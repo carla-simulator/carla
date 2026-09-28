@@ -12,6 +12,7 @@
 #include "Carla/Sensor/UE4_Overridden/SceneCaptureComponent2D_CARLA.h"
 #include "Carla/Sensor/ImageUtil.h"
 #include "Carla/Sensor/PostProcessConfig.h"
+#include "Carla/Sensor/ShowOnlyFilter.h"
 
 #include <type_traits>
 
@@ -185,6 +186,42 @@ public:
   bool GetUseRayTracing() const
   {
     return bUseRayTracing;
+  }
+
+  /// Show-only render mode (see FCarlaShowOnlyFilter): comma separated
+  /// semantic label names. Non-empty restricts the capture to the actors
+  /// carrying those labels (plus the shadow catchers and explicit ids).
+  UFUNCTION(BlueprintCallable)
+  void SetShowOnlyTags(const FString &CommaSeparatedLabels)
+  {
+    ShowOnlyFilter.SetShowOnlyTags(CommaSeparatedLabels);
+  }
+
+  /// Labels whose actors are rendered alongside the show-only set so they
+  /// receive its cast shadows ("Roads,Sidewalks"). No effect when the
+  /// show-only mode is off.
+  UFUNCTION(BlueprintCallable)
+  void SetShadowCatcherTags(const FString &CommaSeparatedLabels)
+  {
+    ShowOnlyFilter.SetShadowCatcherTags(CommaSeparatedLabels);
+  }
+
+  /// CARLA actor ids always included in the show-only set.
+  UFUNCTION(BlueprintCallable)
+  void SetShowOnlyActorIds(const FString &CommaSeparatedIds)
+  {
+    ShowOnlyFilter.SetShowOnlyActorIds(CommaSeparatedIds);
+  }
+
+  UFUNCTION(BlueprintCallable)
+  bool IsShowOnlyEnabled() const
+  {
+    return ShowOnlyFilter.IsEnabled();
+  }
+
+  const FCarlaShowOnlyFilter &GetShowOnlyFilter() const
+  {
+    return ShowOnlyFilter;
   }
 
   UFUNCTION(BlueprintCallable)
@@ -679,6 +716,10 @@ protected:
   /// dropped in EndPlay; outstanding AsyncTasks keep it alive via shared
   /// ownership.
   FRHIGPUReadbackPoolPtr ReadbackPool;
+
+  /// Show-only actor filter, applied to the capture component right before
+  /// every capture (see FCarlaShowOnlyFilter).
+  FCarlaShowOnlyFilter ShowOnlyFilter;
 
   /// Returns true if any GBuffer stream has an active listener.
   bool IsAnyGBufferClientListening() const;

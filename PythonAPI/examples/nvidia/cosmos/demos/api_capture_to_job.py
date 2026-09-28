@@ -79,6 +79,8 @@ def main() -> int:
     ap.add_argument("--clip-id", default=None)
     ap.add_argument("--out", default="./clips", help="where the captured clip is written")
     ap.add_argument("--results", default=None, help="results root (default $COSMOS_RESULTS or ./cosmos-results)")
+    ap.add_argument("--no-viewer-video", action="store_true",
+                    help="do not render the result's side-by-side viewer to viewer_<layout>.mp4")
     ap.add_argument("--endpoint", default=None)
     ap.add_argument("--token", default=None)
     ap.add_argument("-v", "--verbose", action="store_true")
@@ -97,7 +99,8 @@ def main() -> int:
     try:
         job = cosmos.submit_clip(clip, args.backend, args.prompt, controls, seed=args.seed)
         log.info("job %s queued (position %s); controls %s", job.id, job.info.queue_position, list(controls))
-        stored = wait_and_store(job, args.results, log)
+        stored = wait_and_store(job, args.results, log, clip=clip,
+                                viewer_video=False if args.no_viewer_video else None)
     except JobFailed as exc:
         log.error("the job did not finish: %s", exc)
         return 2

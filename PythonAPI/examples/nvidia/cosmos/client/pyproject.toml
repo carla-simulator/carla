@@ -20,7 +20,7 @@ capture = [
     "opencv-python-headless>=4.8",
     "pillow>=10",
 ]
-viewer = ["pygame>=2.6"]
+viewer = ["pygame>=2.6", "imageio-ffmpeg>=0.4"]  # ffmpeg fallback for the mp4 export when the system has none
 test = ["pytest>=8"]
 
 [project.scripts]

@@ -10,12 +10,29 @@
 
 #include <util/ue-header-guard-begin.h>
 #include "GameFramework/Actor.h"
+#include "Camera/CameraModifier.h"
 #include <util/ue-header-guard-end.h>
 
 #include "Weather.generated.h"
 
 class ASensor;
 class ASceneCaptureCamera;
+class UParticleSystem;
+class UParticleSystemComponent;
+
+/// Main-view lens pass; sensor passes are managed separately by AWeather.
+UCLASS()
+class CARLA_API UCarlaRainCameraModifier : public UCameraModifier
+{
+  GENERATED_BODY()
+public:
+  UPROPERTY(Transient)
+  UMaterial* RainMaterial = nullptr;
+  float RainWeight = 0.0f;
+protected:
+  virtual void ModifyPostProcess(float DeltaTime, float& BlendWeight,
+      FPostProcessSettings& Settings) override;
+};
 
 UCLASS(Abstract)
 class CARLA_API AWeather : public AActor
@@ -64,6 +81,22 @@ public:
   UFUNCTION(BlueprintCallable, Category = "Weather")
   static void ApplyWeatherToSkyActor(AActor* SkyActor, const FWeatherParameters& Weather);
 
+  /// Environment-map override for the sky light (set_sky_light_map RPC):
+  /// every ASkyBase rig in World switches its sky light to the given cubemap
+  /// (SLS_SpecifiedCubemap, real-time capture off) at the given intensity,
+  /// and ApplyWeatherToSkyActor keeps it that way across weather pushes
+  /// until ClearSkyLightMap. Scoped to World: it is dropped when that world
+  /// is cleaned up (load_world / reload_world), so the next level starts on
+  /// its own real-time capture. The cubemap is rooted for as long as it is
+  /// set. Returns false if no sky rig was found.
+  static bool SetSkyLightMap(UWorld* World, class UTextureCube* Cubemap, float Intensity);
+
+  /// Drops the override and restores the real-time atmosphere capture with
+  /// the curve-driven intensity.
+  static void ClearSkyLightMap(UWorld* World);
+
+  static bool HasSkyLightMap();
+
 protected:
 
 #if WITH_EDITOR
@@ -75,7 +108,26 @@ protected:
 
 private:
 
+  virtual void Tick(float DeltaSeconds) override;
+  virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+  void UpdateRain();
+  UParticleSystemComponent* CreateRainEmitter(AActor* Owner, bool bSensor);
   void CheckWeatherPostProcessEffects();
+
+  UPROPERTY(Transient)
+  class UMaterialParameterCollection* RainParameters = nullptr;
+
+  UPROPERTY(Transient)
+  UParticleSystem* RainTemplate = nullptr;
+
+  UPROPERTY(Transient)
+  UParticleSystemComponent* ViewportRain = nullptr;
+
+  UPROPERTY(Transient)
+  UCarlaRainCameraModifier* RainCameraModifier = nullptr;
+
+  TMap<TWeakObjectPtr<ASceneCaptureCamera>, TWeakObjectPtr<UParticleSystemComponent>> SensorRain;
+
 
   /// Push the current weather into the ASkyBase rig (BP_Carla_Sky) and run its
   /// blueprint Update. The UE5 sky rig only refreshes itself from its
@@ -95,8 +147,10 @@ private:
   UPROPERTY(EditAnywhere, Category="Parameters")
   FWeatherParameters Weather;
 
+  UPROPERTY()
   UMaterial* PrecipitationPostProcessMaterial;
 
+  UPROPERTY()
   UMaterial* DustStormPostProcessMaterial;
 
   TMap<UMaterial*, float> ActiveBlendables;

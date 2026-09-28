@@ -6,6 +6,7 @@
 
 #include "Carla/Weather/Weather.h"
 #include "Carla.h"
+#include "Carla/Game/CarlaEpisode.h"
 #include "Carla/Game/CarlaStatics.h"
 #include "Carla/Lights/CarlaLightSubsystem.h"
 #include "Carla/Recorder/CarlaRecorder.h"
@@ -14,13 +15,20 @@
 #include "Carla/Weather/Sky.h"
 
 #include <util/ue-header-guard-begin.h>
+#include "Camera/PlayerCameraManager.h"
+#include "Particles/ParticleSystem.h"
+#include "Particles/ParticleSystemComponent.h"
+#include "EngineUtils.h"
 #include "Components/ExponentialHeightFogComponent.h"
+#include "Components/DirectionalLightComponent.h"
 #include "Components/LightComponent.h"
 #include "Components/PostProcessComponent.h"
 #include "Components/SceneCaptureComponent2D.h"
 #include "Components/SkyLightComponent.h"
 #include "Components/VolumetricCloudComponent.h"
 #include "Curves/CurveFloat.h"
+#include "Engine/TextureCube.h"
+#include "Engine/World.h"
 #include "HAL/IConsoleManager.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMaterialLibrary.h"
@@ -48,7 +56,7 @@
 // the skylight floor below.
 static TAutoConsoleVariable<float> CVarCarlaWeatherMoonIntensity(
     TEXT("carla.Weather.MoonIntensity"),
-    100.0f,
+    500.0f,
     TEXT("Minimum DirectionalLightComponentMoon intensity (lux) enforced on the sky rig ")
     TEXT("whenever SunAltitudeAngle < 0. Set 0 to leave the rig's authored/curve-driven ")
     TEXT("moon intensity untouched."),
@@ -145,13 +153,160 @@ AWeather::AWeather(const FObjectInitializer& ObjectInitializer)
     : Super(ObjectInitializer)
 {
     PrecipitationPostProcessMaterial = ConstructorHelpers::FObjectFinder<UMaterial>(
-        TEXT("Material'/Game/Carla/Static/GenericMaterials/FX/ScreenDust/M_screenDrops.M_screenDrops'")).Object;
+        TEXT("Material'/Game/Carla/Static/GenericMaterials/FX/ScreenDust/M_LensRain.M_LensRain'")).Object;
 
     DustStormPostProcessMaterial = ConstructorHelpers::FObjectFinder<UMaterial>(
         TEXT("Material'/Game/Carla/Static/GenericMaterials/FX/ScreenDust/M_screenDust_wind.M_screenDust_wind'")).Object;
 
-    PrimaryActorTick.bCanEverTick = false;
+    RainParameters = ConstructorHelpers::FObjectFinder<UMaterialParameterCollection>(
+        TEXT("/Game/Carla/Blueprints/Weather/Materials/WeatherMaterialParameters.WeatherMaterialParameters")).Object;
+    RainTemplate = ConstructorHelpers::FObjectFinder<UParticleSystem>(
+        TEXT("/Game/Carla/Static/FX/Particles/Rain/PS_Rain.PS_Rain")).Object;
+    PrimaryActorTick.bCanEverTick = true;
+    PrimaryActorTick.TickGroup = TG_PostPhysics;
     RootComponent = ObjectInitializer.CreateDefaultSubobject<USceneComponent>(this, TEXT("RootComponent"));
+}
+
+void UCarlaRainCameraModifier::ModifyPostProcess(float DeltaSeconds,
+    float& BlendWeight, FPostProcessSettings& Settings)
+{
+    if (RainMaterial && RainWeight > 0.0f)
+    {
+        Settings.AddBlendable(RainMaterial, RainWeight);
+        BlendWeight = 1.0f;
+    }
+}
+
+UParticleSystemComponent* AWeather::CreateRainEmitter(AActor* Owner, bool bSensor)
+{
+    if (!RainTemplate)
+        return nullptr;
+    UParticleSystemComponent* Emitter = nullptr;
+    if (bSensor)
+    {
+        // RGB blueprints already attach PS_Rain. Adopt it, including its BP
+        // references, rather than creating duplicate rain or invalidating them.
+        TInlineComponentArray<UParticleSystemComponent*> Components(Owner);
+        for (auto* Component : Components)
+            if (Component->Template == RainTemplate)
+            {
+                Emitter = Component;
+                break;
+            }
+    }
+    const bool bNewComponent = Emitter == nullptr;
+    if (bNewComponent)
+        Emitter = NewObject<UParticleSystemComponent>(Owner);
+    Emitter->DetachFromComponent(FDetachmentTransformRules::KeepWorldTransform);
+    Emitter->bAutoActivate = false;
+    Emitter->bAutoDestroy = false;
+    Emitter->SetTemplate(RainTemplate);
+    // Each capture sees only its own volume. The spectator volume is excluded
+    // from captures, so adding cameras never increases another view's density.
+    Emitter->SetOnlyOwnerSee(bSensor);
+    Emitter->SetVisibleInSceneCaptureOnly(bSensor);
+    Emitter->SetHiddenInSceneCapture(!bSensor);
+    Emitter->SetCastShadow(false);
+    if (bNewComponent)
+    {
+        Owner->AddInstanceComponent(Emitter);
+        Emitter->RegisterComponent();
+    }
+    Emitter->SetWorldScale3D(FVector(2.0f));
+    if (auto* Material = Emitter->CreateDynamicMaterialInstance(0))
+    {
+        Material->SetScalarParameterValue(TEXT("StreakBrightness"), 1.2f);
+        Material->SetScalarParameterValue(TEXT("StreakOpacity"), 0.65f);
+    }
+    return Emitter;
+}
+
+void AWeather::UpdateRain()
+{
+    if (!GetWorld() || !GetWorld()->IsGameWorld())
+        return;
+
+    const float Rain = FMath::Clamp(Weather.Precipitation / 100.0f, 0.0f, 1.0f);
+    // Explicitly drive the lens collection without depending on a town's sky BP.
+    if (RainParameters)
+        UKismetMaterialLibrary::SetScalarParameterValue(GetWorld(), RainParameters, TEXT("Precipitation"), Rain);
+
+    auto UpdateEmitter = [this, Rain](UParticleSystemComponent* Emitter, const FVector& Location)
+    {
+        if (!Emitter) return;
+        // PS_Rain's scaled spawn box is X[-1000,4000], Y[-2000,2000] cm.
+        // Center it on the view and retain world-space, vertically falling drops.
+        const FVector Origin = Location + FVector(-1500.0f, 0.0f, 400.0f);
+        if (FVector::DistSquared(Emitter->GetComponentLocation(), Origin) > FMath::Square(2000.0f))
+            Emitter->DeactivateImmediate(); // Do not leave a trail after teleporting.
+        Emitter->SetWorldLocation(Origin);
+        Emitter->SetFloatParameter(TEXT("RainDensity"), Rain * (4000.0f / 0.85f));
+        // Legacy distribution maps Z [0,1] to [0,-1000] cm/s. Negative input clamps to zero.
+        Emitter->SetVectorParameter(TEXT("RainVelocity"),
+            FVector(FMath::Clamp(Weather.WindIntensity, 0.0f, 100.0f) * 3.0f, 0.0f, 1.0f));
+        if (Rain <= 0.0f)
+            Emitter->DeactivateImmediate();
+        else if (!Emitter->IsActive())
+            Emitter->ActivateSystem(true);
+    };
+
+    if (auto* Camera = UGameplayStatics::GetPlayerCameraManager(GetWorld(), 0))
+    {
+        if (!IsValid(RainCameraModifier) || RainCameraModifier->GetOuter() != Camera)
+        {
+            if (IsValid(RainCameraModifier))
+                if (auto* PreviousCamera = Cast<APlayerCameraManager>(RainCameraModifier->GetOuter()))
+                    PreviousCamera->RemoveCameraModifier(RainCameraModifier);
+            RainCameraModifier = Cast<UCarlaRainCameraModifier>(
+                Camera->AddNewCameraModifier(UCarlaRainCameraModifier::StaticClass()));
+        }
+        if (RainCameraModifier)
+        {
+            RainCameraModifier->RainMaterial = PrecipitationPostProcessMaterial;
+            RainCameraModifier->RainWeight = Rain;
+        }
+        if (!ViewportRain && Rain > 0.0f)
+            ViewportRain = CreateRainEmitter(this, false);
+        UpdateEmitter(ViewportRain, Camera->GetCameraLocation());
+    }
+    else if (ViewportRain)
+        ViewportRain->DeactivateImmediate();
+
+    for (auto It = SensorRain.CreateIterator(); It; ++It)
+        if (!It.Key().IsValid() || !It.Value().IsValid())
+        {
+            if (It.Value().IsValid()) It.Value()->DestroyComponent();
+            It.RemoveCurrent();
+        }
+    for (TActorIterator<ASceneCaptureCamera> It(GetWorld()); It; ++It)
+    {
+        auto* Sensor = *It;
+        auto* Emitter = SensorRain.FindRef(Sensor).Get();
+        if (!Emitter && Rain > 0.0f)
+        {
+            Emitter = CreateRainEmitter(Sensor, true);
+            SensorRain.Add(Sensor, Emitter);
+        }
+        UpdateEmitter(Emitter, Sensor->GetCaptureComponent2D()->GetComponentLocation());
+    }
+}
+
+void AWeather::Tick(float DeltaSeconds)
+{
+    Super::Tick(DeltaSeconds);
+    UpdateRain();
+}
+
+void AWeather::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+    for (auto& Entry : SensorRain)
+        if (Entry.Value.IsValid()) Entry.Value->DestroyComponent();
+    SensorRain.Empty();
+    if (IsValid(RainCameraModifier))
+        if (auto* Camera = Cast<APlayerCameraManager>(RainCameraModifier->GetOuter()))
+            Camera->RemoveCameraModifier(RainCameraModifier);
+    RainCameraModifier = nullptr;
+    Super::EndPlay(EndPlayReason);
 }
 
 void AWeather::CheckWeatherPostProcessEffects()
@@ -171,9 +326,188 @@ void AWeather::CheckWeatherPostProcessEffects()
     for (AActor* SensorActor : SensorActors)
     {
         ASceneCaptureCamera* Sensor = Cast<ASceneCaptureCamera>(SensorActor);
+        // Removing a material from ActiveBlendables does not remove it from
+        // an existing camera. Clear stale weather passes when rain/dust stops;
+        // leave unrelated camera post-process materials intact.
+        if (!ActiveBlendables.Contains(PrecipitationPostProcessMaterial))
+            Sensor->GetCaptureComponent2D()->PostProcessSettings.RemoveBlendable(PrecipitationPostProcessMaterial);
+        if (!ActiveBlendables.Contains(DustStormPostProcessMaterial))
+            Sensor->GetCaptureComponent2D()->PostProcessSettings.RemoveBlendable(DustStormPostProcessMaterial);
         for (auto& ActiveBlendable : ActiveBlendables)
             Sensor->GetCaptureComponent2D()->PostProcessSettings.AddBlendable(ActiveBlendable.Key, ActiveBlendable.Value);
     }
+}
+
+// Environment-map override for the sky light (set_sky_light_map RPC). The
+// cubemap lives in the transient package and is rooted while set, but the
+// override is scoped to the world it was set on: it is re-applied to that
+// world's sky rig on every weather push, and dropped when that world is
+// cleaned up (load_world / reload_world), so a freshly loaded level always
+// starts on its own real-time atmosphere capture -- a client that loaded a
+// new map never asked for the previous map's lighting.
+namespace
+{
+    struct FSkyLightMapOverride
+    {
+        UTextureCube* Cubemap = nullptr;
+        float Intensity = 1.0f;
+        TWeakObjectPtr<UWorld> World;
+    };
+    FSkyLightMapOverride GSkyLightMapOverride;
+    FDelegateHandle GSkyLightMapWorldCleanupHandle;
+
+    bool SkyLightMapAppliesTo(const UWorld* World)
+    {
+        return GSkyLightMapOverride.Cubemap != nullptr && World != nullptr &&
+            GSkyLightMapOverride.World.Get() == World;
+    }
+
+    // What the override rewrites on a sky light, saved the first time it is
+    // applied to that component and put back by ClearSkyLightMap. The
+    // real-time capture honours bLowerHemisphereIsBlack too, so leaving it
+    // cleared would change the rig's ambient after the map is removed.
+    struct FSkyLightSavedState
+    {
+        TEnumAsByte<ESkyLightSourceType> SourceType;
+        bool bLowerHemisphereIsBlack;
+    };
+    TMap<TWeakObjectPtr<USkyLightComponent>, FSkyLightSavedState> GSkyLightSavedStates;
+
+    void ApplySkyLightMapToComponent(USkyLightComponent* SkyLightComponent)
+    {
+        if (!GSkyLightSavedStates.Contains(SkyLightComponent))
+        {
+            GSkyLightSavedStates.Add(SkyLightComponent,
+                {SkyLightComponent->SourceType, SkyLightComponent->bLowerHemisphereIsBlack});
+        }
+        if (SkyLightComponent->bRealTimeCapture)
+            SkyLightComponent->SetRealTimeCaptureEnabled(false);
+        if (SkyLightComponent->SourceType != SLS_SpecifiedCubemap)
+        {
+            SkyLightComponent->SourceType = SLS_SpecifiedCubemap;
+            SkyLightComponent->MarkRenderStateDirty();
+            SkyLightComponent->SetCaptureIsDirty();
+        }
+        if (SkyLightComponent->bLowerHemisphereIsBlack)
+        {
+            SkyLightComponent->bLowerHemisphereIsBlack = false;
+            SkyLightComponent->MarkRenderStateDirty();
+        }
+        SkyLightComponent->SetSourceCubemapAngle(0.0f);
+        SkyLightComponent->SetCubemap(GSkyLightMapOverride.Cubemap);
+        if (SkyLightComponent->Cubemap != GSkyLightMapOverride.Cubemap)
+        {
+            // SetCubemap is a no-op on a Static-mobility light; the rig's
+            // skylight is meant to be Stationary, but do not depend on it.
+            SkyLightComponent->Cubemap = GSkyLightMapOverride.Cubemap;
+        }
+        // Always re-process: the cubemap contents may be new even when the
+        // pointer is not (see SkyLightMap.cpp on object naming).
+        SkyLightComponent->MarkRenderStateDirty();
+        SkyLightComponent->SetCaptureIsDirty();
+        SkyLightComponent->SetLightColor(FLinearColor::White);
+        SkyLightComponent->SetIntensity(GSkyLightMapOverride.Intensity);
+        if (!SkyLightComponent->IsActive())
+            SkyLightComponent->SetActive(true);
+    }
+
+    // Forget the override: unroot the cubemap (the transient object is then
+    // collected with the next GC pass) and drop the saved component states,
+    // whose weak keys are dead once the owning world has gone anyway.
+    void DropSkyLightMapOverride()
+    {
+        if (GSkyLightMapOverride.Cubemap != nullptr)
+            GSkyLightMapOverride.Cubemap->RemoveFromRoot();
+        GSkyLightMapOverride = FSkyLightMapOverride{};
+        GSkyLightSavedStates.Empty();
+        if (GSkyLightMapWorldCleanupHandle.IsValid())
+        {
+            FWorldDelegates::OnWorldCleanup.Remove(GSkyLightMapWorldCleanupHandle);
+            GSkyLightMapWorldCleanupHandle.Reset();
+        }
+    }
+
+    // load_world / reload_world tear the current world down through
+    // UWorld::CleanupWorld before the next level is brought up; that is the
+    // end of the override's scope. Other worlds (the editor world, a level
+    // instance) are not ours and are left alone.
+    void OnSkyLightMapWorldCleanup(UWorld* World, bool /*bSessionEnded*/, bool /*bCleanupResources*/)
+    {
+        if (World == nullptr || GSkyLightMapOverride.World.Get() != World)
+            return;
+        DropSkyLightMapOverride();
+        UE_LOG(LogCarla, Log, TEXT("AWeather: sky light map dropped with world %s"), *World->GetName());
+    }
+}
+
+bool AWeather::SetSkyLightMap(UWorld* World, UTextureCube* Cubemap, float Intensity)
+{
+    if (Cubemap == nullptr || World == nullptr)
+        return false;
+    if (GSkyLightMapOverride.Cubemap != nullptr && GSkyLightMapOverride.Cubemap != Cubemap)
+        GSkyLightMapOverride.Cubemap->RemoveFromRoot();
+    Cubemap->AddToRoot();
+    if (GSkyLightMapOverride.World.Get() != World)
+    {
+        // Setting on a different world than the previous override: whatever
+        // that world's rigs remembered is gone with it.
+        GSkyLightSavedStates.Empty();
+    }
+    GSkyLightMapOverride.Cubemap = Cubemap;
+    GSkyLightMapOverride.Intensity = Intensity;
+    GSkyLightMapOverride.World = World;
+    if (!GSkyLightMapWorldCleanupHandle.IsValid())
+        GSkyLightMapWorldCleanupHandle = FWorldDelegates::OnWorldCleanup.AddStatic(&OnSkyLightMapWorldCleanup);
+
+    int32 Applied = 0;
+    TArray<AActor*> SkyActors;
+    UGameplayStatics::GetAllActorsOfClass(World, ASkyBase::StaticClass(), SkyActors);
+    for (AActor* SkyActor : SkyActors)
+    {
+        ASkyBase* Sky = Cast<ASkyBase>(SkyActor);
+        if (USkyLightComponent* SkyLightComponent = Sky != nullptr ? Sky->GetSkyLightComponent() : nullptr)
+        {
+            ApplySkyLightMapToComponent(SkyLightComponent);
+            ++Applied;
+        }
+    }
+    UE_LOG(LogCarla, Log, TEXT("AWeather: sky light map set (intensity %.3f) on %d sky rig(s)"), Intensity, Applied);
+    return Applied > 0;
+}
+
+void AWeather::ClearSkyLightMap(UWorld* World)
+{
+    // Restore the rigs first (the saved states go away with the override).
+    TArray<AActor*> SkyActors;
+    UGameplayStatics::GetAllActorsOfClass(World, ASkyBase::StaticClass(), SkyActors);
+    for (AActor* SkyActor : SkyActors)
+    {
+        ASkyBase* Sky = Cast<ASkyBase>(SkyActor);
+        if (USkyLightComponent* SkyLightComponent = Sky != nullptr ? Sky->GetSkyLightComponent() : nullptr)
+        {
+            SkyLightComponent->SetCubemap(nullptr);
+            if (const FSkyLightSavedState* Saved = GSkyLightSavedStates.Find(SkyLightComponent))
+            {
+                SkyLightComponent->SourceType = Saved->SourceType;
+                SkyLightComponent->bLowerHemisphereIsBlack = Saved->bLowerHemisphereIsBlack;
+                SkyLightComponent->MarkRenderStateDirty();
+                SkyLightComponent->SetCaptureIsDirty();
+            }
+            SkyLightComponent->SetRealTimeCaptureEnabled(true);
+        }
+    }
+    DropSkyLightMapOverride();
+    // Restores the curve intensity and the real-time capture through the
+    // normal weather push.
+    if (UCarlaEpisode* Episode = UCarlaStatics::GetCurrentEpisode(World))
+        if (AWeather* Weather = Episode->GetWeather())
+            Weather->PushWeatherToSky();
+    UE_LOG(LogCarla, Log, TEXT("AWeather: sky light map cleared"));
+}
+
+bool AWeather::HasSkyLightMap()
+{
+    return GSkyLightMapOverride.Cubemap != nullptr;
 }
 
 void AWeather::PushWeatherToSky()
@@ -307,8 +641,6 @@ void AWeather::ApplyWeatherToSkyActor(AActor* SkyActor, const FWeatherParameters
                 for (const TPair<UClass*, TArray<AActor*>>& Pair : AttachedByClass)
                 {
                     const TArray<AActor*>& Instances = Pair.Value;
-                    if (Instances.Num() <= 1)
-                        continue;
                     // Keep the one "SkySphere" actually points to when this
                     // is its class; otherwise keep whichever is last (order
                     // is not meaningful here, just needs to be consistent).
@@ -316,14 +648,40 @@ void AWeather::ApplyWeatherToSkyActor(AActor* SkyActor, const FWeatherParameters
                         ? SphereActor : Instances.Last();
                     for (AActor* Instance : Instances)
                     {
-                        if (Instance == ToKeep)
-                            continue;
-                        TArray<AActor*> OrphanChildren;
-                        Instance->GetAttachedActors(OrphanChildren);
-                        for (AActor* OrphanChild : OrphanChildren)
-                            if (OrphanChild != nullptr)
-                                OrphanChild->Destroy();
-                        Instance->Destroy();
+                        if (Instance != ToKeep)
+                        {
+                            TArray<AActor*> OrphanChildren;
+                            Instance->GetAttachedActors(OrphanChildren);
+                            for (AActor* OrphanChild : OrphanChildren)
+                                if (OrphanChild != nullptr)
+                                    OrphanChild->Destroy();
+                            Instance->Destroy();
+                        }
+                    }
+
+                    // SetSunActorReference (called earlier in the
+                    // UpdateFunctionNames loop) links a stock-engine
+                    // ADirectionalLight onto this rig, on top of our own
+                    // Sun/Moon components -- a THIRD directional light,
+                    // confirmed in the outliner ("DirectionalLight0") and over
+                    // the render warning ("Multiple directional lights are
+                    // competing..."). Neutralize the survivor the same way
+                    // Sky.cpp's constructor already does for the Moon: below
+                    // the Sun's ForwardShadingPriority, and out of the running
+                    // for SkyAtmosphere's single sun-light slot (every
+                    // DirectionalLightComponent defaults bAtmosphereSunLight
+                    // true -- left alone, this stray light could win that slot
+                    // over our real Sun, which is what actually broke
+                    // SkyAtmosphere/rendered a black sky once the sun rose,
+                    // independent of the render warning). Cheap and
+                    // idempotent, run every push like the dedup above.
+                    if (UDirectionalLightComponent* StrayLight =
+                            ToKeep != nullptr ? ToKeep->FindComponentByClass<UDirectionalLightComponent>() : nullptr)
+                    {
+                        if (StrayLight->ForwardShadingPriority != -1)
+                            StrayLight->SetForwardShadingPriority(-1);
+                        if (StrayLight->IsUsedAsAtmosphereSunLight())
+                            StrayLight->SetAtmosphereSunLight(false);
                     }
                 }
             }
@@ -359,16 +717,23 @@ void AWeather::ApplyWeatherToSkyActor(AActor* SkyActor, const FWeatherParameters
         // for these two variables) rather than read off an AWeather instance,
         // so this function works with no AWeather actor placed in the level
         // at all -- see ASkyBase::RefreshWeather/LoadPreset.
+        // Loaded per call, never cached in function-local statics: a raw
+        // static UObject pointer is invisible to the garbage collector, and
+        // these assets are otherwise unreferenced once the world that first
+        // loaded them is purged. With the old static cache, the second
+        // episode of a session (e.g. any generate_opendrive_world load)
+        // evaluated a freed UCurveFloat and crashed inside FRichCurve::Eval
+        // (SIGSEGV in ApplyWeatherToSkyActor <- GameMode BeginPlay). While
+        // the asset is alive LoadObject is a FindObject hit, so per-call
+        // loading costs nothing measurable at weather-push frequency.
         auto FindCurve = [](const TCHAR* PropertyName) -> UCurveFloat*
         {
-            static UCurveFloat* const SunIntensityCurve = LoadObject<UCurveFloat>(nullptr,
-                TEXT("/Game/Carla/Blueprints/Weather/Weather2_Curves/SunIntensity_2.SunIntensity_2"));
-            static UCurveFloat* const SkyIntensityCurve = LoadObject<UCurveFloat>(nullptr,
-                TEXT("/Game/Carla/Blueprints/Weather/Weather2_Curves/SkylightIntensity_2.SkylightIntensity_2"));
             if (FCString::Strcmp(PropertyName, TEXT("SunIntensity_Curve")) == 0)
-                return SunIntensityCurve;
+                return LoadObject<UCurveFloat>(nullptr,
+                    TEXT("/Game/Carla/Blueprints/Weather/Weather2_Curves/SunIntensity_2.SunIntensity_2"));
             if (FCString::Strcmp(PropertyName, TEXT("SkyIntensity_Curve")) == 0)
-                return SkyIntensityCurve;
+                return LoadObject<UCurveFloat>(nullptr,
+                    TEXT("/Game/Carla/Blueprints/Weather/Weather2_Curves/SkylightIntensity_2.SkylightIntensity_2"));
             return nullptr;
         };
         auto FindComponent = [SkyActor](const TCHAR* PropertyName) -> ULightComponent*
@@ -403,6 +768,13 @@ void AWeather::ApplyWeatherToSkyActor(AActor* SkyActor, const FWeatherParameters
                 // intensity; the physical tint comes from the color temperature.
                 SunLightComponent->SetLightColor(FLinearColor::White);
             }
+        }
+        // UpdateSun never applies a rotation. Pitch is negated because a
+        // directional light shines along its forward vector.
+        if (ULightComponent* SunLightComponent = FindComponent(TEXT("DirectionalLightComponentSun")))
+        {
+            SunLightComponent->SetWorldRotation(
+                FRotator(-Weather.SunAltitudeAngle, Weather.SunAzimuthAngle, 0.0f));
         }
         // The rig's Moon light ships with AffectsWorld off -- a disabled
         // light contributes nothing to the scene no matter what its
@@ -462,12 +834,26 @@ void AWeather::ApplyWeatherToSkyActor(AActor* SkyActor, const FWeatherParameters
         // day, 0 at night) remains the multiplier on the capture.
         if (USkyLightComponent* SkyLightComponent = FindSkyLightComponent(TEXT("SkyLightComponent")))
         {
+            if (SkyLightMapAppliesTo(SkyActor->GetWorld()))
+            {
+                // Environment map set through set_sky_light_map on this
+                // world: the measured panorama replaces the atmosphere
+                // capture as the ambient and reflection source, and its
+                // intensity is the caller's, not the curve's. Reapplied on
+                // every weather push so that a set_weather call cannot
+                // silently revert to the real-time capture. A rig in any
+                // other world (a newly loaded level) takes the else branch.
+                ApplySkyLightMapToComponent(SkyLightComponent);
+            }
+            else
+            {
             if (!SkyLightComponent->bRealTimeCapture)
                 SkyLightComponent->SetRealTimeCaptureEnabled(true);
             if (!SkyLightComponent->IsActive())
                 SkyLightComponent->SetActive(true);
             if (UCurveFloat* SkyIntensityCurve = FindCurve(TEXT("SkyIntensity_Curve")))
                 SkyLightComponent->SetIntensity(SkyIntensityCurve->GetFloatValue(Weather.SunAltitudeAngle));
+            }
             UE_LOG(LogCarla, Verbose, TEXT(
                 "AWeather sky light: active=%d intensity=%.3f realtimecapture=%d mobility=%d visible=%d"),
                 SkyLightComponent->IsActive() ? 1 : 0,
@@ -506,7 +892,10 @@ void AWeather::ApplyWeatherToSkyActor(AActor* SkyActor, const FWeatherParameters
             }
 
             const float SkylightFloor = CVarCarlaWeatherNightSkylightIntensity.GetValueOnGameThread();
-            if (USkyLightComponent* SkyLightComponent = FindSkyLightComponent(TEXT("SkyLightComponent")))
+            // Not while an environment map is set: its intensity is the
+            // caller's measurement, the night floor would override it.
+            if (USkyLightComponent* SkyLightComponent = GSkyLightMapOverride.Cubemap == nullptr
+                ? FindSkyLightComponent(TEXT("SkyLightComponent")) : nullptr)
             {
                 if (!SkyLightComponent->IsActive())
                     SkyLightComponent->SetActive(true);
@@ -567,6 +956,28 @@ void AWeather::ApplyWeatherToSkyActor(AActor* SkyActor, const FWeatherParameters
                     SphereActor->ProcessEvent(RefreshMaterialFunction, nullptr);
             }
         }
+        else
+        {
+            // Day: bring the moon back down from whatever night floor last
+            // set it to. Unlike the sun/skylight above (pushed unconditionally
+            // from their curves every single call, so they self-correct both
+            // ways), the moon has no such day-side reset anywhere -- only the
+            // night-only floor clamp above, which only ever raises it. Without
+            // this, one night floor-clamp leaves the moon lit at that
+            // intensity forever, becoming a second active directional light
+            // competing with the sun by day ("Multiple directional lights are
+            // competing to be the single one used for forward shading..." --
+            // confirmed via headless test: moon intensity clamped to a night
+            // floor stayed there across a follow-up day update) and polluting
+            // the SkyAtmosphere/SkyLight capture. bAffectsWorld/Active are
+            // deliberately left alone (see the comment above where they're
+            // forced on) -- zero intensity alone makes it contribute nothing.
+            if (ULightComponent* MoonLightComponent = FindComponent(TEXT("DirectionalLightComponentMoon")))
+            {
+                if (MoonLightComponent->Intensity != 0.0f)
+                    MoonLightComponent->SetIntensity(0.0f);
+            }
+        }
     }
 
     // Cloud density. Ported from BP_GeneralSceneSettings.UpdateClouds (that
@@ -582,11 +993,12 @@ void AWeather::ApplyWeatherToSkyActor(AActor* SkyActor, const FWeatherParameters
             : nullptr;
         if (CloudComponent != nullptr)
         {
-            static UCurveFloat* const DensityCurve = LoadObject<UCurveFloat>(nullptr,
+            // Per-call loads, not GC-invisible static caches -- see FindCurve.
+            UCurveFloat* const DensityCurve = LoadObject<UCurveFloat>(nullptr,
                 TEXT("/Game/Carla/Blueprints/Weather/CloudsBillowy/C_BillowyDensity.C_BillowyDensity"));
-            static UMaterialInterface* const NormalCloudMaterial = LoadObject<UMaterialInterface>(nullptr,
+            UMaterialInterface* const NormalCloudMaterial = LoadObject<UMaterialInterface>(nullptr,
                 TEXT("/Game/Carla/Static/FX/VolumetricClouds/MI_Clouds.MI_Clouds"));
-            static UMaterialInterface* const BillowyCloudMaterial = LoadObject<UMaterialInterface>(nullptr,
+            UMaterialInterface* const BillowyCloudMaterial = LoadObject<UMaterialInterface>(nullptr,
                 TEXT("/Game/Carla/Static/GenericMaterials/VolumetricClouds/Masters/M_VolumetricCloud_03_Profiles_Billowy_Inst.M_VolumetricCloud_03_Profiles_Billowy_Inst"));
 
             const float OvercastThreshold = CVarCarlaWeatherOvercastThreshold.GetValueOnGameThread();
@@ -684,7 +1096,8 @@ void AWeather::ApplyWeatherToSkyActor(AActor* SkyActor, const FWeatherParameters
     // (already correct at 0-1); only Wetness gets overridden here, raw, right
     // after the BP call above wrote the wrong value.
     {
-        static UMaterialParameterCollection* const WeatherMPC = LoadObject<UMaterialParameterCollection>(nullptr,
+        // Per-call load, not a GC-invisible static cache -- see FindCurve.
+        UMaterialParameterCollection* const WeatherMPC = LoadObject<UMaterialParameterCollection>(nullptr,
             TEXT("/Game/Carla/Blueprints/Weather/Materials/WeatherMaterialParameters.WeatherMaterialParameters"));
         if (WeatherMPC != nullptr && SkyActor->GetWorld() != nullptr)
         {
@@ -799,6 +1212,7 @@ void AWeather::ApplyWeather(const FWeatherParameters& InWeather)
     RefreshWeather(Weather);
     PushWeatherToSky();
     UpdateStreetLightsForDayNight();
+    UpdateRain();
 
     // record the weather event
     ACarlaRecorder *Recorder = UCarlaStatics::GetRecorder(GetWorld());

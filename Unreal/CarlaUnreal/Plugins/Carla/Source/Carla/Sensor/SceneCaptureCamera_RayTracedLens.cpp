@@ -23,6 +23,29 @@
 // small aperture instead.
 static constexpr float GPinholeApertureFstop = 32.0f;
 
+// Rollback valve for the synchronous-mode blocking delivery below. Off, the
+// sensor keeps the asynchronous one-frame-late readback in every mode.
+static TAutoConsoleVariable<int32> CVarRTLensSyncBlockingReadback(
+    TEXT("carla.RTLens.SyncModeBlockingReadback"),
+    1,
+    TEXT("In synchronous mode, deliver the rt_lens image captured on the same tick.\n")
+    TEXT("  0: always use the asynchronous, one-tick-late, droppable readback.\n")
+    TEXT("  1: capture then read back through the per-tick batched GPU sync (default)."),
+    ECVF_Default);
+
+// Rollback valve for the synchronous-mode complete-pipeline policy (see
+// RTLensEngineAdapter::SetBlockingRayTracingPipelineCreation). Off, the sensor
+// leaves r.RayTracing.NonBlockingPipelineCreation alone and freshly spawned
+// actors render black and untagged for the ticks their ray tracing pipeline
+// takes to compile.
+static TAutoConsoleVariable<int32> CVarRTLensSyncBlockingPipelineCreation(
+    TEXT("carla.RTLens.SyncModeBlockingPipelineCreation"),
+    1,
+    TEXT("In synchronous mode, wait for the ray tracing material pipeline before rendering.\n")
+    TEXT("  0: leave r.RayTracing.NonBlockingPipelineCreation as configured (new actors may render with the fallback hit shader for a few ticks).\n")
+    TEXT("  1: set r.RayTracing.NonBlockingPipelineCreation 0 while synchronous, restore it when asynchronous (default)."),
+    ECVF_Default);
+
 // =============================================================================
 // -- Local static helpers ------------------------------------------------------
 // =============================================================================
@@ -42,6 +65,7 @@ namespace SceneCaptureCameraRayTracedLens_local_ns
       TEXT("kannala_brandt"),
       TEXT("brown_conrady"),
       TEXT("lut"),
+      TEXT("ftheta"),
     };
 
     using I = std::underlying_type_t<ECameraModel>;
@@ -86,6 +110,8 @@ namespace SceneCaptureCameraRayTracedLens_local_ns
       return FMath::Sin(FMath::Min(Theta, PI * 0.5f));
     case ECameraModel::KannalaBrandt:
       return CameraModelUtil::KannalaBrandt::ComputeCameraPolynomial(Theta, Coeffs);
+    case ECameraModel::FTheta:
+      return CameraModelUtil::FTheta::SolveRadius(Theta, Coeffs);
     default:
       return FMath::Tan(FMath::Min(Theta, FMath::DegreesToRadians(89.5f)));
     }
@@ -206,10 +232,10 @@ void ASceneCaptureCamera_RayTracedLens::Set(const FActorDescription &Description
   const float ThetaHalf = FMath::DegreesToRadians(FOVDeg) * 0.5f;
   if (LensModel.FocalX <= 0.0f)
   {
-    if (LensModel.Model == ECameraModel::LUT1D)
+    if (LensModel.Model == ECameraModel::LUT1D || LensModel.Model == ECameraModel::FTheta)
     {
       UE_LOG(LogCarla, Warning,
-          TEXT("ASceneCaptureCamera_RayTracedLens: camera_model=lut needs an explicit fx; using fx=1."));
+          TEXT("ASceneCaptureCamera_RayTracedLens: camera_model=lut/ftheta needs an explicit fx (1/width for pixel-unit coefficients); using fx=1."));
       LensModel.FocalX = 1.0f;
     }
     else
@@ -261,6 +287,24 @@ void ASceneCaptureCamera_RayTracedLens::Set(const FActorDescription &Description
   bEnableDenoiser = UActorBlueprintFunctionLibrary::RetrieveActorAttributeToBool(
       "enable_denoiser", Variations, true);
 
+  // The path tracer runs at most r.PathTracing.MaxFramePassCount sample passes per
+  // frame. A sensor asking for more can never finish (and denoise) within a tick:
+  // every frame it would deliver a partially accumulated image, which is far noisier
+  // than a smaller count that converges. Clamp to the cap and say so.
+  if (const IConsoleVariable* MaxPassCountVar =
+          IConsoleManager::Get().FindConsoleVariable(TEXT("r.PathTracing.MaxFramePassCount")))
+  {
+    const int32 MaxPassCount = FMath::Max(MaxPassCountVar->GetInt(), 1);
+    if (SamplesPerPixel > MaxPassCount)
+    {
+      UE_LOG(LogCarla, Warning,
+          TEXT("rt_lens: samples_per_pixel %d exceeds r.PathTracing.MaxFramePassCount %d; "
+               "clamping so every frame converges and denoises within the tick"),
+          SamplesPerPixel, MaxPassCount);
+      SamplesPerPixel = MaxPassCount;
+    }
+  }
+
   CaptureComponent2D->PostProcessSettings.bOverride_PathTracingSamplesPerPixel = true;
   CaptureComponent2D->PostProcessSettings.bOverride_PathTracingEnableDenoiser = true;
   CaptureComponent2D->PostProcessSettings.PathTracingSamplesPerPixel = SamplesPerPixel;
@@ -269,6 +313,24 @@ void ASceneCaptureCamera_RayTracedLens::Set(const FActorDescription &Description
   // SetCamera above may have rewritten the exposure block from generic
   // attributes; re-pin it (see SetRayTracedLensExposure).
   SetRayTracedLensExposure();
+
+  // exposure_mode=manual: deterministic exposure from the profile's physical
+  // camera plus exposure_compensation (EV); needed when the layer is composited
+  // against an external render and the frame content (show-only actors over a
+  // black background) would drive the histogram.
+  {
+    const FString ExposureMode = UActorBlueprintFunctionLibrary::RetrieveActorAttributeToString(
+        "exposure_mode", Variations, TEXT("auto"));
+    auto &PPS = CaptureComponent2D->PostProcessSettings;
+    if (ExposureMode == TEXT("manual"))
+    {
+      PPS.bOverride_AutoExposureMethod = true;
+      PPS.AutoExposureMethod = AEM_Manual;
+    }
+    PPS.bOverride_AutoExposureBias = true;
+    PPS.AutoExposureBias = UActorBlueprintFunctionLibrary::RetrieveActorAttributeToFloat(
+        "exposure_compensation", Variations, 0.0f);
+  }
 }
 
 void ASceneCaptureCamera_RayTracedLens::UpdatePostProcessConfig(FPostProcessConfig &InOutPostProcessConfig)
@@ -283,6 +345,15 @@ void ASceneCaptureCamera_RayTracedLens::OnFirstClientConnected()
 
 void ASceneCaptureCamera_RayTracedLens::OnLastClientDisconnected()
 {
+}
+
+void ASceneCaptureCamera_RayTracedLens::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+  // Process-wide override made in PostPhysTick for synchronous mode; a sensor
+  // destroyed while synchronous must not leave it behind (any other live
+  // rt_lens sensor sets it again on its next tick).
+  RTLensEngineAdapter::SetBlockingRayTracingPipelineCreation(false);
+  Super::EndPlay(EndPlayReason);
 }
 
 void ASceneCaptureCamera_RayTracedLens::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaSeconds)
@@ -318,31 +389,12 @@ void ASceneCaptureCamera_RayTracedLens::PostPhysTick(UWorld *World, ELevelTick T
     CaptureComponent2D->PostProcessSettings.PathTracingEnableDenoiser = bEnableDenoiser;
   }
 
-  // NEVER-FREEZE READBACK + CAPTURE ORDER. The game thread also drives the RPC
-  // server, so it must never block on this sensor's heavy path-traced render.
-  //
-  // 1) Enqueue a NON-BLOCKING readback of the render target produced by the
-  //    PREVIOUS tick's capture. bNonBlocking=true records the GPU copy and
-  //    returns; it does NOT wait for GPU completion on the render thread (the
-  //    default path's RHIGetRenderQueryResult(bWait=true) wait DEADLOCKS the
-  //    whole server under load -- render thread blocked mid-command, GPU
-  //    submission can't advance, game thread freezes behind it at FFrameEndSync;
-  //    proven via gdb). Completion is polled off-thread; frames just drop under
-  //    load instead of freezing.
-  // 2) Then CaptureScene() (inside Super::PostPhysTick). Because the readback was
-  //    enqueued FIRST, the recorded copy rides this capture's GPU submission --
-  //    which is what makes its readback fence actually signal -- and captures the
-  //    previous frame's pixels (they precede this tick's render). Result: one
-  //    frame of latency, never a stall.
-  //
-  // CaptureScene() is synchronous (FlushRenderingCommands), which also paces the
-  // game thread to the render thread so the pipeline never backs up -- a single
-  // capture blocks the game thread only briefly (<15 ms measured); under load the
-  // pace drops, it does not freeze.
-  if (AreClientsListening())
-  {
-    if (auto *RenderTarget = GetCaptureRenderTarget())
+  TickCaptureAndReadback(World, TickType, DeltaSeconds,
+    [this](bool bNonBlocking)
     {
+      auto *RenderTarget = GetCaptureRenderTarget();
+      if (RenderTarget == nullptr)
+        return;
       const auto FrameIndex = FCarlaEngine::GetFrameCounter();
       // Use the per-sensor recycling readback pool (not a fresh per-frame
       // FRHIGPUTextureReadback): the async path holds each readback until its
@@ -354,9 +406,76 @@ void ASceneCaptureCamera_RayTracedLens::PostPhysTick(UWorld *World, ELevelTick T
       {
         SendDataToClient(*this, Pixels, FrameIndex);
         return true;
-      }, /*bNonBlocking=*/true, GetReadbackPool());
-    }
+      }, bNonBlocking, GetReadbackPool());
+    });
+}
+
+void ASceneCaptureCamera_RayTracedLens::TickCaptureAndReadback(
+    UWorld *World,
+    ELevelTick TickType,
+    float DeltaSeconds,
+    TFunctionRef<void(bool bNonBlocking)> EnqueueReadback)
+{
+  // SYNCHRONOUS MODE -- capture first, then a BLOCKING readback of what we just
+  // rendered. The client's world.tick() is the frame boundary, so the image
+  // stamped with frame k has to BE tick k's render, and no frame may be
+  // dropped. Recording the copy after CaptureScene() puts it behind this tick's
+  // render commands; ImageUtil batches it and FSensorManager's single per-tick
+  // ImageUtil::FlushBatchedReadbacks() waits for the GPU once for the whole
+  // camera batch and delivers it before the tick ends. That is exactly the path
+  // every raster scene-capture camera takes (see
+  // ASceneCaptureCamera::PostPhysTick -> ImageUtil::ReadSensorImageDataAsyncFColor),
+  // and because the batch sync waits for the copy, a frame cannot be dropped at
+  // any samples_per_pixel. The cost is one pipeline drain per tick shared by
+  // every camera -- not one per camera, and not the per-camera flush +
+  // query-wait that used to deadlock (see ImageUtil::ReadImageDataBegin).
+  //
+  // Completeness is the other half of the same contract: the render of tick k
+  // must contain every actor tick k has, with its real materials. The engine
+  // otherwise renders an actor whose materials are new to the ray tracing
+  // pipeline with a black, untagged fallback shader while that pipeline
+  // compiles in the background (see the adapter for the mechanism and the
+  // measured cost), so synchronous mode asks for blocking pipeline creation
+  // before this tick's capture is enqueued; asynchronous mode, which must never
+  // stall the game thread, restores the engine's non-blocking default.
+  const bool bSynchronousMode = GetEpisode().GetSettings().bSynchronousMode;
+  if (CVarRTLensSyncBlockingPipelineCreation.GetValueOnGameThread() != 0)
+  {
+    RTLensEngineAdapter::SetBlockingRayTracingPipelineCreation(bSynchronousMode);
   }
 
-  Super::PostPhysTick(World, TickType, DeltaSeconds);
+  if (bSynchronousMode &&
+      CVarRTLensSyncBlockingReadback.GetValueOnGameThread() != 0)
+  {
+    ASceneCaptureSensor::PostPhysTick(World, TickType, DeltaSeconds);
+    if (AreClientsListening())
+    {
+      EnqueueReadback(/*bNonBlocking=*/false);
+    }
+    return;
+  }
+
+  // ASYNCHRONOUS MODE -- NEVER-FREEZE READBACK + CAPTURE ORDER. Nothing paces
+  // the client here, so the game thread (which also drives the RPC server) must
+  // never block on this sensor's heavy path-traced render.
+  //
+  // 1) Enqueue a NON-BLOCKING readback of the render target produced by the
+  //    PREVIOUS tick's capture. bNonBlocking=true records the GPU copy and
+  //    returns; it does NOT wait for GPU completion on the render thread (the
+  //    default path's RHIGetRenderQueryResult(bWait=true) wait DEADLOCKS the
+  //    whole server under load -- render thread blocked mid-command, GPU
+  //    submission can't advance, game thread freezes behind it at FFrameEndSync;
+  //    proven via gdb). Completion is polled off-thread; frames just drop under
+  //    load instead of freezing.
+  // 2) Then CaptureScene() (inside ASceneCaptureSensor::PostPhysTick). Because
+  //    the readback was enqueued FIRST, the recorded copy rides this capture's
+  //    GPU submission -- which is what makes its readback fence actually signal
+  //    -- and captures the previous frame's pixels (they precede this tick's
+  //    render). Result: one frame of latency, never a stall.
+  if (AreClientsListening())
+  {
+    EnqueueReadback(/*bNonBlocking=*/true);
+  }
+
+  ASceneCaptureSensor::PostPhysTick(World, TickType, DeltaSeconds);
 }

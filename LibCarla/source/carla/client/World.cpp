@@ -348,6 +348,21 @@ namespace client {
     _episode.Lock()->ApplyColorTextureToObjects(objects_name, parameter, Texture);
   }
 
+  void World::SetSkyLightMap(
+      const rpc::TextureFloatColor& panorama,
+      float intensity,
+      int32_t face_size) {
+    _episode.Lock()->SetSkyLightMap(panorama, intensity, face_size);
+  }
+
+  void World::ClearSkyLightMap() {
+    _episode.Lock()->ClearSkyLightMap();
+  }
+
+  bool World::HasSkyLightMap() const {
+    return _episode.Lock()->HasSkyLightMap();
+  }
+
   std::vector<std::string> World::GetNamesOfAllObjects() const {
     return _episode.Lock()->GetNamesOfAllObjects();
   }

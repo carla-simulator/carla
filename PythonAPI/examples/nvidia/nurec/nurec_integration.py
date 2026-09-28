@@ -293,30 +293,67 @@ def dict_to_camera_spec(params: dict) -> CameraSpec:
     if resolution_h is None or resolution_w is None:
         raise ValueError("resolution_h and resolution_w are required parameters")
 
-    # Determine camera type
+    # Determine camera type. CameraSpec is a oneof over three lens models and the server
+    # accepts all three; only ftheta used to be built here, so "opencv_pinhole" -- which this
+    # docstring has always documented, and which is the only way to render a camera the scene
+    # does not calibrate (a nominal AV-7 slot, or a plain CARLA sensor) -- was rejected.
     camera_type = params.get("camera_type", "ftheta")
-    if camera_type not in ["ftheta"]:
-        raise ValueError(f"Unsupported camera_type: {camera_type}, supported types are: ftheta")
-    
+    supported = ("ftheta", "opencv_pinhole", "opencv_fisheye")
+    if camera_type not in supported:
+        raise ValueError(f"Unsupported camera_type: {camera_type}, supported types are: "
+                         f"{', '.join(supported)}")
+
     # Set defaults only if parameters are not explicitly provided
     params.setdefault("principal_point_x", resolution_w / 2.0)
     params.setdefault("principal_point_y", resolution_h / 2.0)
-    params.setdefault("reference_poly", 1)
-    params.setdefault("pixeldist_to_angle_poly", [])
-    params.setdefault("angle_to_pixeldist_poly", [])
-    params.setdefault("max_angle", np.pi)
 
-    camera_param = FthetaCameraParam(
-        principal_point_x=params["principal_point_x"],
-        principal_point_y=params["principal_point_y"],
-        reference_poly=params["reference_poly"],
-        pixeldist_to_angle_poly=params["pixeldist_to_angle_poly"],
-        angle_to_pixeldist_poly=params["angle_to_pixeldist_poly"],
-        max_angle=params["max_angle"],
-    )
+    if camera_type == "ftheta":
+        params.setdefault("reference_poly", 1)
+        params.setdefault("pixeldist_to_angle_poly", [])
+        params.setdefault("angle_to_pixeldist_poly", [])
+        params.setdefault("max_angle", np.pi)
+        spec_kwargs = dict(ftheta_param=FthetaCameraParam(
+            principal_point_x=params["principal_point_x"],
+            principal_point_y=params["principal_point_y"],
+            reference_poly=params["reference_poly"],
+            pixeldist_to_angle_poly=params["pixeldist_to_angle_poly"],
+            angle_to_pixeldist_poly=params["angle_to_pixeldist_poly"],
+            max_angle=params["max_angle"],
+        ))
+    else:
+        # A projective lens needs a focal length; derive it from `fov` when only that is given,
+        # which is what a CARLA sensor knows about itself.
+        if "focal_length_x" not in params:
+            if "fov" not in params:
+                raise ValueError(f"{camera_type} needs focal_length_x, or fov to derive it from")
+            params["focal_length_x"] = (resolution_w / 2.0) / np.tan(np.deg2rad(params["fov"]) / 2.0)
+        params.setdefault("focal_length_y", params["focal_length_x"])
+        # ncore's dataclasses assert a fixed shape on every distortion vector, so an
+        # undistorted lens is a vector of zeros, not an empty list: the server raises
+        # `assert self.<name>_coeffs.shape == (n,)` otherwise.  Pad to the length it wants.
+        def coeffs(name: str, n: int) -> list:
+            given = list(params.get(name) or [])
+            if len(given) > n:
+                raise ValueError(f"{camera_type}: at most {n} {name}, got {len(given)}")
+            return given + [0.0] * (n - len(given))
+
+        common = dict(principal_point_x=params["principal_point_x"],
+                      principal_point_y=params["principal_point_y"],
+                      focal_length_x=params["focal_length_x"],
+                      focal_length_y=params["focal_length_y"],
+                      radial_coeffs=coeffs("radial_coeffs", 6))
+        if camera_type == "opencv_pinhole":
+            spec_kwargs = dict(opencv_pinhole_param=OpenCVPinholeCameraParam(
+                **common,
+                tangential_coeffs=coeffs("tangential_coeffs", 2),
+                thin_prism_coeffs=coeffs("thin_prism_coeffs", 4),
+            ))
+        else:
+            spec_kwargs = dict(opencv_fisheye_param=OpenCVFisheyeCameraParam(
+                **common, max_angle=params.get("max_angle", np.pi)))
 
     return CameraSpec(
-        ftheta_param=camera_param,
+        **spec_kwargs,
         logical_id=params["logical_id"],
         trajectory_idx=params.get("trajectory_idx", 0),
         resolution_h=resolution_h,

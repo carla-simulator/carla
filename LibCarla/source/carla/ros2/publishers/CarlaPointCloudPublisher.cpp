@@ -104,10 +104,9 @@ bool CarlaPointCloudPublisher::WritePointCloud(
   message->fields = BuildPointFields(GetFieldDescriptors(), GetFieldDescriptorCount());
   message->point_step = static_cast<std::uint32_t>(point_size);
   message->row_step = static_cast<std::uint32_t>(width * point_size);
-  // is_dense=false matches the upstream convention: lidar / radar scans contain
-  // invalid points (no return / max-range hits) and subscribers must not
-  // assume tightly packed valid data.
-  message->is_dense = false;
+  // CARLA's point-cloud sensors emit one point per actual return and never
+  // NaN/Inf placeholders, so every published cloud is dense.
+  message->is_dense = true;
   message->data = std::move(data);
 
   return true;

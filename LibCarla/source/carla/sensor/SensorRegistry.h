@@ -20,6 +20,7 @@
 #include "carla/sensor/s11n/GnssSerializer.h"
 #include "carla/sensor/s11n/ImageSerializer.h"
 #include "carla/sensor/s11n/NormalsImageSerializer.h"
+#include "carla/sensor/s11n/DistanceImageSerializer.h"
 #include "carla/sensor/s11n/OpticalFlowImageSerializer.h"
 #include "carla/sensor/s11n/IMUSerializer.h"
 #include "carla/sensor/s11n/LidarSerializer.h"
@@ -47,6 +48,8 @@ class ARayCastSemanticLidar;
 class ARayCastLidar;
 class ASceneCaptureCamera;
 class ASceneCaptureCamera_RayTracedLens;
+class ASceneCaptureCamera_RayTracedLensDistance;
+class ASceneCaptureCamera_RayTracedLensInstance;
 class ASemanticSegmentationCamera;
 class AInstanceSegmentationCamera;
 class ARssSensor;
@@ -102,7 +105,13 @@ namespace sensor {
     std::pair<AV2XSensor *, s11n::CAMDataSerializer>,
     std::pair<ACustomV2XSensor *, s11n::CustomV2XDataSerializer>,
     std::pair<AVehicleStatusSensor *, s11n::VehicleStatusSerializer>, // Autoware
-    std::pair<AAutowareGnssSensor *, s11n::GnssSerializer> // Autoware
+    std::pair<AAutowareGnssSensor *, s11n::GnssSerializer>, // Autoware
+    // Appended at the end on purpose: the position in this list IS the wire type id,
+    // so inserting anywhere else would renumber every sensor after it.
+    std::pair<ASceneCaptureCamera_RayTracedLensDistance *, s11n::DistanceImageSerializer>,
+    // Tag AOV: the byte layout is the one sensor.camera.instance_segmentation already
+    // uses (R = label, G/B = 16-bit actor id), so it ships as a plain image.
+    std::pair<ASceneCaptureCamera_RayTracedLensInstance *, s11n::ImageSerializer>
   >;
 
 } // namespace sensor
@@ -128,6 +137,8 @@ namespace sensor {
 #include "Carla/Sensor/RssSensor.h"
 #include "Carla/Sensor/SceneCaptureCamera.h"
 #include "Carla/Sensor/SceneCaptureCamera_RayTracedLens.h"
+#include "Carla/Sensor/SceneCaptureCamera_RayTracedLensDistance.h"
+#include "Carla/Sensor/SceneCaptureCamera_RayTracedLensInstance.h"
 #include "Carla/Sensor/SemanticSegmentationCamera.h"
 #include "Carla/Sensor/InstanceSegmentationCamera.h"
 #include "Carla/Sensor/WorldObserver.h"

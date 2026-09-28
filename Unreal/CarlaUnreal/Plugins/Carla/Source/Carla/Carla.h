@@ -42,6 +42,7 @@ class FCarlaModule : public IModuleInterface
 {
 	void AddShaderSearchPaths();
     void MountExternalPackageRoots();
+    void MountEditorContentPacks();
 	void RegisterSettings();
 	void UnregisterSettings();
 	bool HandleSettingsSaved();

@@ -28,6 +28,7 @@ namespace element {
   class RoadInfoSpeed;
   class RoadInfoCrosswalk;
   class RoadInfoSignal;
+  class RoadInfoStencil;
 
   class RoadInfoVisitor {
   public:
@@ -58,6 +59,7 @@ namespace element {
     virtual void Visit(RoadInfoSpeed &) {}
     virtual void Visit(RoadInfoCrosswalk &) {}
     virtual void Visit(RoadInfoSignal &) {}
+    virtual void Visit(RoadInfoStencil &) {}
   };
 
 } // namespace element

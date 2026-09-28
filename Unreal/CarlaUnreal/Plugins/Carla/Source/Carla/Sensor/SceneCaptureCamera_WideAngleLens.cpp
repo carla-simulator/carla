@@ -53,5 +53,5 @@ void ASceneCaptureCamera_WideAngleLens::PostPhysTick(UWorld* World, ELevelTick T
   // client is subscribed.
   if (!AreClientsListening())
     return;
-  FPixelReader::SendPixelsInRenderThread<ASceneCaptureCamera_WideAngleLens, FColor>(*this);
+  CaptureAndSendToClient(*this);
 }

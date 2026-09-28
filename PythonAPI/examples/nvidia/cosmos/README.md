@@ -272,7 +272,7 @@ and the full workflow demos; details and runtimes in
 | `demos/single_view_live.py` | TM-driven hero, single 720p camera, capture → submit (`--backend`, `--control`) → download → viewer |
 | `demos/single_view_replay.py` | deterministic clip from a recorder log, then `batch.yaml` prompts × seeds as `batch` jobs |
 | `demos/av7_world_scenario.py` | NVIDIA 7-camera rig, ClipGT scene export, Transfer 2.5 AV (`hdmap_bbox` rendered server-side); `--also-cosmos3` adds a Cosmos 3 `wsm` job |
-| `demos/viewer.py` | input \| control \| result side by side, per camera, scrubbing; `--clip` alone shows the local GT preview instead of a result |
+| `demos/viewer.py` | input \| control \| result side by side, per camera, scrubbing; `--export FILE` writes the same layout to mp4 with no display (`--export-layout grid\|single\|both`, `--export-fps`, `--export-overlay`), `v` does it from the window; `--clip` alone shows the local GT preview instead of a result |
 
 ### Results are stored
 
@@ -282,6 +282,7 @@ Every wait path — `job.download()`, the `api_*` demos, `carla-cosmos submit --
 ```
 <results root>/index.json                       every job this machine knows about
 <results root>/<clip_id>/<job_id>/*.mp4         videos + control_<hint>.mp4 + grid.mp4
+<results root>/<clip_id>/<job_id>/viewer_grid.mp4 | viewer_single.mp4   the viewer, as a video
 <results root>/<clip_id>/<job_id>/manifest.json the server's listing, verbatim
 <results root>/<clip_id>/<job_id>/job.json      request as submitted, timings, sizes + sha256, expiry
 ```
@@ -291,6 +292,13 @@ Downloads are verified against the server's listing and idempotent.
 `carla-cosmos jobs` says which results are on this machine and where, and warns
 before the server garbage-collects the ones that are not (server default
 `COSMOS_JOB_TTL_HOURS=168`).  `carla-cosmos submit --wait --no-download` opts out.
+
+Every stored job also gets **`viewer_<layout>.mp4`**: the side-by-side viewer
+below rendered to a file (recorded in `job.json` with `"kind": "viewer"`), so a
+result is watchable without opening anything.  It goes through the viewer's own
+compositor — same tiles, labels and fitting — and needs no display, so it also
+works under `systemd-run` or over ssh.  `--no-viewer-video` /
+`viewer_video=False` / `COSMOS_VIEWER_VIDEO=0` opts out.
 
 ## Server
 

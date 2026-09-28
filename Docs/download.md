@@ -10,7 +10,7 @@ This is an automated build with the latest changes pushed to our `ue5-dev`
 branch. It contains the very latest fixes and features that will be part of the
 next release, but also some experimental changes. Use at your own risk!
 
-- [CARLA Nightly Build (Linux)](https://s3.us-east-005.backblazeb2.com/carla-releases/Linux/Dev/CARLA_UE5_Latest.tar.gz)
+- [CARLA Nightly Build (Linux)](https://downloads.carlasim.com/Linux/Dev/CARLA_UE5_Latest.tar.gz)
 
 <p><a id="last-run-link" href='https://github.com/carla-simulator/carla/actions'>Last successful build</a>: <span id="last-run-time" class="loading">Loading...</span></p>
 

@@ -913,6 +913,14 @@ bool ASceneCaptureSensor::ApplyPostProcessVolumeToSensor(APostProcessVolume *Ori
 void ASceneCaptureSensor::EnqueueRenderSceneImmediate()
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(ASceneCaptureSensor::EnqueueRenderSceneImmediate);
+  // Show-only mode: refresh the actor list (only rescans when the world's
+  // actor count changed) and push it into the capture component so actors
+  // spawned since the last capture are included.
+  if (ShowOnlyFilter.IsEnabled())
+  {
+    ShowOnlyFilter.Refresh(GetWorld(), &GetEpisode());
+    ShowOnlyFilter.ApplyTo(*CaptureComponent2D);
+  }
   // Creates an snapshot of the scene, requieres bCaptureEveryFrame = false.
 #ifdef CARLA_HAS_GBUFFER_API
   CaptureSceneExtended();
@@ -1108,6 +1116,14 @@ void ASceneCaptureSensor::EndPlay(const EEndPlayReason::Type EndPlayReason)
   if (CaptureRenderTarget)
   {
     CaptureRenderTarget->ReleaseResource();
+  }
+  // Free the persistent view state (Lumen scene, TSR history...) now instead
+  // of at the next garbage collection; see USceneCaptureComponent2D_CARLA.
+  if (CaptureComponent2D)
+  {
+    FlushRenderingCommands();
+    CaptureComponent2D->Deactivate();
+    CaptureComponent2D->ReleaseViewStates();
   }
   // Drop the sensor's strong ref. Any in-flight AsyncTask still holds a copy
   // of the shared_ptr, so the pool dies with the last consuming task.

@@ -29,7 +29,7 @@ import yaml
 import carla
 
 from . import coords
-from .contracts import AV_CAMERAS, CameraManifest, RigManifest, canonical_camera_name
+from .contracts import AV_CAMERAS, CameraManifest, FThetaModel, RigManifest, canonical_camera_name
 
 log = logging.getLogger(__name__)
 
@@ -59,6 +59,12 @@ class Camera:
     width: int = 1280
     height: int = 720
     lens: str = "pinhole"
+    ftheta: FThetaModel | None = None
+    """Measured lens, when this camera stands for a real one (see :class:`FThetaModel`).
+
+    ``hfov`` stays the pinhole FOV CARLA's own sensors are spawned with; ``ftheta`` is what
+    the exported calibration describes.  They differ only when the clip's RGB comes from
+    somewhere other than a CARLA pinhole camera."""
 
     @property
     def canonical(self) -> str:
@@ -85,7 +91,7 @@ class MountedCamera:
         a = self.attach
         return CameraManifest(
             name=self.camera.name, hfov=self.camera.hfov, width=self.camera.width,
-            height=self.camera.height, lens=self.camera.lens,
+            height=self.camera.height, lens=self.camera.lens, ftheta=self.camera.ftheta,
             t_flu=list(self.t_flu), rpy_flu=list(self.rpy_flu),
             attach_ue={"x": a.location.x, "y": a.location.y, "z": a.location.z,
                        "pitch": a.rotation.pitch, "yaw": a.rotation.yaw, "roll": a.rotation.roll},
@@ -133,7 +139,8 @@ class Rig:
         """Load a rig from YAML (see ``client/rigs/*.yaml``)."""
         data = yaml.safe_load(Path(path).read_text())
         cams = [Camera(name=c["name"], hfov=float(c["hfov"]), t=tuple(c["t"]), rpy=tuple(c.get("rpy", (0, 0, 0))),
-                       width=int(c.get("width", 1280)), height=int(c.get("height", 720)), lens=c.get("lens", "pinhole"))
+                       width=int(c.get("width", 1280)), height=int(c.get("height", 720)), lens=c.get("lens", "pinhole"),
+                       ftheta=FThetaModel(**c["ftheta"]) if c.get("ftheta") else None)
                 for c in data["cameras"]]
         return cls(name=data["name"], cameras=cams, mount=data.get("mount", "roofline"),
                    margin=float(data.get("margin", 0.05)))
@@ -182,6 +189,7 @@ def _camera_dict(c: Camera) -> dict:
     d = asdict(c)
     d["t"] = [float(v) for v in c.t]
     d["rpy"] = [float(v) for v in c.rpy]
+    d["ftheta"] = c.ftheta.model_dump() if c.ftheta is not None else None
     return d
 
 

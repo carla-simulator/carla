@@ -33,4 +33,42 @@ namespace RTLensEngineAdapter
   // settings, not a per-tick push -- the renderer only invalidates
   // path-tracer accumulation when a value actually changes.
   void ApplyLensModel(FPostProcessSettings &PostProcessSettings, const FLensModelDescriptor &Descriptor);
+
+  // Ray tracing material pipeline completeness.
+  //
+  // Every path-traced capture binds one ray tracing pipeline state (RTPSO)
+  // holding the closest-hit shader of every loaded ray tracing material. When
+  // that set changes -- a vehicle or walker blueprint whose materials the
+  // scene has not rendered before finishes compiling its shaders -- the
+  // renderer needs a new RTPSO. With the engine default
+  // r.RayTracing.NonBlockingPipelineCreation=1 that RTPSO compiles in the
+  // background and, until it is ready, the frame renders with the previous
+  // pipeline: every mesh segment whose material is not in it is bound to
+  // PathTracingDefaultOpaqueCHS instead (Renderer/Private/RayTracing/
+  // RayTracingMaterialHitShaders.cpp, CreateMaterialRayTracingMaterialPipeline
+  // and SetupMaterialRayTracingHitGroupBindings; the shader is
+  // Shaders/Private/PathTracing/PathTracingDefaultHitShader.usf). That shader
+  // shades opaque black and never calls SetCarlaTag, so the new actor is black
+  // in rt_lens and tagged 0 in rt_lens_instance -- absent from both -- for as
+  // long as the compile takes (measured: 5-6 ticks after the material shaders
+  // land, with the actor's already-known materials, e.g. glass or tyres,
+  // showing normally in between). The distance AOV still sees it, because the
+  // fallback shader does report its hit distance.
+  //
+  // A synchronous-mode frame has to be the complete render of its tick, so the
+  // sensor asks the renderer to wait for the pipeline instead (the engine's
+  // documented meaning of r.RayTracing.NonBlockingPipelineCreation=0:
+  // "rendering will always use correct requested material"; offline renders
+  // get the same treatment through FSceneView::bIsOfflineRender). The wait is
+  // one deferred RHI dispatch per NEW material set -- measured 90-200 ms once,
+  // then never again for those materials -- and zero on every other frame. In
+  // asynchronous mode the game thread must never stall behind a sensor, so the
+  // previous value is restored and the engine's fallback is accepted.
+  //
+  // The cvar is ECVF_RenderThreadSafe: FConsoleVariableRef::Set copies the new
+  // value to the render thread through a render command, so a value written
+  // before CaptureScene() is what that capture's render sees. A value forced
+  // from the console (-ExecCmds / console_command, SetByConsole) outranks
+  // SetByCode and is left alone, with one warning.
+  void SetBlockingRayTracingPipelineCreation(bool bBlocking);
 }

@@ -199,7 +199,9 @@ namespace ImageUtil
   // This variant converts the raw pixel data to an FLinearColor array before invoking Callback.
   bool ReadImageDataAsyncFLinearColor(
     UTextureRenderTarget2D& RenderTarget,               // Render target to read from.
-    ReadImageDataAsyncCallbackFLinearColor&& Callback   // Callback to invoke when the image is available.
+    ReadImageDataAsyncCallbackFLinearColor&& Callback,  // Callback to invoke when the image is available.
+    bool bNonBlocking = false,                          // true = render thread never waits on GPU (see ImageUtil.cpp).
+    FRHIGPUReadbackPoolPtr Pool = nullptr               // recycling readback pool; avoids a per-frame staging-buffer alloc.
   );
 
 

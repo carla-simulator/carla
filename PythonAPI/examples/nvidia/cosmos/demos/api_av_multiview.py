@@ -41,6 +41,8 @@ def main() -> int:
     ap.add_argument("--weight", type=float, default=None)
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--results", default=None, help="results root (default $COSMOS_RESULTS or ./cosmos-results)")
+    ap.add_argument("--no-viewer-video", action="store_true",
+                    help="do not render the result's side-by-side viewer to viewer_<layout>.mp4")
     ap.add_argument("--endpoint", default=None)
     ap.add_argument("--token", default=None)
     ap.add_argument("--no-view", action="store_true", help="do not open demos/viewer.py on the result")
@@ -63,7 +65,8 @@ def main() -> int:
     try:
         job = cosmos.submit_clip(clip, BACKEND, args.prompt, {"hdmap_bbox": control}, views=views, seed=args.seed)
         log.info("job %s queued (position %s)", job.id, job.info.queue_position)
-        stored = wait_and_store(job, args.results, log)
+        stored = wait_and_store(job, args.results, log, clip=clip,
+                                viewer_video=False if args.no_viewer_video else None)
     except JobFailed as exc:
         log.error("the job did not finish: %s", exc)
         return 2

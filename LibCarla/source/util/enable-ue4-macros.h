@@ -16,6 +16,7 @@
 // asio Win32 code parsed after this bracket still needs them.
 #if defined(_WIN32)
 #  pragma pop_macro("TEXT")
+#  include <util/windows-macros-undef.h> // Interlocked* etc., from winnt-macros.txt
 #  undef CaptureStackBackTrace
 #  undef CopyFile
 #  undef CreateDesktop

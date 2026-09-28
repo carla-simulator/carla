@@ -92,6 +92,10 @@ using namespace std::chrono_literals;
             // OnEpisodeStarted() used to do this but is no longer called on
             // episode change (see OnEpisodeChanged below).
             self->_walker_navigation.reset();
+            // Same ordering rule for the map cache: load_world returns as
+            // soon as the new episode id is published below, and the first
+            // world.get_map() must already see the cache as stale.
+            self->_should_update_map = true;
           }
 
           do {

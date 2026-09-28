@@ -20,8 +20,8 @@
 # DDS topology (validated 2026-08 on Town10, full classical stack):
 #   - The SIMULATOR runs Fast DDS (-rmw=fastdds) with a generated profile that
 #     whitelists ONLY the docker bridge IP (useBuiltinTransports=false).
-#     Do NOT use -rmw=cyclonedds on the simulator for now: our CycloneDDS
-#     receive path has a known fragmented-receive bug (being fixed separately).
+#     -rmw=cyclonedds is also validated (fragmented-receive fix b9c33737a);
+#     fastdds remains the default for its longer validation history.
 #   - The AUTOWARE side runs CycloneDDS pinned to the docker bridge interface
 #     via a generated cyclonedds.xml (MaxAutoParticipantIndex=300, 65500B max
 #     message size, 10-64MB socket buffers -- the official docker image's own
@@ -78,19 +78,21 @@ export PATH
 # ---------------------------------------------------------------- defaults --
 MODE=""
 TOWN="Town10HD_Opt"
-RMW="fastdds"                 # SIMULATOR-side RMW. cyclonedds has a known
-                              # fragmented-receive bug on the sim side -- keep fastdds.
+RMW="fastdds"                 # SIMULATOR-side RMW: fastdds (default) or cyclonedds, both validated.
 STACK="auto"                  # auto|source|docker : how to run Autoware (classical)
 MAP_PATH=""
+SERVER_ARGS=""                # extra simulator flags, appended last (see --server-args)
 CARLA_ROOT_ARG="${CARLA_ROOT:-}"
 AUTOWARE_WS="${AUTOWARE_WS:-$HOME/autoware}"
 DOMAIN_ID=42
 DRY_RUN=false
 WITH_DISPLAY=false
 WITH_RVIZ=false
+RVIZ_IMAGE_TOPIC=""            # image panel topic for the generated rviz config (default per mode)
 NO_AUTO=false
 NO_GATES=false
 NO_RECOVER=false
+NO_WHEEL_CHECK=false   # skip the installed-vs-this-tree carla wheel provenance check
 GOAL=""
 SPAWN_INDEX=""                # autoware_demo.py --spawn_index passthrough (e2e default: 52)
 LOG_DIR="$SCRIPT_DIR/logs"
@@ -119,9 +121,9 @@ Usage: $(basename "$0") --mode classical|e2e [options]
                          Must not collide with an existing container; this script
                          never touches containers it did not create.
   --rmw NAME             SIMULATOR RMW: fastdds|cyclonedds|zenoh (default: fastdds).
-                         cyclonedds is NOT recommended on the sim side for now
-                         (known fragmented-receive bug). The Autoware side always
-                         runs cyclonedds (zenoh: zenoh) with a generated config.
+                         fastdds and cyclonedds are both validated on the sim
+                         side; the Autoware side always runs cyclonedds
+                         (zenoh: zenoh) with a generated config.
   --map-path DIR         dir containing pointcloud_map.pcd, lanelet2_map.osm,
                          map_projector_info.yaml
                          (default: ../map_tools/maps/<town-without-_Opt>)
@@ -154,10 +156,26 @@ Usage: $(basename "$0") --mode classical|e2e [options]
                          localization check + distortion-corrector health). The
                          gates exist because engaging on a diverged pose drives
                          the car into things -- only skip them knowingly.
+  --no-wheel-check       skip the carla module provenance check (installed
+                         .so vs any of this tree's built wheels) -- use
+                         only when you knowingly run a wheel from elsewhere
+  --rviz-image-topic T   image topic for RViz's image panel (default: classical
+                         /sensing/camera/front/image from autoware_demo.py's front
+                         camera, e2e /sensing/camera/CAM_FRONT/image_raw/image)
   --with-rviz            also start RViz (docker stack: separate container with
                          DISPLAY passthrough; source stack: local rviz2)
   --log-dir DIR          per-process logs + pidfile (default: <this dir>/logs)
   --with-display         do NOT pass -RenderOffScreen to the CARLA server
+  --server-args "FLAGS"  extra flags appended verbatim to the simulator's own
+                         command line, after every flag this script sets
+                         itself -- including the default -nosound (headless
+                         -game has no need for audio). Pass "-enablesound"
+                         here to restore it: Unreal's own flag for canceling
+                         a -nosound also present, regardless of order. E.g.
+                         "-log -carla-streaming-port=2001". Whitespace-split
+                         with shell-style quoting (quote a value to keep a
+                         space in it); never evaluated -- \$, ;, \` etc.
+                         reach the simulator's argv literally.
   --dry-run              print every command that would run; execute nothing;
                          preflight failures downgrade to warnings
   -h | --help            this text
@@ -186,9 +204,12 @@ while [[ $# -gt 0 ]]; do
         --no-auto)      NO_AUTO=true; shift ;;
         --no-gates)     NO_GATES=true; shift ;;
         --no-recover)   NO_RECOVER=true; shift ;;
+        --no-wheel-check) NO_WHEEL_CHECK=true; shift ;;
         --with-rviz)    WITH_RVIZ=true; shift ;;
+        --rviz-image-topic) RVIZ_IMAGE_TOPIC="$2"; shift 2 ;;
         --log-dir)      LOG_DIR="$2"; shift 2 ;;
         --with-display) WITH_DISPLAY=true; shift ;;
+        --server-args)  SERVER_ARGS="$2"; shift 2 ;;
         --dry-run)      DRY_RUN=true; shift ;;
         -h|--help)      usage; exit 0 ;;
         *) echo "ERROR: unknown option: $1" >&2; usage >&2; exit 2 ;;
@@ -606,7 +627,7 @@ $DRY_RUN && log "DRY RUN -- nothing will be executed; preflight failures become 
 
 # Simulator RMW sanity
 if [[ "$RMW" == "cyclonedds" ]]; then
-    warn "-rmw=cyclonedds on the SIMULATOR has a known fragmented-receive bug (large messages, e.g. pointclouds, can be dropped). Use the default fastdds until it is fixed."
+    log "simulator RMW: cyclonedds (validated; fastdds is the default only by history)"
 fi
 
 # Resolve --stack auto (classical only; e2e always needs the source ws for VAD)
@@ -754,6 +775,73 @@ if [[ -z "$CARLA_PY" ]]; then
     CARLA_PY="python3"   # dry-run placeholder
 fi
 
+# Wheel provenance: 'import carla' above only proves *some* wheel is
+# installed, not that it is THIS tree's build. A wheel from another
+# worktree imported fine and then aborted load_town with
+# std::bad_array_new_length after a 15-minute setup (client/server RPC
+# layout mismatch) -- and the version string can't tell them apart, both
+# report 0.10.0. Compare the installed extension's sha256 against every
+# wheel this tree has built (any preset, any match -- the question is
+# "did this come from a build of this tree", not "the newest one").
+# Read wheel entries via $CARLA_PY's own zipfile module, not `unzip`: a
+# lookup miss (e.g. a differing Python ABI tag) is then just a skipped
+# candidate under Python's own try/except, never a set -e/pipefail exit
+# that this script would never see.
+if $NO_WHEEL_CHECK; then
+    log "carla module provenance check skipped (--no-wheel-check)"
+else
+    mapfile -t WHEEL_HITS < <(find "$REPO_ROOT/Build" -maxdepth 4 \
+        -path '*/PythonAPI/dist/carla-*.whl' -printf '%T@ %p\n' 2>/dev/null \
+        | sort -rn)
+    WHEELS=()
+    for hit in "${WHEEL_HITS[@]}"; do
+        WHEELS+=("${hit#* }")
+    done
+    INSTALLED_SO="$("$CARLA_PY" -c 'import carla; print(carla.__file__)' 2>/dev/null || true)"
+    if [[ ${#WHEELS[@]} -eq 0 || "$INSTALLED_SO" != *.so ]]; then
+        warn "carla module provenance NOT verified (no built wheel under $REPO_ROOT/Build/*/PythonAPI/dist, or module is not a single .so) -- if this module was NOT built from this tree, load_town can abort ~15 minutes into the run with std::bad_array_new_length. Build one here: cmake --build Build/<preset> --target carla-python-api (or pass --no-wheel-check to silence this warning)"
+    else
+        # Two lines out: installed sha256 (empty if unreadable), then the
+        # first wheel whose same-named entry hashes the same (empty if
+        # none do). A missing zip entry is caught per-wheel and skipped,
+        # not raised -- see the comment above.
+        PROV_OUT="$("$CARLA_PY" -c '
+import sys, hashlib, zipfile
+installed_so = sys.argv[1]
+wheels = sys.argv[2:]
+try:
+    with open(installed_so, "rb") as f:
+        installed_hash = hashlib.sha256(f.read()).hexdigest()
+except OSError:
+    print("")
+    print("")
+    sys.exit(0)
+name = installed_so.rsplit("/", 1)[-1]
+matched = ""
+for wheel in wheels:
+    try:
+        with zipfile.ZipFile(wheel) as zf:
+            entry = zf.read(name)
+    except Exception:
+        continue
+    if hashlib.sha256(entry).hexdigest() == installed_hash:
+        matched = wheel
+        break
+print(installed_hash)
+print(matched)
+' "$INSTALLED_SO" "${WHEELS[@]}" 2>/dev/null || true)"
+        INSTALLED_SHA="$(sed -n '1p' <<<"$PROV_OUT")"
+        MATCHED_WHEEL="$(sed -n '2p' <<<"$PROV_OUT")"
+        if [[ -z "$INSTALLED_SHA" ]]; then
+            warn "carla module provenance not checked (could not hash $INSTALLED_SO)"
+        elif [[ -z "$MATCHED_WHEEL" ]]; then
+            preflight_fail "installed carla module ($INSTALLED_SO, sha256 ${INSTALLED_SHA:0:12}...) matches none of this tree's ${#WHEELS[@]} built wheel(s) under $REPO_ROOT/Build/*/PythonAPI/dist -- a client built elsewhere can import fine and still abort load_town with std::bad_array_new_length. Reinstall from this tree: $CARLA_PY -m pip install --force-reinstall '${WHEELS[0]}' (or pass --no-wheel-check to proceed anyway)"
+        else
+            log "carla module provenance OK: matches $(basename "$MATCHED_WHEEL") (sha256 ${INSTALLED_SHA:0:12}...)"
+        fi
+    fi
+fi
+
 # e2e-only preflight: VAD model + launch glue
 E2E_GLUE="pr1685"
 if [[ "$MODE" == "e2e" ]]; then
@@ -812,8 +900,27 @@ if [[ "$RMW" == "zenoh" ]]; then
 fi
 
 # ---------------------------------------------------------- 1. CARLA server --
-SERVER_FLAGS="-ros2 -rmw=$RMW -carla-rpc-port=$RPC_PORT -ros-domain-id=$DOMAIN_ID"
+SERVER_FLAGS="-ros2 -rmw=$RMW -carla-rpc-port=$RPC_PORT -ros-domain-id=$DOMAIN_ID -nosound"
 $WITH_DISPLAY || SERVER_FLAGS+=" -RenderOffScreen"
+if [[ -n "$SERVER_ARGS" ]]; then
+    # Reject a whitespace-only value the same way an unbalanced quote is
+    # rejected below, rather than letting it through to xargs/mapfile,
+    # which would turn it into one spurious empty argv token.
+    [[ "$SERVER_ARGS" =~ [^[:space:]] ]] \
+        || die "--server-args: value is empty or whitespace-only"
+    # Tokenize --server-args with xargs: it honors shell-style quoting
+    # (so a value containing a space can be kept as one token) but, unlike
+    # eval or an unquoted expansion, never performs variable/command
+    # substitution -- a metacharacter in the input stays inert text.
+    SERVER_ARGS_LINES="$(xargs -n1 printf '%s\n' <<<"$SERVER_ARGS")" \
+        || die "--server-args: unbalanced quoting in '$SERVER_ARGS'"
+    SERVER_ARGS_ARR=()
+    mapfile -t SERVER_ARGS_ARR <<<"$SERVER_ARGS_LINES"
+    # Re-quote each token with %q: start_proc() below re-parses the whole
+    # command string through `bash -c`, so each token must round-trip
+    # through that second parse as the single literal argument it is.
+    SERVER_FLAGS+="$(printf ' %q' "${SERVER_ARGS_ARR[@]}")"
+fi
 
 if [[ "$SERVER_KIND" == "packaged" ]]; then
     start_proc carla_server "${SIM_ENV}exec '$SERVER_LAUNCHER' $SERVER_FLAGS"
@@ -890,15 +997,48 @@ CLASSICAL_SRC_CMD="${STACK_PRELUDE}exec ros2 launch autoware_launch e2e_simulato
 # in e2e mode (no perception stack) -- the panel stays black. Generate a copy
 # repointed at the raw front VAD camera. Best-effort: if the ws config or the
 # expected topic line is missing, fall back to the stock config.
+# The same applies to classical mode on CARLA: the traffic-light module is
+# switched off by the CARLA overrides, so the panel is repointed at the
+# front camera autoware_demo.py spawns for exactly this purpose
+# (/sensing/camera/front/image). Override with --rviz-image-topic.
+if [[ -z "$RVIZ_IMAGE_TOPIC" ]]; then
+    if [[ "$MODE" == "e2e" ]]; then RVIZ_IMAGE_TOPIC="/sensing/camera/CAM_FRONT/image_raw/image"
+    else RVIZ_IMAGE_TOPIC="/sensing/camera/front/image"; fi
+fi
+# make_carla_rviz <stock autoware.rviz> <output>: 0 on success, 1 if the stock
+# config lacks the expected image panel (caller falls back to the stock file).
+make_carla_rviz() {
+    local stock="$1" out="$2"
+    [[ -f "$stock" ]] || return 1
+    grep -q 'Value: /perception/traffic_light_recognition/traffic_light/debug/rois' "$stock" || return 1
+    sed -e "s|Value: /perception/traffic_light_recognition/traffic_light/debug/rois|Value: $RVIZ_IMAGE_TOPIC|" \
+        -e 's|Name: RecognitionResultOnImage|Name: FrontCamera|' \
+        "$stock" > "$out"
+    # The stock current view is a TopDownOrtho on the 'viewer' frame, which
+    # map_tf_generator pins to the point-cloud map's centroid -- it never
+    # follows the ego, so a drive leaves the screen. Start on the saved
+    # ThirdPersonFollower (base_link) instead; the top-down view stays in the
+    # Views panel. Best-effort: a config without the expected block is kept.
+    python3 - "$out" <<'PY' || true
+import sys, re
+p = sys.argv[1]; s = open(p).read()
+m = re.search(r"  Views:\n    Current:\n(?:      .*\n)+?(?=    Saved:\n)", s)
+if m:
+    cur = ("  Views:\n    Current:\n      Class: rviz_default_plugins/ThirdPersonFollower\n      Distance: 32\n"
+           "      Enable Stereo Rendering:\n        Stereo Eye Separation: 0.05999999865889549\n        Stereo Focal Distance: 1\n"
+           "        Swap Stereo Eyes: false\n        Value: false\n      Focal Point:\n        X: 0\n        Y: 0\n        Z: 0\n"
+           "      Focal Shape Fixed Size: true\n      Focal Shape Size: 0.05000000074505806\n      Invert Z Axis: false\n"
+           "      Name: Current View\n      Near Clip Distance: 0.009999999776482582\n      Pitch: 0.45\n      Target Frame: base_link\n"
+           "      Value: ThirdPersonFollower (rviz)\n      Yaw: 3.141592025756836\n")
+    open(p, "w").write(s[:m.start()] + cur + s[m.end():])
+PY
+}
 E2E_RVIZ_ARG=""
 if [[ "$MODE" == "e2e" ]] && ! $DRY_RUN; then
     STOCK_RVIZ="$(find "$AUTOWARE_WS/install" -path '*autoware_launch*' -name autoware.rviz 2>/dev/null | head -1)"
-    if [[ -n "$STOCK_RVIZ" ]] && grep -q 'Value: /perception/traffic_light_recognition/traffic_light/debug/rois' "$STOCK_RVIZ"; then
-        sed -e 's|Value: /perception/traffic_light_recognition/traffic_light/debug/rois|Value: /sensing/camera/CAM_FRONT/image_raw/image|' \
-            -e 's|Name: RecognitionResultOnImage|Name: FrontCamera|' \
-            "$STOCK_RVIZ" > "$LOG_DIR/vad_e2e.rviz"
+    if make_carla_rviz "$STOCK_RVIZ" "$LOG_DIR/vad_e2e.rviz"; then
         E2E_RVIZ_ARG=" rviz_config:='$LOG_DIR/vad_e2e.rviz'"
-        log "e2e rviz: image panel repointed to /sensing/camera/CAM_FRONT/image_raw/image ($LOG_DIR/vad_e2e.rviz)"
+        log "e2e rviz: image panel repointed to $RVIZ_IMAGE_TOPIC ($LOG_DIR/vad_e2e.rviz)"
     else
         warn "could not generate the e2e rviz config (stock autoware.rviz or its traffic-light image panel not found) -- rviz image panel will be black"
     fi
@@ -936,6 +1076,16 @@ if [[ "$MODE" == "classical" ]]; then
             if have xhost && [[ -n "${DISPLAY:-}" ]] && ! $DRY_RUN; then
                 xhost +local: >/dev/null 2>&1 || warn "xhost +local: failed -- rviz may not reach the X display"
             fi
+            # Image panel -> front camera: the stock config lives in the image,
+            # so copy it out of the stack container into the /dds mount.
+            RVIZ_DOCKER_CFG="/opt/autoware/autoware_launch/share/autoware_launch/rviz/autoware.rviz"
+            if ! $DRY_RUN && docker cp "$CONTAINER_NAME:$RVIZ_DOCKER_CFG" "$DDS_DIR/autoware_stock.rviz" 2>/dev/null \
+                    && make_carla_rviz "$DDS_DIR/autoware_stock.rviz" "$DDS_DIR/autoware_carla.rviz"; then
+                RVIZ_DOCKER_CFG="/dds/autoware_carla.rviz"
+                log "rviz: image panel repointed to $RVIZ_IMAGE_TOPIC ($DDS_DIR/autoware_carla.rviz)"
+            else
+                warn "could not generate the rviz config with the front camera panel -- using the stock autoware.rviz (image panel will be black)"
+            fi
             start_container "$CONTAINER_NAME-rviz" \
                 --network host "${GPU_ARGS[@]}" "${RVIZ_GPU_ENV[@]}" \
                 -e RMW_IMPLEMENTATION=rmw_cyclonedds_cpp \
@@ -945,7 +1095,7 @@ if [[ "$MODE" == "classical" ]]; then
                 -v /tmp/.X11-unix:/tmp/.X11-unix \
                 -v "$DDS_DIR":/dds:ro \
                 --entrypoint bash "$IMAGE" \
-                -c "$AW_SETUP_SNIPPET; exec rviz2 -d /opt/autoware/autoware_launch/share/autoware_launch/rviz/autoware.rviz"
+                -c "$AW_SETUP_SNIPPET; exec rviz2 -d $RVIZ_DOCKER_CFG"
             log "rviz container started (if the window does not appear, run: xhost +local:)"
             if ! $DRY_RUN; then
                 ( sleep 20
@@ -962,7 +1112,12 @@ if [[ "$MODE" == "classical" ]]; then
             # llvmpipe/iGPU and starves the machine (see the docker path above).
             RVIZ_ENV=""
             have nvidia-smi && RVIZ_ENV="__NV_PRIME_RENDER_OFFLOAD=1 __GLX_VENDOR_LIBRARY_NAME=nvidia "
-            start_proc rviz "${STACK_PRELUDE}RVIZ_CFG=\$(find '$AUTOWARE_WS/install' -path '*autoware_launch*' -name autoware.rviz 2>/dev/null | head -1); exec env ${RVIZ_ENV}rviz2 \${RVIZ_CFG:+-d \"\$RVIZ_CFG\"}"
+            RVIZ_CFG="$(find "$AUTOWARE_WS/install" -path '*autoware_launch*' -name autoware.rviz 2>/dev/null | head -1)"
+            if make_carla_rviz "$RVIZ_CFG" "$LOG_DIR/autoware_carla.rviz"; then
+                RVIZ_CFG="$LOG_DIR/autoware_carla.rviz"
+                log "rviz: image panel repointed to $RVIZ_IMAGE_TOPIC ($RVIZ_CFG)"
+            fi
+            start_proc rviz "${STACK_PRELUDE}exec env ${RVIZ_ENV}rviz2 ${RVIZ_CFG:+-d '$RVIZ_CFG'}"
         fi
     fi
 else

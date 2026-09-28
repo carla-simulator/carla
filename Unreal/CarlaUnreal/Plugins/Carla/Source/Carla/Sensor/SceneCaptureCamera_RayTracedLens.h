@@ -46,6 +46,13 @@ protected:
 
   void PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaSeconds) override;
 
+  /// Restores r.RayTracing.NonBlockingPipelineCreation if this sensor left it
+  /// at 0 (synchronous mode, see PostPhysTick): the override is process-wide
+  /// and would otherwise outlive the sensor, making every other ray tracing
+  /// pipeline in the process (Lumen, reflections) block on compiles. Another
+  /// live rt_lens sensor re-applies it on its next tick.
+  void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+
   /// Forces path-tracing view mode for this sensor's capture. Hooked through
   /// the same extension point ASceneCaptureSensor::BeginPlay already calls
   /// for every subclass, so no BeginPlay override is needed here.
@@ -54,7 +61,33 @@ protected:
   virtual void OnFirstClientConnected() override;
   virtual void OnLastClientDisconnected() override;
 
-private:
+  /// Runs this tick's capture and this tick's readback in the order the world's
+  /// synchronization mode requires, then returns. Every path-traced lens sensor
+  /// must go through here so colour and AOV cameras stay on the same frame.
+  ///
+  /// EnqueueReadback is invoked at most once, only when clients are listening,
+  /// with the bNonBlocking flag to hand to the ImageUtil::ReadImageData*
+  /// overload; the callee just issues its own read of GetCaptureRenderTarget().
+  ///
+  /// Synchronous mode: capture first, then a BLOCKING readback of what was just
+  /// rendered, delivered by FSensorManager's single per-tick
+  /// ImageUtil::FlushBatchedReadbacks() GPU sync -- the frame the client gets
+  /// for tick k is tick k's render and cannot be dropped.
+  /// Asynchronous mode: readback first (of the previous tick's pixels), then
+  /// capture, never waiting on the render thread -- one tick of latency and
+  /// frames may drop under load, but the server cannot stall.
+  void TickCaptureAndReadback(
+      UWorld *World,
+      ELevelTick TickType,
+      float DeltaSeconds,
+      TFunctionRef<void(bool bNonBlocking)> EnqueueReadback);
+
+  // Protected rather than private so subclasses that render the same lens into
+  // a different output (ASceneCaptureCamera_RayTracedLensDistance,
+  // ASceneCaptureCamera_RayTracedLensInstance) can reuse this class's
+  // Set()/TickCaptureAndReadback() wholesale and only adjust these knobs --
+  // PostPhysTick reasserts them every tick, so a subclass cannot override them
+  // by writing PostProcessSettings directly.
 
   /// Pins the capture's auto exposure to the daylight histogram window
   /// (EV100 10-12, same as the viewport). Without this the path-traced

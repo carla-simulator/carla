@@ -88,6 +88,15 @@ ASkyBase::ASkyBase(
 
   DirectionalLightComponentMoon = CreateDefaultSubobject<UDirectionalLightComponent>("DirectionalLightComponentMoon");
   DirectionalLightComponentMoon->SetupAttachment(RootComponent);
+  // Below the Sun's priority (1) so it never contends for forward shading.
+  // Separately: every DirectionalLightComponent defaults bAtmosphereSunLight
+  // true -- a completely different resolution SkyAtmosphere uses to pick its
+  // single "sun" reference for scattering, independent of ForwardShadingPriority
+  // above. Leaving the Moon eligible there let it win that tie against the
+  // real Sun, which reads as a broken/black sky once the sun actually rises
+  // (SkyAtmosphere doing all its math against the moon's position instead).
+  DirectionalLightComponentMoon->ForwardShadingPriority = -1;
+  DirectionalLightComponentMoon->SetAtmosphereSunLight(false);
 
   SkyLightComponent = CreateDefaultSubobject<USkyLightComponent>("SkyLightComponent");
   SkyLightComponent->SetupAttachment(RootComponent);

@@ -135,12 +135,6 @@ carla_option (
   OFF
 )
 
-carla_option (
-  ENABLE_STREETMAP
-  "Whether to download the Streetmap UE plugin."
-  ON
-)
-
 
 
 # ================================
@@ -235,10 +229,18 @@ carla_string_option (
 # fetches the SDK from NVIDIA's public repository) and injects DLSS_SDK into
 # every Unreal build, package, and launch command, so `cmake --build` works
 # from any shell without CarlaSetup.sh's exports.
+cmake_path (
+  CONVERT
+  "$ENV{DLSS_SDK}"
+  TO_CMAKE_PATH_LIST
+  CARLA_DLSS_SDK_PATH_INFERRED
+  NORMALIZE
+)
+
 carla_string_option (
   CARLA_DLSS_SDK_PATH
   "Path to a checkout of the NVIDIA DLSS SDK (github.com/NVIDIA/DLSS). \"disabled\" builds without DLSS support; empty resolves the DLSS_SDK environment variable and falls back to fetching into ~/SDKs/DLSS."
-  "$ENV{DLSS_SDK}"
+  "${CARLA_DLSS_SDK_PATH_INFERRED}"
 )
 
 # Docs for UE5 build configurations:
@@ -273,6 +275,18 @@ carla_option (
   ${CARLA_UNREAL_PACKAGE_NO_COMPRESSION_DEFAULT}
 )
 
+# Cook errors (package load errors, handled ensures) make the cook commandlet
+# exit non-zero and UAT aborts BuildCookRun with Error_UnknownCookFailure (rc 25)
+# before anything is staged. This valve forwards -IgnoreCookErrors so a package
+# is still produced from a partially broken cook. Diagnostic use only: the
+# package ships whatever the cooker managed to save, never release one built
+# with it.
+carla_option (
+  CARLA_IGNORE_COOK_ERRORS
+  "Whether to pass -IgnoreCookErrors to UAT BuildCookRun so cook errors do not abort the package target (diagnostic safety valve, never for release builds)."
+  OFF
+)
+
 set (
   CARLA_MAPS_TO_COOK
   ""
@@ -280,6 +294,15 @@ set (
   "Override the cooked map list ('+'-separated full package paths, e.g. \
 \"/Game/Carla/Maps/Town10HD_Opt+/Game/Carla/Maps/Mine_01\"). \
 Empty means use the +MapsToCook list from DefaultGame.ini (cook all maps)."
+)
+
+set (
+  CARLA_BASE_RELEASE
+  ""
+  CACHE STRING
+  "Name of the release version the package target creates with UAT's \
+-createreleaseversion (the base a content pack's DLC cook is 'based on'). \
+Empty means carla-<CARLA_VERSION>-<UE_SYSTEM_NAME>, e.g. carla-0.10.0-Linux."
 )
 
 
@@ -445,20 +468,6 @@ carla_string_option (
   CARLA_LIBOSMSCOUT_TAG
   "Target libosmscout git tag."
   ${CARLA_LIBOSMSCOUT_VERSION}
-)
-
-# ==== STREETMAP ====
-
-carla_string_option (
-  CARLA_STREETMAP_VERSION
-  "Target StreetMap version."
-  ue5-dev-carla
-)
-
-carla_string_option (
-  CARLA_STREETMAP_TAG
-  "Target StreetMap git tag."
-  ${CARLA_STREETMAP_VERSION}
 )
 
 # ==== FASTDDS ====

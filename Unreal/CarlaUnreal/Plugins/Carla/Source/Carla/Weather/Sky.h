@@ -7,6 +7,7 @@
 
 #include "Sky.generated.h"
 
+struct FWeatherParameters;
 class UPostProcessComponent;
 class UExponentialHeightFogComponent;
 class UDirectionalLightComponent;
@@ -111,6 +112,10 @@ public:
 	// AWeather::ApplyWeatherToSkyActor must go through -- don't re-implement
 	// a name-based search elsewhere, that's exactly what broke last time.
 	static FWeatherParameters* FindWeatherParameters(AActor* SkyActor);
+
+	// The rig's sky light, for AWeather::SetSkyLightMap (environment-map
+	// override); may be null on a rig that lost the component.
+	USkyLightComponent* GetSkyLightComponent() const { return SkyLightComponent; }
 
 	// Profile to load/save on PostProcessComponent, i.e. the JSON file name
 	// (without extension) under Content/Carla/Config/PostProcess/. Pick an

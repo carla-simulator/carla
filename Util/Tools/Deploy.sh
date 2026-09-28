@@ -8,7 +8,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 REPLACE_LATEST=false
 AWS_COPY="aws s3 cp"
-ENDPOINT="https://s3.us-east-005.backblazeb2.com"
+ENDPOINT="https://1b808339cbe94fecce530dfada93713b.r2.cloudflarestorage.com"
 SUMMARY_OUTPUT_PATH=
 
 # ==============================================================================
@@ -68,9 +68,9 @@ fi
 NIGHTLY_DEPLOY_NAME=$(git log --pretty=format:'%cd_%h' --date=format:'%Y%m%d' -n 1).tar.gz
 LATEST_DEPLOY_NAME="CARLA_UE5_Latest.tar.gz"
 
-# Backblaze bucket paths
+# Cloudflare R2 bucket paths
 S3_PREFIX=s3://carla-releases/Linux
-URL_PREFIX=${ENDPOINT}/carla-releases/Linux
+URL_PREFIX=https://downloads.carlasim.com/Linux
 
 NIGHTLY_DEPLOY_URI=${S3_PREFIX}/Dev/${NIGHTLY_DEPLOY_NAME}
 LATEST_DEPLOY_URI=${S3_PREFIX}/Dev/${LATEST_DEPLOY_NAME}

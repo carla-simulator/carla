@@ -6,6 +6,7 @@
 
 #include "Carla/Actor/Factory/VehicleActorFactory.h"
 #include "Carla/Actor/ActorBlueprintFunctionLibrary.h"
+#include "Carla/ContentPacks/ContentPackManager.h"
 #include "Carla/Actor/ActorDefinition.h"
 #include "Carla/Game/CarlaEpisode.h"
 
@@ -14,14 +15,32 @@
 #include "JsonUtilities.h"
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"
+#include "Components/StaticMeshComponent.h"
+#include "Materials/MaterialInstanceDynamic.h"
 #include <util/ue-header-guard-end.h>
 
 TArray<FActorDefinition> AVehicleActorFactory::GetDefinitions()
 {
+  // Rebuilt from scratch every episode, otherwise entries accumulate.
+  Definitions.Reset();
+  VehiclesParams.Reset();
+  MineVehiclesParams.Reset();
   LoadVehicleParametersArrayFromFile("VehicleParameters.json", VehiclesParams);
   FString UniqueVehicleParameters = GetWorld()->GetMapName().Mid(GetWorld()->StreamingLevelsPrefix.Len()) + "/Vehicles.json";
   LoadVehicleParametersArrayFromFile(UniqueVehicleParameters, MineVehiclesParams);
   VehiclesParams.Append(MineVehiclesParams);
+  // Content packs: <Pack>/Content/Config/{VehicleParameters,Vehicles,<Map>/Vehicles}.json,
+  // later packs override earlier entries with the same make.model.
+  for (const FString &CatalogName : {FString("VehicleParameters.json"), FString("Vehicles.json"), UniqueVehicleParameters})
+  {
+    for (const FString &PackFile : UCarlaContentPackManager::FindPackCatalogFiles(CatalogName))
+    {
+      TArray<FVehicleParameters> PackVehiclesParams;
+      LoadVehicleParametersArrayFromFile(PackFile, PackVehiclesParams);
+      UCarlaContentPackManager::MergeCatalog(VehiclesParams, PackVehiclesParams,
+          [](const FVehicleParameters &V) { return V.Make + TEXT(".") + V.Model; });
+    }
+  }
   UActorBlueprintFunctionLibrary::MakeVehicleDefinitions(VehiclesParams, Definitions);
   return Definitions;
 }
@@ -48,11 +67,45 @@ FActorSpawnResult AVehicleActorFactory::SpawnActor(
   }
 
   if( PostProcessVehicle(SpawnedActor, ActorDescription) ){
+    // Modular vehicles keep painted panels on static-mesh components. The
+    // legacy Blueprint paint path only visits the main skeletal mesh.
+    if (SpawnedActor->ActorHasTag(TEXT("Carla.StaticBodyworkPaint")) &&
+        ActorDescription.Variations.Contains(TEXT("color")))
+    {
+      const FLinearColor Color(UActorBlueprintFunctionLibrary::RetrieveActorAttributeToColor(
+          TEXT("color"), ActorDescription.Variations, FColor::White));
+      TArray<UStaticMeshComponent*> Panels;
+      SpawnedActor->GetComponents(Panels);
+      for (UStaticMeshComponent* Panel : Panels)
+      {
+        const TArray<FName> Slots = Panel->GetMaterialSlotNames();
+        for (int32 Index = 0; Index < Slots.Num(); ++Index)
+        {
+          if (Slots[Index] == TEXT("Bodywork_Mat"))
+          {
+            if (UMaterialInstanceDynamic* Paint = Panel->CreateDynamicMaterialInstance(Index))
+            {
+              Paint->SetVectorParameterValue(TEXT("Base Color"), Color);
+            }
+          }
+        }
+      }
+    }
     SpawnResult.Status = EActorSpawnResultStatus::Success;
     return SpawnResult;
   }
   SpawnResult.Status = EActorSpawnResultStatus::UnknownError;
   return SpawnResult;
+}
+
+void AVehicleActorFactory::ReleaseContentPack(const FString &MountPoint)
+{
+  Definitions.RemoveAll([&](const FActorDefinition &D) { return DefinitionReferencesPath(D, MountPoint); });
+  auto UnderPack = [&](const FVehicleParameters &V) {
+    return V.Class.ToSoftObjectPath().ToString().StartsWith(MountPoint);
+  };
+  VehiclesParams.RemoveAll(UnderPack);
+  MineVehiclesParams.RemoveAll(UnderPack);
 }
 
 TSharedPtr<FJsonObject> AVehicleActorFactory::FVehicleParametersToJsonObject(const FVehicleParameters& VehicleParams)
@@ -225,7 +278,11 @@ bool AVehicleActorFactory::JsonToFVehicleParametersArray(const FString& JsonStri
 void AVehicleActorFactory::LoadVehicleParametersArrayFromFile(const FString& FileName, TArray<FVehicleParameters>& OutVehicleParamsArray)
 {
   FString JsonString;
-  FString FilePath = FPaths::ProjectContentDir() + TEXT("Carla/Config/") + FileName;
+  // A relative name is resolved against the project catalog dir; an absolute
+  // path (content pack catalogs) is used as is.
+  FString FilePath = FPaths::IsRelative(FileName)
+      ? FPaths::ProjectContentDir() + TEXT("Carla/Config/") + FileName
+      : FileName;
   FString JsonContent;
 
   // Load the JSON file content into an FString

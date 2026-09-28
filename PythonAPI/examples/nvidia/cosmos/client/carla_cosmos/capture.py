@@ -257,10 +257,14 @@ class Capture:
             # the actor pose, and measuring across a tick is what keeps the rig origin on the rear
             # axle instead of 0.27 m behind it at 8 m/s.  See rig.measure_rear_axle.
             axle = measure_rear_axle(self.ego, self.world, self.ticks.tick)
+            # A tick source that places the ego itself has to place it by the same rear-axle
+            # point the rig is mounted against, or the trajectory it replays and the poses the
+            # scene exports are two different curves.
+            set_axle = getattr(self.ticks, "set_axle", None)
+            if set_axle is not None:
+                set_axle(axle)
             mounted = self.rig.mount_on(self.ego, axle)
-            exporter = scene.SceneExporter(self.world, clip_id, self.ego, axle,
-                                           cameras=[m.manifest() for m in mounted],
-                                           visibility=self.visibility)
+            exporter = self._exporter(clip_id, axle, mounted)
             streams = [self._open_streams(m, clip_dir, tmp_dir) for m in mounted]
             # Second settle tick: flush sensor spawns.
             settle_fid = self.ticks.tick()
@@ -273,7 +277,13 @@ class Capture:
                 self._drain_stale(streams, self.ticks.tick())
             log.info("capturing %d frames at %d fps (%d cameras, aovs=%s) after %d warm-up tick(s)",
                      self.frames, self.fps, len(streams), ",".join(self.aovs), self.warmup)
+            prepare = getattr(self.ticks, "prepare_frame", None)
             for i in range(self.frames):
+                # A tick source that drives the ego itself (trajectory replay) needs to know
+                # which clip frame is about to be ticked: the pre-roll above burns an
+                # unspecified number of ticks, so counting them in the source is not an option.
+                if prepare is not None:
+                    prepare(i)
                 fid = self.ticks.tick()
                 snap = self.world.get_snapshot()
                 if snap.frame != fid:
@@ -314,6 +324,20 @@ class Capture:
             self.world.apply_settings(settings)
 
     # ------------------------------------------------------------------ internals
+    def _exporter(self, clip_id: str, axle: np.ndarray,
+                  mounted: list[MountedCamera]) -> scene.SceneExporter:
+        """The scene exporter for this capture.
+
+        The cameras handed here are the ones the occlusion filter projects obstacles with, so
+        they must describe the lens that produced the **depth AOV** — CARLA's pinhole.  The
+        cameras handed to :meth:`scene.SceneExporter.write` describe the lens that produced the
+        **RGB**, and go into the calibration table.  They are the same object here and differ
+        only when the RGB comes from elsewhere (see :class:`carla_cosmos.nurec.NurecCapture`).
+        """
+        return scene.SceneExporter(self.world, clip_id, self.ego, axle,
+                                   cameras=[m.manifest() for m in mounted],
+                                   visibility=self.visibility)
+
     @staticmethod
     def _depth_frames(streams: list[_CameraStreams], index: int) -> dict[str, np.ndarray]:
         """This tick's raw metric depth per camera, for the exporter's occlusion filter.
@@ -423,11 +447,22 @@ class Capture:
             raise FrameDesyncError(
                 f"{s.mounted.camera.name}/{aov}: expected frame {fid}, got {img.frame}")
 
+    def _rgb_frame(self, s: _CameraStreams, index: int, fid: int, first: bool) -> np.ndarray:
+        """This tick's RGB for ``s``: what ``rgb_<camera>.mp4`` and the edge control are made of.
+
+        The only seam between the clip's RGB and CARLA's own renderer.  Subclasses may return
+        pixels from somewhere else (:class:`carla_cosmos.nurec.NurecCapture` returns the neural
+        render of a real place) but must still consume this tick's CARLA image, which the
+        ``super()`` call does - the queues are matched frame by frame and skipping one desyncs
+        every later frame.
+        """
+        return controls.rgb_from_bgra(controls.bgra_view(self._get_image(s, "rgb", fid, first)))
+
     def _process_frame(self, s: _CameraStreams, index: int, fid: int, first: bool) -> None:
         cam = s.mounted.camera.name
         rgb = tags = None
         if "rgb" in s.sensors:
-            rgb = controls.rgb_from_bgra(controls.bgra_view(self._get_image(s, "rgb", fid, first)))
+            rgb = self._rgb_frame(s, index, fid, first)
         if "semantic" in s.sensors:
             tags = np.copy(controls.semantic_tags(controls.bgra_view(
                 self._get_image(s, "semantic", fid, first))))

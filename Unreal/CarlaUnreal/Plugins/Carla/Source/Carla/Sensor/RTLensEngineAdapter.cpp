@@ -7,8 +7,69 @@
 #include "Carla/Sensor/RTLensEngineAdapter.h"
 #include "Carla.h"
 
+#include <util/ue-header-guard-begin.h>
+#include "HAL/IConsoleManager.h"
+#include <util/ue-header-guard-end.h>
+
 namespace RTLensEngineAdapter
 {
+
+void SetBlockingRayTracingPipelineCreation(bool bBlocking)
+{
+  static IConsoleVariable *CVar =
+      IConsoleManager::Get().FindConsoleVariable(TEXT("r.RayTracing.NonBlockingPipelineCreation"));
+  // Value the engine had before this sensor overrode it; INDEX_NONE while not
+  // overridden.
+  static int32 ValueBeforeOverride = INDEX_NONE;
+  static bool bWarnedConsoleOverride = false;
+
+  if (CVar == nullptr)
+  {
+    return; // engine built without the cvar (no ray tracing support)
+  }
+
+  if (!bBlocking)
+  {
+    if (ValueBeforeOverride != INDEX_NONE)
+    {
+      CVar->Set(ValueBeforeOverride, ECVF_SetByCode);
+      UE_LOG(LogCarla, Log,
+          TEXT("rt_lens: asynchronous mode, r.RayTracing.NonBlockingPipelineCreation restored to %d"),
+          ValueBeforeOverride);
+      ValueBeforeOverride = INDEX_NONE;
+    }
+    return;
+  }
+
+  if (CVar->GetInt() == 0)
+  {
+    return; // already blocking (by us, by the ini or by the console)
+  }
+
+  // SetByConsole outranks SetByCode: the user forced non-blocking creation on
+  // purpose; say once what that costs and respect it.
+  if (((uint32)CVar->GetFlags() & ECVF_SetByMask) > (uint32)ECVF_SetByCode)
+  {
+    if (!bWarnedConsoleOverride)
+    {
+      bWarnedConsoleOverride = true;
+      UE_LOG(LogCarla, Warning,
+          TEXT("rt_lens: r.RayTracing.NonBlockingPipelineCreation is forced to %d from the console; ")
+          TEXT("synchronous-mode frames will miss freshly spawned actors while their ray tracing ")
+          TEXT("pipeline compiles (they render with the black, untagged PathTracingDefaultOpaqueCHS)."),
+          CVar->GetInt());
+    }
+    return;
+  }
+
+  ValueBeforeOverride = CVar->GetInt();
+  CVar->Set(0, ECVF_SetByCode);
+  UE_LOG(LogCarla, Log,
+      TEXT("rt_lens: synchronous mode, r.RayTracing.NonBlockingPipelineCreation 0 (was %d): ")
+      TEXT("captures wait for the ray tracing material pipeline instead of rendering new actors ")
+      TEXT("with the fallback hit shader"),
+      ValueBeforeOverride);
+}
 
 void ApplyLensModel(FPostProcessSettings &PostProcessSettings, const FLensModelDescriptor &Descriptor)
 {

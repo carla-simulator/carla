@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1000" viewBox="0 0 1600 1000">
+<rect width="1600" height="1000" fill="#f2f3f2"/><path d="M525 0h1075v900H525z" fill="#e4e9e6"/>
+<g stroke="#fafbfa" stroke-width="24"><path d="M530 100h1070M530 260h1070M530 420h1070M530 580h1070M530 740h1070M630 0v900M810 0v900M990 0v900M1170 0v900M1350 0v900M1530 0v900"/></g>
+<path d="M530 740L1450 0" stroke="#cad3d6" stroke-width="46"/><path d="M530 740L1450 0" stroke="#fff" stroke-width="34"/>
+<path d="M810 720V420H1170V190" fill="none" stroke="#578fc9" stroke-width="12" stroke-linejoin="round"/>
+<path d="M810 697l-17 38 17-8 17 8z" fill="#3976ba" stroke="white" stroke-width="4"/>
+<rect x="565" y="40" width="510" height="72" rx="30" fill="white"/>
+<g font-family="sans-serif" fill="#3c4145"><text x="605" y="87" font-size="28">Navigate</text><text x="1450" y="53" font-size="24">10:21</text><text x="1320" y="53" font-size="24">22°</text><text x="82" y="80" font-size="35">P</text><text x="155" y="80" font-size="23" fill="#90979a">R   N   D</text><text x="72" y="165" font-size="28">MODEL 3</text><text x="70" y="815" font-size="25">Parked</text><text x="349" y="82" font-size="22">82%</text></g>
+<rect x="428" y="60" width="39" height="18" rx="3" fill="none" stroke="#65736d" stroke-width="2"/><rect x="431" y="63" width="29" height="12" fill="#699d7b"/>
+<g transform="translate(260 480)"><ellipse cy="25" rx="123" ry="224" fill="#dfe2e1"/><path d="M-62-192Q0-211 62-192Q88-172 92-117L91 156Q86 192 60 203H-60Q-86 192-91 156L-92-117Q-88-172-62-192" fill="#fdfefe" stroke="#bcc2c5" stroke-width="3"/><path d="M-63-89Q0-112 63-89L70 94Q0 129-70 94Z" fill="#3d4952"/><path d="M-63-77Q0-101 63-77L61-25H-61Z" fill="#68747c"/><path d="M-62 49H62L65 90Q0 114-65 90Z" fill="#5b6770"/><path d="M-70-154H70M-74 153H74" stroke="#d3d8db" stroke-width="3"/><path d="M-93-99l-20 3v19l20-3M93-99l20 3v19l-20-3" fill="#dadfe1"/><path d="M-68 177h21M47 177h21" stroke="#a64040" stroke-width="5"/></g>
+<rect x="560" y="782" width="610" height="84" rx="15" fill="white"/><text x="590" y="817" font-family="sans-serif" font-size="24" fill="#454b50">Eixample</text><text x="590" y="849" font-family="sans-serif" font-size="20" fill="#899398">Barcelona</text>
+<rect y="900" width="1600" height="100" fill="#171a1d"/><g font-family="sans-serif" font-size="28" fill="#ddd"><text x="70" y="962">⚙</text><text x="325" y="962">21.0°</text><text x="700" y="962">AUTO</text><text x="1050" y="962">21.0°</text><text x="1440" y="962">♫</text></g></svg>

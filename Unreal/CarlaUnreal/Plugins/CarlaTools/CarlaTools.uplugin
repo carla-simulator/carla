@@ -43,6 +43,10 @@
     {
       "Name": "PCG",
       "Enabled": true
+    },
+    {
+      "Name": "StreetMap",
+      "Enabled": true
     }
   ]
 }

@@ -15,6 +15,7 @@
 #include "carla/rpc/ActorDefinition.h"
 #include "carla/rpc/AttachmentType.h"
 #include "carla/rpc/Command.h"
+#include "carla/rpc/ContentPackInfo.h"
 #include "carla/rpc/CommandResponse.h"
 #include "carla/rpc/CustomV2XBytes.h"
 #include "carla/rpc/EnvironmentObject.h"
@@ -129,6 +130,12 @@ namespace detail {
         const rpc::MaterialParameter& parameter,
         const rpc::TextureFloatColor& Texture);
 
+    void SetSkyLightMap(const rpc::TextureFloatColor& panorama, float intensity, int32_t face_size);
+
+    void ClearSkyLightMap();
+
+    bool HasSkyLightMap() const;
+
     std::vector<std::string> GetNamesOfAllObjects() const;
 
     rpc::EpisodeInfo GetEpisodeInfo();
@@ -173,6 +180,12 @@ namespace detail {
     std::vector<uint8_t> GetCacheFile(const std::string &name, const bool request_otherwise = true) const;
 
     std::vector<std::string> GetAvailableMaps();
+
+    std::vector<rpc::ContentPackInfo> GetContentPacks();
+
+    rpc::ContentPackInfo MountContentPack(const std::string &path);
+
+    bool UnmountContentPack(const std::string &name);
 
     std::vector<rpc::ActorDefinition> GetActorDefinitions();
 

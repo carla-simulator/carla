@@ -33,10 +33,24 @@ private:
   /// Update material parameters for DigitalTwins meshes based on traffic light state
   void UpdateDigitalTwinsMaterials(ETrafficLightState State);
 
+  /// Scan every "led_*" material slot of this actor's meshes and sort the lamps into states.
+  /// Called lazily from UpdateDigitalTwinsMaterials, and again whenever the actor's mesh
+  /// component count changes (UMapLogicParser re-parents the baked rig's meshes onto us).
+  void BuildLampMap();
+
   /// Get the emissive color for a given traffic light state
   FLinearColor GetColorForState(ETrafficLightState State) const;
 
-  // Maps each material to its light type (Red=0, Yellow=1, Green=2)
-  // Built during BeginPlay by analyzing initial emissive colors
+  /// Every lamp this actor drives, and the state it belongs to. A rig may carry any number of
+  /// lamps per state (a mast arm repeats the three aspects on each head, a combi head adds
+  /// arrow aspects), so this is not limited to three entries.
   TMap<UMaterialInstanceDynamic*, ETrafficLightState> MaterialToLightType;
+
+  /// Lamps that belong to no state -- the stateless atlas glyphs (Tram, tram lines, Circle,
+  /// Triangle) and anything unclassifiable. Baked lit at intensity 50000, so they are
+  /// switched off once and never touched again.
+  TArray<UMaterialInstanceDynamic*> DarkMaterials;
+
+  /// Mesh component count the lamp map was built from.
+  int32 CachedMeshComponentCount = 0;
 };
