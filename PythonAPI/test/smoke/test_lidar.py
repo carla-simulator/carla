@@ -18,6 +18,7 @@ from queue import Empty
 class SensorType(Enum):
     LIDAR = 1
     SEMLIDAR = 2
+    HSSLIDAR = 3
 
 class Sensor():
     def __init__(self, test, sensor_type, attributes, sensor_name = None, sensor_queue = None):
@@ -33,6 +34,8 @@ class Sensor():
             self.bp_sensor = self.world.get_blueprint_library().filter("sensor.lidar.ray_cast")[0]
         elif self.sensor_type == SensorType.SEMLIDAR:
             self.bp_sensor = self.world.get_blueprint_library().filter("sensor.lidar.ray_cast_semantic")[0]
+        elif self.sensor_type == SensorType.HSSLIDAR:
+            self.bp_sensor = self.world.get_blueprint_library().filter("sensor.lidar.hss_lidar")[0]
         else:
             self.error = "Unknown type of sensor"
 
@@ -59,7 +62,7 @@ class Sensor():
             total_detect_points += 1
 
         # Point cloud used with numpy from the raw data
-        if self.sensor_type == SensorType.LIDAR:
+        if self.sensor_type in (SensorType.LIDAR, SensorType.HSSLIDAR):
             points = np.frombuffer(sensor_data.raw_data, dtype=np.dtype('f4'))
             points = np.reshape(points, (int(points.shape[0] / 4), 4))
             total_np_points = points.shape[0]
@@ -130,6 +133,30 @@ class TestSyncLidar(SyncSmokeTest):
 
         sensors.append(Sensor(self, SensorType.SEMLIDAR, att_s00))
         sensors.append(Sensor(self, SensorType.SEMLIDAR, att_s01))
+
+        for _ in range(0, 10):
+            self.world.tick()
+        time.sleep(0.5)
+
+        for sensor in sensors:
+            sensor.destroy()
+
+        for sensor in sensors:
+            if not sensor.is_correct():
+                self.fail(sensor.error)
+
+
+    def test_hsslidar_point_count(self):
+        print("TestSyncLidar.test_hsslidar_point_count")
+        sensors = []
+
+        att_h00 = {'channels' : '64', 'range' : '100', 'horizontal_resolution': '0.2',
+          'rotation_frequency': '20'}
+        att_h01 = {'channels' : '32', 'range' : '200', 'horizontal_resolution': '0.1',
+          'rotation_frequency': '50'}
+
+        sensors.append(Sensor(self, SensorType.HSSLIDAR, att_h00))
+        sensors.append(Sensor(self, SensorType.HSSLIDAR, att_h01))
 
         for _ in range(0, 10):
             self.world.tick()
@@ -236,3 +263,90 @@ class TestCompareLidars(SyncSmokeTest):
         time.sleep(1)
         for sensor in sensors:
             sensor.destroy()
+
+
+class TestLidarBatchConsistency(SyncSmokeTest):
+    """A LiDAR must produce the same data alone and when simulated in parallel with other LiDARs."""
+
+    FRAMES = 10
+
+    def record(self, attributes, extra_lidars=0):
+        bp_lib = self.world.get_blueprint_library()
+        tranf = self.world.get_map().get_spawn_points()[0]
+        tranf.location.z += 3
+
+        bp = bp_lib.find("sensor.lidar.ray_cast")
+        for key in attributes:
+            bp.set_attribute(key, attributes[key])
+        lidar = self.world.spawn_actor(bp, tranf)
+        others = [self.world.spawn_actor(bp_lib.find("sensor.lidar.ray_cast"), tranf) for _ in range(extra_lidars)]
+
+        data_queue = Queue()
+        lidar.listen(lambda data: data_queue.put((data.frame, bytes(data.raw_data))))
+        for other in others:
+            other.listen(lambda data: None)
+
+        frames = []
+        try:
+            for _ in range(self.FRAMES):
+                frame = self.world.tick()
+                while True:
+                    data = data_queue.get(True, 10.0)
+                    if data[0] == frame:
+                        frames.append(data[1])
+                        break
+        finally:
+            for sensor in [lidar] + others:
+                sensor.stop()
+                sensor.destroy()
+            self.world.tick()
+        return frames
+
+    def test_single_and_batch_match(self):
+        print("TestLidarBatchConsistency.test_single_and_batch_match")
+        # Noise and dropoff enabled so the random sequence is covered as well.
+        attributes = {'channels' : '32', 'range' : '50', 'points_per_second': '100000',
+          'rotation_frequency': '20', 'noise_stddev': '0.02', 'noise_seed': '4242'}
+
+        single = self.record(attributes)
+        batch = self.record(attributes, extra_lidars=2)
+
+        self.assertEqual(len(single), len(batch))
+        for idx, (a, b) in enumerate(zip(single, batch)):
+            self.assertTrue(len(a) > 0, "Frame %d has no points." % idx)
+            self.assertEqual(a, b, "Frame %d differs between the single and the batched LiDAR." % idx)
+
+
+class TestLidarSensorTick(SyncSmokeTest):
+    """LiDARs must honor sensor_tick when they are simulated by the LiDAR subsystem."""
+
+    def test_lidar_sensor_tick(self):
+        print("TestLidarSensorTick.test_lidar_sensor_tick")
+        bp_lib = self.world.get_blueprint_library()
+        sensor_tick = 1.0
+        num_ticks = 50
+
+        counts = {}
+        sensors = []
+        for bp_id in ["sensor.lidar.ray_cast", "sensor.lidar.ray_cast_semantic", "sensor.lidar.hss_lidar"]:
+            bp = bp_lib.find(bp_id)
+            bp.set_attribute("sensor_tick", str(sensor_tick))
+            if bp.has_attribute("points_per_second"):
+                bp.set_attribute("points_per_second", "10000")
+            sensor = self.world.spawn_actor(bp, carla.Transform())
+            counts[bp_id] = 0
+            sensor.listen(lambda data, bp_id=bp_id: counts.__setitem__(bp_id, counts[bp_id] + 1))
+            sensors.append(sensor)
+
+        for _ in range(num_ticks):
+            self.world.tick()
+        time.sleep(1.0)
+
+        for sensor in sensors:
+            sensor.stop()
+            sensor.destroy()
+
+        dt = self.world.get_settings().fixed_delta_seconds
+        expected = int(math.ceil(num_ticks * dt / sensor_tick))
+        for bp_id, count in counts.items():
+            self.assertEqual(count, expected, "%s does not match tick count" % bp_id)
