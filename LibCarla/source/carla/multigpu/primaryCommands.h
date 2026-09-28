@@ -50,10 +50,8 @@ class PrimaryCommands {
     [[nodiscard]]
     std::optional<token_type> GetToken(stream_id sensor_id);
 
-    /// Returns false if no secondary ever accepted this sensor (GetToken()
-    /// routing failed) or if the secondary holding it gave no reply (the
-    /// null-session path from SendEnableForROS). The caller must treat that
-    /// as ROS enablement not having happened.
+    /// Returns false if no secondary accepted this sensor or the secondary
+    /// holding it did not reply; ROS enablement has not happened in that case.
     [[nodiscard]]
     bool EnableForROS(stream_id sensor_id);
 
