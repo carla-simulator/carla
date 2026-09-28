@@ -80,7 +80,7 @@ class TestDeterminism(SmokeTest):
         number_of_vehicles = 100
         tm_seed = 1
 
-        self.client.load_world("Town03")
+        self.client.load_world("Town03_Opt")
         # workaround: give time to UE4 to clean memory after loading (old assets)
         time.sleep(5)
 
