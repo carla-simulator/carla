@@ -102,11 +102,11 @@ void AHSSLidar::SendData(const float DeltaTime)
 }
 
 AHSSLidar::FDetection AHSSLidar::ComputeDetection(
-    const FHitResult& HitInfo, const FTransform& SensorTransf) const
+    const FHitResult& HitInfo, const FTransform& InverseSensorTransform) const
 {
   FDetection Detection;
   const FVector HitPoint = HitInfo.ImpactPoint;
-  Detection.point = SensorTransf.Inverse().TransformPosition(HitPoint);
+  Detection.point = InverseSensorTransform.TransformPosition(HitPoint);
 
   const float Distance = Detection.point.Length();
 
@@ -123,6 +123,11 @@ AHSSLidar::FDetection AHSSLidar::ComputeDetection(
 void AHSSLidar::PreprocessRays(uint32_t Channels, uint32_t MaxPointsPerChannel)
 {
   Super::PreprocessRays(Channels, MaxPointsPerChannel);
+
+  if (!DropOffGenActive)
+  {
+    return;
+  }
 
   for (auto ch = 0u; ch < Channels; ch++) {
     for (auto p = 0u; p < MaxPointsPerChannel; p++) {
@@ -147,52 +152,73 @@ bool AHSSLidar::PostprocessDetection(FDetection& Detection) const
     return RandomEngine->GetUniformFloat() < DropOffAlpha * Intensity + DropOffBeta;
 }
 
-void AHSSLidar::ComputeAndSaveDetections(const FTransform& SensorTransform) {
-  for (auto idxChannel = 0u; idxChannel < Description.Channels; ++idxChannel)
-    PointsPerChannel[idxChannel] = RecordedHits[idxChannel].size();
+void AHSSLidar::ResetDetections(uint32_t Channels, uint32_t MaxPointsPerChannel)
+{
+  Detections.resize(Channels);
 
-  LidarData.ResetMemory(PointsPerChannel);
-#if WITH_EDITOR
-  if(bSavingDataToDisk)
+  for (auto& ChannelDetections : Detections)
   {
-    PointCloudResetMemory();
+    ChannelDetections.clear();
+    ChannelDetections.reserve(MaxPointsPerChannel);
   }
-#endif
+}
 
-  for (auto idxChannel = 0u; idxChannel < Description.Channels; ++idxChannel) {
-    for (auto& hit : RecordedHits[idxChannel]) {
-      FDetection Detection = ComputeDetection(hit, SensorTransform);
+void AHSSLidar::WriteDetectionAsync(uint32_t Channel, const FHitResult& HitInfo, const FTransform& InverseSensorTransform, const FVector& SensorLocation)
+{
+  DEBUG_ASSERT(GetChannelCount() > Channel);
+  Detections[Channel].emplace_back(ComputeDetection(HitInfo, InverseSensorTransform));
+}
+
+void AHSSLidar::ComputeAndSaveDetections(const FTransform& SensorTransform)
+{
+  TRACE_CPUPROFILER_EVENT_SCOPE_STR(__FUNCTION__);
+
+  for (auto idxChannel = 0u; idxChannel < Description.Channels; ++idxChannel)
+  {
+    auto& ChannelDetections = Detections[idxChannel];
+    size_t Kept = 0;
+    for (FDetection& Detection : ChannelDetections)
+    {
       if (PostprocessDetection(Detection))
       {
-        LidarData.WritePointSync(Detection);
-#if WITH_EDITOR
-        if(bSavingDataToDisk)
-        {
-          PointCloudWritePointSync(Detection);
-        }
-#endif
+        ChannelDetections[Kept++] = Detection;
       }
-      else
-        PointsPerChannel[idxChannel]--;
     }
+    ChannelDetections.resize(Kept);
+    PointsPerChannel[idxChannel] = static_cast<uint32_t>(Kept);
   }
 
+  LidarData.ResetMemory(PointsPerChannel);
+  for (auto idxChannel = 0u; idxChannel < Description.Channels; ++idxChannel)
+  {
+    LidarData.WritePoints(Detections[idxChannel]);
+  }
   LidarData.WriteChannelCount(PointsPerChannel);
-}
 
-void AHSSLidar::PointCloudResetMemory()
-{
-  PointCloudLidarData.Empty();
-  PointCloudLidarData.Reserve(
-      static_cast<uint32_t>(std::accumulate(PointsPerChannel.begin(), PointsPerChannel.end(), 0)) * 4);
-}
+#if WITH_EDITOR
+  if (bSavingDataToDisk)
+  {
+    const uint32_t TotalPoints = std::accumulate(PointsPerChannel.begin(), PointsPerChannel.end(), 0u);
 
-void AHSSLidar::PointCloudWritePointSync(const FDetection& Detection)
-{
-  PointCloudLidarData.Emplace(Detection.point.x);
-  PointCloudLidarData.Emplace(Detection.point.y);
-  PointCloudLidarData.Emplace(Detection.point.z);
-  PointCloudLidarData.Emplace(Detection.intensity);
+    static_assert(sizeof(FDetection) == sizeof(float) * 4);
+    static_assert(std::is_trivially_copyable_v<FDetection>);
+
+    PointCloudLidarData.SetNumUninitialized(static_cast<int32>(TotalPoints * 4));
+
+    float* Dest = PointCloudLidarData.GetData();
+
+    for (const auto& ChannelDetections : Detections)
+    {
+      if (ChannelDetections.empty())
+      {
+        continue;
+      }
+      const size_t NumBytes = ChannelDetections.size() * sizeof(FDetection);
+      FMemory::Memcpy(Dest, ChannelDetections.data(), NumBytes);
+      Dest += ChannelDetections.size() * 4;
+    }
+  }
+#endif
 }
 
 // SimulateLidar(float DeltaTime)
@@ -213,7 +239,7 @@ void AHSSLidar::SimulateLidar(const float DeltaTime, bool bLockPhysics)
   // horizontal_resolution and horizontal_fov are user-supplied attributes;
   // clamp them to safe positive values before dividing. A zero or negative
   // resolution would divide to inf/NaN and then cast to a huge uint32,
-  // triggering an OOM-sized allocation in ResetRecordedHits/PreprocessRays.
+  // triggering an OOM-sized allocation in ResetDetections/PreprocessRays.
   constexpr float MinHorizontalResolution = 0.01f;
   const float HorizontalResolution = FMath::Max(
       SnapToStep(Description.HorizontalResolution, MinHorizontalResolution),
@@ -234,10 +260,11 @@ void AHSSLidar::SimulateLidar(const float DeltaTime, bool bLockPhysics)
 
   check(ChannelCount == LaserAngles.Num());
 
-  ResetRecordedHits(ChannelCount, PointsToScanWithOneLaser);
+  ResetDetections(ChannelCount, PointsToScanWithOneLaser);
   PreprocessRays(ChannelCount, PointsToScanWithOneLaser);
 
   const FTransform ActorTransform = GetTransform();
+  const FTransform InverseSensorTransform = ActorTransform.Inverse();
   const FVector LidarBodyLocation = ActorTransform.GetLocation();
   const FRotator LidarBodyRotation = ActorTransform.Rotator();
 
@@ -252,14 +279,20 @@ void AHSSLidar::SimulateLidar(const float DeltaTime, bool bLockPhysics)
       TraceParams.bReturnPhysicalMaterial = false;
 
       const float VertAngle = LaserAngles[idxChannel];
+      const std::vector<bool>& ChannelPreprocessCondition = RayPreprocessCondition[idxChannel];
+
       for (auto idxPtsOneLaser = 0u; idxPtsOneLaser < PointsToScanWithOneLaser; idxPtsOneLaser++) {
+        if (!ChannelPreprocessCondition[idxPtsOneLaser])
+        {
+          continue;
+        }
+
         FHitResult HitResult;
         const float HorizAngle =
             -HorizontalFov / 2.0f + static_cast<float>(idxPtsOneLaser) * HorizontalResolution;
-        const bool PreprocessResult = RayPreprocessCondition[idxChannel][idxPtsOneLaser];
 
-        if (PreprocessResult && ShootLaser(VertAngle, HorizAngle, HitResult, TraceParams, LidarBodyLocation, LidarBodyRotation)) {
-          WritePointAsync(idxChannel, HitResult);
+        if (ShootLaser(VertAngle, HorizAngle, HitResult, TraceParams, LidarBodyLocation, LidarBodyRotation)) {
+          WriteDetectionAsync(idxChannel, HitResult, InverseSensorTransform, LidarBodyLocation);
         }
       };
     });

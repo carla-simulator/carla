@@ -189,10 +189,31 @@ void ATagger::TagActorsInLevel(ULevel &Level, bool bTagForSemanticSegmentation)
   }
 }
 
+crp::CityObjectLabel ATagger::GetTagFromName(const FName &Tag)
+{
+  static const TMap<FName, crp::CityObjectLabel> KnownTags = []()
+  {
+    TMap<FName, crp::CityObjectLabel> Map;
+    for (uint8 Value = 0; Value <= static_cast<uint8>(crp::CityObjectLabel::Rock); ++Value)
+    {
+      const FString Name = GetTagAsString(static_cast<crp::CityObjectLabel>(Value));
+      Map.Add(FName(*Name), GetTagFromString(Name));
+    }
+    return Map;
+  }();
+
+  if (const crp::CityObjectLabel* Found = KnownTags.Find(Tag))
+  {
+    return *Found;
+  }
+  
+  return GetTagFromString(Tag.ToString());
+}
+
 crp::CityObjectLabel ATagger::GetTagOfTaggedComponent(const UPrimitiveComponent &Component)
 {
   if (Component.ComponentTags.Num() > 0) {
-    return GetTagFromString(Component.ComponentTags[0].ToString());
+    return GetTagFromName(Component.ComponentTags[0]);
   }
   return static_cast<crp::CityObjectLabel>(Component.CustomDepthStencilValue);
 }
