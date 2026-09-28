@@ -358,9 +358,15 @@ void ATrafficLightManager::SetAdjustSignsHeightToGround(bool bEnabled)
 
   // Signs are generated at map load, before a client can apply world settings,
   // so honour a late enable by re-snapping the already-spawned signs.
+  SnapSignsToGround();
+}
+
+void ATrafficLightManager::SnapSignsToGround()
+{
   // AdjustSpawnedSignsHeight is idempotent (the bPositioned flag guards each
-  // sign), so re-applying the setting is safe.
-  if (bEnabled && TrafficLightsGenerated && AdjustSpawnedSignsHeight())
+  // sign), so calling this again is safe.
+  if (bAdjustSignsHeightToGround && TrafficLightsGenerated &&
+      AdjustSpawnedSignsHeight())
   {
     if (ACarlaGameModeBase* GameMode = UCarlaStatics::GetGameMode(GetWorld()))
     {
@@ -509,6 +515,7 @@ void ATrafficLightManager::AdoptModelConfigurationFrom(const ATrafficLightManage
   TrafficSignsModels = Other.TrafficSignsModels;
   SignComponentModels = Other.SignComponentModels;
   SpeedLimitModels = Other.SpeedLimitModels;
+  bAdjustSignsHeightToGround = Other.bAdjustSignsHeightToGround;
 }
 
 void ATrafficLightManager::Tick(float DeltaSeconds)

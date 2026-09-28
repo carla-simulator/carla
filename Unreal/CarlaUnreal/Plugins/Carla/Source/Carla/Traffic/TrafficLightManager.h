@@ -76,6 +76,11 @@ public:
   // manager is spawned with defaults and never configured in the editor.
   void SetAdjustSignsHeightToGround(bool bEnabled);
 
+  // Snap the generated signs that are not on the ground yet, if the flag is
+  // on, and refresh the environment objects when any moved. Call it again
+  // after more ground streams in.
+  void SnapSignsToGround();
+
 private:
 
   // Snap every generated sign to the ground, ignoring the generated set during

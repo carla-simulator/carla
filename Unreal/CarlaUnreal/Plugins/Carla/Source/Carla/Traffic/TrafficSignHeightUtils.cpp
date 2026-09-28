@@ -15,7 +15,7 @@
 #include "Components/SceneComponent.h"
 #include "Engine/World.h"
 #include "GameFramework/Actor.h"
-#include "Landscape.h"
+#include "LandscapeProxy.h"
 #include <util/ue-header-guard-end.h>
 
 namespace crp = carla::rpc;
@@ -33,8 +33,10 @@ namespace TrafficSignHeightUtils
     bool IsGroundHit(const FHitResult &HitResult)
     {
       // Landscapes are not tagged by ATagger, so they carry no tag at all.
+      // On World Partition maps the collision belongs to the streaming
+      // proxies, so match the proxy base class rather than ALandscape.
       const AActor *HitActor = HitResult.GetActor();
-      if (HitActor != nullptr && HitActor->IsA<ALandscape>())
+      if (HitActor != nullptr && HitActor->IsA<ALandscapeProxy>())
       {
         return true;
       }
