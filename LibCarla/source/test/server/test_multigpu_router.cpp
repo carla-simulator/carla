@@ -10,7 +10,9 @@
 #include <carla/multigpu/commands.h>
 #include <carla/multigpu/listener.h>
 #include <carla/multigpu/primary.h>
+#include <carla/multigpu/primaryCommands.h>
 #include <carla/multigpu/router.h>
+#include <carla/streaming/detail/Token.h>
 
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/executor_work_guard.hpp>
@@ -18,6 +20,7 @@
 #include <chrono>
 #include <future>
 #include <memory>
+#include <optional>
 #include <string>
 #include <thread>
 
@@ -50,6 +53,33 @@ namespace {
     }
   };
 
+  bool IsRejected(std::future<carla::multigpu::SessionInfo> &future) {
+    return future.get().session == nullptr;
+  }
+
+  bool WaitUntilPending(
+      carla::multigpu::Router &router,
+      const std::shared_ptr<carla::multigpu::Primary> &session) {
+    const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(2);
+    while (std::chrono::steady_clock::now() < deadline) {
+      if (router.TestHasPendingRequest(session)) {
+        return true;
+      }
+      std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    }
+    return false;
+  }
+
+  carla::Buffer MakeTokenReply(carla::streaming::detail::stream_id_type stream_id, uint16_t port) {
+    carla::streaming::detail::token_data data;
+    data.stream_id = stream_id;
+    data.port = port;
+    data.protocol = carla::streaming::detail::token_data::protocol::tcp;
+    data.address_type = carla::streaming::detail::token_data::address::ip_v4;
+    data.address.v4 = boost::asio::ip::make_address_v4("127.0.0.1").to_bytes();
+    return carla::Buffer(reinterpret_cast<const unsigned char *>(&data), sizeof(data));
+  }
+
 } // namespace
 
 TEST_F(MultiGpuRouterTest, write_to_next_with_no_sessions_rejects_instead_of_hanging) {
@@ -59,12 +89,11 @@ TEST_F(MultiGpuRouterTest, write_to_next_with_no_sessions_rejects_instead_of_han
   auto future = router.WriteToNext(carla::multigpu::MultiGPUCommand::GET_TOKEN, carla::Buffer());
 
   ASSERT_EQ(future.wait_for(std::chrono::seconds(2)), std::future_status::ready);
-  // Specifically std::runtime_error (Router::RejectPromise), not merely
+  // Specifically a rejection value (Router::RejectPromise), not
   // std::future_error(broken_promise): the promise here is never stored
-  // anywhere, so a bare "some exception was thrown" assertion would also
-  // pass if this rejection path were removed entirely and the local promise
-  // were simply left to be destroyed unset.
-  EXPECT_THROW(future.get(), std::runtime_error);
+  // anywhere, so if this rejection path were removed the local promise would
+  // be destroyed unset and get() would throw instead.
+  EXPECT_TRUE(IsRejected(future));
 }
 
 TEST_F(MultiGpuRouterTest, write_to_one_with_expired_session_rejects_instead_of_hanging) {
@@ -82,7 +111,7 @@ TEST_F(MultiGpuRouterTest, write_to_one_with_expired_session_rejects_instead_of_
       expired_session, carla::multigpu::MultiGPUCommand::ENABLE_ROS, carla::Buffer());
 
   ASSERT_EQ(future.wait_for(std::chrono::seconds(2)), std::future_status::ready);
-  EXPECT_THROW(future.get(), std::runtime_error);
+  EXPECT_TRUE(IsRejected(future));
 }
 
 TEST_F(MultiGpuRouterTest, write_to_one_with_disconnected_but_still_alive_session_rejects) {
@@ -101,7 +130,7 @@ TEST_F(MultiGpuRouterTest, write_to_one_with_disconnected_but_still_alive_sessio
       session, carla::multigpu::MultiGPUCommand::ENABLE_ROS, carla::Buffer());
 
   ASSERT_EQ(future.wait_for(std::chrono::seconds(2)), std::future_status::ready);
-  EXPECT_THROW(future.get(), std::runtime_error);
+  EXPECT_TRUE(IsRejected(future));
 }
 
 TEST_F(MultiGpuRouterTest, write_to_next_with_connected_session_stays_pending) {
@@ -131,7 +160,7 @@ TEST_F(MultiGpuRouterTest, disconnect_rejects_pending_promise_for_that_session) 
   router.TestDisconnectSession(session);
 
   ASSERT_EQ(future.wait_for(std::chrono::seconds(2)), std::future_status::ready);
-  EXPECT_THROW(future.get(), std::runtime_error);
+  EXPECT_TRUE(IsRejected(future));
 }
 
 TEST_F(MultiGpuRouterTest, episode_ready_marker_with_no_pending_promise_triggers_resync_callback) {
@@ -207,7 +236,7 @@ TEST_F(MultiGpuRouterTest, episode_ready_marker_is_not_misdelivered_to_a_pending
   // resolves normally.
   router.TestHandleResponse(session, carla::Buffer());
   ASSERT_EQ(future.wait_for(std::chrono::seconds(2)), std::future_status::ready);
-  EXPECT_NO_THROW(future.get());
+  EXPECT_EQ(future.get().session, session);
 }
 
 TEST_F(MultiGpuRouterTest, response_with_pending_promise_does_not_trigger_resync_callback) {
@@ -229,7 +258,7 @@ TEST_F(MultiGpuRouterTest, response_with_pending_promise_does_not_trigger_resync
   router.TestHandleResponse(session, carla::Buffer());
 
   ASSERT_EQ(future.wait_for(std::chrono::seconds(2)), std::future_status::ready);
-  EXPECT_NO_THROW(future.get());
+  EXPECT_EQ(future.get().session, session);
   EXPECT_EQ(callback_count, 0);
 }
 
@@ -247,7 +276,7 @@ TEST_F(MultiGpuRouterTest, overlapping_request_to_same_session_is_rejected_not_o
   auto second = router.WriteToNext(carla::multigpu::MultiGPUCommand::GET_TOKEN, carla::Buffer());
 
   ASSERT_EQ(second.wait_for(std::chrono::seconds(2)), std::future_status::ready);
-  EXPECT_THROW(second.get(), std::runtime_error);
+  EXPECT_TRUE(IsRejected(second));
 
   // The first request must be exactly as pending as before the second one
   // arrived: not silently resolved, not silently lost.
@@ -283,18 +312,88 @@ TEST_F(MultiGpuRouterTest, write_to_next_round_robins_across_connected_sessions)
 
   router.TestDisconnectSession(session_b);
   ASSERT_EQ(future_b.wait_for(std::chrono::seconds(2)), std::future_status::ready);
-  EXPECT_THROW(future_b.get(), std::runtime_error);
+  EXPECT_TRUE(IsRejected(future_b));
   EXPECT_EQ(future_a.wait_for(std::chrono::milliseconds(20)), std::future_status::timeout);
   EXPECT_EQ(future_c.wait_for(std::chrono::milliseconds(20)), std::future_status::timeout);
 
   router.TestDisconnectSession(session_a);
   ASSERT_EQ(future_a.wait_for(std::chrono::seconds(2)), std::future_status::ready);
-  EXPECT_THROW(future_a.get(), std::runtime_error);
+  EXPECT_TRUE(IsRejected(future_a));
   EXPECT_EQ(future_c.wait_for(std::chrono::milliseconds(20)), std::future_status::timeout);
 
   router.TestDisconnectSession(session_c);
   ASSERT_EQ(future_c.wait_for(std::chrono::seconds(2)), std::future_status::ready);
-  EXPECT_THROW(future_c.get(), std::runtime_error);
+  EXPECT_TRUE(IsRejected(future_c));
+}
+
+TEST_F(MultiGpuRouterTest, get_token_fails_cleanly_when_secondary_disconnects_mid_request) {
+  auto router = std::make_shared<carla::multigpu::Router>(TESTING_PORT);
+  router->AsyncRun(1u);
+  auto session = MakeFakeSession();
+  router->TestConnectSession(session);
+  carla::multigpu::PrimaryCommands commander(router);
+
+  auto pending = std::async(std::launch::async, [&commander]() { return commander.GetToken(42u); });
+  ASSERT_TRUE(WaitUntilPending(*router, session));
+
+  // The secondary dies with the GET_TOKEN in flight. In CarlaUnreal an
+  // exception escaping GetToken() here crashes the primary (see
+  // Router::RejectPromise), so the failure must come back as a value.
+  router->TestDisconnectSession(session);
+
+  ASSERT_EQ(pending.wait_for(std::chrono::seconds(2)), std::future_status::ready);
+  std::optional<carla::multigpu::token_type> token;
+  ASSERT_NO_THROW(token = pending.get());
+  EXPECT_FALSE(token.has_value());
+}
+
+TEST_F(MultiGpuRouterTest, get_token_after_failed_request_routes_to_remaining_secondary) {
+  auto router = std::make_shared<carla::multigpu::Router>(TESTING_PORT);
+  router->AsyncRun(1u);
+  auto session_a = MakeFakeSession();
+  auto session_b = MakeFakeSession();
+  router->TestConnectSession(session_a);
+  router->TestConnectSession(session_b);
+  carla::multigpu::PrimaryCommands commander(router);
+
+  auto failed = std::async(std::launch::async, [&commander]() { return commander.GetToken(42u); });
+  ASSERT_TRUE(WaitUntilPending(*router, session_a));
+  router->TestDisconnectSession(session_a);
+  ASSERT_EQ(failed.wait_for(std::chrono::seconds(2)), std::future_status::ready);
+  ASSERT_FALSE(failed.get().has_value());
+
+  // The failure must not have been cached: retrying the same sensor routes
+  // to the surviving secondary and resolves with its reply.
+  auto retried = std::async(std::launch::async, [&commander]() { return commander.GetToken(42u); });
+  ASSERT_TRUE(WaitUntilPending(*router, session_b));
+  router->TestHandleResponse(session_b, MakeTokenReply(42u, 2002u));
+  ASSERT_EQ(retried.wait_for(std::chrono::seconds(2)), std::future_status::ready);
+  const auto token = retried.get();
+  ASSERT_TRUE(token.has_value());
+  EXPECT_EQ(token->get_stream_id(), 42u);
+  EXPECT_EQ(token->get_port(), 2002u);
+
+  // Once routed, the token is served from the cache without another round
+  // trip (nothing would answer one here).
+  const auto cached = commander.GetToken(42u);
+  ASSERT_TRUE(cached.has_value());
+  EXPECT_EQ(cached->get_port(), 2002u);
+  EXPECT_FALSE(router->TestHasPendingRequest(session_b));
+}
+
+TEST_F(MultiGpuRouterTest, enable_for_ros_without_any_secondary_returns_instead_of_recursing) {
+  auto router = std::make_shared<carla::multigpu::Router>(TESTING_PORT);
+  router->AsyncRun(1u);
+  carla::multigpu::PrimaryCommands commander(router);
+
+  // GetToken() fails immediately here, so EnableForROS() must give up rather
+  // than retry its routing recursively without bound, and must report the
+  // failure back to the caller instead of silently succeeding.
+  auto done = std::async(std::launch::async, [&commander]() { return commander.EnableForROS(7u); });
+  ASSERT_EQ(done.wait_for(std::chrono::seconds(2)), std::future_status::ready);
+  bool enabled = true;
+  ASSERT_NO_THROW(enabled = done.get());
+  EXPECT_FALSE(enabled);
 }
 
 TEST(MultiGpuRouterProductionShutdown, stop_releases_listening_port_despite_reference_cycle) {

@@ -41,13 +41,21 @@ void PrimaryCommands::SendLoadMap(std::string map) {
 }
 
 // send to who the router wants the request for a token
-token_type PrimaryCommands::SendGetToken(stream_id sensor_id, std::weak_ptr<Primary> &out_session) {
+std::optional<token_type> PrimaryCommands::SendGetToken(stream_id sensor_id, std::weak_ptr<Primary> &out_session) {
   log_info("asking for a token");
   carla::Buffer buf(reinterpret_cast<carla::Buffer::value_type *>(&sensor_id),
                     static_cast<size_t>(sizeof(stream_id)));
   auto fut = _router->WriteToNext(MultiGPUCommand::GET_TOKEN, std::move(buf));
 
   auto response = fut.get();
+  if (response.session == nullptr) {
+    log_error("multigpu: no secondary provided a token for sensor ", sensor_id);
+    return std::nullopt;
+  }
+  if (response.buffer.size() < sizeof(carla::streaming::detail::token_data)) {
+    log_error("multigpu: malformed token reply for sensor ", sensor_id, ": ", response.buffer.size(), " bytes");
+    return std::nullopt;
+  }
   out_session = response.session;
   token_type new_token(*reinterpret_cast<carla::streaming::detail::token_data *>(response.buffer.data()));
   log_info("got a token: ", new_token.get_stream_id(), ", ", new_token.get_port());
@@ -62,10 +70,14 @@ void PrimaryCommands::SendIsAlive() {
   log_info("sending is alive command");
   auto fut = _router->WriteToNext(MultiGPUCommand::YOU_ALIVE, std::move(buf));
   auto response = fut.get();
+  if (response.session == nullptr) {
+    log_error("multigpu: is-alive command got no reply");
+    return;
+  }
   log_info("response from alive command: ", response.buffer.data());
 }
 
-void PrimaryCommands::SendEnableForROS(stream_id sensor_id) {
+bool PrimaryCommands::SendEnableForROS(stream_id sensor_id) {
   // search if the sensor has been activated in any secondary server
   auto it = _servers.find(sensor_id);
   if (it != _servers.end()) {
@@ -73,9 +85,14 @@ void PrimaryCommands::SendEnableForROS(stream_id sensor_id) {
                       static_cast<size_t>(sizeof(stream_id)));
     auto fut = _router->WriteToOne(it->second, MultiGPUCommand::ENABLE_ROS, std::move(buf));
 
-    fut.get();
+    if (fut.get().session == nullptr) {
+      log_error("enable_for_ros for sensor ", sensor_id, " got no reply from its secondary server");
+      return false;
+    }
+    return true;
   } else {
     log_error("enable_for_ros for sensor", sensor_id, " not found on any server");
+    return false;
   }
 }
 
@@ -87,7 +104,9 @@ void PrimaryCommands::SendDisableForROS(stream_id sensor_id) {
                       static_cast<size_t>(sizeof(stream_id)));
     auto fut = _router->WriteToOne(it->second, MultiGPUCommand::DISABLE_ROS, std::move(buf));
 
-    fut.get();
+    if (fut.get().session == nullptr) {
+      log_error("disable_for_ros for sensor ", sensor_id, " got no reply from its secondary server");
+    }
   } else {
     log_error("disable_for_ros for sensor", sensor_id, " not found on any server");
   }
@@ -102,6 +121,10 @@ bool PrimaryCommands::SendIsEnabledForROS(stream_id sensor_id) {
     auto fut = _router->WriteToOne(it->second, MultiGPUCommand::IS_ENABLED_ROS, std::move(buf));
 
     auto response = fut.get();
+    if ((response.session == nullptr) || response.buffer.empty()) {
+      log_error("is_enabled_for_ros for sensor ", sensor_id, " got no reply from its secondary server");
+      return false;
+    }
     bool res = (*reinterpret_cast<bool *>(response.buffer.data()));
     return res;
   } else {
@@ -110,7 +133,7 @@ bool PrimaryCommands::SendIsEnabledForROS(stream_id sensor_id) {
   }
 }
 
-token_type PrimaryCommands::GetToken(stream_id sensor_id) {
+std::optional<token_type> PrimaryCommands::GetToken(stream_id sensor_id) {
   std::scoped_lock<std::mutex> lock(_mutex);
   // search if the sensor has been activated in any secondary server
   auto it = _tokens.find(sensor_id);
@@ -125,28 +148,34 @@ token_type PrimaryCommands::GetToken(stream_id sensor_id) {
     // (and potentially stale) "next server" lookup.
     std::weak_ptr<Primary> server;
     auto token = SendGetToken(sensor_id, server);
+    if (!token) {
+      return std::nullopt;
+    }
     // add to the maps
-    _tokens[sensor_id] = token;
+    _tokens.emplace(sensor_id, *token);
     _servers[sensor_id] = server;
-    log_debug("Using token from new activated sensor: ", token.get_stream_id(), ", ", token.get_port());
+    log_debug("Using token from new activated sensor: ", token->get_stream_id(), ", ", token->get_port());
     return token;
   }
 }
 
-void PrimaryCommands::EnableForROS(stream_id sensor_id) {
+bool PrimaryCommands::EnableForROS(stream_id sensor_id) {
   {
     std::scoped_lock<std::mutex> lock(_mutex);
     auto it = _servers.find(sensor_id);
     if (it != _servers.end()) {
-      SendEnableForROS(sensor_id);
-      return;
+      return SendEnableForROS(sensor_id);
     }
   }
   // The sensor has not been routed to a secondary yet. GetToken() performs
   // that routing under its own critical section, so the lock above must be
   // released first to avoid a self-deadlock on the recursive call below.
-  GetToken(sensor_id);
-  EnableForROS(sensor_id);
+  // On failure nothing was routed, so recursing would retry forever.
+  if (!GetToken(sensor_id)) {
+    log_error("enable_for_ros for sensor ", sensor_id, " failed: no secondary server accepted it");
+    return false;
+  }
+  return EnableForROS(sensor_id);
 }
 
 void PrimaryCommands::DisableForROS(stream_id sensor_id) {

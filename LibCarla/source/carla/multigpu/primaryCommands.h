@@ -14,6 +14,7 @@
 #include "carla/streaming/detail/Types.h"
 
 #include <mutex>
+#include <optional>
 
 namespace carla {
 namespace multigpu {
@@ -43,9 +44,18 @@ class PrimaryCommands {
     // send to know if a connection is alive
     void SendIsAlive();
 
-    token_type GetToken(stream_id sensor_id);
+    /// Returns std::nullopt if no secondary could provide the token (e.g. the
+    /// selected secondary disconnected with the request in flight). Nothing
+    /// is cached on failure, so a later call for the same sensor retries.
+    [[nodiscard]]
+    std::optional<token_type> GetToken(stream_id sensor_id);
 
-    void EnableForROS(stream_id sensor_id);
+    /// Returns false if no secondary ever accepted this sensor (GetToken()
+    /// routing failed) or if the secondary holding it gave no reply (the
+    /// null-session path from SendEnableForROS). The caller must treat that
+    /// as ROS enablement not having happened.
+    [[nodiscard]]
+    bool EnableForROS(stream_id sensor_id);
 
     void DisableForROS(stream_id sensor_id);
 
@@ -56,12 +66,12 @@ class PrimaryCommands {
     // send to one secondary to get the token of a sensor; also reports which
     // secondary session actually answered, so the caller never has to guess
     // it from a separate (and racy) round-robin lookup.
-    token_type SendGetToken(
+    std::optional<token_type> SendGetToken(
         carla::streaming::detail::stream_id_type sensor_id,
         std::weak_ptr<Primary> &out_session);
 
     // manage ROS enable/disable of sensor
-    void SendEnableForROS(stream_id sensor_id);
+    bool SendEnableForROS(stream_id sensor_id);
     void SendDisableForROS(stream_id sensor_id);
     bool SendIsEnabledForROS(stream_id sensor_id);
 
