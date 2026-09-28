@@ -1,5 +1,6 @@
 ## LATEST Changes
 
+* Fixed `PythonAPI/examples/no_rendering_mode.py` ignoring `--show-triggers`, `--show-connections` and `--show-spawn-points` when a cached map image already existed: the flags are now part of the cache file name.
 * Fixed every native sensor (lidar, radar, IMU, cameras) simulating only the last physics substep's delta instead of the true elapsed time whenever `sensor_tick` spans more than one substep, which halved lidar's swept angle and skewed IMU/radar readings.
 * Fixed client snapshot data for OpenDRIVE traffic lights outside junctions by assigning fallback controllers to their traffic-light groups (#9853).
 * Added road stencil subsystem to LibCarla (Stencil, RoadInfoStencil, Map/MapBuilder/ObjectParser support)
