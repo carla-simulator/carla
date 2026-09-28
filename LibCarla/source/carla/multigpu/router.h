@@ -28,6 +28,8 @@ namespace multigpu {
   // class Primary;
   class Listener;
 
+  /// Outcome of a routed request. A null @a session means the request was
+  /// rejected (see Router::RejectPromise): no secondary answered it.
   struct SessionInfo {
     std::shared_ptr<Primary>  session;
     carla::Buffer             buffer;
@@ -76,6 +78,10 @@ namespace multigpu {
     void TestHandleResponse(std::shared_ptr<Primary> session, Buffer buffer) {
       HandleResponse(std::move(session), std::move(buffer));
     }
+    bool TestHasPendingRequest(const std::shared_ptr<Primary> &session) {
+      std::scoped_lock<std::mutex> lock(_mutex);
+      return _promises.contains(session.get());
+    }
 #endif // LIBCARLA_WITH_GTEST
 
   private:
@@ -94,6 +100,15 @@ namespace multigpu {
     /// A session can vanish (dead weak_ptr, disconnect, empty router) between
     /// the moment a promise is created and the moment a response would have
     /// arrived; without this, the caller's std::future::get() blocks forever.
+    ///
+    /// The failure is delivered as a value (a SessionInfo with a null
+    /// session), never through std::promise::set_exception(): inside the
+    /// CarlaUnreal process std::rethrow_exception() binds to the libc++abi
+    /// copy exported by libcarla-ros2-native.so, while exceptions are
+    /// allocated and caught by libstdc++'s ABI. std::current_exception() then
+    /// sees a foreign exception and returns null, so the rpc sync-call
+    /// packaged_task becomes ready with neither a value nor an exception and
+    /// the rpc thread reads an unconstructed result (SIGSEGV).
     static void RejectPromise(
         std::shared_ptr<std::promise<SessionInfo>> promise,
         std::string_view reason);
