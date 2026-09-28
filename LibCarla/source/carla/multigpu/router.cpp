@@ -29,7 +29,7 @@ void Router::Stop() {
   // ~Router() never runs in production (PrimaryCommands holds a shared_ptr
   // back to this Router, see set_router()), so Stop() must release the
   // listening socket itself. Listener::Stop() is idempotent, so this is
-  // safe even if ~Listener() also runs later, as it does in a unit test.
+  // safe even if ~Listener() also runs later.
   if (_listener) {
     _listener->Stop();
   }
