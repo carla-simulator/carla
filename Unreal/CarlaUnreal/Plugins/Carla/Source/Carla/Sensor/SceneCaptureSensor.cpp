@@ -15,6 +15,7 @@
 #include "Engine/PostProcessVolume.h"
 #include "EngineUtils.h"
 #include "GameFramework/SpectatorPawn.h"
+#include "Misc/App.h"
 #include <util/ue-header-guard-end.h>
 
 #include <mutex>
@@ -1070,6 +1071,13 @@ bool ASceneCaptureSensor::IsAnyGBufferClientListening() const
 
 bool ASceneCaptureSensor::ShouldCaptureThisFrame()
 {
+  // A process without an RHI (-nullrhi) never creates the capture render
+  // target. Its cameras are rendered by a Multi-GPU secondary, so skip the
+  // capture even when a local listener (for example ROS 2) is active.
+  if (!FApp::CanEverRender())
+  {
+    return false;
+  }
   if (CVarCarlaCameraForceAllGBuffers.GetValueOnAnyThread() > 0)
   {
     return true;
