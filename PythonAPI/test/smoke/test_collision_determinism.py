@@ -141,7 +141,7 @@ class TwoCarsHighSpeedCollision(Scenario):
         blueprint_library = self.world.get_blueprint_library()
 
         vehicle00_bp = blueprint_library.filter("tt")[0]
-        vehicle01_bp = blueprint_library.filter("mkz_2017")[0]
+        vehicle01_bp = blueprint_library.filter("vehicle.lincoln.mkz")[0]
 
         vehicle00_tr = carla.Transform(carla.Location(140, -256, 0.015), carla.Rotation(yaw=180))
         vehicle01_tr = carla.Transform(carla.Location(40, -255, 0.04), carla.Rotation(yaw=0))
@@ -173,8 +173,8 @@ class ThreeCarsSlowSpeedCollision(Scenario):
 
         blueprint_library = self.world.get_blueprint_library()
 
-        vehicle00_bp = blueprint_library.filter("prius")[0]
-        vehicle01_bp = blueprint_library.filter("a2")[0]
+        vehicle00_bp = blueprint_library.filter("vehicle.mini.cooper")[0]
+        vehicle01_bp = blueprint_library.filter("vehicle.ue4.audi.tt")[0]
         vehicle02_bp = blueprint_library.filter("lincoln")[0]
 
         vehicle00_tr = carla.Transform(carla.Location(110, -255, 0.05), carla.Rotation(yaw=180))
@@ -208,7 +208,7 @@ class CarBikeCollision(Scenario):
 
         blueprint_library = self.world.get_blueprint_library()
 
-        car_bp = blueprint_library.filter("mkz_2017")[0]
+        car_bp = blueprint_library.filter("vehicle.lincoln.mkz")[0]
         bike_bp = blueprint_library.filter("gazelle")[0]
 
         car_tr = carla.Transform(carla.Location(50, -255, 0.04), carla.Rotation(yaw=0))
@@ -241,8 +241,8 @@ class CarWalkerCollision(Scenario):
 
         blueprint_library = self.world.get_blueprint_library()
 
-        car_bp = blueprint_library.filter("mkz_2017")[0]
-        walker_bp = blueprint_library.filter("walker.pedestrian.0007")[0]
+        car_bp = blueprint_library.filter("vehicle.lincoln.mkz")[0]
+        walker_bp = blueprint_library.filter("walker.pedestrian.0015")[0]
         if walker_bp.has_attribute('is_invincible'):
             walker_bp.set_attribute('is_invincible', 'false')
 

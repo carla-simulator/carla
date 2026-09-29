@@ -21,7 +21,7 @@ import carla
 import time
 
 TESTING_ADDRESS = ('localhost', 3654)
-VEHICLE_VEHICLES_EXCLUDE_FROM_OLD_TOWNS = ['vehicle.mitsubishi.fusorosa', 'vehicle.carlamotors.european_hgv', 'vehicle.carlamotors.firetruck']
+VEHICLE_VEHICLES_EXCLUDE_FROM_OLD_TOWNS = ['vehicle.fuso.mitsubishi', 'vehicle.carlacola.actors', 'vehicle.firetruck.actors']
 
 class SmokeTest(unittest.TestCase):
     def setUp(self):
