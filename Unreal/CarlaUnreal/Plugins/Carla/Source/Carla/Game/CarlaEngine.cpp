@@ -168,17 +168,19 @@ void FCarlaEngine::NotifyInitGame(const UCarlaSettings &Settings)
         switch (Id) {
           case carla::multigpu::MultiGPUCommand::SEND_FRAME:
           {
-            if(GetCurrentEpisode())
             {
               TRACE_CPUPROFILER_EVENT_SCOPE_STR("MultiGPUCommand::SEND_FRAME");
-              // convert frame data from buffer to istream
-              CarlaStreamBuffer TempStream((char *) Data.data(), Data.size());
-              std::istream InStream(&TempStream);
-              GetCurrentEpisode()->GetFrameData().Read(InStream);
+              std::scoped_lock<std::mutex> Lock(FrameToProcessMutex);
+              if (CurrentEpisode)
               {
-                TRACE_CPUPROFILER_EVENT_SCOPE_STR("FramesToProcess.emplace_back");
-                std::scoped_lock<std::mutex> Lock(FrameToProcessMutex);
-                FramesToProcess.emplace_back(GetCurrentEpisode()->GetFrameData());
+                // convert frame data from buffer to istream
+                CarlaStreamBuffer TempStream(reinterpret_cast<char *>(Data.data()), Data.size());
+                std::istream InStream(&TempStream);
+                CurrentEpisode->GetFrameData().Read(InStream);
+                {
+                  TRACE_CPUPROFILER_EVENT_SCOPE_STR("FramesToProcess.emplace_back");
+                  FramesToProcess.emplace_back(CurrentEpisode->GetFrameData());
+                }
                 // SEND_FRAME has no acknowledgement or backpressure, so a growing
                 // backlog means this secondary is falling behind; surface it.
                 // Logged only on state change, with separate warn/recovery
@@ -207,8 +209,12 @@ void FCarlaEngine::NotifyInitGame(const UCarlaSettings &Settings)
           }
           case carla::multigpu::MultiGPUCommand::LOAD_MAP:
           {
-            FString FinalPath((char *) Data.data());
-            UGameplayStatics::OpenLevel(CurrentEpisode->GetWorld(), *FinalPath, true);
+            FString FinalPath(reinterpret_cast<char *>(Data.data()));
+            {
+              std::scoped_lock<std::mutex> Lock(FrameToProcessMutex);
+              PendingLoadMap = FinalPath;
+              bLoadMapPending = true;
+            }
             break;
           }
           case carla::multigpu::MultiGPUCommand::GET_TOKEN:
@@ -372,7 +378,10 @@ void FCarlaEngine::NotifyBeginEpisode(UCarlaEpisode &Episode)
 {
   TRACE_CPUPROFILER_EVENT_SCOPE_STR(__FUNCTION__);
   Episode.EpisodeSettings.FixedDeltaSeconds = FCarlaEngine_GetFixedDeltaSeconds();
-  CurrentEpisode = &Episode;
+  {
+    std::scoped_lock<std::mutex> Lock(FrameToProcessMutex);
+    CurrentEpisode = &Episode;
+  }
 
   // Reset map settings
   UWorld* World = CurrentEpisode->GetWorld();
@@ -439,7 +448,10 @@ void FCarlaEngine::NotifyBeginEpisode(UCarlaEpisode &Episode)
 void FCarlaEngine::NotifyEndEpisode()
 {
   Server.NotifyEndEpisode();
+  std::scoped_lock<std::mutex> Lock(FrameToProcessMutex);
   CurrentEpisode = nullptr;
+  FramesToProcess.clear();
+  bFramesToProcessBacklogged = false;
 }
 
 void FCarlaEngine::OnPreTick(UWorld *, ELevelTick TickType, float DeltaSeconds)
@@ -473,7 +485,19 @@ void FCarlaEngine::OnPreTick(UWorld *, ELevelTick TickType, float DeltaSeconds)
       {
         Server.RunSome(1u);
       }
-      while (!FramesToProcess.size());
+      while (!FramesToProcess.size() && !(bLoadMapPending && CurrentEpisode));
+
+      if (bLoadMapPending && CurrentEpisode)
+      {
+        FString MapToLoad;
+        {
+          std::scoped_lock<std::mutex> Lock(FrameToProcessMutex);
+          MapToLoad = std::move(PendingLoadMap);
+          PendingLoadMap.Reset();
+          bLoadMapPending = false;
+        }
+        UGameplayStatics::OpenLevel(CurrentEpisode->GetWorld(), *MapToLoad, true);
+      }
     }
 
     // update frame counter

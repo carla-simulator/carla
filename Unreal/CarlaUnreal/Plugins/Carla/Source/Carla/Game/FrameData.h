@@ -179,5 +179,5 @@ private:
 
   void AddExistingActors(void);
 
-  UCarlaEpisode *Episode;
+  UCarlaEpisode *Episode = nullptr;
 };
