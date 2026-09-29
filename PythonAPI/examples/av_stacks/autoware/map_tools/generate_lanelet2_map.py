@@ -963,9 +963,15 @@ def generate(args, world=None):
             sys.exit(2)
         convert_xodr_to_lanelet2(xodr_path, args.out)
         if not args.no_traffic_lights:
+            osm = OsmMap(args.out)
+            removed = _remove_regulatory_elements(
+                osm, lambda tags: tags.get("subtype") == "traffic_light")
+            if removed:
+                osm.write(args.out)
             print("WARNING: offline (--xodr) mode -- traffic-light regulatory elements are NOT "
-                  "injected (needs a live server for ground truth). The map will lack "
-                  "traffic-light regulation, like the upstream prebuilt maps.", flush=True)
+                  "injected (needs a live server for ground truth), and the converter's own "
+                  f"{removed} traffic-light elements were removed because the bridge has no "
+                  "state for them. The map will lack traffic-light regulation.", flush=True)
         if not args.no_stop_signs:
             print("WARNING: offline (--xodr) mode -- stop-sign regulatory elements are NOT "
                   "injected (needs a live server for ground truth). The map will lack "

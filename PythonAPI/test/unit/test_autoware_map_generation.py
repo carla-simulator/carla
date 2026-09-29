@@ -19,7 +19,9 @@ import io
 import os
 import sys
 import tempfile
+import types
 import unittest
+from unittest import mock
 import xml.etree.ElementTree as ET
 from fnmatch import fnmatchcase
 
@@ -917,6 +919,39 @@ class CheckUniqueOpendriveIdTests(unittest.TestCase):
 
         with self.assertRaises(RuntimeError):
             gl2m._check_unique_opendrive_id("traffic light", 5, "007", seen)
+
+
+class GenerateOfflineTests(unittest.TestCase):
+    def test_offline_mode_removes_converter_traffic_light_elements(self):
+        converter_light = (
+            '  <relation id="700" action="modify" visible="true" version="1">\n'
+            '    <tag k="type" v="regulatory_element"/>\n'
+            '    <tag k="subtype" v="traffic_light"/>\n'
+            '  </relation>\n'
+        )
+        fd, out_path = tempfile.mkstemp(suffix=".osm")
+        os.close(fd)
+        self.addCleanup(os.unlink, out_path)
+        fd, xodr_path = tempfile.mkstemp(suffix=".xodr")
+        os.close(fd)
+        self.addCleanup(os.unlink, xodr_path)
+
+        def fake_convert(_xodr, out):
+            with open(out, "w", encoding="utf-8") as f:
+                f.write(_osm_with(converter_light))
+
+        args = types.SimpleNamespace(
+            out=out_path, xodr=xodr_path, no_traffic_lights=False, no_stop_signs=True)
+        with mock.patch.object(gl2m, "convert_xodr_to_lanelet2", fake_convert), \
+                contextlib.redirect_stdout(io.StringIO()):
+            gl2m.generate(args)
+
+        subtypes = [
+            t.get("v")
+            for rel in ET.parse(out_path).getroot().findall("relation")
+            for t in rel.findall("tag") if t.get("k") == "subtype"
+        ]
+        self.assertNotIn("traffic_light", subtypes)
 
 
 if __name__ == "__main__":
