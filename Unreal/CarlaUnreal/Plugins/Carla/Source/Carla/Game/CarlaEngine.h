@@ -148,6 +148,9 @@ private:
   // primary's SEND_FRAME cadence, so the backlog warning logs on state
   // change only rather than once per queued frame.
   bool bFramesToProcessBacklogged = false;
+
+  FString PendingLoadMap;
+  std::atomic<bool> bLoadMapPending{false};
 };
 
 // Note: this has a circular dependency with FCarlaEngine; it must be included late.

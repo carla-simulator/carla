@@ -83,6 +83,7 @@ void FFrameData::PlayFrameData(
     UCarlaEpisode *ThisEpisode,
     std::unordered_map<uint32_t, uint32_t>& MappedId)
 {
+  Episode = ThisEpisode;
 
   for(const CarlaRecorderEventAdd &EventAdd : EventsAdd.GetEvents())
   {
