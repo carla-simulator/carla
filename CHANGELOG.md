@@ -1,5 +1,6 @@
 ## LATEST Changes
 
+* Fixed every native sensor (lidar, radar, IMU, cameras) simulating only the last physics substep's delta instead of the true elapsed time whenever `sensor_tick` spans more than one substep, which halved lidar's swept angle and skewed IMU/radar readings.
 * Fixed client snapshot data for OpenDRIVE traffic lights outside junctions by assigning fallback controllers to their traffic-light groups (#9853).
 * Added road stencil subsystem to LibCarla (Stencil, RoadInfoStencil, Map/MapBuilder/ObjectParser support)
 * Fixed `str(carla.WorldSettings(...))` raising `bad_optional_access` (surfacing in Python as a `RuntimeError`) when `fixed_delta_seconds` was unset, which is the default for every settings object that has not pinned the time step; it now prints `fixed_delta_seconds=None`.
