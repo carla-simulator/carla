@@ -269,8 +269,11 @@ private:
 
   const UCarlaEpisode *Episode = nullptr;
 
-  /// Allows the sensor to tick with the tick rate from UE4.
+  /// Allows the sensor to tick using the configured UE5 tick interval.
   bool ReadyToTick = false;
+
+  /// Elapsed time computed by UE5's tick scheduler for the most recent Tick().
+  float ReadyToTickDeltaSeconds = 0.0f;
 
   bool bClientsListening = false;
 

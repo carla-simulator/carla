@@ -461,8 +461,10 @@ class MapImage(object):
         hash_func.update(opendrive_content.encode("UTF-8"))
         opendrive_hash = str(hash_func.hexdigest())
 
-        # Build path for saving or loading the cached rendered map
-        filename = carla_map.name.split('/')[-1] + "_" + opendrive_hash + ".tga"
+        # Build path for saving or loading the cached rendered map. The show_*
+        # flags change what is drawn, so they are part of the cache key
+        flags = "".join("1" if flag else "0" for flag in (show_triggers, show_connections, show_spawn_points))
+        filename = carla_map.name.split('/')[-1] + "_" + opendrive_hash + "_" + flags + ".tga"
         dirname = os.path.join("cache", "no_rendering_mode")
         full_path = str(os.path.join(dirname, filename))
 
