@@ -49,7 +49,7 @@ def _pack_console_command(cmd, msgid=1):
 
 
 def _unpack_console_command_reply(data, msgid=1):
-    # msgpack-RPC response: [type=1, msgid, error, result: bool]
+    # msgpack-RPC response: [type=1, msgid, error, result]
     if len(data) < 4 or data[0] != 0x94:
         raise AssertionError("console_command reply is not a 4-element msgpack array: %r" % (data,))
     if data[1] != 0x01:
@@ -58,9 +58,15 @@ def _unpack_console_command_reply(data, msgid=1):
         raise AssertionError("console_command reply msgid %d does not match request %d: %r" % (data[2], msgid, data))
     if data[3] != 0xc0:
         raise AssertionError("console_command reply carries an error (byte %#x): %r" % (data[3], data))
-    if len(data) < 5 or data[4] not in (0xc2, 0xc3):
-        raise AssertionError("console_command reply result is not a bool: %r" % (data,))
-    return data[4] == 0xc3
+    # carla::rpc::Response<bool> is a std::variant<error, bool> packed as an array,
+    # so the result is [[variant_index, bool]] rather than a bare bool.
+    if len(data) < 8 or data[4] != 0x91 or data[5] != 0x92:
+        raise AssertionError("console_command reply result is not [[index, bool]]: %r" % (data,))
+    if data[6] != 0x01:
+        raise AssertionError("console_command reply holds an error alternative: %r" % (data,))
+    if data[7] not in (0xc2, 0xc3):
+        raise AssertionError("console_command reply value is not a bool: %r" % (data,))
+    return data[7] == 0xc3
 
 
 def console_command(cmd, address=TESTING_ADDRESS, timeout=10.0):
