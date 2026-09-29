@@ -198,7 +198,7 @@ TEST(TrafficManagerInterpolation, InterpolateBufferAt_CoincidentBracketReturnsCl
 }
 
 // -----------------------------------------------------------------------------
-// GetPathSpeedLimit (the SimpleWaypoint-free seam used by GetTurnTargetVelocity)
+// GetPathSpeedLimit
 // -----------------------------------------------------------------------------
 
 namespace {
@@ -208,9 +208,7 @@ constexpr float kLateralAcceleration{3.0f};
 constexpr float kBrakingDeceleration{2.0f};
 constexpr float kFreeSpeed{30.0f};
 
-/// A straight run of `straight_length` metres along +x followed by a left turn
-/// of `radius` and `arc_degrees`, sampled every `spacing` metres, which is how
-/// the in-memory map stores a road.
+/// A straight run along +x followed by a left arc, sampled every `spacing` m.
 std::vector<cg::Location> StraightThenArc(
     float straight_length,
     float radius,
@@ -255,8 +253,6 @@ TEST(TrafficManagerPathSpeed, PathSpeedLimit_ShortPathIsNotLimited) {
 }
 
 TEST(TrafficManagerPathSpeed, PathSpeedLimit_ArcUnderfootAllowsItsOwnSpeed) {
-  // The whole path is one arc and the vehicle is on it, so no braking distance
-  // may be credited: the answer is the speed the curvature alone allows.
   const float radius = 11.0f;
   const std::vector<cg::Location> path = StraightThenArc(0.0f, radius, 120.0f, kSampleSpacing);
 
@@ -268,9 +264,6 @@ TEST(TrafficManagerPathSpeed, PathSpeedLimit_ArcUnderfootAllowsItsOwnSpeed) {
 }
 
 TEST(TrafficManagerPathSpeed, PathSpeedLimit_HoldsSteadyAsAnArcIsConsumed) {
-  // Regression test for the sawtooth: driving along a constant-radius arc, the
-  // limit must not change as waypoints are passed and dropped. Each step here
-  // is the state one sample spacing later, so the answers must agree.
   const float radius = 11.0f;
   const std::vector<cg::Location> path = StraightThenArc(0.0f, radius, 180.0f, kSampleSpacing);
 
@@ -290,8 +283,6 @@ TEST(TrafficManagerPathSpeed, PathSpeedLimit_HoldsSteadyAsAnArcIsConsumed) {
 }
 
 TEST(TrafficManagerPathSpeed, PathSpeedLimit_AllowsMoreSpeedFurtherFromTheTurn) {
-  // The braking envelope: the same corner seen from further away allows more
-  // speed now, because there is room to shed it.
   const float radius = 11.0f;
   const std::vector<cg::Location> near_path = StraightThenArc(10.0f, radius, 90.0f, kSampleSpacing);
   const std::vector<cg::Location> far_path = StraightThenArc(40.0f, radius, 90.0f, kSampleSpacing);
@@ -306,8 +297,7 @@ TEST(TrafficManagerPathSpeed, PathSpeedLimit_AllowsMoreSpeedFurtherFromTheTurn) 
 }
 
 TEST(TrafficManagerPathSpeed, PathSpeedLimit_TighterTurnAllowsLessSpeed) {
-  // Junction connectors are stored more densely than the map resolution, which
-  // is what lets a turn this tight be measured at all: see the next test.
+  // Junction connectors are stored more densely than the map resolution.
   constexpr float kJunctionSpacing{2.0f};
   const std::vector<cg::Location> tight = StraightThenArc(0.0f, 6.0f, 120.0f, kJunctionSpacing);
   const std::vector<cg::Location> open = StraightThenArc(0.0f, 25.0f, 120.0f, kJunctionSpacing);
@@ -320,10 +310,6 @@ TEST(TrafficManagerPathSpeed, PathSpeedLimit_TighterTurnAllowsLessSpeed) {
 }
 
 TEST(TrafficManagerPathSpeed, PathSpeedLimit_PathShorterThanTwoSamplesIsNotLimited) {
-  // Three samples are needed for a curvature, so a path carrying less than two
-  // sample spacings of length cannot be judged and must not invent a limit.
-  // The path buffer is always at least 15 m long, so this is the tail of a
-  // finished route rather than anything a driving vehicle sees.
   const std::vector<cg::Location> stub = StraightThenArc(0.0f, 6.0f, 60.0f, 2.0f);
   ASSERT_LT(stub.size() * 2.0f, 2.0f * kSampleSpacing);
 
@@ -334,7 +320,6 @@ TEST(TrafficManagerPathSpeed, PathSpeedLimit_PathShorterThanTwoSamplesIsNotLimit
 }
 
 TEST(TrafficManagerPathSpeed, PathSpeedLimit_NonPositiveSpacingIsNotLimited) {
-  // A spacing of zero would never advance the sampler.
   const std::vector<cg::Location> path = StraightThenArc(0.0f, 6.0f, 120.0f, 2.0f);
 
   EXPECT_FLOAT_EQ(
@@ -343,9 +328,6 @@ TEST(TrafficManagerPathSpeed, PathSpeedLimit_NonPositiveSpacingIsNotLimited) {
 }
 
 TEST(TrafficManagerPathSpeed, PathSpeedLimit_ArcBehindTheVehicleIsNotCreditedWithBraking) {
-  // path_start_offset is negative while the scan is seeded with the waypoint
-  // just passed. The arc under the vehicle must then be measured with no
-  // braking distance credited to it, or the sawtooth comes back.
   const float radius = 11.0f;
   const std::vector<cg::Location> path = StraightThenArc(0.0f, radius, 180.0f, kSampleSpacing);
 
@@ -504,7 +486,7 @@ TEST(TrafficManagerWideTurn, OffsetSideOccupied_NeighbourAheadOutsideWindowIsCle
 }
 
 // -----------------------------------------------------------------------------
-// IsRefreshDue (the cadence every cached world query and the batch sync run on)
+// IsRefreshDue
 // -----------------------------------------------------------------------------
 
 namespace {
@@ -536,14 +518,12 @@ TEST(TrafficManagerRefreshCadence, IsRefreshDue_AtOrPastThePeriodIsDue) {
 }
 
 TEST(TrafficManagerRefreshCadence, IsRefreshDue_ClockGoingBackwardsIsDue) {
-  // A new episode restarts elapsed_seconds at zero. Without this the caches
-  // would carry the previous episode's contents for a whole period, where the
-  // actor ids have already started over.
+  // A new episode restarts elapsed_seconds at zero.
   EXPECT_TRUE(refresh::IsRefreshDue(0.05, 300.0, 1.0));
 }
 
 // -----------------------------------------------------------------------------
-// IsEarlyRefreshDue (the unscheduled light state read a new vehicle is worth)
+// IsEarlyRefreshDue
 // -----------------------------------------------------------------------------
 
 namespace {
@@ -553,12 +533,8 @@ struct LightRefreshTrace {
   int steps_from_registration_to_a_refresh{-1};
 };
 
-/// Drives the cadence VehicleLightStage reads the fleet's light states at over
-/// @a steps steps of @a step_period seconds, for a vehicle registered on step
-/// @a registration_step that the server never reports (pass @a steps for a
-/// fleet the server reports in full). The list is read when it is due or when
-/// a vehicle armed an unscheduled read, and a vehicle the list was missing
-/// when it was read is not worth arming another.
+/// Mirrors VehicleLightStage's refresh cadence for a vehicle registered on
+/// @a registration_step that the server never reports; pass @a steps for none.
 LightRefreshTrace TraceLightRefreshes(
     const int steps,
     const double step_period,
@@ -613,8 +589,6 @@ TEST(TrafficManagerRefreshCadence, IsEarlyRefreshDue_StepThatAlreadyReadNeedsNoR
 }
 
 TEST(TrafficManagerRefreshCadence, EarlyRefresh_VehicleTheServerNeverReportsKeepsTheRegularCadence) {
-  // Ten seconds at 30 fps: the read is paced by its own period whether or not
-  // the fleet contains a vehicle the server leaves out of every response.
   const LightRefreshTrace reported{
       TraceLightRefreshes(kThirtyFpsSteps, kThirtyFpsPeriod, kThirtyFpsSteps)};
   const LightRefreshTrace omitted{TraceLightRefreshes(kThirtyFpsSteps, kThirtyFpsPeriod, 3)};
@@ -627,14 +601,12 @@ TEST(TrafficManagerRefreshCadence, EarlyRefresh_VehicleTheServerNeverReportsKeep
 }
 
 TEST(TrafficManagerRefreshCadence, EarlyRefresh_NewlyRegisteredVehicleIsReadPromptly) {
-  // The one read a vehicle with no known light state is worth still happens on
-  // the step after it is registered.
   const LightRefreshTrace omitted{TraceLightRefreshes(kThirtyFpsSteps, kThirtyFpsPeriod, 3)};
   EXPECT_EQ(omitted.steps_from_registration_to_a_refresh, 1);
 }
 
 // -----------------------------------------------------------------------------
-// IsBatchSyncDue (the bound on the control batches queued ahead of the server)
+// IsBatchSyncDue
 // -----------------------------------------------------------------------------
 
 namespace {
@@ -644,8 +616,6 @@ struct BatchSyncTrace {
   uint64_t deepest_queue{0u};
 };
 
-/// Drives the asynchronous worker's batch queue over @a steps steps, one batch
-/// per step, waiting for one whenever @a limit of them have gone unwaited for.
 BatchSyncTrace TraceBatchSyncs(const int steps, const uint64_t limit) {
   BatchSyncTrace trace{};
   uint64_t unwaited{limit};
@@ -661,8 +631,7 @@ BatchSyncTrace TraceBatchSyncs(const int steps, const uint64_t limit) {
   return trace;
 }
 
-/// The same queue bounded by simulation time instead, which is what a server
-/// running at @a fixed_delta_seconds per step accumulates.
+/// The same queue bounded by simulation time instead.
 BatchSyncTrace TraceTimeGatedBatchSyncs(
     const int steps,
     const double fixed_delta_seconds,
@@ -709,9 +678,8 @@ TEST(TrafficManagerBatchSync, QueueNeverHoldsMoreThanThePermittedBatches) {
 }
 
 TEST(TrafficManagerBatchSync, SlowServerWithAFixedDeltaIsBoundedTheSameWayAsAFastOne) {
-  // A fixed delta advances the clock by the same step whatever the frame rate,
-  // so a simulation-time bound scales with the delta and not with the queue it
-  // is meant to cap: at 0.05 s a second of it is twenty batches.
+  // With a fixed delta a simulation-time bound scales with the delta, not the
+  // queue: at 0.05 s a one-second period is twenty batches.
   const BatchSyncTrace counted{TraceBatchSyncs(kBatchSteps, refresh::MAX_UNWAITED_CONTROL_BATCHES)};
   const BatchSyncTrace timed{TraceTimeGatedBatchSyncs(kBatchSteps, 0.05, 1.0)};
 
@@ -720,7 +688,7 @@ TEST(TrafficManagerBatchSync, SlowServerWithAFixedDeltaIsBoundedTheSameWayAsAFas
 }
 
 // -----------------------------------------------------------------------------
-// ShapeReferenceVelocity (the bounded-acceleration reference the loop follows)
+// ShapeReferenceVelocity
 // -----------------------------------------------------------------------------
 
 namespace {
@@ -742,9 +710,6 @@ float Shape(
 }  // namespace
 
 TEST(TrafficManagerComfortConstants, ReferenceLeadOutrunsTheThrottleSaturationError) {
-  // A vehicle that cannot follow the ramp is pinned at the lead cap, and it
-  // still has to receive everything the controller has, so the cap must sit
-  // above the relative velocity error that already saturates the throttle.
   for (const auto &longitudinal : {pid_constants::LONGITUDIAL_PARAM,
                                    pid_constants::LONGITUDIAL_HIGHWAY_PARAM}) {
     EXPECT_GT(pid_constants::REFERENCE_LEAD_FRACTION,
@@ -766,17 +731,11 @@ TEST(TrafficManagerReferenceVelocity, ShapeReference_NeverExceedsTheTarget) {
 }
 
 TEST(TrafficManagerReferenceVelocity, ShapeReference_DecelerationIsPassedThroughUnshaped) {
-  // The reference may not sit above the target, so a target that drops below
-  // the vehicle's speed reaches the loop unchanged and nothing here delays a
-  // brake.
   EXPECT_FLOAT_EQ(Shape(20.0f, 20.0f, 5.0f, kControlDt), 5.0f);
 }
 
 TEST(TrafficManagerReferenceVelocity, ShapeReference_StaleLowReferenceIsRecoveredInOneStep) {
-  // A reference left behind by a cycle that did not drive the vehicle (a
-  // flushed state entry, a K-turn recovery) may not brake a vehicle that is
-  // already moving: it is pulled up to the current speed within one step.
-  // This is what lets the shaper carry no slow-server reset guard.
+  // e.g. a flushed state entry or a K-turn recovery.
   EXPECT_FLOAT_EQ(Shape(0.0f, 20.0f, 25.0f, kControlDt), 20.0f);
 }
 
@@ -787,9 +746,7 @@ TEST(TrafficManagerReferenceVelocity, ShapeReference_StaleHighReferenceIsCappedT
 }
 
 TEST(TrafficManagerReferenceVelocity, ShapeReference_LeadStaysBoundedWhileTheVehicleCannotFollow) {
-  // Uphill, or wedged against a kerb: the vehicle never gains speed. The
-  // reference must not run away from it, or the loop keeps asking for full
-  // throttle long after the obstruction clears.
+  // Uphill, or wedged against a kerb: the vehicle never gains speed.
   float reference{0.0f};
   for (int step = 0; step < 400; ++step) {
     reference = Shape(reference, 0.0f, kCruiseTarget, kControlDt);
@@ -798,9 +755,6 @@ TEST(TrafficManagerReferenceVelocity, ShapeReference_LeadStaysBoundedWhileTheVeh
 }
 
 TEST(TrafficManagerReferenceVelocity, ShapeReference_EmergencyStopDiscardsTheStoredReference) {
-  // While the vehicle was held the loop drove nothing, so the stored reference
-  // says nothing about the speed it is at now; on release the ramp has to
-  // restart from the vehicle, not from where the reference was left.
   const float held{Shape(25.0f, 5.0f, 20.0f, kControlDt, true)};
   const float not_held{Shape(25.0f, 5.0f, 20.0f, kControlDt, false)};
 
@@ -809,11 +763,7 @@ TEST(TrafficManagerReferenceVelocity, ShapeReference_EmergencyStopDiscardsTheSto
 }
 
 TEST(TrafficManagerReferenceVelocity, ShapeReference_SlowServerStillRampsAtTheCompensatedRate) {
-  // Regression for the ramp being switched off on a server at or below five
-  // frames a second: the step is bounded by the same period the controller is
-  // compensated over, and the reference is not reset to the vehicle's speed.
-  // Advancing by COMFORT_ACCELERATION * control_dt instead would put the
-  // reference five times further ahead, which saturates the throttle.
+  // The step is bounded by MAX_CONTROL_DT, as the controller is.
   EXPECT_FLOAT_EQ(
       Shape(0.0f, 0.0f, kCruiseTarget, 1.0f),
       pid_constants::COMFORT_ACCELERATION * pid_constants::MAX_CONTROL_DT);
@@ -826,18 +776,14 @@ TEST(TrafficManagerReferenceVelocity, ShapeReference_ShortFrameStillAdvancesTheR
 }
 
 // -----------------------------------------------------------------------------
-// RelativeVelocityDeviation (the zero-target guard)
+// RelativeVelocityDeviation
 // -----------------------------------------------------------------------------
 
 TEST(TrafficManagerReferenceVelocity, VelocityDeviation_MatchesThePlainRatioOnceCaughtUp) {
-  // Everywhere outside an acceleration transient the reference has reached the
-  // target and the expression is the one it replaced.
   EXPECT_FLOAT_EQ(tmgr::PID::RelativeVelocityDeviation(20.0f, 10.0f, 20.0f), 0.5f);
 }
 
 TEST(TrafficManagerReferenceVelocity, VelocityDeviation_ZeroTargetBehindAStoppedVehicleIsFinite) {
-  // The target reaches exactly zero behind a stopped vehicle, so a stopped
-  // vehicle behind one used to divide zero by zero.
   const float reference{Shape(0.0f, 0.0f, 0.0f, kControlDt)};
   const float deviation{tmgr::PID::RelativeVelocityDeviation(reference, 0.0f, 0.0f)};
 
@@ -846,9 +792,7 @@ TEST(TrafficManagerReferenceVelocity, VelocityDeviation_ZeroTargetBehindAStopped
 }
 
 TEST(TrafficManagerReferenceVelocity, VelocityDeviation_ZeroTargetDoesNotPoisonTheNextStep) {
-  // The NaN used to survive the throttle branch, be stored as the step's
-  // deviation, and become a NaN steering command on the next step through the
-  // derivative term.
+  // A NaN deviation would reach the steering through the derivative term.
   StateEntry previous{};
   StateEntry current{};
   const float reference{Shape(0.0f, 0.0f, 0.0f, kControlDt)};
@@ -870,7 +814,7 @@ TEST(TrafficManagerReferenceVelocity, VelocityDeviation_ZeroTargetDoesNotPoisonT
 }
 
 // -----------------------------------------------------------------------------
-// SmoothActuation (launch ramp and command deadbands)
+// SmoothActuation
 // -----------------------------------------------------------------------------
 
 namespace {
@@ -896,9 +840,6 @@ ActuationSignal Smooth(
 }  // namespace
 
 TEST(TrafficManagerActuationSmoothing, LaunchRamp_LimitsTheThrottleRiseFromRest) {
-  // The longitudinal gain reaches MAX_THROTTLE for any velocity error above a
-  // few per cent, so from a standstill the throttle would go to its bound in a
-  // single frame.
   const ActuationSignal smoothed{Smooth(
       PreviousCommand(0.0f, 0.0f, 0.0f), kControlDt, 0.0f,
       ActuationSignal{pid_constants::MAX_THROTTLE, 0.0f, 0.0f})};
@@ -907,11 +848,6 @@ TEST(TrafficManagerActuationSmoothing, LaunchRamp_LimitsTheThrottleRiseFromRest)
 }
 
 TEST(TrafficManagerActuationSmoothing, LaunchRamp_AlwaysClearsTheThrottleDeadband) {
-  // The ramp and the deadband act on the same signal. At the shortest period
-  // the controller is compensated over, the step the ramp allows must still be
-  // larger than the band that snaps a command back to the previous one, or a
-  // vehicle pulling away from rest is held at zero throttle for ever and
-  // blocks its lane.
   const ActuationSignal smoothed{Smooth(
       PreviousCommand(0.0f, 0.0f, 0.0f), 0.0001f, 0.0f,
       ActuationSignal{pid_constants::MAX_THROTTLE, 0.0f, 0.0f})};
@@ -923,8 +859,6 @@ TEST(TrafficManagerActuationSmoothing, LaunchRamp_AlwaysClearsTheThrottleDeadban
 }
 
 TEST(TrafficManagerActuationSmoothing, LaunchRamp_ReachesFullThrottleInABoundedNumberOfSteps) {
-  // Repeatedly applying the ramp has to converge on the demand rather than
-  // stall part way, which is what the deadband would do to a step it swallows.
   StateEntry previous{PreviousCommand(0.0f, 0.0f, 0.0f)};
   for (int step = 0; step < 200; ++step) {
     const ActuationSignal smoothed{Smooth(
@@ -971,8 +905,6 @@ TEST(TrafficManagerActuationSmoothing, Deadband_HoldsTheBrakeDitherAndPassesARea
 }
 
 TEST(TrafficManagerActuationSmoothing, Deadband_ZeroPedalDemandIsAlwaysHonoured) {
-  // The pedals have to rest exactly at zero, and nothing here may delay a
-  // lift-off or the release of a brake.
   const ActuationSignal smoothed{Smooth(
       PreviousCommand(0.005f, 0.005f, 0.0f), kControlDt, 10.0f,
       ActuationSignal{0.0f, 0.0f, 0.0f})};
@@ -991,9 +923,6 @@ TEST(TrafficManagerActuationSmoothing, Deadband_HoldsTheSteeringDitherAtUrbanSpe
 }
 
 TEST(TrafficManagerActuationSmoothing, Deadband_SteeringBandShrinksWithSpeed) {
-  // What a steering deadband can hide is a lateral acceleration, which grows
-  // with the square of speed: the same command step that is dither at urban
-  // speed is a real demand on a motorway.
   const StateEntry previous{PreviousCommand(0.0f, 0.0f, 0.1f)};
   const ActuationSignal demand{0.0f, 0.0f, 0.1005f};
 

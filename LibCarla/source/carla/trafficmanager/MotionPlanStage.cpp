@@ -385,9 +385,6 @@ void MotionPlanStage::Update(const unsigned long index) {
         control_dt = DT;
       }
 
-      // Reference speed the longitudinal loop is asked to reach this step,
-      // which closes on the target at a bounded acceleration instead of
-      // stepping to it, and the velocity error it produces.
       const float reference_velocity{PID::ShapeReferenceVelocity(
           previous_state.reference_velocity,
           vehicle_speed,
@@ -746,14 +743,9 @@ float MotionPlanStage::GetTurnTargetVelocity(const Buffer &waypoint_buffer,
     return max_target_velocity;
   }
 
-  // The scan starts at the waypoint the vehicle has just passed, not at the
-  // first one ahead of it: the arc a vehicle is already cornering on began
-  // behind that one, and starting there credits the arc with the distance
-  // still to run up to it, so the speed climbs by a quarter each time a
-  // waypoint is consumed and falls back as the next is approached, which is a
-  // sawtooth in the middle of every curve. Where the front has several
-  // predecessors, at a junction exit, there is no single arc to continue and
-  // the scan starts at the front.
+  // Start at the waypoint just passed: the arc being cornered on began behind
+  // the front one, and starting at the front makes the speed sawtooth each time
+  // a waypoint is consumed. With several predecessors there is no single arc.
   std::vector<cg::Location> path;
   path.reserve(waypoint_buffer.size() + 1u);
   float path_start_offset = vehicle_location.Distance(waypoint_buffer.front()->GetLocation());

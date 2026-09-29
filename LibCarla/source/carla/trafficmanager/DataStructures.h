@@ -70,14 +70,9 @@ struct StateEntry {
   float angular_deviation;
   float velocity_deviation;
   float steer;
-  /// Last actuation commanded to the vehicle, which the next one is smoothed
-  /// against.
   float throttle {0.0f};
   float brake {0.0f};
-  /// Speed the longitudinal loop was asked to reach on the last step, which
-  /// closes on the real target at a bounded acceleration. Zero is a safe
-  /// initial value: the shaping raises the reference to the current speed
-  /// before using it, so a flushed or freshly created entry costs nothing.
+  /// Zero is a safe initial value: the shaping raises it to the current speed.
   float reference_velocity {0.0f};
 };
 

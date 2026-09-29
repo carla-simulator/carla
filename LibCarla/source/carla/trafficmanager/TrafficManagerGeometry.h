@@ -58,20 +58,10 @@ using Buffer = std::deque<SimpleWaypointPtr>;
     float target_distance,
     cg::Location vehicle_location);
 
-/// Highest speed the curvature of `path` allows, given that the vehicle may
-/// brake at `braking_deceleration` on the way to it. Walks the path at
-/// `sample_spacing`, interpolating each sample rather than picking waypoints,
-/// and takes the lowest speed any three consecutive samples permit:
-/// sqrt(R * lateral_acceleration + 2 * braking_deceleration * distance).
-///
+/// Lowest sqrt(R * lateral_acceleration + 2 * braking_deceleration * distance)
+/// over every three consecutive samples taken at `sample_spacing` along `path`.
 /// `path_start_offset` is where `path.front()` sits relative to the vehicle,
-/// negative when it is behind. It has to be: the arc a vehicle is already in
-/// begins behind the first waypoint ahead of it, and crediting that arc with
-/// the distance to that waypoint lets the speed inside a constant corner jump
-/// every time one is consumed.
-///
-/// A path of fewer than three points, or one that never bends, returns
-/// `max_speed`.
+/// negative when behind it. Fewer than three points returns `max_speed`.
 [[nodiscard]] float GetPathSpeedLimit(
     const std::vector<cg::Location> &path,
     float path_start_offset,

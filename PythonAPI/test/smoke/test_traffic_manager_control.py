@@ -4,24 +4,9 @@
 # This work is licensed under the terms of the MIT license.
 # For a copy, see <https://opensource.org/licenses/MIT>.
 
-"""Smoke tests for the Traffic Manager control loop.
-
-Three behaviours that need a live server tick loop and cannot be reached from
-the LibCarla suite, because they only appear once the controller output has
-been through the physics and back:
-
-* pulling away from rest and from a junction happens at a comfortable rate
-  rather than with the throttle on its bound from the first frame,
-* corners are taken at a comfortable lateral acceleration rather than at the
-  tyre-grip limit, and the speed limiter does not brake traffic to a halt,
-* the automatic vehicle lights never switch on a light the stage does not
-  manage, which is what deriving a command from the "state unknown" sentinel
-  used to do -- reachable only in asynchronous mode, where the cached light
-  state list can predate a vehicle.
-
-The comfort tests run in synchronous mode so the sampling period is exact.
-The lights test runs in asynchronous mode because that is the only mode where
-the cached world queries are paced instead of read every step.
+"""Smoke tests for the Traffic Manager control loop: pull-away and cornering
+comfort (synchronous, for an exact sampling period) and automatic vehicle lights
+(asynchronous, the only mode where the cached light states are paced).
 """
 
 import math
@@ -32,29 +17,19 @@ from . import SmokeTest, SyncSmokeTest
 import carla
 
 
-# Sampling window used to differentiate speed. One tick of 0.05 s resolves the
-# transient but also every suspension blip; 0.2 s smooths those out and still
-# sits well inside a pull-away, which takes about 2 s.
+# 0.2 s at 0.05 s ticks: smooths suspension blips, still well inside a pull-away.
 ACCELERATION_WINDOW_TICKS = 4
 
-# A comfortable urban pull-away is 1-2 m/s2. Measured on this branch: 1.8-2.0
-# mean and 2.6-2.9 peak. Before the reference shaper: 5.2-5.6 median and 8.4
-# peak. The bound sits between the two with margin for physics noise.
+# m/s2. Shaped pull-aways peak near 2.9; unshaped ones reached 8.4.
 MAX_PULL_AWAY_ACCELERATION = 4.5
 
-# The turn speed limiter asks for LATERAL_COMFORT_ACCELERATION (3.0 m/s2).
-# Measured on this branch: 3.8-4.0 m/s2 at the 99th percentile. The tyre-grip
-# model it replaced asked for FRICTION * GRAVITY (5.89 m/s2) and measured over
-# 9.8 m/s2 at the peak, so this bound separates the two.
+# m/s2 at the 99th percentile; the limiter targets 3.0 and measures about 4.0.
 MAX_CORNERING_ACCELERATION = 5.0
 
-# The limiter must not brake traffic to a standstill: a regression that makes
-# the path speed limit collapse would otherwise pass every bound above.
+# m/s. Catches a collapsed path speed limit, which would pass the bounds above.
 MIN_FLEET_MEAN_SPEED = 2.0
 
-# Bits the VehicleLightStage does not manage. The "state unknown" sentinel is
-# every bit set, so a command derived from it switches these on and the
-# write-back then holds them on for good.
+# Bits VehicleLightStage does not manage; the "state unknown" sentinel sets them.
 UNMANAGED_LIGHTS = (
     int(carla.VehicleLightState.Reverse) |
     int(carla.VehicleLightState.Interior) |
@@ -82,8 +57,6 @@ def _forward_speed(actor_snapshot):
 
 
 def _lateral_acceleration(actor_snapshot):
-    # v * yaw_rate is the centripetal acceleration of a vehicle following its
-    # own heading, which is what the turn speed limiter bounds.
     yaw_rate = math.radians(actor_snapshot.get_angular_velocity().z)
     return abs(_magnitude(actor_snapshot.get_velocity()) * yaw_rate)
 
@@ -116,8 +89,7 @@ class TestTrafficManagerComfort(SyncSmokeTest):
         except Exception:
             pass
         self.tm = None
-        # The packaged build only ships Town10HD_Opt, so the base class's
-        # Town03 is not available here.
+        # The packaged build only ships Town10HD_Opt, not the base class's Town03.
         self.world.apply_settings(self.settings)
         self.world.tick()
         self.settings = None
@@ -138,8 +110,7 @@ class TestTrafficManagerComfort(SyncSmokeTest):
         return self.spawned
 
     def _settle(self, ticks):
-        # A vehicle spawns above the road and drops onto it. Hold it on the
-        # handbrake until the suspension has settled, so the landing is not
+        # Hold spawned vehicles on the handbrake so the landing is not
         # measured as a pull-away.
         for actor in self.spawned:
             actor.apply_control(carla.VehicleControl(hand_brake=True))
@@ -153,8 +124,7 @@ class TestTrafficManagerComfort(SyncSmokeTest):
 
         for actor in vehicles:
             actor.set_autopilot(True, self.tm_port)
-        # The first cycle after registration localizes the vehicle and issues
-        # no control, so do not sample across it.
+        # The first cycle after registration issues no control.
         for _ in range(5):
             self.world.tick()
 
@@ -224,11 +194,7 @@ class TestTrafficManagerComfort(SyncSmokeTest):
 
 
 class TestTrafficManagerVehicleLights(SmokeTest):
-    """Asynchronous mode, where the cached light state list is paced.
-
-    Synchronous mode reads the list on every step, so the case a stale or
-    incomplete cache produces is only reachable here.
-    """
+    """Asynchronous mode, the only one where the cached light states are paced."""
 
     def setUp(self):
         super(TestTrafficManagerVehicleLights, self).setUp()
@@ -272,8 +238,7 @@ class TestTrafficManagerVehicleLights(SmokeTest):
         observed_managed = 0
         next_spawn = 8
         for step in range(40):
-            # Registering a vehicle between two refreshes of the cached list is
-            # the case that used to read the "state unknown" sentinel.
+            # Registers vehicles between two refreshes of the cached list.
             if step % 8 == 0 and next_spawn < min(12, len(spawn_points)):
                 self._spawn_one(
                     spawn_points[next_spawn], vehicle_bps[next_spawn % len(vehicle_bps)])
@@ -309,9 +274,6 @@ class TestTrafficManagerVehicleLights(SmokeTest):
         first.destroy()
         time.sleep(1.0)
 
-        # The cached list outlives the response it came from, so a destroyed
-        # vehicle has to be dropped from it explicitly. A replacement must get
-        # its own state rather than the one left behind.
         replacement = self._spawn_one(spawn_points[1], vehicle_bps[1])
         self.assertIsNotNone(replacement)
         for _ in range(10):

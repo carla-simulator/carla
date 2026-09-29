@@ -157,8 +157,7 @@ float GetPathSpeedLimit(
                  cg::Location{previous_location.x + (location.x - previous_location.x) * fraction,
                               previous_location.y + (location.y - previous_location.y) * fraction,
                               previous_location.z + (location.z - previous_location.z) * fraction}};
-      // The vehicle has to be down to the arc's speed by the time it reaches
-      // the first of the three samples, not the middle one.
+      // Braking distance is measured to the first of the three samples.
       const float distance_to_arc =
           path_start_offset + next_sample_at - 2.0f * sample_spacing;
       next_sample_at += sample_spacing;

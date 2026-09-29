@@ -111,10 +111,8 @@ public:
                   const LocalMapPtr &local_map,
                   std::unordered_map<ActorId, std::pair<float, bool>> &large_vehicles);
 
-  /// Pins the frame every vehicle of this cycle is planned against. Reading
-  /// the snapshot per vehicle instead lets a frame land mid-cycle, which gives
-  /// the vehicles after it a controller period one frame longer than the ones
-  /// before it, in the same cycle.
+  /// Pins one frame for the whole cycle; reading it per vehicle lets a frame
+  /// land mid-cycle and skews the controller period within a cycle.
   void SetCycleTimestamp(const cc::Timestamp &timestamp);
 
   void Update(const unsigned long index);

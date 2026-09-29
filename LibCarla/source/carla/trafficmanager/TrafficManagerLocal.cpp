@@ -184,8 +184,6 @@ void TrafficManagerLocal::Step() {
   // Stop TM from processing the same frame more than once
   if (!synchronous_mode) {
     if (timestamp.frame == last_frame) {
-      // Without this the worker would spin on the episode state and contend
-      // with the thread that publishes it.
       std::this_thread::sleep_for(SNAPSHOT_POLL_PERIOD);
       return;
     }
@@ -283,18 +281,12 @@ void TrafficManagerLocal::Step() {
   registration_lock.unlock();
 
   // Sending the current cycle's batch command to the simulator. Synchronous
-  // mode has to apply the batch before the client sends the next tick cue.
-  // Asynchronous mode discards the responses anyway and waiting for them costs
-  // a full server frame.
+  // mode must apply it before the next tick; async waiting costs a server frame.
   if (synchronous_mode) {
     episode_proxy.Lock()->ApplyBatchSync(control_frame, false);
   } else if (!control_frame.empty()) {
-    // The server acknowledges an unwaited batch on receipt, not on
-    // application, so nothing otherwise bounds how many batches queue up ahead
-    // of the game thread if another client saturates its command budget, and
-    // the applied command would fall further and further behind the computed
-    // one. Waiting for every so many batches caps that: the queue ahead of the
-    // one waited for has to drain before the call returns.
+    // An unwaited batch is acknowledged on receipt, not on application, so
+    // periodically waiting is what bounds the queue ahead of the game thread.
     if (IsBatchSyncDue(unwaited_control_batches, MAX_UNWAITED_CONTROL_BATCHES)) {
       episode_proxy.Lock()->ApplyBatchSync(control_frame, false);
       unwaited_control_batches = 0u;

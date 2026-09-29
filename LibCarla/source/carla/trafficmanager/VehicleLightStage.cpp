@@ -25,7 +25,6 @@ VehicleLightStage::VehicleLightStage(
     control_frame(control_frame) {}
 
 void VehicleLightStage::UpdateWorldInfo(const double current_time, const bool synchronous_mode) {
-  // Nothing has to be read while no vehicle is set to update its lights.
   const bool any_vehicle_updates_lights = std::any_of(
       vehicle_id_list.begin(),
       vehicle_id_list.end(),
@@ -38,8 +37,7 @@ void VehicleLightStage::UpdateWorldInfo(const double current_time, const bool sy
     return;
   }
 
-  // The flag guards the unknown-state path in Update, so it may only be set
-  // once the read has succeeded.
+  // Set only once the read has succeeded; it guards the unknown-state path.
   light_states_refreshed = false;
   if (synchronous_mode ||
       IsRefreshDue(current_time, last_light_states_update, VEHICLE_LIGHT_STATES_REFRESH_PERIOD)) {
@@ -97,11 +95,8 @@ void VehicleLightStage::Update(const unsigned long index) {
   }
 
   if (!found_light_state) {
-    // The vehicle's current lights are unknown: the cached list predates it,
-    // or the server omits it because it is dormant on a large map. Deriving a
-    // command from the sentinel above would switch on every bit this stage
-    // does not manage (reverse, interior, special) and the write-back below
-    // would then hold them on for good.
+    // Unknown state: deriving a command from the sentinel would switch on the
+    // unmanaged bits (reverse, interior, special) for good.
     if (IsEarlyRefreshDue(light_states_refreshed, missing_from_last_refresh.contains(actor_id))) {
       last_light_states_update = -std::numeric_limits<double>::infinity();
     }
@@ -207,15 +202,12 @@ void VehicleLightStage::Update(const unsigned long index) {
   // Update the vehicle light state if it has changed
   if (new_light_states != light_states) {
     control_frame.push_back(carla::rpc::Command::SetVehicleLightState(actor_id, new_light_states));
-    // Otherwise the same command is queued again on every step until the list
-    // is refreshed.
+    // Otherwise the same command is re-queued every step until the next refresh.
     SetCachedLightState(actor_id, new_light_states);
   }
 }
 
 void VehicleLightStage::RemoveActor(const ActorId actor_id) {
-  // The cache outlives the response it came from, so a destroyed vehicle has
-  // to be dropped from it explicitly.
   all_light_states.erase(
       std::remove_if(
           all_light_states.begin(),

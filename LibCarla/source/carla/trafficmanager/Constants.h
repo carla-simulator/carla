@@ -38,51 +38,34 @@ static const double INV_HYBRID_DT = 1.0 / HYBRID_MODE_DT;
 static const float PHYSICS_RADIUS = 50.0f;
 } // namespace HybridMode
 
-// Cadences for the world queries the traffic manager reads over synchronous
-// RPCs. The server drains its RPC queue once per rendered frame, so in
-// asynchronous mode each of those costs the step a full frame of latency;
-// none of this data changes fast enough to be worth reading every step.
-// Synchronous mode keeps reading them every step, so its behaviour is
-// unchanged.
+// Refresh periods (simulation seconds) for world queries read over synchronous
+// RPCs. In asynchronous mode each such RPC costs a full server frame of
+// latency; synchronous mode still reads them every step.
 namespace WorldInfoRefresh {
 static const double EPISODE_SETTINGS_REFRESH_PERIOD = 1.0;
 static const double VEHICLE_LIGHT_STATES_REFRESH_PERIOD = 0.25;
 static const double WEATHER_REFRESH_PERIOD = 1.0;
-// How many control batches may be sent without waiting for one, which is what
-// bounds the number of them queued ahead of the server's game thread. Counted
-// in batches and not in simulation time: the worker sends one batch per server
-// frame, but a fixed delta advances the clock by the same step whatever the
-// frame rate, so a simulation-time period lets a slow server queue
-// proportionally more of them (at 5 fps and a 0.05 s delta, twenty). The wait
-// costs the step the server frame it would otherwise have computed through, so
-// it is paid on one step in four rather than on every one.
+// Bounds how many control batches can queue ahead of the server's game thread.
+// Counted in batches, not simulation time: with a fixed delta a time period
+// would let a slow server queue proportionally more of them.
 static const uint64_t MAX_UNWAITED_CONTROL_BATCHES = 4u;
-// Idle period of the asynchronous worker between snapshots. Negligible next to
-// a rendered frame, and keeps the worker off the episode state.
+// Keeps the asynchronous worker from spinning on the episode state.
 static const std::chrono::milliseconds SNAPSHOT_POLL_PERIOD {1};
 
-/// Whether @a period of simulation time has elapsed since @a last. Also true
-/// when the simulation clock jumps backwards, which means a new episode, and
-/// when either value is NaN, so an unusable clock refreshes rather than pins
-/// the cache for ever.
+/// Also true when the clock jumps backwards (new episode) or on NaN, so an
+/// unusable clock refreshes rather than pins the cache for ever.
 inline bool IsRefreshDue(const double now, const double last, const double period) {
   return !(now >= last && (now - last) < period);
 }
 
-/// Whether a vehicle the cached light state list does not cover is worth an
-/// unscheduled read of the whole list. @a missing_from_the_last_refresh says
-/// the vehicle was already absent from a list read from the server, so reading
-/// it again would only say the same: one the server keeps omitting, because it
-/// is dormant on a large map, would otherwise re-arm the unscheduled read on
-/// every other step and hold the whole fleet's lights at that cadence.
+/// A vehicle the server already omitted from a fresh list (dormant on a large
+/// map) must not re-arm the unscheduled read on every other step.
 [[nodiscard]] inline bool IsEarlyRefreshDue(
     const bool refreshed_this_step,
     const bool missing_from_the_last_refresh) {
   return !refreshed_this_step && !missing_from_the_last_refresh;
 }
 
-/// Whether the control batch produced on this step has to be waited for.
-/// @a unwaited_batches counts the batches sent since the last one that was.
 [[nodiscard]] inline bool IsBatchSyncDue(const uint64_t unwaited_batches, const uint64_t limit) {
   return unwaited_batches >= limit;
 }
@@ -213,22 +196,13 @@ static const float LANDMARK_DETECTION_TIME = 3.5f;
 static const float TL_TARGET_VELOCITY = 15.0f / 3.6f;
 static const float STOP_TARGET_VELOCITY = 10.0f / 3.6f;
 static const float YIELD_TARGET_VELOCITY = 10.0f / 3.6f;
-// Lateral acceleration a turn is taken at. This replaces a tyre-grip model
-// (FRICTION * GRAVITY, 0.6 g), which sits near the handling limit of a road
-// car and is not a speed anyone would choose: measured 0.44 g at the 95th
-// percentile and over 1 g at the peak through Town15 junctions. Comfort work
-// on adaptive cruise puts a turn at 0.2-0.3 g, and 0.3 g still takes the
-// R = 11 m junction connectors on Town10 at 20 km/h.
+// m/s2 (~0.3 g), a comfortable cornering level; still takes the R = 11 m
+// Town10 junction connectors at 20 km/h.
 static const float LATERAL_COMFORT_ACCELERATION = 3.0f;
-// Deceleration the approach to a turn is planned with: the speed allowed now
-// is the one that reaches the turn's own limit by braking at this rate, so the
-// vehicle slows before the curvature arrives instead of inside it.
+// m/s2 used to plan braking ahead of a turn, so vehicles slow before it.
 static const float TURN_BRAKING_DECELERATION = 2.0f;
-// Arc spacing of the curvature samples along the path. It cannot go below the
-// resolution the map is stored at: samples closer together than that land on
-// the chords of the stored polyline, which read as straight. It cannot go far
-// above it either, since three samples are needed for a curvature and a turn
-// shorter than two spacings is then not measured at all.
+// Closer samples land on the stored polyline's chords and read as straight;
+// wider ones miss turns shorter than two spacings.
 static const float CURVATURE_SAMPLE_SPACING = Map::MAP_RESOLUTION;
 static const float PI = 3.1415927f;
 static const float PERC_MAX_SLOWDOWN = 0.08f;
@@ -327,66 +301,29 @@ static const float MAX_DEVIATION_DELTA = 0.05f;
 // The same bound expressed as a rate, so it scales with the measured tick
 // period: 1.0 normalised units/s = 180 deg/s.
 static const float MAX_DEVIATION_RATE = MAX_DEVIATION_DELTA / DT;
-// Command quantisation. Re-evaluating the controller every frame makes the
-// output dither by a few thousandths around the trim point, which shows up as
-// a twitching pedal and wheel and as constant small actuator reversals
-// (measured: 12 steering and 3.5 throttle direction changes per second at a
-// steady cruise). Holding the previous command inside these bands removes the
-// dither without adding any lag, and they sit well below what is visible in
-// the vehicle's motion: 0.002 of full lock is about 0.14 degrees of steering.
-// A deadband is used rather than a slew limit on purpose: a slew limit has to
-// be asymmetric to stay safe (free to lift off, free to brake), and that
-// asymmetry biases the average command down, which measurably cost up to
-// 12 km/h of achieved speed on the navigation benchmark.
-// Pulling away from a standstill is the one place a ramp is wanted: the
-// proportional gain reaches MAX_THROTTLE for any velocity error above a few
-// per cent, so the throttle goes to its bound in a single frame and the
-// vehicle launches hard. Ramp it in below LAUNCH_RAMP_SPEED only, which keeps
-// the bias above out of normal driving.
-// The threshold has to stay near standstill. Raising it to 5 m/s to let the
-// ramp finish before releasing also caught corner exits, where the traffic
-// manager slows well below that, and throttling those cost 0.4 m of lane
-// deviation on the navigation benchmark.
+// Deadbands hold the previous command to remove per-frame dither around the
+// trim point. A slew limit is avoided on purpose: it must be asymmetric to stay
+// safe, and that biases the average command down. The throttle ramp applies
+// only near standstill (m/s); a higher threshold also catches corner exits.
 static const float LAUNCH_RAMP_SPEED = 2.0f;
 static constexpr float MAX_LAUNCH_THROTTLE_RISE_RATE = 1.7f;
 static constexpr float THROTTLE_DEADBAND = 0.01f;
-// The ramp and the deadband act on the same signal, so a step the ramp allows
-// has to be larger than the band that would otherwise snap it back to the
-// previous command; if it is not, a vehicle pulling away from rest is held at
-// zero throttle for ever and blocks its lane.
+// Otherwise the deadband snaps every ramp step back and a vehicle at rest is
+// held at zero throttle for ever.
 static_assert(MAX_LAUNCH_THROTTLE_RISE_RATE * MIN_CONTROL_DT > THROTTLE_DEADBAND,
               "the launch ramp must be able to step out of the throttle deadband");
 static const float BRAKE_DEADBAND = 0.01f;
 static const float STEER_DEADBAND = 0.002f;
-// What a steering deadband can hide is a lateral acceleration, which grows
-// with the square of speed, so it is scaled down like the STEER_LIMIT_GAIN
-// envelope above and is quoted at this reference speed. Urban speeds keep the
-// full band; by highway speed it is effectively off, which measurably matters:
-// an unscaled band cost 0.2 m of lane deviation at 90 km/h on the navigation
-// benchmark.
+// m/s. The steering deadband is scaled by (ref / speed)^2 above this speed,
+// since the lateral acceleration it hides grows with the square of speed.
 static const float STEER_DEADBAND_REF_SPEED = 8.0f;
-// Longitudinal comfort limit. The proportional gain below saturates the
-// throttle for any velocity error over 7 per cent (0.85 / 12), so a target
-// that steps commands full throttle in a single frame, and the target does
-// step: the landmark that holds a vehicle at 10-15 km/h through a junction
-// leaves the path buffer in one frame, and the speed asked of the vehicle
-// triples between two consecutive frames. Measured pulling out of junctions
-// and roundabouts on Town10 and Town15 before this: 5.2-5.6 m/s2 median and
-// 8.4 m/s2 peak, at ~60 m/s3 of jerk, where a comfortable urban pull-away is
-// 1-2 m/s2 and 2 m/s3.
-// The loop is given a reference that closes on the target at this
-// acceleration instead of the target itself. Bounding the reference rather
-// than the throttle keeps the actuator free (nothing delays a lift-off or a
-// brake), needs no knowledge of the vehicle's power or gearing, and leaves the
-// loop untouched everywhere the reference has caught up with the target, which
-// is everywhere except an acceleration transient.
+// m/s2 at which the longitudinal reference closes on a stepping target. The
+// proportional gain saturates the throttle above a 7 per cent error (0.85 / 12),
+// so without it a target step commands full throttle in one frame.
 static const float COMFORT_ACCELERATION = 2.0f;
-// How far the reference may lead the vehicle, as a fraction of the target. A
-// vehicle that cannot follow the ramp (uphill, wedged against a kerb) would
-// otherwise let the reference run away from it, and the loop would keep asking
-// for full throttle long after the obstruction cleared. The fraction has to
-// stay above the 7 per cent that saturates the throttle, so a vehicle held at
-// the cap still gets everything the controller has.
+// Max lead of the reference over the vehicle, as a fraction of the target, so
+// it cannot run away from a blocked vehicle. Must stay above the 7 per cent
+// that saturates the throttle.
 static const float REFERENCE_LEAD_FRACTION = 0.15f;
 static const std::vector<float> LONGITUDIAL_PARAM = {12.0f, 0.05f, 0.02f};
 static const std::vector<float> LONGITUDIAL_HIGHWAY_PARAM = {20.0f, 0.05f, 0.01f};

@@ -31,15 +31,10 @@ private:
   /// Simulation time of the last refresh of each cached world query.
   double last_light_states_update {-std::numeric_limits<double>::infinity()};
   double last_weather_update {-std::numeric_limits<double>::infinity()};
-  /// Whether all_light_states was read from the server on the current step.
   bool light_states_refreshed {false};
-  /// Vehicles the server itself left out of the list it last returned. Dropped
-  /// whenever the list is read again, so it only holds vehicles that were
-  /// checked against a list this stage did not have to guess at.
+  /// Vehicles the server left out of the list it last returned.
   std::unordered_set<ActorId> missing_from_last_refresh;
 
-  /// Keeps the commands issued by this stage visible in the cached list until
-  /// it is read from the server again.
   void SetCachedLightState(const ActorId actor_id,
                            const rpc::VehicleLightState::flag_type light_state);
 
@@ -50,9 +45,7 @@ public:
                     const cc::World &world,
                     ControlFrame& control_frame);
 
-  /// @a current_time is the elapsed simulation time of the frame being
-  /// processed, which paces the refresh of each cached query. Synchronous mode
-  /// refreshes every step, as it did before the caching was introduced.
+  /// Synchronous mode refreshes every step.
   void UpdateWorldInfo(const double current_time, const bool synchronous_mode);
 
   void Update(const unsigned long index) override;
