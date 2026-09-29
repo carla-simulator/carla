@@ -113,6 +113,10 @@ public:
 	// a name-based search elsewhere, that's exactly what broke last time.
 	static FWeatherParameters* FindWeatherParameters(AActor* SkyActor);
 
+	// Tag of the rig ACarlaGameModeBase spawns on a World Partition map that
+	// has none loaded at InitGame.
+	static const FName FallbackSkyTag;
+
 	// The rig's sky light, for AWeather::SetSkyLightMap (environment-map
 	// override); may be null on a rig that lost the component.
 	USkyLightComponent* GetSkyLightComponent() const { return SkyLightComponent; }
@@ -247,6 +251,12 @@ protected:
 	// spawn/Play), so re-push "Sky Parameters" here to make that self-healing:
 	// any edit still ends with the rig showing the current weather.
 	virtual void OnConstruction(const FTransform& Transform) override;
+
+	// A level-placed rig in a World Partition cell streams in after
+	// InitGame, which then spawned a second one: two suns at the same
+	// ForwardShadingPriority, and the main directional light flipping
+	// between them frame to frame. The level-placed rig wins.
+	virtual void BeginPlay() override;
 
 #if WITH_EDITOR
 	// Applies TimePresetName/ConditionPresetName as soon as either dropdown
