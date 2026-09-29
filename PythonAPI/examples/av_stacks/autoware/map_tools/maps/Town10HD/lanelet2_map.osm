@@ -256831,6 +256831,7 @@
     <tag k="type" v="lanelet" />
     <tag k="subtype" v="road" />
     <tag k="location" v="urban" />
+    <member type="relation" ref="900961015" role="regulatory_element" />
   </relation>
   <relation id="6135" action="modify" visible="true" version="1">
     <member type="way" ref="6134" role="right" />
@@ -256855,7 +256856,6 @@
     <tag k="type" v="lanelet" />
     <tag k="subtype" v="road" />
     <tag k="location" v="urban" />
-    <member type="relation" ref="900961015" role="regulatory_element" />
   </relation>
   <relation id="7217" action="modify" visible="true" version="1">
     <member type="way" ref="7216" role="right" />
@@ -256879,6 +256879,7 @@
     <tag k="type" v="lanelet" />
     <tag k="subtype" v="road" />
     <tag k="location" v="urban" />
+    <member type="relation" ref="900945018" role="regulatory_element" />
   </relation>
   <relation id="8385" action="modify" visible="true" version="1">
     <member type="way" ref="8384" role="right" />
@@ -256904,7 +256905,6 @@
     <tag k="subtype" v="road" />
     <tag k="location" v="urban" />
     <member type="relation" ref="900962015" role="regulatory_element" />
-    <member type="relation" ref="900945018" role="regulatory_element" />
   </relation>
   <relation id="9252" action="modify" visible="true" version="1">
     <member type="way" ref="9251" role="right" />
@@ -257522,6 +257522,7 @@
     <tag k="type" v="lanelet" />
     <tag k="subtype" v="road" />
     <tag k="location" v="urban" />
+    <member type="relation" ref="900944015" role="regulatory_element" />
   </relation>
   <relation id="18842" action="modify" visible="true" version="1">
     <member type="way" ref="18841" role="right" />
@@ -257607,7 +257608,6 @@
     <tag k="type" v="lanelet" />
     <tag k="subtype" v="road" />
     <tag k="location" v="urban" />
-    <member type="relation" ref="900944015" role="regulatory_element" />
   </relation>
   <relation id="20858" action="modify" visible="true" version="1">
     <member type="way" ref="20857" role="right" />
@@ -258746,13 +258746,13 @@
     <tag k="height" v="0.201" />
   </way>
   <node id="900949012" action="modify" visible="true" version="1" lat="0.0" lon="0.0">
-    <tag k="local_x" v="-70.0817" />
-    <tag k="local_y" v="-22.7393" />
+    <tag k="local_x" v="-68.0818" />
+    <tag k="local_y" v="-22.7448" />
     <tag k="ele" v="0.0000" />
   </node>
   <node id="900949013" action="modify" visible="true" version="1" lat="0.0" lon="0.0">
-    <tag k="local_x" v="-70.0929" />
-    <tag k="local_y" v="-29.7393" />
+    <tag k="local_x" v="-68.0929" />
+    <tag k="local_y" v="-29.7448" />
     <tag k="ele" v="0.0000" />
   </node>
   <way id="900949014" action="modify" visible="true" version="1">
@@ -258839,13 +258839,13 @@
     <tag k="height" v="0.201" />
   </way>
   <node id="900954012" action="modify" visible="true" version="1" lat="0.0" lon="0.0">
-    <tag k="local_x" v="-21.8250" />
-    <tag k="local_y" v="-135.3270" />
+    <tag k="local_x" v="-23.8249" />
+    <tag k="local_y" v="-135.3147" />
     <tag k="ele" v="0.0000" />
   </node>
   <node id="900954013" action="modify" visible="true" version="1" lat="0.0" lon="0.0">
-    <tag k="local_x" v="-21.8004" />
-    <tag k="local_y" v="-128.3270" />
+    <tag k="local_x" v="-23.8004" />
+    <tag k="local_y" v="-128.3147" />
     <tag k="ele" v="0.0000" />
   </node>
   <way id="900954014" action="modify" visible="true" version="1">
@@ -258949,13 +258949,13 @@
     <tag k="height" v="0.201" />
   </way>
   <node id="900953015" action="modify" visible="true" version="1" lat="0.0" lon="0.0">
-    <tag k="local_x" v="-46.7523" />
-    <tag k="local_y" v="-108.0813" />
+    <tag k="local_x" v="-46.7467" />
+    <tag k="local_y" v="-110.0813" />
     <tag k="ele" v="0.0000" />
   </node>
   <node id="900953016" action="modify" visible="true" version="1" lat="0.0" lon="0.0">
-    <tag k="local_x" v="-53.7523" />
-    <tag k="local_y" v="-108.0925" />
+    <tag k="local_x" v="-53.7467" />
+    <tag k="local_y" v="-110.0925" />
     <tag k="ele" v="0.0000" />
   </node>
   <way id="900953017" action="modify" visible="true" version="1">
@@ -259043,13 +259043,13 @@
     <tag k="height" v="0.201" />
   </way>
   <node id="900962012" action="modify" visible="true" version="1" lat="0.0" lon="0.0">
-    <tag k="local_x" v="-108.4016" />
-    <tag k="local_y" v="7.9936" />
+    <tag k="local_x" v="-108.4240" />
+    <tag k="local_y" v="5.9937" />
     <tag k="ele" v="0.0000" />
   </node>
   <node id="900962013" action="modify" visible="true" version="1" lat="0.0" lon="0.0">
-    <tag k="local_x" v="-115.4023" />
-    <tag k="local_y" v="7.9760" />
+    <tag k="local_x" v="-115.4247" />
+    <tag k="local_y" v="5.9761" />
     <tag k="ele" v="0.0000" />
   </node>
   <way id="900962014" action="modify" visible="true" version="1">
@@ -259153,13 +259153,13 @@
     <tag k="height" v="0.201" />
   </way>
   <node id="900945015" action="modify" visible="true" version="1" lat="0.0" lon="0.0">
-    <tag k="local_x" v="-68.4224" />
-    <tag k="local_y" v="63.4572" />
+    <tag k="local_x" v="-67.4225" />
+    <tag k="local_y" v="63.4468" />
     <tag k="ele" v="0.0000" />
   </node>
   <node id="900945016" action="modify" visible="true" version="1" lat="0.0" lon="0.0">
-    <tag k="local_x" v="-68.4685" />
-    <tag k="local_y" v="56.4573" />
+    <tag k="local_x" v="-67.4686" />
+    <tag k="local_y" v="56.4469" />
     <tag k="ele" v="0.0000" />
   </node>
   <way id="900945017" action="modify" visible="true" version="1">
@@ -259247,13 +259247,13 @@
     <tag k="height" v="0.201" />
   </way>
   <node id="900961012" action="modify" visible="true" version="1" lat="0.0" lon="0.0">
-    <tag k="local_x" v="-109.0527" />
-    <tag k="local_y" v="-50.0859" />
+    <tag k="local_x" v="-109.0303" />
+    <tag k="local_y" v="-48.0860" />
     <tag k="ele" v="0.0000" />
   </node>
   <node id="900961013" action="modify" visible="true" version="1" lat="0.0" lon="0.0">
-    <tag k="local_x" v="-102.0531" />
-    <tag k="local_y" v="-50.1609" />
+    <tag k="local_x" v="-102.0307" />
+    <tag k="local_y" v="-48.1611" />
     <tag k="ele" v="0.0000" />
   </node>
   <way id="900961014" action="modify" visible="true" version="1">
@@ -259340,13 +259340,13 @@
     <tag k="height" v="0.201" />
   </way>
   <node id="900951012" action="modify" visible="true" version="1" lat="0.0" lon="0.0">
-    <tag k="local_x" v="-47.0778" />
-    <tag k="local_y" v="7.5318" />
+    <tag k="local_x" v="-47.0721" />
+    <tag k="local_y" v="5.5318" />
     <tag k="ele" v="0.0000" />
   </node>
   <node id="900951013" action="modify" visible="true" version="1" lat="0.0" lon="0.0">
-    <tag k="local_x" v="-54.0777" />
-    <tag k="local_y" v="7.4822" />
+    <tag k="local_x" v="-54.0720" />
+    <tag k="local_y" v="5.4865" />
     <tag k="ele" v="0.0000" />
   </node>
   <way id="900951014" action="modify" visible="true" version="1">
@@ -259433,13 +259433,13 @@
     <tag k="height" v="0.201" />
   </way>
   <node id="900952012" action="modify" visible="true" version="1" lat="0.0" lon="0.0">
-    <tag k="local_x" v="-23.9155" />
-    <tag k="local_y" v="-18.3675" />
+    <tag k="local_x" v="-25.9155" />
+    <tag k="local_y" v="-18.3620" />
     <tag k="ele" v="0.0000" />
   </node>
   <node id="900952013" action="modify" visible="true" version="1" lat="0.0" lon="0.0">
-    <tag k="local_x" v="-23.9044" />
-    <tag k="local_y" v="-11.3676" />
+    <tag k="local_x" v="-25.9044" />
+    <tag k="local_y" v="-11.3620" />
     <tag k="ele" v="0.0000" />
   </node>
   <way id="900952014" action="modify" visible="true" version="1">
@@ -259526,13 +259526,13 @@
     <tag k="height" v="0.201" />
   </way>
   <node id="900950012" action="modify" visible="true" version="1" lat="0.0" lon="0.0">
-    <tag k="local_x" v="-46.9206" />
-    <tag k="local_y" v="-48.2811" />
+    <tag k="local_x" v="-46.9263" />
+    <tag k="local_y" v="-46.2811" />
     <tag k="ele" v="0.0000" />
   </node>
   <node id="900950013" action="modify" visible="true" version="1" lat="0.0" lon="0.0">
-    <tag k="local_x" v="-39.9206" />
-    <tag k="local_y" v="-48.2699" />
+    <tag k="local_x" v="-39.9263" />
+    <tag k="local_y" v="-46.2699" />
     <tag k="ele" v="0.0000" />
   </node>
   <way id="900950014" action="modify" visible="true" version="1">
@@ -259619,13 +259619,13 @@
     <tag k="height" v="0.201" />
   </way>
   <node id="900957012" action="modify" visible="true" version="1" lat="0.0" lon="0.0">
-    <tag k="local_x" v="104.6761" />
-    <tag k="local_y" v="8.7955" />
+    <tag k="local_x" v="104.6624" />
+    <tag k="local_y" v="6.7955" />
     <tag k="ele" v="0.0000" />
   </node>
   <node id="900957013" action="modify" visible="true" version="1" lat="0.0" lon="0.0">
-    <tag k="local_x" v="97.6761" />
-    <tag k="local_y" v="8.8227" />
+    <tag k="local_x" v="97.6625" />
+    <tag k="local_y" v="6.8228" />
     <tag k="ele" v="0.0000" />
   </node>
   <way id="900957014" action="modify" visible="true" version="1">
@@ -259712,13 +259712,13 @@
     <tag k="height" v="0.201" />
   </way>
   <node id="900958012" action="modify" visible="true" version="1" lat="0.0" lon="0.0">
-    <tag k="local_x" v="104.2857" />
-    <tag k="local_y" v="-48.4400" />
+    <tag k="local_x" v="104.2994" />
+    <tag k="local_y" v="-46.4400" />
     <tag k="ele" v="0.0000" />
   </node>
   <node id="900958013" action="modify" visible="true" version="1" lat="0.0" lon="0.0">
-    <tag k="local_x" v="111.2857" />
-    <tag k="local_y" v="-48.4673" />
+    <tag k="local_x" v="111.2994" />
+    <tag k="local_y" v="-46.4673" />
     <tag k="ele" v="0.0000" />
   </node>
   <way id="900958014" action="modify" visible="true" version="1">
@@ -259805,13 +259805,13 @@
     <tag k="height" v="0.201" />
   </way>
   <node id="900944012" action="modify" visible="true" version="1" lat="0.0" lon="0.0">
-    <tag k="local_x" v="-46.8993" />
-    <tag k="local_y" v="42.4779" />
+    <tag k="local_x" v="-46.8955" />
+    <tag k="local_y" v="42.9778" />
     <tag k="ele" v="0.0000" />
   </node>
   <node id="900944013" action="modify" visible="true" version="1" lat="0.0" lon="0.0">
-    <tag k="local_x" v="-39.8993" />
-    <tag k="local_y" v="42.4477" />
+    <tag k="local_x" v="-39.8955" />
+    <tag k="local_y" v="42.9477" />
     <tag k="ele" v="0.0000" />
   </node>
   <way id="900944014" action="modify" visible="true" version="1">
@@ -259898,13 +259898,13 @@
     <tag k="height" v="0.201" />
   </way>
   <node id="900943012" action="modify" visible="true" version="1" lat="0.0" lon="0.0">
-    <tag k="local_x" v="-25.6266" />
-    <tag k="local_y" v="63.0115" />
+    <tag k="local_x" v="-27.6265" />
+    <tag k="local_y" v="63.0323" />
     <tag k="ele" v="0.0000" />
   </node>
   <node id="900943013" action="modify" visible="true" version="1" lat="0.0" lon="0.0">
-    <tag k="local_x" v="-25.5850" />
-    <tag k="local_y" v="70.0114" />
+    <tag k="local_x" v="-27.5849" />
+    <tag k="local_y" v="70.0323" />
     <tag k="ele" v="0.0000" />
   </node>
   <way id="900943014" action="modify" visible="true" version="1">
@@ -259991,13 +259991,13 @@
     <tag k="height" v="0.201" />
   </way>
   <node id="900959012" action="modify" visible="true" version="1" lat="0.0" lon="0.0">
-    <tag k="local_x" v="77.6820" />
-    <tag k="local_y" v="-23.1499" />
+    <tag k="local_x" v="79.6820" />
+    <tag k="local_y" v="-23.1554" />
     <tag k="ele" v="0.0000" />
   </node>
   <node id="900959013" action="modify" visible="true" version="1" lat="0.0" lon="0.0">
-    <tag k="local_x" v="77.6709" />
-    <tag k="local_y" v="-30.1499" />
+    <tag k="local_x" v="79.6708" />
+    <tag k="local_y" v="-30.1554" />
     <tag k="ele" v="0.0000" />
   </node>
   <way id="900959014" action="modify" visible="true" version="1">
@@ -260084,13 +260084,13 @@
     <tag k="height" v="0.201" />
   </way>
   <node id="900960012" action="modify" visible="true" version="1" lat="0.0" lon="0.0">
-    <tag k="local_x" v="-83.3351" />
-    <tag k="local_y" v="-18.2025" />
+    <tag k="local_x" v="-85.3350" />
+    <tag k="local_y" v="-18.1969" />
     <tag k="ele" v="0.0000" />
   </node>
   <node id="900960013" action="modify" visible="true" version="1" lat="0.0" lon="0.0">
-    <tag k="local_x" v="-83.3239" />
-    <tag k="local_y" v="-11.2025" />
+    <tag k="local_x" v="-85.3239" />
+    <tag k="local_y" v="-11.1969" />
     <tag k="ele" v="0.0000" />
   </node>
   <way id="900960014" action="modify" visible="true" version="1">
