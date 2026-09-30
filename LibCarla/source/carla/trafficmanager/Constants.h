@@ -5,6 +5,7 @@
 
 #pragma once
 
+#include <chrono>
 #include <limits>
 #include <stdint.h>
 #include <iostream>
@@ -36,6 +37,39 @@ static const double HYBRID_MODE_DT = 0.05;
 static const double INV_HYBRID_DT = 1.0 / HYBRID_MODE_DT;
 static const float PHYSICS_RADIUS = 50.0f;
 } // namespace HybridMode
+
+// Refresh periods (simulation seconds) for world queries read over synchronous
+// RPCs. In asynchronous mode each such RPC costs a full server frame of
+// latency; synchronous mode still reads them every step.
+namespace WorldInfoRefresh {
+static const double EPISODE_SETTINGS_REFRESH_PERIOD = 1.0;
+static const double VEHICLE_LIGHT_STATES_REFRESH_PERIOD = 0.25;
+static const double WEATHER_REFRESH_PERIOD = 1.0;
+// Bounds how many control batches can queue ahead of the server's game thread.
+// Counted in batches, not simulation time: with a fixed delta a time period
+// would let a slow server queue proportionally more of them.
+static const uint64_t MAX_UNWAITED_CONTROL_BATCHES = 4u;
+// Keeps the asynchronous worker from spinning on the episode state.
+static const std::chrono::milliseconds SNAPSHOT_POLL_PERIOD {1};
+
+/// Also true when the clock jumps backwards (new episode) or on NaN, so an
+/// unusable clock refreshes rather than pins the cache for ever.
+inline bool IsRefreshDue(const double now, const double last, const double period) {
+  return !(now >= last && (now - last) < period);
+}
+
+/// A vehicle the server already omitted from a fresh list (dormant on a large
+/// map) must not re-arm the unscheduled read on every other step.
+[[nodiscard]] inline bool IsEarlyRefreshDue(
+    const bool refreshed_this_step,
+    const bool missing_from_the_last_refresh) {
+  return !refreshed_this_step && !missing_from_the_last_refresh;
+}
+
+[[nodiscard]] inline bool IsBatchSyncDue(const uint64_t unwaited_batches, const uint64_t limit) {
+  return unwaited_batches >= limit;
+}
+} // namespace WorldInfoRefresh
 
 namespace SpeedThreshold {
 static const float HIGHWAY_SPEED = 60.0f / 3.6f;
@@ -162,8 +196,14 @@ static const float LANDMARK_DETECTION_TIME = 3.5f;
 static const float TL_TARGET_VELOCITY = 15.0f / 3.6f;
 static const float STOP_TARGET_VELOCITY = 10.0f / 3.6f;
 static const float YIELD_TARGET_VELOCITY = 10.0f / 3.6f;
-static const float FRICTION = 0.6f;
-static const float GRAVITY = 9.81f;
+// m/s2 (~0.3 g), a comfortable cornering level; still takes the R = 11 m
+// Town10 junction connectors at 20 km/h.
+static const float LATERAL_COMFORT_ACCELERATION = 3.0f;
+// m/s2 used to plan braking ahead of a turn, so vehicles slow before it.
+static const float TURN_BRAKING_DECELERATION = 2.0f;
+// Closer samples land on the stored polyline's chords and read as straight;
+// wider ones miss turns shorter than two spacings.
+static const float CURVATURE_SAMPLE_SPACING = Map::MAP_RESOLUTION;
 static const float PI = 3.1415927f;
 static const float PERC_MAX_SLOWDOWN = 0.08f;
 static const float FOLLOW_LEAD_FACTOR = 2.0f;
@@ -248,7 +288,7 @@ static const float INV_DT = 1.0f / DT;
 // Valid range for the measured controller period. Below MIN the derivative
 // division gets noisy; above MAX the sim is hitching so badly that reacting
 // to the full elapsed time would command huge one-tick corrections.
-static const float MIN_CONTROL_DT = 0.01f;
+static constexpr float MIN_CONTROL_DT = 0.01f;
 static const float MAX_CONTROL_DT = 0.2f;
 // Steering slew budget, per second of simulation time (0.15 per 0.05 s tick
 // at the design rate). Applying it per second instead of per tick keeps the
@@ -261,6 +301,30 @@ static const float MAX_DEVIATION_DELTA = 0.05f;
 // The same bound expressed as a rate, so it scales with the measured tick
 // period: 1.0 normalised units/s = 180 deg/s.
 static const float MAX_DEVIATION_RATE = MAX_DEVIATION_DELTA / DT;
+// Deadbands hold the previous command to remove per-frame dither around the
+// trim point. A slew limit is avoided on purpose: it must be asymmetric to stay
+// safe, and that biases the average command down. The throttle ramp applies
+// only near standstill (m/s); a higher threshold also catches corner exits.
+static const float LAUNCH_RAMP_SPEED = 2.0f;
+static constexpr float MAX_LAUNCH_THROTTLE_RISE_RATE = 1.7f;
+static constexpr float THROTTLE_DEADBAND = 0.01f;
+// Otherwise the deadband snaps every ramp step back and a vehicle at rest is
+// held at zero throttle for ever.
+static_assert(MAX_LAUNCH_THROTTLE_RISE_RATE * MIN_CONTROL_DT > THROTTLE_DEADBAND,
+              "the launch ramp must be able to step out of the throttle deadband");
+static const float BRAKE_DEADBAND = 0.01f;
+static const float STEER_DEADBAND = 0.002f;
+// m/s. The steering deadband is scaled by (ref / speed)^2 above this speed,
+// since the lateral acceleration it hides grows with the square of speed.
+static const float STEER_DEADBAND_REF_SPEED = 8.0f;
+// m/s2 at which the longitudinal reference closes on a stepping target. The
+// proportional gain saturates the throttle above a 7 per cent error (0.85 / 12),
+// so without it a target step commands full throttle in one frame.
+static const float COMFORT_ACCELERATION = 2.0f;
+// Max lead of the reference over the vehicle, as a fraction of the target, so
+// it cannot run away from a blocked vehicle. Must stay above the 7 per cent
+// that saturates the throttle.
+static const float REFERENCE_LEAD_FRACTION = 0.15f;
 static const std::vector<float> LONGITUDIAL_PARAM = {12.0f, 0.05f, 0.02f};
 static const std::vector<float> LONGITUDIAL_HIGHWAY_PARAM = {20.0f, 0.05f, 0.01f};
 // Lateral gains, step-response tuned against the LINEAR Chaos steering
