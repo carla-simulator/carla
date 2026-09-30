@@ -482,6 +482,72 @@ static float ComputeMoonHaloBlend(float SunAltitudeAngle)
     return T * T * (3.0f - 2.0f * T);   // smoothstep
 }
 
+// The directional light's VSM cache is keyed on the exact light direction. A
+// sun that turns once per tick, while each tick renders several views (the
+// viewport and every camera sensor), keeps swapping the cache entry between
+// cached and uncached. With a low sun the stale pages show: direct sunlight
+// switching on and off in single frames (Town15, sun at +1..+5 degrees, 12 of
+// 120 frames; 0 with this). The engine's advice for a light that invalidates
+// often but not on every render (VirtualShadowMapCacheManager.cpp) is
+// r.Shadow.Virtual.Cache.ForceInvalidateDirectional. It is held on while the
+// sun moves and released once the sun has been still for
+// VSMSunStillSeconds. It is set by code, so a value set in the console wins.
+static TAutoConsoleVariable<bool> CVarCarlaWeatherVSMInvalidateWhileSunMoves(
+    TEXT("carla.Weather.VSMInvalidateWhileSunMoves"),
+    true,
+    TEXT("Hold r.Shadow.Virtual.Cache.ForceInvalidateDirectional on while the sun direction ")
+    TEXT("changes. 0 leaves it alone."),
+    ECVF_Default);
+
+static TAutoConsoleVariable<float> CVarCarlaWeatherVSMSunStillSeconds(
+    TEXT("carla.Weather.VSMSunStillSeconds"),
+    1.0f,
+    TEXT("World seconds without a sun direction change before the directional VSM cache is ")
+    TEXT("used again. World time, not engine frames: in synchronous mode the editor keeps ")
+    TEXT("rendering between client ticks, and a frame count released the cvar between two ")
+    TEXT("pushes of a moving sun, which brought the flicker back."),
+    ECVF_Default);
+
+static FRotator GLastSunRotation(ForceInitToZero);
+static double GLastSunMoveWorldSeconds = 0.0;
+static bool GForcingDirectionalVSMInvalidate = false;
+
+static void SetForceInvalidateDirectionalVSM(bool bOn)
+{
+    if (GForcingDirectionalVSMInvalidate == bOn)
+        return;
+    if (IConsoleVariable* CVar = IConsoleManager::Get().FindConsoleVariable(
+            TEXT("r.Shadow.Virtual.Cache.ForceInvalidateDirectional")))
+    {
+        CVar->Set(bOn ? 1 : 0, ECVF_SetByCode);
+        GForcingDirectionalVSMInvalidate = bOn;
+        UE_LOG(LogCarla, Log, TEXT("AWeather: directional VSM force-invalidate %s"), bOn ? TEXT("on") : TEXT("off"));
+    }
+}
+
+static void NoteSunRotation(const UWorld* World, const FRotator& Rotation)
+{
+    if (!CVarCarlaWeatherVSMInvalidateWhileSunMoves.GetValueOnGameThread())
+    {
+        SetForceInvalidateDirectionalVSM(false);
+        return;
+    }
+    if (!Rotation.Equals(GLastSunRotation, 1e-4f))
+    {
+        GLastSunRotation = Rotation;
+        GLastSunMoveWorldSeconds = World->GetTimeSeconds();
+        SetForceInvalidateDirectionalVSM(true);
+    }
+}
+
+static void ReleaseDirectionalVSMInvalidateIfSunStill(const UWorld* World)
+{
+    if (GForcingDirectionalVSMInvalidate && World != nullptr
+        && World->GetTimeSeconds() - GLastSunMoveWorldSeconds
+            > FMath::Max(CVarCarlaWeatherVSMSunStillSeconds.GetValueOnGameThread(), 0.0f))
+        SetForceInvalidateDirectionalVSM(false);
+}
+
 // 1 at SunTwilightStartDeg and above, decaying to 0 at SunTwilightEndDeg.
 // Negative when the twilight fade is disabled.
 static float ComputeSunTwilightFactor(float SunAltitudeAngle)
@@ -932,10 +998,12 @@ void AWeather::Tick(float DeltaSeconds)
 {
     Super::Tick(DeltaSeconds);
     UpdateRain();
+    ReleaseDirectionalVSMInvalidateIfSunStill(GetWorld());
 }
 
 void AWeather::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
+    SetForceInvalidateDirectionalVSM(false);
     for (auto& Entry : SensorRain)
         if (Entry.Value.IsValid()) Entry.Value->DestroyComponent();
     SensorRain.Empty();
@@ -1545,8 +1613,10 @@ void AWeather::ApplyWeatherToSkyActor(AActor* SkyActor, const FWeatherParameters
         // directional light shines along its forward vector.
         if (ULightComponent* SunLightComponent = FindComponent(TEXT("DirectionalLightComponentSun")))
         {
-            SunLightComponent->SetWorldRotation(
-                FRotator(-Weather.SunAltitudeAngle, Weather.SunAzimuthAngle, 0.0f));
+            const FRotator SunRotation(-Weather.SunAltitudeAngle, Weather.SunAzimuthAngle, 0.0f);
+            SunLightComponent->SetWorldRotation(SunRotation);
+            if (SkyActor->GetWorld() != nullptr && SkyActor->GetWorld()->IsGameWorld())
+                NoteSunRotation(SkyActor->GetWorld(), SunRotation);
         }
 
         // The moon likewise, anti-solar; pitch negated as for the sun. Held at
