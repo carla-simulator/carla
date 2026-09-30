@@ -8,6 +8,7 @@
 #include "Carla.h"
 #include "Carla/ContentPacks/ContentPackManager.h"
 #include "Carla/Game/CarlaEpisode.h"
+#include "Carla/Game/CarlaGameModeBase.h"
 #include "Carla/Game/CarlaStaticDelegates.h"
 #include "Carla/Game/CarlaStatics.h"
 #include "Carla/Lights/CarlaLightSubsystem.h"
@@ -15,6 +16,7 @@
 #include "Carla/Settings/CarlaSettings.h"
 #include "Carla/Settings/EpisodeSettings.h"
 #include "Carla/MapGen/LargeMapManager.h"
+#include "Carla/Traffic/TrafficLightManager.h"
 
 #include <util/disable-ue4-macros.h>
 #include <carla/Logging.h>
@@ -349,6 +351,24 @@ void FCarlaEngine::NotifyBeginEpisode(UCarlaEpisode &Episode)
   {
     CurrentSettings.TileStreamingDistance = LargeMapManager->GetLayerStreamingDistance();
     CurrentSettings.ActorActiveDistance = LargeMapManager->GetActorStreamingDistance();
+  }
+
+  // The settings survive load_world(reset_settings=False) but the traffic
+  // light manager is new with every map, and a map can enable sign snapping
+  // on its own. Enable it on whichever side lacks it so that they agree.
+  ACarlaGameModeBase* GameMode = UCarlaStatics::GetGameMode(World);
+  if (ATrafficLightManager* TrafficLightManager =
+          GameMode ? GameMode->GetTrafficLightManager() : nullptr)
+  {
+    if (CurrentSettings.bAdjustSignsHeightToGround)
+    {
+      TrafficLightManager->SetAdjustSignsHeightToGround(true);
+    }
+    else
+    {
+      CurrentSettings.bAdjustSignsHeightToGround =
+          TrafficLightManager->GetAdjustSignsHeightToGround();
+    }
   }
 
   if (!bIsPrimaryServer)

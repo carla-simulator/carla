@@ -1,5 +1,6 @@
 ## LATEST Changes
 
+* Added opt-in ground-height adjustment for OpenDRIVE-generated traffic signs and traffic lights, snapping only generated actors (never hand-placed ones) to the ground while keeping their trigger volumes aligned. Disabled by default; enable it at runtime through the `adjust_signs_height_to_ground` flag on `carla.WorldSettings` (which re-snaps already-spawned signs, so packaged maps whose traffic-light manager is spawned with defaults can toggle it), or per map with the `bAdjustSignsHeightToGround` flag on the traffic-light manager. On World Partition maps the ground streams in around the streaming source, so a sign is snapped when the cell below it becomes resident instead of only once at map load. Ported from `ue4-dev`.
 * Updated the walker skeleton tutorial to the current bone API (`carla.WalkerBoneControlIn`, `Walker.set_bones` and `Walker.show_pose`) and fixed bone names in its skeleton tree.
 * Documented that `Actor` and `ActorSnapshot` velocity, angular velocity and acceleration getters, and `Actor.set_target_velocity`/`set_target_angular_velocity`, use world coordinates.
 * Fixed `BehaviorAgent.run_step` raising `AttributeError: 'NoneType' object has no attribute 'is_junction'` once the local planner's waypoint queue is empty, e.g. at the end of a route.
