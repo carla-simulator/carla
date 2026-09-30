@@ -26,6 +26,8 @@ public:
 
   virtual void Tick(float DeltaSeconds) override;
 
+  virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+
   UFUNCTION(BlueprintCallable, Category = "Traffic Light Manager")
   void RegisterLightComponentFromOpenDRIVE(UTrafficLightComponent * TrafficLight);
 
@@ -73,6 +75,10 @@ private:
   void SpawnSignals();
 
   void UpdateSignalGroundDormancy();
+
+  void OnLevelAddedToWorld(ULevel *Level, UWorld *World);
+
+  void SuppressSpawnedSignsIfLevelHasPlacedSigns(ULevel *Level);
 
   void RemoveRoadrunnerProps() const;
 
@@ -150,5 +156,19 @@ private:
   float DormancyTraceDepth = 2000.0f;
 
   int32 DormancySweepIndex = 0;
+
+  // Signs SpawnSignals spawned from the OpenDRIVE (stop, yield, speed limit).
+  // On a World Partition map whose own signs are placed in the level (Town15:
+  // Vienna Convention BP_Sign actors), those are what should be seen, but they
+  // are in cells not loaded when SpawnSignals runs, so it cannot adopt them
+  // and spawns stock CARLA signs as well (a US "YIELD" plate among European
+  // signs). Once a placed sign streams in, the spawned ones are hidden and
+  // lose their mesh collision; their sign components and trigger boxes stay,
+  // so the traffic logic is unchanged.
+  TSet<TWeakObjectPtr<ATrafficSignBase>> SpawnedSigns;
+
+  bool bSpawnedSignsSuppressed = false;
+
+  FDelegateHandle LevelAddedHandle;
 
 };

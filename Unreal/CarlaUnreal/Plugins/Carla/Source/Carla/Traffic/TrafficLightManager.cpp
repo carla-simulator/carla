@@ -11,6 +11,10 @@
 #include "YieldSignComponent.h"
 #include "SpeedLimitComponent.h"
 #include "Components/BoxComponent.h"
+#include "Engine/Level.h"
+#include "Engine/World.h"
+#include "HAL/IConsoleManager.h"
+#include "TrafficLightBase.h"
 #include "Runtime/CoreUObject/Public/UObject/ConstructorHelpers.h"
 #include "OpenDrive/OpenDrive.h"
 #include "OpenDrive/MapLogicParser.h"
@@ -25,6 +29,13 @@
 
 
 #include <string>
+
+static TAutoConsoleVariable<bool> CVarCarlaHideSpawnedSignsWhenPlaced(
+    TEXT("carla.TrafficSigns.HideSpawnedWhenPlaced"),
+    true,
+    TEXT("On World Partition maps, hide the signs spawned from the OpenDRIVE once a sign ")
+    TEXT("placed in the level streams in. Their traffic logic stays. Read at level load."),
+    ECVF_Default);
 
 ATrafficLightManager::ATrafficLightManager()
 {
@@ -309,6 +320,8 @@ void ATrafficLightManager::RemoveGeneratedSignalsAndTrafficLights()
     Sign->Destroy();
   }
   TrafficSigns.Empty();
+  SpawnedSigns.Empty();
+  bSpawnedSignsSuppressed = false;
 
   for(auto& TrafficGroup : TrafficGroups)
   {
@@ -432,7 +445,81 @@ void ATrafficLightManager::InitializeTrafficLights()
   if (GetWorld()->GetWorldPartition() != nullptr)
   {
     SetActorTickEnabled(true);
+    if (!LevelAddedHandle.IsValid())
+    {
+      LevelAddedHandle = FWorldDelegates::LevelAddedToWorld.AddUObject(
+          this, &ATrafficLightManager::OnLevelAddedToWorld);
+    }
+    for (ULevel *Level : GetWorld()->GetLevels())
+    {
+      SuppressSpawnedSignsIfLevelHasPlacedSigns(Level);
+    }
   }
+}
+
+void ATrafficLightManager::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+  FWorldDelegates::LevelAddedToWorld.Remove(LevelAddedHandle);
+  LevelAddedHandle.Reset();
+  Super::EndPlay(EndPlayReason);
+}
+
+void ATrafficLightManager::OnLevelAddedToWorld(ULevel *Level, UWorld *World)
+{
+  if (World == GetWorld())
+  {
+    SuppressSpawnedSignsIfLevelHasPlacedSigns(Level);
+  }
+}
+
+void ATrafficLightManager::SuppressSpawnedSignsIfLevelHasPlacedSigns(ULevel *Level)
+{
+  if (bSpawnedSignsSuppressed || Level == nullptr || SpawnedSigns.Num() == 0 ||
+      !CVarCarlaHideSpawnedSignsWhenPlaced.GetValueOnGameThread())
+  {
+    return;
+  }
+  AActor *PlacedSign = nullptr;
+  for (AActor *Actor : Level->Actors)
+  {
+    // Traffic lights are sign actors too, and are left out: this is about
+    // the plates.
+    if (IsValid(Actor) && Actor->IsA<ATrafficSignBase>() && !Actor->IsA<ATrafficLightBase>() &&
+        Actor->GetOwner() != this && !SpawnedSigns.Contains(Cast<ATrafficSignBase>(Actor)))
+    {
+      PlacedSign = Actor;
+      break;
+    }
+  }
+  if (PlacedSign == nullptr)
+  {
+    return;
+  }
+  bSpawnedSignsSuppressed = true;
+  int32 Hidden = 0;
+  for (const TWeakObjectPtr<ATrafficSignBase> &Weak : SpawnedSigns)
+  {
+    ATrafficSignBase *Sign = Weak.Get();
+    if (!IsValid(Sign))
+    {
+      continue;
+    }
+    Sign->SetActorHiddenInGame(true);
+    TArray<UPrimitiveComponent*> Primitives;
+    Sign->GetComponents(Primitives);
+    for (UPrimitiveComponent *Primitive : Primitives)
+    {
+      // The trigger boxes carry the stop/yield/speed logic.
+      if (!Primitive->IsA<UBoxComponent>())
+      {
+        Primitive->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+      }
+    }
+    ++Hidden;
+  }
+  UE_LOG(LogCarla, Log,
+      TEXT("Traffic signs: %s is placed in the level, hiding the %d signs spawned from the OpenDRIVE"),
+      *PlacedSign->GetName(), Hidden);
 }
 
 void ATrafficLightManager::AdoptModelConfigurationFrom(const ATrafficLightManager& Other)
@@ -464,6 +551,11 @@ void ATrafficLightManager::UpdateSignalGroundDormancy()
     DormancySweepIndex = (DormancySweepIndex + 1) % Num;
     ATrafficSignBase *Sign = TrafficSigns[DormancySweepIndex];
     if (!IsValid(Sign))
+    {
+      continue;
+    }
+    // Hidden for good: the map's placed signs stand in for it.
+    if (bSpawnedSignsSuppressed && SpawnedSigns.Contains(Sign))
     {
       continue;
     }
@@ -790,6 +882,7 @@ void ATrafficLightManager::SpawnSignals()
       }
       TrafficSignComponents.Add(SignComponent->GetSignId(), SignComponent);
       TrafficSigns.Add(TrafficSign);
+      SpawnedSigns.Add(TrafficSign);
     }
     else if (Signal->GetType() == carla::road::SignalType::MaximumSpeed() &&
             SpeedLimitModels.Contains(Signal->GetSubtype().c_str()))
@@ -876,6 +969,7 @@ void ATrafficLightManager::SpawnSignals()
       }
       TrafficSignComponents.Add(SignComponent->GetSignId(), SignComponent);
       TrafficSigns.Add(TrafficSign);
+      SpawnedSigns.Add(TrafficSign);
     }
   }
 }
