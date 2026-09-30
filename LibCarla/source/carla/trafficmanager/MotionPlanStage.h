@@ -34,7 +34,6 @@ private:
   const LocalizationFrame &localization_frame;
   const CollisionFrame &collision_frame;
   const TLFrame &tl_frame;
-  const cc::World &world;
   // Structure holding the controller state for registered vehicles.
   std::unordered_map<ActorId, StateEntry> pid_state_map;
   // Structure to keep track of duration between teleportation
@@ -91,6 +90,7 @@ private:
                                   float max_target_velocity);
 
   float GetTurnTargetVelocity(const Buffer &waypoint_buffer,
+                              const cg::Location vehicle_location,
                               float max_target_velocity);
 
 public:
@@ -106,11 +106,14 @@ public:
                   const LocalizationFrame &localization_frame,
                   const CollisionFrame &collision_frame,
                   const TLFrame &tl_frame,
-                  const cc::World &world,
                   ControlFrame &output_array,
                   RandomGenerator &random_device,
                   const LocalMapPtr &local_map,
                   std::unordered_map<ActorId, std::pair<float, bool>> &large_vehicles);
+
+  /// Pins one frame for the whole cycle; reading it per vehicle lets a frame
+  /// land mid-cycle and skews the controller period within a cycle.
+  void SetCycleTimestamp(const cc::Timestamp &timestamp);
 
   void Update(const unsigned long index);
 

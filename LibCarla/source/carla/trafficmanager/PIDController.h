@@ -7,6 +7,7 @@
 #pragma once
 
 #include <algorithm>
+#include <cmath>
 
 #include "carla/trafficmanager/Constants.h"
 #include "carla/trafficmanager/DataStructures.h"
@@ -21,6 +22,71 @@ using namespace constants::PID;
 using TimeInstance = chr::time_point<chr::system_clock, chr::nanoseconds>;
 
 namespace PID {
+
+/// Reference speed that closes on @a target_velocity at COMFORT_ACCELERATION
+/// instead of stepping to it. After an emergency stop the previous reference
+/// is meaningless, so it restarts from the vehicle speed.
+[[nodiscard]] inline float ShapeReferenceVelocity(
+    const float previous_reference,
+    const float vehicle_speed,
+    const float target_velocity,
+    const float control_dt,
+    const bool emergency_stop) {
+
+  float reference{emergency_stop ? vehicle_speed : previous_reference};
+
+  // Same period bounds as the controller, so a long frame cannot over-advance.
+  reference = std::min(
+      reference + COMFORT_ACCELERATION * std::clamp(control_dt, MIN_CONTROL_DT, MAX_CONTROL_DT),
+      target_velocity);
+  // Never below the current speed (the ramp must not brake) nor above the
+  // target (it must not cancel a requested deceleration).
+  reference = std::max(reference, std::min(vehicle_speed, target_velocity));
+  return std::min(reference, vehicle_speed + REFERENCE_LEAD_FRACTION * target_velocity);
+}
+
+/// The target is exactly zero behind a stopped vehicle; the floor avoids a 0/0
+/// NaN that the derivative term would turn into a NaN steering command.
+[[nodiscard]] inline float RelativeVelocityDeviation(
+    const float reference_velocity,
+    const float vehicle_speed,
+    const float target_velocity) {
+
+  return (reference_velocity - vehicle_speed) /
+         std::max(target_velocity, constants::MotionPlan::EPSILON_RELATIVE_SPEED);
+}
+
+/// A zero pedal demand bypasses the deadband, so pedals rest exactly at zero
+/// and nothing here delays a deceleration.
+inline void SmoothActuation(
+    const StateEntry &previous_state,
+    const float control_dt,
+    const float vehicle_speed,
+    ActuationSignal &actuation_signal) {
+
+  const float speed_ratio{
+      STEER_DEADBAND_REF_SPEED / std::max(vehicle_speed, STEER_DEADBAND_REF_SPEED)};
+  const float steer_deadband{STEER_DEADBAND * speed_ratio * speed_ratio};
+
+  if (vehicle_speed < LAUNCH_RAMP_SPEED) {
+    const float dt{std::clamp(control_dt, MIN_CONTROL_DT, MAX_CONTROL_DT)};
+    actuation_signal.throttle = std::min(
+        actuation_signal.throttle,
+        previous_state.throttle + MAX_LAUNCH_THROTTLE_RISE_RATE * dt);
+  }
+
+  if (actuation_signal.throttle > 0.0f &&
+      std::abs(actuation_signal.throttle - previous_state.throttle) < THROTTLE_DEADBAND) {
+    actuation_signal.throttle = previous_state.throttle;
+  }
+  if (actuation_signal.brake > 0.0f &&
+      std::abs(actuation_signal.brake - previous_state.brake) < BRAKE_DEADBAND) {
+    actuation_signal.brake = previous_state.brake;
+  }
+  if (std::abs(actuation_signal.steer - previous_state.steer) < steer_deadband) {
+    actuation_signal.steer = previous_state.steer;
+  }
+}
 
 /// This function calculates the actuation signals based on the resent state
 /// change of the vehicle to minimize PID error.

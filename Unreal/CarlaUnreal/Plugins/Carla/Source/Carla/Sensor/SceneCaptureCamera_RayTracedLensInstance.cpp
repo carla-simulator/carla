@@ -142,19 +142,18 @@ void ASceneCaptureCamera_RayTracedLensInstance::PostPhysTick(
   // policy: blocking readback after the capture in synchronous mode, and
   // readback-then-capture without ever waiting on the render thread otherwise.
   TickCaptureAndReadback(World, TickType, DeltaSeconds,
-    [this](bool bNonBlocking)
+    [this](bool bNonBlocking, const FSensorCaptureContext &CaptureContext)
     {
       UTextureRenderTarget2D *RenderTarget = GetCaptureRenderTarget();
       if (RenderTarget == nullptr)
       {
         return;
       }
-      const auto FrameIndex = FCarlaEngine::GetFrameCounter();
-      ImageUtil::ReadImageDataAsyncFColor(*RenderTarget, [this, FrameIndex](
+      ImageUtil::ReadImageDataAsyncFColor(*RenderTarget, [this, CaptureContext](
         TArrayView<const FColor> Pixels,
         FIntPoint Size) -> bool
       {
-        SendDataToClient(*this, Pixels, FrameIndex);
+        SendDataToClient(*this, Pixels, CaptureContext);
         return true;
       }, bNonBlocking, GetReadbackPool());
     });

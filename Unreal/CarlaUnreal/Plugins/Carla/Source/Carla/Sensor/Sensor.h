@@ -26,6 +26,16 @@
 
 struct FActorDescription;
 
+/// Sensor frame metadata snapshotted at capture time, carried by value
+/// through async delivery instead of re-read live.
+struct FSensorCaptureContext
+{
+  uint64_t FrameIndex = 0;
+  double Timestamp = 0.0;
+  FTransform Transform;          // world transform at capture time
+  FTransform RelativeTransform;  // relative to attach parent (for ROS2)
+};
+
 
 
 /*  @CARLA_UE5
@@ -38,10 +48,10 @@ struct FActorDescription;
     if (!AreClientsListening()) // Ideally, check whether there are any clients.
         return;
 
-    auto FrameIndex = FCarlaEngine::GetFrameCounter();
+    auto CaptureContext = MakeCaptureContext(*this);
     ImageUtil::ReadImageDataAsync(
         *GetCaptureRenderTarget(),
-        [this](
+        [this, CaptureContext](
             const void* MappedPtr,
             size_t RowPitch,
             size_t BufferHeight,
@@ -53,7 +63,7 @@ struct FActorDescription;
             SendDataToClient(
                 *this,
                 ImageData,
-                FrameIndex);
+                CaptureContext);
             return true;
         });
 
@@ -150,6 +160,20 @@ public:
 
   void SetSavingDataToDisk(bool bSavingData) { bSavingDataToDisk = bSavingData; }
 
+  /// Call on the game thread right after CaptureScene().
+  static FSensorCaptureContext MakeCaptureContext(const ASensor &Sensor)
+  {
+    FSensorCaptureContext Context;
+    Context.FrameIndex = FCarlaEngine::GetFrameCounter();
+    Context.Timestamp = Sensor.GetEpisode().GetElapsedGameTime();
+    Context.Transform = Sensor.GetActorTransform();
+    const AActor *ParentActor = Sensor.GetAttachParentActor();
+    Context.RelativeTransform = ParentActor ?
+        Context.Transform.GetRelativeTransform(ParentActor->GetActorTransform()) :
+        Context.Transform;
+    return Context;
+  }
+
 protected:
 
   void PostActorCreated() override;
@@ -174,9 +198,9 @@ protected:
     typename SensorType,
     typename ElementType>
   static void SendDataToClient(
-    SensorType&& Sensor,                  // The data's owning sensor.
-    TArrayView<ElementType> SensorData,   // Data to send to the client.
-    uint64_t FrameIndex                   // Current frame index.
+    SensorType&& Sensor,                             // The data's owning sensor.
+    TArrayView<ElementType> SensorData,              // Data to send to the client.
+    const FSensorCaptureContext &CaptureContext      // Metadata snapshotted at capture time.
     )
   {
     using carla::sensor::SensorRegistry;
@@ -187,8 +211,10 @@ protected:
         return;
 
     auto Stream = Sensor.GetDataStream(Sensor);
-    Stream.SetFrameNumber(FrameIndex);
-    
+    Stream.SetFrameNumber(CaptureContext.FrameIndex);
+    Stream.SetTimestamp(CaptureContext.Timestamp);
+    Stream.SetTransform(CaptureContext.Transform);
+
     auto Buffer = Stream.PopBufferFromPool();
     Buffer.copy_from(
       HeaderOffset,
@@ -209,35 +235,29 @@ protected:
     {
       TRACE_CPUPROFILER_EVENT_SCOPE_STR("ROS2 SendDataToClient");
       auto StreamId = carla::streaming::detail::token_type(Sensor.GetToken()).get_stream_id();
-      auto Res = std::async(std::launch::async, [&Sensor, ROS2, &Stream, StreamId, BufferView]()
-      {
-        // get resolution of camera
-        int W = -1, H = -1;
-        float Fov = -1.0f;
-        auto WidthOpt = Sensor.GetAttribute("image_size_x");
-        if (WidthOpt.has_value())
-          W = FCString::Atoi(*WidthOpt->Value);
-        auto HeightOpt = Sensor.GetAttribute("image_size_y");
-        if (HeightOpt.has_value())
-          H = FCString::Atoi(*HeightOpt->Value);
-        auto FovOpt = Sensor.GetAttribute("fov");
-        if (FovOpt.has_value())
-          Fov = FCString::Atof(*FovOpt->Value);
-        // send data to ROS2
-        auto ParentActor = Sensor.GetAttachParentActor();
-        auto Transform =
-          ParentActor ?
-          Sensor.GetActorTransform().GetRelativeTransform(ParentActor->GetActorTransform()) :
-          Stream.GetSensorTransform();
-        ROS2->ProcessDataFromCamera(
-          Stream.GetSensorType(),
-          StreamId,
-          Transform,
-          W, H,
-          Fov,
-          BufferView,
-          &Sensor);
-      });
+      auto SensorTypeId = Stream.GetSensorType();
+      const FTransform &Transform = CaptureContext.RelativeTransform;
+
+      int W = -1, H = -1;
+      float Fov = -1.0f;
+      auto WidthOpt = Sensor.GetAttribute("image_size_x");
+      if (WidthOpt.has_value())
+        W = FCString::Atoi(*WidthOpt->Value);
+      auto HeightOpt = Sensor.GetAttribute("image_size_y");
+      if (HeightOpt.has_value())
+        H = FCString::Atoi(*HeightOpt->Value);
+      auto FovOpt = Sensor.GetAttribute("fov");
+      if (FovOpt.has_value())
+        Fov = FCString::Atof(*FovOpt->Value);
+
+      ROS2->ProcessDataFromCamera(
+        SensorTypeId,
+        StreamId,
+        Transform,
+        W, H,
+        Fov,
+        BufferView,
+        &Sensor);
     }
 #endif
 

@@ -120,13 +120,13 @@
       return: carla.Vector3D
       return_units: m/s<sup>2</sup>
       doc: >
-        Returns the actor's 3D acceleration vector the client recieved during last tick. The method does not call the simulator.
+        Returns the actor's 3D acceleration vector the client recieved during last tick, in world coordinates. The method does not call the simulator.
     # --------------------------------------
     - def_name: get_angular_velocity
       return: carla.Vector3D
       return_units: deg/s
       doc: >
-        Returns the actor's angular velocity vector the client recieved during last tick. The method does not call the simulator.
+        Returns the actor's angular velocity vector the client recieved during last tick, in world coordinates. The method does not call the simulator.
     # --------------------------------------
     - def_name: get_location
       return: carla.Location
@@ -143,7 +143,7 @@
       return: carla.Vector3D
       return_units: m/s
       doc: >
-        Returns the actor's velocity vector the client recieved during last tick. The method does not call the simulator.
+        Returns the actor's velocity vector the client recieved during last tick, in world coordinates. The method does not call the simulator.
     # --------------------------------------
     - def_name: get_world
       return: carla.World
@@ -156,7 +156,7 @@
         type: carla.Vector3D
         param_units: deg/s
       doc: >
-        Sets the actor's angular velocity vector. This is applied before the physics step so the resulting angular velocity will be affected by external forces such as friction.
+        Sets the actor's angular velocity vector, in world coordinates. This is applied before the physics step so the resulting angular velocity will be affected by external forces such as friction.
     # --------------------------------------
     - def_name: set_location
       params:
@@ -186,7 +186,7 @@
       - param_name: velocity
         type: carla.Vector3D
       doc: >
-        Sets the actor's velocity vector. This is applied before the physics step so the resulting angular velocity will be affected by external forces such as friction.
+        Sets the actor's velocity vector, in world coordinates. This is applied before the physics step so the resulting velocity will be affected by external forces such as friction.
     # --------------------------------------
     - def_name: __str__
     # --------------------------------------

@@ -150,18 +150,17 @@ void ASceneCaptureCamera_RayTracedLensDistance::PostPhysTick(
   // what keeps a colour and a distance camera on the same frame -- comes from
   // the base class's TickCaptureAndReadback so both sensors share one policy.
   TickCaptureAndReadback(World, TickType, DeltaSeconds,
-    [this](bool bNonBlocking)
+    [this](bool bNonBlocking, const FSensorCaptureContext &CaptureContext)
     {
       UTextureRenderTarget2D *RenderTarget = GetCaptureRenderTarget();
       if (RenderTarget == nullptr)
       {
         return;
       }
-      const auto FrameIndex = FCarlaEngine::GetFrameCounter();
       ImageUtil::ReadImageDataAsync(
           *RenderTarget,
           GetReadbackPool(),
-          [this, FrameIndex](
+          [this, CaptureContext](
               const void *MappedPtr,
               size_t RowPitch,       // in pixels, not bytes
               size_t BufferHeight,
@@ -186,7 +185,7 @@ void ASceneCaptureCamera_RayTracedLensDistance::PostPhysTick(
               }
               RowPtr += RowPitch;
             }
-            SendDataToClient(*this, TArrayView<float>(Distances), FrameIndex);
+            SendDataToClient(*this, TArrayView<float>(Distances), CaptureContext);
             return true;
           },
           bNonBlocking);

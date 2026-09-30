@@ -95,10 +95,10 @@ _</font>
 
 ##### Getters
 - <a name="carla.Actor.get_acceleration"></a>**<font color="#7fb800">get_acceleration</font>**(<font color="#00a6ed">**self**</font>)  
-Returns the actor's 3D acceleration vector the client recieved during last tick. The method does not call the simulator.  
+Returns the actor's 3D acceleration vector the client recieved during last tick, in world coordinates. The method does not call the simulator.  
     - **Return:** _[carla.Vector3D](#carla.Vector3D)<small> - m/s<sup>2</sup></small>_  
 - <a name="carla.Actor.get_angular_velocity"></a>**<font color="#7fb800">get_angular_velocity</font>**(<font color="#00a6ed">**self**</font>)  
-Returns the actor's angular velocity vector the client recieved during last tick. The method does not call the simulator.  
+Returns the actor's angular velocity vector the client recieved during last tick, in world coordinates. The method does not call the simulator.  
     - **Return:** _[carla.Vector3D](#carla.Vector3D)<small> - deg/s</small>_  
 - <a name="carla.Actor.get_location"></a>**<font color="#7fb800">get_location</font>**(<font color="#00a6ed">**self**</font>)  
 Returns the actor's location the client recieved during last tick. The method does not call the simulator.  
@@ -109,7 +109,7 @@ Returns the actor's transform (location and rotation) the client recieved during
     - **Return:** _[carla.Transform](#carla.Transform)_  
     - **Setter:** _[carla.Actor.set_transform](#carla.Actor.set_transform)_  
 - <a name="carla.Actor.get_velocity"></a>**<font color="#7fb800">get_velocity</font>**(<font color="#00a6ed">**self**</font>)  
-Returns the actor's velocity vector the client recieved during last tick. The method does not call the simulator.  
+Returns the actor's velocity vector the client recieved during last tick, in world coordinates. The method does not call the simulator.  
     - **Return:** _[carla.Vector3D](#carla.Vector3D)<small> - m/s</small>_  
 - <a name="carla.Actor.get_world"></a>**<font color="#7fb800">get_world</font>**(<font color="#00a6ed">**self**</font>)  
 Returns the world this actor belongs to.  
@@ -130,11 +130,11 @@ Enables or disables the simulation of physics on this actor.
     - **Parameters:**
         - `enabled` (_bool_)  
 - <a name="carla.Actor.set_target_angular_velocity"></a>**<font color="#7fb800">set_target_angular_velocity</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**angular_velocity**</font>)  
-Sets the actor's angular velocity vector. This is applied before the physics step so the resulting angular velocity will be affected by external forces such as friction.  
+Sets the actor's angular velocity vector, in world coordinates. This is applied before the physics step so the resulting angular velocity will be affected by external forces such as friction.  
     - **Parameters:**
         - `angular_velocity` (_[carla.Vector3D](#carla.Vector3D)<small> - deg/s</small>_)  
 - <a name="carla.Actor.set_target_velocity"></a>**<font color="#7fb800">set_target_velocity</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**velocity**</font>)  
-Sets the actor's velocity vector. This is applied before the physics step so the resulting angular velocity will be affected by external forces such as friction.  
+Sets the actor's velocity vector, in world coordinates. This is applied before the physics step so the resulting velocity will be affected by external forces such as friction.  
     - **Parameters:**
         - `velocity` (_[carla.Vector3D](#carla.Vector3D)_)  
 - <a name="carla.Actor.set_transform"></a>**<font color="#7fb800">set_transform</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**transform**</font>)  
@@ -294,16 +294,16 @@ An identifier for the snapshot itself.
 
 ##### Getters
 - <a name="carla.ActorSnapshot.get_acceleration"></a>**<font color="#7fb800">get_acceleration</font>**(<font color="#00a6ed">**self**</font>)  
-Returns the acceleration vector registered for an actor in that tick.  
+Returns the acceleration vector registered for an actor in that tick, in world coordinates.  
     - **Return:** _[carla.Vector3D](#carla.Vector3D)<small> - m/s<sup>2</sup></small>_  
 - <a name="carla.ActorSnapshot.get_angular_velocity"></a>**<font color="#7fb800">get_angular_velocity</font>**(<font color="#00a6ed">**self**</font>)  
-Returns the angular velocity vector registered for an actor in that tick.  
+Returns the angular velocity vector registered for an actor in that tick, in world coordinates.  
     - **Return:** _[carla.Vector3D](#carla.Vector3D)<small> - rad/s</small>_  
 - <a name="carla.ActorSnapshot.get_transform"></a>**<font color="#7fb800">get_transform</font>**(<font color="#00a6ed">**self**</font>)  
 Returns the actor's transform (location and rotation) for an actor in that tick.  
     - **Return:** _[carla.Transform](#carla.Transform)_  
 - <a name="carla.ActorSnapshot.get_velocity"></a>**<font color="#7fb800">get_velocity</font>**(<font color="#00a6ed">**self**</font>)  
-Returns the velocity vector registered for an actor in that tick.  
+Returns the velocity vector registered for an actor in that tick, in world coordinates.  
     - **Return:** _[carla.Vector3D](#carla.Vector3D)<small> - m/s</small>_  
 
 ---
