@@ -1305,6 +1305,32 @@ Bounding box encapsulating the junction lanes.
 ### Methods
 
 ##### Getters
+- <a name="carla.Junction.get_adjacent_roads"></a>**<font color="#7fb800">get_adjacent_roads</font>**(<font color="#00a6ed">**self**</font>)  
+Returns the roads outside the junction that meet it.  
+    - **Return:** _list([carla.Road](#carla.Road))_  
+- <a name="carla.Junction.get_connecting_roads"></a>**<font color="#7fb800">get_connecting_roads</font>**(<font color="#00a6ed">**self**</font>)  
+Returns the roads inside the junction. These are OpenDRIVE's connecting roads.  
+    - **Return:** _list([carla.Road](#carla.Road))_  
+- <a name="carla.Junction.get_entry_lanes"></a>**<font color="#7fb800">get_entry_lanes</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**lane_type**=[carla.LaneType.Driving](#carla.LaneType.Driving)</font>)  
+Returns the lanes on the adjacent roads that feed into the junction.  
+    - **Parameters:**
+        - `lane_type` (_[carla.LaneType](#carla.LaneType)_) - Type of lanes to get.  
+    - **Return:** _list([carla.Lane](#carla.Lane))_  
+- <a name="carla.Junction.get_entry_waypoints"></a>**<font color="#7fb800">get_entry_waypoints</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**lane_type**=[carla.LaneType.Driving](#carla.LaneType.Driving)</font>)  
+Returns one waypoint per entry lane, placed on the adjacent road where it meets the junction.  
+    - **Parameters:**
+        - `lane_type` (_[carla.LaneType](#carla.LaneType)_) - Type of lanes to get the waypoints.  
+    - **Return:** _list([carla.Waypoint](#carla.Waypoint))_  
+- <a name="carla.Junction.get_exit_lanes"></a>**<font color="#7fb800">get_exit_lanes</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**lane_type**=[carla.LaneType.Driving](#carla.LaneType.Driving)</font>)  
+Returns the lanes on the adjacent roads that the junction feeds into.  
+    - **Parameters:**
+        - `lane_type` (_[carla.LaneType](#carla.LaneType)_) - Type of lanes to get.  
+    - **Return:** _list([carla.Lane](#carla.Lane))_  
+- <a name="carla.Junction.get_exit_waypoints"></a>**<font color="#7fb800">get_exit_waypoints</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**lane_type**=[carla.LaneType.Driving](#carla.LaneType.Driving)</font>)  
+Returns one waypoint per exit lane, placed on the adjacent road where it leaves the junction.  
+    - **Parameters:**
+        - `lane_type` (_[carla.LaneType](#carla.LaneType)_) - Type of lanes to get the waypoints.  
+    - **Return:** _list([carla.Waypoint](#carla.Waypoint))_  
 - <a name="carla.Junction.get_waypoints"></a>**<font color="#7fb800">get_waypoints</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**lane_type**</font>)  
 Returns a list of pairs of waypoints. Every tuple on the list contains first an initial and then a final waypoint within the intersection boundaries that describe the beginning and the end of said lane along the junction. Lanes follow their OpenDRIVE definitions so there may be many different tuples with the same starting waypoint due to possible deviations, as this are considered different lanes.  
     - **Parameters:**
@@ -1476,6 +1502,85 @@ Type 381.
 
 ---
 
+## carla.Lane<a name="carla.Lane"></a>
+A single OpenDRIVE lane, identified by its road, lane section and lane id.
+A lane lives inside exactly one lane section, which is why its identity carries the section: the same lane id on the same road is a different lane in a different section.  
+
+### Instance Variables
+- <a name="carla.Lane.id"></a>**<font color="#f8805a">id</font>** (_int_)  
+OpenDRIVE id of the lane. Negative to the right of the centre line, positive to the left; the centre lane is 0.  
+- <a name="carla.Lane.road_id"></a>**<font color="#f8805a">road_id</font>** (_int_)  
+Id of the road this lane belongs to.  
+- <a name="carla.Lane.section_id"></a>**<font color="#f8805a">section_id</font>** (_int_)  
+Id of the lane section this lane belongs to.  
+- <a name="carla.Lane.type"></a>**<font color="#f8805a">type</font>** (_[carla.LaneType](#carla.LaneType)_)  
+Type of the lane.  
+- <a name="carla.Lane.length"></a>**<font color="#f8805a">length</font>** (_float<small> - meters</small>_)  
+Length of the lane.  
+- <a name="carla.Lane.s_start"></a>**<font color="#f8805a">s_start</font>** (_float<small> - meters</small>_)  
+Distance along the road at which this lane's section begins.  
+- <a name="carla.Lane.level"></a>**<font color="#f8805a">level</font>** (_bool_)  
+OpenDRIVE level flag: whether the lane keeps the road's superelevation.  
+- <a name="carla.Lane.is_straight"></a>**<font color="#f8805a">is_straight</font>** (_bool_)  
+Whether the lane has no curvature.  
+- <a name="carla.Lane.is_positive_direction"></a>**<font color="#f8805a">is_positive_direction</font>** (_bool_)  
+Whether the lane runs along increasing s.  
+
+### Methods
+
+##### Getters
+- <a name="carla.Lane.get_left_lane"></a>**<font color="#7fb800">get_left_lane</font>**(<font color="#00a6ed">**self**</font>)  
+Returns the lane to the left, or <b>None</b> at the edge of the road. See get_right_lane() on direction.  
+    - **Return:** _[carla.Lane](#carla.Lane)_  
+- <a name="carla.Lane.get_next_lane"></a>**<font color="#7fb800">get_next_lane</font>**(<font color="#00a6ed">**self**</font>)  
+Returns the lanes this one leads into. Empty where the lane ends. Returns a list, as a lane may lead into several, typically at a junction.  
+    - **Return:** _list([carla.Lane](#carla.Lane))_  
+- <a name="carla.Lane.get_previous_lane"></a>**<font color="#7fb800">get_previous_lane</font>**(<font color="#00a6ed">**self**</font>)  
+Returns the lanes that lead into this one.  
+    - **Return:** _list([carla.Lane](#carla.Lane))_  
+- <a name="carla.Lane.get_right_lane"></a>**<font color="#7fb800">get_right_lane</font>**(<font color="#00a6ed">**self**</font>)  
+Returns the lane to the right, or <b>None</b> at the edge of the road.
+Crossing the centre line flips the sign of the lane id, so the lane returned may run in the <b>opposite direction</b>. This matches [carla.Waypoint.get_right_waypoint](#carla.Waypoint.get_right_waypoint)(). Not to be confused with the deprecated [carla.Waypoint.get_right_lane](#carla.Waypoint.get_right_lane)(), which returns a waypoint.  
+    - **Return:** _[carla.Lane](#carla.Lane)_  
+- <a name="carla.Lane.get_road"></a>**<font color="#7fb800">get_road</font>**(<font color="#00a6ed">**self**</font>)  
+Returns the road this lane belongs to.  
+    - **Return:** _[carla.Road](#carla.Road)_  
+- <a name="carla.Lane.get_section"></a>**<font color="#7fb800">get_section</font>**(<font color="#00a6ed">**self**</font>)  
+Returns the lane section this lane belongs to.  
+    - **Return:** _[carla.LaneSection](#carla.LaneSection)_  
+- <a name="carla.Lane.get_transform"></a>**<font color="#7fb800">get_transform</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**s**</font>)  
+Returns the transform at the centre of the lane at this distance along the road.  
+    - **Parameters:**
+        - `s` (_float<small> - meters</small>_)  
+    - **Return:** _[carla.Transform](#carla.Transform)_  
+- <a name="carla.Lane.get_waypoint"></a>**<font color="#7fb800">get_waypoint</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**s**</font>)  
+Returns the waypoint on this lane at this distance along the road, or <b>None</b> when the distance falls outside the lane.  
+    - **Parameters:**
+        - `s` (_float<small> - meters</small>_) - Distance along the <b>road</b>.  
+    - **Return:** _[carla.Waypoint](#carla.Waypoint)_  
+- <a name="carla.Lane.get_waypoints"></a>**<font color="#7fb800">get_waypoints</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**distance**</font>)  
+Returns waypoints along this lane, every <code>distance</code> metres.  
+    - **Parameters:**
+        - `distance` (_float<small> - meters</small>_) - Spacing between samples.  
+    - **Return:** _list([carla.Waypoint](#carla.Waypoint))_  
+- <a name="carla.Lane.get_width"></a>**<font color="#7fb800">get_width</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**s**</font>)  
+Returns the width of the lane at this distance along the road.  
+    - **Parameters:**
+        - `s` (_float<small> - meters</small>_) - Distance along the <b>road</b>, not an offset from the start of the lane.  
+    - **Return:** _float<small> - meters</small>_  
+
+##### Dunder methods
+- <a name="carla.Lane.__eq__"></a>**<font color="#7fb800">\__eq__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**=[carla.Lane](#carla.Lane)</font>)  
+Returns <b>True</b> if both lanes have the same road, section and lane id.  
+    - **Return:** _bool_  
+- <a name="carla.Lane.__hash__"></a>**<font color="#7fb800">\__hash__</font>**(<font color="#00a6ed">**self**</font>)  
+    - **Return:** _int_  
+- <a name="carla.Lane.__ne__"></a>**<font color="#7fb800">\__ne__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**=[carla.Lane](#carla.Lane)</font>)  
+    - **Return:** _bool_  
+- <a name="carla.Lane.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
+
+---
+
 ## carla.LaneChange<a name="carla.LaneChange"></a>
 Class that defines the permission to turn either left, right, both or none (meaning only going straight is allowed). This information is stored for every [carla.Waypoint](#carla.Waypoint) according to the OpenDRIVE file. The snipet in [carla.Map.get_waypoint](#carla.Map.get_waypoint) shows how a waypoint can be used to learn which turns are permitted.  
 
@@ -1553,6 +1658,60 @@ Class that defines the lane marking types accepted by OpenDRIVE 1.4. The snipet 
 - <a name="carla.LaneMarkingType.BottsDots"></a>**<font color="#f8805a">BottsDots</font>**  
 - <a name="carla.LaneMarkingType.Grass"></a>**<font color="#f8805a">Grass</font>**  
 - <a name="carla.LaneMarkingType.Curb"></a>**<font color="#f8805a">Curb</font>**  
+
+---
+
+## carla.LaneSection<a name="carla.LaneSection"></a>
+A stretch of road over which the lane layout does not change.
+An OpenDRIVE road is divided along its s coordinate into lane sections; lanes are added or dropped only at a section boundary. This is why a lane's identity carries a section id, and why [carla.Lane.get_next_lane](#carla.Lane.get_next_lane)() can step into a different section, or return nothing where a lane simply ends.  
+
+### Instance Variables
+- <a name="carla.LaneSection.id"></a>**<font color="#f8805a">id</font>** (_int_)  
+OpenDRIVE id of the lane section, unique within its road.  
+- <a name="carla.LaneSection.road_id"></a>**<font color="#f8805a">road_id</font>** (_int_)  
+Id of the road this section belongs to.  
+- <a name="carla.LaneSection.s_start"></a>**<font color="#f8805a">s_start</font>** (_float<small> - meters</small>_)  
+Distance along the road at which this section begins.  
+- <a name="carla.LaneSection.length"></a>**<font color="#f8805a">length</font>** (_float<small> - meters</small>_)  
+Length of the section.  
+
+### Methods
+- <a name="carla.LaneSection.contains_lane"></a>**<font color="#7fb800">contains_lane</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**lane_id**</font>)  
+Whether this section has a lane with this id.  
+    - **Parameters:**
+        - `lane_id` (_int_)  
+    - **Return:** _bool_  
+
+##### Getters
+- <a name="carla.LaneSection.get_lane"></a>**<font color="#7fb800">get_lane</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**lane_id**</font>)  
+Returns the lane with this id, or <b>None</b> when the section has no such lane.  
+    - **Parameters:**
+        - `lane_id` (_int_)  
+    - **Return:** _[carla.Lane](#carla.Lane)_  
+- <a name="carla.LaneSection.get_lanes"></a>**<font color="#7fb800">get_lanes</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**lane_type**=[carla.LaneType.Driving](#carla.LaneType.Driving)</font>)  
+Returns every lane of the given type in this section.  
+    - **Parameters:**
+        - `lane_type` (_[carla.LaneType](#carla.LaneType)_) - Type of lanes to get.  
+    - **Return:** _list([carla.Lane](#carla.Lane))_  
+- <a name="carla.LaneSection.get_next_section"></a>**<font color="#7fb800">get_next_section</font>**(<font color="#00a6ed">**self**</font>)  
+Returns the next section along the road, or <b>None</b> at the end.  
+    - **Return:** _[carla.LaneSection](#carla.LaneSection)_  
+- <a name="carla.LaneSection.get_previous_section"></a>**<font color="#7fb800">get_previous_section</font>**(<font color="#00a6ed">**self**</font>)  
+Returns the previous section along the road, or <b>None</b> at the start.  
+    - **Return:** _[carla.LaneSection](#carla.LaneSection)_  
+- <a name="carla.LaneSection.get_road"></a>**<font color="#7fb800">get_road</font>**(<font color="#00a6ed">**self**</font>)  
+Returns the road this section belongs to.  
+    - **Return:** _[carla.Road](#carla.Road)_  
+
+##### Dunder methods
+- <a name="carla.LaneSection.__eq__"></a>**<font color="#7fb800">\__eq__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**=[carla.LaneSection](#carla.LaneSection)</font>)  
+Returns <b>True</b> if both sections have the same road and section id.  
+    - **Return:** _bool_  
+- <a name="carla.LaneSection.__hash__"></a>**<font color="#7fb800">\__hash__</font>**(<font color="#00a6ed">**self**</font>)  
+    - **Return:** _int_  
+- <a name="carla.LaneSection.__ne__"></a>**<font color="#7fb800">\__ne__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**=[carla.LaneSection](#carla.LaneSection)</font>)  
+    - **Return:** _bool_  
+- <a name="carla.LaneSection.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
 
 ---
 
@@ -1939,11 +2098,40 @@ Returns the landmarks of a specific type. Landmarks retrieved using this method 
 - <a name="carla.Map.get_crosswalks"></a>**<font color="#7fb800">get_crosswalks</font>**(<font color="#00a6ed">**self**</font>)  
 Returns a list of locations with all crosswalk zones in the form of closed polygons. The first point is repeated, symbolizing where the polygon begins and ends.  
     - **Return:** _list([carla.Location](#carla.Location))_  
+- <a name="carla.Map.get_junction_by_id"></a>**<font color="#7fb800">get_junction_by_id</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**junction_id**</font>)  
+Returns the junction with this id, or <b>None</b> when the map has no such junction.  
+    - **Parameters:**
+        - `junction_id` (_int_)  
+    - **Return:** _[carla.Junction](#carla.Junction)_  
+- <a name="carla.Map.get_junctions"></a>**<font color="#7fb800">get_junctions</font>**(<font color="#00a6ed">**self**</font>)  
+Returns every junction in the map.  
+    - **Return:** _list([carla.Junction](#carla.Junction))_  
 - <a name="carla.Map.get_landmark_group"></a>**<font color="#7fb800">get_landmark_group</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**landmark**</font>)  
 Returns the landmarks in the same group as the specified landmark (including itself). Returns an empty list if the landmark does not belong to any group.  
     - **Parameters:**
         - `landmark` (_[carla.Landmark](#carla.Landmark)_) - A landmark that belongs to the group.  
     - **Return:** _list([carla.Landmark](#carla.Landmark))_  
+- <a name="carla.Map.get_lane"></a>**<font color="#7fb800">get_lane</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**road_id**</font>, <font color="#00a6ed">**section_id**</font>, <font color="#00a6ed">**lane_id**</font>)  
+Returns the lane, or <b>None</b> when the road, section or lane is unknown.  
+    - **Parameters:**
+        - `road_id` (_int_)  
+        - `section_id` (_int_)  
+        - `lane_id` (_int_)  
+    - **Return:** _[carla.Lane](#carla.Lane)_  
+- <a name="carla.Map.get_lane_section"></a>**<font color="#7fb800">get_lane_section</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**road_id**</font>, <font color="#00a6ed">**section_id**</font>)  
+Returns the lane section, or <b>None</b> when the road or section is unknown.  
+    - **Parameters:**
+        - `road_id` (_int_)  
+        - `section_id` (_int_)  
+    - **Return:** _[carla.LaneSection](#carla.LaneSection)_  
+- <a name="carla.Map.get_road"></a>**<font color="#7fb800">get_road</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**road_id**</font>)  
+Returns the road with this id, or <b>None</b> when the map has no such road.  
+    - **Parameters:**
+        - `road_id` (_int_) - OpenDRIVE id of the road.  
+    - **Return:** _[carla.Road](#carla.Road)_  
+- <a name="carla.Map.get_roads"></a>**<font color="#7fb800">get_roads</font>**(<font color="#00a6ed">**self**</font>)  
+Returns every road in the map.  
+    - **Return:** _list([carla.Road](#carla.Road))_  
 - <a name="carla.Map.get_spawn_points"></a>**<font color="#7fb800">get_spawn_points</font>**(<font color="#00a6ed">**self**</font>)  
 Returns a list of recommendations made by the creators of the map to be used as spawning points for the vehicles. The list includes [carla.Transform](#carla.Transform) objects with certain location and orientation. Said locations are slightly on-air in order to avoid Z-collisions, so vehicles fall for a bit before starting their way.  
     - **Return:** _list([carla.Transform](#carla.Transform))_  
@@ -2296,6 +2484,101 @@ This vector back in CARLA's left-handed frame: `(x, -y, z)`.
 - <a name="carla.RightHandedVector3D.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
 Parses the components to string.  
     - **Return:** _str_  
+
+---
+
+## carla.Road<a name="carla.Road"></a>
+An OpenDRIVE road: a run of carriageway divided along its s coordinate into lane sections, each of which holds the lanes.
+Roads join end to end through get_next_road() and get_previous_road(), or through a junction. There is deliberately no left or right here: OpenDRIVE gives roads no lateral relation, because a road already contains the lanes on both sides of its centre line. Lateral neighbours live on [carla.Lane](#carla.Lane).  
+
+### Instance Variables
+- <a name="carla.Road.id"></a>**<font color="#f8805a">id</font>** (_int_)  
+OpenDRIVE id of the road.  
+- <a name="carla.Road.name"></a>**<font color="#f8805a">name</font>** (_str_)  
+Name recorded in the OpenDRIVE file. Often empty.  
+- <a name="carla.Road.length"></a>**<font color="#f8805a">length</font>** (_float<small> - meters</small>_)  
+Length of the road.  
+- <a name="carla.Road.is_junction"></a>**<font color="#f8805a">is_junction</font>** (_bool_)  
+Whether the road is part of a junction.  
+- <a name="carla.Road.junction_id"></a>**<font color="#f8805a">junction_id</font>** (_int_)  
+Id of the junction this road belongs to, or -1 when it is not part of one.  
+- <a name="carla.Road.is_rht"></a>**<font color="#f8805a">is_rht</font>** (_bool_)  
+Whether traffic on this road drives on the right.  
+- <a name="carla.Road.successor_id"></a>**<font color="#f8805a">successor_id</font>** (_int_)  
+Id of the road that follows this one, as recorded in OpenDRIVE.  
+- <a name="carla.Road.predecessor_id"></a>**<font color="#f8805a">predecessor_id</font>** (_int_)  
+Id of the road that precedes this one, as recorded in OpenDRIVE.  
+
+### Methods
+
+##### Getters
+- <a name="carla.Road.get_junction"></a>**<font color="#7fb800">get_junction</font>**(<font color="#00a6ed">**self**</font>)  
+Returns the junction this road belongs to, or <b>None</b> when it is not part of one.  
+    - **Return:** _[carla.Junction](#carla.Junction)_  
+- <a name="carla.Road.get_lane"></a>**<font color="#7fb800">get_lane</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**section_id**</font>, <font color="#00a6ed">**lane_id**</font>)  
+Returns the lane with this id in this lane section, or <b>None</b> when it does not exist.  
+    - **Parameters:**
+        - `section_id` (_int_)  
+        - `lane_id` (_int_)  
+    - **Return:** _[carla.Lane](#carla.Lane)_  
+- <a name="carla.Road.get_lane_at"></a>**<font color="#7fb800">get_lane_at</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**s**</font>, <font color="#00a6ed">**lane_id**</font>)  
+Returns the lane with this id in whichever lane section covers this distance along the road.  
+    - **Parameters:**
+        - `s` (_float<small> - meters</small>_)  
+        - `lane_id` (_int_)  
+    - **Return:** _[carla.Lane](#carla.Lane)_  
+- <a name="carla.Road.get_lanes"></a>**<font color="#7fb800">get_lanes</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**s**</font>, <font color="#00a6ed">**lane_type**=[carla.LaneType.Driving](#carla.LaneType.Driving)</font>)  
+Returns every lane of the given type present at this distance along the road.  
+    - **Parameters:**
+        - `s` (_float<small> - meters</small>_) - Distance along the road.  
+        - `lane_type` (_[carla.LaneType](#carla.LaneType)_) - Type of lanes to get.  
+    - **Return:** _list([carla.Lane](#carla.Lane))_  
+- <a name="carla.Road.get_next_road"></a>**<font color="#7fb800">get_next_road</font>**(<font color="#00a6ed">**self**</font>)  
+Returns the roads reachable by continuing forward.  
+    - **Return:** _list([carla.Road](#carla.Road))_  
+- <a name="carla.Road.get_previous_road"></a>**<font color="#7fb800">get_previous_road</font>**(<font color="#00a6ed">**self**</font>)  
+Returns the roads that lead into this one.  
+    - **Return:** _list([carla.Road](#carla.Road))_  
+- <a name="carla.Road.get_section"></a>**<font color="#7fb800">get_section</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**section_id**</font>)  
+Returns the lane section with this id, or <b>None</b>.  
+    - **Parameters:**
+        - `section_id` (_int_)  
+    - **Return:** _[carla.LaneSection](#carla.LaneSection)_  
+- <a name="carla.Road.get_section_at"></a>**<font color="#7fb800">get_section_at</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**s**</font>)  
+Returns the lane section covering this distance along the road, or <b>None</b>.  
+    - **Parameters:**
+        - `s` (_float<small> - meters</small>_)  
+    - **Return:** _[carla.LaneSection](#carla.LaneSection)_  
+- <a name="carla.Road.get_sections"></a>**<font color="#7fb800">get_sections</font>**(<font color="#00a6ed">**self**</font>)  
+Returns every lane section of the road.  
+    - **Return:** _list([carla.LaneSection](#carla.LaneSection))_  
+- <a name="carla.Road.get_transform_at"></a>**<font color="#7fb800">get_transform_at</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**s**</font>)  
+Returns the transform at the centre of the road at this distance along it.  
+    - **Parameters:**
+        - `s` (_float<small> - meters</small>_)  
+    - **Return:** _[carla.Transform](#carla.Transform)_  
+- <a name="carla.Road.get_waypoints"></a>**<font color="#7fb800">get_waypoints</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**distance**</font>, <font color="#00a6ed">**lane_type**=[carla.LaneType.Driving](#carla.LaneType.Driving)</font>)  
+Returns waypoints sampled <b>along</b> the road every <code>distance</code> metres, on every lane of the given type. Not to be confused with get_waypoints_at(), which cuts across the road at one distance.  
+    - **Parameters:**
+        - `distance` (_float<small> - meters</small>_) - Spacing between samples.  
+        - `lane_type` (_[carla.LaneType](#carla.LaneType)_)  
+    - **Return:** _list([carla.Waypoint](#carla.Waypoint))_  
+- <a name="carla.Road.get_waypoints_at"></a>**<font color="#7fb800">get_waypoints_at</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**s**</font>, <font color="#00a6ed">**lane_type**=[carla.LaneType.Driving](#carla.LaneType.Driving)</font>)  
+Returns a cross-section of the road: one waypoint per lane of the given type, all at the same distance along the road. Cuts <b>across</b> the road, where get_waypoints() samples <b>along</b> it.  
+    - **Parameters:**
+        - `s` (_float<small> - meters</small>_)  
+        - `lane_type` (_[carla.LaneType](#carla.LaneType)_)  
+    - **Return:** _list([carla.Waypoint](#carla.Waypoint))_  
+
+##### Dunder methods
+- <a name="carla.Road.__eq__"></a>**<font color="#7fb800">\__eq__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**=[carla.Road](#carla.Road)</font>)  
+Returns <b>True</b> if both roads have the same id.  
+    - **Return:** _bool_  
+- <a name="carla.Road.__hash__"></a>**<font color="#7fb800">\__hash__</font>**(<font color="#00a6ed">**self**</font>)  
+    - **Return:** _int_  
+- <a name="carla.Road.__ne__"></a>**<font color="#7fb800">\__ne__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**=[carla.Road](#carla.Road)</font>)  
+    - **Return:** _bool_  
+- <a name="carla.Road.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
 
 ---
 
@@ -3643,14 +3926,29 @@ Returns a list of landmarks in the road of a specified type from the current way
         - `type` (_str_) - The type of landmarks to search.  
         - `stop_at_junction` (_bool_) - Enables or disables the landmark search through junctions.  
     - **Return:** _list([carla.Landmark](#carla.Landmark))_  
+- <a name="carla.Waypoint.get_lane"></a>**<font color="#7fb800">get_lane</font>**(<font color="#00a6ed">**self**</font>)  
+Returns the lane this waypoint samples.  
+    - **Return:** _[carla.Lane](#carla.Lane)_  
 - <a name="carla.Waypoint.get_left_lane"></a>**<font color="#7fb800">get_left_lane</font>**(<font color="#00a6ed">**self**</font>)  
 Generates a Waypoint at the center of the left lane based on the direction of the current Waypoint, taking into account if the lane change is allowed in this location.
 Will return <b>None</b> if the lane does not exist.  
     - **Return:** _[carla.Waypoint](#carla.Waypoint)_  
-- <a name="carla.Waypoint.get_right_lane"></a>**<font color="#7fb800">get_right_lane</font>**(<font color="#00a6ed">**self**</font>)  
-Generates a waypoint at the center of the right lane based on the direction of the current waypoint, taking into account if the lane change is allowed in this location.
+- <a name="carla.Waypoint.get_left_waypoint"></a>**<font color="#7fb800">get_left_waypoint</font>**(<font color="#00a6ed">**self**</font>)  
+Generates a waypoint at the center of the left lane based on the direction of the current waypoint, taking into account if the lane change is allowed in this location. Replaces get_left_lane(), which is deprecated.
 Will return <b>None</b> if the lane does not exist.  
     - **Return:** _[carla.Waypoint](#carla.Waypoint)_  
+- <a name="carla.Waypoint.get_right_lane"></a>**<font color="#7fb800">get_right_lane</font>**(<font color="#00a6ed">**self**</font>)  
+Generates a waypoint at the center of the right lane based on the direction of the current waypoint, taking into account if the lane change is allowed in this location.
+Will return <b>None</b> if the lane does not exist.
+<b>Deprecated:</b> use get_right_waypoint().  
+    - **Return:** _[carla.Waypoint](#carla.Waypoint)_  
+- <a name="carla.Waypoint.get_right_waypoint"></a>**<font color="#7fb800">get_right_waypoint</font>**(<font color="#00a6ed">**self**</font>)  
+Generates a waypoint at the center of the right lane based on the direction of the current waypoint, taking into account if the lane change is allowed in this location. Replaces get_right_lane(), which is deprecated.
+Will return <b>None</b> if the lane does not exist.  
+    - **Return:** _[carla.Waypoint](#carla.Waypoint)_  
+- <a name="carla.Waypoint.get_road"></a>**<font color="#7fb800">get_road</font>**(<font color="#00a6ed">**self**</font>)  
+Returns the road this waypoint samples.  
+    - **Return:** _[carla.Road](#carla.Road)_  
 
 ##### Dunder methods
 - <a name="carla.Waypoint.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
@@ -4556,328 +4854,6 @@ document.getElementById("snipets-container").innerHTML = null;
 }
 </script>
   
-<div id ="carla.Map.get_waypoint-snipet" style="display: none;">
-<p class="SnipetFont">
-Snippet for carla.Map.get_waypoint
-</p>
-<div id="carla.Map.get_waypoint-code" class="SnipetContent">
-
-```py
-  
-
-# This recipe shows the current traffic rules affecting the vehicle. 
-# Shows the current lane type and if a lane change can be done in the actual lane or the surrounding ones.
-
-# ...
-waypoint = world.get_map().get_waypoint(vehicle.get_location(),project_to_road=True, lane_type=(carla.LaneType.Driving | carla.LaneType.Shoulder | carla.LaneType.Sidewalk))
-print("Current lane type: " + str(waypoint.lane_type))
-# Check current lane change allowed
-print("Current Lane change:  " + str(waypoint.lane_change))
-# Left and Right lane markings
-print("L lane marking type: " + str(waypoint.left_lane_marking.type))
-print("L lane marking change: " + str(waypoint.left_lane_marking.lane_change))
-print("R lane marking type: " + str(waypoint.right_lane_marking.type))
-print("R lane marking change: " + str(waypoint.right_lane_marking.lane_change))
-# ...
-  
-
-```
-<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.Map.get_waypoint-code')">Copy snippet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snippet</button><br><br>
-  
-
-<img src="/img/snipets_images/carla.Map.get_waypoint.jpg">
-  
-</div>
-  
-<div id ="carla.WalkerAIController.stop-snipet" style="display: none;">
-<p class="SnipetFont">
-Snippet for carla.WalkerAIController.stop
-</p>
-<div id="carla.WalkerAIController.stop-code" class="SnipetContent">
-
-```py
-  
-
-#To destroy the pedestrians, stop them from the navigation, and then destroy the objects (actor and controller).
-
-# stop pedestrians (list is [controller, actor, controller, actor ...])
-for i in range(0, len(all_id), 2):
-    all_actors[i].stop()
-
-# destroy pedestrian (actor and controller)
-client.apply_batch([carla.command.DestroyActor(x) for x in all_id])
-  
-
-```
-<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.WalkerAIController.stop-code')">Copy snippet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snippet</button><br><br>
-  
-</div>
-  
-<div id ="carla.Client.__init__-snipet" style="display: none;">
-<p class="SnipetFont">
-Snippet for carla.Client.__init__
-</p>
-<div id="carla.Client.__init__-code" class="SnipetContent">
-
-```py
-  
-
-# This recipe shows in every script provided in PythonAPI/Examples 
-# and it is used to parse the client creation arguments when running the script. 
-
-    argparser = argparse.ArgumentParser(
-        description=__doc__)
-    argparser.add_argument(
-        '--host',
-        metavar='H',
-        default='127.0.0.1',
-        help='IP of the host server (default: 127.0.0.1)')
-    argparser.add_argument(
-        '-p', '--port',
-        metavar='P',
-        default=2000,
-        type=int,
-        help='TCP port to listen to (default: 2000)')
-    argparser.add_argument(
-        '-s', '--speed',
-        metavar='FACTOR',
-        default=1.0,
-        type=float,
-        help='rate at which the weather changes (default: 1.0)')
-    args = argparser.parse_args()
-
-    speed_factor = args.speed
-    update_freq = 0.1 / speed_factor
-
-    client = carla.Client(args.host, args.port)
-
-  
-
-```
-<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.Client.__init__-code')">Copy snippet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snippet</button><br><br>
-  
-</div>
-  
-<div id ="carla.World.get_spectator-snipet" style="display: none;">
-<p class="SnipetFont">
-Snippet for carla.World.get_spectator
-</p>
-<div id="carla.World.get_spectator-code" class="SnipetContent">
-
-```py
-  
-
-# This recipe spawns an actor and the spectator camera at the actor's location.
-
-# ...
-world = client.get_world()
-spectator = world.get_spectator()
-
-vehicle_bp = random.choice(world.get_blueprint_library().filter('vehicle.bmw.*'))
-transform = random.choice(world.get_map().get_spawn_points())
-vehicle = world.try_spawn_actor(vehicle_bp, transform)
-
-# Wait for world to get the vehicle actor
-world.tick()
-
-world_snapshot = world.wait_for_tick()
-actor_snapshot = world_snapshot.find(vehicle.id)
-
-# Set spectator at given transform (vehicle transform)
-spectator.set_transform(actor_snapshot.get_transform())
-# ...
-  
-
-```
-<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.World.get_spectator-code')">Copy snippet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snippet</button><br><br>
-  
-</div>
-  
-<div id ="carla.TrafficLight.set_state-snipet" style="display: none;">
-<p class="SnipetFont">
-Snippet for carla.TrafficLight.set_state
-</p>
-<div id="carla.TrafficLight.set_state-code" class="SnipetContent">
-
-```py
-  
-
-# This recipe changes from red to green the traffic light that affects the vehicle. 
-# This is done by detecting if the vehicle actor is at a traffic light.
-
-# ...
-world = client.get_world()
-spectator = world.get_spectator()
-
-vehicle_bp = random.choice(world.get_blueprint_library().filter('vehicle.bmw.*'))
-transform = random.choice(world.get_map().get_spawn_points())
-vehicle = world.try_spawn_actor(vehicle_bp, transform)
-
-# Wait for world to get the vehicle actor
-world.tick()
-
-world_snapshot = world.wait_for_tick()
-actor_snapshot = world_snapshot.find(vehicle.id)
-
-# Set spectator at given transform (vehicle transform)
-spectator.set_transform(actor_snapshot.get_transform())
-# ...# ...
-if vehicle_actor.is_at_traffic_light():
-    traffic_light = vehicle_actor.get_traffic_light()
-    if traffic_light.get_state() == carla.TrafficLightState.Red:
-       # world.hud.notification("Traffic light changed! Good to go!")
-        traffic_light.set_state(carla.TrafficLightState.Green)
-# ...
-
-  
-
-```
-<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.TrafficLight.set_state-code')">Copy snippet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snippet</button><br><br>
-  
-
-<img src="/img/snipets_images/carla.TrafficLight.set_state.gif">
-  
-</div>
-  
-<div id ="carla.Sensor.listen-snipet" style="display: none;">
-<p class="SnipetFont">
-Snippet for carla.Sensor.listen
-</p>
-<div id="carla.Sensor.listen-code" class="SnipetContent">
-
-```py
-  
-
-# This recipe applies a color conversion to the image taken by a camera sensor,
-# so it is converted to a semantic segmentation image.
-
-# ...
-camera_bp = world.get_blueprint_library().filter('sensor.camera.semantic_segmentation')
-# ...
-cc = carla.ColorConverter.CityScapesPalette
-camera.listen(lambda image: image.save_to_disk('output/%06d.png' % image.frame, cc))
-# ...
-  
-
-```
-<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.Sensor.listen-code')">Copy snippet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snippet</button><br><br>
-  
-</div>
-  
-<div id ="carla.World.spawn_actor-snipet" style="display: none;">
-<p class="SnipetFont">
-Snippet for carla.World.spawn_actor
-</p>
-<div id="carla.World.spawn_actor-code" class="SnipetContent">
-
-```py
-  
-
-# This recipe attaches different camera / sensors to a vehicle with different attachments.
-
-# ...
-camera = world.spawn_actor(rgb_camera_bp, transform, attach_to=vehicle, attachment_type=Attachment.Rigid)
-# Default attachment:  Attachment.Rigid
-gnss_sensor = world.spawn_actor(sensor_gnss_bp, transform, attach_to=vehicle)
-collision_sensor = world.spawn_actor(sensor_collision_bp, transform, attach_to=vehicle)
-lane_invasion_sensor = world.spawn_actor(sensor_lane_invasion_bp, transform, attach_to=vehicle)
-# ...
-  
-
-```
-<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.World.spawn_actor-code')">Copy snippet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snippet</button><br><br>
-  
-</div>
-  
-<div id ="carla.DebugHelper.draw_box-snipet" style="display: none;">
-<p class="SnipetFont">
-Snippet for carla.DebugHelper.draw_box
-</p>
-<div id="carla.DebugHelper.draw_box-code" class="SnipetContent">
-
-```py
-  
-
-# This recipe shows how to draw traffic light actor bounding boxes from a world snapshot.
-
-# ....
-debug = world.debug
-world_snapshot = world.get_snapshot()
-
-for actor_snapshot in world_snapshot:
-    actual_actor = world.get_actor(actor_snapshot.id)
-    if actual_actor.type_id == 'traffic.traffic_light':
-        debug.draw_box(carla.BoundingBox(actor_snapshot.get_transform().location,carla.Vector3D(0.5,0.5,2)),actor_snapshot.get_transform().rotation, 0.05, carla.Color(255,0,0,0),0)
-# ...
-
-  
-
-```
-<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.DebugHelper.draw_box-code')">Copy snippet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snippet</button><br><br>
-  
-
-<img src="/img/snipets_images/carla.DebugHelper.draw_box.jpg">
-  
-</div>
-  
-<div id ="carla.World.enable_environment_objects-snipet" style="display: none;">
-<p class="SnipetFont">
-Snippet for carla.World.enable_environment_objects
-</p>
-<div id="carla.World.enable_environment_objects-code" class="SnipetContent">
-
-```py
-  
-# This recipe turn visibility off and on for two specifc buildings on the map
-
-# Get the buildings in the world
-world = client.get_world()
-env_objs = world.get_environment_objects(carla.CityObjectLabel.Buildings)
-
-# Access individual building IDs and save in a set
-building_01 = env_objs[0]
-building_02 = env_objs[1]
-objects_to_toggle = {building_01.id, building_02.id}
-
-# Toggle buildings off
-world.enable_environment_objects(objects_to_toggle, False)
-# Toggle buildings on
-world.enable_environment_objects(objects_to_toggle, True)
-  
-
-```
-<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.World.enable_environment_objects-code')">Copy snippet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snippet</button><br><br>
-  
-</div>
-  
-<div id ="carla.World.load_map_layer-snipet" style="display: none;">
-<p class="SnipetFont">
-Snippet for carla.World.load_map_layer
-</p>
-<div id="carla.World.load_map_layer-code" class="SnipetContent">
-
-```py
-  
-# This recipe toggles on several layers in our "_Opt" maps
-
-# Load town one with only minimum layout (roads, sidewalks, traffic lights and traffic signs)
-world = client.load_world('Town01_Opt', carla.MapLayer.None)
-
-# Toggle all buildings on
-world.load_map_layer(carla.MapLayer.Buildings)
-
-# Toggle all foliage on
-world.load_map_layer(carla.MapLayer.Foliage)
-
-# Toggle all parked vehicles on
-world.load_map_layer(carla.MapLayer.ParkedVehicles)
-  
-
-```
-<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.World.load_map_layer-code')">Copy snippet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snippet</button><br><br>
-  
-</div>
-  
 <div id ="carla.Client.apply_batch_sync-snipet" style="display: none;">
 <p class="SnipetFont">
 Snippet for carla.Client.apply_batch_sync
@@ -4951,37 +4927,91 @@ for i in range(0, len(all_actors), 2):
   
 </div>
   
-<div id ="carla.ActorBlueprint.set_attribute-snipet" style="display: none;">
+<div id ="carla.Sensor.listen-snipet" style="display: none;">
 <p class="SnipetFont">
-Snippet for carla.ActorBlueprint.set_attribute
+Snippet for carla.Sensor.listen
 </p>
-<div id="carla.ActorBlueprint.set_attribute-code" class="SnipetContent">
+<div id="carla.Sensor.listen-code" class="SnipetContent">
 
 ```py
   
 
-# This recipe changes attributes of different type of blueprint actors.
+# This recipe applies a color conversion to the image taken by a camera sensor,
+# so it is converted to a semantic segmentation image.
 
 # ...
-walker_bp = world.get_blueprint_library().filter('walker.pedestrian.0002')
-walker_bp.set_attribute('is_invincible', True)
-
+camera_bp = world.get_blueprint_library().filter('sensor.camera.semantic_segmentation')
 # ...
-# Changes attribute randomly by the recommended value
-vehicle_bp = wolrd.get_blueprint_library().filter('vehicle.bmw.*')
-color = random.choice(vehicle_bp.get_attribute('color').recommended_values)
-vehicle_bp.set_attribute('color', color)
-
-# ...
-
-camera_bp = world.get_blueprint_library().filter('sensor.camera.rgb')
-camera_bp.set_attribute('image_size_x', 600)
-camera_bp.set_attribute('image_size_y', 600)
+cc = carla.ColorConverter.CityScapesPalette
+camera.listen(lambda image: image.save_to_disk('output/%06d.png' % image.frame, cc))
 # ...
   
 
 ```
-<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.ActorBlueprint.set_attribute-code')">Copy snippet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snippet</button><br><br>
+<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.Sensor.listen-code')">Copy snippet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snippet</button><br><br>
+  
+</div>
+  
+<div id ="carla.Map.get_waypoint-snipet" style="display: none;">
+<p class="SnipetFont">
+Snippet for carla.Map.get_waypoint
+</p>
+<div id="carla.Map.get_waypoint-code" class="SnipetContent">
+
+```py
+  
+
+# This recipe shows the current traffic rules affecting the vehicle. 
+# Shows the current lane type and if a lane change can be done in the actual lane or the surrounding ones.
+
+# ...
+waypoint = world.get_map().get_waypoint(vehicle.get_location(),project_to_road=True, lane_type=(carla.LaneType.Driving | carla.LaneType.Shoulder | carla.LaneType.Sidewalk))
+print("Current lane type: " + str(waypoint.lane_type))
+# Check current lane change allowed
+print("Current Lane change:  " + str(waypoint.lane_change))
+# Left and Right lane markings
+print("L lane marking type: " + str(waypoint.left_lane_marking.type))
+print("L lane marking change: " + str(waypoint.left_lane_marking.lane_change))
+print("R lane marking type: " + str(waypoint.right_lane_marking.type))
+print("R lane marking change: " + str(waypoint.right_lane_marking.lane_change))
+# ...
+  
+
+```
+<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.Map.get_waypoint-code')">Copy snippet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snippet</button><br><br>
+  
+
+<img src="/img/snipets_images/carla.Map.get_waypoint.jpg">
+  
+</div>
+  
+<div id ="carla.World.enable_environment_objects-snipet" style="display: none;">
+<p class="SnipetFont">
+Snippet for carla.World.enable_environment_objects
+</p>
+<div id="carla.World.enable_environment_objects-code" class="SnipetContent">
+
+```py
+  
+# This recipe turn visibility off and on for two specifc buildings on the map
+
+# Get the buildings in the world
+world = client.get_world()
+env_objs = world.get_environment_objects(carla.CityObjectLabel.Buildings)
+
+# Access individual building IDs and save in a set
+building_01 = env_objs[0]
+building_02 = env_objs[1]
+objects_to_toggle = {building_01.id, building_02.id}
+
+# Toggle buildings off
+world.enable_environment_objects(objects_to_toggle, False)
+# Toggle buildings on
+world.enable_environment_objects(objects_to_toggle, True)
+  
+
+```
+<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.World.enable_environment_objects-code')">Copy snippet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snippet</button><br><br>
   
 </div>
   
@@ -5043,6 +5073,114 @@ while True:
   
 </div>
   
+<div id ="carla.WalkerAIController.stop-snipet" style="display: none;">
+<p class="SnipetFont">
+Snippet for carla.WalkerAIController.stop
+</p>
+<div id="carla.WalkerAIController.stop-code" class="SnipetContent">
+
+```py
+  
+
+#To destroy the pedestrians, stop them from the navigation, and then destroy the objects (actor and controller).
+
+# stop pedestrians (list is [controller, actor, controller, actor ...])
+for i in range(0, len(all_id), 2):
+    all_actors[i].stop()
+
+# destroy pedestrian (actor and controller)
+client.apply_batch([carla.command.DestroyActor(x) for x in all_id])
+  
+
+```
+<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.WalkerAIController.stop-code')">Copy snippet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snippet</button><br><br>
+  
+</div>
+  
+<div id ="carla.World.load_map_layer-snipet" style="display: none;">
+<p class="SnipetFont">
+Snippet for carla.World.load_map_layer
+</p>
+<div id="carla.World.load_map_layer-code" class="SnipetContent">
+
+```py
+  
+# This recipe toggles on several layers in our "_Opt" maps
+
+# Load town one with only minimum layout (roads, sidewalks, traffic lights and traffic signs)
+world = client.load_world('Town01_Opt', carla.MapLayer.None)
+
+# Toggle all buildings on
+world.load_map_layer(carla.MapLayer.Buildings)
+
+# Toggle all foliage on
+world.load_map_layer(carla.MapLayer.Foliage)
+
+# Toggle all parked vehicles on
+world.load_map_layer(carla.MapLayer.ParkedVehicles)
+  
+
+```
+<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.World.load_map_layer-code')">Copy snippet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snippet</button><br><br>
+  
+</div>
+  
+<div id ="carla.World.spawn_actor-snipet" style="display: none;">
+<p class="SnipetFont">
+Snippet for carla.World.spawn_actor
+</p>
+<div id="carla.World.spawn_actor-code" class="SnipetContent">
+
+```py
+  
+
+# This recipe attaches different camera / sensors to a vehicle with different attachments.
+
+# ...
+camera = world.spawn_actor(rgb_camera_bp, transform, attach_to=vehicle, attachment_type=Attachment.Rigid)
+# Default attachment:  Attachment.Rigid
+gnss_sensor = world.spawn_actor(sensor_gnss_bp, transform, attach_to=vehicle)
+collision_sensor = world.spawn_actor(sensor_collision_bp, transform, attach_to=vehicle)
+lane_invasion_sensor = world.spawn_actor(sensor_lane_invasion_bp, transform, attach_to=vehicle)
+# ...
+  
+
+```
+<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.World.spawn_actor-code')">Copy snippet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snippet</button><br><br>
+  
+</div>
+  
+<div id ="carla.DebugHelper.draw_box-snipet" style="display: none;">
+<p class="SnipetFont">
+Snippet for carla.DebugHelper.draw_box
+</p>
+<div id="carla.DebugHelper.draw_box-code" class="SnipetContent">
+
+```py
+  
+
+# This recipe shows how to draw traffic light actor bounding boxes from a world snapshot.
+
+# ....
+debug = world.debug
+world_snapshot = world.get_snapshot()
+
+for actor_snapshot in world_snapshot:
+    actual_actor = world.get_actor(actor_snapshot.id)
+    if actual_actor.type_id == 'traffic.traffic_light':
+        debug.draw_box(carla.BoundingBox(actor_snapshot.get_transform().location,carla.Vector3D(0.5,0.5,2)),actor_snapshot.get_transform().rotation, 0.05, carla.Color(255,0,0,0),0)
+# ...
+
+  
+
+```
+<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.DebugHelper.draw_box-code')">Copy snippet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snippet</button><br><br>
+  
+
+<img src="/img/snipets_images/carla.DebugHelper.draw_box.jpg">
+  
+</div>
+  
 <div id ="carla.World.unload_map_layer-snipet" style="display: none;">
 <p class="SnipetFont">
 Snippet for carla.World.unload_map_layer
@@ -5066,6 +5204,166 @@ world.unload_map_layer(carla.MapLayer.ParkedVehicles)
 
 ```
 <button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.World.unload_map_layer-code')">Copy snippet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snippet</button><br><br>
+  
+</div>
+  
+<div id ="carla.World.get_spectator-snipet" style="display: none;">
+<p class="SnipetFont">
+Snippet for carla.World.get_spectator
+</p>
+<div id="carla.World.get_spectator-code" class="SnipetContent">
+
+```py
+  
+
+# This recipe spawns an actor and the spectator camera at the actor's location.
+
+# ...
+world = client.get_world()
+spectator = world.get_spectator()
+
+vehicle_bp = random.choice(world.get_blueprint_library().filter('vehicle.bmw.*'))
+transform = random.choice(world.get_map().get_spawn_points())
+vehicle = world.try_spawn_actor(vehicle_bp, transform)
+
+# Wait for world to get the vehicle actor
+world.tick()
+
+world_snapshot = world.wait_for_tick()
+actor_snapshot = world_snapshot.find(vehicle.id)
+
+# Set spectator at given transform (vehicle transform)
+spectator.set_transform(actor_snapshot.get_transform())
+# ...
+  
+
+```
+<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.World.get_spectator-code')">Copy snippet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snippet</button><br><br>
+  
+</div>
+  
+<div id ="carla.ActorBlueprint.set_attribute-snipet" style="display: none;">
+<p class="SnipetFont">
+Snippet for carla.ActorBlueprint.set_attribute
+</p>
+<div id="carla.ActorBlueprint.set_attribute-code" class="SnipetContent">
+
+```py
+  
+
+# This recipe changes attributes of different type of blueprint actors.
+
+# ...
+walker_bp = world.get_blueprint_library().filter('walker.pedestrian.0002')
+walker_bp.set_attribute('is_invincible', True)
+
+# ...
+# Changes attribute randomly by the recommended value
+vehicle_bp = wolrd.get_blueprint_library().filter('vehicle.bmw.*')
+color = random.choice(vehicle_bp.get_attribute('color').recommended_values)
+vehicle_bp.set_attribute('color', color)
+
+# ...
+
+camera_bp = world.get_blueprint_library().filter('sensor.camera.rgb')
+camera_bp.set_attribute('image_size_x', 600)
+camera_bp.set_attribute('image_size_y', 600)
+# ...
+  
+
+```
+<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.ActorBlueprint.set_attribute-code')">Copy snippet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snippet</button><br><br>
+  
+</div>
+  
+<div id ="carla.TrafficLight.set_state-snipet" style="display: none;">
+<p class="SnipetFont">
+Snippet for carla.TrafficLight.set_state
+</p>
+<div id="carla.TrafficLight.set_state-code" class="SnipetContent">
+
+```py
+  
+
+# This recipe changes from red to green the traffic light that affects the vehicle. 
+# This is done by detecting if the vehicle actor is at a traffic light.
+
+# ...
+world = client.get_world()
+spectator = world.get_spectator()
+
+vehicle_bp = random.choice(world.get_blueprint_library().filter('vehicle.bmw.*'))
+transform = random.choice(world.get_map().get_spawn_points())
+vehicle = world.try_spawn_actor(vehicle_bp, transform)
+
+# Wait for world to get the vehicle actor
+world.tick()
+
+world_snapshot = world.wait_for_tick()
+actor_snapshot = world_snapshot.find(vehicle.id)
+
+# Set spectator at given transform (vehicle transform)
+spectator.set_transform(actor_snapshot.get_transform())
+# ...# ...
+if vehicle_actor.is_at_traffic_light():
+    traffic_light = vehicle_actor.get_traffic_light()
+    if traffic_light.get_state() == carla.TrafficLightState.Red:
+       # world.hud.notification("Traffic light changed! Good to go!")
+        traffic_light.set_state(carla.TrafficLightState.Green)
+# ...
+
+  
+
+```
+<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.TrafficLight.set_state-code')">Copy snippet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snippet</button><br><br>
+  
+
+<img src="/img/snipets_images/carla.TrafficLight.set_state.gif">
+  
+</div>
+  
+<div id ="carla.Client.__init__-snipet" style="display: none;">
+<p class="SnipetFont">
+Snippet for carla.Client.__init__
+</p>
+<div id="carla.Client.__init__-code" class="SnipetContent">
+
+```py
+  
+
+# This recipe shows in every script provided in PythonAPI/Examples 
+# and it is used to parse the client creation arguments when running the script. 
+
+    argparser = argparse.ArgumentParser(
+        description=__doc__)
+    argparser.add_argument(
+        '--host',
+        metavar='H',
+        default='127.0.0.1',
+        help='IP of the host server (default: 127.0.0.1)')
+    argparser.add_argument(
+        '-p', '--port',
+        metavar='P',
+        default=2000,
+        type=int,
+        help='TCP port to listen to (default: 2000)')
+    argparser.add_argument(
+        '-s', '--speed',
+        metavar='FACTOR',
+        default=1.0,
+        type=float,
+        help='rate at which the weather changes (default: 1.0)')
+    args = argparser.parse_args()
+
+    speed_factor = args.speed
+    update_freq = 0.1 / speed_factor
+
+    client = carla.Client(args.host, args.port)
+
+  
+
+```
+<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.Client.__init__-code')">Copy snippet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snippet</button><br><br>
   
 </div>
   
