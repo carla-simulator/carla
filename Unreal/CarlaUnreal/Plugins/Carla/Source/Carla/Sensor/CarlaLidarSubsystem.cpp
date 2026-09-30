@@ -53,7 +53,7 @@ void UCarlaLidarSubsystem::UnregisterLidar(ARayCastSemanticLidar *Lidar)
   ActiveLidars.RemoveAll([](const TWeakObjectPtr<ARayCastSemanticLidar>& Ptr) { return !Ptr.IsValid(); });
 }
 
-void UCarlaLidarSubsystem::StartLidarSimulations(UWorld *World, float DeltaSeconds)
+void UCarlaLidarSubsystem::StartLidarSimulations(UWorld *World, [[maybe_unused]] float DeltaSeconds)
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(UCarlaLidarSubsystem::StartLidarSimulations);
 
@@ -80,25 +80,27 @@ void UCarlaLidarSubsystem::StartLidarSimulations(UWorld *World, float DeltaSecon
 
   const bool bBatch = (CVarLidarBatch.GetValueOnGameThread() != 0) && (LidarsToSimulate.Num() > 1);
 
-  // Dispatch raycast simulation as a high-priority Task Graph job on worker threads
+  // Dispatch raycast simulation as a high-priority Task Graph job on worker threads.
+  // Each LiDAR uses its own tick-interval delta, not the physics substep delta.
   LidarSimulationTask = FFunctionGraphTask::CreateAndDispatchWhenReady(
-    [this, World, DeltaSeconds, bBatch]()
+    [this, World, bBatch]()
     {
       TRACE_CPUPROFILER_EVENT_SCOPE(TaskGraphLidarSimulations);
       auto LockedPhysObject = FPhysicsObjectExternalInterface::LockRead(World->GetPhysicsScene());
 
       if (bBatch)
       {
-        ParallelFor(LidarsToSimulate.Num(), [this, DeltaSeconds](int32 Index)
+        ParallelFor(LidarsToSimulate.Num(), [this](int32 Index)
         {
-          LidarsToSimulate[Index]->SimulateLidar(DeltaSeconds, /*bLockPhysics=*/false);
+          ARayCastSemanticLidar *Lidar = LidarsToSimulate[Index];
+          Lidar->SimulateLidar(Lidar->GetReadyToTickDeltaSeconds(), /*bLockPhysics=*/false);
         });
       }
       else
       {
         for (ARayCastSemanticLidar *Lidar : LidarsToSimulate)
         {
-          Lidar->SimulateLidar(DeltaSeconds, /*bLockPhysics=*/false);
+          Lidar->SimulateLidar(Lidar->GetReadyToTickDeltaSeconds(), /*bLockPhysics=*/false);
         }
       }
 
@@ -110,7 +112,7 @@ void UCarlaLidarSubsystem::StartLidarSimulations(UWorld *World, float DeltaSecon
   );
 }
 
-void UCarlaLidarSubsystem::FinishLidarSimulations(UWorld *World, float DeltaSeconds)
+void UCarlaLidarSubsystem::FinishLidarSimulations(UWorld *World, [[maybe_unused]] float DeltaSeconds)
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(UCarlaLidarSubsystem::FinishLidarSimulations);
 
@@ -127,7 +129,7 @@ void UCarlaLidarSubsystem::FinishLidarSimulations(UWorld *World, float DeltaSeco
     {
       if (IsValid(Lidar))
       {
-        Lidar->SendData(DeltaSeconds);
+        Lidar->SendData(Lidar->GetReadyToTickDeltaSeconds());
         Lidar->ClearReadyToTick();
       }
     }

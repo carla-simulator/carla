@@ -147,6 +147,11 @@ public:
     ReadyToTick = false;
   }
 
+  float GetReadyToTickDeltaSeconds() const
+  {
+    return ReadyToTickDeltaSeconds;
+  }
+
   UFUNCTION(BlueprintCallable)
   URandomEngine *GetRandomEngine()
   {
