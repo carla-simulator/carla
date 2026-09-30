@@ -282,6 +282,17 @@ start_proc() {
     log "started '$name' (pid/pgid $pid), log: $logfile"
 }
 
+# Quick crash check for a process started via start_proc: not a readiness
+# check, just catches an immediate exit (bad args, missing import, etc.).
+#   check_alive <name>
+check_alive() {
+    local name="$1" pid
+    $DRY_RUN && return 0
+    sleep 1.5
+    pid="$(awk -v n="$name" '$1==n{print $2}' "$PIDFILE")"
+    kill -0 "$pid" 2>/dev/null || die "'$name' exited immediately -- see $LOG_DIR/$name.log"
+}
+
 # Start one managed docker container (recorded for teardown; this script only
 # ever removes containers it created itself).
 #   start_container <name> <docker run args...>
@@ -518,15 +529,11 @@ EOF
 #      2026-08). These ADAPI topics publish at a low rate; at sub-realtime sim
 #      speed the stock 3.0 s staleness window flaps ERROR and the MRM pulses
 #      EMERGENCY_STOP, freezing the car mid-drive for no real reason.
-#   4. planning/preset/default_preset.yaml: launch_traffic_light_module ->
-#      false. The generated lanelet2 maps do not yet carry usable traffic
-#      light regulatory elements + camera ROI projection is unverified; with
-#      the module on, the car can wait forever at a light it cannot see.
 OVERRIDE_SCRIPT="$LOG_DIR/apply_carla_overrides.sh"
 
 write_override_script() {
     if $DRY_RUN; then
-        echo "[dry-run] write $OVERRIDE_SCRIPT (NDT convergence likelihood -> 1.0; stop_check_enabled -> false; ADAPI diag timeouts -> 30.0; launch_traffic_light_module -> false; idempotent)"
+        echo "[dry-run] write $OVERRIDE_SCRIPT (NDT convergence likelihood -> 1.0; stop_check_enabled -> false; ADAPI diag timeouts -> 30.0; idempotent)"
         return 0
     fi
     # A generated file (fed to bash via stdin / docker exec -i) sidesteps the
@@ -574,28 +581,6 @@ print(f"patched: {path} (ADAPI diag timeouts -> 30.0)")
 PYEOF
 else
     echo "WARNING: diagnostics/autoware-carla.yaml not found under $root (older autoware_launch? MRM may flap at sub-realtime speed)" >&2
-fi
-# Generated lanelet2 maps have no usable traffic-light regulatory elements yet
-# (and camera ROI projection is unverified) -- with the module on, the car can
-# wait forever at a light it cannot see.
-preset="$(find -L "$root" -path '*autoware_launch*' -name default_preset.yaml 2>/dev/null | head -1)"
-if [ -n "$preset" ]; then
-    python3 - "$preset" <<'PYEOF'
-import re, sys
-path = sys.argv[1]
-lines = open(path).read().splitlines(keepends=True)
-armed = False
-for i, ln in enumerate(lines):
-    if "launch_traffic_light_module" in ln:
-        armed = True
-    elif armed and re.match(r"\s*default:", ln):
-        lines[i] = re.sub(r'default:\s*"?\w+"?', 'default: "false"', ln)
-        break
-open(path, "w").write("".join(lines))
-print(f"patched: {path} (launch_traffic_light_module -> false)")
-PYEOF
-else
-    echo "WARNING: planning preset default_preset.yaml not found under $root" >&2
 fi
 EOF
 }
@@ -956,6 +941,11 @@ fi
 start_proc autoware_demo "exec '$CARLA_PY' '$AUTOWARE_DEMO' --host $CARLA_HOST --port $RPC_PORT --hz_rate 20 --resync${SPAWN_INDEX:+ --spawn_index $SPAWN_INDEX}"
 pause 5 "let autoware_demo.py spawn the ego before attaching more sensors"
 
+if [[ "$MODE" == "classical" ]]; then
+    start_proc traffic_light_state_source "exec '$CARLA_PY' '$SCRIPT_DIR/carla_traffic_light_state_source.py' --host '$CARLA_HOST' --port '$RPC_PORT' --map '$MAP_PATH/lanelet2_map.osm' --output '$DDS_DIR/traffic_light_states.json'"
+    check_alive traffic_light_state_source
+fi
+
 # ------------------------------------------------- 4+5. e2e-only glue procs --
 if [[ "$MODE" == "e2e" ]]; then
     # Six VAD cameras (1600x900, nuScenes-style rig) on /sensing/camera/CAM_*/image_raw.
@@ -1060,6 +1050,7 @@ if [[ "$MODE" == "classical" ]]; then
             -e ROS_DOMAIN_ID="$DOMAIN_ID" \
             -v "$DDS_DIR":/dds:ro \
             -v "$MAP_PATH":"/maps/$TOWN_BASE":ro \
+            -v "$SCRIPT_DIR/autoware_traffic_light_state_publisher.py":/carla-autoware-run/autoware_traffic_light_state_publisher.py:ro \
             -v "$HOME/autoware_data":/root/autoware_data \
             --entrypoint bash "$IMAGE" -c 'sleep infinity'
         apply_carla_overrides docker /opt/autoware
@@ -1120,6 +1111,17 @@ if [[ "$MODE" == "classical" ]]; then
             start_proc rviz "${STACK_PRELUDE}exec env ${RVIZ_ENV}rviz2 ${RVIZ_CFG:+-d '$RVIZ_CFG'}"
         fi
     fi
+
+    # The stock vision model reports UNKNOWN for CARLA's rendered lights. Do
+    # not feed that classifier in this ground-truth-driven demo: its cached
+    # UNKNOWN would be merged with the authoritative external state. CARLA's
+    # native traffic-light camera remains available on <base>/image.
+    if [[ "$STACK" == "docker" ]]; then
+        start_proc traffic_light_state_publisher "exec docker exec '$CONTAINER_NAME' bash -c '$AW_SETUP_SNIPPET; exec python3 /carla-autoware-run/autoware_traffic_light_state_publisher.py --input /dds/traffic_light_states.json'"
+    else
+        start_proc traffic_light_state_publisher "${STACK_PRELUDE}exec python3 '$SCRIPT_DIR/autoware_traffic_light_state_publisher.py' --input '$DDS_DIR/traffic_light_states.json'"
+    fi
+    check_alive traffic_light_state_publisher
 else
     if [[ "$E2E_GLUE" == "pr1685" ]]; then
         start_proc autoware "$E2E_PR_CMD"

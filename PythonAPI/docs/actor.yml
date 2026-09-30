@@ -572,6 +572,22 @@
     - var_name: trigger_volume
       doc: >
         A carla.BoundingBox situated near a traffic sign where the carla.Actor who is inside can know about it.
+    # - METHODS ----------------------------
+    methods:
+    - def_name: get_opendrive_id
+      return: str
+      doc: >
+        Returns the OpenDRIVE id of this traffic sign.
+    # --------------------------------------
+    - def_name: get_stop_waypoints
+      return: list(carla.Waypoint)
+      doc: >
+        Returns a list of waypoints indicating the stop position for the traffic sign. These waypoints are computed from the trigger volume of the sign that indicates where a vehicle should stop.
+    # --------------------------------------
+    - def_name: get_affected_lane_waypoints
+      return: list(carla.Waypoint)
+      doc: >
+        Returns a list of waypoints indicating the positions and lanes where the traffic sign is having an effect.
     # --------------------------------------
 
   - class_name: TrafficLightState
@@ -692,11 +708,6 @@
       doc: >
         Sets a given time for the yellow light to be active.
     # --------------------------------------
-    - def_name: get_affected_lane_waypoints
-      return: list(carla.Waypoint)
-      doc: >
-        Returns a list of waypoints indicating the positions and lanes where the traffic light is having an effect.
-    # --------------------------------------
     - def_name: get_light_boxes
       return: list(carla.BoundingBox)
       doc: >
@@ -705,12 +716,7 @@
     - def_name: get_opendrive_id
       return: str
       doc: >
-        Returns the OpenDRIVE id of this traffic light.
-    # --------------------------------------
-    - def_name: get_stop_waypoints
-      return: list(carla.Waypoint)
-      doc: >
-        Returns a list of waypoints indicating the stop position for the traffic light. These waypoints are computed from the trigger boxes of the traffic light that indicate where a vehicle should stop.
+        Returns the OpenDRIVE id of this traffic light. Inherited from carla.TrafficSign.
     # --------------------------------------
     - def_name: __str__
     # --------------------------------------
