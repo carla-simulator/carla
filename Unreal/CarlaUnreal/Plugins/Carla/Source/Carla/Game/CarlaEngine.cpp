@@ -17,6 +17,8 @@
 #include "Carla/Settings/EpisodeSettings.h"
 #include "Carla/MapGen/LargeMapManager.h"
 #include "Carla/Traffic/TrafficLightManager.h"
+#include "Carla/Actor/ActorData.h"
+#include "Carla/Sensor/Sensor.h"
 
 #include <util/disable-ue4-macros.h>
 #include <carla/Logging.h>
@@ -43,6 +45,8 @@
 #include <util/ue-header-guard-end.h>
 
 #include <cstdlib>
+#include <cstring>
+#include <optional>
 #include <thread>
 
 // =============================================================================
@@ -74,6 +78,12 @@ static void FCarlaEngine_SetFixedDeltaSeconds(TOptional<double> FixedDeltaSecond
 
 FCarlaEngine::~FCarlaEngine()
 {
+  // The command callback captures this engine and outlives it otherwise
+  // (Secondary is kept alive by its own commander).
+  if (Secondary)
+  {
+    Secondary->Stop();
+  }
   if (bIsRunning)
   {
     #if defined(WITH_ROS2)
@@ -159,6 +169,22 @@ void FCarlaEngine::NotifyInitGame(const UCarlaSettings &Settings)
       // we are secondary server, connecting to primary server
       bIsPrimaryServer = false;
 
+      // Clients subscribe with the primary's stream ids only (see GET_TOKEN).
+      Server.GetStreamingServer().SetSessionsUseStreamAliases(true);
+
+      // ROS commands address the sensor by the primary's stream id.
+      auto FindAliasedStream = [this](const carla::Buffer &Data)
+          -> std::optional<carla::streaming::detail::stream_id_type>
+      {
+        carla::streaming::detail::stream_id_type PrimaryStreamId = 0u;
+        if (Data.size() < sizeof(PrimaryStreamId))
+        {
+          return std::nullopt;
+        }
+        std::memcpy(&PrimaryStreamId, Data.data(), sizeof(PrimaryStreamId));
+        return Server.GetStreamingServer().FindStreamAlias(PrimaryStreamId);
+      };
+
       // define the commands executor (when a command comes from the primary server)
       auto CommandExecutor = [=, this](carla::multigpu::MultiGPUCommand Id, carla::Buffer Data) {
         struct CarlaStreamBuffer : public std::streambuf
@@ -209,23 +235,40 @@ void FCarlaEngine::NotifyInitGame(const UCarlaSettings &Settings)
           }
           case carla::multigpu::MultiGPUCommand::LOAD_MAP:
           {
-            FString FinalPath(reinterpret_cast<char *>(Data.data()));
+            const carla::multigpu::LoadMapRequest Request = carla::multigpu::ParseLoadMapPayload(
+                std::string_view(reinterpret_cast<const char *>(Data.data()), Data.size()));
             {
               std::scoped_lock<std::mutex> Lock(FrameToProcessMutex);
-              PendingLoadMap = FinalPath;
+              PendingLoadMap = UTF8_TO_TCHAR(Request.map.c_str());
+              PendingLoadMapId = Request.load_id;
+              PendingLoadEpoch = SensorStreams.BeginEpisodeChange(Server.GetStreamingServer());
               bLoadMapPending = true;
             }
             break;
           }
           case carla::multigpu::MultiGPUCommand::GET_TOKEN:
           {
-            // get the sensor id
-            auto sensor_id = *(reinterpret_cast<carla::streaming::detail::stream_id_type *>(Data.data()));
-            // query dispatcher
-            carla::streaming::detail::token_type token(Server.GetStreamingServer().GetToken(sensor_id));
-            carla::Buffer buf(reinterpret_cast<unsigned char *>(&token), (size_t) sizeof(token));
-            carla::log_info("responding with a token for port ", token.get_port());
-            Secondary->Write(std::move(buf));
+            // Resolved by actor id: local stream ids follow this secondary's own creation order.
+            carla::multigpu::GetTokenRequest Request{};
+            std::optional<carla::streaming::detail::token_type> Token;
+            if (Data.size() >= sizeof(Request))
+            {
+              std::memcpy(&Request, Data.data(), sizeof(Request));
+              Token = SensorStreams.Resolve(Server.GetStreamingServer(), Request.actor_id, Request.stream_id);
+            }
+            if (!Token)
+            {
+              carla::log_warning("multigpu: cannot provide a token for sensor actor ", Request.actor_id,
+                  " (", Data.size(), "-byte request); replying not ready");
+              carla::Buffer Reply(
+                  reinterpret_cast<const unsigned char *>(carla::multigpu::kTokenNotReadyMarker.data()),
+                  carla::multigpu::kTokenNotReadyMarker.size());
+              Secondary->Write(std::move(Reply));
+              break;
+            }
+            carla::Buffer Reply(reinterpret_cast<const unsigned char *>(&*Token), sizeof(*Token));
+            carla::log_info("responding with a token for port ", Token->get_port());
+            Secondary->Write(std::move(Reply));
             break;
           }
           case carla::multigpu::MultiGPUCommand::YOU_ALIVE:
@@ -238,37 +281,35 @@ void FCarlaEngine::NotifyInitGame(const UCarlaSettings &Settings)
           }
           case carla::multigpu::MultiGPUCommand::ENABLE_ROS:
           {
-            // get the sensor id
-            auto sensor_id = *(reinterpret_cast<carla::streaming::detail::stream_id_type *>(Data.data()));
-            // query dispatcher
-            Server.GetStreamingServer().EnableForROS(sensor_id);
-            // return a 'true'
-            bool res = true;
-            carla::Buffer buf(reinterpret_cast<unsigned char *>(&res), (size_t) sizeof(bool));
-            carla::log_info("responding ENABLE_ROS with a true");
+            const auto sensor_id = FindAliasedStream(Data);
+            if (sensor_id)
+            {
+              Server.GetStreamingServer().EnableForROS(*sensor_id);
+            }
+            const bool res = sensor_id.has_value();
+            carla::Buffer buf(reinterpret_cast<const unsigned char *>(&res), sizeof(res));
+            carla::log_info("responding ENABLE_ROS with: ", res);
             Secondary->Write(std::move(buf));
             break;
           }
           case carla::multigpu::MultiGPUCommand::DISABLE_ROS:
           {
-            // get the sensor id
-            auto sensor_id = *(reinterpret_cast<carla::streaming::detail::stream_id_type *>(Data.data()));
-            // query dispatcher
-            Server.GetStreamingServer().DisableForROS(sensor_id);
-            // return a 'true'
-            bool res = true;
-            carla::Buffer buf(reinterpret_cast<unsigned char *>(&res), (size_t) sizeof(bool));
-            carla::log_info("responding DISABLE_ROS with a true");
+            const auto sensor_id = FindAliasedStream(Data);
+            if (sensor_id)
+            {
+              Server.GetStreamingServer().DisableForROS(*sensor_id);
+            }
+            const bool res = sensor_id.has_value();
+            carla::Buffer buf(reinterpret_cast<const unsigned char *>(&res), sizeof(res));
+            carla::log_info("responding DISABLE_ROS with: ", res);
             Secondary->Write(std::move(buf));
             break;
           }
           case carla::multigpu::MultiGPUCommand::IS_ENABLED_ROS:
           {
-            // get the sensor id
-            auto sensor_id = *(reinterpret_cast<carla::streaming::detail::stream_id_type *>(Data.data()));
-            // query dispatcher
-            bool res = Server.GetStreamingServer().IsEnabledForROS(sensor_id);
-            carla::Buffer buf(reinterpret_cast<unsigned char *>(&res), (size_t) sizeof(bool));
+            const auto sensor_id = FindAliasedStream(Data);
+            const bool res = sensor_id && Server.GetStreamingServer().IsEnabledForROS(*sensor_id);
+            carla::Buffer buf(reinterpret_cast<const unsigned char *>(&res), sizeof(res));
             carla::log_info("responding IS_ENABLED_ROS with: ", res);
             Secondary->Write(std::move(buf));
             break;
@@ -434,24 +475,108 @@ void FCarlaEngine::NotifyBeginEpisode(UCarlaEpisode &Episode)
 
   if (!bIsPrimaryServer && Secondary)
   {
+    SensorStreams.OpenEpisode(LoadingEpoch);
+    bWarnedSensorBindRefused = false;
+
     // Re-arms the primary's full-resync flag (see Router::HandleResponse),
     // since connect-time arming predates this secondary's own level load.
     // Write(Buffer), not Write(std::string): the latter has no completion
     // handler keeping the message alive and can dangle.
-    carla::Buffer Marker(
-        reinterpret_cast<const unsigned char *>(carla::multigpu::kEpisodeReadyMarker.data()),
-        carla::multigpu::kEpisodeReadyMarker.size());
+    const std::string Ready = carla::multigpu::MakeEpisodeReadyMessage(LoadingLoadMapId);
+    carla::Buffer Marker(reinterpret_cast<const unsigned char *>(Ready.data()), Ready.size());
     Secondary->Write(std::move(Marker));
   }
 }
 
 void FCarlaEngine::NotifyEndEpisode()
 {
+  SensorStreams.CloseEpisode();
   Server.NotifyEndEpisode();
   std::scoped_lock<std::mutex> Lock(FrameToProcessMutex);
   CurrentEpisode = nullptr;
   FramesToProcess.clear();
   bFramesToProcessBacklogged = false;
+}
+
+void FCarlaEngine::BindReplayedSensor(uint32_t PrimaryActorId, uint32_t LocalActorId, bool bCreated)
+{
+  FCarlaActor *CarlaActor = CurrentEpisode->FindCarlaActor(LocalActorId);
+  if ((CarlaActor == nullptr) || (CarlaActor->GetActorType() != FCarlaActor::ActorType::Sensor))
+  {
+    return;
+  }
+
+  if (!SensorStreams.IsEpisodeOpen())
+  {
+    if (!bWarnedSensorBindRefused)
+    {
+      UE_LOG(LogCarla, Warning,
+          TEXT("Multi-GPU: ignoring replayed sensor %u (primary actor %u): the episode of the latest map load is not open here (did the level load fail?); its clients get no data until it is"),
+          LocalActorId, PrimaryActorId);
+      bWarnedSensorBindRefused = true;
+    }
+    return;
+  }
+
+  ASensor *Sensor = Cast<ASensor>(CarlaActor->GetActor());
+  const bool bSensorHasStream = (Sensor != nullptr) && Sensor->IsStreamReady();
+  std::optional<carla::streaming::detail::stream_id_type> OwnStreamId;
+  if (bSensorHasStream)
+  {
+    OwnStreamId = carla::streaming::detail::token_type(Sensor->GetToken()).get_stream_id();
+  }
+  else if (FActorSensorData *DormantData = CarlaActor->GetActorData<FActorSensorData>())
+  {
+    if (DormantData->Stream.IsStreamReady())
+    {
+      OwnStreamId = carla::streaming::detail::token_type(DormantData->Stream.GetToken()).get_stream_id();
+    }
+  }
+  if (!OwnStreamId)
+  {
+    UE_LOG(LogCarla, Warning,
+        TEXT("Multi-GPU: replayed sensor %u (primary actor %u) has no stream; its clients get no data"),
+        LocalActorId, PrimaryActorId);
+    return;
+  }
+
+  // Only a sensor created by this replay step has never ticked; a live
+  // sensor's stream must not be replaced (its capture reads it concurrently).
+  const bool bCanAdopt = bCreated && bSensorHasStream;
+  auto ReservedStream = SensorStreams.Bind(Server.GetStreamingServer(), PrimaryActorId, *OwnStreamId, bCanAdopt);
+  if (!ReservedStream)
+  {
+    return;
+  }
+  Sensor->SetDataStream(FDataStream(std::move(*ReservedStream)));
+  Server.GetStreamingServer().CloseStream(*OwnStreamId);
+}
+
+void FCarlaEngine::WaitForSecondaryEpisodes()
+{
+  if (!SecondaryServer || !SecondaryServer->IsAnySecondaryLoading())
+  {
+    return;
+  }
+  TRACE_CPUPROFILER_EVENT_SCOPE_STR(__FUNCTION__);
+  static constexpr double TimeoutSeconds = 30.0;
+  const double Start = FPlatformTime::Seconds();
+  const double Deadline = Start + TimeoutSeconds;
+  UE_LOG(LogCarla, Log, TEXT("Multi-GPU: waiting for secondary servers to load the new episode"));
+  while (SecondaryServer->IsAnySecondaryLoading())
+  {
+    if (FPlatformTime::Seconds() >= Deadline)
+    {
+      UE_LOG(LogCarla, Warning,
+          TEXT("Multi-GPU: secondary servers did not load the new episode within %.0f s (waited %.0f ms); ticking without waiting"),
+          TimeoutSeconds, (FPlatformTime::Seconds() - Start) * 1000.0);
+      SecondaryServer->StopWaitingForSecondaryLoads();
+      return;
+    }
+    Server.RunSome(1u);
+  }
+  UE_LOG(LogCarla, Log, TEXT("Multi-GPU: all secondary servers loaded the new episode after %.0f ms"),
+      (FPlatformTime::Seconds() - Start) * 1000.0);
 }
 
 void FCarlaEngine::OnPreTick(UWorld *, ELevelTick TickType, float DeltaSeconds)
@@ -477,6 +602,12 @@ void FCarlaEngine::OnPreTick(UWorld *, ELevelTick TickType, float DeltaSeconds)
         Server.RunSome(1u);
       }
       while (bSynchronousMode && !Server.TickCueReceived());
+
+      // Frames sent while a secondary is still loading are dropped there.
+      if (bSynchronousMode)
+      {
+        WaitForSecondaryEpisodes();
+      }
     }
     else
     {
@@ -494,6 +625,8 @@ void FCarlaEngine::OnPreTick(UWorld *, ELevelTick TickType, float DeltaSeconds)
           std::scoped_lock<std::mutex> Lock(FrameToProcessMutex);
           MapToLoad = std::move(PendingLoadMap);
           PendingLoadMap.Reset();
+          LoadingEpoch = PendingLoadEpoch;
+          LoadingLoadMapId = PendingLoadMapId;
           bLoadMapPending = false;
         }
         UGameplayStatics::OpenLevel(CurrentEpisode->GetWorld(), *MapToLoad, true);
@@ -513,7 +646,17 @@ void FCarlaEngine::OnPreTick(UWorld *, ELevelTick TickType, float DeltaSeconds)
         {
           TRACE_CPUPROFILER_EVENT_SCOPE_STR("FramesToProcess.PlayFrameData");
           std::scoped_lock<std::mutex> Lock(FrameToProcessMutex);
-          FramesToProcess.front().PlayFrameData(CurrentEpisode, MappedId);
+          FramesToProcess.front().PlayFrameData(
+              CurrentEpisode,
+              MappedId,
+              [this](uint32_t PrimaryActorId, uint32_t LocalActorId, bool bCreated)
+              {
+                BindReplayedSensor(PrimaryActorId, LocalActorId, bCreated);
+              },
+              [this](uint32_t PrimaryActorId)
+              {
+                SensorStreams.Unbind(Server.GetStreamingServer(), PrimaryActorId);
+              });
           FramesToProcess.erase(FramesToProcess.begin()); // remove first element
         }
       }

@@ -18,6 +18,7 @@
 #include <carla/multigpu/primaryCommands.h>
 #include <carla/multigpu/secondary.h>
 #include <carla/multigpu/secondaryCommands.h>
+#include <carla/multigpu/sensorStreamRegistry.h>
 #if WITH_ROS2
     #include <carla/ros2/ROS2.h>
 #endif
@@ -108,6 +109,14 @@ private:
 
   void ResetSimulationState();
 
+  /// Secondary only: binds a sensor replayed from the primary to the stream
+  /// its clients were given (see carla::multigpu::SensorStreamRegistry).
+  void BindReplayedSensor(uint32_t PrimaryActorId, uint32_t LocalActorId, bool bCreated);
+
+  /// Primary only: keeps processing RPC until every secondary sent LOAD_MAP
+  /// reports its episode ready (bounded by a timeout).
+  void WaitForSecondaryEpisodes();
+
   bool bIsRunning = false;
 
   bool bSynchronousMode = false;
@@ -138,6 +147,10 @@ private:
 
   std::unordered_map<uint32_t, uint32_t> MappedId;
 
+  // Secondary only. Resolved and reset from the multi-GPU command thread
+  // (GET_TOKEN, LOAD_MAP), bound from the game thread; internally synchronized.
+  carla::multigpu::SensorStreamRegistry SensorStreams;
+
   std::shared_ptr<carla::multigpu::Router>    SecondaryServer;
   std::shared_ptr<carla::multigpu::Secondary> Secondary;
 
@@ -149,8 +162,21 @@ private:
   // change only rather than once per queued frame.
   bool bFramesToProcessBacklogged = false;
 
+  // Game thread only: BindReplayedSensor warns once per opened episode.
+  bool bWarnedSensorBindRefused = false;
+
   FString PendingLoadMap;
   std::atomic<bool> bLoadMapPending{false};
+
+  // SensorStreams epoch of PendingLoadMap (guarded by FrameToProcessMutex) and
+  // of the map load the game thread started last (game thread only).
+  carla::multigpu::SensorStreamRegistry::epoch_type PendingLoadEpoch = 0u;
+  carla::multigpu::SensorStreamRegistry::epoch_type LoadingEpoch = 0u;
+
+  // Primary's id of PendingLoadMap and of the load started last, echoed in
+  // the episode-ready message; same guards as the epochs above.
+  carla::multigpu::load_map_id_type PendingLoadMapId = 0u;
+  carla::multigpu::load_map_id_type LoadingLoadMapId = 0u;
 };
 
 // Note: this has a circular dependency with FCarlaEngine; it must be included late.
