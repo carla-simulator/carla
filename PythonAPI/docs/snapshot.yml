@@ -82,13 +82,13 @@
       return: carla.Vector3D
       return_units: m/s<sup>2</sup>
       doc: >
-        Returns the acceleration vector registered for an actor in that tick. 
+        Returns the acceleration vector registered for an actor in that tick, in world coordinates. 
     # --------------------------------------
     - def_name: get_angular_velocity
       return: carla.Vector3D
       return_units: rad/s
       doc: >
-        Returns the angular velocity vector registered for an actor in that tick.
+        Returns the angular velocity vector registered for an actor in that tick, in world coordinates.
     # --------------------------------------
     - def_name: get_transform
       return: carla.Transform
@@ -99,6 +99,6 @@
       return: carla.Vector3D
       return_units: m/s
       doc: > 
-        Returns the velocity vector registered for an actor in that tick.
+        Returns the velocity vector registered for an actor in that tick, in world coordinates.
     # --------------------------------------
 ...
