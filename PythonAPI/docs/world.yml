@@ -547,7 +547,7 @@
         default: None
         doc: > 
           The parent object that the spawned actor will follow around. 
-      - param_name: attachment 
+      - param_name: attachment_type
         type: carla.AttachmentType
         default: Rigid
         doc: > 
@@ -571,7 +571,7 @@
         default: None
         doc: > 
           The parent object that the spawned actor will follow around. 
-      - param_name: attachment 
+      - param_name: attachment_type
         type: carla.AttachmentType
         default: Rigid
         doc: > 
