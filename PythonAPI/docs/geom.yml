@@ -784,7 +784,7 @@
     - def_name: get_world_vertices
       return: list(carla.Location)
       params:
-      - param_name: transform
+      - param_name: bbox_transform
         type: carla.Transform
         doc: >
           Contains location and rotation needed to convert this object's local space to world space.
