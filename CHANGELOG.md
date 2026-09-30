@@ -1,5 +1,6 @@
 ## LATEST Changes
 
+* Updated the walker skeleton tutorial to the current bone API (`carla.WalkerBoneControlIn`, `Walker.set_bones` and `Walker.show_pose`) and fixed bone names in its skeleton tree.
 * Documented that `Actor` and `ActorSnapshot` velocity, angular velocity and acceleration getters, and `Actor.set_target_velocity`/`set_target_angular_velocity`, use world coordinates.
 * Fixed `BehaviorAgent.run_step` raising `AttributeError: 'NoneType' object has no attribute 'is_junction'` once the local planner's waypoint queue is empty, e.g. at the end of a route.
 * Fixed `PythonAPI/examples/no_rendering_mode.py` ignoring `--show-triggers`, `--show-connections` and `--show-spawn-points` when a cached map image already existed: the flags are now part of the cache file name.

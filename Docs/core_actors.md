@@ -271,7 +271,7 @@ vehicle.set_light_state(current_lights)
 [__carla.Walker__](python_api.md#carla.Walker) work in a similar way as vehicles do. Control over them is provided by controllers.  
 
 * [__carla.WalkerControl__](python_api.md#carla.WalkerControl) moves the pedestrian around with a certain direction and speed. It also allows them to jump. 
-* [__carla.WalkerBoneControl__](python_api.md#carla.WalkerBoneControl) provides control over the 3D skeleton. [This tutorial](tuto_G_control_walker_skeletons.md) explains how to control it. 
+* [__carla.WalkerBoneControlIn__](python_api.md#carla.WalkerBoneControlIn) provides control over the 3D skeleton. [This tutorial](tuto_G_control_walker_skeletons.md) explains how to control it. 
 
 Walkers can be AI controlled. They do not have an autopilot mode. The [__carla.WalkerAIController__](python_api.md#carla.WalkerAIController) actor moves around the actor it is attached to.  
 

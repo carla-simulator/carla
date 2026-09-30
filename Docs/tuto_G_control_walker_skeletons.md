@@ -27,7 +27,7 @@ crl_root
 └── crl_hips__C
     ├── crl_spine__C
     │   └── crl_spine01__C
-    │       ├── ctrl_shoulder__L
+    │       ├── crl_shoulder__L
     │       │   └── crl_arm__L
     │       │       └── crl_foreArm__L
     │       │           └── crl_hand__L
@@ -39,15 +39,15 @@ crl_root
     │       │               │   └── crl_handIndex01__L
     │       │               │       └── crl_handIndex02__L
     │       │               │           └── crl_handIndexEnd__L
-    │       │               ├── crl_handMiddle_L
+    │       │               ├── crl_handMiddle__L
     │       │               │   └── crl_handMiddle01__L
     │       │               │       └── crl_handMiddle02__L
     │       │               │           └── crl_handMiddleEnd__L
-    │       │               ├── crl_handRing_L
+    │       │               ├── crl_handRing__L
     │       │               │   └── crl_handRing01__L
     │       │               │       └── crl_handRing02__L
     │       │               │           └── crl_handRingEnd__L
-    │       │               └── crl_handPinky_L
+    │       │               └── crl_handPinky__L
     │       │                   └── crl_handPinky01__L
     │       │                       └── crl_handPinky02__L
     │       │                           └── crl_handPinkyEnd__L
@@ -67,15 +67,15 @@ crl_root
     │                       │   └── crl_handIndex01__R
     │                       │       └── crl_handIndex02__R
     │                       │           └── crl_handIndexEnd__R
-    │                       ├── crl_handMiddle_R
+    │                       ├── crl_handMiddle__R
     │                       │   └── crl_handMiddle01__R
     │                       │       └── crl_handMiddle02__R
     │                       │           └── crl_handMiddleEnd__R
-    │                       ├── crl_handRing_R
+    │                       ├── crl_handRing__R
     │                       │   └── crl_handRing01__R
     │                       │       └── crl_handRing02__R
     │                       │           └── crl_handRingEnd__R
-    │                       └── crl_handPinky_R
+    │                       └── crl_handPinky__R
     │                           └── crl_handPinky01__R
     │                               └── crl_handPinky02__R
     │                                   └── crl_handPinkyEnd__R
@@ -119,30 +119,35 @@ Spawn a random walker at one of the map's spawn points
 
 ```py
 world = client.get_world()
-blueprint = random.choice(self.world.get_blueprint_library().filter('walker.*'))
+blueprint = random.choice(world.get_blueprint_library().filter('walker.*'))
 spawn_points = world.get_map().get_spawn_points()
 spawn_point = random.choice(spawn_points) if spawn_points else carla.Transform()
-world.try_spawn_actor(blueprint, spawn_point)
+walker = world.try_spawn_actor(blueprint, spawn_point)
 ```
 
 ### Control walker skeletons
 
-A walker's skeleton can be modified by passing an instance of the WalkerBoneControl class
-to the walker's apply_control function. The WalkerBoneControl class contains the transforms
+A walker's skeleton can be modified by passing an instance of the WalkerBoneControlIn class
+to the walker's set_bones function. The WalkerBoneControlIn class contains the transforms
 of the bones to be modified. Its bone_transforms member is a list of tuples of value pairs
 where the first value is the bone name and the second value is the bone transform. The
-apply_control function can be called on every tick to animate a walker's skeleton. The
+set_bones function can be called on every tick to animate a walker's skeleton. The
 location and rotation of each transform is relative to its parent. Therefore when a
 parent bone's transform is modified, the transforms of the child bones in model space
 will also be changed relatively.
+
+The walker keeps playing its animation until the custom pose is shown with show_pose.
+blend_pose mixes the animation and the custom pose, and hide_pose goes back to the
+animation.
 
 In the example below, the rotations of the walker's hands are set to be 90 degrees around
 the forward axis and the locations are set to the origin.
 
 ```py
-control = carla.WalkerBoneControl()
+control = carla.WalkerBoneControlIn()
 first_tuple = ('crl_hand__R', carla.Transform(rotation=carla.Rotation(roll=90)))
 second_tuple = ('crl_hand__L', carla.Transform(rotation=carla.Rotation(roll=90)))
 control.bone_transforms = [first_tuple, second_tuple]
-world.player.apply_control(control)
+walker.set_bones(control)
+walker.show_pose()
 ```
