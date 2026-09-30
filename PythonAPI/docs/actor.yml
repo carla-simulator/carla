@@ -390,7 +390,7 @@
       - param_name: enabled
         type: bool
         default: True
-      - param_name: port
+      - param_name: tm_port
         type: uint16
         default: 8000
         doc: >
@@ -501,7 +501,7 @@
     # --------------------------------------
     - def_name: blend_pose
       params:
-      - param_name: blend_value
+      - param_name: blend
         type: float
         param_units: value from 0 to 1 with the blend percentage
       doc: >
