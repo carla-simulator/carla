@@ -68,7 +68,33 @@ public:
   /// being replaced by a persistent-level one on World Partition maps.
   void AdoptModelConfigurationFrom(const ATrafficLightManager& Other);
 
+  // Whether OpenDRIVE-generated signs/lights are snapped to the ground after
+  // spawning. Read by ALargeMapManager so both paths share the same flag.
+  bool GetAdjustSignsHeightToGround() const { return bAdjustSignsHeightToGround; }
+
+  // Toggle ground snapping at runtime (driven by the carla.WorldSettings
+  // episode setting). Enabling it after the signals have already been
+  // generated re-snaps the spawned signs, so the feature works on maps whose
+  // manager is spawned with defaults and never configured in the editor.
+  void SetAdjustSignsHeightToGround(bool bEnabled);
+
+  // Snap the generated signs that are not on the ground yet, if the flag is
+  // on, and refresh the environment objects when any moved. Call it again
+  // after more ground streams in.
+  void SnapSignsToGround();
+
 private:
+
+  // Snap every generated sign to the ground, ignoring the generated set during
+  // the trace so the ray reaches the terrain. Idempotent via bPositioned;
+  // returns true if at least one sign moved.
+  bool AdjustSpawnedSignsHeight();
+
+  // Every valid sign, to be ignored during a ground trace. Otherwise the ray
+  // hits the sign's own collision (or a neighbour still at its nominal height)
+  // instead of the ground, which lifts the actor by roughly its own base
+  // height and leaves the pole floating (see PR #9773).
+  TArray<AActor*> GetSignsToIgnoreWhileTracing() const;
 
   void SpawnTrafficLights();
 
@@ -99,6 +125,11 @@ private:
   // Mapped references to TrafficSigns
   UPROPERTY()
   TArray<TObjectPtr<ATrafficSignBase>> TrafficSigns;
+
+  // When true, snap generated signs/lights to the ground after spawning.
+  // Opt-in: off by default so maps that need it enable it explicitly.
+  UPROPERTY(EditAnywhere, Category= "Traffic Light Manager")
+  bool bAdjustSignsHeightToGround = false;
 
   UPROPERTY(EditAnywhere, Category= "Traffic Light Manager")
   TSubclassOf<AActor> TrafficLightModel_RHT;
@@ -156,6 +187,10 @@ private:
   float DormancyTraceDepth = 2000.0f;
 
   int32 DormancySweepIndex = 0;
+
+  // Set when the dormancy sweep snaps a sign, cleared when the environment
+  // objects are re-registered at the end of a full sweep.
+  bool bPendingEnvironmentObjectRefresh = false;
 
   // Signs SpawnSignals spawned from the OpenDRIVE (stop, yield, speed limit).
   // On a World Partition map whose own signs are placed in the level (Town15:

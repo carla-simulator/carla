@@ -76,11 +76,14 @@ protected:
   /// Asynchronous mode: readback first (of the previous tick's pixels), then
   /// capture, never waiting on the render thread -- one tick of latency and
   /// frames may drop under load, but the server cannot stall.
+  ///
+  /// Context is the capture metadata matching the pixels this readback will
+  /// pull: this tick's in synchronous mode, the PREVIOUS tick's in async mode.
   void TickCaptureAndReadback(
       UWorld *World,
       ELevelTick TickType,
       float DeltaSeconds,
-      TFunctionRef<void(bool bNonBlocking)> EnqueueReadback);
+      TFunctionRef<void(bool bNonBlocking, const FSensorCaptureContext &Context)> EnqueueReadback);
 
   // Protected rather than private so subclasses that render the same lens into
   // a different output (ASceneCaptureCamera_RayTracedLensDistance,
@@ -109,4 +112,11 @@ protected:
   /// LensModel they do not need the RTLensEngineAdapter seam.
   int32 SamplesPerPixel = 16;
   bool bEnableDenoiser = true;
+
+private:
+
+  /// Capture metadata for what is currently in the render target (see
+  /// TickCaptureAndReadback).
+  FSensorCaptureContext PendingReadbackContext;
+  bool bHasPendingReadbackContext = false;
 };

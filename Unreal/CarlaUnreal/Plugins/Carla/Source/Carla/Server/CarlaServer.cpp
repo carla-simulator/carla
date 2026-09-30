@@ -845,6 +845,12 @@ void FCarlaServer::FPimpl::BindActions()
       LargeMap->ConsiderSpectatorAsEgo(settings.spectator_as_ego);
     }
 
+    if (ATrafficLightManager* TrafficLightManager = GameMode->GetTrafficLightManager())
+    {
+      TrafficLightManager->SetAdjustSignsHeightToGround(
+          settings.adjust_signs_height_to_ground);
+    }
+
     return FCarlaEngine::GetFrameCounter();
   };
 

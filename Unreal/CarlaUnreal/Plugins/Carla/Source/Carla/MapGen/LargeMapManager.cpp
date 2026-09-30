@@ -12,6 +12,7 @@
 
 #include "Walker/WalkerBase.h"
 #include "Carla/Game/Tagger.h"
+#include "Carla/Traffic/TrafficLightManager.h"
 #include "Carla/Vehicle/CustomTerrainPhysicsComponent.h"
 
 #include <util/ue-header-guard-begin.h>
@@ -153,6 +154,7 @@ void ALargeMapManager::OnLevelAddedToWorld(ULevel* InLevel, UWorld* InWorld)
   LM_LOG(Warning, "OnLevelAddedToWorld");
   ATagger::TagActorsInLevel(*InLevel, true);
 
+  AdjustSignsHeightToGround();
 
   //FDebug::DumpStackTraceToLog(ELogVerbosity::Log);
 }
@@ -163,6 +165,20 @@ void ALargeMapManager::OnLevelRemovedFromWorld(ULevel* InLevel, UWorld* InWorld)
   //FDebug::DumpStackTraceToLog(ELogVerbosity::Log);
   FCarlaMapTile& Tile = GetCarlaMapTile(InLevel);
   Tile.TilesSpawned = false;
+}
+
+void ALargeMapManager::AdjustSignsHeightToGround()
+{
+  // Look the manager up read-only (do not spawn one) so this streaming
+  // callback has no side effects when there is no manager. The generated
+  // signs live in the persistent level, not in the tile, so the manager
+  // checks all of them and skips the ones that are already on the ground.
+  AActor* ManagerActor = UGameplayStatics::GetActorOfClass(
+      GetWorld(), ATrafficLightManager::StaticClass());
+  if (ATrafficLightManager* Manager = Cast<ATrafficLightManager>(ManagerActor))
+  {
+    Manager->SnapSignsToGround();
+  }
 }
 
 void ALargeMapManager::RegisterInitialObjects()
@@ -217,6 +233,8 @@ void ALargeMapManager::OnActorSpawned(
       // Wait until the pending levels changes are finished to avoid spawning
       // the car without ground underneath
       World->FlushLevelStreaming();
+
+      AdjustSignsHeightToGround();
 
       IsHeroVehicle = true;
     }
