@@ -104,6 +104,7 @@ void Router::DisconnectSession(std::shared_ptr<Primary> session) {
         _sessions.end());
     log_info("Connected secondary servers:", _sessions.size());
   }
+  _loading.erase(session.get());
 
   // A request may still be waiting on this session's response; without this,
   // the caller blocked in std::future::get() would hang forever.
@@ -136,8 +137,15 @@ void Router::HandleResponse(std::shared_ptr<Primary> session, Buffer buffer) {
   // for whatever happens to be pending on this session.
   const std::string_view payload(
       reinterpret_cast<const char *>(buffer.data()), buffer.size());
-  if (payload == kEpisodeReadyMarker) {
+  if (const auto ready_load_id = ParseEpisodeReadyMessage(payload)) {
     log_info("Secondary episode ready, re-arming full resync");
+    auto loading = _loading.find(session.get());
+    if ((loading != _loading.end()) && (loading->second == *ready_load_id)) {
+      _loading.erase(loading);
+    } else if (loading != _loading.end()) {
+      log_info("multigpu router: ignoring episode ready of load ", *ready_load_id,
+          ", waiting for load ", loading->second);
+    }
     if (_callback) {
       _callback();
     }
@@ -157,6 +165,7 @@ void Router::HandleResponse(std::shared_ptr<Primary> session, Buffer buffer) {
 void Router::ClearSessions() {
   std::scoped_lock<std::mutex> lock(_mutex);
   _sessions.clear();
+  _loading.clear();
   // Symmetric with DisconnectSession: any request still waiting on a
   // response from a session that is about to disappear must not be left to
   // hang forever.
@@ -182,6 +191,40 @@ void Router::Write(MultiGPUCommand id, Buffer &&buffer) {
       s->Write(message);
     }
   }
+}
+
+load_map_id_type Router::WriteLoadMap(std::string_view map) {
+  std::scoped_lock<std::mutex> lock(_mutex);
+  const load_map_id_type load_id = ++_last_load_id;
+  const std::string payload = MakeLoadMapPayload(map, load_id);
+  Buffer buffer(reinterpret_cast<const unsigned char *>(payload.data()), payload.size());
+
+  CommandHeader header;
+  header.id = MultiGPUCommand::LOAD_MAP;
+  header.size = static_cast<uint32_t>(buffer.size());
+  Buffer buf_header(reinterpret_cast<uint8_t *>(&header), sizeof(header));
+
+  auto view_header = carla::BufferView::CreateFrom(std::move(buf_header));
+  auto view_data = carla::BufferView::CreateFrom(std::move(buffer));
+  auto message = Primary::MakeMessage(view_header, view_data);
+
+  for (auto &s : _sessions) {
+    if (s != nullptr) {
+      s->Write(message);
+      _loading[s.get()] = load_id;
+    }
+  }
+  return load_id;
+}
+
+bool Router::IsAnySecondaryLoading() {
+  std::scoped_lock<std::mutex> lock(_mutex);
+  return !_loading.empty();
+}
+
+void Router::StopWaitingForSecondaryLoads() {
+  std::scoped_lock<std::mutex> lock(_mutex);
+  _loading.clear();
 }
 
 std::future<SessionInfo> Router::WriteToNext(MultiGPUCommand id, Buffer &&buffer) {
@@ -221,6 +264,12 @@ std::future<SessionInfo> Router::WriteToNext(MultiGPUCommand id, Buffer &&buffer
   }
   ++_next;
   return response->get_future();
+}
+
+bool Router::IsConnected(const std::weak_ptr<Primary> &server) {
+  std::scoped_lock<std::mutex> lock(_mutex);
+  auto s = server.lock();
+  return s && (std::find(_sessions.begin(), _sessions.end(), s) != _sessions.end());
 }
 
 std::future<SessionInfo> Router::WriteToOne(std::weak_ptr<Primary> server, MultiGPUCommand id, Buffer &&buffer) {

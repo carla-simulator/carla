@@ -13,6 +13,7 @@
 #include "carla/streaming/detail/Token.h"
 #include "carla/streaming/detail/Types.h"
 
+#include <cstdint>
 #include <mutex>
 #include <optional>
 
@@ -23,6 +24,7 @@ namespace multigpu {
 // using callback_response = std::function<void(std::shared_ptr<Primary>, carla::Buffer)>;
 using token_type = carla::streaming::detail::token_type;
 using stream_id = carla::streaming::detail::stream_id_type;
+using actor_id = uint32_t;
 
 class Router;
 
@@ -45,15 +47,17 @@ class PrimaryCommands {
     void SendIsAlive();
 
     /// Returns std::nullopt if no secondary could provide the token (e.g. the
-    /// selected secondary disconnected with the request in flight). Nothing
-    /// is cached on failure, so a later call for the same sensor retries.
+    /// selected secondary disconnected with the request in flight, or has no
+    /// episode loaded). Nothing is cached on failure, so a later call for the
+    /// same sensor retries. @a sensor_actor_id is the primary's id of the
+    /// sensor actor, which the secondary resolves to its own sensor stream.
     [[nodiscard]]
-    std::optional<token_type> GetToken(stream_id sensor_id);
+    std::optional<token_type> GetToken(stream_id sensor_id, actor_id sensor_actor_id);
 
     /// Returns false if no secondary accepted this sensor or the secondary
     /// holding it did not reply; ROS enablement has not happened in that case.
     [[nodiscard]]
-    bool EnableForROS(stream_id sensor_id);
+    bool EnableForROS(stream_id sensor_id, actor_id sensor_actor_id);
 
     void DisableForROS(stream_id sensor_id);
 
@@ -65,7 +69,8 @@ class PrimaryCommands {
     // secondary session actually answered, so the caller never has to guess
     // it from a separate (and racy) round-robin lookup.
     std::optional<token_type> SendGetToken(
-        carla::streaming::detail::stream_id_type sensor_id,
+        stream_id sensor_id,
+        actor_id sensor_actor_id,
         std::weak_ptr<Primary> &out_session);
 
     // manage ROS enable/disable of sensor
@@ -73,6 +78,12 @@ class PrimaryCommands {
     void SendDisableForROS(stream_id sensor_id);
     bool SendIsEnabledForROS(stream_id sensor_id);
 
+    /// Forgets the routing of @a sensor_id if its secondary disconnected.
+    /// Caller must hold _mutex.
+    void PurgeIfDisconnected(stream_id sensor_id);
+
+    /// Reads a one-bool reply; @a buffer must not be empty.
+    static bool ReadBoolReply(const carla::Buffer &buffer);
 
     std::shared_ptr<Router> _router;
     std::unordered_map<stream_id, token_type> _tokens;

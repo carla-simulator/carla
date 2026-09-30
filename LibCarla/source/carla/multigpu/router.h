@@ -43,6 +43,9 @@ namespace multigpu {
     ~Router();
 
     void Write(MultiGPUCommand id, Buffer &&buffer);
+    /// Broadcasts LOAD_MAP tagged with a new load id; each connected secondary
+    /// counts as loading until it reports that load's episode ready.
+    load_map_id_type WriteLoadMap(std::string_view map);
     std::future<SessionInfo> WriteToNext(MultiGPUCommand id, Buffer &&buffer);
     std::future<SessionInfo> WriteToOne(std::weak_ptr<Primary> server, MultiGPUCommand id, Buffer &&buffer);
     void Stop();
@@ -53,6 +56,17 @@ namespace multigpu {
     void AsyncRun(size_t worker_threads);
 
     boost::asio::ip::tcp::endpoint GetLocalEndpoint() const;
+
+    /// Whether @a server is still one of the connected secondary sessions.
+    [[nodiscard]]
+    bool IsConnected(const std::weak_ptr<Primary> &server);
+
+    /// Whether a connected secondary sent LOAD_MAP has not yet reported the
+    /// episode of its latest LOAD_MAP ready (a disconnect also clears it).
+    [[nodiscard]]
+    bool IsAnySecondaryLoading();
+
+    void StopWaitingForSecondaryLoads();
 
     bool HasClientsConnected() {
       return (!_sessions.empty());
@@ -125,6 +139,8 @@ namespace multigpu {
     std::shared_ptr<Listener>               _listener;
     uint32_t                                _next;
     std::unordered_map<Primary *, std::shared_ptr<std::promise<SessionInfo>>> _promises;
+    std::unordered_map<const Primary *, load_map_id_type> _loading;
+    load_map_id_type                        _last_load_id = 0u;
     PrimaryCommands                         _commander;
     std::function<void(void)>               _callback;
   };

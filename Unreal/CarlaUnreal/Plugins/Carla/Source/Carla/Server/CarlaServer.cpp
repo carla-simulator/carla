@@ -1267,7 +1267,12 @@ void FCarlaServer::FPimpl::BindActions()
     {
       // multi-gpu
       UE_LOG(LogCarla, Log, TEXT("Sensor %d '%s' created in secondary server"), sensor_id, *Desc);
-      auto Token = SecondaryServer->GetCommander().GetToken(sensor_id);
+      const FCarlaActor *SensorActor = Episode->FindCarlaActorFromStream(sensor_id);
+      if (SensorActor == nullptr)
+      {
+        RESPOND_ERROR("sensor stream has no actor");
+      }
+      auto Token = SecondaryServer->GetCommander().GetToken(sensor_id, SensorActor->GetActorId());
       if (!Token)
       {
         RESPOND_ERROR("no secondary server could provide a token for this sensor");
@@ -1311,7 +1316,12 @@ void FCarlaServer::FPimpl::BindActions()
     if (SecondaryServer->HasClientsConnected() && !ForceInPrimary)
     {
       // multi-gpu
-      if (!SecondaryServer->GetCommander().EnableForROS(sensor_id))
+      const FCarlaActor *SensorActor = Episode->FindCarlaActorFromStream(sensor_id);
+      if (SensorActor == nullptr)
+      {
+        RESPOND_ERROR("sensor stream has no actor");
+      }
+      if (!SecondaryServer->GetCommander().EnableForROS(sensor_id, SensorActor->GetActorId()))
       {
         RESPOND_ERROR("no secondary server could enable ROS for this sensor");
       }

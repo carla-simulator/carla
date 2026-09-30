@@ -31,6 +31,10 @@
 #include "Carla/Traffic/TrafficLightBase.h"
 #include "Carla/Traffic/TrafficSignBase.h"
 
+#include <util/ue-header-guard-begin.h>
+#include "Templates/Function.h"
+#include <util/ue-header-guard-end.h>
+
 #include <sstream>
 #include <unordered_map>
 
@@ -76,7 +80,14 @@ public:
 
   void GetFrameData(UCarlaEpisode *ThisEpisode, bool bAdditionalData = false, bool bIncludeActorsAgain = false);
 
-  void PlayFrameData(UCarlaEpisode *ThisEpisode, std::unordered_map<uint32_t, uint32_t>& MappedId);
+  /// @a OnActorAdded receives (primary actor id, local actor id, whether it
+  /// was just created rather than reused) for every actor created or reused;
+  /// @a OnActorRemoved the primary id of every actor destroyed.
+  void PlayFrameData(
+      UCarlaEpisode *ThisEpisode,
+      std::unordered_map<uint32_t, uint32_t>& MappedId,
+      TFunctionRef<void(uint32_t, uint32_t, bool)> OnActorAdded,
+      TFunctionRef<void(uint32_t)> OnActorRemoved);
 
   void Clear();
 
