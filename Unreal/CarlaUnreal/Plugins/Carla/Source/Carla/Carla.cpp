@@ -3,6 +3,7 @@
 #include "Carla.h"
 #include "Settings/CarlaSettings.h"
 #include "Lights/LightDefaultsEditorPanel.h"
+#include "BlueprintLibary/LightDefaultsJsonUtils.h"
 
 #include <util/ue-header-guard-begin.h>
 #include "Developer/Settings/Public/ISettingsModule.h"
@@ -26,6 +27,7 @@ void FCarlaModule::StartupModule()
 	AddShaderSearchPaths();
 	RegisterSettings();
 	LoadChronoDll();
+	ULightDefaultsJsonUtils::RegisterRuntimeBuildingDefaultsHooks();
 #if WITH_EDITOR
 	RegisterLightDefaultsEditorTab();
 	RegisterLightDefaultsMapOpenedHook();
@@ -218,6 +220,7 @@ void FCarlaModule::LoadChronoDll()
 
 void FCarlaModule::ShutdownModule()
 {
+	ULightDefaultsJsonUtils::UnregisterRuntimeBuildingDefaultsHooks();
 #if WITH_EDITOR
 	UnregisterLightDefaultsMapOpenedHook();
 	UnregisterLightDefaultsEditorTab();
