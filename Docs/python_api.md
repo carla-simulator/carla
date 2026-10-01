@@ -533,11 +533,11 @@ Reload the current world, note that a new world is created with default settings
     - **Parameters:**
         - `reset_settings` (_bool_) - Option to reset the episode setting to default values, set to false to keep the current settings. This is useful to keep sync mode when changing map and to keep deterministic scenarios.  
     - **Raises:** RuntimeError when corresponding.  
-- <a name="carla.Client.replay_file"></a>**<font color="#7fb800">replay_file</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**name**</font>, <font color="#00a6ed">**start**</font>, <font color="#00a6ed">**duration**</font>, <font color="#00a6ed">**follow_id**</font>, <font color="#00a6ed">**replay_sensors**</font>)  
+- <a name="carla.Client.replay_file"></a>**<font color="#7fb800">replay_file</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**name**</font>, <font color="#00a6ed">**time_start**</font>, <font color="#00a6ed">**duration**</font>, <font color="#00a6ed">**follow_id**</font>, <font color="#00a6ed">**replay_sensors**</font>)  
 Load a new world with default settings using `map_name` map. All actors present in the current world will be destroyed, __but__ traffic manager instances will stay alive.  
     - **Parameters:**
         - `name` (_str_) - Name of the file containing the information of the simulation.  
-        - `start` (_float<small> - seconds</small>_) - Time where to start playing the simulation. Negative is read as beginning from the end, being -10 just 10 seconds before the recording finished.  
+        - `time_start` (_float<small> - seconds</small>_) - Time where to start playing the simulation. Negative is read as beginning from the end, being -10 just 10 seconds before the recording finished.  
         - `duration` (_float<small> - seconds</small>_) - Time that will be reenacted using the information `name` file. If the end is reached, the simulation will continue.  
         - `follow_id` (_int_) - ID of the actor to follow. If this is 0 then camera is disabled.  
         - `replay_sensors` (_bool_) - Flag to enable or disable the spawn of sensors during playback.  
@@ -3941,13 +3941,13 @@ Stops the callback for `callback_id` started with __<font color="#7fb800">on_tic
         - `callback_id` (_callback_) - The callback to be removed. The ID is returned when creating the callback.  
 - <a name="carla.World.reset_all_traffic_lights"></a>**<font color="#7fb800">reset_all_traffic_lights</font>**(<font color="#00a6ed">**self**</font>)  
 Resets the cycle of all traffic lights in the map to the initial state.  
-- <a name="carla.World.spawn_actor"></a>**<font color="#7fb800">spawn_actor</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**blueprint**</font>, <font color="#00a6ed">**transform**</font>, <font color="#00a6ed">**attach_to**=None</font>, <font color="#00a6ed">**attachment**=Rigid</font>)<button class="SnipetButton" id="carla.World.spawn_actor-snipet_button">snippet &rarr;</button>  
+- <a name="carla.World.spawn_actor"></a>**<font color="#7fb800">spawn_actor</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**blueprint**</font>, <font color="#00a6ed">**transform**</font>, <font color="#00a6ed">**attach_to**=None</font>, <font color="#00a6ed">**attachment_type**=Rigid</font>)<button class="SnipetButton" id="carla.World.spawn_actor-snipet_button">snippet &rarr;</button>  
 The method will create, return and spawn an actor into the world. The actor will need an available blueprint to be created and a transform (location and rotation). It can also be attached to a parent with a certain attachment type.  
     - **Parameters:**
         - `blueprint` (_[carla.ActorBlueprint](#carla.ActorBlueprint)_) - The reference from which the actor will be created.  
         - `transform` (_[carla.Transform](#carla.Transform)_) - Contains the location and orientation the actor will be spawned with.  
         - `attach_to` (_[carla.Actor](#carla.Actor)_) - The parent object that the spawned actor will follow around.  
-        - `attachment` (_[carla.AttachmentType](#carla.AttachmentType)_) - Determines how fixed and rigorous should be the changes in position according to its parent object.  
+        - `attachment_type` (_[carla.AttachmentType](#carla.AttachmentType)_) - Determines how fixed and rigorous should be the changes in position according to its parent object.  
     - **Return:** _[carla.Actor](#carla.Actor)_  
 - <a name="carla.World.spawn_custom_mesh"></a>**<font color="#7fb800">spawn_custom_mesh</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**vertices**</font>, <font color="#00a6ed">**triangles**</font>, <font color="#00a6ed">**material**=grass</font>)  
 Spawns a static procedural mesh with collision in the world. The mesh lives until the world is reloaded. Useful to add custom terrain or static geometry to maps generated at runtime from OpenDRIVE.  
@@ -3962,13 +3962,13 @@ This method is used in [__synchronous__ mode](https://[carla.readthedocs.io](#ca
     - **Return:** _int_  
     - **Note:** <font color="#8E8E8E">_If no tick is received in synchronous mode, the simulation will freeze. Also, if many ticks are received from different clients, there may be synchronization issues. Please read the docs about [synchronous mode](https://[carla.readthedocs.io](#carla.readthedocs.io)/en/latest/adv_synchrony_timestep/) to learn more.  
 _</font>  
-- <a name="carla.World.try_spawn_actor"></a>**<font color="#7fb800">try_spawn_actor</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**blueprint**</font>, <font color="#00a6ed">**transform**</font>, <font color="#00a6ed">**attach_to**=None</font>, <font color="#00a6ed">**attachment**=Rigid</font>)  
+- <a name="carla.World.try_spawn_actor"></a>**<font color="#7fb800">try_spawn_actor</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**blueprint**</font>, <font color="#00a6ed">**transform**</font>, <font color="#00a6ed">**attach_to**=None</font>, <font color="#00a6ed">**attachment_type**=Rigid</font>)  
 Same as __<font color="#7fb800">spawn_actor()</font>__ but returns <b>None</b> on failure instead of throwing an exception.  
     - **Parameters:**
         - `blueprint` (_[carla.ActorBlueprint](#carla.ActorBlueprint)_) - The reference from which the actor will be created.  
         - `transform` (_[carla.Transform](#carla.Transform)_) - Contains the location and orientation the actor will be spawned with.  
         - `attach_to` (_[carla.Actor](#carla.Actor)_) - The parent object that the spawned actor will follow around.  
-        - `attachment` (_[carla.AttachmentType](#carla.AttachmentType)_) - Determines how fixed and rigorous should be the changes in position according to its parent object.  
+        - `attachment_type` (_[carla.AttachmentType](#carla.AttachmentType)_) - Determines how fixed and rigorous should be the changes in position according to its parent object.  
     - **Return:** _[carla.Actor](#carla.Actor)_  
 - <a name="carla.World.unload_map_layer"></a>**<font color="#7fb800">unload_map_layer</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**map_layers**</font>)<button class="SnipetButton" id="carla.World.unload_map_layer-snipet_button">snippet &rarr;</button>  
 Unloads the selected layers to the level. If the layer is already unloaded the call has no effect.  
@@ -4729,8 +4729,8 @@ actor_snapshot = world_snapshot.find(vehicle.id)
 # Set spectator at given transform (vehicle transform)
 spectator.set_transform(actor_snapshot.get_transform())
 # ...# ...
-if vehicle_actor.is_at_traffic_light():
-    traffic_light = vehicle_actor.get_traffic_light()
+if vehicle.is_at_traffic_light():
+    traffic_light = vehicle.get_traffic_light()
     if traffic_light.get_state() == carla.TrafficLightState.Red:
        # world.hud.notification("Traffic light changed! Good to go!")
         traffic_light.set_state(carla.TrafficLightState.Green)
@@ -4759,7 +4759,7 @@ Snippet for carla.Sensor.listen
 # so it is converted to a semantic segmentation image.
 
 # ...
-camera_bp = world.get_blueprint_library().filter('sensor.camera.semantic_segmentation')
+camera_bp = world.get_blueprint_library().find('sensor.camera.semantic_segmentation')
 # ...
 cc = carla.ColorConverter.CityScapesPalette
 camera.listen(lambda image: image.save_to_disk('output/%06d.png' % image.frame, cc))
@@ -4783,8 +4783,8 @@ Snippet for carla.World.spawn_actor
 # This recipe attaches different camera / sensors to a vehicle with different attachments.
 
 # ...
-camera = world.spawn_actor(rgb_camera_bp, transform, attach_to=vehicle, attachment_type=Attachment.Rigid)
-# Default attachment:  Attachment.Rigid
+camera = world.spawn_actor(rgb_camera_bp, transform, attach_to=vehicle, attachment_type=carla.AttachmentType.Rigid)
+# Default attachment:  carla.AttachmentType.Rigid
 gnss_sensor = world.spawn_actor(sensor_gnss_bp, transform, attach_to=vehicle)
 collision_sensor = world.spawn_actor(sensor_collision_bp, transform, attach_to=vehicle)
 lane_invasion_sensor = world.spawn_actor(sensor_lane_invasion_bp, transform, attach_to=vehicle)
@@ -4868,7 +4868,7 @@ Snippet for carla.World.load_map_layer
 # This recipe toggles on several layers in our "_Opt" maps
 
 # Load town one with only minimum layout (roads, sidewalks, traffic lights and traffic signs)
-world = client.load_world('Town01_Opt', carla.MapLayer.None)
+world = client.load_world('Town01_Opt', map_layers=carla.MapLayer.NONE)
 
 # Toggle all buildings on
 world.load_map_layer(carla.MapLayer.Buildings)
@@ -4893,10 +4893,13 @@ Snippet for carla.Client.apply_batch_sync
 
 ```py
   
-# 0. Choose a blueprint fo the walkers
+# 0. Choose a blueprint for the walkers
 world = client.get_world()
 blueprintsWalkers = world.get_blueprint_library().filter("walker.pedestrian.*")
 walker_bp = random.choice(blueprintsWalkers)
+
+walkers_list = []
+all_id = []
 
 # 1. Take all the random locations to spawn
 spawn_points = []
@@ -4970,20 +4973,20 @@ Snippet for carla.ActorBlueprint.set_attribute
 # This recipe changes attributes of different type of blueprint actors.
 
 # ...
-walker_bp = world.get_blueprint_library().filter('walker.pedestrian.0002')
-walker_bp.set_attribute('is_invincible', True)
+walker_bp = world.get_blueprint_library().find('walker.pedestrian.0002')
+walker_bp.set_attribute('is_invincible', 'true')
 
 # ...
 # Changes attribute randomly by the recommended value
-vehicle_bp = wolrd.get_blueprint_library().filter('vehicle.bmw.*')
+vehicle_bp = random.choice(world.get_blueprint_library().filter('vehicle.bmw.*'))
 color = random.choice(vehicle_bp.get_attribute('color').recommended_values)
 vehicle_bp.set_attribute('color', color)
 
 # ...
 
-camera_bp = world.get_blueprint_library().filter('sensor.camera.rgb')
-camera_bp.set_attribute('image_size_x', 600)
-camera_bp.set_attribute('image_size_y', 600)
+camera_bp = world.get_blueprint_library().find('sensor.camera.rgb')
+camera_bp.set_attribute('image_size_x', '600')
+camera_bp.set_attribute('image_size_y', '600')
 # ...
   
 
@@ -5062,7 +5065,7 @@ Snippet for carla.World.unload_map_layer
 
 # Load town one with minimum layout (roads, sidewalks, traffic lights and traffic signs)
 # as well as buildings and parked vehicles
-world = client.load_world('Town01_Opt', carla.MapLayer.Buildings | carla.MapLayer.ParkedVehicles) 
+world = client.load_world('Town01_Opt', map_layers=carla.MapLayer.Buildings | carla.MapLayer.ParkedVehicles) 
 
 # Toggle all buildings off
 world.unload_map_layer(carla.MapLayer.Buildings)
