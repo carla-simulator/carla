@@ -330,7 +330,7 @@ while True:
                 ray = npc.get_transform().location - vehicle.get_transform().location
 
                 if forward_vec.dot(ray) > 1:
-                    p1 = get_image_point(bb.location, K, world_2_camera)http://host.robots.ox.ac.uk/pascal/VOC/
+                    p1 = get_image_point(bb.location, K, world_2_camera)
                     verts = [v for v in bb.get_world_vertices(npc.get_transform())]
                     x_max = -10000
                     x_min = 10000

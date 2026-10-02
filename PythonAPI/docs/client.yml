@@ -126,7 +126,7 @@
         type: str
         doc: >
           Name of the file containing the information of the simulation.
-      - param_name: start
+      - param_name: time_start
         type: float
         param_units: seconds
         doc: >

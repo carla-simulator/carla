@@ -295,8 +295,8 @@ To enable autopilot for a set of vehicles, retrieve the port of the TM instance 
 
 ```python
 tm_port = tm.get_port()
- for v in vehicles_list:
-     v.set_autopilot(True,tm_port)
+for v in vehicles_list:
+    v.set_autopilot(True,tm_port)
 ```
 !!! Note 
     Creating or connecting to a TM in multi-client situations is different from the above example. Learn more in the section [__Running multiple Traffic Managers__](#running-multiple-traffic-managers).
@@ -335,7 +335,7 @@ tm_port = tm.get_port()
 for v in my_vehicles:
   v.set_autopilot(True,tm_port)
 danger_car = my_vehicles[0]
-tm.global_distance_to_leading_vehicle(5)
+tm.set_global_distance_to_leading_vehicle(5)
 tm.global_percentage_speed_difference(80)
 for v in my_vehicles: 
   tm.auto_lane_change(v,False)
