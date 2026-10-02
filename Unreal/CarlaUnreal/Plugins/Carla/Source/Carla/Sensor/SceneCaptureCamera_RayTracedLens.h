@@ -58,6 +58,11 @@ protected:
   /// for every subclass, so no BeginPlay override is needed here.
   void UpdatePostProcessConfig(FPostProcessConfig &InOutPostProcessConfig) override;
 
+  bool RequiresRayTracing() const override
+  {
+    return true;
+  }
+
   virtual void OnFirstClientConnected() override;
   virtual void OnLastClientDisconnected() override;
 
