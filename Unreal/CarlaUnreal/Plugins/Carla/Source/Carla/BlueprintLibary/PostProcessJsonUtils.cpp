@@ -16,7 +16,7 @@
 
 static TAutoConsoleVariable<FString> CVarCarlaPostProcessProfile(
     TEXT("carla.PostProcess.Profile"),
-    TEXT("Photoreal"),
+    TEXT("Default"),
     TEXT("Camera profile (Content/Carla/Config/PostProcess/<name>.json) shared by the sky rig's ")
     TEXT("post process at BeginPlay and by RGB sensors spawned without post_process_profile."),
     ECVF_Default);

@@ -8,7 +8,7 @@ try:
  s=w.get_settings();s.synchronous_mode=True;s.fixed_delta_seconds=1/30;s.substepping=True;s.max_substep_delta_time=.01;s.max_substeps=10;w.apply_settings(s);w.set_weather(carla.WeatherParameters.ClearNoon)
  bp=w.get_blueprint_library().find('vehicle.tesla.model3');bp.set_attribute('color','140,12,20');vehicle=w.spawn_actor(bp,w.get_map().get_spawn_points()[0]);vehicle.apply_control(carla.VehicleControl(brake=1))
  for _ in range(90):w.tick()
- bp=w.get_blueprint_library().find('sensor.camera.rgb');bp.set_attribute('image_size_x','1600');bp.set_attribute('image_size_y','1000');bp.set_attribute('fov','55');bp.set_attribute('post_process_profile','VehicleReview');camera=w.spawn_actor(bp,carla.Transform());q=queue.Queue();camera.listen(q.put)
+ bp=w.get_blueprint_library().find('sensor.camera.rgb');bp.set_attribute('image_size_x','1600');bp.set_attribute('image_size_y','1000');bp.set_attribute('fov','55');camera=w.spawn_actor(bp,carla.Transform());q=queue.Queue();camera.listen(q.put)
  def capture(label,loc,aim):
   if a.light_audit and not label.startswith('audit-'):return
   if a.views and label not in a.views.split(','):return
