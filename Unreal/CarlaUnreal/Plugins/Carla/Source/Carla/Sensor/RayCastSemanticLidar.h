@@ -57,16 +57,15 @@ protected:
   virtual void PreprocessRays(uint32_t Channels, uint32_t MaxPointsPerChannel);
 
   /// Compute all raw detection information
-  void ComputeRawDetection(const FHitResult &HitInfo, const FTransform &SensorTransf, FSemanticDetection &Detection) const;
+  void ComputeRawDetection(const FHitResult &HitInfo, const FTransform &InverseSensorTransform, const FVector &SensorLocation, FSemanticDetection &Detection) const;
 
-  /// Saving the hits the raycast returns per channel
-  void WritePointAsync(uint32_t Channel, FHitResult &Detection);
+  /// Computes the detection of a hit inside the raycast ParallelFor.
+  virtual void WriteDetectionAsync(uint32_t Channel, const FHitResult &HitInfo, const FTransform &InverseSensorTransform, const FVector &SensorLocation);
 
-  /// Clear the recorded data structure
-  void ResetRecordedHits(uint32_t Channels, uint32_t MaxPointsPerChannel);
+  /// Clear the per-channel detection buffers
+  virtual void ResetDetections(uint32_t Channels, uint32_t MaxPointsPerChannel);
 
-  /// This method uses all the saved FHitResults, compute the
-  /// RawDetections and then send it to the LidarData structure.
+  /// Copies the per-channel detections into the LidarData structure.
   virtual void ComputeAndSaveDetections(const FTransform &SensorTransform);
 
   UPROPERTY(EditAnywhere)
@@ -74,11 +73,12 @@ protected:
 
   TArray<float> LaserAngles;
 
-  std::vector<std::vector<FHitResult>> RecordedHits;
   std::vector<std::vector<bool>> RayPreprocessCondition;
   std::vector<uint32_t> PointsPerChannel;
 
 private:
   FSemanticLidarData SemanticLidarData;
+
+  std::vector<std::vector<FSemanticDetection>> SemanticDetections;
 
 };

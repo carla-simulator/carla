@@ -350,3 +350,62 @@ class TestLidarSensorTick(SyncSmokeTest):
         expected = int(math.ceil(num_ticks * dt / sensor_tick))
         for bp_id, count in counts.items():
             self.assertEqual(count, expected, "%s does not match tick count" % bp_id)
+
+
+class TestSemanticTags(SyncSmokeTest):
+    """Semantic tags read from tagged components (semantic LiDAR, environment objects, level bounding boxes)."""
+
+    SEMANTIC_POINT = np.dtype([('x', 'f4'), ('y', 'f4'), ('z', 'f4'), ('cos', 'f4'),
+                               ('object_idx', 'u4'), ('object_tag', 'u4')])
+
+    def test_semantic_lidar_vehicle_tags(self):
+        print("TestSemanticTags.test_semantic_lidar_vehicle_tags")
+        bp_lib = self.world.get_blueprint_library()
+        spawn_point = self.world.get_map().get_spawn_points()[0]
+
+        vehicle = self.world.spawn_actor(bp_lib.find('vehicle.lincoln.mkz'), spawn_point)
+        # Behind the vehicle, looking at it.
+        behind = spawn_point.transform(carla.Location(x=-8.0, z=1.5))
+        lidar_location = carla.Location(x=behind.x, y=behind.y, z=behind.z)
+        bp = bp_lib.find('sensor.lidar.ray_cast_semantic')
+        for key, value in {'channels': '32', 'range': '50', 'points_per_second': '200000',
+                           'rotation_frequency': '20'}.items():
+            bp.set_attribute(key, value)
+        lidar = self.world.spawn_actor(bp, carla.Transform(lidar_location, spawn_point.rotation))
+
+        data_queue = Queue()
+        lidar.listen(lambda data: data_queue.put((data.frame, bytes(data.raw_data))))
+        try:
+            # Let the vehicle settle before reading the last frame.
+            for _ in range(10):
+                frame = self.world.tick()
+            while True:
+                data = data_queue.get(True, 10.0)
+                if data[0] == frame:
+                    points = np.frombuffer(data[1], dtype=self.SEMANTIC_POINT)
+                    break
+        finally:
+            lidar.stop()
+            lidar.destroy()
+            vehicle.destroy()
+            self.world.tick()
+
+        valid_tags = {int(label) for label in carla.CityObjectLabel.values.values()}
+        unknown_tags = set(np.unique(points['object_tag']).tolist()) - valid_tags
+        self.assertEqual(len(unknown_tags), 0, "Unknown semantic tags: %s" % sorted(unknown_tags))
+
+        vehicle_tags = points['object_tag'][points['object_idx'] == vehicle.id]
+        self.assertTrue(len(vehicle_tags) > 0, "The semantic LiDAR did not hit the vehicle.")
+        self.assertTrue(np.all(vehicle_tags == int(carla.CityObjectLabel.Car)),
+                        "Vehicle points have tags %s, expected Car." % sorted(set(vehicle_tags.tolist())))
+
+    def test_environment_object_labels(self):
+        print("TestSemanticTags.test_environment_object_labels")
+        # Labels present in every CARLA town. Buildings and Poles are plural tag names.
+        for label in [carla.CityObjectLabel.Buildings, carla.CityObjectLabel.Vegetation,
+                      carla.CityObjectLabel.Poles]:
+            objects = self.world.get_environment_objects(label)
+            self.assertTrue(len(objects) > 0, "No environment objects with label %s." % label)
+            for obj in objects:
+                self.assertEqual(obj.type, label, "%s has type %s, expected %s." % (obj.name, obj.type, label))
+            self.assertTrue(len(self.world.get_level_bbs(label)) > 0, "No level bounding boxes with label %s." % label)
