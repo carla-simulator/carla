@@ -228,6 +228,11 @@ public:
   /// for callers that scale blueprint-side values instead of components.
   static float GetLegacyIntensityScale(ELightType LightType);
 
+  /// Street light intensity -> lumens: authored UE4-era kilolumens (< 1000)
+  /// are scaled by carla.Light.StreetIntensityScale, legacy 6-10 M values are
+  /// divided back to lumens, anything else already is lumens.
+  static float StreetIntensityToLumens(float Intensity);
+
 private:
 
   /// Show or hide every Point/Spot/Rect light component on the owner. The

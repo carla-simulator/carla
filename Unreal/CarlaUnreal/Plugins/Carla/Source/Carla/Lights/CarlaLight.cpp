@@ -43,21 +43,26 @@ static TAutoConsoleVariable<float> CVarCarlaLightMinAttenuationRadius(
     TEXT("registered CarlaLight. Set 0 to leave authored radii untouched."),
     ECVF_Default);
 
-// Two scales, split by light type. The content itself defines the street
-// factor: the re-authored legacy street lamps (00_LegacyAssets) carry
-// CarlaLight intensities of 6-10 MILLION where the modern blueprints carry
-// 12-20 -- a ratio of ~500k -- and those legacy values are what reads as a
-// proper lamp pool under this project's fixed day-calibrated exposure
-// (auto exposure is disabled project-wide). Building/other/vehicle lights
-// are far denser per map (hundreds on Town10), so the same factor floods the
-// whole town white; they keep the older, milder calibration.
+// Street lights are photometric: their components run in lumens and the
+// CarlaLight intensity (Light Defaults, client API) IS lumens -- an LED road
+// luminaire is 10-25 klm, giving 0.5-2 cd/m2 on the asphalt like real street
+// lighting. The modern lamp blueprints author UE4-era values of 12-20, i.e.
+// kilolumens, so authored values below CarlaLightMaxAuthoredIntensity are
+// multiplied by this scale. The old calibration (x500000, from when the
+// project had no auto exposure) gave 1 million lumens per lamp head.
+// Building/other/vehicle lights keep the older, milder calibration.
 static TAutoConsoleVariable<float> CVarCarlaLightStreetIntensityScale(
     TEXT("carla.Light.StreetIntensityScale"),
-    500000.0f,
-    TEXT("Multiplier converting small UE4-era CarlaLight intensities of STREET lights to UE5 ")
-    TEXT("photometric units, applied to the owner's light components after every blueprint ")
-    TEXT("intensity push. Set 1 to leave component intensities untouched."),
+    1000.0f,
+    TEXT("Multiplier from authored UE4-era STREET light intensities (below 1000, i.e. kilolumens) ")
+    TEXT("to lumens, applied to the owner's light components after every blueprint intensity ")
+    TEXT("push. Values of 1000 and above are taken as lumens already."),
     ECVF_Default);
+
+// The re-authored legacy street lamps (00_LegacyAssets) carry 6-10 MILLION,
+// calibrated against the old x500000 scale: bring them back to lumens.
+static constexpr float CarlaLightLegacyStreetThreshold = 1000000.0f;
+static constexpr float CarlaLightLegacyStreetDivisor = 500.0f;
 
 static TAutoConsoleVariable<float> CVarCarlaLightLegacyIntensityScale(
     TEXT("carla.Light.LegacyIntensityScale"),
@@ -252,15 +257,41 @@ float UCarlaLight::GetLegacyIntensityScale(ELightType LightType)
       : CVarCarlaLightLegacyIntensityScale.GetValueOnGameThread();
 }
 
+float UCarlaLight::StreetIntensityToLumens(float Intensity)
+{
+  if (Intensity > 0.0f && Intensity < CarlaLightMaxAuthoredIntensity)
+    return Intensity * CVarCarlaLightStreetIntensityScale.GetValueOnGameThread();
+  if (Intensity >= CarlaLightLegacyStreetThreshold)
+    return Intensity / CarlaLightLegacyStreetDivisor;
+  return Intensity;
+}
+
 void UCarlaLight::ScaleLightComponentIntensities(AActor* Owner, ELightType LightType)
 {
-  const float Scale = GetLegacyIntensityScale(LightType);
-  if (Scale == 1.0f || Owner == nullptr)
+  if (Owner == nullptr)
   {
     return;
   }
   TArray<ULocalLightComponent*> LightComponents;
   Owner->GetComponents<ULocalLightComponent>(LightComponents);
+  if (LightType == ELightType::Street)
+  {
+    for (ULocalLightComponent* LightComponent : LightComponents)
+    {
+      // Authored content mixes Unitless and Lumens; the value is lumens.
+      if (LightComponent->IntensityUnits != ELightUnits::Lumens)
+        LightComponent->SetIntensityUnits(ELightUnits::Lumens);
+      const float Lumens = StreetIntensityToLumens(LightComponent->Intensity);
+      if (Lumens != LightComponent->Intensity)
+        LightComponent->SetIntensity(Lumens);
+    }
+    return;
+  }
+  const float Scale = GetLegacyIntensityScale(LightType);
+  if (Scale == 1.0f)
+  {
+    return;
+  }
   for (ULocalLightComponent* LightComponent : LightComponents)
   {
     const float Current = LightComponent->Intensity;
@@ -288,9 +319,20 @@ void UCarlaLight::ApplyIntensityToComponents(float Intensity)
   {
     return;
   }
-  const float Scale = GetLegacyIntensityScale(LightType);
   TArray<ULocalLightComponent*> LightComponents;
   Owner->GetComponents<ULocalLightComponent>(LightComponents);
+  if (LightType == ELightType::Street)
+  {
+    const float Lumens = StreetIntensityToLumens(Intensity);
+    for (ULocalLightComponent* LightComponent : LightComponents)
+    {
+      if (LightComponent->IntensityUnits != ELightUnits::Lumens)
+        LightComponent->SetIntensityUnits(ELightUnits::Lumens);
+      LightComponent->SetIntensity(Lumens);
+    }
+    return;
+  }
+  const float Scale = GetLegacyIntensityScale(LightType);
   for (ULocalLightComponent* LightComponent : LightComponents)
   {
     LightComponent->SetIntensity(Intensity * Scale);

@@ -400,6 +400,24 @@ void ASkyBase::BeginPlay()
   Super::BeginPlay();
 
   UWorld* World = GetWorld();
+  // One camera profile for every view: the viewport / spectator renders
+  // through this unbound post process, and RGB sensors without an explicit
+  // post_process_profile load the same file (UPostProcessJsonUtils::
+  // ResolveProfileName). What the map saved in the rig is only the editor view.
+  if (World != nullptr && World->IsGameWorld() && PostProcessComponent != nullptr)
+  {
+    const FString Profile = UPostProcessJsonUtils::GetActiveProfileName();
+    if (UPostProcessJsonUtils::LoadAllPostProcessFromJsonToPostProcessComponent(PostProcessComponent, Profile))
+    {
+      UE_LOG(LogCarla, Log, TEXT("ASkyBase: %s loaded camera profile '%s'"), *GetName(), *Profile);
+    }
+    else
+    {
+      UE_LOG(LogCarla, Warning, TEXT("ASkyBase: %s could not load camera profile '%s'"), *GetName(), *Profile);
+    }
+    AWeather::FillSkyPostProcessFallback(PostProcessComponent);
+  }
+
   if (World == nullptr || ActorHasTag(FallbackSkyTag))
     return;
 

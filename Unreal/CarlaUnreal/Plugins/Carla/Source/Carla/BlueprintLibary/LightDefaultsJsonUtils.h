@@ -276,11 +276,13 @@ public:
     // "PercentLitThreshold" parameter -- PercentLit (0..100) is just handed
     // down as that threshold (divided by 100), and the renderer resolves the
     // per-instance randomness deterministically per physical window.
+    // Color goes to M_FakeInterior's "Emissive Color" (the material ships
+    // white, which reads as cold fluorescent blocks at night).
     UFUNCTION(BlueprintCallable, Category = "Lights|JSON", meta = (WorldContext = "WorldContextObject"))
     static TArray<FLightAssetSummary> ScanProceduralBuildingsInLevel(const UObject* WorldContextObject);
 
     UFUNCTION(BlueprintCallable, Category = "Lights|JSON", meta = (WorldContext = "WorldContextObject"))
-    static void ApplyProceduralBuildingsEmissiveLive(const UObject* WorldContextObject, float EmissiveIntensity, float PercentLit);
+    static void ApplyProceduralBuildingsEmissiveLive(const UObject* WorldContextObject, float EmissiveIntensity, float PercentLit, const FLinearColor& Color);
 
     UFUNCTION(BlueprintCallable, Category = "Lights|JSON", meta = (WorldContext = "WorldContextObject"))
     static void ReapplyProceduralBuildingsToLevel(const UObject* WorldContextObject);
@@ -304,7 +306,7 @@ public:
     static TArray<FLightAssetSummary> ScanLegacyBuildingsInLevel(const UObject* WorldContextObject);
 
     UFUNCTION(BlueprintCallable, Category = "Lights|JSON", meta = (WorldContext = "WorldContextObject"))
-    static void ApplyLegacyBuildingsEmissiveLive(const UObject* WorldContextObject, float EmissiveIntensity, float PercentLit);
+    static void ApplyLegacyBuildingsEmissiveLive(const UObject* WorldContextObject, float EmissiveIntensity, float PercentLit, const FLinearColor& Color);
 
     UFUNCTION(BlueprintCallable, Category = "Lights|JSON", meta = (WorldContext = "WorldContextObject"))
     static void ReapplyLegacyBuildingsToLevel(const UObject* WorldContextObject);
