@@ -1,4 +1,5 @@
 #include "Sky.h"
+#include "Carla.h"
 
 #include <util/ue-header-guard-begin.h>
 #include "Components/PostProcessComponent.h"
@@ -390,6 +391,38 @@ void ASkyBase::OnConstruction(const FTransform& Transform)
   // Construction and would otherwise leave CameraParameters' last pushed
   // values sitting unapplied against a Settings struct that just got reset.
   PushCameraParameters();
+}
+
+const FName ASkyBase::FallbackSkyTag(TEXT("CarlaFallbackSky"));
+
+void ASkyBase::BeginPlay()
+{
+  Super::BeginPlay();
+
+  UWorld* World = GetWorld();
+  if (World == nullptr || ActorHasTag(FallbackSkyTag))
+    return;
+
+  TArray<AActor*> Fallbacks;
+  UGameplayStatics::GetAllActorsWithTag(World, FallbackSkyTag, Fallbacks);
+  if (Fallbacks.IsEmpty())
+    return;
+  for (AActor* Fallback : Fallbacks)
+  {
+    // SetSunActorReference attaches a DirectionalLight actor to the rig,
+    // which Destroy would leave behind.
+    TArray<AActor*> Attached;
+    Fallback->GetAttachedActors(Attached, /*bResetArray=*/true, /*bRecursivelyIncludeAttachedActors=*/true);
+    for (AActor* Child : Attached)
+      Child->Destroy();
+    Fallback->Destroy();
+  }
+  UE_LOG(LogCarla, Log, TEXT("ASkyBase: %s streamed in, removed %d fallback sky rig(s)"),
+      *GetName(), Fallbacks.Num());
+
+  // Streamed in with the state saved in the map; catch up with the weather.
+  if (AWeather* Weather = Cast<AWeather>(UGameplayStatics::GetActorOfClass(World, AWeather::StaticClass())))
+    AWeather::ApplyWeatherToSkyActor(this, Weather->GetCurrentWeather());
 }
 
 void ASkyBase::E_SetAsMapDefault()
