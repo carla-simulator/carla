@@ -228,7 +228,7 @@ static TAutoConsoleVariable<float> CVarCarlaWeatherMoonDiscBrightnessEndDeg(
 
 static TAutoConsoleVariable<float> CVarCarlaWeatherMoonDiscNightBrightness(
     TEXT("carla.Weather.MoonDiscNightBrightness"),
-    500.0f,
+    60.0f,
     TEXT("Emissive brightness of the moon disc at full night. Lower also means less bloom ")
     TEXT("around it, the only per-object bloom control there is."),
     ECVF_Default);
@@ -296,9 +296,11 @@ static TAutoConsoleVariable<float> CVarCarlaWeatherNightSkylightIntensity(
 // SunTwilightEndDeg, and the sky light blends to its night floor over the same
 // band. The sky keeps its twilight glow; surfaces stop being lit by the sun
 // once TransmittanceReleaseDeg has released. 0 or above restores the cut.
+// -10, not the astronomical -18: on camera a city night is dark by the end of
+// nautical twilight, and -18 kept most of a night cycle looking like dusk.
 static TAutoConsoleVariable<float> CVarCarlaWeatherSunTwilightEndDeg(
     TEXT("carla.Weather.SunTwilightEndDeg"),
-    -18.0f,
+    -10.0f,
     TEXT("Sun altitude at which the sun light has faded out below the horizon. ")
     TEXT("0 or above leaves the rig's hard cut at the horizon."),
     ECVF_Default);
@@ -511,13 +513,14 @@ static TAutoConsoleVariable<float> CVarCarlaWeatherDeckLightFullCloudiness(
     TEXT("Cloudiness at which the deck's emission and sky light reach their full value."),
     ECVF_Default);
 
-// The material's domain warp count is an integer (1.99 renders as 1), so it
-// cannot blend: it flips once, where the deck has already closed and the
-// change of pattern hides in a uniform grey layer.
+// M_BasicClouds' domain warp loop blends its last iteration by the count's
+// fraction, so the warp count blends continuously with the deck factor (-1).
+// The stock loop truncated the count to an integer (1.99 rendered as 1): a
+// value in [0, 1] flips it once at that deck factor instead, for that material.
 static TAutoConsoleVariable<float> CVarCarlaWeatherDeckWarpSwitch(
     TEXT("carla.Weather.DeckWarpSwitch"),
-    0.5f,
-    TEXT("Deck factor (0-1, see DeckStartCloudiness) at which the warp count flips to DeckWarpCount."),
+    -1.0f,
+    TEXT("-1: blend the warp count with the deck factor. 0-1: flip it to DeckWarpCount at that deck factor."),
     ECVF_Default);
 
 // BaseNoiseExp closes the coverage fast at first (a log blend, and the deck's
@@ -1151,6 +1154,14 @@ void AWeather::Tick(float DeltaSeconds)
     Super::Tick(DeltaSeconds);
     UpdateRain();
     ReleaseDirectionalVSMInvalidateIfSunStill(GetWorld());
+}
+
+void AWeather::BeginPlay()
+{
+    Super::BeginPlay();
+    // BP_CarlaWeather is saved with "Start with Tick Enabled" off, which left
+    // UpdateRain dead: no rain volume followed the spectator or the sensors.
+    SetActorTickEnabled(true);
 }
 
 void AWeather::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -2193,8 +2204,12 @@ void AWeather::ApplyWeatherToSkyActor(AActor* SkyActor, const FWeatherParameters
                             CloudMID->SetScalarParameterValue(Name, DeckValue >= 0.0f ? FMath::Lerp(Authored, DeckValue, Alpha) : Authored);
                     };
                     BlendToDeck(TEXT("ExtinctionScale"), CVarCarlaWeatherDeckExtinctionScale.GetValueOnGameThread(), Deck);
+                    // M_BasicClouds blends the last warp iteration by the
+                    // count's fraction, so the warp blends like the rest. A
+                    // DeckWarpSwitch in [0, 1] restores the single flip.
+                    const float WarpSwitch = CVarCarlaWeatherDeckWarpSwitch.GetValueOnGameThread();
                     BlendToDeck(TEXT("Perlin FBM Domain Warp Count"), CVarCarlaWeatherDeckWarpCount.GetValueOnGameThread(),
-                        Deck >= CVarCarlaWeatherDeckWarpSwitch.GetValueOnGameThread() && Deck > 0.0f ? 1.0f : 0.0f);
+                        WarpSwitch < 0.0f ? Deck : (Deck >= WarpSwitch && Deck > 0.0f ? 1.0f : 0.0f));
                 }
                 CloudComponent->SetMaterial(CloudMID);
             }

@@ -113,6 +113,7 @@ protected:
 private:
 
   virtual void Tick(float DeltaSeconds) override;
+  virtual void BeginPlay() override;
   virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
   void UpdateRain();
   UParticleSystemComponent* CreateRainEmitter(AActor* Owner, bool bSensor);
