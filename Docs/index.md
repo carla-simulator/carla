@@ -50,7 +50,7 @@ CARLA forum</a>
 [__ASM OpenDrive__](adv_opendrive.md) — Details of the OpenDrive support in CARLA.   
 [__ROS2__](ros2_native.md) — Details of how to use the native ROS2 interface.  
 [__Scenic__](tuto_G_scenic.md) — How to use Scenic with CARLA to generate scenarios.  
-[__SYNKROTRON__](ecosys_syncrotron.md) — Details about SYNKROTRON's CARLA-based simulation products.  
+[__SYNKROTRON__](ecosys_synkrotron.md) — Details about SYNKROTRON's CARLA-based simulation products.  
 [__Inverted AI__](inverted_ai.md) — Details about Inverted AI's generative AI based traffic simulation products.
 
 ## Contributing to CARLA
