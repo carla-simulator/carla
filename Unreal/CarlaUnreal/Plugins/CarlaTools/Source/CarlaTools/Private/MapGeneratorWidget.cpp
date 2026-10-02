@@ -1098,7 +1098,8 @@ bool UMapGeneratorWidget::CreateTilesMaps(const FMapGeneratorMetaInfo& MetaInfo)
       HeightmapDataPerLayers.Add(FGuid(), HeightData);
       MaterialLayerDataPerLayer.Add(FGuid(), TArray<FLandscapeImportLayerInfo>());
       Landscape->Import(Landscape->GetLandscapeGuid(), 0, 0, HeightRT->SizeX-1, HeightRT->SizeY-1, Landscape->NumSubsections, Landscape->SubsectionSizeQuads,
-          HeightmapDataPerLayers, TEXT("NONE"), MaterialLayerDataPerLayer, ELandscapeImportAlphamapType::Layered);
+          HeightmapDataPerLayers, TEXT("NONE"), MaterialLayerDataPerLayer, ELandscapeImportAlphamapType::Layered,
+          TArrayView<const FLandscapeLayer>());
 
       Landscape->ReregisterAllComponents();
       Landscape->CreateLandscapeInfo();

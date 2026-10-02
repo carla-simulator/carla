@@ -10,6 +10,9 @@
 #include <carla/geom/AngularVelocity.h>
 #include <carla/geom/GeoProjectionsParams.h>
 #include <carla/geom/Quaternion.h>
+#include <carla/geom/RightHandedRotation.h>
+#include <carla/geom/RightHandedTransform.h>
+#include <carla/geom/RightHandedVector3D.h>
 #include <carla/geom/Velocity.h>
 
 #include <limits>
@@ -39,6 +42,10 @@ static auto GetTransformMatrix(const carla::geom::Transform &self) {
 
 static auto GetInverseTransformMatrix(const carla::geom::Transform &self) {
   return BuildMatrix(self.GetInverseMatrix());
+}
+
+static auto GetRightHandedTransformMatrix(const carla::geom::RightHandedTransform &self) {
+  return BuildMatrix(self.GetMatrix());
 }
 
 static auto Cross(const carla::geom::Vector3D &self, const carla::geom::Vector3D &other) {
@@ -156,6 +163,9 @@ void export_geom() {
     .add_property("y", +[](const cg::Location &self) { return self.y; }, +[](cg::Location &self, float y) { self.y = y; })
     .add_property("z", +[](const cg::Location &self) { return self.z; }, +[](cg::Location &self, float z) { self.z = z; })
     .def("distance", &cg::Location::Distance, (arg("location")))
+    .def("to_right_handed", &cg::Location::ToRightHanded)
+    .def("from_right_handed", &cg::Location::FromRightHanded, (arg("location")))
+    .staticmethod("from_right_handed")
     .def("__eq__", &cg::Location::operator==)
     .def("__ne__", &cg::Location::operator!=)
     .def("__abs__", &cg::Location::Abs)
@@ -189,6 +199,9 @@ void export_geom() {
     .def("get_right_vector", &cg::Rotation::GetRightVector)
     .def("get_up_vector", &cg::Rotation::GetUpVector)
     .def("get_normalized", &cg::Rotation::Normalize)
+    .def("to_right_handed", &cg::Rotation::ToRightHanded)
+    .def("from_right_handed", &cg::Rotation::FromRightHanded, (arg("rotation")))
+    .staticmethod("from_right_handed")
     .def("__eq__", &cg::Rotation::operator==)
     .def("__ne__", &cg::Rotation::operator!=)
     .def(self_ns::str(self_ns::self))
@@ -197,11 +210,13 @@ void export_geom() {
   class_<cg::Quaternion>("Quaternion")
     .def(init<float, float, float, float>((arg("x")=0.0f, arg("y")=0.0f, arg("z")=0.0f, arg("w")=1.0f)))
     .def(init<const cg::Rotation &>((arg("rotation"))))
+    .def(init<const cg::RightHandedRotation &>((arg("rotation"))))
     .def_readwrite("x", &cg::Quaternion::x)
     .def_readwrite("y", &cg::Quaternion::y)
     .def_readwrite("z", &cg::Quaternion::z)
     .def_readwrite("w", &cg::Quaternion::w)
     .def("rotator", &cg::Quaternion::Rotator)
+    .def("to_right_handed_rotation", &cg::Quaternion::ToRightHandedRotation)
     .def("get_forward_vector", &cg::Quaternion::GetForwardVector)
     .def("get_right_vector", &cg::Quaternion::GetRightVector)
     .def("get_up_vector", &cg::Quaternion::GetUpVector)
@@ -212,6 +227,49 @@ void export_geom() {
     .def("__eq__", &cg::Quaternion::operator==)
     .def("__ne__", &cg::Quaternion::operator!=)
     .def(self * self)
+    .def(self_ns::str(self_ns::self))
+  ;
+
+  // ---------------------------------------------------------------------------
+  // Right-handed (ROS / REP-103 "FLU") boundary types. See
+  // Docs/coordinate_conventions.md -- these are the only place a CARLA pose
+  // changes handedness, and they are never returned by the simulator itself.
+  // ---------------------------------------------------------------------------
+
+  class_<cg::RightHandedVector3D>("RightHandedVector3D")
+    .def(init<float, float, float>((arg("x")=0.0f, arg("y")=0.0f, arg("z")=0.0f)))
+    .def_readwrite("x", &cg::RightHandedVector3D::x)
+    .def_readwrite("y", &cg::RightHandedVector3D::y)
+    .def_readwrite("z", &cg::RightHandedVector3D::z)
+    .def("to_left_handed", +[](const cg::RightHandedVector3D &self) {
+      return static_cast<cg::Vector3D>(self);
+    })
+    .def(self_ns::str(self_ns::self))
+  ;
+
+  class_<cg::RightHandedRotation>("RightHandedRotation")
+    .def(init<float, float, float>((arg("roll")=0.0f, arg("pitch")=0.0f, arg("yaw")=0.0f)))
+    .def_readwrite("roll", &cg::RightHandedRotation::roll)
+    .def_readwrite("pitch", &cg::RightHandedRotation::pitch)
+    .def_readwrite("yaw", &cg::RightHandedRotation::yaw)
+    .def("get_quaternion", +[](const cg::RightHandedRotation &self) {
+      return cg::Quaternion(self);
+    })
+    .def("__eq__", &cg::RightHandedRotation::operator==)
+    .def("__ne__", &cg::RightHandedRotation::operator!=)
+    .def(self_ns::str(self_ns::self))
+  ;
+
+  class_<cg::RightHandedTransform>("RightHandedTransform")
+    .def(init<cg::RightHandedVector3D, cg::RightHandedRotation>(
+        (arg("location")=cg::RightHandedVector3D(),
+         arg("rotation")=cg::RightHandedRotation())))
+    .def_readwrite("location", &cg::RightHandedTransform::location)
+    .def_readwrite("rotation", &cg::RightHandedTransform::rotation)
+    .def("get_quaternion", &cg::RightHandedTransform::GetQuaternion)
+    .def("get_matrix", &GetRightHandedTransformMatrix)
+    .def("__eq__", &cg::RightHandedTransform::operator==)
+    .def("__ne__", &cg::RightHandedTransform::operator!=)
     .def(self_ns::str(self_ns::self))
   ;
 
@@ -234,6 +292,9 @@ void export_geom() {
     .def("get_up_vector", &cg::Transform::GetUpVector)
     .def("get_matrix", &GetTransformMatrix)
     .def("get_inverse_matrix", &GetInverseTransformMatrix)
+    .def("to_right_handed", &cg::Transform::ToRightHanded)
+    .def("from_right_handed", &cg::Transform::FromRightHanded, (arg("transform")))
+    .staticmethod("from_right_handed")
     .def("__eq__", &cg::Transform::operator==)
     .def("__ne__", &cg::Transform::operator!=)
     .def(self_ns::str(self_ns::self))

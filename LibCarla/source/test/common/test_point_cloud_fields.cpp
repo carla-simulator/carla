@@ -44,6 +44,28 @@ TEST(PointCloudFields, lidar_layout_matches_lidar_detection_size) {
   EXPECT_EQ(LastFieldEnd(fields), 16u);
 }
 
+TEST(PointCloudFields, extended_lidar_layout_is_autoware_xyzircaedt) {
+  const auto &fields = carla::ros2::kLidarFieldsEx;
+  ASSERT_EQ(fields.size(), 10u);
+  EXPECT_EQ(fields[0].name, "x");
+  EXPECT_EQ(fields[1].name, "y");
+  EXPECT_EQ(fields[2].name, "z");
+  EXPECT_EQ(fields[3].name, "intensity");
+  EXPECT_EQ(fields[4].name, "return_type");
+  EXPECT_EQ(fields[5].name, "channel");
+  EXPECT_EQ(fields[6].name, "azimuth");
+  EXPECT_EQ(fields[7].name, "elevation");
+  EXPECT_EQ(fields[8].name, "distance");
+  EXPECT_EQ(fields[9].name, "time_stamp");
+  EXPECT_EQ(fields[3].datatype, carla::ros2::PointFieldDataType::UInt8);
+  EXPECT_EQ(fields[4].datatype, carla::ros2::PointFieldDataType::UInt8);
+  EXPECT_EQ(fields[5].datatype, carla::ros2::PointFieldDataType::UInt16);
+  EXPECT_EQ(fields[9].datatype, carla::ros2::PointFieldDataType::UInt32);
+  // Tightly packed 32 B stride: matches both the Autoware PointXYZIRCAEDT
+  // struct and the naturally aligned LidarPointEx POD in the publisher.
+  EXPECT_EQ(LastFieldEnd(fields), 32u);
+}
+
 TEST(PointCloudFields, semantic_lidar_layout_matches_semantic_lidar_detection_size) {
   const auto &fields = carla::ros2::kSemanticLidarFields;
   ASSERT_EQ(fields.size(), 6u);
@@ -91,6 +113,7 @@ TEST(PointCloudFields, layouts_offsets_are_monotonically_increasing) {
     }
   };
   check_monotonic(carla::ros2::kLidarFields);
+  check_monotonic(carla::ros2::kLidarFieldsEx);
   check_monotonic(carla::ros2::kSemanticLidarFields);
   check_monotonic(carla::ros2::kRadarFields);
   check_monotonic(carla::ros2::kDvsFields);

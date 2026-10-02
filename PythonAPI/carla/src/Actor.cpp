@@ -137,6 +137,8 @@ void export_actor() {
       .def("set_target_angular_velocity", &cc::Actor::SetTargetAngularVelocity, (arg("angular_velocity")))
       .def("enable_constant_velocity", &cc::Actor::EnableConstantVelocity, (arg("velocity")))
       .def("disable_constant_velocity", &cc::Actor::DisableConstantVelocity)
+      .def("enable_constant_acceleration", &cc::Actor::EnableConstantAcceleration, (arg("acceleration")))
+      .def("disable_constant_acceleration", &cc::Actor::DisableConstantAcceleration)
       .def("add_impulse", &AddActorImpulse, (arg("impulse"))) 
       .def("add_impulse_at_location", &AddActorImpulseAtLocation, (arg("impulse"), arg("location")))
       .def("add_force", &AddActorForce, (arg("force")))
@@ -245,6 +247,9 @@ void export_actor() {
       "TrafficSign",
       no_init)
       .add_property("trigger_volume", CALL_RETURNING_COPY(cc::TrafficSign, GetTriggerVolume))
+      .def("get_stop_waypoints", CALL_RETURNING_LIST(cc::TrafficSign, GetStopWaypoints))
+      .def("get_affected_lane_waypoints", CALL_RETURNING_LIST(cc::TrafficSign, GetAffectedLaneWaypoints))
+      .def("get_opendrive_id", &cc::TrafficSign::GetSignId)
   ;
 
   enum_<cr::TrafficLightState>("TrafficLightState")
@@ -273,10 +278,7 @@ void export_actor() {
       .def("get_pole_index", &cc::TrafficLight::GetPoleIndex)
       .def("get_group_traffic_lights", &GetGroupTrafficLights)
       .def("reset_group", &cc::TrafficLight::ResetGroup)
-      .def("get_affected_lane_waypoints", CALL_RETURNING_LIST(cc::TrafficLight, GetAffectedLaneWaypoints))
       .def("get_light_boxes", &GetLightBoxes)
-      .def("get_opendrive_id", &cc::TrafficLight::GetOpenDRIVEID)
-      .def("get_stop_waypoints", CALL_RETURNING_LIST(cc::TrafficLight, GetStopWaypoints))
       .def(self_ns::str(self_ns::self))
   ;
 }

@@ -26,11 +26,80 @@
 #define CAMERA_TYPE_EQUISOLID 3			// r = f * sin(Theta / 2) * 2
 #define CAMERA_TYPE_ORTHOGONAL 4		// r = f * sin(Theta)
 #define CAMERA_TYPE_CUSTOM 5			// r = <custom power series using Theta>
+#define CAMERA_TYPE_BROWN_CONRADY 6		// not supported by the cubemap path (rendered as perspective)
+#define CAMERA_TYPE_LUT1D 7				// r = LensLUT[Theta], uniform samples over [0, LensThetaMax]
 
 
 
 #if CAMERA_TYPE == CAMERA_TYPE_CUSTOM
 	StructuredBuffer<float> Coefficients;
+	// Element count passed explicitly: GetDimensions() on a structured
+	// buffer SRV is not reliable across RHIs (returned garbage on Vulkan).
+	uint CoefficientCount;
+#endif
+
+#if CAMERA_TYPE == CAMERA_TYPE_LUT1D
+	// Mirrors CameraModelUtil::LUT1D (CPU) and LensModels.ush (engine path
+	// tracer): LensLUT[i] is R(Theta) for Theta = i / (N - 1) * LensThetaMax,
+	// monotonically non-decreasing, in the same normalized units as the
+	// CameraParams focal lengths (pixel = Center + Focal * R).
+	StructuredBuffer<float> LensLUT;
+	uint LensLUTSize; // element count (see CoefficientCount above)
+	float LensThetaMax;
+
+	uint LensLUTCount()
+	{
+		return LensLUTSize;
+	}
+
+	float LensLUTForward(float Theta)
+	{
+		const uint Count = LensLUTCount();
+		if (Count == 0)
+			return 0.0F;
+		if (Count == 1)
+			return LensLUT[0];
+		const float Clamped = clamp(Theta, 0.0F, LensThetaMax);
+		const float T = LensThetaMax > 0.0F ? (Clamped / LensThetaMax) * float(Count - 1) : 0.0F;
+		const uint I0 = min(uint(floor(T)), Count - 1);
+		const uint I1 = min(I0 + 1, Count - 1);
+		return lerp(LensLUT[I0], LensLUT[I1], T - float(I0));
+	}
+
+	float LensLUTInverse(float Distance)
+	{
+		const uint Count = LensLUTCount();
+		if (Count < 2)
+			return 0.0F;
+		if (Distance <= LensLUT[0])
+			return 0.0F;
+		if (Distance >= LensLUT[Count - 1])
+			return LensThetaMax;
+		uint Lo = 0;
+		uint Hi = Count - 1;
+		for (uint Iter = 0; Iter < 32; ++Iter)
+		{
+			if (Hi - Lo <= 1)
+				break;
+			const uint Mid = (Lo + Hi) / 2;
+			if (LensLUT[Mid] <= Distance)
+				Lo = Mid;
+			else
+				Hi = Mid;
+		}
+		const float R0 = LensLUT[Lo];
+		const float R1 = LensLUT[Hi];
+		const float Frac = R1 > R0 ? (Distance - R0) / (R1 - R0) : 0.0F;
+		return ((float(Lo) + Frac) / float(Count - 1)) * LensThetaMax;
+	}
+
+	// True when the image-plane radius lies outside the calibrated range:
+	// the lens never maps a ray there, so the pixel is invalid.
+	bool LensLUTOutOfRange(float Distance)
+	{
+		const uint Count = LensLUTCount();
+		return Count == 0 || Distance > LensLUT[Count - 1];
+	}
 #endif
 
 
@@ -60,10 +129,6 @@ float2 PixelCoordinateToUV(uint2 PixelCoordinate, uint2 ImageShape)
 		float Theta2 = Theta * Theta;
 		float ThetaN = 1.0f;
 		
-		uint CoefficientCount = 0;
-		uint Stride = 0;
-		Coefficients.GetDimensions(CoefficientCount, Stride);
-		
 		for (uint i = 0; i < CoefficientCount; ++i)
 		{
 			ThetaN *= Theta2;
@@ -81,10 +146,6 @@ float2 PixelCoordinateToUV(uint2 PixelCoordinate, uint2 ImageShape)
 		float ThetaN = Theta2;
 		float A = 3.0F;
 	
-		uint CoefficientCount = 0;
-		uint Stride = 0;
-		Coefficients.GetDimensions(CoefficientCount, Stride);
-		
 		for (uint i = 0; i != CoefficientCount; ++i)
 		{
 			Result += A * Coefficients[i] * ThetaN;
@@ -138,6 +199,10 @@ float ComputeDistance(float Angle)
 #if CAMERA_TYPE == CAMERA_TYPE_CUSTOM
 
 	return ComputeCameraPolynomial(Angle);
+
+#elif CAMERA_TYPE == CAMERA_TYPE_LUT1D
+
+	return LensLUTForward(Angle);
 
 #elif CAMERA_TYPE == CAMERA_TYPE_PERSPECTIVE
 
@@ -211,7 +276,11 @@ float ComputeAngle(float Distance)
 		Theta -= N / D;
 	}
 	return Theta;
-	
+
+#elif CAMERA_TYPE == CAMERA_TYPE_LUT1D
+
+	return LensLUTInverse(Distance);
+
 #elif CAMERA_TYPE == CAMERA_TYPE_PERSPECTIVE
 
 	return ComputeAnglePerspective(Distance);

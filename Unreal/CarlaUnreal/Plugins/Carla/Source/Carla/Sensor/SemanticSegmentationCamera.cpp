@@ -23,6 +23,15 @@ ASemanticSegmentationCamera::ASemanticSegmentationCamera(
       TEXT("Material'/Carla/PostProcessingMaterials/GTMaterial.GTMaterial'"));
 }
 
+void ASemanticSegmentationCamera::SetUpSceneCaptureComponent(USceneCaptureComponent2D &SceneCapture)
+{
+  Super::SetUpSceneCaptureComponent(SceneCapture);
+  // This sensor's post-process material samples the segmentation ID buffer;
+  // ask the renderer to run the segmentation pass for this capture (it is
+  // skipped for every capture that does not opt in).
+  SceneCapture.bRequiresSegmentationPass = true;
+}
+
 void ASemanticSegmentationCamera::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaSeconds)
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(ASemanticSegmentationCamera::PostPhysTick);
@@ -31,12 +40,12 @@ void ASemanticSegmentationCamera::PostPhysTick(UWorld *World, ELevelTick TickTyp
   if (!AreClientsListening())
       return;
 
-  auto FrameIndex = FCarlaEngine::GetFrameCounter();
-  ImageUtil::ReadSensorImageDataAsyncFColor(*this, [this, FrameIndex](
+  auto CaptureContext = MakeCaptureContext(*this);
+  ImageUtil::ReadSensorImageDataAsyncFColor(*this, [this, CaptureContext](
     TArrayView<const FColor> Pixels,
     FIntPoint Size) -> bool
   {
-    SendDataToClient(*this, Pixels, FrameIndex);
+    SendDataToClient(*this, Pixels, CaptureContext);
     return true;
   });
 }

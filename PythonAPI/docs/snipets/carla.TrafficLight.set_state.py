@@ -19,8 +19,8 @@ actor_snapshot = world_snapshot.find(vehicle.id)
 # Set spectator at given transform (vehicle transform)
 spectator.set_transform(actor_snapshot.get_transform())
 # ...# ...
-if vehicle_actor.is_at_traffic_light():
-    traffic_light = vehicle_actor.get_traffic_light()
+if vehicle.is_at_traffic_light():
+    traffic_light = vehicle.get_traffic_light()
     if traffic_light.get_state() == carla.TrafficLightState.Red:
        # world.hud.notification("Traffic light changed! Good to go!")
         traffic_light.set_state(carla.TrafficLightState.Green)

@@ -13,6 +13,7 @@
 #include "carla/Time.h"
 
 #include <boost/asio/connect.hpp>
+#include <boost/asio/post.hpp>
 #include <boost/asio/read.hpp>
 #include <boost/asio/write.hpp>
 #include <boost/asio/bind_executor.hpp>
@@ -142,10 +143,18 @@ namespace tcp {
   void Client::Stop() {
     _connection_timer.cancel();
     auto self = shared_from_this();
+    // Serialize the shutdown with the completion handlers: every read/connect
+    // handler runs on _strand, so mutating _done and closing the socket from
+    // the caller's thread (game thread via sensor destruction) races a
+    // concurrent async_read initiation on an io_context worker -- asio sockets
+    // are not thread-safe, and the race crashed the client inside ReadData
+    // when switching sensors. self keeps the client alive until this runs.
+    boost::asio::post(_strand, [this, self]() {
       _done = true;
       if (_socket.is_open()) {
         _socket.close();
       }
+    });
   }
 
   void Client::Reconnect() {
@@ -170,6 +179,14 @@ namespace tcp {
 
       auto handle_read_data = [this, self, message](boost::system::error_code ec, size_t DEBUG_ONLY(bytes)) {
         DEBUG_ONLY(log_debug("streaming client: Client::ReadData.handle_read_data", bytes, "bytes"));
+        // A read that completed while Stop() was being processed must not
+        // deliver its payload: the subscriber that _callback points into is
+        // already being torn down (sensor destruction), and calling into it
+        // is a use-after-free (observed as a manual_control segfault when
+        // switching sensors).
+        if (_done) {
+          return;
+        }
         if (!ec) {
           DEBUG_ASSERT_EQ(bytes, message->size());
           DEBUG_ASSERT_NE(bytes, 0u);

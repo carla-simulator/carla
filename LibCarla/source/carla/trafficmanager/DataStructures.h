@@ -38,6 +38,11 @@ struct LocalizationData {
   SimpleWaypointPtr junction_end_point;
   SimpleWaypointPtr safe_point;
   bool is_at_junction_entrance;
+  /// False when the localization stage could not place the vehicle on the map
+  /// -- a map without a single drivable waypoint (EmptyMap, an OpenDRIVE file
+  /// with no road). Every later stage assumes a non-empty waypoint buffer, so
+  /// TrafficManagerLocal::Step skips such a vehicle for this cycle.
+  bool localized = false;
 };
 using LocalizationFrame = std::vector<LocalizationData>;
 
@@ -65,6 +70,10 @@ struct StateEntry {
   float angular_deviation;
   float velocity_deviation;
   float steer;
+  float throttle {0.0f};
+  float brake {0.0f};
+  /// Zero is a safe initial value: the shaping raises it to the current speed.
+  float reference_velocity {0.0f};
 };
 
 } // namespace traffic_manager

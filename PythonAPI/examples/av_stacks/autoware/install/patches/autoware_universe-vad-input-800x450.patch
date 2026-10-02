@@ -1,0 +1,15 @@
+diff --git a/e2e/autoware_tensorrt_vad/config/vad_carla_tiny.param.yaml b/e2e/autoware_tensorrt_vad/config/vad_carla_tiny.param.yaml
+index 989b7ed39..c0ac61faa 100644
+--- a/e2e/autoware_tensorrt_vad/config/vad_carla_tiny.param.yaml
++++ b/e2e/autoware_tensorrt_vad/config/vad_carla_tiny.param.yaml
+@@ -60,8 +60,8 @@
+       # --- Camera Sensor Dimensions (Hardware-Specific) ---
+       # Actual resolution of your camera sensors
+       # CARLA default: 1600x900, adjust for your hardware
+-      input_image_width: 1600
+-      input_image_height: 900
++      input_image_width: 800
++      input_image_height: 450
+ 
+       # Model input dimensions (target_image_width/height) are defined in vad-carla-tiny.param.json
+ 

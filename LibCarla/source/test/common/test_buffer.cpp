@@ -114,10 +114,9 @@ TEST(buffer, memcpy) {
 
 #ifndef LIBCARLA_NO_EXCEPTIONS
 TEST(buffer, message_too_big) {
-  // carla::throw_exception(const std::exception&) slices the derived type
-  // before rethrow, so std::invalid_argument arrives at the catch site as
-  // std::exception. The test still verifies the protective behavior.
-  ASSERT_THROW(Buffer(4294967296ul), std::exception);
+  // carla::throw_exception is templated on the static type, so the
+  // std::invalid_argument survives the rethrow with its message.
+  ASSERT_THROW(Buffer(4294967296ul), std::invalid_argument);
   Buffer buf;
   ASSERT_THROW(buf.reset(4294967296ul), std::exception);
 }

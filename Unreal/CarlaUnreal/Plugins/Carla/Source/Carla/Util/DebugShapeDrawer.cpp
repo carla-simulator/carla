@@ -30,7 +30,7 @@ struct FShapeVisitor
       LifeTime(InLifeTime),
       bPersistentLines(bInPersistentLines)
   {
-    World->PersistentLineBatcher->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+    World->GetLineBatcher(UWorld::ELineBatcherType::WorldPersistent)->SetCollisionEnabled(ECollisionEnabled::NoCollision);
   }
 
   void operator()(const Shape::Point &Point) const
@@ -41,7 +41,7 @@ struct FShapeVisitor
     {
       Location = LargeMap->GlobalToLocalLocation(Location);
     }
-    World->PersistentLineBatcher->DrawPoint(
+    World->GetLineBatcher(UWorld::ELineBatcherType::WorldPersistent)->DrawPoint(
         Location,
         Color,
         1e2f * Point.size,
@@ -59,7 +59,7 @@ struct FShapeVisitor
       Begin = LargeMap->GlobalToLocalLocation(Begin);
       End = LargeMap->GlobalToLocalLocation(End);
     }
-    World->PersistentLineBatcher->DrawLine(
+    World->GetLineBatcher(UWorld::ELineBatcherType::WorldPersistent)->DrawLine(
         Begin,
         End,
         Color,
@@ -127,7 +127,7 @@ struct FShapeVisitor
             DepthPriority)
     };
 
-    World->PersistentLineBatcher->DrawLines(TArrayView<FBatchedLine>(BatchedLines, 5));
+    World->GetLineBatcher(UWorld::ELineBatcherType::WorldPersistent)->DrawLines(TArrayView<FBatchedLine>(BatchedLines, 5));
   }
 
   void operator()(const Shape::Box &Box) const
@@ -156,7 +156,7 @@ struct FShapeVisitor
         Q.Y=B[j].Y;
         P.Z=B[0].Z;
         Q.Z=B[1].Z;
-        World->PersistentLineBatcher->DrawLine(
+        World->GetLineBatcher(UWorld::ELineBatcherType::WorldPersistent)->DrawLine(
             Transform.TransformPosition(P),
             Transform.TransformPosition(Q),
             Color,
@@ -170,7 +170,7 @@ struct FShapeVisitor
         Q.Z=B[j].Z;
         P.X=B[0].X;
         Q.X=B[1].X;
-        World->PersistentLineBatcher->DrawLine(
+        World->GetLineBatcher(UWorld::ELineBatcherType::WorldPersistent)->DrawLine(
             Transform.TransformPosition(P),
             Transform.TransformPosition(Q),
             Color,
@@ -184,7 +184,7 @@ struct FShapeVisitor
         Q.X=B[j].X;
         P.Y=B[0].Y;
         Q.Y=B[1].Y;
-        World->PersistentLineBatcher->DrawLine(
+        World->GetLineBatcher(UWorld::ELineBatcherType::WorldPersistent)->DrawLine(
             Transform.TransformPosition(P),
             Transform.TransformPosition(Q),
             Color,
@@ -245,8 +245,9 @@ void FDebugShapeDrawer::Draw(const carla::rpc::DebugShape &Shape)
 
 void FDebugShapeDrawer::Clear()
 {
-  if (World.PersistentLineBatcher != nullptr)
+  ULineBatchComponent* LineBatcher = World.GetLineBatcher(UWorld::ELineBatcherType::WorldPersistent);
+  if (LineBatcher != nullptr)
   {
-    World.PersistentLineBatcher->Flush();
+    LineBatcher->Flush();
   }
 }

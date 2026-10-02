@@ -35,8 +35,13 @@ namespace carla
 
 namespace carla
 {
+  /// Templated on the static type so the thrown object keeps its dynamic
+  /// type: taking a `const std::exception &` and `throw e;` would slice
+  /// every carla::client error down to a bare std::exception (what() ==
+  /// "std::exception"), losing the server's message.
+  template <typename ExceptionT>
   [[noreturn]]
-  inline static void throw_exception(const std::exception &e)
+  inline void throw_exception(const ExceptionT &e)
   {
     throw e;
   }

@@ -56,11 +56,9 @@ void ARayCastLidar::Set(const FLidarDescription &LidarDescription)
   DropOffGenActive = Description.DropOffGenRate > std::numeric_limits<float>::epsilon();
 }
 
-void ARayCastLidar::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaTime)
+void ARayCastLidar::SendData(const float DeltaTime)
 {
-  TRACE_CPUPROFILER_EVENT_SCOPE(ARayCastLidar::PostPhysTick);
-  SimulateLidar(DeltaTime);
-
+  TRACE_CPUPROFILER_EVENT_SCOPE(ARayCastLidar::SendData);
   auto DataStream = GetDataStream(*this);
   auto SensorTransform = DataStream.GetSensorTransform();
 
@@ -76,19 +74,22 @@ void ARayCastLidar::PostPhysTick(UWorld *World, ELevelTick TickType, float Delta
     TRACE_CPUPROFILER_EVENT_SCOPE_STR("ROS2 Send");
     auto StreamId = carla::streaming::detail::token_type(GetToken()).get_stream_id();
     AActor* ParentActor = GetAttachParentActor();
+    // Passing the channel count and vertical FOV limits routes the publisher
+    // through the extended Autoware XYZIRCAEDT layout (tier4 autoware-support
+    // port); see ROS2::ProcessDataFromLidar.
     if (ParentActor)
     {
       FTransform LocalTransformRelativeToParent = GetActorTransform().GetRelativeTransform(ParentActor->GetActorTransform());
-      ROS2->ProcessDataFromLidar(DataStream.GetSensorType(), StreamId, LocalTransformRelativeToParent, LidarData, this);
+      ROS2->ProcessDataFromLidar(DataStream.GetSensorType(), StreamId, LocalTransformRelativeToParent,
+                                 Description.Channels, Description.UpperFovLimit, Description.LowerFovLimit, LidarData, this);
     }
     else
     {
-      ROS2->ProcessDataFromLidar(DataStream.GetSensorType(), StreamId, SensorTransform, LidarData, this);
+      ROS2->ProcessDataFromLidar(DataStream.GetSensorType(), StreamId, SensorTransform,
+                                 Description.Channels, Description.UpperFovLimit, Description.LowerFovLimit, LidarData, this);
     }
   }
   #endif
-
-
 }
 
 float ARayCastLidar::ComputeIntensity(const FSemanticDetection& RawDetection) const

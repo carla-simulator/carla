@@ -102,6 +102,19 @@ FCarlaActor* FActorRegistry::Register(AActor &Actor, FActorDescription Descripti
         TEXT("This actor's memory address is already registered, "
              "either you forgot to deregister the actor "
              "or the actor was garbage collected."));
+    // Purge the stale entry: leaving it makes the old id alias the new
+    // actor through Actors/ActorDatabase, so operations on either id hit
+    // the same AActor with two conflicting FCarlaActor states.
+    const IdType StaleId = Ids[&Actor];
+    if (StaleId != Id)
+    {
+      if (FCarlaActor* StaleActor = FindCarlaActor(StaleId))
+      {
+        StaleActor->TheActor = nullptr;
+      }
+      ActorDatabase.Remove(StaleId);
+      Actors.Remove(StaleId);
+    }
   }
   Ids.Emplace(&Actor, Id);
 
@@ -114,6 +127,12 @@ FCarlaActor* FActorRegistry::Register(AActor &Actor, FActorDescription Descripti
 
       // Optional: You can use only the value, or a key-value combination as the tag
       FString TagString = Key + TEXT(":") + Attribute.Value; // or just Attribute.Value
+      // FName asserts above NAME_SIZE (1024) characters; a lens lookup table
+      // ("lut" on the fisheye / rt_lens cameras) can be several thousand.
+      // The tag is informational, so keep a truncated prefix instead.
+      constexpr int32 MaxTagLength = 1000;
+      if (TagString.Len() > MaxTagLength)
+        TagString = TagString.Left(MaxTagLength) + TEXT("...");
       Actor.Tags.Add(FName(*TagString));
   }
 

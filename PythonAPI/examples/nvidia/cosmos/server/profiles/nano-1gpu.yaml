@@ -1,0 +1,8 @@
+name: nano-1gpu
+description: Manual layout — Cosmos 3 Nano alone on GPU 0 (auto plans this and more from the detected GPUs)
+workers:
+  - name: cosmos3-nano
+    type: cosmos3
+    backends: [cosmos3-nano]
+    gpus: [0]
+    args: ["--tp", "1"]

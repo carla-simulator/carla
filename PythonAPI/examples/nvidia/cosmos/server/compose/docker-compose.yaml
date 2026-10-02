@@ -1,0 +1,25 @@
+# docker compose up -d      (from this directory; edit STATE/IMAGE/PROFILE below or via .env)
+services:
+  cosmos:
+    image: ${COSMOS_IMAGE:-carla-cosmos:nano}
+    container_name: carla-cosmos
+    restart: unless-stopped
+    ports:
+      - "${COSMOS_PORT:-8000}:8000"
+    volumes:
+      - ${COSMOS_STATE:-./state}:/state
+    shm_size: 16g
+    environment:
+      COSMOS_PROFILE: ${COSMOS_PROFILE:-auto}
+      COSMOS_GUARDRAILS: ${COSMOS_GUARDRAILS:-1}
+      COSMOS_TOKEN: ${COSMOS_TOKEN:-}
+    labels:
+      com.carla.cosmos.role: server
+      com.carla.cosmos.port: "${COSMOS_PORT:-8000}"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu, compute, utility, graphics]

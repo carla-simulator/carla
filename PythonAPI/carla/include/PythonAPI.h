@@ -10,6 +10,9 @@
 #include <carla/geom/GeoLocation.h>
 #include <carla/geom/Location.h>
 #include <carla/geom/Quaternion.h>
+#include <carla/geom/RightHandedRotation.h>
+#include <carla/geom/RightHandedTransform.h>
+#include <carla/geom/RightHandedVector3D.h>
 #include <carla/geom/Rotation.h>
 #include <carla/geom/Transform.h>
 #include <carla/geom/Vector2D.h>
@@ -336,6 +339,24 @@ namespace geom {
         << ", y=" << std::to_string(q.y)
         << ", z=" << std::to_string(q.z)
         << ", w=" << std::to_string(q.w) << ')';
+    return out;
+  }
+
+  inline std::ostream &operator<<(std::ostream &out, const RightHandedVector3D &v) {
+    WriteVector3D(out, "RightHandedVector3D", v);
+    return out;
+  }
+
+  inline std::ostream &operator<<(std::ostream &out, const RightHandedRotation &rotation) {
+    out << "RightHandedRotation(roll=" << std::to_string(rotation.roll)
+        << ", pitch=" << std::to_string(rotation.pitch)
+        << ", yaw=" << std::to_string(rotation.yaw) << ')';
+    return out;
+  }
+
+  inline std::ostream &operator<<(std::ostream &out, const RightHandedTransform &transform) {
+    out << "RightHandedTransform(" << transform.location << ", "
+        << transform.rotation << ')';
     return out;
   }
 

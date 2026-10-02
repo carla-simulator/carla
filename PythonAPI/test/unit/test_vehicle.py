@@ -52,18 +52,22 @@ class TestVehiclePhysicsControl(unittest.TestCase):
                           carla.Vector2D(x=63.0868, y=0.703473),
                           carla.Vector2D(x=119.12, y=0.573047)]
 
-        wheels = [carla.WheelPhysicsControl(tire_friction=2, max_steer_angle=30, radius=10),
-                  carla.WheelPhysicsControl(tire_friction=3, max_steer_angle=40, radius=20),
-                  carla.WheelPhysicsControl(tire_friction=4, max_steer_angle=50, radius=30),
-                  carla.WheelPhysicsControl(tire_friction=5, max_steer_angle=60, radius=40)]
+        wheels = [carla.WheelPhysicsControl(cornering_stiffness=1000, max_steer_angle=30, wheel_radius=10,
+                                             location=carla.Location(x=1, y=1, z=0)),
+                  carla.WheelPhysicsControl(cornering_stiffness=1100, max_steer_angle=40, wheel_radius=20,
+                                             location=carla.Location(x=1, y=-1, z=0)),
+                  carla.WheelPhysicsControl(cornering_stiffness=1200, max_steer_angle=50, wheel_radius=30,
+                                             location=carla.Location(x=-1, y=1, z=0)),
+                  carla.WheelPhysicsControl(cornering_stiffness=1300, max_steer_angle=60, wheel_radius=40,
+                                             location=carla.Location(x=-1, y=-1, z=0))]
 
         pc = carla.VehiclePhysicsControl(
             torque_curve=torque_curve,
             max_rpm=5729,
-            moi=1,
+            rev_up_moi=1,
 
-            use_gear_autobox=1,
-            gear_switch_time=0.5,
+            use_automatic_gears=1,
+            gear_change_time=0.5,
 
             mass=5500,
             drag_coefficient=0.3,
@@ -78,10 +82,10 @@ class TestVehiclePhysicsControl(unittest.TestCase):
             self.assertTrue(abs(pc.torque_curve[i].y - torque_curve[i][1]) <= error)
 
         self.assertTrue(abs(pc.max_rpm - 5729) <= error)
-        self.assertTrue(abs(pc.moi - 1) <= error)
+        self.assertTrue(abs(pc.rev_up_moi - 1) <= error)
 
-        self.assertTrue(abs(pc.use_gear_autobox - 1) <= error)
-        self.assertTrue(abs(pc.gear_switch_time - 0.5) <= error)
+        self.assertTrue(abs(pc.use_automatic_gears - 1) <= error)
+        self.assertTrue(abs(pc.gear_change_time - 0.5) <= error)
 
         self.assertTrue(abs(pc.mass - 5500) <= error)
         self.assertTrue(abs(pc.drag_coefficient - 0.3) <= error)
@@ -95,10 +99,10 @@ class TestVehiclePhysicsControl(unittest.TestCase):
             self.assertTrue(abs(pc.steering_curve[i].y - steering_curve[i].y) <= error)
 
         for i in range(0, len(wheels)):
-            self.assertTrue(abs(pc.wheels[i].tire_friction - wheels[i].tire_friction) <= error)
+            self.assertTrue(abs(pc.wheels[i].cornering_stiffness - wheels[i].cornering_stiffness) <= error)
             self.assertTrue(abs(pc.wheels[i].max_steer_angle - wheels[i].max_steer_angle) <= error)
-            self.assertTrue(abs(pc.wheels[i].radius - wheels[i].radius) <= error)
+            self.assertTrue(abs(pc.wheels[i].wheel_radius - wheels[i].wheel_radius) <= error)
 
-            self.assertTrue(abs(pc.wheels[i].position.x - wheels[i].position.x) <= error)
-            self.assertTrue(abs(pc.wheels[i].position.y - wheels[i].position.y) <= error)
-            self.assertTrue(abs(pc.wheels[i].position.z - wheels[i].position.z) <= error)
+            self.assertTrue(abs(pc.wheels[i].location.x - wheels[i].location.x) <= error)
+            self.assertTrue(abs(pc.wheels[i].location.y - wheels[i].location.y) <= error)
+            self.assertTrue(abs(pc.wheels[i].location.z - wheels[i].location.z) <= error)

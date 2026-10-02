@@ -10,8 +10,10 @@
 #include "carla/client/Actor.h"
 #include "carla/client/ActorBlueprint.h"
 #include "carla/client/ActorList.h"
+#include "carla/client/Map.h"
 #include "carla/client/detail/Simulator.h"
 #include "carla/StringUtil.h"
+#include "carla/road/Controller.h"
 #include "carla/road/SignalType.h"
 #include "carla/road/Junction.h"
 #include "carla/client/TrafficLight.h"
@@ -233,6 +235,13 @@ namespace client {
     _episode.Lock()->ResetAllTrafficLights();
   }
 
+  void World::SpawnCustomMesh(
+      const std::vector<float> &vertices,
+      const std::vector<uint32_t> &triangles,
+      const std::string &material) {
+    _episode.Lock()->SpawnCustomMesh(vertices, triangles, material);
+  }
+
   SharedPtr<LightManager> World::GetLightManager() const {
     return _episode.Lock()->GetLightManager();
   }
@@ -341,8 +350,35 @@ namespace client {
     _episode.Lock()->ApplyColorTextureToObjects(objects_name, parameter, Texture);
   }
 
+  void World::SetSkyLightMap(
+      const rpc::TextureFloatColor& panorama,
+      float intensity,
+      int32_t face_size) {
+    _episode.Lock()->SetSkyLightMap(panorama, intensity, face_size);
+  }
+
+  void World::ClearSkyLightMap() {
+    _episode.Lock()->ClearSkyLightMap();
+  }
+
+  bool World::HasSkyLightMap() const {
+    return _episode.Lock()->HasSkyLightMap();
+  }
+
   std::vector<std::string> World::GetNamesOfAllObjects() const {
     return _episode.Lock()->GetNamesOfAllObjects();
+  }
+
+  void World::SetPublishTF(bool publish_tf) {
+    _episode.Lock()->SetPublishTF(publish_tf);
+  }
+
+  bool World::GetPublishTF() const {
+    return _episode.Lock()->GetPublishTF();
+  }
+
+  std::vector<geom::Transform> World::GetEgoSpawnPoints() const {
+    return _episode.Lock()->GetEgoSpawnPoints();
   }
 
   void World::ApplyTexturesToObject(

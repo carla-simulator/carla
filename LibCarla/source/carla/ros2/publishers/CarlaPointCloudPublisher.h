@@ -36,7 +36,14 @@ struct CarlaPointCloudMsgTraits;
 // pass the (base_topic_name, frame_id) pair through.
 class CarlaPointCloudPublisher : public BasePublisher {
 public:
-  CarlaPointCloudPublisher(std::string base_topic_name, std::string frame_id);
+  // exact_topic: when true the writer publishes on base_topic_name verbatim
+  // (no "/point_cloud" suffix). Used by single-topic point-cloud sensors when
+  // the actor carries a ros_topic_name override — tier4's custom topic names
+  // replaced the whole topic for those publishers (e.g. Autoware expects
+  // exactly /sensing/lidar/top/pointcloud_raw_ex). The DVS point-cloud lane
+  // keeps the suffix: it shares its base with the image/camera_info topics.
+  CarlaPointCloudPublisher(
+      std::string base_topic_name, std::string frame_id, bool exact_topic = false);
   ~CarlaPointCloudPublisher() override;
 
   CarlaPointCloudPublisher(const CarlaPointCloudPublisher &) = delete;

@@ -97,34 +97,54 @@ void FPixelReader::WritePixelsToBuffer(
         Fallback = std::move(FallbackReadback)]() mutable {
     {
       TRACE_CPUPROFILER_EVENT_SCOPE_STR("Wait GPU transfer");
+      // Bounded: if the copy never completes (capture stopped before its
+      // command buffer was submitted) drop the frame instead of leaking a
+      // spinning task and its pool slot.
+      uint64 Spins = 0;
       while (!Readback->IsReady())
       {
         std::this_thread::sleep_for(std::chrono::microseconds(100));
+        if (++Spins > 50000u)  // ~5 s
+        {
+          if (Pool && SlotIndex != INDEX_NONE)
+            Pool->Release(SlotIndex);
+          return;
+        }
       }
     }
 
+    // FRHIGPUTextureReadback::Lock() maps through the immediate command list
+    // and asserts IsInRenderingThread(); it cannot run on this worker (the
+    // same hop ImageUtil's ReadImageDataEndAsync makes). The readback is
+    // already complete, so the Lock is a cheap CPU-side map and does not
+    // stall the render thread.
+    ENQUEUE_RENDER_COMMAND(PixelReaderDeliver)(
+      [=, FuncForSending = std::move(FuncForSending), Pool = std::move(Pool),
+          Fallback = std::move(Fallback)](FRHICommandListImmediate&) mutable
     {
-      TRACE_CPUPROFILER_EVENT_SCOPE_STR("Readback data");
-      FPixelFormatInfo PixelFormat = GPixelFormats[BackBufferPixelFormat];
-      uint32 ExpectedRowBytes = BackBufferSize.X * PixelFormat.BlockBytes;
-      int32 Size = (BackBufferSize.Y * (PixelFormat.BlockBytes * BackBufferSize.X));
-      // FRHIGPUTextureReadback::Lock takes its argument by reference and writes
-      // the row stride (in pixels) back into it. It must not alias `Size`, or
-      // the payload length collapses to a single row's pixel count.
-      int32 RowPitchInPixels = 0;
-      void* LockedData = Readback->Lock(RowPitchInPixels);
-      if (LockedData)
       {
-        FuncForSending(LockedData, Size, Offset, ExpectedRowBytes);
+        TRACE_CPUPROFILER_EVENT_SCOPE_STR("Readback data");
+        FPixelFormatInfo PixelFormat = GPixelFormats[BackBufferPixelFormat];
+        uint32 ExpectedRowBytes = BackBufferSize.X * PixelFormat.BlockBytes;
+        int32 Size = (BackBufferSize.Y * (PixelFormat.BlockBytes * BackBufferSize.X));
+        // FRHIGPUTextureReadback::Lock takes its argument by reference and writes
+        // the row stride (in pixels) back into it. It must not alias `Size`, or
+        // the payload length collapses to a single row's pixel count.
+        int32 RowPitchInPixels = 0;
+        void* LockedData = Readback->Lock(RowPitchInPixels);
+        if (LockedData)
+        {
+          FuncForSending(LockedData, Size, Offset, ExpectedRowBytes);
+        }
+        Readback->Unlock();
       }
-      Readback->Unlock();
-    }
 
-    if (Pool && SlotIndex != INDEX_NONE)
-    {
-      Pool->Release(SlotIndex);
-    }
-    // Fallback (if any) destructs here, freeing its staging buffer.
+      if (Pool && SlotIndex != INDEX_NONE)
+      {
+        Pool->Release(SlotIndex);
+      }
+      // Fallback (if any) destructs here, freeing its staging buffer.
+    });
   });
 }
 

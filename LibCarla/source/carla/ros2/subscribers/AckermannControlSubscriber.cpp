@@ -10,15 +10,13 @@
 #include "carla/ros2/ROS2CallbackData.h"
 #include "carla/ros2/subscribers/AckermannControlConversion.h"
 #include "carla/ros2/subscribers/SubscriberImpl.h"
-#include "carla/ros2/types/AckermannDriveStamped.h"
-#include "carla/ros2/types/AckermannDriveStampedPubSubTypes.h"
+#include "carla/ros2/types/msg/AckermannDriveStamped.h"
 
 namespace carla {
 namespace ros2 {
 
 struct AckermannControlTraits {
-  using msg_type = ackermann_msgs::msg::AckermannDriveStamped;
-  using msg_pubsub_type = ackermann_msgs::msg::AckermannDriveStampedPubSubType;
+  using msg_type = msg::AckermannDriveStamped;
 };
 
 AckermannControlSubscriber::AckermannControlSubscriber(
@@ -36,11 +34,11 @@ AckermannControlSubscriber::~AckermannControlSubscriber() = default;
 ROS2CallbackData AckermannControlSubscriber::GetMessage() {
   auto message = _impl->GetMessage();
   return FromAckermannDrive(
-      message.drive().steering_angle(),
-      message.drive().steering_angle_velocity(),
-      message.drive().speed(),
-      message.drive().acceleration(),
-      message.drive().jerk());
+      message.drive.steering_angle,
+      message.drive.steering_angle_velocity,
+      message.drive.speed,
+      message.drive.acceleration,
+      message.drive.jerk);
 }
 
 void AckermannControlSubscriber::ProcessMessages(ActorCallback callback) {

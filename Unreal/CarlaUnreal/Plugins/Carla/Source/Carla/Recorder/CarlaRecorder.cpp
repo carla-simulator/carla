@@ -108,7 +108,7 @@ void ACarlaRecorder::Ticking(float DeltaSeconds)
     // through all actors in registry
     for (auto It = Registry.begin(); It != Registry.end(); ++It)
     {
-      FCarlaActor* View = It.Value().Get();
+      FCarlaActor* View = It->Value.Get();
 
       switch (View->GetActorType())
       {

@@ -1,0 +1,17 @@
+diff --git a/autoware_launch/config/control/trajectory_follower/longitudinal/pid.param.yaml b/autoware_launch/config/control/trajectory_follower/longitudinal/pid.param.yaml
+index 372ea454..eba11989 100644
+--- a/autoware_launch/config/control/trajectory_follower/longitudinal/pid.param.yaml
++++ b/autoware_launch/config/control/trajectory_follower/longitudinal/pid.param.yaml
+@@ -19,7 +19,11 @@
+     enable_overshoot_emergency: false # {OVERRIDE}
+     enable_large_tracking_error_emergency: true
+     enable_slope_compensation: true
+-    enable_keep_stopped_until_steer_convergence: true
++    # {OVERRIDE for CARLA e2e/VAD} An e2e planner re-infers the trajectory every
++    # frame, so the endpoint jitters > new_traj_end_dist and
++    # isTrajectoryShapeChanged() never settles -> isSteerConverged() stays false
++    # -> with this flag true the vehicle NEVER departs from STOPPED (deadlock).
++    enable_keep_stopped_until_steer_convergence: false
+ 
+     # state transition
+     drive_state_stop_dist: 0.5

@@ -8,6 +8,7 @@
 #include "carla/multigpu/primary.h"
 
 #include "carla/Logging.h"
+#include "carla/Sockets.h"
 
 #include <boost/asio/post.hpp>
 
@@ -21,6 +22,9 @@ namespace multigpu {
       _acceptor(_io_context, std::move(ep)),
       _timeout(time_duration::seconds(1u)) {
         _acceptor.listen();
+        // Same fd-leak-into-forked-children concern as
+        // carla::streaming::detail::tcp::Server; see carla/Sockets.h.
+        carla::SetSocketCloseOnExec(_acceptor.native_handle());
       }
 
   Listener::~Listener() {

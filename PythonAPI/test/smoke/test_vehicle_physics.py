@@ -275,7 +275,7 @@ class TestVehicleFriction(SyncSmokeTest):
         # workaround: give time to UE4 to clean memory after loading (old assets)
         time.sleep(5)
 
-        bp_vehicles = self.world.get_blueprint_library().filter("*charger_2020")
+        bp_vehicles = self.world.get_blueprint_library().filter("vehicle.dodge.charger")
 
         value_vol_friction = 5.0
         friction_bp = self.world.get_blueprint_library().find('static.trigger.friction')

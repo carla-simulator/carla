@@ -128,6 +128,12 @@ namespace client {
     /// Disable the constant velocity mode
     void DisableConstantVelocity();
 
+    /// Enable a constant acceleration mode (direct acceleration, no pedal input)
+    void EnableConstantAcceleration(const geom::Vector3D &vector);
+
+    /// Disable the constant acceleration mode
+    void DisableConstantAcceleration();
+
     /// Add impulse to the actor at its center of mass.
     void AddImpulse(const geom::Vector3D &vector);
 

@@ -64,6 +64,7 @@ struct FWideAngleLensShaderBase
         SHADER_PARAMETER(uint32, Flags)
         SHADER_PARAMETER(float, LongitudeOffset)
         SHADER_PARAMETER(float, FOVFadeSize)
+        SHADER_PARAMETER(FVector4f, InvalidColor)
     END_SHADER_PARAMETER_STRUCT()
 };
 
@@ -84,7 +85,34 @@ struct FWideAngleLensShaderBase<ECameraModel::KannalaBrandt>
         SHADER_PARAMETER(uint32, Flags)
         SHADER_PARAMETER(float, LongitudeOffset)
         SHADER_PARAMETER(float, FOVFadeSize)
+        SHADER_PARAMETER(FVector4f, InvalidColor)
         SHADER_PARAMETER_RDG_BUFFER_SRV(StructuredBuffer<float>, Coefficients)
+        SHADER_PARAMETER(uint32, CoefficientCount)
+    END_SHADER_PARAMETER_STRUCT()
+};
+
+// LUT1D: R(Theta) sample table (see CameraModelCommon.ush, LensLUT*).
+template <>
+struct FWideAngleLensShaderBase<ECameraModel::LUT1D>
+{
+    BEGIN_SHADER_PARAMETER_STRUCT(FParameters, )
+        SHADER_PARAMETER_RDG_TEXTURE_UAV(RWTexture2D<float4>, OutImage)
+        SHADER_PARAMETER_RDG_TEXTURE_SRV(Texture2D, CubeFront)
+        SHADER_PARAMETER_RDG_TEXTURE_SRV(Texture2D, CubeBack)
+        SHADER_PARAMETER_RDG_TEXTURE_SRV(Texture2D, CubeRight)
+        SHADER_PARAMETER_RDG_TEXTURE_SRV(Texture2D, CubeLeft)
+        SHADER_PARAMETER_RDG_TEXTURE_SRV(Texture2D, CubeTop)
+        SHADER_PARAMETER_RDG_TEXTURE_SRV(Texture2D, CubeBottom)
+        SHADER_PARAMETER_SAMPLER(SamplerState, FaceSampler)
+        SHADER_PARAMETER(float, YFOVAngle)
+        SHADER_PARAMETER(FVector4f, CameraParams)
+        SHADER_PARAMETER(uint32, Flags)
+        SHADER_PARAMETER(float, LongitudeOffset)
+        SHADER_PARAMETER(float, FOVFadeSize)
+        SHADER_PARAMETER(FVector4f, InvalidColor)
+        SHADER_PARAMETER_RDG_BUFFER_SRV(StructuredBuffer<float>, LensLUT)
+        SHADER_PARAMETER(uint32, LensLUTSize)
+        SHADER_PARAMETER(float, LensThetaMax)
     END_SHADER_PARAMETER_STRUCT()
 };
 
@@ -112,6 +140,7 @@ struct FToPerspectiveShaderBase<ECameraModel::KannalaBrandt>
         SHADER_PARAMETER(FVector4f, DestinationCameraParams)
         SHADER_PARAMETER(FVector4f, SourceCameraParams)
         SHADER_PARAMETER_RDG_BUFFER_SRV(StructuredBuffer<float>, Coefficients)
+        SHADER_PARAMETER(uint32, CoefficientCount)
     END_SHADER_PARAMETER_STRUCT()
 };
 
@@ -180,6 +209,7 @@ DECLARE_WIDE_ANGLE_LENS_SHADER(FWideAngleLensShader_Equidistance, ECameraModel::
 DECLARE_WIDE_ANGLE_LENS_SHADER(FWideAngleLensShader_Equisolid, ECameraModel::Equisolid);
 DECLARE_WIDE_ANGLE_LENS_SHADER(FWideAngleLensShader_Orthogonal, ECameraModel::Orthographic);
 DECLARE_WIDE_ANGLE_LENS_SHADER(FWideAngleLensShader_Custom, ECameraModel::KannalaBrandt);
+DECLARE_WIDE_ANGLE_LENS_SHADER(FWideAngleLensShader_LUT1D, ECameraModel::LUT1D);
 
 DECLARE_PERSPECTIVE_SHADER(FToPerspectiveShader_Perspective, ECameraModel::Perspective);
 DECLARE_PERSPECTIVE_SHADER(FToPerspectiveShader_Stereographic, ECameraModel::Stereographic);
@@ -196,15 +226,9 @@ static auto CreateDistortionParameters(
     FRDGTextureRef Destination,
     FRDGTextureRef CubeTextures[6],
     FRHISamplerState* Sampler,
-    float YFOVAngle,
-    float FocalDistance,
-    FIntPoint Size,
-    float LongitudeOffset,
-    float FOVFadeSize,
-    bool RenderEquirectangular,
-    bool FovMaskEnable)
+    const CameraModelUtil::FDistortCubemapToImageOptions& Options,
+    FVector4f CameraParams)
 {
-    const auto Center = Size / 2;
     auto Parameters = GraphBuilder.AllocParameters<typename FShaderType::FParameters>();
     Parameters->OutImage = GraphBuilder.CreateUAV(Destination);
     Parameters->CubeFront = GraphBuilder.CreateSRV(FRDGTextureSRVDesc::Create(CubeTextures[0]));
@@ -214,45 +238,25 @@ static auto CreateDistortionParameters(
     Parameters->CubeTop = GraphBuilder.CreateSRV(FRDGTextureSRVDesc::Create(CubeTextures[4]));
     Parameters->CubeBottom = GraphBuilder.CreateSRV(FRDGTextureSRVDesc::Create(CubeTextures[5]));
     Parameters->FaceSampler = Sampler;
-    Parameters->CameraParams = FVector4f(FocalDistance, FocalDistance, Center.X, Center.Y);
-    Parameters->YFOVAngle = YFOVAngle;
-    Parameters->LongitudeOffset = LongitudeOffset;
-    Parameters->FOVFadeSize = FOVFadeSize;
+    Parameters->CameraParams = CameraParams;
+    Parameters->YFOVAngle = Options.YFOVAngle;
+    Parameters->LongitudeOffset = Options.LongitudeOffset;
+    Parameters->FOVFadeSize = Options.FOVFadeSize;
+    Parameters->InvalidColor = Options.InvalidColor;
     Parameters->Flags = 0;
-    if (RenderEquirectangular)
+    if (Options.bRenderEquirectangular)
         Parameters->Flags |= WAL_SHADER_FLAGS_EQUIRECTANGULAR;
-    if (FovMaskEnable)
+    if (Options.bFOVMaskEnable)
         Parameters->Flags |= WAL_SHADER_FLAGS_FOV_MASK;
     return Parameters;
 }
 
 template <typename FShaderType>
-static void ApplyDistortion(
+static void DispatchDistortion(
     FRDGBuilder& GraphBuilder,
-    FRDGTextureRef Destination,
-    FRDGTextureRef CubeTextures[6],
-    FRHISamplerState* Sampler,
-    float YFOVAngle,
-    float FocalDistance,
-    FIntPoint Size,
-    float LongitudeOffset,
-    float FOVFadeSize,
-    bool RenderEquirectangular,
-    bool FovMaskEnable)
+    typename FShaderType::FParameters* Parameters,
+    FIntPoint Size)
 {
-    auto Parameters = CreateDistortionParameters<FShaderType>(
-        GraphBuilder,
-        Destination,
-        CubeTextures,
-        Sampler,
-        YFOVAngle,
-        FocalDistance,
-        Size,
-        LongitudeOffset,
-        FOVFadeSize,
-        RenderEquirectangular,
-        FovMaskEnable);
-
     GraphBuilder.AddPass(
         RDG_EVENT_NAME("WideAngleLens-Dispatch"),
         Parameters,
@@ -272,60 +276,85 @@ static void ApplyDistortion(
         });
 }
 
+template <typename FShaderType>
 static void ApplyDistortion(
     FRDGBuilder& GraphBuilder,
     FRDGTextureRef Destination,
     FRDGTextureRef CubeTextures[6],
     FRHISamplerState* Sampler,
-    float YFOVAngle,
-    float FocalDistance,
     FIntPoint Size,
-    float LongitudeOffset,
-    float FOVFadeSize,
-    bool RenderEquirectangular,
-    bool FovMaskEnable,
-    TArrayView<const float> KannalaBrandtCoefficients)
+    const CameraModelUtil::FDistortCubemapToImageOptions& Options,
+    FVector4f CameraParams)
+{
+    auto Parameters = CreateDistortionParameters<FShaderType>(
+        GraphBuilder, Destination, CubeTextures, Sampler, Options, CameraParams);
+    DispatchDistortion<FShaderType>(GraphBuilder, Parameters, Size);
+}
+
+static void ApplyDistortionKannalaBrandt(
+    FRDGBuilder& GraphBuilder,
+    FRDGTextureRef Destination,
+    FRDGTextureRef CubeTextures[6],
+    FRHISamplerState* Sampler,
+    FIntPoint Size,
+    const CameraModelUtil::FDistortCubemapToImageOptions& Options,
+    FVector4f CameraParams)
 {
     using FShaderType = FWideAngleLensShader_Custom;
 
     auto Parameters = CreateDistortionParameters<FShaderType>(
-        GraphBuilder,
-        Destination,
-        CubeTextures,
-        Sampler,
-        YFOVAngle,
-        FocalDistance,
-        Size,
-        LongitudeOffset,
-        FOVFadeSize,
-        RenderEquirectangular,
-        FovMaskEnable);
+        GraphBuilder, Destination, CubeTextures, Sampler, Options, CameraParams);
 
+    const auto& Coefficients = Options.KannalaBrandtCoefficients;
     auto CoefficientBuffer = CreateStructuredBuffer(
         GraphBuilder,
         TEXT("CoefficientBuffer"),
         sizeof(float),
-        KannalaBrandtCoefficients.Num(),
-        KannalaBrandtCoefficients.GetData(),
-        KannalaBrandtCoefficients.Num() * sizeof(float),
+        Coefficients.Num(),
+        Coefficients.GetData(),
+        Coefficients.Num() * sizeof(float),
         ERDGInitialDataFlags::None);
 
-    Parameters->Coefficients = GraphBuilder.CreateSRV(FRDGBufferSRVDesc(CoefficientBuffer, PF_R32_FLOAT));
+    Parameters->Coefficients = GraphBuilder.CreateSRV(FRDGBufferSRVDesc(CoefficientBuffer));
+    Parameters->CoefficientCount = static_cast<uint32>(Coefficients.Num());
+    DispatchDistortion<FShaderType>(GraphBuilder, Parameters, Size);
+}
 
-    GraphBuilder.AddPass(
-        RDG_EVENT_NAME("WideAngleLens-Dispatch"),
-        Parameters,
-        ERDGPassFlags::Compute,
-        [Parameters, Size](FRHICommandListImmediate& RHICmdList)
-        {
-            TShaderMapRef<FShaderType> ComputeShader(GetGlobalShaderMap(GMaxRHIFeatureLevel));
-            check(ComputeShader.IsValid());
+static void ApplyDistortionLUT1D(
+    FRDGBuilder& GraphBuilder,
+    FRDGTextureRef Destination,
+    FRDGTextureRef CubeTextures[6],
+    FRHISamplerState* Sampler,
+    FIntPoint Size,
+    const CameraModelUtil::FDistortCubemapToImageOptions& Options,
+    FVector4f CameraParams)
+{
+    using FShaderType = FWideAngleLensShader_LUT1D;
 
-            FComputeShaderUtils::Dispatch(RHICmdList, ComputeShader, *Parameters,
-                FComputeShaderUtils::GetGroupCount(
-                    FIntVector(Size.X, Size.Y, 1),
-                    FIntVector(SubgroupSize, 1, 1)));
-        });
+    auto Parameters = CreateDistortionParameters<FShaderType>(
+        GraphBuilder, Destination, CubeTextures, Sampler, Options, CameraParams);
+
+    // An empty table would map every pixel to Theta = 0; substitute a single
+    // zero sample so the shader's out-of-range test marks the frame invalid
+    // instead of sampling a zero-sized buffer.
+    static const float EmptyLUT[1] = { 0.0F };
+    const TArrayView<const float> LUT = Options.LUT.Num() > 0
+        ? Options.LUT
+        : TArrayView<const float>(EmptyLUT, 1);
+
+    auto LUTBuffer = CreateStructuredBuffer(
+        GraphBuilder,
+        TEXT("LensLUTBuffer"),
+        sizeof(float),
+        LUT.Num(),
+        LUT.GetData(),
+        LUT.Num() * sizeof(float),
+        ERDGInitialDataFlags::None);
+
+    Parameters->LensLUT = GraphBuilder.CreateSRV(FRDGBufferSRVDesc(LUTBuffer));
+    Parameters->LensLUTSize = static_cast<uint32>(LUT.Num());
+    Parameters->LensThetaMax = Options.ThetaMax;
+    DispatchDistortion<FShaderType>(GraphBuilder, Parameters, Size);
 }
 
 template <typename FShaderType>
@@ -394,7 +423,8 @@ static void ToPerspective(
     Parameters->SourceSampler = Sampler;
     Parameters->SourceCameraParams = FVector4f(SourceFocalDistance, SourceFocalDistance, Center.X, Center.Y);
     Parameters->DestinationCameraParams = FVector4f(DestinationFocalDistance, DestinationFocalDistance, Center.X, Center.Y);
-    Parameters->Coefficients = GraphBuilder.CreateSRV(FRDGBufferSRVDesc(CoefficientBuffer, PF_R32_FLOAT));
+    Parameters->Coefficients = GraphBuilder.CreateSRV(FRDGBufferSRVDesc(CoefficientBuffer));
+    Parameters->CoefficientCount = static_cast<uint32>(KannalaBrandtCoefficients.Num());
 
     GraphBuilder.AddPass(
         RDG_EVENT_NAME("ToPerspective-Dispatch"),
@@ -548,98 +578,52 @@ namespace CameraModelUtil
                     TexCreate_ShaderResource | TexCreate_UAV),
                 TEXT("DistortedTexture"));
 
+        // (fx, fy, cx, cy) in pixels. Legacy path: square focal length from
+        // the FOV, principal point at the image centre.
+        const FVector4f CameraParams = Options.bExplicitIntrinsics
+            ? Options.Intrinsics
+            : FVector4f(Options.YFocalLength, Options.YFocalLength, (Size / 2).X, (Size / 2).Y);
+
         switch (Options.CameraModel)
         {
         case ECameraModel::Perspective:
+        case ECameraModel::BrownConrady: // no cubemap implementation; undistorted pinhole
             ApplyDistortion<FWideAngleLensShader_Perspective>(
-                GraphBuilder,
-                DistortedTexture,
-                CubeTextures,
-                Sampler,
-                Options.YFOVAngle,
-                Options.YFocalLength,
-                Size,
-                Options.LongitudeOffset,
-                Options.FOVFadeSize,
-                Options.bRenderEquirectangular,
-                Options.bFOVMaskEnable);
+                GraphBuilder, DistortedTexture, CubeTextures, Sampler, Size, Options, CameraParams);
             break;
         case ECameraModel::Stereographic:
             ApplyDistortion<FWideAngleLensShader_Stereographic>(
-                GraphBuilder,
-                DistortedTexture,
-                CubeTextures,
-                Sampler,
-                Options.YFOVAngle,
-                Options.YFocalLength,
-                Size,
-                Options.LongitudeOffset,
-                Options.FOVFadeSize,
-                Options.bRenderEquirectangular,
-                Options.bFOVMaskEnable);
+                GraphBuilder, DistortedTexture, CubeTextures, Sampler, Size, Options, CameraParams);
             break;
         case ECameraModel::Equidistant:
             ApplyDistortion<FWideAngleLensShader_Equidistance>(
-                GraphBuilder,
-                DistortedTexture,
-                CubeTextures,
-                Sampler,
-                Options.YFOVAngle,
-                Options.YFocalLength,
-                Size,
-                Options.LongitudeOffset,
-                Options.FOVFadeSize,
-                Options.bRenderEquirectangular,
-                Options.bFOVMaskEnable);
+                GraphBuilder, DistortedTexture, CubeTextures, Sampler, Size, Options, CameraParams);
             break;
         case ECameraModel::Equisolid:
             ApplyDistortion<FWideAngleLensShader_Equisolid>(
-                GraphBuilder,
-                DistortedTexture,
-                CubeTextures,
-                Sampler,
-                Options.YFOVAngle,
-                Options.YFocalLength,
-                Size,
-                Options.LongitudeOffset,
-                Options.FOVFadeSize,
-                Options.bRenderEquirectangular,
-                Options.bFOVMaskEnable);
+                GraphBuilder, DistortedTexture, CubeTextures, Sampler, Size, Options, CameraParams);
             break;
         case ECameraModel::Orthographic:
             ApplyDistortion<FWideAngleLensShader_Orthogonal>(
-                GraphBuilder,
-                DistortedTexture,
-                CubeTextures,
-                Sampler,
-                Options.YFOVAngle,
-                Options.YFocalLength,
-                Size,
-                Options.LongitudeOffset,
-                Options.FOVFadeSize,
-                Options.bRenderEquirectangular,
-                Options.bFOVMaskEnable);
+                GraphBuilder, DistortedTexture, CubeTextures, Sampler, Size, Options, CameraParams);
             break;
         case ECameraModel::KannalaBrandt:
-            ApplyDistortion(
-                GraphBuilder,
-                DistortedTexture,
-                CubeTextures,
-                Sampler,
-                Options.YFOVAngle,
-                Options.YFocalLength,
-                Size,
-                Options.LongitudeOffset,
-                Options.FOVFadeSize,
-                Options.bRenderEquirectangular,
-                Options.bFOVMaskEnable,
-                Options.KannalaBrandtCoefficients);
+            ApplyDistortionKannalaBrandt(
+                GraphBuilder, DistortedTexture, CubeTextures, Sampler, Size, Options, CameraParams);
+            break;
+        case ECameraModel::LUT1D:
+            ApplyDistortionLUT1D(
+                GraphBuilder, DistortedTexture, CubeTextures, Sampler, Size, Options, CameraParams);
             break;
         default:
             check(false);
         }
 
-        if (Options.bRenderPerspective && !Options.bRenderEquirectangular)
+        const bool bCanRenderPerspective =
+            Options.CameraModel != ECameraModel::LUT1D &&
+            Options.CameraModel != ECameraModel::BrownConrady;
+
+        if (Options.bRenderPerspective && !Options.bRenderEquirectangular && bCanRenderPerspective)
         {
             auto PerspectiveTexture =
                 GraphBuilder.CreateTexture(
@@ -750,7 +734,7 @@ namespace CameraModelUtil
         FRHISamplerState* Sampler,
         const FDistortCubemapToImageOptions& Options)
     {
-        FTexture2DRHIRef TextureRHIs[6] = {};
+        FTextureRHIRef TextureRHIs[6] = {};
 
         for (uint8 i = 0; i != 6; ++i)
         {
@@ -814,6 +798,329 @@ namespace CameraModelUtil
         }
     }
 
+
+
+    // -----------------------------------------------------------------------
+    // FLensModelDescriptor forward/inverse core.
+    // -----------------------------------------------------------------------
+
+    namespace BrownConrady
+    {
+        // Evaluates Distort() and its Jacobian in one pass, so Undistort()'s
+        // Newton-Raphson loop only pays for the distortion math once per iteration.
+        static void EvalWithJacobian(
+            float Xn,
+            float Yn,
+            TArrayView<const float> C,
+            float& OutXd,
+            float& OutYd,
+            float OutJ[4]) // row-major [dXd/dXn, dXd/dYn, dYd/dXn, dYd/dYn]
+        {
+            const float K1 = C.Num() > 0 ? C[0] : 0.0F;
+            const float K2 = C.Num() > 1 ? C[1] : 0.0F;
+            const float K3 = C.Num() > 2 ? C[2] : 0.0F;
+            const float P1 = C.Num() > 3 ? C[3] : 0.0F;
+            const float P2 = C.Num() > 4 ? C[4] : 0.0F;
+
+            const float R2 = Xn * Xn + Yn * Yn;
+            const float R4 = R2 * R2;
+            const float Radial = 1.0F + K1 * R2 + K2 * R4 + K3 * R4 * R2;
+            const float DRadialDR2 = K1 + 2.0F * K2 * R2 + 3.0F * K3 * R4;
+
+            OutXd = Xn * Radial + 2.0F * P1 * Xn * Yn + P2 * (R2 + 2.0F * Xn * Xn);
+            OutYd = Yn * Radial + P1 * (R2 + 2.0F * Yn * Yn) + 2.0F * P2 * Xn * Yn;
+
+            const float DRadialDXn = 2.0F * Xn * DRadialDR2;
+            const float DRadialDYn = 2.0F * Yn * DRadialDR2;
+
+            OutJ[0] = Radial + Xn * DRadialDXn + 2.0F * P1 * Yn + 6.0F * P2 * Xn; // dXd/dXn
+            OutJ[1] = Xn * DRadialDYn + 2.0F * P1 * Xn + 2.0F * P2 * Yn;          // dXd/dYn
+            OutJ[2] = Yn * DRadialDXn + 2.0F * P1 * Xn + 2.0F * P2 * Yn;          // dYd/dXn
+            OutJ[3] = Radial + Yn * DRadialDYn + 6.0F * P1 * Yn + 2.0F * P2 * Xn; // dYd/dYn
+        }
+
+        FVector2f Distort(
+            float Xn,
+            float Yn,
+            TArrayView<const float> Coefficients)
+        {
+            float Xd, Yd, J[4];
+            EvalWithJacobian(Xn, Yn, Coefficients, Xd, Yd, J);
+            return FVector2f(Xd, Yd);
+        }
+
+        FVector2f Undistort(
+            float Xd,
+            float Yd,
+            TArrayView<const float> Coefficients,
+            int32 Iterations)
+        {
+            float Xn = Xd, Yn = Yd; // initial guess: undistorted ~ distorted for small distortion
+            for (int32 i = 0; i != Iterations; ++i)
+            {
+                float Fx, Fy, J[4];
+                EvalWithJacobian(Xn, Yn, Coefficients, Fx, Fy, J);
+                Fx -= Xd;
+                Fy -= Yd;
+
+                const float Det = J[0] * J[3] - J[1] * J[2];
+                if (FMath::Abs(Det) < 1e-12F)
+                    break;
+
+                const float InvDet = 1.0F / Det;
+                const float DXn = InvDet * (J[3] * Fx - J[1] * Fy);
+                const float DYn = InvDet * (-J[2] * Fx + J[0] * Fy);
+
+                Xn -= DXn;
+                Yn -= DYn;
+            }
+            return FVector2f(Xn, Yn);
+        }
+    } // BrownConrady
+
+    namespace FTheta
+    {
+        float Polynomial(float Distance, TArrayView<const float> Coefficients)
+        {
+            float Result = 0.0F, RN = 1.0F;
+            const int32 N = FMath::Min(Coefficients.Num(), 8);
+            for (int32 i = 0; i < N; ++i) { Result += Coefficients[i] * RN; RN *= Distance; }
+            return Result;
+        }
+        float SolveRadius(float Theta, TArrayView<const float> Coefficients, int32 Iterations)
+        {
+            const int32 N = FMath::Min(Coefficients.Num(), 8);
+            const float C0 = N > 0 ? Coefficients[0] : 0.0F, C1 = N > 1 ? Coefficients[1] : 0.0F;
+            float R = FMath::Abs(C1) > 1e-12F ? (Theta - C0) / C1 : Theta;
+            for (int32 It = 0; It < Iterations; ++It)
+            {
+                float D = 0.0F, RN = 1.0F;
+                for (int32 i = 1; i < N; ++i) { D += float(i) * Coefficients[i] * RN; RN *= R; }
+                if (FMath::Abs(D) < 1e-12F) break;
+                R -= (Polynomial(R, Coefficients) - Theta) / D;
+            }
+            return FMath::Max(R, 0.0F);
+        }
+    }
+
+    namespace LUT1D
+    {
+        float SampleForward(
+            float Theta,
+            TArrayView<const float> Samples,
+            float ThetaMax)
+        {
+            const int32 Count = Samples.Num();
+            if (Count == 0)
+                return 0.0F;
+            if (Count == 1)
+                return Samples[0];
+
+            const float Clamped = FMath::Clamp(Theta, 0.0F, ThetaMax);
+            const float T = ThetaMax > 0.0F ? (Clamped / ThetaMax) * static_cast<float>(Count - 1) : 0.0F;
+            const int32 I0 = FMath::Clamp(static_cast<int32>(FMath::FloorToFloat(T)), 0, Count - 1);
+            const int32 I1 = FMath::Min(I0 + 1, Count - 1);
+            const float Frac = T - static_cast<float>(I0);
+            return FMath::Lerp(Samples[I0], Samples[I1], Frac);
+        }
+
+        float SampleInverse(
+            float Distance,
+            TArrayView<const float> Samples,
+            float ThetaMax)
+        {
+            const int32 Count = Samples.Num();
+            if (Count < 2)
+                return 0.0F;
+            if (Distance <= Samples[0])
+                return 0.0F;
+            if (Distance >= Samples[Count - 1])
+                return ThetaMax;
+
+            // Samples is assumed monotonically non-decreasing.
+            int32 Lo = 0;
+            int32 Hi = Count - 1;
+            while (Hi - Lo > 1)
+            {
+                const int32 Mid = (Lo + Hi) / 2;
+                if (Samples[Mid] <= Distance)
+                    Lo = Mid;
+                else
+                    Hi = Mid;
+            }
+
+            const float R0 = Samples[Lo];
+            const float R1 = Samples[Hi];
+            const float Frac = R1 > R0 ? (Distance - R0) / (R1 - R0) : 0.0F;
+            const float IndexF = static_cast<float>(Lo) + Frac;
+            return (IndexF / static_cast<float>(Count - 1)) * ThetaMax;
+        }
+    } // LUT1D
+
+    // R(Theta) for every model except BrownConrady, which is not radially symmetric.
+    static float RadialForward(
+        ECameraModel Model,
+        float Theta,
+        TArrayView<const float> Coeffs,
+        TArrayView<const float> LUT,
+        float ThetaMax)
+    {
+        switch (Model)
+        {
+        case ECameraModel::Perspective:
+            return std::tan(Theta);
+        case ECameraModel::Stereographic:
+            return std::tan(Theta * 0.5F) * 2.0F;
+        case ECameraModel::Equidistant:
+            return Theta;
+        case ECameraModel::Equisolid:
+            return std::sin(Theta * 0.5F) * 2.0F;
+        case ECameraModel::Orthographic:
+            return std::sin(Theta);
+        case ECameraModel::KannalaBrandt:
+            return KannalaBrandt::ComputeCameraPolynomial(Theta, Coeffs);
+        case ECameraModel::LUT1D:
+            return LUT1D::SampleForward(Theta, LUT, ThetaMax);
+        case ECameraModel::FTheta:
+            return FTheta::SolveRadius(Theta, Coeffs);
+        default:
+            check(false);
+            return 0.0F;
+        }
+    }
+
+    // Theta(R) for every model except BrownConrady.
+    static float RadialInverse(
+        ECameraModel Model,
+        float Distance,
+        TArrayView<const float> Coeffs,
+        TArrayView<const float> LUT,
+        float ThetaMax)
+    {
+        switch (Model)
+        {
+        case ECameraModel::Perspective:
+            return std::atan(Distance);
+        case ECameraModel::Stereographic:
+            return std::atan(Distance * 0.5F) * 2.0F;
+        case ECameraModel::Equidistant:
+            return Distance;
+        case ECameraModel::Equisolid:
+            return std::asin(FMath::Clamp(Distance * 0.5F, -1.0F, 1.0F)) * 2.0F;
+        case ECameraModel::Orthographic:
+            return std::asin(FMath::Clamp(Distance, -1.0F, 1.0F));
+        case ECameraModel::KannalaBrandt:
+        {
+            float Theta = Distance;
+            for (uint8 i = 0; i != KannalaBrandtSolverIterations; ++i)
+            {
+                float N = Distance - KannalaBrandt::ComputeCameraPolynomial(Theta, Coeffs);
+                float D = -KannalaBrandt::ComputeCameraPolynomialDerivative(Theta, Coeffs);
+                Theta -= N / D;
+            }
+            return Theta;
+        }
+        case ECameraModel::LUT1D:
+            return LUT1D::SampleInverse(Distance, LUT, ThetaMax);
+        case ECameraModel::FTheta:
+            return FTheta::Polynomial(Distance, Coeffs);
+        default:
+            check(false);
+            return 0.0F;
+        }
+    }
+
+    static float SelectCAScale(const FLensModelDescriptor& Descriptor, ELensColorChannel Channel)
+    {
+        switch (Channel)
+        {
+        case ELensColorChannel::Red:
+            return Descriptor.CAScaleR;
+        case ELensColorChannel::Blue:
+            return Descriptor.CAScaleB;
+        default:
+            return 1.0F;
+        }
+    }
+
+    FVector2f ComputeLensImagePoint(
+        const FLensModelDescriptor& Descriptor,
+        FVector Direction,
+        ELensColorChannel Channel)
+    {
+        Direction = Direction.GetSafeNormal();
+        if (Direction.IsNearlyZero())
+            Direction = FVector(0, 0, 1);
+
+        const float CAScale = SelectCAScale(Descriptor, Channel);
+
+        float Xn, Yn;
+
+        if (Descriptor.Model == ECameraModel::BrownConrady)
+        {
+            const float Z = FMath::Max(static_cast<float>(Direction.Z), KINDA_SMALL_NUMBER);
+            const float PinholeX = static_cast<float>(Direction.X) / Z;
+            const float PinholeY = static_cast<float>(Direction.Y) / Z;
+            const FVector2f Distorted = BrownConrady::Distort(PinholeX, PinholeY, Descriptor.Coeffs);
+            Xn = Distorted.X;
+            Yn = Distorted.Y;
+        }
+        else
+        {
+            const float Theta = std::acos(FMath::Clamp(static_cast<float>(Direction.Z), -1.0F, 1.0F));
+            const float Phi = std::atan2(static_cast<float>(Direction.Y), static_cast<float>(Direction.X));
+            const float R = RadialForward(Descriptor.Model, Theta, Descriptor.Coeffs, Descriptor.LUT, Descriptor.ThetaMax);
+            Xn = R * std::cos(Phi);
+            Yn = R * std::sin(Phi);
+        }
+
+        Xn *= CAScale;
+        Yn *= CAScale;
+
+        return FVector2f(
+            Descriptor.CenterX + Descriptor.FocalX * Xn,
+            Descriptor.CenterY + Descriptor.FocalY * Yn);
+    }
+
+    FVector ComputeLensRayDirection(
+        const FLensModelDescriptor& Descriptor,
+        FVector2f ImagePoint,
+        ELensColorChannel Channel)
+    {
+        const float CAScale = SelectCAScale(Descriptor, Channel);
+        const float SafeCAScale = FMath::IsNearlyZero(CAScale) ? 1.0F : CAScale;
+
+        const float Xn = (ImagePoint.X - Descriptor.CenterX) / (Descriptor.FocalX * SafeCAScale);
+        const float Yn = (ImagePoint.Y - Descriptor.CenterY) / (Descriptor.FocalY * SafeCAScale);
+
+        if (Descriptor.Model == ECameraModel::BrownConrady)
+        {
+            const FVector2f Pinhole = BrownConrady::Undistort(Xn, Yn, Descriptor.Coeffs);
+            return FVector(Pinhole.X, Pinhole.Y, 1.0F).GetSafeNormal();
+        }
+
+        const float R = std::sqrt(Xn * Xn + Yn * Yn);
+        const float Phi = std::atan2(Yn, Xn);
+        const float Theta = RadialInverse(Descriptor.Model, R, Descriptor.Coeffs, Descriptor.LUT, Descriptor.ThetaMax);
+        const float SinTheta = std::sin(Theta);
+        return FVector(
+            SinTheta * std::cos(Phi),
+            SinTheta * std::sin(Phi),
+            std::cos(Theta));
+    }
+
+    FVector LensDirToUE(FVector LensDir)
+    {
+        // Lens: +X right, +Y down, +Z forward -> UE: +X forward, +Y right, +Z up
+        return FVector(LensDir.Z, LensDir.X, -LensDir.Y);
+    }
+
+    FVector UEDirToLens(FVector UEDir)
+    {
+        // UE: +X forward, +Y right, +Z up -> Lens: +X right, +Y down, +Z forward
+        return FVector(UEDir.Y, -UEDir.Z, UEDir.X);
+    }
+
 } // CameraModelUtil
 
 
@@ -850,6 +1157,12 @@ IMPLEMENT_SHADER_TYPE(,
 
 IMPLEMENT_SHADER_TYPE(,
     FWideAngleLensShader_Custom,
+    TEXT("/Plugin/Carla/WideAngleLens.usf"),
+    TEXT("MainCS"),
+    SF_Compute);
+
+IMPLEMENT_SHADER_TYPE(,
+    FWideAngleLensShader_LUT1D,
     TEXT("/Plugin/Carla/WideAngleLens.usf"),
     TEXT("MainCS"),
     SF_Compute);

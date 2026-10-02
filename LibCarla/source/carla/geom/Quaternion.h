@@ -8,6 +8,7 @@
 
 #include "carla/MsgPack.h"
 #include "carla/geom/Math.h"
+#include "carla/geom/RightHandedRotation.h"
 #include "carla/geom/RightHandedVector3D.h"
 #include "carla/geom/Rotation.h"
 #include "carla/geom/Vector3D.h"
@@ -17,10 +18,22 @@
 namespace carla {
 namespace geom {
 
-  /// Quaternion representing a 3D rotation. Internally stored in right-handed
-  /// math convention as `(x, y, z, w)`. Conversion to and from CARLA's
-  /// left-handed `Rotation` negates yaw and roll while leaving pitch
-  /// unchanged, matching the hybrid handedness of Unreal Engine rotators.
+  /// Quaternion representing a 3D rotation, stored as `(x, y, z, w)`.
+  ///
+  /// **Frame: right-handed**, x forward / y **left** / z up (ROS REP-103
+  /// "FLU"). It is the quaternion of `RightHandedRotation`, not of CARLA's
+  /// left-handed `Rotation`, and it is bit-for-bit the one the ROS 2 bridge
+  /// publishes (`ros2::TransformFromCarlaRotation` in
+  /// `carla/ros2/publishers/TransformQuaternion.h`).
+  ///
+  /// The `Quaternion(const Rotation &)` constructor therefore performs a
+  /// handedness change: it routes through `Rotation::ToRightHanded()`, which
+  /// negates **yaw and pitch** and leaves roll alone. (The #9751 commit
+  /// message says "yaw and roll"; that is wrong -- see
+  /// `Docs/coordinate_conventions.md`.) With those signs the basis vectors of
+  /// `Quaternion(r)` -- which convert back to CARLA's frame on the way out --
+  /// reproduce, column for column, the matrix of `Rotation::RotateVector` and
+  /// `Transform::GetMatrix`.
   class Quaternion {
   public:
 
@@ -48,16 +61,16 @@ namespace geom {
         w(iw) {
     }
 
-    /// Convert a CARLA Euler rotation (degrees, hybrid handedness) into a
-    /// quaternion. Yaw and roll are negated on the way in so the internal
-    /// quaternion math operates in a consistent right-handed frame.
-    explicit Quaternion(const Rotation &rotation) {
+    /// Quaternion of a right-handed (FLU) Euler triple, degrees, intrinsic
+    /// Z-Y-X: `q = qz(yaw) * qy(pitch) * qx(roll)`. This is the textbook
+    /// right-handed roll-pitch-yaw formula -- no sign tricks live here.
+    explicit Quaternion(const RightHandedRotation &rotation) {
       const float half_yaw_rad =
-          static_cast<float>(Math::ToRadians<double>(-rotation.yaw)) * 0.5f;
+          static_cast<float>(Math::ToRadians<double>(rotation.yaw)) * 0.5f;
       const float half_pitch_rad =
           static_cast<float>(Math::ToRadians<double>(rotation.pitch)) * 0.5f;
       const float half_roll_rad =
-          static_cast<float>(Math::ToRadians<double>(-rotation.roll)) * 0.5f;
+          static_cast<float>(Math::ToRadians<double>(rotation.roll)) * 0.5f;
 
       const float cy = std::cos(half_yaw_rad);
       const float sy = std::sin(half_yaw_rad);
@@ -66,19 +79,50 @@ namespace geom {
       const float cr = std::cos(half_roll_rad);
       const float sr = std::sin(half_roll_rad);
 
-      w = cy * cp * cr + sy * sp * sr;
-      x = cy * cp * sr - sy * sp * cr;
-      y = cy * sp * cr + sy * cp * sr;
-      z = sy * cp * cr - cy * sp * sr;
+      w = cr * cp * cy + sr * sp * sy;
+      x = sr * cp * cy - cr * sp * sy;
+      y = cr * sp * cy + sr * cp * sy;
+      z = cr * cp * sy - sr * sp * cy;
+    }
+
+    /// Quaternion of a CARLA (left-handed) Euler rotation, degrees.
+    ///
+    /// The handedness change happens exactly once, in
+    /// `Rotation::ToRightHanded()`: **yaw and pitch are negated, roll is
+    /// not**. The resulting `(x, y, z, w)` is in the right-handed FLU frame
+    /// and is the value the ROS 2 bridge publishes.
+    explicit Quaternion(const Rotation &rotation)
+      : Quaternion(rotation.ToRightHanded()) {
     }
 
     // =========================================================================
     // -- Other methods --------------------------------------------------------
     // =========================================================================
 
-    /// Convert this quaternion back to a CARLA Euler rotation. Inverse of the
-    /// `Quaternion(Rotation)` constructor; yaw and roll are negated on the
-    /// way out to undo the handedness flip applied at construction.
+    /// This rotation as right-handed (FLU) Euler angles, degrees, intrinsic
+    /// Z-Y-X. Inverse of `Quaternion(const RightHandedRotation &)`.
+    RightHandedRotation ToRightHandedRotation() const {
+      const float sin_pitch = 2.0f * (w * y - z * x);
+      const float clamped_sin_pitch =
+          (sin_pitch > 1.0f) ? 1.0f : (sin_pitch < -1.0f) ? -1.0f : sin_pitch;
+      const float pitch_rad = std::asin(clamped_sin_pitch);
+
+      const float roll_rad = std::atan2(
+          2.0f * (w * x + y * z),
+          1.0f - 2.0f * (x * x + y * y));
+      const float yaw_rad = std::atan2(
+          2.0f * (w * z + x * y),
+          1.0f - 2.0f * (y * y + z * z));
+
+      return RightHandedRotation(
+          static_cast<float>(Math::ToDegrees<double>(roll_rad)),
+          static_cast<float>(Math::ToDegrees<double>(pitch_rad)),
+          static_cast<float>(Math::ToDegrees<double>(yaw_rad)));
+    }
+
+    /// Convert this quaternion back to a CARLA (left-handed) Euler rotation.
+    /// Inverse of the `Quaternion(Rotation)` constructor; the handedness
+    /// change is undone once, by `Rotation::FromRightHanded()`.
     Rotation Rotator() const {
       const float sin_pitch = 2.0f * (w * y - z * x);
       const float clamped_sin_pitch =
@@ -92,10 +136,10 @@ namespace geom {
           2.0f * (w * z + x * y),
           1.0f - 2.0f * (y * y + z * z));
 
-      return Rotation(
+      return Rotation::FromRightHanded(RightHandedRotation(
+          static_cast<float>(Math::ToDegrees<double>(roll_rad)),
           static_cast<float>(Math::ToDegrees<double>(pitch_rad)),
-          static_cast<float>(Math::ToDegrees<double>(-yaw_rad)),
-          static_cast<float>(Math::ToDegrees<double>(-roll_rad)));
+          static_cast<float>(Math::ToDegrees<double>(yaw_rad))));
     }
 
     /// Rotate a right-handed vector by this quaternion. Computes

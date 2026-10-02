@@ -51,7 +51,7 @@
         type: list
         doc: >
           A list of commands to execute in batch. The commands available are listed right above, in the method **<font color="#7fb800">apply_batch()</font>**.
-      - param_name: due_tick_cue
+      - param_name: do_tick
         type: bool
         default: false
         doc: >
@@ -126,7 +126,7 @@
         type: str
         doc: >
           Name of the file containing the information of the simulation.
-      - param_name: start
+      - param_name: time_start
         type: float
         param_units: seconds
         doc: >
@@ -159,7 +159,7 @@
     # --------------------------------------
     - def_name: show_recorder_actors_blocked
       params:
-      - param_name: filename
+      - param_name: name
         type: str
         doc: >
           Name of the recorded file to load
@@ -179,34 +179,34 @@
      # --------------------------------------
     - def_name: show_recorder_collisions
       params:
-      - param_name: filename
+      - param_name: name
         type: str
         doc: >
           Name or absolute path of the file recorded, depending on your previous choice.
-      - param_name: category1
+      - param_name: type1
         type: single char
         doc: >
           Character variable specifying a first type of actor involved in the collision.
-      - param_name: category2
+      - param_name: type2
         type: single char
         doc: >
           Character variable specifying the second type of actor involved in the collision.
       return: string
       doc: >
         The terminal will show the collisions registered by the recorder. These can be filtered by specifying the type of actor involved.
-        The categories will be specified in `category1` and `category2` as follows:
+        The categories will be specified in `type1` and `type2` as follows:
           'h' = Hero, the one vehicle that can be controlled manually or managed by the user.
           'v' = Vehicle
           'w' = Walker
           't' = Traffic light
           'o' = Other
           'a' = Any
-        If you want to see only collisions between a vehicles and a walkers, use for `category1` as 'v' and `category2` as 'w' or vice versa.
+        If you want to see only collisions between a vehicles and a walkers, use for `type1` as 'v' and `type2` as 'w' or vice versa.
         If you want to see all the collisions (filter off) you can use 'a' for both parameters.
     # --------------------------------------
     - def_name: show_recorder_file_info
       params:
-      - param_name: filename
+      - param_name: name
         type: str
         doc: >
           Name or absolute path of the file recorded, depending on your previous choice.
@@ -220,7 +220,7 @@
     # --------------------------------------
     - def_name: start_recorder
       params:
-      - param_name: filename
+      - param_name: name
         type: str
         doc: >
           Name of the file to write the recorded data. A simple name will save the recording in 'CarlaUnreal/Saved/recording.log'. Otherwise, if some folder appears in the name, it will be considered an absolute path.
@@ -250,6 +250,32 @@
           '/Game/Carla/Maps/Town06',
           '/Game/Carla/Maps/Town07']
     # --------------------------------------
+    - def_name: get_content_packs
+      params:
+      return: list(carla.ContentPackInfo)
+      doc: >
+        Returns the content packs known to the server: the ones found at startup in `CarlaUnreal/Packs/`, in the directories given with `-carla-packs=<dir>[;<dir>]` or `$CARLA_PACKS`, and the ones mounted with carla.Client.mount_content_pack. Unmounted packs are listed with `mounted=False`.
+    # --------------------------------------
+    - def_name: mount_content_pack
+      params:
+      - param_name: path
+        type: str
+        doc: >
+          Path on the server host of the pack directory (or its `carla-pack.json`).
+      return: carla.ContentPackInfo
+      doc: >
+        Mounts a content pack (a content-only Unreal plugin cooked against this CARLA release, with a `carla-pack.json` manifest) into the running server without a restart. Its maps are listed by carla.Client.get_available_maps and loadable with carla.Client.load_world, and its catalogs (`Config/*.json`) are added to the blueprint library on the next episode. Raises a RuntimeError naming the reason when the path is not a pack, the pack was built for another base release or platform, or a pack of that name is already mounted.
+    # --------------------------------------
+    - def_name: unmount_content_pack
+      params:
+      - param_name: name
+        type: str
+        doc: >
+          Name of the pack, as reported by carla.Client.get_content_packs.
+      return: bool
+      doc: >
+        Unmounts a content pack. Refused (RuntimeError) while a map of the pack is the current world or objects loaded from it are still alive; load another map first. Returns True on success.
+    # --------------------------------------
     - def_name: get_client_version
       params:
       return: str
@@ -264,7 +290,7 @@
     # --------------------------------------
     - def_name: get_trafficmanager
       params:
-      - param_name: client_connection
+      - param_name: port
         type: int
         default: 8000
         doc: >
@@ -342,6 +368,41 @@
           Name of the file you are requesting.
       doc: >
         Requests one of the required files returned by carla.Client.get_required_files.
+
+  - class_name: ContentPackInfo
+    # - DESCRIPTION ------------------------
+    doc: >
+      Description of a content pack known to the server, as returned by carla.Client.get_content_packs and carla.Client.mount_content_pack.
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: name
+      type: str
+      doc: >
+        Pack name; also the plugin name and the `/<name>/` package mount point.
+    - var_name: version
+      type: str
+      doc: >
+        Pack version from the manifest.
+    - var_name: base_release
+      type: str
+      doc: >
+        CARLA base release the pack was cooked against, e.g. `carla-0.10.2-Linux`.
+    - var_name: path
+      type: str
+      doc: >
+        Absolute directory of the pack on the server host.
+    - var_name: mounted
+      type: bool
+      doc: >
+        True while the pack is mounted in the server.
+    - var_name: maps
+      type: list(str)
+      doc: >
+        Map names declared by the pack manifest.
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __str__
+    # --------------------------------------
 
   - class_name: TrafficManager
     # - DESCRIPTION ------------------------

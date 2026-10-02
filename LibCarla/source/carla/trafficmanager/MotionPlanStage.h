@@ -34,12 +34,25 @@ private:
   const LocalizationFrame &localization_frame;
   const CollisionFrame &collision_frame;
   const TLFrame &tl_frame;
-  const cc::World &world;
   // Structure holding the controller state for registered vehicles.
   std::unordered_map<ActorId, StateEntry> pid_state_map;
   // Structure to keep track of duration between teleportation
   // in hybrid physics mode.
   std::unordered_map<ActorId, cc::Timestamp> teleportation_instance;
+  // Stuck/misaligned-vehicle recovery bookkeeping: when the vehicle first
+  // stopped making commanded progress, and the K-turn maneuver state
+  // (current phase deadline + whether the phase reverses).
+  struct RecoveryState {
+    double phase_until;
+    bool reversing;
+    // Turn direction latched at maneuver entry. Recomputing it from the
+    // instantaneous deviation sign every tick makes the maneuver cancel
+    // itself when the target sits near dead-astern: each rock past 180 deg
+    // flips the sign and the phases undo each other.
+    float steer_direction;
+  };
+  std::unordered_map<ActorId, double> stuck_since;
+  std::unordered_map<ActorId, RecoveryState> recovery_state;
   ControlFrame &output_array;
   cc::Timestamp current_timestamp;
   RandomGenerator &random_device;
@@ -77,6 +90,7 @@ private:
                                   float max_target_velocity);
 
   float GetTurnTargetVelocity(const Buffer &waypoint_buffer,
+                              const cg::Location vehicle_location,
                               float max_target_velocity);
 
 public:
@@ -92,11 +106,14 @@ public:
                   const LocalizationFrame &localization_frame,
                   const CollisionFrame &collision_frame,
                   const TLFrame &tl_frame,
-                  const cc::World &world,
                   ControlFrame &output_array,
                   RandomGenerator &random_device,
                   const LocalMapPtr &local_map,
                   std::unordered_map<ActorId, std::pair<float, bool>> &large_vehicles);
+
+  /// Pins one frame for the whole cycle; reading it per vehicle lets a frame
+  /// land mid-cycle and skews the controller period within a cycle.
+  void SetCycleTimestamp(const cc::Timestamp &timestamp);
 
   void Update(const unsigned long index);
 

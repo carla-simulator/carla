@@ -15,6 +15,7 @@
 #include "carla/rpc/ActorDefinition.h"
 #include "carla/rpc/AttachmentType.h"
 #include "carla/rpc/Command.h"
+#include "carla/rpc/ContentPackInfo.h"
 #include "carla/rpc/CommandResponse.h"
 #include "carla/rpc/CustomV2XBytes.h"
 #include "carla/rpc/EnvironmentObject.h"
@@ -129,6 +130,12 @@ namespace detail {
         const rpc::MaterialParameter& parameter,
         const rpc::TextureFloatColor& Texture);
 
+    void SetSkyLightMap(const rpc::TextureFloatColor& panorama, float intensity, int32_t face_size);
+
+    void ClearSkyLightMap();
+
+    bool HasSkyLightMap() const;
+
     std::vector<std::string> GetNamesOfAllObjects() const;
 
     rpc::EpisodeInfo GetEpisodeInfo();
@@ -136,6 +143,31 @@ namespace detail {
     rpc::MapInfo GetMapInfo();
 
     std::vector<uint8_t> GetNavigationMesh() const;
+
+    /// True when the server hosts the pedestrian navigation (a
+    /// World-Partitioned navmesh exists in the current world). Returns false
+    /// on legacy .bin towns and on servers that predate the RPC.
+    bool IsNavigationServerSide() const;
+
+    /// Server-side random point on the loaded navmesh. Returns the failure
+    /// sentinel Location(0, 0, -1e6) when no point could be found.
+    geom::Location GetRandomLocationFromNavigation() const;
+
+    bool WalkerStartNavigation(rpc::ActorId walker) const;
+
+    bool WalkerGoToLocation(rpc::ActorId walker, const geom::Location &destination) const;
+
+    bool WalkerSetMaxSpeed(rpc::ActorId walker, float max_speed) const;
+
+    bool WalkerStopNavigation(rpc::ActorId walker) const;
+
+    /// Probability that a walker whose navigation starts after this call may
+    /// cross roads (server-side navigation only).
+    bool SetPedestriansCrossFactor(float percentage) const;
+
+    /// Seed for the server-side navigation RNG (crosser draw); applies to
+    /// walkers whose navigation starts after this call.
+    bool SetPedestriansSeed(uint32_t seed) const;
 
     bool SetFilesBaseFolder(const std::string &path);
 
@@ -148,6 +180,12 @@ namespace detail {
     std::vector<uint8_t> GetCacheFile(const std::string &name, const bool request_otherwise = true) const;
 
     std::vector<std::string> GetAvailableMaps();
+
+    std::vector<rpc::ContentPackInfo> GetContentPacks();
+
+    rpc::ContentPackInfo MountContentPack(const std::string &path);
+
+    bool UnmountContentPack(const std::string &name);
 
     std::vector<rpc::ActorDefinition> GetActorDefinitions();
 
@@ -166,6 +204,12 @@ namespace detail {
     void SetIMUSensorGravity(float gravity);
 
     bool IsWeatherEnabled();
+
+    void SetPublishTF(bool publish_tf);
+
+    bool GetPublishTF() const;
+
+    std::vector<geom::Transform> GetEgoSpawnPoints() const;
 
     std::vector<rpc::Actor> GetActorsById(const std::vector<ActorId> &ids);
 
@@ -226,6 +270,13 @@ namespace detail {
         const geom::Vector3D &vector);
 
     void DisableActorConstantVelocity(
+        rpc::ActorId actor);
+
+    void EnableActorConstantAcceleration(
+        rpc::ActorId actor,
+        const geom::Vector3D &vector);
+
+    void DisableActorConstantAcceleration(
         rpc::ActorId actor);
 
     void AddActorImpulse(
@@ -454,6 +505,11 @@ namespace detail {
     void ClearDebugShape();
 
     void ClearDebugString();
+
+    void SpawnCustomMesh(
+        const std::vector<float> &vertices,
+        const std::vector<uint32_t> &triangles,
+        const std::string &material);
 
     void ApplyBatch(
         std::vector<rpc::Command> commands,

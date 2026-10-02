@@ -66,7 +66,7 @@ void ACityMapGenerator::PreSave(FObjectPreSaveContext ObjectSaveContext)
 #if WITH_EDITOR
   if (bGenerateRoadMapOnSave) {
     // Generate road map only if we are not cooking.
-    FCoreUObjectDelegates::OnObjectSaved.Broadcast(this);
+    FCoreUObjectDelegates::OnObjectPreSave.Broadcast(this, ObjectSaveContext);
     if (!GIsCookerLoadingPackage) {
       check(RoadMap != nullptr);
       GenerateRoadMap();

@@ -5,7 +5,7 @@
 #include <fastdds/dds/subscriber/DataReaderListener.hpp>
 #include <fastdds/dds/core/status/SubscriptionMatchedStatus.hpp>
 #include <fastdds/dds/subscriber/SampleInfo.hpp>
-#include "carla/ros2/types/String.h"
+#include "carla/ros2/types/msg/String.h"
 #include "carla/ros2/subscribers/BasicSubscriber.h"
 #include "carla/ros2/ROS2CallbackData.h"
 
@@ -24,7 +24,7 @@ namespace ros2 {
 
       int _matched {0};
       BasicSubscriber* _owner {nullptr};
-      std_msgs::msg::String _message {};
+      msg::String _message {};
     };
 
     void BasicListenerImpl::on_subscription_matched(efd::DataReader* reader, const efd::SubscriptionMatchedStatus& info)
@@ -47,7 +47,7 @@ namespace ros2 {
       efd::SampleInfo info;
       eprosima::fastrtps::types::ReturnCode_t rcode = reader->take_next_sample(&_message, &info);
       if (rcode == erc::ReturnCodeValue::RETCODE_OK) {
-        _owner->ForwardMessage(_message.data());
+        _owner->ForwardMessage(_message.data);
       }
       if (rcode == erc::ReturnCodeValue::RETCODE_ERROR) {
           std::cerr << "RETCODE_ERROR" << std::endl;
