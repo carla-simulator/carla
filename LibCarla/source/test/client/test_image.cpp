@@ -10,7 +10,12 @@
 #include <carla/image/ImageIO.h>
 #include <carla/image/ImageView.h>
 
+#include <array>
+#include <chrono>
+#include <cstdio>
+#include <fstream>
 #include <memory>
+#include <string>
 
 template <typename ViewT, typename PixelT>
 struct TestImage {
@@ -185,3 +190,38 @@ TEST(image, semantic_segmentation) {
     }
   }
 }
+
+#if LIBCARLA_IMAGE_SUPPORT_PNG
+TEST(image, rejects_png_with_malformed_zlib_stream) {
+  // Valid PNG framing and chunk CRCs, but the IDAT payload is not a zlib stream.
+  // This exercises the libpng-to-zlib error path instead of only PNG header parsing.
+  constexpr std::array<unsigned char, 60u> malformed_png = {
+      0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a,
+      0x00, 0x00, 0x00, 0x0d, 0x49, 0x48, 0x44, 0x52,
+      0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01,
+      0x08, 0x00, 0x00, 0x00, 0x00, 0x3a, 0x7e, 0x9b,
+      0x55, 0x00, 0x00, 0x00, 0x03, 0x49, 0x44, 0x41,
+      0x54, 0x00, 0x00, 0x00, 0xf9, 0xca, 0x4e, 0xa2,
+      0x00, 0x00, 0x00, 0x00, 0x49, 0x45, 0x4e, 0x44,
+      0xae, 0x42, 0x60, 0x82};
+  const std::string path = std::string(::testing::TempDir()) + "malformed-zlib-" +
+      std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()) + ".png";
+  struct RemoveFile {
+    std::string path;
+
+    ~RemoveFile() {
+      std::remove(path.c_str());
+    }
+  } remove_file{path};
+
+  {
+    std::ofstream output(path, std::ios::binary);
+    ASSERT_TRUE(output);
+    output.write(reinterpret_cast<const char *>(malformed_png.data()), malformed_png.size());
+    ASSERT_TRUE(output);
+  }
+
+  boost::gil::rgba8_image_t image;
+  EXPECT_THROW(carla::image::ImageIO::ReadImage(path, image), std::ios_base::failure);
+}
+#endif // LIBCARLA_IMAGE_SUPPORT_PNG

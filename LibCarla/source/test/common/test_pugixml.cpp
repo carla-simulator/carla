@@ -5,9 +5,18 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "test.h"
-#include <pugixml/pugixml.hpp>
+#include <pugixml.hpp>
 
 using namespace pugi;
+
+TEST(pugixml, rejects_malformed_xml) {
+  xml_document document;
+  const auto result = document.load_string("<OpenDRIVE><road id=\"1\"></OpenDRIVE>");
+
+  EXPECT_FALSE(result);
+  EXPECT_EQ(result.status, status_end_element_mismatch);
+  EXPECT_GT(result.offset, 0u);
+}
 
 TEST(pugixml, null_pointer_dereference_insert_move_before) {
   // Create an empty node (without root, _root = nullptr)

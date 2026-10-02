@@ -13,7 +13,7 @@
 #include "carla/road/MapBuilder.h"
 #include "carla/geom/Math.h"
 
-#include <third-party/pugixml/pugixml.hpp>
+#include <pugixml.hpp>
 
 #include <string>
 #include <vector>
