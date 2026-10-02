@@ -111,7 +111,7 @@ It is important to note that to get the 3D coordinates of the bounding box in wo
 actor.bounding_box.get_world_vertices(actor.get_transform())
 ```
 
-For objects in the map like buildings, traffic lights and road signs, the bounding box can be retrieved through the [carla.World]((python_api.md#carla.World)) method `get_level_bbs()`. A [carla.CityObjectLabel]((python_api.md#carla.CityObjectLabel)) can be used as an argument to filter the bounding box list to relevant objects:
+For objects in the map like buildings, traffic lights and road signs, the bounding box can be retrieved through the [carla.World](python_api.md#carla.World) method `get_level_bbs()`. A [carla.CityObjectLabel](python_api.md#carla.CityObjectLabel) can be used as an argument to filter the bounding box list to relevant objects:
 
 ```py
 # Retrieve all bounding boxes for traffic lights within the level
