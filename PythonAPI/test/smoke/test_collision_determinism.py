@@ -159,7 +159,8 @@ class TwoCarsHighSpeedCollision(Scenario):
         veh_refs = [self.world.get_actor(x) for x in veh_ids]
 
         if (0 in veh_ids) or (None in veh_refs):
-            self.fail("%s: The test cars could not be correctly spawned" % (bp_veh.id))
+            errors = ", ".join(x.error for x in responses if x.has_error())
+            raise RuntimeError("The test actors could not be correctly spawned: %s" % errors)
 
         self.add_actor(veh_refs[0], "Car")
         self.add_actor(veh_refs[1], "Car")
@@ -227,7 +228,8 @@ class CarBikeCollision(Scenario):
         veh_refs = [self.world.get_actor(x) for x in veh_ids]
 
         if (0 in veh_ids) or (None in veh_refs):
-            self.fail("%s: The test cars could not be correctly spawned" % (bp_veh.id))
+            errors = ", ".join(x.error for x in responses if x.has_error())
+            raise RuntimeError("The test actors could not be correctly spawned: %s" % errors)
 
         self.add_actor(veh_refs[0], "Car")
         self.add_actor(veh_refs[1], "Bike")
@@ -261,7 +263,8 @@ class CarWalkerCollision(Scenario):
         veh_refs = [self.world.get_actor(x) for x in veh_ids]
 
         if (0 in veh_ids) or (None in veh_refs):
-            self.fail("%s: The test cars could not be correctly spawned" % (bp_veh.id))
+            errors = ", ".join(x.error for x in responses if x.has_error())
+            raise RuntimeError("The test actors could not be correctly spawned: %s" % errors)
 
         self.wait(1)
 
