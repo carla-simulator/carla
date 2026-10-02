@@ -81,8 +81,11 @@ void FFrameData::GetFrameData(UCarlaEpisode *ThisEpisode, bool bAdditionalData, 
 
 void FFrameData::PlayFrameData(
     UCarlaEpisode *ThisEpisode,
-    std::unordered_map<uint32_t, uint32_t>& MappedId)
+    std::unordered_map<uint32_t, uint32_t>& MappedId,
+    TFunctionRef<void(uint32_t, uint32_t, bool)> OnActorAdded,
+    TFunctionRef<void(uint32_t)> OnActorRemoved)
 {
+  Episode = ThisEpisode;
 
   for(const CarlaRecorderEventAdd &EventAdd : EventsAdd.GetEvents())
   {
@@ -108,6 +111,7 @@ void FFrameData::PlayFrameData(
         // mapping id (recorded Id is a new Id in replayer)
         MappedId[OldId] = Result.second;
         UE_LOG(LogCarla, Log, TEXT("actor created"));
+        OnActorAdded(OldId, Result.second, true);
         break;
 
       // actor reused from existing
@@ -115,6 +119,7 @@ void FFrameData::PlayFrameData(
         // mapping id (say desired Id is mapped to what)
         MappedId[OldId] = Result.second;
         UE_LOG(LogCarla, Log, TEXT("actor reused"));
+        OnActorAdded(OldId, Result.second, false);
         break;
     }
   }
@@ -123,6 +128,7 @@ void FFrameData::PlayFrameData(
   {
     ProcessReplayerEventDel(MappedId[EventDel.DatabaseId]);
     MappedId.erase(EventDel.DatabaseId);
+    OnActorRemoved(EventDel.DatabaseId);
   }
 
   for (const CarlaRecorderPosition &Position : Positions.GetPositions())
