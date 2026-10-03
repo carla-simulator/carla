@@ -781,25 +781,53 @@ void ACarlaWheeledVehicle::SetWheelSteerDirection(EVehicleWheelLocation WheelLoc
   }
 }
 
-float ACarlaWheeledVehicle::GetWheelSteerAngle(EVehicleWheelLocation WheelLocation) {
+float ACarlaWheeledVehicle::GetWheelSteerAngle(EVehicleWheelLocation WheelLocation)
+{
+  UChaosWheeledVehicleMovementComponent* Movement = GetChaosWheeledVehicleMovementComponent();
+  if (Movement == nullptr)
+  {
+    return 0.0F;
+  }
 
-#if 0 // @CARLAUE5     // ToDo We need to investigate about this
-  check((uint8)WheelLocation >= 0)
-    UVehicleAnimationInstance* VehicleAnim = Cast<UVehicleAnimationInstance>(GetMesh()->GetAnimInstance());
-  check(VehicleAnim != nullptr)
-    check(VehicleAnim->GetWheeledVehicleMovementComponent() != nullptr)
+  if (!bPhysicsEnabled)
+  {
+    // Without physics the wheels are posed by the animation blueprint, and the
+    // UE5 path that would write that pose is still unimplemented (see
+    // SetWheelSteerDirection above), so there is no wheel angle to report yet.
+    return 0.0F;
+  }
 
-    if (bPhysicsEnabled == true)
-    {
-      return VehicleAnim->GetWheeledVehicleMovementComponent()->Wheels[(uint8)WheelLocation]->GetSteerAngle();
-    }
-    else
-    {
-      return VehicleAnim->GetWheelRotAngle((uint8)WheelLocation);
-    }
-#else
-  return 0.0F;
-#endif
+  // EVehicleWheelLocation is the index into the movement component's wheel
+  // arrays: UChaosVehicleWheel::WheelIndex is documented as "our index in the
+  // vehicle's (and setup's) wheels array", and the rest of this class already
+  // addresses Wheels/WheelSetups that way (physics control, friction scales).
+  const int32 WheelIndex = static_cast<int32>(WheelLocation);
+  if (!Movement->Wheels.IsValidIndex(WheelIndex))
+  {
+    // Reachable from the client for any vehicle with fewer wheels than the
+    // requested location -- a bike asked for BL_Wheel, say -- so it must not
+    // bring the server down.
+    UE_LOG(LogCarla, Warning,
+        TEXT("GetWheelSteerAngle: wheel location %d does not exist on %s, which has %d wheels."),
+        WheelIndex, *GetName(), Movement->Wheels.Num());
+    return 0.0F;
+  }
+
+  const UChaosVehicleWheel* Wheel = Movement->Wheels[WheelIndex];
+  // GetSteerAngle() reads the async solver's output and check()s that it is
+  // there, so the same conditions are tested here first: that output only
+  // exists once the physics state has been created and stepped.
+  const TUniquePtr<FPhysicsVehicleOutput>& VehicleOutput = Movement->PhysicsVehicleOutput();
+  if (Wheel == nullptr || !VehicleOutput.IsValid() ||
+      !VehicleOutput->Wheels.IsValidIndex(Wheel->WheelIndex))
+  {
+    return 0.0F;
+  }
+
+  // Chaos keeps the steering angle in degrees (the solver writes
+  // FWheelsOutput::SteeringAngle in degrees), which is the unit the Python API
+  // promises, so it is returned unconverted.
+  return Wheel->GetSteerAngle();
 }
 
 void ACarlaWheeledVehicle::SetSimulatePhysics(bool enabled) {
