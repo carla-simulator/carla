@@ -14,6 +14,7 @@
 #include "carla/ros2/middleware/MiddlewareConfig.h"
 #include "carla/streaming/detail/Types.h"
 
+#include <atomic>
 #include <functional>
 #include <memory>
 #include <shared_mutex>
@@ -300,7 +301,7 @@ private:
 
   bool _enabled{false};
   bool _clock_owner{true};
-  bool _publish_tf{true};
+  std::atomic<bool> _publish_tf{true};
   mutable std::shared_mutex _owner_query_mutex;
   PublicationOwnerQuery _owner_query;
   uint64_t _frame{0};

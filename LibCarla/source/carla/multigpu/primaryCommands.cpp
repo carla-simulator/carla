@@ -95,6 +95,11 @@ std::optional<token_type> PrimaryCommands::SendGetToken(
   return new_token;
 }
 
+void PrimaryCommands::SendPublishTF(bool publish_tf) {
+  const uint8_t value = publish_tf ? 1u : 0u;
+  _router->Write(MultiGPUCommand::SET_PUBLISH_TF, carla::Buffer(&value, sizeof(value)));
+}
+
 // send to know if a connection is alive
 void PrimaryCommands::SendIsAlive() {
   std::scoped_lock<std::mutex> lock(_mutex);

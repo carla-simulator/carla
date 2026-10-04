@@ -1060,6 +1060,7 @@ void FCarlaServer::FPimpl::BindActions()
     auto ROS2 = carla::ros2::ROS2::GetInstance();
     if (ROS2 && ROS2->IsEnabled()) {
       ROS2->SetPublishTF(publish_tf);
+      SecondaryServer->GetCommander().SendPublishTF(publish_tf);
       return R<void>::Success();
     }
     RESPOND_ERROR("set_publish_tf: ROS2 is not enabled");

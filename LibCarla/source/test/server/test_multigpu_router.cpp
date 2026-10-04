@@ -1592,3 +1592,22 @@ TEST_F(MultiGpuRouterTest, is_routed_does_not_wait_for_a_request_in_flight) {
   ASSERT_EQ(pending.wait_for(std::chrono::seconds(2)), std::future_status::ready);
   EXPECT_TRUE(commander.IsRouted(77u));
 }
+
+TEST(MultiGpuCommands, set_publish_tf_is_appended_after_existing_commands) {
+  EXPECT_GT(
+      static_cast<uint32_t>(carla::multigpu::MultiGPUCommand::SET_PUBLISH_TF),
+      static_cast<uint32_t>(carla::multigpu::MultiGPUCommand::YOU_ALIVE));
+}
+
+TEST_F(MultiGpuRouterTest, send_publish_tf_broadcasts_to_connected_sessions_and_tolerates_none) {
+  auto router = std::make_shared<carla::multigpu::Router>(TESTING_PORT);
+  router->SetCallbacks();
+  router->AsyncRun(1u);
+
+  router->GetCommander().SendPublishTF(false);
+
+  auto session = MakeFakeSession();
+  router->TestConnectSession(session);
+  router->GetCommander().SendPublishTF(true);
+  router->Stop();
+}

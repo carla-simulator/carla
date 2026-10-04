@@ -307,6 +307,16 @@ void FCarlaEngine::NotifyInitGame(const UCarlaSettings &Settings)
             Secondary->Write(std::move(buf));
             break;
           }
+          case carla::multigpu::MultiGPUCommand::SET_PUBLISH_TF:
+          {
+            #if defined(WITH_ROS2)
+            if (!Data.empty())
+            {
+              carla::ros2::ROS2::GetInstance()->SetPublishTF(Data.data()[0] != 0u);
+            }
+            #endif
+            break;
+          }
           case carla::multigpu::MultiGPUCommand::IS_ENABLED_ROS:
           {
             const auto sensor_id = FindAliasedStream(Data);
@@ -747,6 +757,12 @@ void FCarlaEngine::OnPostTick(UWorld *World, ELevelTick TickType, float DeltaSec
     {
       if (SecondaryServer->HasClientsConnected()) {
         const bool bWasNewConnection = bNewConnection.exchange(false);
+        #if defined(WITH_ROS2)
+        if (bWasNewConnection)
+        {
+          SecondaryServer->GetCommander().SendPublishTF(carla::ros2::ROS2::GetInstance()->GetPublishTF());
+        }
+        #endif
         GetCurrentEpisode()->GetFrameData().GetFrameData(GetCurrentEpisode(), true, bWasNewConnection);
         std::ostringstream OutStream;
         GetCurrentEpisode()->GetFrameData().Write(OutStream);
