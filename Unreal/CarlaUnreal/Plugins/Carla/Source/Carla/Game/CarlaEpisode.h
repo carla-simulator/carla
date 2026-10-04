@@ -266,6 +266,10 @@ public:
       AActor *Parent,
       EAttachmentType InAttachmentType = EAttachmentType::Rigid);
 
+  /// Publishes @a Child's ROS 2 topics under every ancestor of @a Parent
+  /// (included) that has a ros_name. No-op when ROS 2 is disabled.
+  void AddActorRosParents(FCarlaActor &Child, FCarlaActor &Parent);
+
   /// @copydoc FActorDispatcher::DestroyActor(AActor*)
   UFUNCTION(BlueprintCallable)
   bool DestroyActor(AActor *Actor)
@@ -402,14 +406,26 @@ private:
 
   void TickTimers(float DeltaSeconds)
   {
-    ElapsedGameTime += DeltaSeconds;
     SetVisualGameTime(VisualGameTime + DeltaSeconds);
+    SetElapsedGameTime(ElapsedGameTime + DeltaSeconds);
+  }
+
+  /// Multi-GPU secondary: follows the primary's episode time instead of
+  /// accumulating its own.
+  void TickTimersFromPrimary(float DeltaSeconds, double PrimaryElapsedGameTime)
+  {
+    SetVisualGameTime(VisualGameTime + DeltaSeconds);
+    SetElapsedGameTime(PrimaryElapsedGameTime);
+  }
+
+  void SetElapsedGameTime(double Time)
+  {
+    ElapsedGameTime = Time;
     #if defined(WITH_ROS2)
     auto ROS2 = carla::ros2::ROS2::GetInstance();
     if (ROS2->IsEnabled())
       ROS2->SetTimestamp(GetElapsedGameTime());
     #endif
-
   }
 
   const uint64 Id = 0u;

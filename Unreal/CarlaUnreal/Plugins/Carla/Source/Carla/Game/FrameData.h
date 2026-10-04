@@ -35,6 +35,7 @@
 #include "Templates/Function.h"
 #include <util/ue-header-guard-end.h>
 
+#include <optional>
 #include <sstream>
 #include <unordered_map>
 
@@ -65,6 +66,8 @@ class FFrameData
   CarlaRecorderPhysicsControls PhysicsControls;
   CarlaRecorderTrafficLightTimes TrafficLightTimes;
   CarlaRecorderFrameCounter FrameCounter;
+  // The primary's episode time of this frame (Multi-GPU).
+  std::optional<double> ElapsedGameTime;
 
   #pragma pack(push, 1)
   struct Header
@@ -90,6 +93,11 @@ public:
       TFunctionRef<void(uint32_t)> OnActorRemoved);
 
   void Clear();
+
+  std::optional<double> GetElapsedGameTime() const
+  {
+    return ElapsedGameTime;
+  }
 
   void Write(std::ostream& OutStream);
   void Read(std::istream& InStream);
@@ -155,6 +163,8 @@ private:
   bool ProcessReplayerEventDel(uint32_t DatabaseId);
   // replay event for parenting actors
   bool ProcessReplayerEventParent(uint32_t ChildId, uint32_t ParentId);
+
+  int32 GetAttachmentDepth(uint32_t ActorId);
   // reposition actors
   bool ProcessReplayerPosition(CarlaRecorderPosition Pos1, 
                                CarlaRecorderPosition Pos2, double Per, double DeltaTime);

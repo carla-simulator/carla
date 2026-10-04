@@ -420,6 +420,30 @@ void UCarlaEpisode::AttachActors(
   }
 }
 
+void UCarlaEpisode::AddActorRosParents(FCarlaActor &Child, FCarlaActor &Parent)
+{
+#if defined(WITH_ROS2)
+  auto ROS2 = carla::ros2::ROS2::GetInstance();
+  if (!ROS2->IsEnabled())
+  {
+    return;
+  }
+  constexpr int32 MaxAncestors = 16;
+  FCarlaActor *CurrentActor = &Parent;
+  for (int32 Depth = 0; CurrentActor != nullptr && CurrentActor != &Child && Depth < MaxAncestors; ++Depth)
+  {
+    for (const auto &Attr : CurrentActor->GetActorInfo()->Description.Variations)
+    {
+      if (Attr.Key == "ros_name")
+      {
+        ROS2->AddActorParentRosName(static_cast<void*>(Child.GetActor()), static_cast<void*>(CurrentActor->GetActor()));
+      }
+    }
+    CurrentActor = FindCarlaActor(CurrentActor->GetParent());
+  }
+#endif
+}
+
 void UCarlaEpisode::InitializeAtBeginPlay()
 {
   auto World = GetWorld();

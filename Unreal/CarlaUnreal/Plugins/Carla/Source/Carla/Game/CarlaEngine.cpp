@@ -673,14 +673,28 @@ void FCarlaEngine::OnPreTick(UWorld *, ELevelTick TickType, float DeltaSeconds)
 
     if (CurrentEpisode)
     {
-      CurrentEpisode->TickTimers(DeltaSeconds);
-
-      if (!bIsPrimaryServer)
+      if (bIsPrimaryServer)
       {
-        if (FramesToProcess.size())
+        CurrentEpisode->TickTimers(DeltaSeconds);
+      }
+      else
+      {
+        std::scoped_lock<std::mutex> Lock(FrameToProcessMutex);
+        // Sensors and ROS 2 stamp the frame with the primary's time; the local
+        // delta includes the time spent waiting for the primary.
+        const std::optional<double> PrimaryElapsedGameTime =
+            FramesToProcess.empty() ? std::nullopt : FramesToProcess.front().GetElapsedGameTime();
+        if (PrimaryElapsedGameTime)
+        {
+          CurrentEpisode->TickTimersFromPrimary(DeltaSeconds, *PrimaryElapsedGameTime);
+        }
+        else
+        {
+          CurrentEpisode->TickTimers(DeltaSeconds);
+        }
+        if (!FramesToProcess.empty())
         {
           TRACE_CPUPROFILER_EVENT_SCOPE_STR("FramesToProcess.PlayFrameData");
-          std::scoped_lock<std::mutex> Lock(FrameToProcessMutex);
           FramesToProcess.front().PlayFrameData(
               CurrentEpisode,
               MappedId,

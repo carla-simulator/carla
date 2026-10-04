@@ -22,6 +22,7 @@
 #include <util/enable-ue4-macros.h>
 
 #include <util/ue-header-guard-begin.h>
+#include "Algo/StableSort.h"
 #include "VehicleAnimationInstance.h"
 #include <util/ue-header-guard-end.h>
 
@@ -78,6 +79,7 @@ void FFrameData::GetFrameData(UCarlaEpisode *ThisEpisode, bool bAdditionalData, 
     }
   }
   GetFrameCounter();
+  ElapsedGameTime = Episode->GetElapsedGameTime();
 }
 
 void FFrameData::PlayFrameData(
@@ -132,15 +134,35 @@ void FFrameData::PlayFrameData(
     OnActorRemoved(EventDel.DatabaseId);
   }
 
+  for (const CarlaRecorderEventParent &EventParent : EventsParent.GetEvents())
+  {
+    const auto Child = MappedId.find(EventParent.DatabaseId);
+    const auto Parent = MappedId.find(EventParent.DatabaseIdParent);
+    if ((Child != MappedId.end()) && (Parent != MappedId.end()))
+    {
+      ProcessReplayerEventParent(Child->second, Parent->second);
+    }
+  }
+
+  // Parents first: moving an attached parent drags its children, so a child
+  // set before its parent would end up offset by the parent's motion.
+  TArray<TPair<int32, CarlaRecorderPosition>> OrderedPositions;
+  OrderedPositions.Reserve(static_cast<int32>(Positions.GetPositions().size()));
   for (const CarlaRecorderPosition &Position : Positions.GetPositions())
   {
-    CarlaRecorderPosition Pos = Position;
-    auto NewId = MappedId.find(Pos.DatabaseId);
-    if (NewId != MappedId.end())
+    auto NewId = MappedId.find(Position.DatabaseId);
+    if (NewId == MappedId.end())
     {
-      Pos.DatabaseId = NewId->second;
-      ProcessReplayerPosition(Pos, Pos, 0.0, 0.0);
+      continue;
     }
+    CarlaRecorderPosition Pos = Position;
+    Pos.DatabaseId = NewId->second;
+    OrderedPositions.Emplace(GetAttachmentDepth(Pos.DatabaseId), Pos);
+  }
+  Algo::StableSortBy(OrderedPositions, [](const TPair<int32, CarlaRecorderPosition> &Item) { return Item.Key; });
+  for (const TPair<int32, CarlaRecorderPosition> &Item : OrderedPositions)
+  {
+    ProcessReplayerPosition(Item.Value, Item.Value, 0.0, 0.0);
   }
 
   for (const CarlaRecorderStateTrafficLight &State : States.GetStates())
@@ -213,6 +235,7 @@ void FFrameData::Clear()
   PhysicsControls.Clear();
   TrafficLightTimes.Clear();
   FrameCounter.FrameCounter = 0;
+  ElapsedGameTime.reset();
 }
 
 void FFrameData::Write(std::ostream& OutStream)
@@ -230,6 +253,13 @@ void FFrameData::Write(std::ostream& OutStream)
   LightScenes.Write(OutStream);
   TrafficLightTimes.Write(OutStream);
   FrameCounter.Write(OutStream);
+  if (ElapsedGameTime)
+  {
+    CarlaRecorderFrame Frame{FrameCounter.FrameCounter, 0.0, *ElapsedGameTime};
+    WriteValue<char>(OutStream, static_cast<char>(CarlaRecorderPacketId::FrameStart));
+    WriteValue<uint32_t>(OutStream, sizeof(CarlaRecorderFrame));
+    Frame.Write(OutStream);
+  }
 }
 
 void FFrameData::Read(std::istream& InStream)
@@ -240,6 +270,10 @@ void FFrameData::Read(std::istream& InStream)
     Header header;
     ReadValue<char>(InStream, header.Id);
     ReadValue<uint32_t>(InStream, header.Size);
+    if (!InStream)
+    {
+      break;
+    }
     switch (header.Id)
     {
       // events add
@@ -300,6 +334,17 @@ void FFrameData::Read(std::istream& InStream)
       case static_cast<char>(CarlaRecorderPacketId::FrameCounter):
         FrameCounter.Read(InStream);
         break;
+
+      case static_cast<char>(CarlaRecorderPacketId::FrameStart):
+      {
+        CarlaRecorderFrame Frame{};
+        Frame.Read(InStream);
+        if (InStream)
+        {
+          ElapsedGameTime = Frame.Elapsed;
+        }
+        break;
+      }
 
       // unknown packet, just skip
       default:
@@ -975,9 +1020,16 @@ bool FFrameData::ProcessReplayerEventParent(uint32_t ChildId, uint32_t ParentId)
     UE_LOG(LogCarla, Log, TEXT("Parenting Parent actors not found"));
     return false;
   }
+  // A full resync replays the parent events of actors already attached here.
+  if (Child->GetParent() != 0u)
+  {
+    return Child->GetParent() == ParentId;
+  }
   Child->SetParent(ParentId);
   Child->SetAttachmentType(carla::rpc::AttachmentType::Rigid);
   Parent->AddChildren(Child->GetActorId());
+  // Same ROS 2 topic hierarchy as the primary (CarlaServer spawn with parent).
+  Episode->AddActorRosParents(*Child, *Parent);
   if(!Parent->IsDormant())
   {
     if(!Child->IsDormant())
@@ -993,6 +1045,20 @@ bool FFrameData::ProcessReplayerEventParent(uint32_t ChildId, uint32_t ParentId)
     Episode->PutActorToSleep(Child->GetActorId());
   }
   return true;
+}
+
+int32 FFrameData::GetAttachmentDepth(uint32_t ActorId)
+{
+  check(Episode != nullptr);
+  int32 Depth = 0;
+  FCarlaActor *CarlaActor = Episode->FindCarlaActor(ActorId);
+  // Bounded in case of a malformed parent cycle.
+  while ((CarlaActor != nullptr) && (CarlaActor->GetParent() != 0u) && (Depth < 16))
+  {
+    ++Depth;
+    CarlaActor = Episode->FindCarlaActor(CarlaActor->GetParent());
+  }
+  return Depth;
 }
 
 // reposition actors
@@ -1307,6 +1373,14 @@ void FFrameData::AddExistingActors(void)
           CarlaActor->GetActorGlobalTransform(),
           CarlaActor->GetActorInfo()->Description,
           false);
+    }
+  }
+  for (auto& It : Registry)
+  {
+    const FCarlaActor* CarlaActor = It.Value.Get();
+    if ((CarlaActor != nullptr) && (CarlaActor->GetParent() != 0u))
+    {
+      AddEvent(CarlaRecorderEventParent{CarlaActor->GetActorId(), CarlaActor->GetParent()});
     }
   }
 }
