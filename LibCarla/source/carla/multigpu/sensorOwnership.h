@@ -15,8 +15,9 @@ enum class ProcessRole {
 
 /// Whether this process captures and publishes a sensor. The primary keeps
 /// every sensor not routed to a live secondary, and its primary-only sensors
-/// (collision, vehicle status) always; a secondary owns a sensor once the
-/// primary routed its token there.
+/// always (collision, vehicle status, and the GNSS, IMU, lidar and radar whose
+/// output or tick cadence depends on the fixed delta a secondary lacks); a
+/// secondary owns a sensor once the primary routed its token there.
 [[nodiscard]]
 constexpr bool OwnsSensor(
     ProcessRole role,

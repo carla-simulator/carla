@@ -633,7 +633,7 @@ void ROS2::ProcessDataFromGNSS(
     const carla::geom::Transform sensor_transform,
     const carla::geom::GeoLocation &data,
     void *actor) {
-  if (!AcquirePublication(stream_id, actor)) {
+  if (!AcquirePublication(stream_id, actor, true)) {
     return;
   }
   if (auto base = GetOrCreateSensor(ESensors::GnssSensor, stream_id, actor)) {
@@ -660,7 +660,7 @@ void ROS2::ProcessDataFromIMU(
     carla::geom::Vector3D gyroscope,
     float compass,
     void *actor) {
-  if (!AcquirePublication(stream_id, actor)) {
+  if (!AcquirePublication(stream_id, actor, true)) {
     return;
   }
   if (auto base = GetOrCreateSensor(ESensors::InertialMeasurementUnit, stream_id, actor)) {
@@ -748,7 +748,7 @@ void ROS2::ProcessDataFromLidar(
     float lower_fov_limit,
     carla::sensor::data::LidarData &data,
     void *actor) {
-  if (!AcquirePublication(stream_id, actor)) {
+  if (!AcquirePublication(stream_id, actor, true)) {
     return;
   }
   if (auto base = GetOrCreateSensor(ESensors::RayCastLidar, stream_id, actor)) {
@@ -801,7 +801,7 @@ void ROS2::ProcessDataFromSemanticLidar(
     const carla::geom::Transform sensor_transform,
     carla::sensor::data::SemanticLidarData &data,
     void *actor) {
-  if (!AcquirePublication(stream_id, actor)) {
+  if (!AcquirePublication(stream_id, actor, true)) {
     return;
   }
   if (auto base = GetOrCreateSensor(ESensors::RayCastSemanticLidar, stream_id, actor)) {
@@ -829,7 +829,7 @@ void ROS2::ProcessDataFromRadar(
     const carla::geom::Transform sensor_transform,
     const carla::sensor::data::RadarData &data,
     void *actor) {
-  if (!AcquirePublication(stream_id, actor)) {
+  if (!AcquirePublication(stream_id, actor, true)) {
     return;
   }
   if (auto base = GetOrCreateSensor(ESensors::Radar, stream_id, actor)) {
@@ -1008,7 +1008,7 @@ void ROS2::ProcessDataFromAutowareGNSS(
     const carla::geom::Transform &sensor_world_transform,
     const double mgrs_offset_position[3],
     void *actor) {
-  if (!AcquirePublication(stream_id, actor)) {
+  if (!AcquirePublication(stream_id, actor, true)) {
     return;
   }
   if (auto base = GetOrCreateSensor(ESensors::AutowareGnssSensor, stream_id, actor)) {
