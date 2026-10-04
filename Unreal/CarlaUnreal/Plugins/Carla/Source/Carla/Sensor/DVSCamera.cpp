@@ -139,7 +139,8 @@ void ADVSCamera::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaTim
   check(CaptureRenderTarget != nullptr);
   // This path does not go through ASceneCaptureSensor::ShouldCaptureThisFrame(),
   // so it needs its own check for a process without an RHI (-nullrhi).
-  if (!HasActorBegunPlay() || !IsValid(this) || !AreClientsListening() || !FApp::CanEverRender())
+  if (!HasActorBegunPlay() || !IsValid(this) || !AreClientsListening() || !FApp::CanEverRender() ||
+      !OwnsSensorStream())
   {
     return;
   }

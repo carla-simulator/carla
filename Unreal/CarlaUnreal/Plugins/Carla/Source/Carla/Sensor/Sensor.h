@@ -125,6 +125,10 @@ public:
     return Stream.AreClientsListening();
   }
 
+  /// Multi-GPU: whether this process owns this (non primary-only) sensor and
+  /// must capture it. Always true on a single server. Game thread only.
+  bool OwnsSensorStream();
+
   void Tick(const float DeltaTime) final;
 
   virtual void PrePhysTick(float DeltaSeconds) {}

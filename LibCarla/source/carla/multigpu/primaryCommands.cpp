@@ -46,6 +46,7 @@ void PrimaryCommands::SendLoadMap(std::string map) {
   std::scoped_lock<std::mutex> lock(_mutex);
   _tokens.clear();
   _servers.clear();
+  ClearRoutes();
   _router->WriteLoadMap(map);
 }
 
@@ -195,6 +196,7 @@ std::optional<token_type> PrimaryCommands::GetToken(stream_id sensor_id, actor_i
     if (error == TokenError::Refused) {
       _servers.erase(sensor_id);
       _tokens.erase(sensor_id);
+      EraseRoute(sensor_id);
     }
     return std::nullopt;
   }
@@ -203,6 +205,7 @@ std::optional<token_type> PrimaryCommands::GetToken(stream_id sensor_id, actor_i
   auto route = _servers.try_emplace(sensor_id, Route{server, sensor_actor_id}).first;
   route->second.session = server;
   route->second.actor = sensor_actor_id;
+  SetRoute(sensor_id, server);
   if (lost) {
     RestoreRosAfterReroute(sensor_id);
   }
@@ -279,6 +282,7 @@ std::size_t PrimaryCommands::RerouteLostSensors() {
         log_warning("multigpu: could not route sensor ", sensor_id, " to the new secondary; its listeners must listen() again");
         _servers.erase(route);
         _tokens.erase(sensor_id);
+        EraseRoute(sensor_id);
         continue;
       }
       auto old_token = _tokens.find(sensor_id);
@@ -289,6 +293,7 @@ std::size_t PrimaryCommands::RerouteLostSensors() {
       _tokens.erase(sensor_id);
       _tokens.emplace(sensor_id, *token);
       route->second.session = server;
+      SetRoute(sensor_id, server);
       log_info("multigpu: routed sensor ", sensor_id, " to the new secondary at port ", token->get_port());
       ++rerouted;
       RestoreRosAfterReroute(sensor_id);
@@ -301,6 +306,7 @@ void PrimaryCommands::ForgetSensor(stream_id sensor_id) {
   std::scoped_lock<std::mutex> lock(_mutex);
   _servers.erase(sensor_id);
   _tokens.erase(sensor_id);
+  EraseRoute(sensor_id);
 }
 
 bool PrimaryCommands::IsRoutedToLiveSecondary(stream_id sensor_id) {
@@ -316,6 +322,34 @@ void PrimaryCommands::RestoreRosAfterReroute(stream_id sensor_id) {
   if (!SendEnableForROS(sensor_id)) {
     log_warning("multigpu: could not enable ROS again for sensor ", sensor_id, " on its new secondary");
   }
+}
+
+bool PrimaryCommands::IsRouted(stream_id sensor_id) const {
+  std::weak_ptr<Primary> server;
+  {
+    std::scoped_lock<std::mutex> lock(_routes_mutex);
+    auto it = _routes.find(sensor_id);
+    if (it == _routes.end()) {
+      return false;
+    }
+    server = it->second;
+  }
+  return (_router != nullptr) && _router->IsConnected(server);
+}
+
+void PrimaryCommands::SetRoute(stream_id sensor_id, std::weak_ptr<Primary> server) {
+  std::scoped_lock<std::mutex> lock(_routes_mutex);
+  _routes[sensor_id] = std::move(server);
+}
+
+void PrimaryCommands::EraseRoute(stream_id sensor_id) {
+  std::scoped_lock<std::mutex> lock(_routes_mutex);
+  _routes.erase(sensor_id);
+}
+
+void PrimaryCommands::ClearRoutes() {
+  std::scoped_lock<std::mutex> lock(_routes_mutex);
+  _routes.clear();
 }
 
 bool PrimaryCommands::ReadBoolReply(const carla::Buffer &buffer) {

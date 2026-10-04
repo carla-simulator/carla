@@ -134,6 +134,27 @@ bool SensorStreamRegistry::IsEpisodeOpen() {
   return _bindable;
 }
 
+void SensorStreamRegistry::ResetOwnership(carla::streaming::Server &server) {
+  std::scoped_lock<std::mutex> lock(_mutex);
+  for (auto &item : _entries) {
+    auto &entry = item.second;
+    if (entry.primary_stream_id) {
+      server.RemoveStreamAlias(*entry.primary_stream_id);
+      entry.primary_stream_id.reset();
+    }
+  }
+}
+
+bool SensorStreamRegistry::IsOwnedStream(stream_id_type local_stream_id) const {
+  std::scoped_lock<std::mutex> lock(_mutex);
+  for (const auto &item : _entries) {
+    if ((item.second.stream_id == local_stream_id) && item.second.primary_stream_id) {
+      return true;
+    }
+  }
+  return false;
+}
+
 void SensorStreamRegistry::Forget(carla::streaming::Server &server, const Entry &entry) {
   if (entry.primary_stream_id) {
     server.RemoveStreamAlias(*entry.primary_stream_id);

@@ -1528,3 +1528,67 @@ TEST(MultiGpuRouterProductionShutdown, stop_releases_listening_port_despite_refe
   // the rest of the process; production leaks it on purpose.
   router->GetCommander().set_router(nullptr);
 }
+
+TEST_F(MultiGpuRouterTest, is_routed_is_false_before_the_sensor_is_routed) {
+  auto router = std::make_shared<carla::multigpu::Router>(TESTING_PORT);
+  router->AsyncRun(1u);
+  router->TestConnectSession(MakeFakeSession());
+  carla::multigpu::PrimaryCommands commander(router);
+  EXPECT_FALSE(commander.IsRouted(42u));
+}
+
+TEST_F(MultiGpuRouterTest, is_routed_is_true_for_the_routed_sensor_only) {
+  auto router = std::make_shared<carla::multigpu::Router>(TESTING_PORT);
+  router->AsyncRun(1u);
+  auto session = MakeFakeSession();
+  router->TestConnectSession(session);
+  carla::multigpu::PrimaryCommands commander(router);
+  ASSERT_TRUE(RouteSensor(*router, commander, session, 2020u));
+  EXPECT_TRUE(commander.IsRouted(42u));
+  EXPECT_FALSE(commander.IsRouted(43u));
+}
+
+TEST_F(MultiGpuRouterTest, is_routed_is_false_once_the_secondary_disconnects_before_any_purge) {
+  auto router = std::make_shared<carla::multigpu::Router>(TESTING_PORT);
+  router->AsyncRun(1u);
+  auto session_a = MakeFakeSession();
+  auto session_b = MakeFakeSession();
+  router->TestConnectSession(session_a);
+  router->TestConnectSession(session_b);
+  carla::multigpu::PrimaryCommands commander(router);
+  ASSERT_TRUE(RouteSensor(*router, commander, session_a, 2021u));
+
+  router->TestDisconnectSession(session_a);
+  EXPECT_FALSE(commander.IsRouted(42u));
+}
+
+TEST_F(MultiGpuRouterTest, is_routed_is_false_after_load_map) {
+  auto router = std::make_shared<carla::multigpu::Router>(TESTING_PORT);
+  router->AsyncRun(1u);
+  auto session = MakeFakeSession();
+  router->TestConnectSession(session);
+  carla::multigpu::PrimaryCommands commander(router);
+  ASSERT_TRUE(RouteSensor(*router, commander, session, 2022u));
+
+  commander.SendLoadMap("/Game/Carla/Maps/Town10HD_Opt");
+  EXPECT_FALSE(commander.IsRouted(42u));
+}
+
+TEST_F(MultiGpuRouterTest, is_routed_does_not_wait_for_a_request_in_flight) {
+  auto router = std::make_shared<carla::multigpu::Router>(TESTING_PORT);
+  router->AsyncRun(1u);
+  auto session = MakeFakeSession();
+  router->TestConnectSession(session);
+  carla::multigpu::PrimaryCommands commander(router);
+  ASSERT_TRUE(RouteSensor(*router, commander, session, 2023u));
+
+  auto pending = std::async(std::launch::async, [&commander]() { return commander.GetToken(77u, 10u); });
+  ASSERT_TRUE(WaitUntilPending(*router, session));
+  auto routed = std::async(std::launch::async, [&commander]() { return commander.IsRouted(42u); });
+  ASSERT_EQ(routed.wait_for(std::chrono::seconds(2)), std::future_status::ready);
+  EXPECT_TRUE(routed.get());
+
+  router->TestHandleResponse(session, MakeTokenReply(77u, 2024u));
+  ASSERT_EQ(pending.wait_for(std::chrono::seconds(2)), std::future_status::ready);
+  EXPECT_TRUE(commander.IsRouted(77u));
+}

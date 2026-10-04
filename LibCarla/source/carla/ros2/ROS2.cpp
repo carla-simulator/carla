@@ -52,6 +52,7 @@
 #include <cmath>
 #include <memory>
 #include <string>
+#include <shared_mutex>
 #include <utility>
 #include <vector>
 
@@ -125,7 +126,9 @@ bool ROS2::Enable(bool enable, Middleware middleware, int domain_id) {
   }
   _enabled = enable;
   log_info("ROS2 enabled: ", _enabled);
-  _clock_publisher = std::make_shared<CarlaClockPublisher>();
+  if (_clock_owner) {
+    _clock_publisher = std::make_shared<CarlaClockPublisher>();
+  }
 #if defined(WITH_ROS2_DEMO)
   _basic_publisher = std::make_shared<BasicPublisher>();
   _basic_publisher->Init();
@@ -175,6 +178,16 @@ void ROS2::SetTimestamp(double timestamp) {
   _basic_publisher->SetData("Hello from Carla!");
   _basic_publisher->Publish();
 #endif
+}
+
+void ROS2::SetPublicationOwnerQuery(PublicationOwnerQuery query) {
+  std::unique_lock<std::shared_mutex> lock(_owner_query_mutex);
+  _owner_query = std::move(query);
+}
+
+bool ROS2::OwnsPublication(carla::streaming::detail::stream_id_type stream_id, bool primary_only) const {
+  std::shared_lock<std::shared_mutex> lock(_owner_query_mutex);
+  return !_owner_query || _owner_query(stream_id, primary_only);
 }
 
 void ROS2::RegisterSensor(
@@ -524,6 +537,9 @@ void ROS2::ProcessDataFromCamera(
     int W, int H, float Fov,
     const carla::SharedBufferView buffer,
     void *actor) {
+  if (!OwnsPublication(stream_id)) {
+    return;
+  }
   // Image dimensions + FOV are now read straight from ImageSerializer's
   // per-frame header inside the camera publisher's WriteCameraInfo call;
   // the W/H/Fov arguments survive for ABI compatibility with the
@@ -607,6 +623,9 @@ void ROS2::ProcessDataFromGNSS(
     const carla::geom::Transform sensor_transform,
     const carla::geom::GeoLocation &data,
     void *actor) {
+  if (!OwnsPublication(stream_id)) {
+    return;
+  }
   if (auto base = GetOrCreateSensor(ESensors::GnssSensor, stream_id, actor)) {
     auto publisher = std::dynamic_pointer_cast<CarlaGNSSPublisher>(base);
     publisher->Write(_seconds, _nanoseconds, data.latitude, data.longitude, data.altitude);
@@ -631,6 +650,9 @@ void ROS2::ProcessDataFromIMU(
     carla::geom::Vector3D gyroscope,
     float compass,
     void *actor) {
+  if (!OwnsPublication(stream_id)) {
+    return;
+  }
   if (auto base = GetOrCreateSensor(ESensors::InertialMeasurementUnit, stream_id, actor)) {
     auto publisher = std::dynamic_pointer_cast<CarlaIMUPublisher>(base);
     publisher->Write(
@@ -658,6 +680,9 @@ void ROS2::ProcessDataFromDVS(
     const carla::SharedBufferView buffer,
     int /*W*/, int /*H*/, float /*Fov*/,
     void *actor) {
+  if (!OwnsPublication(stream_id)) {
+    return;
+  }
   if (auto base = GetOrCreateSensor(ESensors::DVSCamera, stream_id, actor)) {
     auto publisher = std::dynamic_pointer_cast<CarlaDVSCameraPublisher>(base);
     const auto *header = reinterpret_cast<
@@ -713,6 +738,9 @@ void ROS2::ProcessDataFromLidar(
     float lower_fov_limit,
     carla::sensor::data::LidarData &data,
     void *actor) {
+  if (!OwnsPublication(stream_id)) {
+    return;
+  }
   if (auto base = GetOrCreateSensor(ESensors::RayCastLidar, stream_id, actor)) {
     auto publisher = std::dynamic_pointer_cast<CarlaLidarPublisher>(base);
     // The lidar returns a flat list of floats rather than structured detection
@@ -763,6 +791,9 @@ void ROS2::ProcessDataFromSemanticLidar(
     const carla::geom::Transform sensor_transform,
     carla::sensor::data::SemanticLidarData &data,
     void *actor) {
+  if (!OwnsPublication(stream_id)) {
+    return;
+  }
   if (auto base = GetOrCreateSensor(ESensors::RayCastSemanticLidar, stream_id, actor)) {
     auto publisher = std::dynamic_pointer_cast<CarlaSemanticLidarPublisher>(base);
     const auto width = static_cast<std::uint32_t>(data._ser_points.size());
@@ -788,6 +819,9 @@ void ROS2::ProcessDataFromRadar(
     const carla::geom::Transform sensor_transform,
     const carla::sensor::data::RadarData &data,
     void *actor) {
+  if (!OwnsPublication(stream_id)) {
+    return;
+  }
   if (auto base = GetOrCreateSensor(ESensors::Radar, stream_id, actor)) {
     auto publisher = std::dynamic_pointer_cast<CarlaRadarPublisher>(base);
     const auto width = static_cast<std::uint32_t>(data.GetDetectionCount());
@@ -815,6 +849,9 @@ void ROS2::ProcessDataFromObstacleDetection(
     AActor * /*second_actor*/,
     float distance,
     void * /*actor*/) {
+  if (!OwnsPublication(stream_id)) {
+    return;
+  }
   log_info(
       "Sensor ObstacleDetector to ROS data: frame.", _frame, "sensor.", sensor_type,
       "stream.", stream_id, "distance.", distance);
@@ -827,6 +864,9 @@ void ROS2::ProcessDataFromCollisionSensor(
     uint32_t other_actor,
     carla::geom::Vector3D impulse,
     void *actor) {
+  if (!OwnsPublication(stream_id, true)) {
+    return;
+  }
   if (auto base = GetOrCreateSensor(ESensors::CollisionSensor, stream_id, actor)) {
     auto publisher = std::dynamic_pointer_cast<CarlaCollisionPublisher>(base);
     publisher->Write(_seconds, _nanoseconds, other_actor, impulse.x, impulse.y, impulse.z);
@@ -845,11 +885,15 @@ void ROS2::ProcessDataFromCollisionSensor(
 
 void ROS2::ProcessDataFromStatusSensor(
     uint64_t /*sensor_type*/,
-    carla::streaming::detail::stream_id_type /*stream_id*/,
+    carla::streaming::detail::stream_id_type stream_id,
     const carla::geom::Transform /*sensor_transform*/,
     const carla::sensor::s11n::VehicleStatusData &data,
     void *vehicle_actor,
     void * /*actor*/) {
+  // Primary-only: the Autoware vehicle is registered on the primary alone.
+  if (!OwnsPublication(stream_id, true)) {
+    return;
+  }
   // Only vehicles registered with enable_autoware_control publish reports:
   // the report topics are fixed absolute names shared by the whole vehicle
   // interface (tier4 restricted this to the ego for the same reason).
@@ -955,6 +999,9 @@ void ROS2::ProcessDataFromAutowareGNSS(
     const carla::geom::Transform &sensor_world_transform,
     const double mgrs_offset_position[3],
     void *actor) {
+  if (!OwnsPublication(stream_id)) {
+    return;
+  }
   if (auto base = GetOrCreateSensor(ESensors::AutowareGnssSensor, stream_id, actor)) {
     if (auto publisher = std::dynamic_pointer_cast<AutowareGNSSPublisher>(base)) {
       publisher->Write(

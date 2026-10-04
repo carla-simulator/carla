@@ -7,6 +7,7 @@
 #include <carla/Buffer.h>
 #include <carla/BufferView.h>
 #include <carla/multigpu/mirroredActors.h>
+#include <carla/multigpu/sensorOwnership.h>
 #include <carla/multigpu/sensorStreamRegistry.h>
 #include <carla/streaming/Client.h>
 #include <carla/streaming/Server.h>
@@ -663,4 +664,169 @@ TEST(MultiGpuSensorStreams, restarted_secondary_binds_overlapping_ids_to_their_o
         streams.server.FindStreamAlias(1000u + primary_id),
         std::optional<stream_id_type>(StreamIdOf(sensors.at(secondary.mirrors.at(primary_id)))));
   }
+}
+
+TEST(MultiGpuSensorOwnership, a_bound_sensor_is_not_owned_until_its_token_is_granted) {
+  SecondaryStreams secondary;
+  auto sensor = secondary.server.MakeStream();
+  EXPECT_FALSE(secondary.registry.Bind(secondary.server, 7u, StreamIdOf(sensor), true).has_value());
+  EXPECT_FALSE(secondary.registry.IsOwnedStream(StreamIdOf(sensor)));
+
+  ASSERT_TRUE(secondary.registry.Resolve(secondary.server, 7u, 100u).has_value());
+  EXPECT_TRUE(secondary.registry.IsOwnedStream(StreamIdOf(sensor)));
+}
+
+TEST(MultiGpuSensorOwnership, a_sensor_adopting_its_reservation_is_owned) {
+  SecondaryStreams secondary;
+  ASSERT_TRUE(secondary.registry.Resolve(secondary.server, 7u, 100u).has_value());
+  auto sensor = secondary.server.MakeStream();
+  EXPECT_FALSE(secondary.registry.IsOwnedStream(StreamIdOf(sensor)));
+
+  const auto adopted = secondary.registry.Bind(secondary.server, 7u, StreamIdOf(sensor), true);
+  ASSERT_TRUE(adopted.has_value());
+  EXPECT_TRUE(secondary.registry.IsOwnedStream(StreamIdOf(*adopted)));
+}
+
+TEST(MultiGpuSensorOwnership, a_retargeted_sensor_moves_ownership_to_its_stream) {
+  SecondaryStreams secondary;
+  ASSERT_TRUE(secondary.registry.Resolve(secondary.server, 7u, 100u).has_value());
+  const auto reserved_id = secondary.server.FindStreamAlias(100u);
+  ASSERT_TRUE(reserved_id.has_value());
+  auto sensor = secondary.server.MakeStream();
+
+  EXPECT_FALSE(secondary.registry.Bind(secondary.server, 7u, StreamIdOf(sensor), false).has_value());
+  EXPECT_TRUE(secondary.registry.IsOwnedStream(StreamIdOf(sensor)));
+  EXPECT_FALSE(secondary.registry.IsOwnedStream(*reserved_id));
+}
+
+TEST(MultiGpuSensorOwnership, unbind_drops_ownership) {
+  SecondaryStreams secondary;
+  auto sensor = secondary.server.MakeStream();
+  EXPECT_FALSE(secondary.registry.Bind(secondary.server, 7u, StreamIdOf(sensor), true).has_value());
+  ASSERT_TRUE(secondary.registry.Resolve(secondary.server, 7u, 100u).has_value());
+
+  secondary.registry.Unbind(secondary.server, 7u);
+  EXPECT_FALSE(secondary.registry.IsOwnedStream(StreamIdOf(sensor)));
+}
+
+TEST(MultiGpuSensorOwnership, episode_change_drops_ownership_until_the_token_is_granted_again) {
+  SecondaryStreams secondary;
+  auto sensor = secondary.server.MakeStream();
+  EXPECT_FALSE(secondary.registry.Bind(secondary.server, 7u, StreamIdOf(sensor), true).has_value());
+  ASSERT_TRUE(secondary.registry.Resolve(secondary.server, 7u, 100u).has_value());
+
+  const auto epoch = secondary.registry.BeginEpisodeChange(secondary.server);
+  EXPECT_FALSE(secondary.registry.IsOwnedStream(StreamIdOf(sensor)));
+
+  secondary.registry.OpenEpisode(epoch);
+  auto new_sensor = secondary.server.MakeStream();
+  EXPECT_FALSE(secondary.registry.Bind(secondary.server, 7u, StreamIdOf(new_sensor), true).has_value());
+  EXPECT_FALSE(secondary.registry.IsOwnedStream(StreamIdOf(new_sensor)));
+
+  ASSERT_TRUE(secondary.registry.Resolve(secondary.server, 7u, 200u).has_value());
+  EXPECT_TRUE(secondary.registry.IsOwnedStream(StreamIdOf(new_sensor)));
+}
+
+TEST(MultiGpuSensorOwnership, secondaries_with_colliding_local_ids_own_only_what_was_routed_to_them) {
+  SecondaryStreams secondary_a;
+  SecondaryStreams secondary_b;
+  auto sensor_a = secondary_a.server.MakeStream();
+  auto sensor_b = secondary_b.server.MakeStream();
+  ASSERT_EQ(StreamIdOf(sensor_a), StreamIdOf(sensor_b));
+  EXPECT_FALSE(secondary_a.registry.Bind(secondary_a.server, 7u, StreamIdOf(sensor_a), true).has_value());
+  EXPECT_FALSE(secondary_b.registry.Bind(secondary_b.server, 7u, StreamIdOf(sensor_b), true).has_value());
+
+  ASSERT_TRUE(secondary_b.registry.Resolve(secondary_b.server, 7u, 100u).has_value());
+  EXPECT_FALSE(secondary_a.registry.IsOwnedStream(StreamIdOf(sensor_a)));
+  EXPECT_TRUE(secondary_b.registry.IsOwnedStream(StreamIdOf(sensor_b)));
+
+  // secondary_b reconnects and the primary routes the sensor to secondary_a.
+  secondary_b.registry.ResetOwnership(secondary_b.server);
+  ASSERT_TRUE(secondary_a.registry.Resolve(secondary_a.server, 7u, 100u).has_value());
+  EXPECT_TRUE(secondary_a.registry.IsOwnedStream(StreamIdOf(sensor_a)));
+  EXPECT_FALSE(secondary_b.registry.IsOwnedStream(StreamIdOf(sensor_b)));
+}
+
+TEST(MultiGpuSensorOwnership, reset_ownership_drops_every_alias_and_ownership) {
+  SecondaryStreams secondary;
+  auto sensor = secondary.server.MakeStream();
+  EXPECT_FALSE(secondary.registry.Bind(secondary.server, 7u, StreamIdOf(sensor), true).has_value());
+  ASSERT_TRUE(secondary.registry.Resolve(secondary.server, 7u, 100u).has_value());
+  ASSERT_TRUE(secondary.registry.Resolve(secondary.server, 8u, 101u).has_value());
+  const auto reserved_id = secondary.server.FindStreamAlias(101u);
+  ASSERT_TRUE(reserved_id.has_value());
+
+  secondary.registry.ResetOwnership(secondary.server);
+  EXPECT_FALSE(secondary.registry.IsOwnedStream(StreamIdOf(sensor)));
+  EXPECT_FALSE(secondary.registry.IsOwnedStream(*reserved_id));
+  EXPECT_FALSE(secondary.server.FindStreamAlias(100u).has_value());
+  EXPECT_FALSE(secondary.server.FindStreamAlias(101u).has_value());
+  EXPECT_TRUE(secondary.server.FindToken(StreamIdOf(sensor)).has_value());
+}
+
+TEST(MultiGpuSensorOwnership, a_reservation_survives_reset_ownership_and_is_reused_when_routed_again) {
+  SecondaryStreams secondary;
+  ASSERT_TRUE(secondary.registry.Resolve(secondary.server, 8u, 101u).has_value());
+  const auto reserved_id = secondary.server.FindStreamAlias(101u);
+  ASSERT_TRUE(reserved_id.has_value());
+
+  secondary.registry.ResetOwnership(secondary.server);
+  ASSERT_TRUE(secondary.registry.Resolve(secondary.server, 8u, 201u).has_value());
+  EXPECT_EQ(secondary.server.FindStreamAlias(201u), reserved_id);
+  EXPECT_TRUE(secondary.registry.IsOwnedStream(*reserved_id));
+
+  auto sensor = secondary.server.MakeStream();
+  const auto adopted = secondary.registry.Bind(secondary.server, 8u, StreamIdOf(sensor), true);
+  ASSERT_TRUE(adopted.has_value());
+  EXPECT_EQ(StreamIdOf(*adopted), *reserved_id);
+}
+
+TEST(MultiGpuSensorOwnership, unbind_after_reset_ownership_closes_the_reservation) {
+  SecondaryStreams secondary;
+  ASSERT_TRUE(secondary.registry.Resolve(secondary.server, 8u, 101u).has_value());
+  const auto reserved_id = secondary.server.FindStreamAlias(101u);
+  ASSERT_TRUE(reserved_id.has_value());
+
+  secondary.registry.ResetOwnership(secondary.server);
+  secondary.registry.Unbind(secondary.server, 8u);
+  EXPECT_FALSE(secondary.server.FindToken(*reserved_id).has_value());
+}
+
+TEST(MultiGpuSensorOwnership, secondary_publishes_a_routed_sensor_until_it_reconnects) {
+  using carla::multigpu::OwnsSensor;
+  using carla::multigpu::ProcessRole;
+  SecondaryStreams secondary;
+  auto camera = secondary.server.MakeStream();
+  auto collision = secondary.server.MakeStream();
+  EXPECT_FALSE(secondary.registry.Bind(secondary.server, 7u, StreamIdOf(camera), true).has_value());
+  EXPECT_FALSE(secondary.registry.Bind(secondary.server, 9u, StreamIdOf(collision), true).has_value());
+  const auto owns = [&secondary](const carla::streaming::Stream &stream, bool primary_only) {
+    return OwnsSensor(ProcessRole::Secondary, false, primary_only, secondary.registry.IsOwnedStream(StreamIdOf(stream)));
+  };
+
+  EXPECT_FALSE(owns(camera, false));
+  ASSERT_TRUE(secondary.registry.Resolve(secondary.server, 7u, 100u).has_value());
+  ASSERT_TRUE(secondary.registry.Resolve(secondary.server, 9u, 101u).has_value());
+  EXPECT_TRUE(owns(camera, false));
+  EXPECT_FALSE(owns(collision, true));
+
+  secondary.registry.ResetOwnership(secondary.server);
+  EXPECT_FALSE(owns(camera, false));
+
+  ASSERT_TRUE(secondary.registry.Resolve(secondary.server, 7u, 100u).has_value());
+  EXPECT_TRUE(owns(camera, false));
+}
+
+TEST(MultiGpuSensorOwnership, unrelated_streams_are_not_owned) {
+  SecondaryStreams secondary;
+  auto routed = secondary.server.MakeStream();
+  auto mirrored = secondary.server.MakeStream();
+  EXPECT_FALSE(secondary.registry.Bind(secondary.server, 7u, StreamIdOf(routed), true).has_value());
+  EXPECT_FALSE(secondary.registry.Bind(secondary.server, 8u, StreamIdOf(mirrored), true).has_value());
+  ASSERT_TRUE(secondary.registry.Resolve(secondary.server, 7u, 100u).has_value());
+
+  EXPECT_TRUE(secondary.registry.IsOwnedStream(StreamIdOf(routed)));
+  EXPECT_FALSE(secondary.registry.IsOwnedStream(StreamIdOf(mirrored)));
+  EXPECT_FALSE(secondary.registry.IsOwnedStream(100u));
+  EXPECT_FALSE(secondary.registry.IsOwnedStream(0u));
 }

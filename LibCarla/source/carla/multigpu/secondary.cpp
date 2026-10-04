@@ -95,6 +95,10 @@ namespace multigpu {
 
         log_info("secondary server: connected to ", self->_endpoint);
 
+        if (self->_on_connected) {
+          self->_on_connected();
+        }
+
         self->ReadData();
       };
 

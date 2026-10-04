@@ -255,7 +255,7 @@ public:
   {
     // This path does not go through ASceneCaptureSensor::ShouldCaptureThisFrame(),
     // so it needs its own check for a process without an RHI (-nullrhi).
-    if (!Sensor.AreClientsListening() || !FApp::CanEverRender())
+    if (!Sensor.AreClientsListening() || !FApp::CanEverRender() || !Sensor.OwnsSensorStream())
     {
       return;
     }

@@ -64,6 +64,15 @@ public:
   [[nodiscard]]
   bool IsEpisodeOpen();
 
+  /// The primary forgot every route (this secondary reconnected): drops all
+  /// aliases so no sensor stays owned until Resolve() grants it again.
+  void ResetOwnership(carla::streaming::Server &server);
+
+  /// Whether the primary routed the sensor of @a local_stream_id to this
+  /// secondary, i.e. Resolve() granted its token in the current episode.
+  [[nodiscard]]
+  bool IsOwnedStream(stream_id_type local_stream_id) const;
+
 private:
   struct Entry {
     stream_id_type stream_id;
@@ -73,7 +82,7 @@ private:
 
   static void Forget(carla::streaming::Server &server, const Entry &entry);
 
-  std::mutex _mutex;
+  mutable std::mutex _mutex;
   epoch_type _epoch = 0u;
   bool _bindable = false;
   std::unordered_map<actor_id_type, Entry> _entries;

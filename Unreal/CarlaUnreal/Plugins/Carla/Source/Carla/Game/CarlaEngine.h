@@ -99,6 +99,16 @@ public:
     return SecondaryServer;
   }
 
+  /// False on a Multi-GPU secondary; set before ROS 2 is initialized.
+  bool IsPrimaryServer() const
+  {
+    return bIsPrimaryServer;
+  }
+
+  /// Multi-GPU: whether this process captures and publishes the sensor of the
+  /// local @a StreamId (see carla::multigpu::OwnsSensor). Thread-safe.
+  bool OwnsSensorStream(carla::streaming::detail::stream_id_type StreamId, bool bPrimaryOnly) const;
+
 private:
 
   void OnPreTick(UWorld *World, ELevelTick TickType, float DeltaSeconds);
