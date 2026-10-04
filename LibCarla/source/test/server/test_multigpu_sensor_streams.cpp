@@ -801,7 +801,8 @@ TEST(MultiGpuSensorOwnership, secondary_publishes_a_routed_sensor_until_it_recon
   EXPECT_FALSE(secondary.registry.Bind(secondary.server, 7u, StreamIdOf(camera), true).has_value());
   EXPECT_FALSE(secondary.registry.Bind(secondary.server, 9u, StreamIdOf(collision), true).has_value());
   const auto owns = [&secondary](const carla::streaming::Stream &stream, bool primary_only) {
-    return OwnsSensor(ProcessRole::Secondary, false, primary_only, secondary.registry.IsOwnedStream(StreamIdOf(stream)));
+    const bool token_granted = secondary.registry.IsOwnedStream(StreamIdOf(stream));
+    return OwnsSensor(ProcessRole::Secondary, false, primary_only, token_granted);
   };
 
   EXPECT_FALSE(owns(camera, false));

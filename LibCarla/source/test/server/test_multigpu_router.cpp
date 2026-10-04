@@ -1593,21 +1593,20 @@ TEST_F(MultiGpuRouterTest, is_routed_does_not_wait_for_a_request_in_flight) {
   EXPECT_TRUE(commander.IsRouted(77u));
 }
 
-TEST(MultiGpuCommands, set_publish_tf_is_appended_after_existing_commands) {
-  EXPECT_GT(
-      static_cast<uint32_t>(carla::multigpu::MultiGPUCommand::SET_PUBLISH_TF),
-      static_cast<uint32_t>(carla::multigpu::MultiGPUCommand::YOU_ALIVE));
+TEST(MultiGpuCommands, set_publish_tf_keeps_the_wire_value_after_existing_commands) {
+  EXPECT_EQ(static_cast<uint32_t>(carla::multigpu::MultiGPUCommand::YOU_ALIVE), 6u);
+  EXPECT_EQ(static_cast<uint32_t>(carla::multigpu::MultiGPUCommand::SET_PUBLISH_TF), 7u);
 }
 
-TEST_F(MultiGpuRouterTest, send_publish_tf_broadcasts_to_connected_sessions_and_tolerates_none) {
+TEST_F(MultiGpuRouterTest, send_publish_tf_without_and_with_sessions_does_not_throw) {
   auto router = std::make_shared<carla::multigpu::Router>(TESTING_PORT);
   router->SetCallbacks();
   router->AsyncRun(1u);
 
-  router->GetCommander().SendPublishTF(false);
+  EXPECT_NO_THROW(router->GetCommander().SendPublishTF(false));
 
   auto session = MakeFakeSession();
   router->TestConnectSession(session);
-  router->GetCommander().SendPublishTF(true);
+  EXPECT_NO_THROW(router->GetCommander().SendPublishTF(true));
   router->Stop();
 }

@@ -1028,7 +1028,6 @@ bool FFrameData::ProcessReplayerEventParent(uint32_t ChildId, uint32_t ParentId)
   Child->SetParent(ParentId);
   Child->SetAttachmentType(carla::rpc::AttachmentType::Rigid);
   Parent->AddChildren(Child->GetActorId());
-  // Same ROS 2 topic hierarchy as the primary (CarlaServer spawn with parent).
   Episode->AddActorRosParents(*Child, *Parent);
   if(!Parent->IsDormant())
   {
@@ -1052,8 +1051,7 @@ int32 FFrameData::GetAttachmentDepth(uint32_t ActorId)
   check(Episode != nullptr);
   int32 Depth = 0;
   FCarlaActor *CarlaActor = Episode->FindCarlaActor(ActorId);
-  // Bounded in case of a malformed parent cycle.
-  while ((CarlaActor != nullptr) && (CarlaActor->GetParent() != 0u) && (Depth < 16))
+  while ((CarlaActor != nullptr) && (CarlaActor->GetParent() != 0u) && (Depth < UCarlaEpisode::MaxAttachmentDepth))
   {
     ++Depth;
     CarlaActor = Episode->FindCarlaActor(CarlaActor->GetParent());

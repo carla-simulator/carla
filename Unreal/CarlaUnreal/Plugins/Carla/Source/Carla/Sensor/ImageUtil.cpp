@@ -475,12 +475,8 @@ namespace ImageUtil
     ReadImageDataAsyncCallback&& Callback)
   {
     auto RenderTarget = Sensor.GetCaptureRenderTarget();
-    if (RenderTarget == nullptr)
+    if (RenderTarget == nullptr || !Sensor.OwnsSensorStream())
       return false;
-    if (!Sensor.OwnsSensorStream())
-    {
-      return false;
-    }
     return ReadImageDataAsync(
       *RenderTarget,
       Sensor.GetReadbackPool(),
@@ -518,12 +514,8 @@ namespace ImageUtil
     ReadImageDataAsyncCallbackFColor&& Callback)
   {
     auto RenderTarget = Sensor.GetCaptureRenderTarget();
-    if (RenderTarget == nullptr)
+    if (RenderTarget == nullptr || !Sensor.OwnsSensorStream())
       return false;
-    if (!Sensor.OwnsSensorStream())
-    {
-      return false;
-    }
     // Pass the sensor's readback pool, as ReadSensorImageDataAsync does:
     // without it every camera allocated a fresh staging buffer (8 MB at
     // 1080p) on every frame.
@@ -565,12 +557,8 @@ namespace ImageUtil
     ReadImageDataAsyncCallbackFLinearColor&& Callback)
   {
     auto RenderTarget = Sensor.GetCaptureRenderTarget();
-    if (RenderTarget == nullptr)
+    if (RenderTarget == nullptr || !Sensor.OwnsSensorStream())
       return false;
-    if (!Sensor.OwnsSensorStream())
-    {
-      return false;
-    }
     // Recycle the staging buffer through the sensor's pool, as the FColor
     // variant does.
     return ReadImageDataAsyncFLinearColor(

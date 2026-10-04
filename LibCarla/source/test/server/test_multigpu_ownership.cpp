@@ -8,8 +8,8 @@
 
 namespace {
 
-  using carla::multigpu::OwnsSensor;
-  using carla::multigpu::ProcessRole;
+using carla::multigpu::OwnsSensor;
+using carla::multigpu::ProcessRole;
 
 } // namespace
 

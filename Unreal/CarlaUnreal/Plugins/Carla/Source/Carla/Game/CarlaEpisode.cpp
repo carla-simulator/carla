@@ -428,9 +428,8 @@ void UCarlaEpisode::AddActorRosParents(FCarlaActor &Child, FCarlaActor &Parent)
   {
     return;
   }
-  constexpr int32 MaxAncestors = 16;
   FCarlaActor *CurrentActor = &Parent;
-  for (int32 Depth = 0; CurrentActor != nullptr && CurrentActor != &Child && Depth < MaxAncestors; ++Depth)
+  for (int32 Depth = 0; CurrentActor != nullptr && CurrentActor != &Child && Depth < MaxAttachmentDepth; ++Depth)
   {
     for (const auto &Attr : CurrentActor->GetActorInfo()->Description.Variations)
     {

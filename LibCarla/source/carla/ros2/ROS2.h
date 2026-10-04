@@ -87,6 +87,9 @@ public:
   void SetPublicationOwnerQuery(PublicationOwnerQuery query);
   [[nodiscard]]
   bool OwnsPublication(carla::streaming::detail::stream_id_type stream_id, bool primary_only = false) const;
+  /// Like OwnsPublication, but a process that lost ownership also drops the
+  /// publishers it created for @a actor, so the topic keeps a single writer.
+  bool AcquirePublication(carla::streaming::detail::stream_id_type stream_id, void *actor, bool primary_only = false);
   /// Must be called before Enable(): only the clock owner creates /clock.
   void SetClockOwner(bool clock_owner) { _clock_owner = clock_owner; }
 

@@ -330,7 +330,6 @@ void FCarlaEngine::NotifyInitGame(const UCarlaSettings &Settings)
       };
 
       Secondary = std::make_shared<carla::multigpu::Secondary>(PrimaryIP, PrimaryPort, CommandExecutor);
-      // A new connection means the primary forgot its routes to this secondary.
       Secondary->SetConnectedCallback([this]()
       {
         SensorStreams.ResetOwnership(Server.GetStreamingServer());
@@ -387,7 +386,6 @@ void FCarlaEngine::NotifyInitGame(const UCarlaSettings &Settings)
             DomainId, carla::ros2::kMinDomainId, carla::ros2::kMaxDomainId);
         DomainId = carla::ros2::kUnsetDomainId;
       }
-      // A secondary mirrors the primary's simulation time; only the primary publishes /clock.
       ROS2->SetClockOwner(bIsPrimaryServer);
       if (!ROS2->Enable(true, Parsed.middleware, DomainId))
       {
@@ -399,7 +397,7 @@ void FCarlaEngine::NotifyInitGame(const UCarlaSettings &Settings)
       else
       {
         UE_LOG(LogCarla, Log, TEXT("ROS2: enabled with middleware '%s'."), *Settings.RmwName);
-        // Installed on every primary too: secondaries can connect at any time.
+        // Installed on a primary as well: secondaries can connect later.
         ROS2->SetPublicationOwnerQuery(
             [this](carla::streaming::detail::stream_id_type StreamId, bool bPrimaryOnly)
             {
@@ -583,7 +581,7 @@ bool FCarlaEngine::OwnsSensorStream(carla::streaming::detail::stream_id_type Str
 {
   if (!bIsRunning)
   {
-    return carla::multigpu::OwnsSensor(carla::multigpu::ProcessRole::Standalone, false, bPrimaryOnly, false);
+    return true;
   }
   if (bIsPrimaryServer)
   {
@@ -690,8 +688,7 @@ void FCarlaEngine::OnPreTick(UWorld *, ELevelTick TickType, float DeltaSeconds)
       else
       {
         std::scoped_lock<std::mutex> Lock(FrameToProcessMutex);
-        // Sensors and ROS 2 stamp the frame with the primary's time; the local
-        // delta includes the time spent waiting for the primary.
+        // The local delta includes the time spent waiting for the primary.
         const std::optional<double> PrimaryElapsedGameTime =
             FramesToProcess.empty() ? std::nullopt : FramesToProcess.front().GetElapsedGameTime();
         if (PrimaryElapsedGameTime)

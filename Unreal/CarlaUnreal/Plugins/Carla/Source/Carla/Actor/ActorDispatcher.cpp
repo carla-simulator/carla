@@ -293,8 +293,7 @@ FCarlaActor* UActorDispatcher::RegisterActor(
           bEnableAutowareControl = Attr.Value.Value.ToBool();
         }
       }
-      // A Multi-GPU secondary mirrors the hero; only the primary takes its control topics.
-      UCarlaGameInstance *GameInstance = UCarlaStatics::GetGameInstance(&Actor);
+      UCarlaGameInstance *GameInstance = bIsHero ? UCarlaStatics::GetGameInstance(&Actor) : nullptr;
       const FCarlaEngine *CarlaEngine = (GameInstance != nullptr) ? GameInstance->GetCarlaEngine() : nullptr;
       const bool bIsSecondary = (CarlaEngine != nullptr) && !CarlaEngine->IsPrimaryServer();
       if (bIsHero && !bIsSecondary)

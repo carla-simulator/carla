@@ -1164,13 +1164,6 @@ void FCarlaServer::FPimpl::BindActions()
     CarlaActor->SetAttachmentType(InAttachmentType);
     ParentCarlaActor->AddChildren(CarlaActor->GetActorId());
 
-    // NOTE: tier4 also propagated each ancestor's ros_topic_name onto the
-    // child here, but their AddActorRosTopicName used map::insert, so the
-    // dispatcher's earlier per-actor registration (own override or "")
-    // always won and the call was a no-op. Our AddActorRosTopicName is
-    // insert_or_assign (re-registration idempotency), which made the
-    // propagation live and clobbered every attached sensor's own
-    // ros_topic_name with its ancestor's — so it is dropped entirely.
     Episode->AddActorRosParents(*CarlaActor, *ParentCarlaActor);
 
     // Only is possible to attach if the actor has been really spawned and

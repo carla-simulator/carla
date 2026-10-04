@@ -1092,7 +1092,6 @@ bool ASceneCaptureSensor::ShouldCaptureThisFrame()
   {
     return false;
   }
-  // Multi-GPU: a mirrored camera is captured only by the process owning it.
   if (!OwnsSensorStream())
   {
     return false;

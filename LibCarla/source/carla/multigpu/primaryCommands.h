@@ -46,7 +46,6 @@ class PrimaryCommands {
     // broadcast to all secondary servers the map to load
     void SendLoadMap(std::string map);
 
-    // broadcast to all secondary servers the global ROS 2 TF publication flag
     void SendPublishTF(bool publish_tf);
 
     // send to know if a connection is alive

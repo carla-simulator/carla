@@ -66,7 +66,6 @@ class FFrameData
   CarlaRecorderPhysicsControls PhysicsControls;
   CarlaRecorderTrafficLightTimes TrafficLightTimes;
   CarlaRecorderFrameCounter FrameCounter;
-  // The primary's episode time of this frame (Multi-GPU).
   std::optional<double> ElapsedGameTime;
 
   #pragma pack(push, 1)

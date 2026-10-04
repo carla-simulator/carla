@@ -266,8 +266,12 @@ public:
       AActor *Parent,
       EAttachmentType InAttachmentType = EAttachmentType::Rigid);
 
+  /// Bound on parent-chain walks, in case of a malformed (cyclic) hierarchy.
+  static constexpr int32 MaxAttachmentDepth = 16;
+
   /// Publishes @a Child's ROS 2 topics under every ancestor of @a Parent
-  /// (included) that has a ros_name. No-op when ROS 2 is disabled.
+  /// (included) that has a ros_name. Ancestors' ros_topic_name overrides are
+  /// deliberately not propagated: they would replace the child's own.
   void AddActorRosParents(FCarlaActor &Child, FCarlaActor &Parent);
 
   /// @copydoc FActorDispatcher::DestroyActor(AActor*)
@@ -410,8 +414,6 @@ private:
     SetElapsedGameTime(ElapsedGameTime + DeltaSeconds);
   }
 
-  /// Multi-GPU secondary: follows the primary's episode time instead of
-  /// accumulating its own.
   void TickTimersFromPrimary(float DeltaSeconds, double PrimaryElapsedGameTime)
   {
     SetVisualGameTime(VisualGameTime + DeltaSeconds);
