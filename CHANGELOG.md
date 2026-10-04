@@ -1,5 +1,6 @@
 ## LATEST Changes
 
+* Hardened `Vehicle.get_wheel_steer_angle` on UE5: the angle (degrees, straight from the Chaos solver) is now returned only after checking the movement component, the requested wheel location and the solver's per-wheel output, so a vehicle with fewer wheels than the requested location returns `0.0` with a `LogCarla` warning instead of risking the solver `check()`, and vehicles with physics disabled return `0.0` silently instead of logging a warning on every call. Added the `smoke.test_vehicle_wheel_steer_angle` smoke test.
 * Fixed broken links in the documentation: the SYNKROTRON page on the home page, the Linux and Windows build guides in the contribution guidelines and the colliders tutorial, and Python API links in the bounding boxes, getting started and first steps tutorials.
 * Changed volumtric cloud mode to (`r.VolumetricRenderTarget.Mode=2`) at Epic and Cine. Mode 3 drastically reduced th performance at the cost of a slight visual improvement.
 * Added `carla.Road`, `carla.LaneSection` and `carla.Lane` to the Python API, so the road network can be addressed as objects instead of only sampled as waypoints.
