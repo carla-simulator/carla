@@ -90,6 +90,9 @@ public:
   /// Like OwnsPublication, but a process that lost ownership also drops the
   /// publishers it created for @a actor, so the topic keeps a single writer.
   bool AcquirePublication(carla::streaming::detail::stream_id_type stream_id, void *actor, bool primary_only = false);
+  /// Drops the publishers created for @a actor; for sensors that stop being
+  /// published, so no publish call would reach AcquirePublication.
+  void ReleasePublication(void *actor);
   /// Must be called before Enable(): only the clock owner creates /clock.
   void SetClockOwner(bool clock_owner) { _clock_owner = clock_owner; }
 

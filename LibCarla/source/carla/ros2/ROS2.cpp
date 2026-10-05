@@ -194,10 +194,14 @@ bool ROS2::AcquirePublication(carla::streaming::detail::stream_id_type stream_id
   if (OwnsPublication(stream_id, primary_only)) {
     return true;
   }
+  ReleasePublication(actor);
+  return false;
+}
+
+void ROS2::ReleasePublication(void *actor) {
   _publishers.erase(actor);
   _camera_publishers.erase(actor);
   _transforms.erase(actor);
-  return false;
 }
 
 void ROS2::RegisterSensor(

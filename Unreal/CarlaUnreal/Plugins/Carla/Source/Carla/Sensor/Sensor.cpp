@@ -98,7 +98,15 @@ bool ASensor::OwnsSensorStream()
     return true;
   }
   const auto StreamId = carla::streaming::detail::token_type(Stream.GetToken()).get_stream_id();
-  return CarlaEngine->OwnsSensorStream(StreamId, false);
+  const bool bOwns = CarlaEngine->OwnsSensorStream(StreamId, false);
+#if defined(WITH_ROS2)
+  if (bOwnedOnLastCheck && !bOwns)
+  {
+    carla::ros2::ROS2::GetInstance()->ReleasePublication(this);
+  }
+#endif
+  bOwnedOnLastCheck = bOwns;
+  return bOwns;
 }
 
 void ASensor::SetSeed(const int32 InSeed)

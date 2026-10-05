@@ -316,4 +316,6 @@ private:
 
   bool bClientsListening = false;
 
+  bool bOwnedOnLastCheck = true;
+
 };
