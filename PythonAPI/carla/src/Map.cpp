@@ -7,6 +7,9 @@
 #include <PythonAPI.h>
 
 #include <carla/geom/GeoProjectionsParams.h>
+#include <carla/client/Lane.h>
+#include <carla/client/LaneSection.h>
+#include <carla/client/Road.h>
 
 #ifdef _MSC_VER
 #pragma warning(push)
@@ -17,6 +20,30 @@
 #else
 #include <boost/variant2/variant.hpp>
 #endif
+
+namespace carla {
+namespace client {
+
+  std::ostream &operator<<(std::ostream &out, const Road &road) {
+    out << "Road(id=" << std::to_string(road.GetId()) << ')';
+    return out;
+  }
+
+  std::ostream &operator<<(std::ostream &out, const LaneSection &section) {
+    out << "LaneSection(road_id=" << std::to_string(section.GetRoadId())
+        << ", id=" << std::to_string(section.GetId()) << ')';
+    return out;
+  }
+
+  std::ostream &operator<<(std::ostream &out, const Lane &lane) {
+    out << "Lane(road_id=" << std::to_string(lane.GetRoadId())
+        << ", section_id=" << std::to_string(lane.GetSectionId())
+        << ", id=" << std::to_string(lane.GetId()) << ')';
+    return out;
+  }
+
+} // namespace client
+} // namespace carla
 
 static void SaveOpenDriveToDisk(const carla::client::Map &self, std::string path) {
   carla::PythonUtil::ReleaseGIL unlock;
@@ -235,6 +262,12 @@ void export_map() {
     .def("get_geoprojection", &GetGeoProjection)
     .def("to_opendrive", CALL_RETURNING_COPY(cc::Map, GetOpenDrive))
     .def("save_to_disk", &SaveOpenDriveToDisk, (arg("path")=""))
+    .def("get_roads", CALL_RETURNING_LIST(cc::Map, GetRoads))
+    .def("get_road", &cc::Map::GetRoad, (arg("road_id")))
+    .def("get_lane_section", &cc::Map::GetLaneSection, (arg("road_id"), arg("section_id")))
+    .def("get_lane", &cc::Map::GetLane, (arg("road_id"), arg("section_id"), arg("lane_id")))
+    .def("get_junctions", CALL_RETURNING_LIST(cc::Map, GetJunctions))
+    .def("get_junction_by_id", &cc::Map::GetJunctionById, (arg("junction_id")))
     .def("get_crosswalks", CALL_RETURNING_LIST(cc::Map, GetAllCrosswalkZones))
     .def("get_all_landmarks", CALL_RETURNING_LIST(cc::Map, GetAllLandmarks))
     .def("get_all_landmarks_from_id", CALL_RETURNING_LIST_1(cc::Map, GetLandmarksFromId, std::string), (args("opendrive_id")))
@@ -253,6 +286,80 @@ void export_map() {
     .add_property("color", &cre::LaneMarking::color)
     .add_property("lane_change", &cre::LaneMarking::lane_change)
     .add_property("width", &cre::LaneMarking::width)
+  ;
+
+  class_<cc::Road, boost::noncopyable, std::shared_ptr<cc::Road>>("Road", no_init)
+    .add_property("id", &cc::Road::GetId)
+    .add_property("name", CALL_RETURNING_COPY(cc::Road, GetName))
+    .add_property("length", &cc::Road::GetLength)
+    .add_property("is_junction", &cc::Road::IsJunction)
+    .add_property("junction_id", &cc::Road::GetJunctionId)
+    .add_property("is_rht", &cc::Road::IsRHT)
+    .add_property("successor_id", &cc::Road::GetSuccessorId)
+    .add_property("predecessor_id", &cc::Road::GetPredecessorId)
+    .def("get_next_road", CALL_RETURNING_LIST(cc::Road, GetNextRoads))
+    .def("get_previous_road", CALL_RETURNING_LIST(cc::Road, GetPreviousRoads))
+    .def("get_lanes", CALL_RETURNING_LIST_2(cc::Road, GetLanes, double, cr::Lane::LaneType),
+        (arg("s"), arg("lane_type")=cr::Lane::LaneType::Driving))
+    .def("get_lane", &cc::Road::GetLane, (arg("section_id"), arg("lane_id")))
+    .def("get_lane_at", &cc::Road::GetLaneAt, (arg("s"), arg("lane_id")))
+    .def("get_sections", CALL_RETURNING_LIST(cc::Road, GetSections))
+    .def("get_section", &cc::Road::GetSection, (arg("section_id")))
+    .def("get_section_at", &cc::Road::GetSectionAt, (arg("s")))
+    .def("get_junction", &cc::Road::GetJunction)
+    .def("get_transform_at", &cc::Road::GetTransformAt, (arg("s")))
+    .def("get_waypoints_at", CALL_RETURNING_LIST_2(cc::Road, GetWaypointsAt, double, cr::Lane::LaneType),
+        (arg("s"), arg("lane_type")=cr::Lane::LaneType::Driving))
+    .def("get_waypoints", CALL_RETURNING_LIST_2(cc::Road, GetWaypoints, double, cr::Lane::LaneType),
+        (arg("distance"), arg("lane_type")=cr::Lane::LaneType::Driving))
+    .def("__eq__", &cc::Road::operator==)
+    .def("__ne__", &cc::Road::operator!=)
+    .def("__hash__", &cc::Road::GetId)
+    .def(self_ns::str(self_ns::self))
+  ;
+
+  class_<cc::LaneSection, boost::noncopyable, std::shared_ptr<cc::LaneSection>>("LaneSection", no_init)
+    .add_property("id", &cc::LaneSection::GetId)
+    .add_property("road_id", &cc::LaneSection::GetRoadId)
+    .add_property("s_start", &cc::LaneSection::GetDistance)
+    .add_property("length", &cc::LaneSection::GetLength)
+    .def("get_road", &cc::LaneSection::GetRoad)
+    .def("get_lanes", CALL_RETURNING_LIST_1(cc::LaneSection, GetLanes, cr::Lane::LaneType),
+        (arg("lane_type")=cr::Lane::LaneType::Driving))
+    .def("get_lane", &cc::LaneSection::GetLane, (arg("lane_id")))
+    .def("contains_lane", &cc::LaneSection::ContainsLane, (arg("lane_id")))
+    .def("get_next_section", &cc::LaneSection::GetNextSection)
+    .def("get_previous_section", &cc::LaneSection::GetPreviousSection)
+    .def("__eq__", &cc::LaneSection::operator==)
+    .def("__ne__", &cc::LaneSection::operator!=)
+    .def("__hash__", &cc::LaneSection::GetUniqueId)
+    .def(self_ns::str(self_ns::self))
+  ;
+
+  class_<cc::Lane, boost::noncopyable, std::shared_ptr<cc::Lane>>("Lane", no_init)
+    .add_property("id", &cc::Lane::GetId)
+    .add_property("road_id", &cc::Lane::GetRoadId)
+    .add_property("section_id", &cc::Lane::GetSectionId)
+    .add_property("type", &cc::Lane::GetType)
+    .add_property("length", &cc::Lane::GetLength)
+    .add_property("s_start", &cc::Lane::GetDistance)
+    .add_property("level", &cc::Lane::GetLevel)
+    .add_property("is_straight", &cc::Lane::IsStraight)
+    .add_property("is_positive_direction", &cc::Lane::IsPositiveDirection)
+    .def("get_road", &cc::Lane::GetRoad)
+    .def("get_section", &cc::Lane::GetSection)
+    .def("get_width", &cc::Lane::GetWidth, (arg("s")))
+    .def("get_transform", &cc::Lane::GetTransform, (arg("s")))
+    .def("get_right_lane", &cc::Lane::GetRightLane)
+    .def("get_left_lane", &cc::Lane::GetLeftLane)
+    .def("get_next_lane", CALL_RETURNING_LIST(cc::Lane, GetNextLanes))
+    .def("get_previous_lane", CALL_RETURNING_LIST(cc::Lane, GetPreviousLanes))
+    .def("get_waypoint", &cc::Lane::GetWaypoint, (arg("s")))
+    .def("get_waypoints", CALL_RETURNING_LIST_1(cc::Lane, GetWaypoints, double), (arg("distance")))
+    .def("__eq__", &cc::Lane::operator==)
+    .def("__ne__", &cc::Lane::operator!=)
+    .def("__hash__", &cc::Lane::GetUniqueId)
+    .def(self_ns::str(self_ns::self))
   ;
 
   class_<cc::Waypoint, boost::noncopyable, std::shared_ptr<cc::Waypoint>>("Waypoint", no_init)
@@ -275,8 +382,12 @@ void export_map() {
     .def("previous", CALL_RETURNING_LIST_1(cc::Waypoint, GetPrevious, double), (args("distance")))
     .def("next_until_lane_end", CALL_RETURNING_LIST_1(cc::Waypoint, GetNextUntilLaneEnd, double), (args("distance")))
     .def("previous_until_lane_start", CALL_RETURNING_LIST_1(cc::Waypoint, GetPreviousUntilLaneStart, double), (args("distance")))
-    .def("get_right_lane", &cc::Waypoint::GetRight)
-    .def("get_left_lane", &cc::Waypoint::GetLeft)
+    .def("get_right_lane", &cc::Waypoint::GetRight) // deprecated, returns a Waypoint
+    .def("get_left_lane", &cc::Waypoint::GetLeft)   // deprecated, returns a Waypoint
+    .def("get_right_waypoint", &cc::Waypoint::GetRight)
+    .def("get_left_waypoint", &cc::Waypoint::GetLeft)
+    .def("get_lane", &cc::Waypoint::GetLane)
+    .def("get_road", &cc::Waypoint::GetRoad)
     .def("get_junction", &cc::Waypoint::GetJunction)
     .def("get_landmarks", CALL_RETURNING_LIST_2(cc::Waypoint, GetAllLandmarksInDistance, double, bool), (arg("distance"), arg("stop_at_junction")=false))
     .def("get_landmarks_of_type", CALL_RETURNING_LIST_3(cc::Waypoint, GetLandmarksOfTypeInDistance, double, std::string, bool), (arg("distance"), arg("type"), arg("stop_at_junction")=false))
@@ -287,6 +398,16 @@ void export_map() {
     .add_property("id", &cc::Junction::GetId)
     .add_property("bounding_box", &cc::Junction::GetBoundingBox)
     .def("get_waypoints", &GetJunctionWaypoints)
+    .def("get_connecting_roads", CALL_RETURNING_LIST(cc::Junction, GetConnectingRoads))
+    .def("get_adjacent_roads", CALL_RETURNING_LIST(cc::Junction, GetAdjacentRoads))
+    .def("get_entry_lanes", CALL_RETURNING_LIST_1(cc::Junction, GetEntryLanes, cr::Lane::LaneType),
+        (arg("lane_type")=cr::Lane::LaneType::Driving))
+    .def("get_exit_lanes", CALL_RETURNING_LIST_1(cc::Junction, GetExitLanes, cr::Lane::LaneType),
+        (arg("lane_type")=cr::Lane::LaneType::Driving))
+    .def("get_entry_waypoints", CALL_RETURNING_LIST_1(cc::Junction, GetEntryWaypoints, cr::Lane::LaneType),
+        (arg("lane_type")=cr::Lane::LaneType::Driving))
+    .def("get_exit_waypoints", CALL_RETURNING_LIST_1(cc::Junction, GetExitWaypoints, cr::Lane::LaneType),
+        (arg("lane_type")=cr::Lane::LaneType::Driving))
   ;
 
   class_<cr::SignalType>("LandmarkType", no_init)
