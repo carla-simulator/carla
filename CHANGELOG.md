@@ -1,5 +1,6 @@
 ## LATEST Changes
 
+* Fixed broken links in the documentation: the SYNKROTRON page on the home page, the Linux and Windows build guides in the contribution guidelines and the colliders tutorial, and Python API links in the bounding boxes, getting started and first steps tutorials.
 * Changed volumtric cloud mode to (`r.VolumetricRenderTarget.Mode=2`) at Epic and Cine. Mode 3 drastically reduced th performance at the cost of a slight visual improvement.
 * Added `carla.Road`, `carla.LaneSection` and `carla.Lane` to the Python API, so the road network can be addressed as objects instead of only sampled as waypoints.
 * Added new functions to the `carla.Map`, `carla.Waypoint` and `carla.Junction`, related to the new road, lane section and lane objects: `carla.Map.get_roads`, `get_road`, `get_lane_section`, `get_lane`, `get_junctions` and `get_junction_by_id`; `carla.Waypoint.get_lane` and `get_road`; and `carla.Junction.get_connecting_roads`, `get_adjacent_roads`, `get_entry_lanes`, `get_exit_lanes`, `get_entry_waypoints` and `get_exit_waypoints`.
