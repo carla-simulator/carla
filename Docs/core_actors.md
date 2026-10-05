@@ -41,9 +41,9 @@ vehicle_bp = random.choice(blueprint_library.filter('vehicle.*.*'))
 
 Besides that, each [carla.ActorBlueprint](python_api.md#carla.ActorBlueprint) has a series of [carla.ActorAttribute](python_api.md#carla.ActorAttribute) that can be _get_ and _set_.
 ```py
-is_bike = [vehicle.get_attribute('number_of_wheels') == 2]
-if(is_bike)
-    vehicle.set_attribute('color', '255,0,0')
+is_bike = vehicle_bp.get_attribute('number_of_wheels') == 2
+if is_bike:
+    vehicle_bp.set_attribute('color', '255,0,0')
 ```
 !!! Note
     Some of the attributes cannot be modified. Check it out in the [blueprint library](bp_library.md).
@@ -101,7 +101,7 @@ An actor can be attached to another one when spawned. Actors follow the parent t
 The next example attaches a camera rigidly to a vehicle, so their relative position remains fixed. 
 
 ```py
-camera = world.spawn_actor(camera_bp, relative_transform, attach_to=my_vehicle, carla.AttachmentType.Rigid)
+camera = world.spawn_actor(camera_bp, relative_transform, attach_to=my_vehicle, attachment_type=carla.AttachmentType.Rigid)
 ```
 !!! Important
     When spawning attached actors, the transform provided must be relative to the parent actor. 
@@ -204,7 +204,7 @@ The state of a traffic light can be set using the API. So does the seconds spent
 #Change a red traffic light to green
 if traffic_light.get_state() == carla.TrafficLightState.Red:
     traffic_light.set_state(carla.TrafficLightState.Green)
-    traffic_light.set_set_green_time(4.0)
+    traffic_light.set_green_time(4.0)
 ``` 
 
 !!! Note

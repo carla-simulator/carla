@@ -479,7 +479,7 @@
     - def_name: apply_settings
       return: int
       params:
-      - param_name: world_settings
+      - param_name: settings
         type: carla.WorldSettings
       doc: >
         This method applies settings contained in an object to the simulation running and returns the ID of the frame they were implemented. 
@@ -547,7 +547,7 @@
         default: None
         doc: > 
           The parent object that the spawned actor will follow around. 
-      - param_name: attachment 
+      - param_name: attachment_type
         type: carla.AttachmentType
         default: Rigid
         doc: > 
@@ -571,7 +571,7 @@
         default: None
         doc: > 
           The parent object that the spawned actor will follow around. 
-      - param_name: attachment 
+      - param_name: attachment_type
         type: carla.AttachmentType
         default: Rigid
         doc: > 
@@ -610,14 +610,14 @@
     # --------------------------------------
     - def_name: get_level_bbs
       params:
-      - param_name: actor_type
+      - param_name: bb_type
         type: carla.CityObjectLabel
         default: Any
         doc: > 
           Semantic tag of the elements contained in the bounding boxes that are returned. 
       return: array(carla.BoundingBox)
       doc: >
-        Returns an array of bounding boxes with location and rotation in world space. The method returns all the bounding boxes in the level by default, but the query can be filtered by semantic tags with the argument `actor_type`. 
+        Returns an array of bounding boxes with location and rotation in world space. The method returns all the bounding boxes in the level by default, but the query can be filtered by semantic tags with the argument `bb_type`. 
     # --------------------------------------
     - def_name: get_environment_objects
       params:

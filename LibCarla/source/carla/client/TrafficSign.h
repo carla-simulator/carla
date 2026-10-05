@@ -7,6 +7,7 @@
 #pragma once
 
 #include "carla/client/Actor.h"
+#include "carla/client/Waypoint.h"
 #include "carla/road/RoadTypes.h"
 
 namespace carla {
@@ -22,6 +23,10 @@ namespace client {
     }
 
     carla::road::SignId GetSignId() const;
+
+    std::vector<SharedPtr<Waypoint>> GetAffectedLaneWaypoints() const;
+
+    std::vector<SharedPtr<Waypoint>> GetStopWaypoints() const;
 
   };
 

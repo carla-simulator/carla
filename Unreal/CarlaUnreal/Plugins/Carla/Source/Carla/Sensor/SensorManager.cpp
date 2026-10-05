@@ -5,6 +5,8 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "SensorManager.h"
+#include "Carla/Sensor/CarlaLidarSubsystem.h"
+#include "Engine/World.h"
 #include "Sensor.h"
 #include "Carla/Sensor/ImageUtil.h"
 
@@ -21,7 +23,14 @@ void FSensorManager::DeRegisterSensor(ASensor* Sensor)
 void FSensorManager::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaSeconds)
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(FSensorManager::PostPhysTick);
-  for(ASensor* Sensor : SensorList)
+
+  UCarlaLidarSubsystem* LidarSubsystem = World ? World->GetSubsystem<UCarlaLidarSubsystem>() : nullptr;
+  if (LidarSubsystem != nullptr) 
+  {
+    LidarSubsystem->StartLidarSimulations(World, DeltaSeconds);
+  }
+
+  for (ASensor * Sensor : SensorList) 
   {
     Sensor->PostPhysTickInternal(World, TickType, DeltaSeconds);
   }
@@ -29,4 +38,9 @@ void FSensorManager::PostPhysTick(UWorld *World, ELevelTick TickType, float Delt
   // and deliver the whole batch (one pipeline drain per tick instead of one
   // per camera).
   ImageUtil::FlushBatchedReadbacks();
+
+  if (LidarSubsystem != nullptr) 
+  {
+    LidarSubsystem->FinishLidarSimulations(World, DeltaSeconds);
+  }
 }

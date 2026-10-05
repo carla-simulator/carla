@@ -178,6 +178,9 @@ void ACarlaGameModeBase::InitGame(
       ASkyBase* SkyActor = World->SpawnActor<ASkyBase>(SkyClass);
       if (SkyActor != nullptr)
       {
+        // A level-placed rig that is spatially loaded streams in after this,
+        // and replaces this one (see ASkyBase::BeginPlay).
+        SkyActor->Tags.Add(ASkyBase::FallbackSkyTag);
         // The class defaults leave the sun at the horizon (pitch 0), which
         // renders a black atmosphere and an unlit ground; level-placed rigs
         // (Town10) carry a proper rotation in their instance data. Point the
