@@ -12,7 +12,7 @@ variables:
   UE5_BRANCH: "ue5-dev-carla"
   UE_VOLUME: "carla-ue5-engine-22.04"
   CARLA_CONTENT_BRANCH: "ue5"
-  CARLA_CONTENT_BASE_REF: "0.10.0"
+  CARLA_CONTENT_BASE_REF: "ue5-dev"
   carla_version: "0.10.0"
   image_carla_release: "$CI_REGISTRY_IMAGE/carla-$carla_version:release"
   image_carla_release_slim: "$CI_REGISTRY_IMAGE/carla-$carla_version:release-slim"
