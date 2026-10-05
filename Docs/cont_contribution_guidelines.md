@@ -109,7 +109,7 @@ The documentation is written with a mix of [Markdown](https://www.markdownguide.
 !!! Important
     To submit docs contributions, follow the same workflow explained right above in [code contributions](#submission). To sum up, contributions are made in a child branch from `dev` and merged to said branch.  
 
-__1. Build CARLA from source.__ Follow the steps in the docs to build on [Linux](build_linux.md) or [Windows](build_windows.md).  
+__1. Build CARLA from source.__ Follow the steps in the docs to build on [Linux](build_linux_ue5.md) or [Windows](build_windows_ue5.md).  
 
 
 __2. Install [MkDocs](http://www.mkdocs.org/).__ MkDocs is a static site generator used to build documentation. 

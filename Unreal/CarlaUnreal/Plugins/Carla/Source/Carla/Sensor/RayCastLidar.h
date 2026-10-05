@@ -35,7 +35,7 @@ public:
   virtual void Set(const FActorDescription &Description) override;
   virtual void Set(const FLidarDescription &LidarDescription) override;
 
-  virtual void PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaTime);
+  virtual void SendData(const float DeltaTime) override;
 
   const TArray<float>& GetTestPointCloud() const { return PointCloudLidarData; };
 
