@@ -228,7 +228,7 @@ static TAutoConsoleVariable<float> CVarCarlaWeatherMoonDiscBrightnessEndDeg(
 
 static TAutoConsoleVariable<float> CVarCarlaWeatherMoonDiscNightBrightness(
     TEXT("carla.Weather.MoonDiscNightBrightness"),
-    60.0f,
+    40.0f,
     TEXT("Emissive brightness of the moon disc at full night. Lower also means less bloom ")
     TEXT("around it, the only per-object bloom control there is."),
     ECVF_Default);
@@ -345,6 +345,17 @@ static TAutoConsoleVariable<float> CVarCarlaWeatherSkySphereCloudOpacity(
     TEXT("asset's value."),
     ECVF_Default);
 
+// With "Colors Determined By Sun Position" on, the sphere's own colour curves
+// gave it a dusk sky all night (orange horizon, brown painted clouds), and it
+// is switched on at SkySphereShowDeg: the sky jumped from black to dusk there.
+// Forced near-black, it matches the atmosphere it hides and only the stars show.
+static TAutoConsoleVariable<FString> CVarCarlaWeatherSkySphereNightColor(
+    TEXT("carla.Weather.SkySphereNightColor"),
+    TEXT("0.002 0.002 0.0025"),
+    TEXT("Horizon, zenith and cloud colour of the night sky sphere, \"R G B\". Anything ")
+    TEXT("else (e.g. \"off\") leaves the sphere's sun-driven colours."),
+    ECVF_Default);
+
 static TAutoConsoleVariable<float> CVarCarlaWeatherStreetLightsOnDeg(
     TEXT("carla.Weather.StreetLightsOnDeg"),
     0.8f,
@@ -411,7 +422,7 @@ static TAutoConsoleVariable<FString> CVarCarlaWeatherCityGlowColor(
 
 static TAutoConsoleVariable<float> CVarCarlaWeatherStarsBrightness(
     TEXT("carla.Weather.StarsBrightness"),
-    0.3f,
+    4.0f,
     TEXT("Value forced into the night sky sphere's \"Stars Brightness\" variable ")
     TEXT("(BP_Sky_Sphere, engine content) whenever SunAltitudeAngle < 0. Set 0 to leave the ")
     TEXT("sphere's authored value alone; any other value replaces it on every push, which is ")
@@ -701,6 +712,86 @@ static void ReleaseDirectionalVSMInvalidateIfSunStill(const UWorld* World)
         && World->GetTimeSeconds() - GLastSunMoveWorldSeconds
             > FMath::Max(CVarCarlaWeatherVSMSunStillSeconds.GetValueOnGameThread(), 0.0f))
         SetForceInvalidateDirectionalVSM(false);
+}
+
+// Lumen caches its lighting (radiance cache probes, surface cache) and updates
+// it over many frames, nearest first; the sky light's real-time capture is
+// time-sliced too. After a jump from day to night the city stayed lit like day
+// for 20+ s (Town10, fixed exposure: 24 s, nearest street first, far facades
+// last). Held for LightingJumpSettleSeconds of world time after a weather push
+// that moves the sun or the clouds by more than the thresholds, the three
+// cvars below bring that to ~6 s. Gradual changes (a timeline, a client easing
+// the sun) never trigger it. Set by code, so a value set in the console wins.
+static TAutoConsoleVariable<float> CVarCarlaWeatherLightingJumpSunDeg(
+    TEXT("carla.Weather.LightingJumpSunDeg"),
+    5.0f,
+    TEXT("Sun altitude change, in degrees, between two weather pushes that counts as a lighting ")
+    TEXT("jump and forces Lumen and the sky light capture to update in full. 0 disables it."),
+    ECVF_Default);
+
+static TAutoConsoleVariable<float> CVarCarlaWeatherLightingJumpCloudiness(
+    TEXT("carla.Weather.LightingJumpCloudiness"),
+    30.0f,
+    TEXT("Cloudiness change between two weather pushes that counts as a lighting jump. 0 disables it."),
+    ECVF_Default);
+
+static TAutoConsoleVariable<float> CVarCarlaWeatherLightingJumpSettleSeconds(
+    TEXT("carla.Weather.LightingJumpSettleSeconds"),
+    8.0f,
+    TEXT("World seconds the full Lumen / sky light updates are held after a lighting jump."),
+    ECVF_Default);
+
+static const TCHAR* GLightingJumpCVars[] = {
+    TEXT("r.Lumen.RadianceCache.ForceFullUpdate"),
+    TEXT("r.LumenScene.Lighting.ForceLightingUpdate"),
+    TEXT("r.SkyLight.RealTimeReflectionCapture.TimeSlice")};
+static const int32 GLightingJumpValues[] = {1, 1, 0};
+static int32 GLightingJumpRestore[UE_ARRAY_COUNT(GLightingJumpCVars)] = {};
+static bool GForcingLightingUpdate = false;
+static double GLightingJumpWorldSeconds = 0.0;
+static float GLastPushedSunAltitude = TNumericLimits<float>::Max();
+static float GLastPushedCloudiness = TNumericLimits<float>::Max();
+
+static void SetForceLightingUpdate(bool bOn)
+{
+    if (GForcingLightingUpdate == bOn)
+        return;
+    for (int32 i = 0; i < UE_ARRAY_COUNT(GLightingJumpCVars); ++i)
+    {
+        IConsoleVariable* CVar = IConsoleManager::Get().FindConsoleVariable(GLightingJumpCVars[i]);
+        if (CVar == nullptr)
+            continue;
+        if (bOn)
+            GLightingJumpRestore[i] = CVar->GetInt();
+        CVar->Set(bOn ? GLightingJumpValues[i] : GLightingJumpRestore[i], ECVF_SetByCode);
+    }
+    GForcingLightingUpdate = bOn;
+    UE_LOG(LogCarla, Log, TEXT("AWeather: full Lumen / sky light update %s"), bOn ? TEXT("on") : TEXT("off"));
+}
+
+static void NoteLightingChange(const UWorld* World, float SunAltitude, float Cloudiness)
+{
+    const float SunDeg = CVarCarlaWeatherLightingJumpSunDeg.GetValueOnGameThread();
+    const float CloudJump = CVarCarlaWeatherLightingJumpCloudiness.GetValueOnGameThread();
+    const bool bFirst = GLastPushedSunAltitude == TNumericLimits<float>::Max();
+    const bool bJump = !bFirst && (
+        (SunDeg > 0.0f && FMath::Abs(SunAltitude - GLastPushedSunAltitude) > SunDeg) ||
+        (CloudJump > 0.0f && FMath::Abs(Cloudiness - GLastPushedCloudiness) > CloudJump));
+    GLastPushedSunAltitude = SunAltitude;
+    GLastPushedCloudiness = Cloudiness;
+    if (bJump)
+    {
+        GLightingJumpWorldSeconds = World->GetTimeSeconds();
+        SetForceLightingUpdate(true);
+    }
+}
+
+static void ReleaseLightingUpdateIfSettled(const UWorld* World)
+{
+    if (GForcingLightingUpdate && World != nullptr
+        && World->GetTimeSeconds() - GLightingJumpWorldSeconds
+            > FMath::Max(CVarCarlaWeatherLightingJumpSettleSeconds.GetValueOnGameThread(), 0.0f))
+        SetForceLightingUpdate(false);
 }
 
 // 1 at SunTwilightStartDeg and above, decaying to 0 at SunTwilightEndDeg.
@@ -1154,6 +1245,7 @@ void AWeather::Tick(float DeltaSeconds)
     Super::Tick(DeltaSeconds);
     UpdateRain();
     ReleaseDirectionalVSMInvalidateIfSunStill(GetWorld());
+    ReleaseLightingUpdateIfSettled(GetWorld());
 }
 
 void AWeather::BeginPlay()
@@ -1167,6 +1259,9 @@ void AWeather::BeginPlay()
 void AWeather::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
     SetForceInvalidateDirectionalVSM(false);
+    SetForceLightingUpdate(false);
+    GLastPushedSunAltitude = TNumericLimits<float>::Max();
+    GLastPushedCloudiness = TNumericLimits<float>::Max();
     for (auto& Entry : SensorRain)
         if (Entry.Value.IsValid()) Entry.Value->DestroyComponent();
     SensorRain.Empty();
@@ -1790,7 +1885,10 @@ void AWeather::ApplyWeatherToSkyActor(AActor* SkyActor, const FWeatherParameters
             const FRotator SunRotation(-Weather.SunAltitudeAngle, Weather.SunAzimuthAngle, 0.0f);
             SunLightComponent->SetWorldRotation(SunRotation);
             if (SkyActor->GetWorld() != nullptr && SkyActor->GetWorld()->IsGameWorld())
+            {
                 NoteSunRotation(SkyActor->GetWorld(), SunRotation);
+                NoteLightingChange(SkyActor->GetWorld(), Weather.SunAltitudeAngle, Weather.Cloudiness);
+            }
         }
 
         // The moon likewise, anti-solar; pitch negated as for the sun. Held at
@@ -2085,6 +2183,28 @@ void AWeather::ApplyWeatherToSkyActor(AActor* SkyActor, const FWeatherParameters
                 UFunction* RefreshMaterialFunction = SphereActor->FindFunction(TEXT("RefreshMaterial"));
                 if (RefreshMaterialFunction != nullptr && RefreshMaterialFunction->ParmsSize == 0)
                     SphereActor->ProcessEvent(RefreshMaterialFunction, nullptr);
+
+                // After RefreshMaterial, which rewrites the colours and the cloud
+                // opacity from the sphere's variables.
+                const FLinearColor NightColor = ParseColorCVar(CVarCarlaWeatherSkySphereNightColor, FLinearColor(-1.0f, -1.0f, -1.0f));
+                const float CloudOpacity = CVarCarlaWeatherSkySphereCloudOpacity.GetValueOnGameThread();
+                TInlineComponentArray<UMeshComponent*> SphereMeshes;
+                SphereActor->GetComponents(SphereMeshes);
+                for (UMeshComponent* SphereMesh : SphereMeshes)
+                {
+                    UMaterialInstanceDynamic* SphereMID = SphereMesh != nullptr
+                        ? Cast<UMaterialInstanceDynamic>(SphereMesh->GetMaterial(0)) : nullptr;
+                    if (SphereMID == nullptr)
+                        continue;
+                    if (NightColor.R >= 0.0f)
+                    {
+                        SphereMID->SetVectorParameterValue(TEXT("Horizon color"), NightColor);
+                        SphereMID->SetVectorParameterValue(TEXT("Zenith Color"), NightColor);
+                        SphereMID->SetVectorParameterValue(TEXT("Cloud color"), NightColor);
+                    }
+                    if (CloudOpacity >= 0.0f)
+                        SphereMID->SetScalarParameterValue(TEXT("Cloud opacity"), CloudOpacity);
+                }
             }
         }
         else
