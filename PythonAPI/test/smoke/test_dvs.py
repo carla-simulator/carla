@@ -21,6 +21,19 @@ DVS_DTYPE = np.dtype([('x', np.uint16), ('y', np.uint16), ('t', np.int64), ('pol
 
 
 class TestDVSCamera(SyncSmokeTest):
+    def tearDown(self):
+        # Restore the settings from SyncSmokeTest.setUp and reload a map that ships with the
+        # package. The base SmokeTest.tearDown loads Town03_Opt, which may not be present.
+        self.world.apply_settings(self.settings)
+        if self.settings.synchronous_mode:
+            self.world.tick()
+        self.settings = None
+        self.client.load_world("Town10HD_Opt")
+        # workaround: give time to the engine to clean memory after loading
+        time.sleep(5)
+        self.world = None
+        self.client = None
+
     def run_dvs(self, attributes):
         """Moves a DVS camera along the road and returns the received event arrays.
 
