@@ -112,12 +112,19 @@ ASkyBase::ASkyBase(
 
 void ASkyBase::SaveProfile()
 {
+  // The weather's fallback bloom is not part of the profile: saved as set,
+  // the profile would claim it and the fallback could never update it.
+  const bool bBloomOverride = PostProcessComponent->Settings.bOverride_BloomIntensity;
+  if (bBloomFromWeatherFallback)
+    PostProcessComponent->Settings.bOverride_BloomIntensity = false;
   UPostProcessJsonUtils::SaveAllPostProcessComponentToJson(PostProcessComponent, ProfileName);
+  PostProcessComponent->Settings.bOverride_BloomIntensity = bBloomOverride;
 }
 
 void ASkyBase::LoadProfile()
 {
   UPostProcessJsonUtils::LoadAllPostProcessFromJsonToPostProcessComponent(PostProcessComponent, ProfileName);
+  bBloomFromWeatherFallback = false;
 
   // Profiles that don't claim AutoExposureMinBrightness/MaxBrightness (i.e.
   // rely on Weather's fallback clamp, see ApplyWeatherToSkyActor) store those
@@ -409,6 +416,7 @@ void ASkyBase::BeginPlay()
     const FString Profile = UPostProcessJsonUtils::GetActiveProfileName();
     if (UPostProcessJsonUtils::LoadAllPostProcessFromJsonToPostProcessComponent(PostProcessComponent, Profile))
     {
+      bBloomFromWeatherFallback = false;
       UE_LOG(LogCarla, Log, TEXT("ASkyBase: %s loaded camera profile '%s'"), *GetName(), *Profile);
     }
     else

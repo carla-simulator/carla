@@ -13,6 +13,7 @@
 #include <util/ue-header-guard-begin.h>
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+#include "UObject/ObjectKey.h"
 #include <util/ue-header-guard-end.h>
 
 #include <type_traits>
@@ -221,7 +222,10 @@ public:
   /// that still looks like an authored UE4 value (see
   /// CarlaLightMaxAuthoredIntensity in the .cpp) by the scale registered for
   /// LightType. Shared with vehicle headlights for the same reason as above.
-  static void ScaleLightComponentIntensities(AActor* Owner, ELightType LightType);
+  /// With Converted, a component still holding the value last written for it
+  /// (recorded there) is skipped, so the conversion never applies twice.
+  static void ScaleLightComponentIntensities(AActor* Owner, ELightType LightType,
+      TMap<FObjectKey, float>* Converted = nullptr);
 
   /// The UE4->UE5 intensity conversion factor for a light type (the value of
   /// carla.Light.StreetIntensityScale or carla.Light.LegacyIntensityScale),
@@ -315,5 +319,11 @@ protected:
 private:
 
   void RecordLightChange() const;
+
+  // Intensity this light last wrote to each of its owner's light components
+  // (already in final units). A component still at that value is not a fresh
+  // blueprint push and must not be converted again: 0.5 became 500 lm and
+  // then 500000 lm on the next day/night change.
+  TMap<FObjectKey, float> ConvertedIntensities;
 
 };

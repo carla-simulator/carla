@@ -2481,16 +2481,23 @@ void AWeather::FillSkyPostProcessFallback(UPostProcessComponent* PostProcessComp
         Settings.bOverride_AutoExposureBias = true;
         Settings.AutoExposureBias = ExposureBias;
     }
-    // Only when the profile does not set bloom. A value equal to the last
-    // one written here counts as ours, so the cvar stays live.
-    static float LastBloomIntensityWritten = -1.0f;
+    // Only when the profile does not set bloom. The sky rig remembers that the
+    // bloom is ours (until a profile is loaded), so the cvar stays live.
+    ASkyBase* Sky = Cast<ASkyBase>(PostProcessComponent->GetOwner());
+    const bool bBloomIsOurs = Sky != nullptr && Sky->bBloomFromWeatherFallback;
     const float BloomIntensity = CVarCarlaWeatherBloomIntensity.GetValueOnGameThread();
-    if (BloomIntensity >= 0.0f
-        && (!Settings.bOverride_BloomIntensity || Settings.BloomIntensity == LastBloomIntensityWritten))
+    if (BloomIntensity >= 0.0f && (!Settings.bOverride_BloomIntensity || bBloomIsOurs))
     {
         Settings.bOverride_BloomIntensity = true;
         Settings.BloomIntensity = BloomIntensity;
-        LastBloomIntensityWritten = BloomIntensity;
+        if (Sky != nullptr)
+            Sky->bBloomFromWeatherFallback = true;
+    }
+    else if (BloomIntensity < 0.0f && bBloomIsOurs)
+    {
+        // Cvar switched off: hand bloom back to the engine default.
+        Settings.bOverride_BloomIntensity = false;
+        Sky->bBloomFromWeatherFallback = false;
     }
     const float ExposureMaxEV = CVarCarlaWeatherExposureMaxEV.GetValueOnGameThread();
     if (ExposureMaxEV >= 0.0f)

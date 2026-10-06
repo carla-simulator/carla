@@ -198,7 +198,7 @@ void UCarlaLight::ApplyLegacyComponentConversion()
   {
     return;
   }
-  ScaleLightComponentIntensities(GetOwner(), LightType);
+  ScaleLightComponentIntensities(GetOwner(), LightType, &ConvertedIntensities);
 }
 
 void UCarlaLight::ActivateAndConfigureLightComponents(AActor* Owner)
@@ -266,7 +266,8 @@ float UCarlaLight::StreetIntensityToLumens(float Intensity)
   return Intensity;
 }
 
-void UCarlaLight::ScaleLightComponentIntensities(AActor* Owner, ELightType LightType)
+void UCarlaLight::ScaleLightComponentIntensities(AActor* Owner, ELightType LightType,
+    TMap<FObjectKey, float>* Converted)
 {
   if (Owner == nullptr)
   {
@@ -274,33 +275,35 @@ void UCarlaLight::ScaleLightComponentIntensities(AActor* Owner, ELightType Light
   }
   TArray<ULocalLightComponent*> LightComponents;
   Owner->GetComponents<ULocalLightComponent>(LightComponents);
-  if (LightType == ELightType::Street)
+  const float Scale = GetLegacyIntensityScale(LightType);
+  for (ULocalLightComponent* LightComponent : LightComponents)
   {
-    for (ULocalLightComponent* LightComponent : LightComponents)
+    const float Current = LightComponent->Intensity;
+    // Still the value written last time: no blueprint push since, nothing to convert.
+    if (Converted != nullptr)
+    {
+      const float* Written = Converted->Find(LightComponent);
+      if (Written != nullptr && *Written == Current)
+        continue;
+    }
+    float Result = Current;
+    if (LightType == ELightType::Street)
     {
       // Authored content mixes Unitless and Lumens; the value is lumens.
       if (LightComponent->IntensityUnits != ELightUnits::Lumens)
         LightComponent->SetIntensityUnits(ELightUnits::Lumens);
-      const float Lumens = StreetIntensityToLumens(LightComponent->Intensity);
-      if (Lumens != LightComponent->Intensity)
-        LightComponent->SetIntensity(Lumens);
+      Result = StreetIntensityToLumens(Current);
     }
-    return;
-  }
-  const float Scale = GetLegacyIntensityScale(LightType);
-  if (Scale == 1.0f)
-  {
-    return;
-  }
-  for (ULocalLightComponent* LightComponent : LightComponents)
-  {
-    const float Current = LightComponent->Intensity;
-    UE_LOG(LogCarla, VeryVerbose, TEXT("CarlaLight conversion: owner %s component %s intensity %f visible %d"),
-        *Owner->GetName(), *LightComponent->GetName(), Current, LightComponent->IsVisible() ? 1 : 0);
-    if (Current > 0.0f && Current < CarlaLightMaxAuthoredIntensity)
+    else if (Scale != 1.0f && Current > 0.0f && Current < CarlaLightMaxAuthoredIntensity)
     {
-      LightComponent->SetIntensity(Current * Scale);
+      UE_LOG(LogCarla, VeryVerbose, TEXT("CarlaLight conversion: owner %s component %s intensity %f visible %d"),
+          *Owner->GetName(), *LightComponent->GetName(), Current, LightComponent->IsVisible() ? 1 : 0);
+      Result = Current * Scale;
     }
+    if (Result != Current)
+      LightComponent->SetIntensity(Result);
+    if (Converted != nullptr)
+      Converted->Add(LightComponent, Result);
   }
 }
 
@@ -321,6 +324,7 @@ void UCarlaLight::ApplyIntensityToComponents(float Intensity)
   }
   TArray<ULocalLightComponent*> LightComponents;
   Owner->GetComponents<ULocalLightComponent>(LightComponents);
+  // Already in final units: recorded so the legacy conversion leaves it alone.
   if (LightType == ELightType::Street)
   {
     const float Lumens = StreetIntensityToLumens(Intensity);
@@ -329,6 +333,7 @@ void UCarlaLight::ApplyIntensityToComponents(float Intensity)
       if (LightComponent->IntensityUnits != ELightUnits::Lumens)
         LightComponent->SetIntensityUnits(ELightUnits::Lumens);
       LightComponent->SetIntensity(Lumens);
+      ConvertedIntensities.Add(LightComponent, Lumens);
     }
     return;
   }
@@ -336,6 +341,7 @@ void UCarlaLight::ApplyIntensityToComponents(float Intensity)
   for (ULocalLightComponent* LightComponent : LightComponents)
   {
     LightComponent->SetIntensity(Intensity * Scale);
+    ConvertedIntensities.Add(LightComponent, Intensity * Scale);
   }
 }
 
