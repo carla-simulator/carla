@@ -16,7 +16,7 @@
         - [Lidar raycast](ref_sensors.md#lidar-raycast-sensor).
         - [SemanticLidar raycast](ref_sensors.md#semanticlidar-raycast-sensor).
         - [Radar](ref_sensors.md#radar-sensor).
-        - [RGB camera](ref_sensors.md#rgb-camera).
+        - [RGB camera](ref_sensors.md#rgb-camera). Its look comes from a camera preset chosen with the `post_process_profile` blueprint attribute ([camera post-process presets](camera_postprocess_presets.md)).
         - [Semantic Segmentation camera](ref_sensors.md#semantic-segmentation-camera).
         <br><b>Only receive data when triggered.</b>
         - [Collision detector](ref_sensors.md#collision-detector).
