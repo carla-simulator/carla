@@ -486,6 +486,7 @@ A value of 1.5 means that we want the sensor to capture data each second and a h
 | `iso`    | float    | 100\.0   | The camera sensor sensitivity.   |
 | `gamma`  | float    | 2\.2     | Target gamma value of the camera.      |
 | `lens_flare_intensity`           | float    | 0\.1     | Intensity for the lens flare post-process effect, `0.0` for disabling it.    |
+| `post_process_profile` | str    | (empty)  | Camera preset to load, a JSON file in `Content/Carla/Config/PostProcess/` on the server: `Default`, `GoPro`, `AutomotiveHDR`, `Dashcam` or your own. Empty uses the active profile (console variable `carla.PostProcess.Profile`, `Default` unless changed), the same one the spectator view uses. See [Camera post-process presets](camera_postprocess_presets.md). |
 | `sensor_tick`        | float    | 0\.0     | Simulation seconds between sensor captures (ticks).  |
 | `shutter_speed`      | float    | 200\.0   | The camera shutter speed in seconds (1.0/s).       |
 
@@ -644,7 +645,7 @@ Setting `carla.RTLens.SyncModeBlockingReadback 0` (server console) forces the as
 | `show_only_actor_ids` | str | (empty) | Comma-separated CARLA actor ids, added to the show-only render list regardless of label. |
 | `use_ray_tracing` | bool | True | Present for parity with the other cameras, but always effectively `True`: the path tracer has no rasterized fallback. |
 | `enable_postprocess_effects` | bool | True | Post-process effects activation. |
-| `post_process_profile` | str | `Default` | Named post-process profile applied to the capture. |
+| `post_process_profile` | str | (empty) | Named post-process profile applied to the capture. Empty uses the active profile (`carla.PostProcess.Profile`, `Default` unless changed), as for the RGB camera. |
 | `sensor_tick` | float | 0\.0 | Simulation seconds between sensor captures (ticks). |
 
 #### Output attributes

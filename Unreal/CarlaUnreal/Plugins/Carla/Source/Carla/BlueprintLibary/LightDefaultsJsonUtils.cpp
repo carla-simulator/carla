@@ -329,7 +329,7 @@ namespace
     // resolved per physical instance by the renderer itself, so this is what
     // actually achieves individual-window variation; PercentLit here just
     // becomes the threshold we hand it (as a 0..1 fraction).
-    void ApplyToActorSlots(AActor* /*Actor*/, const TArray<FBuildingSlotRef>& Slots, float EmissiveIntensity, float PercentLit)
+    void ApplyToActorSlots(AActor* /*Actor*/, const TArray<FBuildingSlotRef>& Slots, float EmissiveIntensity, float PercentLit, const FLinearColor& Color)
     {
         const float Threshold = FMath::Clamp(PercentLit / 100.0f, 0.0f, 1.0f);
         for (const FBuildingSlotRef& Slot : Slots)
@@ -343,6 +343,7 @@ namespace
                 continue;
 
             MID->SetScalarParameterValue(TEXT("EmissiveIntensity"), EmissiveIntensity);
+            MID->SetVectorParameterValue(TEXT("Emissive Color"), Color);
             MID->SetScalarParameterValue(TEXT("On/Off"), 1.0f);
             MID->SetScalarParameterValue(TEXT("PercentLitThreshold"), Threshold);
         }
@@ -372,7 +373,7 @@ namespace
     // whole building is deterministically on or off, no PercentLitThreshold
     // gating needed (pinned to 1.0, i.e. always-pass, since it's irrelevant
     // here).
-    void ApplyToLegacyActorSlots(AActor* Actor, const TArray<FBuildingSlotRef>& Slots, float EmissiveIntensity, float PercentLit)
+    void ApplyToLegacyActorSlots(AActor* Actor, const TArray<FBuildingSlotRef>& Slots, float EmissiveIntensity, float PercentLit, const FLinearColor& Color)
     {
         const float Threshold = FMath::Clamp(PercentLit / 100.0f, 0.0f, 1.0f);
         const bool bLit = StableActorRandom01(Actor) < Threshold;
@@ -387,6 +388,7 @@ namespace
                 continue;
 
             MID->SetScalarParameterValue(TEXT("EmissiveIntensity"), bLit ? EmissiveIntensity : 0.0f);
+            MID->SetVectorParameterValue(TEXT("Emissive Color"), Color);
             MID->SetScalarParameterValue(TEXT("On/Off"), bLit ? 1.0f : 0.0f);
             MID->SetScalarParameterValue(TEXT("PercentLitThreshold"), 1.0f);
         }
@@ -920,15 +922,15 @@ TArray<FLightAssetSummary> ULightDefaultsJsonUtils::ScanProceduralBuildingsInLev
     return Result;
 }
 
-void ULightDefaultsJsonUtils::ApplyProceduralBuildingsEmissiveLive(const UObject* WorldContextObject, float EmissiveIntensity, float PercentLit)
+void ULightDefaultsJsonUtils::ApplyProceduralBuildingsEmissiveLive(const UObject* WorldContextObject, float EmissiveIntensity, float PercentLit, const FLinearColor& Color)
 {
     UWorld* World = GEngine ? GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::ReturnNull) : nullptr;
     if (World == nullptr)
         return;
 
-    CollectBuildingActorsByMechanism(World, /*bInstancedOnly=*/true, [EmissiveIntensity, PercentLit](AActor* Actor, const TArray<FBuildingSlotRef>& Slots)
+    CollectBuildingActorsByMechanism(World, /*bInstancedOnly=*/true, [EmissiveIntensity, PercentLit, Color](AActor* Actor, const TArray<FBuildingSlotRef>& Slots)
     {
-        ApplyToActorSlots(Actor, Slots, EmissiveIntensity, PercentLit);
+        ApplyToActorSlots(Actor, Slots, EmissiveIntensity, PercentLit, Color);
     });
 }
 
@@ -937,7 +939,7 @@ void ULightDefaultsJsonUtils::ReapplyProceduralBuildingsToLevel(const UObject* W
     FLightAssetDefault Default;
     if (!LoadClassDefault(ProceduralBuildingsKey, Default))
         return;
-    ApplyProceduralBuildingsEmissiveLive(WorldContextObject, Default.EmissiveIntensity, Default.Intensity);
+    ApplyProceduralBuildingsEmissiveLive(WorldContextObject, Default.EmissiveIntensity, Default.Intensity, Default.Color);
 }
 
 void ULightDefaultsJsonUtils::SetProceduralBuildingsSelected(const UObject* WorldContextObject, bool bSelected)
@@ -1010,15 +1012,15 @@ TArray<FLightAssetSummary> ULightDefaultsJsonUtils::ScanLegacyBuildingsInLevel(c
     return Result;
 }
 
-void ULightDefaultsJsonUtils::ApplyLegacyBuildingsEmissiveLive(const UObject* WorldContextObject, float EmissiveIntensity, float PercentLit)
+void ULightDefaultsJsonUtils::ApplyLegacyBuildingsEmissiveLive(const UObject* WorldContextObject, float EmissiveIntensity, float PercentLit, const FLinearColor& Color)
 {
     UWorld* World = GEngine ? GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::ReturnNull) : nullptr;
     if (World == nullptr)
         return;
 
-    CollectBuildingActorsByMechanism(World, /*bInstancedOnly=*/false, [EmissiveIntensity, PercentLit](AActor* Actor, const TArray<FBuildingSlotRef>& Slots)
+    CollectBuildingActorsByMechanism(World, /*bInstancedOnly=*/false, [EmissiveIntensity, PercentLit, Color](AActor* Actor, const TArray<FBuildingSlotRef>& Slots)
     {
-        ApplyToLegacyActorSlots(Actor, Slots, EmissiveIntensity, PercentLit);
+        ApplyToLegacyActorSlots(Actor, Slots, EmissiveIntensity, PercentLit, Color);
     });
 }
 
@@ -1027,7 +1029,7 @@ void ULightDefaultsJsonUtils::ReapplyLegacyBuildingsToLevel(const UObject* World
     FLightAssetDefault Default;
     if (!LoadClassDefault(LegacyBuildingsKey, Default))
         return;
-    ApplyLegacyBuildingsEmissiveLive(WorldContextObject, Default.EmissiveIntensity, Default.Intensity);
+    ApplyLegacyBuildingsEmissiveLive(WorldContextObject, Default.EmissiveIntensity, Default.Intensity, Default.Color);
 }
 
 void ULightDefaultsJsonUtils::ReapplyBuildingDefaultsToLevel(ULevel* Level)
@@ -1050,7 +1052,7 @@ void ULightDefaultsJsonUtils::ReapplyBuildingDefaultsToLevel(ULevel* Level)
         {
             CollectBuildingSlotsOnActor(Actor, /*bInstancedOnly=*/true, [&](AActor* Owner, const TArray<FBuildingSlotRef>& Slots)
             {
-                ApplyToActorSlots(Owner, Slots, Procedural.EmissiveIntensity, Procedural.Intensity);
+                ApplyToActorSlots(Owner, Slots, Procedural.EmissiveIntensity, Procedural.Intensity, Procedural.Color);
                 ++NumProcedural;
             });
         }
@@ -1058,7 +1060,7 @@ void ULightDefaultsJsonUtils::ReapplyBuildingDefaultsToLevel(ULevel* Level)
         {
             CollectBuildingSlotsOnActor(Actor, /*bInstancedOnly=*/false, [&](AActor* Owner, const TArray<FBuildingSlotRef>& Slots)
             {
-                ApplyToLegacyActorSlots(Owner, Slots, Legacy.EmissiveIntensity, Legacy.Intensity);
+                ApplyToLegacyActorSlots(Owner, Slots, Legacy.EmissiveIntensity, Legacy.Intensity, Legacy.Color);
                 ++NumLegacy;
             });
         }

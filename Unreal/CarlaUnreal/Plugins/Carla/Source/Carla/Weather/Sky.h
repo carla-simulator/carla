@@ -121,6 +121,13 @@ public:
 	// override); may be null on a rig that lost the component.
 	USkyLightComponent* GetSkyLightComponent() const { return SkyLightComponent; }
 
+	// True while PostProcessComponent's bloom was filled in by
+	// AWeather::FillSkyPostProcessFallback (carla.Weather.BloomIntensity)
+	// rather than set by the loaded profile. Loading a profile clears it;
+	// SaveProfile leaves that bloom out of the file.
+	UPROPERTY(Transient)
+	bool bBloomFromWeatherFallback = false;
+
 	// Profile to load/save on PostProcessComponent, i.e. the JSON file name
 	// (without extension) under Content/Carla/Config/PostProcess/. Pick an
 	// existing one from the dropdown or type a new name to create it on the

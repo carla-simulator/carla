@@ -81,6 +81,10 @@ public:
   UFUNCTION(BlueprintCallable, Category = "Weather")
   static void ApplyWeatherToSkyActor(AActor* SkyActor, const FWeatherParameters& Weather);
 
+  /// Exposure / bloom defaults for the fields the sky's loaded camera profile
+  /// does not set (see the comment in ApplyWeatherToSkyActor).
+  static void FillSkyPostProcessFallback(class UPostProcessComponent* PostProcessComponent);
+
   /// Environment-map override for the sky light (set_sky_light_map RPC):
   /// every ASkyBase rig in World switches its sky light to the given cubemap
   /// (SLS_SpecifiedCubemap, real-time capture off) at the given intensity,
@@ -109,6 +113,7 @@ protected:
 private:
 
   virtual void Tick(float DeltaSeconds) override;
+  virtual void BeginPlay() override;
   virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
   void UpdateRain();
   UParticleSystemComponent* CreateRainEmitter(AActor* Owner, bool bSensor);
