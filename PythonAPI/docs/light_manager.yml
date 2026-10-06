@@ -81,7 +81,11 @@
     doc: >
       This class exposes the lights that exist in the scene, except for vehicle lights. The properties of a light can be queried and changed at will.
       
-      Lights are automatically turned on when the simulator enters night mode (sun altitude is below zero).
+      Street and building lights are automatically turned on when the sun goes down (sun altitude at or below `0.8` degrees, console variable `carla.Weather.StreetLightsOnDeg`) and off when it rises; lights of the `Other` group are left alone. The switch happens only when a weather change crosses that threshold: changing the weather while it stays night (or day) does not touch the lights, so changes made through this API persist until the next sunrise or sunset. Lights that load later (World Partition maps streaming in cells) take the current state.
+
+      __Intensity units.__ Street lights are photometric and their intensity is in lumens; a real road luminaire is about 10000-25000 lm. Values below `1000` are read as kilolumens (the scale of the UE4-era lamp content, `carla.Light.StreetIntensityScale`), so `20` and `20000` give the same light; use values of `1000` and above for lumens. Building and other lights keep the UE4 scale: the light component gets the intensity multiplied by `carla.Light.LegacyIntensityScale` (default `10000`).
+
+      The per-class defaults applied when a map loads come from `Content/Carla/Config/Lights/Defaults.json` on the server, edited with the Light Defaults tool in the editor. They are not readable from the client; query the lights instead.
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: color
@@ -98,7 +102,7 @@
       type: float
       var_units: lumens
       doc: >
-        Intensity of the light.
+        Intensity of the light. For street lights, values below `1000` are kilolumens (see the note on intensity units above).
     # --------------------------------------
     - var_name: is_on
       type: bool
@@ -139,7 +143,7 @@
     # --------------------------------------
     - def_name: set_intensity
       doc: >
-        Changes the intensity of the light to `intensity`. 
+        Changes the intensity of the light to `intensity`. For street lights, values below `1000` are kilolumens (see the note on intensity units in carla.Light).
       params:
       - param_name: intensity
         type: float
@@ -390,7 +394,7 @@
     # --------------------------------------
     - def_name: set_day_night_cycle
       doc: >
-        All scene lights have a day-night cycle, automatically turning on and off with the altitude of the sun. This interferes in cases where full control of the scene lights is required, so setting this to __False__ deactivates it. It can reactivated by setting it to __True__.
+        All scene lights have a day-night cycle, automatically turning on and off with the altitude of the sun. This interferes in cases where full control of the scene lights is required, so setting this to __False__ deactivates it. It can reactivated by setting it to __True__; the next weather change then applies the current day or night state to every light again, overriding manual changes.
       params:
       - param_name: active
         type: bool

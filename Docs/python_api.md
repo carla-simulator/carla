@@ -1797,7 +1797,9 @@ Iterate over the [carla.LidarDetection](#carla.LidarDetection) retrieved as data
 
 ## carla.Light<a name="carla.Light"></a>
 This class exposes the lights that exist in the scene, except for vehicle lights. The properties of a light can be queried and changed at will.
-Lights are automatically turned on when the simulator enters night mode (sun altitude is below zero).  
+Street and building lights are automatically turned on when the sun goes down (sun altitude at or below `0.8` degrees, console variable `[carla.Weather.StreetLightsOnDeg](#carla.Weather.StreetLightsOnDeg)`) and off when it rises; lights of the `Other` group are left alone. The switch happens only when a weather change crosses that threshold: changing the weather while it stays night (or day) does not touch the lights, so changes made through this API persist until the next sunrise or sunset. Lights that load later (World Partition maps streaming in cells) take the current state.
+__Intensity units.__ Street lights are photometric and their intensity is in lumens; a real road luminaire is about 10000-25000 lm. Values below `1000` are read as kilolumens (the scale of the UE4-era lamp content, `[carla.Light.StreetIntensityScale](#carla.Light.StreetIntensityScale)`), so `20` and `20000` give the same light; use values of `1000` and above for lumens. Building and other lights keep the UE4 scale: the light component gets the intensity multiplied by `[carla.Light.LegacyIntensityScale](#carla.Light.LegacyIntensityScale)` (default `10000`).
+The per-class defaults applied when a map loads come from `Content/Carla/Config/Lights/Defaults.json` on the server, edited with the Light Defaults tool in the editor. They are not readable from the client; query the lights instead.  
 
 ### Instance Variables
 - <a name="carla.Light.color"></a>**<font color="#f8805a">color</font>** (_[carla.Color](#carla.Color)_)  
@@ -1805,7 +1807,7 @@ Color of the light.
 - <a name="carla.Light.id"></a>**<font color="#f8805a">id</font>** (_int_)  
 Identifier of the light.  
 - <a name="carla.Light.intensity"></a>**<font color="#f8805a">intensity</font>** (_float<small> - lumens</small>_)  
-Intensity of the light.  
+Intensity of the light. For street lights, values below `1000` are kilolumens (see the note on intensity units above).  
 - <a name="carla.Light.is_on"></a>**<font color="#f8805a">is_on</font>** (_bool_)  
 Switch of the light. It is __True__ when the light is on. When the night mode starts, this is set to __True__.  
 - <a name="carla.Light.location"></a>**<font color="#f8805a">location</font>** (_[carla.Location](#carla.Location)<small> - meters</small>_)  
@@ -1827,7 +1829,7 @@ Changes the color of the light to `color`.
     - **Parameters:**
         - `color` (_[carla.Color](#carla.Color)_)  
 - <a name="carla.Light.set_intensity"></a>**<font color="#7fb800">set_intensity</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**intensity**</font>)  
-Changes the intensity of the light to `intensity`.  
+Changes the intensity of the light to `intensity`. For street lights, values below `1000` are kilolumens (see the note on intensity units in [carla.Light](#carla.Light)).  
     - **Parameters:**
         - `intensity` (_float<small> - lumens</small>_)  
 - <a name="carla.Light.set_light_group"></a>**<font color="#7fb800">set_light_group</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**light_group**</font>)  
@@ -1935,7 +1937,7 @@ Changes the color of each element in `lights` to the corresponding in `colors`.
         - `lights` (_list([carla.Light](#carla.Light))_) - List of lights to be changed.  
         - `colors` (_list([carla.Color](#carla.Color))_) - List of colors to be applied.  
 - <a name="carla.LightManager.set_day_night_cycle"></a>**<font color="#7fb800">set_day_night_cycle</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**active**</font>)  
-All scene lights have a day-night cycle, automatically turning on and off with the altitude of the sun. This interferes in cases where full control of the scene lights is required, so setting this to __False__ deactivates it. It can reactivated by setting it to __True__.  
+All scene lights have a day-night cycle, automatically turning on and off with the altitude of the sun. This interferes in cases where full control of the scene lights is required, so setting this to __False__ deactivates it. It can reactivated by setting it to __True__; the next weather change then applies the current day or night state to every light again, overriding manual changes.  
     - **Parameters:**
         - `active` (_bool_) - (De)activation of the day-night cycle.  
 - <a name="carla.LightManager.set_intensities"></a>**<font color="#7fb800">set_intensities</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**lights**</font>, <font color="#00a6ed">**intensities**</font>)  
@@ -2699,7 +2701,7 @@ Sensors compound a specific family of actors quite diverse and unique. They are 
   - [Lidar raycast](ref_sensors.md#lidar-raycast-sensor).
   - [SemanticLidar raycast](ref_sensors.md#semanticlidar-raycast-sensor).
   - [Radar](ref_sensors.md#radar-sensor).
-  - [RGB camera](ref_sensors.md#rgb-camera).
+  - [RGB camera](ref_sensors.md#rgb-camera). Its look comes from a camera preset chosen with the `post_process_profile` blueprint attribute ([camera post-process presets](camera_postprocess_presets.md)).
   - [Semantic Segmentation camera](ref_sensors.md#semantic-segmentation-camera).
   <br><b>Only receive data when triggered.</b>
   - [Collision detector](ref_sensors.md#collision-detector).
@@ -3968,7 +3970,7 @@ This class defines objects containing lighting and weather specifications that c
 
 ### Instance Variables
 - <a name="carla.WeatherParameters.cloudiness"></a>**<font color="#f8805a">cloudiness</font>** (_float_)  
-Values range from 0 to 100, being 0 a clear sky and 100 one completely covered with clouds.  
+Values range from 0 to 100, being 0 a clear sky and 100 one completely covered with clouds. From `80` up the clouds gradually close into a uniform grey overcast deck, complete at `100` (console variable `[carla.Weather.DeckStartCloudiness](#carla.Weather.DeckStartCloudiness)`); below `80` nothing changes.  
 - <a name="carla.WeatherParameters.precipitation"></a>**<font color="#f8805a">precipitation</font>** (_float_)  
 Rain intensity values range from 0 to 100, being 0 none at all and 100 a heavy rain.  
 - <a name="carla.WeatherParameters.precipitation_deposits"></a>**<font color="#f8805a">precipitation_deposits</font>** (_float_)  
@@ -3978,7 +3980,7 @@ Controls the strenght of the wind with values from 0, no wind at all, to 100, a 
 - <a name="carla.WeatherParameters.sun_azimuth_angle"></a>**<font color="#f8805a">sun_azimuth_angle</font>** (_float<small> - degrees</small>_)  
 The azimuth angle of the sun. Values range from 0 to 360. Zero is an origin point in a sphere determined by Unreal Engine.  
 - <a name="carla.WeatherParameters.sun_altitude_angle"></a>**<font color="#f8805a">sun_altitude_angle</font>** (_float<small> - degrees</small>_)  
-Altitude angle of the sun. Values range from -90 to 90 corresponding to midnight and midday each.  
+Altitude angle of the sun. Values range from -90 to 90 corresponding to midnight and midday each. Street and building lights switch on at or below `0.8` degrees (see [carla.Light](#carla.Light)), and a city night is fully dark on camera from about `-10` degrees.  
 - <a name="carla.WeatherParameters.fog_density"></a>**<font color="#f8805a">fog_density</font>** (_float_)  
 Fog concentration or thickness. It only affects the RGB camera sensor. Values range from 0 to 100.  
 - <a name="carla.WeatherParameters.fog_distance"></a>**<font color="#f8805a">fog_distance</font>** (_float<small> - meters</small>_)  
@@ -3998,7 +4000,7 @@ Determines the strength of the dust storm weather. Values range from 0 to 100.
 
 ### Methods
 - <a name="carla.WeatherParameters.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**cloudiness**=0.0</font>, <font color="#00a6ed">**precipitation**=0.0</font>, <font color="#00a6ed">**precipitation_deposits**=0.0</font>, <font color="#00a6ed">**wind_intensity**=0.0</font>, <font color="#00a6ed">**sun_azimuth_angle**=0.0</font>, <font color="#00a6ed">**sun_altitude_angle**=0.0</font>, <font color="#00a6ed">**fog_density**=0.0</font>, <font color="#00a6ed">**fog_distance**=0.0</font>, <font color="#00a6ed">**wetness**=0.0</font>, <font color="#00a6ed">**fog_falloff**=0.0</font>, <font color="#00a6ed">**scattering_intensity**=0.0</font>, <font color="#00a6ed">**mie_scattering_scale**=0.0</font>, <font color="#00a6ed">**rayleigh_scattering_scale**=0.0331</font>)  
-Method to initialize an object defining weather conditions. This class has some presets for different noon and sunset conditions listed in a note below.  
+Method to initialize an object defining weather conditions. This class has some presets for different noon, sunset and night conditions listed in a note below. The weather a map starts with comes from `Content/Carla/Config/Weather/MapDefaults.json` on the server (a time and condition pair from `Presets.json`, or a full set of values per map); these files are not readable from the client, use [carla.World.get_weather](#carla.World.get_weather) after loading the map.  
     - **Parameters:**
         - `cloudiness` (_float_) - 0 is a clear sky, 100 complete overcast.  
         - `precipitation` (_float_) - 0 is no rain at all, 100 a heavy rain.  
@@ -4013,7 +4015,7 @@ Method to initialize an object defining weather conditions. This class has some 
         - `scattering_intensity` (_float_) - Controls how much the light will contribute to volumetric fog. When set to 0, there is no contribution.  
         - `mie_scattering_scale` (_float_) - Controls interaction of light with large particles like pollen or air pollution resulting in a hazy sky with halos around the light sources. When set to 0, there is no contribution.  
         - `rayleigh_scattering_scale` (_float_) - Controls interaction of light with small particles like air molecules. Dependent on light wavelength, resulting in a blue sky in the day or red sky in the evening.  
-    - **Note:** <font color="#8E8E8E">_ClearNoon, CloudyNoon, WetNoon, WetCloudyNoon, SoftRainNoon, MidRainyNoon, HardRainNoon, ClearSunset, CloudySunset, WetSunset, WetCloudySunset, SoftRainSunset, MidRainSunset, HardRainSunset. 
+    - **Note:** <font color="#8E8E8E">_ClearNoon, CloudyNoon, WetNoon, WetCloudyNoon, SoftRainNoon, MidRainyNoon, HardRainNoon, ClearSunset, CloudySunset, WetSunset, WetCloudySunset, SoftRainSunset, MidRainSunset, HardRainSunset, ClearNight, CloudyNight, WetNight, WetCloudyNight, SoftRainNight, MidRainyNight, HardRainNight. 
 _</font>  
 
 ##### Dunder methods
@@ -4380,7 +4382,7 @@ Lights the scene with an environment map instead of the real-time atmosphere cap
         - `intensity` (_float_) - Multiplier applied on top of the panorama's linear radiance values.  
         - `face_size` (_int_) - Resolution (pixels per edge) of the cubemap the panorama is resampled into before lighting the sky.  
 - <a name="carla.World.set_weather"></a>**<font color="#7fb800">set_weather</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**weather**</font>)  
-Changes the weather parameteres ruling the simulation to another ones defined in an object.  
+Changes the weather parameteres ruling the simulation to another ones defined in an object. A large jump (sun altitude moving more than `5` degrees or cloudiness more than `30` in one call, e.g. noon to night) makes the global illumination and the sky light refresh fully for `8` seconds, so give the scene about 7 seconds before capturing (console variables `[carla.Weather.LightingJumpSunDeg](#carla.Weather.LightingJumpSunDeg)`, `LightingJumpCloudiness`, `LightingJumpSettleSeconds`). Gradual changes are not affected. Street and building lights only switch when the change crosses sunrise or sunset (see [carla.Light](#carla.Light)).  
     - **Parameters:**
         - `weather` (_[carla.WeatherParameters](#carla.WeatherParameters)_) - New conditions to be applied.  
     - **Getter:** _[carla.World.get_weather](#carla.World.get_weather)_  

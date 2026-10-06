@@ -504,7 +504,7 @@ void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
     FActorVariation post_process_profile;
     post_process_profile.Id = TEXT("post_process_profile");
     post_process_profile.Type = EActorAttributeType::String;
-    post_process_profile.RecommendedValues = {TEXT("Default")};
+    post_process_profile.RecommendedValues = {TEXT("")};
     post_process_profile.bRestrictToRecommended = false;
 
     Definition.Variations.Append({PostProccess, post_process_profile});
@@ -764,7 +764,7 @@ void UActorBlueprintFunctionLibrary::MakeWideAngleLensCameraDefinition(
     FActorVariation WAL_PostProcessProfile;
     WAL_PostProcessProfile.Id = TEXT("post_process_profile");
     WAL_PostProcessProfile.Type = EActorAttributeType::String;
-    WAL_PostProcessProfile.RecommendedValues = {TEXT("Default")};
+    WAL_PostProcessProfile.RecommendedValues = {TEXT("")};
     WAL_PostProcessProfile.bRestrictToRecommended = false;
 
     // Gamma
@@ -1300,7 +1300,7 @@ void UActorBlueprintFunctionLibrary::MakeRayTracedLensCameraDefinition(
     FActorVariation post_process_profile;
     post_process_profile.Id = TEXT("post_process_profile");
     post_process_profile.Type = EActorAttributeType::String;
-    post_process_profile.RecommendedValues = {TEXT("Default")};
+    post_process_profile.RecommendedValues = {TEXT("")};
     post_process_profile.bRestrictToRecommended = false;
 
     Definition.Variations.Append({PostProccess, post_process_profile});
@@ -2306,16 +2306,11 @@ void UActorBlueprintFunctionLibrary::SetCamera(
         Description.Variations,
         TEXT(""));
 
-    // Post-process profiles are camera-lens presets (Default, GoPro, ...),
-    // not per-map looks: the same BP_Carla_Sky + PostProcessVolume already
-    // gives every map the same base grading. Empty or the legacy lowercase
-    // "default" sentinel means "no preference", so just load Default.json.
-    // Callers that want a specific look (e.g. GoPro.json) set
-    // post_process_profile explicitly via the API/scripts.
-    if (PostProcessProfileName.IsEmpty() || PostProcessProfileName == TEXT("default"))
-    {
-      PostProcessProfileName = TEXT("Default");
-    }
+    // Post-process profiles are camera presets (Default, GoPro,
+    // ...), not per-map looks. Empty or the legacy lowercase "default" means
+    // no preference: the active profile (carla.PostProcess.Profile), the same
+    // one the sky rig loads for the viewport.
+    PostProcessProfileName = UPostProcessJsonUtils::ResolveProfileName(PostProcessProfileName);
 
     UPostProcessJsonUtils::LoadAllPostProcessFromJsonToSceneCapture(
         Camera->GetCaptureComponent(),
@@ -2487,8 +2482,7 @@ void UActorBlueprintFunctionLibrary::SetCamera(
     // photometric sun as soon as r.EyeAdaptation.MethodOverride forces manual.
     FString PostProcessProfileName = RetrieveActorAttributeToString(
         "post_process_profile", Variations, TEXT(""));
-    if (PostProcessProfileName.IsEmpty() || PostProcessProfileName == TEXT("default"))
-      PostProcessProfileName = TEXT("Default");
+    PostProcessProfileName = UPostProcessJsonUtils::ResolveProfileName(PostProcessProfileName);
     for (auto *Face : Camera->GetCaptureComponents2D())
       UPostProcessJsonUtils::LoadAllPostProcessFromJsonToSceneCapture(
           Face, PostProcessProfileName);

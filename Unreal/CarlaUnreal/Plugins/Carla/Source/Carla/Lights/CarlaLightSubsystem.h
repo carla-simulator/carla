@@ -94,6 +94,14 @@ private:
   UPROPERTY()
   TMap<int, UCarlaLight* > Lights;
 
+  // Last state NotifyDayTimeChange broadcast, applied (next tick) to lights registering later.
+  void ScheduleDayTimeState(UCarlaLight* CarlaLight);
+  bool bHasDayTimeState = false;
+  bool bLastIsDay = true;
+  // set_day_night_cycle from the client; off, day/night changes are ignored.
+  bool bDayNightCycle = true;
+  TSet<TWeakObjectPtr<UCarlaLight>> PendingDayTimeLights;
+
   // Flag for each client to tell if an update needs to be done
   TMap<FString, bool> ClientStates;
   // Since the clients doesn't have a proper id on the simulation,
