@@ -149,6 +149,17 @@ namespace client {
         std::string TireJSON = "",
         std::string BaseJSONPath = "");
 
+    /// Returns the vehicle to the default physics, undoing EnableChronoPhysics
+    /// or EnableCarSim.
+    ///
+    /// The name is historical: it dates from ue4-dev, where the default vehicle
+    /// physics really was PhysX. UE5 uses Chaos, so this restores Chaos, not
+    /// PhysX. The name is kept because `restore_physx_physics` is public Python
+    /// API and renaming it would break existing scripts and diverge from
+    /// ue4-dev.
+    /// See https://github.com/carla-simulator/carla/blob/871b555f5720d80c20253e0e8c89e156da115767/LibCarla/source/carla/client/Vehicle.h#L165
+    void RestorePhysXPhysics();
+
     /// Returns the failure state of the vehicle
     rpc::VehicleFailureState GetFailureState() const;
 

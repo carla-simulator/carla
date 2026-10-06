@@ -1,0 +1,83 @@
+{
+  "Name":                           "Generic Multi-Link",
+  "Type":                           "Suspension",
+  "Template":                       "MultiLink",
+
+  "Spindle" :
+  {
+    "Mass":                         1.103,
+    "COM":                          [0.000, 0.80, 0.000],
+    "Inertia":                      [0.000478, 0.000478, 0.000496],
+    "Radius":                       0.1,
+    "Width":                        0.03
+  },
+
+  "Upright":
+  {
+    "Mass":                         3.201,
+    "COM":                          [0.000, 0.760, 0.000],
+    "Inertia":                      [0.0250, 0.00653, 0.0284],
+    "Radius":                       0.02
+  },
+
+  "Upper Arm":
+  {
+    "Mass":                         4.744,
+    "COM":                          [-0.014, 0.490, 0.098],
+    "Inertia":                      [0.0237, 0.0294, 0.00612],
+    "Radius":                       0.02,
+    "Location Chassis Front":       [0.060, 0.397, 0.082],
+    "Location Chassis Back":        [-0.157, 0.358, 0.062],
+    "Location Upright":             [0.056, 0.714, 0.151]
+  },
+
+  "Lateral":
+  {
+    "Mass":                         1.910,
+    "COM":                          [0.033, 0.440, -0.113],
+    "Inertia":                      [0.0543, 0.0541, 0.000279],
+    "Radius":                       0.02,
+    "Location Chassis":             [0.036, 0.188, -0.133],
+    "Location Upright":             [0.029, 0.692, -0.093],
+    "Universal Joint Axis Link":    [-0.978950, 0.204099, 0.0],
+    "Universal Joint Axis Chassis": [-0.021990, -0.105472, 0.994179]
+  },
+
+  "Trailing Link":
+  {
+    "Mass":                         15.204,
+    "COM":                          [0.279, 0.543, -0.132],
+    "Inertia":                      [0.0762, 0.527, 0.567],
+    "Radius":                       0.03,
+    "Location Chassis":             [0.723, 0.449, -0.072],
+    "Location Upright":             [-0.000, 0.714, -0.156],
+    "Universal Joint Axis Link":    [0.0, 0.0, 1.0],
+    "Universal Joint Axis Chassis": [-0.272, 0.962, 0.0]
+  },
+
+  "Tierod":
+  {
+    "Location Chassis":             [-0.257, 0.170, -0.116],
+    "Location Upright":             [-0.144, 0.712, -0.056]
+  },
+
+  "Spring":
+  {
+    "Location Chassis":             [0.181, 0.491, 0.110],
+    "Location Link":                [0.181, 0.419, -0.164],
+    "Spring Coefficient":           167062.000,
+    "Free Length" :                 0.339
+  },
+
+  "Shock":
+  {
+    "Location Chassis":             [0.171, 0.478, 0.315],
+    "Location Link":                [0.181, 0.519, -0.162],
+    "Damping Coefficient":          15000.0
+  },
+
+  "Axle":
+  {
+    "Inertia":                      0.166
+  }
+}
