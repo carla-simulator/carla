@@ -1,0 +1,46 @@
+[build-system]
+requires = ["hatchling>=1.21"]
+build-backend = "hatchling.build"
+
+[project]
+name = "carla-agentic-tools"
+version = "0.6.0"
+description = "MCP server exposing a library of vetted CARLA procedures (skills) for build, packaging, simulation, and ROS 2."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { file = "LICENSE" }
+keywords = ["carla", "mcp", "agent", "skills", "simulation", "ros2", "unreal"]
+dependencies = [
+    "mcp>=1.2.0,<3",
+]
+
+[project.urls]
+Homepage = "https://github.com/carla-simulator/carla-agentic-tools"
+Issues = "https://github.com/carla-simulator/carla-agentic-tools/issues"
+
+[project.scripts]
+carla-agentic-tools = "carla_agentic_tools.server:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/carla_agentic_tools"]
+
+# The skills ARE the product, so they must travel inside the wheel. They stay at
+# the repo root for authoring (short paths, no src/ nesting in every reference)
+# and are mapped into the package at build time, where
+# server.py::_resolve_skills_dir finds them as package data. Without this a
+# `pip install` yields a server with an empty registry — the reason this project
+# previously only worked from a checkout.
+[tool.hatch.build.targets.wheel.force-include]
+"skills" = "carla_agentic_tools/skills"
+
+# Ship the same tree in the sdist so a source build reproduces the wheel.
+[tool.hatch.build.targets.sdist]
+include = ["src", "skills", "tests", "README.md", "LICENSE", "pyproject.toml"]
+
+# Scratch that must never reach a release artifact.
+[tool.hatch.build]
+exclude = [
+    "**/__pycache__",
+    "**/*.pyc",
+    ".fixtures",
+]

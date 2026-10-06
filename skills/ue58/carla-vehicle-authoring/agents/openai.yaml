@@ -1,0 +1,4 @@
+interface:
+  display_name: "CARLA Vehicle Authoring"
+  short_description: "Create and validate detailed Blender vehicles for CARLA"
+  default_prompt: "Use $carla-vehicle-authoring to create or improve a reference-based vehicle and validate it in CARLA."
