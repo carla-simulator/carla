@@ -225,6 +225,13 @@ namespace road {
 
     std::vector<carla::geom::BoundingBox> GetJunctionsBoundingBoxes() const;
 
+    /// Read-only access to the parsed OpenDRIVE data: roads, junctions,
+    /// signals and controllers. The client-side carla::client::Road,
+    /// LaneSection and Lane wrappers resolve their ids through this.
+    const MapData &GetData() const {
+      return _data;
+    }
+
 #ifdef LIBCARLA_WITH_GTEST
     MapData &GetMap() {
       return _data;

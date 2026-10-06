@@ -771,7 +771,7 @@
         doc: >
           New conditions to be applied.
       doc: >
-        Changes the weather parameteres ruling the simulation to another ones defined in an object.
+        Changes the weather parameteres ruling the simulation to another ones defined in an object. A large jump (sun altitude moving more than `5` degrees or cloudiness more than `30` in one call, e.g. noon to night) makes the global illumination and the sky light refresh fully for `8` seconds, so give the scene about 7 seconds before capturing (console variables `carla.Weather.LightingJumpSunDeg`, `LightingJumpCloudiness`, `LightingJumpSettleSeconds`). Gradual changes are not affected. Street and building lights only switch when the change crosses sunrise or sunset (see carla.Light).
     # --------------------------------------
     - def_name: set_sky_light_map
       params:

@@ -3,7 +3,7 @@
 Thanks for sending a pull request! Please make sure you click the link above to
 view the contribution guidelines, then fill out the blanks below.
 Please, make sure if your contribution is for UE4 version of CARLA you merge against ue4-dev branch. 
-if it is for UE5 version of CARLA you merge agaisnt ue5-dev branch
+if it is for UE5 version of CARLA you merge agaisnt ue58-dev branch
 
 Checklist:
 

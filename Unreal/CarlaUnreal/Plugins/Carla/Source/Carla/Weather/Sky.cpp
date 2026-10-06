@@ -112,12 +112,19 @@ ASkyBase::ASkyBase(
 
 void ASkyBase::SaveProfile()
 {
+  // The weather's fallback bloom is not part of the profile: saved as set,
+  // the profile would claim it and the fallback could never update it.
+  const bool bBloomOverride = PostProcessComponent->Settings.bOverride_BloomIntensity;
+  if (bBloomFromWeatherFallback)
+    PostProcessComponent->Settings.bOverride_BloomIntensity = false;
   UPostProcessJsonUtils::SaveAllPostProcessComponentToJson(PostProcessComponent, ProfileName);
+  PostProcessComponent->Settings.bOverride_BloomIntensity = bBloomOverride;
 }
 
 void ASkyBase::LoadProfile()
 {
   UPostProcessJsonUtils::LoadAllPostProcessFromJsonToPostProcessComponent(PostProcessComponent, ProfileName);
+  bBloomFromWeatherFallback = false;
 
   // Profiles that don't claim AutoExposureMinBrightness/MaxBrightness (i.e.
   // rely on Weather's fallback clamp, see ApplyWeatherToSkyActor) store those
@@ -400,6 +407,25 @@ void ASkyBase::BeginPlay()
   Super::BeginPlay();
 
   UWorld* World = GetWorld();
+  // One camera profile for every view: the viewport / spectator renders
+  // through this unbound post process, and RGB sensors without an explicit
+  // post_process_profile load the same file (UPostProcessJsonUtils::
+  // ResolveProfileName). What the map saved in the rig is only the editor view.
+  if (World != nullptr && World->IsGameWorld() && PostProcessComponent != nullptr)
+  {
+    const FString Profile = UPostProcessJsonUtils::GetActiveProfileName();
+    if (UPostProcessJsonUtils::LoadAllPostProcessFromJsonToPostProcessComponent(PostProcessComponent, Profile))
+    {
+      bBloomFromWeatherFallback = false;
+      UE_LOG(LogCarla, Log, TEXT("ASkyBase: %s loaded camera profile '%s'"), *GetName(), *Profile);
+    }
+    else
+    {
+      UE_LOG(LogCarla, Warning, TEXT("ASkyBase: %s could not load camera profile '%s'"), *GetName(), *Profile);
+    }
+    AWeather::FillSkyPostProcessFallback(PostProcessComponent);
+  }
+
   if (World == nullptr || ActorHasTag(FallbackSkyTag))
     return;
 

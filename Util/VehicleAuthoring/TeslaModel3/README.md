@@ -35,7 +35,7 @@ Run functional validation against a dedicated server (these scripts temporarily 
 
 Modular paint uses the actor tag `Carla.StaticBodyworkPaint`, slots named `Bodywork_Mat`, and the clear-coat paint material's `Base Color` parameter. This opt-in preserves existing vehicles' Blueprint paint behavior. Door order follows the API (FL, FR, RL, RR). All four doors have simple convex collision; hood and trunk are separate meshes but are not animated by this implementation.
 
-`Config/PostProcess/VehicleReview.json` is an optional neutral camera profile. Select it with the RGB sensor attribute `post_process_profile=VehicleReview`, or run `validate_cameras.py --profile VehicleReview`. It removes the default profile's saturation reduction, gamma grading and +1.2 EV exposure bias for material review; the default camera profile is unchanged. Keep default-profile captures when comparing ordinary CARLA output.
+The default camera profile (`Config/PostProcess/Default.json`) is a neutral photoreal grading, suitable for material review. It replaced the former `VehicleReview` profile.
 
 Calipers are separate meshes tagged `Carla.Caliper.0` through `.3` (FL, FR, RL, RR). The actor tag `Carla.ModularWheelCalipers` enables their wheel-centre/suspension and steering updates while excluding wheel rotation. Source hub meshes are exported independently; rim, tire and rotor geometry remains in the rotating wheel assembly.
 

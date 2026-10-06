@@ -9,9 +9,31 @@
 #include "Components/PostProcessComponent.h"
 #include "Components/SceneCaptureComponent2D.h"
 #include "HAL/FileManager.h"
+#include "HAL/IConsoleManager.h"
 #include "JsonObjectConverter.h"
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"
+
+static TAutoConsoleVariable<FString> CVarCarlaPostProcessProfile(
+    TEXT("carla.PostProcess.Profile"),
+    TEXT("Default"),
+    TEXT("Camera profile (Content/Carla/Config/PostProcess/<name>.json) shared by the sky rig's ")
+    TEXT("post process at BeginPlay and by RGB sensors spawned without post_process_profile."),
+    ECVF_Default);
+
+FString UPostProcessJsonUtils::GetActiveProfileName()
+{
+    const FString Name = CVarCarlaPostProcessProfile.GetValueOnGameThread();
+    return Name.IsEmpty() ? FString(TEXT("Default")) : Name;
+}
+
+FString UPostProcessJsonUtils::ResolveProfileName(const FString& Requested)
+{
+    // FString's == ignores case: an explicit "Default" must still load Default.json.
+    if (Requested.IsEmpty() || Requested.Equals(TEXT("default"), ESearchCase::CaseSensitive))
+        return GetActiveProfileName();
+    return Requested;
+}
 
 bool UPostProcessJsonUtils::SaveAllPostProcessToJson(APostProcessVolume* Volume, const FString& FileName)
 {
