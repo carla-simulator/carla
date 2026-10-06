@@ -2,8 +2,9 @@
 # Self-contained environment for the import-carla-prop skill.
 # Source before the skill's other scripts:  source env.sh
 #
-# carla-agentic-tools is standalone (not inside a CARLA checkout), so the target
-# instance is chosen at runtime. Both roots are overridable and must point at a
+# The skill library is engine-agnostic — it ships inside a CARLA checkout but
+# not necessarily the ue4-dev one this skill targets — so the target instance
+# is chosen at runtime. Both roots are overridable and must point at a
 # real, built CARLA + UE4:
 #
 #   CARLA_UE4_ROOT  the carla source checkout to import into

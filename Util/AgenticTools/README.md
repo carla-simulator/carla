@@ -1,5 +1,10 @@
 # carla-agentic-tools
 
+> Vendored into the CARLA repository. The skill library itself lives at
+> `skills/` in the repo root, not beside this file; `.mcp.json` at the root
+> registers this server for the project. The install instructions below are
+> for using the skills from outside a CARLA checkout.
+
 A library of **vetted CARLA procedures** ("skills") for any agent. Each skill is
 a `SKILL.md` plus executable scripts with its failure modes encoded, so an agent
 discovers the right procedure and checks its prerequisites instead of improvising

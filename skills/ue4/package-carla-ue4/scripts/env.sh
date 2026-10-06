@@ -2,8 +2,9 @@
 # Self-contained environment for the package-carla-ue4 skill.
 # Source this before running the skill's scripts:  source env.sh
 #
-# carla-agentic-tools is a STANDALONE repo — it does not live inside a CARLA
-# checkout — so the target instance is chosen at runtime. Both roots below are
+# The skill library is engine-agnostic — it ships inside a CARLA checkout but
+# not necessarily the ue4-dev one this skill targets — so the target instance
+# is chosen at runtime. Both roots below are
 # overridable and must ultimately point at a real, built CARLA + UE4:
 #
 #   CARLA_UE4_ROOT  the carla source checkout (branch ue4-dev) to package
