@@ -58,7 +58,12 @@ class TestVehicleWheelSteerAngle(SyncSmokeTest):
         self.world.tick()
 
         bp_lib = self.world.get_blueprint_library()
-        vehicle_bps = self.filter_vehicles_for_old_towns(bp_lib.filter("vehicle.*"))
+        # Motorbikes and bicycles are also "vehicle.*", and their Chaos setup
+        # still carries four wheels, so the physics-control check below would
+        # not catch one; select four-wheelers by blueprint instead.
+        vehicle_bps = [
+            bp for bp in self.filter_vehicles_for_old_towns(bp_lib.filter("vehicle.*"))
+            if int(bp.get_attribute("number_of_wheels")) == 4]
         self.assertGreater(len(vehicle_bps), 0)
 
         spawn_points = self.world.get_map().get_spawn_points()
