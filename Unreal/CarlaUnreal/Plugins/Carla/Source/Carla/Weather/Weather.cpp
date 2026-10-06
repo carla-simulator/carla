@@ -2345,9 +2345,9 @@ void AWeather::ApplyWeatherToSkyActor(AActor* SkyActor, const FWeatherParameters
     // actor exists, but street lamps otherwise only ever turned on when
     // actually playing: ASkyBase::RefreshWeather/LoadPreset fall back to
     // calling this function directly with no AWeather placed, and that path
-    // never reached UpdateStreetLightsForDayNight. Broadcasting again here is
-    // harmless when an AWeather is present too -- registered lights just
-    // re-receive the same state.
+    // never reached UpdateStreetLightsForDayNight. Notifying again here is
+    // harmless when an AWeather is present too: the subsystem only
+    // broadcasts when the day/night state actually changes.
     if (UWorld* World = SkyActor->GetWorld())
     {
         if (UCarlaLightSubsystem* CarlaLightSubsystem = World->GetSubsystem<UCarlaLightSubsystem>())
@@ -2517,11 +2517,10 @@ void AWeather::UpdateStreetLightsForDayNight()
     if (CarlaLightSubsystem == nullptr)
         return;
 
-    // Sun above StreetLightsOnDeg = day, at or below = night. Broadcasting on every
-    // weather update is harmless: registered lights just re-receive the same
-    // state when nothing changed.
+    // Sun above StreetLightsOnDeg = day, at or below = night. Notified on every
+    // weather update; the subsystem only broadcasts an actual change.
     const bool bIsDay = Weather.SunAltitudeAngle > CVarCarlaWeatherStreetLightsOnDeg.GetValueOnGameThread();
-    UE_LOG(LogCarla, Log, TEXT("AWeather: broadcasting day/night change (bIsDay=%d) to %d registered CarlaLights"),
+    UE_LOG(LogCarla, Verbose, TEXT("AWeather: day/night state (bIsDay=%d) for %d registered CarlaLights"),
         bIsDay ? 1 : 0, CarlaLightSubsystem->NumLights());
     CarlaLightSubsystem->NotifyDayTimeChange(bIsDay);
 }

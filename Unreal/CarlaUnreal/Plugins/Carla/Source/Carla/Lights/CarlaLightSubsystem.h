@@ -98,6 +98,8 @@ private:
   void ScheduleDayTimeState(UCarlaLight* CarlaLight);
   bool bHasDayTimeState = false;
   bool bLastIsDay = true;
+  // set_day_night_cycle from the client; off, day/night changes are ignored.
+  bool bDayNightCycle = true;
   TSet<TWeakObjectPtr<UCarlaLight>> PendingDayTimeLights;
 
   // Flag for each client to tell if an update needs to be done
