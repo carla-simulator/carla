@@ -229,6 +229,12 @@ void UChronoMovementComponent::ProcessControl(FVehicleControl &Control)
     {
       PowerTrain->SetDriveMode(ChPowertrain::DriveMode::FORWARD);
     }
+    // ACarlaWheeledVehicle::FlushVehicleControl() rebuilds bReverse from Gear
+    // after every flush, so report the gear back as the default movement
+    // component does; otherwise reverse is dropped on the next tick. Chrono 6
+    // reports reverse as gear 0, so it is mapped to -1 here.
+    Control.Gear = VehicleControl.bReverse ?
+        -1 : PowerTrain->GetCurrentTransmissionGear();
   }
 }
 
@@ -336,6 +342,7 @@ void UChronoMovementComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
   if(!CarlaVehicle)
   {
+    Super::EndPlay(EndPlayReason);
     return;
   }
   // reset callbacks to react to collisions
@@ -345,6 +352,7 @@ void UChronoMovementComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
       this, &UChronoMovementComponent::OnVehicleOverlap);
   CarlaVehicle->GetMesh()->SetCollisionResponseToChannel(
       ECollisionChannel::ECC_WorldStatic, ECollisionResponse::ECR_Block);
+  Super::EndPlay(EndPlayReason);
 }
 #endif
 
