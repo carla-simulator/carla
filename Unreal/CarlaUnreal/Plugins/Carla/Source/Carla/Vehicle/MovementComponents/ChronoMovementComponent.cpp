@@ -75,6 +75,29 @@ void UChronoMovementComponent::CreateChronoMovementComponent(
   ChronoMovementComponent->TransmissionJSON =
       carla::rpc::ToFString(Powertrain["Transmission Input File"].GetString());
 
+  // Chrono's Read*JSON helpers return null for a file they cannot read, and
+  // ChWheeledVehicle dereferences that without checking, taking the server
+  // down. Check every template up front instead.
+  for (const FString* Template : {
+      &ChronoMovementComponent->VehicleJSON,
+      &ChronoMovementComponent->TireJSON,
+      &ChronoMovementComponent->EngineJSON,
+      &ChronoMovementComponent->TransmissionJSON})
+  {
+    const std::string TemplatePath =
+        carla::rpc::FromFString(ChronoMovementComponent->BaseJSONPath) +
+        carla::rpc::FromFString(*Template);
+    rapidjson::Document Document;
+    chrono::vehicle::ReadFileJSON(TemplatePath, Document);
+    if (!Document.IsObject())
+    {
+      UE_LOG(LogCarla, Error, TEXT(
+          "Could not read Chrono template %s; Chrono physics not enabled."),
+          *carla::rpc::ToFString(TemplatePath));
+      return;
+    }
+  }
+
   Vehicle->SetCarlaMovementComponent(ChronoMovementComponent);
   ChronoMovementComponent->RegisterComponent();
   #else
