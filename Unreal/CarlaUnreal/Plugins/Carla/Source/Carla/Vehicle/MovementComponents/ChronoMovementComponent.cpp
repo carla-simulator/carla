@@ -47,6 +47,34 @@ void UChronoMovementComponent::CreateChronoMovementComponent(
   }
   ChronoMovementComponent->MaxSubsteps = MaxSubsteps;
   ChronoMovementComponent->MaxSubstepDeltaTime = MaxSubstepDeltaTime;
+
+  // Since Chrono 8 a powertrain is an engine plus a transmission. The
+  // powertrain template names the two, with the same keys a Chrono vehicle
+  // JSON uses for its "Powertrain" block, so the RPC keeps taking one file.
+  // Resolve it before the component replaces the current one, so a bad
+  // template leaves the vehicle on the physics it already has.
+  const std::string PowertrainPath =
+      carla::rpc::FromFString(ChronoMovementComponent->BaseJSONPath) +
+      carla::rpc::FromFString(ChronoMovementComponent->PowertrainJSON);
+  rapidjson::Document Powertrain;
+  chrono::vehicle::ReadFileJSON(PowertrainPath, Powertrain);
+  if (!Powertrain.IsObject() ||
+      !Powertrain.HasMember("Engine Input File") ||
+      !Powertrain["Engine Input File"].IsString() ||
+      !Powertrain.HasMember("Transmission Input File") ||
+      !Powertrain["Transmission Input File"].IsString())
+  {
+    UE_LOG(LogCarla, Error, TEXT(
+        "Chrono powertrain template %s must name an \"Engine Input File\" and a "
+        "\"Transmission Input File\"; Chrono physics not enabled."),
+        *carla::rpc::ToFString(PowertrainPath));
+    return;
+  }
+  ChronoMovementComponent->EngineJSON =
+      carla::rpc::ToFString(Powertrain["Engine Input File"].GetString());
+  ChronoMovementComponent->TransmissionJSON =
+      carla::rpc::ToFString(Powertrain["Transmission Input File"].GetString());
+
   Vehicle->SetCarlaMovementComponent(ChronoMovementComponent);
   ChronoMovementComponent->RegisterComponent();
   #else
@@ -60,28 +88,28 @@ using namespace chrono;
 using namespace chrono::vehicle;
 
 constexpr double CMTOM = 0.01;
-ChVector<> UE4LocationToChrono(const FVector& Location)
+ChVector3d UE4LocationToChrono(const FVector& Location)
 {
-  return CMTOM*ChVector<>(Location.X, -Location.Y, Location.Z);
+  return CMTOM*ChVector3d(Location.X, -Location.Y, Location.Z);
 }
 constexpr double MTOCM = 100;
-FVector ChronoToUE4Location(const ChVector<>& position)
+FVector ChronoToUE4Location(const ChVector3d& position)
 {
   return MTOCM*FVector(position.x(), -position.y(), position.z());
 }
-ChVector<> UE4DirectionToChrono(const FVector& Location)
+ChVector3d UE4DirectionToChrono(const FVector& Location)
 {
-  return ChVector<>(Location.X, -Location.Y, Location.Z);
+  return ChVector3d(Location.X, -Location.Y, Location.Z);
 }
-FVector ChronoToUE4Direction(const ChVector<>& position)
+FVector ChronoToUE4Direction(const ChVector3d& position)
 {
   return FVector(position.x(), -position.y(), position.z());
 }
-ChQuaternion<> UE4QuatToChrono(const FQuat& Quat)
+ChQuaterniond UE4QuatToChrono(const FQuat& Quat)
 {
-  return ChQuaternion<>(Quat.W, -Quat.X, Quat.Y, -Quat.Z);
+  return ChQuaterniond(Quat.W, -Quat.X, Quat.Y, -Quat.Z);
 }
-FQuat ChronoToUE4Quat(const ChQuaternion<>& quat)
+FQuat ChronoToUE4Quat(const ChQuaterniond& quat)
 {
   return FQuat(-quat.e1(), quat.e2(), -quat.e3(), quat.e0());
 }
@@ -111,9 +139,9 @@ std::pair<bool, FHitResult>
   return std::make_pair(bDidHit, Hit);
 }
 
-double UERayCastTerrain::GetHeight(const ChVector<>& loc) const
+double UERayCastTerrain::GetHeight(const ChVector3d& loc) const
 {
-  FVector Location = ChronoToUE4Location(loc + ChVector<>(0,0,0.5)); // small offset to detect the ground properly
+  FVector Location = ChronoToUE4Location(loc + ChVector3d(0,0,0.5)); // small offset to detect the ground properly
   auto point_pair = GetTerrainProperties(Location);
   if (point_pair.first)
   {
@@ -122,7 +150,7 @@ double UERayCastTerrain::GetHeight(const ChVector<>& loc) const
   }
   return -1000000.0;
 }
-ChVector<> UERayCastTerrain::GetNormal(const ChVector<>& loc) const
+ChVector3d UERayCastTerrain::GetNormal(const ChVector3d& loc) const
 {
   FVector Location = ChronoToUE4Location(loc);
   auto point_pair = GetTerrainProperties(Location);
@@ -134,7 +162,7 @@ ChVector<> UERayCastTerrain::GetNormal(const ChVector<>& loc) const
   }
   return UE4DirectionToChrono(FVector(0,0,1));
 }
-float UERayCastTerrain::GetCoefficientFriction(const ChVector<>& loc) const
+float UERayCastTerrain::GetCoefficientFriction(const ChVector3d& loc) const
 {
   return 1;
 }
@@ -146,9 +174,12 @@ void UChronoMovementComponent::BeginPlay()
   DisableUE4VehiclePhysics();
 
   // // // Chrono System
-  Sys.Set_G_acc(ChVector<>(0, 0, -9.81));
+  // Chrono 9 stopped giving a system a collision system by default; keep the
+  // Bullet one Chrono 6 used to create implicitly.
+  Sys.SetCollisionSystemType(ChCollisionSystem::Type::BULLET);
+  Sys.SetGravitationalAcceleration(ChVector3d(0, 0, -9.81));
   Sys.SetSolverType(ChSolver::Type::BARZILAIBORWEIN);
-  Sys.SetSolverMaxIterations(150);
+  Sys.GetSolver()->AsIterative()->SetMaxIterations(150);
   Sys.SetMaxPenetrationRecoverySpeed(4.0);
 
   InitializeChronoVehicle();
@@ -173,7 +204,7 @@ void UChronoMovementComponent::InitializeChronoVehicle()
   auto ChronoRotation = UE4QuatToChrono(VehicleRotation);
 
   // Set base path for vehicle JSON files
-  vehicle::SetDataPath(carla::rpc::FromFString(BaseJSONPath));
+  SetVehicleDataPath(carla::rpc::FromFString(BaseJSONPath));
 
   std::string BasePath_string = carla::rpc::FromFString(BaseJSONPath);
 
@@ -196,16 +227,27 @@ void UChronoMovementComponent::InitializeChronoVehicle()
       *VehicleJSONPath,
       *PowerTrainJSONPath,
       *TireJSONPath);
-  // Create JSON vehicle
+  // Engine and transmission named by the powertrain template, resolved in
+  // CreateChronoMovementComponent.
+  std::string EngineJSON_string =
+      BasePath_string + carla::rpc::FromFString(EngineJSON);
+  std::string TransmissionJSON_string =
+      BasePath_string + carla::rpc::FromFString(TransmissionJSON);
+
+  // Create JSON vehicle. Its powertrain and tires come from the templates
+  // passed to the RPC, not from the vehicle JSON.
   Vehicle = chrono_types::make_shared<WheeledVehicle>(
       &Sys,
-      VehiclePath_string);
-  Vehicle->Initialize(ChCoordsys<>(ChronoLocation, ChronoRotation));
+      VehiclePath_string,
+      false,
+      false);
+  Vehicle->Initialize(ChCoordsysd(ChronoLocation, ChronoRotation));
   Vehicle->GetChassis()->SetFixed(false);
   // Create and initialize the powertrain System
-  auto powertrain = ReadPowertrainJSON(
-      PowerTrain_string);
-  Vehicle->InitializePowertrain(powertrain);
+  auto Engine = ReadEngineJSON(EngineJSON_string);
+  auto Transmission = ReadTransmissionJSON(TransmissionJSON_string);
+  Vehicle->InitializePowertrain(
+      chrono_types::make_shared<ChPowertrainAssembly>(Engine, Transmission));
   // Create and initialize the tires
   for (auto& axle : Vehicle->GetAxles()) {
       for (auto& wheel : axle->GetWheels()) {
@@ -218,23 +260,20 @@ void UChronoMovementComponent::InitializeChronoVehicle()
 void UChronoMovementComponent::ProcessControl(FVehicleControl &Control)
 {
   VehicleControl = Control;
-  auto PowerTrain = Vehicle->GetPowertrain();
-  if (PowerTrain)
+  auto Transmission = Vehicle ? Vehicle->GetTransmission() : nullptr;
+  if (Transmission && Transmission->IsAutomatic())
   {
-    if (VehicleControl.bReverse)
-    {
-      PowerTrain->SetDriveMode(ChPowertrain::DriveMode::REVERSE);
-    }
-    else
-    {
-      PowerTrain->SetDriveMode(ChPowertrain::DriveMode::FORWARD);
-    }
-    // ACarlaWheeledVehicle::FlushVehicleControl() rebuilds bReverse from Gear
-    // after every flush, so report the gear back as the default movement
-    // component does; otherwise reverse is dropped on the next tick. Chrono 6
-    // reports reverse as gear 0, so it is mapped to -1 here.
-    Control.Gear = VehicleControl.bReverse ?
-        -1 : PowerTrain->GetCurrentTransmissionGear();
+    Transmission->asAutomatic()->SetDriveMode(VehicleControl.bReverse ?
+        ChAutomaticTransmission::DriveMode::REVERSE :
+        ChAutomaticTransmission::DriveMode::FORWARD);
+  }
+  // ACarlaWheeledVehicle::FlushVehicleControl() rebuilds bReverse from Gear
+  // after every flush, so report the gear back as the default movement
+  // component does; otherwise reverse is dropped on the next tick. Chrono uses
+  // the same convention: -1 reverse, 0 neutral, 1+ forward.
+  if (Transmission)
+  {
+    Control.Gear = Transmission->GetCurrentGear();
   }
 }
 
@@ -273,9 +312,9 @@ void UChronoMovementComponent::TickComponent(float DeltaTime,
     AdvanceChronoSimulation(DeltaTime);
   }
 
-  const auto ChronoPositionOffset = ChVector<>(0,0,-0.25f);
-  auto VehiclePos = Vehicle->GetVehiclePos() + ChronoPositionOffset;
-  auto VehicleRot = Vehicle->GetVehicleRot();
+  const auto ChronoPositionOffset = ChVector3d(0,0,-0.25f);
+  auto VehiclePos = Vehicle->GetPos() + ChronoPositionOffset;
+  auto VehicleRot = Vehicle->GetRot();
   double Time = Vehicle->GetSystem()->GetChTime();
 
   FVector NewLocation = ChronoToUE4Location(VehiclePos);
@@ -301,7 +340,7 @@ void UChronoMovementComponent::AdvanceChronoSimulation(float StepSize)
   double Throttle = VehicleControl.Throttle;
   double Steering = -VehicleControl.Steer; // RHF to LHF
   double Brake = VehicleControl.Brake + VehicleControl.bHandBrake;
-  Vehicle->Synchronize(Time, {Steering, Throttle, Brake}, *Terrain.get());
+  Vehicle->Synchronize(Time, {Steering, Throttle, Brake, 0.0}, *Terrain.get());
   Vehicle->Advance(StepSize);
   Sys.DoStepDynamics(StepSize);
 }
@@ -311,7 +350,7 @@ FVector UChronoMovementComponent::GetVelocity() const
   if (Vehicle)
   {
     return ChronoToUE4Location(
-        Vehicle->GetVehiclePointVelocity(ChVector<>(0,0,0)));
+        Vehicle->GetPointVelocity(ChVector3d(0,0,0)));
   }
   return FVector();
 }
@@ -320,10 +359,10 @@ int32 UChronoMovementComponent::GetVehicleCurrentGear() const
 {
   if (Vehicle)
   {
-    auto PowerTrain = Vehicle->GetPowertrain();
-    if (PowerTrain)
+    auto Transmission = Vehicle->GetTransmission();
+    if (Transmission)
     {
-      return PowerTrain->GetCurrentTransmissionGear();
+      return Transmission->GetCurrentGear();
     }
   }
   return 0;

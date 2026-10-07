@@ -19,7 +19,7 @@
 #endif
 
 #include "chrono/physics/ChSystemNSC.h"
-#include "chrono_vehicle/ChVehicleModelData.h"
+#include "chrono_vehicle/ChVehicleDataPath.h"
 #include "chrono_vehicle/ChTerrain.h"
 #include "chrono_vehicle/driver/ChDataDriver.h"
 #include "chrono_vehicle/wheeled_vehicle/vehicle/WheeledVehicle.h"
@@ -42,9 +42,9 @@ public:
   UERayCastTerrain(ACarlaWheeledVehicle* UEVehicle, chrono::vehicle::ChVehicle* ChrVehicle);
 
   std::pair<bool, FHitResult> GetTerrainProperties(const FVector &Location) const;
-  virtual double GetHeight(const chrono::ChVector<>& loc) const override;
-  virtual chrono::ChVector<> GetNormal(const chrono::ChVector<>& loc) const override;
-  virtual float GetCoefficientFriction(const chrono::ChVector<>& loc) const override;
+  virtual double GetHeight(const chrono::ChVector3d& loc) const override;
+  virtual chrono::ChVector3d GetNormal(const chrono::ChVector3d& loc) const override;
+  virtual float GetCoefficientFriction(const chrono::ChVector3d& loc) const override;
 };
 #endif
 
@@ -66,6 +66,9 @@ class CARLA_API UChronoMovementComponent : public UBaseCarlaMovementComponent
   FString PowertrainJSON = "hmmwv/powertrain/HMMWV_ShaftsPowertrain.json";
   FString TireJSON =       "hmmwv/tire/HMMWV_Pac02Tire.json";
   FString BaseJSONPath = "";
+  // Resolved from the powertrain template by CreateChronoMovementComponent.
+  FString EngineJSON = "";
+  FString TransmissionJSON = "";
 
 public:
 

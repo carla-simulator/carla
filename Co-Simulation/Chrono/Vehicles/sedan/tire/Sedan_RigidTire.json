@@ -3,9 +3,9 @@
   "Type":                       "Tire",
   "Template":                   "RigidTire",
 
-  "Radius":                     0.336423,
-  "Width":                      0.204978,
-  "Mass":                       12.0,
+  "Radius":                     0.3266,
+  "Width":                      0.245,
+  "Mass":                       11.5,
   "Inertia":                    [0.156, 0.679, 0.156],
 
   "Contact Material":

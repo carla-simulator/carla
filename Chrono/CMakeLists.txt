@@ -12,10 +12,10 @@ set (PROJECT_INSTALL_PATH ${CMAKE_CURRENT_BINARY_DIR}/install)
 # Unreal/ is added after this directory and needs the include paths.
 set (CARLA_CHRONO_INSTALL_PATH ${PROJECT_INSTALL_PATH} PARENT_SCOPE)
 
-# Chrono 6.0.0 is a C++14 code base: compiling it at CARLA's C++20 level trips
-# constructs that C++20 removed. Pin the subproject to C++14 and let it keep its
-# own standard - the installed headers still include cleanly from the C++20
-# Carla module, which is all UChronoMovementComponent needs.
+# Chrono 10 selects C++17 on its own (src/CMakeLists.txt, CH_CXX17). Pin the
+# subproject to that rather than CARLA's C++20: the installed headers still
+# include cleanly from the C++20 Carla module, which is all
+# UChronoMovementComponent needs.
 if (CARLA_CHRONO_SOURCE_PATH STREQUAL "")
   set (
     CARLA_CHRONO_SOURCE_ARGS
@@ -39,9 +39,9 @@ ExternalProject_Add (
     -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
     -DCMAKE_INSTALL_PREFIX=${PROJECT_INSTALL_PATH}
     -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}
-    -DCMAKE_CXX_STANDARD=14
+    -DCMAKE_CXX_STANDARD=17
     -DEIGEN3_INCLUDE_DIR=${eigen_SOURCE_DIR}
-    -DENABLE_MODULE_VEHICLE=ON
+    -DCH_ENABLE_MODULE_VEHICLE=ON
     -DBUILD_DEMOS=OFF
     -DBUILD_TESTING=OFF
     -DBUILD_BENCHMARKING=OFF

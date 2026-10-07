@@ -176,10 +176,16 @@ public class Carla :
 
     if (EnableChrono)
     {
+      // Chrono 10 headers destroy a std::vector<ChContactMaterialData>, a
+      // polymorphic type without a virtual destructor, inline. Clang reports
+      // it inside libc++'s construct_at, outside any pragma around the Chrono
+      // includes, so it can only be relaxed for the whole module.
+      CppCompileWarningSettings.DeleteNonVirtualDtorWarningLevel = WarningLevel.Warning;
+
       var ChronoLibraryNames = new string[]
       {
-        "ChronoEngine",
-        "ChronoEngine_vehicle",
+        "Chrono_core",
+        "Chrono_vehicle",
         "ChronoModels_vehicle",
         "ChronoModels_robot",
       };

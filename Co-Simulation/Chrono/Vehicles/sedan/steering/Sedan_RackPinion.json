@@ -15,6 +15,6 @@
   "Pinion":
   {
     "Radius":                   0.3,
-    "Maximum Angle":            0.27
+    "Maximum Angle (deg)":      15.5
   }
 }

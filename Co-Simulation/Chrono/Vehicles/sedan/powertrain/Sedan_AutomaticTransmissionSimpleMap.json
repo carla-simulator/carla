@@ -1,0 +1,18 @@
+{
+  "Name": "Sedan Simple Map Transmission",
+  "Type": "Transmission",
+  "Template": "AutomaticTransmissionSimpleMap",
+
+  "Gear Box": {
+    "Reverse Gear Ratio": -0.333,
+    "Forward Gear Ratios": [0.265, 0.489, 0.784, 1.063, 1.276, 1.499],
+    "Shift Points Map RPM": [
+                                [ 1000, 4000 ],  // 1st
+                                [ 1200, 4500 ],  // 2nd 
+                                [ 1400, 4500 ],  // 3rd
+                                [ 1600, 4500 ],  // 4th
+                                [ 1800, 4500 ],  // 5th
+                                [ 2000, 4500 ]   // 6th
+    ]
+  }
+}

@@ -350,7 +350,7 @@ carla_string_option (
 carla_string_option (
   CARLA_CHRONO_VERSION
   "Target Project Chrono version."
-  6.0.0
+  10.0.0
 )
 
 carla_string_option (

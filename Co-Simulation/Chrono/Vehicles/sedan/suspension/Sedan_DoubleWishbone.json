@@ -3,6 +3,9 @@
   "Type":                       "Suspension",
   "Template":                   "DoubleWishbone",
 
+ "Camber Angle (deg)":               0,
+ "Toe Angle (deg)":                  0,
+
   "Spindle" :
   {
     "Mass":                     1.103,
@@ -56,15 +59,13 @@
     "Location Chassis":         [-0.04, 0.5200, 0.2300],
     "Location Arm":             [0.0, 0.6200, -0.2700],
     "Free Length":              0.51,
-    "Spring Coefficient":       500000.0,
-    "Damping Coefficient":      10000.0
+    "Spring Coefficient":       500000.0
   },
 
   "Shock":
   {
     "Location Chassis":         [-0.04, 0.5200, 0.2300],
     "Location Arm":             [0.0, 0.6200, -0.2700],
-    "Spring Coefficient":       500000.0,
     "Damping Coefficient":      10000.0
   },
 

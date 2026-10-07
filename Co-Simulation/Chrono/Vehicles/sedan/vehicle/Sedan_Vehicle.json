@@ -38,7 +38,7 @@
 
   "Wheelbase": 2.776,
   "Minimum Turning Radius": 7.6,
-  "Maximum Steering Angle": 25.0,
+  "Maximum Steering Angle (deg)": 25.0,
 
   "Driveline": {
     "Input File": "sedan/driveline/Sedan_Driveline2WD.json",

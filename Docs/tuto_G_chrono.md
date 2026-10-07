@@ -34,14 +34,14 @@ cmake --preset Release -DENABLE_CHRONO=ON
 cmake --build Build/Release --target launch
 ```
 
-The above pulls the source code for version 6 from the Project Chrono repository. If you wish to use your own Chrono checkout, point `CARLA_CHRONO_SOURCE_PATH` at it:
+The above pulls the source code for version 10.0.0 from the Project Chrono repository. If you wish to use your own Chrono checkout, point `CARLA_CHRONO_SOURCE_PATH` at it:
 
 ```sh
 cmake --preset Release -DENABLE_CHRONO=ON -DCARLA_CHRONO_SOURCE_PATH=<PATH>
 ```
 
 A different upstream revision can be selected with `-DCARLA_CHRONO_TAG=<TAG>`, but note that the
-integration targets the Chrono 6 API and is not guaranteed to compile against later releases.
+integration targets the Chrono 10 API and is not guaranteed to compile against other releases.
 
 ---
 
@@ -52,7 +52,19 @@ Chrono physics is enabled using the `enable_chrono_physics` method available thr
 - __`base_path`:__ Path of the directory which contains the template files. This is necessary to ensure that auxiliary files referenced from the template files have a common base path from which to search.
 - __`vehicle_json`:__ Path of the vehicle template file relative to the `base_path`.
 - __`tire_json`:__ Path of the tire template file relative to the `base_path`.
-- __`powertrain_json`:__ Path of the powertrain template file relative to the `base_path`.
+- __`powertrain_json`:__ Path of the powertrain template file relative to the `base_path`. Since Chrono 8 a powertrain is an engine plus a transmission, so this file names the two templates to pair, using the same keys as the `Powertrain` block of a Chrono vehicle JSON:
+
+```json
+{
+  "Name": "Sedan Simple Map Powertrain",
+  "Type": "Powertrain",
+  "Template": "PowertrainAssembly",
+  "Engine Input File": "sedan/powertrain/Sedan_EngineSimpleMap.json",
+  "Transmission Input File": "sedan/powertrain/Sedan_AutomaticTransmissionSimpleMap.json"
+}
+```
+
+  Both paths are relative to `base_path`. The engine and transmission files themselves use Chrono's own `Engine` and `Transmission` template formats.
 
 !!! Important
     Double-check your paths. Incorrect or missing paths can cause Unreal Engine to crash.
