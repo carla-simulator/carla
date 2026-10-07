@@ -35,6 +35,7 @@ nav:
   - 'C++ reference': 'ref_cpp.md'
   - 'Blueprint library': 'bp_library.md'
   - 'Tutorials': 'tutorials.md'
+  - 'Agent skills': 'agent_skills.md'
   - 'CARLA Studio': 'https://github.com/carla-simulator/carla-studio'
   #- 'Extended documentation': 'ext_docs.md'
 
