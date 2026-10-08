@@ -48,4 +48,8 @@ protected:
   void DisableUE4VehiclePhysics();
 
   void EnableUE4VehiclePhysics(bool bResetVelocity = true);
+
+  // Hands the vehicle back to Chaos moving at LinearVelocity (cm/s); a reset
+  // also clears its angular velocity.
+  void EnableUE4VehiclePhysics(const FVector& LinearVelocity, bool bResetAngularVelocity);
 };

@@ -114,7 +114,9 @@ public:
 
 private:
 
-  void DisableChronoPhysics();
+  // Hands the vehicle back to Chaos. It keeps the velocity Chrono gave it
+  // unless bResetVelocity, for a Chrono state that cannot be trusted.
+  void DisableChronoPhysics(bool bResetVelocity = false);
 
   UFUNCTION()
   void OnVehicleHit(AActor *Actor,

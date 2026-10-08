@@ -452,16 +452,22 @@ void UChronoMovementComponent::DisableSpecialPhysics()
   DisableChronoPhysics();
 }
 
-void UChronoMovementComponent::DisableChronoPhysics()
+void UChronoMovementComponent::DisableChronoPhysics(bool bResetVelocity)
 {
   this->SetComponentTickEnabled(false);
-  EnableUE4VehiclePhysics(true);
+  // Read before the swap below, while GetVelocity() is still Chrono's.
+  const FVector Velocity = bResetVelocity ? FVector::ZeroVector : GetVelocity();
   CarlaVehicle->OnActorHit.RemoveDynamic(this, &UChronoMovementComponent::OnVehicleHit);
   CarlaVehicle->GetMesh()->OnComponentBeginOverlap.RemoveDynamic(
       this, &UChronoMovementComponent::OnVehicleOverlap);
   CarlaVehicle->GetMesh()->SetCollisionResponseToChannel(
       ECollisionChannel::ECC_WorldStatic, ECollisionResponse::ECR_Block);
+  // Swap the movement component before Chaos is re-enabled: recreating the
+  // Chaos physics state reads the vehicle's velocity, which goes through the
+  // current movement component, and a diverged Chrono one answers NaN. This
+  // destroys this component, but it stays valid until garbage collection.
   UDefaultMovementComponent::CreateDefaultMovementComponent(CarlaVehicle);
+  EnableUE4VehiclePhysics(Velocity, bResetVelocity);
 }
 
 void UChronoMovementComponent::OnVehicleHit(AActor *Actor,
