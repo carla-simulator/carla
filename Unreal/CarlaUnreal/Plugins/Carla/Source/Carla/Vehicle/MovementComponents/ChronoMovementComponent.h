@@ -36,6 +36,8 @@
 #ifdef WITH_CHRONO
 class UERayCastTerrain : public chrono::vehicle::ChTerrain
 {
+  // Used where the trace finds no physical material: ChTerrain's own default.
+  static constexpr float DefaultFriction = 0.8f;
   ACarlaWheeledVehicle* CarlaVehicle;
   chrono::vehicle::ChVehicle* ChronoVehicle;
 public:

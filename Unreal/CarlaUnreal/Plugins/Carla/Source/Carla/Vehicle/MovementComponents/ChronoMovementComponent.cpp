@@ -12,6 +12,7 @@
 
 #include <util/ue-header-guard-begin.h>
 #include "Misc/Paths.h"
+#include "PhysicalMaterials/PhysicalMaterial.h"
 #include <util/ue-header-guard-end.h>
 
 #include <util/disable-ue4-macros.h>
@@ -220,6 +221,7 @@ std::pair<bool, FHitResult>
   FHitResult Hit;
   FCollisionQueryParams CollisionQueryParams;
   CollisionQueryParams.AddIgnoredActor(CarlaVehicle);
+  CollisionQueryParams.bReturnPhysicalMaterial = true;
   bool bDidHit = CarlaVehicle->GetWorld()->LineTraceSingleByChannel(
       Hit,
       StartLocation,
@@ -246,14 +248,20 @@ void UERayCastTerrain::GetProperties(
   // Start slightly above the query point to detect the ground properly.
   FVector Location = ChronoToUE4Location(loc + ChVector3d(0,0,0.5));
   auto point_pair = GetTerrainProperties(Location);
-  friction = GetCoefficientFriction(loc);
   if (point_pair.first)
   {
     point = UE4LocationToChrono(point_pair.second.Location);
     height = point.z();
     normal = UE4DirectionToChrono(point_pair.second.Normal);
+    // The friction of the surface hit, as Chaos would see it. Chrono's tire
+    // models scale their grip by this over the tire's own mu0, so a fixed
+    // value ignored CARLA's surfaces and, at 1.0 against the sedan tires'
+    // 0.8, gave them about 25% more grip than specified.
+    const UPhysicalMaterial* Material = point_pair.second.PhysMaterial.Get();
+    friction = Material ? Material->Friction : DefaultFriction;
     return;
   }
+  friction = DefaultFriction;
   height = -1000000.0;
   point = ChVector3d(loc.x(), loc.y(), height);
   normal = UE4DirectionToChrono(FVector(0,0,1));
@@ -285,7 +293,11 @@ ChVector3d UERayCastTerrain::GetNormal(const ChVector3d& loc) const
 }
 float UERayCastTerrain::GetCoefficientFriction(const ChVector3d& loc) const
 {
-  return 1;
+  ChVector3d Point, Normal;
+  double Height;
+  float Friction;
+  GetProperties(loc, Point, Height, Normal, Friction);
+  return Friction;
 }
 
 void UChronoMovementComponent::BeginPlay()
