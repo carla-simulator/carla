@@ -316,6 +316,21 @@ class TestLidarBatchConsistency(SyncSmokeTest):
             self.assertTrue(len(a) > 0, "Frame %d has no points." % idx)
             self.assertEqual(a, b, "Frame %d differs between the single and the batched LiDAR." % idx)
 
+    def test_noise_seed(self):
+        print("TestLidarBatchConsistency.test_noise_seed")
+        attributes = {'channels' : '32', 'range' : '50', 'points_per_second': '100000',
+          'rotation_frequency': '20', 'noise_stddev': '0.02'}
+
+        seed_1 = self.record(dict(attributes, noise_seed='1'))
+        seed_1_again = self.record(dict(attributes, noise_seed='1'))
+        seed_2 = self.record(dict(attributes, noise_seed='2'))
+
+        self.assertEqual(len(seed_1), len(seed_2))
+        for idx, (a, b, c) in enumerate(zip(seed_1, seed_1_again, seed_2)):
+            self.assertTrue(len(a) > 0, "Frame %d has no points." % idx)
+            self.assertTrue(a == b, "Frame %d differs between two runs with the same noise_seed." % idx)
+        self.assertTrue(any(a != c for a, c in zip(seed_1, seed_2)), "Different noise_seed values produced identical data.")
+
 
 class TestLidarSensorTick(SyncSmokeTest):
     """LiDARs must honor sensor_tick when they are simulated by the LiDAR subsystem."""

@@ -46,6 +46,7 @@ void ARayCastLidar::Set(const FActorDescription &ActorDescription)
 void ARayCastLidar::Set(const FLidarDescription &LidarDescription)
 {
   Description = LidarDescription;
+  SetSeed(Description.RandomSeed);
   LidarData = FLidarData(Description.Channels);
   CreateLasers();
   PointsPerChannel.resize(Description.Channels);
