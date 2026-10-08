@@ -96,12 +96,16 @@ FString UChronoMovementComponent::CreateChronoMovementComponent(
 
   // Chrono's Read*JSON helpers return null for a file they cannot read, and
   // ChWheeledVehicle dereferences that without checking, taking the server
-  // down. Check every template up front instead.
-  for (const FString* Template : {
-      &ChronoMovementComponent->VehicleJSON,
-      &ChronoMovementComponent->TireJSON,
-      &ChronoMovementComponent->EngineJSON,
-      &ChronoMovementComponent->TransmissionJSON})
+  // down. They also only assert() the template's "Type" (compiled out in a
+  // release build) and read "Template" unchecked, so an engine JSON passed
+  // as a tire is accepted and the vehicle falls through the ground. Check
+  // every template up front instead.
+  const std::pair<const FString*, const char*> Templates[] = {
+      {&ChronoMovementComponent->VehicleJSON, "Vehicle"},
+      {&ChronoMovementComponent->TireJSON, "Tire"},
+      {&ChronoMovementComponent->EngineJSON, "Engine"},
+      {&ChronoMovementComponent->TransmissionJSON, "Transmission"}};
+  for (const auto& [Template, ExpectedType] : Templates)
   {
     const std::string TemplatePath =
         carla::rpc::FromFString(ChronoMovementComponent->BaseJSONPath) +
@@ -113,6 +117,17 @@ FString UChronoMovementComponent::CreateChronoMovementComponent(
       return Fail(FString::Printf(
           TEXT("Could not read Chrono template %s"),
           *carla::rpc::ToFString(TemplatePath)));
+    }
+    if (!Document.HasMember("Type") || !Document["Type"].IsString() ||
+        std::string(Document["Type"].GetString()) != ExpectedType ||
+        !Document.HasMember("Template") || !Document["Template"].IsString())
+    {
+      return Fail(FString::Printf(
+          TEXT("Chrono template %s is not a \"%s\" template (its \"Type\" must be "
+               "\"%s\" and it must name a \"Template\")"),
+          *carla::rpc::ToFString(TemplatePath),
+          *carla::rpc::ToFString(ExpectedType),
+          *carla::rpc::ToFString(ExpectedType)));
     }
   }
 
