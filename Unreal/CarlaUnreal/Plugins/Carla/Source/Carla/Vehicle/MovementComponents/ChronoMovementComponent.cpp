@@ -17,9 +17,26 @@
 #include <util/disable-ue4-macros.h>
 #include <carla/rpc/String.h>
 #ifdef WITH_CHRONO
-#include "chrono_vehicle/utils/ChUtilsJSON.h"
+#include "chrono_thirdparty/rapidjson/document.h"
 #endif
 #include <util/enable-ue4-macros.h>
+
+#ifdef WITH_CHRONO
+// Declared here rather than by including chrono_vehicle/utils/ChUtilsJSON.h:
+// that header pulls in the tracked-vehicle headers, whose ChTrackShoe.h
+// destroys a std::vector<ChContactMaterialData> (a polymorphic type without a
+// virtual destructor) inline, which Clang reports as
+// -Wdelete-non-abstract-non-virtual-dtor inside libc++, where no pragma
+// around the include reaches. These are the only JSON helpers used here.
+namespace chrono {
+namespace vehicle {
+CH_VEHICLE_API void ReadFileJSON(const std::string& filename, rapidjson::Document& d);
+CH_VEHICLE_API std::shared_ptr<ChEngine> ReadEngineJSON(const std::string& filename);
+CH_VEHICLE_API std::shared_ptr<ChTransmission> ReadTransmissionJSON(const std::string& filename);
+CH_VEHICLE_API std::shared_ptr<ChTire> ReadTireJSON(const std::string& filename);
+}  // namespace vehicle
+}  // namespace chrono
+#endif
 
 
 FString UChronoMovementComponent::CreateChronoMovementComponent(
