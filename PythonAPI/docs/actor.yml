@@ -435,7 +435,7 @@
       doc: >
         Returns the steering angle in degrees of a vehicle's wheel.
       note: >
-        Returns the angle set while the wheel animation is overridden, the physics angle while physics simulates the vehicle, and the visual angle otherwise.
+        Returns the angle set while the wheel animation is overridden, the physics angle while physics simulates the vehicle, and the visual angle otherwise. Raises an error if the vehicle has no wheel at that location.
     # --------------------------------------
     - def_name: set_wheel_pitch_angle
       params:

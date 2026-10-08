@@ -3455,7 +3455,7 @@ Returns the steering angle in degrees of a vehicle's wheel.
     - **Parameters:**
         - `wheel_location` (_[carla.VehicleWheelLocation](#carla.VehicleWheelLocation)_)  
     - **Return:** _float_  
-    - **Note:** <font color="#8E8E8E">_Returns the angle set while the wheel animation is overridden, the physics angle while physics simulates the vehicle, and the visual angle otherwise.
+    - **Note:** <font color="#8E8E8E">_Returns the angle set while the wheel animation is overridden, the physics angle while physics simulates the vehicle, and the visual angle otherwise. Raises an error if the vehicle has no wheel at that location.
 _</font>  
 - <a name="carla.Vehicle.get_wheel_suspension_offset"></a>**<font color="#7fb800">get_wheel_suspension_offset</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**wheel_location**</font>)  
 Returns the suspension offset in meters of a vehicle's wheel, following the same rules as [carla.Vehicle.get_wheel_steer_angle](#carla.Vehicle.get_wheel_steer_angle).  

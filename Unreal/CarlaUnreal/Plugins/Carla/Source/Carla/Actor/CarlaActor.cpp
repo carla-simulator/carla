@@ -884,7 +884,10 @@ ECarlaServerResponse FVehicleActor::GetWheelSteerAngle(
     if(Vehicle == nullptr){
       return ECarlaServerResponse::NotAVehicle;
     }
-
+    if (!Vehicle->HasWheel(static_cast<int32>(WheelLocation)))
+    {
+      return ECarlaServerResponse::WheelNotFound;
+    }
     Angle = Vehicle->GetWheelSteerAngle(WheelLocation);
   }
   return ECarlaServerResponse::Success;
@@ -921,6 +924,10 @@ ECarlaServerResponse FVehicleActor::GetWheelPitchAngle(
     {
       return ECarlaServerResponse::NotAVehicle;
     }
+    if (!Vehicle->HasWheel(static_cast<int32>(WheelLocation)))
+    {
+      return ECarlaServerResponse::WheelNotFound;
+    }
     Angle = Vehicle->GetWheelPitchAngle(WheelLocation);
   }
   return ECarlaServerResponse::Success;
@@ -956,6 +963,10 @@ ECarlaServerResponse FVehicleActor::GetWheelSuspensionOffset(
     if (Vehicle == nullptr)
     {
       return ECarlaServerResponse::NotAVehicle;
+    }
+    if (!Vehicle->HasWheel(static_cast<int32>(WheelLocation)))
+    {
+      return ECarlaServerResponse::WheelNotFound;
     }
     Offset = Vehicle->GetWheelSuspensionOffset(WheelLocation) * UE_CM_TO_M;
   }
