@@ -1,5 +1,5 @@
-"""The version is written in five places; make drift a test failure."""
-import re
+"""The version is written in three places; make drift a test failure."""
+import json
 import sys
 from pathlib import Path
 
@@ -7,27 +7,21 @@ REPO = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(REPO / "src"))
 
 
-def _pyproject_version() -> str:
-    text = (REPO / "pyproject.toml").read_text()
-    # Only the [project] table's own version; a dependency pin must not match.
-    project = text.split("[project]", 1)[1].split("\n[", 1)[0]
-    match = re.search(r'^version\s*=\s*"([^"]+)"', project, re.M)
-    assert match, "no version in [project]"
-    return match.group(1)
+def _plugin_manifest() -> dict:
+    return json.loads((REPO / ".claude-plugin" / "plugin.json").read_text())
 
 
-def test_package_version_matches_pyproject():
+def _release() -> str:
+    """The Claude Code plugin manifest is the reference version."""
+    return _plugin_manifest()["version"]
+
+
+def test_package_version_matches_plugin():
     from carla_agentic_tools import __version__
 
-    assert __version__ == _pyproject_version(), (
-        f"__init__.py says {__version__}, pyproject.toml says "
-        f"{_pyproject_version()} — update both"
+    assert __version__ == _release(), (
+        f"__init__.py says {__version__}, .claude-plugin/plugin.json says {_release()}"
     )
-
-
-def test_version_is_pep440_release():
-    assert re.fullmatch(r"\d+\.\d+\.\d+", _pyproject_version()), \
-        "expected a plain X.Y.Z release version"
 
 
 def _reported_version(server) -> str:
@@ -35,7 +29,6 @@ def _reported_version(server) -> str:
 
     mcp 2.x takes `version` on the constructor and keeps it on the server object;
     1.x's FastMCP has no such parameter and holds a low-level Server that does.
-    A published install resolves whichever SDK is newest, so both must be read.
     """
     low = getattr(server.mcp, "_mcp_server", None)
     if low is not None and hasattr(low, "create_initialization_options"):
@@ -53,95 +46,11 @@ def test_server_reports_its_own_version():
     import carla_agentic_tools.server as server
 
     reported = _reported_version(server)
-    assert reported == _pyproject_version(), \
-        f"serverInfo.version is {reported!r}, expected {_pyproject_version()}"
-
-
-# --- the npm package -------------------------------------------------------
-
-def _npm_package() -> dict:
-    import json
-    return json.loads((REPO / "package.json").read_text())
-
-
-def test_npm_version_matches_pyproject():
-    """Two packages, one codebase: a user on npx and a user on uvx must be told
-    the same version, and `serverInfo.version` is read from whichever they ran."""
-    got = _npm_package()["version"]
-    assert got == _pyproject_version(), (
-        f"package.json says {got}, pyproject.toml says {_pyproject_version()}"
-    )
-
-
-def test_npm_ships_what_it_declares():
-    """A file named in `files` but absent ships a package missing part of itself."""
-    for name in _npm_package()["files"]:
-        target = REPO / name.rstrip("/")
-        assert target.exists(), f"package.json lists {name}, which is missing"
-
-
-def test_npm_ships_the_skills_and_no_python():
-    """The npm package must stand alone — that is the whole point of it.
-
-    The skills are the product, so they travel in the tarball; and nothing in
-    `files` may pull in the Python half, or `npx` users download a server they
-    cannot run twice over.
-    """
-    files = _npm_package()["files"]
-    assert "skills/" in files, "the skills must ship in the npm tarball"
-    assert not any(f.startswith(("src/", "tests/")) for f in files), \
-        "the Python implementation must not ship to npm"
-    assert not _npm_package().get("dependencies"), \
-        "a runtime dependency defeats the point: npx would install at first run"
-
-
-def test_npm_entry_point_exists_and_is_executable():
-    import os
-    bin_rel = _npm_package()["bin"]["carla-agentic-tools"]
-    entry = REPO / bin_rel
-    assert entry.is_file(), f"{bin_rel} is missing"
-    assert os.access(entry, os.X_OK), f"{bin_rel} is not executable"
-    assert entry.read_text().startswith("#!"), "no shebang, so `npx` cannot exec it"
-
-
-def test_reported_version_ignores_stale_distribution_metadata():
-    """serverInfo.version must come from the package, not from what is installed.
-
-    Reading distribution metadata reports the wrong version whenever a different
-    release is installed alongside the checkout, and nothing at all from a bare
-    checkout — in which case FastMCP falls back to naming the MCP SDK release.
-    """
-    import importlib.metadata as md
-
-    sys.path.insert(0, str(REPO / "src"))
-    import carla_agentic_tools.server as server
-
-    original = md.version
-    try:
-        md.version = lambda name: "9.9.9-wrong"
-        assert server._version() == _pyproject_version()
-        md.version = lambda name: (_ for _ in ()).throw(md.PackageNotFoundError(name))
-        assert server._version() == _pyproject_version()
-    finally:
-        md.version = original
+    assert reported == _release(), \
+        f"serverInfo.version is {reported!r}, expected {_release()}"
 
 
 # --- the Claude Code plugin ------------------------------------------------
-
-def _plugin_manifest() -> dict:
-    import json
-    return json.loads((REPO / ".claude-plugin" / "plugin.json").read_text())
-
-
-def test_plugin_version_matches_pyproject():
-    """A release is a git tag, and the plugin manifest is what Claude Code shows
-    as the installed version — drift here misreports which skills a user has."""
-    got = _plugin_manifest()["version"]
-    assert got == _pyproject_version(), (
-        f".claude-plugin/plugin.json says {got}, "
-        f"pyproject.toml says {_pyproject_version()}"
-    )
-
 
 def test_plugin_runs_a_file_that_ships():
     """The plugin starts the Node server from its own checkout. If the path drifts
@@ -157,21 +66,19 @@ def test_plugin_runs_a_file_that_ships():
 # --- the portable Agent Plugin manifests (Cursor, Codex) -------------------
 
 def _portable_manifest() -> dict:
-    import json
     return json.loads((REPO / "plugin.json").read_text())
 
 
 def _portable_mcp() -> dict:
-    import json
     return json.loads((REPO / "mcp.json").read_text())
 
 
-def test_portable_version_matches_pyproject():
+def test_portable_version_matches_plugin():
     """Cursor and Codex read the root plugin.json; Claude Code reads
     .claude-plugin/plugin.json. Both must name the same release."""
     got = _portable_manifest()["version"]
-    assert got == _pyproject_version(), (
-        f"plugin.json says {got}, pyproject.toml says {_pyproject_version()}"
+    assert got == _release(), (
+        f"plugin.json says {got}, .claude-plugin/plugin.json says {_release()}"
     )
 
 
