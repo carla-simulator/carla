@@ -736,8 +736,8 @@ namespace detail {
           BaseJSONPath);
     }
 
-    void RestorePhysXPhysics(Vehicle &vehicle) {
-      _client.RestorePhysXPhysics(vehicle.GetId());
+    void RestoreDefaultPhysics(Vehicle &vehicle) {
+      _client.RestoreDefaultPhysics(vehicle.GetId());
     }
 
     /// @}

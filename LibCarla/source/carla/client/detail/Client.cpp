@@ -640,8 +640,8 @@ namespace detail {
         BaseJSONPath);
   }
 
-  void Client::RestorePhysXPhysics(rpc::ActorId vehicle) {
-    _pimpl->AsyncCall("restore_physx_physics", vehicle);
+  void Client::RestoreDefaultPhysics(rpc::ActorId vehicle) {
+    _pimpl->AsyncCall("restore_default_physics", vehicle);
   }
 
   void Client::ApplyControlToWalker(rpc::ActorId walker, const rpc::WalkerControl &control) {

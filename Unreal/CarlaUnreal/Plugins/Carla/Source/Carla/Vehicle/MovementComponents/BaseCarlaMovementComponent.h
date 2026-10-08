@@ -39,8 +39,9 @@ public:
 
   virtual float GetVehicleForwardSpeed() const;
 
-  // Hands the vehicle back to the default Chaos physics. Only the components
-  // that take physics over (Chrono, CarSim) need to do anything here.
+  // Hands the vehicle back to the default Chaos physics. Only a component that
+  // takes physics over needs to do anything here; Chrono does, CarSim does not
+  // override it yet.
   virtual void DisableSpecialPhysics() {};
 
 protected:

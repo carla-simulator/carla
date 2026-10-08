@@ -152,8 +152,8 @@ namespace client {
         BaseJSONPath);
   }
 
-  void Vehicle::RestorePhysXPhysics() {
-    GetEpisode().Lock()->RestorePhysXPhysics(*this);
+  void Vehicle::RestoreDefaultPhysics() {
+    GetEpisode().Lock()->RestoreDefaultPhysics(*this);
   }
 
   rpc::VehicleFailureState Vehicle::GetFailureState() const {

@@ -359,7 +359,7 @@ public:
     return ECarlaServerResponse::ActorTypeMismatch;
   }
 
-  virtual ECarlaServerResponse RestorePhysXPhysics()
+  virtual ECarlaServerResponse RestoreDefaultPhysics()
   {
     return ECarlaServerResponse::ActorTypeMismatch;
   }
@@ -564,7 +564,7 @@ public:
       const FString& VehicleJSON, const FString& PowertrainJSON,
       const FString& TireJSON, const FString& BaseJSONPath) final;
 
-  virtual ECarlaServerResponse RestorePhysXPhysics() final;
+  virtual ECarlaServerResponse RestoreDefaultPhysics() final;
 };
 
 class FSensorActor : public FCarlaActor

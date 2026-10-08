@@ -3407,10 +3407,10 @@ Vehicles will be affected by a traffic light when the light is red and the vehic
 Open the door `door_idx` if the vehicle has it. Use [carla.VehicleDoor.All](#carla.VehicleDoor.All) to open all available doors.  
     - **Parameters:**
         - `door_idx` (_[carla.VehicleDoor](#carla.VehicleDoor)_) - door index.  
+- <a name="carla.Vehicle.restore_default_physics"></a>**<font color="#7fb800">restore_default_physics</font>**(<font color="#00a6ed">**self**</font>)  
+Restores the default CARLA physics (Chaos) on a vehicle that had Chrono physics enabled, undoing `enable_chrono_physics`.  
 - <a name="carla.Vehicle.restore_physx_physics"></a>**<font color="#7fb800">restore_physx_physics</font>**(<font color="#00a6ed">**self**</font>)  
-Restores the default CARLA physics on a vehicle that had a special physics engine enabled, undoing `enable_chrono_physics`.  
-    - **Note:** <font color="#8E8E8E">_The `physx` in the name is historical: it comes from ue4-dev, where the default vehicle physics was PhysX. On UE5 the default is Chaos, and that is what this restores. The name is kept for compatibility with existing scripts and with ue4-dev.
-_</font>  
+Deprecated alias of `restore_default_physics`, the name ue4-dev used when the default vehicle physics was PhysX. Emits a `DeprecationWarning`.  
 - <a name="carla.Vehicle.show_debug_telemetry"></a>**<font color="#7fb800">show_debug_telemetry</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**enabled**=True</font>)  
 Enables or disables the telemetry on this vehicle. This shows information about the vehicles current state and forces applied to it in the spectator window. Only information for one vehicle can be shown so that, if you enable a second one, the previous will be automatically disabled.  
     - **Parameters:**

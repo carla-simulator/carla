@@ -385,11 +385,13 @@
       warning: >
         Collisions are not supported. When a collision is detected, physics will revert to the default CARLA physics.
      # -------------------------------------- 
+    - def_name: restore_default_physics
+      doc: >
+        Restores the default CARLA physics (Chaos) on a vehicle that had Chrono physics enabled, undoing `enable_chrono_physics`.
+     # --------------------------------------
     - def_name: restore_physx_physics
       doc: >
-        Restores the default CARLA physics on a vehicle that had a special physics engine enabled, undoing `enable_chrono_physics`.
-      note: >
-        The `physx` in the name is historical: it comes from ue4-dev, where the default vehicle physics was PhysX. On UE5 the default is Chaos, and that is what this restores. The name is kept for compatibility with existing scripts and with ue4-dev.
+        Deprecated alias of `restore_default_physics`, the name ue4-dev used when the default vehicle physics was PhysX. Emits a `DeprecationWarning`.
      # -------------------------------------- 
     - def_name: set_autopilot
       params:

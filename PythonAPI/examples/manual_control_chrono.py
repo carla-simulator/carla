@@ -474,7 +474,7 @@ class KeyboardControl(object):
                         self._chrono_enabled = True
                         world.hud.notification("Enabled Chrono physics")
                     else:
-                        world.player.restore_physx_physics()
+                        world.player.restore_default_physics()
                         self._chrono_enabled = False
                         world.hud.notification("Disabled Chrono physics")
                 elif event.key == K_o:
