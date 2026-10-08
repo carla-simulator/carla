@@ -300,11 +300,13 @@ void UChronoMovementComponent::InitializeChronoVehicle()
   auto Transmission = ReadTransmissionJSON(TransmissionJSON_string);
   Vehicle->InitializePowertrain(
       chrono_types::make_shared<ChPowertrainAssembly>(Engine, Transmission));
-  // Create and initialize the tires
+  // Create and initialize the tires. Unreal renders the vehicle, so Chrono
+  // gets no visualization: a MESH one would load the tire .obj on the server
+  // and crash it (ChTire::AddVisualizationMesh) when the file is missing.
   for (auto& axle : Vehicle->GetAxles()) {
       for (auto& wheel : axle->GetWheels()) {
           auto tire = ReadTireJSON(Tire_string);
-          Vehicle->InitializeTire(tire, wheel, VisualizationType::MESH);
+          Vehicle->InitializeTire(tire, wheel, VisualizationType::NONE);
       }
   }
 }

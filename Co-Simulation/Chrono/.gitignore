@@ -1,5 +1,0 @@
-# Mesh assets are byte-identical to Project Chrono's own data/vehicle/sedan and
-# are staged here by the Chrono/ subproject at build time. Only the JSON
-# templates, which carry CARLA's tuning, are tracked.
-Vehicles/sedan/*.obj
-Vehicles/sedan/*.mtl

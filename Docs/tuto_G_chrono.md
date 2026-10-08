@@ -69,7 +69,7 @@ Chrono physics is enabled using the `enable_chrono_physics` method available thr
 !!! Important
     Double-check your paths. Incorrect or missing paths can cause Unreal Engine to crash.
 
-A default implementation for a sedan is provided in `Co-Simulation/Chrono/Vehicles/sedan/`. Its JSON templates are tracked in the repository; the mesh assets they reference are identical to Chrono's own and are copied there by the build, so configure with `-DENABLE_CHRONO=ON` at least once before using them. More example templates for other vehicles are available in `Build/Release/Chrono/install/share/chrono/data/vehicle`. Read the Project Chrono [documentation](https://api.projectchrono.org/manual_vehicle.html) to find out more about their vehicle examples and how to create templates.
+A default implementation for a sedan is provided in `Co-Simulation/Chrono/Vehicles/sedan/`. Only its JSON templates are needed: Unreal renders the vehicle, so CARLA does not load the meshes a Chrono template references. More example templates for other vehicles are available in `Build/Release/Chrono/install/share/chrono/data/vehicle`. Read the Project Chrono [documentation](https://api.projectchrono.org/manual_vehicle.html) to find out more about their vehicle examples and how to create templates.
 
 See below for an example of how to enable Chrono physics:
 

@@ -47,26 +47,6 @@ ExternalProject_Add (
     -DBUILD_BENCHMARKING=OFF
 )
 
-# The sedan templates under Co-Simulation/ reference Chrono's own sedan meshes.
-# Those files are byte-identical to what Chrono installs, so stage them from the
-# install tree rather than vendoring a second copy into the repository. Only the
-# JSON templates, which carry CARLA's tuning, are tracked by git.
-set (CARLA_CHRONO_VEHICLE_DATA_PATH ${CMAKE_SOURCE_DIR}/Co-Simulation/Chrono/Vehicles/sedan)
-
-add_custom_command (
-  TARGET chrono
-  POST_BUILD
-  COMMAND
-    ${CMAKE_COMMAND} -E copy
-    ${PROJECT_INSTALL_PATH}/share/chrono/data/vehicle/sedan/sedan_chassis_vis.obj
-    ${PROJECT_INSTALL_PATH}/share/chrono/data/vehicle/sedan/sedan_chassis_vis.mtl
-    ${PROJECT_INSTALL_PATH}/share/chrono/data/vehicle/sedan/sedan_rim.obj
-    ${PROJECT_INSTALL_PATH}/share/chrono/data/vehicle/sedan/sedan_rim.mtl
-    ${PROJECT_INSTALL_PATH}/share/chrono/data/vehicle/sedan/sedan_tire.obj
-    ${PROJECT_INSTALL_PATH}/share/chrono/data/vehicle/sedan/sedan_tire.mtl
-    ${CARLA_CHRONO_VEHICLE_DATA_PATH}
-)
-
 set (CARLA_PLUGIN_BINARY_PATH ${CMAKE_SOURCE_DIR}/Unreal/CarlaUnreal/Plugins/Carla/Binaries/Linux)
 
 make_directory (${CARLA_PLUGIN_BINARY_PATH})
