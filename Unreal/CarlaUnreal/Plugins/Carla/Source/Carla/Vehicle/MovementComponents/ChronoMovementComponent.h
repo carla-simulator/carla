@@ -43,8 +43,14 @@ public:
 
   std::pair<bool, FHitResult> GetTerrainProperties(const FVector &Location) const;
   virtual double GetHeight(const chrono::ChVector3d& loc) const override;
+  virtual chrono::ChVector3d GetPoint(const chrono::ChVector3d& loc) const override;
   virtual chrono::ChVector3d GetNormal(const chrono::ChVector3d& loc) const override;
   virtual float GetCoefficientFriction(const chrono::ChVector3d& loc) const override;
+  virtual void GetProperties(const chrono::ChVector3d& loc,
+                             chrono::ChVector3d& point,
+                             double& height,
+                             chrono::ChVector3d& normal,
+                             float& friction) const override;
 };
 #endif
 

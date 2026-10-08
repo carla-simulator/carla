@@ -162,28 +162,57 @@ std::pair<bool, FHitResult>
   return std::make_pair(bDidHit, Hit);
 }
 
-double UERayCastTerrain::GetHeight(const ChVector3d& loc) const
+void UERayCastTerrain::GetProperties(
+    const ChVector3d& loc,
+    ChVector3d& point,
+    double& height,
+    ChVector3d& normal,
+    float& friction) const
 {
-  FVector Location = ChronoToUE4Location(loc + ChVector3d(0,0,0.5)); // small offset to detect the ground properly
+  // One trace answers every query. Chrono 10's tire models read the contact
+  // point as well as the height (ChTire::DiscTerrainCollision uses it for the
+  // penetration depth and the moment arm), and ChTerrain's default GetPoint()
+  // puts it on the z=0 plane, so anything not overridden here makes the car
+  // fall through or bounce off ground that is not at z=0.
+  // Start slightly above the query point to detect the ground properly.
+  FVector Location = ChronoToUE4Location(loc + ChVector3d(0,0,0.5));
   auto point_pair = GetTerrainProperties(Location);
+  friction = GetCoefficientFriction(loc);
   if (point_pair.first)
   {
-    double Height = CMTOM*static_cast<double>(point_pair.second.Location.Z);
-    return Height;
+    point = UE4LocationToChrono(point_pair.second.Location);
+    height = point.z();
+    normal = UE4DirectionToChrono(point_pair.second.Normal);
+    return;
   }
-  return -1000000.0;
+  height = -1000000.0;
+  point = ChVector3d(loc.x(), loc.y(), height);
+  normal = UE4DirectionToChrono(FVector(0,0,1));
+}
+
+double UERayCastTerrain::GetHeight(const ChVector3d& loc) const
+{
+  ChVector3d Point, Normal;
+  double Height;
+  float Friction;
+  GetProperties(loc, Point, Height, Normal, Friction);
+  return Height;
+}
+ChVector3d UERayCastTerrain::GetPoint(const ChVector3d& loc) const
+{
+  ChVector3d Point, Normal;
+  double Height;
+  float Friction;
+  GetProperties(loc, Point, Height, Normal, Friction);
+  return Point;
 }
 ChVector3d UERayCastTerrain::GetNormal(const ChVector3d& loc) const
 {
-  FVector Location = ChronoToUE4Location(loc);
-  auto point_pair = GetTerrainProperties(Location);
-  if (point_pair.first)
-  {
-    FVector Normal = point_pair.second.Normal;
-    auto ChronoNormal = UE4DirectionToChrono(Normal);
-    return ChronoNormal;
-  }
-  return UE4DirectionToChrono(FVector(0,0,1));
+  ChVector3d Point, Normal;
+  double Height;
+  float Friction;
+  GetProperties(loc, Point, Height, Normal, Friction);
+  return Normal;
 }
 float UERayCastTerrain::GetCoefficientFriction(const ChVector3d& loc) const
 {
