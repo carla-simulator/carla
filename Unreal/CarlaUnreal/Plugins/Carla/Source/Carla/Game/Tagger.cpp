@@ -206,7 +206,7 @@ crp::CityObjectLabel ATagger::GetTagFromName(const FName &Tag)
   {
     return *Found;
   }
-  
+
   return GetTagFromString(Tag.ToString());
 }
 

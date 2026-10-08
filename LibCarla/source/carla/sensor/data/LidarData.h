@@ -11,6 +11,7 @@
 
 #include <cstdint>
 #include <cstring>
+#include <type_traits>
 #include <vector>
 
 namespace carla {
@@ -110,13 +111,9 @@ namespace data {
 
     void WritePoints(const std::vector<LidarDetection> &detections) {
       static_assert(sizeof(LidarDetection) == 4u * sizeof(float), "LidarDetection must be 4 packed floats");
-      if (detections.empty()) {
-        return;
-      }
-
-      const size_t offset = _points.size();
-      _points.resize(offset + detections.size() * 4u);
-      std::memcpy(_points.data() + offset, detections.data(), detections.size() * sizeof(LidarDetection));
+      static_assert(std::is_trivially_copyable<LidarDetection>::value, "LidarDetection must be trivially copyable");
+      const float *first = reinterpret_cast<const float *>(detections.data());
+      _points.insert(_points.end(), first, first + detections.size() * 4u);
     }
 
   private:

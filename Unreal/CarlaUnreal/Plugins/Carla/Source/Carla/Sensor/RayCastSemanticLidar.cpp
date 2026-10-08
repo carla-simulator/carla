@@ -214,12 +214,7 @@ void ARayCastSemanticLidar::PreprocessRays(uint32_t Channels, uint32_t MaxPoints
 }
 
 void ARayCastSemanticLidar::ResetDetections(uint32_t Channels, uint32_t MaxPointsPerChannel) {
-  SemanticDetections.resize(Channels);
-
-  for (auto& Detections : SemanticDetections) {
-    Detections.clear();
-    Detections.reserve(MaxPointsPerChannel);
-  }
+  ResetChannelDetections(SemanticDetections, Channels, MaxPointsPerChannel);
 }
 
 void ARayCastSemanticLidar::WriteDetectionAsync(uint32_t Channel, const FHitResult& HitInfo, const FTransform& InverseSensorTransform, const FVector& SensorLocation) {

@@ -154,16 +154,10 @@ bool AHSSLidar::PostprocessDetection(FDetection& Detection) const
 
 void AHSSLidar::ResetDetections(uint32_t Channels, uint32_t MaxPointsPerChannel)
 {
-  Detections.resize(Channels);
-
-  for (auto& ChannelDetections : Detections)
-  {
-    ChannelDetections.clear();
-    ChannelDetections.reserve(MaxPointsPerChannel);
-  }
+  ResetChannelDetections(Detections, Channels, MaxPointsPerChannel);
 }
 
-void AHSSLidar::WriteDetectionAsync(uint32_t Channel, const FHitResult& HitInfo, const FTransform& InverseSensorTransform, const FVector& SensorLocation)
+void AHSSLidar::WriteDetectionAsync(uint32_t Channel, const FHitResult& HitInfo, const FTransform& InverseSensorTransform, const FVector& /*SensorLocation*/)
 {
   DEBUG_ASSERT(GetChannelCount() > Channel);
   Detections[Channel].emplace_back(ComputeDetection(HitInfo, InverseSensorTransform));
@@ -173,50 +167,13 @@ void AHSSLidar::ComputeAndSaveDetections(const FTransform& SensorTransform)
 {
   TRACE_CPUPROFILER_EVENT_SCOPE_STR(__FUNCTION__);
 
-  for (auto idxChannel = 0u; idxChannel < Description.Channels; ++idxChannel)
-  {
-    auto& ChannelDetections = Detections[idxChannel];
-    size_t Kept = 0;
-    for (FDetection& Detection : ChannelDetections)
-    {
-      if (PostprocessDetection(Detection))
-      {
-        ChannelDetections[Kept++] = Detection;
-      }
-    }
-    ChannelDetections.resize(Kept);
-    PointsPerChannel[idxChannel] = static_cast<uint32_t>(Kept);
-  }
-
-  LidarData.ResetMemory(PointsPerChannel);
-  for (auto idxChannel = 0u; idxChannel < Description.Channels; ++idxChannel)
-  {
-    LidarData.WritePoints(Detections[idxChannel]);
-  }
-  LidarData.WriteChannelCount(PointsPerChannel);
+  CompactAndWriteDetections(Detections, PointsPerChannel, Description.Channels, LidarData,
+      [this](FDetection& Detection) { return PostprocessDetection(Detection); });
 
 #if WITH_EDITOR
   if (bSavingDataToDisk)
   {
-    const uint32_t TotalPoints = std::accumulate(PointsPerChannel.begin(), PointsPerChannel.end(), 0u);
-
-    static_assert(sizeof(FDetection) == sizeof(float) * 4);
-    static_assert(std::is_trivially_copyable_v<FDetection>);
-
-    PointCloudLidarData.SetNumUninitialized(static_cast<int32>(TotalPoints * 4));
-
-    float* Dest = PointCloudLidarData.GetData();
-
-    for (const auto& ChannelDetections : Detections)
-    {
-      if (ChannelDetections.empty())
-      {
-        continue;
-      }
-      const size_t NumBytes = ChannelDetections.size() * sizeof(FDetection);
-      FMemory::Memcpy(Dest, ChannelDetections.data(), NumBytes);
-      Dest += ChannelDetections.size() * 4;
-    }
+    CopyDetectionsToPointCloud(Detections, PointsPerChannel, PointCloudLidarData);
   }
 #endif
 }
