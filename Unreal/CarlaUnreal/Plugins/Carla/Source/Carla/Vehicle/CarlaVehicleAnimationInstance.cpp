@@ -28,6 +28,7 @@ void UCarlaVehicleAnimationInstance::NativeUpdateAnimation(float DeltaSeconds)
 {
   Super::NativeUpdateAnimation(DeltaSeconds);
 
+  UpdateWheelAnimationOverride();
   if (!ShouldRollWheels())
   {
     bRollingWheels = false;
@@ -46,7 +47,8 @@ bool UCarlaVehicleAnimationInstance::ShouldRollWheels() const
   const ACarlaWheeledVehicle *Vehicle = Cast<ACarlaWheeledVehicle>(GetOwningActor());
   return Vehicle != nullptr &&
       GetWheeledVehicleComponent() != nullptr &&
-      !Vehicle->IsSimulatedByChaos();
+      !Vehicle->IsSimulatedByChaos() &&
+      !Vehicle->IsWheelAnimationOverridden();
 }
 
 void UCarlaVehicleAnimationInstance::BeginRolling()
@@ -93,6 +95,40 @@ void UCarlaVehicleAnimationInstance::RollWheels(float DeltaSeconds)
     Wheel.LastLocation = Location;
     WheelPoses[i].RotOffset.Pitch = Wheel.SpinAngle;
   }
+}
+
+void UCarlaVehicleAnimationInstance::UpdateWheelAnimationOverride()
+{
+  const ACarlaWheeledVehicle *Vehicle = Cast<ACarlaWheeledVehicle>(GetOwningActor());
+  const bool bOverridden = Vehicle != nullptr && Vehicle->IsWheelAnimationOverridden();
+  TArray<FWheelAnimationData> &WheelPoses = GetWheelPoses();
+  if (bOverridden)
+  {
+    const TArray<FWheelAnimationData> &OverriddenPoses = Vehicle->GetOverriddenWheelPoses();
+    for (int32 i = 0; i < WheelPoses.Num() && i < OverriddenPoses.Num(); ++i)
+    {
+      WheelPoses[i].RotOffset = OverriddenPoses[i].RotOffset;
+      WheelPoses[i].LocOffset = OverriddenPoses[i].LocOffset;
+    }
+  }
+  else if (bWheelAnimationOverridden && Vehicle != nullptr && !Vehicle->IsSimulatedByChaos())
+  {
+    // Nothing else steers or compresses the wheels without Chaos. The roll
+    // carries on from the pitch left.
+    for (FWheelAnimationData &Pose : WheelPoses)
+    {
+      Pose.RotOffset.Yaw = 0.0f;
+      Pose.LocOffset = FVector::ZeroVector;
+    }
+  }
+  bWheelAnimationOverridden = bOverridden;
+}
+
+const FWheelAnimationData *UCarlaVehicleAnimationInstance::GetWheelPose(int32 WheelIndex) const
+{
+  const TArray<FWheelAnimationData> &WheelPoses =
+      GetProxyOnGameThread<FVehicleAnimationInstanceProxy>().GetWheelAnimData();
+  return WheelPoses.IsValidIndex(WheelIndex) ? &WheelPoses[WheelIndex] : nullptr;
 }
 
 TArray<FWheelAnimationData> &UCarlaVehicleAnimationInstance::GetWheelPoses()

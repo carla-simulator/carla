@@ -12,9 +12,10 @@
 
 #include "CarlaVehicleAnimationInstance.generated.h"
 
-/// Parent class of the vehicle animation blueprints. Rolls the wheels by the
-/// distance they travel while Chaos is not simulating the vehicle, which is
-/// when the engine leaves them frozen.
+/// Parent class of the vehicle animation blueprints. Draws the vehicle's
+/// overridden wheel poses, and otherwise, while Chaos is not simulating the
+/// vehicle, which is when the engine leaves the wheels frozen, rolls them by
+/// the distance they travel.
 UCLASS(transient)
 class CARLA_API UCarlaVehicleAnimationInstance : public UVehicleAnimationInstance
 {
@@ -23,6 +24,9 @@ class CARLA_API UCarlaVehicleAnimationInstance : public UVehicleAnimationInstanc
 public:
 
   virtual void NativeUpdateAnimation(float DeltaSeconds) override;
+
+  /// The pose last written for a wheel, or nullptr if there is no such wheel.
+  const FWheelAnimationData *GetWheelPose(int32 WheelIndex) const;
 
 private:
 
@@ -48,9 +52,13 @@ private:
 
   void RollWheels(float DeltaSeconds);
 
+  void UpdateWheelAnimationOverride();
+
   TArray<FWheelAnimationData> &GetWheelPoses();
 
   TArray<FWheel> Wheels;
 
   bool bRollingWheels = false;
+
+  bool bWheelAnimationOverridden = false;
 };
