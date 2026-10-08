@@ -67,7 +67,7 @@ Chrono physics is enabled using the `enable_chrono_physics` method available thr
   Both paths are relative to `base_path`. The engine and transmission files themselves use Chrono's own `Engine` and `Transmission` template formats.
 
 !!! Important
-    Double-check your paths. Incorrect or missing paths can cause Unreal Engine to crash.
+    Every template is checked before Chrono takes over the vehicle. A path that does not exist, a file that is not valid JSON, or a template of the wrong `Type` (an engine passed as the tire, say) makes `enable_chrono_physics` raise `RuntimeError` with the reason, and the vehicle keeps its current physics. Called without template arguments, it uses the sedan templates under `Co-Simulation/Chrono/Vehicles/`.
 
 A default implementation for a sedan is provided in `Co-Simulation/Chrono/Vehicles/sedan/`. Only its JSON templates are needed: Unreal renders the vehicle, so CARLA does not load the meshes a Chrono template references. More example templates for other vehicles are available in `Build/Release/Chrono/install/share/chrono/data/vehicle`. Read the Project Chrono [documentation](https://api.projectchrono.org/manual_vehicle.html) to find out more about their vehicle examples and how to create templates.
 
