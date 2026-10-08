@@ -1242,7 +1242,7 @@ static FWheelAnimationData GetShownWheelPose(const USkeletalMeshComponent &Mesh,
 
 void ACarlaWheeledVehicle::SetWheelSteerDirection(EVehicleWheelLocation WheelLocation, float AngleInDeg)
 {
-  if (FWheelAnimationData *Pose = FindOverriddenWheelPose(WheelLocation, TEXT("SetWheelSteerDirection")))
+  if (FWheelAnimationData *Pose = GetOverriddenWheelPoseOrWarn(WheelLocation, TEXT("SetWheelSteerDirection")))
   {
     Pose->RotOffset.Yaw = AngleInDeg;
   }
@@ -1254,21 +1254,12 @@ float ACarlaWheeledVehicle::GetWheelSteerAngle(EVehicleWheelLocation WheelLocati
   // arrays: UChaosVehicleWheel::WheelIndex is documented as "our index in the
   // vehicle's (and setup's) wheels array".
   const int32 WheelIndex = static_cast<int32>(WheelLocation);
-  if (!IsValidWheel(WheelIndex, TEXT("GetWheelSteerAngle")))
-  {
-    return 0.0F;
-  }
-  if (const UChaosVehicleWheel *Wheel = GetSimulatedWheel(WheelIndex))
-  {
-    // Degrees, the unit the Python API promises.
-    return Wheel->GetSteerAngle();
-  }
-  return GetWheelPose(WheelIndex).RotOffset.Yaw;
+  return HasWheelOrWarn(WheelIndex, TEXT("GetWheelSteerAngle")) ? GetWheelPose(WheelIndex).RotOffset.Yaw : 0.0F;
 }
 
 void ACarlaWheeledVehicle::SetWheelPitchAngle(EVehicleWheelLocation WheelLocation, float AngleInDeg)
 {
-  if (FWheelAnimationData *Pose = FindOverriddenWheelPose(WheelLocation, TEXT("SetWheelPitchAngle")))
+  if (FWheelAnimationData *Pose = GetOverriddenWheelPoseOrWarn(WheelLocation, TEXT("SetWheelPitchAngle")))
   {
     Pose->RotOffset.Pitch = AngleInDeg;
   }
@@ -1277,20 +1268,12 @@ void ACarlaWheeledVehicle::SetWheelPitchAngle(EVehicleWheelLocation WheelLocatio
 float ACarlaWheeledVehicle::GetWheelPitchAngle(EVehicleWheelLocation WheelLocation)
 {
   const int32 WheelIndex = static_cast<int32>(WheelLocation);
-  if (!IsValidWheel(WheelIndex, TEXT("GetWheelPitchAngle")))
-  {
-    return 0.0F;
-  }
-  if (const UChaosVehicleWheel *Wheel = GetSimulatedWheel(WheelIndex))
-  {
-    return Wheel->GetRotationAngle();
-  }
-  return GetWheelPose(WheelIndex).RotOffset.Pitch;
+  return HasWheelOrWarn(WheelIndex, TEXT("GetWheelPitchAngle")) ? GetWheelPose(WheelIndex).RotOffset.Pitch : 0.0F;
 }
 
 void ACarlaWheeledVehicle::SetWheelSuspensionOffset(EVehicleWheelLocation WheelLocation, float OffsetInCm)
 {
-  if (FWheelAnimationData *Pose = FindOverriddenWheelPose(WheelLocation, TEXT("SetWheelSuspensionOffset")))
+  if (FWheelAnimationData *Pose = GetOverriddenWheelPoseOrWarn(WheelLocation, TEXT("SetWheelSuspensionOffset")))
   {
     // The same offset Chaos applies.
     Pose->LocOffset = -GetWheelSuspensionAxis(static_cast<int32>(WheelLocation)) * OffsetInCm;
@@ -1300,16 +1283,11 @@ void ACarlaWheeledVehicle::SetWheelSuspensionOffset(EVehicleWheelLocation WheelL
 float ACarlaWheeledVehicle::GetWheelSuspensionOffset(EVehicleWheelLocation WheelLocation)
 {
   const int32 WheelIndex = static_cast<int32>(WheelLocation);
-  if (!IsValidWheel(WheelIndex, TEXT("GetWheelSuspensionOffset")))
+  if (!HasWheelOrWarn(WheelIndex, TEXT("GetWheelSuspensionOffset")))
   {
     return 0.0F;
   }
-  if (const UChaosVehicleWheel *Wheel = GetSimulatedWheel(WheelIndex))
-  {
-    return Wheel->GetSuspensionOffset();
-  }
-  const FVector LocOffset = GetWheelPose(WheelIndex).LocOffset;
-  return -FVector::DotProduct(LocOffset, GetWheelSuspensionAxis(WheelIndex));
+  return -FVector::DotProduct(GetWheelPose(WheelIndex).LocOffset, GetWheelSuspensionAxis(WheelIndex));
 }
 
 void ACarlaWheeledVehicle::SetWheelAnimationOverride(bool bEnabled)
@@ -1336,12 +1314,12 @@ void ACarlaWheeledVehicle::SetWheelAnimationOverride(bool bEnabled)
   bWheelAnimationOverridden = bEnabled;
 }
 
-FWheelAnimationData *ACarlaWheeledVehicle::FindOverriddenWheelPose(
+FWheelAnimationData *ACarlaWheeledVehicle::GetOverriddenWheelPoseOrWarn(
     EVehicleWheelLocation WheelLocation,
     const TCHAR *Caller)
 {
   const int32 WheelIndex = static_cast<int32>(WheelLocation);
-  if (!IsValidWheel(WheelIndex, Caller))
+  if (!HasWheelOrWarn(WheelIndex, Caller))
   {
     return nullptr;
   }
@@ -1361,10 +1339,17 @@ FWheelAnimationData ACarlaWheeledVehicle::GetWheelPose(int32 WheelIndex) const
   {
     return OverriddenWheelPoses[WheelIndex];
   }
+  if (const UChaosVehicleWheel *Wheel = GetSimulatedWheel(WheelIndex))
+  {
+    // The pose Chaos draws, in degrees and cm.
+    const FRotator Rotation(Wheel->GetRotationAngle(), Wheel->GetSteerAngle(), 0.0f);
+    const FVector Offset = -GetWheelSuspensionAxis(WheelIndex) * Wheel->GetSuspensionOffset();
+    return FWheelAnimationData{NAME_None, Rotation, Offset};
+  }
   return GetShownWheelPose(*GetMesh(), WheelIndex);
 }
 
-bool ACarlaWheeledVehicle::IsValidWheel(int32 WheelIndex, const TCHAR *Caller) const
+bool ACarlaWheeledVehicle::HasWheelOrWarn(int32 WheelIndex, const TCHAR *Caller) const
 {
   if (!HasWheel(WheelIndex))
   {
@@ -1393,7 +1378,7 @@ const UChaosVehicleWheel *ACarlaWheeledVehicle::GetSimulatedWheel(int32 WheelInd
 {
   // Non-const: the engine does not mark PhysicsVehicleOutput() const.
   UChaosWheeledVehicleMovementComponent *Movement = GetChaosWheeledVehicleMovementComponent();
-  if (bWheelAnimationOverridden || !IsSimulatedByChaos() || Movement == nullptr ||
+  if (!IsSimulatedByChaos() || Movement == nullptr ||
       !Movement->Wheels.IsValidIndex(WheelIndex))
   {
     return nullptr;

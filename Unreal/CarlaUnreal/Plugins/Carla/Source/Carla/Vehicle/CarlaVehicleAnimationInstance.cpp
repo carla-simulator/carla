@@ -28,8 +28,13 @@ void UCarlaVehicleAnimationInstance::NativeUpdateAnimation(float DeltaSeconds)
 {
   Super::NativeUpdateAnimation(DeltaSeconds);
 
-  UpdateWheelAnimationOverride();
-  if (!ShouldRollWheels())
+  const ACarlaWheeledVehicle *Vehicle = Cast<ACarlaWheeledVehicle>(GetOwningActor());
+  if (Vehicle == nullptr)
+  {
+    return;
+  }
+  UpdateWheelAnimationOverride(*Vehicle);
+  if (!ShouldRollWheels(*Vehicle))
   {
     bRollingWheels = false;
     return;
@@ -39,16 +44,14 @@ void UCarlaVehicleAnimationInstance::NativeUpdateAnimation(float DeltaSeconds)
     BeginRolling();
     bRollingWheels = true;
   }
-  RollWheels(DeltaSeconds);
+  RollWheels(*Vehicle, DeltaSeconds);
 }
 
-bool UCarlaVehicleAnimationInstance::ShouldRollWheels() const
+bool UCarlaVehicleAnimationInstance::ShouldRollWheels(const ACarlaWheeledVehicle &Vehicle) const
 {
-  const ACarlaWheeledVehicle *Vehicle = Cast<ACarlaWheeledVehicle>(GetOwningActor());
-  return Vehicle != nullptr &&
-      GetWheeledVehicleComponent() != nullptr &&
-      !Vehicle->IsSimulatedByChaos() &&
-      !Vehicle->IsWheelAnimationOverridden();
+  return GetWheeledVehicleComponent() != nullptr &&
+      !Vehicle.IsSimulatedByChaos() &&
+      !Vehicle.IsWheelAnimationOverridden();
 }
 
 void UCarlaVehicleAnimationInstance::BeginRolling()
@@ -78,9 +81,8 @@ void UCarlaVehicleAnimationInstance::BeginRolling()
   }
 }
 
-void UCarlaVehicleAnimationInstance::RollWheels(float DeltaSeconds)
+void UCarlaVehicleAnimationInstance::RollWheels(const ACarlaWheeledVehicle &Vehicle, float DeltaSeconds)
 {
-  const ACarlaWheeledVehicle *Vehicle = CastChecked<ACarlaWheeledVehicle>(GetOwningActor());
   TArray<FWheelAnimationData> &WheelPoses = GetWheelPoses();
   const FTransform MeshTransform = GetSkelMeshComponent()->GetComponentTransform();
   const FVector Forward = MeshTransform.GetUnitAxis(EAxis::X);
@@ -91,27 +93,26 @@ void UCarlaVehicleAnimationInstance::RollWheels(float DeltaSeconds)
     FWheel &Wheel = Wheels[i];
     const FVector Location = MeshTransform.TransformPosition(Wheel.RestLocation);
     const float Travel = FVector::DotProduct(Location - Wheel.LastLocation, Forward);
-    Wheel.SpinAngle = RollWheel(Wheel.SpinAngle, Travel, Vehicle->GetWheelRadius(i), MaxTravel);
+    Wheel.SpinAngle = RollWheel(Wheel.SpinAngle, Travel, Vehicle.GetWheelRadius(i), MaxTravel);
     Wheel.LastLocation = Location;
     WheelPoses[i].RotOffset.Pitch = Wheel.SpinAngle;
   }
 }
 
-void UCarlaVehicleAnimationInstance::UpdateWheelAnimationOverride()
+void UCarlaVehicleAnimationInstance::UpdateWheelAnimationOverride(const ACarlaWheeledVehicle &Vehicle)
 {
-  const ACarlaWheeledVehicle *Vehicle = Cast<ACarlaWheeledVehicle>(GetOwningActor());
-  const bool bOverridden = Vehicle != nullptr && Vehicle->IsWheelAnimationOverridden();
+  const bool bOverridden = Vehicle.IsWheelAnimationOverridden();
   TArray<FWheelAnimationData> &WheelPoses = GetWheelPoses();
   if (bOverridden)
   {
-    const TArray<FWheelAnimationData> &OverriddenPoses = Vehicle->GetOverriddenWheelPoses();
+    const TArray<FWheelAnimationData> &OverriddenPoses = Vehicle.GetOverriddenWheelPoses();
     for (int32 i = 0; i < WheelPoses.Num() && i < OverriddenPoses.Num(); ++i)
     {
       WheelPoses[i].RotOffset = OverriddenPoses[i].RotOffset;
       WheelPoses[i].LocOffset = OverriddenPoses[i].LocOffset;
     }
   }
-  else if (bWasWheelAnimationOverridden && Vehicle != nullptr && !Vehicle->IsSimulatedByChaos())
+  else if (bWasWheelAnimationOverridden && !Vehicle.IsSimulatedByChaos())
   {
     // Nothing else steers or compresses the wheels without Chaos. The roll
     // carries on from the pitch left.

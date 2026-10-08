@@ -773,15 +773,17 @@ private:
 
   TArray<FWheelAnimationData> OverriddenWheelPoses;
 
-  /// The overridden pose for a setter to write, or nullptr if it cannot be set.
-  FWheelAnimationData *FindOverriddenWheelPose(EVehicleWheelLocation WheelLocation, const TCHAR *Caller);
+  /// The overridden pose for a setter to write, or nullptr, with a warning, if
+  /// it cannot be set.
+  FWheelAnimationData *GetOverriddenWheelPoseOrWarn(EVehicleWheelLocation WheelLocation, const TCHAR *Caller);
 
-  bool IsValidWheel(int32 WheelIndex, const TCHAR *Caller) const;
+  bool HasWheelOrWarn(int32 WheelIndex, const TCHAR *Caller) const;
 
-  /// The Chaos wheel, only while it poses the wheel and has output for it.
+  /// The Chaos wheel, while Chaos simulates the vehicle and has output for it.
   const UChaosVehicleWheel *GetSimulatedWheel(int32 WheelIndex) const;
 
-  /// The overridden pose while overridden, otherwise the pose last drawn.
+  /// The pose shown for a wheel: the overridden one, otherwise Chaos's,
+  /// otherwise the one last drawn.
   FWheelAnimationData GetWheelPose(int32 WheelIndex) const;
 
   const UChaosVehicleWheel *GetWheelDefaults(int32 WheelIndex) const;

@@ -12,6 +12,8 @@
 
 #include "CarlaVehicleAnimationInstance.generated.h"
 
+class ACarlaWheeledVehicle;
+
 /// Parent class of the vehicle animation blueprints. Draws the vehicle's
 /// overridden wheel poses, and otherwise, while Chaos is not simulating the
 /// vehicle, which is when the engine leaves the wheels frozen, rolls them by
@@ -46,13 +48,13 @@ private:
     float SpinAngle = 0.0f;
   };
 
-  bool ShouldRollWheels() const;
+  bool ShouldRollWheels(const ACarlaWheeledVehicle &Vehicle) const;
 
   void BeginRolling();
 
-  void RollWheels(float DeltaSeconds);
+  void RollWheels(const ACarlaWheeledVehicle &Vehicle, float DeltaSeconds);
 
-  void UpdateWheelAnimationOverride();
+  void UpdateWheelAnimationOverride(const ACarlaWheeledVehicle &Vehicle);
 
   TArray<FWheelAnimationData> &GetWheelPoses();
 
