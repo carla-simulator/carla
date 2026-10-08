@@ -834,6 +834,21 @@ ECarlaServerResponse FVehicleActor::SetVehicleLightState(
   return ECarlaServerResponse::Success;
 }
 
+// Why the wheel's pose cannot be set, or Success if it can.
+static ECarlaServerResponse CanSetWheelPose(
+    const ACarlaWheeledVehicle& Vehicle, const EVehicleWheelLocation& WheelLocation)
+{
+  if (!Vehicle.HasWheel(static_cast<int32>(WheelLocation)))
+  {
+    return ECarlaServerResponse::WheelNotFound;
+  }
+  if (!Vehicle.IsWheelAnimationOverridden())
+  {
+    return ECarlaServerResponse::WheelAnimationOverrideDisabled;
+  }
+  return ECarlaServerResponse::Success;
+}
+
 ECarlaServerResponse FVehicleActor::SetWheelSteerDirection(
     const EVehicleWheelLocation& WheelLocation, float AngleInDeg)
 {
@@ -845,6 +860,11 @@ ECarlaServerResponse FVehicleActor::SetWheelSteerDirection(
     auto Vehicle = Cast<ACarlaWheeledVehicle>(GetActor());
     if(Vehicle == nullptr){
       return ECarlaServerResponse::NotAVehicle;
+    }
+    const ECarlaServerResponse Response = CanSetWheelPose(*Vehicle, WheelLocation);
+    if (Response != ECarlaServerResponse::Success)
+    {
+      return Response;
     }
     Vehicle->SetWheelSteerDirection(WheelLocation, AngleInDeg);
   }
@@ -866,6 +886,96 @@ ECarlaServerResponse FVehicleActor::GetWheelSteerAngle(
     }
 
     Angle = Vehicle->GetWheelSteerAngle(WheelLocation);
+  }
+  return ECarlaServerResponse::Success;
+}
+
+ECarlaServerResponse FVehicleActor::SetWheelPitchAngle(
+    const EVehicleWheelLocation& WheelLocation, float AngleInDeg)
+{
+  if (!IsDormant())
+  {
+    auto Vehicle = Cast<ACarlaWheeledVehicle>(GetActor());
+    if (Vehicle == nullptr)
+    {
+      return ECarlaServerResponse::NotAVehicle;
+    }
+    const ECarlaServerResponse Response = CanSetWheelPose(*Vehicle, WheelLocation);
+    if (Response != ECarlaServerResponse::Success)
+    {
+      return Response;
+    }
+    Vehicle->SetWheelPitchAngle(WheelLocation, AngleInDeg);
+  }
+  return ECarlaServerResponse::Success;
+}
+
+ECarlaServerResponse FVehicleActor::GetWheelPitchAngle(
+    const EVehicleWheelLocation& WheelLocation, float& Angle)
+{
+  Angle = 0.0f;
+  if (!IsDormant())
+  {
+    auto Vehicle = Cast<ACarlaWheeledVehicle>(GetActor());
+    if (Vehicle == nullptr)
+    {
+      return ECarlaServerResponse::NotAVehicle;
+    }
+    Angle = Vehicle->GetWheelPitchAngle(WheelLocation);
+  }
+  return ECarlaServerResponse::Success;
+}
+
+ECarlaServerResponse FVehicleActor::SetWheelSuspensionOffset(
+    const EVehicleWheelLocation& WheelLocation, float Offset)
+{
+  if (!IsDormant())
+  {
+    auto Vehicle = Cast<ACarlaWheeledVehicle>(GetActor());
+    if (Vehicle == nullptr)
+    {
+      return ECarlaServerResponse::NotAVehicle;
+    }
+    const ECarlaServerResponse Response = CanSetWheelPose(*Vehicle, WheelLocation);
+    if (Response != ECarlaServerResponse::Success)
+    {
+      return Response;
+    }
+    Vehicle->SetWheelSuspensionOffset(WheelLocation, Offset * 100.0f);
+  }
+  return ECarlaServerResponse::Success;
+}
+
+ECarlaServerResponse FVehicleActor::GetWheelSuspensionOffset(
+    const EVehicleWheelLocation& WheelLocation, float& Offset)
+{
+  Offset = 0.0f;
+  if (!IsDormant())
+  {
+    auto Vehicle = Cast<ACarlaWheeledVehicle>(GetActor());
+    if (Vehicle == nullptr)
+    {
+      return ECarlaServerResponse::NotAVehicle;
+    }
+    Offset = Vehicle->GetWheelSuspensionOffset(WheelLocation) / 100.0f;
+  }
+  return ECarlaServerResponse::Success;
+}
+
+ECarlaServerResponse FVehicleActor::SetWheelAnimationOverride(bool bEnabled)
+{
+  if (!IsDormant())
+  {
+    auto Vehicle = Cast<ACarlaWheeledVehicle>(GetActor());
+    if (Vehicle == nullptr)
+    {
+      return ECarlaServerResponse::NotAVehicle;
+    }
+    if (bEnabled && !Vehicle->HasCarlaVehicleAnimation())
+    {
+      return ECarlaServerResponse::WheelAnimationNotSupported;
+    }
+    Vehicle->SetWheelAnimationOverride(bEnabled);
   }
   return ECarlaServerResponse::Success;
 }
