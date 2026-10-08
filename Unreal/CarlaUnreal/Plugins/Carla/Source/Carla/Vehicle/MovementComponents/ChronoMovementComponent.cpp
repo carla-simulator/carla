@@ -371,18 +371,47 @@ void UChronoMovementComponent::TickComponent(float DeltaTime,
 
   FVector NewLocation = ChronoToUE4Location(VehiclePos);
   FQuat NewRotation = ChronoToUE4Quat(VehicleRot);
-  if(NewLocation.ContainsNaN() || NewRotation.ContainsNaN())
+  // A diverging simulation flings the vehicle through huge but finite
+  // positions (kilometres per step) before it reaches Inf and then NaN, and
+  // handing Chaos a vehicle out there makes Chaos produce NaN in turn. So
+  // check for a non-finite pose, an implausible speed, or a jump in position
+  // or orientation no vehicle could make in one tick (a forced divergence
+  // stood the car on its nose, 1.3 to 84.8 degrees of pitch, in one 0.1 s
+  // step), and do it before the actor is moved: the vehicle is handed back
+  // where it last was valid, at rest.
+  // DisableChronoPhysics() re-enables the Chaos simulation; creating the
+  // default movement component alone leaves the vehicle without physics.
+  constexpr double MaxPlausibleSpeed = 150.0; // m/s, 540 km/h
+  constexpr double MaxPlausibleTurnRate = 4.0 * PI; // rad/s, 720 deg/s
+  auto IsFinite = [](double X, double Y, double Z, double W = 0.0)
   {
-    UE_LOG(LogCarla, Warning, TEXT(
-        "Error: Chrono vehicle position or rotation contains NaN. Disabling chrono physics..."));
-    UDefaultMovementComponent::CreateDefaultMovementComponent(CarlaVehicle);
-    return;
-  }
-  CarlaVehicle->SetActorLocation(NewLocation);
+    return FMath::IsFinite(X) && FMath::IsFinite(Y) &&
+        FMath::IsFinite(Z) && FMath::IsFinite(W);
+  };
+  const double ChronoSpeed = Vehicle->GetPointVelocity(ChVector3d(0,0,0)).Length();
   FRotator NewRotator = NewRotation.Rotator();
   // adding small rotation to compensate chrono offset
   const float ChronoPitchOffset = 2.5f;
-  NewRotator.Add(ChronoPitchOffset, 0.f, 0.f); 
+  NewRotator.Add(ChronoPitchOffset, 0.f, 0.f);
+  const double JumpSpeed = DeltaTime > 0.f ?
+      CMTOM * FVector::Dist(NewLocation, CarlaVehicle->GetActorLocation()) / DeltaTime :
+      0.0;
+  const double TurnRate = DeltaTime > 0.f ?
+      CarlaVehicle->GetActorQuat().AngularDistance(NewRotator.Quaternion()) / DeltaTime :
+      0.0;
+  if (!IsFinite(NewLocation.X, NewLocation.Y, NewLocation.Z) ||
+      !IsFinite(NewRotation.X, NewRotation.Y, NewRotation.Z, NewRotation.W) ||
+      !FMath::IsFinite(ChronoSpeed) || ChronoSpeed > MaxPlausibleSpeed ||
+      JumpSpeed > MaxPlausibleSpeed || TurnRate > MaxPlausibleTurnRate)
+  {
+    UE_LOG(LogCarla, Warning, TEXT(
+        "Error: Chrono simulation diverged (non-finite pose, a speed of %g m/s, "
+        "a jump of %g m/s or a turn of %g deg/s). Disabling chrono physics..."),
+        ChronoSpeed, JumpSpeed, FMath::RadiansToDegrees(TurnRate));
+    DisableChronoPhysics(true);
+    return;
+  }
+  CarlaVehicle->SetActorLocation(NewLocation);
   CarlaVehicle->SetActorRotation(NewRotator);
 }
 
