@@ -51,7 +51,7 @@ Chrono physics is enabled using the `enable_chrono_physics` method available thr
 
 - __`base_path`:__ Path of the directory which contains the template files. This is necessary to ensure that auxiliary files referenced from the template files have a common base path from which to search.
 - __`vehicle_json`:__ Path of the vehicle template file relative to the `base_path`.
-- __`tire_json`:__ Path of the tire template file relative to the `base_path`.
+- __`tire_json`:__ Path of the tire template file relative to the `base_path`. The tire model must take its forces from terrain queries, as TMeasy and Pacejka do. Chrono's rigid tire does not: it only produces forces through Chrono's own collision system, which never sees the CARLA terrain, so a vehicle on rigid tires falls through the ground.
 - __`powertrain_json`:__ Path of the powertrain template file relative to the `base_path`. Since Chrono 8 a powertrain is an engine plus a transmission, so this file names the two templates to pair, using the same keys as the `Powertrain` block of a Chrono vehicle JSON:
 
 ```json
