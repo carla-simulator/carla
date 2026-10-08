@@ -486,7 +486,7 @@ A value of 1.5 means that we want the sensor to capture data each second and a h
 | `iso`    | float    | 100\.0   | The camera sensor sensitivity.   |
 | `gamma`  | float    | 2\.2     | Target gamma value of the camera.      |
 | `lens_flare_intensity`           | float    | 0\.1     | Intensity for the lens flare post-process effect, `0.0` for disabling it.    |
-| `post_process_profile` | str    | (empty)  | Camera preset to load, a JSON file in `Content/Carla/Config/PostProcess/` on the server: `Default`, `GoPro`, `AutomotiveHDR`, `Dashcam` or your own. Empty uses the active profile (console variable `carla.PostProcess.Profile`, `Default` unless changed), the same one the spectator view uses. See [Camera post-process presets](camera_postprocess_presets.md). |
+| `post_process_profile` | str    | (empty)  | Camera preset to load, a JSON file in `Content/Carla/Config/PostProcess/` on the server: `AutomotiveHDR`, `AutomotiveHDRClean`, `WideHDR8MP`, `LegacyCCD`, `LogHDR`, `Smartphone`, `Cinematic`, `GoPro`, `Dashcam` or your own. Empty (or `Default`) uses the sensor default, console variable `carla.PostProcess.Profile` (`AutomotiveHDR` unless changed). The spectator view uses its own profile, `carla.PostProcess.ViewportProfile` (`Cinematic`). See [Camera post-process presets](camera_postprocess_presets.md). |
 | `sensor_tick`        | float    | 0\.0     | Simulation seconds between sensor captures (ticks).  |
 | `shutter_speed`      | float    | 200\.0   | The camera shutter speed in seconds (1.0/s).       |
 
@@ -535,7 +535,7 @@ Since these effects are provided by UE, please make sure to check their document
 | `focal_distance`     | float          | 1000\.0        | Distance at which the depth of field effect should be sharp. Measured in cm (UE units).           |
 | `blur_amount`  | float          | 1\.0           | Distance from camera in Km to give a blur amount of 50%. |
 | `blur_radius`  | float          | 0\.0           | Radius in pixels at 1080p resolution to emulate atmospheric scattering according to distance from camera.           |
-| `motion_blur_intensity`          | float          | 0\.45          | Strength of motion blur [0,1].     |
+| `motion_blur_intensity`          | float          | 0\.45          | Strength of motion blur [0,1]. Ignored while the exposure-linked motion blur is on (see below).     |
 | `motion_blur_max_distortion`       | float          | 0\.35          | Max distortion caused by motion blur. Percentage of screen width.       |
 | `motion_blur_min_object_screen_size`           | float          | 0\.1           | Percentage of screen width objects must have for motion blur, lower value means less draw calls.  |
 | `slope`        | float          | 0\.88          | Steepness of the S-curve for the tonemapper. Larger values make the slope steeper (darker) [0.0, 1.0].  |
@@ -558,6 +558,27 @@ Since these effects are provided by UE, please make sure to check their document
     `use_ray_tracing`, `enable_dlss` and `dlss_screen_percentage` are available on every scene-capture camera (`sensor.camera.rgb`, `sensor.camera.depth`, `sensor.camera.semantic_segmentation`, `sensor.camera.instance_segmentation`, `sensor.camera.optical_flow`, `sensor.camera.dvs`), not only on the RGB camera.
 
 [AutomaticExposure.gamesetting]: https://docs.unrealengine.com/en-US/Engine/Rendering/PostProcessEffects/AutomaticExposure/index.html#gamesetting
+
+#### Exposure-linked motion blur
+
+A real camera blurs what moves during its exposure time, and its auto exposure lengthens that time in the dark. The RGB
+camera does the same by default: every capture reads the exposure its own auto exposure settled on, turns it into an
+exposure time for an f/`carla.Camera.FNumber` lens at base ISO (`t = N² / 2^EV100`), clamps it between
+`carla.Camera.MinExposureMs` and `carla.Camera.MaxExposureMs` (darker scenes raise the gain instead, as a
+machine-vision AV camera does) and sets the motion blur to `t` divided by the simulation time between two captures
+(1 = a 360° shutter). By day the exposure is a few milliseconds and the image stays sharp; at night it reaches the
+cap and moving objects and lights streak. The blur length depends on the simulation time only, not on how fast the
+simulator runs, so it is the same in synchronous and asynchronous mode. This also applies below 1920&times;1080,
+where the camera otherwise keeps motion blur off.
+
+| Console variable | Default | Description |
+| --- | --- | --- |
+| `carla.Camera.ExposureMotionBlur` | `1` | `1` derives the motion blur from the exposure time (overrides `motion_blur_intensity`); `0` uses the `motion_blur_*` attributes and the post-process profile as they are. |
+| `carla.Camera.FNumber` | `2.0` | Lens f-number used to turn the auto exposure into an exposure time. |
+| `carla.Camera.MinExposureMs` | `0.05` | Shortest exposure time in milliseconds. |
+| `carla.Camera.MaxExposureMs` | `20` | Longest exposure time in milliseconds. |
+| `carla.Camera.ExposureLog` | `0` | `1` logs each capture's exposure, exposure time and motion blur amount. |
+
 
 #### Output attributes
 
@@ -645,7 +666,7 @@ Setting `carla.RTLens.SyncModeBlockingReadback 0` (server console) forces the as
 | `show_only_actor_ids` | str | (empty) | Comma-separated CARLA actor ids, added to the show-only render list regardless of label. |
 | `use_ray_tracing` | bool | True | Present for parity with the other cameras, but always effectively `True`: the path tracer has no rasterized fallback. |
 | `enable_postprocess_effects` | bool | True | Post-process effects activation. |
-| `post_process_profile` | str | (empty) | Named post-process profile applied to the capture. Empty uses the active profile (`carla.PostProcess.Profile`, `Default` unless changed), as for the RGB camera. |
+| `post_process_profile` | str | (empty) | Named post-process profile applied to the capture. Empty (or `Default`) uses the sensor default (`carla.PostProcess.Profile`, `AutomotiveHDR` unless changed), as for the RGB camera. |
 | `sensor_tick` | float | 0\.0 | Simulation seconds between sensor captures (ticks). |
 
 #### Output attributes

@@ -86,9 +86,9 @@ static TAutoConsoleVariable<float> CVarCarlaWeatherBloomIntensity(
     TEXT("does not set one, so the sun glows in the viewport. Negative leaves it alone."),
     ECVF_Default);
 
-// Off by default: the camera profile (carla.PostProcess.Profile) owns the
-// exposure, so the viewport and the sensors read the same values. Set it to
-// force a bias on the viewport only.
+// Off by default: the viewport's camera profile (carla.PostProcess.
+// ViewportProfile) owns its exposure. Set it to force a bias on the viewport
+// only.
 static TAutoConsoleVariable<float> CVarCarlaWeatherExposureBias(
     TEXT("carla.Weather.ExposureBias"),
     -1.0f,
@@ -520,7 +520,7 @@ static TAutoConsoleVariable<float> CVarCarlaWeatherDeckStartCloudiness(
 // stage that real overcast does not go through.
 static TAutoConsoleVariable<float> CVarCarlaWeatherDeckLightFullCloudiness(
     TEXT("carla.Weather.DeckLightFullCloudiness"),
-    92.0f,
+    84.0f,
     TEXT("Cloudiness at which the deck's emission and sky light reach their full value."),
     ECVF_Default);
 
@@ -563,7 +563,7 @@ static TAutoConsoleVariable<float> CVarCarlaWeatherDeckWarpCount(
 
 static TAutoConsoleVariable<float> CVarCarlaWeatherDeckGlow(
     TEXT("carla.Weather.DeckGlow"),
-    1.5f,
+    2.0f,
     TEXT("Cloud emission at Cloudiness 100 with the sun at its peak (0 off)."),
     ECVF_Default);
 
@@ -578,6 +578,28 @@ static TAutoConsoleVariable<float> CVarCarlaWeatherDeckSkyLightIntensity(
     1.0f,
     TEXT("Replaces OvercastSkyLightIntensity at Cloudiness 100 (blended by the deck factor)."),
     ECVF_Default);
+
+// A raining deck is thicker and darker than a dry overcast one: in rain
+// footage the sky is mid grey (L* ~70-85), not the white of a bright overcast.
+// With Precipitation (linearly up to 100) the deck's emission is scaled down
+// and its sky light up, so the sky darkens while the ground keeps its light.
+static TAutoConsoleVariable<float> CVarCarlaWeatherRainDeckGlowScale(
+    TEXT("carla.Weather.RainDeckGlowScale"),
+    0.25f,
+    TEXT("DeckGlow multiplier at Precipitation 100 (1 = rain does not change the deck)."),
+    ECVF_Default);
+
+static TAutoConsoleVariable<float> CVarCarlaWeatherRainDeckSkyLightScale(
+    TEXT("carla.Weather.RainDeckSkyLightScale"),
+    3.0f,
+    TEXT("DeckSkyLightIntensity multiplier at Precipitation 100 (1 = rain does not change it)."),
+    ECVF_Default);
+
+static float RainDeckScale(const TAutoConsoleVariable<float>& CVar, float Precipitation)
+{
+    return FMath::Lerp(1.0f, FMath::Max(CVar.GetValueOnGameThread(), 0.0f),
+        FMath::Clamp(Precipitation / 100.0f, 0.0f, 1.0f));
+}
 
 // 0 below DeckStartCloudiness, 1 at Cloudiness 100, smoothstep in between.
 static float ComputeCloudDeckFactor(float Cloudiness)
@@ -597,10 +619,11 @@ static float ComputeCloudDeckLightFactor(float Cloudiness)
 }
 
 // OvercastSkyLightIntensity, giving way to DeckSkyLightIntensity as the deck closes.
-static float GetOvercastSkyLightTarget(float Cloudiness)
+static float GetOvercastSkyLightTarget(float Cloudiness, float Precipitation)
 {
     const float Overcast = CVarCarlaWeatherOvercastSkyLightIntensity.GetValueOnGameThread();
-    const float Deck = CVarCarlaWeatherDeckSkyLightIntensity.GetValueOnGameThread();
+    const float Deck = CVarCarlaWeatherDeckSkyLightIntensity.GetValueOnGameThread()
+        * RainDeckScale(CVarCarlaWeatherRainDeckSkyLightScale, Precipitation);
     if (Overcast < 0.0f || Deck < 0.0f)
         return Overcast;
     return FMath::Lerp(Overcast, Deck, ComputeCloudDeckLightFactor(Cloudiness));
@@ -613,6 +636,41 @@ static FLinearColor ParseColorCVar(const TAutoConsoleVariable<FString>& CVar, co
     if (Channels.Num() != 3)
         return Fallback;
     return FLinearColor(FCString::Atof(*Channels[0]), FCString::Atof(*Channels[1]), FCString::Atof(*Channels[2]));
+}
+
+// Sun light scattered by the volumetric clouds near the horizon. Below ~2 deg
+// the atmosphere leaves the sun almost pure red, and the clouds it lights read
+// saturated salmon on camera. Scaling only the cloud scattering keeps the
+// afterglow (the ground, the sky and the sun disc are untouched) but dimmer
+// and less saturated. Full at or below TwilightCloudFullDeg, fading to white
+// (no effect) at TwilightCloudOffDeg.
+static TAutoConsoleVariable<FString> CVarCarlaWeatherTwilightCloudScale(
+    TEXT("carla.Weather.TwilightCloudScale"),
+    TEXT("0.4 0.55 0.8"),
+    TEXT("Sun CloudScatteredLuminanceScale at the horizon, \"R G B\" (\"1 1 1\" off)."),
+    ECVF_Default);
+
+static TAutoConsoleVariable<float> CVarCarlaWeatherTwilightCloudFullDeg(
+    TEXT("carla.Weather.TwilightCloudFullDeg"),
+    2.0f,
+    TEXT("Sun altitude at or below which carla.Weather.TwilightCloudScale applies in full."),
+    ECVF_Default);
+
+static TAutoConsoleVariable<float> CVarCarlaWeatherTwilightCloudOffDeg(
+    TEXT("carla.Weather.TwilightCloudOffDeg"),
+    12.0f,
+    TEXT("Sun altitude at or above which the clouds get the sun's full scattering again."),
+    ECVF_Default);
+
+static FLinearColor ComputeTwilightCloudScale(float SunAltitudeAngle)
+{
+    const float Full = CVarCarlaWeatherTwilightCloudFullDeg.GetValueOnGameThread();
+    const float Off = FMath::Max(CVarCarlaWeatherTwilightCloudOffDeg.GetValueOnGameThread(), Full + 0.1f);
+    const float T = FMath::SmoothStep(0.0f, 1.0f, FMath::Clamp((SunAltitudeAngle - Full) / (Off - Full), 0.0f, 1.0f));
+    FLinearColor Scale = FMath::Lerp(ParseColorCVar(CVarCarlaWeatherTwilightCloudScale, FLinearColor::White),
+                                     FLinearColor::White, T);
+    Scale.A = 1.0f;
+    return Scale;
 }
 
 // bOnlyDarken picks the clamp direction: a ceiling for the sun, a floor for
@@ -1884,6 +1942,15 @@ void AWeather::ApplyWeatherToSkyActor(AActor* SkyActor, const FWeatherParameters
         {
             const FRotator SunRotation(-Weather.SunAltitudeAngle, Weather.SunAzimuthAngle, 0.0f);
             SunLightComponent->SetWorldRotation(SunRotation);
+            if (UDirectionalLightComponent* SunDirectional = Cast<UDirectionalLightComponent>(SunLightComponent))
+            {
+                const FLinearColor CloudScale = ComputeTwilightCloudScale(Weather.SunAltitudeAngle);
+                if (!SunDirectional->CloudScatteredLuminanceScale.Equals(CloudScale))
+                {
+                    SunDirectional->CloudScatteredLuminanceScale = CloudScale;
+                    SunDirectional->MarkRenderStateDirty();
+                }
+            }
             if (SkyActor->GetWorld() != nullptr && SkyActor->GetWorld()->IsGameWorld())
             {
                 NoteSunRotation(SkyActor->GetWorld(), SunRotation);
@@ -2024,7 +2091,7 @@ void AWeather::ApplyWeatherToSkyActor(AActor* SkyActor, const FWeatherParameters
             if (UCurveFloat* SkyIntensityCurve = FindCurve(TEXT("SkyIntensity_Curve")))
                 SkyLightComponent->SetIntensity(ApplyOvercastBlend(
                     SkyIntensityCurve->GetFloatValue(Weather.SunAltitudeAngle),
-                    GetOvercastSkyLightTarget(Weather.Cloudiness),
+                    GetOvercastSkyLightTarget(Weather.Cloudiness, Weather.Precipitation),
                     Weather.Cloudiness, /*bOnlyDarken=*/false, /*CurvePeak=*/0.0f));
             FObjectProperty* AtmosphereProperty = CastField<FObjectProperty>(
                 SkyActor->GetClass()->FindPropertyByName(TEXT("SkyAtmosphereComponent")));
@@ -2106,7 +2173,7 @@ void AWeather::ApplyWeatherToSkyActor(AActor* SkyActor, const FWeatherParameters
                 {
                     // From what the curve and the overcast blend give at the horizon.
                     const float DayValue = FMath::Max(ApplyOvercastBlend(1.0f,
-                        GetOvercastSkyLightTarget(Weather.Cloudiness),
+                        GetOvercastSkyLightTarget(Weather.Cloudiness, Weather.Precipitation),
                         Weather.Cloudiness, /*bOnlyDarken=*/false, /*CurvePeak=*/0.0f), 1e-3f);
                     const float U = Weather.SunAltitudeAngle / TwilightEnd;
                     Floor = FMath::Pow(DayValue, 1.0f - U) * FMath::Pow(SkylightFloor, U);
@@ -2405,6 +2472,7 @@ void AWeather::ApplyWeatherToSkyActor(AActor* SkyActor, const FWeatherParameters
             }
             const FLinearColor DeckGlow = ParseColorCVar(CVarCarlaWeatherDeckGlowColor, FLinearColor::White)
                 * (FMath::Max(CVarCarlaWeatherDeckGlow.GetValueOnGameThread(), 0.0f)
+                    * RainDeckScale(CVarCarlaWeatherRainDeckGlowScale, Weather.Precipitation)
                     * ComputeCloudDeckLightFactor(Weather.Cloudiness) * SunFraction);
             UKismetMaterialLibrary::SetVectorParameterValue(
                 SkyActor->GetWorld(), WeatherMPC, TEXT("CityGlow"), CityGlow + DeckGlow);

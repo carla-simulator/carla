@@ -3972,7 +3972,7 @@ This class defines objects containing lighting and weather specifications that c
 - <a name="carla.WeatherParameters.cloudiness"></a>**<font color="#f8805a">cloudiness</font>** (_float_)  
 Values range from 0 to 100, being 0 a clear sky and 100 one completely covered with clouds. From `80` up the clouds gradually close into a uniform grey overcast deck, complete at `100` (console variable `[carla.Weather.DeckStartCloudiness](#carla.Weather.DeckStartCloudiness)`); below `80` nothing changes.  
 - <a name="carla.WeatherParameters.precipitation"></a>**<font color="#f8805a">precipitation</font>** (_float_)  
-Rain intensity values range from 0 to 100, being 0 none at all and 100 a heavy rain.  
+Rain intensity values range from 0 to 100, being 0 none at all and 100 a heavy rain. A raining overcast sky is darker than a dry one: with precipitation the overcast deck glows less and lights the ground through the sky light instead (console variables `carla.Weather.RainDeckGlowScale`, `0.25` at 100, and `carla.Weather.RainDeckSkyLightScale`, `3` at 100).  
 - <a name="carla.WeatherParameters.precipitation_deposits"></a>**<font color="#f8805a">precipitation_deposits</font>** (_float_)  
 Determines the creation of puddles. Values range from 0 to 100, being 0 none at all and 100 a road completely capped with water. Puddles are created with static noise, meaning that they will always appear at the same locations.  
 - <a name="carla.WeatherParameters.wind_intensity"></a>**<font color="#f8805a">wind_intensity</font>** (_float_)  
@@ -3980,7 +3980,7 @@ Controls the strenght of the wind with values from 0, no wind at all, to 100, a 
 - <a name="carla.WeatherParameters.sun_azimuth_angle"></a>**<font color="#f8805a">sun_azimuth_angle</font>** (_float<small> - degrees</small>_)  
 The azimuth angle of the sun. Values range from 0 to 360. Zero is an origin point in a sphere determined by Unreal Engine.  
 - <a name="carla.WeatherParameters.sun_altitude_angle"></a>**<font color="#f8805a">sun_altitude_angle</font>** (_float<small> - degrees</small>_)  
-Altitude angle of the sun. Values range from -90 to 90 corresponding to midnight and midday each. Street and building lights switch on at or below `0.8` degrees (see [carla.Light](#carla.Light)), and a city night is fully dark on camera from about `-10` degrees.  
+Altitude angle of the sun. Values range from -90 to 90 corresponding to midnight and midday each. Street and building lights switch on at or below `0.8` degrees (see [carla.Light](#carla.Light)), and a city night is fully dark on camera from about `-10` degrees. Near the horizon (at or below `2` degrees, fading out by `12`) the sunlight scattered by the clouds is dimmed and cooled (console variable `carla.Weather.TwilightCloudScale`, `"0.4 0.55 0.8"`; `carla.Weather.TwilightCloudFullDeg` / `TwilightCloudOffDeg`), so sunset and sunrise clouds glow pink instead of saturated salmon.  
 - <a name="carla.WeatherParameters.fog_density"></a>**<font color="#f8805a">fog_density</font>** (_float_)  
 Fog concentration or thickness. It only affects the RGB camera sensor. Values range from 0 to 100.  
 - <a name="carla.WeatherParameters.fog_distance"></a>**<font color="#f8805a">fog_distance</font>** (_float<small> - meters</small>_)  

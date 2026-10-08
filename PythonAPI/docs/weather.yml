@@ -18,7 +18,7 @@
     - var_name: precipitation
       type: float
       doc: >
-        Rain intensity values range from 0 to 100, being 0 none at all and 100 a heavy rain. 
+        Rain intensity values range from 0 to 100, being 0 none at all and 100 a heavy rain. A raining overcast sky is darker than a dry one: with precipitation the overcast deck glows less and lights the ground through the sky light instead (console variables `carla.Weather.RainDeckGlowScale`, `0.25` at 100, and `carla.Weather.RainDeckSkyLightScale`, `3` at 100). 
     # --------------------------------------
     - var_name: precipitation_deposits
       type: float
@@ -40,7 +40,7 @@
       type: float
       var_units: degrees
       doc: >
-        Altitude angle of the sun. Values range from -90 to 90 corresponding to midnight and midday each. Street and building lights switch on at or below `0.8` degrees (see carla.Light), and a city night is fully dark on camera from about `-10` degrees.
+        Altitude angle of the sun. Values range from -90 to 90 corresponding to midnight and midday each. Street and building lights switch on at or below `0.8` degrees (see carla.Light), and a city night is fully dark on camera from about `-10` degrees. Near the horizon (at or below `2` degrees, fading out by `12`) the sunlight scattered by the clouds is dimmed and cooled (console variable `carla.Weather.TwilightCloudScale`, `"0.4 0.55 0.8"`; `carla.Weather.TwilightCloudFullDeg` / `TwilightCloudOffDeg`), so sunset and sunrise clouds glow pink instead of saturated salmon.
     # --------------------------------------
     - var_name: fog_density
       type: float

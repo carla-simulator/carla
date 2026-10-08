@@ -407,13 +407,13 @@ void ASkyBase::BeginPlay()
   Super::BeginPlay();
 
   UWorld* World = GetWorld();
-  // One camera profile for every view: the viewport / spectator renders
-  // through this unbound post process, and RGB sensors without an explicit
-  // post_process_profile load the same file (UPostProcessJsonUtils::
-  // ResolveProfileName). What the map saved in the rig is only the editor view.
+  // The viewport / spectator renders through this unbound post process with
+  // the viewport profile (carla.PostProcess.ViewportProfile); RGB sensors load
+  // their own (carla.PostProcess.Profile or post_process_profile). What the map
+  // saved in the rig is only the editor view.
   if (World != nullptr && World->IsGameWorld() && PostProcessComponent != nullptr)
   {
-    const FString Profile = UPostProcessJsonUtils::GetActiveProfileName();
+    const FString Profile = UPostProcessJsonUtils::GetViewportProfileName();
     if (UPostProcessJsonUtils::LoadAllPostProcessFromJsonToPostProcessComponent(PostProcessComponent, Profile))
     {
       bBloomFromWeatherFallback = false;

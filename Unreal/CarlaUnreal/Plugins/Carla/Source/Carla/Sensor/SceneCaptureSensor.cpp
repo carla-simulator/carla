@@ -15,6 +15,7 @@
 #include "Engine/PostProcessVolume.h"
 #include "EngineUtils.h"
 #include "GameFramework/SpectatorPawn.h"
+#include "SceneManagement.h"
 #include <util/ue-header-guard-end.h>
 
 #include <mutex>
@@ -52,6 +53,45 @@ static TAutoConsoleVariable<int32> CVarCarlaCameraForceAllGBuffers(
     TEXT("Force CARLA scene-capture cameras to request every GBuffer texture\n")
     TEXT("each frame, irrespective of client subscription. Intended as a\n")
     TEXT("one-release rollback path; default is 0 (lazy, by subscription)."),
+    ECVF_Default);
+
+// Exposure-linked motion blur for the RGB cameras. A real camera blurs what
+// moves during its exposure time, which its auto exposure lengthens in the
+// dark (a machine-vision AV camera: ~0.1 ms by day, capped around 20 ms at
+// night, gain above that). Every capture reads the exposure the sensor's own
+// eye adaptation settled on (EV100 = log2(1 / (1.2 * Exposure))), turns it into
+// an exposure time t = N^2 / 2^EV100 for an f/N lens at base ISO, clamps it and
+// sets MotionBlurAmount = t / capture interval (1 = 360 degree shutter). Night
+// lamps then streak along their motion instead of twinkling between pixels.
+static TAutoConsoleVariable<int32> CVarCarlaCameraExposureMotionBlur(
+    TEXT("carla.Camera.ExposureMotionBlur"),
+    1,
+    TEXT("1: RGB cameras derive their motion blur from the auto exposure time (overrides motion_blur_intensity).\n")
+    TEXT("0: use the motion_blur_* attributes / post-process profile as they are."),
+    ECVF_Default);
+
+static TAutoConsoleVariable<float> CVarCarlaCameraFNumber(
+    TEXT("carla.Camera.FNumber"),
+    2.0f,
+    TEXT("Lens f-number used to turn the auto exposure into an exposure time (carla.Camera.ExposureMotionBlur)."),
+    ECVF_Default);
+
+static TAutoConsoleVariable<float> CVarCarlaCameraMinExposureMs(
+    TEXT("carla.Camera.MinExposureMs"),
+    0.05f,
+    TEXT("Shortest exposure time in ms (carla.Camera.ExposureMotionBlur)."),
+    ECVF_Default);
+
+static TAutoConsoleVariable<float> CVarCarlaCameraMaxExposureMs(
+    TEXT("carla.Camera.MaxExposureMs"),
+    20.0f,
+    TEXT("Longest exposure time in ms; darker scenes raise the gain instead (carla.Camera.ExposureMotionBlur)."),
+    ECVF_Default);
+
+static TAutoConsoleVariable<int32> CVarCarlaCameraExposureLog(
+    TEXT("carla.Camera.ExposureLog"),
+    0,
+    TEXT("1: log each RGB capture's exposure, exposure time and motion blur amount."),
     ECVF_Default);
 
 // =============================================================================
@@ -1040,7 +1080,10 @@ void ASceneCaptureSensor::BeginPlay()
   CaptureComponent2D->ShowFlags = PostProcessConfig.EngineShowFlags;
   CaptureComponent2D->PostProcessSettings = PostProcessConfig.PostProcessSettings;
 
-  if (ImageWidth < 1920 || ImageHeight < 1080)
+  // Exposure-linked motion blur (UpdateExposureMotionBlur) manages the flag
+  // itself; otherwise motion blur stays off below 1080p as before.
+  if ((ImageWidth < 1920 || ImageHeight < 1080) &&
+      (CVarCarlaCameraExposureMotionBlur.GetValueOnGameThread() == 0 || !ArePostProcessingEffectsEnabled()))
     CaptureComponent2D->ShowFlags.SetMotionBlur(false);
 
   // This ensures the camera is always spawning the raindrops in case the
@@ -1120,7 +1163,51 @@ void ASceneCaptureSensor::PostPhysTick(UWorld *World, ELevelTick TickType, float
   {
     return;
   }
+  UpdateExposureMotionBlur(World, DeltaTime);
   EnqueueRenderSceneImmediate();
+}
+
+void ASceneCaptureSensor::UpdateExposureMotionBlur(UWorld *World, float DeltaTime)
+{
+  // Simulation time between two captures of this sensor: the motion vectors
+  // span it (the view state keeps the previous capture's matrices).
+  const double Now = World != nullptr ? World->GetTimeSeconds() : 0.0;
+  const float Interval = LastCaptureTime >= 0.0 && Now > LastCaptureTime
+      ? static_cast<float>(Now - LastCaptureTime)
+      : FMath::Max(DeltaTime, 1e-3f);
+  LastCaptureTime = Now;
+
+  if (!ArePostProcessingEffectsEnabled() || CVarCarlaCameraExposureMotionBlur.GetValueOnGameThread() == 0)
+  {
+    return;
+  }
+  FSceneViewStateInterface *ViewState = CaptureComponent2D->GetViewState(0);
+  const float Exposure = ViewState != nullptr ? ViewState->GetLastEyeAdaptationExposure() : 0.0f;
+  if (!(Exposure > 0.0f) || !FMath::IsFinite(Exposure))
+  {
+    return;  // no eye adaptation readback yet (first frames)
+  }
+  const float FNumber = FMath::Max(CVarCarlaCameraFNumber.GetValueOnGameThread(), 0.5f);
+  const float MinSeconds = FMath::Max(CVarCarlaCameraMinExposureMs.GetValueOnGameThread(), 0.0f) * 1e-3f;
+  const float MaxSeconds = FMath::Max(CVarCarlaCameraMaxExposureMs.GetValueOnGameThread() * 1e-3f, MinSeconds);
+  ExposureSeconds = FMath::Clamp(FNumber * FNumber * 1.2f * Exposure, MinSeconds, MaxSeconds);
+
+  FPostProcessSettings &Settings = CaptureComponent2D->PostProcessSettings;
+  Settings.bOverride_MotionBlurAmount = true;
+  Settings.MotionBlurAmount = FMath::Clamp(ExposureSeconds / FMath::Max(Interval, 1e-3f), 0.0f, 1.0f);
+  // 0 = follow the render rate, so the blur length does not depend on how
+  // fast the simulator runs in wall-clock time (a fixed target FPS scales it
+  // by target / real delta, wrong in synchronous mode).
+  Settings.bOverride_MotionBlurTargetFPS = true;
+  Settings.MotionBlurTargetFPS = 0;
+  CaptureComponent2D->ShowFlags.SetMotionBlur(Settings.MotionBlurAmount > 0.001f);
+
+  if (CVarCarlaCameraExposureLog.GetValueOnGameThread() != 0)
+  {
+    UE_LOG(LogCarla, Log, TEXT("%s exposure %.4g (EV100 %.2f) -> %.3f ms, interval %.1f ms, motion blur %.3f"),
+        *GetName(), Exposure, FMath::Log2(1.0f / (1.2f * Exposure)), ExposureSeconds * 1e3f, Interval * 1e3f,
+        Settings.MotionBlurAmount);
+  }
 }
 
 void ASceneCaptureSensor::EndPlay(const EEndPlayReason::Type EndPlayReason)

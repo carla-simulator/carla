@@ -31,17 +31,61 @@ camera = world.spawn_actor(camera_bp, carla.Transform(carla.location(0,0,1.5), c
 
 ## Presets shipped with CARLA
 
-| Preset | Look |
-| --- | --- |
-| `Default` | Photoreal camera, used by the spectator and by every RGB camera that does not set `post_process_profile`. Neutral grading, histogram auto exposure with a brightness-dependent exposure bias curve, so shade, dusk and night stay darker as on a real camera. |
-| `GoPro` | Action camera. Vivid colour, strong local tone compression, crisp detail, light vignette and edge fringing, fast auto exposure. |
-| `AutomotiveHDR` | Front camera of an automated vehicle (HDR sensor with a perception ISP). Neutral and flat, highly compressed dynamic range, no lens effects (vignette, bloom, fringing, motion blur, depth of field), very fast auto exposure for tunnel entries and exits. |
-| `Dashcam` | Consumer dashcam. Low dynamic range (bright skies clip), contrasty, over-sharpened, strong vignette and fringing, sensor grain, slightly cool and overexposed. |
+RGB cameras spawned without `post_process_profile` (or with `Default`) load the sensor default, `AutomotiveHDR`
+(console variable `carla.PostProcess.Profile`). The spectator / editor viewport renders with its own profile,
+`Cinematic` (console variable `carla.PostProcess.ViewportProfile`), so its look does not change when the sensor
+default does; set it to `AutomotiveHDR` to see in the viewport what the sensors see.
 
-The presets only change the image processing. The lens geometry is set on the camera blueprint: for an action-camera or dashcam view, also widen `fov` (for example 110 to 120) and, if needed, use the lens distortion attributes (`lens_k`, `lens_kcube`, `lens_x_size`, `lens_y_size`).
+Each automotive preset reproduces the look of the camera of a public driving dataset, tuned on Town10 against frames
+of that dataset (exposure and contrast percentiles, saturation, white balance, sharpness, noise per brightness). The
+consumer presets are graded by eye.
+
+| Preset | Imitates | Look |
+| --- | --- | --- |
+| `AutomotiveHDR` (sensor default) | nuScenes front camera (Basler acA1600-60gc) | Flat machine-vision camera: neutral, low saturation, fast auto exposure capped at 20 ms (gain and noise rise in the dark), star-shaped lens flare and bloom on lights, sensor noise, slight optical softness. |
+| `AutomotiveHDRClean` | same camera, better sensor and optics | Same tone mapping and exposure as `AutomotiveHDR`, with little noise and a weak flare. For datasets that should not carry sensor artefacts. |
+| `WideHDR8MP` | 8 MP 120° ADAS front camera (Zenseact ZOD; Mobileye / Tesla HW4 class, 120&ndash;140 dB sensors) | Flat multi-exposure HDR: no clipped highlights, lifted blacks, crisp lamps without star flare, strong noise reduction (soft, smeared detail), edge fringing. |
+| `LegacyCCD` | KITTI (Point Grey Flea2 CCD, 2011) | Low dynamic range: hard clipped skies, deep contrasty shadows, saturated colour, sharp, little bloom. |
+| `LogHDR` | Cityscapes (onsemi AR0331, 16-bit HDR log-compressed to 8 bit) | No clipped highlights, dark mid-tones, green-yellow cast, moderate saturation. |
+| `Smartphone` | comma.ai road camera (Sony IMX298, phone ISP, HEVC) | Dark mid-tones, saturated and cool, soft codec detail. |
+| `Cinematic` (viewport) | photo / film camera | Neutral grading with a filmic curve, histogram auto exposure with a brightness-dependent exposure bias curve (shade, dusk and night stay darker as on a real camera), light vignette. |
+| `GoPro` | action camera | Vivid colour, strong local tone compression, crisp detail, light vignette and edge fringing, fast auto exposure. |
+| `Dashcam` | consumer dashcam | Low dynamic range (bright skies clip), contrasty, over-sharpened, strong vignette and fringing, sensor grain, slightly cool and overexposed. |
+
+The presets only change the image processing. Resolution, field of view and lens are attributes of the camera
+blueprint; to match the imitated camera use:
+
+| Preset | `image_size_x` &times; `image_size_y` | `fov` |
+| --- | --- | --- |
+| `AutomotiveHDR`, `AutomotiveHDRClean` | 1600 &times; 900 | 70 |
+| `WideHDR8MP` | 3840 &times; 2160 (or 1920 &times; 1080) | 120 |
+| `LegacyCCD` | 1242 &times; 375 | 82 |
+| `LogHDR` | 2048 &times; 1024 | 50 |
+| `Smartphone` | 1164 &times; 874 | 65 |
+| `Cinematic` | any | 90 |
+| `GoPro`, `Dashcam` | 1920 &times; 1080 | 110&ndash;120 |
 
 ```py
 camera_bp = bp_lib.find('sensor.camera.rgb')
-camera_bp.set_attribute('post_process_profile', 'AutomotiveHDR')
-camera_bp.set_attribute('fov', '100')
+camera_bp.set_attribute('post_process_profile', 'LegacyCCD')
+camera_bp.set_attribute('image_size_x', '1242')
+camera_bp.set_attribute('image_size_y', '375')
+camera_bp.set_attribute('fov', '82')
 ```
+
+### Sensor effects
+
+The automotive presets add camera artefacts on top of the grading:
+
+- __Sensor noise and optical softness.__ A post-process material, `M_SensorNoise` (in
+  `Content/Carla/Blueprints/CameraProfiles`), blurs the image slightly (lens, demosaicing and ISP) and adds photon and
+  read noise in linear light. The gain follows the camera's own auto exposure: once the exposure time reaches its cap
+  the gain rises, so noise grows in the dark as on a real camera. Each preset references a material instance,
+  `MI_SensorNoise_<Preset>`, with its own parameters (`Strength`, `BlurSigma`, `NoiseCell`, `ChromaScale`,
+  `FullWell`, `ReadNoise`, `MaxExposureMs`); `AutomotiveHDR` uses the parent material's defaults. Remove the
+  material from *Weighted Blendables* to turn both off.
+- __Lens flare.__ `AutomotiveHDR` and `AutomotiveHDRClean` use the convolution (FFT) bloom with a lens kernel,
+  `Kernels/T_LensPSF_Star`, modelled on the nuScenes night frames: a soft halo and faint star spikes around bright
+  lights. The other presets use the standard bloom.
+- __Exposure-linked motion blur.__ Applies to every preset: see [RGB camera &mdash; exposure-linked motion
+  blur](ref_sensors.md#exposure-linked-motion-blur).

@@ -2306,10 +2306,9 @@ void UActorBlueprintFunctionLibrary::SetCamera(
         Description.Variations,
         TEXT(""));
 
-    // Post-process profiles are camera presets (Default, GoPro,
-    // ...), not per-map looks. Empty or the legacy lowercase "default" means
-    // no preference: the active profile (carla.PostProcess.Profile), the same
-    // one the sky rig loads for the viewport.
+    // Post-process profiles are camera presets (AutomotiveHDR, GoPro, ...),
+    // not per-map looks. Empty or "Default" means no preference: the sensor
+    // default (carla.PostProcess.Profile).
     PostProcessProfileName = UPostProcessJsonUtils::ResolveProfileName(PostProcessProfileName);
 
     UPostProcessJsonUtils::LoadAllPostProcessFromJsonToSceneCapture(
