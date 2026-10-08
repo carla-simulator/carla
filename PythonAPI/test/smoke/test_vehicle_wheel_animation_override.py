@@ -1,8 +1,7 @@
-from . import SyncSmokeTest
+from .vehicle_wheel_smoke_test import VehicleWheelSmokeTest
 
 import carla
 import math
-import time
 
 ANGLE_TOLERANCE_DEG = 2.0
 OFFSET_TOLERANCE_M = 0.01
@@ -18,65 +17,10 @@ WHEELS = (
     carla.VehicleWheelLocation.BR_Wheel)
 
 
-class TestVehicleWheelAnimationOverride(SyncSmokeTest):
+class TestVehicleWheelAnimationOverride(VehicleWheelSmokeTest):
     """While the wheel animation is overridden the wheel setters pose the
     wheels, with or without Chaos, the getters report what was set, and ending
     the override hands the wheels back."""
-
-    def tearDown(self):
-        self.world.apply_settings(self.settings)
-        self.world.tick()
-        self.settings = None
-        self.client.load_world("Town10HD_Opt")
-        time.sleep(5)
-        self.world = None
-        self.client = None
-
-    def _spawn_four_wheeler(self):
-        self.world = self.client.load_world("Town10HD_Opt")
-        settings = carla.WorldSettings(
-            no_rendering_mode=False,
-            synchronous_mode=True,
-            fixed_delta_seconds=0.05)
-        self.world.apply_settings(settings)
-        self.world.tick()
-
-        bp_lib = self.world.get_blueprint_library()
-        vehicle_bps = [
-            bp for bp in self.filter_vehicles_for_old_towns(bp_lib.filter("vehicle.*"))
-            if int(bp.get_attribute("number_of_wheels")) == 4]
-        self.assertGreater(len(vehicle_bps), 0)
-
-        spawn_points = self.world.get_map().get_spawn_points()
-        self.assertGreater(len(spawn_points), 0)
-
-        vehicle = self.world.spawn_actor(vehicle_bps[0], spawn_points[0])
-        for _ in range(40):
-            self._tick(vehicle)
-        return vehicle
-
-    def _tick(self, vehicle, count=1):
-        # The bones are only refreshed while the vehicle is being rendered.
-        for _ in range(count):
-            transform = vehicle.get_transform()
-            forward = transform.get_forward_vector()
-            right = transform.get_right_vector()
-            location = transform.location + carla.Location(
-                forward.x - 6.0 * right.x, forward.y - 6.0 * right.y, 2.0)
-            self.world.get_spectator().set_transform(carla.Transform(
-                location, carla.Rotation(pitch=-10.0, yaw=transform.rotation.yaw + 90.0)))
-            self.world.tick()
-
-    def _wheel_bones(self, vehicle):
-        """The relative transform of each wheel bone, by name."""
-        bones = {
-            name: transform
-            for name, transform in zip(
-                vehicle.get_bone_names(), vehicle.get_bone_relative_transforms())
-            if name.lower().startswith("wheel")}
-        self.assertEqual(
-            len(bones), 4, "expected four wheel bones, found %s" % sorted(bones))
-        return bones
 
     @staticmethod
     def _heading(transform):
@@ -120,6 +64,17 @@ class TestVehicleWheelAnimationOverride(SyncSmokeTest):
         steer_before, suspension_before = before[WHEELS[0]]
 
         vehicle.set_wheel_animation_override(True)
+        # Spin every wheel from where it is, so the bones turn by the same angle.
+        for wheel in WHEELS:
+            vehicle.set_wheel_pitch_angle(wheel, vehicle.get_wheel_pitch_angle(wheel) + PITCH_DEG)
+        self._tick(vehicle, 2)
+        spun = self._wheel_bones(vehicle)
+        for name in rest:
+            spin = self._spin_between(rest[name], spun[name])
+            self.assertLess(
+                abs(abs(spin) - PITCH_DEG), ANGLE_TOLERANCE_DEG,
+                "spun: %s turned %.2f degrees, not %.2f" % (name, spin, PITCH_DEG))
+
         for wheel in WHEELS:
             vehicle.set_wheel_steer_direction(wheel, STEER_DEG)
             vehicle.set_wheel_pitch_angle(wheel, PITCH_DEG)
@@ -173,6 +128,28 @@ class TestVehicleWheelAnimationOverride(SyncSmokeTest):
         vehicle = self._spawn_four_wheeler()
         try:
             for wheel in WHEELS:
+                with self.assertRaises(RuntimeError):
+                    vehicle.set_wheel_steer_direction(wheel, STEER_DEG)
+                with self.assertRaises(RuntimeError):
+                    vehicle.set_wheel_pitch_angle(wheel, PITCH_DEG)
+                with self.assertRaises(RuntimeError):
+                    vehicle.set_wheel_suspension_offset(wheel, SUSPENSION_M)
+        finally:
+            vehicle.destroy()
+
+    def test_missing_wheel_raises(self):
+        print("TestVehicleWheelAnimationOverride.test_missing_wheel_raises")
+        vehicle = self._spawn_vehicle(2)
+        try:
+            missing = WHEELS[len(vehicle.get_physics_control().wheels):]
+            if not missing:
+                self.skipTest("the two-wheeler's Chaos setup carries four wheels")
+            for wheel in missing:
+                for getter in (vehicle.get_wheel_steer_angle,
+                               vehicle.get_wheel_pitch_angle,
+                               vehicle.get_wheel_suspension_offset):
+                    with self.assertRaises(RuntimeError):
+                        getter(wheel)
                 with self.assertRaises(RuntimeError):
                     vehicle.set_wheel_steer_direction(wheel, STEER_DEG)
                 with self.assertRaises(RuntimeError):
