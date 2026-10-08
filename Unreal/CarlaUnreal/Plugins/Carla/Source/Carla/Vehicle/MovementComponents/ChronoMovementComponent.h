@@ -68,9 +68,11 @@ class CARLA_API UChronoMovementComponent : public UBaseCarlaMovementComponent
   uint64_t MaxSubsteps = 10;
   float MaxSubstepDeltaTime = 0.01;
   FVehicleControl VehicleControl;
-  FString VehicleJSON =    "hmmwv/vehicle/HMMWV_Vehicle.json";
-  FString PowertrainJSON = "hmmwv/powertrain/HMMWV_ShaftsPowertrain.json";
-  FString TireJSON =       "hmmwv/tire/HMMWV_Pac02Tire.json";
+  // Defaults: the sedan templates under Co-Simulation/Chrono/Vehicles/, which
+  // is also where an empty base path points (see CreateChronoMovementComponent).
+  FString VehicleJSON =    "sedan/vehicle/Sedan_Vehicle.json";
+  FString PowertrainJSON = "sedan/powertrain/Sedan_SimpleMapPowertrain.json";
+  FString TireJSON =       "sedan/tire/Sedan_TMeasyTire.json";
   FString BaseJSONPath = "";
   // Resolved from the powertrain template by CreateChronoMovementComponent.
   FString EngineJSON = "";

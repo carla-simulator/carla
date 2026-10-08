@@ -3392,10 +3392,10 @@ Enables Chrono physics on a spawned vehicle.
     - **Parameters:**
         - `max_substeps` (_int_) - Max number of Chrono substeps.  
         - `max_substep_delta_time` (_int_) - Max size of substep.  
-        - `vehicle_json` (_str_) - Path to vehicle json file relative to `base_json_path`.  
-        - `powertrain_json` (_str_) - Path to powertrain json file relative to `base_json_path`.  
-        - `tire_json` (_str_) - Path to tire json file relative to `base_json_path`.  
-        - `base_json_path` (_str_) - Path to `chrono/data/vehicle` folder. E.g., `/home/user/carla/Build/Release/Chrono/install/share/chrono/data/vehicle/` (the final `/` character is required).  
+        - `vehicle_json` (_str_) - Path to vehicle json file relative to `base_json_path`. Empty selects `sedan/vehicle/Sedan_Vehicle.json`.  
+        - `powertrain_json` (_str_) - Path to powertrain json file relative to `base_json_path`. Empty selects `sedan/powertrain/Sedan_SimpleMapPowertrain.json`.  
+        - `tire_json` (_str_) - Path to tire json file relative to `base_json_path`. Empty selects `sedan/tire/Sedan_TMeasyTire.json`.  
+        - `base_json_path` (_str_) - Directory the template paths are relative to, e.g. Chrono's `data/vehicle` folder (`/home/user/carla/Build/Release/Chrono/install/share/chrono/data/vehicle/`; the final `/` character is required). Empty selects `Co-Simulation/Chrono/Vehicles/` in the source tree the server was built from, which holds the sedan templates.  
     - **Note:** <font color="#8E8E8E">_Ensure that the CARLA server was built with `-DENABLE_CHRONO=ON`. You will not be able to use Chrono physics without it.
 _</font>  
     - **Warning:** <font color="#ED2F2F">_Collisions are not supported. When a collision is detected, physics will revert to the default CARLA physics.

@@ -10,6 +10,10 @@
 #include "Carla/Vehicle/MovementComponents/DefaultMovementComponent.h"
 #include "Carla/Util/RayTracer.h"
 
+#include <util/ue-header-guard-begin.h>
+#include "Misc/Paths.h"
+#include <util/ue-header-guard-end.h>
+
 #include <util/disable-ue4-macros.h>
 #include <carla/rpc/String.h>
 #ifdef WITH_CHRONO
@@ -44,6 +48,17 @@ void UChronoMovementComponent::CreateChronoMovementComponent(
   if (!BaseJSONPath.IsEmpty())
   {
     ChronoMovementComponent->BaseJSONPath = BaseJSONPath;
+  }
+  else
+  {
+    // The templates CARLA ships, in the source tree this server was built
+    // from (<repository>/Unreal/CarlaUnreal/ is the project directory).
+    ChronoMovementComponent->BaseJSONPath = FPaths::ConvertRelativePathToFull(
+        FPaths::ProjectDir() / TEXT("../../Co-Simulation/Chrono/Vehicles/"));
+    if (!ChronoMovementComponent->BaseJSONPath.EndsWith(TEXT("/")))
+    {
+      ChronoMovementComponent->BaseJSONPath += TEXT("/");
+    }
   }
   ChronoMovementComponent->MaxSubsteps = MaxSubsteps;
   ChronoMovementComponent->MaxSubstepDeltaTime = MaxSubstepDeltaTime;

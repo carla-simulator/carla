@@ -365,19 +365,19 @@
         - param_name: vehicle_json
           type: str
           doc: >
-            Path to vehicle json file relative to `base_json_path`
+            Path to vehicle json file relative to `base_json_path`. Empty selects `sedan/vehicle/Sedan_Vehicle.json`
         - param_name: powertrain_json
           type: str
           doc: >
-            Path to powertrain json file relative to `base_json_path`
+            Path to powertrain json file relative to `base_json_path`. Empty selects `sedan/powertrain/Sedan_SimpleMapPowertrain.json`
         - param_name: tire_json
           type: str
           doc: >
-            Path to tire json file relative to `base_json_path`
+            Path to tire json file relative to `base_json_path`. Empty selects `sedan/tire/Sedan_TMeasyTire.json`
         - param_name: base_json_path
           type: str
           doc: >
-            Path to `chrono/data/vehicle` folder. E.g., `/home/user/carla/Build/Release/Chrono/install/share/chrono/data/vehicle/` (the final `/` character is required).
+            Directory the template paths are relative to, e.g. Chrono's `data/vehicle` folder (`/home/user/carla/Build/Release/Chrono/install/share/chrono/data/vehicle/`; the final `/` character is required). Empty selects `Co-Simulation/Chrono/Vehicles/` in the source tree the server was built from, which holds the sedan templates.
       doc: >
         Enables Chrono physics on a spawned vehicle.
       note: >
