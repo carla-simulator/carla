@@ -675,6 +675,13 @@ public:
   UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
   float GetWheelSteerAngle(EVehicleWheelLocation WheelLocation);
 
+  /// Whether the Chaos vehicle simulation is moving this vehicle.
+  bool IsSimulatedByChaos() const;
+
+  /// Radius of the wheel at WheelIndex, in cm, as last applied through the
+  /// physics control. Does not need the Chaos wheel instances to exist.
+  float GetWheelRadius(int32 WheelIndex) const;
+
   UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
   void OpenDoor(const EVehicleDoor DoorIdx);
 

@@ -1295,6 +1295,28 @@ float ACarlaWheeledVehicle::GetWheelSteerAngle(EVehicleWheelLocation WheelLocati
   return Wheel->GetSteerAngle();
 }
 
+bool ACarlaWheeledVehicle::IsSimulatedByChaos() const
+{
+  return bPhysicsEnabled &&
+      (BaseMovementComponent == nullptr || BaseMovementComponent->IsA<UDefaultMovementComponent>());
+}
+
+float ACarlaWheeledVehicle::GetWheelRadius(int32 WheelIndex) const
+{
+  if (LastPhysicsControl.Wheels.IsValidIndex(WheelIndex))
+  {
+    return LastPhysicsControl.Wheels[WheelIndex].WheelRadius;
+  }
+  // A rejected physics control can leave fewer entries than wheels.
+  const UChaosWheeledVehicleMovementComponent *Movement = GetChaosWheeledVehicleMovementComponent();
+  if (Movement == nullptr || !Movement->WheelSetups.IsValidIndex(WheelIndex))
+  {
+    return 0.0f;
+  }
+  const UChaosVehicleWheel *Wheel = Movement->WheelSetups[WheelIndex].WheelClass.GetDefaultObject();
+  return Wheel != nullptr ? Wheel->WheelRadius : 0.0f;
+}
+
 void ACarlaWheeledVehicle::SetSimulatePhysics(bool enabled) {
   if (!GetCarlaMovementComponent<UDefaultMovementComponent>())
   {
