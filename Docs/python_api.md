@@ -3396,9 +3396,9 @@ Enables Chrono physics on a spawned vehicle.
         - `powertrain_json` (_str_) - Path to powertrain json file relative to `base_json_path`. Empty selects `sedan/powertrain/Sedan_SimpleMapPowertrain.json`.  
         - `tire_json` (_str_) - Path to tire json file relative to `base_json_path`. Empty selects `sedan/tire/Sedan_TMeasyTire.json`.  
         - `base_json_path` (_str_) - Directory the template paths are relative to, e.g. Chrono's `data/vehicle` folder (`/home/user/carla/Build/Release/Chrono/install/share/chrono/data/vehicle/`; the final `/` character is required). Empty selects `Co-Simulation/Chrono/Vehicles/` in the source tree the server was built from, which holds the sedan templates.  
-    - **Note:** <font color="#8E8E8E">_Ensure that the CARLA server was built with `-DENABLE_CHRONO=ON`. You will not be able to use Chrono physics without it.
+    - **Note:** <font color="#8E8E8E">_Ensure that the CARLA server was built with `-DENABLE_CHRONO=ON`. You will not be able to use Chrono physics without it. Raises `RuntimeError` when Chrono cannot be enabled (a server built without Chrono, a template that is missing or that Chrono rejects); the vehicle then keeps its current physics.
 _</font>  
-    - **Warning:** <font color="#ED2F2F">_Collisions are not supported. When a collision is detected, physics will revert to the default CARLA physics.
+    - **Warning:** <font color="#ED2F2F">_Collisions are not supported. When a collision is detected, or the Chrono simulation diverges, physics will revert to the default CARLA physics; this is only reported in the server log.
 _</font>  
 - <a name="carla.Vehicle.is_at_traffic_light"></a>**<font color="#7fb800">is_at_traffic_light</font>**(<font color="#00a6ed">**self**</font>)  
 Vehicles will be affected by a traffic light when the light is red and the vehicle is inside its bounding box. The client returns whether a traffic light is affecting this vehicle according to last tick (it does not call the simulator).  

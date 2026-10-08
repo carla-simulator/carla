@@ -381,9 +381,9 @@
       doc: >
         Enables Chrono physics on a spawned vehicle.
       note: >
-        Ensure that the CARLA server was built with `-DENABLE_CHRONO=ON`. You will not be able to use Chrono physics without it.
+        Ensure that the CARLA server was built with `-DENABLE_CHRONO=ON`. You will not be able to use Chrono physics without it. Raises `RuntimeError` when Chrono cannot be enabled (a server built without Chrono, a template that is missing or that Chrono rejects); the vehicle then keeps its current physics.
       warning: >
-        Collisions are not supported. When a collision is detected, physics will revert to the default CARLA physics.
+        Collisions are not supported. When a collision is detected, or the Chrono simulation diverges, physics will revert to the default CARLA physics; this is only reported in the server log.
      # -------------------------------------- 
     - def_name: restore_default_physics
       doc: >

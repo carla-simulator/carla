@@ -81,7 +81,10 @@ class CARLA_API UChronoMovementComponent : public UBaseCarlaMovementComponent
 public:
 
 
-  static void CreateChronoMovementComponent(
+  // Replaces the vehicle's movement component with a Chrono one. Returns an
+  // empty string on success, or why Chrono could not be enabled, in which
+  // case the vehicle keeps the physics it had.
+  static FString CreateChronoMovementComponent(
       ACarlaWheeledVehicle* Vehicle,
       uint64_t MaxSubsteps,
       float MaxSubstepDeltaTime,
@@ -93,6 +96,8 @@ public:
   #ifdef WITH_CHRONO
   virtual void BeginPlay() override;
 
+  // Builds the Chrono system and vehicle from the templates. Throws
+  // std::exception on a template Chrono cannot use.
   void InitializeChronoVehicle();
 
   void ProcessControl(FVehicleControl &Control) override;

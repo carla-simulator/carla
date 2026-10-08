@@ -630,7 +630,9 @@ namespace detail {
       std::string PowertrainJSON,
       std::string TireJSON,
       std::string BaseJSONPath) {
-    _pimpl->AsyncCall("enable_chrono_physics",
+    // Waited on, so a template Chrono rejects raises on the client instead of
+    // being reported only in the server log.
+    _pimpl->CallAndWait<void>("enable_chrono_physics",
         vehicle,
         MaxSubsteps,
         MaxSubstepDeltaTime,

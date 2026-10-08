@@ -1093,10 +1093,12 @@ ECarlaServerResponse FVehicleActor::UseCarSimRoad(bool bEnabled)
 ECarlaServerResponse FVehicleActor::EnableChronoPhysics(
       uint64_t MaxSubsteps, float MaxSubstepDeltaTime,
       const FString& VehicleJSON, const FString& PowertrainJSON,
-      const FString& TireJSON, const FString& BaseJSONPath)
+      const FString& TireJSON, const FString& BaseJSONPath,
+      FString& OutError)
 {
   if (IsDormant())
   {
+    return ECarlaServerResponse::FunctionNotAvailableWhenDormant;
   }
   else
   {
@@ -1105,7 +1107,7 @@ ECarlaServerResponse FVehicleActor::EnableChronoPhysics(
     {
       return ECarlaServerResponse::NotAVehicle;
     }
-    UChronoMovementComponent::CreateChronoMovementComponent(
+    OutError = UChronoMovementComponent::CreateChronoMovementComponent(
         Vehicle,
         MaxSubsteps,
         MaxSubstepDeltaTime,

@@ -22,7 +22,7 @@
 #include <util/enable-ue4-macros.h>
 
 
-void UChronoMovementComponent::CreateChronoMovementComponent(
+FString UChronoMovementComponent::CreateChronoMovementComponent(
     ACarlaWheeledVehicle* Vehicle,
     uint64_t MaxSubsteps,
     float MaxSubstepDeltaTime,
@@ -32,6 +32,11 @@ void UChronoMovementComponent::CreateChronoMovementComponent(
     FString BaseJSONPath)
 {
   #ifdef WITH_CHRONO
+  auto Fail = [](const FString& Error)
+  {
+    UE_LOG(LogCarla, Error, TEXT("%s; Chrono physics not enabled."), *Error);
+    return Error;
+  };
   UChronoMovementComponent* ChronoMovementComponent = NewObject<UChronoMovementComponent>(Vehicle);
   if (!VehicleJSON.IsEmpty())
   {
@@ -79,11 +84,10 @@ void UChronoMovementComponent::CreateChronoMovementComponent(
       !Powertrain.HasMember("Transmission Input File") ||
       !Powertrain["Transmission Input File"].IsString())
   {
-    UE_LOG(LogCarla, Error, TEXT(
+    return Fail(FString::Printf(TEXT(
         "Chrono powertrain template %s must name an \"Engine Input File\" and a "
-        "\"Transmission Input File\"; Chrono physics not enabled."),
-        *carla::rpc::ToFString(PowertrainPath));
-    return;
+        "\"Transmission Input File\""),
+        *carla::rpc::ToFString(PowertrainPath)));
   }
   ChronoMovementComponent->EngineJSON =
       carla::rpc::ToFString(Powertrain["Engine Input File"].GetString());
@@ -106,17 +110,35 @@ void UChronoMovementComponent::CreateChronoMovementComponent(
     chrono::vehicle::ReadFileJSON(TemplatePath, Document);
     if (!Document.IsObject())
     {
-      UE_LOG(LogCarla, Error, TEXT(
-          "Could not read Chrono template %s; Chrono physics not enabled."),
-          *carla::rpc::ToFString(TemplatePath));
-      return;
+      return Fail(FString::Printf(
+          TEXT("Could not read Chrono template %s"),
+          *carla::rpc::ToFString(TemplatePath)));
     }
+  }
+
+  // Build the Chrono vehicle before the component replaces the current one,
+  // so whatever Chrono rejects still leaves the vehicle on the physics it
+  // has, and the client hears about it.
+  ChronoMovementComponent->CarlaVehicle = Vehicle;
+  try
+  {
+    ChronoMovementComponent->InitializeChronoVehicle();
+  }
+  catch (const std::exception& Exception)
+  {
+    return Fail(FString::Printf(
+        TEXT("Chrono could not build the vehicle: %s"),
+        *carla::rpc::ToFString(Exception.what())));
   }
 
   Vehicle->SetCarlaMovementComponent(ChronoMovementComponent);
   ChronoMovementComponent->RegisterComponent();
+  return FString();
   #else
-  UE_LOG(LogCarla, Warning, TEXT("Error: Chrono is not enabled") );
+  const FString Error = TEXT(
+      "Chrono is not enabled in this build; configure CARLA with -DENABLE_CHRONO=ON");
+  UE_LOG(LogCarla, Warning, TEXT("Error: %s"), *Error);
+  return Error;
   #endif
 }
 
@@ -240,16 +262,8 @@ void UChronoMovementComponent::BeginPlay()
 
   DisableUE4VehiclePhysics();
 
-  // // // Chrono System
-  // Chrono 9 stopped giving a system a collision system by default; keep the
-  // Bullet one Chrono 6 used to create implicitly.
-  Sys.SetCollisionSystemType(ChCollisionSystem::Type::BULLET);
-  Sys.SetGravitationalAcceleration(ChVector3d(0, 0, -9.81));
-  Sys.SetSolverType(ChSolver::Type::BARZILAIBORWEIN);
-  Sys.GetSolver()->AsIterative()->SetMaxIterations(150);
-  Sys.SetMaxPenetrationRecoverySpeed(4.0);
-
-  InitializeChronoVehicle();
+  // The Chrono vehicle was built by CreateChronoMovementComponent, before
+  // this component replaced the previous one.
 
   // Create the terrain
   Terrain = chrono_types::make_shared<UERayCastTerrain>(CarlaVehicle, Vehicle.get());
@@ -264,6 +278,15 @@ void UChronoMovementComponent::BeginPlay()
 
 void UChronoMovementComponent::InitializeChronoVehicle()
 {
+  // // // Chrono System
+  // Chrono 9 stopped giving a system a collision system by default; keep the
+  // Bullet one Chrono 6 used to create implicitly.
+  Sys.SetCollisionSystemType(ChCollisionSystem::Type::BULLET);
+  Sys.SetGravitationalAcceleration(ChVector3d(0, 0, -9.81));
+  Sys.SetSolverType(ChSolver::Type::BARZILAIBORWEIN);
+  Sys.GetSolver()->AsIterative()->SetMaxIterations(150);
+  Sys.SetMaxPenetrationRecoverySpeed(4.0);
+
   // Initial location with small offset to prevent falling through the ground
   FVector VehicleLocation = CarlaVehicle->GetActorLocation() + FVector(0,0,25);
   FQuat VehicleRotation = CarlaVehicle->GetActorRotation().Quaternion();
@@ -313,6 +336,10 @@ void UChronoMovementComponent::InitializeChronoVehicle()
   // Create and initialize the powertrain System
   auto Engine = ReadEngineJSON(EngineJSON_string);
   auto Transmission = ReadTransmissionJSON(TransmissionJSON_string);
+  if (!Engine || !Transmission)
+  {
+    throw std::runtime_error("could not read the engine or transmission template");
+  }
   Vehicle->InitializePowertrain(
       chrono_types::make_shared<ChPowertrainAssembly>(Engine, Transmission));
   // Create and initialize the tires. Unreal renders the vehicle, so Chrono
@@ -321,6 +348,10 @@ void UChronoMovementComponent::InitializeChronoVehicle()
   for (auto& axle : Vehicle->GetAxles()) {
       for (auto& wheel : axle->GetWheels()) {
           auto tire = ReadTireJSON(Tire_string);
+          if (!tire)
+          {
+            throw std::runtime_error("could not read the tire template");
+          }
           Vehicle->InitializeTire(tire, wheel, VisualizationType::NONE);
       }
   }

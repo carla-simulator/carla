@@ -2887,18 +2887,27 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
           ECarlaServerResponse::ActorNotFound,
           " Actor Id: " + FString::FromInt(ActorId));
     }
+    FString Error;
     ECarlaServerResponse Response =
         CarlaActor->EnableChronoPhysics(
             MaxSubsteps, MaxSubstepDeltaTime,
             cr::ToFString(VehicleJSON),
             cr::ToFString(PowertrainJSON),
             cr::ToFString(TireJSON),
-            cr::ToFString(BaseJSONPath));
+            cr::ToFString(BaseJSONPath),
+            Error);
     if (Response != ECarlaServerResponse::Success)
     {
       return RespondError(
           "enable_chrono_physics",
           Response,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    if (!Error.IsEmpty())
+    {
+      return RespondError(
+          "enable_chrono_physics",
+          Error,
           " Actor Id: " + FString::FromInt(ActorId));
     }
     return R<void>::Success();
