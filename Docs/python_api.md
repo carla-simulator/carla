@@ -3444,13 +3444,25 @@ Retrieves the traffic light actor affecting this vehicle (if any) according to l
 - <a name="carla.Vehicle.get_traffic_light_state"></a>**<font color="#7fb800">get_traffic_light_state</font>**(<font color="#00a6ed">**self**</font>)  
 The client returns the state of the traffic light affecting this vehicle according to last tick. The method does not call the simulator. If no traffic light is currently affecting the vehicle, returns <b>green</b>.  
     - **Return:** _[carla.TrafficLightState](#carla.TrafficLightState)_  
-- <a name="carla.Vehicle.get_wheel_steer_angle"></a>**<font color="#7fb800">get_wheel_steer_angle</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**wheel_location**</font>)  
-Returns the physics angle in degrees of a vehicle's wheel.  
+- <a name="carla.Vehicle.get_wheel_pitch_angle"></a>**<font color="#7fb800">get_wheel_pitch_angle</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**wheel_location**</font>)  
+Returns the spin angle in degrees of a vehicle's wheel, following the same rules as [carla.Vehicle.get_wheel_steer_angle](#carla.Vehicle.get_wheel_steer_angle).  
     - **Parameters:**
         - `wheel_location` (_[carla.VehicleWheelLocation](#carla.VehicleWheelLocation)_)  
     - **Return:** _float_  
-    - **Note:** <font color="#8E8E8E">_Returns the angle based on the physics of the wheel, not the visual angle.
+    - **Setter:** _[carla.Vehicle.set_wheel_pitch_angle](#carla.Vehicle.set_wheel_pitch_angle)_  
+- <a name="carla.Vehicle.get_wheel_steer_angle"></a>**<font color="#7fb800">get_wheel_steer_angle</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**wheel_location**</font>)  
+Returns the steering angle in degrees of a vehicle's wheel.  
+    - **Parameters:**
+        - `wheel_location` (_[carla.VehicleWheelLocation](#carla.VehicleWheelLocation)_)  
+    - **Return:** _float_  
+    - **Note:** <font color="#8E8E8E">_Returns the angle set while the wheel animation is overridden, the physics angle while physics simulates the vehicle, and the visual angle otherwise.
 _</font>  
+- <a name="carla.Vehicle.get_wheel_suspension_offset"></a>**<font color="#7fb800">get_wheel_suspension_offset</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**wheel_location**</font>)  
+Returns the suspension offset in meters of a vehicle's wheel, following the same rules as [carla.Vehicle.get_wheel_steer_angle](#carla.Vehicle.get_wheel_steer_angle).  
+    - **Parameters:**
+        - `wheel_location` (_[carla.VehicleWheelLocation](#carla.VehicleWheelLocation)_)  
+    - **Return:** _float_  
+    - **Setter:** _[carla.Vehicle.set_wheel_suspension_offset](#carla.Vehicle.set_wheel_suspension_offset)_  
 
 ##### Setters
 - <a name="carla.Vehicle.set_autopilot"></a>**<font color="#7fb800">set_autopilot</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**enabled**=True</font>, <font color="#00a6ed">**tm_port**=8000</font>)  
@@ -3463,12 +3475,34 @@ Sets the light state of a vehicle using a flag that represents the lights that a
     - **Parameters:**
         - `light_state` (_[carla.VehicleLightState](#carla.VehicleLightState)_)  
     - **Getter:** _[carla.Vehicle.get_light_state](#carla.Vehicle.get_light_state)_  
-- <a name="carla.Vehicle.set_wheel_steer_direction"></a>**<font color="#7fb800">set_wheel_steer_direction</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**wheel_location**</font>, <font color="#00a6ed">**angle_in_deg**</font>)<button class="SnipetButton" id="carla.Vehicle.set_wheel_steer_direction-snipet_button">snippet &rarr;</button>  
-Sets the angle of a vehicle's wheel visually.  
+- <a name="carla.Vehicle.set_wheel_animation_override"></a>**<font color="#7fb800">set_wheel_animation_override</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**enabled**</font>)  
+Enables or disables the wheel animation override. While it is enabled the wheels show only the values set through [carla.Vehicle.set_wheel_steer_direction](#carla.Vehicle.set_wheel_steer_direction), [carla.Vehicle.set_wheel_pitch_angle](#carla.Vehicle.set_wheel_pitch_angle) and [carla.Vehicle.set_wheel_suspension_offset](#carla.Vehicle.set_wheel_suspension_offset), starting from the pose they had, whether or not physics simulates the vehicle. Disabling it hands the wheels back to the physics simulation, or, without physics, rolls them with the distance the vehicle travels.  
+    - **Parameters:**
+        - `enabled` (_bool_)  
+    - **Warning:** <font color="#ED2F2F">_Does not affect the physics of the vehicle. Raises an error on vehicles whose animation blueprint does not derive from `CarlaVehicleAnimationInstance`.
+_</font>  
+- <a name="carla.Vehicle.set_wheel_pitch_angle"></a>**<font color="#7fb800">set_wheel_pitch_angle</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**wheel_location**</font>, <font color="#00a6ed">**angle_in_deg**</font>)  
+Sets the spin angle of a vehicle's wheel visually, in degrees.  
     - **Parameters:**
         - `wheel_location` (_[carla.VehicleWheelLocation](#carla.VehicleWheelLocation)_)  
         - `angle_in_deg` (_float_)  
-    - **Warning:** <font color="#ED2F2F">_Does not affect the physics of the vehicle.
+    - **Getter:** _[carla.Vehicle.get_wheel_pitch_angle](#carla.Vehicle.get_wheel_pitch_angle)_  
+    - **Warning:** <font color="#ED2F2F">_Raises an error unless the wheel animation override is enabled, see [carla.Vehicle.set_wheel_animation_override](#carla.Vehicle.set_wheel_animation_override).
+_</font>  
+- <a name="carla.Vehicle.set_wheel_steer_direction"></a>**<font color="#7fb800">set_wheel_steer_direction</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**wheel_location**</font>, <font color="#00a6ed">**angle_in_deg**</font>)<button class="SnipetButton" id="carla.Vehicle.set_wheel_steer_direction-snipet_button">snippet &rarr;</button>  
+Sets the steering angle of a vehicle's wheel visually, in degrees.  
+    - **Parameters:**
+        - `wheel_location` (_[carla.VehicleWheelLocation](#carla.VehicleWheelLocation)_)  
+        - `angle_in_deg` (_float_)  
+    - **Warning:** <font color="#ED2F2F">_Raises an error unless the wheel animation override is enabled, see [carla.Vehicle.set_wheel_animation_override](#carla.Vehicle.set_wheel_animation_override).
+_</font>  
+- <a name="carla.Vehicle.set_wheel_suspension_offset"></a>**<font color="#7fb800">set_wheel_suspension_offset</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**wheel_location**</font>, <font color="#00a6ed">**offset**</font>)  
+Sets the suspension offset of a vehicle's wheel visually.  
+    - **Parameters:**
+        - `wheel_location` (_[carla.VehicleWheelLocation](#carla.VehicleWheelLocation)_)  
+        - `offset` (_float_) - Meters along the suspension axis, positive when compressed.  
+    - **Getter:** _[carla.Vehicle.get_wheel_suspension_offset](#carla.Vehicle.get_wheel_suspension_offset)_  
+    - **Warning:** <font color="#ED2F2F">_Raises an error unless the wheel animation override is enabled, see [carla.Vehicle.set_wheel_animation_override](#carla.Vehicle.set_wheel_animation_override).
 _</font>  
 
 ##### Dunder methods
@@ -5036,9 +5070,14 @@ Snippet for carla.Vehicle.set_wheel_steer_direction
 ```py
   
 # Sets the appearance of the vehicles front wheels to 40°. Vehicle physics will not be affected.
+# The wheel setters only work while the wheel animation override is enabled.
 
+vehicle.set_wheel_animation_override(True)
 vehicle.set_wheel_steer_direction(carla.VehicleWheelLocation.FR_Wheel, 40.0)
 vehicle.set_wheel_steer_direction(carla.VehicleWheelLocation.FL_Wheel, 40.0)
+
+# Hands the wheels back to the physics, or to the automatic roll without physics.
+vehicle.set_wheel_animation_override(False)
   
 
 ```
