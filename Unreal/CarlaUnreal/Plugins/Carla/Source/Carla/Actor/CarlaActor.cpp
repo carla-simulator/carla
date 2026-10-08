@@ -941,7 +941,7 @@ ECarlaServerResponse FVehicleActor::SetWheelSuspensionOffset(
     {
       return Response;
     }
-    Vehicle->SetWheelSuspensionOffset(WheelLocation, Offset * 100.0f);
+    Vehicle->SetWheelSuspensionOffset(WheelLocation, Offset * UE_M_TO_CM);
   }
   return ECarlaServerResponse::Success;
 }
@@ -957,7 +957,7 @@ ECarlaServerResponse FVehicleActor::GetWheelSuspensionOffset(
     {
       return ECarlaServerResponse::NotAVehicle;
     }
-    Offset = Vehicle->GetWheelSuspensionOffset(WheelLocation) / 100.0f;
+    Offset = Vehicle->GetWheelSuspensionOffset(WheelLocation) * UE_CM_TO_M;
   }
   return ECarlaServerResponse::Success;
 }

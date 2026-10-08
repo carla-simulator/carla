@@ -60,5 +60,5 @@ private:
 
   bool bRollingWheels = false;
 
-  bool bWheelAnimationOverridden = false;
+  bool bWasWheelAnimationOverridden = false;
 };

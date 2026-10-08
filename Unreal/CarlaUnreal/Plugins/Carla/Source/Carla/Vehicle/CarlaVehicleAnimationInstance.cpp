@@ -111,7 +111,7 @@ void UCarlaVehicleAnimationInstance::UpdateWheelAnimationOverride()
       WheelPoses[i].LocOffset = OverriddenPoses[i].LocOffset;
     }
   }
-  else if (bWheelAnimationOverridden && Vehicle != nullptr && !Vehicle->IsSimulatedByChaos())
+  else if (bWasWheelAnimationOverridden && Vehicle != nullptr && !Vehicle->IsSimulatedByChaos())
   {
     // Nothing else steers or compresses the wheels without Chaos. The roll
     // carries on from the pitch left.
@@ -121,7 +121,7 @@ void UCarlaVehicleAnimationInstance::UpdateWheelAnimationOverride()
       Pose.LocOffset = FVector::ZeroVector;
     }
   }
-  bWheelAnimationOverridden = bOverridden;
+  bWasWheelAnimationOverridden = bOverridden;
 }
 
 const FWheelAnimationData *UCarlaVehicleAnimationInstance::GetWheelPose(int32 WheelIndex) const
