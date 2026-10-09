@@ -475,7 +475,7 @@ carla_string_option (
 carla_string_option (
   CARLA_FASTDDS_VERSION
   "Target Fast-DDS version."
-  2.14.6
+  2.14.7
 )
 
 carla_string_option (
