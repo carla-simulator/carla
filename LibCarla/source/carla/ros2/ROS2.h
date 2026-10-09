@@ -9,6 +9,7 @@
 #include "carla/Buffer.h"
 #include "carla/BufferView.h"
 #include "carla/geom/Transform.h"
+#include "carla/ros2/PublisherRegistry.h"
 #include "carla/ros2/ROS2CallbackData.h"
 #include "carla/ros2/middleware/Middleware.h"
 #include "carla/ros2/middleware/MiddlewareConfig.h"
@@ -258,22 +259,7 @@ public:
       void *actor = nullptr);
 
 private:
-  struct ActorRegistration {
-    std::string ros_name;
-    std::string frame_id;
-    bool publish_tf{true};
-  };
-
-  // Resolves an actor's `rt/carla/[parent/]ros_name` base topic by walking the
-  // parent chain. Returns empty if the actor is not registered.
-  std::string BuildBaseTopicName(void *actor) const;
-  // True when the actor carries a non-empty ros_topic_name override, i.e.
-  // BuildBaseTopicName returns an exact user-chosen topic. Single-topic
-  // publishers then skip their conventional suffix (tier4 semantics).
-  bool HasTopicOverride(void *actor) const;
-  std::string LookupRosName(void *actor) const;
-  std::string LookupFrameId(void *actor) const;
-  std::string BuildParentChain(void *actor) const;
+  using Registry = PublisherRegistry<BasePublisher, CarlaCameraPublisher, CarlaTransformPublisher>;
 
   // Lazy-creates the per-sensor publisher matching `type` (an ESensors enum
   // declared in ROS2.cpp). Returns the BasePublisher pointer; the caller
@@ -281,10 +267,9 @@ private:
   std::shared_ptr<BasePublisher> GetOrCreateSensor(
       int type, carla::streaming::detail::stream_id_type id, void *actor);
 
-  // Lazy-creates the per-sensor transform publisher, gated on the actor's
-  // publish_tf flag (set at RegisterSensor time). Returns nullptr if the
-  // sensor opted out.
-  std::shared_ptr<CarlaTransformPublisher> GetOrCreateTransformPublisher(void *actor);
+  // Broadcasts the sensor transform on /tf unless the global gate or the
+  // actor's publish_tf flag (set at RegisterSensor time) is off.
+  void PublishTransform(void *actor, const carla::geom::Transform &sensor_transform);
 
   // Camera-side counterpart of GetOrCreateSensor for publishers that inherit
   // CarlaCameraPublisher (the RGB / Depth / SS / IS / Normals / OpticalFlow
@@ -293,12 +278,7 @@ private:
   std::shared_ptr<CarlaCameraPublisher> GetOrCreateCameraSensor(
       carla::streaming::detail::stream_id_type id,
       void *actor,
-      const std::string &default_prefix);
-
-  // Resolves a `prefix__` placeholder by appending the stream id, persisting
-  // the resolved name in `_registrations` so subsequent lookups see it.
-  void ResolveAutoStreamSuffix(
-      void *actor, const std::string &prefix, carla::streaming::detail::stream_id_type id);
+      const char *default_prefix);
 
   // singleton
   ROS2() = default;
@@ -314,9 +294,9 @@ private:
   int32_t _seconds{0};
   uint32_t _nanoseconds{0};
 
-  std::unordered_map<void *, ActorRegistration> _registrations;
-  // Exact-topic overrides; empty string means "no override".
-  std::unordered_map<void *, std::string> _actor_ros_topic_names;
+  // Naming and per-sensor publishers; the camera readback threads use it
+  // concurrently with the game thread.
+  Registry _registry;
   // Vehicles registered with enable_autoware_control — the only ones whose
   // vehicle-status stream is accepted and published.
   std::unordered_set<void *> _autoware_vehicles;
@@ -325,11 +305,7 @@ private:
   // is supported (tier4 semantics).
   std::unordered_map<void *, std::shared_ptr<AutowareVehicleStatusPublisher>>
       _autoware_status_publishers;
-  std::unordered_map<void *, std::vector<void *>> _actor_parents;
   std::shared_ptr<CarlaClockPublisher> _clock_publisher;
-  std::unordered_map<void *, std::shared_ptr<BasePublisher>> _publishers;
-  std::unordered_map<void *, std::shared_ptr<CarlaCameraPublisher>> _camera_publishers;
-  std::unordered_map<void *, std::shared_ptr<CarlaTransformPublisher>> _transforms;
   std::unordered_set<carla::streaming::detail::stream_id_type> _publish_stream;
   std::unordered_map<void *, ActorCallback> _actor_callbacks;
   std::unordered_multimap<void *, std::shared_ptr<BaseSubscriber>> _subscribers;
