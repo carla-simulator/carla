@@ -127,7 +127,7 @@ namespace tcp {
                 } else {
                   // Else try again.
                   log_debug("streaming client: failed to send stream id:", ec.message());
-                  Connect();
+                  Reconnect();
                 }
               }));
         } else {
@@ -141,7 +141,6 @@ namespace tcp {
   }
 
   void Client::Stop() {
-    _connection_timer.cancel();
     auto self = shared_from_this();
     // Serialize the shutdown with the completion handlers: every read/connect
     // handler runs on _strand, so mutating _done and closing the socket from
@@ -151,6 +150,7 @@ namespace tcp {
     // when switching sensors. self keeps the client alive until this runs.
     boost::asio::post(_strand, [this, self]() {
       _done = true;
+      _connection_timer.cancel();
       if (_socket.is_open()) {
         _socket.close();
       }
@@ -158,13 +158,16 @@ namespace tcp {
   }
 
   void Client::Reconnect() {
+    if (_done) {
+      return;
+    }
     auto self = shared_from_this();
     _connection_timer.expires_after(time_duration::seconds(1u).to_chrono());
-    _connection_timer.async_wait([this, self](boost::system::error_code ec) {
-      if (!ec) {
+    _connection_timer.async_wait(boost::asio::bind_executor(_strand, [this, self](boost::system::error_code ec) {
+      if (!ec && !_done) {
         Connect();
       }
-    });
+    }));
   }
 
   void Client::ReadData() {
@@ -198,7 +201,7 @@ namespace tcp {
         } else {
           // As usual, if anything fails start over from the very top.
           log_debug("streaming client: failed to read data:", ec.message());
-          Connect();
+          Reconnect();
         }
       };
 
@@ -221,7 +224,7 @@ namespace tcp {
           log_debug("streaming client: failed to read header:", ec.message());
           DEBUG_ONLY(log_debug("size  = ", message->size()));
           DEBUG_ONLY(log_debug("bytes = ", bytes));
-          Connect();
+          Reconnect();
         }
       };
 
