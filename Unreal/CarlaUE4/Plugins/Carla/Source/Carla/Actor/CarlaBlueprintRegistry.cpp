@@ -33,7 +33,7 @@ static FString PropSizeTypeToString(EPropSize PropSizeType)
   {
     return FString("unknown");
   }
-  return ptr->GetNameStringByIndex(static_cast<int32>(PropSizeType));
+  return ptr->GetNameStringByValue(static_cast<int32>(PropSizeType));
 }
 
 static EPropSize StringToPropSizeType(FString PropSize)
