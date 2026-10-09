@@ -232,7 +232,7 @@
       - param_name: velocity
         type: carla.Vector3D
       doc: >
-        Sets the actor's velocity vector. This is applied before the physics step so the resulting angular velocity will be affected by external forces such as friction.
+        Sets the actor's velocity vector, in world coordinates. This is applied before the physics step so the resulting velocity will be affected by external forces such as friction. Only the linear velocity is set: the method does not steer a vehicle or change the actor's rotation.
     # --------------------------------------
     - def_name: __str__
     # --------------------------------------
