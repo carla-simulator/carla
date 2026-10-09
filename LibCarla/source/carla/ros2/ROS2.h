@@ -141,6 +141,7 @@ public:
   void ProcessDataFromCamera(
       uint64_t sensor_type,
       carla::streaming::detail::stream_id_type stream_id,
+      double capture_timestamp,
       const carla::geom::Transform sensor_transform,
       int W, int H, float Fov,
       const carla::SharedBufferView buffer,

@@ -6,6 +6,7 @@
 
 #include "carla/Logging.h"
 #include "carla/ros2/ROS2.h"
+#include "carla/ros2/ROS2Time.h"
 #include "carla/geom/GeoLocation.h"
 #include "carla/geom/Vector3D.h"
 #include "carla/sensor/data/DVSEvent.h"
@@ -49,7 +50,6 @@
   #include "subscribers/BasicSubscriber.h"
 #endif
 
-#include <cmath>
 #include <memory>
 #include <string>
 #include <utility>
@@ -162,11 +162,9 @@ void ROS2::SetFrame(uint64_t frame) {
 }
 
 void ROS2::SetTimestamp(double timestamp) {
-  double integral;
-  const double fractional = std::modf(timestamp, &integral);
-  const double multiplier = 1000000000.0;
-  _seconds = static_cast<int32_t>(integral);
-  _nanoseconds = static_cast<uint32_t>(fractional * multiplier);
+  const msg::Time stamp = ToRosTime(timestamp);
+  _seconds = stamp.sec;
+  _nanoseconds = stamp.nanosec;
   if (_clock_publisher) {
     _clock_publisher->Write(_seconds, _nanoseconds);
     _clock_publisher->Publish();
@@ -520,10 +518,13 @@ std::string ParentFrameOrMap(const std::string &parent_chain) {
 void ROS2::ProcessDataFromCamera(
     uint64_t sensor_type,
     carla::streaming::detail::stream_id_type stream_id,
+    double capture_timestamp,
     const carla::geom::Transform sensor_transform,
     int W, int H, float Fov,
     const carla::SharedBufferView buffer,
     void *actor) {
+  const msg::Time stamp = ToRosTime(capture_timestamp);
+
   // Image dimensions + FOV are now read straight from ImageSerializer's
   // per-frame header inside the camera publisher's WriteCameraInfo call;
   // the W/H/Fov arguments survive for ABI compatibility with the
@@ -574,17 +575,17 @@ void ROS2::ProcessDataFromCamera(
       const auto *header = reinterpret_cast<
           const carla::sensor::s11n::OpticalFlowImageSerializer::ImageHeader *>(header_ptr);
       publisher->WriteCameraInfo(
-          _seconds, _nanoseconds, 0, 0, header->height, header->width, header->fov_angle, true);
+          stamp.sec, stamp.nanosec, 0, 0, header->height, header->width, header->fov_angle, true);
       publisher->WriteImage(
-          _seconds, _nanoseconds, header->height, header->width,
+          stamp.sec, stamp.nanosec, header->height, header->width,
           buffer->data() + carla::sensor::s11n::OpticalFlowImageSerializer::header_offset);
     } else {
       const auto *header = reinterpret_cast<
           const carla::sensor::s11n::ImageSerializer::ImageHeader *>(header_ptr);
       publisher->WriteCameraInfo(
-          _seconds, _nanoseconds, 0, 0, header->height, header->width, header->fov_angle, true);
+          stamp.sec, stamp.nanosec, 0, 0, header->height, header->width, header->fov_angle, true);
       publisher->WriteImage(
-          _seconds, _nanoseconds, header->height, header->width,
+          stamp.sec, stamp.nanosec, header->height, header->width,
           buffer->data() + carla::sensor::s11n::ImageSerializer::header_offset);
     }
     publisher->Publish();
@@ -592,7 +593,7 @@ void ROS2::ProcessDataFromCamera(
 
   if (auto transform_publisher = GetOrCreateTransformPublisher(actor)) {
     transform_publisher->Write(
-        _seconds, _nanoseconds,
+        stamp.sec, stamp.nanosec,
         ParentFrameOrMap(BuildParentChain(actor)),
         LookupFrameId(actor),
         sensor_transform.location.x, sensor_transform.location.y, sensor_transform.location.z,
