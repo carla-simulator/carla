@@ -19,6 +19,9 @@
 #include "PhysicsEngine/PhysicsSettings.h"
 #include "Carla/MapGen/LargeMapManager.h"
 #include "Carla/OpenDrive/OpenDrive.h"
+#include "Carla/Vehicle/VehicleControl.h"
+
+#include "Components/PrimitiveComponent.h"
 
 #include <compiler/disable-ue4-macros.h>
 #include <carla/Logging.h>
@@ -28,6 +31,7 @@
 #include <carla/multigpu/secondaryCommands.h>
 #include <carla/ros2/ROS2.h>
 #include <carla/ros2/middleware/Middleware.h>
+#include <carla/rpc/VehicleControl.h>
 #include <carla/streaming/EndPoint.h>
 #include <carla/streaming/Server.h>
 #include <compiler/enable-ue4-macros.h>
@@ -422,9 +426,59 @@ void FCarlaEngine::OnPostTick(UWorld *World, ELevelTick TickType, float DeltaSec
     // send the worldsnapshot
     WorldObserver.BroadcastTick(*CurrentEpisode, DeltaSeconds, bMapChanged, LightUpdatePending);
     CurrentEpisode->GetSensorManager().PostPhysTick(World, TickType, DeltaSeconds);
+    #if defined(WITH_ROS2)
+    PublishROS2VehicleState(DeltaSeconds);
+    #endif
     ResetSimulationState();
   }
 }
+
+#if defined(WITH_ROS2)
+void FCarlaEngine::PublishROS2VehicleState(float DeltaSeconds)
+{
+  TRACE_CPUPROFILER_EVENT_SCOPE_STR(__FUNCTION__);
+  auto ROS2 = carla::ros2::ROS2::GetInstance();
+  if (!ROS2->IsEnabled() || !CurrentEpisode)
+  {
+    return;
+  }
+
+  constexpr float TO_METERS = 1e-2;
+  const FActorRegistry &Registry = CurrentEpisode->GetActorRegistry();
+  for (auto &It : Registry)
+  {
+    FCarlaActor *View = It.Value.Get();
+    if (!View || View->GetActorType() != FCarlaActor::ActorType::Vehicle)
+    {
+      continue;
+    }
+    AActor *Actor = View->GetActor();
+    if (!Actor || !ROS2->IsVehicleRegistered(static_cast<void*>(Actor)))
+    {
+      continue;
+    }
+
+    const carla::geom::Transform Transform(View->GetActorGlobalTransform());
+    const FVector Velocity = TO_METERS * Actor->GetVelocity();
+    const auto *RootComponent = Cast<UPrimitiveComponent>(Actor->GetRootComponent());
+    const FVector AngularVelocity =
+        RootComponent != nullptr ?
+            RootComponent->GetPhysicsAngularVelocityInDegrees() :
+            FVector{0.0f, 0.0f, 0.0f};
+
+    FVehicleControl VehicleControl;
+    View->GetVehicleControl(VehicleControl);
+
+    ROS2->ProcessDataFromVehicle(
+        static_cast<void*>(Actor),
+        Transform,
+        carla::geom::Vector3D(Velocity.X, Velocity.Y, Velocity.Z),
+        carla::geom::Vector3D(AngularVelocity.X, AngularVelocity.Y, AngularVelocity.Z),
+        DeltaSeconds,
+        carla::rpc::VehicleControl(VehicleControl));
+  }
+}
+#endif
 
 void FCarlaEngine::OnEpisodeSettingsChanged(const FEpisodeSettings &Settings)
 {

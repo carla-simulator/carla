@@ -12,7 +12,7 @@ COPY carla-*.whl /tmp/
 RUN python3 -m pip install --no-cache-dir /tmp/carla-*.whl && \
     rm -f /tmp/carla-*.whl
 
-COPY ros2_native.py stack.json map_to_markers.py ego_tf_broadcaster.py cleanup.py launcher.sh /opt/carla/
+COPY ros2_native.py stack.json map_to_markers.py cleanup.py launcher.sh /opt/carla/
 RUN chmod +x /opt/carla/launcher.sh
 
 CMD ["/opt/carla/launcher.sh"]
