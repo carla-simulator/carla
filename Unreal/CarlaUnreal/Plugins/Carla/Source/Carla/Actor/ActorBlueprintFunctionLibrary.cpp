@@ -1181,8 +1181,8 @@ void UActorBlueprintFunctionLibrary::MakeRayTracedLensCameraDefinition(
   Lut.RecommendedValues = {TEXT("")};
   Lut.bRestrictToRecommended = false;
 
-  // Normalized focal lengths (image half-width = 0.5). 0 = derive from the
-  // fov attribute through the selected camera_model's projection.
+  // Focal lengths, normalized per axis: fx by the image width, fy by its height.
+  // 0 = derive from the fov attribute through the camera_model, with square pixels.
   FActorVariation Fx;
   Fx.Id = TEXT("fx");
   Fx.Type = EActorAttributeType::Float;

@@ -188,6 +188,11 @@ public:
     return bUseRayTracing;
   }
 
+  /// Applies the `carla.Camera.UseRayTracing` tier policy to a camera's own
+  /// ray-tracing preference. A camera that cannot render without ray tracing
+  /// passes `bRequired` and is never switched off by the policy.
+  static bool ResolveCameraRayTracing(bool bSensorEnabled, bool bRequired);
+
   /// Show-only render mode (see FCarlaShowOnlyFilter): comma separated
   /// semantic label names. Non-empty restricts the capture to the actors
   /// carrying those labels (plus the shadow catchers and explicit ids).
@@ -639,6 +644,13 @@ public:
   static bool ApplyPostProcessVolumeToSensor(APostProcessVolume *Origin, ASceneCaptureSensor *Dest, bool bOverrideCurrentCamera = false);
 
 protected:
+  /// True for sensors that cannot render without hardware ray tracing
+  /// (path-traced lens cameras); the tier policy never switches them off.
+  virtual bool RequiresRayTracing() const
+  {
+    return false;
+  }
+
   void CaptureSceneExtended();
 
 #ifdef CARLA_HAS_GBUFFER_API
