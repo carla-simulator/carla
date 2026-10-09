@@ -6,6 +6,7 @@
 
 #include <carla/Buffer.h>
 #include <carla/BufferView.h>
+#include <carla/multigpu/mirroredActors.h>
 #include <carla/multigpu/sensorStreamRegistry.h>
 #include <carla/streaming/Client.h>
 #include <carla/streaming/Server.h>
@@ -15,10 +16,13 @@
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/asio/write.hpp>
 
+#include <algorithm>
 #include <array>
 #include <atomic>
 #include <chrono>
+#include <map>
 #include <optional>
+#include <set>
 #include <string>
 #include <thread>
 
@@ -407,4 +411,256 @@ TEST(streaming, closing_a_session_after_its_alias_moved_leaves_the_new_stream_se
   }
   Drain(new_session);
   EXPECT_TRUE(WriteUntilReadable(new_stream, new_session));
+}
+
+namespace {
+
+  using carla::multigpu::MirroredActorMap;
+
+  /// A secondary's actor registry and the replay of add/remove events onto
+  /// it, as FFrameData::PlayFrameData does.
+  struct FakeSecondary {
+    struct Actor {
+      std::string blueprint;
+      std::string mesh;
+      bool map_registered = false;
+      bool dormant = false;
+    };
+
+    struct Lookup {
+      const FakeSecondary &secondary;
+      std::string blueprint;
+      std::string mesh;
+
+      bool IsSameKind(uint32_t id) const {
+        const auto it = secondary.actors.find(id);
+        return (it != secondary.actors.end()) && (it->second.blueprint == blueprint);
+      }
+
+      std::optional<uint32_t> FindMapActor() const {
+        if (blueprint == "spectator") {
+          return secondary.spectator;
+        }
+        for (const auto &[id, actor] : secondary.actors) {
+          if (IsMapActorLike(id) && (secondary.place.count(id) > 0u) && (secondary.place.at(id) == mesh + "@place")) {
+            return id;
+          }
+        }
+        return std::nullopt;
+      }
+
+      bool IsMapActorLike(uint32_t id) const {
+        const auto it = secondary.actors.find(id);
+        return (it != secondary.actors.end()) && it->second.map_registered &&
+            (it->second.blueprint == blueprint) && (it->second.mesh == mesh);
+      }
+
+      bool Contains(uint32_t id) const {
+        return secondary.actors.count(id) > 0u;
+      }
+    };
+
+    std::map<uint32_t, Actor> actors;
+    std::map<uint32_t, std::string> place;
+    std::optional<uint32_t> spectator;
+    MirroredActorMap mirrors;
+    uint32_t counter = 0u;
+
+    uint32_t AddMapActor(std::string blueprint, std::string mesh = {}) {
+      const uint32_t id = ++counter;
+      actors[id] = Actor{std::move(blueprint), std::move(mesh), true, false};
+      return id;
+    }
+
+    carla::multigpu::ReplayedActorPlan Plan(uint32_t primary_id, const std::string &blueprint, const std::string &mesh = {}) const {
+      return carla::multigpu::PlanReplayedActor(mirrors, primary_id, Lookup{*this, blueprint, mesh});
+    }
+
+    /// Mirrors FActorRegistry::Register: a requested id that is taken by a
+    /// dormant actor would be attached to it, so the plan must never ask for one.
+    uint32_t Replay(uint32_t primary_id, const std::string &blueprint, const std::string &mesh = {}) {
+      const auto plan = Plan(primary_id, blueprint, mesh);
+      uint32_t local_id = 0u;
+      if (plan.reuse) {
+        local_id = *plan.reuse;
+      } else {
+        EXPECT_EQ(actors.count(plan.spawn_id), 0u) << "spawn requested taken id " << plan.spawn_id;
+        local_id = ++counter;
+        if ((plan.spawn_id != 0u) && (actors.count(plan.spawn_id) == 0u)) {
+          local_id = plan.spawn_id;
+          counter = std::max(counter, local_id);
+        }
+        actors[local_id] = Actor{blueprint, mesh, false, false};
+      }
+      mirrors[primary_id] = local_id;
+      return local_id;
+    }
+
+    void Remove(uint32_t primary_id) {
+      actors.erase(mirrors[primary_id]);
+      mirrors.erase(primary_id);
+    }
+  };
+
+  bool MirrorsAreDistinct(const MirroredActorMap &mirrors) {
+    std::set<uint32_t> locals;
+    for (const auto &item : mirrors) {
+      if (!locals.insert(item.second).second) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+} // namespace
+
+TEST(MultiGpuMirroredActors, a_local_id_equal_to_the_primary_id_of_another_mirror_is_not_reused) {
+  FakeSecondary secondary;
+  secondary.counter = 156u;
+  secondary.actors[157u] = {"sensor.camera.rgb", {}, false, false};
+  secondary.mirrors[153u] = 157u;
+
+  const auto plan = secondary.Plan(157u, "sensor.camera.rgb");
+  EXPECT_FALSE(plan.reuse.has_value());
+  EXPECT_EQ(plan.spawn_id, 0u);
+}
+
+TEST(MultiGpuMirroredActors, restarted_secondary_gives_every_primary_camera_its_own_actor) {
+  // The log of the restarted secondary: its counter ran 4 ids ahead, so its
+  // own map actors hold the primary's ids 151 to 156.
+  FakeSecondary secondary;
+  secondary.counter = 146u;
+  for (int i = 0; i < 10; ++i) {
+    secondary.AddMapActor("traffic.stop");
+  }
+  for (uint32_t primary_id = 153u; primary_id <= 160u; ++primary_id) {
+    secondary.Replay(primary_id, "sensor.camera.rgb");
+  }
+  EXPECT_EQ(secondary.mirrors.size(), 8u);
+  EXPECT_TRUE(MirrorsAreDistinct(secondary.mirrors));
+  EXPECT_EQ(secondary.actors.size(), 18u);
+}
+
+TEST(MultiGpuMirroredActors, an_id_held_by_a_dormant_actor_is_never_requested) {
+  FakeSecondary secondary;
+  secondary.counter = 160u;
+  secondary.actors[157u] = {"vehicle.lincoln.mkz", {}, false, true};
+  secondary.mirrors[153u] = 157u;
+
+  const auto plan = secondary.Plan(157u, "sensor.camera.rgb");
+  EXPECT_FALSE(plan.reuse.has_value());
+  EXPECT_EQ(plan.spawn_id, 0u);
+}
+
+TEST(MultiGpuMirroredActors, a_free_id_is_requested_for_a_new_actor) {
+  FakeSecondary secondary;
+  const auto plan = secondary.Plan(42u, "vehicle.lincoln.mkz");
+  EXPECT_FALSE(plan.reuse.has_value());
+  EXPECT_EQ(plan.spawn_id, 42u);
+}
+
+TEST(MultiGpuMirroredActors, a_mapped_actor_reuses_its_mirror_even_if_its_id_is_taken) {
+  FakeSecondary secondary;
+  secondary.counter = 160u;
+  secondary.actors[153u] = {"traffic.stop", {}, true, false};
+  secondary.actors[157u] = {"sensor.camera.rgb", {}, false, false};
+  secondary.mirrors[153u] = 157u;
+
+  EXPECT_EQ(secondary.Plan(153u, "sensor.camera.rgb").reuse, std::optional<uint32_t>(157u));
+  EXPECT_EQ(secondary.Replay(153u, "sensor.camera.rgb"), 157u);
+  EXPECT_EQ(secondary.actors.size(), 2u);
+}
+
+TEST(MultiGpuMirroredActors, a_map_prop_at_the_primary_id_is_reused_and_mapped) {
+  FakeSecondary secondary;
+  const uint32_t prop = secondary.AddMapActor("static.prop.mesh", "cone");
+
+  EXPECT_EQ(secondary.Replay(prop, "static.prop.mesh", "cone"), prop);
+  EXPECT_EQ(secondary.mirrors.at(prop), prop);
+  EXPECT_EQ(secondary.actors.size(), 1u);
+  EXPECT_EQ(secondary.Plan(prop, "static.prop.mesh", "cone").reuse, std::optional<uint32_t>(prop));
+}
+
+TEST(MultiGpuMirroredActors, a_map_prop_at_its_place_is_reused_whatever_its_id) {
+  FakeSecondary secondary;
+  secondary.AddMapActor("static.prop.mesh", "barrel");
+  const uint32_t cone = secondary.AddMapActor("static.prop.mesh", "cone");
+  secondary.place[cone] = "cone@place";
+
+  EXPECT_EQ(secondary.Replay(90u, "static.prop.mesh", "cone"), cone);
+  EXPECT_EQ(secondary.actors.size(), 2u);
+}
+
+TEST(MultiGpuMirroredActors, a_map_prop_mirroring_another_primary_actor_is_not_reused) {
+  FakeSecondary secondary;
+  const uint32_t prop = secondary.AddMapActor("static.prop.mesh", "cone");
+  secondary.mirrors[12u] = prop;
+
+  const auto plan = secondary.Plan(prop, "static.prop.mesh", "cone");
+  EXPECT_FALSE(plan.reuse.has_value());
+  EXPECT_EQ(plan.spawn_id, 0u);
+}
+
+TEST(MultiGpuMirroredActors, a_map_prop_with_another_mesh_is_not_reused) {
+  FakeSecondary secondary;
+  const uint32_t prop = secondary.AddMapActor("static.prop.mesh", "barrel");
+  EXPECT_FALSE(secondary.Plan(prop, "static.prop.mesh", "cone").reuse.has_value());
+}
+
+TEST(MultiGpuMirroredActors, the_spectator_is_reused_whatever_its_id) {
+  FakeSecondary secondary;
+  secondary.spectator = secondary.AddMapActor("spectator");
+
+  EXPECT_EQ(secondary.Replay(7u, "spectator"), *secondary.spectator);
+  EXPECT_EQ(secondary.actors.size(), 1u);
+}
+
+TEST(MultiGpuMirroredActors, a_removed_actor_is_spawned_again_on_its_next_add) {
+  FakeSecondary secondary;
+  const uint32_t first = secondary.Replay(30u, "vehicle.lincoln.mkz");
+  secondary.Remove(30u);
+  EXPECT_EQ(secondary.mirrors.count(30u), 0u);
+
+  secondary.AddMapActor("traffic.stop");
+  const uint32_t second = secondary.Replay(30u, "vehicle.lincoln.mkz");
+  EXPECT_EQ(secondary.actors.count(second), 1u);
+  EXPECT_EQ(secondary.mirrors.at(30u), second);
+  EXPECT_EQ(first, 30u);
+}
+
+TEST(MultiGpuMirroredActors, a_stale_mirror_of_another_kind_is_not_reused) {
+  FakeSecondary secondary;
+  secondary.counter = 50u;
+  secondary.actors[50u] = {"vehicle.lincoln.mkz", {}, false, false};
+  secondary.mirrors[30u] = 50u;
+
+  const auto plan = secondary.Plan(30u, "sensor.camera.rgb");
+  EXPECT_FALSE(plan.reuse.has_value());
+  EXPECT_EQ(plan.spawn_id, 30u);
+}
+
+TEST(MultiGpuSensorStreams, restarted_secondary_binds_overlapping_ids_to_their_own_streams) {
+  SecondaryStreams streams;
+  FakeSecondary secondary;
+  secondary.counter = 146u;
+  for (int i = 0; i < 10; ++i) {
+    secondary.AddMapActor("traffic.stop");
+  }
+  std::map<uint32_t, carla::streaming::Stream> sensors;
+  for (uint32_t primary_id = 153u; primary_id <= 160u; ++primary_id) {
+    const uint32_t local_id = secondary.Replay(primary_id, "sensor.camera.rgb");
+    auto it = sensors.find(local_id);
+    if (it == sensors.end()) {
+      it = sensors.emplace(local_id, streams.server.MakeStream()).first;
+    }
+    EXPECT_FALSE(streams.registry.Bind(streams.server, primary_id, StreamIdOf(it->second), true).has_value());
+  }
+  ASSERT_EQ(sensors.size(), 8u);
+
+  for (uint32_t primary_id = 153u; primary_id <= 160u; ++primary_id) {
+    ASSERT_TRUE(streams.registry.Resolve(streams.server, primary_id, 1000u + primary_id).has_value());
+    EXPECT_EQ(
+        streams.server.FindStreamAlias(1000u + primary_id),
+        std::optional<stream_id_type>(StreamIdOf(sensors.at(secondary.mirrors.at(primary_id)))));
+  }
 }

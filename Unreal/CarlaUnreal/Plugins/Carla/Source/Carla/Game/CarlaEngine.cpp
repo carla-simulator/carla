@@ -422,6 +422,8 @@ void FCarlaEngine::NotifyBeginEpisode(UCarlaEpisode &Episode)
   {
     std::scoped_lock<std::mutex> Lock(FrameToProcessMutex);
     CurrentEpisode = &Episode;
+    // The new episode has a new actor registry.
+    MappedId.clear();
   }
 
   // Reset map settings
