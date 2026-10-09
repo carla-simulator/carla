@@ -185,6 +185,50 @@ TEST(streaming, low_level_tcp_small_message) {
   c->Stop();
 }
 
+TEST(streaming, client_backs_off_when_the_server_drops_the_session) {
+  using namespace carla::streaming;
+  using namespace carla::streaming::detail;
+
+  constexpr auto observation_window = 3500ms;
+  constexpr std::size_t min_sessions = 2u;
+  constexpr std::size_t max_sessions = 6u;
+
+  boost::asio::io_context io_context;
+  boost::asio::ip::tcp::acceptor acceptor(io_context,
+                                          boost::asio::ip::tcp::endpoint(boost::asio::ip::address_v4::loopback(), 0));
+  std::atomic_size_t accepted{0u};
+
+  std::function<void()> accept;
+  accept = [&acceptor, &accepted, &accept]() {
+    acceptor.async_accept([&accepted, &accept](boost::system::error_code ec, boost::asio::ip::tcp::socket socket) {
+      if (ec == boost::asio::error::operation_aborted) {
+        return;
+      }
+      if (!ec) {
+        ++accepted;
+        socket.close();
+      }
+      accept();
+    });
+  };
+  accept();
+
+  Dispatcher dispatcher{make_endpoint<tcp::Client::protocol_type>(acceptor.local_endpoint())};
+  auto stream = dispatcher.MakeStream();
+  auto c = std::make_shared<tcp::Client>(io_context, stream.token(), [](carla::Buffer) {});
+  c->Connect();
+
+  carla::ThreadGroup threads;
+  threads.CreateThreads(2u, [&io_context]() { io_context.run(); });
+
+  std::this_thread::sleep_for(observation_window);
+  c->Stop();
+  io_context.stop();
+  const std::size_t sessions = accepted.load();
+  ASSERT_GE(sessions, min_sessions);
+  ASSERT_LE(sessions, max_sessions);
+}
+
 struct DoneGuard {
   ~DoneGuard() { done = true; };
   std::atomic_bool &done;
