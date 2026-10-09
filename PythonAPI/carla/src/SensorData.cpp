@@ -364,7 +364,6 @@ void export_sensor_data() {
 
   class_<cs::SensorData, boost::noncopyable, std::shared_ptr<cs::SensorData>>("SensorData", no_init)
     .add_property("frame", &cs::SensorData::GetFrame)
-    .add_property("frame_number", &cs::SensorData::GetFrame) // deprecated.
     .add_property("timestamp", &cs::SensorData::GetTimestamp)
     .add_property("transform", CALL_RETURNING_COPY(cs::SensorData, GetSensorTransform))
   ;

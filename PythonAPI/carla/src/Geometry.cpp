@@ -344,12 +344,12 @@ void export_geom() {
   .def_readwrite("offset_z", &cg::OffsetTransform::offset_z)
   .def_readwrite("offset_cos_h", &cg::OffsetTransform::offset_cos_h)
   .def_readwrite("offset_sin_h", &cg::OffsetTransform::offset_sin_h)
-  .def("apply_transformation", &cg::OffsetTransform::ApplyTransformation, (arg("location")))
+  .def("apply_transform", &cg::OffsetTransform::ApplyTransformation, (arg("location")))
   // Deprecated: shipped as CamelCase, which reads like a class among snake_case
   // methods. Documented, so it keeps working and warns instead of disappearing.
   .def("ApplyTransformation", +[](const cg::OffsetTransform &self, const cg::Location &location) {
       PyErr_WarnEx(PyExc_DeprecationWarning,
-          "ApplyTransformation is deprecated, use apply_transformation instead", 1);
+          "ApplyTransformation is deprecated, use apply_transform instead", 1);
       return self.ApplyTransformation(location);
     }, (arg("location")))
   .def("__eq__", &cg::OffsetTransform::operator==)

@@ -51,6 +51,138 @@
 
     # - METHODS ----------------------------
     methods:
+    - def_name: set_collisions
+      params:
+      - param_name: enabled
+        type: bool
+        default: True
+        doc: >
+          True enables the actor's collisions, False disables them.
+      doc: >
+        Enables or disables the actor's collisions.
+    # --------------------------------------
+    - def_name: get_socket_world_transforms
+      return: list(carla.Transform)
+      doc: >
+        Returns the transform of every socket, in world coordinates.
+    # --------------------------------------
+    - def_name: get_socket_relative_transforms
+      return: list(carla.Transform)
+      doc: >
+        Returns the transform of every socket, relative to the actor.
+    # --------------------------------------
+    - def_name: get_socket_names
+      return: list(str)
+      doc: >
+        Returns the name of every socket authored on the actor's components, in the same order as __<font color="#7fb800">get_socket_world_transforms()</font>__ and __<font color="#7fb800">get_socket_relative_transforms()</font>__. Bones are not sockets; use __<font color="#7fb800">get_bone_names()</font>__ for those.
+    # --------------------------------------
+    - def_name: get_component_world_transform
+      params:
+      - param_name: component_name
+        type: str
+        doc: >
+          Name of the component, as returned by __<font color="#7fb800">get_component_names()</font>__.
+      return: carla.Transform
+      doc: >
+        Returns the transform of a component, in world coordinates.
+    # --------------------------------------
+    - def_name: get_component_relative_transform
+      params:
+      - param_name: component_name
+        type: str
+        doc: >
+          Name of the component, as returned by __<font color="#7fb800">get_component_names()</font>__.
+      return: carla.Transform
+      doc: >
+        Returns the transform of a component, relative to the actor.
+    # --------------------------------------
+    - def_name: get_component_names
+      return: list(str)
+      doc: >
+        Returns the name of every component of the actor that has a transform.
+    # --------------------------------------
+    - def_name: get_bone_world_transforms
+      return: list(carla.Transform)
+      doc: >
+        Returns the transform of every bone, in world coordinates.
+    # --------------------------------------
+    - def_name: get_bone_relative_transforms
+      return: list(carla.Transform)
+      doc: >
+        Returns the transform of every bone, relative to the actor.
+    # --------------------------------------
+    - def_name: get_bone_names
+      return: list(str)
+      doc: >
+        Returns the name of every bone of the actor's skinned meshes, in the same order as __<font color="#7fb800">get_bone_world_transforms()</font>__ and __<font color="#7fb800">get_bone_relative_transforms()</font>__.
+    # --------------------------------------
+    - def_name: get_actor_name
+      return: str
+      doc: >
+        Returns the name of the underlying Unreal actor. The method does not call the simulator.
+    # --------------------------------------
+    - def_name: get_actor_class_name
+      return: str
+      doc: >
+        Returns the name of the actor's Unreal class. The method does not call the simulator.
+    # --------------------------------------
+    - def_name: enable_constant_acceleration
+      params:
+      - param_name: acceleration
+        type: carla.Vector3D
+        param_units: m/s<sup>2</sup>
+        doc: >
+          Acceleration vector in local space.
+      doc: >
+        Sets the actor's acceleration to a constant value over time.
+    # --------------------------------------
+    - def_name: disable_constant_acceleration
+      doc: >
+        Disables any constant acceleration previously set for the actor.
+    # --------------------------------------
+    - def_name: apply_texture
+      params:
+      - param_name: material_parameter
+        type: carla.MaterialParameter
+        doc: >
+          Material channel the texture is written to.
+      - param_name: texture
+        type: carla.TextureColor
+        doc: >
+          Texture to apply. A carla.TextureFloatColor is also accepted.
+      doc: >
+        Applies a texture to one material channel of the actor.
+    # --------------------------------------
+    - def_name: add_impulse_at_location
+      params:
+      - param_name: impulse
+        type: carla.Vector3D
+        param_units: N*s
+        doc: >
+          Impulse vector in global coordinates.
+      - param_name: location
+        type: carla.Location
+        param_units: meters
+        doc: >
+          Point of application, in global coordinates.
+      doc: >
+        Applies an impulse at a given point of the actor instead of its center of mass.
+    # --------------------------------------
+    - def_name: add_force_at_location
+      params:
+      - param_name: force
+        type: carla.Vector3D
+        param_units: N
+        doc: >
+          Force vector in global coordinates.
+      - param_name: location
+        type: carla.Location
+        param_units: meters
+        doc: >
+          Point of application, in global coordinates.
+      doc: >
+        Applies a force at a given point of the actor instead of its center of mass.
+    # --------------------------------------
     - def_name: add_angular_impulse
       params:
       - param_name: angular_impulse
@@ -261,6 +393,16 @@
         Bounding box containing the geometry of the vehicle. Its location and rotation are relative to the vehicle it is attached to. 
     # - METHODS ----------------------------
     methods:
+    - def_name: get_vehicle_bone_world_transforms
+      return: list(carla.Transform)
+      doc: >
+        Returns the transform of every bone of the vehicle's skinned meshes, in world coordinates. Same result as __<font color="#7fb800">carla.Actor.get_bone_world_transforms()</font>__.
+    # --------------------------------------
+    - def_name: get_telemetry_data
+      return: carla.VehicleTelemetryData
+      doc: >
+        Returns the vehicle's current telemetry: speed, control inputs, engine state and per-wheel data.
+    # --------------------------------------
     - def_name: apply_control
       params:
       - param_name: control

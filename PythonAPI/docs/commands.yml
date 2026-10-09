@@ -467,7 +467,7 @@
       type: bool
       doc: >
         If autopilot should be activated or not.
-    - var_name: port
+    - var_name: tm_port
       type: uint16
       doc: >
         Port of the Traffic Manager where the vehicle is to be registered or unlisted. 

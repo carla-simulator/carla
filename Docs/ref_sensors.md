@@ -17,7 +17,10 @@
 - [__Instance segmentation camera__](#instance-segmentation-camera)
 - [__DVS camera__](#dvs-camera)
 - [__Optical Flow camera__](#optical-flow-camera)
+- [__Normals camera__](#normals-camera)
 - [__V2X sensor__](#v2x-sensor)
+- [__Autoware GNSS sensor__](#autoware-gnss-sensor)
+- [__Vehicle status sensor__](#vehicle-status-sensor)
 	- [Cooperative awareness message](#cooperative-awareness-message)
 	- [Custom message](#custom-v2x-message)
 
@@ -1014,6 +1017,53 @@ The Optical Flow camera captures the motion perceived from the point of view of 
 
 ---
 
+## Normals camera
+
+*   __Blueprint:__ sensor.camera.normals
+*   __Output:__ [carla.Image](python_api.md#carla.Image) per step (unless `sensor_tick` says otherwise).
+
+This camera renders the surface normal of whatever each pixel sees. The three components of the normal are stored in the red, green and blue channels, each remapped from [-1.0, 1.0] to [0, 255], so a channel value of `v` is a component of `v / 255 * 2 - 1`. A road seen from above gives a pixel close to `[128, 139, 254]`, a normal pointing up. The alpha channel is unused.
+
+#### Basic camera attributes
+
+| Blueprint attribute       | Type    | Default | Description   |
+| ----------------------------- | ----------------------------- | ----------------------------- | ----------------------------- |
+| `fov`   | float   | 90\.0   | Horizontal field of view in degrees.    |
+| `image_size_x`            | int     | 800     | Image width in pixels.      |
+| `image_size_y`            | int     | 600     | Image height in pixels.     |
+| `sensor_tick` | float   | 0\.0    | Simulation seconds between sensor captures (ticks). |
+
+<br>
+
+#### Camera lens distortion attributes
+
+| Blueprint attribute      | Type         | Default      | Description  |
+| ---------------------------- | ---------------------------- | ---------------------------- | ---------------------------- |
+| `lens_circle_falloff`    | float        | 5\.0         | Range: [0.0, 10.0]       |
+| `lens_circle_multiplier` | float        | 0\.0         | Range: [0.0, 10.0]       |
+| `lens_k`     | float        | \-1.0        | Range: [-inf, inf]       |
+| `lens_kcube` | float        | 0\.0         | Range: [-inf, inf]       |
+| `lens_x_size`            | float        | 0\.08        | Range: [0.0, 1.0]        |
+| `lens_y_size`            | float        | 0\.08        | Range: [0.0, 1.0]        |
+
+<br>
+
+#### Output attributes
+
+| Sensor data attribute            | Type  | Description        |
+| ----------------------- | ----------------------- | ----------------------- |
+| `fov` | float | Horizontal field of view in degrees.         |
+| `frame`            | int   | Frame number when the measurement took place.      |
+| `height`           | int   | Image height in pixels.          |
+| `raw_data`         | bytes | Array of BGRA 32-bit pixels.     |
+| `timestamp`        | double | Simulation time of the measurement in seconds since the beginning of the episode.        |
+| `transform`        | [carla.Transform](<../python_api#carlatransform>)  | Location and rotation in world coordinates of the sensor at the time of the measurement. |
+| `width`            | int   | Image width in pixels.           |
+
+<br>
+
+---
+
 ## V2X sensor 
 
 Vehicle-to-everything (V2X) communication is an important aspect for future applications of cooperative intelligent transportation systems. In real vehicles, this requires a dedicated onboard unit (OBU) in each vehicle, that is able to send and receive information over wireless channels. Depending on the region (Europe, China, USA), different physical technologies, protocols and application messaging formats are used. 
@@ -1040,7 +1090,7 @@ While the visibility is simulated within CARLA, the scenario can be configured b
 #### Cooperative Awareness Message
 
 *   __Blueprint:__ sensor.other.v2x
-*   __Output:__ [carla.CAMData](python_api.md#carla.CAMData), triggered according to the ETSI CAM standard, unless configured otherwise
+*   __Output:__ [carla.CAMMessage](python_api.md#carla.CAMMessage), triggered according to the ETSI CAM standard, unless configured otherwise
 
 Triggering conditions according to ETSI standard:
 - Heading angle change > 4°
@@ -1110,3 +1160,73 @@ Example:
 | path\_loss\_model       | string | geometric     |   general path loss model to be used. Options: [geometric, winner]  |
 | use\_etsi\_fading       | bool   | true         |   Use the fading params as mentioned in the ETSI publication (true), or use the custom fading standard deviation         |
 | custom\_fading\_stddev  | float  | 0.0      |   Custom value for fading standard deviation, only used if `use_etsi_fading` is set to `false`              |
+
+
+---
+
+## Autoware GNSS sensor
+
+*   __Blueprint:__ sensor.other.autoware_gnss
+*   __Output:__ [carla.GnssMeasurement](python_api.md#carla.GnssMeasurement) per step (unless `sensor_tick` says otherwise).
+
+A GNSS receiver for the Autoware stack. In Python it behaves exactly like [sensor.other.gnss](#gnss-sensor), reporting latitude, longitude and altitude with the same noise model. The difference is on the native ROS 2 interface, where it projects the position through the map's MGRS grid and publishes `geometry_msgs/Pose` on `<topic>/pose` and `geometry_msgs/PoseWithCovarianceStamped` on `<topic>/pose_with_covariance`, which is what Autoware's localisation subscribes to. Use the plain GNSS sensor unless you are running Autoware.
+
+#### Autoware GNSS attributes
+
+| Blueprint attribute      | Type   | Default            | Description        |
+| ------------------- | ------------------- | ------------------- | ------------------- |
+| `noise_alt_bias`   | float  | 0\.0   | Mean parameter in the noise model for altitude.    |
+| `noise_alt_stddev` | float  | 0\.0   | Standard deviation parameter in the noise model for altitude.  |
+| `noise_lat_bias`   | float  | 0\.0   | Mean parameter in the noise model for latitude.    |
+| `noise_lat_stddev` | float  | 0\.0   | Standard deviation parameter in the noise model for latitude.  |
+| `noise_lon_bias`   | float  | 0\.0   | Mean parameter in the noise model for longitude.   |
+| `noise_lon_stddev` | float  | 0\.0   | Standard deviation parameter in the noise model for longitude. |
+| `noise_seed`       | int    | 0      | Initializer for a pseudorandom number generator.   |
+| `sensor_tick`      | float  | 0\.0   | Simulation seconds between sensor captures (ticks).            |
+
+<br>
+
+#### Output attributes
+
+| Sensor data attribute            | Type  | Description        |
+| ----------------------- | ----------------------- | ----------------------- |
+| `frame`            | int   | Frame number when the measurement took place.      |
+| `timestamp`        | double | Simulation time of the measurement in seconds since the beginning of the episode.        |
+| `transform`        | [carla.Transform](<../python_api#carlatransform>)  | Location and rotation in world coordinates of the sensor at the time of the measurement. |
+| `latitude`         | double | Latitude of the actor.           |
+| `longitude`        | double | Longitude of the actor.          |
+| `altitude`         | double | Altitude of the actor.           |
+
+<br>
+
+---
+
+## Vehicle status sensor
+
+*   __Blueprint:__ sensor.other.vehicle_status
+*   __Output:__ [carla.SensorData](python_api.md#carla.SensorData) per step (unless `sensor_tick` says otherwise).
+
+Reports the state of the vehicle it is attached to, for the Autoware stack. It publishes six messages on the native ROS 2 interface: `VelocityReport`, `SteeringReport`, `ControlModeReport`, `GearReport`, `TurnIndicatorsReport` and `HazardLightsReport`.
+
+!!! Important
+    This sensor carries no payload for a Python client. Listening to it delivers a bare `carla.SensorData` with only `frame`, `timestamp` and `transform`; the vehicle state is only available over ROS 2. Read the same values in Python from [carla.Vehicle](python_api.md#carla.Vehicle) instead.
+
+!!! Note
+    Unlike the other sensors, this one does not need `enable_for_ros()`. It publishes to the `/vehicle/status/*` topics as soon as it is spawned.
+
+#### Vehicle status attributes
+
+| Blueprint attribute      | Type   | Default            | Description        |
+| ------------------- | ------------------- | ------------------- | ------------------- |
+| `speed_units`      | string | mps    | Units the speed is reported in.       |
+| `sensor_tick`      | float  | 0\.0   | Simulation seconds between sensor captures (ticks).            |
+
+<br>
+
+#### Output attributes
+
+| Sensor data attribute            | Type  | Description        |
+| ----------------------- | ----------------------- | ----------------------- |
+| `frame`            | int   | Frame number when the measurement took place.      |
+| `timestamp`        | double | Simulation time of the measurement in seconds since the beginning of the episode.        |
+| `transform`        | [carla.Transform](<../python_api#carlatransform>)  | Location and rotation in world coordinates of the sensor at the time of the measurement. |
