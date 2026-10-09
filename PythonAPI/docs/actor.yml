@@ -589,6 +589,8 @@
     - def_name: start
       doc: >
         Enables AI control for its parent walker. 
+      note: >
+        Tick the world at least once between spawning the walker and calling this method. The method reads the walker's location from the last snapshot received by the client, and the walker will not walk if it is not in it yet.
     # --------------------------------------
     - def_name: stop
       doc: >

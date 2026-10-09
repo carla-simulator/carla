@@ -3554,6 +3554,8 @@ Sets the destination that the pedestrian will reach.
         - `destination` (_[carla.Location](#carla.Location)<small> - meters</small>_)  
 - <a name="carla.WalkerAIController.start"></a>**<font color="#7fb800">start</font>**(<font color="#00a6ed">**self**</font>)  
 Enables AI control for its parent walker.  
+    - **Note:** <font color="#8E8E8E">_Tick the world at least once between spawning the walker and calling this method. The method reads the walker's location from the last snapshot received by the client, and the walker will not walk if it is not in it yet.
+_</font>  
 - <a name="carla.WalkerAIController.stop"></a>**<font color="#7fb800">stop</font>**(<font color="#00a6ed">**self**</font>)<button class="SnipetButton" id="carla.WalkerAIController.stop-snipet_button">snippet &rarr;</button>  
 Disables AI control for its parent walker.  
 
