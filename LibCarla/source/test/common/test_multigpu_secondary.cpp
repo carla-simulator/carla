@@ -12,7 +12,9 @@
 
 #include <boost/asio/ip/tcp.hpp>
 
+#include <cstdint>
 #include <filesystem>
+#include <iterator>
 #include <memory>
 #include <thread>
 
@@ -33,7 +35,7 @@ TEST(multigpu_secondary, retrying_a_refused_connection_does_not_add_threads) {
   constexpr auto observation_window = 3500ms;
   constexpr std::size_t worker_threads = 2u;
 
-  uint16_t unused_port = 0u;
+  std::uint16_t unused_port = 0u;
   {
     boost::asio::io_context io_context;
     boost::asio::ip::tcp::acceptor acceptor(
@@ -43,7 +45,7 @@ TEST(multigpu_secondary, retrying_a_refused_connection_does_not_add_threads) {
   }
 
   const auto threads_before = CountThreads();
-  auto secondary = std::make_shared<Secondary>("127.0.0.1", unused_port, [](auto, auto) {});
+  auto secondary = std::make_shared<Secondary>("127.0.0.1", unused_port, [](carla::multigpu::MultiGPUCommand, carla::Buffer) {});
   secondary->Connect();
   std::this_thread::sleep_for(observation_window);
   const auto threads_after = CountThreads();
