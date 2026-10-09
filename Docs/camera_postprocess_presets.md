@@ -87,5 +87,10 @@ The automotive presets add camera artefacts on top of the grading:
 - __Lens flare.__ `AutomotiveHDR` and `AutomotiveHDRClean` use the convolution (FFT) bloom with a lens kernel,
   `Kernels/T_LensPSF_Star`, modelled on the nuScenes night frames: a soft halo and faint star spikes around bright
   lights. The other presets use the standard bloom.
+- __Small lights and temporal anti-aliasing.__ With TSR (the default anti-aliasing) distant or thin lights &mdash;
+  small vehicle lamps, far street lights &mdash; lose most of their glow, because TSR blends each frame with the
+  previous ones and flattens bright features of a few pixels before the bloom. A real camera has no such filter. FXAA
+  (`r.AntiAliasingMethod 1`) keeps their glow at the cost of more aliasing, shimmer and moir&eacute; on foliage, fences
+  and distant lines.
 - __Exposure-linked motion blur.__ Applies to every preset: see [RGB camera &mdash; exposure-linked motion
   blur](ref_sensors.md#exposure-linked-motion-blur).

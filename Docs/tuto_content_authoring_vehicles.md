@@ -268,3 +268,59 @@ Click on the mesh in the component's panel:
 The new blueprint will not be added automatically to blueprint library, it's necessary to manually add the vehicle blueprint in the vehicle parameters file.
 - Find the vehicle parameters file in Unreal/CarlaUnreal/Content/Carla/Config/VehicleParameters.json
 - Add the new vehicle parameters to file
+
+## Lights
+
+All the lamps of a vehicle (headlights, position lights, brake lights, blinkers, fog and reverse lights) are one static
+mesh, `SM_<Vehicle>_Emissive`, added to the vehicle blueprint as a *Static Mesh* component. Its material is an
+instance of `M_VehicleLightsMaster` (in `Content/Carla/Static/GenericMaterials/000_Masters/Vehicles`). The material
+reads a mask texture, `T_8Color_msk`, on the **first UV channel** to decide which light group each lamp belongs to, so
+the UV map of the lights mesh is what assigns lamps to groups.
+
+### UV map
+
+Place the UVs of every lamp inside the cell of its group. The cells are flat-coloured triangles; the texture alpha
+separates the front and the rear version of the position and fog lights, so those two groups have two cells each.
+
+| Cell colour | Group | Material parameters |
+| --- | --- | --- |
+| Black | Low beam | `Low Beam Color` |
+| Blue | High beam | `High Beam Color` |
+| White, alpha 0 / alpha 1 | Front / rear position | `Front Position Color` / `Back Position Color` |
+| Cyan, alpha 0 / alpha 1 | Front / rear fog | `Front Fog Color` / `Back Fog Color` |
+| Yellow | Brake | `Brake Color` |
+| Green | Reverse | `Reverse Color` |
+| Red | Left blinker | `Blinker Color` |
+| Magenta | Right blinker | `Blinker Color` |
+
+A point inside each cell, in UV space (U right, V down): low beam `(0.85, 0.85)`, high beam `(0.65, 0.65)`, front
+position `(0.25, 0.40)`, rear position `(0.40, 0.25)`, front fog `(0.25, 0.60)`, rear fog `(0.40, 0.75)`, brake
+`(0.15, 0.15)`, reverse `(0.15, 0.85)`, left blinker `(0.85, 0.15)`, right blinker `(0.65, 0.35)`. The left and right
+blinkers are the vehicle's own left and right.
+
+If a tail lamp is both the position and the brake light, put it in the rear position cell and set `TailBrakeBoost` on
+the material instance: the lamp then glows with `Back Position Color` x (1 + `TailBrakeBoost`) while braking.
+
+### Importing
+
+Import the lights mesh as a *Static Mesh*, create a material instance of `M_VehicleLightsMaster`
+(`MI_<Vehicle>_Emissive`) and assign it to the lights mesh component of the vehicle blueprint. Glass meshes in front
+of the lamps must use a translucent material; an opaque lamp housing hides the lamps even when they are lit.
+
+The brightness of a group is the product of two values:
+
+- `Intensity` of the vehicle class in `Content/Carla/Config/Lights/Defaults.json` (`perVehicleClass`), the same for
+  every group of the vehicle. The CARLA vehicles use `200000`. `GroupIntensity` in the same file sets the real
+  spot/point lights of each group, which light the scene but do not glow.
+- The group colour on the material instance (table above). Balance the groups of a new vehicle by eye against an
+  existing one at night: CARLA uses the Audi TT as the reference for the front lamps and the Mercedes CCC for the rear
+  lamps. Colour values up to about 30 still make the glow grow; above that a lamp does not change.
+
+By day the material multiplies the lamps by `DayBoost` (default `6`) so that daytime running lights and brake lights
+stay visible in sunlight; the rear position lights are not boosted.
+
+!!! Note
+    With temporal anti-aliasing (TSR, the default), small or thin lamps lose most of their glow beyond about 10 m:
+    TSR blends each frame with the previous ones and flattens bright features that cover a few pixels. Lamps of a few
+    pixels therefore glow less than large ones however bright their colour is. With FXAA (`r.AntiAliasingMethod 1`)
+    they glow as expected, at the cost of more aliasing on fine geometry.
