@@ -115,6 +115,9 @@ private:
   // positions (to be able to interpolate)
   std::vector<CarlaRecorderPosition> CurrPos;
   std::vector<CarlaRecorderPosition> PrevPos;
+  // wheels (interpolated like the positions)
+  std::vector<CarlaRecorderAnimWheels> CurrWheels;
+  std::vector<CarlaRecorderAnimWheels> PrevWheels;
   // mapping id
   std::unordered_map<uint32_t, uint32_t> MappedId;
   // times
@@ -157,7 +160,7 @@ private:
   void ProcessStates(void);
 
   void ProcessAnimVehicle(void);
-  void ProcessAnimVehicleWheels(void);
+  void ProcessAnimVehicleWheels(bool IsFirstTime = false);
   void ProcessAnimWalker(void);
   void ProcessAnimBiker(void);
 
@@ -172,6 +175,9 @@ private:
 
   // positions
   void UpdatePositions(double Per, double DeltaTime);
+
+  // wheels, at the same point between frames as the positions
+  void UpdateWheels(double Per);
 
   void InterpolatePosition(const CarlaRecorderPosition &Start, const CarlaRecorderPosition &End, double Per, double DeltaTime);
 };

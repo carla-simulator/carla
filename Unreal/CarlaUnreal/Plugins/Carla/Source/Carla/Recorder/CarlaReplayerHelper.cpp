@@ -316,10 +316,27 @@ bool CarlaReplayerHelper::ProcessReplayerPosition(CarlaRecorderPosition Pos1, Ca
   return false;
 }
 
-void CarlaReplayerHelper::ProcessReplayerAnimVehicleWheels(CarlaRecorderAnimWheels VehicleAnimWheels)
+// The spin from one frame to the next. A wheel can turn more than half a turn
+// between frames, so the whole turns come from the distance travelled.
+static float GetWheelSpinDelta(float Spin1, float Spin2, float Travel, float Radius)
+{
+  const float Delta = FMath::UnwindDegrees(Spin2 - Spin1);
+  if (Radius <= UE_KINDA_SMALL_NUMBER)
+  {
+    return Delta;
+  }
+  const float Expected = -FMath::RadiansToDegrees(Travel / Radius);
+  return Delta + 360.0f * FMath::RoundToFloat((Expected - Delta) / 360.0f);
+}
+
+void CarlaReplayerHelper::ProcessReplayerAnimVehicleWheels(
+    const CarlaRecorderAnimWheels &Wheels1,
+    const CarlaRecorderAnimWheels &Wheels2,
+    double Per,
+    float Travel)
 {
   check(Episode != nullptr)
-  FCarlaActor *CarlaActor = Episode->FindCarlaActor(VehicleAnimWheels.DatabaseId);
+  FCarlaActor *CarlaActor = Episode->FindCarlaActor(Wheels2.DatabaseId);
   if (CarlaActor == nullptr)
     return;
   if (CarlaActor->GetActorType() != FCarlaActor::ActorType::Vehicle)
@@ -332,12 +349,20 @@ void CarlaReplayerHelper::ProcessReplayerAnimVehicleWheels(CarlaRecorderAnimWhee
 
   // Released in ProcessReplayerFinish.
   CarlaVehicle->SetWheelAnimationOverride(true);
-  for (const WheelInfo& Element : VehicleAnimWheels.WheelValues)
+  const float Alpha = static_cast<float>(Per);
+  const bool bSameWheels = Wheels1.WheelValues.size() == Wheels2.WheelValues.size();
+  for (size_t i = 0; i < Wheels2.WheelValues.size(); ++i)
   {
-    if (!CarlaVehicle->HasWheel(static_cast<int32>(Element.Location)))
+    const WheelInfo& Element2 = Wheels2.WheelValues[i];
+    const WheelInfo& Element1 = bSameWheels ? Wheels1.WheelValues[i] : Element2;
+    const int32 WheelIndex = static_cast<int32>(Element2.Location);
+    if (!CarlaVehicle->HasWheel(WheelIndex))
       continue;
-    CarlaVehicle->SetWheelSteerDirection(Element.Location, Element.SteeringAngle);
-    CarlaVehicle->SetWheelPitchAngle(Element.Location, Element.TireRotation);
+    const float Spin = Element1.TireRotation + Alpha * GetWheelSpinDelta(
+        Element1.TireRotation, Element2.TireRotation, Travel, CarlaVehicle->GetWheelRadius(WheelIndex));
+    CarlaVehicle->SetWheelSteerDirection(Element2.Location,
+        FMath::Lerp(Element1.SteeringAngle, Element2.SteeringAngle, Alpha));
+    CarlaVehicle->SetWheelPitchAngle(Element2.Location, FMath::UnwindDegrees(Spin));
   }
 }
 
