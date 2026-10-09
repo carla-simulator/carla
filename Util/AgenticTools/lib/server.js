@@ -17,7 +17,7 @@ const PROTOCOL_VERSIONS = ["2025-06-18", "2025-03-26", "2024-11-05"];
 
 function version() {
   try {
-    return require("../package.json").version;
+    return require("../.claude-plugin/plugin.json").version;
   } catch (e) {
     return "0.0.0";
   }

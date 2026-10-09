@@ -1,7 +1,7 @@
 # Agent skills
 
 CARLA ships a library of vetted procedures for coding agents, under
-[`skills/`](https://github.com/carla-simulator/carla/tree/ue58-dev/skills) in
+[`Skills/`](https://github.com/carla-simulator/carla/tree/ue58-dev/Skills) in
 the repository. An agent working inside a CARLA checkout finds them
 automatically and uses them instead of improvising from the `Makefile`.
 

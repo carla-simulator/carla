@@ -55,19 +55,11 @@ and the wrong one fails slowly. CARLA_ROOT is the only CARLA path to ask for;
 set_config derives the engine-specific variable that gates ue4/ue5/ue58.
 `;
 
-// Two layouts must both work: the npm tarball ships skills/ beside lib/, and a
-// checkout has it at the repo root. CARLA_SKILLS_DIR overrides both, for
-// authoring against a working tree without reinstalling.
+// The library is Skills/ at the carla repo root, three levels above lib/.
+// CARLA_SKILLS_DIR overrides it, for authoring against another working tree.
 function resolveSkillsDir() {
   if (process.env.CARLA_SKILLS_DIR) return path.resolve(process.env.CARLA_SKILLS_DIR);
-  // statSync inline: the isDir helper below is a const, still in its temporal
-  // dead zone when this runs at module load.
-  const dirExists = (p) => { try { return fs.statSync(p).isDirectory(); } catch (e) { return false; } };
-  const packaged = path.join(__dirname, "..", "skills");
-  if (dirExists(packaged)) return path.resolve(packaged);
-  // Vendored into the carla repo: the server lives at Util/AgenticTools/ and
-  // the skill library at the repo root, so the two are no longer siblings.
-  return path.resolve(path.join(__dirname, "..", "..", "..", "skills"));
+  return path.resolve(path.join(__dirname, "..", "..", "..", "Skills"));
 }
 
 const SKILLS_DIR = resolveSkillsDir();

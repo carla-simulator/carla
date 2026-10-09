@@ -8,6 +8,7 @@
 #include "Carla/Game/CarlaStatics.h"
 #include "Carla/Actor/ActorBlueprintFunctionLibrary.h"
 #include "Carla/Sensor/PostProcessConfig.h"
+#include "Carla/Sensor/SceneCaptureSensor.h"
 
 #include <util/ue-header-guard-begin.h>
 #include "Engine/Engine.h"
@@ -192,7 +193,7 @@ ASceneCaptureSensor_WideAngleLens::ASceneCaptureSensor_WideAngleLens(const FObje
         FaceCapture->bUseCustomProjectionMatrix = true;
         FaceCapture->CustomProjectionMatrix = ProjectionMatrix;
         // Propagate ray-tracing flag to this face capture.
-        FaceCapture->bUseRayTracingIfEnabled = bUseRayTracing;
+        FaceCapture->bUseRayTracingIfEnabled = ASceneCaptureSensor::ResolveCameraRayTracing(bUseRayTracing, false);
         SceneCaptureSensorWideAngleLens_local_ns::SetCameraDefaultOverrides(*FaceCapture);
     }
 }
@@ -419,7 +420,7 @@ void ASceneCaptureSensor_WideAngleLens::SetUseRayTracing(bool Enable)
     for (auto FaceCapture : FaceCaptures)
     {
         if (FaceCapture != nullptr)
-            FaceCapture->bUseRayTracingIfEnabled = Enable;
+            FaceCapture->bUseRayTracingIfEnabled = ASceneCaptureSensor::ResolveCameraRayTracing(Enable, false);
     }
 }
 

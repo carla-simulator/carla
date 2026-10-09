@@ -27,14 +27,20 @@
 // load) cannot hand out the same index twice.
 static std::atomic<int> SCENE_CAPTURE_COUNTER{0};
 
-static TAutoConsoleVariable<int32> CVarCarlaCameraUseRayTracing(
-    TEXT("carla.Camera.UseRayTracing"),
-    -1,
-    TEXT("Global override for per-camera hardware ray-tracing on CARLA sensors.\n")
-    TEXT("  -1: Respect the per-sensor bUseRayTracing attribute (default).\n")
-    TEXT("   0: Force ray-tracing OFF on every camera.\n")
-    TEXT("   1: Force ray-tracing ON on every camera."),
-    ECVF_Default);
+// Registered by CarlaDeviceProfileSelectorModule, which loads first and sets it
+// per quality tier. -1 follows each sensor's bUseRayTracing, 0 forces ray
+// tracing off and 1 forces it on for every camera.
+static int32 GetCameraRayTracingOverride()
+{
+  static std::atomic<const TConsoleVariableData<int32> *> CVar{nullptr};
+  const TConsoleVariableData<int32> *Cached = CVar.load(std::memory_order_relaxed);
+  if (Cached == nullptr)
+  {
+    Cached = IConsoleManager::Get().FindTConsoleVariableDataInt(TEXT("carla.Camera.UseRayTracing"));
+    CVar.store(Cached, std::memory_order_relaxed);
+  }
+  return (Cached != nullptr) ? Cached->GetValueOnAnyThread() : -1;
+}
 
 // Rollback / debug switch for the lazy GBuffer capture path. GBuffer captures
 // are only allocated when a client subscribes via listen_to_gbuffer(); setting
@@ -132,9 +138,17 @@ void ASceneCaptureSensor::ApplyRayTracingSetting()
   {
     return;
   }
-  const int32 CVarOverride = CVarCarlaCameraUseRayTracing.GetValueOnAnyThread();
-  const bool bEffective = (CVarOverride < 0) ? bUseRayTracing : (CVarOverride > 0);
-  CaptureComponent2D->bUseRayTracingIfEnabled = bEffective;
+  CaptureComponent2D->bUseRayTracingIfEnabled = ResolveCameraRayTracing(bUseRayTracing, RequiresRayTracing());
+}
+
+bool ASceneCaptureSensor::ResolveCameraRayTracing(const bool bSensorEnabled, const bool bRequired)
+{
+  if (bRequired)
+  {
+    return true;
+  }
+  const int32 CVarOverride = GetCameraRayTracingOverride();
+  return (CVarOverride < 0) ? bSensorEnabled : (CVarOverride > 0);
 }
 
 void ASceneCaptureSensor::SetFOVAngle(const float FOVAngle)

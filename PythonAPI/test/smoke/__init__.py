@@ -30,9 +30,13 @@ class SmokeTest(unittest.TestCase):
         self.vehicle_vehicles_exclude_from_old_towns = VEHICLE_VEHICLES_EXCLUDE_FROM_OLD_TOWNS
         self.client.set_timeout(120.0)
         self.world = self.client.get_world()
+        self.initial_map_name = self.world.get_map().name.split('/')[-1]
 
     def tearDown(self):
-        self.client.load_world("Town03_Opt")
+        try:
+            self.client.load_world(self.initial_map_name)
+        except RuntimeError:
+            self.client.reload_world()
         # workaround: give time to UE4 to clean memory after loading (old assets)
         time.sleep(5)
         self.world = None

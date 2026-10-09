@@ -135,6 +135,10 @@ namespace data {
       _ser_points.emplace_back(detection);
     }
 
+    void WritePointsSync(const std::vector<SemanticLidarDetection> &detections) {
+      _ser_points.insert(_ser_points.end(), detections.begin(), detections.end());
+    }
+
   protected:
     std::vector<uint32_t> _header;
     uint32_t _max_channel_points;
