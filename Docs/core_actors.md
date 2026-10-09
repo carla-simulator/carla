@@ -287,12 +287,19 @@ world.SpawnActor(walker_controller_bp, carla.Transform(), parent_walker)
 __Each AI controller needs initialization, a goal and, optionally, a speed__. Stopping the controller works in the same manner. 
 
 ```py
+world.tick()  # Use world.wait_for_tick() in asynchronous mode.
 ai_controller.start()
 ai_controller.go_to_location(world.get_random_location_from_navigation())
 ai_controller.set_max_speed(1 + random.random())  # Between 1 and 2 m/s (default is 1.4 m/s).
 ...
 ai_controller.stop()
 ```
+!!! Important
+    The world must tick at least once between spawning the walker and calling `start()`.
+    `start()` reads the walker's location from the last snapshot the client received, and a
+    walker spawned after that snapshot is not in it yet. Without the tick, the walker will not
+    walk.
+
 When a walker reaches the target location, they will automatically walk to another random point. If the target point is not reachable, walkers will go to the closest point from their current location.
 
 A snipet in [carla.Client](python_api.md#carla.Client.apply_batch_sync) uses batches to spawn a lot of walkers and make them wander around.
