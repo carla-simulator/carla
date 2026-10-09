@@ -50,6 +50,11 @@ private:
 
   bool ShouldRollWheels(const ACarlaWheeledVehicle &Vehicle) const;
 
+  void InitWheels();
+
+  /// World locations of the wheels, kept while not rolling.
+  void TrackWheelLocations();
+
   void BeginRolling();
 
   void RollWheels(const ACarlaWheeledVehicle &Vehicle, float DeltaSeconds);
