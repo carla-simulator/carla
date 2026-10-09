@@ -111,7 +111,7 @@ public:
     _actor_parents.clear();
     _topic_overrides.clear();
     for (auto &item : _in_flight) {
-      item.second.released = true;
+      ++item.second.generation;
     }
   }
 
@@ -134,6 +134,7 @@ public:
   template <typename Factory>
   TransformTarget GetOrCreateTransform(void *actor, Factory &&make) {
     TransformTarget target;
+    std::uint64_t guard_generation = 0u;
     {
       std::lock_guard<std::mutex> lock(_mutex);
       auto registration = _registrations.find(actor);
@@ -151,9 +152,10 @@ public:
         target.publisher = it->second;
         return target;
       }
-      ++_in_flight[actor].count;
+      guard_generation = EnterLocked(actor);
     }
-    target.publisher = Finish(_transforms, actor, make());
+    InFlightGuard guard(*this, actor, guard_generation);
+    target.publisher = Finish(_transforms, guard, make());
     return target;
   }
 
@@ -183,7 +185,7 @@ private:
   Erased TakePublishers(void *actor) {
     auto in_flight = _in_flight.find(actor);
     if (in_flight != _in_flight.end()) {
-      in_flight->second.released = true;
+      ++in_flight->second.generation;
     }
     return Erased{Take(_publishers, actor), Take(_camera_publishers, actor), Take(_transforms, actor)};
   }
@@ -193,6 +195,7 @@ private:
       Map &map, void *actor, stream_id_type id,
       std::initializer_list<const char *> prefixes, Factory &&make) {
     Naming naming;
+    std::uint64_t generation = 0u;
     {
       std::lock_guard<std::mutex> lock(_mutex);
       auto it = map.find(actor);
@@ -209,27 +212,82 @@ private:
       }
       auto topic_override = _topic_overrides.find(actor);
       naming.topic_override = topic_override != _topic_overrides.end() && !topic_override->second.empty();
-      ++_in_flight[actor].count;
+      generation = EnterLocked(actor);
     }
-    return Finish(map, actor, make(naming));
+    InFlightGuard guard(*this, actor, generation);
+    return Finish(map, guard, make(naming));
   }
 
-  /// A publisher built while the actor's publishers were released is used for
-  /// this sample only: caching it would revive what was just released. When
-  /// another thread cached one first, that one wins and ours is dropped
-  /// after the lock is released.
-  template <typename Map>
-  typename Map::mapped_type Finish(Map &map, void *actor, typename Map::mapped_type created) {
-    std::lock_guard<std::mutex> lock(_mutex);
-    auto in_flight = _in_flight.find(actor);
-    const bool released = in_flight == _in_flight.end() || in_flight->second.released;
-    if (in_flight != _in_flight.end() && --in_flight->second.count == 0u) {
-      _in_flight.erase(in_flight);
+  struct InFlight {
+    std::uint32_t count{0u};
+    std::uint64_t generation{0u};
+  };
+
+  /// Leaves the in-flight section even when the factory throws.
+  class InFlightGuard {
+  public:
+    InFlightGuard(PublisherRegistry &registry, void *actor, std::uint64_t generation)
+      : _registry(registry), _actor(actor), _generation(generation) {}
+
+    InFlightGuard(const InFlightGuard &) = delete;
+    InFlightGuard &operator=(const InFlightGuard &) = delete;
+
+    ~InFlightGuard() {
+      if (_active) {
+        std::lock_guard<std::mutex> lock(_registry._mutex);
+        LeaveLocked();
+      }
     }
-    if (created == nullptr || released) {
+
+    void *Actor() const { return _actor; }
+
+    /// True if the actor's publishers were not released since Enter.
+    bool LeaveLocked() {
+      _active = false;
+      auto in_flight = _registry._in_flight.find(_actor);
+      if (in_flight == _registry._in_flight.end()) {
+        return false;
+      }
+      const bool current = in_flight->second.generation == _generation;
+      if (--in_flight->second.count == 0u) {
+        _registry._in_flight.erase(in_flight);
+      }
+      return current;
+    }
+
+  private:
+    PublisherRegistry &_registry;
+    void *_actor;
+    std::uint64_t _generation;
+    bool _active{true};
+  };
+
+  std::uint64_t EnterLocked(void *actor) {
+    auto &in_flight = _in_flight[actor];
+    ++in_flight.count;
+    return in_flight.generation;
+  }
+
+  bool HasNamingLocked(void *actor) const {
+    if (_registrations.find(actor) != _registrations.end()) {
+      return true;
+    }
+    auto topic_override = _topic_overrides.find(actor);
+    return topic_override != _topic_overrides.end() && !topic_override->second.empty();
+  }
+
+  /// A publisher built while the actor's publishers were released, or for an
+  /// actor that is no longer named, is used for this sample only: caching it
+  /// would revive what was just released. When another thread cached one
+  /// first, that one wins and ours is dropped after the lock is released.
+  template <typename Map>
+  typename Map::mapped_type Finish(Map &map, InFlightGuard &guard, typename Map::mapped_type created) {
+    std::lock_guard<std::mutex> lock(_mutex);
+    const bool current = guard.LeaveLocked();
+    if (created == nullptr || !current || !HasNamingLocked(guard.Actor())) {
       return created;
     }
-    return map.try_emplace(actor, created).first->second;
+    return map.try_emplace(guard.Actor(), created).first->second;
   }
 
   void ResolveAutoStreamSuffixLocked(void *actor, const std::string &prefix, stream_id_type id) {
@@ -298,11 +356,6 @@ private:
     base_topic_name += ros_name;
     return base_topic_name;
   }
-
-  struct InFlight {
-    std::uint32_t count{0u};
-    bool released{false};
-  };
 
   mutable std::mutex _mutex;
   std::unordered_map<void *, InFlight> _in_flight;

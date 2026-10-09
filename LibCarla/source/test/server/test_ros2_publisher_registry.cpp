@@ -9,12 +9,16 @@
 #include <array>
 #include <atomic>
 #include <chrono>
+#include <cstdint>
 #include <functional>
 #include <future>
 #include <memory>
+#include <mutex>
 #include <random>
+#include <stdexcept>
 #include <string>
 #include <thread>
+#include <unordered_set>
 #include <vector>
 
 namespace {
@@ -22,30 +26,41 @@ namespace {
   std::atomic<int> g_live_publishers{0};
   std::atomic<int> g_use_after_free{0};
 
-  struct FakePublisher {
-    static constexpr std::uint32_t kAlive = 0xA11CEu;
-    static constexpr std::uint32_t kDead = 0xDEADu;
+  /// Addresses of the live publishers; Publish() on any other address is a
+  /// use after free, detected without dereferencing it.
+  std::mutex g_live_mutex;
+  std::unordered_set<std::uintptr_t> g_live_addresses;
 
+  struct FakePublisher {
     explicit FakePublisher(std::string topic = {}) : topic(std::move(topic)) {
       ++g_live_publishers;
+      std::lock_guard<std::mutex> lock(g_live_mutex);
+      g_live_addresses.insert(reinterpret_cast<std::uintptr_t>(this));
     }
 
     virtual ~FakePublisher() {
-      magic = kDead;
+      {
+        std::lock_guard<std::mutex> lock(g_live_mutex);
+        g_live_addresses.erase(reinterpret_cast<std::uintptr_t>(this));
+      }
       --g_live_publishers;
       if (on_destroy) {
         on_destroy();
       }
     }
 
-    void Publish() {
-      if (magic != kAlive) {
-        ++g_use_after_free;
+    static void Publish(const std::shared_ptr<FakePublisher> &publisher) {
+      const auto address = reinterpret_cast<std::uintptr_t>(publisher.get());
+      {
+        std::lock_guard<std::mutex> lock(g_live_mutex);
+        if (g_live_addresses.count(address) == 0u) {
+          ++g_use_after_free;
+          return;
+        }
       }
-      ++published;
+      ++publisher->published;
     }
 
-    std::uint32_t magic{kAlive};
     std::string topic;
     std::atomic<int> published{0};
     std::function<void()> on_destroy;
@@ -79,8 +94,15 @@ namespace {
   }
 
   /// True if another thread can take the registry lock while this one runs.
-  bool LockIsFree(const Registry &registry) {
-    auto probe = std::async(std::launch::async, [&registry] { registry.GetTopicOverride(nullptr); });
+  /// The probe shares ownership of the registry and is detached, so a probe
+  /// stuck on a held lock fails the test instead of hanging it.
+  bool LockIsFree(const std::shared_ptr<Registry> &registry) {
+    auto done = std::make_shared<std::promise<void>>();
+    auto probe = done->get_future();
+    std::thread([registry, done] {
+      registry->GetTopicOverride(nullptr);
+      done->set_value();
+    }).detach();
     return probe.wait_for(std::chrono::seconds(2)) == std::future_status::ready;
   }
 
@@ -146,19 +168,21 @@ TEST(ROS2PublisherRegistry, release_and_unregister_drop_the_cached_publishers) {
 }
 
 TEST(ROS2PublisherRegistry, publishers_are_built_without_the_lock) {
-  Registry registry;
+  const auto shared = std::make_shared<Registry>();
+  Registry &registry = *shared;
   int camera = 0;
   registry.Register(&camera, {"rgb", "rgb", true});
   bool lock_free = false;
   registry.GetOrCreateCamera(&camera, 1u, "rgb", [&](const Naming &naming) {
-    lock_free = LockIsFree(registry);
+    lock_free = LockIsFree(shared);
     return std::make_shared<FakeCamera>(naming.base_topic);
   });
   EXPECT_TRUE(lock_free);
 }
 
 TEST(ROS2PublisherRegistry, publishers_are_destroyed_without_the_lock) {
-  Registry registry;
+  const auto shared = std::make_shared<Registry>();
+  Registry &registry = *shared;
   int camera = 0;
   registry.Register(&camera, {"rgb", "rgb", true});
   int destroyed = 0;
@@ -166,7 +190,7 @@ TEST(ROS2PublisherRegistry, publishers_are_destroyed_without_the_lock) {
   auto watch = [&](auto publisher) {
     publisher->on_destroy = [&] {
       ++destroyed;
-      lock_free = lock_free && LockIsFree(registry);
+      lock_free = lock_free && LockIsFree(shared);
     };
   };
 
@@ -174,8 +198,8 @@ TEST(ROS2PublisherRegistry, publishers_are_destroyed_without_the_lock) {
   registry.Release(&camera);
   watch(GetCamera(registry, &camera));
   registry.Unregister(&camera);
-  watch(GetCamera(registry, &camera));
   registry.SetTopicOverride(&camera, "custom");
+  watch(GetCamera(registry, &camera));
   registry.RemoveTopicOverride(&camera);
   registry.Register(&camera, {"rgb", "rgb", true});
   watch(GetSensor(registry, &camera));
@@ -196,6 +220,69 @@ TEST(ROS2PublisherRegistry, a_publisher_released_while_being_built_is_not_cached
   });
   ASSERT_NE(built, nullptr);
   EXPECT_NE(GetCamera(registry, &camera), built);
+}
+
+TEST(ROS2PublisherRegistry, a_publisher_unregistered_while_being_built_is_not_cached) {
+  Registry registry;
+  int camera = 0;
+  registry.Register(&camera, {"rgb", "rgb", true});
+  const auto built = registry.GetOrCreateSensor(&camera, 1u, {"imu"}, [&](const Naming &naming) {
+    registry.Unregister(&camera);
+    registry.Register(&camera, {"rgb", "rgb", true});
+    return std::make_shared<FakePublisher>(naming.base_topic);
+  });
+  ASSERT_NE(built, nullptr);
+  EXPECT_NE(GetSensor(registry, &camera), built);
+}
+
+TEST(ROS2PublisherRegistry, an_unnamed_actor_gets_no_cached_publisher) {
+  Registry registry;
+  int camera = 0;
+  const auto first = GetCamera(registry, &camera);
+  ASSERT_NE(first, nullptr);
+  EXPECT_NE(GetCamera(registry, &camera), first);
+  EXPECT_NE(GetSensor(registry, &camera), GetSensor(registry, &camera));
+
+  registry.SetTopicOverride(&camera, "custom");
+  const auto overridden = GetCamera(registry, &camera);
+  EXPECT_EQ(overridden->topic, "rt/custom");
+  EXPECT_EQ(GetCamera(registry, &camera), overridden);
+}
+
+TEST(ROS2PublisherRegistry, a_throwing_factory_leaves_the_registry_usable) {
+  Registry registry;
+  int camera = 0;
+  registry.Register(&camera, {"rgb", "rgb", true});
+  const auto throwing = [](const Naming &) -> std::shared_ptr<FakeCamera> {
+    throw std::runtime_error("factory failed");
+  };
+  EXPECT_THROW(registry.GetOrCreateCamera(&camera, 1u, "rgb", throwing), std::runtime_error);
+  EXPECT_THROW(
+      registry.GetOrCreateTransform(&camera, []() -> std::shared_ptr<FakeTransform> {
+        throw std::runtime_error("factory failed");
+      }),
+      std::runtime_error);
+
+  registry.Release(&camera);
+  const auto camera_publisher = GetCamera(registry, &camera);
+  EXPECT_EQ(GetCamera(registry, &camera), camera_publisher);
+  const auto transform = GetTransform(registry, &camera).publisher;
+  EXPECT_EQ(GetTransform(registry, &camera).publisher, transform);
+}
+
+TEST(ROS2PublisherRegistry, a_release_during_an_overlapping_build_only_drops_that_build) {
+  Registry registry;
+  int camera = 0;
+  registry.Register(&camera, {"rgb", "rgb", true});
+  std::shared_ptr<FakeCamera> inner;
+  const auto outer = registry.GetOrCreateCamera(&camera, 1u, "rgb", [&](const Naming &naming) {
+    registry.Release(&camera);
+    inner = GetCamera(registry, &camera);
+    return std::make_shared<FakeCamera>(naming.base_topic);
+  });
+  ASSERT_NE(inner, nullptr);
+  EXPECT_NE(outer, inner);
+  EXPECT_EQ(GetCamera(registry, &camera), inner);
 }
 
 TEST(ROS2PublisherRegistry, concurrent_builders_share_the_first_cached_publisher) {
@@ -237,13 +324,13 @@ TEST(ROS2PublisherRegistry, publishing_races_registration_release_and_unregister
           void *actor = &actors[random() % kActors];
           const auto id = static_cast<std::uint32_t>(random() % 1000u);
           if (auto camera = GetCamera(registry, actor, id)) {
-            camera->Publish();
+            FakePublisher::Publish(camera);
           }
           if (auto sensor = GetSensor(registry, actor, id)) {
-            sensor->Publish();
+            FakePublisher::Publish(sensor);
           }
           if (auto transform = GetTransform(registry, actor).publisher) {
-            transform->Publish();
+            FakePublisher::Publish(transform);
           }
           if ((i % 64) == 0) {
             registry.Release(actor);
