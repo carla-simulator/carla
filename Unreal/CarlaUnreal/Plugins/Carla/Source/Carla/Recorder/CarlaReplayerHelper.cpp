@@ -29,7 +29,6 @@
 #include <util/ue-header-guard-begin.h>
 #include "Components/BoxComponent.h"
 #include "Engine/StaticMeshActor.h"
-#include "VehicleAnimationInstance.h"
 #include <util/ue-header-guard-end.h>
 
 #include <util/disable-ue4-macros.h>
@@ -327,19 +326,19 @@ void CarlaReplayerHelper::ProcessReplayerAnimVehicleWheels(CarlaRecorderAnimWhee
     return;
   ACarlaWheeledVehicle* CarlaVehicle = Cast<ACarlaWheeledVehicle>(CarlaActor->GetActor());
   check(CarlaVehicle != nullptr)
-  USkeletalMeshComponent* SkeletalMesh = CarlaVehicle->GetMesh();
-  check(SkeletalMesh != nullptr)
-  UVehicleAnimationInstance* VehicleAnim = Cast<UVehicleAnimationInstance>(SkeletalMesh->GetAnimInstance());
-  check(VehicleAnim != nullptr)
+  // Without it the wheels cannot be posed, and roll on their own instead.
+  if (!CarlaVehicle->HasCarlaVehicleAnimation())
+    return;
 
-#if 0 // @CARLAUE5
-  for (uint32_t i = 0; i < VehicleAnimWheels.WheelValues.size(); ++i)
+  // Released in ProcessReplayerFinish.
+  CarlaVehicle->SetWheelAnimationOverride(true);
+  for (const WheelInfo& Element : VehicleAnimWheels.WheelValues)
   {
-    const WheelInfo& Element = VehicleAnimWheels.WheelValues[i];
-    VehicleAnim->SetWheelRotYaw(static_cast<uint8>(Element.Location), Element.SteeringAngle);
-    VehicleAnim->SetWheelPitchAngle(static_cast<uint8>(Element.Location), Element.TireRotation);
+    if (!CarlaVehicle->HasWheel(static_cast<int32>(Element.Location)))
+      continue;
+    CarlaVehicle->SetWheelSteerDirection(Element.Location, Element.SteeringAngle);
+    CarlaVehicle->SetWheelPitchAngle(Element.Location, Element.TireRotation);
   }
-#endif
 }
 
 // reposition the camera
@@ -558,6 +557,10 @@ bool CarlaReplayerHelper::ProcessReplayerFinish(bool bApplyAutopilot, bool bIgno
         {
             // stop all vehicles
             SetActorSimulatePhysics(CarlaActor, true);
+            if (auto* CarlaVehicle = Cast<ACarlaWheeledVehicle>(CarlaActor->GetActor()))
+            {
+              CarlaVehicle->SetWheelAnimationOverride(false);
+            }
             // ProcessReplayerEventAdd also disabled collision on replayed
             // vehicles; restore it or they are left permanently undrivable
             // (no wheel contact) after the replay ends.
