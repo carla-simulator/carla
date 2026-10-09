@@ -407,6 +407,15 @@
     # --------------------------------------
     - def_name: __str__
     # --------------------------------------
+    - def_name: set_wheel_animation_override
+      params:
+        - param_name: enabled
+          type: bool
+      doc: >
+        Enables or disables the wheel animation override. While it is enabled the wheels show only the values set through carla.Vehicle.set_wheel_steer_direction, carla.Vehicle.set_wheel_pitch_angle and carla.Vehicle.set_wheel_suspension_offset, starting from the pose they had, whether or not physics simulates the vehicle. Disabling it hands the wheels back to the physics simulation, or, without physics, rolls them with the distance the vehicle travels.
+      warning: >
+        Does not affect the physics of the vehicle. Raises an error on vehicles whose animation blueprint does not derive from `CarlaVehicleAnimationInstance`.
+    # --------------------------------------
     - def_name: set_wheel_steer_direction
       params:
         - param_name: wheel_location
@@ -414,9 +423,9 @@
         - param_name: angle_in_deg
           type: float
       doc: >
-        Sets the angle of a vehicle's wheel visually.
+        Sets the steering angle of a vehicle's wheel visually, in degrees.
       warning: >
-        Does not affect the physics of the vehicle.
+        Raises an error unless the wheel animation override is enabled, see carla.Vehicle.set_wheel_animation_override.
     # --------------------------------------
     - def_name: get_wheel_steer_angle
       return: float
@@ -424,9 +433,49 @@
         - param_name: wheel_location
           type: carla.VehicleWheelLocation
       doc: >
-        Returns the physics angle in degrees of a vehicle's wheel.
+        Returns the steering angle in degrees of a vehicle's wheel.
       note: >
-        Returns the angle based on the physics of the wheel, not the visual angle.
+        Returns the angle set while the wheel animation is overridden, the physics angle while physics simulates the vehicle, and the visual angle otherwise. Raises an error if the vehicle has no wheel at that location.
+    # --------------------------------------
+    - def_name: set_wheel_pitch_angle
+      params:
+        - param_name: wheel_location
+          type: carla.VehicleWheelLocation
+        - param_name: angle_in_deg
+          type: float
+      doc: >
+        Sets the spin angle of a vehicle's wheel visually, in degrees.
+      warning: >
+        Raises an error unless the wheel animation override is enabled, see carla.Vehicle.set_wheel_animation_override.
+    # --------------------------------------
+    - def_name: get_wheel_pitch_angle
+      return: float
+      params:
+        - param_name: wheel_location
+          type: carla.VehicleWheelLocation
+      doc: >
+        Returns the spin angle in degrees of a vehicle's wheel, following the same rules as carla.Vehicle.get_wheel_steer_angle.
+    # --------------------------------------
+    - def_name: set_wheel_suspension_offset
+      params:
+        - param_name: wheel_location
+          type: carla.VehicleWheelLocation
+        - param_name: offset
+          type: float
+          doc: >
+            Meters along the suspension axis, positive when compressed.
+      doc: >
+        Sets the suspension offset of a vehicle's wheel visually.
+      warning: >
+        Raises an error unless the wheel animation override is enabled, see carla.Vehicle.set_wheel_animation_override.
+    # --------------------------------------
+    - def_name: get_wheel_suspension_offset
+      return: float
+      params:
+        - param_name: wheel_location
+          type: carla.VehicleWheelLocation
+      doc: >
+        Returns the suspension offset in meters of a vehicle's wheel, following the same rules as carla.Vehicle.get_wheel_steer_angle.
     # --------------------------------------
     - def_name: get_failure_state
       return: carla.VehicleFailureState
