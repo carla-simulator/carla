@@ -150,7 +150,6 @@
 
 #### Sensors
 
-
 * Fixed ROS 2 camera images, camera_info and camera TF being stamped with the simulation time at publish instead of at capture, so a readback that finished after the next tick repeated that tick's stamp and skipped its own. Cameras now publish the timestamp captured with the frame, the same value as the Python sensor timestamp.
 * Fixed **`sensor.camera.rt_lens_instance` labelling the sky `Unlabeled` (0)** instead of `Sky` (11) like the raster segmentation cameras (#10295): camera rays that hit nothing are now tagged `Sky` with id `0xFFFF`. The fix is in the engine's path tracer, CarlaUnreal/UnrealEngine#69.
 * Fixed every native sensor (LiDAR, radar, IMU, cameras) simulating only the last physics substep instead of the true elapsed time when `sensor_tick` spanned more than one substep, which halved LiDAR's swept angle and skewed IMU and radar readings.
