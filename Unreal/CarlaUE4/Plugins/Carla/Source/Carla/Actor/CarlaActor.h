@@ -3,6 +3,8 @@
 //
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
+//
+// Additional functionality added by AVL List GmbH under the terms of the MIT license.
 
 #pragma once
 
@@ -299,6 +301,16 @@ public:
     return ECarlaServerResponse::ActorTypeMismatch;
   }
 
+  virtual ECarlaServerResponse SetWheelHeight(const EVehicleWheelLocation&, float)
+  {
+    return ECarlaServerResponse::ActorTypeMismatch;
+  }
+
+  virtual ECarlaServerResponse GetWheelHeight(const EVehicleWheelLocation&, float&)
+  {
+    return ECarlaServerResponse::ActorTypeMismatch;
+  }
+
   virtual ECarlaServerResponse ApplyControlToVehicle(
       const FVehicleControl&, const EVehicleInputPriority&)
   {
@@ -533,6 +545,12 @@ public:
 
   ECarlaServerResponse GetWheelPitchAngle(
       const EVehicleWheelLocation& WheelLocation, float& Angle) override final;
+
+  ECarlaServerResponse SetWheelHeight(
+      const EVehicleWheelLocation& WheelLocation, float Height) override final;
+
+  ECarlaServerResponse GetWheelHeight(
+      const EVehicleWheelLocation& WheelLocation, float& Height) override final;
 
   ECarlaServerResponse SetActorSimulatePhysics(bool bSimulatePhysics) override final;
 

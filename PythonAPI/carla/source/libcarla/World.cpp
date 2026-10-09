@@ -3,6 +3,8 @@
 //
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
+//
+// Additional functionality added by AVL List GmbH under the terms of the MIT license.
 
 #include <carla/PythonUtil.h>
 #include <carla/actors/ActorBlueprint.h>
@@ -293,6 +295,12 @@ void export_world() {
     .def_readonly("label", &cr::LabelledPoint::_label)
   ;
 
+  class_<cr::ContactPoint>("ContactPoint", no_init)
+    .def_readonly("location", &cr::ContactPoint::_location)
+    .def_readonly("normal", &cr::ContactPoint::_normal)
+    .def_readonly("friction", &cr::ContactPoint::_friction)
+  ;
+
   enum_<cr::MapLayer>("MapLayer")
     .value("NONE", cr::MapLayer::None)
     .value("Buildings", cr::MapLayer::Buildings)
@@ -399,18 +407,32 @@ void export_world() {
     .def("cast_ray", CALL_RETURNING_LIST_2(cc::World, CastRay, cg::Location, cg::Location), (arg("initial_location"), arg("final_location")))
     .def("project_point", CALL_RETURNING_OPTIONAL_3(cc::World, ProjectPoint, cg::Location, cg::Vector3D, float), (arg("location"), arg("direction"), arg("search_distance")=10000.f))
     .def("ground_projection", CALL_RETURNING_OPTIONAL_2(cc::World, GroundProjection, cg::Location, float), (arg("location"), arg("search_distance")=10000.f))
+    .def("get_contact_points", +[](cc::World &self, boost::python::list &locations, boost::python::list &directions, boost::python::list &ignored_actor_ids, float search_distance) {
+        auto contact_points = self.GetContactPoints(
+          PythonListToVector<cg::Location>(locations),
+          PythonListToVector<carla::ActorId>(ignored_actor_ids),
+          PythonListToVector<cg::Vector3D>(directions),
+          search_distance
+        );
+
+        boost::python::list result;
+        for (auto &&optional : contact_points) {
+          result.append(OptionalToPythonObject(optional));
+        }
+        return result;
+      }, (arg("locations"), arg("directions"), arg("ignored_actor_ids"), arg("search_distance")=10000.0f))
     .def("get_names_of_all_objects", CALL_RETURNING_LIST(cc::World, GetNamesOfAllObjects))
     .def("apply_color_texture_to_object", &cc::World::ApplyColorTextureToObject, (arg("object_name"), arg("material_parameter"), arg("texture")))
     .def("apply_float_color_texture_to_object", &cc::World::ApplyFloatColorTextureToObject, (arg("object_name"), arg("material_parameter"), arg("texture")))
     .def("apply_textures_to_object", &cc::World::ApplyTexturesToObject, (arg("object_name"), arg("diffuse_texture"), arg("emissive_texture"), arg("normal_texture"), arg("ao_roughness_metallic_emissive_texture")))
     .def("apply_color_texture_to_objects", +[](cc::World &self, boost::python::list &list, const cr::MaterialParameter& parameter, const cr::TextureColor& Texture) {
-        self.ApplyColorTextureToObjects(PythonLitstToVector<std::string>(list), parameter, Texture);
+        self.ApplyColorTextureToObjects(PythonListToVector<std::string>(list), parameter, Texture);
       }, (arg("objects_name_list"), arg("material_parameter"), arg("texture")))
     .def("apply_float_color_texture_to_objects", +[](cc::World &self, boost::python::list &list, const cr::MaterialParameter& parameter, const cr::TextureFloatColor& Texture) {
-        self.ApplyFloatColorTextureToObjects(PythonLitstToVector<std::string>(list), parameter, Texture);
+        self.ApplyFloatColorTextureToObjects(PythonListToVector<std::string>(list), parameter, Texture);
       }, (arg("objects_name_list"), arg("material_parameter"), arg("texture")))
     .def("apply_textures_to_objects", +[](cc::World &self, boost::python::list &list, const cr::TextureColor& diffuse_texture, const cr::TextureFloatColor& emissive_texture, const cr::TextureFloatColor& normal_texture, const cr::TextureFloatColor& ao_roughness_metallic_emissive_texture) {
-        self.ApplyTexturesToObjects(PythonLitstToVector<std::string>(list), diffuse_texture, emissive_texture, normal_texture, ao_roughness_metallic_emissive_texture);
+        self.ApplyTexturesToObjects(PythonListToVector<std::string>(list), diffuse_texture, emissive_texture, normal_texture, ao_roughness_metallic_emissive_texture);
       }, (arg("objects_name_list"), arg("diffuse_texture"), arg("emissive_texture"), arg("normal_texture"), arg("ao_roughness_metallic_emissive_texture")))
     .def(self_ns::str(self_ns::self))
     .def("set_annotations_traverse_translucency", CALL_WITHOUT_GIL_1(cc::World, SetAnnotationsTraverseTranslucency, bool), (arg("enable")))

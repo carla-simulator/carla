@@ -3,6 +3,8 @@
 //
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
+//
+// Additional functionality added by AVL List GmbH under the terms of the MIT license.
 
 #include "carla/client/Vehicle.h"
 
@@ -101,6 +103,14 @@ namespace client {
 
   float Vehicle::GetWheelPitchAngle(WheelLocation wheel_location) {
     return GetEpisode().Lock()->GetWheelPitchAngle(*this, wheel_location);
+  }
+
+  void Vehicle::SetWheelHeight(WheelLocation wheel_location, float height) {
+    GetEpisode().Lock()->SetWheelHeight(*this, wheel_location, height);
+  }
+
+  float Vehicle::GetWheelHeight(WheelLocation wheel_location) {
+    return GetEpisode().Lock()->GetWheelHeight(*this, wheel_location);
   }
 
   Vehicle::Control Vehicle::GetControl() const {
