@@ -91,7 +91,7 @@ static boost::python::object OptionalToPythonObject(const boost::optional<T>& op
 void export_geom() {
   using namespace boost::python;
   namespace cg = carla::geom;
-  class_<std::vector<cg::Vector2D>>("vector_of_vector2D")
+  class_<std::vector<cg::Vector2D>>("VectorOfVector2D")
       .def(boost::python::vector_indexing_suite<std::vector<cg::Vector2D>>())
       .def(self_ns::str(self_ns::self))
   ;
@@ -300,7 +300,7 @@ void export_geom() {
     .def(self_ns::str(self_ns::self))
   ;
 
-  class_<std::vector<cg::Transform>>("vector_of_transform")
+  class_<std::vector<cg::Transform>>("VectorOfTransform")
       .def(boost::python::vector_indexing_suite<std::vector<cg::Transform>>())
       .def(self_ns::str(self_ns::self))
   ;
@@ -344,7 +344,14 @@ void export_geom() {
   .def_readwrite("offset_z", &cg::OffsetTransform::offset_z)
   .def_readwrite("offset_cos_h", &cg::OffsetTransform::offset_cos_h)
   .def_readwrite("offset_sin_h", &cg::OffsetTransform::offset_sin_h)
-  .def("ApplyTransformation", &cg::OffsetTransform::ApplyTransformation)
+  .def("apply_transformation", &cg::OffsetTransform::ApplyTransformation, (arg("location")))
+  // Deprecated: shipped as CamelCase, which reads like a class among snake_case
+  // methods. Documented, so it keeps working and warns instead of disappearing.
+  .def("ApplyTransformation", +[](const cg::OffsetTransform &self, const cg::Location &location) {
+      PyErr_WarnEx(PyExc_DeprecationWarning,
+          "ApplyTransformation is deprecated, use apply_transformation instead", 1);
+      return self.ApplyTransformation(location);
+    }, (arg("location")))
   .def("__eq__", &cg::OffsetTransform::operator==)
   ;
 

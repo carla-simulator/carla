@@ -37,6 +37,22 @@
 // -- Constructor and destructor -----------------------------------------------
 // =============================================================================
 
+// SnapshotPose fills LocalTransforms with parent-relative bone transforms, so
+// scaling those by the component transform alone never reaches world space.
+static void MakePoseWorldSpace(USkeletalMeshComponent *Mesh, FPoseSnapshot &Pose)
+{
+  if (Mesh == nullptr)
+  {
+    return;
+  }
+  const FTransform ComponentToWorld = Mesh->GetComponentTransform();
+  const int32 NumBones = FMath::Min(Pose.LocalTransforms.Num(), Mesh->GetNumBones());
+  for (int32 BoneIndex = 0; BoneIndex < NumBones; ++BoneIndex)
+  {
+    Pose.LocalTransforms[BoneIndex] = Mesh->GetBoneTransform(BoneIndex, ComponentToWorld);
+  }
+}
+
 void ACarlaWheeledVehicle::PrintROS2Message(const char* Message)
 {
   FString ROSMessage = Message;
@@ -561,10 +577,7 @@ void ACarlaWheeledVehicle::TickActor(float DeltaTime, enum ELevelTick TickType, 
 
   FPoseSnapshot pose;
   GetMesh()->SnapshotPose(pose);
-  for(FTransform &transform : pose.LocalTransforms)
-  {
-    transform *= GetMesh()->GetComponentTransform();
-  }
+  MakePoseWorldSpace(GetMesh(), pose);
 
   WorldTransformedPose = pose;
 
@@ -1554,10 +1567,7 @@ FPoseSnapshot ACarlaWheeledVehicle::GetWorldTransformedPose()
   {
     SetActorTickEnabled(true);
     GetMesh()->SnapshotPose(WorldTransformedPose);
-    for(FTransform &transform : WorldTransformedPose.LocalTransforms)
-    {
-      transform *= GetMesh()->GetComponentTransform();
-    }
+    MakePoseWorldSpace(GetMesh(), WorldTransformedPose);
   }
   return WorldTransformedPose;
 }

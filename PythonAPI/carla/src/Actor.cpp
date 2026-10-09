@@ -91,7 +91,7 @@ void export_actor() {
     .value("Dormant", cr::ActorState::Dormant)
   ;
 
-  class_<std::vector<int>>("vector_of_ints")
+  class_<std::vector<int>>("VectorOfInts")
       .def(vector_indexing_suite<std::vector<int>>())
       .def(self_ns::str(self_ns::self))
   ;
@@ -219,7 +219,7 @@ void export_actor() {
       .def("use_carsim_road", &cc::Vehicle::UseCarSimRoad, (arg("enabled")))
       .def("enable_chrono_physics", &cc::Vehicle::EnableChronoPhysics, (arg("max_substeps")=30, arg("max_substep_delta_time")=0.002, arg("vehicle_json")="", arg("powetrain_json")="", arg("tire_json")="", arg("base_json_path")=""))
       .def("get_failure_state", &cc::Vehicle::GetFailureState)
-      .def("get_vehicle_bone_world_transforms", &cc::Vehicle::GetVehicleBoneWorldTransforms)
+      .def("get_vehicle_bone_world_transforms", CALL_RETURNING_LIST(cc::Vehicle, GetVehicleBoneWorldTransforms))
       .def(self_ns::str(self_ns::self))
   ;
 
