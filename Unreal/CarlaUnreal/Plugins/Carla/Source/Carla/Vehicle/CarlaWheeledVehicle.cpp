@@ -32,6 +32,7 @@
 #include "DrawDebugHelpers.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "PhysicsEngine/PhysicsObjectExternalInterface.h"
+#include "Physics/Experimental/PhysScene_Chaos.h"
 #include <util/ue-header-guard-end.h>
 
 // =============================================================================
@@ -1301,14 +1302,15 @@ void ACarlaWheeledVehicle::SetWheelAnimationOverride(bool bEnabled)
   }
   if (bEnabled && !bWheelAnimationOverridden)
   {
-    // Start from the pose shown, so the wheels do not jump.
-    for (int32 i = 0; HasWheel(i); ++i)
-    {
-      OverriddenWheelPoses.Add(GetShownWheelPose(*GetMesh(), i));
-    }
+    // Start from the latest pose, so the wheels do not jump.
+    OverriddenWheelPoses = GetWheelPoses();
   }
   else if (!bEnabled)
   {
+    if (bWheelAnimationOverridden && IsSimulatedByChaos())
+    {
+      SeedChaosWheels(OverriddenWheelPoses);
+    }
     OverriddenWheelPoses.Reset();
   }
   bWheelAnimationOverridden = bEnabled;
@@ -1347,6 +1349,106 @@ FWheelAnimationData ACarlaWheeledVehicle::GetWheelPose(int32 WheelIndex) const
     return FWheelAnimationData{NAME_None, Rotation, Offset};
   }
   return GetShownWheelPose(*GetMesh(), WheelIndex);
+}
+
+TArray<FWheelAnimationData> ACarlaWheeledVehicle::GetWheelPoses() const
+{
+  TArray<FWheelAnimationData> Poses;
+  for (int32 i = 0; HasWheel(i); ++i)
+  {
+    Poses.Add(GetWheelPose(i));
+  }
+  return Poses;
+}
+
+void ACarlaWheeledVehicle::SeedChaosWheels(const TArray<FWheelAnimationData> &Poses)
+{
+  UChaosWheeledVehicleMovementComponent *Movement = GetChaosWheeledVehicleMovementComponent();
+  if (Movement == nullptr)
+  {
+    return;
+  }
+  // SetSnapshot dereferences the physics vehicle, created with this output.
+  TUniquePtr<FPhysicsVehicleOutput> &Output = Movement->PhysicsVehicleOutput();
+  if (!Output.IsValid() || Output->Wheels.Num() != Poses.Num())
+  {
+    return;
+  }
+  FWheeledSnaphotData Snapshot;
+  Movement->GetBaseSnapshot(Snapshot);
+  TArray<float> Spins;
+  const float ForwardSpeed = FVector::DotProduct(Snapshot.LinearVelocity, GetActorForwardVector());
+  for (int32 i = 0; i < Poses.Num(); ++i)
+  {
+    // Chaos recomputes steering and suspension every step; only the spin carries over.
+    const FWheelAnimationData &Pose = Poses[i];
+    const float Radius = GetWheelRadius(i);
+    FWheelSnapshot &Wheel = Snapshot.WheelSnapshots.AddDefaulted_GetRef();
+    Wheel.WheelRotationAngle = Pose.RotOffset.Pitch;
+    Wheel.SteeringAngle = Pose.RotOffset.Yaw;
+    Wheel.SuspensionOffset = -FVector::DotProduct(Pose.LocOffset, GetWheelSuspensionAxis(i));
+    Wheel.WheelRadius = Radius;
+    Wheel.WheelAngularVelocity = Radius > UE_KINDA_SMALL_NUMBER ? ForwardSpeed / Radius : 0.0f;
+    // What is drawn until the next physics step, which a sleeping vehicle skips.
+    Output->Wheels[i].AngularPosition = FMath::DegreesToRadians(-Wheel.WheelRotationAngle);
+    Spins.Add(Wheel.WheelRotationAngle);
+  }
+  Movement->SetSnapshot(Snapshot);
+  ArmSeedRewrite(MoveTemp(Spins));
+}
+
+void ACarlaWheeledVehicle::ArmSeedRewrite(TArray<float> Spins)
+{
+  DisarmSeedRewrite();
+  FPhysScene *Scene = GetWorld() != nullptr ? GetWorld()->GetPhysicsScene() : nullptr;
+  if (Scene == nullptr)
+  {
+    return;
+  }
+  PendingSeedSpins = MoveTemp(Spins);
+  bSeedStepStarted = false;
+  SeedPreTickHandle = Scene->OnPhysScenePreTick.AddUObject(this, &ACarlaWheeledVehicle::OnSeedPreTick);
+  SeedPostTickHandle = Scene->OnPhysScenePostTick.AddUObject(this, &ACarlaWheeledVehicle::OnSeedPostTick);
+}
+
+void ACarlaWheeledVehicle::DisarmSeedRewrite()
+{
+  FPhysScene *Scene = GetWorld() != nullptr ? GetWorld()->GetPhysicsScene() : nullptr;
+  if (Scene != nullptr)
+  {
+    Scene->OnPhysScenePreTick.Remove(SeedPreTickHandle);
+    Scene->OnPhysScenePostTick.Remove(SeedPostTickHandle);
+  }
+  SeedPreTickHandle.Reset();
+  SeedPostTickHandle.Reset();
+  PendingSeedSpins.Reset();
+}
+
+void ACarlaWheeledVehicle::OnSeedPreTick(FPhysScene_Chaos *Scene, float DeltaSeconds)
+{
+  // This step is the first to start from the seeded wheels.
+  bSeedStepStarted = true;
+}
+
+void ACarlaWheeledVehicle::OnSeedPostTick(FChaosScene *Scene)
+{
+  if (!bSeedStepStarted)
+  {
+    return;
+  }
+  UChaosWheeledVehicleMovementComponent *Movement = GetChaosWheeledVehicleMovementComponent();
+  if (Movement != nullptr)
+  {
+    TUniquePtr<FPhysicsVehicleOutput> &Output = Movement->PhysicsVehicleOutput();
+    if (Output.IsValid() && Output->Wheels.Num() == PendingSeedSpins.Num())
+    {
+      for (int32 i = 0; i < PendingSeedSpins.Num(); ++i)
+      {
+        Output->Wheels[i].AngularPosition = FMath::DegreesToRadians(-PendingSeedSpins[i]);
+      }
+    }
+  }
+  DisarmSeedRewrite();
 }
 
 bool ACarlaWheeledVehicle::HasWheelOrWarn(int32 WheelIndex, const TCHAR *Caller) const
@@ -1446,14 +1548,14 @@ void ACarlaWheeledVehicle::SetSimulatePhysics(bool enabled) {
     if (bPhysicsEnabled == enabled)
       return;
 
+    // Rebuilding the physics state resets the poses drawn.
+    const TArray<FWheelAnimationData> ShownPoses = GetWheelPoses();
+
     SetActorEnableCollision(true);
     UPrimitiveComponent* RootPrimitive =
       Cast<UPrimitiveComponent>(GetRootComponent());
     RootPrimitive->SetSimulatePhysics(enabled);
     RootPrimitive->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-
-    UVehicleAnimationInstance* VehicleAnim = Cast<UVehicleAnimationInstance>(GetMesh()->GetAnimInstance());
-    check(VehicleAnim != nullptr)
 
       if (enabled)
       {
@@ -1463,7 +1565,7 @@ void ACarlaWheeledVehicle::SetSimulatePhysics(bool enabled) {
         // wake it, leaving the drivetrain permanently inert (full throttle,
         // zero motion) until something else wakes the body. Wake it here.
         RootPrimitive->WakeAllRigidBodies();
-        //VehicleAnim->ResetWheelCustomRotations();
+        SeedChaosWheels(ShownPoses);
       }
       else
       {
@@ -1495,6 +1597,7 @@ FVector ACarlaWheeledVehicle::GetVelocity() const
 void ACarlaWheeledVehicle::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
   //ShowDebugTelemetry(false);
+  DisarmSeedRewrite();
   Super::EndPlay(EndPlayReason);
   RemoveReferenceToManager();
 }

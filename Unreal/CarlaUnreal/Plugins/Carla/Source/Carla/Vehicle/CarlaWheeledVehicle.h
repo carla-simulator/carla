@@ -76,6 +76,9 @@ enum class EVehicleDoor : uint8 {
   All = 6
 };
 
+class FChaosScene;
+class FPhysScene_Chaos;
+
 /// Base class for CARLA wheeled vehicles.
 UCLASS()
 class CARLA_API ACarlaWheeledVehicle : public AWheeledVehiclePawn
@@ -785,6 +788,32 @@ private:
   /// The pose shown for a wheel: the overridden one, otherwise Chaos's,
   /// otherwise the one last drawn.
   FWheelAnimationData GetWheelPose(int32 WheelIndex) const;
+
+  /// GetWheelPose for every wheel.
+  TArray<FWheelAnimationData> GetWheelPoses() const;
+
+  /// Sets the Chaos wheels to these poses, so that they do not jump when Chaos
+  /// takes over the wheels again.
+  void SeedChaosWheels(const TArray<FWheelAnimationData> &Poses);
+
+  /// The next physics pre-tick copies in the output of the step before the
+  /// seed, so the seeded spins are written again when that frame's physics ends.
+  void ArmSeedRewrite(TArray<float> Spins);
+
+  void DisarmSeedRewrite();
+
+  void OnSeedPreTick(FPhysScene_Chaos *Scene, float DeltaSeconds);
+
+  void OnSeedPostTick(FChaosScene *Scene);
+
+  /// Degrees, as drawn.
+  TArray<float> PendingSeedSpins;
+
+  bool bSeedStepStarted = false;
+
+  FDelegateHandle SeedPreTickHandle;
+
+  FDelegateHandle SeedPostTickHandle;
 
   const UChaosVehicleWheel *GetWheelDefaults(int32 WheelIndex) const;
 
