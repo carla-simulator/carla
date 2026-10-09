@@ -92,7 +92,13 @@ void Router::ConnectSession(std::shared_ptr<Primary> session) {
   _new_sessions.emplace_back(session);
   _sessions.emplace_back(std::move(session));
   log_info("Connected secondary servers:", _sessions.size());
-  // run external callback for new connections
+  if (_last_map) {
+    // The resync callback runs from HandleResponse once the map is loaded.
+    const load_map_id_type load_id = ++_last_load_id;
+    SendLoadMap(_sessions.back(), *_last_map, load_id);
+    _loading[_sessions.back().get()] = load_id;
+    return;
+  }
   if (_callback)
     _callback();
 }
@@ -196,9 +202,10 @@ void Router::Write(MultiGPUCommand id, Buffer &&buffer) {
   }
 }
 
-load_map_id_type Router::WriteLoadMap(std::string_view map) {
-  std::scoped_lock<std::mutex> lock(_mutex);
-  const load_map_id_type load_id = ++_last_load_id;
+void Router::SendLoadMap(
+    const std::shared_ptr<Primary> &session,
+    std::string_view map,
+    load_map_id_type load_id) {
   const std::string payload = MakeLoadMapPayload(map, load_id);
   Buffer buffer(reinterpret_cast<const unsigned char *>(payload.data()), payload.size());
 
@@ -209,11 +216,19 @@ load_map_id_type Router::WriteLoadMap(std::string_view map) {
 
   auto view_header = carla::BufferView::CreateFrom(std::move(buf_header));
   auto view_data = carla::BufferView::CreateFrom(std::move(buffer));
-  auto message = Primary::MakeMessage(view_header, view_data);
+  if (_request_observer) {
+    _request_observer(session.get(), MultiGPUCommand::LOAD_MAP, *view_data);
+  }
+  session->Write(Primary::MakeMessage(view_header, view_data));
+}
 
+load_map_id_type Router::WriteLoadMap(std::string_view map) {
+  std::scoped_lock<std::mutex> lock(_mutex);
+  const load_map_id_type load_id = ++_last_load_id;
+  _last_map = std::string(map);
   for (auto &s : _sessions) {
     if (s != nullptr) {
-      s->Write(message);
+      SendLoadMap(s, map, load_id);
       _loading[s.get()] = load_id;
     }
   }

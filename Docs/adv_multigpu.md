@@ -77,7 +77,7 @@ Start one secondary per GPU and point each one at the primary:
 Each secondary follows the primary through `load_world()`: after the reload it resynchronizes the full world state before it renders again.
 
 !!! Warning
-    A secondary only learns about a map change while it is connected. One that starts, or restarts, after the primary called `load_world()` opens its default map, so its sensors render that map instead of the primary's. The recovery described under [Sensor assignment](#sensor-assignment) has only been validated while the primary is on its default map.
+    A secondary that starts, or restarts, after the primary called `load_world()` or `reload_world()` loads the primary's current map when it connects, because the primary remembers the last map name it loaded, even if no secondary was connected at that time. The primary waits for the secondary to finish loading, so a late secondary can stall the simulation tick for the duration of the map load. A map generated with `load_opendrive` is not forwarded to secondaries at all, and the primary does not forget the previous named map, so a secondary that connects afterwards loads that previous map instead of the OpenDRIVE one. The recovery described under [Sensor assignment](#sensor-assignment) has only been validated while the primary is on its default map.
 
 ---
 
@@ -117,7 +117,7 @@ On a CPU with many cores, pinning each process to its own cores (for example wit
 - When no secondary is connected, sensors are served by the primary. On a `-nullrhi` primary that only works for CPU sensors, as described above.
 - A secondary that disconnects takes its sensors' streams with it: they stop delivering data until a secondary connects again.
 - When a secondary connects, the primary assigns it the sensors that were lost, under the same stream ids, and re-enables ROS 2 publication on the ones that had it. Destroyed sensors are not reassigned.
-- Clients that are already listening resume without calling `listen()` again only if the new secondary uses the same streaming address and port as the one that left (for example, the same secondary restarted with the same command line, with the primary on its default map, see the warning above). Otherwise they must call `listen()` again.
+- Clients that are already listening resume without calling `listen()` again only if the new secondary uses the same streaming address and port as the one that left (for example, the same secondary restarted with the same command line, with the primary on a map loaded by name, see the warning above). Otherwise they must call `listen()` again.
 - If several secondaries restart at once, the first one to connect takes all the lost sensors, whichever secondary served them before.
 
 ---

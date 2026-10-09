@@ -18,6 +18,8 @@
 
 #include <functional>
 #include <mutex>
+#include <optional>
+#include <string>
 #include <vector>
 #include <sstream>
 #include <string_view>
@@ -104,7 +106,7 @@ namespace multigpu {
       std::scoped_lock<std::mutex> lock(_mutex);
       return _promises.contains(session.get());
     }
-    // Test-only: sees every request WriteToOne/WriteToNext send, under _mutex.
+    // Test-only: sees every request WriteToOne/WriteToNext and every LOAD_MAP send, under _mutex.
     void TestSetRequestObserver(request_observer_type observer) {
       std::scoped_lock<std::mutex> lock(_mutex);
       _request_observer = std::move(observer);
@@ -115,6 +117,12 @@ namespace multigpu {
     void ConnectSession(std::shared_ptr<Primary> session);
     void DisconnectSession(std::shared_ptr<Primary> session);
     void ClearSessions();
+
+    /// Sends LOAD_MAP to one session. Caller must already hold _mutex.
+    void SendLoadMap(
+        const std::shared_ptr<Primary> &session,
+        std::string_view map,
+        load_map_id_type load_id);
 
     /// Re-arms the new-connection resync if @a buffer is the secondary's
     /// episode-ready marker (checked first, so it can never be misdelivered
@@ -155,6 +163,7 @@ namespace multigpu {
     std::unordered_map<Primary *, std::shared_ptr<std::promise<SessionInfo>>> _promises;
     std::unordered_map<const Primary *, load_map_id_type> _loading;
     load_map_id_type                        _last_load_id = 0u;
+    std::optional<std::string>              _last_map;
     PrimaryCommands                         _commander;
     std::function<void(void)>               _callback;
     request_observer_type                   _request_observer;

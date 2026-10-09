@@ -403,6 +403,82 @@ TEST_F(MultiGpuRouterTest, episode_ready_marker_with_no_pending_promise_triggers
   EXPECT_EQ(callback_count, 1);
 }
 
+TEST_F(MultiGpuRouterTest, session_connecting_after_load_map_loads_the_remembered_map_before_resync) {
+  carla::multigpu::Router router(TESTING_PORT);
+  RequestLog log(router);
+  int callback_count = 0;
+  router.SetNewConnectionCallback([&callback_count]() { ++callback_count; });
+
+  const auto first_load = router.WriteLoadMap("Town03");
+  auto session = MakeFakeSession();
+  router.TestConnectSession(session);
+
+  const auto sent = log.Take();
+  ASSERT_EQ(sent.size(), 1u);
+  EXPECT_EQ(sent[0].session, session.get());
+  EXPECT_EQ(sent[0].command, carla::multigpu::MultiGPUCommand::LOAD_MAP);
+  const auto request = carla::multigpu::ParseLoadMapPayload(
+      std::string_view(reinterpret_cast<const char *>(sent[0].payload.data()), sent[0].payload.size()));
+  EXPECT_EQ(request.map, "Town03");
+  EXPECT_GT(request.load_id, first_load);
+  EXPECT_TRUE(router.IsAnySecondaryLoading());
+  EXPECT_EQ(callback_count, 0);
+
+  const std::string ready = carla::multigpu::MakeEpisodeReadyMessage(request.load_id);
+  router.TestHandleResponse(session, MakeBuffer(ready));
+  EXPECT_FALSE(router.IsAnySecondaryLoading());
+  EXPECT_EQ(callback_count, 1);
+}
+
+TEST_F(MultiGpuRouterTest, session_connecting_without_a_remembered_map_gets_no_load_map) {
+  carla::multigpu::Router router(TESTING_PORT);
+  RequestLog log(router);
+  int callback_count = 0;
+  router.SetNewConnectionCallback([&callback_count]() { ++callback_count; });
+
+  router.TestConnectSession(MakeFakeSession());
+
+  EXPECT_TRUE(log.Take().empty());
+  EXPECT_FALSE(router.IsAnySecondaryLoading());
+  EXPECT_EQ(callback_count, 1);
+}
+
+TEST_F(MultiGpuRouterTest, session_connected_before_load_map_keeps_the_broadcast_behaviour) {
+  carla::multigpu::Router router(TESTING_PORT);
+  RequestLog log(router);
+  int callback_count = 0;
+  router.SetNewConnectionCallback([&callback_count]() { ++callback_count; });
+
+  auto session = MakeFakeSession();
+  router.TestConnectSession(session);
+  EXPECT_EQ(callback_count, 1);
+
+  const auto load_id = router.WriteLoadMap("Town05");
+  const auto sent = log.Take();
+  ASSERT_EQ(sent.size(), 1u);
+  EXPECT_EQ(sent[0].session, session.get());
+  EXPECT_EQ(sent[0].command, carla::multigpu::MultiGPUCommand::LOAD_MAP);
+  EXPECT_TRUE(router.IsAnySecondaryLoading());
+  EXPECT_EQ(callback_count, 1);
+
+  router.TestHandleResponse(session, MakeBuffer(carla::multigpu::MakeEpisodeReadyMessage(load_id)));
+  EXPECT_FALSE(router.IsAnySecondaryLoading());
+  EXPECT_EQ(callback_count, 2);
+}
+
+TEST_F(MultiGpuRouterTest, stale_ready_of_an_older_load_does_not_finish_a_late_secondary_load) {
+  carla::multigpu::Router router(TESTING_PORT);
+  const auto stale_load = router.WriteLoadMap("Town01");
+  router.WriteLoadMap("Town03");
+  auto session = MakeFakeSession();
+  router.TestConnectSession(session);
+  ASSERT_TRUE(router.IsAnySecondaryLoading());
+
+  router.TestHandleResponse(session, MakeBuffer(carla::multigpu::MakeEpisodeReadyMessage(stale_load)));
+
+  EXPECT_TRUE(router.IsAnySecondaryLoading());
+}
+
 TEST_F(MultiGpuRouterTest, unsolicited_non_marker_data_does_not_trigger_resync_callback) {
   carla::multigpu::Router router(TESTING_PORT);
   router.AsyncRun(1u);
