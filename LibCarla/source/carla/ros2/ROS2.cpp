@@ -7,6 +7,7 @@
 #include "carla/Logging.h"
 #include "carla/ros2/ROS2.h"
 #include "carla/ros2/ROS2SensorTypes.h"
+#include "carla/ros2/ROS2Time.h"
 #include "carla/geom/GeoLocation.h"
 #include "carla/geom/Vector3D.h"
 #include "carla/sensor/data/DVSEvent.h"
@@ -50,7 +51,6 @@
   #include "subscribers/BasicSubscriber.h"
 #endif
 
-#include <cmath>
 #include <memory>
 #include <string>
 #include <utility>
@@ -154,12 +154,8 @@ void ROS2::SetFrame(uint64_t frame) {
 }
 
 void ROS2::SetTimestamp(double timestamp) {
-  double integral;
-  const double fractional = std::modf(timestamp, &integral);
-  const double multiplier = 1000000000.0;
-  const Stamp stamp{
-      static_cast<int32_t>(integral),
-      static_cast<uint32_t>(fractional * multiplier)};
+  const msg::Time time = ToRosTime(timestamp);
+  const Stamp stamp{time.sec, time.nanosec};
   std::shared_ptr<CarlaClockPublisher> clock_publisher;
   {
     std::lock_guard<std::mutex> lock(_mutex);
@@ -576,11 +572,13 @@ void ROS2::PublishTransform(
 void ROS2::ProcessDataFromCamera(
     uint64_t sensor_type,
     carla::streaming::detail::stream_id_type stream_id,
+    double capture_timestamp,
     const carla::geom::Transform sensor_transform,
     int W, int H, float Fov,
     const carla::SharedBufferView buffer,
     void *actor) {
-  const Stamp stamp = GetStamp();
+  const msg::Time capture_time = ToRosTime(capture_timestamp);
+  const Stamp stamp{capture_time.sec, capture_time.nanosec};
   // Image dimensions + FOV are now read straight from ImageSerializer's
   // per-frame header inside the camera publisher's WriteCameraInfo call;
   // the W/H/Fov arguments survive for ABI compatibility with the
