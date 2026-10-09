@@ -20,10 +20,6 @@
 #include "carla/rpc/VehicleLightState.h"
 #include <util/enable-ue4-macros.h>
 
-#include <util/ue-header-guard-begin.h>
-#include "VehicleAnimationInstance.h"
-#include <util/ue-header-guard-end.h>
-
 void FFrameData::GetFrameData(UCarlaEpisode *ThisEpisode, bool bAdditionalData, bool bIncludeActorsAgain)
 {
   Episode = ThisEpisode;
@@ -1021,18 +1017,18 @@ void FFrameData::ProcessReplayerAnimVehicleWheels(CarlaRecorderAnimWheels Vehicl
     return;
   auto CarlaVehicle = Cast<ACarlaWheeledVehicle>(CarlaActor->GetActor());
   check(CarlaVehicle != nullptr)
-  auto SkeletalMesh = CarlaVehicle->GetMesh();
-  check(SkeletalMesh != nullptr)
-  auto VehicleAnim = Cast<UVehicleAnimationInstance>(SkeletalMesh->GetAnimInstance());
-  check(VehicleAnim != nullptr)
+  // Without it the wheels cannot be posed, and roll on their own instead.
+  if (!CarlaVehicle->HasCarlaVehicleAnimation())
+    return;
 
-  for (uint32_t i = 0; i < VehicleAnimWheels.WheelValues.size(); ++i)
+  // Released in ProcessReplayerFinish.
+  CarlaVehicle->SetWheelAnimationOverride(true);
+  for (const WheelInfo& Element : VehicleAnimWheels.WheelValues)
   {
-    const WheelInfo& Element = VehicleAnimWheels.WheelValues[i];
-#if 0 // @CARLAUE5
-    VehicleAnim->SetWheelRotYaw(static_cast<uint8>(Element.Location), Element.SteeringAngle);
-    VehicleAnim->SetWheelPitchAngle(static_cast<uint8>(Element.Location), Element.TireRotation);
-#endif
+    if (!CarlaVehicle->HasWheel(static_cast<int32>(Element.Location)))
+      continue;
+    CarlaVehicle->SetWheelSteerDirection(Element.Location, Element.SteeringAngle);
+    CarlaVehicle->SetWheelPitchAngle(Element.Location, Element.TireRotation);
   }
 }
 
@@ -1109,6 +1105,10 @@ bool FFrameData::ProcessReplayerFinish(bool bApplyAutopilot, bool bIgnoreHero, s
         {
             // stop all vehicles
             SetActorSimulatePhysics(CarlaActor, true);
+            if (auto* CarlaVehicle = Cast<ACarlaWheeledVehicle>(CarlaActor->GetActor()))
+            {
+              CarlaVehicle->SetWheelAnimationOverride(false);
+            }
             SetActorVelocity(CarlaActor, FVector(0, 0, 0));
             FVehicleControl Control;
             Control.Throttle = 0.0f;
