@@ -24,6 +24,7 @@
 #include <atomic>
 #include <functional>
 #include <memory>
+#include <mutex>
 
 namespace carla {
 
@@ -79,6 +80,7 @@ namespace multigpu {
     boost::asio::steady_timer         _connection_timer;
     std::shared_ptr<BufferPool>       _buffer_pool;
     std::atomic_bool                  _done {false};
+    std::once_flag                    _run_flag;
     SecondaryCommands                 _commander;
   };
 
