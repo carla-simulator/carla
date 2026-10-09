@@ -99,8 +99,8 @@ struct GetTokenRequest {
 };
 static_assert(sizeof(GetTokenRequest) == 2 * sizeof(uint32_t));
 
-/// GET_TOKEN reply when the secondary cannot serve the sensor (malformed
-/// request). Shorter than a token on purpose.
+/// GET_TOKEN reply when the secondary cannot resolve the sensor to a stream
+/// (or the request is malformed). Shorter than a token on purpose.
 inline constexpr std::string_view kTokenNotReadyMarker{"TOKEN_NOT_READY"};
 
 } // namespace multigpu

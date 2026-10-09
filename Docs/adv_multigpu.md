@@ -74,7 +74,10 @@ Start one secondary per GPU and point each one at the primary:
 !!! Note
     `-graphicsadapter` is the Vulkan device index, which does not always match the `nvidia-smi` index. For example, a duplicate Vulkan ICD registration makes each GPU appear twice. Check the `LogVulkanRHI: ... DeviceName:` line in each secondary's log to confirm which GPU it opened.
 
-Each secondary loads the same map as the primary and follows the primary through `load_world()`: after the reload it resynchronizes the full world state before it renders again.
+Each secondary follows the primary through `load_world()`: after the reload it resynchronizes the full world state before it renders again.
+
+!!! Warning
+    A secondary only learns about a map change while it is connected. One that starts, or restarts, after the primary called `load_world()` opens its default map, so its sensors render that map instead of the primary's. The recovery described under [Sensor assignment](#sensor-assignment) has only been validated while the primary is on its default map.
 
 ---
 
@@ -110,9 +113,12 @@ On a CPU with many cores, pinning each process to its own cores (for example wit
 
 - A sensor is assigned when a client first calls `listen()` or `enable_for_ros()` on it, not when it is spawned.
 - While at least one secondary is connected, the primary assigns every sensor round-robin across the connected secondaries. That includes CPU sensors such as LiDAR, GNSS and IMU. The exceptions are the collision sensor and the world observer stream, which always stay on the primary.
-- The assignment is sticky. The sensor stays on its secondary until it is destroyed. It never migrates or rebalances, and assignment does not take the load on each GPU into account.
+- The assignment is sticky. The sensor stays on its secondary until it is destroyed or that secondary is lost (see below). It never rebalances, and assignment does not take the load on each GPU into account.
 - When no secondary is connected, sensors are served by the primary. On a `-nullrhi` primary that only works for CPU sensors, as described above.
-- A secondary that disconnects takes its sensors' streams with it: they stop delivering data.
+- A secondary that disconnects takes its sensors' streams with it: they stop delivering data until a secondary connects again.
+- When a secondary connects, the primary assigns it the sensors that were lost, under the same stream ids, and re-enables ROS 2 publication on the ones that had it. Destroyed sensors are not reassigned.
+- Clients that are already listening resume without calling `listen()` again only if the new secondary uses the same streaming address and port as the one that left (for example, the same secondary restarted with the same command line, with the primary on its default map, see the warning above). Otherwise they must call `listen()` again.
+- If several secondaries restart at once, the first one to connect takes all the lost sensors, whichever secondary served them before.
 
 ---
 
@@ -139,6 +145,7 @@ Use synchronous mode (`synchronous_mode=True` with a `fixed_delta_seconds`) with
 
 - **No camera fallback on a `-nullrhi` primary.** If every secondary disconnects, cameras stop producing data, and new camera `listen()` calls fail until a secondary connects.
 - **No frame barrier.** See [Synchronous mode](#synchronous-mode).
-- **Round-robin only.** Sensors are not weighted by cost or GPU capacity, and cannot move between secondaries.
+- **Round-robin only.** Sensors are not weighted by cost or GPU capacity, and cannot move between secondaries, except that the sensors of a lost secondary go to the next one that connects.
+- **Streams do not follow a different endpoint.** A client keeps retrying the address it was given. Sensors reassigned to a secondary on another address or port need a new `listen()`, and a stale listener is rejected by the secondary it keeps contacting, which fills that secondary's log.
 - **GBuffer streams** (`listen_to_gbuffer`) are not available through Multi-GPU routing. A `-nullrhi` primary rejects them.
 - **Textures applied at runtime** (`apply_textures_to_object`) are not replicated to secondaries.

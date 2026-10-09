@@ -1215,12 +1215,22 @@ void FCarlaServer::FPimpl::BindActions()
       RESPOND_ERROR("unable to destroy actor: not found");
     }
     UE_LOG(LogCarla, Log, TEXT("CarlaServer destroy_actor %d"), ActorId);
+    std::optional<carla::streaming::detail::stream_id_type> SensorStreamId;
+    const ASensor *Sensor = Cast<ASensor>(CarlaActor->GetActor());
+    if (Sensor != nullptr && Episode->bIsPrimaryServer)
+    {
+      SensorStreamId = carla::streaming::detail::token_type(Sensor->GetToken()).get_stream_id();
+    }
     // We need to force the actor state change, since dormant actors
     //  will ignore the FCarlaActor destruction
     CarlaActor->SetActorState(cr::ActorState::PendingKill);
     if (!Episode->DestroyActor(ActorId))
     {
       RESPOND_ERROR("internal error: unable to destroy actor");
+    }
+    if (SensorStreamId && SecondaryServer)
+    {
+      SecondaryServer->GetCommander().ForgetSensor(*SensorStreamId);
     }
     return true;
   };

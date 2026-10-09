@@ -10,6 +10,7 @@
 #include "carla/streaming/EndPoint.h"
 
 #include <algorithm>
+#include <utility>
 
 namespace carla {
 namespace multigpu {
@@ -88,6 +89,7 @@ boost::asio::ip::tcp::endpoint Router::GetLocalEndpoint() const {
 void Router::ConnectSession(std::shared_ptr<Primary> session) {
   DEBUG_ASSERT(session != nullptr);
   std::scoped_lock<std::mutex> lock(_mutex);
+  _new_sessions.emplace_back(session);
   _sessions.emplace_back(std::move(session));
   log_info("Connected secondary servers:", _sessions.size());
   // run external callback for new connections
@@ -165,6 +167,7 @@ void Router::HandleResponse(std::shared_ptr<Primary> session, Buffer buffer) {
 void Router::ClearSessions() {
   std::scoped_lock<std::mutex> lock(_mutex);
   _sessions.clear();
+  _new_sessions.clear();
   _loading.clear();
   // Symmetric with DisconnectSession: any request still waiting on a
   // response from a session that is about to disappear must not be left to
@@ -257,6 +260,9 @@ std::future<SessionInfo> Router::WriteToNext(MultiGPUCommand id, Buffer &&buffer
       RejectPromise(response, "a request is already pending on this secondary session");
     } else {
       _promises[s.get()] = response;
+      if (_request_observer) {
+        _request_observer(s.get(), id, *view_data);
+      }
       s->Write(message);
     }
   } else {
@@ -270,6 +276,11 @@ bool Router::IsConnected(const std::weak_ptr<Primary> &server) {
   std::scoped_lock<std::mutex> lock(_mutex);
   auto s = server.lock();
   return s && (std::find(_sessions.begin(), _sessions.end(), s) != _sessions.end());
+}
+
+std::vector<std::weak_ptr<Primary>> Router::TakeNewSessions() {
+  std::scoped_lock<std::mutex> lock(_mutex);
+  return std::exchange(_new_sessions, {});
 }
 
 std::future<SessionInfo> Router::WriteToOne(std::weak_ptr<Primary> server, MultiGPUCommand id, Buffer &&buffer) {
@@ -302,6 +313,9 @@ std::future<SessionInfo> Router::WriteToOne(std::weak_ptr<Primary> server, Multi
     RejectPromise(response, "a request is already pending on this secondary session");
   } else {
     _promises[s.get()] = response;
+    if (_request_observer) {
+      _request_observer(s.get(), id, *view_data);
+    }
     s->Write(message);
   }
   return response->get_future();

@@ -16,6 +16,7 @@
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/ip/tcp.hpp>
 
+#include <functional>
 #include <mutex>
 #include <vector>
 #include <sstream>
@@ -61,6 +62,10 @@ namespace multigpu {
     [[nodiscard]]
     bool IsConnected(const std::weak_ptr<Primary> &server);
 
+    /// Sessions connected since the previous call, oldest first.
+    [[nodiscard]]
+    std::vector<std::weak_ptr<Primary>> TakeNewSessions();
+
     /// Whether a connected secondary sent LOAD_MAP has not yet reported the
     /// episode of its latest LOAD_MAP ready (a disconnect also clears it).
     [[nodiscard]]
@@ -75,6 +80,9 @@ namespace multigpu {
     PrimaryCommands &GetCommander() {
       return _commander;
     }
+
+    using request_observer_type =
+        std::function<void(const Primary *, MultiGPUCommand, const carla::BufferView &)>;
 
 #ifdef LIBCARLA_WITH_GTEST
     // Test-only access to the session bookkeeping, bypassing the real
@@ -95,6 +103,11 @@ namespace multigpu {
     bool TestHasPendingRequest(const std::shared_ptr<Primary> &session) {
       std::scoped_lock<std::mutex> lock(_mutex);
       return _promises.contains(session.get());
+    }
+    // Test-only: sees every request WriteToOne/WriteToNext send, under _mutex.
+    void TestSetRequestObserver(request_observer_type observer) {
+      std::scoped_lock<std::mutex> lock(_mutex);
+      _request_observer = std::move(observer);
     }
 #endif // LIBCARLA_WITH_GTEST
 
@@ -136,6 +149,7 @@ namespace multigpu {
     ThreadPool                              _pool;
     boost::asio::ip::tcp::endpoint          _endpoint;
     std::vector<std::shared_ptr<Primary>>   _sessions;
+    std::vector<std::weak_ptr<Primary>>     _new_sessions;
     std::shared_ptr<Listener>               _listener;
     uint32_t                                _next;
     std::unordered_map<Primary *, std::shared_ptr<std::promise<SessionInfo>>> _promises;
@@ -143,6 +157,7 @@ namespace multigpu {
     load_map_id_type                        _last_load_id = 0u;
     PrimaryCommands                         _commander;
     std::function<void(void)>               _callback;
+    request_observer_type                   _request_observer;
   };
 
 } // namespace multigpu

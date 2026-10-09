@@ -707,6 +707,19 @@ void FCarlaEngine::OnPostTick(UWorld *World, ELevelTick TickType, float DeltaSec
         SecondaryServer->GetCommander().SendFrameData(carla::Buffer(std::move((unsigned char *) Tmp.c_str()), (size_t) Tmp.size()));
 
         GetCurrentEpisode()->GetFrameData().Clear();
+
+        // Game thread, like the get_sensor_token RPC: it must not run inside a
+        // Router callback, and the secondary answers GET_TOKEN on its command
+        // thread, so this cannot wait on either game thread.
+        if (bWasNewConnection)
+        {
+          const std::size_t Rerouted = SecondaryServer->GetCommander().RerouteLostSensors();
+          if (Rerouted > 0u)
+          {
+            UE_LOG(LogCarla, Log, TEXT("Multi-GPU: routed %d sensors of a lost secondary to a new one"),
+                static_cast<int32>(Rerouted));
+          }
+        }
       }
     }
 

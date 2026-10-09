@@ -13,6 +13,7 @@
 #include "carla/streaming/detail/Token.h"
 #include "carla/streaming/detail/Types.h"
 
+#include <cstddef>
 #include <cstdint>
 #include <mutex>
 #include <optional>
@@ -49,8 +50,9 @@ class PrimaryCommands {
     /// Returns std::nullopt if no secondary could provide the token (e.g. the
     /// selected secondary disconnected with the request in flight, or has no
     /// episode loaded). Nothing is cached on failure, so a later call for the
-    /// same sensor retries. @a sensor_actor_id is the primary's id of the
-    /// sensor actor, which the secondary resolves to its own sensor stream.
+    /// same sensor retries. A sensor whose secondary disconnected is routed
+    /// again here. @a sensor_actor_id is the primary's id of the sensor actor,
+    /// which the secondary resolves to its own sensor stream.
     [[nodiscard]]
     std::optional<token_type> GetToken(stream_id sensor_id, actor_id sensor_actor_id);
 
@@ -63,31 +65,63 @@ class PrimaryCommands {
 
     bool IsEnabledForROS(stream_id sensor_id);
 
+    /// Routes every sensor whose secondary disconnected to the secondaries
+    /// connected since the previous call, under the same primary stream id,
+    /// so clients already subscribed reconnect to it without a new listen().
+    /// The first new secondary that stays connected takes every lost sensor.
+    /// A sensor the new secondary refuses is forgotten and routed lazily
+    /// later; if it disconnects instead, the sensor stays lost for the next
+    /// one. ROS publishing enabled through EnableForROS() is enabled again.
+    /// Blocks on round trips; never call it from a Router callback. Returns
+    /// how many sensors were routed again.
+    std::size_t RerouteLostSensors();
+
+    /// Drops the routing of a destroyed sensor so it is never routed again.
+    void ForgetSensor(stream_id sensor_id);
+
   private:
 
-    // send to one secondary to get the token of a sensor; also reports which
-    // secondary session actually answered, so the caller never has to guess
-    // it from a separate (and racy) round-robin lookup.
+    struct Route {
+      std::weak_ptr<Primary> session;
+      actor_id actor;
+      bool ros_enabled = false;
+    };
+
+    enum class TokenError { None, NoReply, Refused };
+
+    // send to one secondary (@a target, or round-robin if null) to get the
+    // token of a sensor; also reports which secondary session actually
+    // answered, so the caller never has to guess it from a separate (and
+    // racy) round-robin lookup. On failure @a error says whether a secondary
+    // answered (Refused) or not (NoReply).
     std::optional<token_type> SendGetToken(
         stream_id sensor_id,
         actor_id sensor_actor_id,
-        std::weak_ptr<Primary> &out_session);
+        const std::weak_ptr<Primary> *target,
+        std::weak_ptr<Primary> &out_session,
+        TokenError &error);
 
     // manage ROS enable/disable of sensor
     bool SendEnableForROS(stream_id sensor_id);
     void SendDisableForROS(stream_id sensor_id);
     bool SendIsEnabledForROS(stream_id sensor_id);
 
-    /// Forgets the routing of @a sensor_id if its secondary disconnected.
+    /// Whether @a sensor_id is routed to a secondary that is still connected.
     /// Caller must hold _mutex.
-    void PurgeIfDisconnected(stream_id sensor_id);
+    bool IsRoutedToLiveSecondary(stream_id sensor_id);
+
+    /// Enables ROS again on the new secondary of a re-routed sensor if it was
+    /// enabled before. Caller must hold _mutex.
+    void RestoreRosAfterReroute(stream_id sensor_id);
 
     /// Reads a one-bool reply; @a buffer must not be empty.
     static bool ReadBoolReply(const carla::Buffer &buffer);
 
     std::shared_ptr<Router> _router;
     std::unordered_map<stream_id, token_type> _tokens;
-    std::unordered_map<stream_id, std::weak_ptr<Primary>> _servers;
+    // Keeps the routes of disconnected secondaries until they are routed
+    // again, forgotten, or a map load clears them.
+    std::unordered_map<stream_id, Route> _servers;
 
     // Serializes every round trip through _router (GetToken/EnableForROS/...).
     // The router keeps at most one in-flight promise per secondary session
