@@ -99,23 +99,19 @@ namespace client {
       return World{_simulator->LoadEpisode(std::move(map_name), reset_settings, map_layers)};
     }
 
-    /// Return (and load) a new world (map) only when the requested map is different from the current one
-
-    void LoadWorldIfDifferent(
+    /// Return the current world, loading @a map_name first unless it is already
+    /// the map in use. @a map_name has to match the running map exactly.
+    World LoadWorldIfDifferent(
         std::string map_name,
         bool reset_settings = true,
         rpc::MapLayer map_layers = rpc::MapLayer::All) const {
-      carla::client::World world = GetWorld();
-      carla::SharedPtr<carla::client::Map> current_map = world.GetMap();
-      std::string current_map_name = current_map->GetName();
-      std::string map_name_prefix = "Carla/Maps/";
-      std::string map_name_without_prefix = map_name;
-      std::string map_name_with_prefix = map_name_prefix + map_name;
-      if(!(map_name_without_prefix == current_map_name) && !(map_name_with_prefix == current_map_name)){
-        World World{_simulator->LoadEpisode(std::move(map_name), reset_settings, map_layers)};
-      }else{}
+      const std::string current_map_name = GetWorld().GetMap()->GetName();
+      if (current_map_name == map_name || current_map_name == "Carla/Maps/" + map_name) {
+        return GetWorld();
+      }
+      return World{_simulator->LoadEpisode(std::move(map_name), reset_settings, map_layers)};
     }
-    
+
     World GenerateOpenDriveWorld(
         std::string opendrive,
         const rpc::OpendriveGenerationParameters & params,

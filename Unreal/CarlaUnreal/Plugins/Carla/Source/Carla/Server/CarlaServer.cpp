@@ -229,6 +229,17 @@ private:
       RESPOND_ERROR("unable to find CARLA game mode"); \
     }
 
+static std::vector<std::string> MakeStringVector(const TArray<FString> &Names)
+{
+  std::vector<std::string> Result;
+  Result.reserve(Names.Num());
+  for (const FString &Name : Names)
+  {
+    Result.push_back(TCHAR_TO_UTF8(*Name));
+  }
+  return Result;
+}
+
 carla::rpc::ResponseError RespondError(
     const FString& FuncName,
     const FString& ErrorMessage,
@@ -1791,23 +1802,17 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
           " Actor Id: " + FString::FromInt(ActorId));
     }
 
-    TArray<UActorComponent*> Components;
-    CarlaActor->GetActor()->GetComponents(Components);
     const FString TargetName(UTF8_TO_TCHAR(component_name.c_str()));
-
-    for (UActorComponent* ActorComponent : Components)
+    FTransform Transform;
+    ECarlaServerResponse Response = CarlaActor->GetActorComponentWorldTransform(TargetName, Transform);
+    if (Response != ECarlaServerResponse::Success)
     {
-      USceneComponent* SceneComponent = Cast<USceneComponent>(ActorComponent);
-      if (SceneComponent != nullptr && SceneComponent->GetName() == TargetName)
-      {
-        return cr::Transform(SceneComponent->GetComponentTransform());
-      }
+      return RespondError(
+          "get_actor_component_world_transform",
+          Response,
+          " Component Name: " + TargetName);
     }
-
-    return RespondError(
-        "get_actor_component_world_transform",
-        ECarlaServerResponse::ComponentNotFound,
-        " Component Name: " + TargetName);
+    return cr::Transform(Transform);
   };
 
   BIND_SYNC(get_actor_component_relative_transform) << [this](
@@ -1824,23 +1829,17 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
           " Actor Id: " + FString::FromInt(ActorId));
     }
 
-    TArray<UActorComponent*> Components;
-    CarlaActor->GetActor()->GetComponents(Components);
     const FString TargetName(UTF8_TO_TCHAR(component_name.c_str()));
-
-    for (UActorComponent* ActorComponent : Components)
+    FTransform Transform;
+    ECarlaServerResponse Response = CarlaActor->GetActorComponentRelativeTransform(TargetName, Transform);
+    if (Response != ECarlaServerResponse::Success)
     {
-      USceneComponent* SceneComponent = Cast<USceneComponent>(ActorComponent);
-      if (SceneComponent != nullptr && SceneComponent->GetName() == TargetName)
-      {
-        return cr::Transform(SceneComponent->GetRelativeTransform());
-      }
+      return RespondError(
+          "get_actor_component_relative_transform",
+          Response,
+          " Component Name: " + TargetName);
     }
-
-    return RespondError(
-        "get_actor_component_relative_transform",
-        ECarlaServerResponse::ComponentNotFound,
-        " Component Name: " + TargetName);
+    return cr::Transform(Transform);
   };
 
   BIND_SYNC(get_actor_bone_world_transforms) << [this](
@@ -1856,28 +1855,16 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
           " Actor Id: " + FString::FromInt(ActorId));
     }
 
-    TArray<USkinnedMeshComponent*> SkinnedMeshComponents;
-    CarlaActor->GetActor()->GetComponents<USkinnedMeshComponent>(SkinnedMeshComponents);
-    if (SkinnedMeshComponents.Num() == 0)
+    TArray<FTransform> Transforms;
+    ECarlaServerResponse Response = CarlaActor->GetActorBoneWorldTransforms(Transforms);
+    if (Response != ECarlaServerResponse::Success)
     {
       return RespondError(
           "get_actor_bone_world_transforms",
-          ECarlaServerResponse::ComponentNotFound,
-          TEXT(" Component Name: SkinnedMeshComponent"));
+          Response,
+          " Actor Id: " + FString::FromInt(ActorId));
     }
-
-    TArray<FTransform> BoneWorldTransforms;
-    for (USkinnedMeshComponent* SkinnedMeshComponent : SkinnedMeshComponents)
-    {
-      const FTransform WorldTransform = SkinnedMeshComponent->GetComponentTransform();
-      const int32 NumBones = SkinnedMeshComponent->GetNumBones();
-      for (int32 BoneIndex = 0; BoneIndex < NumBones; ++BoneIndex)
-      {
-        BoneWorldTransforms.Add(
-            SkinnedMeshComponent->GetBoneTransform(BoneIndex, WorldTransform));
-      }
-    }
-    return MakeVectorFromTArray<cr::Transform>(BoneWorldTransforms);
+    return MakeVectorFromTArray<cr::Transform>(Transforms);
   };
 
   BIND_SYNC(get_actor_bone_relative_transforms) << [this](
@@ -1893,27 +1880,16 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
           " Actor Id: " + FString::FromInt(ActorId));
     }
 
-    TArray<USkinnedMeshComponent*> SkinnedMeshComponents;
-    CarlaActor->GetActor()->GetComponents<USkinnedMeshComponent>(SkinnedMeshComponents);
-    if (SkinnedMeshComponents.Num() == 0)
+    TArray<FTransform> Transforms;
+    ECarlaServerResponse Response = CarlaActor->GetActorBoneRelativeTransforms(Transforms);
+    if (Response != ECarlaServerResponse::Success)
     {
       return RespondError(
           "get_actor_bone_relative_transforms",
-          ECarlaServerResponse::ComponentNotFound,
-          TEXT(" Component Name: SkinnedMeshComponent"));
+          Response,
+          " Actor Id: " + FString::FromInt(ActorId));
     }
-
-    TArray<FTransform> BoneRelativeTransforms;
-    for (USkinnedMeshComponent* SkinnedMeshComponent : SkinnedMeshComponents)
-    {
-      const int32 NumBones = SkinnedMeshComponent->GetNumBones();
-      for (int32 BoneIndex = 0; BoneIndex < NumBones; ++BoneIndex)
-      {
-        BoneRelativeTransforms.Add(
-            SkinnedMeshComponent->GetBoneTransform(BoneIndex, FTransform::Identity));
-      }
-    }
-    return MakeVectorFromTArray<cr::Transform>(BoneRelativeTransforms);
+    return MakeVectorFromTArray<cr::Transform>(Transforms);
   };
 
   BIND_SYNC(get_actor_component_names) << [this](
@@ -1929,15 +1905,16 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
           " Actor Id: " + FString::FromInt(ActorId));
     }
 
-    TArray<UActorComponent*> Components;
-    CarlaActor->GetActor()->GetComponents(Components);
-    std::vector<std::string> ComponentNames;
-    ComponentNames.reserve(Components.Num());
-    for (UActorComponent* ActorComponent : Components)
+    TArray<FString> Names;
+    ECarlaServerResponse Response = CarlaActor->GetActorComponentNames(Names);
+    if (Response != ECarlaServerResponse::Success)
     {
-      ComponentNames.push_back(TCHAR_TO_UTF8(*ActorComponent->GetName()));
+      return RespondError(
+          "get_actor_component_names",
+          Response,
+          " Actor Id: " + FString::FromInt(ActorId));
     }
-    return ComponentNames;
+    return MakeStringVector(Names);
   };
 
   BIND_SYNC(get_actor_bone_names) << [this](
@@ -1953,25 +1930,16 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
           " Actor Id: " + FString::FromInt(ActorId));
     }
 
-    USkinnedMeshComponent* SkinnedMeshComponent =
-        CarlaActor->GetActor()->FindComponentByClass<USkinnedMeshComponent>();
-    if (SkinnedMeshComponent == nullptr)
+    TArray<FString> Names;
+    ECarlaServerResponse Response = CarlaActor->GetActorBoneNames(Names);
+    if (Response != ECarlaServerResponse::Success)
     {
       return RespondError(
           "get_actor_bone_names",
-          ECarlaServerResponse::ComponentNotFound,
-          TEXT(" Component Name: SkinnedMeshComponent"));
+          Response,
+          " Actor Id: " + FString::FromInt(ActorId));
     }
-
-    TArray<FName> BoneNames;
-    SkinnedMeshComponent->GetBoneNames(BoneNames);
-    std::vector<std::string> StringBoneNames;
-    StringBoneNames.reserve(BoneNames.Num());
-    for (const FName &Name : BoneNames)
-    {
-      StringBoneNames.push_back(TCHAR_TO_UTF8(*Name.ToString()));
-    }
-    return StringBoneNames;
+    return MakeStringVector(Names);
   };
 
   BIND_SYNC(get_actor_socket_world_transforms) << [this](
@@ -1987,22 +1955,16 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
           " Actor Id: " + FString::FromInt(ActorId));
     }
 
-    TArray<FTransform> SocketWorldTransforms;
-    TArray<UActorComponent*> Components;
-    CarlaActor->GetActor()->GetComponents(Components);
-    for (UActorComponent* ActorComponent : Components)
+    TArray<FTransform> Transforms;
+    ECarlaServerResponse Response = CarlaActor->GetActorSocketWorldTransforms(Transforms);
+    if (Response != ECarlaServerResponse::Success)
     {
-      USceneComponent* SceneComponent = Cast<USceneComponent>(ActorComponent);
-      if (SceneComponent == nullptr)
-      {
-        continue;
-      }
-      for (const FName &SocketName : SceneComponent->GetAllSocketNames())
-      {
-        SocketWorldTransforms.Add(SceneComponent->GetSocketTransform(SocketName));
-      }
+      return RespondError(
+          "get_actor_socket_world_transforms",
+          Response,
+          " Actor Id: " + FString::FromInt(ActorId));
     }
-    return MakeVectorFromTArray<cr::Transform>(SocketWorldTransforms);
+    return MakeVectorFromTArray<cr::Transform>(Transforms);
   };
 
   BIND_SYNC(get_actor_socket_relative_transforms) << [this](
@@ -2018,23 +1980,16 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
           " Actor Id: " + FString::FromInt(ActorId));
     }
 
-    TArray<FTransform> SocketRelativeTransforms;
-    TArray<UActorComponent*> Components;
-    CarlaActor->GetActor()->GetComponents(Components);
-    for (UActorComponent* ActorComponent : Components)
+    TArray<FTransform> Transforms;
+    ECarlaServerResponse Response = CarlaActor->GetActorSocketRelativeTransforms(Transforms);
+    if (Response != ECarlaServerResponse::Success)
     {
-      USceneComponent* SceneComponent = Cast<USceneComponent>(ActorComponent);
-      if (SceneComponent == nullptr)
-      {
-        continue;
-      }
-      for (const FName &SocketName : SceneComponent->GetAllSocketNames())
-      {
-        SocketRelativeTransforms.Add(
-            SceneComponent->GetSocketTransform(SocketName, ERelativeTransformSpace::RTS_Actor));
-      }
+      return RespondError(
+          "get_actor_socket_relative_transforms",
+          Response,
+          " Actor Id: " + FString::FromInt(ActorId));
     }
-    return MakeVectorFromTArray<cr::Transform>(SocketRelativeTransforms);
+    return MakeVectorFromTArray<cr::Transform>(Transforms);
   };
 
   BIND_SYNC(get_actor_socket_names) << [this](
@@ -2050,22 +2005,16 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
           " Actor Id: " + FString::FromInt(ActorId));
     }
 
-    std::vector<std::string> StringSocketNames;
-    TArray<UActorComponent*> Components;
-    CarlaActor->GetActor()->GetComponents(Components);
-    for (UActorComponent* ActorComponent : Components)
+    TArray<FString> Names;
+    ECarlaServerResponse Response = CarlaActor->GetActorSocketNames(Names);
+    if (Response != ECarlaServerResponse::Success)
     {
-      USceneComponent* SceneComponent = Cast<USceneComponent>(ActorComponent);
-      if (SceneComponent == nullptr)
-      {
-        continue;
-      }
-      for (const FName &Name : SceneComponent->GetAllSocketNames())
-      {
-        StringSocketNames.push_back(TCHAR_TO_UTF8(*Name.ToString()));
-      }
+      return RespondError(
+          "get_actor_socket_names",
+          Response,
+          " Actor Id: " + FString::FromInt(ActorId));
     }
-    return StringSocketNames;
+    return MakeStringVector(Names);
   };
 
   BIND_SYNC(get_physics_control) << [this](
@@ -2534,11 +2483,16 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
           ECarlaServerResponse::ActorNotFound,
           " Actor Id: " + FString::FromInt(ActorId));
     }
-    else
+    TArray<FTransform> Transforms;
+    ECarlaServerResponse Response = CarlaActor->GetActorBoneWorldTransforms(Transforms);
+    if (Response != ECarlaServerResponse::Success)
     {
-      ACarlaWheeledVehicle* CarlaVehicle = Cast<ACarlaWheeledVehicle>(CarlaActor->GetActor());
-      return MakeVectorFromTArray<cr::Transform>(CarlaVehicle->GetWorldTransformedPose().LocalTransforms);
+      return RespondError(
+          "get_vehicle_bone_world_transforms",
+          Response,
+          " Actor Id: " + FString::FromInt(ActorId));
     }
+    return MakeVectorFromTArray<cr::Transform>(Transforms);
   };
 
   // ~~ Apply control ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
