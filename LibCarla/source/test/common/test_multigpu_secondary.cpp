@@ -32,8 +32,8 @@ namespace {
 TEST(multigpu_secondary, retrying_a_refused_connection_does_not_add_threads) {
   using namespace carla::multigpu;
 
-  constexpr auto observation_window = 3500ms;
-  constexpr std::size_t worker_threads = 2u;
+  constexpr auto first_attempt = 500ms;
+  constexpr auto retry_window = 3000ms;
 
   std::uint16_t unused_port = 0u;
   {
@@ -44,14 +44,15 @@ TEST(multigpu_secondary, retrying_a_refused_connection_does_not_add_threads) {
     unused_port = acceptor.local_endpoint().port();
   }
 
-  const auto threads_before = CountThreads();
   auto secondary = std::make_shared<Secondary>("127.0.0.1", unused_port, [](carla::multigpu::MultiGPUCommand, carla::Buffer) {});
   secondary->Connect();
-  std::this_thread::sleep_for(observation_window);
-  const auto threads_after = CountThreads();
+  std::this_thread::sleep_for(first_attempt);
+  const auto threads_after_first_attempt = CountThreads();
+  std::this_thread::sleep_for(retry_window);
+  const auto threads_after_retries = CountThreads();
   secondary->Stop();
 
-  ASSERT_LE(threads_after, threads_before + worker_threads);
+  ASSERT_EQ(threads_after_retries, threads_after_first_attempt);
 }
 
 #endif // __linux__
