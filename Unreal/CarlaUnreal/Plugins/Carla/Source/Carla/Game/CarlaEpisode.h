@@ -205,6 +205,12 @@ public:
     return ActorDispatcher->GetActorRegistry().GetDescriptionFromStream(StreamId);
   }
 
+  /// Find the Carla actor (sensor) that owns the stream @a StreamId, or nullptr.
+  FCarlaActor* FindCarlaActorFromStream(carla::streaming::detail::stream_id_type StreamId)
+  {
+    return ActorDispatcher->GetActorRegistry().FindCarlaActorFromStream(StreamId);
+  }
+
   // ===========================================================================
   // -- Actor handling methods -------------------------------------------------
   // ===========================================================================
@@ -259,6 +265,14 @@ public:
       AActor *Child,
       AActor *Parent,
       EAttachmentType InAttachmentType = EAttachmentType::Rigid);
+
+  /// Bound on parent-chain walks, in case of a malformed (cyclic) hierarchy.
+  static constexpr int32 MaxAttachmentDepth = 16;
+
+  /// Publishes @a Child's ROS 2 topics under every ancestor of @a Parent
+  /// (included) that has a ros_name. Ancestors' ros_topic_name overrides are
+  /// deliberately not propagated: they would replace the child's own.
+  void AddActorRosParents(FCarlaActor &Child, FCarlaActor &Parent);
 
   /// @copydoc FActorDispatcher::DestroyActor(AActor*)
   UFUNCTION(BlueprintCallable)
@@ -396,14 +410,24 @@ private:
 
   void TickTimers(float DeltaSeconds)
   {
-    ElapsedGameTime += DeltaSeconds;
     SetVisualGameTime(VisualGameTime + DeltaSeconds);
+    SetElapsedGameTime(ElapsedGameTime + DeltaSeconds);
+  }
+
+  void TickTimersFromPrimary(float DeltaSeconds, double PrimaryElapsedGameTime)
+  {
+    SetVisualGameTime(VisualGameTime + DeltaSeconds);
+    SetElapsedGameTime(PrimaryElapsedGameTime);
+  }
+
+  void SetElapsedGameTime(double Time)
+  {
+    ElapsedGameTime = Time;
     #if defined(WITH_ROS2)
     auto ROS2 = carla::ros2::ROS2::GetInstance();
     if (ROS2->IsEnabled())
       ROS2->SetTimestamp(GetElapsedGameTime());
     #endif
-
   }
 
   const uint64 Id = 0u;

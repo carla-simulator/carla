@@ -85,6 +85,30 @@ void ASensor::Tick(const float DeltaTime)
   PrePhysTick(DeltaTime);
 }
 
+bool ASensor::OwnsSensorStream()
+{
+  if (!Stream.IsStreamReady())
+  {
+    return true;
+  }
+  UCarlaGameInstance *GameInstance = UCarlaStatics::GetGameInstance(this);
+  FCarlaEngine *CarlaEngine = (GameInstance != nullptr) ? GameInstance->GetCarlaEngine() : nullptr;
+  if (CarlaEngine == nullptr)
+  {
+    return true;
+  }
+  const auto StreamId = carla::streaming::detail::token_type(Stream.GetToken()).get_stream_id();
+  const bool bOwns = CarlaEngine->OwnsSensorStream(StreamId, false);
+#if defined(WITH_ROS2)
+  if (bOwnedOnLastCheck && !bOwns)
+  {
+    carla::ros2::ROS2::GetInstance()->ReleasePublication(this);
+  }
+#endif
+  bOwnedOnLastCheck = bOwns;
+  return bOwns;
+}
+
 void ASensor::SetSeed(const int32 InSeed)
 {
   check(RandomEngine != nullptr);

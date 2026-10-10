@@ -51,6 +51,7 @@
 
 #include <cmath>
 #include <memory>
+#include <shared_mutex>
 #include <string>
 #include <utility>
 #include <vector>
@@ -125,7 +126,9 @@ bool ROS2::Enable(bool enable, Middleware middleware, int domain_id) {
   }
   _enabled = enable;
   log_info("ROS2 enabled: ", _enabled);
-  _clock_publisher = std::make_shared<CarlaClockPublisher>();
+  if (_clock_owner) {
+    _clock_publisher = std::make_shared<CarlaClockPublisher>();
+  }
 #if defined(WITH_ROS2_DEMO)
   _basic_publisher = std::make_shared<BasicPublisher>();
   _basic_publisher->Init();
@@ -177,29 +180,43 @@ void ROS2::SetTimestamp(double timestamp) {
 #endif
 }
 
+void ROS2::SetPublicationOwnerQuery(PublicationOwnerQuery query) {
+  std::unique_lock<std::shared_mutex> lock(_owner_query_mutex);
+  _owner_query = std::move(query);
+}
+
+bool ROS2::OwnsPublication(carla::streaming::detail::stream_id_type stream_id, bool primary_only) const {
+  std::shared_lock<std::shared_mutex> lock(_owner_query_mutex);
+  return !_owner_query || _owner_query(stream_id, primary_only);
+}
+
+bool ROS2::AcquirePublication(carla::streaming::detail::stream_id_type stream_id, void *actor, bool primary_only) {
+  if (OwnsPublication(stream_id, primary_only)) {
+    return true;
+  }
+  ReleasePublication(actor);
+  return false;
+}
+
+void ROS2::ReleasePublication(void *actor) {
+  _registry.Release(actor);
+}
+
 void ROS2::RegisterSensor(
     void *actor, std::string ros_name, std::string frame_id, bool publish_tf) {
-  // insert_or_assign so re-registering an actor with a new ros_name actually
-  // updates the entry; unordered_map::insert would silently keep the stale
-  // one.
-  _registrations.insert_or_assign(
-      actor, ActorRegistration{std::move(ros_name), std::move(frame_id), publish_tf});
+  // Re-registering an actor with a new ros_name replaces the entry.
+  _registry.Register(actor, {std::move(ros_name), std::move(frame_id), publish_tf});
 }
 
 void ROS2::UnregisterSensor(void *actor) {
-  _publishers.erase(actor);
-  _camera_publishers.erase(actor);
-  _transforms.erase(actor);
-  _actor_parents.erase(actor);
-  _registrations.erase(actor);
+  _registry.Unregister(actor);
 }
 
 void ROS2::RegisterVehicle(
     void *actor, std::string ros_name, std::string frame_id, ActorCallback callback,
     bool enable_ackermann_control,
     bool enable_autoware_control) {
-  _registrations.insert_or_assign(
-      actor, ActorRegistration{ros_name, frame_id, true});
+  _registry.Register(actor, {ros_name, frame_id, true});
 
   // Idempotency: drop any prior subscribers / callbacks bound to this actor
   // so a re-registration does not accumulate duplicate DataReaders nor leave
@@ -211,9 +228,9 @@ void ROS2::RegisterVehicle(
   // The legacy CarlaEgoVehicleControlSubscriber::Init built its topic as
   // "rt/carla/" + [parent + "/"] + name + "/vehicle_control_cmd". With the
   // new template constructors the suffix is appended inside each subscriber,
-  // so we hand them the base path only. BuildBaseTopicName also honors an
+  // so we hand them the base path only. The base topic also honors an
   // exact-topic override registered via AddActorRosTopicName.
-  const std::string base_topic_name = BuildBaseTopicName(actor);
+  const std::string base_topic_name = _registry.BaseTopicName(actor);
 
   // The control modes are mutually exclusive: a vehicle listens on exactly one
   // command surface, so two topics can never contend frame to frame. The
@@ -238,35 +255,21 @@ void ROS2::UnregisterVehicle(void *actor) {
 }
 
 void ROS2::AddActorRosTopicName(void *actor, std::string ros_topic_name) {
-  _actor_ros_topic_names.insert_or_assign(actor, std::move(ros_topic_name));
+  _registry.SetTopicOverride(actor, std::move(ros_topic_name));
 }
 
 void ROS2::RemoveActorRosTopicName(void *actor) {
-  _actor_ros_topic_names.erase(actor);
-  // Drop the cached publishers bound to the overridden topic so the next data
-  // tick re-creates them under the default naming (tier4 semantics).
-  _publishers.erase(actor);
-  _camera_publishers.erase(actor);
-  _transforms.erase(actor);
+  // Also drops the cached publishers bound to the overridden topic so the next
+  // data tick re-creates them under the default naming (tier4 semantics).
+  _registry.RemoveTopicOverride(actor);
 }
 
 std::string ROS2::GetActorRosTopicName(void *actor) const {
-  auto it = _actor_ros_topic_names.find(actor);
-  return it != _actor_ros_topic_names.end() ? it->second : std::string{};
-}
-
-bool ROS2::HasTopicOverride(void *actor) const {
-  auto it = _actor_ros_topic_names.find(actor);
-  return it != _actor_ros_topic_names.end() && !it->second.empty();
+  return _registry.GetTopicOverride(actor);
 }
 
 void ROS2::AddActorParentRosName(void *actor, void *parent) {
-  auto it = _actor_parents.find(actor);
-  if (it != _actor_parents.end()) {
-    it->second.push_back(parent);
-  } else {
-    _actor_parents.insert({actor, {parent}});
-  }
+  _registry.AddParent(actor, parent);
 }
 
 void ROS2::AddBasicSubscriberCallback(
@@ -288,186 +291,82 @@ void ROS2::RemoveBasicSubscriberCallback([[maybe_unused]] void *actor) {
 #endif
 }
 
-std::string ROS2::LookupRosName(void *actor) const {
-  auto it = _registrations.find(actor);
-  return it != _registrations.end() ? it->second.ros_name : std::string{};
-}
-
-std::string ROS2::LookupFrameId(void *actor) const {
-  auto it = _registrations.find(actor);
-  return it != _registrations.end() ? it->second.frame_id : std::string{};
-}
-
-std::string ROS2::BuildParentChain(void *actor) const {
-  auto it = _actor_parents.find(actor);
-  if (it == _actor_parents.end()) {
-    return std::string{};
-  }
-  const std::string current_actor_name = LookupRosName(actor);
-  std::string parent_name;
-  for (auto *parent : it->second) {
-    const std::string name = LookupRosName(parent);
-    if (name.empty() || name == current_actor_name) {
-      continue;
-    }
-    parent_name = name + '/' + parent_name;
-  }
-  if (!parent_name.empty() && parent_name.back() == '/') {
-    parent_name.pop_back();
-  }
-  return parent_name;
-}
-
-std::string ROS2::BuildBaseTopicName(void *actor) const {
-  // Exact-topic override (ros_topic_name attribute flow): a non-empty custom
-  // name replaces the whole "rt/carla/[parent/]ros_name" convention. Suffixes
-  // for multi-topic sensors are appended by the publishers on top of this.
-  auto override_it = _actor_ros_topic_names.find(actor);
-  if (override_it != _actor_ros_topic_names.end() && !override_it->second.empty()) {
-    const std::string &custom = override_it->second;
-    std::string base_topic_name = "rt";
-    if (custom.front() != '/') {
-      base_topic_name += '/';
-    }
-    base_topic_name += custom;
-    return base_topic_name;
-  }
-
-  const std::string ros_name = LookupRosName(actor);
-  if (ros_name.empty()) {
-    return std::string{};
-  }
-  const std::string parent_chain = BuildParentChain(actor);
-  std::string base_topic_name = "rt/carla/";
-  if (!parent_chain.empty()) {
-    base_topic_name += parent_chain + "/";
-  }
-  base_topic_name += ros_name;
-  return base_topic_name;
-}
-
-void ROS2::ResolveAutoStreamSuffix(
-    void *actor,
-    const std::string &prefix,
-    carla::streaming::detail::stream_id_type id) {
-  auto it = _registrations.find(actor);
-  if (it == _registrations.end()) {
-    return;
-  }
-  const std::string placeholder = prefix + "__";
-  if (it->second.ros_name != placeholder) {
-    return;
-  }
-  std::string resolved = prefix + std::to_string(id);
-  it->second.ros_name = resolved;
-  if (it->second.frame_id == placeholder) {
-    it->second.frame_id = std::move(resolved);
-  }
-}
-
 template <typename CameraT>
 std::shared_ptr<CarlaCameraPublisher> ROS2::GetOrCreateCameraSensor(
     carla::streaming::detail::stream_id_type id,
     void *actor,
-    const std::string &default_prefix) {
-  auto it_camera = _camera_publishers.find(actor);
-  if (it_camera != _camera_publishers.end()) {
-    // Enforce the one-actor-one-camera-type invariant on the cache-hit path.
-    // RGB/Depth/SS/IS/Normals all alias CarlaRGBCameraPublisher (shared BGRA
-    // passthrough), so a hit across those types casts cleanly and is expected.
-    // Only an RGB <-> OpticalFlow mismatch fails the cast: that would route
-    // optical-flow float bytes through an RGB publisher (or vice versa). Surface
-    // it and skip the sample instead of letting the first-created type silently
-    // win and corrupt the published image.
-    auto typed = std::dynamic_pointer_cast<CameraT>(it_camera->second);
-    if (typed == nullptr) {
-      log_error(
-          "ROS2 camera publisher type mismatch for actor", actor,
-          "- the actor was dispatched as two different camera types; ignoring this sample.");
-      return nullptr;
-    }
-    return typed;
+    const char *default_prefix) {
+  auto publisher = _registry.GetOrCreateCamera(actor, id, default_prefix,
+      [](const Registry::Naming &naming) -> std::shared_ptr<CarlaCameraPublisher> {
+        return std::make_shared<CameraT>(naming.base_topic, naming.frame_id);
+      });
+  // Enforce the one-actor-one-camera-type invariant on the cache-hit path.
+  // RGB/Depth/SS/IS/Normals all alias CarlaRGBCameraPublisher (shared BGRA
+  // passthrough), so a hit across those types casts cleanly and is expected.
+  // Only an RGB <-> OpticalFlow mismatch fails the cast: that would route
+  // optical-flow float bytes through an RGB publisher (or vice versa). Surface
+  // it and skip the sample instead of letting the first-created type silently
+  // win and corrupt the published image.
+  if (publisher != nullptr && std::dynamic_pointer_cast<CameraT>(publisher) == nullptr) {
+    log_error(
+        "ROS2 camera publisher type mismatch for actor", actor,
+        "- the actor was dispatched as two different camera types; ignoring this sample.");
+    return nullptr;
   }
-
-  ResolveAutoStreamSuffix(actor, default_prefix, id);
-  const std::string base_topic_name = BuildBaseTopicName(actor);
-  const std::string frame_id = LookupFrameId(actor);
-
-  auto new_publisher = std::make_shared<CameraT>(base_topic_name, frame_id);
-  _camera_publishers.insert({actor, new_publisher});
-  return new_publisher;
+  return publisher;
 }
 
 std::shared_ptr<BasePublisher> ROS2::GetOrCreateSensor(
     int type, carla::streaming::detail::stream_id_type id, void *actor) {
-  auto it_publishers = _publishers.find(actor);
-  if (it_publishers != _publishers.end()) {
-    return it_publishers->second;
-  }
-
-  // Resolve auto-naming "prefix__" -> "prefix<stream_id>" before computing the
-  // topic name. Each enum case names its own prefix so the resolved ros_name
-  // stays stable across ticks.
-  auto resolve = [this, actor, id](const std::string &prefix) {
-    ResolveAutoStreamSuffix(actor, prefix, id);
+  using Naming = Registry::Naming;
+  // Each case names the "prefix__" placeholders it resolves to
+  // "prefix<stream_id>" before the topic name is built, so the resolved
+  // ros_name stays stable across ticks.
+  const auto get = [this, actor, id](std::initializer_list<const char *> prefixes, auto make) {
+    return _registry.GetOrCreateSensor(actor, id, prefixes,
+        [&make](const Naming &naming) -> std::shared_ptr<BasePublisher> { return make(naming); });
   };
-
-  std::shared_ptr<BasePublisher> publisher;
   switch (type) {
-    case ESensors::CollisionSensor: {
-      resolve("collision");
-      publisher = std::make_shared<CarlaCollisionPublisher>(
-          BuildBaseTopicName(actor), LookupFrameId(actor));
-      break;
-    }
-    case ESensors::DVSCamera: {
-      resolve("dvs");
-      publisher = std::make_shared<CarlaDVSCameraPublisher>(
-          BuildBaseTopicName(actor), LookupFrameId(actor));
-      break;
-    }
-    case ESensors::GnssSensor: {
-      resolve("gnss");
-      publisher = std::make_shared<CarlaGNSSPublisher>(
-          BuildBaseTopicName(actor), LookupFrameId(actor));
-      break;
-    }
-    case ESensors::InertialMeasurementUnit: {
-      resolve("imu");
-      publisher = std::make_shared<CarlaIMUPublisher>(
-          BuildBaseTopicName(actor), LookupFrameId(actor));
-      break;
-    }
-    case ESensors::Radar: {
-      resolve("radar");
-      publisher = std::make_shared<CarlaRadarPublisher>(
-          BuildBaseTopicName(actor), LookupFrameId(actor), HasTopicOverride(actor));
-      break;
-    }
-    case ESensors::RayCastSemanticLidar: {
-      resolve("ray_cast_semantic");
-      publisher = std::make_shared<CarlaSemanticLidarPublisher>(
-          BuildBaseTopicName(actor), LookupFrameId(actor), HasTopicOverride(actor));
-      break;
-    }
-    case ESensors::RayCastLidar: {
+    case ESensors::CollisionSensor:
+      return get({"collision"}, [](const Naming &naming) {
+        return std::make_shared<CarlaCollisionPublisher>(naming.base_topic, naming.frame_id);
+      });
+    case ESensors::DVSCamera:
+      return get({"dvs"}, [](const Naming &naming) {
+        return std::make_shared<CarlaDVSCameraPublisher>(naming.base_topic, naming.frame_id);
+      });
+    case ESensors::GnssSensor:
+      return get({"gnss"}, [](const Naming &naming) {
+        return std::make_shared<CarlaGNSSPublisher>(naming.base_topic, naming.frame_id);
+      });
+    case ESensors::InertialMeasurementUnit:
+      return get({"imu"}, [](const Naming &naming) {
+        return std::make_shared<CarlaIMUPublisher>(naming.base_topic, naming.frame_id);
+      });
+    case ESensors::Radar:
+      return get({"radar"}, [](const Naming &naming) {
+        return std::make_shared<CarlaRadarPublisher>(
+            naming.base_topic, naming.frame_id, naming.topic_override);
+      });
+    case ESensors::RayCastSemanticLidar:
+      return get({"ray_cast_semantic"}, [](const Naming &naming) {
+        return std::make_shared<CarlaSemanticLidarPublisher>(
+            naming.base_topic, naming.frame_id, naming.topic_override);
+      });
+    case ESensors::RayCastLidar:
       // Both ray-cast and HSS lidars dispatch here; resolve either placeholder.
-      resolve("ray_cast");
-      resolve("hss_lidar");
-      publisher = std::make_shared<CarlaLidarPublisher>(
-          BuildBaseTopicName(actor), LookupFrameId(actor), HasTopicOverride(actor));
-      break;
-    }
-    case ESensors::AutowareGnssSensor: {
-      resolve("autoware_gnss");
+      return get({"ray_cast", "hss_lidar"}, [](const Naming &naming) {
+        return std::make_shared<CarlaLidarPublisher>(
+            naming.base_topic, naming.frame_id, naming.topic_override);
+      });
+    case ESensors::AutowareGnssSensor:
       // frame_id "map" (not the sensor's own frame): the published poses are
       // world/map-frame quantities including the MGRS offset. Architecture
       // decision — tier4's AutowarePublisherBase used the sensor ros_name as
       // frame_id, which was accidental; triage confirmed "map" is the intent.
-      publisher = std::make_shared<AutowareGNSSPublisher>(
-          BuildBaseTopicName(actor), "map");
-      break;
-    }
+      return get({"autoware_gnss"}, [](const Naming &naming) {
+        return std::make_shared<AutowareGNSSPublisher>(naming.base_topic, "map");
+      });
     case ESensors::LaneInvasionSensor:
     case ESensors::ObstacleDetectionSensor:
     case ESensors::RssSensor:
@@ -481,41 +380,28 @@ std::shared_ptr<BasePublisher> ROS2::GetOrCreateSensor(
       log_error("ROS2::GetOrCreateSensor: unknown sensor type", type);
       return nullptr;
   }
-
-  if (publisher) {
-    _publishers.insert({actor, publisher});
-  }
-  return publisher;
 }
 
-std::shared_ptr<CarlaTransformPublisher> ROS2::GetOrCreateTransformPublisher(void *actor) {
+void ROS2::PublishTransform(void *actor, const carla::geom::Transform &sensor_transform) {
   // Global TF gate (tier4's _publish_tf): checked before the cache so
   // toggling at runtime silences every sensor immediately.
   if (!_publish_tf) {
-    return nullptr;
+    return;
   }
-  auto it = _transforms.find(actor);
-  if (it != _transforms.end()) {
-    return it->second;
+  const auto target = _registry.GetOrCreateTransform(actor, [] {
+    return std::make_shared<CarlaTransformPublisher>();
+  });
+  if (target.publisher == nullptr) {
+    return;
   }
-  auto registration_it = _registrations.find(actor);
-  if (registration_it == _registrations.end() || !registration_it->second.publish_tf) {
-    return nullptr;
-  }
-  auto transform = std::make_shared<CarlaTransformPublisher>();
-  _transforms.insert({actor, transform});
-  return transform;
+  target.publisher->Write(
+      _seconds, _nanoseconds,
+      target.parent_frame,
+      target.frame_id,
+      sensor_transform.location.x, sensor_transform.location.y, sensor_transform.location.z,
+      sensor_transform.rotation.pitch, sensor_transform.rotation.yaw, sensor_transform.rotation.roll);
+  target.publisher->Publish();
 }
-
-namespace {
-
-// Builds the parent_frame_id for TF: top-level actors broadcast against
-// "map"; child actors broadcast against their direct parent's frame_id.
-std::string ParentFrameOrMap(const std::string &parent_chain) {
-  return parent_chain.empty() ? std::string{"map"} : parent_chain;
-}
-
-}  // namespace
 
 void ROS2::ProcessDataFromCamera(
     uint64_t sensor_type,
@@ -524,6 +410,9 @@ void ROS2::ProcessDataFromCamera(
     int W, int H, float Fov,
     const carla::SharedBufferView buffer,
     void *actor) {
+  if (!AcquirePublication(stream_id, actor)) {
+    return;
+  }
   // Image dimensions + FOV are now read straight from ImageSerializer's
   // per-frame header inside the camera publisher's WriteCameraInfo call;
   // the W/H/Fov arguments survive for ABI compatibility with the
@@ -590,15 +479,7 @@ void ROS2::ProcessDataFromCamera(
     publisher->Publish();
   }
 
-  if (auto transform_publisher = GetOrCreateTransformPublisher(actor)) {
-    transform_publisher->Write(
-        _seconds, _nanoseconds,
-        ParentFrameOrMap(BuildParentChain(actor)),
-        LookupFrameId(actor),
-        sensor_transform.location.x, sensor_transform.location.y, sensor_transform.location.z,
-        sensor_transform.rotation.pitch, sensor_transform.rotation.yaw, sensor_transform.rotation.roll);
-    transform_publisher->Publish();
-  }
+  PublishTransform(actor, sensor_transform);
 }
 
 void ROS2::ProcessDataFromGNSS(
@@ -607,20 +488,15 @@ void ROS2::ProcessDataFromGNSS(
     const carla::geom::Transform sensor_transform,
     const carla::geom::GeoLocation &data,
     void *actor) {
+  if (!AcquirePublication(stream_id, actor, true)) {
+    return;
+  }
   if (auto base = GetOrCreateSensor(ESensors::GnssSensor, stream_id, actor)) {
     auto publisher = std::dynamic_pointer_cast<CarlaGNSSPublisher>(base);
     publisher->Write(_seconds, _nanoseconds, data.latitude, data.longitude, data.altitude);
     publisher->Publish();
   }
-  if (auto transform_publisher = GetOrCreateTransformPublisher(actor)) {
-    transform_publisher->Write(
-        _seconds, _nanoseconds,
-        ParentFrameOrMap(BuildParentChain(actor)),
-        LookupFrameId(actor),
-        sensor_transform.location.x, sensor_transform.location.y, sensor_transform.location.z,
-        sensor_transform.rotation.pitch, sensor_transform.rotation.yaw, sensor_transform.rotation.roll);
-    transform_publisher->Publish();
-  }
+  PublishTransform(actor, sensor_transform);
 }
 
 void ROS2::ProcessDataFromIMU(
@@ -631,6 +507,9 @@ void ROS2::ProcessDataFromIMU(
     carla::geom::Vector3D gyroscope,
     float compass,
     void *actor) {
+  if (!AcquirePublication(stream_id, actor, true)) {
+    return;
+  }
   if (auto base = GetOrCreateSensor(ESensors::InertialMeasurementUnit, stream_id, actor)) {
     auto publisher = std::dynamic_pointer_cast<CarlaIMUPublisher>(base);
     publisher->Write(
@@ -640,15 +519,7 @@ void ROS2::ProcessDataFromIMU(
         compass);
     publisher->Publish();
   }
-  if (auto transform_publisher = GetOrCreateTransformPublisher(actor)) {
-    transform_publisher->Write(
-        _seconds, _nanoseconds,
-        ParentFrameOrMap(BuildParentChain(actor)),
-        LookupFrameId(actor),
-        sensor_transform.location.x, sensor_transform.location.y, sensor_transform.location.z,
-        sensor_transform.rotation.pitch, sensor_transform.rotation.yaw, sensor_transform.rotation.roll);
-    transform_publisher->Publish();
-  }
+  PublishTransform(actor, sensor_transform);
 }
 
 void ROS2::ProcessDataFromDVS(
@@ -658,6 +529,9 @@ void ROS2::ProcessDataFromDVS(
     const carla::SharedBufferView buffer,
     int /*W*/, int /*H*/, float /*Fov*/,
     void *actor) {
+  if (!AcquirePublication(stream_id, actor)) {
+    return;
+  }
   if (auto base = GetOrCreateSensor(ESensors::DVSCamera, stream_id, actor)) {
     auto publisher = std::dynamic_pointer_cast<CarlaDVSCameraPublisher>(base);
     const auto *header = reinterpret_cast<
@@ -680,15 +554,7 @@ void ROS2::ProcessDataFromDVS(
         _seconds, _nanoseconds, 1, static_cast<std::uint32_t>(event_count), event_bytes);
     publisher->Publish();
   }
-  if (auto transform_publisher = GetOrCreateTransformPublisher(actor)) {
-    transform_publisher->Write(
-        _seconds, _nanoseconds,
-        ParentFrameOrMap(BuildParentChain(actor)),
-        LookupFrameId(actor),
-        sensor_transform.location.x, sensor_transform.location.y, sensor_transform.location.z,
-        sensor_transform.rotation.pitch, sensor_transform.rotation.yaw, sensor_transform.rotation.roll);
-    transform_publisher->Publish();
-  }
+  PublishTransform(actor, sensor_transform);
 }
 
 void ROS2::ProcessDataFromLidar(
@@ -713,6 +579,9 @@ void ROS2::ProcessDataFromLidar(
     float lower_fov_limit,
     carla::sensor::data::LidarData &data,
     void *actor) {
+  if (!AcquirePublication(stream_id, actor, true)) {
+    return;
+  }
   if (auto base = GetOrCreateSensor(ESensors::RayCastLidar, stream_id, actor)) {
     auto publisher = std::dynamic_pointer_cast<CarlaLidarPublisher>(base);
     // The lidar returns a flat list of floats rather than structured detection
@@ -746,15 +615,7 @@ void ROS2::ProcessDataFromLidar(
     }
     publisher->Publish();
   }
-  if (auto transform_publisher = GetOrCreateTransformPublisher(actor)) {
-    transform_publisher->Write(
-        _seconds, _nanoseconds,
-        ParentFrameOrMap(BuildParentChain(actor)),
-        LookupFrameId(actor),
-        sensor_transform.location.x, sensor_transform.location.y, sensor_transform.location.z,
-        sensor_transform.rotation.pitch, sensor_transform.rotation.yaw, sensor_transform.rotation.roll);
-    transform_publisher->Publish();
-  }
+  PublishTransform(actor, sensor_transform);
 }
 
 void ROS2::ProcessDataFromSemanticLidar(
@@ -763,6 +624,9 @@ void ROS2::ProcessDataFromSemanticLidar(
     const carla::geom::Transform sensor_transform,
     carla::sensor::data::SemanticLidarData &data,
     void *actor) {
+  if (!AcquirePublication(stream_id, actor, true)) {
+    return;
+  }
   if (auto base = GetOrCreateSensor(ESensors::RayCastSemanticLidar, stream_id, actor)) {
     auto publisher = std::dynamic_pointer_cast<CarlaSemanticLidarPublisher>(base);
     const auto width = static_cast<std::uint32_t>(data._ser_points.size());
@@ -771,15 +635,7 @@ void ROS2::ProcessDataFromSemanticLidar(
         reinterpret_cast<const std::uint8_t *>(data._ser_points.data()));
     publisher->Publish();
   }
-  if (auto transform_publisher = GetOrCreateTransformPublisher(actor)) {
-    transform_publisher->Write(
-        _seconds, _nanoseconds,
-        ParentFrameOrMap(BuildParentChain(actor)),
-        LookupFrameId(actor),
-        sensor_transform.location.x, sensor_transform.location.y, sensor_transform.location.z,
-        sensor_transform.rotation.pitch, sensor_transform.rotation.yaw, sensor_transform.rotation.roll);
-    transform_publisher->Publish();
-  }
+  PublishTransform(actor, sensor_transform);
 }
 
 void ROS2::ProcessDataFromRadar(
@@ -788,6 +644,9 @@ void ROS2::ProcessDataFromRadar(
     const carla::geom::Transform sensor_transform,
     const carla::sensor::data::RadarData &data,
     void *actor) {
+  if (!AcquirePublication(stream_id, actor, true)) {
+    return;
+  }
   if (auto base = GetOrCreateSensor(ESensors::Radar, stream_id, actor)) {
     auto publisher = std::dynamic_pointer_cast<CarlaRadarPublisher>(base);
     const auto width = static_cast<std::uint32_t>(data.GetDetectionCount());
@@ -796,15 +655,7 @@ void ROS2::ProcessDataFromRadar(
         reinterpret_cast<const std::uint8_t *>(data._detections.data()));
     publisher->Publish();
   }
-  if (auto transform_publisher = GetOrCreateTransformPublisher(actor)) {
-    transform_publisher->Write(
-        _seconds, _nanoseconds,
-        ParentFrameOrMap(BuildParentChain(actor)),
-        LookupFrameId(actor),
-        sensor_transform.location.x, sensor_transform.location.y, sensor_transform.location.z,
-        sensor_transform.rotation.pitch, sensor_transform.rotation.yaw, sensor_transform.rotation.roll);
-    transform_publisher->Publish();
-  }
+  PublishTransform(actor, sensor_transform);
 }
 
 void ROS2::ProcessDataFromObstacleDetection(
@@ -815,6 +666,9 @@ void ROS2::ProcessDataFromObstacleDetection(
     AActor * /*second_actor*/,
     float distance,
     void * /*actor*/) {
+  if (!OwnsPublication(stream_id)) {
+    return;
+  }
   log_info(
       "Sensor ObstacleDetector to ROS data: frame.", _frame, "sensor.", sensor_type,
       "stream.", stream_id, "distance.", distance);
@@ -827,29 +681,27 @@ void ROS2::ProcessDataFromCollisionSensor(
     uint32_t other_actor,
     carla::geom::Vector3D impulse,
     void *actor) {
+  if (!AcquirePublication(stream_id, actor, true)) {
+    return;
+  }
   if (auto base = GetOrCreateSensor(ESensors::CollisionSensor, stream_id, actor)) {
     auto publisher = std::dynamic_pointer_cast<CarlaCollisionPublisher>(base);
     publisher->Write(_seconds, _nanoseconds, other_actor, impulse.x, impulse.y, impulse.z);
     publisher->Publish();
   }
-  if (auto transform_publisher = GetOrCreateTransformPublisher(actor)) {
-    transform_publisher->Write(
-        _seconds, _nanoseconds,
-        ParentFrameOrMap(BuildParentChain(actor)),
-        LookupFrameId(actor),
-        sensor_transform.location.x, sensor_transform.location.y, sensor_transform.location.z,
-        sensor_transform.rotation.pitch, sensor_transform.rotation.yaw, sensor_transform.rotation.roll);
-    transform_publisher->Publish();
-  }
+  PublishTransform(actor, sensor_transform);
 }
 
 void ROS2::ProcessDataFromStatusSensor(
     uint64_t /*sensor_type*/,
-    carla::streaming::detail::stream_id_type /*stream_id*/,
+    carla::streaming::detail::stream_id_type stream_id,
     const carla::geom::Transform /*sensor_transform*/,
     const carla::sensor::s11n::VehicleStatusData &data,
     void *vehicle_actor,
     void * /*actor*/) {
+  if (!OwnsPublication(stream_id, true)) {
+    return;
+  }
   // Only vehicles registered with enable_autoware_control publish reports:
   // the report topics are fixed absolute names shared by the whole vehicle
   // interface (tier4 restricted this to the ego for the same reason).
@@ -955,6 +807,9 @@ void ROS2::ProcessDataFromAutowareGNSS(
     const carla::geom::Transform &sensor_world_transform,
     const double mgrs_offset_position[3],
     void *actor) {
+  if (!AcquirePublication(stream_id, actor, true)) {
+    return;
+  }
   if (auto base = GetOrCreateSensor(ESensors::AutowareGnssSensor, stream_id, actor)) {
     if (auto publisher = std::dynamic_pointer_cast<AutowareGNSSPublisher>(base)) {
       publisher->Write(
@@ -973,35 +828,13 @@ void ROS2::ProcessDataFromAutowareGNSS(
           "- the actor was dispatched as both regular and Autoware GNSS; ignoring this sample.");
     }
   }
-  if (auto transform_publisher = GetOrCreateTransformPublisher(actor)) {
-    transform_publisher->Write(
-        _seconds, _nanoseconds,
-        ParentFrameOrMap(BuildParentChain(actor)),
-        LookupFrameId(actor),
-        sensor_transform.location.x, sensor_transform.location.y, sensor_transform.location.z,
-        sensor_transform.rotation.pitch, sensor_transform.rotation.yaw, sensor_transform.rotation.roll);
-    transform_publisher->Publish();
-  }
+  PublishTransform(actor, sensor_transform);
 }
 
 void ROS2::Shutdown() {
-  for (auto &element : _publishers) {
-    element.second.reset();
-  }
-  for (auto &element : _transforms) {
-    element.second.reset();
-  }
-  for (auto &element : _camera_publishers) {
-    element.second.reset();
-  }
-  _publishers.clear();
-  _transforms.clear();
-  _camera_publishers.clear();
+  _registry.Clear();
   _subscribers.clear();
   _actor_callbacks.clear();
-  _registrations.clear();
-  _actor_parents.clear();
-  _actor_ros_topic_names.clear();
   _autoware_vehicles.clear();
   _autoware_status_publishers.clear();
   _clock_publisher.reset();
