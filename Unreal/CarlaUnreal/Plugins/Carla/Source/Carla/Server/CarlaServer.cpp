@@ -3014,17 +3014,50 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
           ECarlaServerResponse::ActorNotFound,
           " Actor Id: " + FString::FromInt(ActorId));
     }
+    FString Error;
     ECarlaServerResponse Response =
         CarlaActor->EnableChronoPhysics(
             MaxSubsteps, MaxSubstepDeltaTime,
             cr::ToFString(VehicleJSON),
             cr::ToFString(PowertrainJSON),
             cr::ToFString(TireJSON),
-            cr::ToFString(BaseJSONPath));
+            cr::ToFString(BaseJSONPath),
+            Error);
     if (Response != ECarlaServerResponse::Success)
     {
       return RespondError(
           "enable_chrono_physics",
+          Response,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    if (!Error.IsEmpty())
+    {
+      return RespondError(
+          "enable_chrono_physics",
+          Error,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    return R<void>::Success();
+  };
+
+  BIND_SYNC(restore_default_physics) << [this](
+      cr::ActorId ActorId) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
+    if (!CarlaActor)
+    {
+      return RespondError(
+          "restore_default_physics",
+          ECarlaServerResponse::ActorNotFound,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    ECarlaServerResponse Response =
+        CarlaActor->RestoreDefaultPhysics();
+    if (Response != ECarlaServerResponse::Success)
+    {
+      return RespondError(
+          "restore_default_physics",
           Response,
           " Actor Id: " + FString::FromInt(ActorId));
     }

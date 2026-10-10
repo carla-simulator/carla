@@ -1214,7 +1214,34 @@ ECarlaServerResponse FVehicleActor::UseCarSimRoad(bool bEnabled)
 ECarlaServerResponse FVehicleActor::EnableChronoPhysics(
       uint64_t MaxSubsteps, float MaxSubstepDeltaTime,
       const FString& VehicleJSON, const FString& PowertrainJSON,
-      const FString& TireJSON, const FString& BaseJSONPath)
+      const FString& TireJSON, const FString& BaseJSONPath,
+      FString& OutError)
+{
+  if (IsDormant())
+  {
+    return ECarlaServerResponse::FunctionNotAvailableWhenDormant;
+  }
+  else
+  {
+    auto Vehicle = Cast<ACarlaWheeledVehicle>(GetActor());
+    if (Vehicle == nullptr)
+    {
+      return ECarlaServerResponse::NotAVehicle;
+    }
+    OutError = UChronoMovementComponent::CreateChronoMovementComponent(
+        Vehicle,
+        MaxSubsteps,
+        MaxSubstepDeltaTime,
+        VehicleJSON,
+        PowertrainJSON,
+        TireJSON,
+        BaseJSONPath);
+  }
+  return ECarlaServerResponse::Success;
+}
+
+// Hands the vehicle back to Chaos (ue4-dev's RestorePhysXPhysics).
+ECarlaServerResponse FVehicleActor::RestoreDefaultPhysics()
 {
   if (IsDormant())
   {
@@ -1226,14 +1253,12 @@ ECarlaServerResponse FVehicleActor::EnableChronoPhysics(
     {
       return ECarlaServerResponse::NotAVehicle;
     }
-    UChronoMovementComponent::CreateChronoMovementComponent(
-        Vehicle,
-        MaxSubsteps,
-        MaxSubstepDeltaTime,
-        VehicleJSON,
-        PowertrainJSON,
-        TireJSON,
-        BaseJSONPath);
+    UBaseCarlaMovementComponent* MovementComponent =
+        Vehicle->GetCarlaMovementComponent<UBaseCarlaMovementComponent>();
+    if (MovementComponent)
+    {
+      MovementComponent->DisableSpecialPhysics();
+    }
   }
   return ECarlaServerResponse::Success;
 }

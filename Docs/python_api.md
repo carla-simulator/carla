@@ -3392,13 +3392,13 @@ Enables Chrono physics on a spawned vehicle.
     - **Parameters:**
         - `max_substeps` (_int_) - Max number of Chrono substeps.  
         - `max_substep_delta_time` (_int_) - Max size of substep.  
-        - `vehicle_json` (_str_) - Path to vehicle json file relative to `base_json_path`.  
-        - `powertrain_json` (_str_) - Path to powertrain json file relative to `base_json_path`.  
-        - `tire_json` (_str_) - Path to tire json file relative to `base_json_path`.  
-        - `base_json_path` (_str_) - Path to `chrono/data/vehicle` folder. E.g., `/home/user/carla/Build/chrono-install/share/chrono/data/vehicle/` (the final `/` character is required).  
-    - **Note:** <font color="#8E8E8E">_Ensure that you have started the CARLA server with the `ARGS="--chrono"` flag. You will not be able to use Chrono physics without this flag set.
+        - `vehicle_json` (_str_) - Path to vehicle json file relative to `base_json_path`. Empty selects `sedan/vehicle/Sedan_Vehicle.json`.  
+        - `powertrain_json` (_str_) - Path to powertrain json file relative to `base_json_path`. Empty selects `sedan/powertrain/Sedan_SimpleMapPowertrain.json`.  
+        - `tire_json` (_str_) - Path to tire json file relative to `base_json_path`. Empty selects `sedan/tire/Sedan_TMeasyTire.json`.  
+        - `base_json_path` (_str_) - Directory the template paths are relative to, e.g. Chrono's `data/vehicle` folder (`/home/user/carla/Build/Release/Chrono/install/share/chrono/data/vehicle/`; the final `/` character is required). Empty selects `Co-Simulation/Chrono/Vehicles/` in the source tree the server was built from, which holds the sedan templates.  
+    - **Note:** <font color="#8E8E8E">_Ensure that the CARLA server was built with `-DENABLE_CHRONO=ON`. You will not be able to use Chrono physics without it. Raises `RuntimeError` when Chrono cannot be enabled (a server built without Chrono, a template that is missing or that Chrono rejects); the vehicle then keeps its current physics.
 _</font>  
-    - **Warning:** <font color="#ED2F2F">_Collisions are not supported. When a collision is detected, physics will revert to the default CARLA physics.
+    - **Warning:** <font color="#ED2F2F">_Collisions are not supported. When a collision is detected, or the Chrono simulation diverges, physics will revert to the default CARLA physics; this is only reported in the server log.
 _</font>  
 - <a name="carla.Vehicle.is_at_traffic_light"></a>**<font color="#7fb800">is_at_traffic_light</font>**(<font color="#00a6ed">**self**</font>)  
 Vehicles will be affected by a traffic light when the light is red and the vehicle is inside its bounding box. The client returns whether a traffic light is affecting this vehicle according to last tick (it does not call the simulator).  
@@ -3407,6 +3407,10 @@ Vehicles will be affected by a traffic light when the light is red and the vehic
 Open the door `door_idx` if the vehicle has it. Use [carla.VehicleDoor.All](#carla.VehicleDoor.All) to open all available doors.  
     - **Parameters:**
         - `door_idx` (_[carla.VehicleDoor](#carla.VehicleDoor)_) - door index.  
+- <a name="carla.Vehicle.restore_default_physics"></a>**<font color="#7fb800">restore_default_physics</font>**(<font color="#00a6ed">**self**</font>)  
+Restores the default CARLA physics (Chaos) on a vehicle that had Chrono physics enabled, undoing `enable_chrono_physics`.  
+- <a name="carla.Vehicle.restore_physx_physics"></a>**<font color="#7fb800">restore_physx_physics</font>**(<font color="#00a6ed">**self**</font>)  
+Deprecated alias of `restore_default_physics`, the name ue4-dev used when the default vehicle physics was PhysX. Emits a `DeprecationWarning`.  
 - <a name="carla.Vehicle.show_debug_telemetry"></a>**<font color="#7fb800">show_debug_telemetry</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**enabled**=True</font>)  
 Enables or disables the telemetry on this vehicle. This shows information about the vehicles current state and forces applied to it in the spectator window. Only information for one vehicle can be shown so that, if you enable a second one, the previous will be automatically disabled.  
     - **Parameters:**

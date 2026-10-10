@@ -1,0 +1,67 @@
+cmake_minimum_required (
+  VERSION
+  ${CARLA_CMAKE_MINIMUM_REQUIRED_VERSION}
+)
+
+project (carla-chrono-project)
+
+include (ExternalProject)
+
+set (PROJECT_INSTALL_PATH ${CMAKE_CURRENT_BINARY_DIR}/install)
+
+# Unreal/ is added after this directory and needs the include paths.
+set (CARLA_CHRONO_INSTALL_PATH ${PROJECT_INSTALL_PATH} PARENT_SCOPE)
+
+# Chrono 10 selects C++17 on its own (src/CMakeLists.txt, CH_CXX17). Pin the
+# subproject to that rather than CARLA's C++20: the installed headers still
+# include cleanly from the C++20 Carla module, which is all
+# UChronoMovementComponent needs.
+if (CARLA_CHRONO_SOURCE_PATH STREQUAL "")
+  set (
+    CARLA_CHRONO_SOURCE_ARGS
+    GIT_REPOSITORY https://github.com/projectchrono/chrono.git
+    GIT_TAG ${CARLA_CHRONO_TAG}
+    GIT_SHALLOW ON
+  )
+else ()
+  carla_message ("Using local Project Chrono source at ${CARLA_CHRONO_SOURCE_PATH}")
+  set (
+    CARLA_CHRONO_SOURCE_ARGS
+    SOURCE_DIR ${CARLA_CHRONO_SOURCE_PATH}
+    BUILD_ALWAYS OFF
+  )
+endif ()
+
+ExternalProject_Add (
+  chrono
+  ${CARLA_CHRONO_SOURCE_ARGS}
+  CMAKE_ARGS
+    -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+    -DCMAKE_INSTALL_PREFIX=${PROJECT_INSTALL_PATH}
+    -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}
+    -DCMAKE_CXX_STANDARD=17
+    -DEIGEN3_INCLUDE_DIR=${eigen_SOURCE_DIR}
+    -DCH_ENABLE_MODULE_VEHICLE=ON
+    -DBUILD_DEMOS=OFF
+    -DBUILD_TESTING=OFF
+    -DBUILD_BENCHMARKING=OFF
+)
+
+set (CARLA_PLUGIN_BINARY_PATH ${CMAKE_SOURCE_DIR}/Unreal/CarlaUnreal/Plugins/Carla/Binaries/Linux)
+
+make_directory (${CARLA_PLUGIN_BINARY_PATH})
+
+add_custom_command (
+  TARGET chrono
+  POST_BUILD
+  COMMAND
+    ${CMAKE_COMMAND} -E copy
+    ${PROJECT_INSTALL_PATH}/lib/*.so*
+    ${CARLA_PLUGIN_BINARY_PATH}
+)
+
+carla_add_custom_target (
+  carla-chrono
+  "Build the Project Chrono CARLA subproject."
+  DEPENDS chrono
+)

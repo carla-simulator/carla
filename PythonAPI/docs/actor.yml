@@ -365,25 +365,33 @@
         - param_name: vehicle_json
           type: str
           doc: >
-            Path to vehicle json file relative to `base_json_path`
+            Path to vehicle json file relative to `base_json_path`. Empty selects `sedan/vehicle/Sedan_Vehicle.json`
         - param_name: powertrain_json
           type: str
           doc: >
-            Path to powertrain json file relative to `base_json_path`
+            Path to powertrain json file relative to `base_json_path`. Empty selects `sedan/powertrain/Sedan_SimpleMapPowertrain.json`
         - param_name: tire_json
           type: str
           doc: >
-            Path to tire json file relative to `base_json_path`
+            Path to tire json file relative to `base_json_path`. Empty selects `sedan/tire/Sedan_TMeasyTire.json`
         - param_name: base_json_path
           type: str
           doc: >
-            Path to `chrono/data/vehicle` folder. E.g., `/home/user/carla/Build/chrono-install/share/chrono/data/vehicle/` (the final `/` character is required).
+            Directory the template paths are relative to, e.g. Chrono's `data/vehicle` folder (`/home/user/carla/Build/Release/Chrono/install/share/chrono/data/vehicle/`; the final `/` character is required). Empty selects `Co-Simulation/Chrono/Vehicles/` in the source tree the server was built from, which holds the sedan templates.
       doc: >
         Enables Chrono physics on a spawned vehicle.
       note: >
-        Ensure that you have started the CARLA server with the `ARGS="--chrono"` flag. You will not be able to use Chrono physics without this flag set.
+        Ensure that the CARLA server was built with `-DENABLE_CHRONO=ON`. You will not be able to use Chrono physics without it. Raises `RuntimeError` when Chrono cannot be enabled (a server built without Chrono, a template that is missing or that Chrono rejects); the vehicle then keeps its current physics.
       warning: >
-        Collisions are not supported. When a collision is detected, physics will revert to the default CARLA physics.
+        Collisions are not supported. When a collision is detected, or the Chrono simulation diverges, physics will revert to the default CARLA physics; this is only reported in the server log.
+     # -------------------------------------- 
+    - def_name: restore_default_physics
+      doc: >
+        Restores the default CARLA physics (Chaos) on a vehicle that had Chrono physics enabled, undoing `enable_chrono_physics`.
+     # --------------------------------------
+    - def_name: restore_physx_physics
+      doc: >
+        Deprecated alias of `restore_default_physics`, the name ue4-dev used when the default vehicle physics was PhysX. Emits a `DeprecationWarning`.
      # -------------------------------------- 
     - def_name: set_autopilot
       params:

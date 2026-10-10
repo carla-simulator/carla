@@ -379,7 +379,13 @@ public:
   }
 
   virtual ECarlaServerResponse EnableChronoPhysics(uint64_t, float,
-      const FString&, const FString&, const FString&, const FString&)
+      const FString&, const FString&, const FString&, const FString&,
+      FString& /*OutError*/)
+  {
+    return ECarlaServerResponse::ActorTypeMismatch;
+  }
+
+  virtual ECarlaServerResponse RestoreDefaultPhysics()
   {
     return ECarlaServerResponse::ActorTypeMismatch;
   }
@@ -598,7 +604,10 @@ public:
   virtual ECarlaServerResponse EnableChronoPhysics(
       uint64_t MaxSubsteps, float MaxSubstepDeltaTime,
       const FString& VehicleJSON, const FString& PowertrainJSON,
-      const FString& TireJSON, const FString& BaseJSONPath) final;
+      const FString& TireJSON, const FString& BaseJSONPath,
+      FString& OutError) final;
+
+  virtual ECarlaServerResponse RestoreDefaultPhysics() final;
 };
 
 class FSensorActor : public FCarlaActor

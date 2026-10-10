@@ -86,6 +86,9 @@ public class Carla :
         case "OSM2ODR":
           EnableOSM2ODR = true;
           break;
+        case "CHRONO":
+          EnableChrono = true;
+          break;
         default:
           Console.WriteLine($"Unknown option \"{Trimmed}\".");
           break;
@@ -173,15 +176,24 @@ public class Carla :
 
     if (EnableChrono)
     {
-      // @TODO
       var ChronoLibraryNames = new string[]
       {
-        "ChronoEngine",
-        "ChronoEngine_vehicle",
+        "Chrono_core",
+        "Chrono_vehicle",
         "ChronoModels_vehicle",
         "ChronoModels_robot",
       };
-      throw new NotImplementedException();
+
+      // Chrono is built by the Chrono/ subproject, which stages its shared
+      // objects next to the other CARLA runtime dependencies.
+      string CarlaPluginBinariesLinuxPath = Path.Combine(
+          Path.GetFullPath(ModuleDirectory), "..", "..", "Binaries", "Linux");
+
+      foreach (var ChronoLibraryName in ChronoLibraryNames)
+      {
+        AddDynamicLibrary(Path.Combine(
+            CarlaPluginBinariesLinuxPath, "lib" + ChronoLibraryName + ".so"));
+      }
     }
 
     if (EnableRos2)

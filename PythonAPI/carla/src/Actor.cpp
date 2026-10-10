@@ -27,6 +27,15 @@ static auto GetSemanticTags(const cc::Actor &self) {
   return StdVectorToPyList(tags);
 }
 
+static void RestorePhysXPhysics(cc::Vehicle &self) {
+  if (PyErr_WarnEx(PyExc_DeprecationWarning,
+      "Vehicle.restore_physx_physics() is deprecated, use "
+      "Vehicle.restore_default_physics(); UE5 restores Chaos, not PhysX.", 1) < 0) {
+    boost::python::throw_error_already_set();
+  }
+  self.RestoreDefaultPhysics();
+}
+
 static void AddActorImpulse(cc::Actor &self,
     const cg::Vector3D &impulse) {
   self.AddImpulse(impulse);
@@ -222,7 +231,9 @@ void export_actor() {
       .def("get_traffic_light", &cc::Vehicle::GetTrafficLight)
       .def("enable_carsim", &cc::Vehicle::EnableCarSim, (arg("simfile_path") = ""))
       .def("use_carsim_road", &cc::Vehicle::UseCarSimRoad, (arg("enabled")))
-      .def("enable_chrono_physics", &cc::Vehicle::EnableChronoPhysics, (arg("max_substeps")=30, arg("max_substep_delta_time")=0.002, arg("vehicle_json")="", arg("powetrain_json")="", arg("tire_json")="", arg("base_json_path")=""))
+      .def("enable_chrono_physics", &cc::Vehicle::EnableChronoPhysics, (arg("max_substeps")=30, arg("max_substep_delta_time")=0.002, arg("vehicle_json")="", arg("powertrain_json")="", arg("tire_json")="", arg("base_json_path")=""))
+      .def("restore_default_physics", &cc::Vehicle::RestoreDefaultPhysics)
+      .def("restore_physx_physics", &RestorePhysXPhysics)
       .def("get_failure_state", &cc::Vehicle::GetFailureState)
       .def("get_vehicle_bone_world_transforms", &cc::Vehicle::GetVehicleBoneWorldTransforms)
       .def(self_ns::str(self_ns::self))
