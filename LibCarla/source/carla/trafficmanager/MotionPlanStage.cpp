@@ -723,8 +723,12 @@ float MotionPlanStage::GetLandmarkTargetVelocity(const SimpleWaypoint& waypoint,
       } else if (landmark_type == "205") {  // Yield
         minimum_velocity = YIELD_TARGET_VELOCITY;
       } else if (landmark_type == "274") {  // Speed limit
-        float value = static_cast<float>(landmark->GetValue()) / 3.6f;
-        value = parameters.GetVehicleTargetVelocity(actor_id, value);
+        const std::optional<double> limit = landmark->GetSpeedLimitKmh();
+        if (!limit.has_value()) {
+          continue;
+        }
+        const float value = parameters.GetVehicleTargetVelocity(
+            actor_id, static_cast<float>(*limit)) / 3.6f;
         minimum_velocity = (value < max_target_velocity) ? value : max_target_velocity;
       } else {
         continue;
@@ -742,7 +746,9 @@ float MotionPlanStage::GetRoadSpeedLimit(const SimpleWaypoint &waypoint,
                                          float vehicle_speed_limit) {
   // The vehicle's own speed limit only changes when it drives through a
   // speed-sign trigger box and otherwise sits at the controller's 30 km/h
-  // default, so prefer the limit the OpenDRIVE map gives for the lane.
+  // default, so prefer the limit the OpenDRIVE map gives for the lane. That
+  // limit already includes the last 274 sign passed on the road, so a sign
+  // keeps holding the vehicle down after the lookahead has gone past it.
   const std::optional<double> map_limit = waypoint.GetWaypoint()->GetSpeedLimit();
   if (map_limit.has_value()) {
     const float limit = static_cast<float>(*map_limit);

@@ -76,6 +76,7 @@ namespace client {
     double GetLaneWidth() const;
 
     /// OpenDRIVE max speed here in km/h, or empty when the map gives none.
+    /// See road::Map::GetSpeedLimit.
     std::optional<double> GetSpeedLimit() const;
 
     road::Lane::LaneType GetType() const;

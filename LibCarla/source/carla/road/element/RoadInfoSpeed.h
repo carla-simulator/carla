@@ -14,6 +14,22 @@ namespace carla {
 namespace road {
 namespace element {
 
+  /// Converts an OpenDRIVE speed to km/h. @a unit is "m/s", "km/h" or "mph";
+  /// when it is empty, @a default_unit is used instead.
+  inline double SpeedToKmh(
+      const double speed,
+      const std::string &unit,
+      const std::string &default_unit = "m/s") {
+    const std::string &u = unit.empty() ? default_unit : unit;
+    if (u == "km/h") {
+      return speed;
+    }
+    if (u == "mph") {
+      return speed * 1.609344;
+    }
+    return speed * 3.6;
+  }
+
   class RoadInfoSpeed final : public RoadInfo {
   public:
 
@@ -54,13 +70,7 @@ namespace element {
 
     /// The max speed converted to km/h.
     double GetSpeedKmh() const {
-      if (_unit == "km/h") {
-        return _speed;
-      }
-      if (_unit == "mph") {
-        return _speed * 1.609344;
-      }
-      return _speed * 3.6;
+      return SpeedToKmh(_speed, _unit);
     }
 
   private:

@@ -287,18 +287,68 @@ namespace road {
     return GetLane(waypoint).GetType();
   }
 
+  /// The limit of the last maximum speed sign (274) passed on this road
+  /// that applies to the waypoint's lane, in km/h. A later sign replaces an
+  /// earlier one, and leaving the road ends it.
+  static std::optional<double> GetPassedSpeedSignLimit(
+      const Road &road,
+      const Lane &lane,
+      const Waypoint &waypoint) {
+    const bool forward = lane.IsPositiveDirection();
+    const RoadInfoSignal *closest = nullptr;
+    std::optional<double> limit;
+    for (const auto *info : road.GetInfos<RoadInfoSignal>()) {
+      const Signal *signal = info->GetSignal();
+      if (signal == nullptr) {
+        continue;
+      }
+      const auto sign_limit = signal->GetSpeedLimitKmh();
+      if (!sign_limit.has_value()) {
+        continue;
+      }
+      const double s = info->GetS();
+      if (forward ? (s > waypoint.s) : (s < waypoint.s)) {
+        continue;
+      }
+      if (closest != nullptr &&
+          (forward ? (s <= closest->GetS()) : (s >= closest->GetS()))) {
+        continue;
+      }
+      const auto &validities = info->GetValidities();
+      const bool is_valid = std::any_of(validities.begin(), validities.end(),
+          [&](const LaneValidity &validity) {
+            return waypoint.lane_id >= validity._from_lane &&
+                   waypoint.lane_id <= validity._to_lane;
+          });
+      if (!is_valid) {
+        continue;
+      }
+      closest = info;
+      limit = sign_limit;
+    }
+    return limit;
+  }
+
   std::optional<double> Map::GetSpeedLimit(const Waypoint waypoint) const {
     const auto &lane = GetLane(waypoint);
-    const auto lane_speed = lane.GetInfo<RoadInfoSpeed>(waypoint.s);
-    if (lane_speed != nullptr && lane_speed->GetSpeed() > 0.0) {
-      return lane_speed->GetSpeedKmh();
-    }
     RELEASE_ASSERT(lane.GetRoad() != nullptr);
-    const auto road_speed = lane.GetRoad()->GetInfo<RoadInfoSpeed>(waypoint.s);
-    if (road_speed != nullptr && road_speed->GetSpeed() > 0.0) {
-      return road_speed->GetSpeedKmh();
+    const Road &road = *lane.GetRoad();
+
+    std::optional<double> limit;
+    const auto lane_speed = lane.GetInfo<RoadInfoSpeed>(waypoint.s);
+    const auto road_speed = road.GetInfo<RoadInfoSpeed>(waypoint.s);
+    if (lane_speed != nullptr && lane_speed->GetSpeed() > 0.0) {
+      limit = lane_speed->GetSpeedKmh();
+    } else if (road_speed != nullptr && road_speed->GetSpeed() > 0.0) {
+      limit = road_speed->GetSpeedKmh();
     }
-    return std::nullopt;
+
+    // Both are maximums, so the lower one is in force.
+    const auto sign_limit = GetPassedSpeedSignLimit(road, lane, waypoint);
+    if (sign_limit.has_value()) {
+      limit = limit.has_value() ? std::min(*limit, *sign_limit) : *sign_limit;
+    }
+    return limit;
   }
 
   double Map::GetLaneWidth(const Waypoint waypoint) const {
