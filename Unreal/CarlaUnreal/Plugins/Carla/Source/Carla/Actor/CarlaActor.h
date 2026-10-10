@@ -301,6 +301,31 @@ public:
     return ECarlaServerResponse::ActorTypeMismatch;
   }
 
+  virtual ECarlaServerResponse SetWheelPitchAngle(const EVehicleWheelLocation&, float)
+  {
+    return ECarlaServerResponse::ActorTypeMismatch;
+  }
+
+  virtual ECarlaServerResponse GetWheelPitchAngle(const EVehicleWheelLocation&, float&)
+  {
+    return ECarlaServerResponse::ActorTypeMismatch;
+  }
+
+  virtual ECarlaServerResponse SetWheelSuspensionOffset(const EVehicleWheelLocation&, float)
+  {
+    return ECarlaServerResponse::ActorTypeMismatch;
+  }
+
+  virtual ECarlaServerResponse GetWheelSuspensionOffset(const EVehicleWheelLocation&, float&)
+  {
+    return ECarlaServerResponse::ActorTypeMismatch;
+  }
+
+  virtual ECarlaServerResponse SetWheelAnimationOverride(bool)
+  {
+    return ECarlaServerResponse::ActorTypeMismatch;
+  }
+
   virtual ECarlaServerResponse ApplyControlToVehicle(
       const FVehicleControl&, const EVehicleInputPriority&)
   {
@@ -535,6 +560,22 @@ public:
 
   virtual ECarlaServerResponse GetWheelSteerAngle(
       const EVehicleWheelLocation& WheelLocation, float& Angle);
+
+  virtual ECarlaServerResponse SetWheelPitchAngle(
+      const EVehicleWheelLocation& WheelLocation, float AngleInDeg) final;
+
+  virtual ECarlaServerResponse GetWheelPitchAngle(
+      const EVehicleWheelLocation& WheelLocation, float& Angle) final;
+
+  /// Offset in meters.
+  virtual ECarlaServerResponse SetWheelSuspensionOffset(
+      const EVehicleWheelLocation& WheelLocation, float Offset) final;
+
+  /// Offset in meters.
+  virtual ECarlaServerResponse GetWheelSuspensionOffset(
+      const EVehicleWheelLocation& WheelLocation, float& Offset) final;
+
+  virtual ECarlaServerResponse SetWheelAnimationOverride(bool bEnabled) final;
 
   virtual ECarlaServerResponse SetActorSimulatePhysics(bool bSimulatePhysics) final;
 

@@ -419,13 +419,43 @@ namespace detail {
         rpc::ActorId vehicle,
         rpc::VehicleWheelLocation vehicle_wheel,
         float angle_in_deg) {
-    return _pimpl->AsyncCall("set_wheel_steer_direction", vehicle, vehicle_wheel, angle_in_deg);
+    _pimpl->CallAndWait<void>("set_wheel_steer_direction", vehicle, vehicle_wheel, angle_in_deg);
   }
 
   float Client::GetWheelSteerAngle(
         rpc::ActorId vehicle,
         rpc::VehicleWheelLocation wheel_location){
     return _pimpl->CallAndWait<float>("get_wheel_steer_angle", vehicle, wheel_location);
+  }
+
+  void Client::SetWheelPitchAngle(
+        rpc::ActorId vehicle,
+        rpc::VehicleWheelLocation wheel_location,
+        float angle_in_deg) {
+    _pimpl->CallAndWait<void>("set_wheel_pitch_angle", vehicle, wheel_location, angle_in_deg);
+  }
+
+  float Client::GetWheelPitchAngle(
+        rpc::ActorId vehicle,
+        rpc::VehicleWheelLocation wheel_location) {
+    return _pimpl->CallAndWait<float>("get_wheel_pitch_angle", vehicle, wheel_location);
+  }
+
+  void Client::SetWheelSuspensionOffset(
+        rpc::ActorId vehicle,
+        rpc::VehicleWheelLocation wheel_location,
+        float offset) {
+    _pimpl->CallAndWait<void>("set_wheel_suspension_offset", vehicle, wheel_location, offset);
+  }
+
+  float Client::GetWheelSuspensionOffset(
+        rpc::ActorId vehicle,
+        rpc::VehicleWheelLocation wheel_location) {
+    return _pimpl->CallAndWait<float>("get_wheel_suspension_offset", vehicle, wheel_location);
+  }
+
+  void Client::SetWheelAnimationOverride(rpc::ActorId vehicle, bool enabled) {
+    _pimpl->CallAndWait<void>("set_wheel_animation_override", vehicle, enabled);
   }
 
   rpc::Actor Client::SpawnActor(

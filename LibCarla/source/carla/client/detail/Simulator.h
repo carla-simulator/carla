@@ -712,6 +712,26 @@ namespace detail {
       return _client.GetWheelSteerAngle(vehicle.GetId(), wheel_location);
     }
 
+    void SetWheelPitchAngle(Vehicle &vehicle, rpc::VehicleWheelLocation wheel_location, float angle_in_deg) {
+      _client.SetWheelPitchAngle(vehicle.GetId(), wheel_location, angle_in_deg);
+    }
+
+    float GetWheelPitchAngle(Vehicle &vehicle, rpc::VehicleWheelLocation wheel_location) {
+      return _client.GetWheelPitchAngle(vehicle.GetId(), wheel_location);
+    }
+
+    void SetWheelSuspensionOffset(Vehicle &vehicle, rpc::VehicleWheelLocation wheel_location, float offset) {
+      _client.SetWheelSuspensionOffset(vehicle.GetId(), wheel_location, offset);
+    }
+
+    float GetWheelSuspensionOffset(Vehicle &vehicle, rpc::VehicleWheelLocation wheel_location) {
+      return _client.GetWheelSuspensionOffset(vehicle.GetId(), wheel_location);
+    }
+
+    void SetWheelAnimationOverride(Vehicle &vehicle, bool enabled) {
+      _client.SetWheelAnimationOverride(vehicle.GetId(), enabled);
+    }
+
     void EnableCarSim(Vehicle &vehicle, std::string simfile_path) {
       _client.EnableCarSim(vehicle.GetId(), simfile_path);
     }

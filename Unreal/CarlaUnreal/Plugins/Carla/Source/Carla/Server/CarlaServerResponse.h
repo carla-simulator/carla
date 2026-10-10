@@ -22,7 +22,10 @@ enum class ECarlaServerResponse
   CarSimPluginNotEnabled,
   NotATrafficLight,
   FunctionNotAvailableWhenDormant,
-  ComponentNotFound
+  ComponentNotFound,
+  WheelNotFound,
+  WheelAnimationOverrideDisabled,
+  WheelAnimationNotSupported
 };
 
 FString CarlaGetStringError(ECarlaServerResponse Response);
