@@ -17,6 +17,7 @@
 #include "Carla/Lights/CarlaLightSubsystem.h"
 
 #include <util/disable-ue4-macros.h>
+#include "carla/multigpu/mirroredActors.h"
 #include "carla/rpc/VehicleLightState.h"
 #include <util/enable-ue4-macros.h>
 
@@ -81,8 +82,11 @@ void FFrameData::GetFrameData(UCarlaEpisode *ThisEpisode, bool bAdditionalData, 
 
 void FFrameData::PlayFrameData(
     UCarlaEpisode *ThisEpisode,
-    std::unordered_map<uint32_t, uint32_t>& MappedId)
+    std::unordered_map<uint32_t, uint32_t>& MappedId,
+    TFunctionRef<void(uint32_t, uint32_t, bool)> OnActorAdded,
+    TFunctionRef<void(uint32_t)> OnActorRemoved)
 {
+  Episode = ThisEpisode;
 
   for(const CarlaRecorderEventAdd &EventAdd : EventsAdd.GetEvents())
   {
@@ -108,6 +112,7 @@ void FFrameData::PlayFrameData(
         // mapping id (recorded Id is a new Id in replayer)
         MappedId[OldId] = Result.second;
         UE_LOG(LogCarla, Log, TEXT("actor created"));
+        OnActorAdded(OldId, Result.second, true);
         break;
 
       // actor reused from existing
@@ -115,6 +120,7 @@ void FFrameData::PlayFrameData(
         // mapping id (say desired Id is mapped to what)
         MappedId[OldId] = Result.second;
         UE_LOG(LogCarla, Log, TEXT("actor reused"));
+        OnActorAdded(OldId, Result.second, false);
         break;
     }
   }
@@ -123,6 +129,7 @@ void FFrameData::PlayFrameData(
   {
     ProcessReplayerEventDel(MappedId[EventDel.DatabaseId]);
     MappedId.erase(EventDel.DatabaseId);
+    OnActorRemoved(EventDel.DatabaseId);
   }
 
   for (const CarlaRecorderPosition &Position : Positions.GetPositions())
@@ -720,6 +727,92 @@ void FFrameData::GetFrameCounter()
   FrameCounter.FrameCounter = FCarlaEngine::GetFrameCounter();
 }
 
+namespace
+{
+  // Local actors as seen by carla::multigpu::PlanReplayedActor.
+  class FReplayedActorLookup
+  {
+  public:
+    FReplayedActorLookup(UCarlaEpisode &InEpisode, const FActorDescription &InDescription, const FVector &InLocation)
+      : Episode(InEpisode), Description(InDescription), Location(InLocation) {}
+
+    bool IsSameKind(uint32_t LocalId) const
+    {
+      const FActorInfo *Info = FindInfo(LocalId);
+      return (Info != nullptr) && (Info->Description.Id == Description.Id);
+    }
+
+    std::optional<uint32_t> FindMapActor() const
+    {
+      if (Description.Id == TEXT("spectator"))
+      {
+        APawn *Spectator = Episode.GetSpectatorPawn();
+        const FCarlaActor *CarlaActor = (Spectator != nullptr) ? Episode.FindCarlaActor(Spectator) : nullptr;
+        return (CarlaActor != nullptr) ? std::optional<uint32_t>(CarlaActor->GetActorId()) : std::nullopt;
+      }
+      if (Description.Id != TEXT("static.prop.mesh"))
+      {
+        return std::nullopt;
+      }
+      // Same truncated location as FindTrafficSignAt.
+      const FIntVector Cell(static_cast<int32>(Location.X), static_cast<int32>(Location.Y), static_cast<int32>(Location.Z));
+      for (auto It = Episode.GetActorRegistry().begin(); It != Episode.GetActorRegistry().end(); ++It)
+      {
+        const FCarlaActor *CarlaActor = It->Value.Get();
+        if ((CarlaActor == nullptr) || !IsMapActorLike(CarlaActor->GetActorId()))
+        {
+          continue;
+        }
+        const FVector Other = CarlaActor->GetActorGlobalLocation();
+        if (Cell == FIntVector(static_cast<int32>(Other.X), static_cast<int32>(Other.Y), static_cast<int32>(Other.Z)))
+        {
+          return CarlaActor->GetActorId();
+        }
+      }
+      return std::nullopt;
+    }
+
+    // The map registers the spectator and movable static meshes at BeginPlay
+    // (UCarlaEpisode::InitializeAtBeginPlay); the primary resends them on a
+    // full resync.
+    bool IsMapActorLike(uint32_t LocalId) const
+    {
+      const FActorInfo *Info = FindInfo(LocalId);
+      if ((Info == nullptr) || (Info->Description.Id != Description.Id))
+      {
+        return false;
+      }
+      if (Description.Id == TEXT("spectator"))
+      {
+        return true;
+      }
+      if (Description.Id != TEXT("static.prop.mesh"))
+      {
+        return false;
+      }
+      const FActorAttribute *Mesh = Description.Variations.Find(TEXT("mesh_path"));
+      const FActorAttribute *OtherMesh = Info->Description.Variations.Find(TEXT("mesh_path"));
+      return (Mesh != nullptr) && (OtherMesh != nullptr) && (Mesh->Value == OtherMesh->Value);
+    }
+
+    bool Contains(uint32_t LocalId) const
+    {
+      return Episode.GetActorRegistry().Contains(LocalId);
+    }
+
+  private:
+    const FActorInfo *FindInfo(uint32_t LocalId) const
+    {
+      const FCarlaActor *CarlaActor = Episode.FindCarlaActor(LocalId);
+      return (CarlaActor != nullptr) ? CarlaActor->GetActorInfo() : nullptr;
+    }
+
+    UCarlaEpisode &Episode;
+    const FActorDescription &Description;
+    const FVector &Location;
+  };
+}
+
 // create or reuse an actor for replaying
 std::pair<int, FCarlaActor*> FFrameData::CreateOrReuseActor(
     FVector &Location,
@@ -750,41 +843,22 @@ std::pair<int, FCarlaActor*> FFrameData::CreateOrReuseActor(
   }
   else if (SpawnSensors || !ActorDesc.Id.StartsWith("sensor."))
   {
-    // check if an actor of that type already exist with same id
-    if (Episode->GetActorRegistry().Contains(DesiredId))
+    const carla::multigpu::ReplayedActorPlan Plan = carla::multigpu::PlanReplayedActor(
+        MappedId, DesiredId, FReplayedActorLookup(*Episode, ActorDesc, Location));
+    if (Plan.reuse)
     {
-      auto* CarlaActor = Episode->FindCarlaActor(DesiredId);
-      const FActorDescription *desc = &CarlaActor->GetActorInfo()->Description;
-      if (desc->Id == ActorDesc.Id)
-      {
-        // we don't need to create, actor of same type already exist
-        // relocate
-        FRotator Rot = FRotator::MakeFromEuler(Rotation);
-        FTransform Trans2(Rot, Location, FVector(1, 1, 1));
-        CarlaActor->SetActorGlobalTransform(Trans2);
-        return std::pair<int, FCarlaActor*>(2, CarlaActor);
-      }
-    }
-    else if (MappedId.find(DesiredId) != MappedId.end() && Episode->GetActorRegistry().Contains(MappedId[DesiredId]))
-    {
-      auto* CarlaActor = Episode->FindCarlaActor(MappedId[DesiredId]);
-      const FActorDescription *desc = &CarlaActor->GetActorInfo()->Description;
-      if (desc->Id == ActorDesc.Id)
-      {
-        // we don't need to create, actor of same type already exist
-        // relocate
-        FRotator Rot = FRotator::MakeFromEuler(Rotation);
-        FTransform Trans2(Rot, Location, FVector(1, 1, 1));
-        CarlaActor->SetActorGlobalTransform(Trans2);
-        return std::pair<int, FCarlaActor*>(2, CarlaActor);
-      }
+      FCarlaActor *CarlaActor = Episode->FindCarlaActor(*Plan.reuse);
+      FRotator Rot = FRotator::MakeFromEuler(Rotation);
+      FTransform Trans2(Rot, Location, FVector(1, 1, 1));
+      CarlaActor->SetActorGlobalTransform(Trans2);
+      return std::pair<int, FCarlaActor*>(2, CarlaActor);
     }
     // create new actor
     // create the transform
     FRotator Rot = FRotator::MakeFromEuler(Rotation);
     FTransform Trans(Rot, FVector(0, 0, 100000), FVector(1, 1, 1));
     // create as new actor
-    TPair<EActorSpawnResultStatus, FCarlaActor*> Result = Episode->SpawnActorWithInfo(Trans, ActorDesc, DesiredId);
+    TPair<EActorSpawnResultStatus, FCarlaActor*> Result = Episode->SpawnActorWithInfo(Trans, ActorDesc, Plan.spawn_id);
     if (Result.Key == EActorSpawnResultStatus::Success)
     {
       // relocate

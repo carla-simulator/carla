@@ -15,6 +15,8 @@
 #include "Carla/Util/RayTracer.h"
 #include "Carla/Vehicle/CarlaWheeledVehicle.h"
 #include "Carla/Sensor/CustomV2XSensor.h"
+#include "Carla/Sensor/SceneCaptureSensor.h"
+#include "Carla/Sensor/SceneCaptureSensor_WideAngleLens.h"
 #include "Carla/Walker/WalkerController.h"
 #include "Carla/Walker/WalkerBase.h"
 #include "Carla/Weather/SkyLightMap.h"
@@ -83,6 +85,7 @@
 #include <util/ue-header-guard-begin.h>
 #include "EngineUtils.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Misc/App.h"
 #include "Misc/FileHelper.h"
 #include "Animation/PoseSnapshot.h"
 #include <util/ue-header-guard-end.h>
@@ -118,6 +121,27 @@ static carla::rpc::ContentPackInfo MakeContentPackInfo(const FCarlaContentPack &
     Info.maps.emplace_back(carla::rpc::FromFString(Map.Name));
   }
   return Info;
+}
+
+/// True when the stream belongs to a camera and this process has no RHI
+/// (-nullrhi): a local token for it could never deliver a frame, so the
+/// camera must be owned by a rendering Multi-GPU secondary instead.
+static bool IsUnrenderableLocalSensorStream(
+    UCarlaEpisode &Episode,
+    carla::streaming::detail::stream_id_type StreamId)
+{
+  if (FApp::CanEverRender())
+  {
+    return false;
+  }
+  const FCarlaActor *CarlaActor = Episode.FindCarlaActorFromStream(StreamId);
+  if (CarlaActor == nullptr)
+  {
+    return false;
+  }
+  const AActor *Actor = CarlaActor->GetActor();
+  return Actor != nullptr &&
+      (Actor->IsA<ASceneCaptureSensor>() || Actor->IsA<ASceneCaptureSensor_WideAngleLens>());
 }
 
 /// Resolve the AWalkerController behind a walker-navigation RPC actor id.
@@ -1191,12 +1215,22 @@ void FCarlaServer::FPimpl::BindActions()
       RESPOND_ERROR("unable to destroy actor: not found");
     }
     UE_LOG(LogCarla, Log, TEXT("CarlaServer destroy_actor %d"), ActorId);
+    std::optional<carla::streaming::detail::stream_id_type> SensorStreamId;
+    const ASensor *Sensor = Cast<ASensor>(CarlaActor->GetActor());
+    if (Sensor != nullptr && Episode->bIsPrimaryServer)
+    {
+      SensorStreamId = carla::streaming::detail::token_type(Sensor->GetToken()).get_stream_id();
+    }
     // We need to force the actor state change, since dormant actors
     //  will ignore the FCarlaActor destruction
     CarlaActor->SetActorState(cr::ActorState::PendingKill);
     if (!Episode->DestroyActor(ActorId))
     {
       RESPOND_ERROR("internal error: unable to destroy actor");
+    }
+    if (SensorStreamId && SecondaryServer)
+    {
+      SecondaryServer->GetCommander().ForgetSensor(*SensorStreamId);
     }
     return true;
   };
@@ -1243,11 +1277,28 @@ void FCarlaServer::FPimpl::BindActions()
     {
       // multi-gpu
       UE_LOG(LogCarla, Log, TEXT("Sensor %d '%s' created in secondary server"), sensor_id, *Desc);
-      return SecondaryServer->GetCommander().GetToken(sensor_id);
+      const FCarlaActor *SensorActor = Episode->FindCarlaActorFromStream(sensor_id);
+      if (SensorActor == nullptr)
+      {
+        RESPOND_ERROR("sensor stream has no actor");
+      }
+      auto Token = SecondaryServer->GetCommander().GetToken(sensor_id, SensorActor->GetActorId());
+      if (!Token)
+      {
+        RESPOND_ERROR("no secondary server could provide a token for this sensor");
+      }
+      return *Token;
     }
     else
     {
       // single-gpu
+      if (IsUnrenderableLocalSensorStream(*Episode, sensor_id))
+      {
+        UE_LOG(LogCarla, Warning,
+            TEXT("Sensor %d '%s' refused: this server cannot render (-nullrhi) and no secondary server is connected"),
+            sensor_id, *Desc);
+        RESPOND_ERROR("this server cannot render (-nullrhi) and no rendering secondary server is connected to own this camera sensor");
+      }
       UE_LOG(LogCarla, Log, TEXT("Sensor %d '%s' created in primary server"), sensor_id, *Desc);
       return StreamingServer.GetToken(sensor_id);
     }
@@ -1275,11 +1326,26 @@ void FCarlaServer::FPimpl::BindActions()
     if (SecondaryServer->HasClientsConnected() && !ForceInPrimary)
     {
       // multi-gpu
-      SecondaryServer->GetCommander().EnableForROS(sensor_id);
+      const FCarlaActor *SensorActor = Episode->FindCarlaActorFromStream(sensor_id);
+      if (SensorActor == nullptr)
+      {
+        RESPOND_ERROR("sensor stream has no actor");
+      }
+      if (!SecondaryServer->GetCommander().EnableForROS(sensor_id, SensorActor->GetActorId()))
+      {
+        RESPOND_ERROR("no secondary server could enable ROS for this sensor");
+      }
     }
     else
     {
       // single-gpu
+      if (IsUnrenderableLocalSensorStream(*Episode, sensor_id))
+      {
+        UE_LOG(LogCarla, Warning,
+            TEXT("ROS 2 for sensor %d '%s' refused: this server cannot render (-nullrhi) and no secondary server is connected"),
+            sensor_id, *Desc);
+        RESPOND_ERROR("this server cannot render (-nullrhi) and no rendering secondary server is connected to publish this camera sensor");
+      }
       StreamingServer.EnableForROS(sensor_id);
     }
     return R<void>::Success();
@@ -3336,6 +3402,13 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
         "get_gbuffer_token",
         ECarlaServerResponse::ActorTypeMismatch,
         " Actor Id: " + FString::FromInt(ActorId));
+    }
+    if (!FApp::CanEverRender())
+    {
+      return RespondError(
+          "get_gbuffer_token",
+          "this server cannot render (-nullrhi), GBuffer streams are not available",
+          " Actor Id: " + FString::FromInt(ActorId));
     }
 
     switch (GBufferId)

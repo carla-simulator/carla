@@ -27,6 +27,7 @@ nav:
   - 'Sensors and data': 'core_sensors.md'
   - 'Coordinate conventions': 'coordinate_conventions.md'
   - 'Traffic' : 'ts_traffic_simulation_overview.md'
+  - 'Multi-GPU': 'adv_multigpu.md'
 
 - Resources:
   - 'Python API': 'python_api.md'
