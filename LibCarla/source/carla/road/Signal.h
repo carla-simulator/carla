@@ -14,7 +14,6 @@
 #include "carla/road/element/RoadInfoSpeed.h"
 #include "carla/geom/Transform.h"
 
-#include <cstdlib>
 #include <optional>
 #include <string>
 #include <vector>
@@ -146,20 +145,14 @@ namespace road {
 
     /// For a maximum speed sign (type 274), its limit in km/h: the value
     /// converted from its unit (km/h when the unit is omitted, as CARLA reads
-    /// the StVO catalogue), or the subtype when the value is missing. Empty
-    /// for any other signal.
+    /// the StVO catalogue). Empty for any other signal, and for a 274 without
+    /// a value: the meaning of the subtype depends on the country catalogue,
+    /// so it is not read as a speed.
     std::optional<double> GetSpeedLimitKmh() const {
-      if (_type != SignalType::MaximumSpeed()) {
+      if (_type != SignalType::MaximumSpeed() || _value <= 0.0) {
         return std::nullopt;
       }
-      if (_value > 0.0) {
-        return element::SpeedToKmh(_value, _unit, "km/h");
-      }
-      const double subtype = std::atof(_subtype.c_str());
-      if (subtype > 0.0) {
-        return subtype;
-      }
-      return std::nullopt;
+      return element::SpeedToKmh(_value, _unit, "km/h");
     }
 
     double GetHeight() const {
