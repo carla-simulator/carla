@@ -287,6 +287,20 @@ namespace road {
     return GetLane(waypoint).GetType();
   }
 
+  std::optional<double> Map::GetSpeedLimit(const Waypoint waypoint) const {
+    const auto &lane = GetLane(waypoint);
+    const auto lane_speed = lane.GetInfo<RoadInfoSpeed>(waypoint.s);
+    if (lane_speed != nullptr && lane_speed->GetSpeed() > 0.0) {
+      return lane_speed->GetSpeedKmh();
+    }
+    RELEASE_ASSERT(lane.GetRoad() != nullptr);
+    const auto road_speed = lane.GetRoad()->GetInfo<RoadInfoSpeed>(waypoint.s);
+    if (road_speed != nullptr && road_speed->GetSpeed() > 0.0) {
+      return road_speed->GetSpeedKmh();
+    }
+    return std::nullopt;
+  }
+
   double Map::GetLaneWidth(const Waypoint waypoint) const {
     const auto s = waypoint.s;
 

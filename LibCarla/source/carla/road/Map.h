@@ -80,6 +80,12 @@ namespace road {
 
     double GetLaneWidth(Waypoint waypoint) const;
 
+    /// The OpenDRIVE max speed at @a waypoint, in km/h: the lane's <speed>
+    /// record if it has one, otherwise the road's <type><speed>. Empty when
+    /// neither is given (a <type> without <speed>, or max="no limit", parses
+    /// as 0 and counts as not given).
+    std::optional<double> GetSpeedLimit(Waypoint waypoint) const;
+
     JuncId GetJunctionId(RoadId road_id) const;
 
     bool IsJunction(RoadId road_id) const;

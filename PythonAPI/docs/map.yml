@@ -407,6 +407,11 @@
       param_units: meters
       doc: >
         Horizontal size of the road at current <b>s</b>.
+    - var_name: speed_limit
+      type: float
+      param_units: km/h
+      doc: >
+        OpenDRIVE max speed at current <b>s</b>: the lane's `<speed>` record if any, otherwise the road's `<type><speed>`, converted from the unit given in the file. `None` when the map defines neither.
     - var_name: lane_change
       type: carla.LaneChange
       doc: >
