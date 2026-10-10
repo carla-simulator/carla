@@ -246,9 +246,10 @@ namespace road {
       Lane *lane,
       const double s,
       const double max,
-      const std::string /*unit*/) {
+      const std::string unit) {
     DEBUG_ASSERT(lane != nullptr);
-    _temp_lane_info_container[lane].emplace_back(std::make_unique<RoadInfoSpeed>(s, max));
+    _temp_lane_info_container[lane].emplace_back(
+        std::make_unique<RoadInfoSpeed>(s, max, "Town", unit));
   }
 
 
@@ -494,9 +495,10 @@ namespace road {
       const double s,
       const std::string /*type*/,
       const double max,
-      const std::string /*unit*/) {
+      const std::string unit) {
     DEBUG_ASSERT(road != nullptr);
-    _temp_road_info_container[road].emplace_back(std::make_unique<RoadInfoSpeed>(s, max));
+    _temp_road_info_container[road].emplace_back(
+        std::make_unique<RoadInfoSpeed>(s, max, "Town", unit));
   }
 
   void MapBuilder::CreateSectionOffset(

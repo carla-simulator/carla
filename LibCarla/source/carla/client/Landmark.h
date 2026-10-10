@@ -86,6 +86,11 @@ namespace client {
       return _signal->GetSignal()->GetUnit();
     }
 
+    /// See road::Signal::GetSpeedLimitKmh.
+    std::optional<double> GetSpeedLimitKmh() const {
+      return _signal->GetSignal()->GetSpeedLimitKmh();
+    }
+
     double GetHeight() const {
       return _signal->GetSignal()->GetHeight();
     }

@@ -368,6 +368,7 @@ void export_map() {
     .add_property("is_intersection", &cc::Waypoint::IsJunction) // deprecated
     .add_property("is_junction", &cc::Waypoint::IsJunction)
     .add_property("lane_width", &cc::Waypoint::GetLaneWidth)
+    .add_property("speed_limit", CALL_RETURNING_OPTIONAL(cc::Waypoint, GetSpeedLimit))
     .add_property("road_id", &cc::Waypoint::GetRoadId)
     .add_property("section_id", &cc::Waypoint::GetSectionId)
     .add_property("lane_id", &cc::Waypoint::GetLaneId)
