@@ -97,24 +97,14 @@ In order to build CARLA, you need access to the CARLA fork of Unreal Engine 5.8.
 
 __Building in macOS (Apple Silicon)__:
 
-CARLA supports native Apple Silicon (arm64) on macOS with Metal rendering. First, download the Xcode Metal Toolchain:
-
-```sh
-xcodebuild -downloadComponent MetalToolchain
-```
-
-Then run the setup script:
+CARLA supports native Apple Silicon (arm64) on macOS with Metal rendering. First, make sure to install tools required for MacOS builds as explained in the [build document](Docs/build_macos.md). Then run the setup script:
 
 ```sh
 cd CarlaUE58
 ./CarlaSetup.sh
 ```
 
-This verifies prerequisites, clones CARLA content, clones and builds Unreal Engine 5.8, compiles CARLA, and installs the Python API. For detailed instructions, prerequisites, troubleshooting, content caching, and packaging, see the [macOS Build Guide (Docs/build_macos.md)](Docs/build_macos.md).
-
-## Rebuilding CARLA
-
-Once the setup is complete, you can execute subsequent builds with the following commands in a terminal open in the CARLA root directory. In Linux, run these commands in a standard terminal. In Windows, open the x64 Native Tools Command Prompt for Visual Studio 2022. In macOS, use your standard terminal.
+This verifies prerequisites, clones CARLA content, clones and builds Unreal Engine 5.8, compiles CARLA, and installs the Python API. For detailed instructions, prerequisites, troubleshooting, content caching, and packaging, see the [macOS Build Guide (Docs/build_macos.md)](Docs/build_macos.md). The setup may prompt you for your GitHub credentials in order to authorise the download of the Unreal Engine repository. 
 
 __Building in Linux__:
 
