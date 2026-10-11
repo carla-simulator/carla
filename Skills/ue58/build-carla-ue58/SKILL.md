@@ -230,6 +230,12 @@ Solution: do not run it for ue58-dev. Clone the repos explicitly as in Step 2.
 Cause: network or external storage.
 Solution: build on a local disk. `check_env.sh` names the backing device.
 
+**Problem: enabling MCP Server, All Toolsets, or Terminal in Editor GUI prompts "Engine modules cannot be compiled at runtime"**
+Cause: `AllToolsets` aggregates 21 experimental toolsets depending on optional engine modules (`GameplayAbilities`, `CommonConversation`, etc.) whose module manifests are not compiled or synced with the engine build ID by default.
+Solution: compile the toolsets and generate matching manifests via UBT:
+`$CARLA_UNREAL_ENGINE_PATH/Engine/Build/BatchFiles/<Platform>/Build.sh UnrealEditor <Platform> Development -BuildPlugin=AllToolsets`
+(substitute `<Platform>` with `Mac` or `Linux`), then launch the editor normally.
+
 ## Outputs
 
 `Build/<preset>/` with LibCarla libraries, the Python wheel under

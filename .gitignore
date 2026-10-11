@@ -6,6 +6,7 @@
 .idea/
 cmake-build-*/
 __pycache__/
+.DS_Store
 
 Build/
 Build-Tests/

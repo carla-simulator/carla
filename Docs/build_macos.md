@@ -6,6 +6,7 @@
 * __[Set up the environment](#set-up-the-environment)__
 * __[Automated Build and Setup (CarlaSetup.sh)](#automated-build-and-setup-carlasetupsh)__
 * __[Running the CARLA Simulator](#running-the-carla-simulator)__
+* __[Enabling MCP Server and AI Toolsets](#enabling-mcp-server-and-ai-toolsets)__
 * __[Incremental Rebuilds for C++ Developers](#incremental-rebuilds-for-c-developers)__
 * __[Working with Content and Assets](#working-with-content-and-assets)__
 * __[Build a package with CARLA UE 5.8](#build-a-package-with-carla-ue-58)__
@@ -137,6 +138,38 @@ python3.10 PythonAPI/examples/generate_traffic.py -n 25
 # Manual keyboard driving:
 python3.10 PythonAPI/examples/manual_control.py
 ```
+
+---
+
+## Enabling MCP Server and AI Toolsets
+
+If you enable the **MCP Server** (`MCPClientToolset`), **All Toolsets**, or **Terminal** plugins in the Unreal Editor GUI (`Edit → Plugins`) and restart the editor, you may see this error prompt:
+
+> *"The following modules are missing or built with a different engine version:*
+> *CommonConversationRuntime, CommonConversationGraph, CommonConversationEditor, SemanticSearch, Terminal, DataRegistry, ModularGameplay, WorldConditions, GameplayAbilities, ...*
+> *Engine modules cannot be compiled at runtime. Please build through your IDE."*
+
+### Why this happens
+`AllToolsets` is an aggregator plugin consisting of 21 child toolset plugins (`GASToolsets`, `ConversationToolset`, `DataRegistryToolset`, `StateTreeToolset`, `PCGToolset`, etc.) that rely on optional engine modules (`GameplayAbilities`, `CommonConversation`, `WorldConditions`, `DataRegistry`, etc.). 
+
+Because CARLA's project target (`CarlaUnrealEditor.Target.cs`) has `bOverrideBuildEnvironment = true`, the editor cannot compile engine-level modules on the fly at project startup. All engine modules must be compiled and have matching module manifests (`UnrealEditor.modules`) generated for the active engine build.
+
+### How to compile and enable them
+Run UnrealBuildTool directly for the engine target with `-BuildPlugin=AllToolsets`:
+
+```sh
+$CARLA_UNREAL_ENGINE_PATH/Engine/Build/BatchFiles/Mac/Build.sh UnrealEditor Mac Development -BuildPlugin=AllToolsets
+```
+
+*(On Linux systems, substitute `Mac` with `Linux` in the command above).*
+
+This links and generates matching module manifests for all 21 toolset plugins and their engine runtime dependencies. Once completed, re-launch the editor:
+
+```sh
+cmake --build Build --target launch
+```
+
+All Toolsets, MCP Server, and Terminal will now load cleanly without module mismatch warnings.
 
 ---
 
