@@ -83,7 +83,11 @@
 		},
 		{
 			"Name": "NFORDenoise",
-			"Enabled": true
+			"Enabled": true,
+			"PlatformAllowList": [
+				"Linux",
+				"Win64"
+			]
 		},
 		{
 			"Name": "NNEDenoiser",
@@ -91,12 +95,17 @@
 		},
 		{
 			"Name": "DLSSRRDenoiser",
-			"Enabled": true
+			"Enabled": true,
+			"PlatformAllowList": [
+				"Linux",
+				"Win64"
+			]
 		}
 	],
 	"TargetPlatforms": [
 		"Linux",
 		"LinuxArm64",
+		"Mac",
 		"Windows"
 	]
 }

@@ -4,12 +4,20 @@ file (COPY_FILE ${CARLA_WORKSPACE_PATH}/CHANGELOG.md ${CARLA_PACKAGE_ARCHIVE_PAT
 file (COPY_FILE ${CARLA_WORKSPACE_PATH}/Docs/release_readme.md ${CARLA_PACKAGE_ARCHIVE_PATH}/README)
 if (WIN32)
     set (EXE_EXT .exe)
+    set (RECASTBUILDER_SRC ${CARLA_BUILD_PATH}/_deps/recastnavigation-build/RecastBuilder/RecastBuilder.exe)
+    set (RECASTBUILDER_DST ${CARLA_PACKAGE_ARCHIVE_PATH}/Tools/RecastBuilder.exe)
+elseif (APPLE)
+    set (EXE_EXT)
+    set (RECASTBUILDER_SRC ${CARLA_BUILD_PATH}/_deps/recastnavigation-build/RecastBuilder/RecastBuilder.app/Contents/MacOS/RecastBuilder)
+    set (RECASTBUILDER_DST ${CARLA_PACKAGE_ARCHIVE_PATH}/Tools/RecastBuilder)
 else ()
     set (EXE_EXT)
+    set (RECASTBUILDER_SRC ${CARLA_BUILD_PATH}/_deps/recastnavigation-build/RecastBuilder/RecastBuilder)
+    set (RECASTBUILDER_DST ${CARLA_PACKAGE_ARCHIVE_PATH}/Tools/RecastBuilder)
 endif ()
 make_directory (${CARLA_PACKAGE_ARCHIVE_PATH}/Tools)
 # @TODO Temporary hack:
-file (COPY_FILE ${CARLA_BUILD_PATH}/_deps/recastnavigation-build/RecastBuilder/RecastBuilder${EXE_EXT} ${CARLA_PACKAGE_ARCHIVE_PATH}/Tools/RecastBuilder${EXE_EXT})
+file (COPY_FILE ${RECASTBUILDER_SRC} ${RECASTBUILDER_DST})
 # The packaged binary looks for RecastBuilder at FPaths::RootDir()/Tools, and in
 # a packaged build RootDir is <archive>/<Platform>/ (the dir holding Engine/ and
 # CarlaUnreal/), not the archive root (CarlaEpisode.cpp BuildRecastBuilderFile).
@@ -19,7 +27,7 @@ file (GLOB CARLA_PACKAGE_PLATFORM_DIRS LIST_DIRECTORIES true ${CARLA_PACKAGE_ARC
 foreach (CARLA_PACKAGE_PROJECT_DIR ${CARLA_PACKAGE_PLATFORM_DIRS})
   cmake_path (GET CARLA_PACKAGE_PROJECT_DIR PARENT_PATH CARLA_PACKAGE_PLATFORM_DIR)
   make_directory (${CARLA_PACKAGE_PLATFORM_DIR}/Tools)
-  file (COPY_FILE ${CARLA_BUILD_PATH}/_deps/recastnavigation-build/RecastBuilder/RecastBuilder${EXE_EXT} ${CARLA_PACKAGE_PLATFORM_DIR}/Tools/RecastBuilder${EXE_EXT})
+  file (COPY_FILE ${RECASTBUILDER_SRC} ${CARLA_PACKAGE_PLATFORM_DIR}/Tools/RecastBuilder${EXE_EXT})
   # FCarlaModule::AddShaderSearchPaths maps /Plugin/Carla to <plugin>/Shaders at
   # startup; the plugin is staged without its Shaders folder, so a packaged
   # server logged "shader directory ... does not exist; shaders will be

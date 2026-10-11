@@ -17,23 +17,29 @@ environmental conditions.
 [![CARLA Video](Docs/img/carla_ue5_readme_img.webp)](https://www.youtube.com/watch?v=q4V9GYjA1pE)
 
 >[!NOTE]
-> This is the development branch `ue5-dev` for the **Unreal Engine 5.5 version of CARLA**. This branch exists in parallel with the Unreal Engine 4.26 version of CARLA, in the `ue4-dev` branch. Please be sure that this version of CARLA is suitable for your needs as there are significant differences between the UE 5.5 and UE 4.26 versions of CARLA. 
+> This is the development branch for the **Unreal Engine 5.8 version of CARLA**, with native support for **Linux**, **Windows**, and **macOS (Apple Silicon)**. This branch exists in parallel with the Unreal Engine 4.26 version of CARLA, in the `ue4-dev` branch. Please be sure that this version of CARLA is suitable for your needs as there are significant differences between the UE 5.8 and UE 4.26 versions of CARLA. 
 
 ### Recommended system
 
-* Intel i7 gen 9th - 11th / Intel i9 gen 9th - 11th / AMD Ryzen 7 / AMD Ryzen 9
-* +32 Gb RAM memory 
-* NVIDIA RTX 3070/3080/3090 / NVIDIA RTX 4090 / NVIDIA RTX 5090 or better
-* 16 Gb or more VRAM
-* Ubuntu 22.04 or 24.04, or Windows 11
+* **Linux / Windows:**
+  * Intel i7 gen 9th - 11th / Intel i9 gen 9th - 11th / AMD Ryzen 7 / AMD Ryzen 9
+  * +32 Gb RAM memory 
+  * NVIDIA RTX 3070/3080/3090 / NVIDIA RTX 4090 / NVIDIA RTX 5090 or better
+  * 16 Gb or more VRAM
+  * Ubuntu 22.04 or 24.04, or Windows 11
+* **macOS (Apple Silicon):**
+  * Apple Silicon M1 / M2 / M3 / M4 / M5 (native arm64)
+  * macOS 14 (Sonoma) or newer
+  * 32 GB or more Unified Memory recommended
 
  >[!NOTE]
-> You must use either Ubuntu 22.04 or 24.04, or Windows 11. The Unreal Engine 5.5 version of CARLA will not work on Ubuntu 20.04 or Windows 10 or lower.
+> On Linux/Windows, you must use either Ubuntu 22.04 or 24.04, or Windows 11. On macOS, native Apple Silicon is supported with Metal RHI.
 
 ## Documentation
 
 The [CARLA documentation](https://carla-ue5.readthedocs.io/en/latest/) is hosted on ReadTheDocs. Please see the following key links:
 
+- [Building on macOS (Docs/build_macos.md)](Docs/build_macos.md)
 - [Building on Linux](https://carla-ue5.readthedocs.io/en/latest/build_linux_ue5/)
 - [Building on Windows](https://carla-ue5.readthedocs.io/en/latest/build_windows_ue5/)
 - [First steps](https://carla-ue5.readthedocs.io/en/latest/tuto_first_steps/)
@@ -78,23 +84,23 @@ Felipe Codevilla, Antonio Lopez, Vladlen Koltun; PMLR 78:1-16
 }
 ```
 
-## Building CARLA with Unreal Engine 5.5
+## Building CARLA with Unreal Engine 5.8
 --------------
 
-Clone this repository locally from GitHub, specifying the *ue5-dev* branch:
+Clone this repository locally from GitHub, specifying the *ue58-dev-mac* (or *ue58-dev*) branch:
 
 ```sh
-git clone -b ue5-dev https://github.com/carla-simulator/carla.git CarlaUE5
+git clone -b ue58-dev-mac https://github.com/carla-simulator/carla.git CarlaUE58
 ```
 
-In order to build CARLA, you need access to the CARLA fork of Unreal Engine 5.5. In order to access this repository, you must first link your GitHub account to Epic Games by following [this guide](https://www.unrealengine.com/en-US/ue-on-github). You then also need to use your git credentials to authorise the download of the Unreal Engine 5.5 repository. 
+In order to build CARLA, you need access to the CARLA fork of Unreal Engine 5.8. In order to access this repository, you must first link your GitHub account to Epic Games by following [this guide](https://www.unrealengine.com/en-US/ue-on-github). You then also need to use your git credentials to authorise the download of the Unreal Engine 5.8 repository. 
 
 __Building in Linux__:
 
 Run the setup script from a terminal open in the CARLA root directory:
 
 ```sh
-cd CarlaUE5
+cd CarlaUE58
 ./CarlaSetup.sh --interactive
 ```
 
@@ -113,16 +119,16 @@ export GIT_LOCAL_CREDENTIALS=username@github_token
 Then run the setup script using the following command:
 
 ```sh
-cd CarlaUE5
+cd CarlaUE58
 sudo -E ./CarlaSetup.sh
 ```
 
-This will download and install Unreal Engine 5.5, install the prerequisites and build CARLA. It may take some time to complete and use a significant amount of disk space.
+This will download and install Unreal Engine 5.8, install the prerequisites and build CARLA. It may take some time to complete and use a significant amount of disk space.
 
 If you prefer to add the git credentials in the terminal, use the following command:
 
 ```sh
-cd CarlaUE5
+cd CarlaUE58
 sudo -E env GIT_LOCAL_CREDENTIALS=github_username@github_token ./CarlaSetup.sh 
 ```
 
@@ -131,15 +137,32 @@ __Building in Windows__:
 To build in Windows, run the batch script:
 
 ```sh
-cd CarlaUE5
+cd CarlaUE58
 CarlaSetup.bat
 ```
 
 Unattended mode is currently unavailable in Windows, you will need to enter GitHub credentials or administrator privileges when prompted.
 
+__Building in macOS (Apple Silicon)__:
+
+CARLA supports native Apple Silicon (arm64) on macOS with Metal rendering. First, download the Xcode Metal Toolchain:
+
+```sh
+xcodebuild -downloadComponent MetalToolchain
+```
+
+Then run the setup script:
+
+```sh
+cd CarlaUE58
+./CarlaSetup.sh
+```
+
+This verifies prerequisites, clones CARLA content, clones and builds Unreal Engine 5.8, compiles CARLA, and installs the Python API. For detailed instructions, prerequisites, troubleshooting, content caching, and packaging, see the [macOS Build Guide (Docs/build_macos.md)](Docs/build_macos.md).
+
 ## Rebuilding CARLA
 
-Once the setup is complete, you can execute subsequent builds with the following commands in a terminal open in the CARLA root directory. In Linux, run these commands in a standard terminal. In Windows, open the x64 Native Tools Command Prompt for Visual Studio 2022.
+Once the setup is complete, you can execute subsequent builds with the following commands in a terminal open in the CARLA root directory. In Linux, run these commands in a standard terminal. In Windows, open the x64 Native Tools Command Prompt for Visual Studio 2022. In macOS, use your standard terminal.
 
 __Configure__:
 
@@ -155,12 +178,18 @@ Windows:
 cmake -G Ninja -S . -B Build --toolchain=$PWD/CMake/Toolchain.cmake -DCMAKE_BUILD_TYPE=Release
 ```
 
+macOS:
+
+```sh
+cmake -G Ninja -S . -B Build --toolchain=$PWD/CMake/Toolchain.cmake -DCMAKE_BUILD_TYPE=Release -DENABLE_ROS2=OFF -DCARLA_DLSS_SDK_PATH=disabled
+```
+
 >[!NOTE]
 > If you intend to target a specific Python installation, you should add both these arguments to the above cmake command: `-DPython_ROOT_DIR=PATH` and `-DPython3_ROOT_DIR=PATH`.
 
 __Build__:
 
-Linux and Windows:
+Linux, Windows, and macOS:
 
 ```sh
 cmake --build Build
@@ -168,8 +197,7 @@ cmake --build Build
 
 __Build and install the Python API__:
 
-
-Linux and Windows:
+Linux, Windows, and macOS:
 
 ```sh
 cmake --build Build --target carla-python-api-install
@@ -179,9 +207,11 @@ __Launch the editor__:
 
 ```sh
 cmake --build Build --target launch
+# Or launch directly without checking targets:
+cmake --build Build --target launch-only
 ```
 
-For more instructions on building CARLA UE5, please consult the build documentation for [Linux](https://carla-ue5.readthedocs.io/en/latest/build_linux_ue5/) or [Windows](https://carla-ue5.readthedocs.io/en/latest/build_windows_ue5/).
+For more instructions on building CARLA UE5, please consult the build documentation for [macOS](Docs/build_macos.md), [Linux](https://carla-ue5.readthedocs.io/en/latest/build_linux_ue5/) or [Windows](https://carla-ue5.readthedocs.io/en/latest/build_windows_ue5/).
 
 Contributing
 ------------

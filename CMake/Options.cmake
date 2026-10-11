@@ -179,6 +179,8 @@ if (WIN32)
   set (CARLA_UNREAL_RHI_DEFAULT d3d12)
 elseif (LINUX)
   set (CARLA_UNREAL_RHI_DEFAULT vulkan)
+elseif (APPLE)
+  set (CARLA_UNREAL_RHI_DEFAULT metal)
 endif ()
 
 carla_string_option (
@@ -237,10 +239,16 @@ cmake_path (
   NORMALIZE
 )
 
+if (APPLE AND "${CARLA_DLSS_SDK_PATH_INFERRED}" STREQUAL "")
+  set (CARLA_DLSS_SDK_PATH_DEFAULT "disabled")
+else ()
+  set (CARLA_DLSS_SDK_PATH_DEFAULT "${CARLA_DLSS_SDK_PATH_INFERRED}")
+endif ()
+
 carla_string_option (
   CARLA_DLSS_SDK_PATH
   "Path to a checkout of the NVIDIA DLSS SDK (github.com/NVIDIA/DLSS). \"disabled\" builds without DLSS support; empty resolves the DLSS_SDK environment variable and falls back to fetching into ~/SDKs/DLSS."
-  "${CARLA_DLSS_SDK_PATH_INFERRED}"
+  "${CARLA_DLSS_SDK_PATH_DEFAULT}"
 )
 
 # Docs for UE5 build configurations:

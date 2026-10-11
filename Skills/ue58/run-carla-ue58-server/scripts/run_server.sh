@@ -25,11 +25,22 @@ MAP="${1:-}"
 PORT="${PORT:-${CARLA_PORT}}"
 TM_PORT="${TM_PORT:-8000}"
 
-# `comm` in /proc is truncated to 15 characters, so the shipping binary appears as
-# 'CarlaUnreal-Lin', never 'CarlaUnreal-Linux-Shipping'. Matching the full name
-# with pkill -x silently matches nothing and leaves the port held.
-COMM_PKG="CarlaUnreal-Lin"
-COMM_EDITOR="UnrealEditor"
+if [ "$(uname -s)" = "Darwin" ]; then
+  COMM_PKG="CarlaUnreal"
+  COMM_EDITOR="UnrealEditor"
+  EB="${CARLA_UNREAL_ENGINE_PATH}/Engine/Binaries/Mac/UnrealEditor.app/Contents/MacOS/UnrealEditor"
+  SGB="${CARLA_UE58_ROOT}/Unreal/CarlaUnreal/Binaries/Mac/CarlaUnreal"
+  DEFAULT_RHI="metal"
+else
+  # `comm` in /proc is truncated to 15 characters, so the shipping binary appears as
+  # 'CarlaUnreal-Lin', never 'CarlaUnreal-Linux-Shipping'. Matching the full name
+  # with pkill -x silently matches nothing and leaves the port held.
+  COMM_PKG="CarlaUnreal-Lin"
+  COMM_EDITOR="UnrealEditor"
+  EB="${CARLA_UNREAL_ENGINE_PATH}/Engine/Binaries/Linux/UnrealEditor"
+  SGB="${CARLA_UE58_ROOT}/Unreal/CarlaUnreal/Binaries/Linux/CarlaUnreal"
+  DEFAULT_RHI="vulkan"
+fi
 
 port_busy() { (echo >"/dev/tcp/127.0.0.1/$1") >/dev/null 2>&1; }
 
@@ -118,7 +129,11 @@ launch() {
     # and when that goes away it dies with 'close: Bad file descriptor' followed
     # by Signal 11. setsid + nohup + </dev/null detaches it properly.
     local log="${TMPDIR:-/tmp}/carla-ue58-${PORT}.log"
-    setsid nohup "$@" >"${log}" 2>&1 </dev/null &
+    if command -v setsid >/dev/null 2>&1; then
+      setsid nohup "$@" >"${log}" 2>&1 </dev/null &
+    else
+      nohup "$@" >"${log}" 2>&1 </dev/null &
+    fi
     echo "[run] detached, pid $!, log ${log}"
     wait_ready
   else
@@ -147,9 +162,8 @@ detect)
   echo "== What can run here =="
   P="$(carla_ue58_package_sh)"
   [ -n "${P}" ] && echo "  package : ${P}" || echo "  package : none built (package-carla-ue58)"
-  EB="${CARLA_UNREAL_ENGINE_PATH}/Engine/Binaries/Linux/UnrealEditor"
   UPROJ="${CARLA_UE58_ROOT}/Unreal/CarlaUnreal/CarlaUnreal.uproject"
-  if [ -x "${EB}" ] && [ -f "${UPROJ}" ]; then
+  if [ -e "${EB}" ] && [ -f "${UPROJ}" ]; then
     echo "  editor  : ${EB}"
     echo "  game    : same binary with -game (recommended headless server)"
   else
@@ -157,7 +171,6 @@ detect)
   fi
   # The uncooked Development game target cannot start: it is built to load COOKED
   # content and the tree has none, so it dies on the missing global shader cache.
-  SGB="${CARLA_UE58_ROOT}/Unreal/CarlaUnreal/Binaries/Linux/CarlaUnreal"
   [ -x "${SGB}" ] && echo "  NOTE    : ${SGB} exists but CANNOT start ('built to load COOKED content')"
   echo
   echo "== Ports =="
@@ -179,14 +192,13 @@ game)
   # binary with -game. nurec/README.md recommends the standalone game binary,
   # which cannot start (see detect).
   preflight_ports
-  EB="${CARLA_UNREAL_ENGINE_PATH}/Engine/Binaries/Linux/UnrealEditor"
   UPROJ="${CARLA_UE58_ROOT}/Unreal/CarlaUnreal/CarlaUnreal.uproject"
-  [ -x "${EB}" ] || { echo "ERROR ${EB} missing — build the engine" >&2; exit 3; }
+  [ -e "${EB}" ] || { echo "ERROR ${EB} missing — build the engine" >&2; exit 3; }
   [ -f "${UPROJ}" ] || { echo "ERROR ${UPROJ} missing" >&2; exit 3; }
   common_args
   CMD=("${EB}" "${UPROJ}")
   [ -n "${MAP}" ] && CMD+=("${MAP}")
-  CMD+=(-game "-${CARLA_UNREAL_RHI:-vulkan}" "${ARGS[@]}")
+  CMD+=(-game "-${CARLA_UNREAL_RHI:-${DEFAULT_RHI}}" "${ARGS[@]}")
   launch "editor binary in -game mode (uncooked tree, full client support)" "${CMD[@]}"
   ;;
 

@@ -22,6 +22,11 @@
 
 set -e
 
+if [[ "$OSTYPE" == "darwin"* ]] || [ "$(uname -s 2>/dev/null)" = "Darwin" ]; then
+    echo "macOS detected: DLSS is not supported on macOS. Skipping DLSS SDK setup."
+    exit 0
+fi
+
 if [ "$(echo "$DLSS_SDK" | tr '[:upper:]' '[:lower:]')" = "disabled" ]; then
     echo "DLSS_SDK=disabled: skipping the DLSS SDK setup. The DLSS-RR denoiser"
     echo "and DLSS upscaling will be unavailable (NFOR denoiser and spatial"

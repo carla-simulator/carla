@@ -57,10 +57,16 @@ else
     *)   warn "engine reports ${EV}; ue58-dev is validated against 5.8 only" ;;
   esac
   EB="${CARLA_UNREAL_ENGINE_PATH}/Engine/Binaries/Linux/UnrealEditor"
+  if [ "$(uname -s 2>/dev/null)" = "Darwin" ]; then
+    EB="${CARLA_UNREAL_ENGINE_PATH}/Engine/Binaries/Mac/UnrealEditor"
+    if [ ! -e "${EB}" ] && [ -d "${CARLA_UNREAL_ENGINE_PATH}/Engine/Binaries/Mac/UnrealEditor.app" ]; then
+      EB="${CARLA_UNREAL_ENGINE_PATH}/Engine/Binaries/Mac/UnrealEditor.app"
+    fi
+  fi
   # `make` in the engine can exit 0 with targets dead, so check the binary, not
   # the exit code of whatever built it.
-  [ -x "${EB}" ] && ok "UnrealEditor built ($(du -h "${EB}" 2>/dev/null | cut -f1))" \
-    || bad "UnrealEditor missing — build the engine (Setup.sh, GenerateProjectFiles.sh, make WITHOUT -j)"
+  [ -e "${EB}" ] && ok "UnrealEditor built ($(du -h "${EB}" 2>/dev/null | cut -f1))" \
+    || bad "UnrealEditor missing — build the engine"
   BR="$(git -C "${CARLA_UNREAL_ENGINE_PATH}" rev-parse --abbrev-ref HEAD 2>/dev/null || echo unknown)"
   [ "${BR}" = "ue58-dev-carla" ] && ok "engine branch ${BR}" \
     || warn "engine branch is '${BR}', expected ue58-dev-carla"
@@ -91,9 +97,12 @@ echo "== Never run the build under sudo =="
 # build fails in ways that do not name the cause.
 POISON=0
 for d in "${HOME}/.nuget" "${HOME}/.epic" "${HOME}/.lldbinit"; do
-  if [ -e "${d}" ] && [ "$(stat -c %U "${d}" 2>/dev/null)" != "$(id -un)" ]; then
-    bad "${d} is owned by $(stat -c %U "${d}") — a sudo'd build poisoned it"
-    POISON=1
+  if [ -e "${d}" ]; then
+    owner="$(stat -c %U "${d}" 2>/dev/null || stat -f %Su "${d}" 2>/dev/null)"
+    if [ "${owner}" != "$(id -un)" ]; then
+      bad "${d} is owned by ${owner} — a sudo'd build poisoned it"
+      POISON=1
+    fi
   fi
 done
 [ "${POISON}" -eq 0 ] && ok "~/.nuget, ~/.epic, ~/.lldbinit are user-owned" \

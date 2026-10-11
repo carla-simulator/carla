@@ -134,7 +134,13 @@ libcarla|pythonapi|unreal|editor|launch|launch-only|package|target)
 verify)
   echo "== Engine =="
   EB="${CARLA_UNREAL_ENGINE_PATH}/Engine/Binaries/Linux/UnrealEditor"
-  [ -x "${EB}" ] && echo "  PASS UnrealEditor $(date -r "${EB}" '+%Y-%m-%d %H:%M')" \
+  if [ "$(uname -s 2>/dev/null)" = "Darwin" ]; then
+    EB="${CARLA_UNREAL_ENGINE_PATH}/Engine/Binaries/Mac/UnrealEditor"
+    if [ ! -e "${EB}" ] && [ -d "${CARLA_UNREAL_ENGINE_PATH}/Engine/Binaries/Mac/UnrealEditor.app" ]; then
+      EB="${CARLA_UNREAL_ENGINE_PATH}/Engine/Binaries/Mac/UnrealEditor.app"
+    fi
+  fi
+  [ -e "${EB}" ] && echo "  PASS UnrealEditor $(date -r "${EB}" '+%Y-%m-%d %H:%M')" \
     || echo "  FAIL UnrealEditor missing"
 
   echo "== LibCarla =="
@@ -178,10 +184,16 @@ else:
 PY
 
   echo "== Carla plugin =="
-  PB="${CARLA_UE58_ROOT}/Unreal/CarlaUnreal/Plugins/Carla/Binaries/Linux"
+  UE_PLATFORM_DIR="Linux"
+  LIB_EXT="so"
+  if [ "$(uname -s 2>/dev/null)" = "Darwin" ]; then
+    UE_PLATFORM_DIR="Mac"
+    LIB_EXT="dylib"
+  fi
+  PB="${CARLA_UE58_ROOT}/Unreal/CarlaUnreal/Plugins/Carla/Binaries/${UE_PLATFORM_DIR}"
   if [ -d "${PB}" ]; then
-    N=$(ls -1 "${PB}"/*.so 2>/dev/null | wc -l)
-    echo "  PASS ${N} shared object(s) in Plugins/Carla/Binaries/Linux"
+    N=$(ls -1 "${PB}"/*.${LIB_EXT} 2>/dev/null | wc -l)
+    echo "  PASS ${N} shared library(ies) in Plugins/Carla/Binaries/${UE_PLATFORM_DIR}"
   else
     echo "  WARN ${PB} does not exist yet"
   fi

@@ -33,7 +33,13 @@ carla_ue58_is_root() {
   [ -f "${1:-}/CMakePresets.json" ] && [ -d "${1:-}/Unreal/CarlaUnreal" ]
 }
 
-carla_ue58_build_dir() { echo "${CARLA_UE58_ROOT}/Build/${CARLA_PRESET}"; }
+carla_ue58_build_dir() {
+  if [ -f "${CARLA_UE58_ROOT:-}/Build/CMakeCache.txt" ]; then
+    echo "${CARLA_UE58_ROOT:-}/Build"
+  else
+    echo "${CARLA_UE58_ROOT:-}/Build/${CARLA_PRESET:-Release}"
+  fi
+}
 
 carla_ue58_configured() { [ -f "$(carla_ue58_build_dir)/CMakeCache.txt" ]; }
 
@@ -41,7 +47,7 @@ carla_ue58_configured() { [ -f "$(carla_ue58_build_dir)/CMakeCache.txt" ]; }
 # every -D option must be repeated on each re-configure, so a forgotten
 # -DENABLE_ROS2=ON silently yields a non-ROS build with no other symptom.
 carla_ue58_cmake_opt() {
-  local cache="${CARLA_UE58_ROOT:-}/Build/${CARLA_PRESET:-Release}/CMakeCache.txt"
+  local cache="$(carla_ue58_build_dir)/CMakeCache.txt"
   [ -f "${cache}" ] || return 1
   sed -n "s|^${1}:[A-Z]*=||p" "${cache}" | head -1
 }
@@ -78,7 +84,11 @@ carla_ue58_flavor() {
 
 # Newest packaged server launcher produced by the `package` target.
 carla_ue58_package_sh() {
-  ls -1dt "${CARLA_UE58_ROOT:-/nonexistent}"/Build/*/Package/Carla-*/Linux/CarlaUnreal.sh 2>/dev/null | head -1
+  if [ "$(uname -s)" = "Darwin" ]; then
+    ls -1dt "${CARLA_UE58_ROOT:-/nonexistent}"/Build/*/Package/Carla-*/Mac/CarlaUnreal.app/Contents/MacOS/CarlaUnreal 2>/dev/null | head -1
+  else
+    ls -1dt "${CARLA_UE58_ROOT:-/nonexistent}"/Build/*/Package/Carla-*/Linux/CarlaUnreal.sh 2>/dev/null | head -1
+  fi
 }
 
 # --- resolution --------------------------------------------------------------

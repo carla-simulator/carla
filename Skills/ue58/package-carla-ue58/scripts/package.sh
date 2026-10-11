@@ -20,8 +20,8 @@ BUILD_DIR="$(carla_ue58_build_dir)"
 
 pkg_root() {
   if [ -n "${PKG:-}" ]; then echo "${PKG}"; return; fi
-  # Newest package directory across presets.
-  ls -1dt "${CARLA_UE58_ROOT}"/Build/*/Package/Carla-*-Linux-* 2>/dev/null \
+  # Newest package directory across presets or top-level Build.
+  ls -1dt "${CARLA_UE58_ROOT}"/Build/Package/Carla-*-* "${CARLA_UE58_ROOT}"/Build/*/Package/Carla-*-* 2>/dev/null \
     | grep -v '\.tar\.gz$' | head -1
 }
 
@@ -73,7 +73,7 @@ build)
   # the .ucas, retries, and can still exit BUILD SUCCESSFUL leaving a fresh
   # .pak/.utoc beside a stale .ucas — and the .utoc indexes the .ucas by byte
   # offset, so the result is internally inconsistent.
-  if pgrep -x 'CarlaUnreal-Linu' >/dev/null 2>&1 || pgrep -f 'CarlaUnreal-Linux-Shipping' >/dev/null 2>&1; then
+  if pgrep -x 'CarlaUnreal-Linu' >/dev/null 2>&1 || pgrep -f 'CarlaUnreal-Linux-Shipping' >/dev/null 2>&1 || pgrep -x 'CarlaUnreal' >/dev/null 2>&1; then
     echo "ERROR a packaged CARLA server is running — it holds the pak files open." >&2
     echo "      Stop it first:  pkill -f CarlaUnreal-Linux-" >&2
     exit 4

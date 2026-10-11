@@ -134,6 +134,7 @@ if (ENABLE_PEP517)
     CARLA_PYTHON_API_BUILD_COMMAND
     ${Python3_EXECUTABLE}
     -m build
+    --no-isolation
     --outdir ${CARLA_PYTHON_API_DIST_PATH}
     --wheel
   )
