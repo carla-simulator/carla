@@ -23,7 +23,10 @@ file (COPY_FILE ${RECASTBUILDER_SRC} ${RECASTBUILDER_DST})
 # CarlaUnreal/), not the archive root (CarlaEpisode.cpp BuildRecastBuilderFile).
 # Without this copy it silently fell back to the compile-time build-tree path.
 cmake_path (GET CARLA_UE_PROJECT_PATH PARENT_PATH CARLA_UE_PROJECT_DIR)
-file (GLOB CARLA_PACKAGE_PLATFORM_DIRS LIST_DIRECTORIES true ${CARLA_PACKAGE_ARCHIVE_PATH}/*/CarlaUnreal)
+file (GLOB CARLA_PACKAGE_PLATFORM_DIRS LIST_DIRECTORIES true
+  ${CARLA_PACKAGE_ARCHIVE_PATH}/*/CarlaUnreal
+  ${CARLA_PACKAGE_ARCHIVE_PATH}/*/*.app/Contents/UE/CarlaUnreal
+)
 foreach (CARLA_PACKAGE_PROJECT_DIR ${CARLA_PACKAGE_PLATFORM_DIRS})
   cmake_path (GET CARLA_PACKAGE_PROJECT_DIR PARENT_PATH CARLA_PACKAGE_PLATFORM_DIR)
   make_directory (${CARLA_PACKAGE_PLATFORM_DIR}/Tools)
@@ -37,6 +40,25 @@ foreach (CARLA_PACKAGE_PROJECT_DIR ${CARLA_PACKAGE_PLATFORM_DIRS})
     COPY ${CARLA_UE_PROJECT_DIR}/Plugins/Carla/Shaders/
     DESTINATION ${CARLA_PACKAGE_PROJECT_DIR}/Plugins/Carla/Shaders/)
 endforeach ()
+
+if (APPLE)
+  make_directory (${CARLA_PACKAGE_ARCHIVE_PATH}/Mac/Tools)
+  file (COPY_FILE ${RECASTBUILDER_SRC} ${CARLA_PACKAGE_ARCHIVE_PATH}/Mac/Tools/RecastBuilder)
+
+  file (WRITE ${CARLA_PACKAGE_ARCHIVE_PATH}/CarlaUnreal.sh
+"#!/bin/bash
+SCRIPT_DIR=\"\$(cd \"\$(dirname \"\${BASH_SOURCE[0]}\")\" && pwd)\"
+exec \"\$SCRIPT_DIR/Mac/CarlaUnreal-Mac-Shipping.app/Contents/MacOS/CarlaUnreal-Mac-Shipping\" \"\$@\"
+")
+  execute_process (COMMAND chmod +x ${CARLA_PACKAGE_ARCHIVE_PATH}/CarlaUnreal.sh)
+
+  file (WRITE ${CARLA_PACKAGE_ARCHIVE_PATH}/Mac/CarlaUnreal.sh
+"#!/bin/bash
+SCRIPT_DIR=\"\$(cd \"\$(dirname \"\${BASH_SOURCE[0]}\")\" && pwd)\"
+exec \"\$SCRIPT_DIR/CarlaUnreal-Mac-Shipping.app/Contents/MacOS/CarlaUnreal-Mac-Shipping\" \"\$@\"
+")
+  execute_process (COMMAND chmod +x ${CARLA_PACKAGE_ARCHIVE_PATH}/Mac/CarlaUnreal.sh)
+endif ()
 
 make_directory (${CARLA_PACKAGE_ARCHIVE_PATH}/PythonAPI/carla/dist)
 file (GLOB PYTHON_WHL_FILES ${CARLA_BUILD_PATH}/PythonAPI/dist/carla-*.whl)

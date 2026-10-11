@@ -31,7 +31,10 @@ endforeach ()
 
 # The packaged project dir: <archive>/<Platform>/CarlaUnreal (that is what
 # FPaths::ProjectDir() resolves to in the packaged binary).
-file (GLOB PROJECT_DIRS LIST_DIRECTORIES true ${CARLA_PACKAGE_ARCHIVE_PATH}/*/CarlaUnreal)
+file (GLOB PROJECT_DIRS LIST_DIRECTORIES true
+  ${CARLA_PACKAGE_ARCHIVE_PATH}/*/CarlaUnreal
+  ${CARLA_PACKAGE_ARCHIVE_PATH}/*/*.app/Contents/UE/CarlaUnreal
+)
 if (NOT PROJECT_DIRS)
   message (FATAL_ERROR "No <archive>/<Platform>/CarlaUnreal directory under ${CARLA_PACKAGE_ARCHIVE_PATH}.")
 endif ()

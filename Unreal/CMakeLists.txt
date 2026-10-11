@@ -448,9 +448,12 @@ function (
     carla_message ("package(${PACKAGE_CONFIGURATION}): cooking only ${CARLA_MAPS_TO_COOK}")
   endif ()
 
-  # Zen must outlive the cook (stage reads the cooked oplog back) and must not be
-  # spawned under the build. Start it first: package.sh, or zenserver --port 8558.
-  list (APPEND CARLA_PACKAGE_EXTRA_UAT_ARGS -NoZenAutoLaunch=127.0.0.1)
+  # Zen must outlive the cook (stage reads the cooked oplog back).
+  # Windows requires an external zenserver on port 8558; on macOS/Linux,
+  # UE auto-launches Zen with [Zen.AutoLaunch] LimitProcessLifetime=False.
+  if (WIN32)
+    list (APPEND CARLA_PACKAGE_EXTRA_UAT_ARGS -NoZenAutoLaunch=127.0.0.1)
+  endif ()
 
   # Content packs (Plugins/Packs/*) are cooked as DLC "based on" this release:
   # the cook writes Unreal/CarlaUnreal/Releases/<release>/<Platform>/

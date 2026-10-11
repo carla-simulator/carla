@@ -82,7 +82,10 @@ set (REGISTRIES
   "${RELEASE_PLATFORM_DIR}/Metadata/DevelopmentAssetRegistry.bin")
 if (DEFINED CARLA_PACKAGE_ARCHIVE_PATH AND NOT "${CARLA_PACKAGE_ARCHIVE_PATH}" STREQUAL "")
   # A loose copy in the packaged project, when the stage left one (usually it is inside the pak).
-  file (GLOB ARCHIVE_REGISTRIES "${CARLA_PACKAGE_ARCHIVE_PATH}/*/CarlaUnreal/AssetRegistry.bin")
+  file (GLOB ARCHIVE_REGISTRIES
+    "${CARLA_PACKAGE_ARCHIVE_PATH}/*/CarlaUnreal/AssetRegistry.bin"
+    "${CARLA_PACKAGE_ARCHIVE_PATH}/*/*.app/Contents/UE/CarlaUnreal/AssetRegistry.bin"
+  )
   list (APPEND REGISTRIES ${ARCHIVE_REGISTRIES})
 endif ()
 set (CHECKED_REGISTRIES 0)
@@ -186,7 +189,10 @@ endif ()
 # 3. packaged project tree.
 set (CHECKED_ARCHIVES 0)
 if (DEFINED CARLA_PACKAGE_ARCHIVE_PATH AND NOT "${CARLA_PACKAGE_ARCHIVE_PATH}" STREQUAL "")
-  file (GLOB PROJECT_DIRS LIST_DIRECTORIES true "${CARLA_PACKAGE_ARCHIVE_PATH}/*/CarlaUnreal")
+  file (GLOB PROJECT_DIRS LIST_DIRECTORIES true
+    "${CARLA_PACKAGE_ARCHIVE_PATH}/*/CarlaUnreal"
+    "${CARLA_PACKAGE_ARCHIVE_PATH}/*/*.app/Contents/UE/CarlaUnreal"
+  )
   foreach (PROJECT_DIR ${PROJECT_DIRS})
     if (IS_DIRECTORY "${PROJECT_DIR}")
       math (EXPR CHECKED_ARCHIVES "${CHECKED_ARCHIVES} + 1")

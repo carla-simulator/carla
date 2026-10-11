@@ -214,14 +214,22 @@ cmake --build Build --target package
 cmake --build Build --target package-development
 ```
 
-The package is generated in `Build/Package/Carla-<version>-Mac-Shipping/`.
+The package is generated in `Build/Package/Carla-<version>-Mac-Shipping/`, along with the release tarball `Carla-<version>-Mac-Shipping.tar.gz`.
 
 ### 3. Run the Packaged Server
 
+You can run the packaged server via the provided `CarlaUnreal.sh` launcher:
 ```sh
-./Build/Package/Carla-*-Mac-Shipping/Mac/CarlaUnreal.app/Contents/MacOS/CarlaUnreal \
+./Build/Package/Carla-*-Mac-Shipping/CarlaUnreal.sh \
   Town10HD_Opt -metal -windowed -ResX=1920 -ResY=1080 -carla-rpc-port=2000
 ```
+
+*Or directly via the `.app` bundle:*
+```sh
+./Build/Package/Carla-*-Mac-Shipping/Mac/CarlaUnreal-Mac-Shipping.app/Contents/MacOS/CarlaUnreal-Mac-Shipping \
+  Town10HD_Opt -metal -windowed -ResX=1920 -ResY=1080 -carla-rpc-port=2000
+```
+
 *Or via the runner script:*
 ```sh
 WINDOW=1 bash Skills/ue58/run-carla-ue58-server/scripts/run_server.sh package Town10HD_Opt
