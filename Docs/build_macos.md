@@ -259,27 +259,25 @@ A minimal C++ client demo lives under `Examples/CppClient/`.
 
 If you are not using `CarlaSetup.sh` and want to build the Unreal Engine fork manually:
 
-### 1. Clone the CARLA Unreal Engine 5.8 fork
+### 1. Clone the CARLA Unreal Engine 5.8 fork and checkout the pinned commit
 
 ```sh
 git clone -b ue58-dev-carla https://github.com/CarlaUnreal/UnrealEngine.git UnrealEngine5_carla
 cd UnrealEngine5_carla
+git checkout 0703595a065dee51538720027ce9cc05bd464517
 ```
 
-### 2. Setup and Generate Project Files
+### 2. Setup, Generate Project Files, and Apply macOS Patch
 
 ```sh
 ./Setup.command
 ./GenerateProjectFiles.command
+
+# Apply the macOS compatibility patch shipped in CARLA:
+git apply /path/to/CarlaUE58/Util/Patches/UnrealEngine_macOS.patch
 ```
 
-### 3. Key Engine Source Adjustments on Apple Clang / Xcode 16+
-
-If building with Apple Clang 16/21 (Xcode 16+), ensure the following engine fixes are applied:
-1. **SDK Mapping (`Engine/Config/Apple/Apple_SDK.json`):** Map your active macOS SDK version (e.g. `27.0`) to the appropriate LLVM toolchain.
-2. **Designated Initializer Order (`Engine/Source/Runtime/Apple/MetalRHI/Private/MetalViewport.cpp`):** In `FMetalViewportSurfaceDesc`, ensure designated initializers match member declaration order (`.BackBuffer` before `.Drawable`).
-3. **Lambda Capture Scope (`Engine/Plugins/Experimental/Animation/HierarchyTableAnimation/Source/Editor/Private/BlendProfileStandaloneFactory.cpp`):** In `CreateBlendProfileStandaloneWindow`, decouple the `SWindow` assignment from `.SetContent()` so the lambda capture does not access an uninitialized `Window` variable.
-4. **Cocoa Launch Hook (`Engine/Source/Runtime/Launch/Launch.Build.cs`):** Gate `bAllowSwiftMain` off for Mac (`Target.Platform != UnrealTargetPlatform.Mac`) to prevent missing `SwiftUIMacros` failures on standalone binaries.
+*(This patch resolves Apple Clang / Xcode SDK version mapping, C++20 designated initializer ordering in MetalViewport, SWindow lambda initialization, and Cocoa launch gating).*
 
 ### 4. Build Engine Binaries
 

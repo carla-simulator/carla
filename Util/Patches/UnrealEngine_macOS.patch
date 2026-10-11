@@ -1,0 +1,127 @@
+diff --git a/Engine/Config/Apple/Apple_SDK.json b/Engine/Config/Apple/Apple_SDK.json
+index 02e6c6eb4a79..3a7425be2cf9 100644
+--- a/Engine/Config/Apple/Apple_SDK.json
++++ b/Engine/Config/Apple/Apple_SDK.json
+@@ -1,8 +1,8 @@
+ {
+ 	"//1": "Xcode versions:",
+-		"MainVersion": "26.1.1",
++		"MainVersion": "27.0.0",
+ 		"MinVersion": "15.2.0",
+-		"MaxVersion": "26.9.0",
++		"MaxVersion": "30.0.0",
+ 	"//2": "!!!",
+ 	"//3": "NOTE: If you update the MaxVersion, double check the AppleVersionToLLVMVersion array below!!!",
+ 	"//4": "!!!",
+@@ -22,6 +22,7 @@
+ 			"16.0.0-17.0.6",
+ 			"16.3.0-19.1.4",
+ 			"26.0.0-19.1.5",
+-			"26.4.0-21.1.6"
++			"26.4.0-21.1.6",
++			"27.0.0-21.1.6"
+ 		]
+ }
+diff --git a/Engine/Plugins/Experimental/Animation/HierarchyTableAnimation/Source/Editor/Private/BlendProfileStandaloneFactory.cpp b/Engine/Plugins/Experimental/Animation/HierarchyTableAnimation/Source/Editor/Private/BlendProfileStandaloneFactory.cpp
+index 3b5f54188e4d..09cabc0a4572 100644
+--- a/Engine/Plugins/Experimental/Animation/HierarchyTableAnimation/Source/Editor/Private/BlendProfileStandaloneFactory.cpp
++++ b/Engine/Plugins/Experimental/Animation/HierarchyTableAnimation/Source/Editor/Private/BlendProfileStandaloneFactory.cpp
+@@ -57,38 +57,39 @@ bool UBlendProfileStandaloneFactory::ConfigureBlendProfileType()
+ 		.Title(LOCTEXT("Title", "Choose Blend Profile Type"))
+ 		.ClientSize(FVector2D(400, 400))
+ 		.SupportsMinimize(false)
+-		.SupportsMaximize(false)
+-		[
+-			SNew(SVerticalBox)
+-				+ SVerticalBox::Slot()
+-				.AutoHeight()
+-				[
+-					SNew(SEnumComboBox, StaticEnum<EBlendProfileStandaloneType>())
+-						.CurrentValue_Lambda([this]()
+-							{
+-								return static_cast<int32>(BlendProfileType);
+-							})
+-						.OnEnumSelectionChanged_Lambda([this](int32 InEnumValue, ESelectInfo::Type SelectInfo)
+-							{
+-								BlendProfileType = static_cast<EBlendProfileStandaloneType>(InEnumValue);
+-							})
+-				]
+-				+ SVerticalBox::Slot()
+-				.AutoHeight()
+-				[
+-					SNew(SButton)
+-						.OnClicked_Lambda([&]()
+-							{
+-								bConfirmClicked = true;
+-								Window->RequestDestroyWindow();
+-								return FReply::Handled();
+-							})
+-						[
+-							SNew(STextBlock)
+-								.Text(LOCTEXT("Confirm", "Confirm"))
+-						]
+-				]
+-		];
++		.SupportsMaximize(false);
++
++	Window->SetContent(
++		SNew(SVerticalBox)
++			+ SVerticalBox::Slot()
++			.AutoHeight()
++			[
++				SNew(SEnumComboBox, StaticEnum<EBlendProfileStandaloneType>())
++					.CurrentValue_Lambda([this]()
++						{
++							return static_cast<int32>(BlendProfileType);
++						})
++					.OnEnumSelectionChanged_Lambda([this](int32 InEnumValue, ESelectInfo::Type SelectInfo)
++						{
++							BlendProfileType = static_cast<EBlendProfileStandaloneType>(InEnumValue);
++						})
++			]
++			+ SVerticalBox::Slot()
++			.AutoHeight()
++			[
++				SNew(SButton)
++					.OnClicked_Lambda([&]()
++						{
++							bConfirmClicked = true;
++							Window->RequestDestroyWindow();
++							return FReply::Handled();
++						})
++					[
++						SNew(STextBlock)
++							.Text(LOCTEXT("Confirm", "Confirm"))
++					]
++			]
++	);
+ 
+ 
+ 	GEditor->EditorAddModalWindow(Window);
+diff --git a/Engine/Source/Runtime/Apple/MetalRHI/Private/MetalViewport.cpp b/Engine/Source/Runtime/Apple/MetalRHI/Private/MetalViewport.cpp
+index 7e791e9da555..0c592fddde08 100644
+--- a/Engine/Source/Runtime/Apple/MetalRHI/Private/MetalViewport.cpp
++++ b/Engine/Source/Runtime/Apple/MetalRHI/Private/MetalViewport.cpp
+@@ -380,8 +380,8 @@ void FMetalViewport::CreateNativeLayer(int32 NewNativeLayer, void* NativeViewHan
+ 		
+ 		DrawLayers.Add(NewNativeLayer, DrawLayer
+ 	    {
+-			.Drawable = nullptr,
+ 			.BackBuffer = {nullptr, nullptr},
++			.Drawable = nullptr,
+ 			.View = View
+ 		});
+ 		
+diff --git a/Engine/Source/Runtime/Launch/Launch.Build.cs b/Engine/Source/Runtime/Launch/Launch.Build.cs
+index 6acfffda0691..1787fec9582c 100644
+--- a/Engine/Source/Runtime/Launch/Launch.Build.cs
++++ b/Engine/Source/Runtime/Launch/Launch.Build.cs
+@@ -20,7 +20,7 @@ public class Launch : ModuleRules
+ 		}
+ 	}
+ 	
+-	protected virtual bool bAllowSwiftMain => Target.IsInPlatformGroup(UnrealPlatformGroup.Apple) && Target.Type != TargetType.Editor;
++	protected virtual bool bAllowSwiftMain => Target.IsInPlatformGroup(UnrealPlatformGroup.Apple) && Target.Platform != UnrealTargetPlatform.Mac && Target.Type != TargetType.Editor;
+ 	
+ 	public Launch(ReadOnlyTargetRules Target) : base(Target)
+ 	{

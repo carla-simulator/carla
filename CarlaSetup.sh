@@ -141,7 +141,12 @@ else
         GIT_LOCAL_TOKEN=${GIT_CREDENTIALS_INFO[1]}
         UE5_URL=https://$GIT_LOCAL_USER:$GIT_LOCAL_TOKEN@github.com/CarlaUnreal/UnrealEngine.git
     fi
+    CARLA_UNREAL_COMMIT="0703595a065dee51538720027ce9cc05bd464517"
     git clone -b ue58-dev-carla $UE5_URL UnrealEngine5_carla
+    pushd UnrealEngine5_carla
+    echo "Checking out pinned Unreal Engine commit $CARLA_UNREAL_COMMIT..."
+    git checkout $CARLA_UNREAL_COMMIT
+    popd
     export CARLA_UNREAL_ENGINE_PATH="$(cd UnrealEngine5_carla && pwd)"
     popd
 fi
@@ -165,6 +170,21 @@ if [ -z "$UE_EDITOR_BIN" ]; then
     if [[ "$OSTYPE" == "darwin"* ]] || [ "$(uname -s 2>/dev/null)" = "Darwin" ]; then
         ./Setup.command
         ./GenerateProjectFiles.command
+
+        # Apply macOS compatibility patch if present
+        PATCH_FILE="$workspace_path/Util/Patches/UnrealEngine_macOS.patch"
+        if [ -f "$PATCH_FILE" ]; then
+            if git apply --check "$PATCH_FILE" >/dev/null 2>&1; then
+                echo "Applying macOS compatibility patch to Unreal Engine..."
+                git apply "$PATCH_FILE"
+                echo "Unreal Engine macOS patch successfully applied."
+            elif git apply --reverse --check "$PATCH_FILE" >/dev/null 2>&1; then
+                echo "Unreal Engine macOS patch is already applied."
+            else
+                echo "Warning: Unreal Engine patch could not be verified cleanly."
+            fi
+        fi
+
         echo "Building Unreal Engine 5 for macOS..."
         ./Engine/Build/BatchFiles/Mac/Build.sh ShaderCompileWorker Mac Development
         ./Engine/Build/BatchFiles/Mac/Build.sh UnrealEditor Mac Development
