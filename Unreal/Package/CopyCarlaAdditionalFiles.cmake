@@ -42,20 +42,75 @@ foreach (CARLA_PACKAGE_PROJECT_DIR ${CARLA_PACKAGE_PLATFORM_DIRS})
 endforeach ()
 
 if (APPLE)
+  # Re-sign the staged macOS app bundles without sandbox entitlements.
+  # Unreal Engine's default shipping config applies Sandbox.NoNet.entitlements,
+  # which enables com.apple.security.app-sandbox without network permissions,
+  # causing bind() to fail with "Operation not permitted".
+  file (GLOB CARLA_MAC_APP_BUNDLES LIST_DIRECTORIES true ${CARLA_PACKAGE_ARCHIVE_PATH}/*/*.app)
+  foreach (CARLA_MAC_APP ${CARLA_MAC_APP_BUNDLES})
+    execute_process (
+      COMMAND /usr/bin/codesign --force --sign - ${CARLA_MAC_APP}
+      RESULT_VARIABLE CODESIGN_RESULT
+    )
+    if (CODESIGN_RESULT EQUAL 0)
+      message (STATUS "Re-signed ${CARLA_MAC_APP} without app-sandbox restrictions.")
+    else ()
+      message (WARNING "Failed to re-sign ${CARLA_MAC_APP} (${CODESIGN_RESULT}).")
+    endif ()
+  endforeach ()
+
   make_directory (${CARLA_PACKAGE_ARCHIVE_PATH}/Mac/Tools)
   file (COPY_FILE ${RECASTBUILDER_SRC} ${CARLA_PACKAGE_ARCHIVE_PATH}/Mac/Tools/RecastBuilder)
 
   file (WRITE ${CARLA_PACKAGE_ARCHIVE_PATH}/CarlaUnreal.sh
 "#!/bin/bash
 SCRIPT_DIR=\"\$(cd \"\$(dirname \"\${BASH_SOURCE[0]}\")\" && pwd)\"
-exec \"\$SCRIPT_DIR/Mac/CarlaUnreal-Mac-Shipping.app/Contents/MacOS/CarlaUnreal-Mac-Shipping\" \"\$@\"
+# Normalize space-separated port flags (-carla-rpc-port 2000 -> -carla-rpc-port=2000)
+ARGS=()
+while [[ \$# -gt 0 ]]; do
+  case \"\$1\" in
+    -carla-rpc-port|-carla-port|-world-port|-carla-streaming-port|-carla-secondary-port)
+      if [[ -n \"\$2\" && \"\$2\" != -* ]]; then
+        ARGS+=(\"\$1=\$2\")
+        shift 2
+      else
+        ARGS+=(\"\$1\")
+        shift
+      fi
+      ;;
+    *)
+      ARGS+=(\"\$1\")
+      shift
+      ;;
+  esac
+done
+exec \"\$SCRIPT_DIR/Mac/CarlaUnreal-Mac-Shipping.app/Contents/MacOS/CarlaUnreal-Mac-Shipping\" \"\${ARGS[@]}\"
 ")
   execute_process (COMMAND chmod +x ${CARLA_PACKAGE_ARCHIVE_PATH}/CarlaUnreal.sh)
 
   file (WRITE ${CARLA_PACKAGE_ARCHIVE_PATH}/Mac/CarlaUnreal.sh
 "#!/bin/bash
 SCRIPT_DIR=\"\$(cd \"\$(dirname \"\${BASH_SOURCE[0]}\")\" && pwd)\"
-exec \"\$SCRIPT_DIR/CarlaUnreal-Mac-Shipping.app/Contents/MacOS/CarlaUnreal-Mac-Shipping\" \"\$@\"
+# Normalize space-separated port flags (-carla-rpc-port 2000 -> -carla-rpc-port=2000)
+ARGS=()
+while [[ \$# -gt 0 ]]; do
+  case \"\$1\" in
+    -carla-rpc-port|-carla-port|-world-port|-carla-streaming-port|-carla-secondary-port)
+      if [[ -n \"\$2\" && \"\$2\" != -* ]]; then
+        ARGS+=(\"\$1=\$2\")
+        shift 2
+      else
+        ARGS+=(\"\$1\")
+        shift
+      fi
+      ;;
+    *)
+      ARGS+=(\"\$1\")
+      shift
+      ;;
+  esac
+done
+exec \"\$SCRIPT_DIR/CarlaUnreal-Mac-Shipping.app/Contents/MacOS/CarlaUnreal-Mac-Shipping\" \"\${ARGS[@]}\"
 ")
   execute_process (COMMAND chmod +x ${CARLA_PACKAGE_ARCHIVE_PATH}/Mac/CarlaUnreal.sh)
 endif ()
