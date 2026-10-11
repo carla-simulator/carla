@@ -21,16 +21,16 @@ environmental conditions.
 
 ### Recommended system
 
+* **macOS (Apple Silicon):**
+  * Apple Silicon M1 / M2 / M3 / M4 / M5 (native arm64)
+  * macOS 14 (Sonoma) or newer
+  * 32 GB or more Unified Memory recommended
 * **Linux / Windows:**
   * Intel i7 gen 9th - 11th / Intel i9 gen 9th - 11th / AMD Ryzen 7 / AMD Ryzen 9
   * +32 Gb RAM memory 
   * NVIDIA RTX 3070/3080/3090 / NVIDIA RTX 4090 / NVIDIA RTX 5090 or better
   * 16 Gb or more VRAM
   * Ubuntu 22.04 or 24.04, or Windows 11
-* **macOS (Apple Silicon):**
-  * Apple Silicon M1 / M2 / M3 / M4 / M5 (native arm64)
-  * macOS 14 (Sonoma) or newer
-  * 32 GB or more Unified Memory recommended
 
  >[!NOTE]
 > On Linux/Windows, you must use either Ubuntu 22.04 or 24.04, or Windows 11. On macOS, native Apple Silicon is supported with Metal RHI.
@@ -95,6 +95,27 @@ git clone -b ue58-dev-mac https://github.com/carla-simulator/carla.git CarlaUE58
 
 In order to build CARLA, you need access to the CARLA fork of Unreal Engine 5.8. In order to access this repository, you must first link your GitHub account to Epic Games by following [this guide](https://www.unrealengine.com/en-US/ue-on-github). You then also need to use your git credentials to authorise the download of the Unreal Engine 5.8 repository. 
 
+__Building in macOS (Apple Silicon)__:
+
+CARLA supports native Apple Silicon (arm64) on macOS with Metal rendering. First, download the Xcode Metal Toolchain:
+
+```sh
+xcodebuild -downloadComponent MetalToolchain
+```
+
+Then run the setup script:
+
+```sh
+cd CarlaUE58
+./CarlaSetup.sh
+```
+
+This verifies prerequisites, clones CARLA content, clones and builds Unreal Engine 5.8, compiles CARLA, and installs the Python API. For detailed instructions, prerequisites, troubleshooting, content caching, and packaging, see the [macOS Build Guide (Docs/build_macos.md)](Docs/build_macos.md).
+
+## Rebuilding CARLA
+
+Once the setup is complete, you can execute subsequent builds with the following commands in a terminal open in the CARLA root directory. In Linux, run these commands in a standard terminal. In Windows, open the x64 Native Tools Command Prompt for Visual Studio 2022. In macOS, use your standard terminal.
+
 __Building in Linux__:
 
 Run the setup script from a terminal open in the CARLA root directory:
@@ -143,28 +164,16 @@ CarlaSetup.bat
 
 Unattended mode is currently unavailable in Windows, you will need to enter GitHub credentials or administrator privileges when prompted.
 
-__Building in macOS (Apple Silicon)__:
-
-CARLA supports native Apple Silicon (arm64) on macOS with Metal rendering. First, download the Xcode Metal Toolchain:
-
-```sh
-xcodebuild -downloadComponent MetalToolchain
-```
-
-Then run the setup script:
-
-```sh
-cd CarlaUE58
-./CarlaSetup.sh
-```
-
-This verifies prerequisites, clones CARLA content, clones and builds Unreal Engine 5.8, compiles CARLA, and installs the Python API. For detailed instructions, prerequisites, troubleshooting, content caching, and packaging, see the [macOS Build Guide (Docs/build_macos.md)](Docs/build_macos.md).
-
-## Rebuilding CARLA
-
-Once the setup is complete, you can execute subsequent builds with the following commands in a terminal open in the CARLA root directory. In Linux, run these commands in a standard terminal. In Windows, open the x64 Native Tools Command Prompt for Visual Studio 2022. In macOS, use your standard terminal.
-
 __Configure__:
+
+macOS:
+
+```sh
+cmake -G Ninja -S . -B Build --toolchain=$PWD/CMake/Toolchain.cmake -DCMAKE_BUILD_TYPE=Release -DENABLE_ROS2=OFF -DCARLA_DLSS_SDK_PATH=disabled
+```
+
+>[!NOTE]
+> If you intend to target a specific Python installation, you should add both these arguments to the above cmake command: `-DPython_ROOT_DIR=PATH` and `-DPython3_ROOT_DIR=PATH`.
 
 Linux:
 
@@ -177,15 +186,6 @@ Windows:
 ```sh
 cmake -G Ninja -S . -B Build --toolchain=$PWD/CMake/Toolchain.cmake -DCMAKE_BUILD_TYPE=Release
 ```
-
-macOS:
-
-```sh
-cmake -G Ninja -S . -B Build --toolchain=$PWD/CMake/Toolchain.cmake -DCMAKE_BUILD_TYPE=Release -DENABLE_ROS2=OFF -DCARLA_DLSS_SDK_PATH=disabled
-```
-
->[!NOTE]
-> If you intend to target a specific Python installation, you should add both these arguments to the above cmake command: `-DPython_ROOT_DIR=PATH` and `-DPython3_ROOT_DIR=PATH`.
 
 __Build__:
 
@@ -204,6 +204,8 @@ cmake --build Build --target carla-python-api-install
 ```
 
 __Launch the editor__:
+
+Linux, Windows, and macOS:
 
 ```sh
 cmake --build Build --target launch
