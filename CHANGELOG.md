@@ -229,6 +229,7 @@
 * Fixed camera fx in the ROS 2 `CameraInfo`, large map actor tagging, and camera frame and timestamp consistency.
 * Fixed `sensor.camera.instance_segmentation` publishing nothing on ROS 2, `sensor.camera.semantic_segmentation` publishing on an unresolved `semantic_segmentation__` topic, and `sensor.camera.rt_lens` publishing on `rt_lens__` although it has no ROS 2 publisher. The ROS 2 sensor type list had fallen out of step with the sensor registry when the ray-traced lens camera was added; it now has one entry per registry item, checked at compile time.
 * Fixed **CycloneDDS subscribers failing to start with the example profile** (`PythonAPI/examples/ros2/config/cyclonedds.xml`, used by `run_rviz.sh --rmw=cyclonedds`) on hosts with the default `net.core.rmem_max` (#10253). Its 16 MB socket receive buffer was a hard minimum, so `rmw_create_node` failed with `failed to create domain` and RViz showed nothing. The 16 MB is now the size requested, capped by the kernel, as in the Fast-DDS profile.
+* Fixed the native ROS 2 LiDAR point cloud in the Autoware `PointXYZIRCAEDT` layout, which every multi-channel `sensor.lidar.ray_cast` publishes, carrying an intensity of `0` on every point: CARLA's `[0, 1]` float intensity was cast into the layout's `uint8` without scaling. It is now scaled to `[0, 255]`; the `PointXYZI` layout and the Python API keep the float.
 
 #### Traffic Manager and agents
 
