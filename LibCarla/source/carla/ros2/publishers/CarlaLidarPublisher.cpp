@@ -6,6 +6,7 @@
 
 #include "carla/ros2/publishers/CarlaLidarPublisher.h"
 
+#include <algorithm>
 #include <cmath>
 #include <cstring>
 
@@ -117,9 +118,10 @@ std::vector<std::uint8_t> CarlaLidarPublisher::ComputePointCloud(
     point = LidarPointEx{};
     point.x = input[i].x;
     point.y = -input[i].y;  // ROS right-handed frame, same flip as XYZI path.
-    // tier4 truncates CARLA's [0, 1] float intensity straight into the uint8
-    // slot (so it is effectively 0/1); replicated verbatim for wire parity.
-    point.intensity = static_cast<std::uint8_t>(input[i].intensity);
+    // CARLA's intensity is a float in [0, 1]; the Autoware layout holds a
+    // uint8, so scale to [0, 255]. A plain cast truncates every return to 0.
+    point.intensity = static_cast<std::uint8_t>(
+        std::clamp(input[i].intensity, 0.0f, 1.0f) * 255.0f + 0.5f);
     point.z = input[i].z;
     // return_type stays 0 (tier4 leaves it as dummy data).
     // Azimuth/distance are derived from the (already mirrored) Cartesian
