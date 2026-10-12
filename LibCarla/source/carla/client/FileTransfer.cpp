@@ -30,6 +30,23 @@ namespace carla::client {
     return fs::absolute(path);
   }();
 
+  // The path arriving here comes from the server, so it must never be trusted
+  // to stay inside the cache. Normalize it and drop any root, drive or leading
+  // ".." components: a hostile or buggy server (e.g. one sending
+  // "../../../CarlaUnreal/Content/...") can then neither write nor read
+  // outside the cache root, while legitimate nested paths such as
+  // "Config/Town10HD_Opt/Vehicles.xml" resolve unchanged. Escaping paths are
+  // remapped instead of rejected so that both WriteFile and ReadFile agree on
+  // the same in-cache location.
+  static fs::path SanitizeRelativePath(std::string_view file) {
+    auto normalized = fs::path(file).lexically_normal().relative_path();
+    fs::path clean;
+    for (const auto &part : normalized)
+      if (part != ".." && part != ".")
+        clean /= part;
+    return clean;
+  }
+
   bool FileTransfer::SetFilesBaseFolder(std::string_view path) {
     if (path.empty())
       return false;
@@ -44,14 +61,14 @@ namespace carla::client {
   bool FileTransfer::FileExists(std::string_view file) {
     auto fullpath = CachePath;
     fullpath /= carla::version();
-    fullpath /= file;
+    fullpath /= SanitizeRelativePath(file);
     return fs::is_regular_file(fullpath);
   }
 
   bool FileTransfer::WriteFile(std::string_view path, std::vector<uint8_t> content) {
     auto writePath = CachePath;
     writePath /= carla::version();
-    writePath /= path;
+    writePath /= SanitizeRelativePath(path);
 
     // Validate and create the file path
     {
@@ -88,7 +105,7 @@ namespace carla::client {
   std::vector<uint8_t> FileTransfer::ReadFile(std::string_view path) {
     auto fullpath = CachePath;
     fullpath /= carla::version();
-    fullpath /= path;
+    fullpath /= SanitizeRelativePath(path);
     std::ifstream file(fullpath, std::ios::binary);
     std::vector<uint8_t> content(std::istreambuf_iterator<char>(file), {});
     return content;

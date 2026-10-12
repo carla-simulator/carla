@@ -58,6 +58,18 @@ using Buffer = std::deque<SimpleWaypointPtr>;
     float target_distance,
     cg::Location vehicle_location);
 
+/// Lowest sqrt(R * lateral_acceleration + 2 * braking_deceleration * distance)
+/// over every three consecutive samples taken at `sample_spacing` along `path`.
+/// `path_start_offset` is where `path.front()` sits relative to the vehicle,
+/// negative when behind it. Fewer than three points returns `max_speed`.
+[[nodiscard]] float GetPathSpeedLimit(
+    const std::vector<cg::Location> &path,
+    float path_start_offset,
+    float sample_spacing,
+    float lateral_acceleration,
+    float braking_deceleration,
+    float max_speed);
+
 /// Lateral offset profile for the large-vehicle wide turn, as a function of
 /// `t`, the fraction of the junction still ahead of the target waypoint
 /// (1 at the entry, 0 at the exit). Returns the *unsigned* offset in the

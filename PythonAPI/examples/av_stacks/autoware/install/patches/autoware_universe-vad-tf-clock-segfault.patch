@@ -1,0 +1,17 @@
+diff --git a/e2e/autoware_tensorrt_vad/lib/coordinate_transformer.cpp b/e2e/autoware_tensorrt_vad/lib/coordinate_transformer.cpp
+index aa97a446a..ac7fd16d2 100644
+--- a/e2e/autoware_tensorrt_vad/lib/coordinate_transformer.cpp
++++ b/e2e/autoware_tensorrt_vad/lib/coordinate_transformer.cpp
+@@ -53,8 +53,11 @@ std::optional<Eigen::Matrix4f> CoordinateTransformer::lookup_base2cam(
+ 
+     return transform_matrix_inverse;
+   } catch (const tf2::TransformException & ex) {
++    // The throttle macro keeps a reference to the clock across calls; a
++    // temporary from make_shared() dangles and segfaults on the first miss.
++    static const rclcpp::Clock::SharedPtr error_clock = rclcpp::Clock::make_shared();
+     RCLCPP_ERROR_THROTTLE(
+-      rclcpp::get_logger("autoware_tensorrt_vad"), *rclcpp::Clock::make_shared(), 5000,
++      rclcpp::get_logger("autoware_tensorrt_vad"), *error_clock, 5000,
+       "Failed to get TF transformation: %s -> %s. Reason: %s", source_frame.c_str(),
+       target_frame.c_str(), ex.what());
+     return std::nullopt;

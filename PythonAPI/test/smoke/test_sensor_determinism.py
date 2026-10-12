@@ -325,6 +325,11 @@ class TestSensorDeterminism(SmokeTest):
     def test_all_sensors(self):
         print("TestSensorDeterminism.test_all_sensors")
 
+        # The scenario spawn points are Town03 transforms.
+        if not any(m.endswith("/Town03_Opt") for m in self.client.get_available_maps()):
+            self.skipTest("Town03_Opt is not available in this package.")
+        self.world = self.client.load_world("Town03_Opt")
+
         orig_settings = self.world.get_settings()
 
         # Setting output temporal folder

@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+# Thin shim: carla-pack <cmd> ...  ->  python3 Util/ContentPacks/carla_pack.py <cmd> ...
+set -e
+HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PY="${CARLA_PACK_PYTHON:-}"
+if [ -z "$PY" ]; then
+  if command -v python3 >/dev/null 2>&1; then PY=python3; else PY=python; fi
+fi
+exec "$PY" "$HERE/carla_pack.py" "$@"

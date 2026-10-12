@@ -47,6 +47,24 @@ public:
     UFUNCTION(BlueprintCallable, Category = "PostProcess|JSON")
     static bool LoadAllPostProcessFromJsonToSceneCapture(USceneCaptureComponent2D* SensorCamera, const FString& FileName);
 
+    // Names (without ".json") of every profile currently saved under
+    // Content/Carla/Config/PostProcess/. Backs the "Get Options" dropdown on
+    // APostProcessProfileVolume::ProfileName so artists can pick an existing
+    // profile or type a new one to create it on the next SaveProfile.
+    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "PostProcess|JSON")
+    static TArray<FString> GetAvailablePostProcessProfileNames();
+
+    // The camera profile every view uses unless told otherwise: the sky rig's
+    // post process (PIE viewport, spectator, server) loads it at BeginPlay and
+    // RGB sensors spawned without post_process_profile load it too, so all
+    // of them read the same file. Set with carla.PostProcess.Profile.
+    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "PostProcess|JSON")
+    static FString GetActiveProfileName();
+
+    // Profile name given to a sensor -> file to load. Empty, or the legacy
+    // lowercase "default", means the active profile.
+    static FString ResolveProfileName(const FString& Requested);
+
     static FString GetPostProcessConfigPath(const FString& FileName)
     {
         return FPaths::ProjectContentDir() / TEXT("Carla/Config/PostProcess/") + FileName + TEXT(".json");

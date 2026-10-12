@@ -9,15 +9,13 @@
 #include "carla/Logging.h"
 #include "carla/ros2/ROS2CallbackData.h"
 #include "carla/ros2/subscribers/SubscriberImpl.h"
-#include "carla/ros2/types/CarlaEgoVehicleControl.h"
-#include "carla/ros2/types/CarlaEgoVehicleControlPubSubTypes.h"
+#include "carla/ros2/types/msg/CarlaEgoVehicleControl.h"
 
 namespace carla {
 namespace ros2 {
 
 struct CarlaEgoVehicleControlTraits {
-  using msg_type = carla_msgs::msg::CarlaEgoVehicleControl;
-  using msg_pubsub_type = carla_msgs::msg::CarlaEgoVehicleControlPubSubType;
+  using msg_type = msg::CarlaEgoVehicleControl;
 };
 
 CarlaEgoVehicleControlSubscriber::CarlaEgoVehicleControlSubscriber(
@@ -36,13 +34,13 @@ ROS2CallbackData CarlaEgoVehicleControlSubscriber::GetMessage() {
   auto message = _impl->GetMessage();
 
   VehicleControl control;
-  control.throttle = message.throttle();
-  control.steer = message.steer();
-  control.brake = message.brake();
-  control.hand_brake = message.hand_brake();
-  control.reverse = message.reverse();
-  control.gear = message.gear();
-  control.manual_gear_shift = message.manual_gear_shift();
+  control.throttle = message.throttle;
+  control.steer = message.steer;
+  control.brake = message.brake;
+  control.hand_brake = message.hand_brake;
+  control.reverse = message.reverse;
+  control.gear = message.gear;
+  control.manual_gear_shift = message.manual_gear_shift;
   return control;
 }
 

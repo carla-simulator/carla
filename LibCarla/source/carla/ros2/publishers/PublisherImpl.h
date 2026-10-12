@@ -6,150 +6,92 @@
 
 #pragma once
 
-#include <atomic>
 #include <memory>
 #include <string>
 
-#include <fastdds/dds/core/status/PublicationMatchedStatus.hpp>
-#include <fastdds/dds/domain/DomainParticipant.hpp>
-#include <fastdds/dds/domain/DomainParticipantFactory.hpp>
-#include <fastdds/dds/domain/qos/DomainParticipantQos.hpp>
-#include <fastdds/dds/publisher/DataWriter.hpp>
-#include <fastdds/dds/publisher/DataWriterListener.hpp>
-#include <fastdds/dds/publisher/Publisher.hpp>
-#include <fastdds/dds/publisher/qos/DataWriterQos.hpp>
-#include <fastdds/dds/topic/qos/TopicQos.hpp>
-#include <fastdds/dds/topic/Topic.hpp>
-#include <fastdds/dds/topic/TypeSupport.hpp>
-
-#include <fastrtps/attributes/ParticipantAttributes.h>
-#include <fastrtps/qos/QosPolicies.h>
-
 #include "carla/Logging.h"
-#include "carla/ros2/FastDDSAliases.h"
+#include "carla/ros2/middleware/MiddlewareFactory.h"
 
 namespace carla {
 namespace ros2 {
 
-// PublisherImpl wraps the per-message-type FastDDS plumbing (DomainParticipant,
-// Publisher, Topic, DataWriter, TypeSupport) into a single template parameterised by
-// a Traits struct that exposes `msg_type` and `msg_pubsub_type` typedefs. Concrete
-// publishers (CarlaIMUPublisher, future CarlaCameraPublisher, etc.) hold a
-// std::shared_ptr<PublisherImpl<Traits>> rather than re-implementing the boilerplate
-// each time. The class inherits FastDDS's DataWriterListener directly so the
-// publication-matched callback updates the alive flag.
+// PublisherImpl owns the transport-neutral publish path for a single message
+// type. It delegates all DDS plumbing to an IPublisherMiddleware obtained from
+// MiddlewareFactory::CreatePublisher<Traits>(), so the concrete middleware
+// (FastDDS, CycloneDDS, ...) is selected at runtime without any vendor header
+// reaching this template. The Traits struct only has to expose a `msg_type`
+// typedef naming a carla::ros2::msg::* POD; the CDR type name/hash/size come
+// from the CdrTopicInfo<msg_type> specialisation consumed inside the middleware.
+// Concrete publishers hold a std::shared_ptr<PublisherImpl<Traits>>, populate
+// the owned message in place via GetMessage(), then call Publish().
 template <typename Traits>
-class PublisherImpl : public efd::DataWriterListener {
+class PublisherImpl {
 public:
   using msg_type = typename Traits::msg_type;
-  using msg_pubsub_type = typename Traits::msg_pubsub_type;
-
-  void on_publication_matched(
-      efd::DataWriter * /*writer*/,
-      const efd::PublicationMatchedStatus &info) override {
-    _alive.store(info.current_count > 0, std::memory_order_release);
-  }
-
-  ~PublisherImpl() override {
-    if (_datawriter)
-      _publisher->delete_datawriter(_datawriter);
-
-    if (_publisher)
-      _participant->delete_publisher(_publisher);
-
-    if (_topic)
-      _participant->delete_topic(_topic);
-
-    if (_participant)
-      efd::DomainParticipantFactory::get_instance()->delete_participant(_participant);
-  }
 
   bool Init(std::string topic_name) {
-    if (_type == nullptr) {
-      log_error("PublisherImpl::Init invalid TypeSupport");
+    if (!EnsureMiddleware()) {
       return false;
     }
-
-    efd::DomainParticipantQos pqos = efd::PARTICIPANT_QOS_DEFAULT;
-    auto factory = efd::DomainParticipantFactory::get_instance();
-    _participant = factory->create_participant(0, pqos);
-    if (_participant == nullptr) {
-      log_error("PublisherImpl::Init failed to create DomainParticipant");
-      return false;
-    }
-
-    erc type_rcode = _type.register_type(_participant);
-    if (type_rcode != erc::ReturnCodeValue::RETCODE_OK) {
-      log_error("PublisherImpl::Init failed to register type with code:", type_rcode());
-      return false;
-    }
-
-    efd::PublisherQos pubqos = efd::PUBLISHER_QOS_DEFAULT;
-    _publisher = _participant->create_publisher(pubqos, nullptr);
-    if (_publisher == nullptr) {
-      log_error("PublisherImpl::Init failed to create Publisher");
-      return false;
-    }
-
-    efd::TopicQos tqos = efd::TOPIC_QOS_DEFAULT;
-    _topic = _participant->create_topic(topic_name, _type->getName(), tqos);
-    if (_topic == nullptr) {
-      log_error("PublisherImpl::Init failed to create Topic");
-      return false;
-    }
-
-    efd::DataWriterQos wqos = efd::DATAWRITER_QOS_DEFAULT;
-    wqos.endpoint().history_memory_policy =
-        eprosima::fastrtps::rtps::PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
-    efd::DataWriterListener *listener = static_cast<efd::DataWriterListener *>(this);
-    _datawriter = _publisher->create_datawriter(_topic, wqos, listener);
-    if (_datawriter == nullptr) {
-      log_error("PublisherImpl::Init failed to create DataWriter");
-      return false;
-    }
-
-    _topic_name = std::move(topic_name);
-    return true;
+    return _middleware->Init(topic_name);
   }
 
-  [[nodiscard]] const std::string &GetTopicName() const noexcept { return _topic_name; }
+  /// Init with an explicit per-topic QoS profile (see QosProfile.h).
+  bool Init(std::string topic_name, const QosProfile& qos) {
+    if (!EnsureMiddleware()) {
+      return false;
+    }
+    return _middleware->Init(topic_name, qos);
+  }
 
-  [[nodiscard]] bool IsAlive() const noexcept { return _alive.load(std::memory_order_acquire); }
+  std::string GetTopicName() {
+    if (_middleware) {
+      return _middleware->GetTopicName();
+    }
+    return "";
+  }
+
+  bool IsAlive() {
+    if (_middleware) {
+      return _middleware->IsAlive();
+    }
+    return false;
+  }
 
   msg_type *GetMessage() { return &_message; }
 
   bool Publish() {
-    if (_datawriter == nullptr) {
-      // A failed Init() leaves the publisher cached, so Publish() is invoked
-      // once per frame for the lifetime of the sensor. Log this only once to
-      // avoid flooding the server log every frame.
-      if (!_init_error_logged) {
-        log_error(
-            "PublisherImpl::Publish (", _topic_name,
-            ") called before successful Init(); suppressing further messages for this publisher.");
-        _init_error_logged = true;
-      }
+    if (!_middleware) {
+      log_error("PublisherImpl::Publish called before Init");
       return false;
     }
-    eprosima::fastrtps::rtps::InstanceHandle_t instance_handle;
-    erc rcode = _datawriter->write(&_message, instance_handle);
-    if (rcode == erc::ReturnCodeValue::RETCODE_OK) {
-      return true;
-    }
-    log_error("PublisherImpl::Publish (", _topic_name, ") failed with code:", rcode());
-    return false;
+    return _middleware->Publish(&_message);
   }
 
-private:
-  efd::DomainParticipant *_participant{nullptr};
-  efd::Publisher *_publisher{nullptr};
-  efd::Topic *_topic{nullptr};
-  efd::DataWriter *_datawriter{nullptr};
-  efd::TypeSupport _type{new msg_pubsub_type()};
+#ifdef LIBCARLA_WITH_GTEST
+  void SetMiddlewareForTesting(std::unique_ptr<IPublisherMiddleware> middleware) {
+    _middleware = std::move(middleware);
+  }
+#endif
 
-  std::string _topic_name;
-  std::atomic<bool> _alive{false};
-  bool _init_error_logged{false};
+private:
+  bool EnsureMiddleware() {
+#ifdef LIBCARLA_WITH_GTEST
+    // A test may inject a fake middleware before Init(); do not overwrite it.
+    if (!_middleware) {
+#endif
+      _middleware = MiddlewareFactory::CreatePublisher<Traits>();
+      if (!_middleware) {
+        log_error("PublisherImpl::Init failed to create middleware publisher");
+        return false;
+      }
+#ifdef LIBCARLA_WITH_GTEST
+    }
+#endif
+    return true;
+  }
+
+  std::unique_ptr<IPublisherMiddleware> _middleware;
   msg_type _message{};
 };
 

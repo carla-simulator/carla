@@ -21,7 +21,7 @@ import carla
 import time
 
 TESTING_ADDRESS = ('localhost', 3654)
-VEHICLE_VEHICLES_EXCLUDE_FROM_OLD_TOWNS = ['vehicle.mitsubishi.fusorosa', 'vehicle.carlamotors.european_hgv', 'vehicle.carlamotors.firetruck']
+VEHICLE_VEHICLES_EXCLUDE_FROM_OLD_TOWNS = ['vehicle.fuso.mitsubishi', 'vehicle.carlacola.actors', 'vehicle.firetruck.actors']
 
 class SmokeTest(unittest.TestCase):
     def setUp(self):
@@ -30,9 +30,13 @@ class SmokeTest(unittest.TestCase):
         self.vehicle_vehicles_exclude_from_old_towns = VEHICLE_VEHICLES_EXCLUDE_FROM_OLD_TOWNS
         self.client.set_timeout(120.0)
         self.world = self.client.get_world()
+        self.initial_map_name = self.world.get_map().name.split('/')[-1]
 
     def tearDown(self):
-        self.client.load_world("Town03")
+        try:
+            self.client.load_world(self.initial_map_name)
+        except RuntimeError:
+            self.client.reload_world()
         # workaround: give time to UE4 to clean memory after loading (old assets)
         time.sleep(5)
         self.world = None
@@ -59,6 +63,8 @@ class SyncSmokeTest(SmokeTest):
 
     def tearDown(self):
         self.world.apply_settings(self.settings)
-        self.world.tick()
+        if self.settings.synchronous_mode:
+            # only tick when the restored settings keep synchronous mode active
+            self.world.tick()
         self.settings = None
         super(SyncSmokeTest, self).tearDown()

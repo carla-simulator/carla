@@ -16,7 +16,7 @@
         - [Lidar raycast](ref_sensors.md#lidar-raycast-sensor).
         - [SemanticLidar raycast](ref_sensors.md#semanticlidar-raycast-sensor).
         - [Radar](ref_sensors.md#radar-sensor).
-        - [RGB camera](ref_sensors.md#rgb-camera).
+        - [RGB camera](ref_sensors.md#rgb-camera). Its look comes from a camera preset chosen with the `post_process_profile` blueprint attribute ([camera post-process presets](camera_postprocess_presets.md)).
         - [Semantic Segmentation camera](ref_sensors.md#semantic-segmentation-camera).
         <br><b>Only receive data when triggered.</b>
         - [Collision detector](ref_sensors.md#collision-detector).
@@ -91,6 +91,15 @@
           The ID of the Unreal Engine GBuffer texture.
       doc: >
         Commands the sensor to stop listening for the specified GBuffer texture.
+    # --------------------------------------
+    - def_name: send
+      params:
+      - param_name: message
+        type: carla.CustomV2XBytes
+        doc: >
+           The data to send. Note: there is a maximum data size for a single message, see carla.CustomV2XBytes for more information.
+      doc: >
+        Instructs the sensor to send the bytes given by `message` to all other custom V2X sensors on the next tick. Only supported on the custom V2X sensor (`sensor.other.v2x_custom`).
     # --------------------------------------
     - def_name: __str__
     # --------------------------------------

@@ -206,10 +206,43 @@ namespace geom {
     std::stringstream out;
     out << std::fixed; // Avoid using scientific notation
 
+    // A handful of road-generation edge cases (e.g. a near-zero-length
+    // direction vector normalized to a unit vector, or a polynomial
+    // evaluated far outside its intended range) can occasionally produce a
+    // vertex tens of thousands of kilometres from the rest of the map.
+    // RecastBuilder's InputGeom computes its mesh bounding box with
+    // rcCalcBounds() over *every* vertex in the OBJ, regardless of whether
+    // any face still references it, and Recast then sizes its voxel grid
+    // off that bounding box -- so a single such outlier makes navmesh
+    // building computationally intractable even though its own geometry is
+    // dropped below. Confirmed: on a real corrupted Town03 export this
+    // produced a target tile grid of ~2.6M x 45K tiles and RecastBuilder
+    // never finished (pegged a CPU core for 10+ minutes, no output);
+    // zeroing the ~4 offending vertices dropped that to a sane 12x12 grid
+    // and RecastBuilder completed in under a second. Every shipped CARLA
+    // map is a few kilometres across at most, so any vertex beyond this
+    // (generous, two-orders-of-magnitude-safe) bound is corrupt: its
+    // coordinates are zeroed (rather than left in place) so it can't
+    // distort the bounding box, and any face still referencing it is
+    // dropped too, degrading to a small hole in the navmesh rather than a
+    // hung/impossible build.
+    constexpr float MaxSaneCoordinate = 1e5f; // 100 km
+    const auto is_sane_vertex = [](const vertex_type &v) {
+      return std::fabs(v.x) <= MaxSaneCoordinate &&
+             std::fabs(v.y) <= MaxSaneCoordinate &&
+             std::fabs(v.z) <= MaxSaneCoordinate;
+    };
+
+    size_t sanitized_vertices = 0u;
     out << "# List of geometric vertices, with (x, y, z) coordinates." << std::endl;
     for (auto &v : _vertices) {
-      // Switched "y" and "z" for Recast library
-      out << "v " << v.x << " " << v.z << " " << v.y << std::endl;
+      if (is_sane_vertex(v)) {
+        // Switched "y" and "z" for Recast library
+        out << "v " << v.x << " " << v.z << " " << v.y << std::endl;
+      } else {
+        out << "v 0 0 0" << std::endl;
+        ++sanitized_vertices;
+      }
     }
 
     if (!_indexes.empty()) {
@@ -217,6 +250,7 @@ namespace geom {
       auto it_m = _materials.begin();
       auto it = _indexes.begin();
       size_t index_counter = 0u;
+      size_t skipped_faces = 0u;
       while (it != _indexes.end()) {
         // While exist materials
         if (it_m != _materials.end()) {
@@ -229,14 +263,32 @@ namespace geom {
             out << "\nusemtl " << it_m->name << std::endl;
           }
         }
+        // Read the 3 consecutive indices making up this face.
+        const auto i_1 = *it; ++it;
+        const auto i_2 = *it; ++it;
+        const auto i_3 = *it; ++it;
+        index_counter += 3;
+
+        // Indexes are 1-based; guard against out-of-range indices too.
+        if (i_1 == 0 || i_2 == 0 || i_3 == 0 ||
+            i_1 > _vertices.size() || i_2 > _vertices.size() || i_3 > _vertices.size() ||
+            !is_sane_vertex(_vertices[i_1 - 1]) ||
+            !is_sane_vertex(_vertices[i_2 - 1]) ||
+            !is_sane_vertex(_vertices[i_3 - 1])) {
+          ++skipped_faces;
+          continue;
+        }
+
         // Add the actual face using the 3 consecutive indices
         // Changes the face build direction to clockwise since
         // the space has changed.
-        out << "f " << *it; ++it;
-        const auto i_2 = *it; ++it;
-        const auto i_3 = *it; ++it;
-        out << " " << i_3 << " " << i_2 << std::endl;
-        index_counter += 3;
+        out << "f " << i_1 << " " << i_3 << " " << i_2 << std::endl;
+      }
+      if (skipped_faces > 0u) {
+        std::cout << "Mesh::GenerateOBJForRecast: sanitized " << sanitized_vertices
+                   << " out-of-range vertex/vertices and skipped " << skipped_faces
+                   << " face(s) referencing them (beyond "
+                   << MaxSaneCoordinate << "m from the origin)." << std::endl;
       }
     }
 

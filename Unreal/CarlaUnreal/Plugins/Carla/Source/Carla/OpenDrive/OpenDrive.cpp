@@ -6,15 +6,22 @@
 
 #include "Carla/OpenDrive/OpenDrive.h"
 #include "Carla.h"
+#include "Carla/ContentPacks/ContentPackManager.h"
 #include "Carla/Game/CarlaGameModeBase.h"
 #include "Carla/Game/CarlaStatics.h"
 
 #include <util/ue-header-guard-begin.h>
+#include "Engine/Engine.h"
 #include "GenericPlatform/GenericPlatformProcess.h"
 #include "Misc/FileHelper.h"
 #include "HAL/FileManagerGeneric.h"
-#include "Misc/FileHelper.h"
 #include <util/ue-header-guard-end.h>
+
+FString UOpenDrive::GetSavedXODRPath(const FString &MapName)
+{
+  return FPaths::ConvertRelativePathToFull(
+      FPaths::ProjectSavedDir() / TEXT("OpenDrive") / (MapName + TEXT(".xodr")));
+}
 
 FString UOpenDrive::FindPathToXODRFile(const FString &InMapName){
 
@@ -31,16 +38,54 @@ FString UOpenDrive::FindPathToXODRFile(const FString &InMapName){
 
   FString XODRFileName = MapName + TEXT(".xodr");
 
+  auto &FileManager = IFileManager::Get();
+
+  // Generated OpenDRIVE worlds write their xodr to Saved/ (the content dir
+  // is pak-backed in a packaged build); that copy is the current one.
+  const FString SavedFilePath = GetSavedXODRPath(MapName);
+  if (FileManager.FileExists(*SavedFilePath))
+  {
+    return SavedFilePath;
+  }
+
   const FString DefaultFilePath =
       FPaths::ProjectContentDir() +
       TEXT("Carla/Maps/OpenDrive/") +
       XODRFileName;
 
-  auto &FileManager = IFileManager::Get();
-
   if (FileManager.FileExists(*DefaultFilePath))
   {
     return DefaultFilePath;
+  }
+
+  // The manifest owns the sidecar path. DigitalTwin packs isolate each map's
+  // XODR and map_logic.json in a subdirectory so phase files cannot collide.
+  if (const UCarlaContentPackManager *ContentPacks = UCarlaContentPackManager::Get())
+  {
+    for (const FCarlaContentPack &Pack : ContentPacks->GetPacks())
+    {
+      if (!Pack.bMounted) continue;
+      for (const FCarlaContentPackMap &Map : Pack.Manifest.Maps)
+      {
+        if (Map.Name.Equals(MapName, ESearchCase::IgnoreCase) && !Map.Xodr.IsEmpty())
+        {
+          const FString PackFilePath = FPaths::ConvertRelativePathToFull(Pack.ContentDir / Map.Xodr);
+          if (FPaths::IsUnderDirectory(PackFilePath, Pack.ContentDir) && FileManager.FileExists(*PackFilePath))
+          {
+            return PackFilePath;
+          }
+        }
+      }
+    }
+    // Compatibility with older packs without a registered sidecar path.
+    for (const FString &PackContentDir : ContentPacks->GetPackContentDirs())
+    {
+      const FString PackFilePath = PackContentDir / TEXT("Maps/OpenDrive") / XODRFileName;
+      if (FileManager.FileExists(*PackFilePath))
+      {
+        return PackFilePath;
+      }
+    }
   }
 
   TArray<FString> FilesFound;
@@ -102,12 +147,34 @@ FString UOpenDrive::GetXODR(const UWorld *World)
   const auto FileName = MapDir.EndsWith(MapName) ? "*" : MapName;
 
   TArray<FString> Files;
-  IFileManager::Get().FindFilesRecursive(Files, *FolderDir, *FString(FileName + ".xodr"), true, false, false);
+
+  // A generated OpenDRIVE world keeps its current xodr in Saved/; a stale
+  // OpenDriveMap.xodr may still be cooked into the content dir.
+  const FString SavedFilePath = GetSavedXODRPath(MapName);
+  if (IFileManager::Get().FileExists(*SavedFilePath))
+  {
+    Files.Add(SavedFilePath);
+  }
+
+  if (!Files.Num())
+  {
+    IFileManager::Get().FindFilesRecursive(Files, *FolderDir, *FString(FileName + ".xodr"), true, false, false);
+  }
 
   if (!Files.Num())
   {
     FString PluginFolder = FPaths::ProjectDir() + TEXT("Plugins/") + MapName + TEXT("/Content/Maps/OpenDrive/");
     IFileManager::Get().FindFilesRecursive(Files, *PluginFolder, *FString(FileName + ".xodr"), true, false, false);
+  }
+
+  if (!Files.Num())
+  {
+    // Content packs and any other root FindPathToXODRFile knows about.
+    const FString FoundPath = FindPathToXODRFile(MapName);
+    if (!FoundPath.IsEmpty())
+    {
+      Files.Add(FoundPath);
+    }
   }
 
   FString Content;

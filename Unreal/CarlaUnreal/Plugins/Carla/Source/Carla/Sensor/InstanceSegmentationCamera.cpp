@@ -31,6 +31,10 @@ AInstanceSegmentationCamera::AInstanceSegmentationCamera(
 void AInstanceSegmentationCamera::SetUpSceneCaptureComponent(USceneCaptureComponent2D &SceneCapture)
 {
   Super::SetUpSceneCaptureComponent(SceneCapture);
+  // This sensor's post-process material samples the segmentation ID buffer;
+  // ask the renderer to run the segmentation pass for this capture (it is
+  // skipped for every capture that does not opt in).
+  SceneCapture.bRequiresSegmentationPass = true;
 }
 
 void AInstanceSegmentationCamera::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaSeconds)
@@ -38,12 +42,12 @@ void AInstanceSegmentationCamera::PostPhysTick(UWorld *World, ELevelTick TickTyp
   TRACE_CPUPROFILER_EVENT_SCOPE(AInstanceSegmentationCamera::PostPhysTick);
   Super::PostPhysTick(World, TickType, DeltaSeconds);
   
-  auto FrameIndex = FCarlaEngine::GetFrameCounter();
-  ImageUtil::ReadSensorImageDataAsyncFColor(*this, [this, FrameIndex](
+  auto CaptureContext = MakeCaptureContext(*this);
+  ImageUtil::ReadSensorImageDataAsyncFColor(*this, [this, CaptureContext](
     TArrayView<const FColor> Pixels,
     FIntPoint Size) -> bool
   {
-    SendDataToClient(*this, Pixels, FrameIndex);
+    SendDataToClient(*this, Pixels, CaptureContext);
     return true;
   });
 }

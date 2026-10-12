@@ -1,0 +1,22 @@
+# TLS termination in front of the API with Caddy (automatic Let's Encrypt certificates).
+#   DOMAIN=cosmos.example.com docker compose -f docker-compose.yaml -f compose.caddy.yaml up -d
+# The API itself stays plain HTTP inside the compose network; only Caddy is exposed.
+services:
+  cosmos:
+    ports: !reset []
+    expose:
+      - "8000"
+  caddy:
+    image: caddy:2
+    container_name: carla-cosmos-caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    command: caddy reverse-proxy --from ${DOMAIN:?set DOMAIN} --to cosmos:8000
+    volumes:
+      - caddy_data:/data
+      - caddy_config:/config
+volumes:
+  caddy_data:
+  caddy_config:

@@ -1,0 +1,25 @@
+name: full-8gpu
+description: >-
+  Manual 8 x 80 GB layout for the :full image — Cosmos 3 Super (TP=4, GPUs 0-3),
+  Cosmos 3 Nano (GPU 4), Transfer 2.5 general + wsm renderer (GPU 5), GPUs 6-7 idle.
+  'auto' plans the same plus AV multiview on the idle pair; keep this file as a
+  template for hand-tuned splits.
+workers:
+  - name: cosmos3-super
+    type: cosmos3
+    backends: [cosmos3-super]
+    gpus: [0, 1, 2, 3]
+    args: ["--tp", "4"]
+  - name: cosmos3-nano
+    type: cosmos3
+    backends: [cosmos3-nano]
+    gpus: [4]
+    args: ["--tp", "1"]
+  - name: transfer25
+    type: transfer25
+    backends: [transfer2.5]
+    gpus: [5]
+  - name: wsm-renderer
+    type: wsm_renderer
+    backends: [wsm-renderer]
+    gpus: [5]

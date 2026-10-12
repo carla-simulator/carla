@@ -91,6 +91,20 @@ cmake --build Build --target package-development
 
 The package will be generated in the directory `Build/Package`.
 
+### Select which maps to cook
+
+By default a package cooks every map listed in `DefaultGame.ini` (`Town10HD_Opt`, `Mine_01`, `Town15`, `Town_C`). If you only need a subset, set the `CARLA_MAPS_TO_COOK` option when you configure the build to a `+`-separated list of map package paths, which produces a smaller package containing only those maps:
+
+```sh
+cmake -G Ninja -S . -B Build --toolchain=%CD%/CMake/Toolchain.cmake -DCMAKE_BUILD_TYPE=Release ^
+    -DCARLA_MAPS_TO_COOK="/Game/Carla/Maps/Town10HD_Opt+/Game/Carla/Maps/Mine_01"
+```
+
+Use the full map package path (`/Game/Carla/Maps/<MapName>`), not a filesystem path. Leaving `CARLA_MAPS_TO_COOK` empty (the default) cooks the full map list from `DefaultGame.ini`, so the standard build is unchanged.
+
+!!! Note
+    `Town10HD_Opt` is the default map a package boots into. If your selection excludes it, set a different default map in `DefaultEngine.ini` before packaging, otherwise the packaged server starts with a missing-map error.
+
 ### Run the package
 
 Extract the package that you built, then from a command terminal open in the root folder of the extracted package, run the `CarlaUnreal.exe` file:

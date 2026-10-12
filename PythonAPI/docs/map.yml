@@ -275,6 +275,56 @@
         Returns a list of locations with all crosswalk zones in the form of closed polygons. The first point is repeated, symbolizing where the polygon begins and ends.
       return: list(carla.Location)
     # --------------------------------------
+    - def_name: get_roads
+      doc: >
+        Returns every road in the map.
+      return: list(carla.Road)
+    # --------------------------------------
+    - def_name: get_road
+      params:
+      - param_name: road_id
+        type: int
+        doc: >
+          OpenDRIVE id of the road.
+      doc: >
+        Returns the road with this id, or <b>None</b> when the map has no such road.
+      return: carla.Road
+    # --------------------------------------
+    - def_name: get_lane_section
+      params:
+      - param_name: road_id
+        type: int
+      - param_name: section_id
+        type: int
+      doc: >
+        Returns the lane section, or <b>None</b> when the road or section is unknown.
+      return: carla.LaneSection
+    # --------------------------------------
+    - def_name: get_lane
+      params:
+      - param_name: road_id
+        type: int
+      - param_name: section_id
+        type: int
+      - param_name: lane_id
+        type: int
+      doc: >
+        Returns the lane, or <b>None</b> when the road, section or lane is unknown.
+      return: carla.Lane
+    # --------------------------------------
+    - def_name: get_junctions
+      doc: >
+        Returns every junction in the map.
+      return: list(carla.Junction)
+    # --------------------------------------
+    - def_name: get_junction_by_id
+      params:
+      - param_name: junction_id
+        type: int
+      doc: >
+        Returns the junction with this id, or <b>None</b> when the map has no such junction.
+      return: carla.Junction
+    # --------------------------------------
     - def_name: cook_in_memory_map
       params:
       - param_name: path
@@ -481,6 +531,437 @@
         Generates a waypoint at the center of the right lane based on the direction of the current waypoint, taking into account if the lane change is allowed in this location.
 
         Will return <b>None</b> if the lane does not exist.
+
+        <b>Deprecated:</b> use get_right_waypoint().
+    # --------------------------------------
+    - def_name: get_right_waypoint
+      return: carla.Waypoint
+      doc: >
+        Generates a waypoint at the center of the right lane based on the direction of the current waypoint, taking into account if the lane change is allowed in this location. Replaces get_right_lane(), which is deprecated.
+
+        Will return <b>None</b> if the lane does not exist.
+    # --------------------------------------
+    - def_name: get_left_waypoint
+      return: carla.Waypoint
+      doc: >
+        Generates a waypoint at the center of the left lane based on the direction of the current waypoint, taking into account if the lane change is allowed in this location. Replaces get_left_lane(), which is deprecated.
+
+        Will return <b>None</b> if the lane does not exist.
+    # --------------------------------------
+    - def_name: get_lane
+      return: carla.Lane
+      doc: >
+        Returns the lane this waypoint samples.
+    # --------------------------------------
+    - def_name: get_road
+      return: carla.Road
+      doc: >
+        Returns the road this waypoint samples.
+    # --------------------------------------
+    - def_name: __str__
+    # --------------------------------------
+
+  - class_name: Road
+    # - DESCRIPTION ------------------------
+    doc: >
+      An OpenDRIVE road: a run of carriageway divided along its s coordinate into lane sections, each of which holds the lanes.
+
+      Roads join end to end through get_next_road() and get_previous_road(), or through a junction. There is deliberately no left or right here: OpenDRIVE gives roads no lateral relation, because a road already contains the lanes on both sides of its centre line. Lateral neighbours live on carla.Lane.
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: id
+      type: int
+      doc: >
+        OpenDRIVE id of the road.
+    - var_name: name
+      type: str
+      doc: >
+        Name recorded in the OpenDRIVE file. Often empty.
+    - var_name: length
+      type: float
+      var_units: meters
+      doc: >
+        Length of the road.
+    - var_name: is_junction
+      type: bool
+      doc: >
+        Whether the road is part of a junction.
+    - var_name: junction_id
+      type: int
+      doc: >
+        Id of the junction this road belongs to, or -1 when it is not part of one.
+    - var_name: is_rht
+      type: bool
+      doc: >
+        Whether traffic on this road drives on the right.
+    - var_name: successor_id
+      type: int
+      doc: >
+        Id of the road that follows this one, as recorded in OpenDRIVE.
+    - var_name: predecessor_id
+      type: int
+      doc: >
+        Id of the road that precedes this one, as recorded in OpenDRIVE.
+    # - METHODS ----------------------------
+    methods:
+    - def_name: get_next_road
+      return: list(carla.Road)
+      doc: >
+        Returns the roads reachable by continuing forward.
+    # --------------------------------------
+    - def_name: get_previous_road
+      return: list(carla.Road)
+      doc: >
+        Returns the roads that lead into this one.
+    # --------------------------------------
+    - def_name: get_lanes
+      params:
+      - param_name: s
+        type: float
+        param_units: meters
+        doc: >
+          Distance along the road.
+      - param_name: lane_type
+        type: carla.LaneType
+        default: carla.LaneType.Driving
+        doc: >
+          Type of lanes to get.
+      return: list(carla.Lane)
+      doc: >
+        Returns every lane of the given type present at this distance along the road.
+    # --------------------------------------
+    - def_name: get_lane
+      params:
+      - param_name: section_id
+        type: int
+      - param_name: lane_id
+        type: int
+      return: carla.Lane
+      doc: >
+        Returns the lane with this id in this lane section, or <b>None</b> when it does not exist.
+    # --------------------------------------
+    - def_name: get_lane_at
+      params:
+      - param_name: s
+        type: float
+        param_units: meters
+      - param_name: lane_id
+        type: int
+      return: carla.Lane
+      doc: >
+        Returns the lane with this id in whichever lane section covers this distance along the road.
+    # --------------------------------------
+    - def_name: get_sections
+      return: list(carla.LaneSection)
+      doc: >
+        Returns every lane section of the road.
+    # --------------------------------------
+    - def_name: get_section
+      params:
+      - param_name: section_id
+        type: int
+      return: carla.LaneSection
+      doc: >
+        Returns the lane section with this id, or <b>None</b>.
+    # --------------------------------------
+    - def_name: get_section_at
+      params:
+      - param_name: s
+        type: float
+        param_units: meters
+      return: carla.LaneSection
+      doc: >
+        Returns the lane section covering this distance along the road, or <b>None</b>.
+    # --------------------------------------
+    - def_name: get_junction
+      return: carla.Junction
+      doc: >
+        Returns the junction this road belongs to, or <b>None</b> when it is not part of one.
+    # --------------------------------------
+    - def_name: get_transform_at
+      params:
+      - param_name: s
+        type: float
+        param_units: meters
+      return: carla.Transform
+      doc: >
+        Returns the transform at the centre of the road at this distance along it.
+    # --------------------------------------
+    - def_name: get_waypoints_at
+      params:
+      - param_name: s
+        type: float
+        param_units: meters
+      - param_name: lane_type
+        type: carla.LaneType
+        default: carla.LaneType.Driving
+      return: list(carla.Waypoint)
+      doc: >
+        Returns a cross-section of the road: one waypoint per lane of the given type, all at the same distance along the road. Cuts <b>across</b> the road, where get_waypoints() samples <b>along</b> it.
+    # --------------------------------------
+    - def_name: get_waypoints
+      params:
+      - param_name: distance
+        type: float
+        param_units: meters
+        doc: >
+          Spacing between samples.
+      - param_name: lane_type
+        type: carla.LaneType
+        default: carla.LaneType.Driving
+      return: list(carla.Waypoint)
+      doc: >
+        Returns waypoints sampled <b>along</b> the road every <code>distance</code> metres, on every lane of the given type. Not to be confused with get_waypoints_at(), which cuts across the road at one distance.
+    # --------------------------------------
+    - def_name: __eq__
+      params:
+      - param_name: other
+        type: carla.Road
+      return: bool
+      doc: >
+        Returns <b>True</b> if both roads have the same id.
+    # --------------------------------------
+    - def_name: __ne__
+      params:
+      - param_name: other
+        type: carla.Road
+      return: bool
+    # --------------------------------------
+    - def_name: __hash__
+      return: int
+    # --------------------------------------
+    - def_name: __str__
+    # --------------------------------------
+
+  - class_name: LaneSection
+    # - DESCRIPTION ------------------------
+    doc: >
+      A stretch of road over which the lane layout does not change.
+
+      An OpenDRIVE road is divided along its s coordinate into lane sections; lanes are added or dropped only at a section boundary. This is why a lane's identity carries a section id, and why carla.Lane.get_next_lane() can step into a different section, or return nothing where a lane simply ends.
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: id
+      type: int
+      doc: >
+        OpenDRIVE id of the lane section, unique within its road.
+    - var_name: road_id
+      type: int
+      doc: >
+        Id of the road this section belongs to.
+    - var_name: s_start
+      type: float
+      var_units: meters
+      doc: >
+        Distance along the road at which this section begins.
+    - var_name: length
+      type: float
+      var_units: meters
+      doc: >
+        Length of the section.
+    # - METHODS ----------------------------
+    methods:
+    - def_name: get_road
+      return: carla.Road
+      doc: >
+        Returns the road this section belongs to.
+    # --------------------------------------
+    - def_name: get_lanes
+      params:
+      - param_name: lane_type
+        type: carla.LaneType
+        default: carla.LaneType.Driving
+        doc: >
+          Type of lanes to get.
+      return: list(carla.Lane)
+      doc: >
+        Returns every lane of the given type in this section.
+    # --------------------------------------
+    - def_name: get_lane
+      params:
+      - param_name: lane_id
+        type: int
+      return: carla.Lane
+      doc: >
+        Returns the lane with this id, or <b>None</b> when the section has no such lane.
+    # --------------------------------------
+    - def_name: contains_lane
+      params:
+      - param_name: lane_id
+        type: int
+      return: bool
+      doc: >
+        Whether this section has a lane with this id.
+    # --------------------------------------
+    - def_name: get_next_section
+      return: carla.LaneSection
+      doc: >
+        Returns the next section along the road, or <b>None</b> at the end.
+    # --------------------------------------
+    - def_name: get_previous_section
+      return: carla.LaneSection
+      doc: >
+        Returns the previous section along the road, or <b>None</b> at the start.
+    # --------------------------------------
+    - def_name: __eq__
+      params:
+      - param_name: other
+        type: carla.LaneSection
+      return: bool
+      doc: >
+        Returns <b>True</b> if both sections have the same road and section id.
+    # --------------------------------------
+    - def_name: __ne__
+      params:
+      - param_name: other
+        type: carla.LaneSection
+      return: bool
+    # --------------------------------------
+    - def_name: __hash__
+      return: int
+    # --------------------------------------
+    - def_name: __str__
+    # --------------------------------------
+
+  - class_name: Lane
+    # - DESCRIPTION ------------------------
+    doc: >
+      A single OpenDRIVE lane, identified by its road, lane section and lane id.
+
+      A lane lives inside exactly one lane section, which is why its identity carries the section: the same lane id on the same road is a different lane in a different section.
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: id
+      type: int
+      doc: >
+        OpenDRIVE id of the lane. Negative to the right of the centre line, positive to the left; the centre lane is 0.
+    - var_name: road_id
+      type: int
+      doc: >
+        Id of the road this lane belongs to.
+    - var_name: section_id
+      type: int
+      doc: >
+        Id of the lane section this lane belongs to.
+    - var_name: type
+      type: carla.LaneType
+      doc: >
+        Type of the lane.
+    - var_name: length
+      type: float
+      var_units: meters
+      doc: >
+        Length of the lane.
+    - var_name: s_start
+      type: float
+      var_units: meters
+      doc: >
+        Distance along the road at which this lane's section begins.
+    - var_name: level
+      type: bool
+      doc: >
+        OpenDRIVE level flag: whether the lane keeps the road's superelevation.
+    - var_name: is_straight
+      type: bool
+      doc: >
+        Whether the lane has no curvature.
+    - var_name: is_positive_direction
+      type: bool
+      doc: >
+        Whether the lane runs along increasing s.
+    # - METHODS ----------------------------
+    methods:
+    - def_name: get_road
+      return: carla.Road
+      doc: >
+        Returns the road this lane belongs to.
+    # --------------------------------------
+    - def_name: get_section
+      return: carla.LaneSection
+      doc: >
+        Returns the lane section this lane belongs to.
+    # --------------------------------------
+    - def_name: get_width
+      params:
+      - param_name: s
+        type: float
+        param_units: meters
+        doc: >
+          Distance along the <b>road</b>, not an offset from the start of the lane.
+      return: float
+      return_units: meters
+      doc: >
+        Returns the width of the lane at this distance along the road.
+    # --------------------------------------
+    - def_name: get_transform
+      params:
+      - param_name: s
+        type: float
+        param_units: meters
+      return: carla.Transform
+      doc: >
+        Returns the transform at the centre of the lane at this distance along the road.
+    # --------------------------------------
+    - def_name: get_right_lane
+      return: carla.Lane
+      doc: >
+        Returns the lane to the right, or <b>None</b> at the edge of the road.
+
+        Crossing the centre line flips the sign of the lane id, so the lane returned may run in the <b>opposite direction</b>. This matches carla.Waypoint.get_right_waypoint(). Not to be confused with the deprecated carla.Waypoint.get_right_lane(), which returns a waypoint.
+    # --------------------------------------
+    - def_name: get_left_lane
+      return: carla.Lane
+      doc: >
+        Returns the lane to the left, or <b>None</b> at the edge of the road. See get_right_lane() on direction.
+    # --------------------------------------
+    - def_name: get_next_lane
+      return: list(carla.Lane)
+      doc: >
+        Returns the lanes this one leads into. Empty where the lane ends. Returns a list, as a lane may lead into several, typically at a junction.
+    # --------------------------------------
+    - def_name: get_previous_lane
+      return: list(carla.Lane)
+      doc: >
+        Returns the lanes that lead into this one.
+    # --------------------------------------
+    - def_name: get_waypoint
+      params:
+      - param_name: s
+        type: float
+        param_units: meters
+        doc: >
+          Distance along the <b>road</b>.
+      return: carla.Waypoint
+      doc: >
+        Returns the waypoint on this lane at this distance along the road, or <b>None</b> when the distance falls outside the lane.
+    # --------------------------------------
+    - def_name: get_waypoints
+      params:
+      - param_name: distance
+        type: float
+        param_units: meters
+        doc: >
+          Spacing between samples.
+      return: list(carla.Waypoint)
+      doc: >
+        Returns waypoints along this lane, every <code>distance</code> metres.
+    # --------------------------------------
+    - def_name: __eq__
+      params:
+      - param_name: other
+        type: carla.Lane
+      return: bool
+      doc: >
+        Returns <b>True</b> if both lanes have the same road, section and lane id.
+    # --------------------------------------
+    - def_name: __ne__
+      params:
+      - param_name: other
+        type: carla.Lane
+      return: bool
+    # --------------------------------------
+    - def_name: __hash__
+      return: int
     # --------------------------------------
     - def_name: __str__
     # --------------------------------------
@@ -510,6 +991,60 @@
       return: list(tuple(carla.Waypoint))
       doc: >
         Returns a list of pairs of waypoints. Every tuple on the list contains first an initial and then a final waypoint within the intersection boundaries that describe the beginning and the end of said lane along the junction. Lanes follow their OpenDRIVE definitions so there may be many different tuples with the same starting waypoint due to possible deviations, as this are considered different lanes.
+    # --------------------------------------
+    - def_name: get_connecting_roads
+      return: list(carla.Road)
+      doc: >
+        Returns the roads inside the junction. These are OpenDRIVE's connecting roads.
+    # --------------------------------------
+    - def_name: get_adjacent_roads
+      return: list(carla.Road)
+      doc: >
+        Returns the roads outside the junction that meet it.
+    # --------------------------------------
+    - def_name: get_entry_lanes
+      params:
+      - param_name: lane_type
+        type: carla.LaneType
+        default: carla.LaneType.Driving
+        doc: >
+          Type of lanes to get.
+      return: list(carla.Lane)
+      doc: >
+        Returns the lanes on the adjacent roads that feed into the junction.
+    # --------------------------------------
+    - def_name: get_exit_lanes
+      params:
+      - param_name: lane_type
+        type: carla.LaneType
+        default: carla.LaneType.Driving
+        doc: >
+          Type of lanes to get.
+      return: list(carla.Lane)
+      doc: >
+        Returns the lanes on the adjacent roads that the junction feeds into.
+    # --------------------------------------
+    - def_name: get_entry_waypoints
+      params:
+      - param_name: lane_type
+        type: carla.LaneType
+        default: carla.LaneType.Driving
+        doc: >
+          Type of lanes to get the waypoints.
+      return: list(carla.Waypoint)
+      doc: >
+        Returns one waypoint per entry lane, placed on the adjacent road where it meets the junction.
+    # --------------------------------------
+    - def_name: get_exit_waypoints
+      params:
+      - param_name: lane_type
+        type: carla.LaneType
+        default: carla.LaneType.Driving
+        doc: >
+          Type of lanes to get the waypoints.
+      return: list(carla.Waypoint)
+      doc: >
+        Returns one waypoint per exit lane, placed on the adjacent road where it leaves the junction.
     # --------------------------------------
 
   - class_name: LandmarkOrientation

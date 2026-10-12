@@ -23,6 +23,8 @@ namespace client {
   class Map;
   class Junction;
   class Landmark;
+  class Road;
+  class Lane;
 
   class Waypoint
     : public EnableSharedFromThis<Waypoint>,
@@ -64,6 +66,12 @@ namespace client {
     bool IsJunction() const;
 
     SharedPtr<Junction> GetJunction() const;
+
+    /// The lane this waypoint samples.
+    SharedPtr<Lane> GetLane() const;
+
+    /// The road this waypoint samples.
+    SharedPtr<Road> GetRoad() const;
 
     double GetLaneWidth() const;
 

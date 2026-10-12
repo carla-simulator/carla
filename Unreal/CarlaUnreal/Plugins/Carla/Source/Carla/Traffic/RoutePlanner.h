@@ -46,6 +46,19 @@ public:
 
   void AssignRandomRoute(AWheeledVehicleAIController &Controller) const;
 
+  /// Searches every ARoutePlanner in the world for the route spline point
+  /// closest to Location, and returns the road direction there (as a
+  /// rotator built from the spline tangent). Used by editor tools that want
+  /// to align spawned props (e.g. road decals) to the flow of traffic.
+  /// Returns false, leaving OutRotation untouched, if no route spline point
+  /// is found within SearchRadius.
+  UFUNCTION(BlueprintCallable, Category = "Traffic Routes", meta = (WorldContext = "WorldContextObject"))
+  static bool FindRoadFlowRotationAtLocation(
+      const UObject *WorldContextObject,
+      const FVector &Location,
+      float SearchRadius,
+      FRotator &OutRotation);
+
 protected:
 
 #if WITH_EDITOR

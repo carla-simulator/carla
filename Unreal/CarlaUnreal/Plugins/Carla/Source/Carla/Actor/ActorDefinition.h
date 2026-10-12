@@ -63,6 +63,13 @@ struct FVehicleActorDefinition
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
   TObjectPtr<UStaticMesh> mesh = nullptr;
 
+  /// Optional separate glass mesh -- most parked vehicle meshes split the
+  /// body and the glass into two static meshes assigned to two different
+  /// components, and the glass one doesn't follow a consistent naming
+  /// convention relative to the body mesh, so it can't be derived from it.
+  UPROPERTY(EditAnywhere, BlueprintReadWrite)
+  TObjectPtr<UStaticMesh> GlassMesh = nullptr;
+
   /// Colors represent the avaliable colors for each actor
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
   TArray<FColor> colors;

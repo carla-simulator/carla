@@ -5,6 +5,7 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "VehicleVelocityControl.h"
+#include "Carla/Vehicle/CarlaWheeledVehicle.h"
 
 #include <util/ue-header-guard-begin.h>
 #include "Kismet/KismetMathLibrary.h"
@@ -23,7 +24,15 @@ void UVehicleVelocityControl::BeginPlay()
   SetTickGroup(ETickingGroup::TG_PrePhysics);
 
   OwnerVehicle = GetOwner();
-  PrimitiveComponent = Cast<UPrimitiveComponent>(OwnerVehicle->GetRootComponent());
+  ACarlaWheeledVehicle* CarlaVehicle = Cast<ACarlaWheeledVehicle>(OwnerVehicle);
+  if (CarlaVehicle && CarlaVehicle->GetMesh())
+  {
+    PrimitiveComponent = Cast<UPrimitiveComponent>(CarlaVehicle->GetMesh());
+  }
+  if (PrimitiveComponent == nullptr)
+  {
+    PrimitiveComponent = Cast<UPrimitiveComponent>(OwnerVehicle->GetRootComponent());
+  }
 }
 
 void UVehicleVelocityControl::Activate(bool bReset)
@@ -51,6 +60,11 @@ void UVehicleVelocityControl::Deactivate()
 void UVehicleVelocityControl::TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction *ThisTickFunction)
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(UVehicleVelocityControl::TickComponent);
+  if (PrimitiveComponent == nullptr)
+  {
+    return;
+  }
+  PrimitiveComponent->WakeRigidBody(NAME_None);
   FTransform Transf = OwnerVehicle->GetActorTransform();
   const FVector LocVel = Transf.TransformVector(TargetVelocity);
   PrimitiveComponent->SetPhysicsLinearVelocity(LocVel, false, "None");

@@ -1,0 +1,15 @@
+name: mock
+description: CPU-only mock worker (echoes the input video) for tests, API development and smoke tests
+priority: 90
+match: {min_gpus: 0, max_gpus: 0}
+workers:
+  - name: mock
+    type: mock
+    backends: [cosmos3-nano, cosmos3-super, transfer2.5, transfer2.5-av]
+    gpus: []
+    args: ["--delay", "3"]
+  - name: wsm-renderer
+    type: wsm_renderer
+    backends: [wsm-renderer]
+    gpus: []
+    args: ["--engine", "fake"]

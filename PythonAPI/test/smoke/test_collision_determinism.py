@@ -141,7 +141,7 @@ class TwoCarsHighSpeedCollision(Scenario):
         blueprint_library = self.world.get_blueprint_library()
 
         vehicle00_bp = blueprint_library.filter("tt")[0]
-        vehicle01_bp = blueprint_library.filter("mkz_2017")[0]
+        vehicle01_bp = blueprint_library.filter("vehicle.lincoln.mkz")[0]
 
         vehicle00_tr = carla.Transform(carla.Location(140, -256, 0.015), carla.Rotation(yaw=180))
         vehicle01_tr = carla.Transform(carla.Location(40, -255, 0.04), carla.Rotation(yaw=0))
@@ -159,7 +159,8 @@ class TwoCarsHighSpeedCollision(Scenario):
         veh_refs = [self.world.get_actor(x) for x in veh_ids]
 
         if (0 in veh_ids) or (None in veh_refs):
-            self.fail("%s: The test cars could not be correctly spawned" % (bp_veh.id))
+            errors = ", ".join(x.error for x in responses if x.has_error())
+            raise RuntimeError("The test actors could not be correctly spawned: %s" % errors)
 
         self.add_actor(veh_refs[0], "Car")
         self.add_actor(veh_refs[1], "Car")
@@ -173,8 +174,8 @@ class ThreeCarsSlowSpeedCollision(Scenario):
 
         blueprint_library = self.world.get_blueprint_library()
 
-        vehicle00_bp = blueprint_library.filter("prius")[0]
-        vehicle01_bp = blueprint_library.filter("a2")[0]
+        vehicle00_bp = blueprint_library.filter("vehicle.mini.cooper")[0]
+        vehicle01_bp = blueprint_library.filter("vehicle.ue4.audi.tt")[0]
         vehicle02_bp = blueprint_library.filter("lincoln")[0]
 
         vehicle00_tr = carla.Transform(carla.Location(110, -255, 0.05), carla.Rotation(yaw=180))
@@ -208,7 +209,7 @@ class CarBikeCollision(Scenario):
 
         blueprint_library = self.world.get_blueprint_library()
 
-        car_bp = blueprint_library.filter("mkz_2017")[0]
+        car_bp = blueprint_library.filter("vehicle.lincoln.mkz")[0]
         bike_bp = blueprint_library.filter("gazelle")[0]
 
         car_tr = carla.Transform(carla.Location(50, -255, 0.04), carla.Rotation(yaw=0))
@@ -227,7 +228,8 @@ class CarBikeCollision(Scenario):
         veh_refs = [self.world.get_actor(x) for x in veh_ids]
 
         if (0 in veh_ids) or (None in veh_refs):
-            self.fail("%s: The test cars could not be correctly spawned" % (bp_veh.id))
+            errors = ", ".join(x.error for x in responses if x.has_error())
+            raise RuntimeError("The test actors could not be correctly spawned: %s" % errors)
 
         self.add_actor(veh_refs[0], "Car")
         self.add_actor(veh_refs[1], "Bike")
@@ -241,8 +243,8 @@ class CarWalkerCollision(Scenario):
 
         blueprint_library = self.world.get_blueprint_library()
 
-        car_bp = blueprint_library.filter("mkz_2017")[0]
-        walker_bp = blueprint_library.filter("walker.pedestrian.0007")[0]
+        car_bp = blueprint_library.filter("vehicle.lincoln.mkz")[0]
+        walker_bp = blueprint_library.filter("walker.pedestrian.0015")[0]
         if walker_bp.has_attribute('is_invincible'):
             walker_bp.set_attribute('is_invincible', 'false')
 
@@ -261,7 +263,8 @@ class CarWalkerCollision(Scenario):
         veh_refs = [self.world.get_actor(x) for x in veh_ids]
 
         if (0 in veh_ids) or (None in veh_refs):
-            self.fail("%s: The test cars could not be correctly spawned" % (bp_veh.id))
+            errors = ", ".join(x.error for x in responses if x.has_error())
+            raise RuntimeError("The test actors could not be correctly spawned: %s" % errors)
 
         self.wait(1)
 
@@ -397,7 +400,7 @@ class TestCollisionDeterminism(SmokeTest):
             os.mkdir(output_path)
 
         # Loading Town03 for test
-        self.client.load_world("Town03")
+        self.client.load_world("Town03_Opt")
         # workaround: give time to UE4 to clean memory after loading (old assets)
         time.sleep(5)
 
@@ -423,7 +426,7 @@ class TestCollisionDeterminism(SmokeTest):
             os.mkdir(output_path)
 
         # Loading Town03 for test
-        self.client.load_world("Town03")
+        self.client.load_world("Town03_Opt")
         # workaround: give time to UE4 to clean memory after loading (old assets)
         time.sleep(5)
 
@@ -449,7 +452,7 @@ class TestCollisionDeterminism(SmokeTest):
             os.mkdir(output_path)
 
         # Loading Town03 for test
-        self.client.load_world("Town03")
+        self.client.load_world("Town03_Opt")
         # workaround: give time to UE4 to clean memory after loading (old assets)
         time.sleep(5)
 
@@ -475,7 +478,7 @@ class TestCollisionDeterminism(SmokeTest):
             os.mkdir(output_path)
 
         # Loading Town03 for test
-        self.client.load_world("Town03")
+        self.client.load_world("Town03_Opt")
         # workaround: give time to UE4 to clean memory after loading (old assets)
         time.sleep(5)
 

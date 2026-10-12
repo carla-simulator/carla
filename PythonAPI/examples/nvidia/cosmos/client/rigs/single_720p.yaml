@@ -1,0 +1,17 @@
+name: single_720p
+mount: roofline
+margin: 0.05
+cameras:
+- name: camera:front:wide:120fov
+  hfov: 90.0
+  t:
+  - 1.697
+  - -0.01
+  - 1.443
+  rpy:
+  - 0.0
+  - 0.0
+  - 0.0
+  width: 1280
+  height: 720
+  lens: pinhole

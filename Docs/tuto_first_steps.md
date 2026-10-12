@@ -38,7 +38,7 @@ world = client.get_world()
 
 ```
 
-The [__client__](python_api#carlaclient) object serves to maintain the client's connection to the server and has a number of functions for applying commands and loading or exporting data. We can load an alternative map or reload the current one (resetting to initial state) using the client object.
+The [__client__](python_api.md#carla.Client) object serves to maintain the client's connection to the server and has a number of functions for applying commands and loading or exporting data. We can load an alternative map or reload the current one (resetting to initial state) using the client object.
 
 The port can be chosen as any available port and is set to 2000 by default, you can also choose a host different from *localhost* by using a computer's IP address. This way, the CARLA server can be run on a networked machine, while the python client can be run from a personal computer. This is particularly useful for differentiating the GPU used for running the CARLA simulator and that used for neural network training, both of which can be highly demanding on graphics hardware.
 

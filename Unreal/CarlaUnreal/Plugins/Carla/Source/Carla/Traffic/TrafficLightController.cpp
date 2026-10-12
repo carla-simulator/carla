@@ -65,7 +65,7 @@ void UTrafficLightController::EmptyTrafficLights()
 
 void UTrafficLightController::AddTrafficLight(UTrafficLightComponent * TrafficLight)
 {
-  TrafficLights.Add(TrafficLight);
+  TrafficLights.AddUnique(TrafficLight);
   TrafficLight->SetController(this);
 }
 
@@ -104,7 +104,12 @@ void UTrafficLightController::SetTrafficLightsState(ETrafficLightState NewState)
   SetCurrentLightState(NewState);
   for(auto *Light : TrafficLights)
   {
-    Light->SetLightState(NewState);
+    // World Partition can stream out the cell that owns a light while its
+    // controller keeps running; skip entries the GC has invalidated.
+    if (IsValid(Light))
+    {
+      Light->SetLightState(NewState);
+    }
   }
   for(FCarlaActor* Light : TrafficLightCarlaActors)
   {

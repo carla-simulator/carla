@@ -52,6 +52,10 @@ public:
 
   virtual void InitializeSign(const carla::road::Map &Map) override;
 
+  /// Deregister from the controller so streamed-out lights (World Partition)
+  /// never leave dangling entries behind.
+  virtual void OnComponentDestroyed(bool bDestroyingHierarchy) override;
+
   UPROPERTY(Category = "Traffic Light", BlueprintAssignable)
   FLightChangeDispatcher LightChangeDispatcher;
 

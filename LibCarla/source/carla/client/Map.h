@@ -23,6 +23,9 @@ namespace client {
 
   class Waypoint;
   class Junction;
+  class Road;
+  class LaneSection;
+  class Lane;
 
   class Map
     : public EnableSharedFromThis<Map>,
@@ -83,6 +86,33 @@ namespace client {
     /// junction
     std::vector<std::pair<SharedPtr<Waypoint>, SharedPtr<Waypoint>>> GetJunctionWaypoints(
         road::JuncId id, road::Lane::LaneType type) const;
+
+    /// Returns the junction with this id, or nullptr when the map has none.
+    SharedPtr<Junction> GetJunctionById(road::JuncId id) const;
+
+    /// Returns every junction in the map.
+    std::vector<SharedPtr<Junction>> GetJunctions() const;
+
+    /// Returns every road in the map.
+    std::vector<SharedPtr<Road>> GetRoads() const;
+
+    /// Returns the road with this id, or nullptr when the map has none.
+    SharedPtr<Road> GetRoad(road::RoadId road_id) const;
+
+    /// Returns the lane section, or nullptr when road or section is unknown.
+    SharedPtr<LaneSection> GetLaneSection(
+        road::RoadId road_id,
+        road::SectionId section_id) const;
+
+    /// Returns the lane, or nullptr when road, section or lane is unknown.
+    SharedPtr<Lane> GetLane(
+        road::RoadId road_id,
+        road::SectionId section_id,
+        road::LaneId lane_id) const;
+
+    /// @internal Wraps a road-level waypoint. Every client-side wrapper builds
+    /// its waypoints through here, so Waypoint only needs to befriend Map.
+    SharedPtr<Waypoint> MakeWaypoint(road::element::Waypoint waypoint) const;
 
     /// Returns all the larndmarks in the map
     std::vector<SharedPtr<Landmark>> GetAllLandmarks() const;

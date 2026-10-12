@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+*_result.txt
+.omc/
+.build-logs/
+build/

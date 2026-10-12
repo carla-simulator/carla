@@ -27,7 +27,14 @@ namespace detail {
     private NonCopyable {
   public:
 
-    explicit WalkerNavigation(std::weak_ptr<Simulator> simulator);
+    explicit WalkerNavigation(std::weak_ptr<Simulator> simulator, bool server_side = false);
+
+    /// True when the server hosts the navigation (World-Partitioned navmesh):
+    /// the client-side Detour crowd stays disabled and walker AI goes through
+    /// the walker_* RPCs instead.
+    bool IsServerSide() const {
+      return _server_side;
+    }
 
     void RegisterWalker(ActorId walker_id, ActorId controller_id) {
       // add to list
@@ -93,6 +100,8 @@ namespace detail {
     std::weak_ptr<Simulator> _simulator;
 
     unsigned long _next_check_index;
+
+    const bool _server_side;
 
     carla::nav::Navigation _nav;
 

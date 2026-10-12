@@ -12,6 +12,7 @@ extern void export_blueprint();
 extern void export_actor();
 extern void export_sensor();
 extern void export_sensor_data();
+extern void export_v2x();
 extern void export_snapshot();
 extern void export_weather();
 extern void export_world();
@@ -39,6 +40,7 @@ BOOST_PYTHON_MODULE(carla) {
   export_actor();
   export_sensor();
   export_sensor_data();
+  export_v2x();
   export_snapshot();
   export_weather();
   export_world();

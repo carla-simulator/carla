@@ -1,0 +1,22 @@
+diff --git a/autoware_launch/launch/e2e_simulator.launch.xml b/autoware_launch/launch/e2e_simulator.launch.xml
+index 62488879..653fa667 100644
+--- a/autoware_launch/launch/e2e_simulator.launch.xml
++++ b/autoware_launch/launch/e2e_simulator.launch.xml
+@@ -50,7 +50,7 @@
+   <arg name="rviz_config_name" default="autoware.rviz" description="rviz config name"/>
+   <arg name="rviz_config" default="$(find-pkg-share autoware_launch)/rviz/$(var rviz_config_name)" description="rviz config path"/>
+ 
+-  <let name="e2e_enabled" value="$(eval &quot;'$(var use_e2e_planning)' == 'true' or '$(var use_e2e_planner)' == 'true'&quot;)"/>
++  <let name="e2e_enabled" value="$(eval &quot;'true' if ('$(var use_e2e_planning)' == 'true' or '$(var use_e2e_planner)' == 'true') else 'false'&quot;)"/>
+ 
+   <!-- E2E planner bypasses sensing/localization/perception (simulator-agnostic) -->
+   <let name="launch_sensing_value" value="$(eval &quot;'false' if '$(var e2e_enabled)' == 'true' else '$(var sensing)'&quot;)"/>
+@@ -115,7 +115,7 @@
+       <arg name="rviz_config" value="$(var rviz_config)"/>
+ 
+       <!-- E2E planner wiring -->
+-      <arg name="use_e2e_planner" value="$(var use_e2e_planner)"/>
++      <arg name="use_e2e_planner" value="$(var e2e_enabled)"/>
+       <arg name="use_e2e_planning" value="$(var use_e2e_planning)"/>
+       <arg name="e2e_planner_mode" value="$(var e2e_planner_mode)"/>
+     </include>

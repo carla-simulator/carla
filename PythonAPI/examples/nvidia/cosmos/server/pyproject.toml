@@ -1,0 +1,30 @@
+[project]
+name = "carla-cosmos-server"
+version = "0.2.0"
+description = "carla-cosmos API server: auth, blobs, job queue, scheduler and worker launcher"
+requires-python = ">=3.10"
+dependencies = [
+    "carla-cosmos>=0.2.0",        # contracts (installed from ../client, no capture extras)
+    "carla-cosmos-workers>=0.2.0", # worker protocol (installed from ./workers)
+    "fastapi>=0.110",
+    "uvicorn>=0.29",
+    "pydantic>=2",
+    "pyyaml",
+]
+
+[project.optional-dependencies]
+test = ["pytest>=8", "httpx>=0.27"]
+
+[project.scripts]
+carla-cosmos-server = "carla_cosmos_server.launcher:main"
+carla-cosmos-tokens = "carla_cosmos_server.tokens_cli:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["carla_cosmos_server"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

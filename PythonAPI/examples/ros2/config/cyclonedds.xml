@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CycloneDDS xmlns="https://cdds.io/config"
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+            xsi:schemaLocation="https://cdds.io/config https://cdds.io/schema/cyclonedds.xsd">
+    <Domain id="any">
+        <SharedMemory>
+            <Enable>false</Enable>
+        </SharedMemory>
+        <General>
+            <Transport>udp</Transport>
+        </General>
+    </Domain>
+</CycloneDDS>

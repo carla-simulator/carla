@@ -10,6 +10,7 @@
 
 #include "carla/MsgPack.h"
 #include "carla/geom/Math.h"
+#include "carla/geom/RightHandedRotation.h"
 #include "carla/geom/Vector3D.h"
 
 #ifdef LIBCARLA_INCLUDED_FROM_UE4
@@ -21,6 +22,26 @@
 namespace carla {
 namespace geom {
 
+  /// Euler angles of a rotation in **CARLA's / Unreal's left-handed frame**:
+  /// x forward, y right, z up, degrees.
+  ///
+  /// The three angles compose as
+  /// `R = Rz(+yaw) * Ry(-pitch) * Rx(-roll)` with the standard
+  /// (right-handed) elementary matrices, which is the same thing as saying:
+  ///
+  ///   * `+yaw`   turns the nose to the **right**;
+  ///   * `+pitch` tilts the nose **up**    -> `forward.z = +sin(pitch)`;
+  ///   * `+roll`  drops the **right** side -> `right.z = -cos(pitch)*sin(roll)`.
+  ///
+  /// This is CARLA 0.9.x's documented convention and it is what the engine
+  /// builds from the same `FRotator`, verified against rendered camera frames
+  /// on UE5.8. `RotateVector`, `Transform::GetMatrix` and
+  /// `Math::Get{Forward,Right,Up}Vector` all live in this frame and must not
+  /// be "corrected" towards a right-handed convention.
+  ///
+  /// For ROS / REP-103 consumers convert explicitly at the boundary with
+  /// `ToRightHanded()` / `FromRightHanded()`; see `RightHandedRotation` and
+  /// `Docs/coordinate_conventions.md`.
   class Rotation {
   public:
 
@@ -42,7 +63,7 @@ namespace geom {
 
     Rotation() = default;
 
-    Rotation(float p, float y, float r)
+    constexpr Rotation(float p, float y, float r)
       : pitch(p),
         yaw(y),
         roll(r) {}
@@ -64,12 +85,17 @@ namespace geom {
     }
 
     void RotateVector(Vector3D &in_point) const {
-      // Rotates Rz(yaw) * Ry(pitch) * Rx(roll). The sign convention on
-      // pitch and roll axes was corrected here: previously the z-row used
-      // (+sp, -cp*sr) and the third column used (-cy*sp*cr - sy*sr,
-      // -sy*sp*cr + cy*sr), which produced an incorrect rotation for any
-      // non-yaw-only transform. The corrected sign convention matches the
-      // forward / right / up basis vectors produced by `Quaternion(Rotation)`.
+      // Rotates Rz(yaw) * Ry(pitch) * Rx(roll) = first x, then y, then z,
+      // in Unreal's left-handed frame, matching what the engine does with
+      // the same FRotator and CARLA's documented 0.9.x semantics:
+      //   +pitch tilts the forward axis UP  -> z row has (+sp)
+      //   +roll  tilts the right   axis DOWN -> z row has (-cp * sr)
+      // Empirically verified on the running UE5.8 server (2026-08-27): a
+      // camera spawned at Rotation(pitch=+20) fills the frame with sky and
+      // at Rotation(roll=+25) shows more ground on the right-hand side.
+      // #9751 briefly mirrored the pitch/roll signs here; that made this
+      // matrix disagree with the engine, with the ROS 2 bridge's own
+      // `ros2::TransformFromCarlaRotation`, and with every 0.9.x consumer.
       const float cy = std::cos(Math::ToRadians(yaw));
       const float sy = std::sin(Math::ToRadians(yaw));
       const float cr = std::cos(Math::ToRadians(roll));
@@ -81,16 +107,16 @@ namespace geom {
       out_point.x =
         in_point.x * (cp * cy) +
         in_point.y * (cy * sp * sr - sy * cr) +
-        in_point.z * (cy * sp * cr + sy * sr);
+        in_point.z * (-cy * sp * cr - sy * sr);
 
       out_point.y =
         in_point.x * (cp * sy) +
         in_point.y * (sy * sp * sr + cy * cr) +
-        in_point.z * (sy * sp * cr - cy * sr);
+        in_point.z * (-sy * sp * cr + cy * sr);
 
       out_point.z =
-        in_point.x * (-sp) +
-        in_point.y * (cp * sr) +
+        in_point.x * (sp) +
+        in_point.y * (-cp * sr) +
         in_point.z * (cp * cr);
 
       in_point = out_point;
@@ -103,8 +129,8 @@ namespace geom {
     }
 
     void InverseRotateVector(Vector3D &in_point) const {
-      // Transpose of the matrix used in `RotateVector`. Sign-corrected to
-      // match the new forward rotation.
+      // Applies the transposed of the matrix used in RotateVector function,
+      // which is the rotation inverse.
       const float cy = std::cos(Math::ToRadians(yaw));
       const float sy = std::sin(Math::ToRadians(yaw));
       const float cr = std::cos(Math::ToRadians(roll));
@@ -116,16 +142,16 @@ namespace geom {
       out_point.x =
         in_point.x * (cp * cy) +
         in_point.y * (cp * sy) +
-        in_point.z * (-sp);
+        in_point.z * (sp);
 
       out_point.y =
         in_point.x * (cy * sp * sr - sy * cr) +
         in_point.y * (sy * sp * sr + cy * cr) +
-        in_point.z * (cp * sr);
+        in_point.z * (-cp * sr);
 
       out_point.z =
-        in_point.x * (cy * sp * cr + sy * sr) +
-        in_point.y * (sy * sp * cr - cy * sr) +
+        in_point.x * (-cy * sp * cr - sy * sr) +
+        in_point.y * (-sy * sp * cr + cy * sr) +
         in_point.z * (cp * cr);
 
       in_point = out_point;
@@ -163,6 +189,28 @@ namespace geom {
       }
       
       return V0;
+    }
+
+    // =========================================================================
+    // -- Right-handed (ROS / FLU) boundary ------------------------------------
+    // =========================================================================
+
+    /// This rotation expressed in a right-handed, x-forward / y-**left** /
+    /// z-up frame (ROS REP-103 "FLU"), as intrinsic Z-Y-X Euler angles under
+    /// the right-hand rule.
+    ///
+    /// Mirroring the Y axis maps `Rz(+yaw) * Ry(-pitch) * Rx(-roll)` onto
+    /// `Rz(-yaw) * Ry(+(-pitch)) * Rx(+roll)`, so pitch and yaw flip sign and
+    /// roll does not. Example: `Rotation(pitch=20, yaw=30, roll=10)` becomes
+    /// `RightHandedRotation(roll=10, pitch=-20, yaw=-30)`.
+    constexpr RightHandedRotation ToRightHanded() const {
+      return RightHandedRotation(roll, -pitch, -yaw);
+    }
+
+    /// Inverse of `ToRightHanded()`. The mapping is an involution, so the same
+    /// three sign flips apply in both directions.
+    static constexpr Rotation FromRightHanded(const RightHandedRotation &rhs) {
+      return Rotation(-rhs.pitch, -rhs.yaw, rhs.roll);
     }
 
     // =========================================================================

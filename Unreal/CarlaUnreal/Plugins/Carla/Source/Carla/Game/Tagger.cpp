@@ -114,6 +114,19 @@ FLinearColor ATagger::GetActorLabelColor(const AActor &Actor, const crp::CityObj
 // -- static ATagger functions -------------------------------------------------
 // =============================================================================
 
+/// Sets the label tag of a component. Actors are tagged more than once (the
+/// OnActorSpawned delegate runs before a factory assigns the mesh, streamed
+/// levels are re-tagged by TagActorsInLevel) and GetTagOfTaggedComponent reads
+/// ComponentTags[0], so a previous label tag is replaced instead of appended.
+static void ATagger_SetLabelTag(UPrimitiveComponent &Component, crp::CityObjectLabel Label)
+{
+  Component.ComponentTags.RemoveAll([](const FName &Tag) {
+    const FString TagString = Tag.ToString();
+    return ATagger::GetTagAsString(ATagger::GetTagFromString(TagString)) == TagString;
+  });
+  Component.ComponentTags.Insert(FName(*ATagger::GetTagAsString(Label)), 0);
+}
+
 void ATagger::TagActor(const AActor &Actor, bool bTagForSemanticSegmentation)
 {
 #ifdef CARLA_TAGGER_EXTRA_LOG
@@ -133,7 +146,7 @@ void ATagger::TagActor(const AActor &Actor, bool bTagForSemanticSegmentation)
     }
 
     SetStencilValue(*Component, Actor.GetUniqueID(), Label, bTagForSemanticSegmentation);
-    Component->ComponentTags.Add(FName(*GetTagAsString(Label)));
+    ATagger_SetLabelTag(*Component, Label);
     #ifdef CARLA_TAGGER_EXTRA_LOG
         UE_LOG(LogCarla, Log, TEXT("  + StaticMeshComponent: %s"), *Component->GetName());
         UE_LOG(LogCarla, Log, TEXT("    - Label: \"%s\""), *GetTagAsString(Label));
@@ -152,7 +165,7 @@ void ATagger::TagActor(const AActor &Actor, bool bTagForSemanticSegmentation)
     }
 
     SetStencilValue(*Component, Actor.GetUniqueID(), Label, bTagForSemanticSegmentation);
-    Component->ComponentTags.Add(FName(*GetTagAsString(Label)));
+    ATagger_SetLabelTag(*Component, Label);
     #ifdef CARLA_TAGGER_EXTRA_LOG
         UE_LOG(LogCarla, Log, TEXT("  + SkeletalMeshComponent: %s"), *Component->GetName());
         UE_LOG(LogCarla, Log, TEXT("    - Label: \"%s\""), *GetTagAsString(Label));
@@ -176,10 +189,31 @@ void ATagger::TagActorsInLevel(ULevel &Level, bool bTagForSemanticSegmentation)
   }
 }
 
+crp::CityObjectLabel ATagger::GetTagFromName(const FName &Tag)
+{
+  static const TMap<FName, crp::CityObjectLabel> KnownTags = []()
+  {
+    TMap<FName, crp::CityObjectLabel> Map;
+    for (uint8 Value = 0; Value <= static_cast<uint8>(crp::CityObjectLabel::Rock); ++Value)
+    {
+      const FString Name = GetTagAsString(static_cast<crp::CityObjectLabel>(Value));
+      Map.Add(FName(*Name), GetTagFromString(Name));
+    }
+    return Map;
+  }();
+
+  if (const crp::CityObjectLabel* Found = KnownTags.Find(Tag))
+  {
+    return *Found;
+  }
+
+  return GetTagFromString(Tag.ToString());
+}
+
 crp::CityObjectLabel ATagger::GetTagOfTaggedComponent(const UPrimitiveComponent &Component)
 {
   if (Component.ComponentTags.Num() > 0) {
-    return GetTagFromString(Component.ComponentTags[0].ToString());
+    return GetTagFromName(Component.ComponentTags[0]);
   }
   return static_cast<crp::CityObjectLabel>(Component.CustomDepthStencilValue);
 }

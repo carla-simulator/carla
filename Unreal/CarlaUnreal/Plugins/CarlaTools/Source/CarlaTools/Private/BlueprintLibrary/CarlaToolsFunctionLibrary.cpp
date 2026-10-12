@@ -209,7 +209,9 @@ void UCarlaToolsFunctionLibrary::ChunkAndSubdivideStaticMesh(UStaticMesh *Source
 
     FAssetRegistryModule::AssetCreated(NewMesh);
     FString Filename = FPackageName::LongPackageNameToFilename(PackagePath, TEXT(".uasset"));
-    UPackage::SavePackage(Package, NewMesh, EObjectFlags::RF_Public | EObjectFlags::RF_Standalone, *Filename);
+    FSavePackageArgs SaveArgs;
+    SaveArgs.TopLevelFlags = RF_Public | RF_Standalone;
+    UPackage::SavePackage(Package, NewMesh, *Filename, SaveArgs);
   }
 }
 
@@ -307,6 +309,8 @@ void UCarlaToolsFunctionLibrary::SplitStaticMeshByMaterial(UStaticMesh *SourceMe
 
     FAssetRegistryModule::AssetCreated(NewMesh);
     FString Filename = FPackageName::LongPackageNameToFilename(PackagePath, TEXT(".uasset"));
-    UPackage::SavePackage(Package, NewMesh, EObjectFlags::RF_Public | RF_Standalone, *Filename);
+    FSavePackageArgs SaveArgs;
+    SaveArgs.TopLevelFlags = RF_Public | RF_Standalone;
+    UPackage::SavePackage(Package, NewMesh, *Filename, SaveArgs);
   }
 }

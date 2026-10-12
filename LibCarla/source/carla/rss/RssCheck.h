@@ -350,7 +350,7 @@ namespace std {
 /**
  * \brief standard ostream operator
  *
- * \param[in/out] os The output stream to write to
+ * \param[in/out] out The output stream to write to
  * \param[in] ego_dynamics_on_route the ego dynamics on route to stream out
  *
  * \returns The stream object.
@@ -382,7 +382,7 @@ inline std::ostream &operator<<(std::ostream &out, const ::carla::rss::EgoDynami
 /**
  * \brief standard ostream operator
  *
- * \param[in/out] os The output stream to write to
+ * \param[in/out] out The output stream to write to
  * \param[in] actor_constellation_result the actor constellation result to stream out
  *
  * \returns The stream object.
@@ -401,8 +401,8 @@ inline std::ostream &operator<<(std::ostream &out,
 /**
  * \brief standard ostream operator
  *
- * \param[in/out] os The output stream to write to
- * \param[in] actor_constellation_result the actor constellation result to stream out
+ * \param[in/out] out The output stream to write to
+ * \param[in] actor_constellation_data the actor constellation data to stream out
  *
  * \returns The stream object.
  *

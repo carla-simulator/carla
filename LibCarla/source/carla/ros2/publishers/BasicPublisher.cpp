@@ -8,8 +8,7 @@
 
 #include "carla/Logging.h"
 #include "carla/ros2/publishers/PublisherImpl.h"
-#include "carla/ros2/types/String.h"
-#include "carla/ros2/types/StringPubSubTypes.h"
+#include "carla/ros2/types/msg/String.h"
 
 namespace carla {
 namespace ros2 {
@@ -19,8 +18,7 @@ constexpr const char *kBasicPublisherTopic = "rt/basic_publisher_example";
 }  // namespace
 
 struct BasicPublisherMsgTraits {
-  using msg_type = std_msgs::msg::String;
-  using msg_pubsub_type = std_msgs::msg::StringPubSubType;
+  using msg_type = msg::String;
 };
 
 BasicPublisher::BasicPublisher()
@@ -38,7 +36,7 @@ bool BasicPublisher::Publish() {
 }
 
 void BasicPublisher::SetData(const std::string &msg) {
-  _impl->GetMessage()->data(msg);
+  _impl->GetMessage()->data = msg;
 }
 
 }  // namespace ros2

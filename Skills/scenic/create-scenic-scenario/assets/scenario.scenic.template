@@ -1,0 +1,35 @@
+""" SCENARIO_NAME
+DESCRIPTION
+"""
+
+## MAP AND MODEL — param lines must come before `model`
+param map = localPath('PATH_TO_XODR')
+param carla_map = 'TOWN'
+param timestep = 0.1
+model srunner.scenic.models.model
+
+## CONSTANTS
+EGO_MODEL = "vehicle.lincoln.mkz"
+EGO_SPEED = 10
+
+## BEHAVIORS
+behavior EgoBehavior():
+    do FollowLaneBehavior(target_speed=EGO_SPEED)
+
+## GEOMETRY
+# assert only on deterministic lists; never on anything from Uniform()
+lane = Uniform(*network.lanes)
+ego_spawn = new OrientedPoint on lane.centerline
+
+## PLACEMENT
+ego = new Car at ego_spawn,
+    with blueprint EGO_MODEL,
+    with behavior EgoBehavior()
+
+# Pedestrians and props placed on the road need containment waived, or every
+# sample is rejected:
+#     with regionContainedIn None
+
+## CONSTRAINTS
+require (distance to intersection) > 40
+terminate when (distance to ego_spawn) > 70

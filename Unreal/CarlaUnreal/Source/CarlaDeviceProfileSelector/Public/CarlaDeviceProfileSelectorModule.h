@@ -12,8 +12,10 @@
 // Carla per-quality tier module. Loaded at LoadingPhase=PostConfigInit per
 // CarlaUnreal.uproject. Reads `-quality-level=<Tier>` from the command line,
 // resolves it case-sensitively against `Low / Medium / High / Epic`, falls
-// back to `Epic` when absent, and applies the per-tier CVar set at
-// ECVF_SetByDeviceProfile priority. A FCoreDelegates::OnPostEngineInit
+// back to `Epic` when absent, selects the matching DefaultScalability.ini
+// bucket for every scalability group, and lowers the few CVars that
+// DefaultEngine.ini pins above scalability priority at
+// ECVF_SetByDeviceProfile. A FCoreDelegates::OnPostEngineInit
 // callback re-applies the tier scalability levels after
 // UGameUserSettings::ApplyNonResolutionSettings, so persisted
 // GameUserSettings.ini state cannot shadow the tier-selected buckets.

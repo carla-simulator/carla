@@ -285,8 +285,10 @@ class BehaviorAgent(BasicAgent):
             else:
                 control = self.car_following_manager(vehicle, distance)
 
-        # 3: Intersection behavior
-        elif self._incoming_waypoint.is_junction and (self._incoming_direction in [RoadOption.LEFT, RoadOption.RIGHT]):
+        # 3: Intersection behavior. There is no incoming waypoint once the
+        # local planner's queue is empty, e.g. at the end of the route
+        elif (self._incoming_waypoint is not None and self._incoming_waypoint.is_junction
+              and self._incoming_direction in [RoadOption.LEFT, RoadOption.RIGHT]):
             target_speed = min([
                 self._behavior.max_speed,
                 self._speed_limit - 5])

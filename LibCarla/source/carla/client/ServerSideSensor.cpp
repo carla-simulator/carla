@@ -92,6 +92,16 @@ namespace client {
     return GetEpisode().Lock()->IsEnabledForROS(*this);
   }
 
+  void ServerSideSensor::Send(const rpc::CustomV2XBytes &data) {
+    log_debug("calling sensor Send() ", GetDisplayId());
+    if (GetActorDescription().description.id != "sensor.other.v2x_custom")
+    {
+      log_warning("Send methods are not supported on non-V2X sensors (sensor.other.v2x_custom).");
+      return;
+    }
+    GetEpisode().Lock()->Send(*this, data);
+  }
+
   bool ServerSideSensor::Destroy() {
     log_debug("calling sensor Destroy() ", GetDisplayId());
     if (IsListening()) {

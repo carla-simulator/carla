@@ -27,5 +27,30 @@ inline std::array<float, 4> OrientationFromCompass(float compass) {
   return {c, 0.0f, 0.0f, s};
 }
 
+// Converts a linear acceleration sampled in CARLA's left-handed sensor frame
+// (x forward, y right, z up) into the ROS REP-103 right-handed sensor frame
+// (x forward, y left, z up). Ordinary (polar) vectors only need the y axis
+// mirrored — the same y-negation our TF, lidar and odometry publishers apply.
+inline std::array<float, 3> AccelToRos(float ax, float ay, float az) {
+  return {ax, -ay, az};
+}
+
+// Converts an angular velocity sampled in CARLA's left-handed sensor frame
+// into the REP-103 right-handed sensor frame.
+//
+// Angular velocity is a pseudovector, so mirroring the y axis flips the sign
+// of the components PARALLEL to the mirror plane (x and z), not the mirrored
+// one. Concretely, with UE's component cross product v = w x r evaluated in
+// left-handed coordinates:
+//   - turning left  (CCW from above)  -> UE wz < 0, ROS wz > 0  => negate z
+//   - rolling right (right side down) -> UE wx < 0, ROS wx > 0  => negate x
+//   - pitching nose-down              -> UE wy > 0, ROS wy > 0  => keep y
+// This matches the carla-ros-bridge ImuSensor conversion (-x, +y, -z). Note
+// tier4's autoware-support layer negated (y, z) instead, which mis-handles
+// the pseudovector reflection; we deliberately diverge.
+inline std::array<float, 3> GyroToRos(float gx, float gy, float gz) {
+  return {-gx, gy, -gz};
+}
+
 }  // namespace ros2
 }  // namespace carla

@@ -506,7 +506,6 @@ ALandscape* UMeshToLandscapeUtil::ConvertMeshesToLandscape(
 	Landscape->ComponentSizeQuads = ComponentSizeQuads;
 	Landscape->SubsectionSizeQuads = SubsectionSizeQuads;
 	Landscape->NumSubsections = NumSubsections;
-	Landscape->bUseCompressedHeightmapStorage = true;
 
 	TMap<FGuid, TArray<uint16>> LayerHeightMaps;
 	LayerHeightMaps.Add(FGuid(), MoveTemp(HeightmapData));

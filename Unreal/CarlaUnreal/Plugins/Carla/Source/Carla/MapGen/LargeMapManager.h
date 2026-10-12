@@ -81,6 +81,10 @@ protected:
   void OnLevelAddedToWorld(ULevel* InLevel, UWorld* InWorld);
   void OnLevelRemovedFromWorld(ULevel* InLevel, UWorld* InWorld);
 
+  // Snap the generated signs whose ground has streamed in (used after tiles
+  // stream in), if the traffic light manager has the flag on.
+  void AdjustSignsHeightToGround();
+
 public:
 
   void RegisterInitialObjects();

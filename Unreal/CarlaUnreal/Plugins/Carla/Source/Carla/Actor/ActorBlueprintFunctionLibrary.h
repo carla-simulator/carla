@@ -19,12 +19,15 @@
 #include "ActorBlueprintFunctionLibrary.generated.h"
 
 class AGnssSensor;
+class AAutowareGnssSensor;
 class AInertialMeasurementUnit;
 class ARadar;
 class ASceneCaptureSensor;
 class AShaderBasedSensor;
 class ASceneCaptureSensor_WideAngleLens;
 class AShaderBasedSensor_WideAngleLens;
+class AV2XSensor;
+class ACustomV2XSensor;
 struct FLidarDescription;
 struct FActorDescription;
 
@@ -87,6 +90,17 @@ public:
       bool &Success,
       FActorDefinition &Definition);
 
+  static FActorDefinition MakeRayTracedLensCameraDefinition(
+      const FString &Id,
+      bool bEnableModifyingPostProcessEffects = false);
+
+  UFUNCTION(Category = "Carla Actor", BlueprintCallable)
+  static void MakeRayTracedLensCameraDefinition(
+      const FString &Id,
+      bool bEnableModifyingPostProcessEffects,
+      bool &Success,
+      FActorDefinition &Definition);
+
   static FActorDefinition MakeNormalsCameraDefinition();
 
   UFUNCTION(Category = "Carla Actor", BlueprintCallable)
@@ -104,11 +118,15 @@ public:
       FActorDefinition &Definition);
 
   static FActorDefinition MakeGnssDefinition();
+  static FActorDefinition MakeAutowareGnssDefinition();
 
   UFUNCTION(Category = "Carla Actor", BlueprintCallable)
   static void MakeGnssDefinition(
       bool &Success,
-      FActorDefinition &Definition);
+      FActorDefinition &Definition,
+      FString Name);
+
+  static FActorDefinition MakeVehicleStatusDefinition();
 
   static FActorDefinition MakeIMUDefinition();
 
@@ -121,6 +139,20 @@ public:
 
   UFUNCTION(Category = "Carla Actor", BlueprintCallable)
   static void MakeRadarDefinition(
+      bool &Success,
+      FActorDefinition &Definition);
+
+  static FActorDefinition MakeV2XDefinition();
+
+  UFUNCTION(Category = "Carla Actor", BlueprintCallable)
+  static void MakeV2XDefinition(
+      bool &Success,
+      FActorDefinition &Definition);
+
+  static FActorDefinition MakeCustomV2XDefinition();
+
+  UFUNCTION(Category = "Carla Actor", BlueprintCallable)
+  static void MakeCustomV2XDefinition(
       bool &Success,
       FActorDefinition &Definition);
 
@@ -261,8 +293,13 @@ public:
   static void SetLidar(const FActorDescription &Description, FLidarDescription &Lidar);
 
   static void SetGnss(const FActorDescription &Description, AGnssSensor *Gnss);
+  static void SetAutowareGnss(const FActorDescription &Description, AAutowareGnssSensor *Gnss);
 
   static void SetIMU(const FActorDescription &Description, AInertialMeasurementUnit *IMU);
 
   static void SetRadar(const FActorDescription &Description, ARadar *Radar);
+
+  static void SetV2X(const FActorDescription &Description, AV2XSensor *V2X);
+
+  static void SetCustomV2X(const FActorDescription &Description, ACustomV2XSensor *V2X);
 };

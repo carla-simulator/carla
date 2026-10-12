@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <mutex>
+
 #include "carla/Debug.h"
 #include "carla/Logging.h"
 #include "carla/Memory.h"
@@ -28,6 +30,7 @@
 #include "carla/rpc/VehicleWheels.h"
 #include "carla/rpc/Texture.h"
 #include "carla/rpc/MaterialParameter.h"
+#include "carla/rpc/CustomV2XBytes.h"
 
 #include <optional>
 
@@ -135,6 +138,24 @@ namespace detail {
 
     std::vector<std::string> GetAvailableMaps() {
       return _client.GetAvailableMaps();
+    }
+
+    /// @}
+    // =========================================================================
+    /// @name Content packs
+    // =========================================================================
+    /// @{
+
+    std::vector<rpc::ContentPackInfo> GetContentPacks() {
+      return _client.GetContentPacks();
+    }
+
+    rpc::ContentPackInfo MountContentPack(const std::string &path) {
+      return _client.MountContentPack(path);
+    }
+
+    bool UnmountContentPack(const std::string &name) {
+      return _client.UnmountContentPack(name);
     }
 
     /// @}
@@ -271,6 +292,18 @@ namespace detail {
       return _client.IsWeatherEnabled();
     }
 
+    void SetPublishTF(bool publish_tf) {
+      _client.SetPublishTF(publish_tf);
+    }
+
+    bool GetPublishTF() const {
+      return _client.GetPublishTF();
+    }
+
+    std::vector<geom::Transform> GetEgoSpawnPoints() const {
+      return _client.GetEgoSpawnPoints();
+    }
+
     rpc::VehiclePhysicsControl GetVehiclePhysicsControl(const Vehicle &vehicle) const {
       return _client.GetVehiclePhysicsControl(vehicle.GetId());
     }
@@ -322,11 +355,32 @@ namespace detail {
 
     void NavigationTick();
 
+    /// True when the current episode's navigation is hosted by the server
+    /// (World-Partitioned navmesh); walker AI then goes through the
+    /// walker_* RPCs instead of the client-side Detour crowd.
+    bool IsNavigationServerSide();
+
     void RegisterAIController(const WalkerAIController &controller);
 
     void UnregisterAIController(const WalkerAIController &controller);
 
     std::optional<geom::Location> GetRandomLocationFromNavigation();
+
+    bool WalkerStartNavigation(ActorId walker_id) {
+      return _client.WalkerStartNavigation(walker_id);
+    }
+
+    bool WalkerGoToLocation(ActorId walker_id, const geom::Location &destination) {
+      return _client.WalkerGoToLocation(walker_id, destination);
+    }
+
+    bool WalkerSetMaxSpeed(ActorId walker_id, float max_speed) {
+      return _client.WalkerSetMaxSpeed(walker_id, max_speed);
+    }
+
+    bool WalkerStopNavigation(ActorId walker_id) {
+      return _client.WalkerStopNavigation(walker_id);
+    }
 
     void SetPedestriansCrossFactor(float percentage);
 
@@ -395,8 +449,28 @@ namespace detail {
       return GetActorSnapshot(actor.GetId());
     }
 
+    /// State of @a actor according to the latest world snapshot.
+    ///
+    /// An actor spawned by this client is not part of any snapshot produced
+    /// before the spawn was processed (asynchronous mode: until the next frame
+    /// arrives; synchronous mode: until the next tick). Reporting such an actor
+    /// as Invalid made is_alive/is_active False right after spawn_actor(), so
+    /// while the latest snapshot is not newer than the frame recorded at spawn
+    /// time the actor is reported Active. Any snapshot newer than that frame
+    /// is authoritative: an actor missing from it is gone (Invalid). A handle
+    /// that did not come from a spawn call gets no such grace: it is only ever
+    /// as good as the snapshots, including before the first one arrives.
     rpc::ActorState GetActorState(const Actor &actor) const {
-      return GetActorSnapshot(actor).actor_state;
+      DEBUG_ASSERT(_episode != nullptr);
+      const auto state = _episode->GetState();
+      const auto snapshot = state->GetActorSnapshotIfPresent(actor.GetId());
+      if (snapshot.has_value()) {
+        return snapshot->actor_state;
+      }
+      if (actor.WasSpawnedByThisClient() && state->GetFrame() <= actor.GetSpawnFrame()) {
+        return rpc::ActorState::Active;
+      }
+      return rpc::ActorState::Invalid;
     }
 
     geom::Location GetActorLocation(const Actor &actor) const {
@@ -428,6 +502,14 @@ namespace detail {
 
     void DisableActorConstantVelocity(const Actor &actor) {
       _client.DisableActorConstantVelocity(actor.GetId());
+    }
+
+    void EnableActorConstantAcceleration(const Actor &actor, const geom::Vector3D &vector) {
+      _client.EnableActorConstantAcceleration(actor.GetId(), vector);
+    }
+
+    void DisableActorConstantAcceleration(const Actor &actor) {
+      _client.DisableActorConstantAcceleration(actor.GetId());
     }
 
     void AddActorImpulse(const Actor &actor, const geom::Vector3D &impulse) {
@@ -630,6 +712,26 @@ namespace detail {
       return _client.GetWheelSteerAngle(vehicle.GetId(), wheel_location);
     }
 
+    void SetWheelPitchAngle(Vehicle &vehicle, rpc::VehicleWheelLocation wheel_location, float angle_in_deg) {
+      _client.SetWheelPitchAngle(vehicle.GetId(), wheel_location, angle_in_deg);
+    }
+
+    float GetWheelPitchAngle(Vehicle &vehicle, rpc::VehicleWheelLocation wheel_location) {
+      return _client.GetWheelPitchAngle(vehicle.GetId(), wheel_location);
+    }
+
+    void SetWheelSuspensionOffset(Vehicle &vehicle, rpc::VehicleWheelLocation wheel_location, float offset) {
+      _client.SetWheelSuspensionOffset(vehicle.GetId(), wheel_location, offset);
+    }
+
+    float GetWheelSuspensionOffset(Vehicle &vehicle, rpc::VehicleWheelLocation wheel_location) {
+      return _client.GetWheelSuspensionOffset(vehicle.GetId(), wheel_location);
+    }
+
+    void SetWheelAnimationOverride(Vehicle &vehicle, bool enabled) {
+      _client.SetWheelAnimationOverride(vehicle.GetId(), enabled);
+    }
+
     void EnableCarSim(Vehicle &vehicle, std::string simfile_path) {
       _client.EnableCarSim(vehicle.GetId(), simfile_path);
     }
@@ -730,6 +832,8 @@ namespace detail {
         Actor & sensor,
         uint32_t gbuffer_id);
 
+    void Send(const Sensor &sensor, const rpc::CustomV2XBytes &data);
+
     /// @}
     // =========================================================================
     /// @name Operations with traffic lights
@@ -788,6 +892,16 @@ namespace detail {
 
     void ClearDebugString() {
       _client.ClearDebugString();
+    }
+
+    /// Spawns a static procedural mesh in the world. Vertices are a flat
+    /// (x, y, z) triple list in metres (client/UE-handed coordinates);
+    /// triangles are vertex-index triples into that list.
+    void SpawnCustomMesh(
+        const std::vector<float> &vertices,
+        const std::vector<uint32_t> &triangles,
+        const std::string &material) {
+      _client.SpawnCustomMesh(vertices, triangles, material);
     }
 
     /// @}
@@ -856,6 +970,18 @@ namespace detail {
         const rpc::MaterialParameter& parameter,
         const rpc::TextureFloatColor& Texture);
 
+    void SetSkyLightMap(const rpc::TextureFloatColor& panorama, float intensity, int32_t face_size) {
+      _client.SetSkyLightMap(panorama, intensity, face_size);
+    }
+
+    void ClearSkyLightMap() {
+      _client.ClearSkyLightMap();
+    }
+
+    bool HasSkyLightMap() const {
+      return _client.HasSkyLightMap();
+    }
+
     std::vector<std::string> GetNamesOfAllObjects() const;
 
     /// @}
@@ -873,6 +999,10 @@ namespace detail {
     const GarbageCollectionPolicy _gc_policy;
 
     SharedPtr<Map> _cached_map;
+
+    uint64_t _cached_map_episode_id = 0u;
+
+    std::mutex _cached_map_mutex;
 
     std::string _open_drive_file;
   };

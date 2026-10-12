@@ -70,7 +70,7 @@ if exist "%cd%\Unreal\CarlaUnreal\Content" (
     git ^
         -C %cd%\Unreal\CarlaUnreal\Content ^
         clone ^
-        -b ue5-dev ^
+        -b ue58-dev-carla ^
         https://bitbucket.org/carla-simulator/carla-content.git ^
         Carla ^
     || exit /b
@@ -105,7 +105,7 @@ if exist "%CARLA_UNREAL_ENGINE_PATH%" (
     echo Could not find CARLA Unreal Engine, downloading...
     pushd ..
     git clone ^
-        -b ue5-dev-carla ^
+        -b ue58-dev-carla ^
         https://github.com/CarlaUnreal/UnrealEngine.git ^
         UnrealEngine5_carla || exit /b
     pushd UnrealEngine5_carla

@@ -200,7 +200,10 @@ Select all the wheels in the *Skeleton Tree* panel:
 
 ### Creating the animation blueprint
 
-In the content browser directory where you have your new vehicle asset, right click in an empty space and choose `Animation > Animation Blueprint` from the context menu. In the popup that opens, search for `VehicleAnimationInstance` for the *Parent Class* and in the *Specific Skeleton* field search for the *Skeleton* file created for your new vehicle. Name the blueprint and then click *Create*.
+In the content browser directory where you have your new vehicle asset, right click in an empty space and choose `Animation > Animation Blueprint` from the context menu. In the popup that opens, search for `CarlaVehicleAnimationInstance` for the *Parent Class* and in the *Specific Skeleton* field search for the *Skeleton* file created for your new vehicle. Name the blueprint and then click *Create*.
+
+!!! Note
+    `CarlaVehicleAnimationInstance` extends the engine's `VehicleAnimationInstance`, which only animates the wheels while the Chaos vehicle simulation moves the vehicle. With the CARLA class the wheels also roll when physics is disabled and the vehicle is moved through the API, during a replay, or when another physics engine drives it. A vehicle whose animation blueprint still uses `VehicleAnimationInstance` keeps working, but its wheels stay still in those cases; change the parent class through *File > Reparent Blueprint*.
 
 <img src="../img/tuto_content_authoring_vehicles/animation_bp.png" alt= “synkrotron_logo” style="display: block; margin-left: auto; margin-right: auto; width: 50%;">
 

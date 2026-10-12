@@ -1,7 +1,10 @@
-# 0. Choose a blueprint fo the walkers
+# 0. Choose a blueprint for the walkers
 world = client.get_world()
 blueprintsWalkers = world.get_blueprint_library().filter("walker.pedestrian.*")
 walker_bp = random.choice(blueprintsWalkers)
+
+walkers_list = []
+all_id = []
 
 # 1. Take all the random locations to spawn
 spawn_points = []

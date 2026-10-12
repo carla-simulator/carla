@@ -41,6 +41,8 @@ DECLARE_CYCLE_STAT(TEXT("Stream Send"), STAT_CarlaSensorStreamSend, STATGROUP_Ca
 class FCarlaModule : public IModuleInterface
 {
 	void AddShaderSearchPaths();
+    void MountExternalPackageRoots();
+    void MountEditorContentPacks();
 	void RegisterSettings();
 	void UnregisterSettings();
 	bool HandleSettingsSaved();

@@ -13,7 +13,7 @@
     - var_name: cloudiness
       type: float
       doc: >
-        Values range from 0 to 100, being 0 a clear sky and 100 one completely covered with clouds. 
+        Values range from 0 to 100, being 0 a clear sky and 100 one completely covered with clouds. From `80` up the clouds gradually close into a uniform grey overcast deck, complete at `100` (console variable `carla.Weather.DeckStartCloudiness`); below `80` nothing changes.
     # --------------------------------------
     - var_name: precipitation
       type: float
@@ -40,7 +40,7 @@
       type: float
       var_units: degrees
       doc: >
-        Altitude angle of the sun. Values range from -90 to 90 corresponding to midnight and midday each.
+        Altitude angle of the sun. Values range from -90 to 90 corresponding to midnight and midday each. Street and building lights switch on at or below `0.8` degrees (see carla.Light), and a city night is fully dark on camera from about `-10` degrees.
     # --------------------------------------
     - var_name: fog_density
       type: float
@@ -155,9 +155,9 @@
         doc: >
           Controls interaction of light with small particles like air molecules. Dependent on light wavelength, resulting in a blue sky in the day or red sky in the evening.
       note: >
-        ClearNoon, CloudyNoon, WetNoon, WetCloudyNoon, SoftRainNoon, MidRainyNoon, HardRainNoon, ClearSunset, CloudySunset, WetSunset, WetCloudySunset, SoftRainSunset, MidRainSunset, HardRainSunset. 
+        ClearNoon, CloudyNoon, WetNoon, WetCloudyNoon, SoftRainNoon, MidRainyNoon, HardRainNoon, ClearSunset, CloudySunset, WetSunset, WetCloudySunset, SoftRainSunset, MidRainSunset, HardRainSunset, ClearNight, CloudyNight, WetNight, WetCloudyNight, SoftRainNight, MidRainyNight, HardRainNight. 
       doc: >
-        Method to initialize an object defining weather conditions. This class has some presets for different noon and sunset conditions listed in a note below. 
+        Method to initialize an object defining weather conditions. This class has some presets for different noon, sunset and night conditions listed in a note below. The weather a map starts with comes from `Content/Carla/Config/Weather/MapDefaults.json` on the server (a time and condition pair from `Presets.json`, or a full set of values per map); these files are not readable from the client, use carla.World.get_weather after loading the map.
     # --------------------------------------
     - def_name: __eq__
       params:

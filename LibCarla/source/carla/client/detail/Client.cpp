@@ -194,6 +194,18 @@ namespace detail {
     _pimpl->CallAndWait<void>("apply_float_color_texture_to_objects", objects_name, parameter, Texture);
   }
 
+  void Client::SetSkyLightMap(const rpc::TextureFloatColor& panorama, float intensity, int32_t face_size) {
+    _pimpl->CallAndWait<void>("set_sky_light_map", panorama, intensity, face_size);
+  }
+
+  void Client::ClearSkyLightMap() {
+    _pimpl->CallAndWait<void>("clear_sky_light_map");
+  }
+
+  bool Client::HasSkyLightMap() const {
+    return _pimpl->CallAndWait<bool>("has_sky_light_map");
+  }
+
   std::vector<std::string> Client::GetNamesOfAllObjects() const {
     return _pimpl->CallAndWait<std::vector<std::string>>("get_names_of_all_objects");
   }
@@ -212,6 +224,45 @@ namespace detail {
 
   std::vector<uint8_t> Client::GetNavigationMesh() const {
     return _pimpl->CallAndWait<std::vector<uint8_t>>("get_navigation_mesh");
+  }
+
+  bool Client::IsNavigationServerSide() const {
+    try {
+      return _pimpl->CallAndWait<bool>("is_navigation_server_side");
+    } catch (const ::rpc::rpc_error &) {
+      // Servers that predate server-side navigation don't bind this function;
+      // that means legacy client-side navigation. Timeouts are NOT caught:
+      // a dead server must not masquerade as a legacy one.
+      return false;
+    }
+  }
+
+  geom::Location Client::GetRandomLocationFromNavigation() const {
+    return _pimpl->CallAndWait<geom::Location>("get_random_location_from_navigation");
+  }
+
+  bool Client::WalkerStartNavigation(rpc::ActorId walker) const {
+    return _pimpl->CallAndWait<bool>("walker_start_navigation", walker);
+  }
+
+  bool Client::WalkerGoToLocation(rpc::ActorId walker, const geom::Location &destination) const {
+    return _pimpl->CallAndWait<bool>("walker_go_to_location", walker, destination);
+  }
+
+  bool Client::WalkerSetMaxSpeed(rpc::ActorId walker, float max_speed) const {
+    return _pimpl->CallAndWait<bool>("walker_set_max_speed", walker, max_speed);
+  }
+
+  bool Client::WalkerStopNavigation(rpc::ActorId walker) const {
+    return _pimpl->CallAndWait<bool>("walker_stop_navigation", walker);
+  }
+
+  bool Client::SetPedestriansCrossFactor(float percentage) const {
+    return _pimpl->CallAndWait<bool>("set_pedestrians_cross_factor", percentage);
+  }
+
+  bool Client::SetPedestriansSeed(uint32_t seed) const {
+    return _pimpl->CallAndWait<bool>("set_pedestrians_seed", seed);
   }
 
   bool Client::SetFilesBaseFolder(const std::string &path) {
@@ -259,6 +310,18 @@ namespace detail {
     return _pimpl->CallAndWait<std::vector<std::string>>("get_available_maps");
   }
 
+  std::vector<rpc::ContentPackInfo> Client::GetContentPacks() {
+    return _pimpl->CallAndWait<std::vector<rpc::ContentPackInfo>>("get_content_packs");
+  }
+
+  rpc::ContentPackInfo Client::MountContentPack(const std::string &path) {
+    return _pimpl->CallAndWait<rpc::ContentPackInfo>("mount_content_pack", path);
+  }
+
+  bool Client::UnmountContentPack(const std::string &name) {
+    return _pimpl->CallAndWait<bool>("unmount_content_pack", name);
+  }
+
   std::vector<rpc::ActorDefinition> Client::GetActorDefinitions() {
     return _pimpl->CallAndWait<std::vector<rpc::ActorDefinition>>("get_actor_definitions");
   }
@@ -293,6 +356,18 @@ namespace detail {
 
   bool Client::IsWeatherEnabled() {
     return _pimpl->CallAndWait<bool>("is_weather_enabled");
+  }
+
+  void Client::SetPublishTF(bool publish_tf) {
+    _pimpl->AsyncCall("set_publish_tf", publish_tf);
+  }
+
+  bool Client::GetPublishTF() const {
+    return _pimpl->CallAndWait<bool>("get_publish_tf");
+  }
+
+  std::vector<geom::Transform> Client::GetEgoSpawnPoints() const {
+    return _pimpl->CallAndWait<std::vector<carla::geom::Transform>>("get_ego_spawn_points");
   }
 
   std::vector<rpc::Actor> Client::GetActorsById(
@@ -344,13 +419,43 @@ namespace detail {
         rpc::ActorId vehicle,
         rpc::VehicleWheelLocation vehicle_wheel,
         float angle_in_deg) {
-    return _pimpl->AsyncCall("set_wheel_steer_direction", vehicle, vehicle_wheel, angle_in_deg);
+    _pimpl->CallAndWait<void>("set_wheel_steer_direction", vehicle, vehicle_wheel, angle_in_deg);
   }
 
   float Client::GetWheelSteerAngle(
         rpc::ActorId vehicle,
         rpc::VehicleWheelLocation wheel_location){
     return _pimpl->CallAndWait<float>("get_wheel_steer_angle", vehicle, wheel_location);
+  }
+
+  void Client::SetWheelPitchAngle(
+        rpc::ActorId vehicle,
+        rpc::VehicleWheelLocation wheel_location,
+        float angle_in_deg) {
+    _pimpl->CallAndWait<void>("set_wheel_pitch_angle", vehicle, wheel_location, angle_in_deg);
+  }
+
+  float Client::GetWheelPitchAngle(
+        rpc::ActorId vehicle,
+        rpc::VehicleWheelLocation wheel_location) {
+    return _pimpl->CallAndWait<float>("get_wheel_pitch_angle", vehicle, wheel_location);
+  }
+
+  void Client::SetWheelSuspensionOffset(
+        rpc::ActorId vehicle,
+        rpc::VehicleWheelLocation wheel_location,
+        float offset) {
+    _pimpl->CallAndWait<void>("set_wheel_suspension_offset", vehicle, wheel_location, offset);
+  }
+
+  float Client::GetWheelSuspensionOffset(
+        rpc::ActorId vehicle,
+        rpc::VehicleWheelLocation wheel_location) {
+    return _pimpl->CallAndWait<float>("get_wheel_suspension_offset", vehicle, wheel_location);
+  }
+
+  void Client::SetWheelAnimationOverride(rpc::ActorId vehicle, bool enabled) {
+    _pimpl->CallAndWait<void>("set_wheel_animation_override", vehicle, enabled);
   }
 
   rpc::Actor Client::SpawnActor(
@@ -415,6 +520,14 @@ namespace detail {
 
   void Client::DisableActorConstantVelocity(rpc::ActorId actor) {
     _pimpl->AsyncCall("disable_actor_constant_velocity", actor);
+  }
+
+  void Client::EnableActorConstantAcceleration(rpc::ActorId actor, const geom::Vector3D &vector) {
+    _pimpl->AsyncCall("enable_actor_constant_acceleration", actor, vector);
+  }
+
+  void Client::DisableActorConstantAcceleration(rpc::ActorId actor) {
+    _pimpl->AsyncCall("disable_actor_constant_acceleration", actor);
   }
 
   void Client::AddActorImpulse(rpc::ActorId actor, const geom::Vector3D &impulse) {
@@ -723,6 +836,10 @@ namespace detail {
     _pimpl->streaming_client.UnSubscribe(token);
   }
 
+  void Client::Send(rpc::ActorId ActorId, const rpc::CustomV2XBytes &data) {
+    _pimpl->AsyncCall("send", ActorId, data);
+  }
+
   void Client::DrawDebugShape(const rpc::DebugShape &shape) {
     _pimpl->AsyncCall("draw_debug_shape", shape);
   }
@@ -733,6 +850,13 @@ namespace detail {
 
   void Client::ClearDebugString() {
     _pimpl->AsyncCall("clear_debug_string");
+  }
+
+  void Client::SpawnCustomMesh(
+      const std::vector<float> &vertices,
+      const std::vector<uint32_t> &triangles,
+      const std::string &material) {
+    _pimpl->CallAndWait<void>("spawn_custom_mesh", vertices, triangles, material);
   }
 
   void Client::ApplyBatch(std::vector<rpc::Command> commands, bool do_tick_cue) {

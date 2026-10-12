@@ -1,2 +1,3 @@
 ue-header-guard-begin.h
 ue-header-guard-end.h
+windows-macros-undef.h

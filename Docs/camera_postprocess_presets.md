@@ -18,7 +18,7 @@ You can also create new post-process presets directly in the JSON files found in
 
 ## Using post-process presets for the RGB camera sensor
 
-Saved post-process presets can be loaded to modify the RGB camera sensor. When spawning a camera in the simulation through the CARLA Python API, set the `post_process_profile` attribured of the camera blueprint to the name of the post-process preset you wish to use (the name of the JSON file minus the `.json` suffix):
+Saved post-process presets can be loaded to modify the RGB camera sensor. When spawning a camera in the simulation through the CARLA Python API, set the `post_process_profile` attribute of the camera blueprint to the name of the post-process preset you wish to use (the name of the JSON file minus the `.json` suffix):
 
 ```py
 camera_bp = bp_lib.find('sensor.camera.rgb')
@@ -26,3 +26,22 @@ camera_bp.set_attribute('post_process_profile', 'GoPro')
 camera = world.spawn_actor(camera_bp, carla.Transform(carla.location(0,0,1.5), carla.Rotation()))
 ```
 
+
+---
+
+## Presets shipped with CARLA
+
+| Preset | Look |
+| --- | --- |
+| `Default` | Photoreal camera, used by the spectator and by every RGB camera that does not set `post_process_profile`. Neutral grading, histogram auto exposure with a brightness-dependent exposure bias curve, so shade, dusk and night stay darker as on a real camera. |
+| `GoPro` | Action camera. Vivid colour, strong local tone compression, crisp detail, light vignette and edge fringing, fast auto exposure. |
+| `AutomotiveHDR` | Front camera of an automated vehicle (HDR sensor with a perception ISP). Neutral and flat, highly compressed dynamic range, no lens effects (vignette, bloom, fringing, motion blur, depth of field), very fast auto exposure for tunnel entries and exits. |
+| `Dashcam` | Consumer dashcam. Low dynamic range (bright skies clip), contrasty, over-sharpened, strong vignette and fringing, sensor grain, slightly cool and overexposed. |
+
+The presets only change the image processing. The lens geometry is set on the camera blueprint: for an action-camera or dashcam view, also widen `fov` (for example 110 to 120) and, if needed, use the lens distortion attributes (`lens_k`, `lens_kcube`, `lens_x_size`, `lens_y_size`).
+
+```py
+camera_bp = bp_lib.find('sensor.camera.rgb')
+camera_bp.set_attribute('post_process_profile', 'AutomotiveHDR')
+camera_bp.set_attribute('fov', '100')
+```

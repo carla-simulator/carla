@@ -13,6 +13,7 @@
 #include "Actor/ActorBlueprintFunctionLibrary.h"
 #include "ContentStreaming.h"
 #include "Engine/PostProcessVolume.h"
+#include "EngineUtils.h"
 #include "GameFramework/SpectatorPawn.h"
 #include <util/ue-header-guard-end.h>
 
@@ -26,14 +27,20 @@
 // load) cannot hand out the same index twice.
 static std::atomic<int> SCENE_CAPTURE_COUNTER{0};
 
-static TAutoConsoleVariable<int32> CVarCarlaCameraUseRayTracing(
-    TEXT("carla.Camera.UseRayTracing"),
-    -1,
-    TEXT("Global override for per-camera hardware ray-tracing on CARLA sensors.\n")
-    TEXT("  -1: Respect the per-sensor bUseRayTracing attribute (default).\n")
-    TEXT("   0: Force ray-tracing OFF on every camera.\n")
-    TEXT("   1: Force ray-tracing ON on every camera."),
-    ECVF_Default);
+// Registered by CarlaDeviceProfileSelectorModule, which loads first and sets it
+// per quality tier. -1 follows each sensor's bUseRayTracing, 0 forces ray
+// tracing off and 1 forces it on for every camera.
+static int32 GetCameraRayTracingOverride()
+{
+  static std::atomic<const TConsoleVariableData<int32> *> CVar{nullptr};
+  const TConsoleVariableData<int32> *Cached = CVar.load(std::memory_order_relaxed);
+  if (Cached == nullptr)
+  {
+    Cached = IConsoleManager::Get().FindTConsoleVariableDataInt(TEXT("carla.Camera.UseRayTracing"));
+    CVar.store(Cached, std::memory_order_relaxed);
+  }
+  return (Cached != nullptr) ? Cached->GetValueOnAnyThread() : -1;
+}
 
 // Rollback / debug switch for the lazy GBuffer capture path. GBuffer captures
 // are only allocated when a client subscribes via listen_to_gbuffer(); setting
@@ -131,9 +138,17 @@ void ASceneCaptureSensor::ApplyRayTracingSetting()
   {
     return;
   }
-  const int32 CVarOverride = CVarCarlaCameraUseRayTracing.GetValueOnAnyThread();
-  const bool bEffective = (CVarOverride < 0) ? bUseRayTracing : (CVarOverride > 0);
-  CaptureComponent2D->bUseRayTracingIfEnabled = bEffective;
+  CaptureComponent2D->bUseRayTracingIfEnabled = ResolveCameraRayTracing(bUseRayTracing, RequiresRayTracing());
+}
+
+bool ASceneCaptureSensor::ResolveCameraRayTracing(const bool bSensorEnabled, const bool bRequired)
+{
+  if (bRequired)
+  {
+    return true;
+  }
+  const int32 CVarOverride = GetCameraRayTracingOverride();
+  return (CVarOverride < 0) ? bSensorEnabled : (CVarOverride > 0);
 }
 
 void ASceneCaptureSensor::SetFOVAngle(const float FOVAngle)
@@ -912,6 +927,14 @@ bool ASceneCaptureSensor::ApplyPostProcessVolumeToSensor(APostProcessVolume *Ori
 void ASceneCaptureSensor::EnqueueRenderSceneImmediate()
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(ASceneCaptureSensor::EnqueueRenderSceneImmediate);
+  // Show-only mode: refresh the actor list (only rescans when the world's
+  // actor count changed) and push it into the capture component so actors
+  // spawned since the last capture are included.
+  if (ShowOnlyFilter.IsEnabled())
+  {
+    ShowOnlyFilter.Refresh(GetWorld(), &GetEpisode());
+    ShowOnlyFilter.ApplyTo(*CaptureComponent2D);
+  }
   // Creates an snapshot of the scene, requieres bCaptureEveryFrame = false.
 #ifdef CARLA_HAS_GBUFFER_API
   CaptureSceneExtended();
@@ -943,8 +966,53 @@ void ASceneCaptureSensor::BeginPlay()
   CaptureComponent2D->Deactivate();
   CaptureComponent2D->TextureTarget = CaptureRenderTarget;
 
+  // Optional DLSS upscaling: render the capture at a fraction of the target
+  // resolution and let the engine's scene-capture temporal upscaler (DLSS
+  // Super Resolution, bilinear fallback on non-NVIDIA hardware) fill the
+  // render target. The render target itself stays at ImageWidth x ImageHeight,
+  // so client-visible output resolution is unchanged.
+  CaptureComponent2D->CaptureScreenPercentage =
+      bEnableDLSSUpscale ? FMath::Clamp(DLSSScreenPercentage, 25.0f, 100.0f) : 100.0f;
+  if (bEnableDLSSUpscale && !bEnablePostProcessingEffects)
+  {
+    UE_LOG(LogCarla, Warning, TEXT(
+        "%s: DLSS upscaling requested but post-processing effects are disabled; "
+        "the capture has no temporal AA method, so the engine will spatially "
+        "upscale instead of DLSS."), *GetName());
+  }
+
   // Call derived classes to set up their things.
   SetUpSceneCaptureComponent(*CaptureComponent2D);
+
+  // The capture component's own settings assert bOverride_ on every camera
+  // field (SetCameraDefaultOverrides), so map post-process volumes never blend
+  // into sensor renders and sensors don't match the main viewport. Absorb the
+  // map's enabled unbound PostProcessVolume here; the cache logic inside
+  // ApplyPostProcessVolumeToSensor keeps the camera attributes configured
+  // through the sensor API (exposure, film curve, DoF, ...) authoritative.
+  {
+    int32 VolumeCount = 0;
+    bool bApplied = false;
+    for (TActorIterator<APostProcessVolume> It(GetWorld()); It; ++It)
+    {
+      APostProcessVolume *Volume = *It;
+      ++VolumeCount;
+      if (!bApplied && bEnablePostProcessingEffects &&
+          IsValid(Volume) && Volume->bEnabled && Volume->bUnbound)
+      {
+        ApplyPostProcessVolumeToSensor(Volume, this, false);
+        UE_LOG(LogCarla, Log, TEXT("%s: absorbed map post-process volume %s"),
+            *GetName(), *Volume->GetName());
+        bApplied = true;
+      }
+    }
+    if (!bApplied && VolumeCount > 0)
+    {
+      UE_LOG(LogCarla, Verbose, TEXT(
+          "%s: no map post-process volume absorbed (bEnablePP=%d, volumes in world=%d)"),
+          *GetName(), bEnablePostProcessingEffects ? 1 : 0, VolumeCount);
+    }
+  }
 
   CaptureComponent2D->CaptureSource = ESceneCaptureSource::SCS_FinalToneCurveHDR;
 
@@ -1062,6 +1130,14 @@ void ASceneCaptureSensor::EndPlay(const EEndPlayReason::Type EndPlayReason)
   if (CaptureRenderTarget)
   {
     CaptureRenderTarget->ReleaseResource();
+  }
+  // Free the persistent view state (Lumen scene, TSR history...) now instead
+  // of at the next garbage collection; see USceneCaptureComponent2D_CARLA.
+  if (CaptureComponent2D)
+  {
+    FlushRenderingCommands();
+    CaptureComponent2D->Deactivate();
+    CaptureComponent2D->ReleaseViewStates();
   }
   // Drop the sensor's strong ref. Any in-flight AsyncTask still holds a copy
   // of the shared_ptr, so the pool dies with the last consuming task.

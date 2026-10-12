@@ -44,7 +44,7 @@ class TestCollision(unittest.TestCase):
         # bp.set_attribute('is_invincible', 'false')
         walker = world.spawn_actor(bp, carla.Transform(carla.Location(200.7, 199.3, 0.2), carla.Rotation()))
 
-        bp = bp_lib.filter("*mkz_2020*")[0]
+        bp = bp_lib.filter("vehicle.lincoln.mkz")[0]
         vehicle = world.spawn_actor(bp, carla.Transform(carla.Location(177.7, 198.8, 0.2), carla.Rotation()))
         spectator.set_transform(carla.Transform(carla.Location(205.9, 193.2, 3.9), carla.Rotation(pitch=-29, yaw=135)))
 

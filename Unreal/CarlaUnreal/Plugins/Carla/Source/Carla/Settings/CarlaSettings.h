@@ -116,34 +116,6 @@ private:
 
 public:
 
-  /// Low quality Road Materials. Uses slots name to set material for each part
-  /// of the road for low quality.
-  ///
-  /// @todo Move Low quality vars to a generic map of structs with the quality
-  /// level as key.
-  UPROPERTY(Category = "Quality Settings/Low",
-      BlueprintReadOnly,
-      EditAnywhere,
-      config,
-      DisplayName = "Road Materials List for Low Quality")
-  TArray<FStaticMaterial> LowRoadMaterials;
-
-  /// Distance at which the light function should be completely faded to
-  /// DisabledBrightness. This is useful for hiding aliasing from light
-  /// functions applied in the distance.
-  UPROPERTY(Category = "Quality Settings/Low", BlueprintReadOnly, EditAnywhere, config)
-  float LowLightFadeDistance  = 1000.0f;
-
-  /// Default low distance for all primitive components.
-  UPROPERTY(Category = "Quality Settings/Low", BlueprintReadOnly, EditAnywhere, config,
-      meta = (ClampMin = "5000.0", ClampMax = "20000.0", UIMin = "5000.0", UIMax = "20000.0"))
-  float LowStaticMeshMaxDrawDistance = 10000.0f;
-
-  /// Default low distance for roads meshes.
-  UPROPERTY(Category = "Quality Settings/Low", BlueprintReadOnly, EditAnywhere, config,
-      meta = (ClampMin = "5000.0", ClampMax = "20000.0", UIMin = "5000.0", UIMax = "20000.0"))
-  float LowRoadPieceMeshMaxDrawDistance = 15000.0f;
-
   /// EPIC quality Road Materials. Uses slots name to set material for each part
   /// of the road for Epic quality.
   UPROPERTY(Category = "Quality Settings/Epic",
@@ -170,6 +142,25 @@ public:
       config,
       DisplayName = "ROS2 Topics Visible On Startup")
   bool ROS2TopicVisibility = true;
+
+  /// DDS middleware (RMW) used by the native ROS2 connector. Accepted values:
+  /// "fastdds" (default) and "cyclonedds". Set via the --rmw= command-line
+  /// argument. CycloneDDS is only available on Linux.
+  UPROPERTY(Category = "Quality Settings/ROS2",
+      BlueprintReadOnly,
+      EditAnywhere,
+      config,
+      DisplayName = "ROS2 RMW")
+  FString RmwName = TEXT("fastdds");
+
+  /// ROS2 domain id. Set via --ros-domain-id=<N> on the command line.
+  /// -1 (the default) keeps each middleware's native default domain.
+  UPROPERTY(Category = "Quality Settings/ROS2",
+      BlueprintReadOnly,
+      EditAnywhere,
+      config,
+      DisplayName = "ROS2 Domain ID")
+  int32 ROS2DomainId = -1;
 
   /// @}
 };

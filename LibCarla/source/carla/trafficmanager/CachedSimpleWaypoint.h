@@ -35,6 +35,11 @@ namespace traffic_manager {
 
     void Read(const std::vector<uint8_t>& content, unsigned long& start);
 
+    /// Bytes of a record with empty next/previous lists: id (8), road/section/lane/s
+    /// (16), two u16 list sizes (4), left/right ids (16), grid id (4), junction (1),
+    /// road option (1). Lets InMemoryMap::Load bounds-check a cache before reading it.
+    static constexpr unsigned long MinimumSize() { return 50; }
+
     void Read(std::ifstream &in_file);
     void Write(std::ofstream &out_file);
 

@@ -56,6 +56,26 @@ namespace client {
       return _simulator->GetAvailableMaps();
     }
 
+    /// Content packs known to the server (discovered at startup or mounted
+    /// through MountContentPack), mounted or not.
+    std::vector<rpc::ContentPackInfo> GetContentPacks() const {
+      return _simulator->GetContentPacks();
+    }
+
+    /// Mount a content pack from a directory on the server host (the pack
+    /// directory or its carla-pack.json). Throws with the server's reason
+    /// when the pack is invalid, incompatible with the base release or
+    /// already mounted. Its maps show up in GetAvailableMaps afterwards.
+    rpc::ContentPackInfo MountContentPack(const std::string &path) const {
+      return _simulator->MountContentPack(path);
+    }
+
+    /// Unmount a content pack by name. Refused (throws) while a map of the
+    /// pack is loaded or objects from it are still alive.
+    bool UnmountContentPack(const std::string &name) const {
+      return _simulator->UnmountContentPack(name);
+    }
+
     bool SetFilesBaseFolder(const std::string &path) {
       return _simulator->SetFilesBaseFolder(path);
     }

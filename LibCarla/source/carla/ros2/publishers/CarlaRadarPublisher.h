@@ -13,8 +13,8 @@ namespace ros2 {
 
 class CarlaRadarPublisher : public CarlaPointCloudPublisher {
 public:
-  CarlaRadarPublisher(std::string base_topic_name, std::string frame_id)
-    : CarlaPointCloudPublisher(std::move(base_topic_name), std::move(frame_id)) {}
+  CarlaRadarPublisher(std::string base_topic_name, std::string frame_id, bool exact_topic = false)
+    : CarlaPointCloudPublisher(std::move(base_topic_name), std::move(frame_id), exact_topic) {}
 
 private:
   [[nodiscard]] std::size_t GetPointSize() const override;

@@ -99,5 +99,10 @@ cg::Vector3D SimulationState::GetDimensions(ActorId actor_id) const {
   return cg::Vector3D(attributes.half_length, attributes.half_width, attributes.half_height);
 }
 
+float SimulationState::GetMaxSteerAngle(ActorId actor_id) const {
+  const StaticAttributes &attributes = static_attribute_map.at(actor_id);
+  return attributes.max_steer_angle;
+}
+
 } // namespace  traffic_manager
 } // namespace carla

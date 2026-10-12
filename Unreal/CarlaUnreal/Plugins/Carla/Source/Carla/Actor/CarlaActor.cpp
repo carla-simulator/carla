@@ -160,7 +160,10 @@ void FCarlaActor::PutActorToSleep(UCarlaEpisode* CarlaEpisode)
   {
     ActorData->RecordActorData(this, CarlaEpisode);
   }
-  TheActor->Destroy();
+  if (AActor* Actor = TheActor.Get())
+  {
+    Actor->Destroy();
+  }
   TheActor = nullptr;
 }
 
@@ -209,7 +212,15 @@ FTransform FCarlaActor::GetActorGlobalTransform() const
   }
   else
   {
-    FTransform Transform = GetActor()->GetActorTransform();
+    const AActor* Actor = GetActor();
+    if (Actor == nullptr)
+    {
+      // Streamed out by World Partition behind the registry's back; there is
+      // no live transform to read. Identity beats dereferencing null until
+      // stream-out converts these entries to dormant.
+      return FTransform::Identity;
+    }
+    FTransform Transform = Actor->GetActorTransform();
     ALargeMapManager* LargeMap =
         UCarlaStatics::GetLargeMapManager(World);
     if (LargeMap)
@@ -646,6 +657,40 @@ ECarlaServerResponse FVehicleActor::DisableActorConstantVelocity()
   return ECarlaServerResponse::Success;
 }
 
+ECarlaServerResponse FVehicleActor::EnableActorConstantAcceleration(const FVector& Acceleration)
+{
+  if (IsDormant())
+  {
+  }
+  else
+  {
+    auto CarlaVehicle = Cast<ACarlaWheeledVehicle>(GetActor());
+    if (CarlaVehicle == nullptr)
+    {
+      return ECarlaServerResponse::NullActor;
+    }
+    CarlaVehicle->ActivateAccelerationControl(Acceleration);
+  }
+  return ECarlaServerResponse::Success;
+}
+
+ECarlaServerResponse FVehicleActor::DisableActorConstantAcceleration()
+{
+  if (IsDormant())
+  {
+  }
+  else
+  {
+    auto CarlaVehicle = Cast<ACarlaWheeledVehicle>(GetActor());
+    if (CarlaVehicle == nullptr)
+    {
+      return ECarlaServerResponse::NullActor;
+    }
+    CarlaVehicle->DeactivateAccelerationControl();
+  }
+  return ECarlaServerResponse::Success;
+}
+
 ECarlaServerResponse FVehicleActor::GetPhysicsControl(FVehiclePhysicsControl& PhysicsControl)
 {
   if (IsDormant())
@@ -789,6 +834,21 @@ ECarlaServerResponse FVehicleActor::SetVehicleLightState(
   return ECarlaServerResponse::Success;
 }
 
+// Why the wheel's pose cannot be set, or Success if it can.
+static ECarlaServerResponse CanSetWheelPose(
+    const ACarlaWheeledVehicle& Vehicle, const EVehicleWheelLocation& WheelLocation)
+{
+  if (!Vehicle.HasWheel(static_cast<int32>(WheelLocation)))
+  {
+    return ECarlaServerResponse::WheelNotFound;
+  }
+  if (!Vehicle.IsWheelAnimationOverridden())
+  {
+    return ECarlaServerResponse::WheelAnimationOverrideDisabled;
+  }
+  return ECarlaServerResponse::Success;
+}
+
 ECarlaServerResponse FVehicleActor::SetWheelSteerDirection(
     const EVehicleWheelLocation& WheelLocation, float AngleInDeg)
 {
@@ -800,6 +860,11 @@ ECarlaServerResponse FVehicleActor::SetWheelSteerDirection(
     auto Vehicle = Cast<ACarlaWheeledVehicle>(GetActor());
     if(Vehicle == nullptr){
       return ECarlaServerResponse::NotAVehicle;
+    }
+    const ECarlaServerResponse Response = CanSetWheelPose(*Vehicle, WheelLocation);
+    if (Response != ECarlaServerResponse::Success)
+    {
+      return Response;
     }
     Vehicle->SetWheelSteerDirection(WheelLocation, AngleInDeg);
   }
@@ -819,8 +884,109 @@ ECarlaServerResponse FVehicleActor::GetWheelSteerAngle(
     if(Vehicle == nullptr){
       return ECarlaServerResponse::NotAVehicle;
     }
-
+    if (!Vehicle->HasWheel(static_cast<int32>(WheelLocation)))
+    {
+      return ECarlaServerResponse::WheelNotFound;
+    }
     Angle = Vehicle->GetWheelSteerAngle(WheelLocation);
+  }
+  return ECarlaServerResponse::Success;
+}
+
+ECarlaServerResponse FVehicleActor::SetWheelPitchAngle(
+    const EVehicleWheelLocation& WheelLocation, float AngleInDeg)
+{
+  if (!IsDormant())
+  {
+    auto Vehicle = Cast<ACarlaWheeledVehicle>(GetActor());
+    if (Vehicle == nullptr)
+    {
+      return ECarlaServerResponse::NotAVehicle;
+    }
+    const ECarlaServerResponse Response = CanSetWheelPose(*Vehicle, WheelLocation);
+    if (Response != ECarlaServerResponse::Success)
+    {
+      return Response;
+    }
+    Vehicle->SetWheelPitchAngle(WheelLocation, AngleInDeg);
+  }
+  return ECarlaServerResponse::Success;
+}
+
+ECarlaServerResponse FVehicleActor::GetWheelPitchAngle(
+    const EVehicleWheelLocation& WheelLocation, float& Angle)
+{
+  Angle = 0.0f;
+  if (!IsDormant())
+  {
+    auto Vehicle = Cast<ACarlaWheeledVehicle>(GetActor());
+    if (Vehicle == nullptr)
+    {
+      return ECarlaServerResponse::NotAVehicle;
+    }
+    if (!Vehicle->HasWheel(static_cast<int32>(WheelLocation)))
+    {
+      return ECarlaServerResponse::WheelNotFound;
+    }
+    Angle = Vehicle->GetWheelPitchAngle(WheelLocation);
+  }
+  return ECarlaServerResponse::Success;
+}
+
+ECarlaServerResponse FVehicleActor::SetWheelSuspensionOffset(
+    const EVehicleWheelLocation& WheelLocation, float Offset)
+{
+  if (!IsDormant())
+  {
+    auto Vehicle = Cast<ACarlaWheeledVehicle>(GetActor());
+    if (Vehicle == nullptr)
+    {
+      return ECarlaServerResponse::NotAVehicle;
+    }
+    const ECarlaServerResponse Response = CanSetWheelPose(*Vehicle, WheelLocation);
+    if (Response != ECarlaServerResponse::Success)
+    {
+      return Response;
+    }
+    Vehicle->SetWheelSuspensionOffset(WheelLocation, Offset * UE_M_TO_CM);
+  }
+  return ECarlaServerResponse::Success;
+}
+
+ECarlaServerResponse FVehicleActor::GetWheelSuspensionOffset(
+    const EVehicleWheelLocation& WheelLocation, float& Offset)
+{
+  Offset = 0.0f;
+  if (!IsDormant())
+  {
+    auto Vehicle = Cast<ACarlaWheeledVehicle>(GetActor());
+    if (Vehicle == nullptr)
+    {
+      return ECarlaServerResponse::NotAVehicle;
+    }
+    if (!Vehicle->HasWheel(static_cast<int32>(WheelLocation)))
+    {
+      return ECarlaServerResponse::WheelNotFound;
+    }
+    Offset = Vehicle->GetWheelSuspensionOffset(WheelLocation) * UE_CM_TO_M;
+  }
+  return ECarlaServerResponse::Success;
+}
+
+ECarlaServerResponse FVehicleActor::SetWheelAnimationOverride(bool bEnabled)
+{
+  if (!IsDormant())
+  {
+    auto Vehicle = Cast<ACarlaWheeledVehicle>(GetActor());
+    if (Vehicle == nullptr)
+    {
+      return ECarlaServerResponse::NotAVehicle;
+    }
+    if (bEnabled && !Vehicle->HasCarlaVehicleAnimation())
+    {
+      return ECarlaServerResponse::WheelAnimationNotSupported;
+    }
+    Vehicle->SetWheelAnimationOverride(bEnabled);
   }
   return ECarlaServerResponse::Success;
 }
@@ -1273,6 +1439,32 @@ ECarlaServerResponse FWalkerActor::SetWalkerState(
   }
   SetActorGlobalTransform(NewTransform);
   return ECarlaServerResponse::Success;
+}
+
+FVector FWalkerActor::GetActorVelocity() const
+{
+  if (IsDormant())
+  {
+    return GetActorData()->Velocity;
+  }
+
+  // Walkers move via UCharacterMovementComponent (AWalkerController::Tick
+  // drives it through AddMovementInput, a kinematic sweep), not physics
+  // simulation. AActor::GetVelocity() (APawn::GetVelocity()) prefers the
+  // root component's physics-body velocity whenever the root capsule is
+  // simulating physics -- true for walker Blueprints set up for ragdoll
+  // death even while walking normally -- which reports that near-zero
+  // physics-body velocity instead of the character's actual movement
+  // speed. Read the movement component's own tracked velocity directly.
+  auto* Character = Cast<ACharacter>(GetActor());
+  if (Character != nullptr)
+  {
+    if (auto* MovementComponent = Character->GetCharacterMovement())
+    {
+      return MovementComponent->Velocity;
+    }
+  }
+  return GetActor()->GetVelocity();
 }
 
 ECarlaServerResponse FWalkerActor::GetWalkerControl(

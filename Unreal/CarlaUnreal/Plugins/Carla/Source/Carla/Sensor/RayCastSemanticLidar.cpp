@@ -8,6 +8,7 @@
 #include "Carla.h"
 #include "Carla/Actor/ActorBlueprintFunctionLibrary.h"
 #include "Carla/Game/Tagger.h"
+#include "Carla/Sensor/CarlaLidarSubsystem.h"
 
 #include <util/disable-ue4-macros.h>
 #include "carla/geom/Math.h"
@@ -36,6 +37,24 @@ ARayCastSemanticLidar::ARayCastSemanticLidar(const FObjectInitializer& ObjectIni
   : Super(ObjectInitializer)
 {
   PrimaryActorTick.bCanEverTick = true;
+}
+
+void ARayCastSemanticLidar::BeginPlay()
+{
+  Super::BeginPlay();
+  if (UCarlaLidarSubsystem* LidarSubsystem = GetWorld()->GetSubsystem<UCarlaLidarSubsystem>())
+  {
+    LidarSubsystem->RegisterLidar(this);
+  }
+}
+
+void ARayCastSemanticLidar::EndPlay(EEndPlayReason::Type EndPlayReason)
+{
+  if (UCarlaLidarSubsystem* LidarSubsystem = GetWorld()->GetSubsystem<UCarlaLidarSubsystem>())
+  {
+    LidarSubsystem->UnregisterLidar(this);
+  }
+  Super::EndPlay(EndPlayReason);
 }
 
 void ARayCastSemanticLidar::Set(const FActorDescription &ActorDescription)
@@ -70,11 +89,9 @@ void ARayCastSemanticLidar::CreateLasers()
   }
 }
 
-void ARayCastSemanticLidar::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaTime)
+void ARayCastSemanticLidar::SendData(const float DeltaTime)
 {
-  TRACE_CPUPROFILER_EVENT_SCOPE(ARayCastSemanticLidar::PostPhysTick);
-  SimulateLidar(DeltaTime);
-
+  TRACE_CPUPROFILER_EVENT_SCOPE(ARayCastSemanticLidar::SendData);
   auto DataStream = GetDataStream(*this);
   auto SensorTransform = DataStream.GetSensorTransform();
   {
@@ -102,7 +119,7 @@ void ARayCastSemanticLidar::PostPhysTick(UWorld *World, ELevelTick TickType, flo
   #endif
 }
 
-void ARayCastSemanticLidar::SimulateLidar(const float DeltaTime)
+void ARayCastSemanticLidar::SimulateLidar(const float DeltaTime, bool bLockPhysics)
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(ARayCastSemanticLidar::SimulateLidar);
   const uint32 ChannelCount = Description.Channels;
@@ -127,11 +144,17 @@ void ARayCastSemanticLidar::SimulateLidar(const float DeltaTime)
   const float AngleDistanceOfTick = Description.RotationFrequency * Description.HorizontalFov
       * DeltaTime;
   const float AngleDistanceOfLaserMeasure = AngleDistanceOfTick / PointsToScanWithOneLaser;
+  const float HalfHorizontalFov = Description.HorizontalFov / 2;
 
-  ResetRecordedHits(ChannelCount, PointsToScanWithOneLaser);
+  ResetDetections(ChannelCount, PointsToScanWithOneLaser);
   PreprocessRays(ChannelCount, PointsToScanWithOneLaser);
 
-  auto LockedPhysObject = FPhysicsObjectExternalInterface::LockRead(GetWorld()->GetPhysicsScene());
+  const FTransform ActorTransform = GetTransform();
+  const FTransform InverseSensorTransform = ActorTransform.Inverse();
+  const FVector LidarBodyLocation = ActorTransform.GetLocation();
+  const FRotator LidarBodyRotation = ActorTransform.Rotator();
+
+  auto RunChannelRaycasts = [&]()
   {
     TRACE_CPUPROFILER_EVENT_SCOPE(ParallelFor);
     ParallelFor(ChannelCount, [&](int32 idxChannel) {
@@ -141,36 +164,43 @@ void ARayCastSemanticLidar::SimulateLidar(const float DeltaTime)
       TraceParams.bTraceComplex = true;
       TraceParams.bReturnPhysicalMaterial = false;
 
-      for (auto idxPtsOneLaser = 0u; idxPtsOneLaser < PointsToScanWithOneLaser; idxPtsOneLaser++) {
-        FHitResult HitResult;
-        const float VertAngle = LaserAngles[idxChannel];
-        const float HorizAngle = std::fmod(CurrentHorizontalAngle + AngleDistanceOfLaserMeasure
-            * idxPtsOneLaser, Description.HorizontalFov) - Description.HorizontalFov / 2;
-        const bool PreprocessResult = RayPreprocessCondition[idxChannel][idxPtsOneLaser];
+      const float VertAngle = LaserAngles[idxChannel];
+      const std::vector<bool>& ChannelPreprocessCondition = RayPreprocessCondition[idxChannel];
 
-        if (PreprocessResult && ShootLaser(VertAngle, HorizAngle, HitResult, TraceParams)) {
-          WritePointAsync(idxChannel, HitResult);
+      for (auto idxPtsOneLaser = 0u; idxPtsOneLaser < PointsToScanWithOneLaser; idxPtsOneLaser++) {
+        // Rays dropped by a subclass's PreprocessRays.
+        if (!ChannelPreprocessCondition[idxPtsOneLaser])
+        {
+          continue;
+        }
+
+        FHitResult HitResult;
+        const float HorizAngle = std::fmod(CurrentHorizontalAngle + AngleDistanceOfLaserMeasure
+            * idxPtsOneLaser, Description.HorizontalFov) - HalfHorizontalFov;
+
+        if (ShootLaser(VertAngle, HorizAngle, HitResult, TraceParams, LidarBodyLocation, LidarBodyRotation)) {
+          WriteDetectionAsync(idxChannel, HitResult, InverseSensorTransform, LidarBodyLocation);
         }
       };
     });
-  }
-  LockedPhysObject.Release();
+  };
 
-  FTransform ActorTransf = GetTransform();
-  ComputeAndSaveDetections(ActorTransf);
+  if (bLockPhysics)
+  {
+    auto LockedPhysObject = FPhysicsObjectExternalInterface::LockRead(GetWorld()->GetPhysicsScene());
+    RunChannelRaycasts();
+    LockedPhysObject.Release();
+  }
+  else
+  {
+    RunChannelRaycasts();
+  }
+
+  ComputeAndSaveDetections(ActorTransform);
 
   const float HorizontalAngle = carla::geom::Math::ToRadians(
       std::fmod(CurrentHorizontalAngle + AngleDistanceOfTick, Description.HorizontalFov));
   SemanticLidarData.SetHorizontalAngle(HorizontalAngle);
-}
-
-void ARayCastSemanticLidar::ResetRecordedHits(uint32_t Channels, uint32_t MaxPointsPerChannel) {
-  RecordedHits.resize(Channels);
-
-  for (auto& hits : RecordedHits) {
-    hits.clear();
-    hits.reserve(MaxPointsPerChannel);
-  }
 }
 
 void ARayCastSemanticLidar::PreprocessRays(uint32_t Channels, uint32_t MaxPointsPerChannel) {
@@ -183,95 +213,99 @@ void ARayCastSemanticLidar::PreprocessRays(uint32_t Channels, uint32_t MaxPoints
   }
 }
 
-void ARayCastSemanticLidar::WritePointAsync(uint32_t channel, FHitResult &detection) {
-	TRACE_CPUPROFILER_EVENT_SCOPE_STR(__FUNCTION__);
-  DEBUG_ASSERT(GetChannelCount() > channel);
-  RecordedHits[channel].emplace_back(detection);
+void ARayCastSemanticLidar::ResetDetections(uint32_t Channels, uint32_t MaxPointsPerChannel) {
+  ResetChannelDetections(SemanticDetections, Channels, MaxPointsPerChannel);
 }
 
-void ARayCastSemanticLidar::ComputeAndSaveDetections(const FTransform& SensorTransform) {
-	TRACE_CPUPROFILER_EVENT_SCOPE_STR(__FUNCTION__);
-  for (auto idxChannel = 0u; idxChannel < Description.Channels; ++idxChannel)
-    PointsPerChannel[idxChannel] = RecordedHits[idxChannel].size();
-  SemanticLidarData.ResetMemory(PointsPerChannel);
+void ARayCastSemanticLidar::WriteDetectionAsync(uint32_t Channel, const FHitResult& HitInfo, const FTransform& InverseSensorTransform, const FVector& SensorLocation) {
+  DEBUG_ASSERT(GetChannelCount() > Channel);
+  FSemanticDetection& Detection = SemanticDetections[Channel].emplace_back();
+  ComputeRawDetection(HitInfo, InverseSensorTransform, SensorLocation, Detection);
+}
 
-  for (auto idxChannel = 0u; idxChannel < Description.Channels; ++idxChannel) {
-    for (auto& hit : RecordedHits[idxChannel]) {
-      FSemanticDetection detection;
-      ComputeRawDetection(hit, SensorTransform, detection);
-      SemanticLidarData.WritePointSync(detection);
-    }
+void ARayCastSemanticLidar::ComputeAndSaveDetections(const FTransform& SensorTransform)
+{
+  TRACE_CPUPROFILER_EVENT_SCOPE_STR(__FUNCTION__);
+
+  for (auto idxChannel = 0u; idxChannel < Description.Channels; ++idxChannel)
+  {
+    PointsPerChannel[idxChannel] = SemanticDetections[idxChannel].size();
   }
 
+  SemanticLidarData.ResetMemory(PointsPerChannel);
+  for (auto idxChannel = 0u; idxChannel < Description.Channels; ++idxChannel)
+  {
+    SemanticLidarData.WritePointsSync(SemanticDetections[idxChannel]);
+  }
   SemanticLidarData.WriteChannelCount(PointsPerChannel);
 }
 
-void ARayCastSemanticLidar::ComputeRawDetection(const FHitResult& HitInfo, const FTransform& SensorTransf, FSemanticDetection& Detection) const
+void ARayCastSemanticLidar::ComputeRawDetection(const FHitResult& HitInfo, const FTransform& InverseSensorTransform, const FVector& SensorLocation, FSemanticDetection& Detection) const
 {
-    const FVector HitPoint = HitInfo.ImpactPoint;
-    Detection.point = SensorTransf.Inverse().TransformPosition(HitPoint);
+    static const uint32_t TerrainTag = static_cast<uint32_t>(ATagger::GetTagFromString("Terrain"));
 
-    const FVector VecInc = - (HitPoint - SensorTransf.GetLocation()).GetSafeNormal();
+    const FVector HitPoint = HitInfo.ImpactPoint;
+    Detection.point = InverseSensorTransform.TransformPosition(HitPoint);
+
+    const FVector VecInc = - (HitPoint - SensorLocation).GetSafeNormal();
     Detection.cos_inc_angle = FVector::DotProduct(VecInc, HitInfo.ImpactNormal);
 
     const FActorRegistry &Registry = GetEpisode().GetActorRegistry();
 
     const AActor* actor = HitInfo.GetActor();
     Detection.object_idx = 0;
-    
-    // Given that landscapes do not have tags for now, asign it here if the actor is a landscape, otherwise get the component tag
-    if (actor->IsA<ALandscape>()){
-      Detection.object_tag = static_cast<uint32_t>(ATagger::GetTagFromString("Terrain"));
+    Detection.object_tag = static_cast<uint32_t>(crp::CityObjectLabel::None);
+
+    // Given that landscapes do not have tags for now, assign it here if the
+    // actor is a landscape, otherwise get the component tag.
+    // GetTagOfTaggedComponent tolerates untagged components (World Partition
+    // streams in HLOD/proxy geometry that never went through ATagger) by
+    // falling back to the stencil value, where reading ComponentTags[0]
+    // directly asserts on an empty array.
+    if (actor != nullptr && actor->IsA<ALandscape>())
+    {
+      Detection.object_tag = TerrainTag;
     }
-    else {
-      Detection.object_tag = static_cast<uint32_t>(ATagger::GetTagFromString(HitInfo.Component->ComponentTags[0].ToString()));
+    else if (HitInfo.Component.IsValid())
+    {
+      Detection.object_tag = static_cast<uint32_t>(ATagger::GetTagOfTaggedComponent(*HitInfo.Component));
     }
 
-    if (actor != nullptr) {
-
+    if (actor != nullptr)
+    {
       const FCarlaActor* view = Registry.FindCarlaActor(actor);
-      if(view)
+      if (view != nullptr)
+      {
         Detection.object_idx = view->GetActorId();
-
+      }
     }
-    else {
+    else
+    {
       UE_LOG(LogCarla, Warning, TEXT("Actor not valid %p!!!!"), actor);
     }
 }
 
 
-bool ARayCastSemanticLidar::ShootLaser(const float VerticalAngle, const float HorizontalAngle, FHitResult& HitResult, FCollisionQueryParams& TraceParams) const
+bool ARayCastSemanticLidar::ShootLaser(const float VerticalAngle, const float HorizontalAngle, FHitResult& HitResult, FCollisionQueryParams& TraceParams,
+                                       const FVector& LidarBodyLocation, const FRotator& LidarBodyRotation) const
 {
   TRACE_CPUPROFILER_EVENT_SCOPE_STR(__FUNCTION__);
 
-  FHitResult HitInfo(ForceInit);
-
-  FTransform ActorTransf = GetTransform();
-  FVector LidarBodyLoc = ActorTransf.GetLocation();
-  FRotator LidarBodyRot = ActorTransf.Rotator();
-
-  FRotator LaserRot (VerticalAngle, HorizontalAngle, 0);  // float InPitch, float InYaw, float InRoll
-  FRotator ResultRot = UKismetMathLibrary::ComposeRotators(
-    LaserRot,
-    LidarBodyRot
+  FRotator LaserRotation(VerticalAngle, HorizontalAngle, 0);  // float InPitch, float InYaw, float InRoll
+  FRotator ResultRotation = UKismetMathLibrary::ComposeRotators(
+    LaserRotation,
+    LidarBodyRotation
   );
 
   const auto Range = Description.Range;
-  FVector EndTrace = Range * UKismetMathLibrary::GetForwardVector(ResultRot) + LidarBodyLoc;
+  FVector EndTrace = Range * UKismetMathLibrary::GetForwardVector(ResultRotation) + LidarBodyLocation;
   
-  GetWorld()->ParallelLineTraceSingleByChannel(
-    HitInfo,
-    LidarBodyLoc,
+  return GetWorld()->ParallelLineTraceSingleByChannel(
+    HitResult,
+    LidarBodyLocation,
     EndTrace,
     ECC_GameTraceChannel2,
     TraceParams,
     FCollisionResponseParams::DefaultResponseParam
   );
-
-  if (HitInfo.bBlockingHit) {
-    HitResult = HitInfo;
-    return true;
-  } else {
-    return false;
-  }
 }

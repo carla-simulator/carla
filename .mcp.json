@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "carla": {
+      "type": "stdio",
+      "command": "node",
+      "args": ["Util/AgenticTools/bin/carla-agentic-tools.js"]
+    }
+  }
+}

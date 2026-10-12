@@ -85,6 +85,23 @@ namespace client {
     /// @note The function returns the rotation of the vehicle based on the it's physics
     float GetWheelSteerAngle(WheelLocation wheel_location);
 
+    /// Sets the spin angle of a wheel, in degrees (affects the bone of the car skeleton, not the physics)
+    void SetWheelPitchAngle(WheelLocation wheel_location, float angle_in_deg);
+
+    /// Return the spin angle of a wheel, in degrees
+    float GetWheelPitchAngle(WheelLocation wheel_location);
+
+    /// Sets the suspension compression of a wheel, in meters (affects the bone of the car skeleton, not the physics)
+    void SetWheelSuspensionOffset(WheelLocation wheel_location, float offset);
+
+    /// Return the suspension compression of a wheel, in meters
+    float GetWheelSuspensionOffset(WheelLocation wheel_location);
+
+    /// Enables or disables the wheel animation override, in which the wheels
+    /// show only the values set through the wheel setters (affects the bones
+    /// of the car skeleton, not the physics)
+    void SetWheelAnimationOverride(bool enabled);
+
     /// Return the control last applied to this vehicle.
     ///
     /// @note This function does not call the simulator, it returns the data

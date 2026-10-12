@@ -165,6 +165,16 @@ namespace client {
 
     void ResetAllTrafficLights();
 
+    /// Spawns a static procedural mesh with collision. Vertices are a flat
+    /// (x, y, z) triple list in metres, client coordinate frame; triangles
+    /// index vertex triples. Material is a semantic hint ("grass", "road",
+    /// "dirt", "sidewalk") or a full UE object path. The mesh lives until
+    /// the world is reloaded.
+    void SpawnCustomMesh(
+        const std::vector<float> &vertices,
+        const std::vector<uint32_t> &triangles,
+        const std::string &material);
+
     SharedPtr<LightManager> GetLightManager() const;
 
     DebugHelper MakeDebugHelper() const {
@@ -223,6 +233,22 @@ namespace client {
         const rpc::MaterialParameter& parameter,
         const rpc::TextureFloatColor& Texture);
 
+    /// Light the scene with an environment map: an equirectangular linear
+    /// RGB(A) float panorama in the CARLA world frame (column 0 = azimuth 0 =
+    /// +X, azimuth grows toward +Y; row 0 = zenith) becomes the sky light's
+    /// cubemap (ambient + reflections) at the given intensity, replacing the
+    /// real-time atmosphere capture until ClearSkyLightMap. Persists across
+    /// weather changes; dropped by a level load (LoadWorld / ReloadWorld), so
+    /// set it again after loading. face_size is the cubemap resolution.
+    void SetSkyLightMap(
+        const rpc::TextureFloatColor& panorama,
+        float intensity = 1.0f,
+        int32_t face_size = 512);
+
+    void ClearSkyLightMap();
+
+    bool HasSkyLightMap() const;
+
     void ApplyTexturesToObject(
         const std::string &actor_name,
         const rpc::TextureColor& diffuse_texture,
@@ -238,6 +264,15 @@ namespace client {
         const rpc::TextureFloatColor& ao_roughness_metallic_emissive_texture);
 
     std::vector<std::string> GetNamesOfAllObjects() const;
+
+    /// Set whether to publish ROS2 TF information
+    void SetPublishTF(bool publish_tf);
+
+    /// Get whether ROS2 TF information is being published
+    bool GetPublishTF() const;
+
+    /// Get all ego spawn points available in the level.
+    std::vector<geom::Transform> GetEgoSpawnPoints() const;
 
   private:
 

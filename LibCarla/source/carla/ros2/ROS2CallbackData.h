@@ -33,12 +33,23 @@ namespace ros2 {
     float jerk;
   };
 
+  /// Control decoded from Autoware's /control/command/control_cmd:
+  /// longitudinal acceleration [m/s^2] + steering (CARLA sign convention,
+  /// already passed through the AutowareSteeringCompensation LUT).
+  struct VehicleAccelerationControl
+  {
+    float acceleration;
+    float steer;
+    float steer_speed;
+  };
+
   struct MessageControl
   {
     const char* message;
   };
 
-  using ROS2CallbackData = std::variant<VehicleControl, AckermannControl>;
+  using ROS2CallbackData =
+      std::variant<VehicleControl, AckermannControl, VehicleAccelerationControl>;
   using ROS2MessageCallbackData = std::variant<MessageControl>;
 
   using ActorCallback = std::function<void(void *actor, ROS2CallbackData data)>;

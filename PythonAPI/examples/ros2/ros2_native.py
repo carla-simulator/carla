@@ -78,6 +78,13 @@ def main(args):
 
         world = client.get_world()
 
+        # Disable TF publishing if requested
+        if getattr(args, 'disable_tf', False):
+            world.set_publish_tf(False)
+            logging.info("TF publishing disabled")
+        else:
+            logging.info("TF publishing enabled: %s", world.get_publish_tf())
+
         original_settings = world.get_settings()
         settings = world.get_settings()
 
@@ -150,6 +157,7 @@ if __name__ == '__main__':
     argparser.add_argument('--port', metavar='P', default=2000, type=int, help='TCP port of CARLA Simulator (default: 2000)')
     argparser.add_argument('-f', '--file', default='', required=True, help='File to be executed')
     argparser.add_argument('-v', '--verbose', action='store_true', dest='debug', help='print debug information')
+    argparser.add_argument('--disable-tf', action='store_true', dest='disable_tf', help='disable ROS2 TF publishing')
     argparser.add_argument('--tm-port', metavar='P', default=8000, type=int, help='Port of the Traffic Manager to register the autopilot vehicle with (default: 8000). Must match the port used by generate_traffic.py.')
     argparser.add_argument('--delta', metavar='S', default=0.05, type=float, help='Fixed simulation time step in seconds, applied only when this client becomes the synchronous master (default: 0.05)')
     sync_group = argparser.add_mutually_exclusive_group()

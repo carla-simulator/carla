@@ -44,6 +44,8 @@ private:
 	static bool JsonToFBlueprintParameters(const TSharedPtr<FJsonObject> JsonObject, FBlueprintParameters& OutBlueprintParams);
 	static bool JsonToFBlueprintParametersArray(const FString& JsonString, TArray<FBlueprintParameters>& OutBlueprintParamsArray);
 
+	virtual void ReleaseContentPack(const FString &MountPoint) override;
+
 protected:
 	UPROPERTY(EditAnywhere)
 	TArray<FActorDefinition> Definitions;

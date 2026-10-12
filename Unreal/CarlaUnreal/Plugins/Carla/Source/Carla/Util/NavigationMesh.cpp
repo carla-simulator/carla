@@ -6,6 +6,7 @@
 
 #include "Carla/Util/NavigationMesh.h"
 #include "Carla.h"
+#include "Carla/ContentPacks/ContentPackManager.h"
 
 #include <util/ue-header-guard-begin.h>
 #include "Misc/FileHelper.h"
@@ -28,7 +29,37 @@ TArray<uint8> FNavigationMesh::Load(FString MapName)
   const auto FileName = MapName + ".bin";
 
   TArray<FString> Files;
-  IFileManager::Get().FindFilesRecursive(Files, *FPaths::ProjectContentDir(), *FileName, true, false, false);
+
+  // Generated OpenDRIVE worlds get their navmesh built into Saved/Nav/ (the
+  // content dir is pak-backed in a packaged build); that copy is current.
+  const FString SavedFilePath = FPaths::ConvertRelativePathToFull(
+      FPaths::ProjectSavedDir() / TEXT("Nav") / FileName);
+  if (IFileManager::Get().FileExists(*SavedFilePath))
+  {
+    Files.Add(SavedFilePath);
+  }
+
+  // Mounted content packs ship <Content>/Maps/Nav/<Map>.bin.
+  if (const UCarlaContentPackManager *ContentPacks = UCarlaContentPackManager::Get())
+  {
+    for (const FString &PackContentDir : ContentPacks->GetPackContentDirs())
+    {
+      if (Files.Num())
+      {
+        break;
+      }
+      const FString PackFilePath = PackContentDir / TEXT("Maps/Nav") / FileName;
+      if (IFileManager::Get().FileExists(*PackFilePath))
+      {
+        Files.Add(PackFilePath);
+      }
+    }
+  }
+
+  if (!Files.Num())
+  {
+    IFileManager::Get().FindFilesRecursive(Files, *FPaths::ProjectContentDir(), *FileName, true, false, false);
+  }
 
   TArray<uint8> Content;
 

@@ -16,6 +16,7 @@ namespace carla {
 namespace traffic_manager {
 
 using namespace constants::FrameMemory;
+using namespace constants::WorldInfoRefresh;
 
 TrafficManagerLocal::TrafficManagerLocal(
   std::vector<float> longitudinal_PID_parameters,
@@ -73,7 +74,6 @@ TrafficManagerLocal::TrafficManagerLocal(
                                       localization_frame,
                                       collision_frame,
                                       tl_frame,
-                                      world,
                                       control_frame,
                                       random_device,
                                       local_map,
@@ -124,7 +124,20 @@ void TrafficManagerLocal::SetupLocalMap() {
   if (!files.empty()) {
     auto content = episode_proxy.Lock()->GetCacheFile(files[0], true);
     if (content.size() != 0) {
-      local_map->Load(content);
+      if (!local_map->Load(content)) {
+        // The copy in the client's file cache (~/carlaCache) is kept for ever once
+        // downloaded, so a rejected cache is most likely a stale local copy: fetch
+        // the server's current file once and try again before rebuilding from the
+        // OpenDRIVE.
+        log_warning("fetching the Traffic Manager cache", files[0], "from the server again");
+        episode_proxy.Lock()->RequestFile(files[0]);
+        content = episode_proxy.Lock()->GetCacheFile(files[0], false);
+        local_map = std::make_shared<InMemoryMap>(world_map);
+        if (content.size() == 0 || !local_map->Load(content)) {
+          local_map = std::make_shared<InMemoryMap>(world_map);
+          local_map->SetUp();
+        }
+      }
     } else {
       log_warning("No InMemoryMap cache found. Setting up local map. This may take a while...");
       local_map->SetUp();
@@ -153,7 +166,6 @@ void TrafficManagerLocal::Start() {
 void TrafficManagerLocal::Step() {
   bool synchronous_mode = parameters.GetSynchronousMode();
   bool hybrid_physics_mode = parameters.GetHybridPhysicsMode();
-  parameters.SetMaxBoundaries(20.0f, episode_proxy.Lock()->GetEpisodeSettings().actor_active_distance);
 
   // Skipping velocity update if elapsed time is less than 0.05s in asynchronous, hybrid mode.
   if (!synchronous_mode && hybrid_physics_mode) {
@@ -166,14 +178,24 @@ void TrafficManagerLocal::Step() {
     previous_update_instance = current_instance;
   }
 
+  // Read from the episode state the client already holds, so no round trip.
+  const carla::client::Timestamp timestamp = world.GetSnapshot().GetTimestamp();
+
   // Stop TM from processing the same frame more than once
   if (!synchronous_mode) {
-    carla::client::Timestamp timestamp = world.GetSnapshot().GetTimestamp();
     if (timestamp.frame == last_frame) {
+      std::this_thread::sleep_for(SNAPSHOT_POLL_PERIOD);
       return;
     }
     last_frame = timestamp.frame;
   }
+
+  if (synchronous_mode ||
+      IsRefreshDue(timestamp.elapsed_seconds, last_settings_update, EPISODE_SETTINGS_REFRESH_PERIOD)) {
+    episode_settings = episode_proxy.Lock()->GetEpisodeSettings();
+    last_settings_update = timestamp.elapsed_seconds;
+  }
+  parameters.SetMaxBoundaries(20.0f, episode_settings.actor_active_distance);
 
   std::unique_lock<std::mutex> registration_lock(registration_mutex);
   // Updating simulation state, actor life cycle and performing necessary cleanup.
@@ -219,24 +241,58 @@ void TrafficManagerLocal::Step() {
     localization_stage.Update(index);
   }
   for (unsigned long index = 0u; index < vehicle_id_list.size(); ++index) {
+    if (!localization_frame[index].localized) {
+      continue;
+    }
     collision_stage.Update(index);
   }
   collision_stage.ClearCycleCache();
-  vehicle_light_stage.UpdateWorldInfo();
+  vehicle_light_stage.UpdateWorldInfo(timestamp.elapsed_seconds, synchronous_mode);
+  motion_plan_stage.SetCycleTimestamp(timestamp);
   for (unsigned long index = 0u; index < vehicle_id_list.size(); ++index) {
+    if (!localization_frame[index].localized) {
+      continue;
+    }
     traffic_light_stage.Update(index);
     motion_plan_stage.Update(index);
     vehicle_light_stage.Update(index);
   }
 
+  // A vehicle skipped above never had its control command written, and the
+  // default-constructed command would reach the server as an empty spawn
+  // request ("Invalid ActorDescription '' (UId=0)"). Drop those slots; the
+  // commands appended past the per-vehicle range (vehicle lights) are kept.
+  const bool any_skipped = std::any_of(
+      localization_frame.begin(),
+      localization_frame.begin() + static_cast<long>(vehicle_id_list.size()),
+      [](const LocalizationData &data) { return !data.localized; });
+  if (any_skipped) {
+    ControlFrame filtered_frame;
+    filtered_frame.reserve(control_frame.size());
+    for (unsigned long index = 0u; index < control_frame.size(); ++index) {
+      if (index < vehicle_id_list.size() && !localization_frame[index].localized) {
+        continue;
+      }
+      filtered_frame.push_back(std::move(control_frame[index]));
+    }
+    control_frame = std::move(filtered_frame);
+  }
+
   registration_lock.unlock();
 
-  // Sending the current cycle's batch command to the simulator.
+  // Sending the current cycle's batch command to the simulator. Synchronous
+  // mode must apply it before the next tick; async waiting costs a server frame.
   if (synchronous_mode) {
     episode_proxy.Lock()->ApplyBatchSync(control_frame, false);
-  } else {
-    if (control_frame.size() > 0){
+  } else if (!control_frame.empty()) {
+    // An unwaited batch is acknowledged on receipt, not on application, so
+    // periodically waiting is what bounds the queue ahead of the game thread.
+    if (IsBatchSyncDue(unwaited_control_batches, MAX_UNWAITED_CONTROL_BATCHES)) {
       episode_proxy.Lock()->ApplyBatchSync(control_frame, false);
+      unwaited_control_batches = 0u;
+    } else {
+      episode_proxy.Lock()->ApplyBatch(control_frame, false);
+      ++unwaited_control_batches;
     }
   }
 }
@@ -279,6 +335,12 @@ void TrafficManagerLocal::Stop() {
   collision_stage.Reset();
   traffic_light_stage.Reset();
   motion_plan_stage.Reset();
+  vehicle_light_stage.Reset();
+
+  last_frame = 0;
+  episode_settings = rpc::EpisodeSettings{};
+  last_settings_update = -std::numeric_limits<double>::infinity();
+  unwaited_control_batches = MAX_UNWAITED_CONTROL_BATCHES;
 
   buffer_map.clear();
   localization_frame.clear();

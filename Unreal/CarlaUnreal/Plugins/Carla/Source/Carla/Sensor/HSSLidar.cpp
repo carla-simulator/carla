@@ -70,11 +70,9 @@ void AHSSLidar::Set(const FLidarDescription &LidarDescription)
   DropOffGenActive = Description.DropOffGenRate > std::numeric_limits<float>::epsilon();
 }
 
-void AHSSLidar::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaTime)
+void AHSSLidar::SendData(const float DeltaTime)
 {
-  TRACE_CPUPROFILER_EVENT_SCOPE(AHSSLidar::PostPhysTick);
-  SimulateLidar(DeltaTime);
-
+  TRACE_CPUPROFILER_EVENT_SCOPE(AHSSLidar::SendData);
   auto DataStream = GetDataStream(*this);
   auto SensorTransform = DataStream.GetSensorTransform();
 
@@ -104,11 +102,11 @@ void AHSSLidar::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaTime
 }
 
 AHSSLidar::FDetection AHSSLidar::ComputeDetection(
-    const FHitResult& HitInfo, const FTransform& SensorTransf) const
+    const FHitResult& HitInfo, const FTransform& InverseSensorTransform) const
 {
   FDetection Detection;
   const FVector HitPoint = HitInfo.ImpactPoint;
-  Detection.point = SensorTransf.Inverse().TransformPosition(HitPoint);
+  Detection.point = InverseSensorTransform.TransformPosition(HitPoint);
 
   const float Distance = Detection.point.Length();
 
@@ -125,6 +123,11 @@ AHSSLidar::FDetection AHSSLidar::ComputeDetection(
 void AHSSLidar::PreprocessRays(uint32_t Channels, uint32_t MaxPointsPerChannel)
 {
   Super::PreprocessRays(Channels, MaxPointsPerChannel);
+
+  if (!DropOffGenActive)
+  {
+    return;
+  }
 
   for (auto ch = 0u; ch < Channels; ch++) {
     for (auto p = 0u; p < MaxPointsPerChannel; p++) {
@@ -149,52 +152,30 @@ bool AHSSLidar::PostprocessDetection(FDetection& Detection) const
     return RandomEngine->GetUniformFloat() < DropOffAlpha * Intensity + DropOffBeta;
 }
 
-void AHSSLidar::ComputeAndSaveDetections(const FTransform& SensorTransform) {
-  for (auto idxChannel = 0u; idxChannel < Description.Channels; ++idxChannel)
-    PointsPerChannel[idxChannel] = RecordedHits[idxChannel].size();
+void AHSSLidar::ResetDetections(uint32_t Channels, uint32_t MaxPointsPerChannel)
+{
+  ResetChannelDetections(Detections, Channels, MaxPointsPerChannel);
+}
 
-  LidarData.ResetMemory(PointsPerChannel);
+void AHSSLidar::WriteDetectionAsync(uint32_t Channel, const FHitResult& HitInfo, const FTransform& InverseSensorTransform, const FVector& /*SensorLocation*/)
+{
+  DEBUG_ASSERT(GetChannelCount() > Channel);
+  Detections[Channel].emplace_back(ComputeDetection(HitInfo, InverseSensorTransform));
+}
+
+void AHSSLidar::ComputeAndSaveDetections(const FTransform& SensorTransform)
+{
+  TRACE_CPUPROFILER_EVENT_SCOPE_STR(__FUNCTION__);
+
+  CompactAndWriteDetections(Detections, PointsPerChannel, Description.Channels, LidarData,
+      [this](FDetection& Detection) { return PostprocessDetection(Detection); });
+
 #if WITH_EDITOR
-  if(bSavingDataToDisk)
+  if (bSavingDataToDisk)
   {
-    PointCloudResetMemory();
+    CopyDetectionsToPointCloud(Detections, PointsPerChannel, PointCloudLidarData);
   }
 #endif
-
-  for (auto idxChannel = 0u; idxChannel < Description.Channels; ++idxChannel) {
-    for (auto& hit : RecordedHits[idxChannel]) {
-      FDetection Detection = ComputeDetection(hit, SensorTransform);
-      if (PostprocessDetection(Detection))
-      {
-        LidarData.WritePointSync(Detection);
-#if WITH_EDITOR
-        if(bSavingDataToDisk)
-        {
-          PointCloudWritePointSync(Detection);
-        }
-#endif
-      }
-      else
-        PointsPerChannel[idxChannel]--;
-    }
-  }
-
-  LidarData.WriteChannelCount(PointsPerChannel);
-}
-
-void AHSSLidar::PointCloudResetMemory()
-{
-  PointCloudLidarData.Empty();
-  PointCloudLidarData.Reserve(
-      static_cast<uint32_t>(std::accumulate(PointsPerChannel.begin(), PointsPerChannel.end(), 0)) * 4);
-}
-
-void AHSSLidar::PointCloudWritePointSync(const FDetection& Detection)
-{
-  PointCloudLidarData.Emplace(Detection.point.x);
-  PointCloudLidarData.Emplace(Detection.point.y);
-  PointCloudLidarData.Emplace(Detection.point.z);
-  PointCloudLidarData.Emplace(Detection.intensity);
 }
 
 // SimulateLidar(float DeltaTime)
@@ -207,7 +188,7 @@ static float SnapToStep(float value, float step)
   return std::round(value / step) * step;
 }
 
-void AHSSLidar::SimulateLidar(const float DeltaTime)
+void AHSSLidar::SimulateLidar(const float DeltaTime, bool bLockPhysics)
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(AHSSLidar::SimulateLidar);
   const uint32 ChannelCount = Description.Channels;
@@ -215,7 +196,7 @@ void AHSSLidar::SimulateLidar(const float DeltaTime)
   // horizontal_resolution and horizontal_fov are user-supplied attributes;
   // clamp them to safe positive values before dividing. A zero or negative
   // resolution would divide to inf/NaN and then cast to a huge uint32,
-  // triggering an OOM-sized allocation in ResetRecordedHits/PreprocessRays.
+  // triggering an OOM-sized allocation in ResetDetections/PreprocessRays.
   constexpr float MinHorizontalResolution = 0.01f;
   const float HorizontalResolution = FMath::Max(
       SnapToStep(Description.HorizontalResolution, MinHorizontalResolution),
@@ -236,10 +217,15 @@ void AHSSLidar::SimulateLidar(const float DeltaTime)
 
   check(ChannelCount == LaserAngles.Num());
 
-  ResetRecordedHits(ChannelCount, PointsToScanWithOneLaser);
+  ResetDetections(ChannelCount, PointsToScanWithOneLaser);
   PreprocessRays(ChannelCount, PointsToScanWithOneLaser);
 
-  auto LockedPhysObject = FPhysicsObjectExternalInterface::LockRead(GetWorld()->GetPhysicsScene());
+  const FTransform ActorTransform = GetTransform();
+  const FTransform InverseSensorTransform = ActorTransform.Inverse();
+  const FVector LidarBodyLocation = ActorTransform.GetLocation();
+  const FRotator LidarBodyRotation = ActorTransform.Rotator();
+
+  auto RunChannelRaycasts = [&]()
   {
     TRACE_CPUPROFILER_EVENT_SCOPE(ParallelFor);
     ParallelFor(ChannelCount, [&](int32 idxChannel) {
@@ -250,20 +236,35 @@ void AHSSLidar::SimulateLidar(const float DeltaTime)
       TraceParams.bReturnPhysicalMaterial = false;
 
       const float VertAngle = LaserAngles[idxChannel];
+      const std::vector<bool>& ChannelPreprocessCondition = RayPreprocessCondition[idxChannel];
+
       for (auto idxPtsOneLaser = 0u; idxPtsOneLaser < PointsToScanWithOneLaser; idxPtsOneLaser++) {
+        if (!ChannelPreprocessCondition[idxPtsOneLaser])
+        {
+          continue;
+        }
+
         FHitResult HitResult;
         const float HorizAngle =
             -HorizontalFov / 2.0f + static_cast<float>(idxPtsOneLaser) * HorizontalResolution;
-        const bool PreprocessResult = RayPreprocessCondition[idxChannel][idxPtsOneLaser];
 
-        if (PreprocessResult && ShootLaser(VertAngle, HorizAngle, HitResult, TraceParams)) {
-          WritePointAsync(idxChannel, HitResult);
+        if (ShootLaser(VertAngle, HorizAngle, HitResult, TraceParams, LidarBodyLocation, LidarBodyRotation)) {
+          WriteDetectionAsync(idxChannel, HitResult, InverseSensorTransform, LidarBodyLocation);
         }
       };
     });
-  }
-  LockedPhysObject.Release();
+  };
 
-  FTransform ActorTransf = GetTransform();
-  ComputeAndSaveDetections(ActorTransf);
+  if (bLockPhysics)
+  {
+    auto LockedPhysObject = FPhysicsObjectExternalInterface::LockRead(GetWorld()->GetPhysicsScene());
+    RunChannelRaycasts();
+    LockedPhysObject.Release();
+  }
+  else
+  {
+    RunChannelRaycasts();
+  }
+
+  ComputeAndSaveDetections(ActorTransform);
 }

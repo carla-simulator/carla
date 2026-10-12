@@ -8,15 +8,13 @@
 
 #include "carla/Logging.h"
 #include "carla/ros2/publishers/PublisherImpl.h"
-#include "carla/ros2/types/NavSatFix.h"
-#include "carla/ros2/types/NavSatFixPubSubTypes.h"
+#include "carla/ros2/types/msg/NavSatFix.h"
 
 namespace carla {
 namespace ros2 {
 
 struct CarlaGnssMsgTraits {
-  using msg_type = sensor_msgs::msg::NavSatFix;
-  using msg_pubsub_type = sensor_msgs::msg::NavSatFixPubSubType;
+  using msg_type = msg::NavSatFix;
 };
 
 CarlaGNSSPublisher::CarlaGNSSPublisher(
@@ -41,13 +39,13 @@ bool CarlaGNSSPublisher::Write(
     double longitude,
     double altitude) {
   auto *message = _impl->GetMessage();
-  message->header().stamp().sec(seconds);
-  message->header().stamp().nanosec(nanoseconds);
-  message->header().frame_id(GetFrameId());
+  message->header.stamp.sec = seconds;
+  message->header.stamp.nanosec = nanoseconds;
+  message->header.frame_id = GetFrameId();
 
-  message->latitude(latitude);
-  message->longitude(longitude);
-  message->altitude(altitude);
+  message->latitude = latitude;
+  message->longitude = longitude;
+  message->altitude = altitude;
   return true;
 }
 

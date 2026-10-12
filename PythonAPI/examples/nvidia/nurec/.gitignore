@@ -1,0 +1,5 @@
+.venv/
+PhysicalAI-Autonomous-Vehicles-NuRec/
+__pycache__/
+*.py[cod]
+.pytest_cache/

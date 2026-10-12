@@ -22,10 +22,10 @@
     if (!AreClientsListening()) // Ideally, check whether there are any clients.
         return;
 
-    auto FrameIndex = FCarlaEngine::GetFrameCounter();
+    auto CaptureContext = MakeCaptureContext(*this);
     ImageUtil::ReadImageDataAsync(
         *GetCaptureRenderTarget(),
-        [this](
+        [this, CaptureContext](
             const void* MappedPtr,
             size_t RowPitch,
             size_t BufferHeight,
@@ -37,7 +37,7 @@
             SendDataToClient(
                 *this,
                 ImageData,
-                FrameIndex);
+                CaptureContext);
             return true;
         });
 

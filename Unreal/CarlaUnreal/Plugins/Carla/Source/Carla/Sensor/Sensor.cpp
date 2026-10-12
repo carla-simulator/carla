@@ -81,6 +81,7 @@ void ASensor::Tick(const float DeltaTime)
   }
   
   ReadyToTick = true;
+  ReadyToTickDeltaSeconds = DeltaTime;
   PrePhysTick(DeltaTime);
 }
 
@@ -128,12 +129,15 @@ void ASensor::EndPlay(EEndPlayReason::Type EndPlayReason)
   }
 }
 
-void ASensor::PostPhysTickInternal(UWorld *World, ELevelTick TickType, float DeltaSeconds)
+void ASensor::PostPhysTickInternal(UWorld *World, ELevelTick TickType, [[maybe_unused]] float DeltaSeconds)
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(ASensor::PostPhysTickInternal);
   if(ReadyToTick)
   {
-    PostPhysTick(World, TickType, DeltaSeconds);
+    // DeltaSeconds is only the current physics substep's delta; this sensor's
+    // own tick interval may span several substeps, so the correct elapsed
+    // time is ReadyToTickDeltaSeconds (captured in Tick(), see Sensor.h).
+    PostPhysTick(World, TickType, ReadyToTickDeltaSeconds);
     ReadyToTick = false;
   }
 }
