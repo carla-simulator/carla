@@ -25,11 +25,30 @@ class UCarlaEpisode;
 class UTrafficLightController;
 class FCarlaActor;
 
+// Names and actor-relative transforms of an actor's scene components, bones and
+// authored sockets, so a dormant actor answers the same queries as a live one.
+struct FActorRigSnapshot
+{
+  TArray<FString> ComponentNames;
+  TArray<FTransform> ComponentTransforms;
+  TArray<FString> BoneNames;
+  TArray<FTransform> BoneTransforms;
+  TArray<FString> SocketNames;
+  TArray<FTransform> SocketTransforms;
+
+  // Reads the rig off a live actor. Every transform is relative to the actor,
+  // so composing it with the actor transform gives world space either way.
+  static FActorRigSnapshot FromActor(const AActor *Actor);
+};
+
 class FActorData
 {
 public:
 
   FDVector Location;
+
+  // Recorded when the actor goes dormant, read while it has no AActor.
+  FActorRigSnapshot Rig;
 
   FQuat Rotation;
 

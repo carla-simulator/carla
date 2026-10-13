@@ -364,6 +364,16 @@
         X-axis rotation angle.
     # - METHODS ----------------------------
     methods:
+    - def_name: get_normalized
+      return: carla.Rotation
+      doc: >
+        Returns the rotation with every angle wrapped into its standard range.
+    # --------------------------------------
+    - def_name: get_normalized
+      return: carla.Rotation
+      doc: >
+        Returns the rotation with every angle wrapped into its standard range.
+    # --------------------------------------
     - def_name: __init__
       params:
       - param_name: pitch
@@ -440,6 +450,105 @@
         Parses the axis' orientations to string.
     # --------------------------------------
 
+  - class_name: Quaternion
+    # - DESCRIPTION ------------------------
+    doc: >
+      Rotation expressed as a quaternion, an alternative to carla.Rotation that does not suffer from gimbal lock and interpolates smoothly.
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: x
+      type: float
+      doc: >
+        X component of the vector part.
+    - var_name: 'y'
+      type: float
+      doc: >
+        Y component of the vector part.
+    - var_name: z
+      type: float
+      doc: >
+        Z component of the vector part.
+    - var_name: w
+      type: float
+      doc: >
+        Scalar part.
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __init__
+      params:
+      - param_name: x
+        type: float
+        default: 0.0
+      - param_name: 'y'
+        type: float
+        default: 0.0
+      - param_name: z
+        type: float
+        default: 0.0
+      - param_name: w
+        type: float
+        default: 1.0
+      return: carla.Quaternion
+      doc: >
+        Builds a quaternion from its components. A carla.Rotation can be passed instead.
+    # --------------------------------------
+    - def_name: conjugate
+      return: carla.Quaternion
+      doc: >
+        Returns the quaternion with its vector part negated.
+    # --------------------------------------
+    - def_name: get_forward_vector
+      return: carla.Vector3D
+      doc: >
+        Returns the unit vector pointing forward in the rotation's frame.
+    # --------------------------------------
+    - def_name: get_right_vector
+      return: carla.Vector3D
+      doc: >
+        Returns the unit vector pointing right in the rotation's frame.
+    # --------------------------------------
+    - def_name: get_up_vector
+      return: carla.Vector3D
+      doc: >
+        Returns the unit vector pointing up in the rotation's frame.
+    # --------------------------------------
+    - def_name: inverse
+      return: carla.Quaternion
+      doc: >
+        Returns the quaternion that undoes this rotation.
+    # --------------------------------------
+    - def_name: length
+      return: float
+      doc: >
+        Returns the norm of the quaternion.
+    # --------------------------------------
+    - def_name: rotator
+      return: carla.Rotation
+      doc: >
+        Returns the same rotation as pitch, yaw and roll.
+    # --------------------------------------
+    - def_name: to_right_handed_rotation
+      return: carla.RightHandedRotation
+      doc: >
+        Returns the same rotation in a right-handed frame.
+    # --------------------------------------
+    - def_name: unit_quaternion
+      return: carla.Quaternion
+      doc: >
+        Returns the quaternion scaled to unit length.
+    # --------------------------------------
+    - def_name: __eq__
+      params:
+      - param_name: other
+        type: carla.Quaternion
+    # --------------------------------------
+    - def_name: __ne__
+      params:
+      - param_name: other
+        type: carla.Quaternion
+    # --------------------------------------
+    - def_name: __str__
+    # --------------------------------------
   - class_name: Transform
     # - DESCRIPTION ------------------------
     doc: >
