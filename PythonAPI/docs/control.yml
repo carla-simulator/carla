@@ -319,6 +319,60 @@
     - def_name: __str__
     # --------------------------------------
 
+  - class_name: BoneTransformDataIn
+    # - DESCRIPTION ------------------------
+    doc: >
+      Pose to apply to one bone, used in the list carla.WalkerBoneControlIn.bone_transforms.
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: name
+      type: str
+      doc: >
+        Name of the bone.
+    - var_name: transform
+      type: carla.Transform
+      doc: >
+        Pose to apply to the bone, relative to its parent bone.
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __str__
+    # --------------------------------------
+  - class_name: BoneTransformDataOut
+    # - DESCRIPTION ------------------------
+    doc: >
+      Pose of one bone, returned in the list carla.WalkerBoneControlOut.bone_transforms.
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: name
+      type: str
+      doc: >
+        Name of the bone.
+    - var_name: world
+      type: carla.Transform
+      doc: >
+        Pose of the bone in world coordinates.
+    - var_name: component
+      type: carla.Transform
+      doc: >
+        Pose of the bone relative to the skeletal mesh component that owns it.
+    - var_name: relative
+      type: carla.Transform
+      doc: >
+        Pose of the bone relative to its parent bone.
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __eq__
+      params:
+      - param_name: other
+        type: carla.BoneTransformDataOut
+    # --------------------------------------
+    - def_name: __ne__
+      params:
+      - param_name: other
+        type: carla.BoneTransformDataOut
+    # --------------------------------------
+    - def_name: __str__
+    # --------------------------------------
   - class_name: VehiclePhysicsControl
      # - DESCRIPTION ------------------------
     doc: >
@@ -326,6 +380,12 @@
 
     # - PROPERTIES -------------------------
     instance_variables:
+    - var_name: drag_area
+      type: float
+      var_units: m<sup>2</sup>
+      doc: >
+        Frontal area used to compute aerodynamic drag.
+    # --------------------------------------
     - var_name: torque_curve
       type: list(carla.Vector2D)
       doc: >
@@ -449,7 +509,7 @@
       doc: >
         Downforce coefficient of the vehicle (default 0.3).
     # --------------------------------------
-    - var_name: intertia_tensor_scale
+    - var_name: inertia_tensor_scale
       type: carla.Vector3D
       var_units: unitless
       doc: >
@@ -600,7 +660,50 @@
       Class that defines specific physical parameters for wheel objects that will be part of a carla.VehiclePhysicsControl to simulate vehicle it as a material object.
     # - PROPERTIES -------------------------
     instance_variables:
-    - var_name: axel_type
+    - var_name: wheel_index
+      type: int
+      doc: >
+        Index of the wheel in the vehicle's wheel list, being -1 when it has not been assigned yet.
+    # --------------------------------------
+    - var_name: velocity
+      type: carla.Vector3D
+      var_units: cm/s
+      doc: >
+        Velocity of the wheel, relative to the vehicle.
+    # --------------------------------------
+    - var_name: sweep_type
+      type: int
+      doc: >
+        Geometry the sweep tests against, being 0 simple collision and 1 complex collision.
+    # --------------------------------------
+    - var_name: sweep_shape
+      type: int
+      doc: >
+        Shape used to find the ground under the wheel, being 0 a ray, 1 a sphere and 2 the wheel's own collision shape. The later the slower.
+    # --------------------------------------
+    - var_name: old_location
+      type: carla.Location
+      var_units: centimeters
+      doc: >
+        Position the wheel had on the previous simulation step, relative to the vehicle.
+    # --------------------------------------
+    - var_name: location
+      type: carla.Location
+      var_units: centimeters
+      doc: >
+        Position of the wheel, relative to the vehicle.
+    # --------------------------------------
+    - var_name: lateral_slip_graph
+      type: list(carla.Vector2D)
+      doc: >
+        Curve of lateral friction against slip angle, as a list of points where x is the slip angle in degrees and y the friction multiplier.
+    # --------------------------------------
+    - var_name: external_torque_combine_method
+      type: int
+      doc: >
+        How an external torque is combined with the ones the vehicle already applies, being 0 ignore it, 1 replace them and 2 add to them.
+    # --------------------------------------
+    - var_name: axle_type
       type: float
       var_units: unitless
       doc: >
@@ -705,7 +808,7 @@
       doc: >
         Maximum brake torque.
     # --------------------------------------
-    - var_name: max_handbrake_torque
+    - var_name: max_hand_brake_torque
       type: float
       var_units: N*m
       doc: >
@@ -875,6 +978,89 @@
       params:
       - param_name: other
         type: carla.WheelPhysicsControl
+    # --------------------------------------
+    - def_name: __str__
+    # --------------------------------------
+  - class_name: WheelTelemetryData
+    # - DESCRIPTION ------------------------
+    doc: >
+      Simulation state of one wheel, returned inside a carla.VehicleTelemetryData.
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: lat_slip
+      type: float
+      var_units: degrees
+      doc: >
+        Lateral slip angle of the wheel.
+    - var_name: long_slip
+      type: float
+      doc: >
+        Longitudinal slip ratio of the wheel.
+    - var_name: omega
+      type: float
+      var_units: rad/s
+      doc: >
+        Angular velocity of the wheel.
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __eq__
+      params:
+      - param_name: other
+        type: carla.WheelTelemetryData
+    # --------------------------------------
+    - def_name: __ne__
+      params:
+      - param_name: other
+        type: carla.WheelTelemetryData
+    # --------------------------------------
+    - def_name: __str__
+    # --------------------------------------
+  - class_name: VehicleTelemetryData
+    # - DESCRIPTION ------------------------
+    doc: >
+      Simulation state of a vehicle and its wheels, returned by carla.Vehicle.get_telemetry_data().
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: speed
+      type: float
+      var_units: m/s
+      doc: >
+        Forward speed of the vehicle.
+    - var_name: steer
+      type: float
+      doc: >
+        Steering input, being -1.0 full left and 1.0 full right.
+    - var_name: throttle
+      type: float
+      doc: >
+        Throttle input, between 0.0 and 1.0.
+    - var_name: brake
+      type: float
+      doc: >
+        Brake input, between 0.0 and 1.0.
+    - var_name: engine_rpm
+      type: float
+      doc: >
+        Engine revolutions per minute.
+    - var_name: gear
+      type: int
+      doc: >
+        Gear the vehicle is in, being 0 neutral and negative values reverse.
+    - var_name: wheels
+      type: list(carla.WheelTelemetryData)
+      doc: >
+        State of each wheel, in the same order as carla.VehiclePhysicsControl.wheels.
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __eq__
+      params:
+      - param_name: other
+        type: carla.VehicleTelemetryData
+    # --------------------------------------
+    - def_name: __ne__
+      params:
+      - param_name: other
+        type: carla.VehicleTelemetryData
     # --------------------------------------
     - def_name: __str__
     # --------------------------------------

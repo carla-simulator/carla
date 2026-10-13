@@ -12,7 +12,7 @@
       __Note.__ So far, though there is a `vehicle` group, vehicle lights are not available as carla.Light objects. These have to be managed using carla.Vehicle and carla.VehicleLightState.
     # - PROPERTIES -------------------------
     instance_variables:
-    - var_name: None
+    - var_name: NONE
       doc: >
         All lights.
     - var_name: Vehicle

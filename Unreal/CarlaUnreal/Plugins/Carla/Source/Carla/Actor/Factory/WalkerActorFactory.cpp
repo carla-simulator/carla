@@ -150,6 +150,8 @@ TSharedPtr<FJsonObject> AWalkerActorFactory::FWalkerParametersToJsonObject(const
 
   JsonObject->SetNumberField(TEXT("Generation"), WalkerParams.Generation);
 
+  JsonObject->SetStringField(TEXT("SpecialType"), WalkerParams.SpecialType);
+
   JsonObject->SetBoolField(TEXT("CanUseWheelChair"), WalkerParams.bCanUseWheelChair);
 
   return JsonObject;
@@ -276,6 +278,8 @@ bool AWalkerActorFactory::JsonToFWalkerParameters(const TSharedPtr<FJsonObject> 
     {
         OutWalkerParams.bCanUseWheelChair = bCanUseWheelChair;
     }
+
+    JsonObject->TryGetStringField(TEXT("SpecialType"), OutWalkerParams.SpecialType);
 
     return true;
 }

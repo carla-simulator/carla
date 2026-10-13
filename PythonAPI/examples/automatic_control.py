@@ -272,7 +272,7 @@ class HUD(object):
         """Gets informations from the world at every tick"""
         self._server_clock.tick()
         self.server_fps = self._server_clock.get_fps()
-        self.frame = timestamp.frame_count
+        self.frame = timestamp.frame
         self.simulation_time = timestamp.elapsed_seconds
 
     def tick(self, world, clock):
