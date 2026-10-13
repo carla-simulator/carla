@@ -3,6 +3,10 @@ from . import SyncSmokeTest
 import carla
 import math
 
+# A wheel that jumps is off by far more than this; one that rolls, or holds for
+# a frame, is not.
+JUMP_TOLERANCE_DEG = 30.0
+
 
 class VehicleWheelSmokeTest(SyncSmokeTest):
     """Shared setup for the smoke tests that read a vehicle's wheels. Runs on
@@ -60,6 +64,30 @@ class VehicleWheelSmokeTest(SyncSmokeTest):
         self.assertEqual(
             len(bones), 4, "expected four wheel bones, found %s" % sorted(bones))
         return bones
+
+    def _assert_no_wheel_jump(self, vehicle, ticks, message):
+        """Ticks, checking that no wheel bone turns by more than the vehicle's
+        travel in any tick, give or take JUMP_TOLERANCE_DEG."""
+        radius = vehicle.get_physics_control().wheels[0].wheel_radius / 100.0
+        before = self._wheel_bones(vehicle)
+        before_transform = vehicle.get_transform()
+        for tick in range(ticks):
+            self._tick(vehicle)
+            after = self._wheel_bones(vehicle)
+            after_transform = vehicle.get_transform()
+            forward = before_transform.get_forward_vector()
+            moved = after_transform.location - before_transform.location
+            travel = moved.x * forward.x + moved.y * forward.y + moved.z * forward.z
+            expected = math.degrees(travel / radius)
+            for name in before:
+                spin = self._spin_between(before[name], after[name])
+                error = (spin - expected + 180.0) % 360.0 - 180.0
+                self.assertLess(
+                    abs(error), abs(expected) + JUMP_TOLERANCE_DEG,
+                    "%s: %s turned %.1f degrees in tick %d, in which the vehicle "
+                    "covered %.1f degrees worth of ground." % (
+                        message, name, spin, tick, expected))
+            before, before_transform = after, after_transform
 
     @staticmethod
     def _spin_between(before, after):
