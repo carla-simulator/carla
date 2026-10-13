@@ -9,10 +9,19 @@ Camera transform: Transform(Location(x=-88.099998, y=-70.800003, z=1.550000), Ro
 Camera resolution: 1848x1016
 
 weather.cloudiness = 20
-weather.precipitation = 0
+weather.dust_storm = 0.0
+weather.fog_density = 0.0056
+weather.fog_distance = 0.0
+weather.fog_falloff = 0.2
+weather.mie_scattering_scale = 0.0
+weather.precipitation = 0.0
+weather.precipitation_deposits = 0.0
+weather.rayleigh_scattering_scale = 0.0331
+weather.scattering_intensity = 0.0
 weather.sun_altitude_angle = 50
 weather.sun_azimuth_angle = 260
 weather.wetness = 10
+weather.wind_intensity = 0.35
 
 Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it.
 

@@ -112,7 +112,7 @@ class Entry(object):
 class Overview(object):
     """The looping animation a catalogue opens with, one actor fading into the next."""
 
-    def __init__(self, image, hold_ms=2000, fade_steps=9, fade_ms=60, scale=1.0):
+    def __init__(self, image, hold_ms=1200, fade_steps=4, fade_ms=60, scale=1.0):
         self.image = image
         self.hold_ms = hold_ms
         self.fade_steps = fade_steps
