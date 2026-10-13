@@ -47,6 +47,8 @@ void UCarlaVehicleAnimationInstance::NativeUpdateAnimation(float DeltaSeconds)
   else
   {
     bRollingWheels = false;
+    // So the first frame of rolling turns the wheels by that frame's travel.
+    TrackWheelLocations();
   }
   UpdateAxleOffsets(*Vehicle);
   UpdateBodyOffset(*Vehicle);
@@ -166,10 +168,9 @@ bool UCarlaVehicleAnimationInstance::ShouldRollWheels(const ACarlaWheeledVehicle
       !Vehicle.IsWheelAnimationOverridden();
 }
 
-void UCarlaVehicleAnimationInstance::BeginRolling()
+void UCarlaVehicleAnimationInstance::InitWheels()
 {
   const UChaosWheeledVehicleMovementComponent *Movement = GetWheeledVehicleComponent();
-  const TArray<FWheelAnimationData> &WheelPoses = GetWheelPoses();
   const FTransform MeshTransform = GetSkelMeshComponent()->GetComponentTransform();
   const USkeletalMesh *SkeletalMesh = GetSkelMeshComponent()->GetSkeletalMeshAsset();
 
@@ -188,8 +189,39 @@ void UCarlaVehicleAnimationInstance::BeginRolling()
       }
     }
     Wheel.LastLocation = MeshTransform.TransformPosition(Wheel.RestLocation);
+  }
+}
+
+void UCarlaVehicleAnimationInstance::TrackWheelLocations()
+{
+  const UChaosWheeledVehicleMovementComponent *Movement = GetWheeledVehicleComponent();
+  if (Movement == nullptr)
+  {
+    return;
+  }
+  if (Wheels.Num() != Movement->WheelSetups.Num())
+  {
+    InitWheels();
+    return;
+  }
+  const FTransform MeshTransform = GetSkelMeshComponent()->GetComponentTransform();
+  for (FWheel &Wheel : Wheels)
+  {
+    Wheel.LastLocation = MeshTransform.TransformPosition(Wheel.RestLocation);
+  }
+}
+
+void UCarlaVehicleAnimationInstance::BeginRolling()
+{
+  if (Wheels.Num() != GetWheeledVehicleComponent()->WheelSetups.Num())
+  {
+    InitWheels();
+  }
+  const TArray<FWheelAnimationData> &WheelPoses = GetWheelPoses();
+  for (int32 i = 0; i < Wheels.Num(); ++i)
+  {
     // Carry on from the angle Chaos left.
-    Wheel.SpinAngle = WheelPoses.IsValidIndex(i) ? WheelPoses[i].RotOffset.Pitch : 0.0f;
+    Wheels[i].SpinAngle = WheelPoses.IsValidIndex(i) ? WheelPoses[i].RotOffset.Pitch : 0.0f;
   }
 }
 

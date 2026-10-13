@@ -1909,6 +1909,11 @@ void UActorBlueprintFunctionLibrary::MakePedestrianDefinition(
       EActorAttributeType::Bool,
       Parameters.bCanUseWheelChair ? TEXT("true") : TEXT("false")});
 
+  Definition.Attributes.Emplace(FActorAttribute{
+      TEXT("special_type"),
+      EActorAttributeType::String,
+      Parameters.SpecialType});
+
   if (Parameters.Speed.Num() > 0)
   {
     FActorVariation Speed;
@@ -2013,6 +2018,16 @@ void UActorBlueprintFunctionLibrary::MakePropDefinition(
       TEXT("size"),
       EActorAttributeType::String,
       GetSize(Parameters.Size)});
+
+  Definition.Attributes.Emplace(FActorAttribute{
+      TEXT("base_type"),
+      EActorAttributeType::String,
+      Parameters.BaseType});
+
+  Definition.Attributes.Emplace(FActorAttribute{
+      TEXT("subtype"),
+      EActorAttributeType::String,
+      Parameters.SubType});
 
   Success = CheckActorDefinition(Definition);
 }
