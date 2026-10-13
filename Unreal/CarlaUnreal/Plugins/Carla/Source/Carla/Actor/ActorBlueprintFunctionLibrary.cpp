@@ -1254,9 +1254,10 @@ void UActorBlueprintFunctionLibrary::MakeRayTracedLensCameraDefinition(
   EnableDenoiser.RecommendedValues = {TEXT("true")};
   EnableDenoiser.bRestrictToRecommended = false;
 
-  // Exposure. "auto" = the sensor's pinned daylight histogram (EV100 10-12);
-  // "manual" = the physical camera of the loaded post_process_profile plus
-  // exposure_compensation (EV), deterministic frame to frame (compositing).
+  // Exposure. "auto" = the post_process_profile's auto exposure, its upper end
+  // capped by carla.RTLens.MaxAutoExposureEV; "manual" = the physical camera of
+  // the profile, deterministic frame to frame (compositing).
+  // exposure_compensation (EV) adds to the profile's bias.
   FActorVariation RTExposureMode;
   RTExposureMode.Id = TEXT("exposure_mode");
   RTExposureMode.Type = EActorAttributeType::String;

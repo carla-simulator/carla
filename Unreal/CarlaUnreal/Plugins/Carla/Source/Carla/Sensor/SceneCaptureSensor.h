@@ -753,6 +753,9 @@ protected:
 private:
   void ApplyRayTracingSetting();
 
+  /// Captures rendered as camera cuts since BeginPlay (carla.Camera.SpawnCameraCuts).
+  int32 NumCaptures = 0;
+
 #ifdef CARLA_HAS_GBUFFER_API
   template <
       typename SensorT,
