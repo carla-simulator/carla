@@ -1350,6 +1350,15 @@
       return: carla.GeoOffsetTransform
       doc: >
         Constructor for this class.
+    - def_name: apply_transformation
+      params:
+      - param_name: location
+        type: carla.Location
+        doc: >
+          Input location.
+      return: carla.Location
+      doc: >
+        Applies the offset transformation to a location.
     - def_name: ApplyTransformation
       params:
       - param_name: location
@@ -1359,6 +1368,8 @@
       return: carla.Location
       doc: >
         Applies the offset transformation to a location.
+
+        <b>Deprecated:</b> use apply_transformation().
     # - DUNDER METHODS ---------------------
     dunder_methods:
     - def_name: __eq__

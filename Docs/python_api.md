@@ -1099,7 +1099,8 @@ Sine of the heading offset rotation.
 
 ### Methods
 - <a name="carla.GeoOffsetTransform.ApplyTransformation"></a>**<font color="#7fb800">ApplyTransformation</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**location**</font>)  
-Applies the offset transformation to a location.  
+Applies the offset transformation to a location.
+<b>Deprecated:</b> use apply_transformation().  
     - **Parameters:**
         - `location` (_[carla.Location](#carla.Location)_) - Input location.  
     - **Return:** _[carla.Location](#carla.Location)_  
@@ -1111,6 +1112,11 @@ Constructor for this class.
         - `offset_z` (_float_) - Z offset in meters.  
         - `offset_hdg` (_float_) - Heading offset in radians.  
     - **Return:** _[carla.GeoOffsetTransform](#carla.GeoOffsetTransform)_  
+- <a name="carla.GeoOffsetTransform.apply_transformation"></a>**<font color="#7fb800">apply_transformation</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**location**</font>)  
+Applies the offset transformation to a location.  
+    - **Parameters:**
+        - `location` (_[carla.Location](#carla.Location)_) - Input location.  
+    - **Return:** _[carla.Location](#carla.Location)_  
 
 ---
 
