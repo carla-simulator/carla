@@ -138,6 +138,30 @@
         The name of the map. It corresponds to the .umap from Unreal Engine that is loaded from a CARLA server, which then references to the .xodr road description.
     # - METHODS ----------------------------
     methods:
+    - def_name: geolocation_to_transform
+      params:
+      - param_name: geo_location
+        type: carla.GeoLocation
+        doc: >
+          Geographic coordinates to convert.
+      - param_name: projection
+        type: carla.GeoProjectionTM
+        doc: >
+          Projection to use. A carla.GeoProjectionUTM, carla.GeoProjectionWebMerc or carla.GeoProjectionLCC2SP is also accepted. Omit it to use the map's own projection.
+      return: carla.Location
+      doc: >
+        Converts geographic coordinates into simulation coordinates.
+    # --------------------------------------
+    - def_name: get_geoprojection
+      return: carla.GeoProjectionTM
+      doc: >
+        Returns the projection the map uses to convert between geographic and simulation coordinates. A carla.GeoProjectionUTM, carla.GeoProjectionWebMerc or carla.GeoProjectionLCC2SP is returned instead when the map declares one of those.
+    # --------------------------------------
+    - def_name: get_georeference
+      return: carla.GeoLocation
+      doc: >
+        Returns the geographic coordinates of the map's origin, as declared by its OpenDRIVE.
+    # --------------------------------------
     - def_name: __init__
       params:
       - param_name: name
@@ -1350,7 +1374,7 @@
       return: carla.GeoOffsetTransform
       doc: >
         Constructor for this class.
-    - def_name: apply_transformation
+    - def_name: apply_transform
       params:
       - param_name: location
         type: carla.Location
@@ -1369,7 +1393,7 @@
       doc: >
         Applies the offset transformation to a location.
 
-        <b>Deprecated:</b> use apply_transformation().
+        <b>Deprecated:</b> use apply_transform().
     # - DUNDER METHODS ---------------------
     dunder_methods:
     - def_name: __eq__
