@@ -1,8 +1,7 @@
-from . import SyncSmokeTest
+from .vehicle_wheel_smoke_test import VehicleWheelSmokeTest
 
 import carla
 import math
-import time
 
 # A steered front wheel passes well beyond this while the vehicle is turning,
 # and settles well inside it once the steering command returns to centre. The
@@ -15,7 +14,7 @@ ANGLE_EPSILON_DEG = 1.0
 SETTLE_TICKS = 25
 
 
-class TestVehicleWheelSteerAngle(SyncSmokeTest):
+class TestVehicleWheelSteerAngle(VehicleWheelSmokeTest):
     """End-to-end smoke for `Vehicle.get_wheel_steer_angle()`.
 
     The UE5 simulator used to answer this RPC with a hard-coded 0.0 for every
@@ -24,15 +23,6 @@ class TestVehicleWheelSteerAngle(SyncSmokeTest):
     the reported front-wheel angles track that -- so the stub cannot come back
     unnoticed.
     """
-
-    def tearDown(self):
-        self.world.apply_settings(self.settings)
-        self.world.tick()
-        self.settings = None
-        self.client.load_world("Town10HD_Opt")
-        time.sleep(5)
-        self.world = None
-        self.client = None
 
     def _steer_and_read(self, vehicle, steer):
         vehicle.apply_control(carla.VehicleControl(throttle=0.2, steer=steer))
@@ -49,27 +39,9 @@ class TestVehicleWheelSteerAngle(SyncSmokeTest):
 
     def test_get_wheel_steer_angle_tracks_steering(self):
         print("TestVehicleWheelSteerAngle.test_get_wheel_steer_angle_tracks_steering")
-        self.world = self.client.load_world("Town10HD_Opt")
-        settings = carla.WorldSettings(
-            no_rendering_mode=False,
-            synchronous_mode=True,
-            fixed_delta_seconds=0.05)
-        self.world.apply_settings(settings)
-        self.world.tick()
-
-        bp_lib = self.world.get_blueprint_library()
-        # Motorbikes and bicycles are also "vehicle.*", and their Chaos setup
-        # still carries four wheels, so the physics-control check below would
-        # not catch one; select four-wheelers by blueprint instead.
-        vehicle_bps = [
-            bp for bp in self.filter_vehicles_for_old_towns(bp_lib.filter("vehicle.*"))
-            if int(bp.get_attribute("number_of_wheels")) == 4]
-        self.assertGreater(len(vehicle_bps), 0)
-
-        spawn_points = self.world.get_map().get_spawn_points()
-        self.assertGreater(len(spawn_points), 0)
-
-        vehicle = self.world.spawn_actor(vehicle_bps[0], spawn_points[0])
+        # Steered straight away: an idle Chaos vehicle falls asleep, and this
+        # gentle a throttle does not wake it.
+        vehicle = self._spawn_four_wheeler(settle_ticks=0)
         try:
             # The four wheel locations below only exist on a four-wheeler.
             self.assertGreaterEqual(len(vehicle.get_physics_control().wheels), 4)

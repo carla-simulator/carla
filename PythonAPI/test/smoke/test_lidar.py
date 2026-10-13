@@ -15,6 +15,26 @@ from enum import Enum
 from queue import Queue
 from queue import Empty
 
+def wait_for_frame(test, data_queue, frame, timeout=10.0):
+    """Returns the queued (frame, ...) entry for the given frame, failing the test on a timeout."""
+    while True:
+        try:
+            data = data_queue.get(True, timeout)
+        except Empty:
+            test.fail("No sensor data for frame %d within %.0f s." % (frame, timeout))
+        if data[0] == frame:
+            return data
+
+
+def try_spawn_at_free_spawn_point(test, blueprint):
+    """Spawns the blueprint at the first free spawn point, failing the test if none is free."""
+    for spawn_point in test.world.get_map().get_spawn_points():
+        actor = test.world.try_spawn_actor(blueprint, spawn_point)
+        if actor is not None:
+            return actor, spawn_point
+    test.fail("Could not spawn %s at any spawn point." % blueprint.id)
+
+
 class SensorType(Enum):
     LIDAR = 1
     SEMLIDAR = 2
@@ -290,11 +310,7 @@ class TestLidarBatchConsistency(SyncSmokeTest):
         try:
             for _ in range(self.FRAMES):
                 frame = self.world.tick()
-                while True:
-                    data = data_queue.get(True, 10.0)
-                    if data[0] == frame:
-                        frames.append(data[1])
-                        break
+                frames.append(wait_for_frame(self, data_queue, frame)[1])
         finally:
             for sensor in [lidar] + others:
                 sensor.stop()
@@ -332,6 +348,53 @@ class TestLidarBatchConsistency(SyncSmokeTest):
         self.assertTrue(any(a != c for a, c in zip(seed_1, seed_2)), "Different noise_seed values produced identical data.")
 
 
+class TestLidarFixedSeedOutput(SyncSmokeTest):
+    """Each LiDAR type must produce identical per-channel counts and point bytes for the same seed and scene."""
+
+    FRAMES = 10
+    # Noise and drop-off enabled where supported, so the random sequence is covered too.
+    BASE = {'channels': '32', 'range': '50', 'rotation_frequency': '20'}
+    NOISE = {'noise_stddev': '0.02', 'dropoff_general_rate': '0.2', 'noise_seed': '4242'}
+    LIDARS = [
+        ('sensor.lidar.ray_cast', dict(BASE, points_per_second='100000', **NOISE)),
+        ('sensor.lidar.ray_cast_semantic', dict(BASE, points_per_second='100000')),
+        ('sensor.lidar.hss_lidar', dict(BASE, horizontal_resolution='0.2', **NOISE)),
+    ]
+
+    def record(self, bp_id, attributes):
+        bp = self.world.get_blueprint_library().find(bp_id)
+        for key, value in attributes.items():
+            bp.set_attribute(key, value)
+        tranf = self.world.get_map().get_spawn_points()[0]
+        tranf.location.z += 3
+        lidar = self.world.spawn_actor(bp, tranf)
+
+        data_queue = Queue()
+        lidar.listen(lambda data: data_queue.put(
+            (data.frame, [data.get_point_count(c) for c in range(data.channels)], bytes(data.raw_data))))
+        frames = []
+        try:
+            for _ in range(self.FRAMES):
+                frame = self.world.tick()
+                frames.append(wait_for_frame(self, data_queue, frame)[1:])
+        finally:
+            lidar.stop()
+            lidar.destroy()
+            self.world.tick()
+        return frames
+
+    def test_repeated_runs_match(self):
+        print("TestLidarFixedSeedOutput.test_repeated_runs_match")
+        for bp_id, attributes in self.LIDARS:
+            first = self.record(bp_id, attributes)
+            second = self.record(bp_id, attributes)
+            self.assertEqual(len(first), len(second))
+            for idx, ((counts_a, raw_a), (counts_b, raw_b)) in enumerate(zip(first, second)):
+                self.assertTrue(sum(counts_a) > 0, "%s frame %d has no points." % (bp_id, idx))
+                self.assertEqual(counts_a, counts_b, "%s frame %d: per-channel counts differ." % (bp_id, idx))
+                self.assertEqual(raw_a, raw_b, "%s frame %d: point data differs." % (bp_id, idx))
+
+
 class TestLidarSensorTick(SyncSmokeTest):
     """LiDARs must honor sensor_tick when they are simulated by the LiDAR subsystem."""
 
@@ -365,3 +428,45 @@ class TestLidarSensorTick(SyncSmokeTest):
         expected = int(math.ceil(num_ticks * dt / sensor_tick))
         for bp_id, count in counts.items():
             self.assertEqual(count, expected, "%s does not match tick count" % bp_id)
+
+
+class TestSemanticTags(SyncSmokeTest):
+    """Semantic tags read from tagged components by the semantic LiDAR."""
+
+    SEMANTIC_POINT = np.dtype([('x', 'f4'), ('y', 'f4'), ('z', 'f4'), ('cos', 'f4'),
+                               ('object_idx', 'u4'), ('object_tag', 'u4')])
+
+    def test_semantic_lidar_vehicle_tags(self):
+        print("TestSemanticTags.test_semantic_lidar_vehicle_tags")
+        bp_lib = self.world.get_blueprint_library()
+        vehicle, spawn_point = try_spawn_at_free_spawn_point(self, bp_lib.find('vehicle.lincoln.mkz'))
+        # Behind the vehicle, looking at it.
+        behind = spawn_point.transform(carla.Location(x=-8.0, z=1.5))
+        lidar_location = carla.Location(x=behind.x, y=behind.y, z=behind.z)
+        bp = bp_lib.find('sensor.lidar.ray_cast_semantic')
+        for key, value in {'channels': '32', 'range': '50', 'points_per_second': '200000',
+                           'rotation_frequency': '20'}.items():
+            bp.set_attribute(key, value)
+        lidar = self.world.spawn_actor(bp, carla.Transform(lidar_location, spawn_point.rotation))
+
+        data_queue = Queue()
+        lidar.listen(lambda data: data_queue.put((data.frame, bytes(data.raw_data))))
+        try:
+            # Let the vehicle settle before reading the last frame.
+            for _ in range(10):
+                frame = self.world.tick()
+            points = np.frombuffer(wait_for_frame(self, data_queue, frame)[1], dtype=self.SEMANTIC_POINT)
+        finally:
+            lidar.stop()
+            lidar.destroy()
+            vehicle.destroy()
+            self.world.tick()
+
+        valid_tags = {int(label) for label in carla.CityObjectLabel.values.values()}
+        unknown_tags = set(np.unique(points['object_tag']).tolist()) - valid_tags
+        self.assertEqual(len(unknown_tags), 0, "Unknown semantic tags: %s" % sorted(unknown_tags))
+
+        vehicle_tags = points['object_tag'][points['object_idx'] == vehicle.id]
+        self.assertTrue(len(vehicle_tags) > 0, "The semantic LiDAR did not hit the vehicle.")
+        self.assertTrue(np.all(vehicle_tags == int(carla.CityObjectLabel.Car)),
+                        "Vehicle points have tags %s, expected Car." % sorted(set(vehicle_tags.tolist())))

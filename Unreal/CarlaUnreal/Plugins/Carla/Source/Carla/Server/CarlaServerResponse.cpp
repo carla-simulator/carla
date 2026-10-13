@@ -38,6 +38,12 @@ FString CarlaGetStringError(ECarlaServerResponse Response)
       return "Actor is not a traffic light";
     case ECarlaServerResponse::FunctionNotAvailableWhenDormant:
       return "Function not available when the actor is dormant";
+    case ECarlaServerResponse::WheelNotFound:
+      return "Vehicle has no wheel at this location";
+    case ECarlaServerResponse::WheelAnimationOverrideDisabled:
+      return "Wheel animation override is off, enable it with set_wheel_animation_override first";
+    case ECarlaServerResponse::WheelAnimationNotSupported:
+      return "Vehicle's animation blueprint does not derive from CarlaVehicleAnimationInstance";
   }
   return "unknown error";
 }
