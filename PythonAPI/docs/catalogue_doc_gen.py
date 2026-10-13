@@ -33,6 +33,25 @@ FALSE_COLOR = '#f16c6c'
 IMAGE_DIR = '../img/catalogue'
 WEBP_QUALITY = 90
 
+# Town10's own weather, read off a freshly loaded map; the captures start from
+# this and change only what they need.
+TOWN10_WEATHER = {
+    'cloudiness': 30.0,
+    'precipitation': 0.0,
+    'precipitation_deposits': 0.0,
+    'wind_intensity': 0.35,
+    'sun_azimuth_angle': 170.0,
+    'sun_altitude_angle': 10.0,
+    'fog_density': 0.0056,
+    'fog_distance': 0.0,
+    'fog_falloff': 0.2,
+    'wetness': 0.0,
+    'scattering_intensity': 0.0,
+    'mie_scattering_scale': 0.0,
+    'rayleigh_scattering_scale': 0.0331,
+    'dust_storm': 0.0,
+}
+
 RUN_SERVER = os.path.join('Skills', 'ue58', 'run-carla-ue58-server', 'scripts', 'run_server.sh')
 
 
@@ -196,8 +215,8 @@ PEDESTRIAN_CAPTURE = Capture(
     actor=carla.Transform(carla.Location(x=-88.1, y=-73.6, z=1.0), carla.Rotation(yaw=90)),
     camera=carla.Transform(carla.Location(x=-88.1, y=-70.8, z=1.55), carla.Rotation(pitch=-5, yaw=270)),
     resolution=(1848, 1016),
-    weather={'sun_altitude_angle': 50, 'sun_azimuth_angle': 260,
-             'cloudiness': 20, 'precipitation': 0, 'wetness': 10})
+    weather=dict(TOWN10_WEATHER, sun_altitude_angle=50, sun_azimuth_angle=260,
+                 cloudiness=20, wetness=10))
 
 
 # ---------------------------------------------------------------------------
@@ -218,6 +237,7 @@ VEHICLE_NAMES = {
     'vehicle.gazelle.omafiets': 'Gazelle - Omafiets',
     'vehicle.harley-davidson.low_rider': 'Harley-Davidson - Low Rider',
     'vehicle.kawasaki.ninja': 'Kawasaki - Ninja',
+    'vehicle.kia.niro': 'Kia - Niro',
     'vehicle.lincoln.mkz': 'Lincoln - MKZ',
     'vehicle.mini.cooper': 'Mini - Cooper S',
     'vehicle.miningtruck.miningtruck': 'Mining earth mover',
@@ -226,7 +246,6 @@ VEHICLE_NAMES = {
     'vehicle.taxi.ford': 'Ford - Crown (taxi)',
     'vehicle.tesla.model3': 'Tesla - Model 3',
     'vehicle.ue4.audi.tt': 'Audi - TT',
-    'vehicle.ue4.bmw.grantourer': 'BMW - Gran Tourer',
     'vehicle.ue4.chevrolet.impala': 'Chevrolet - Impala',
     'vehicle.ue4.ford.crown': 'Ford - Crown',
     'vehicle.ue4.ford.mustang': 'Ford - Mustang',
@@ -337,10 +356,13 @@ VEHICLE_CAPTURE = Capture(
     },
     resolution=(1920, 1080),
     # Town10's own weather, with the sun raised and turned so the junction is
-    # lit rather than in shadow, and the sky cleared.
-    weather={'sun_altitude_angle': 50, 'sun_azimuth_angle': 350, 'cloudiness': 0,
-             'precipitation': 0, 'wetness': 0, 'scattering_intensity': 0,
-             'mie_scattering_scale': 0.0, 'rayleigh_scattering_scale': 0.0331},
+    # lit rather than in shadow, and the sky cleared. Every field is listed: the
+    # weather is built from scratch so a run never inherits the server's.
+    weather=dict(TOWN10_WEATHER, sun_altitude_angle=50, sun_azimuth_angle=350,
+                 cloudiness=0, scattering_intensity=0, mie_scattering_scale=0.0),
+    # The default profile auto-exposes until white paint clips and blooms into
+    # a halo; GoPro holds the highlights, and no weather setting can.
+    camera_attributes={'post_process_profile': 'GoPro'},
     on_blueprint=pick_color,
     on_spawn=steer_wheels)
 
@@ -604,10 +626,7 @@ def prepare(client, capture):
     settings.fixed_delta_seconds = 0.05
     world.apply_settings(settings)
 
-    weather = world.get_weather()
-    for name, value in capture.weather.items():
-        setattr(weather, name, value)
-    world.set_weather(weather)
+    world.set_weather(carla.WeatherParameters(**capture.weather))
 
     camera_bp = world.get_blueprint_library().find('sensor.camera.rgb')
     camera_bp.set_attribute('image_size_x', str(capture.resolution[0]))
@@ -685,7 +704,7 @@ def build_overview(overview, entries, out_dir):
         return frame
 
     frames, durations = [], []
-    shots = [load(entry) for entry in entries]
+    shots = [load(entry) for entry in entries if entry.image]
     for index, shot in enumerate(shots):
         frames.append(shot)
         durations.append(overview.hold_ms)
@@ -753,8 +772,13 @@ def main():
                     os.path.join(args.out_dir, image.replace('../', '')))
 
             for capture in captures:
+                # --recapture cannot reshoot a hand-made image, so for those
+                # only a file that is really gone counts as missing.
+                gone = absent if capture.actor is not None else (
+                    lambda image: not os.path.isfile(
+                        os.path.join(args.out_dir, image.replace('../', ''))))
                 missing = [entry for entry in entries
-                           if entry.capture is capture and absent(entry.image)]
+                           if entry.capture is capture and gone(entry.image)]
                 if not missing:
                     continue
                 if capture.actor is None:

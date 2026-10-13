@@ -9,15 +9,22 @@ Camera transform, large: Transform(Location(x=-49.470921, y=27.835310, z=2.93172
 Camera transform, small: Transform(Location(x=-47.696186, y=24.049326, z=1.471929), Rotation(pitch=-10.843717, yaw=-77.215683, roll=0.000139))
 Camera transform, standard: Transform(Location(x=-48.672256, y=24.830288, z=1.722733), Rotation(pitch=-13.396630, yaw=-75.692039, roll=0.000119))
 Camera resolution: 1920x1080
+camera.post_process_profile = GoPro
 
 weather.cloudiness = 0
+weather.dust_storm = 0.0
+weather.fog_density = 0.0056
+weather.fog_distance = 0.0
+weather.fog_falloff = 0.2
 weather.mie_scattering_scale = 0.0
-weather.precipitation = 0
+weather.precipitation = 0.0
+weather.precipitation_deposits = 0.0
 weather.rayleigh_scattering_scale = 0.0331
 weather.scattering_intensity = 0
 weather.sun_altitude_angle = 50
 weather.sun_azimuth_angle = 350
-weather.wetness = 0
+weather.wetness = 0.0
+weather.wind_intensity = 0.35
 
 Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it.
 
@@ -28,13 +35,13 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 * __Cars__
 	* [__Dodge - Charger__](#dodge-charger)
 	* [__Dodge - Police Charger__](#dodge-police-charger)
+	* [__Kia - Niro__](#kia-niro)
 	* [__Lincoln - MKZ__](#lincoln-mkz)
 	* [__Mini - Cooper S__](#mini-cooper-s)
 	* [__Nissan - Patrol__](#nissan-patrol)
 	* [__Ford - Crown (taxi)__](#ford-crown-taxi)
 	* [__Tesla - Model 3__](#tesla-model-3)
 	* [__Audi - TT__](#audi-tt)
-	* [__BMW - Gran Tourer__](#bmw-gran-tourer)
 	* [__Chevrolet - Impala__](#chevrolet-impala)
 	* [__Ford - Crown__](#ford-crown)
 	* [__Ford - Mustang__](#ford-mustang)
@@ -81,6 +88,17 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 * __Blueprint ID__: <span style="color:#00a6ed;">vehicle.dodgecop.charger</span>
 * __Base type__: car
 * __Special type__: emergency
+* __Generation__: 3
+* __Number of wheels__: 4
+* __Has lights__: <span style="color:#99c635;">True</span>
+* __Has opening doors__: <span style="color:#99c635;">True</span>
+
+### Kia - Niro
+
+![kia_niro](../img/catalogue/vehicles/kia_niro.webp)
+
+* __Blueprint ID__: <span style="color:#00a6ed;">vehicle.kia.niro</span>
+* __Base type__: car
 * __Generation__: 3
 * __Number of wheels__: 4
 * __Has lights__: <span style="color:#99c635;">True</span>
@@ -148,17 +166,6 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 ![ue4_audi_tt](../img/catalogue/vehicles/ue4_audi_tt.webp)
 
 * __Blueprint ID__: <span style="color:#00a6ed;">vehicle.ue4.audi.tt</span>
-* __Base type__: car
-* __Generation__: 2
-* __Number of wheels__: 4
-* __Has lights__: <span style="color:#99c635;">True</span>
-* __Has opening doors__: <span style="color:#f16c6c;">False</span>
-
-### BMW - Gran Tourer
-
-![ue4_bmw_grantourer](../img/catalogue/vehicles/ue4_bmw_grantourer.webp)
-
-* __Blueprint ID__: <span style="color:#00a6ed;">vehicle.ue4.bmw.grantourer</span>
 * __Base type__: car
 * __Generation__: 2
 * __Number of wheels__: 4
