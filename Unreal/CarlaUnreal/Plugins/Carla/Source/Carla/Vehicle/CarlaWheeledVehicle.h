@@ -641,6 +641,18 @@ public:
   UPROPERTY(Category = "CARLA Wheeled Vehicle", EditDefaultsOnly)
   float DetectionSize { 750.0f };
 
+  /// Radius of the visible front tyre, in cm, when it differs from the
+  /// physics wheel radius; 0 means the same. The animation lowers (or raises)
+  /// a mesh whose wheels are not animated by the suspension by the difference,
+  /// so the tyre touches the ground without changing the physics. See
+  /// UCarlaVehicleAnimationInstance::BodyOffsetTranslation.
+  UPROPERTY(Category = "CARLA Wheeled Vehicle", EditDefaultsOnly)
+  float FrontWheelVisualRadius = 0.0f;
+
+  /// Same as FrontWheelVisualRadius for the rear tyre.
+  UPROPERTY(Category = "CARLA Wheeled Vehicle", EditDefaultsOnly)
+  float RearWheelVisualRadius = 0.0f;
+
   UPROPERTY(Category = "CARLA Wheeled Vehicle", VisibleAnywhere, BlueprintReadOnly)
   FBox FoliageBoundingBox;
 
