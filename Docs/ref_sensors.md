@@ -579,6 +579,17 @@ where the camera otherwise keeps motion blur off.
 | `carla.Camera.MaxExposureMs` | `20` | Longest exposure time in milliseconds. |
 | `carla.Camera.ExposureLog` | `0` | `1` logs each capture's exposure, exposure time and motion blur amount. |
 
+#### Auto exposure of a new camera
+
+A camera that has just been spawned has no auto exposure history. Its first captures are rendered as camera cuts, so
+its auto exposure jumps to the level it settles on: the first image is still metered from scratch, and from the second
+one on the exposure is settled, instead of adapting for a few seconds from a default exposure (a bright flash of the
+sky every time a client respawns a camera, e.g. `manual_control.py` changing the camera position with TAB).
+
+| Console variable | Default | Description |
+| --- | --- | --- |
+| `carla.Camera.SpawnCameraCuts` | `2` | Number of first captures of a new camera rendered as camera cuts. `0` restores the old behaviour. |
+
 
 #### Output attributes
 
@@ -620,7 +631,7 @@ If `fx` is left at `0.0`, the focal length is derived automatically so that the 
 
 __Denoising and convergence.__ The path tracer accumulates one batch of `samples_per_pixel` samples per simulation tick and denoises with NVIDIA DLSS Ray Reconstruction (the engine default, `r.PathTracing.Denoiser.Name=DLSSRR`). A static camera converges over successive ticks; a moving camera relies on the denoiser every frame. Low sample counts (`samples_per_pixel` of 4&ndash;16) with the denoiser enabled are the intended real-time operating point; high sample counts approach ground-truth path tracing at a heavy cost per frame. `samples_per_pixel` is clamped to the console variable `r.PathTracing.MaxFramePassCount` (see [Ray-traced lens tuning](adv_rendering_options.md#ray-traced-lens-tuning)), with a warning logged when it clamps: a sensor asking for more samples than the engine can run in one frame can never finish (and denoise) within its tick, and would deliver a partially accumulated — and therefore noisier — image every frame instead of a smaller, fully converged one. Measured on car pixels at 1080p, noise (in 8-bit levels) falls from about 5.7 at 8 samples/pixel to 3.7 at 64, at roughly 54, 54, 74 and 116 ms per tick for 8/16/32/64 samples/pixel respectively (colour + instance sensors together); requesting a count above the pass cap measured about four times noisier than the same count kept under the cap.
 
-__Exposure.__ `exposure_mode` selects between `auto` (default) — the capture's auto exposure is pinned to the daylight histogram window used by the CARLA sky rig, so path-traced frames match the photometric exposure of the RGB camera instead of adapting to raw sun radiance — and `manual`, which switches to the post-process profile's physical camera exposure plus `exposure_compensation` (in EV, `0.0` = no adjustment, negative darkens, positive brightens), deterministic from frame to frame. Use `manual` when the frame is composited against an external render (e.g. a `show_only_*` layer over an otherwise black background) and the content itself must not drive the histogram.
+__Exposure.__ `exposure_mode` selects between `auto` (default) and `manual`. `auto` uses the auto exposure of the camera profile (`post_process_profile`), like `sensor.camera.rgb`, so the path-traced frames follow day and night like the RGB camera; only the upper end of its range is capped by the `carla.RTLens.MaxAutoExposureEV` console variable (EV100 `12` by default), so the path-traced view cannot meter the raw sun disk and go black. `manual` switches to the profile's physical camera exposure, deterministic from frame to frame. Use `manual` when the frame is composited against an external render (e.g. a `show_only_*` layer over an otherwise black background) and the content itself must not drive the histogram. In both modes `exposure_compensation` (in EV, `0.0` = no adjustment, negative darkens, positive brightens) is added to the profile's exposure bias.
 
 __Show-only rendering.__ `show_only_tags`, `shadow_catcher_tags` and `show_only_actor_ids` restrict the capture to a subset of the scene, for compositing:
 

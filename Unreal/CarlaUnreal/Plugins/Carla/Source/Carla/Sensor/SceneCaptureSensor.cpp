@@ -88,6 +88,20 @@ static TAutoConsoleVariable<float> CVarCarlaCameraMaxExposureMs(
     TEXT("Longest exposure time in ms; darker scenes raise the gain instead (carla.Camera.ExposureMotionBlur)."),
     ECVF_Default);
 
+// A new camera has no eye adaptation history: left alone it starts from a
+// default exposure and takes seconds to adapt (a white sky flash every time a
+// client respawns a camera, e.g. manual_control's TAB). Its first captures are
+// rendered as camera cuts, which makes the eye adaptation jump to its target:
+// the first image is still metered from scratch, the second one is settled.
+// (Extra unsent captures in the same tick do not help: the exposure a capture
+// computes only reaches the captures of later ticks.)
+static TAutoConsoleVariable<int32> CVarCarlaCameraSpawnCameraCuts(
+    TEXT("carla.Camera.SpawnCameraCuts"),
+    2,
+    TEXT("Number of first captures of a new camera rendered as camera cuts, so its auto exposure settles ")
+    TEXT("from the second image on instead of adapting for seconds from a default exposure (0 disables)."),
+    ECVF_Default);
+
 static TAutoConsoleVariable<int32> CVarCarlaCameraExposureLog(
     TEXT("carla.Camera.ExposureLog"),
     0,
@@ -974,6 +988,12 @@ void ASceneCaptureSensor::EnqueueRenderSceneImmediate()
   {
     ShowOnlyFilter.Refresh(GetWorld(), &GetEpisode());
     ShowOnlyFilter.ApplyTo(*CaptureComponent2D);
+  }
+  if (NumCaptures < CVarCarlaCameraSpawnCameraCuts.GetValueOnGameThread())
+  {
+    // Reset by the renderer after the capture.
+    CaptureComponent2D->bCameraCutThisFrame = true;
+    ++NumCaptures;
   }
   // Creates an snapshot of the scene, requieres bCaptureEveryFrame = false.
 #ifdef CARLA_HAS_GBUFFER_API
