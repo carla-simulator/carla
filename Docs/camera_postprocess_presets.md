@@ -23,8 +23,10 @@ Saved post-process presets can be loaded to modify the RGB camera sensor. When s
 ```py
 camera_bp = bp_lib.find('sensor.camera.rgb')
 camera_bp.set_attribute('post_process_profile', 'GoPro')
-camera = world.spawn_actor(camera_bp, carla.Transform(carla.location(0,0,1.5), carla.Rotation()))
+camera = world.spawn_actor(camera_bp, carla.Transform(carla.Location(0,0,1.5), carla.Rotation()))
 ```
+
+The profile is read when the sensor spawns: to change it, set the attribute again and respawn the camera. `PythonAPI/examples/manual_control.py` does this to compare the presets live: `--post-process-profile NAME` picks the first profile and K / Shift+K cycles through the presets shipped with CARLA.
 
 
 ---
