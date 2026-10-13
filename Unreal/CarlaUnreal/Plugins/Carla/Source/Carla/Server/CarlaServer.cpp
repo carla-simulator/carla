@@ -2296,6 +2296,133 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
     return Angle;
   };
 
+  BIND_SYNC(set_wheel_pitch_angle) << [this](
+    cr::ActorId ActorId,
+    cr::VehicleWheelLocation WheelLocation,
+    float AngleInDeg) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
+    if(!CarlaActor){
+      return RespondError(
+          "set_wheel_pitch_angle",
+          ECarlaServerResponse::ActorNotFound,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    ECarlaServerResponse Response =
+        CarlaActor->SetWheelPitchAngle(
+            static_cast<EVehicleWheelLocation>(WheelLocation), AngleInDeg);
+    if (Response != ECarlaServerResponse::Success)
+    {
+      return RespondError(
+          "set_wheel_pitch_angle",
+          Response,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    return R<void>::Success();
+  };
+
+  BIND_SYNC(get_wheel_pitch_angle) << [this](
+      const cr::ActorId ActorId,
+      cr::VehicleWheelLocation WheelLocation) -> R<float>
+  {
+    REQUIRE_CARLA_EPISODE();
+    FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
+    if(!CarlaActor){
+      return RespondError(
+          "get_wheel_pitch_angle",
+          ECarlaServerResponse::ActorNotFound,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    float Value;
+    ECarlaServerResponse Response =
+        CarlaActor->GetWheelPitchAngle(
+            static_cast<EVehicleWheelLocation>(WheelLocation), Value);
+    if (Response != ECarlaServerResponse::Success)
+    {
+      return RespondError(
+          "get_wheel_pitch_angle",
+          Response,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    return Value;
+  };
+
+  BIND_SYNC(set_wheel_suspension_offset) << [this](
+    cr::ActorId ActorId,
+    cr::VehicleWheelLocation WheelLocation,
+    float Offset) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
+    if(!CarlaActor){
+      return RespondError(
+          "set_wheel_suspension_offset",
+          ECarlaServerResponse::ActorNotFound,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    ECarlaServerResponse Response =
+        CarlaActor->SetWheelSuspensionOffset(
+            static_cast<EVehicleWheelLocation>(WheelLocation), Offset);
+    if (Response != ECarlaServerResponse::Success)
+    {
+      return RespondError(
+          "set_wheel_suspension_offset",
+          Response,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    return R<void>::Success();
+  };
+
+  BIND_SYNC(get_wheel_suspension_offset) << [this](
+      const cr::ActorId ActorId,
+      cr::VehicleWheelLocation WheelLocation) -> R<float>
+  {
+    REQUIRE_CARLA_EPISODE();
+    FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
+    if(!CarlaActor){
+      return RespondError(
+          "get_wheel_suspension_offset",
+          ECarlaServerResponse::ActorNotFound,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    float Value;
+    ECarlaServerResponse Response =
+        CarlaActor->GetWheelSuspensionOffset(
+            static_cast<EVehicleWheelLocation>(WheelLocation), Value);
+    if (Response != ECarlaServerResponse::Success)
+    {
+      return RespondError(
+          "get_wheel_suspension_offset",
+          Response,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    return Value;
+  };
+
+  BIND_SYNC(set_wheel_animation_override) << [this](
+    cr::ActorId ActorId,
+    bool bEnabled) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
+    if(!CarlaActor){
+      return RespondError(
+          "set_wheel_animation_override",
+          ECarlaServerResponse::ActorNotFound,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    ECarlaServerResponse Response = CarlaActor->SetWheelAnimationOverride(bEnabled);
+    if (Response != ECarlaServerResponse::Success)
+    {
+      return RespondError(
+          "set_wheel_animation_override",
+          Response,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    return R<void>::Success();
+  };
+
   BIND_SYNC(set_actor_simulate_physics) << [this](
       cr::ActorId ActorId,
       bool bEnabled) -> R<void>

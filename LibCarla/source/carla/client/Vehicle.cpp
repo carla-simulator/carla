@@ -91,6 +91,26 @@ namespace client {
     return GetEpisode().Lock()->GetWheelSteerAngle(*this, wheel_location);
   }
 
+  void Vehicle::SetWheelPitchAngle(WheelLocation wheel_location, float angle_in_deg) {
+    GetEpisode().Lock()->SetWheelPitchAngle(*this, wheel_location, angle_in_deg);
+  }
+
+  float Vehicle::GetWheelPitchAngle(WheelLocation wheel_location) {
+    return GetEpisode().Lock()->GetWheelPitchAngle(*this, wheel_location);
+  }
+
+  void Vehicle::SetWheelSuspensionOffset(WheelLocation wheel_location, float offset) {
+    GetEpisode().Lock()->SetWheelSuspensionOffset(*this, wheel_location, offset);
+  }
+
+  float Vehicle::GetWheelSuspensionOffset(WheelLocation wheel_location) {
+    return GetEpisode().Lock()->GetWheelSuspensionOffset(*this, wheel_location);
+  }
+
+  void Vehicle::SetWheelAnimationOverride(bool enabled) {
+    GetEpisode().Lock()->SetWheelAnimationOverride(*this, enabled);
+  }
+
   Vehicle::Control Vehicle::GetControl() const {
     return GetEpisode().Lock()->GetActorSnapshot(*this).state.vehicle_data.control;
   }

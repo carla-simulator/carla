@@ -246,7 +246,11 @@ void ASceneCaptureCamera_RayTracedLens::Set(const FActorDescription &Description
   }
   if (LensModel.FocalY <= 0.0f)
   {
-    LensModel.FocalY = LensModel.FocalX; // square pixels
+    // The focal lengths are normalized per axis (x by width, y by height), so square
+    // pixels are fy = fx * width/height; fy = fx would squash by the aspect ratio.
+    const float AspectRatio =
+        FMath::Max((float)GetImageWidth(), 1.0f) / FMath::Max((float)GetImageHeight(), 1.0f);
+    LensModel.FocalY = LensModel.FocalX * AspectRatio;
   }
 
   // theta_max_deg <= 0 requests automatic coverage: extend the acceptance

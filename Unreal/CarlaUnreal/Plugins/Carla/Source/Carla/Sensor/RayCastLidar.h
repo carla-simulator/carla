@@ -42,14 +42,18 @@ public:
 private:
   /// Compute the received intensity of the point
   float ComputeIntensity(const FSemanticDetection& RawDetection) const;
-  FDetection ComputeDetection(const FHitResult& HitInfo, const FTransform& SensorTransf) const;
+  FDetection ComputeDetection(const FHitResult& HitInfo, const FTransform& InverseSensorTransform) const;
 
   void PreprocessRays(uint32_t Channels, uint32_t MaxPointsPerChannel) override;
   bool PostprocessDetection(FDetection& Detection) const;
 
+  void WriteDetectionAsync(uint32_t Channel, const FHitResult& HitInfo, const FTransform& InverseSensorTransform, const FVector& SensorLocation) override;
+  void ResetDetections(uint32_t Channels, uint32_t MaxPointsPerChannel) override;
   void ComputeAndSaveDetections(const FTransform& SensorTransform) override;
 
   FLidarData LidarData;
+
+  std::vector<std::vector<FDetection>> Detections;
 
   /// Enable/Disable general dropoff of lidar points
   bool DropOffGenActive;
@@ -64,7 +68,4 @@ private:
 
   // Way to access PointCloud data from the server.
   TArray<float> PointCloudLidarData;
-
-  void PointCloudResetMemory();
-  void PointCloudWritePointSync(const FDetection& Detection);
 };

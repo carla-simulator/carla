@@ -5,7 +5,7 @@ Guidance for any coding agent working in this repository.
 ## Skills
 
 This repo ships a library of **60 vetted CARLA procedures** under
-[`skills/`](skills/). Each is a directory containing a `SKILL.md` with YAML
+[`Skills/`](Skills/). Each is a directory containing a `SKILL.md` with YAML
 frontmatter (`name`, `description`, `compatibility`), the step-by-step
 procedure, and often `scripts/` and `references/` beside it.
 
@@ -34,7 +34,7 @@ wrong one fails slowly. Ask the user, then record the answer.
 (`list_skills`, `read_skill`, `check_prerequisites`, `get_config`,
 `set_config`), which adds environment detection and persistent path config.
 Project config is in [`.mcp.json`](.mcp.json); clients that read it get the
-tools automatically. Agents without MCP should read `skills/` directly — the
+tools automatically. Agents without MCP should read `Skills/` directly — the
 files are the source of truth either way.
 
 ## Skill catalogue

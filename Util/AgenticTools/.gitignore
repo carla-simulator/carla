@@ -4,5 +4,3 @@ __pycache__/
 .omc/
 .build-logs/
 build/
-dist/
-*.egg-info/

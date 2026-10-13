@@ -18,7 +18,8 @@ sys.path.insert(0, str(REPO / "src"))
 
 from carla_agentic_tools import config as cfg  # noqa: E402
 
-COMMON_SH = REPO / "skills" / "_common" / "env_common.sh"
+SKILLS = REPO.parents[1] / "Skills"  # vendored: the library sits at the carla repo root
+COMMON_SH = SKILLS / "_common" / "env_common.sh"
 
 
 @pytest.fixture()
@@ -151,7 +152,7 @@ def test_detection_markers_match_the_shell_helpers():
     group that gates differently from the script it gates — so pin the markers.
     """
     py = (REPO / "src/carla_agentic_tools/config.py").read_text()
-    shell = "\n".join(p.read_text() for p in REPO.glob("skills/*/*/scripts/env.sh"))
+    shell = "\n".join(p.read_text() for p in SKILLS.glob("*/*/scripts/env.sh"))
     for marker in ("CMakePresets.json", "Unreal/CarlaUnreal",
                    "CMake/DLSS.cmake", "Carla/Autoware", "CarlaUE4.uproject"):
         assert marker in py, f"{marker} missing from detect_carla"
@@ -167,7 +168,7 @@ def test_every_skill_can_reach_the_config():
     interpreter that was recorded for it.
     """
     unreachable = []
-    for skill in sorted(REPO.glob("skills/*/*/SKILL.md")):
+    for skill in sorted(SKILLS.glob("*/*/SKILL.md")):
         scripts = skill.parent / "scripts"
         loaded = any("_common/env_common.sh" in p.read_text()
                      for p in scripts.glob("*.sh")) if scripts.is_dir() else False
@@ -182,7 +183,7 @@ def test_no_needs_block_when_the_preflight_passes(clean, monkeypatch):
     PYTHON falls back to python3; if that interpreter already imports carla the
     skill is ready, and asking anyway is a prompt the user cannot act on.
     """
-    monkeypatch.setenv("CARLA_SKILLS_DIR", str(REPO / "skills"))
+    monkeypatch.setenv("CARLA_SKILLS_DIR", str(SKILLS))
     for mod in [m for m in list(sys.modules) if m.startswith("carla_agentic_tools")]:
         del sys.modules[mod]
     import carla_agentic_tools.server as server
@@ -224,7 +225,7 @@ def test_validate_python_is_a_command_not_a_tree(clean):
 
 def test_gating_rejects_a_configured_but_deleted_path(clean, monkeypatch):
     """The case that motivated validation: the path was right when recorded."""
-    monkeypatch.setenv("CARLA_SKILLS_DIR", str(REPO / "skills"))
+    monkeypatch.setenv("CARLA_SKILLS_DIR", str(SKILLS))
     gone = _fake_ue58(clean / "carla")
     # The ue58 skills build the editor, so they declare the engine path too.
     engine = clean / "UnrealEngine"
@@ -249,7 +250,7 @@ def test_gating_rejects_a_configured_but_deleted_path(clean, monkeypatch):
 
 
 def test_set_config_refuses_an_unusable_path(clean, monkeypatch):
-    monkeypatch.setenv("CARLA_SKILLS_DIR", str(REPO / "skills"))
+    monkeypatch.setenv("CARLA_SKILLS_DIR", str(SKILLS))
     for mod in [m for m in list(sys.modules) if m.startswith("carla_agentic_tools")]:
         del sys.modules[mod]
     import carla_agentic_tools.server as server

@@ -17,6 +17,7 @@
 #include "Carla/Util/EmptyActor.h"
 #include "Carla/Util/BoundingBoxCalculator.h"
 #include "Carla/Vegetation/VegetationManager.h"
+#include "Carla/Vehicle/CarlaVehicleAnimationInstance.h"
 
 #include <util/ue-header-guard-begin.h>
 #include "Components/BoxComponent.h"
@@ -1230,69 +1231,205 @@ void ACarlaWheeledVehicle::SetCarlaMovementComponent(UBaseCarlaMovementComponent
   BaseMovementComponent = NewBaseMovementComponent;
 }
 
+// The pose the animation blueprint shows for a wheel, or the rest pose if the
+// blueprint does not derive from UCarlaVehicleAnimationInstance.
+static FWheelAnimationData GetShownWheelPose(const USkeletalMeshComponent &Mesh, int32 WheelIndex)
+{
+  const auto *VehicleAnim = Cast<UCarlaVehicleAnimationInstance>(Mesh.GetAnimInstance());
+  const FWheelAnimationData *Pose = VehicleAnim != nullptr ? VehicleAnim->GetWheelPose(WheelIndex) : nullptr;
+  return Pose != nullptr ? *Pose : FWheelAnimationData{NAME_None, FRotator::ZeroRotator, FVector::ZeroVector};
+}
+
 void ACarlaWheeledVehicle::SetWheelSteerDirection(EVehicleWheelLocation WheelLocation, float AngleInDeg)
 {
-  if (bPhysicsEnabled == false)
+  if (FWheelAnimationData *Pose = GetOverriddenWheelPoseOrWarn(WheelLocation, TEXT("SetWheelSteerDirection")))
   {
-    check((uint8)WheelLocation >= 0)
-      UVehicleAnimationInstance* VehicleAnim = Cast<UVehicleAnimationInstance>(GetMesh()->GetAnimInstance());
-    check(VehicleAnim != nullptr)
-      // ToDo We need to investigate about this
-      //VehicleAnim->GetWheelAnimData()SetWheelRotYaw((uint8)WheelLocation, AngleInDeg);
-  }
-  else
-  {
-    UE_LOG(LogTemp, Warning, TEXT("Cannot set wheel steer direction. Physics are enabled."))
+    Pose->RotOffset.Yaw = AngleInDeg;
   }
 }
 
 float ACarlaWheeledVehicle::GetWheelSteerAngle(EVehicleWheelLocation WheelLocation)
 {
-  UChaosWheeledVehicleMovementComponent* Movement = GetChaosWheeledVehicleMovementComponent();
-  if (Movement == nullptr)
-  {
-    return 0.0F;
-  }
-
-  if (!bPhysicsEnabled)
-  {
-    // Without physics the wheels are posed by the animation blueprint, and the
-    // UE5 path that would write that pose is still unimplemented (see
-    // SetWheelSteerDirection above), so there is no wheel angle to report yet.
-    return 0.0F;
-  }
-
   // EVehicleWheelLocation is the index into the movement component's wheel
   // arrays: UChaosVehicleWheel::WheelIndex is documented as "our index in the
-  // vehicle's (and setup's) wheels array", and the rest of this class already
-  // addresses Wheels/WheelSetups that way (physics control, friction scales).
+  // vehicle's (and setup's) wheels array".
   const int32 WheelIndex = static_cast<int32>(WheelLocation);
-  if (!Movement->Wheels.IsValidIndex(WheelIndex))
+  return HasWheelOrWarn(WheelIndex, TEXT("GetWheelSteerAngle")) ? GetWheelPose(WheelIndex).RotOffset.Yaw : 0.0F;
+}
+
+void ACarlaWheeledVehicle::SetWheelPitchAngle(EVehicleWheelLocation WheelLocation, float AngleInDeg)
+{
+  if (FWheelAnimationData *Pose = GetOverriddenWheelPoseOrWarn(WheelLocation, TEXT("SetWheelPitchAngle")))
   {
-    // Reachable from the client for any vehicle with fewer wheels than the
-    // requested location -- a bike asked for BL_Wheel, say -- so it must not
-    // bring the server down.
-    UE_LOG(LogCarla, Warning,
-        TEXT("GetWheelSteerAngle: wheel location %d does not exist on %s, which has %d wheels."),
-        WheelIndex, *GetName(), Movement->Wheels.Num());
+    Pose->RotOffset.Pitch = AngleInDeg;
+  }
+}
+
+float ACarlaWheeledVehicle::GetWheelPitchAngle(EVehicleWheelLocation WheelLocation)
+{
+  const int32 WheelIndex = static_cast<int32>(WheelLocation);
+  return HasWheelOrWarn(WheelIndex, TEXT("GetWheelPitchAngle")) ? GetWheelPose(WheelIndex).RotOffset.Pitch : 0.0F;
+}
+
+void ACarlaWheeledVehicle::SetWheelSuspensionOffset(EVehicleWheelLocation WheelLocation, float OffsetInCm)
+{
+  if (FWheelAnimationData *Pose = GetOverriddenWheelPoseOrWarn(WheelLocation, TEXT("SetWheelSuspensionOffset")))
+  {
+    // The same offset Chaos applies.
+    Pose->LocOffset = -GetWheelSuspensionAxis(static_cast<int32>(WheelLocation)) * OffsetInCm;
+  }
+}
+
+float ACarlaWheeledVehicle::GetWheelSuspensionOffset(EVehicleWheelLocation WheelLocation)
+{
+  const int32 WheelIndex = static_cast<int32>(WheelLocation);
+  if (!HasWheelOrWarn(WheelIndex, TEXT("GetWheelSuspensionOffset")))
+  {
     return 0.0F;
   }
+  return -FVector::DotProduct(GetWheelPose(WheelIndex).LocOffset, GetWheelSuspensionAxis(WheelIndex));
+}
 
-  const UChaosVehicleWheel* Wheel = Movement->Wheels[WheelIndex];
-  // GetSteerAngle() reads the async solver's output and check()s that it is
-  // there, so the same conditions are tested here first: that output only
-  // exists once the physics state has been created and stepped.
-  const TUniquePtr<FPhysicsVehicleOutput>& VehicleOutput = Movement->PhysicsVehicleOutput();
+void ACarlaWheeledVehicle::SetWheelAnimationOverride(bool bEnabled)
+{
+  if (bEnabled && !HasCarlaVehicleAnimation())
+  {
+    UE_LOG(LogCarla, Warning,
+        TEXT("SetWheelAnimationOverride: the animation blueprint of %s does not derive from CarlaVehicleAnimationInstance."),
+        *GetName());
+    return;
+  }
+  if (bEnabled && !bWheelAnimationOverridden)
+  {
+    // Start from the pose shown, so the wheels do not jump.
+    for (int32 i = 0; HasWheel(i); ++i)
+    {
+      OverriddenWheelPoses.Add(GetShownWheelPose(*GetMesh(), i));
+    }
+  }
+  else if (!bEnabled)
+  {
+    OverriddenWheelPoses.Reset();
+  }
+  bWheelAnimationOverridden = bEnabled;
+}
+
+FWheelAnimationData *ACarlaWheeledVehicle::GetOverriddenWheelPoseOrWarn(
+    EVehicleWheelLocation WheelLocation,
+    const TCHAR *Caller)
+{
+  const int32 WheelIndex = static_cast<int32>(WheelLocation);
+  if (!HasWheelOrWarn(WheelIndex, Caller))
+  {
+    return nullptr;
+  }
+  if (!bWheelAnimationOverridden)
+  {
+    UE_LOG(LogCarla, Warning,
+        TEXT("%s: the wheel animation override is off on %s; enable it first."),
+        Caller, *GetName());
+    return nullptr;
+  }
+  return OverriddenWheelPoses.IsValidIndex(WheelIndex) ? &OverriddenWheelPoses[WheelIndex] : nullptr;
+}
+
+FWheelAnimationData ACarlaWheeledVehicle::GetWheelPose(int32 WheelIndex) const
+{
+  if (bWheelAnimationOverridden && OverriddenWheelPoses.IsValidIndex(WheelIndex))
+  {
+    return OverriddenWheelPoses[WheelIndex];
+  }
+  if (const UChaosVehicleWheel *Wheel = GetSimulatedWheel(WheelIndex))
+  {
+    // The pose Chaos draws, in degrees and cm.
+    const FRotator Rotation(Wheel->GetRotationAngle(), Wheel->GetSteerAngle(), 0.0f);
+    const FVector Offset = -GetWheelSuspensionAxis(WheelIndex) * Wheel->GetSuspensionOffset();
+    return FWheelAnimationData{NAME_None, Rotation, Offset};
+  }
+  return GetShownWheelPose(*GetMesh(), WheelIndex);
+}
+
+bool ACarlaWheeledVehicle::HasWheelOrWarn(int32 WheelIndex, const TCHAR *Caller) const
+{
+  if (!HasWheel(WheelIndex))
+  {
+    // Reachable from the client, a bike asked for BL_Wheel say, so it must not
+    // bring the server down.
+    UE_LOG(LogCarla, Warning,
+        TEXT("%s: wheel location %d does not exist on %s."),
+        Caller, WheelIndex, *GetName());
+    return false;
+  }
+  return true;
+}
+
+bool ACarlaWheeledVehicle::HasWheel(int32 WheelIndex) const
+{
+  const UChaosWheeledVehicleMovementComponent *Movement = GetChaosWheeledVehicleMovementComponent();
+  return Movement != nullptr && Movement->WheelSetups.IsValidIndex(WheelIndex);
+}
+
+bool ACarlaWheeledVehicle::HasCarlaVehicleAnimation() const
+{
+  return Cast<UCarlaVehicleAnimationInstance>(GetMesh()->GetAnimInstance()) != nullptr;
+}
+
+const UChaosVehicleWheel *ACarlaWheeledVehicle::GetSimulatedWheel(int32 WheelIndex) const
+{
+  // Non-const: the engine does not mark PhysicsVehicleOutput() const.
+  UChaosWheeledVehicleMovementComponent *Movement = GetChaosWheeledVehicleMovementComponent();
+  if (!IsSimulatedByChaos() || Movement == nullptr ||
+      !Movement->Wheels.IsValidIndex(WheelIndex))
+  {
+    return nullptr;
+  }
+  // The wheel getters read the async solver's output and check() that it is
+  // there; it only exists once the physics state has been created and stepped.
+  const UChaosVehicleWheel *Wheel = Movement->Wheels[WheelIndex];
+  const TUniquePtr<FPhysicsVehicleOutput> &VehicleOutput = Movement->PhysicsVehicleOutput();
   if (Wheel == nullptr || !VehicleOutput.IsValid() ||
       !VehicleOutput->Wheels.IsValidIndex(Wheel->WheelIndex))
   {
-    return 0.0F;
+    return nullptr;
   }
+  return Wheel;
+}
 
-  // Chaos keeps the steering angle in degrees (the solver writes
-  // FWheelsOutput::SteeringAngle in degrees), which is the unit the Python API
-  // promises, so it is returned unconverted.
-  return Wheel->GetSteerAngle();
+bool ACarlaWheeledVehicle::IsSimulatedByChaos() const
+{
+  return bPhysicsEnabled &&
+      (BaseMovementComponent == nullptr || BaseMovementComponent->IsA<UDefaultMovementComponent>());
+}
+
+float ACarlaWheeledVehicle::GetWheelRadius(int32 WheelIndex) const
+{
+  if (LastPhysicsControl.Wheels.IsValidIndex(WheelIndex))
+  {
+    return LastPhysicsControl.Wheels[WheelIndex].WheelRadius;
+  }
+  const UChaosVehicleWheel *Wheel = GetWheelDefaults(WheelIndex);
+  return Wheel != nullptr ? Wheel->WheelRadius : 0.0f;
+}
+
+FVector ACarlaWheeledVehicle::GetWheelSuspensionAxis(int32 WheelIndex) const
+{
+  if (LastPhysicsControl.Wheels.IsValidIndex(WheelIndex))
+  {
+    return LastPhysicsControl.Wheels[WheelIndex].SuspensionAxis.GetSafeNormal();
+  }
+  const UChaosVehicleWheel *Wheel = GetWheelDefaults(WheelIndex);
+  return Wheel != nullptr ? Wheel->SuspensionAxis.GetSafeNormal() : FVector::DownVector;
+}
+
+const UChaosVehicleWheel *ACarlaWheeledVehicle::GetWheelDefaults(int32 WheelIndex) const
+{
+  // For when a rejected physics control left fewer entries than wheels.
+  const UChaosWheeledVehicleMovementComponent *Movement = GetChaosWheeledVehicleMovementComponent();
+  if (Movement == nullptr || !Movement->WheelSetups.IsValidIndex(WheelIndex))
+  {
+    return nullptr;
+  }
+  return Movement->WheelSetups[WheelIndex].WheelClass.GetDefaultObject();
 }
 
 void ACarlaWheeledVehicle::SetSimulatePhysics(bool enabled) {

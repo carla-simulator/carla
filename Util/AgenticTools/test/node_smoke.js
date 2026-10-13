@@ -15,7 +15,7 @@ const path = require("path");
 const REPO = path.join(__dirname, "..");
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "cat-node-"));
 process.env.CARLA_TOOLS_CONFIG = path.join(tmp, "config.env");
-process.env.CARLA_SKILLS_DIR = path.join(REPO, "skills");
+process.env.CARLA_SKILLS_DIR = path.join(REPO, "..", "..", "Skills");
 for (const k of ["CARLA_ROOT", "CARLA_TARGET", "CARLA_PACKAGE_ROOT", "CARLA_UE4_ROOT",
   "CARLA_UE5_ROOT", "CARLA_UE58_ROOT", "SCENARIO_RUNNER_ROOT", "LEADERBOARD_ROOT",
   "SCENIC_ROOT", "PYTHON", "CARLA_UNREAL_ENGINE_PATH", "UE4_ROOT"]) delete process.env[k];
@@ -188,7 +188,7 @@ test("initialize echoes a known protocol version and names this package", () => 
   const r = server.dispatch({ method: "initialize", params: { protocolVersion: "2024-11-05" } });
   assert.strictEqual(r.protocolVersion, "2024-11-05", "a known version must be echoed");
   assert.strictEqual(r.serverInfo.name, "carla-agentic-tools");
-  assert.strictEqual(r.serverInfo.version, require("../package.json").version);
+  assert.strictEqual(r.serverInfo.version, require("../.claude-plugin/plugin.json").version);
   assert.ok(r.instructions.includes("set_config"), "the routing rule must ride the handshake");
 
   const unknown = server.dispatch({ method: "initialize", params: { protocolVersion: "1999-01-01" } });

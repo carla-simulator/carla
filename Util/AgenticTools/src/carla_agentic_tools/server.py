@@ -34,30 +34,12 @@ except ImportError:  # mcp 1.x
     from mcp.server.fastmcp import FastMCP as _MCPServer
 
 def _resolve_skills_dir() -> Path:
-    """Locate the skill library, installed or in a checkout.
-
-    Two layouts must both work, because the same code serves `uvx
-    carla-agentic-tools` and a developer's `pip install -e .`:
-
-      installed  <site-packages>/carla_agentic_tools/skills/   (wheel package data)
-      checkout   <repo root>/skills/                           (source of truth)
-
-    The in-package copy wins so an installed server never reads a stale sibling
-    checkout. CARLA_SKILLS_DIR overrides both, for authoring against a working
-    tree without reinstalling.
-    """
+    """`Skills/` at the carla repo root, or CARLA_SKILLS_DIR when set."""
     override = os.environ.get("CARLA_SKILLS_DIR")
     if override:
         return Path(override).expanduser().resolve()
-    packaged = Path(__file__).resolve().parent / "skills"
-    if packaged.is_dir():
-        return packaged
-    checkout = Path(__file__).resolve().parents[2] / "skills"
-    if checkout.is_dir():
-        return checkout
-    # Vendored into the carla repo: the server lives at Util/AgenticTools/ and
-    # the skill library at the repo root, so the two are no longer siblings.
-    return Path(__file__).resolve().parents[4] / "skills"
+    # The server lives at Util/AgenticTools/src/carla_agentic_tools/.
+    return Path(__file__).resolve().parents[4] / "Skills"
 
 
 SKILLS_DIR = _resolve_skills_dir()
@@ -110,25 +92,11 @@ set_config derives the engine-specific variable that gates ue4/ue5/ue58.
 """
 
 def _version() -> str:
-    """This package's version, as the client will be shown it.
-
-    Read from `__version__`, which ships inside the package, rather than from
-    installed distribution metadata: the metadata is absent in a bare checkout
-    and stale whenever a different version is installed alongside, and either
-    way FastMCP then reports the *SDK* release instead. Distribution metadata is
-    the fallback for the reverse case, a package without __version__.
-    """
+    """The version clients are shown; without it FastMCP reports the SDK's."""
     try:
         from . import __version__
 
-        if __version__:
-            return __version__
-    except Exception:
-        pass
-    try:
-        from importlib.metadata import version
-
-        return version("carla-agentic-tools")
+        return __version__
     except Exception:
         return ""
 
@@ -475,7 +443,7 @@ def set_config(paths: dict[str, str]) -> str:
 
 
 def main() -> None:
-    """Console-script entrypoint: serve over stdio."""
+    """Serve over stdio."""
     mcp.run()
 
 
