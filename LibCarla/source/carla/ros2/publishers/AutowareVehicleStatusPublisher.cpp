@@ -70,13 +70,14 @@ void AutowareVehicleStatusPublisher::SetVelocity(
   report->heading_rate = heading_rate;
 }
 
-void AutowareVehicleStatusPublisher::SetSteering(float steering_tire_angle) {
+void AutowareVehicleStatusPublisher::SetSteering(float steering_input) {
   auto *report = _impl->steering.GetMessage();
-  // Report the *actual* tire angle: apply the inverse compensation LUT so the
-  // published state matches what the command-side GetSteeringInput mapping
-  // asked the vehicle to do (tier4 AutowarePublisher::SetSteering).
+  // Report the *actual* tire angle: map the normalized steer input through the
+  // compensation LUT, the inverse of the command-side GetSteeringInput mapping
+  // (tier4 AutowarePublisher::SetSteering). The LUT is keyed by the normalized
+  // input; passing an angle instead over-reports by the vehicle's max steer.
   report->steering_tire_angle =
-      autoware_steering_compensation::GetSteeringOutput(steering_tire_angle);
+      autoware_steering_compensation::GetSteeringOutput(steering_input);
 }
 
 void AutowareVehicleStatusPublisher::SetControlMode(const ControlMode mode) {

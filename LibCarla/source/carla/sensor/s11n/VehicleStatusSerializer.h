@@ -37,7 +37,7 @@ namespace s11n {
     float vel_x_mps, vel_y_mps, vel_z_mps;           // local
     float angVel_x_mps, angVel_y_mps, angVel_z_mps;  // local
     float rot_pitch, rot_yaw, rot_roll;              // relative
-    float steer;
+    float steer;                                     // normalized input, [-1, 1]
     int32_t gear;
     uint8_t turn_mask;
     uint8_t control_flags;
