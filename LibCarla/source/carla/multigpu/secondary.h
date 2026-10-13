@@ -46,6 +46,14 @@ namespace multigpu {
 
     void Connect();
 
+    /// Called from an io thread, without any lock held, each time the
+    /// connection to the primary is (re)established. Set it before Connect().
+    void SetConnectedCallback(std::function<void()> callback) {
+      _on_connected = std::move(callback);
+    }
+
+    /// Blocks until the io threads have exited. Must not be called from one
+    /// of them (i.e. from a command callback).
     void Stop();
 
     void AsyncRun(size_t worker_threads);
@@ -80,6 +88,7 @@ namespace multigpu {
     std::shared_ptr<BufferPool>       _buffer_pool;
     std::atomic_bool                  _done {false};
     SecondaryCommands                 _commander;
+    std::function<void()>             _on_connected;
   };
 
 } // namespace multigpu

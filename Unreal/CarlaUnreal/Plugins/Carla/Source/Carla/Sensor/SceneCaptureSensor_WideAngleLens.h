@@ -15,6 +15,7 @@
 #include "Carla/Util/CameraModelUtil.h"
 
 #include <util/ue-header-guard-begin.h>
+#include "Misc/App.h"
 #if __has_include("GBufferView.h")
 #define CARLA_HAS_GBUFFER_API
 #include "GBufferView.h"
@@ -252,8 +253,12 @@ public:
   template <typename TSensor>
   static void CaptureAndSendToClient(TSensor& Sensor)
   {
-    if (!Sensor.AreClientsListening())
+    // This path does not go through ASceneCaptureSensor::ShouldCaptureThisFrame(),
+    // so it needs its own check for a process without an RHI (-nullrhi).
+    if (!Sensor.AreClientsListening() || !FApp::CanEverRender() || !Sensor.OwnsSensorStream())
+    {
       return;
+    }
     Sensor.EnqueueRenderSceneImmediate();
     const auto CaptureContext = ASensor::MakeCaptureContext(Sensor);
     ImageUtil::ReadImageDataAsyncFColor(

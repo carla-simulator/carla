@@ -17,6 +17,7 @@
 #include <util/ue-header-guard-begin.h>
 #include "Actor/ActorBlueprintFunctionLibrary.h"
 #include "Async/ParallelFor.h"
+#include "Misc/App.h"
 #include <util/ue-header-guard-end.h>
 
 #include <random>
@@ -136,7 +137,10 @@ void ADVSCamera::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaTim
   TRACE_CPUPROFILER_EVENT_SCOPE(ADVSCamera::PostPhysTick);
   Super::PostPhysTick(World, TickType, DeltaTime);
   check(CaptureRenderTarget != nullptr);
-  if (!HasActorBegunPlay() || !IsValid(this) || !AreClientsListening())
+  // This path does not go through ASceneCaptureSensor::ShouldCaptureThisFrame(),
+  // so it needs its own check for a process without an RHI (-nullrhi).
+  if (!HasActorBegunPlay() || !IsValid(this) || !AreClientsListening() || !FApp::CanEverRender() ||
+      !OwnsSensorStream())
   {
     return;
   }

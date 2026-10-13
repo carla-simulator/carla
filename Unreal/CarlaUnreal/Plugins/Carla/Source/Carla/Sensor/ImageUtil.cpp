@@ -14,6 +14,7 @@
 #include <HighResScreenshot.h>
 #include <RHIGPUReadback.h>
 #include <Async/ParallelFor.h>
+#include <Misc/App.h>
 #include <util/ue-header-guard-end.h>
 
 #include <chrono>
@@ -140,6 +141,10 @@ namespace ImageUtil
   {
     check(IsInGameThread());
     auto Resource = RenderTarget.GameThread_GetRenderTargetResource();
+    if (Resource == nullptr)
+    {
+      return false;
+    }
     FReadSurfaceDataFlags ReadFlags(RCM_UNorm);
     ReadFlags.SetLinearToGamma(true);
     return Resource->ReadPixels(Out, ReadFlags);
@@ -152,6 +157,10 @@ namespace ImageUtil
     TArray64<FColor>& Out)
   {
     auto Resource = RenderTarget.GameThread_GetRenderTargetResource();
+    if (Resource == nullptr)
+    {
+      return false;
+    }
     FReadSurfaceDataFlags ReadFlags(RCM_UNorm);
     ReadFlags.SetLinearToGamma(true);
     Out.SetNum(RenderTarget.GetSurfaceWidth() * RenderTarget.GetSurfaceHeight());
@@ -221,9 +230,17 @@ namespace ImageUtil
     auto& CmdList = FRHICommandListImmediate::Get();
     auto Resource = static_cast<FTextureRenderTarget2DResource*>(
       RenderTarget.GetResource());
+    // No resource: the RHI never created it (-nullrhi) or it was released.
+    // Leaving Self.Readback null makes the caller drop this frame.
+    if (Resource == nullptr)
+    {
+      return;
+    }
     auto Texture = Resource->GetRenderTargetTexture();
     if (Texture == nullptr)
+    {
       return;
+    }
     Self.Callback = std::move(Callback);
     Self.Pool = std::move(Pool);
     if (Self.Pool)
@@ -405,6 +422,10 @@ namespace ImageUtil
     ReadImageDataAsyncCallback&& Callback,
     bool bNonBlocking)
   {
+    if (!FApp::CanEverRender())
+    {
+      return false;
+    }
     if (IsInRenderingThread())
     {
       ReadImageDataContext Context = { };
@@ -454,7 +475,7 @@ namespace ImageUtil
     ReadImageDataAsyncCallback&& Callback)
   {
     auto RenderTarget = Sensor.GetCaptureRenderTarget();
-    if (RenderTarget == nullptr)
+    if (RenderTarget == nullptr || !Sensor.OwnsSensorStream())
       return false;
     return ReadImageDataAsync(
       *RenderTarget,
@@ -493,7 +514,7 @@ namespace ImageUtil
     ReadImageDataAsyncCallbackFColor&& Callback)
   {
     auto RenderTarget = Sensor.GetCaptureRenderTarget();
-    if (RenderTarget == nullptr)
+    if (RenderTarget == nullptr || !Sensor.OwnsSensorStream())
       return false;
     // Pass the sensor's readback pool, as ReadSensorImageDataAsync does:
     // without it every camera allocated a fresh staging buffer (8 MB at
@@ -536,7 +557,7 @@ namespace ImageUtil
     ReadImageDataAsyncCallbackFLinearColor&& Callback)
   {
     auto RenderTarget = Sensor.GetCaptureRenderTarget();
-    if (RenderTarget == nullptr)
+    if (RenderTarget == nullptr || !Sensor.OwnsSensorStream())
       return false;
     // Recycle the staging buffer through the sensor's pool, as the FColor
     // variant does.

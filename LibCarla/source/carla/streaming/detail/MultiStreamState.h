@@ -97,7 +97,9 @@ namespace detail {
       log_debug("Calling DisconnectSession for ", session->get_stream_id());
       if (_sessions.size() == 0) return;
       if (_sessions.size() == 1) {
-        DEBUG_ASSERT(session == _session.load());
+        if (_sessions[0] != session) {
+          return;
+        }
         _session.store(nullptr);
         _sessions.clear();
         _force_active = false;

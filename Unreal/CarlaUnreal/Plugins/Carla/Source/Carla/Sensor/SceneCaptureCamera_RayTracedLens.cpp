@@ -451,7 +451,7 @@ void ASceneCaptureCamera_RayTracedLens::TickCaptureAndReadback(
       CVarRTLensSyncBlockingReadback.GetValueOnGameThread() != 0)
   {
     ASceneCaptureSensor::PostPhysTick(World, TickType, DeltaSeconds);
-    if (AreClientsListening())
+    if (AreClientsListening() && OwnsSensorStream())
     {
       const FSensorCaptureContext Context = MakeCaptureContext(*this);
       // Keep this current even in sync mode, in case the sensor switches to
@@ -482,7 +482,7 @@ void ASceneCaptureCamera_RayTracedLens::TickCaptureAndReadback(
   //    render). Result: one frame of latency, never a stall.
   // Use the stored context, not this tick's live state: the render target
   // still holds the PREVIOUS capture.
-  if (AreClientsListening() && bHasPendingReadbackContext)
+  if (AreClientsListening() && bHasPendingReadbackContext && OwnsSensorStream())
   {
     EnqueueReadback(/*bNonBlocking=*/true, PendingReadbackContext);
   }

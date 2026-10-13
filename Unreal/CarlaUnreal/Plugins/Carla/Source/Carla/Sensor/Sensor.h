@@ -125,6 +125,10 @@ public:
     return Stream.AreClientsListening();
   }
 
+  /// Whether this process owns the sensor and must capture it; always true on
+  /// a single server. Game thread only.
+  bool OwnsSensorStream();
+
   void Tick(const float DeltaTime) final;
 
   virtual void PrePhysTick(float DeltaSeconds) {}
@@ -311,5 +315,7 @@ private:
   float ReadyToTickDeltaSeconds = 0.0f;
 
   bool bClientsListening = false;
+
+  bool bOwnedOnLastCheck = true;
 
 };
