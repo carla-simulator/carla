@@ -66,7 +66,8 @@ void UCarlaVehicleAnimationInstance::UpdateAxleOffsets(const ACarlaWheeledVehicl
     return;
   }
   const TArray<FWheelAnimationData> &WheelPoses = GetWheelPoses();
-  const int32 NumWheels = FMath::Min(Movement->Wheels.Num(), WheelPoses.Num());
+  // Not Movement->Wheels: disabling physics destroys them.
+  const int32 NumWheels = FMath::Min(Movement->WheelSetups.Num(), WheelPoses.Num());
   const USkeletalMesh *SkeletalMesh = GetSkelMeshComponent()->GetSkeletalMeshAsset();
   const bool bReadRestLocations = !bHasAxleRestLocations && SkeletalMesh != nullptr;
   if (bReadRestLocations)
@@ -94,8 +95,13 @@ void UCarlaVehicleAnimationInstance::UpdateAxleOffsets(const ACarlaWheeledVehicl
             FAnimationRuntime::GetComponentSpaceTransformRefPose(RefSkeleton, BoneIndex).GetLocation();
       }
     }
-    UChaosVehicleWheel *Wheel = Movement->Wheels[i];
-    EAxleType Axle = Wheel != nullptr ? Wheel->GetAxleType() : EAxleType::Undefined;
+    const UChaosVehicleWheel *Wheel = Movement->Wheels.IsValidIndex(i) ? Movement->Wheels[i].Get() : nullptr;
+    if (Wheel == nullptr && Movement->WheelSetups[i].WheelClass != nullptr)
+    {
+      // Disabling physics destroys the wheels; their class keeps the setup.
+      Wheel = Movement->WheelSetups[i].WheelClass->GetDefaultObject<UChaosVehicleWheel>();
+    }
+    EAxleType Axle = Wheel != nullptr ? Wheel->AxleType : EAxleType::Undefined;
     if (Axle == EAxleType::Undefined)
     {
       // Wheel setups list the front wheels first.
