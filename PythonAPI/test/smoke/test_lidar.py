@@ -581,16 +581,26 @@ class TestUnlistenedRayCastSensors(SyncSmokeTest):
         print("TestUnlistenedRayCastSensors.test_late_listen_skips_noise")
         if self.is_ros2_enabled():
             self.skipTest("ROS 2 is enabled on the server, so unlistened sensors are not skipped.")
-        # Fails when unlistened ticks are traced: they would draw the noise a listened sensor draws.
-        bp_id = 'sensor.lidar.ray_cast'
-        attributes = {'channels': '32', 'range': '50', 'points_per_second': '100000', 'rotation_frequency': '10',
-                      'dropoff_general_rate': '0.0', 'dropoff_intensity_limit': '0.0',
-                      'noise_stddev': '0.05', 'noise_seed': '4242'}
-        reference = self.record(bp_id, attributes, self.UNLISTENED_TICKS, listen_before=True)
-        late = self.record(bp_id, attributes, self.UNLISTENED_TICKS, listen_before=False)
-        for idx, (a, b) in enumerate(zip(reference, late)):
-            self.assertTrue(len(a) > 0, "%s frame %d has no points." % (bp_id, idx))
-            self.assertEqual(len(a), len(b), "%s frame %d has a different point count." % (bp_id, idx))
-        self.assertNotEqual(reference[0], late[0],
-                            "%s listened late reproduced the noise of one listened from the start, "
-                            "so its unlistened ticks were traced." % bp_id)
+        # Fails when unlistened ticks are traced: they would draw the random numbers a listened sensor draws
+        # (LiDAR noise, radar ray directions).
+        sensors = [
+            ('sensor.lidar.ray_cast', {'channels': '32', 'range': '50', 'points_per_second': '100000',
+                                       'rotation_frequency': '10', 'dropoff_general_rate': '0.0',
+                                       'dropoff_intensity_limit': '0.0', 'noise_stddev': '0.05',
+                                       'noise_seed': '4242'}),
+            ('sensor.lidar.hss_lidar', {'channels': '32', 'range': '50', 'horizontal_resolution': '0.2',
+                                        'dropoff_general_rate': '0.0', 'dropoff_intensity_limit': '0.0',
+                                        'noise_stddev': '0.05', 'noise_seed': '4242'}),
+            ('sensor.other.radar', {'range': '50', 'points_per_second': '10000', 'noise_seed': '4242'}),
+        ]
+        for bp_id, attributes in sensors:
+            with self.subTest(sensor=bp_id):
+                reference = self.record(bp_id, attributes, self.UNLISTENED_TICKS, listen_before=True)
+                late = self.record(bp_id, attributes, self.UNLISTENED_TICKS, listen_before=False)
+                for idx, (a, b) in enumerate(zip(reference, late)):
+                    self.assertTrue(len(a) > 0, "%s frame %d has no data." % (bp_id, idx))
+                    if bp_id.startswith('sensor.lidar.'):
+                        self.assertEqual(len(a), len(b), "%s frame %d has a different point count." % (bp_id, idx))
+                self.assertTrue(reference[0] != late[0],
+                                "%s listened late reproduced the random draws of one listened from the start, "
+                                "so its unlistened ticks were traced." % bp_id)
