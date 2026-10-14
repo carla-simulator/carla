@@ -103,16 +103,13 @@ namespace multigpu {
   }
 
   void Secondary::Stop() {
+    _done = true;
+    // Joins the io threads, so no command callback runs after Stop() returns;
+    // the socket and timer are then only touched from this thread.
+    _pool.Stop();
     _connection_timer.cancel();
-    std::weak_ptr<Secondary> weak = shared_from_this();
-    boost::asio::post(_strand, [weak]() {
-      auto self = weak.lock();
-      if (!self) return;
-      self->_done = true;
-      if (self->_socket.is_open()) {
-        self->_socket.close();
-      }
-    });
+    boost::system::error_code ec;
+    _socket.close(ec);
   }
 
   void Secondary::Reconnect() {

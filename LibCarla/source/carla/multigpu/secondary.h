@@ -46,6 +46,8 @@ namespace multigpu {
 
     void Connect();
 
+    /// Blocks until the io threads have exited. Must not be called from one
+    /// of them (i.e. from a command callback).
     void Stop();
 
     void AsyncRun(size_t worker_threads);

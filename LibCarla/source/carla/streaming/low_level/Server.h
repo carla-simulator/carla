@@ -12,6 +12,8 @@
 
 #include <boost/asio/io_context.hpp>
 
+#include <optional>
+
 namespace carla {
 namespace streaming {
 namespace low_level {
@@ -79,6 +81,28 @@ namespace low_level {
 
     token_type GetToken(stream_id sensor_id) {
       return _dispatcher.GetToken(sensor_id);
+    }
+
+    [[nodiscard]]
+    std::optional<token_type> FindToken(stream_id id) {
+      return _dispatcher.FindToken(id);
+    }
+
+    void SetSessionsUseStreamAliases(bool enabled) {
+      _dispatcher.SetSessionsUseStreamAliases(enabled);
+    }
+
+    void SetStreamAlias(stream_id alias, stream_id target) {
+      _dispatcher.SetStreamAlias(alias, target);
+    }
+
+    void RemoveStreamAlias(stream_id alias) {
+      _dispatcher.RemoveStreamAlias(alias);
+    }
+
+    [[nodiscard]]
+    std::optional<stream_id> FindStreamAlias(stream_id alias) {
+      return _dispatcher.FindStreamAlias(alias);
     }
 
     void SetROS2TopicVisibilityDefaultEnabled(bool enabled) {
