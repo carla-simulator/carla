@@ -80,6 +80,11 @@ void ARadar::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaTime)
   TRACE_CPUPROFILER_EVENT_SCOPE(ARadar::PostPhysTick);
   CalculateCurrentVelocity(DeltaTime);
 
+  if (CanSkipRayCastSimulation())
+  {
+    return;
+  }
+
   RadarData.Reset();
   SendLineTraces(DeltaTime);
 

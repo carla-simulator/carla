@@ -89,32 +89,37 @@ void ASensorSpawnerActor::SpawnSensors()
 void ASensorSpawnerActor::StartRecordingSensorData()
 {
   bRecordingData = true;
-
-  for(ASensor* CurrentSensor : SpawnedSensorsArray)
-  {
-    if(CurrentSensor)
-    {
-      CurrentSensor->SetSavingDataToDisk(bRecordingData);
-    }
-  }
+  UpdateSensorsSavingData();
 }
 
 void ASensorSpawnerActor::StopRecordingSensorData()
 {
   bRecordingData = false;
-
-  for(ASensor* CurrentSensor : SpawnedSensorsArray)
-  {
-    if(CurrentSensor)
-    {
-      CurrentSensor->SetSavingDataToDisk(bRecordingData);
-    }
-  }
+  UpdateSensorsSavingData();
 }
 
 void ASensorSpawnerActor::ToggleRadarVisibility()
 {
   bRadarVisibility = !bRadarVisibility;
+  UpdateSensorsSavingData();
+}
+
+void ASensorSpawnerActor::UpdateSensorsSavingData()
+{
+  for(ASensor* CurrentSensor : SpawnedSensorsArray)
+  {
+    if(CurrentSensor)
+    {
+      UpdateSensorSavingData(CurrentSensor);
+    }
+  }
+}
+
+void ASensorSpawnerActor::UpdateSensorSavingData(ASensor* Sensor) const
+{
+  // DrawRadarSensorPoints reads the radar data every tick, so the radar must
+  // not skip its traces as an unlistened sensor would.
+  Sensor->SetSavingDataToDisk(bRecordingData || (bRadarVisibility && Sensor->IsA<ARadar>()));
 }
 
 const FActorDefinition* ASensorSpawnerActor::GetActorDefinitionByClass(const TSubclassOf<AActor> ActorClass) const
@@ -212,7 +217,7 @@ void ASensorSpawnerActor::AddSensorToSaveDataArray(AActor* Actor)
     if(SensorClassToCapture == CaptureSensor->GetClass() || SensorClassToCapture == nullptr)
     {
       SpawnedSensorsArray.Add(CaptureSensor);
-      CaptureSensor->SetSavingDataToDisk(bRecordingData);
+      UpdateSensorSavingData(CaptureSensor);
     }
   }
 }
