@@ -125,6 +125,10 @@ public:
     return Stream.AreClientsListening();
   }
 
+  /// True when no client stream, ROS 2 publisher or in-process recording can
+  /// consume this tick's output, so a ray-cast sensor may skip its traces.
+  bool CanSkipRayCastSimulation();
+
   void Tick(const float DeltaTime) final;
 
   virtual void PrePhysTick(float DeltaSeconds) {}

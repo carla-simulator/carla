@@ -120,6 +120,10 @@ private:
 
   UFUNCTION()
   void SpawnSensorsDelayed();
+
+  void UpdateSensorsSavingData();
+
+  void UpdateSensorSavingData(ASensor* Sensor) const;
   
   void GenerateSensorActorDescription(const FActorDefinition* Definition, FActorDescription& SensorDescription) const;
 

@@ -13,6 +13,10 @@
 #include <Carla/Sensor/ImageUtil.h>
 #include <Carla/Sensor/ShaderBasedSensor.h>
 
+#include <util/disable-ue4-macros.h>
+#include <carla/ros2/ROS2.h>
+#include <util/enable-ue4-macros.h>
+
 #include <util/ue-header-guard-begin.h>
 #include <Engine/CollisionProfile.h>
 #include <util/ue-header-guard-end.h>
@@ -83,6 +87,22 @@ void ASensor::Tick(const float DeltaTime)
   ReadyToTick = true;
   ReadyToTickDeltaSeconds = DeltaTime;
   PrePhysTick(DeltaTime);
+}
+
+bool ASensor::CanSkipRayCastSimulation()
+{
+  if (bSavingDataToDisk || AreClientsListening())
+  {
+    return false;
+  }
+#if defined(WITH_ROS2)
+  // ROS 2 publishes on IsEnabled() alone, with or without a subscriber.
+  if (carla::ros2::ROS2::GetInstance()->IsEnabled())
+  {
+    return false;
+  }
+#endif
+  return true;
 }
 
 void ASensor::SetSeed(const int32 InSeed)
