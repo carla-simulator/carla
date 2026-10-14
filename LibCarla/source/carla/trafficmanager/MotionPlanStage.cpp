@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <cmath>
 #include <limits>
+#include <optional>
 
 #include "carla/client/TrafficSign.h"
 #include "carla/client/TrafficLight.h"
@@ -138,7 +139,8 @@ void MotionPlanStage::Update(const unsigned long index) {
   else {
 
     // Target velocity for vehicle.
-    float max_target_velocity = parameters.GetVehicleTargetVelocity(actor_id, vehicle_speed_limit) / 3.6f;
+    const float road_speed_limit_kmh = GetRoadSpeedLimit(*(waypoint_buffer.at(0)), actor_id, vehicle_speed_limit);
+    float max_target_velocity = parameters.GetVehicleTargetVelocity(actor_id, road_speed_limit_kmh) / 3.6f;
 
     // Algorithm to reduce speed near landmarks
     float max_landmark_target_velocity = GetLandmarkTargetVelocity(*(waypoint_buffer.at(0)), vehicle_location, actor_id, max_target_velocity);
@@ -721,8 +723,12 @@ float MotionPlanStage::GetLandmarkTargetVelocity(const SimpleWaypoint& waypoint,
       } else if (landmark_type == "205") {  // Yield
         minimum_velocity = YIELD_TARGET_VELOCITY;
       } else if (landmark_type == "274") {  // Speed limit
-        float value = static_cast<float>(landmark->GetValue()) / 3.6f;
-        value = parameters.GetVehicleTargetVelocity(actor_id, value);
+        const std::optional<double> limit = landmark->GetSpeedLimitKmh();
+        if (!limit.has_value()) {
+          continue;
+        }
+        const float value = parameters.GetVehicleTargetVelocity(
+            actor_id, static_cast<float>(*limit)) / 3.6f;
         minimum_velocity = (value < max_target_velocity) ? value : max_target_velocity;
       } else {
         continue;
@@ -733,6 +739,34 @@ float MotionPlanStage::GetLandmarkTargetVelocity(const SimpleWaypoint& waypoint,
     }
 
     return landmark_target_velocity;
+}
+
+float MotionPlanStage::GetRoadSpeedLimit(const SimpleWaypoint &waypoint,
+                                         const ActorId actor_id,
+                                         float vehicle_speed_limit) {
+  // The vehicle's own speed limit only changes when it drives through a
+  // speed-sign trigger box and otherwise sits at the controller's 30 km/h
+  // default, so prefer the limit the OpenDRIVE map gives for the lane. That
+  // limit already includes the last 274 sign passed on the road, so a sign
+  // keeps holding the vehicle down after the lookahead has gone past it.
+  const std::optional<double> map_limit = waypoint.GetWaypoint()->GetSpeedLimit();
+  if (map_limit.has_value()) {
+    const float limit = static_cast<float>(*map_limit);
+    road_speed_limit[actor_id] = limit;
+    return limit;
+  }
+
+  // Junction connecting roads often carry no <speed>; keep the limit of the
+  // road the vehicle came from instead of dropping to the default mid-turn.
+  if (waypoint.CheckJunction()) {
+    const auto it = road_speed_limit.find(actor_id);
+    if (it != road_speed_limit.end()) {
+      return it->second;
+    }
+  } else {
+    road_speed_limit.erase(actor_id);
+  }
+  return vehicle_speed_limit;
 }
 
 float MotionPlanStage::GetTurnTargetVelocity(const Buffer &waypoint_buffer,
@@ -770,6 +804,7 @@ void MotionPlanStage::RemoveActor(const ActorId actor_id) {
   teleportation_instance.erase(actor_id);
   stuck_since.erase(actor_id);
   recovery_state.erase(actor_id);
+  road_speed_limit.erase(actor_id);
 }
 
 void MotionPlanStage::Reset() {
@@ -777,6 +812,7 @@ void MotionPlanStage::Reset() {
   teleportation_instance.clear();
   stuck_since.clear();
   recovery_state.clear();
+  road_speed_limit.clear();
 }
 
 } // namespace traffic_manager

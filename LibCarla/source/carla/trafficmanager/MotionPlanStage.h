@@ -53,6 +53,9 @@ private:
   };
   std::unordered_map<ActorId, double> stuck_since;
   std::unordered_map<ActorId, RecoveryState> recovery_state;
+  // Last OpenDRIVE speed limit (km/h) seen by each vehicle, carried through
+  // junction roads that don't define their own.
+  std::unordered_map<ActorId, float> road_speed_limit;
   ControlFrame &output_array;
   cc::Timestamp current_timestamp;
   RandomGenerator &random_device;
@@ -88,6 +91,10 @@ private:
                                   const cg::Location vehicle_location,
                                   const ActorId actor_id,
                                   float max_target_velocity);
+
+  float GetRoadSpeedLimit(const SimpleWaypoint &waypoint,
+                          const ActorId actor_id,
+                          float vehicle_speed_limit);
 
   float GetTurnTargetVelocity(const Buffer &waypoint_buffer,
                               const cg::Location vehicle_location,

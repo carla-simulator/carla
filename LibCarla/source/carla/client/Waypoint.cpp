@@ -48,6 +48,10 @@ namespace client {
     return _parent->GetRoad(_waypoint.road_id);
   }
 
+  std::optional<double> Waypoint::GetSpeedLimit() const {
+    return _parent->GetMap().GetSpeedLimit(_waypoint);
+  }
+
   double Waypoint::GetLaneWidth() const {
     return _parent->GetMap().GetLaneWidth(_waypoint);
 
