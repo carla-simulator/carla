@@ -9,6 +9,29 @@
       This snapshot comprises all the information for every actor on scene at a certain moment of time. It creates and gives acces to a data structure containing a series of carla.ActorSnapshot. The client recieves a new snapshot on every tick that cannot be stored.  
     # - PROPERTIES -------------------------
     instance_variables:
+    - var_name: platform_timestamp
+      type: float
+      var_units: seconds
+      doc: >
+        Time register of the frame at which the snapshot was taken, from the operating system.
+    # --------------------------------------
+    - var_name: frame_count
+      type: int
+      doc: >
+        Frame the snapshot belongs to. Same value as <b>frame</b>.
+    # --------------------------------------
+    - var_name: elapsed_seconds
+      type: float
+      var_units: seconds
+      doc: >
+        Simulated seconds elapsed since the beginning of the episode.
+    # --------------------------------------
+    - var_name: delta_seconds
+      type: float
+      var_units: seconds
+      doc: >
+        Simulated seconds elapsed since the previous frame.
+    # --------------------------------------
     - var_name: id
       type: int
       doc: >

@@ -61,8 +61,13 @@ public:
   // set the animation for Vehicles
   void ProcessReplayerAnimVehicle(CarlaRecorderAnimVehicle Vehicle);
 
-  // set the animation for Vehicles Wheels
-  void ProcessReplayerAnimVehicleWheels(CarlaRecorderAnimWheels Vehicle);
+  // set the animation for Vehicles Wheels, interpolating like the positions;
+  // Travel is how far the vehicle moves forward from Wheels1 to Wheels2, in cm
+  void ProcessReplayerAnimVehicleWheels(
+      const CarlaRecorderAnimWheels &Wheels1,
+      const CarlaRecorderAnimWheels &Wheels2,
+      double Per,
+      float Travel);
 
   // set the animation for walkers
   void ProcessReplayerAnimWalker(CarlaRecorderAnimWalker Walker);

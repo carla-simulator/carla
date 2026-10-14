@@ -201,7 +201,6 @@ void export_world() {
          arg("delta_seconds")=0.0,
          arg("platform_timestamp")=0.0)))
     .def_readwrite("frame", &cc::Timestamp::frame)
-    .def_readwrite("frame_count", &cc::Timestamp::frame) // deprecated.
     .def_readwrite("elapsed_seconds", &cc::Timestamp::elapsed_seconds)
     .def_readwrite("delta_seconds", &cc::Timestamp::delta_seconds)
     .def_readwrite("platform_timestamp", &cc::Timestamp::platform_timestamp)
