@@ -14,9 +14,11 @@
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"
 
+// The photoreal profile the sky rig used to load as Default.json, renamed to
+// Cinematic.json when the camera profile library landed.
 static TAutoConsoleVariable<FString> CVarCarlaPostProcessProfile(
     TEXT("carla.PostProcess.Profile"),
-    TEXT("Default"),
+    TEXT("Cinematic"),
     TEXT("Camera profile (Content/Carla/Config/PostProcess/<name>.json) shared by the sky rig's ")
     TEXT("post process at BeginPlay and by RGB sensors spawned without post_process_profile."),
     ECVF_Default);
@@ -24,12 +26,13 @@ static TAutoConsoleVariable<FString> CVarCarlaPostProcessProfile(
 FString UPostProcessJsonUtils::GetActiveProfileName()
 {
     const FString Name = CVarCarlaPostProcessProfile.GetValueOnGameThread();
-    return Name.IsEmpty() ? FString(TEXT("Default")) : Name;
+    return Name.IsEmpty() ? FString(TEXT("Cinematic")) : Name;
 }
 
 FString UPostProcessJsonUtils::ResolveProfileName(const FString& Requested)
 {
-    // FString's == ignores case: an explicit "Default" must still load Default.json.
+    // Case-sensitive on purpose: lowercase "default" means the server profile,
+    // while "Default" is treated as a profile name like any other.
     if (Requested.IsEmpty() || Requested.Equals(TEXT("default"), ESearchCase::CaseSensitive))
         return GetActiveProfileName();
     return Requested;

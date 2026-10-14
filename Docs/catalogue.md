@@ -42,7 +42,7 @@ The CARLA simulator provides a vast library of 3D assets to populate your autono
 * [__Vehicles catalogue__](catalogue_vehicles.md)
 * [__Pedestrians catalogue__](catalogue_pedestrians.md)
 * [__Props catalogue__](catalogue_props.md)
-<!-- * [__Script catalogue__](catalogue_scripts.md) -->
+* [__Scripts catalogue__](catalogue_scripts.md)
 
 ## Maps
 
@@ -110,6 +110,6 @@ Don't forget to destroy the vehicle before you try and spawn another to avoid a 
 vehicle.destroy()
 ```
 
-<!-- ## Scripts
+## Scripts
 
-CARLA comes provided with a library of example scripts that can be used to explore maps, vehicles or use as guidance for using the API in various contexts. You could also use them as the basis for your own scripts. Choose a script for your application in the [__scripts catalogue__](catalogue_scripts.md). -->
+CARLA comes provided with a library of example scripts that can be used to explore maps, vehicles or use as guidance for using the API in various contexts. You could also use them as the basis for your own scripts. Choose a script for your application in the [__scripts catalogue__](catalogue_scripts.md).

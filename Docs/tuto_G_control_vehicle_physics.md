@@ -64,8 +64,18 @@ if __name__ == '__main__':
 
 ## Viewing vehicle telemetry
 
-Vehicle telemetry can be visualised by calling the [`Actor.enable_debug_telemetry`](python_api.md#carla.Actor.enable_debug_telemetry) method. This will provide graph views of several metrics on the server window as well as vehicle reference points on the simulation window.
+Vehicle telemetry can be visualised by calling the [`Vehicle.show_debug_telemetry`](python_api.md#carla.Vehicle.show_debug_telemetry) method. This will provide graph views of several metrics on the server window as well as vehicle reference points on the simulation window. Only one vehicle can be shown at a time: enabling a second one disables the first.
 
 ![vehicle_telemetry](img/vehicle_telemetry.png)
 
 You can try the telemetry visualisation tool in the example script `manual_control.py` located in `PythonAPI/examples`. Activate the telemetry view by pressing `T`.
+
+To read the same state from the client instead of watching it, [`Vehicle.get_telemetry_data`](python_api.md#carla.Vehicle.get_telemetry_data) returns what the solver last computed: the applied control, forward speed, engine RPM and gear, and the slip and angular velocity of each wheel.
+
+```py
+telemetry = vehicle.get_telemetry_data()
+print(telemetry.speed, telemetry.engine_rpm, telemetry.gear)
+
+for wheel in telemetry.wheels:
+    print(wheel.lat_slip, wheel.long_slip, wheel.omega)
+```

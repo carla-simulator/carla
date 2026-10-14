@@ -2,7 +2,9 @@
 
 ---
 
-CARLA server is responsible for publishing the Clock (/clock) based on the simulation time. Clock will be updated every simulation frame.
+The server publishes the simulation clock on `/clock`, updated every frame, and the transform tree on `/tf`, which carries one transform per actor and can be switched off with `world.set_publish_tf(False)`.
+
+In the topics below, `<PARENT ROLE NAME>` is the role name of the actor the sensor is attached to, and `<SENSOR ROLE NAME>` is the sensor's `ros_name`. A sensor with `ros_topic_name` set publishes on that name instead.
 
 ## Available Sensors
 
@@ -86,6 +88,12 @@ CARLA server is responsible for publishing the Clock (/clock) based on the simul
 |-------|------|
 | `/carla/[<PARENT ROLE NAME>]/<SENSOR ROLE NAME>` | [sensor_msgs/NavSatFix](https://docs.ros.org/en/api/sensor_msgs/html/msg/NavSatFix.html) |
 
+
+###### Collision sensor
+
+| Topic | Type |
+|-------|------|
+| `/carla/[<PARENT ROLE NAME>]/<SENSOR ROLE NAME>` | [carla_msgs/CarlaCollisionEvent](ros2_native_msgs.md#carlacollisioneventmsg) |
 
 ###### Lane Invasion Sensor
 

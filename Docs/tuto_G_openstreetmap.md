@@ -8,7 +8,7 @@ In this guide you will learn:
 - How to include traffic light information in the `.xodr` file.
 - How to run the final map in a CARLA simulation.
 
-[OpenStreetMap](https://www.openstreetmap.org) is an open data map of the world developed by thousands of contributors and licensed under the [Open Data Commons Open Database License](https://opendatacommons.org/licenses/odbl/). Sections of the map can be exported to an XML formatted `.osm` file. CARLA can convert this file to an OpenDRIVE format and ingest it using the [OpenDRIVE Standalone Mode](#adv_opendrive.md).
+[OpenStreetMap](https://www.openstreetmap.org) is an open data map of the world developed by thousands of contributors and licensed under the [Open Data Commons Open Database License](https://opendatacommons.org/licenses/odbl/). Sections of the map can be exported to an XML formatted `.osm` file. CARLA can convert this file to an OpenDRIVE format and ingest it using the [OpenDRIVE Standalone Mode](adv_opendrive.md).
 
 - [__Export a map with OpenStreetMap__](#export-a-map-with-openstreetmap)
 - [__Using OpenStreetMaps in CARLA__](#using-openstreetmaps-in-carla)
@@ -30,7 +30,7 @@ __2.__ Search for your desired location and zoom in to a specific area.
 ![openstreetmap_view](img/tuto_g_osm_web.jpg)
 
 !!! Note
-    If you would like to use a map of a large area, for example, Paris, you may consider using CARLA's [__Large Map__ feature](large_map_overview.md).
+    If you would like to use a map of a large area, for example, Paris, you may consider using CARLA's [large map support](core_map.md#large-maps-and-world-partition).
 
 __3.__ Click on _Export_ on the upper left side of the window to open the _Export_ panel.
 

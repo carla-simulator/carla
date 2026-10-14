@@ -654,14 +654,17 @@ Reload the current world, note that a new world is created with default settings
     - **Parameters:**
         - `reset_settings` (_bool_) - Option to reset the episode setting to default values, set to false to keep the current settings. This is useful to keep sync mode when changing map and to keep deterministic scenarios.  
     - **Raises:** RuntimeError when corresponding.  
-- <a name="carla.Client.replay_file"></a>**<font color="#7fb800">replay_file</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**name**</font>, <font color="#00a6ed">**time_start**</font>, <font color="#00a6ed">**duration**</font>, <font color="#00a6ed">**follow_id**</font>, <font color="#00a6ed">**replay_sensors**</font>)  
-Load a new world with default settings using `map_name` map. All actors present in the current world will be destroyed, __but__ traffic manager instances will stay alive.  
+- <a name="carla.Client.replay_file"></a>**<font color="#7fb800">replay_file</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**name**</font>, <font color="#00a6ed">**time_start**</font>, <font color="#00a6ed">**duration**</font>, <font color="#00a6ed">**follow_id**</font>, <font color="#00a6ed">**replay_sensors**=False</font>, <font color="#00a6ed">**replay_weather**=False</font>, <font color="#00a6ed">**offset**=[carla.Transform](#carla.Transform)([carla.Location](#carla.Location)(-10, 0, 5), [carla.Rotation](#carla.Rotation)(pitch=-25))</font>, <font color="#00a6ed">**map_override**=''</font>)  
+Replays a simulation recorded with `start_recorder()`. Actors in the current world that appear in the recording are moved or respawned to reproduce it; the rest carry on. Returns the recording's info string.  
     - **Parameters:**
         - `name` (_str_) - Name of the file containing the information of the simulation.  
         - `time_start` (_float<small> - seconds</small>_) - Time where to start playing the simulation. Negative is read as beginning from the end, being -10 just 10 seconds before the recording finished.  
         - `duration` (_float<small> - seconds</small>_) - Time that will be reenacted using the information `name` file. If the end is reached, the simulation will continue.  
         - `follow_id` (_int_) - ID of the actor to follow. If this is 0 then camera is disabled.  
         - `replay_sensors` (_bool_) - Flag to enable or disable the spawn of sensors during playback.  
+        - `replay_weather` (_bool_) - Restores the weather stored in the recording, and the changes made to it while it was recorded. The current weather is kept when this is False.  
+        - `offset` (_[carla.Transform](#carla.Transform)_) - Where the spectator sits relative to the actor given in `follow_id`. Defaults to 10 m behind and 5 m above it, pitched 25 degrees down. Ignored when `follow_id` is 0.  
+        - `map_override` (_str_) - Name of the map to replay on, instead of the one the recording names. Empty keeps the recorded map.  
 - <a name="carla.Client.request_file"></a>**<font color="#7fb800">request_file</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**name**</font>)  
 Requests one of the required files returned by [carla.Client.get_required_files](#carla.Client.get_required_files).  
     - **Parameters:**
@@ -693,11 +696,12 @@ The information saved by the recorder will be parsed and shown in your terminal 
         - `name` (_str_) - Name or absolute path of the file recorded, depending on your previous choice.  
         - `show_all` (_bool_) - If __True__, returns all the information stored for every frame (traffic light states, positions of all actors, orientation and animation data...). If __False__, returns a summary of key events and frames.  
     - **Return:** _string_  
-- <a name="carla.Client.start_recorder"></a>**<font color="#7fb800">start_recorder</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**name**</font>, <font color="#00a6ed">**additional_data**=False</font>)  
-Enables the recording feature, which will start saving every information possible needed by the server to replay the simulation.  
+- <a name="carla.Client.start_recorder"></a>**<font color="#7fb800">start_recorder</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**name**</font>, <font color="#00a6ed">**additional_data**=False</font>, <font color="#00a6ed">**stop_replayer**=True</font>)  
+Enables the recording feature, which will start saving every information possible needed by the server to replay the simulation. The weather and every change made to it are always recorded.  
     - **Parameters:**
         - `name` (_str_) - Name of the file to write the recorded data. A simple name will save the recording in 'CarlaUnreal/Saved/recording.log'. Otherwise, if some folder appears in the name, it will be considered an absolute path.  
         - `additional_data` (_bool_) - Enables or disable recording non-essential data for reproducing the simulation (bounding box location, physics control parameters, etc).  
+        - `stop_replayer` (_bool_) - Stops a playback in progress before recording. Set it to False to record while a replay keeps running, which captures a replayed situation with new actors or sensors in it.  
 - <a name="carla.Client.stop_recorder"></a>**<font color="#7fb800">stop_recorder</font>**(<font color="#00a6ed">**self**</font>)  
 Stops the recording in progress. If you specified a path in `filename`, the recording will be there. If not, look inside `CarlaUnreal/Saved/`.  
 - <a name="carla.Client.stop_replayer"></a>**<font color="#7fb800">stop_replayer</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**keep_actors**</font>)  
@@ -2412,8 +2416,8 @@ Flattened array of pixel data, use reshape to create an image array.
 
 ##### Getters
 - <a name="carla.OpticalFlowImage.get_color_coded_flow"></a>**<font color="#7fb800">get_color_coded_flow</font>**(<font color="#00a6ed">**self**</font>)  
-Visualization helper. Converts the optical flow image to an RGB image.  
-    - **Return:** _[carla.Image](#carla.Image)_  
+Visualization helper. Converts the optical flow image to an RGB image, with the direction of motion as hue and its magnitude as saturation. The result is a [carla.FakeImage](#carla.FakeImage), so it carries no frame or timestamp.  
+    - **Return:** _[carla.FakeImage](#carla.FakeImage)_  
 
 ##### Dunder methods
 - <a name="carla.OpticalFlowImage.__getitem__"></a>**<font color="#7fb800">\__getitem__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**pos**=int</font>)  
@@ -3308,7 +3312,7 @@ Returns the next known road option and waypoint that an actor controlled by the 
         - `actor` (_[carla.Actor](#carla.Actor)_) - The actor that you wish to query.  
     - **Return:** _list of two elements - [Road option (string e.g. 'Left', 'Right', 'Straight'), Next waypoint ([carla.Waypoint](#carla.Waypoint))]_  
 - <a name="carla.TrafficManager.get_port"></a>**<font color="#7fb800">get_port</font>**(<font color="#00a6ed">**self**</font>)  
-Returns the port where the Traffic Manager is connected. If the object is a TM-Client, it will return the port of its TM-Server. Read the [documentation](#adv_traffic_manager.md#multiclient-and-multitm-management) to learn the difference.  
+Returns the port where the Traffic Manager is connected. If the object is a TM-Client, it will return the port of its TM-Server. Read the [documentation](adv_traffic_manager.md#running-multiple-traffic-managers) to learn the difference.  
     - **Return:** _uint16_  
 
 ##### Setters
@@ -3363,7 +3367,7 @@ Sets a list of route instructions for a vehicle to follow while controlled by th
     - **Warning:** <font color="#ED2F2F">_Ensure that the lane topology doesn't impede the given route.
 _</font>  
 - <a name="carla.TrafficManager.set_synchronous_mode"></a>**<font color="#7fb800">set_synchronous_mode</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**mode_switch**=True</font>)  
-Sets the Traffic Manager to [synchronous mode](adv_traffic_manager.md#synchronous-mode). In a [multiclient situation](adv_traffic_manager.md#multiclient), only the TM-Server can tick. Similarly, in a [multiTM situation](adv_traffic_manager.md#multitm), only one TM-Server must tick. Use this method in the client that does the world tick, and right after setting the world to synchronous mode, to set which TM will be the master while in sync.  
+Sets the Traffic Manager to [synchronous mode](adv_traffic_manager.md#synchronous-mode). In a [multiclient situation](adv_traffic_manager.md#multi-client-simulations), only the TM-Server can tick. Similarly, in a [multiTM situation](adv_traffic_manager.md#multi-tm-simulations), only one TM-Server must tick. Use this method in the client that does the world tick, and right after setting the world to synchronous mode, to set which TM will be the master while in sync.  
     - **Parameters:**
         - `mode_switch` (_bool_) - If __True__, the TM synchronous mode is enabled.  
     - **Warning:** <font color="#ED2F2F">_If the server is set to synchronous mode, the TM <b>must</b> be set to synchronous mode too in the same client that does the tick.

@@ -48,6 +48,31 @@ if is_bike:
 !!! Note
     Some of the attributes cannot be modified. Check it out in the [blueprint library](bp_library.md).
 
+Vehicles, walkers and props carry attributes that describe __what the blueprint is__, so a selection can be made without matching names. They are read-only and present on every blueprint of their kind.
+
+| Attribute | On | Values |
+| --------- | -- | ------ |
+| `base_type` | vehicles | `car`, `truck`, `van`, `bus`, `motorcycle`, `bicycle`, and `industrial` for the off-road machinery of a map such as [Mine_01](map_mine.md) |
+| `base_type` | props | `road`, `sidewalk`, `park_garden`, `containers`, `garbage`, `personal`, `utility` |
+| `subtype` | props | the family within the base type: `cones`, `benches`, `bins`, `signs`, `plantpots`, `debris`, ... |
+| `special_type` | vehicles | `emergency`, `taxi`, `electric`, or empty |
+| `special_type` | walkers | `police`, or empty |
+
+```py
+# Every two-wheeler, whatever it is called
+bikes = [bp for bp in blueprint_library.filter('vehicle.*')
+         if bp.get_attribute('base_type') in ('bicycle', 'motorcycle')]
+
+# Traffic cones only
+cones = [bp for bp in blueprint_library.filter('static.prop.*')
+         if bp.get_attribute('subtype') == 'cones']
+```
+
+The [catalogue](catalogue.md) groups its pages by these same attributes, so a blueprint found there can be filtered for in the library.
+
+!!! Note
+    A map can ship its own vehicles, in `Config/<map>/Vehicles.json`, with values of their own. They are in the blueprint library only while that map is loaded.
+
 Attributes have an [carla.ActorAttributeType](python_api.md#carla.ActorAttributeType) variable. It states its type from a list of enums. Also, modifiable attributes come with a __list of recommended values__. 
 
 ```py
@@ -139,6 +164,23 @@ Besides that, actors also have tags provided by their blueprints. These are most
 !!! Warning
     Most of the methods send requests to the simulator asynchronously. The simulator has a limited amount of time each update to parse them. Flooding the simulator with _set()_ methods will accumulate a significant lag.
 
+### Components, bones and sockets
+
+An actor is built from named parts, and each of them can be located in the world or relative to the actor. This is how a sensor is placed on a part the actor already defines — a wing mirror, a roof socket, a wheel — instead of on a measured offset.
+
+| Parts | Names | Transforms |
+| ----- | ----- | ---------- |
+| Components, the actor's Unreal components | `get_component_names()` | `get_component_world_transform(name)`, `get_component_relative_transform(name)` |
+| Bones, the skeleton of a walker or a vehicle | `get_bone_names()` | `get_bone_world_transforms()`, `get_bone_relative_transforms()` |
+| Sockets, the attachment points the asset declares | `get_socket_names()` | `get_socket_world_transforms()`, `get_socket_relative_transforms()` |
+
+```py
+for name in vehicle.get_component_names():
+    print(name, vehicle.get_component_relative_transform(name))
+```
+
+!!! Note
+    Component transforms are queried one name at a time; bones and sockets are returned for the whole actor at once.
 
 ### Destruction
 
@@ -245,6 +287,26 @@ The physics of vehicle wheels can be improved by enabling the [sweep wheel colli
 [enable_sweep]: https://carla.readthedocs.io/en/latest/python_api/#carla.VehiclePhysicsControl.use_sweep_wheel_collision
 
 
+__Telemetry__ reports what the physics solver is doing with the vehicle, as a [carla.VehicleTelemetryData](python_api.md#carla.VehicleTelemetryData): the control it last applied, forward speed, engine RPM and gear, and a [carla.WheelTelemetryData](python_api.md#carla.WheelTelemetryData) per wheel with its slip and angular velocity.
+
+```py
+    telemetry = vehicle.get_telemetry_data()
+    print(telemetry.speed, telemetry.engine_rpm, telemetry.gear)
+    print(telemetry.wheels[0].lat_slip, telemetry.wheels[0].omega)
+```
+
+__The wheel animation can be driven by hand__ instead of by the physics. With the override enabled, the wheels show only what is set explicitly, whether or not Chaos simulates the vehicle. This is for replays and co-simulation platforms that bring their own wheel state.
+
+```py
+    vehicle.set_wheel_animation_override(True)
+    vehicle.set_wheel_steer_direction(carla.VehicleWheelLocation.FL_Wheel, 30.0)
+    vehicle.set_wheel_pitch_angle(carla.VehicleWheelLocation.FL_Wheel, 90.0)
+    vehicle.set_wheel_suspension_offset(carla.VehicleWheelLocation.FL_Wheel, 0.05)
+```
+
+!!! Note
+    The override is visual only: it moves no physics. The three setters raise an error while it is off.
+
 Vehicles include other functionalities unique to them:
 
 * __Autopilot mode__ will subscribe a vehicle to the [Traffic Manager](adv_traffic_manager.md) to simulate real urban conditions. This module is hard-coded, not based on machine learning.  
@@ -257,7 +319,7 @@ Vehicles include other functionalities unique to them:
 	*   __Motorcycles:__ Yamaha and Harley Davidson models.  
 	*   __Cars:__ Audi TT, Chevrolet Impala, both Dodge police cars, Dodge Charger, Audi e-tron, Lincoln 2017 and 2020, Mustang, Tesla Model 3, Tesla Cybertruck, Volkswagen T2 and the Mercedes C-Class.  
 
-The lights of a vehicle can be retrieved and updated anytime using the methods [carla.Vehicle.get_light_state](python_api.md#carla.Vehicle.get_light_state) and [carla.Vehicle.set_light_state](#python_api.md#carla.Vehicle.set_light_state). These use binary operations to customize the light setting.  
+The lights of a vehicle can be retrieved and updated anytime using the methods [carla.Vehicle.get_light_state](python_api.md#carla.Vehicle.get_light_state) and [carla.Vehicle.set_light_state](python_api.md#carla.Vehicle.set_light_state). These use binary operations to customize the light setting.  
 
 ```py
 # Turn on position lights

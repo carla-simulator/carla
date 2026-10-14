@@ -2,31 +2,13 @@
 
 CARLA Agent scripts allow a vehicle to either follow a random, endless route or take the shortest route to a given destination. Agents obey traffic lights and react to other obstacles in the road. There are three agent types available. Parameters such as target speed, braking distance, tailgating behavior, and more can be modified. Actor classes can be modified or used as a base class to create custom agents according to the user's needs.
 
-- [__Overview of agent scripts__](#overview-of-agent-scripts)
-    - [Planning and control](#planning-and-control)
-    - [Agent behaviors](#agent-behaviors)
 - [__Implement an agent__](#implement-an-agent)
 - [__Behavior types__](#behavior-types)
     - [Create your own behavior type](#create-your-own-behavior-type)
+- [__Overview of agent scripts__](#overview-of-agent-scripts)
+    - [Planning and control](#planning-and-control)
+    - [Agent behaviors](#agent-behaviors)
 - [__Creating an agent__](#creating-an-agent)
-
----
-
-## Overview of agent scripts
-
-The main scripts involved in the CARLA Agents are found in `PythonAPI/carla/agents/navigation`. They fall into two categories; __planning and control__ and __agent behaviors__.
-
-### Planning and control
-
-- __`controller.py`:__ Combines longitudinal and lateral PID controllers into a single class, __VehiclePIDController__, used for low-level control of vehicles from the client side of CARLA.
-- __`global_route_planner.py`:__ Gets detailed topology from the CARLA server to build a graph representation of the world map, providing waypoint and road option information for the __Local Planner__.
-- __`local_planner.py`:__ Follows waypoints based on control inputs from the __VehiclePIDController__. Waypoints can either be provided by the __Global Route Planner__ or be calculated dynamically, choosing random paths at junctions, similar to the [Traffic Manager](adv_traffic_manager.md).
-
-### Agent behaviors
-
-- __`basic_agent.py`:__ Contains an agent base class that implements a __Basic Agent__ that roams around the map or reaches a target destination in the shortest distance possible, avoiding other vehicles, responding to traffic lights but ignoring stop signs.
-- __`behavior_agent.py`:__ Contains a class that implements a more complex __Behavior Agent__ that can reach a target destination in the shortest distance possible, following traffic lights, signs, and speed limits while tailgating other vehicles. There are three predefined types that condition how the agent behaves.
-- __`behavior_types.py`:__ Contains the parameters for the behavior types that condition the __Behavior Agent__; Cautious, Normal, and Aggressive.
 
 ---
 
@@ -96,7 +78,7 @@ The __Basic Agent__ provides a few methods to manipulate agent behavior or progr
 
 - __`set_target_speed(speed)`:__ Set the target speed in km/h
 - __`follow_speed_limits(value=True)`:__ Sets the agent to follow speed limits.
-- __`set_destination(end_location, start_location=None)`:__ The agent will travel from a specific start location to an end location via the shortest route possible. If no start location is provided, it will use the current agent location.
+- __`set_destination(end_location, start_location=None, clean_queue=True)`:__ The agent will travel from a specific start location to an end location via the shortest route possible. If no start location is provided, it will use the current agent location. `clean_queue=False` appends the new route to the one already queued instead of replacing it.
 - __`set_global_plan(plan, stop_waypoint_creation=True, clean_queue=True)`:__ Adds a specific plan for the agent to follow. The plan argument should consist of a list of `[carla.Waypoint, RoadOption]` that will be the path the agent needs to take. `stop_waypoint_creation` will prevent waypoints from being automatically created once the path has run its course. `clean_queue` will reset the agent's current plan.
 - __`trace_route(start_waypoint, end_waypoint)`:__ Gets the shortest distance between two waypoints from the Global Route Planner and returns the path as a list of `[carla.Waypoint, RoadOption]` for the agent to follow.
 - __`ignore_traffic_lights(active=True)`:__ Set the agent to ignore or obey traffic lights.
@@ -157,6 +139,27 @@ elif behavior == '<type_name>':
 
 ---
 
+## Overview of agent scripts
+
+The main scripts involved in the CARLA Agents are found in `PythonAPI/carla/agents/navigation`. They fall into two categories; __planning and control__ and __agent behaviors__.
+
+### Planning and control
+
+- __`controller.py`:__ Combines longitudinal and lateral PID controllers into a single class, __VehiclePIDController__, used for low-level control of vehicles from the client side of CARLA.
+- __`global_route_planner.py`:__ Gets detailed topology from the CARLA server to build a graph representation of the world map, providing waypoint and road option information for the __Local Planner__.
+- __`local_planner.py`:__ Follows waypoints based on control inputs from the __VehiclePIDController__. Waypoints can either be provided by the __Global Route Planner__ or be calculated dynamically, choosing random paths at junctions, similar to the [Traffic Manager](adv_traffic_manager.md).
+
+### Agent behaviors
+
+- __`basic_agent.py`:__ Contains an agent base class that implements a __Basic Agent__ that roams around the map or reaches a target destination in the shortest distance possible, avoiding other vehicles, responding to traffic lights but ignoring stop signs.
+- __`behavior_agent.py`:__ Contains a class that implements a more complex __Behavior Agent__ that can reach a target destination in the shortest distance possible, following traffic lights, signs, and speed limits while tailgating other vehicles. There are three predefined types that condition how the agent behaves.
+- __`behavior_types.py`:__ Contains the parameters for the behavior types that condition the __Behavior Agent__; Cautious, Normal, and Aggressive.
+- __`agents/tools/hints.py`:__ The named tuples the detection helpers return: `ObstacleDetectionResult(obstacle_was_found, obstacle, distance)` and `TrafficLightDetectionResult(traffic_light_was_found, traffic_light)`. A custom agent reads the fields by name rather than unpacking a plain tuple.
+
+The agent and planner modules carry type hints throughout, so an editor or a type checker can follow what a method takes and returns while you subclass them.
+
+---
+
 ## Creating an agent
 
 The CARLA Agents are just examples of the kind of agents users can run. Users can build upon the __Basic Agent__ to create their own agents. The possibilities are endless. There are only two elements that are necessary for every agent, __the initialization__ and the __run step__.
@@ -191,9 +194,3 @@ Check out the `basic_agent.py` and `behavior_agent.py` scripts to explore their 
 ---
 
 You can explore the provided agent scripts, expand upon them or use them as a baseline to create your own. If you have any questions about the agents, feel free to post in the [forum](https://github.com/carla-simulator/carla/discussions/).
-
-
-
-
-
-

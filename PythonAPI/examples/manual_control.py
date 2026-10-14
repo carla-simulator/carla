@@ -1118,7 +1118,7 @@ class RadarSensor(object):
 
 
 class CameraManager(object):
-    def __init__(self, parent_actor, hud, gamma_correction, post_process_profile='Default'):
+    def __init__(self, parent_actor, hud, gamma_correction, post_process_profile='default'):
         self.sensor = None
         self.surface = None
         self._parent = parent_actor
@@ -1407,10 +1407,11 @@ def main():
         '--gamma', default=1.0, type=float,
         help='Gamma correction of the camera (default: 1.0)')
     argparser.add_argument(
-        '--post-process-profile', metavar='NAME', default='Default',
+        '--post-process-profile', metavar='NAME', default='default',
         help='camera post-process profile to load, i.e. a file name (without '
              '.json) under Unreal/CarlaUnreal/Content/Carla/Config/PostProcess/ '
-             '-- e.g. "Default" or "GoPro" (default: "Default")')
+             '-- e.g. "Cinematic" or "GoPro". "default" follows the server '
+             '(default: "default")')
     argparser.add_argument(
         '--sync', action='store_true',
         help='Activate synchronous mode execution')

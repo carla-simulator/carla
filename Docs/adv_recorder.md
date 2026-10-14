@@ -28,6 +28,7 @@ The recorder file includes information regarding many different elements.
 *   __Vehicles__ — position and orientation, linear and angular velocity, light state, and physics control.  
 *   __Pedestrians__ — position and orientation, and linear and angular velocity.  
 *   __Lights__ — Light states from buildings, streets, and vehicles.
+*   __Weather__ — the weather parameters and every change made to them.
 
 To start recording there is only need for a file name. Using `\`, `/` or `:` characters in the file name will define it as an absolute path. If no path is detailed, the file will be saved in `CarlaUnreal/Saved`.  
 
@@ -50,6 +51,12 @@ To stop the recording, the call is also straightforward.
 client.stop_recorder()
 ```
 
+Starting a recording stops any playback that is running, so that the recording captures the live simulation. Pass `stop_replayer=False` to record while a playback continues, which is how a replayed situation is re-recorded with new sensors or new actors in it.
+
+```py
+client.start_recorder("/home/carla/recording02.log", False, False)
+```
+
 !!! Note
     As an estimate, 1h recording with 50 traffic lights and 100 vehicles takes around 200MB in size.
 
@@ -67,6 +74,10 @@ client.replay_file("recording01.log", start, duration, camera)
 | `start`                                                                                                                          | Recording time in seconds to start the simulation at.                                                                            | If positive, time will be considered from the beginning of the recording. <br> If negative, it will be considered from the end. |
 | `duration`                                                                                                                       | Seconds to playback. 0 is all the recording.                                                                                     | By the end of the playback, vehicles will be set to autopilot and pedestrians will stop.                                         |
 | `camera`                                                                                                                         | ID of the actor that the camera will focus on.                                                                                   | Set it to `0` to let the spectator move freely.                                                                                  |
+| `replay_sensors`                                                                                                                 | Re-spawn the sensors that were recorded.                                                                                         | `False` by default.                                                                                                              |
+| `replay_weather`                                                                                                                 | Restore the weather of the recording, and the changes made to it during it.                                                      | `False` by default; the current weather is kept otherwise.                                                                       |
+| `offset`                                                                                                                         | Where the spectator sits relative to the followed actor.                                                                         | 10 m behind and 5 m above, pitched 25&deg; down, by default. Ignored when `camera` is `0`.                                        |
+| `map_override`                                                                                                                   | Name of the map to replay on, instead of the one the recording names.                                                            | Empty by default. For replaying a recording on a different version or variant of the same road network.                           |
 
 <br>
 

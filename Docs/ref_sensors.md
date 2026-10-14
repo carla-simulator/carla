@@ -6,9 +6,11 @@
 - [__IMU sensor__](#imu-sensor)
 - [__Lane invasion detector__](#lane-invasion-detector)
 - [__LIDAR sensor__](#lidar-sensor)
+- [__Hybrid Solid-State LiDAR sensor__](#hybrid-solid-state-lidar-sensor)
 - [__Obstacle detector__](#obstacle-detector)
 - [__Radar sensor__](#radar-sensor)
 - [__RGB camera__](#rgb-camera)
+- [__Fisheye cameras__](#fisheye-cameras)
 - [__Ray-traced lens camera__](#ray-traced-lens-camera)
 - [__Ray-traced lens distance camera__](#ray-traced-lens-distance-camera)
 - [__Ray-traced lens instance camera__](#ray-traced-lens-instance-camera)
@@ -163,6 +165,13 @@ Reports current [gnss position](https://www.gsa.europa.eu/european-gnss/what-gns
 * __Output:__ [carla.IMUMeasurement](python_api.md#carla.IMUMeasurement) per step (unless `sensor_tick` says otherwise).
 
 Provides measures that accelerometer, gyroscope and compass would retrieve for the parent object. The data is collected from the object's current state.
+
+The accelerometer reports gravity as `9.81 m/s²` by default. The value is a property of the world, shared by every IMU in it, and changing it changes what the sensors report without touching the physics of the simulation.
+
+```py
+world.set_imu_sensor_gravity(1.62)    # the Moon, for the sensors
+print(world.get_imu_sensor_gravity())
+```
 
 #### IMU attributes
 
@@ -489,7 +498,7 @@ A value of 1.5 means that we want the sensor to capture data each second and a h
 | `iso`    | float    | 100\.0   | The camera sensor sensitivity.   |
 | `gamma`  | float    | 2\.2     | Target gamma value of the camera.      |
 | `lens_flare_intensity`           | float    | 0\.1     | Intensity for the lens flare post-process effect, `0.0` for disabling it.    |
-| `post_process_profile` | str    | (empty)  | Camera preset to load, a JSON file in `Content/Carla/Config/PostProcess/` on the server: `Default`, `GoPro`, `AutomotiveHDR`, `Dashcam` or your own. Empty uses the active profile (console variable `carla.PostProcess.Profile`, `Default` unless changed), the same one the spectator view uses. See [Camera post-process presets](camera_postprocess_presets.md). |
+| `post_process_profile` | str    | (empty)  | Camera preset to load, a JSON file in `Content/Carla/Config/PostProcess/` on the server: `Cinematic`, `GoPro`, `AutomotiveHDR`, `AutomotiveHDRClean`, `Dashcam`, `LegacyCCD`, `LogHDR`, `Smartphone`, `WideHDR8MP` or your own. Empty uses the active profile (console variable `carla.PostProcess.Profile`, `Cinematic` unless changed), the same one the spectator view uses. See [Camera post-process presets](camera_postprocess_presets.md). |
 | `sensor_tick`        | float    | 0\.0     | Simulation seconds between sensor captures (ticks).  |
 | `shutter_speed`      | float    | 200\.0   | The camera shutter speed in seconds (1.0/s).       |
 
@@ -573,6 +582,48 @@ Since these effects are provided by UE, please make sure to check their document
 | `height`           | int   | Image height in pixels.          |
 | `fov` | float | Horizontal field of view in degrees.         |
 | `raw_data`         | bytes | Array of BGRA 32-bit pixels.     |
+
+---
+## Fisheye cameras
+
+* __Blueprints:__ sensor.camera.rgb_fisheye, sensor.camera.depth_fisheye, sensor.camera.semantic_segmentation_fisheye, sensor.camera.instance_segmentation_fisheye
+* __Output:__ the same data as the pinhole camera each one mirrors — [carla.Image](python_api.md#carla.Image) per step (unless `sensor_tick` says otherwise).
+
+Wide-angle versions of the four raster cameras. The scene is rendered into six cube faces and resampled through the chosen lens model, so a field of view past 180&deg; is possible without the stretching a single pinhole render suffers towards its borders. The depth and segmentation variants are distorted the same way as the RGB one, so their pixels stay aligned with it.
+
+The lens models and their coefficients are the ones [`sensor.camera.rt_lens`](#ray-traced-lens-camera) uses, with one difference that matters: these cameras rasterize, so they cost about what their pinhole counterparts cost, while `rt_lens` path-traces the scene and generates its primary rays through the lens itself. Use `rt_lens` when the projection has to be exact; use these when you need a wide-angle image at raster speed.
+
+#### Fisheye attributes
+
+| Blueprint attribute | Type | Default | Description |
+| ------------------- | ---- | ------- | ----------- |
+| `camera_model` | str | `perspective` | Lens model: `perspective`, `stereographic`, `equidistant`, `equisolid`, `orthographic`, `kannala_brandt`, `ftheta` or `lut`. |
+| `k0`, `k1`, `k2`, `k3` | float | 0.0831, 0.0111, 0.0086, 0.0009 | Kannala-Brandt polynomial coefficients. |
+| `fov` | float | 90\.0 | Horizontal field of view in degrees. |
+| `focal_length` | float | 0\.0 | Focal length. 0 derives it from `fov`. |
+| `fx`, `fy`, `cx`, `cy` | float | 0\.0, 0\.0, 0\.5, 0\.5 | Lens intrinsics in normalized viewport units. `fx` at or below 0 keeps the `fov` / `focal_length` projection, centred. |
+| `lut` | str | (empty) | `camera_model=lut`: comma-separated R(&theta;) samples, evenly spaced over `[0, theta_max_deg]`. |
+| `theta_max_deg` | float | 0\.0 | Angle the last `lut` sample corresponds to. |
+| `face_size` | int | 0 | Side of each cube-face render target in pixels. 0 uses `max(image_size_x, image_size_y)`; smaller faces cost less GPU memory. |
+| `perspective` | bool | False | Rectify the output back to a rectilinear image. Ignored with `equirectangular`, `lut` and Brown-Conrady. |
+| `equirectangular` | bool | False | Render an equirectangular (360&deg;) projection instead of the lens model. |
+| `longitude_offset` | float | 0\.0 | Rotates the equirectangular projection about the vertical axis, in degrees. |
+| `fov_mask` | bool | False | Black out everything outside the lens circle. |
+| `fov_fade_size` | float | 0\.0 | Width of the fade at the edge of that mask. |
+| `lens_circle_falloff` | float | 5\.0 | Falloff of the lens circle. |
+| `image_size_x` | int | 800 | Image width in pixels. |
+| `image_size_y` | int | 600 | Image height in pixels. |
+| `sensor_tick` | float | 0\.0 | Simulation seconds between captures (ticks). |
+
+The RGB variant also takes the exposure, colour and lens attributes of the [RGB camera](#rgb-camera).
+
+```py
+camera_bp = bp_lib.find('sensor.camera.rgb_fisheye')
+camera_bp.set_attribute('camera_model', 'kannala_brandt')
+camera_bp.set_attribute('fov', '180')
+```
+
+See `PythonAPI/examples/manual_control_fisheye.py` for a working rig.
 
 ---
 ## Ray-traced lens camera
@@ -981,6 +1032,8 @@ The Optical Flow camera captures the motion perceived from the point of view of 
 
 ![optical_flow](img/optical_flow.png)
 
+`get_color_coded_flow()` turns the field into the colour wheel above, where hue is the direction of motion and saturation its magnitude. It returns a [`carla.FakeImage`](python_api.md#carla.FakeImage), not a [`carla.Image`](python_api.md#carla.Image): the pixels and `save_to_disk` work the same, but it carries no `frame` or `timestamp`, because it is a visualisation rather than a reading of the sensor.
+
 #### Optical Flow camera attributes
 
 | Blueprint attribute | Type | Default | Description |
@@ -1142,6 +1195,15 @@ Example:
     message.set_bytes(bytearray("Hello CARLA", 'utf-8'))
     sensor.send(message)
 
+### Roadside units
+
+The CAM service reads what the sensor is attached to. On a vehicle it reports the vehicle's dynamics and follows the ETSI generation rules, sending a message when heading, speed or position has changed enough, and at most one every `gen_cam_min` seconds. Attached instead to a traffic light, a traffic sign or another sensor, it registers as a __roadside unit__ and broadcasts at a fixed half-second interval, which is how infrastructure-to-vehicle (V2I) messages are produced.
+
+```py
+v2x_bp = world.get_blueprint_library().find('sensor.other.v2x')
+rsu = world.spawn_actor(v2x_bp, carla.Transform(), attach_to=traffic_light)
+```
+
 ### V2X sensors blueprint attributes
 
 | Blueprint attribute     | Type   | Default | Description                        |
@@ -1160,6 +1222,10 @@ Example:
 | path\_loss\_model       | string | geometric     |   general path loss model to be used. Options: [geometric, winner]  |
 | use\_etsi\_fading       | bool   | true         |   Use the fading params as mentioned in the ETSI publication (true), or use the custom fading standard deviation         |
 | custom\_fading\_stddev  | float  | 0.0      |   Custom value for fading standard deviation, only used if `use_etsi_fading` is set to `false`              |
+| __CAM generation (`sensor.other.v2x` only)__ | | | |
+| gen\_cam\_min          | float  | 0.1      | Shortest interval in seconds between two CAMs |
+| gen\_cam\_max          | float  | 1.0      | Longest interval in seconds between two CAMs. A station that has not moved enough to trigger a message sends one anyway after this long |
+| fixed\_rate            | bool   | false    | Send a CAM every `gen_cam_max` seconds instead of applying the ETSI triggering rules |
 
 
 ---

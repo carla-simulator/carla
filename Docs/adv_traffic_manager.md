@@ -3,17 +3,6 @@
 - [__What is the Traffic Manager?__](#what-is-the-traffic-manager)
 	- [Structured design](#structured-design)
 	- [User customization](#user-customization)
-- [__Architecture__](#architecture)
-	- [Overview](#overview)
-	- [ALSM](#alsm)
-	- [Vehicle registry](#vehicle-registry)
-	- [Simulation state](#simulation-state)
-	- [Control loop](#control-loop)
-	- [In-Memory Map](#in-memory-map)
-	- [PBVT](#pbvt)
-	- [PID controller](#pid-controller)
-	- [Command array](#command-array)
-	- [Stages of the Control Loop](#stages-of-the-control-loop)
 - [__Using the Traffic Manager__](#using-the-traffic-manager)
 	- [Vehicle behavior considerations](#vehicle-behavior-considerations)
 	- [Creating a Traffic Manager](#creating-a-traffic-manager)
@@ -27,6 +16,17 @@
 	- [Multi-TM simulations](#multi-tm-simulations)
 	- [Multi-simulation](#multi-simulation)
 - [__Synchronous mode__](#synchronous-mode)
+- [__Architecture__](#architecture)
+	- [Overview](#overview)
+	- [ALSM](#alsm)
+	- [Vehicle registry](#vehicle-registry)
+	- [Simulation state](#simulation-state)
+	- [Control loop](#control-loop)
+	- [In-Memory Map](#in-memory-map)
+	- [PBVT](#pbvt)
+	- [PID controller](#pid-controller)
+	- [Command array](#command-array)
+	- [Stages of the Control Loop](#stages-of-the-control-loop)
 
 ---
 ## What is the Traffic Manager?
@@ -41,218 +41,6 @@ TM is built on CARLA's client-side. The execution flow is divided into __stages_
 Users have some control over the traffic flow by setting parameters that allow, force, or encourage specific behaviors. Users can change the traffic behavior as they prefer, both online and offline. For example, cars can be allowed to ignore the speed limits or force a lane change. Being able to play around with behaviors is indispensable when trying to simulate reality. Driving systems need to be trained under specific and atypical circumstances.
 
 ---
-## Architecture
-
-### Overview
-
-![Architecture](img/tm_2_architecture.jpg)
-
-The above diagram is a representation of the internal architecture of the TM. The C++ code for each component can be found in `LibCarla/source/carla/trafficmanager`. Each component is explained in detail in the following sections. A simplified overview of the logic is as follows: 
-
-__1. Store and update the current state of the simulation.__
-
-- The [Agent Lifecycle & State Management](#alsm) (ALSM) scans the world to keep track of all the vehicles and walkers present and to clean up entries for those that no longer exist. All the data is retrieved from the server and is passed through several [stages](#stages-of-the-control-loop). The ALSM is the only component that makes calls to the server.
-- The [vehicle registry](#vehicle-registry) contains an array of vehicles on autopilot (controlled by the TM) and a list of pedestrians and vehicles not on autopilot (not controlled by the TM).
-- The [simulation state](#simulation-state) is a cache store of the position, velocity, and additional information of all the vehicles and pedestrians in the simulation.
-
-__2. Calculate the movement of every autopilot vehicle.__
-
-The TM generates viable commands for all vehicles in the [vehicle registry](#vehicle-registry) according to the [simulation state](#simulation-state). Calculations for each vehicle are done separately. These calculations are divided into different [stages](#stages-of-the-control-loop). The [control loop](#control-loop) makes sure that all calculations are consistent by creating __synchronization barriers__ between stages. No vehicle moves to the next stage before calculations are finished for all vehicles in the current stage. Each vehicle goes through the following stages:
-
->__2.1 - [Localization Stage](#stage-1-localization-stage).__
-
->Paths are created dynamically using a list of nearby waypoints collected from the [In-Memory Map](#in-memory-map), a simplification of the simulation map as a grid of waypoints. Directions at junctions are chosen randomly. Each vehicle's path is stored and maintained by the [Path Buffers & Vehicle Tracking](#pbvt) (PBVT) component for easy access and modification in future stages.
-
->__2.2 - [Collision Stage](#stage-2-collision-stage).__
-
->Bounding boxes are extended over each vehicle's path to identify and navigate potential collision hazards.
-
->__2.3 - [Traffic Light Stage](#stage-3-traffic-light-stage).__
-
->Similar to the Collision Stage, potential hazards that affect each vehicle's path due to traffic light influence, stop signs, and junction priority are identified.
-
->__2.4 - [Motion Planner Stage](#stage-4-motion-planner-stage).__
-
->Vehicle movement is computed based on the defined path. A [PID controller](#pid-controller) determines how to reach the target waypoints. This is then translated into a CARLA command for application in the next step.
-
->__2.5 - [Vehicle Lights Stage](#stage-5-vehicle-lights-stage).__
-
-> The vehicle lights switch on/off dynamically based on environmental factors (e.g. sunlight and the presence of fog or rain) and vehicle behavior (e.g. turning on direction indicators if the vehicle will turn left/right at the next junction, or turn on the stop lights if braking).
-
-
-__3. Apply the commands in the simulation.__
-
-Commands generated in the previous step are collected into the [command array](#command-array) and sent to the CARLA server in a batch to be applied in the same frame.
-
-The following sections will explain each component and stage in the TM logic described above in more detail.
-
-### ALSM
-
-ALSM stands for __Agent Lifecycle and State Management__. It is the first step in the TM logic cycle and provides context of the simulation's current state.
-
-The ALSM component:
-
-- Scans the world to keep track of all vehicles and pedestrians, their positions and velocities. If physics are enabled, the velocity is retrieved by [Vehicle.get_velocity()](python_api.md#carla.Vehicle). Otherwise, the velocity is calculated using the history of position updates over time.
-- Stores the position, velocity, and additional information (traffic light influence, bounding boxes, etc) of every vehicle and pedestrian in the [simulation state](#simulation-state) component.
-- Updates the list of TM-controlled vehicles in the [vehicle registry](#vehicle-registry).
-- Updates entries in the [control loop](#control-loop) and [PBVT](#pbvt) components to match the vehicle registry.
-
-__Related .cpp files:__ `ALSM.h`, `ALSM.cpp`.
-
-### Vehicle registry
-
-The vehicle registry keeps track of all vehicles and pedestrians in the simulation.
-
-The vehicle registry:
-
-- Is passed an updated list of vehicles and pedestrians from the [ALSM](#alsm).
-- Stores vehicles registered to the TM in a separate array for iteration during the [control loop](#control-loop).
-
-__Related .cpp files:__ `MotionPlannerStage.cpp`.
-
-### Simulation state
-
-The simulation state stores information about all vehicles in the simulation for easy access and modification in later stages.
-
-The simulation state:
-
-- Receives data from the [ALSM](#alsm) including current actor position, velocity, traffic light influence, traffic light state, etc.
-- Stores all information in cache, avoiding subsequent calls to the server during the [control loop](#control-loop).
-
-__Related .cpp files:__ `SimulationState.cpp`, `SimulationState.h`.
-
-### Control loop
-
-The control loop manages the calculations of the next command for all autopilot vehicles so they are performed synchronously. The control loop consists of five different [stages](#stages-of-the-control-loop); localization, collision, traffic light, motion planner and vehicle lights.
-
-The control loop:
-
-- Receives an array of TM-controlled vehicles from the [vehicle registry](#vehicle-registry).
-- Performs calculations for each vehicle separately by looping over the array.
-- Divides calculations into a series of [stages](#stages-of-the-control-loop).
-- Creates synchronization barriers between stages to guarantee consistency. Calculations for all vehicles are finished before any of them move to the next stage, ensuring all vehicles are updated in the same frame.
-- Coordinates the transition between [stages](#stages-of-the-control-loop) so all calculations are done in sync.
-- Sends the [command array](#command-array) to the server when the last stages ([Motion Planner Stage](#stage-4-motion-planner-stage) and [Vehicle Lights Stage](#stage-5-vehicle-lights-stage)) finishes so there are no frame delays between the command calculations and the command application.
-
-__Related .cpp files:__ `TrafficManagerLocal.cpp`.
-
-### In-Memory Map
-
-The In-Memory Map is a helper module contained within the [PBVT](#pbvt) and is used during the [Localization Stage](#stage-1-localization-stage).  
-
-The In-Memory Map:
-
-- Converts the map into a grid of discrete waypoints.
-- Includes waypoints in a specific data structure with more information to connect waypoints and identify roads, junctions, etc.
-- Identifies these structures with an ID used to locate vehicles in nearby areas quickly.
-
-__Related .cpp files:__ `InMemoryMap.cpp` and `SimpleWaypoint.cpp`.
-
-### PBVT
-
-PBVT stands for __Path Buffer and Vehicle Tracking__. The PBVT is a data structure that contains the expected path for every vehicle and allows easy access to data during the [control loop](#control-loop).
-
-The PBVT:
-
-- Contains a map of deque objects with one entry per vehicle.
-- Contains a set of waypoints for each vehicle describing its current location and near-future path.
-- Contains the [In-Memory Map](#in-memory-map) used by the [Localization Stage](#stage-1-localization-stage) to relate every vehicle to the nearest waypoint and possible overlapping paths.
-
-### PID controller
-
-The PID controller is a helper module that performs calculations during the [Motion Planner Stage](#stage-4-motion-planner-stage).
-
-The PID controller:
-
-- Estimates the throttle, brake, and steering input needed to reach a target value using the information gathered by the [Motion Planner Stage](#stage-4-motion-planner-stage).
-- Makes adjustments depending on the specific parameterization of the controller. Parameters can be modified if desired. Read more about [PID controllers](https://en.wikipedia.org/wiki/PID_controller) to learn how to make modifications.
-- Adapts to the real simulation step. The controller measures the actual simulation-time period between control updates and discretizes its integral/derivative terms and steering rate limits with it, so vehicle control stays stable when heavy rendering (for example, high-resolution or path-traced sensors) lowers the server frame rate. In synchronous mode at the design step of 0.05 s the behavior is identical to previous releases.
-
-__Related .cpp files:__ `PIDController.cpp`.
-### Command Array
-
-The Command Array represents the last step in the TM logic cycle. It receives commands for all the registered vehicles and applies them.
-
-The Command Array:
-
-- Receives a series of [carla.VehicleControl](python_api.md#carla.VehicleControl)'s from the [Motion Planner Stage](#stage-4-motion-planner-stage).
-- Batches all commands to be applied during the same frame.
-- Sends the batch to the CARLA server calling either __apply_batch()__ or __apply_batch_synch()__ in [carla.Client](../python_api/#carla.Client) depending on whether the simulation is running in asynchronous or synchronous mode, respectively.
-
-__Related .cpp files:__ `TrafficManagerLocal.cpp`.
-
-### Stages of the Control Loop
-
-##### Stage 1- Localization Stage
-
-The Localization Stage defines a near-future path for vehicles controlled by the TM.
-
-The Localization Stage:
-
-- Obtains the position and velocity of all vehicles from the [simulation state](#simulation-state).
-- Uses the [In-Memory Map](#in-memory-map) to relate every vehicle with a list of waypoints that describes its current location and near-future path according to its trajectory. The faster the vehicle goes, the longer the list will be.
-- Updates the path according to planning decisions such as lane changes, speed limit, distance to leading vehicle parameterization, etc.
-- Stores the path for all vehicles in the [PBVT](#pbvt) module.
-- Compares paths with each other to estimate possible collision situations. Results are passed to the Collision Stage.
-
-__Related .cpp files:__ `LocalizationStage.cpp` and `LocalizationUtils.cpp`.
-
-##### Stage 2- Collision Stage
-
-The Collision Stage triggers collision hazards.
-
-The Collision Stage:
-
-- Receives from the [Localization Stage](#stage-1-localization-stage) a list of vehicle pairs whose paths could potentially overlap.
-- Extends bounding boxes along the path ahead (geodesic boundaries) for each vehicle pair to check if they actually overlap and determine whether the risk of collision is real.
-- Sends hazards for all possible collisions to the [Motion Planner Stage](#stage-4-motion-planner-stage) to modify the path accordingly.
-
-__Related .cpp files:__ `CollisionStage.cpp`.
-
-##### Stage 3- Traffic Light Stage
-
-The Traffic Light stage triggers hazards due to traffic regulators such as traffic lights, stop signs, and priority at junctions.
-
-The Traffic Light stage:
-
-- Sets a traffic hazard if a vehicle is under the influence of a yellow or red traffic light or a stop sign.
-- Extends a bounding box along a vehicle's path if it is in an unsignaled junction. Vehicles with overlapping paths follow a "First-In-First-Out" order to move. Wait times are set to a fixed value.
-
-__Related .cpp files:__ `TrafficLightStage.cpp`.
-
-##### Stage 4- Motion Planner Stage
-
-The Motion Planner Stage generates the CARLA commands to be applied to vehicles.
-
-The Motion Planner Stage:
-
-- Gathers a vehicle's position and velocity ([simulation state](#simulation-state)), path ([PBVT](#pbvt)), and hazards ([Collision Stage](#stage-2-collision-stage) and [Traffic Light Stage](#stage-3-traffic-light-stage)).
-- Makes high-level decisions about how a vehicle should move, for example, computing the brake needed to prevent a collision hazard. A [PID controller](#pid-controller) is used to estimate behaviors according to target values.
-- Translates the desired movement to a [carla.VehicleControl](python_api.md#carla.VehicleControl) for application to the vehicle.
-- Sends the resulting CARLA commands to the [Command Array](#command-array).
-
-__Related .cpp files:__ `MotionPlannerStage.cpp`.
-
-
-##### Stage 5- Vehicle Lights Stage
-
-The Vehicle Lights Stage activates the lights based on the condition of the vehicle and the surrounding environment.
-	
-The Vehicle Lights Stage:
-
-- Retrieves the planned waypoints for the vehicle, information about vehicle lights (eg. light state and the planned command to be applied) and the weather conditions.
-
-- Determines the new state of the vehicle lights:
-	- Turns on the blinkers if the vehicle is planning to turn left/right at the next junction.
-	- Turns on the stop lights if the applied command is asking the vehicle to brake.
-	- Turns on the low beams and the position lights from sunset to dawn, or under heavy rain.
-	- Turns on the fog lights under heavy fog conditions.
-
-- Update the vehicle lights state if it has changed.
-
-__Related .cpp files:__ `VehicleLightStage.cpp`.
-
----
 ## Using the Traffic Manager
 
 ### Vehicle behavior considerations
@@ -264,6 +52,8 @@ The TM implements general behavior patterns that must be taken into consideratio
 - __Junction priority does not follow traffic regulations.__ The TM uses its own priority system at junctions. The resolution of this restriction is a work in progress. In the meantime, some issues may arise, for example, vehicles inside a roundabout yielding to a vehicle trying to get in.
 - __Stuck vehicles recover on their own.__ A vehicle that has not moved for a while (blocked against a curb, a prop, or another vehicle) performs a K-turn-style recovery maneuver to rejoin its lane instead of staying blocked forever.
 - __Vehicles start from realistic speeds.__ When a moving vehicle is handed to the TM its current speed seeds the controller, avoiding a brake-to-zero transient; vehicles that reach the end of their route hold position instead of drifting.
+- __Acceleration and cornering are bounded for comfort.__ Pulling away from a stop, a junction or a roundabout follows a reference that closes on the target at about 2 m/s&sup2; instead of commanding full throttle, and a turn is braked for in advance so lateral acceleration stays near 3 m/s&sup2;.
+- __Large vehicles swing wide at junctions.__ A vehicle whose blueprint `base_type` is `bus` or `truck` offsets its path at a curving junction, by an amount scaled to its length, so it tracks the turn the way a real one does instead of clipping the inside. It applies only where the junction actually curves.
 
 TM behavior can be adjusted through the Python API. For specific methods, see the TM section of the Python API [documentation](../python_api/#carla.TrafficManager). Below is a general summary of what is possible through the API:
 
@@ -274,6 +64,7 @@ TM behavior can be adjusted through the Python API. For specific methods, see th
 | **Collision  managing:** | - Enable/Disable collisions between a vehicle and a specific actor. <br> - Make a vehicle ignore all other vehicles. <br> - Make a vehicle ignore all walkers. <br> - Make a vehicle ignore all traffic lights. |
 | **Lane  changes:** | - Force a lane change, ignoring possible collisions. <br> - Enable/Disable lane changes for a vehicle. |
 | **Hybrid physics mode:** | - Enable/Disable hybrid physics mode. <br> - Change the radius in which physics is enabled. |
+| **Large vehicles:** | - Enable/Disable the wide junction turn for one bus or truck (`vehicle_large_vehicle_wide_turn`) or for all of them (`global_large_vehicle_wide_turn`). |
 
 
 
@@ -496,6 +287,8 @@ The most likely issue arising from the above set-up is a client trying to connec
 
 TM is designed to work in synchronous mode. Both the CARLA server and TM should be set to synchronous in order to function properly. __Using TM in asynchronous mode can lead to unexpected and undesirable results,__ however, if asynchronous mode is required, the simulation should run at 20-30 fps at least.
 
+In synchronous mode the TM runs its step on the thread that ticks the world, with no worker thread in between, so a tick returns only once the controls for that frame have been applied. In asynchronous mode the worker thread paces itself off the server's own frame rate instead of free-running, which keeps the controller from limit-cycling when a heavy sensor rig slows the simulator down.
+
 The script below demonstrates how to set both the server and TM to synchronous mode:
 
 ```py
@@ -531,12 +324,224 @@ If asynchronous mode is required, use the `--async` flag when running the above 
 
 If more than one TM is set to synchronous mode, synchrony will fail. Follow these guidelines to avoid issues:
 
-- In a __[multiclient](#multiclient)__ situation, only the __TM-Server__ should be set to synchronous mode.
-- In a __[multiTM](#multitm)__ situation, only __one TM-Server__ should be set to synchronous mode.
+- In a __[multiclient](#multi-client-simulations)__ situation, only the __TM-Server__ should be set to synchronous mode.
+- In a __[multiTM](#multi-tm-simulations)__ situation, only __one TM-Server__ should be set to synchronous mode.
 - The __[ScenarioRunner module](https://scenario-runner.readthedocs.io/en/latest/)__ runs a TM automatically. The TM inside ScenarioRunner will automatically be the one set to sync mode.
 
 !!! Warning
     Disable synchronous mode (for both the world and TM) in your script managing ticks before it finishes to prevent the server blocking, waiting forever for a tick.
+
+---
+## Architecture
+
+### Overview
+
+![Architecture](img/tm_2_architecture.jpg)
+
+The above diagram is a representation of the internal architecture of the TM. The C++ code for each component can be found in `LibCarla/source/carla/trafficmanager`. Each component is explained in detail in the following sections. A simplified overview of the logic is as follows: 
+
+__1. Store and update the current state of the simulation.__
+
+- The [Agent Lifecycle & State Management](#alsm) (ALSM) scans the world to keep track of all the vehicles and walkers present and to clean up entries for those that no longer exist. All the data is retrieved from the server and is passed through several [stages](#stages-of-the-control-loop). The ALSM is the only component that makes calls to the server.
+- The [vehicle registry](#vehicle-registry) contains an array of vehicles on autopilot (controlled by the TM) and a list of pedestrians and vehicles not on autopilot (not controlled by the TM).
+- The [simulation state](#simulation-state) is a cache store of the position, velocity, and additional information of all the vehicles and pedestrians in the simulation.
+
+__2. Calculate the movement of every autopilot vehicle.__
+
+The TM generates viable commands for all vehicles in the [vehicle registry](#vehicle-registry) according to the [simulation state](#simulation-state). Calculations for each vehicle are done separately. These calculations are divided into different [stages](#stages-of-the-control-loop). The [control loop](#control-loop) makes sure that all calculations are consistent by creating __synchronization barriers__ between stages. No vehicle moves to the next stage before calculations are finished for all vehicles in the current stage. Each vehicle goes through the following stages:
+
+>__2.1 - [Localization Stage](#stage-1-localization-stage).__
+
+>Paths are created dynamically using a list of nearby waypoints collected from the [In-Memory Map](#in-memory-map), a simplification of the simulation map as a grid of waypoints. Directions at junctions are chosen randomly. Each vehicle's path is stored and maintained by the [Path Buffers & Vehicle Tracking](#pbvt) (PBVT) component for easy access and modification in future stages.
+
+>__2.2 - [Collision Stage](#stage-2-collision-stage).__
+
+>Bounding boxes are extended over each vehicle's path to identify and navigate potential collision hazards.
+
+>__2.3 - [Traffic Light Stage](#stage-3-traffic-light-stage).__
+
+>Similar to the Collision Stage, potential hazards that affect each vehicle's path due to traffic light influence, stop signs, and junction priority are identified.
+
+>__2.4 - [Motion Planner Stage](#stage-4-motion-planner-stage).__
+
+>Vehicle movement is computed based on the defined path. A [PID controller](#pid-controller) determines how to reach the target waypoints. This is then translated into a CARLA command for application in the next step.
+
+>__2.5 - [Vehicle Lights Stage](#stage-5-vehicle-lights-stage).__
+
+> The vehicle lights switch on/off dynamically based on environmental factors (e.g. sunlight and the presence of fog or rain) and vehicle behavior (e.g. turning on direction indicators if the vehicle will turn left/right at the next junction, or turn on the stop lights if braking).
+
+
+__3. Apply the commands in the simulation.__
+
+Commands generated in the previous step are collected into the [command array](#command-array) and sent to the CARLA server in a batch to be applied in the same frame.
+
+The following sections will explain each component and stage in the TM logic described above in more detail.
+
+### ALSM
+
+ALSM stands for __Agent Lifecycle and State Management__. It is the first step in the TM logic cycle and provides context of the simulation's current state.
+
+The ALSM component:
+
+- Scans the world to keep track of all vehicles and pedestrians, their positions and velocities. If physics are enabled, the velocity is retrieved by [Vehicle.get_velocity()](python_api.md#carla.Vehicle). Otherwise, the velocity is calculated using the history of position updates over time.
+- Stores the position, velocity, and additional information (traffic light influence, bounding boxes, etc) of every vehicle and pedestrian in the [simulation state](#simulation-state) component.
+- Updates the list of TM-controlled vehicles in the [vehicle registry](#vehicle-registry).
+- Updates entries in the [control loop](#control-loop) and [PBVT](#pbvt) components to match the vehicle registry.
+
+__Related .cpp files:__ `ALSM.h`, `ALSM.cpp`.
+
+### Vehicle registry
+
+The vehicle registry keeps track of all vehicles and pedestrians in the simulation.
+
+The vehicle registry:
+
+- Is passed an updated list of vehicles and pedestrians from the [ALSM](#alsm).
+- Stores vehicles registered to the TM in a separate array for iteration during the [control loop](#control-loop).
+
+__Related .cpp files:__ `MotionPlannerStage.cpp`.
+
+### Simulation state
+
+The simulation state stores information about all vehicles in the simulation for easy access and modification in later stages.
+
+The simulation state:
+
+- Receives data from the [ALSM](#alsm) including current actor position, velocity, traffic light influence, traffic light state, etc.
+- Stores all information in cache, avoiding subsequent calls to the server during the [control loop](#control-loop).
+
+__Related .cpp files:__ `SimulationState.cpp`, `SimulationState.h`.
+
+### Control loop
+
+The control loop manages the calculations of the next command for all autopilot vehicles so they are performed synchronously. The control loop consists of five different [stages](#stages-of-the-control-loop); localization, collision, traffic light, motion planner and vehicle lights.
+
+The control loop:
+
+- Receives an array of TM-controlled vehicles from the [vehicle registry](#vehicle-registry).
+- Performs calculations for each vehicle separately by looping over the array.
+- Divides calculations into a series of [stages](#stages-of-the-control-loop).
+- Creates synchronization barriers between stages to guarantee consistency. Calculations for all vehicles are finished before any of them move to the next stage, ensuring all vehicles are updated in the same frame.
+- Coordinates the transition between [stages](#stages-of-the-control-loop) so all calculations are done in sync.
+- Sends the [command array](#command-array) to the server when the last stages ([Motion Planner Stage](#stage-4-motion-planner-stage) and [Vehicle Lights Stage](#stage-5-vehicle-lights-stage)) finishes so there are no frame delays between the command calculations and the command application.
+
+__Related .cpp files:__ `TrafficManagerLocal.cpp`.
+
+### In-Memory Map
+
+The In-Memory Map is a helper module contained within the [PBVT](#pbvt) and is used during the [Localization Stage](#stage-1-localization-stage).  
+
+The In-Memory Map:
+
+- Converts the map into a grid of discrete waypoints.
+- Includes waypoints in a specific data structure with more information to connect waypoints and identify roads, junctions, etc.
+- Identifies these structures with an ID used to locate vehicles in nearby areas quickly.
+
+__Related .cpp files:__ `InMemoryMap.cpp` and `SimpleWaypoint.cpp`.
+
+### PBVT
+
+PBVT stands for __Path Buffer and Vehicle Tracking__. The PBVT is a data structure that contains the expected path for every vehicle and allows easy access to data during the [control loop](#control-loop).
+
+The PBVT:
+
+- Contains a map of deque objects with one entry per vehicle.
+- Contains a set of waypoints for each vehicle describing its current location and near-future path.
+- Contains the [In-Memory Map](#in-memory-map) used by the [Localization Stage](#stage-1-localization-stage) to relate every vehicle to the nearest waypoint and possible overlapping paths.
+
+### PID controller
+
+The PID controller is a helper module that performs calculations during the [Motion Planner Stage](#stage-4-motion-planner-stage).
+
+The PID controller:
+
+- Estimates the throttle, brake, and steering input needed to reach a target value using the information gathered by the [Motion Planner Stage](#stage-4-motion-planner-stage).
+- Makes adjustments depending on the specific parameterization of the controller. Parameters can be modified if desired. Read more about [PID controllers](https://en.wikipedia.org/wiki/PID_controller) to learn how to make modifications.
+- Adapts to the real simulation step. The controller measures the actual simulation-time period between control updates and discretizes its integral/derivative terms and steering rate limits with it, so vehicle control stays stable when heavy rendering (for example, high-resolution or path-traced sensors) lowers the server frame rate. In synchronous mode at the design step of 0.05 s the behavior is identical to previous releases.
+
+__Related .cpp files:__ `PIDController.cpp`.
+### Command Array
+
+The Command Array represents the last step in the TM logic cycle. It receives commands for all the registered vehicles and applies them.
+
+The Command Array:
+
+- Receives a series of [carla.VehicleControl](python_api.md#carla.VehicleControl)'s from the [Motion Planner Stage](#stage-4-motion-planner-stage).
+- Batches all commands to be applied during the same frame.
+- Sends the batch to the CARLA server calling either __apply_batch()__ or __apply_batch_synch()__ in [carla.Client](../python_api/#carla.Client) depending on whether the simulation is running in asynchronous or synchronous mode, respectively.
+
+__Related .cpp files:__ `TrafficManagerLocal.cpp`.
+
+### Stages of the Control Loop
+
+##### Stage 1- Localization Stage
+
+The Localization Stage defines a near-future path for vehicles controlled by the TM.
+
+The Localization Stage:
+
+- Obtains the position and velocity of all vehicles from the [simulation state](#simulation-state).
+- Uses the [In-Memory Map](#in-memory-map) to relate every vehicle with a list of waypoints that describes its current location and near-future path according to its trajectory. The faster the vehicle goes, the longer the list will be.
+- Updates the path according to planning decisions such as lane changes, speed limit, distance to leading vehicle parameterization, etc.
+- Stores the path for all vehicles in the [PBVT](#pbvt) module.
+- Compares paths with each other to estimate possible collision situations. Results are passed to the Collision Stage.
+
+__Related .cpp files:__ `LocalizationStage.cpp` and `LocalizationUtils.cpp`.
+
+##### Stage 2- Collision Stage
+
+The Collision Stage triggers collision hazards.
+
+The Collision Stage:
+
+- Receives from the [Localization Stage](#stage-1-localization-stage) a list of vehicle pairs whose paths could potentially overlap.
+- Extends bounding boxes along the path ahead (geodesic boundaries) for each vehicle pair to check if they actually overlap and determine whether the risk of collision is real.
+- Sends hazards for all possible collisions to the [Motion Planner Stage](#stage-4-motion-planner-stage) to modify the path accordingly.
+
+__Related .cpp files:__ `CollisionStage.cpp`.
+
+##### Stage 3- Traffic Light Stage
+
+The Traffic Light stage triggers hazards due to traffic regulators such as traffic lights, stop signs, and priority at junctions.
+
+The Traffic Light stage:
+
+- Sets a traffic hazard if a vehicle is under the influence of a yellow or red traffic light or a stop sign.
+- Extends a bounding box along a vehicle's path if it is in an unsignaled junction. Vehicles with overlapping paths follow a "First-In-First-Out" order to move. Wait times are set to a fixed value.
+
+__Related .cpp files:__ `TrafficLightStage.cpp`.
+
+##### Stage 4- Motion Planner Stage
+
+The Motion Planner Stage generates the CARLA commands to be applied to vehicles.
+
+The Motion Planner Stage:
+
+- Gathers a vehicle's position and velocity ([simulation state](#simulation-state)), path ([PBVT](#pbvt)), and hazards ([Collision Stage](#stage-2-collision-stage) and [Traffic Light Stage](#stage-3-traffic-light-stage)).
+- Makes high-level decisions about how a vehicle should move, for example, computing the brake needed to prevent a collision hazard. A [PID controller](#pid-controller) is used to estimate behaviors according to target values.
+- Translates the desired movement to a [carla.VehicleControl](python_api.md#carla.VehicleControl) for application to the vehicle.
+- Sends the resulting CARLA commands to the [Command Array](#command-array).
+
+__Related .cpp files:__ `MotionPlannerStage.cpp`.
+
+
+##### Stage 5- Vehicle Lights Stage
+
+The Vehicle Lights Stage activates the lights based on the condition of the vehicle and the surrounding environment.
+	
+The Vehicle Lights Stage:
+
+- Retrieves the planned waypoints for the vehicle, information about vehicle lights (eg. light state and the planned command to be applied) and the weather conditions.
+
+- Determines the new state of the vehicle lights:
+	- Turns on the blinkers if the vehicle is planning to turn left/right at the next junction.
+	- Turns on the stop lights if the applied command is asking the vehicle to brake.
+	- Turns on the low beams and the position lights from sunset to dawn, or under heavy rain.
+	- Turns on the fog lights under heavy fog conditions.
+
+- Update the vehicle lights state if it has changed.
+
+__Related .cpp files:__ `VehicleLightStage.cpp`.
 
 ---
 

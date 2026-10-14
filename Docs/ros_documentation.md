@@ -2,6 +2,9 @@
 
 __Full documentation of the ROS bridge is found [__here__](https://carla.readthedocs.io/projects/ros-bridge/en/latest/).__
 
+!!! Note
+    The ROS bridge is a separate process that translates between CARLA and ROS. CARLA also speaks ROS 2 directly, with no bridge in between — see the [native ROS2 interface](ros2_native.md), which is the recommended route for ROS 2 users.
+
 ---
 
 The ROS bridge enables two-way communication between ROS and CARLA. The information from the CARLA server is translated to ROS topics. In the same way, the messages sent between nodes in ROS get translated to commands to be applied in CARLA.

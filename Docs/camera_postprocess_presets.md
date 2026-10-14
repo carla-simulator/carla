@@ -31,12 +31,21 @@ camera = world.spawn_actor(camera_bp, carla.Transform(carla.location(0,0,1.5), c
 
 ## Presets shipped with CARLA
 
+Nine profiles ship in `Content/Carla/Config/PostProcess`. They change the image processing only, never the geometry of the lens.
+
 | Preset | Look |
 | --- | --- |
-| `Default` | Photoreal camera, used by the spectator and by every RGB camera that does not set `post_process_profile`. Neutral grading, histogram auto exposure with a brightness-dependent exposure bias curve, so shade, dusk and night stay darker as on a real camera. |
-| `GoPro` | Action camera. Vivid colour, strong local tone compression, crisp detail, light vignette and edge fringing, fast auto exposure. |
-| `AutomotiveHDR` | Front camera of an automated vehicle (HDR sensor with a perception ISP). Neutral and flat, highly compressed dynamic range, no lens effects (vignette, bloom, fringing, motion blur, depth of field), very fast auto exposure for tunnel entries and exits. |
-| `Dashcam` | Consumer dashcam. Low dynamic range (bright skies clip), contrasty, over-sharpened, strong vignette and fringing, sensor grain, slightly cool and overexposed. |
+| `Cinematic` | The photoreal grading the spectator and the viewport use. Neutral 6500 K, slow histogram auto exposure, moderate bloom, a noticeable vignette and motion blur. |
+| `GoPro` | Action camera. Vivid, crisp (sharpen 0.55), light vignette and edge fringing, fast auto exposure, motion blur on. |
+| `AutomotiveHDR` | Front camera of an automated vehicle: an HDR sensor seen through a perception ISP. Flat and highly compressed, cool 7400 K, no vignette, fringing or motion blur, and very fast auto exposure for tunnel entries and exits. |
+| `AutomotiveHDRClean` | `AutomotiveHDR` with the bloom cut from 1.0 to 0.35, for ground truth where glare around light sources is unwanted. |
+| `Dashcam` | Consumer dashcam. Slightly overexposed, contrasty, over-sharpened, heavy vignette, visible grain and fringing. |
+| `LegacyCCD` | Older CCD sensor. Hard highlight clipping, strong contrast and colour fringing, no motion blur. |
+| `LogHDR` | Log-like capture for a pipeline that does its own grading: dark, flat, almost no bloom and no lens effects. |
+| `Smartphone` | Phone camera. Warm 5600 K, dark exposure, no sharpening, gentle tone curve. |
+| `WideHDR8MP` | Wide-angle 8 MP HDR module. Minimal bloom, no sharpening, pronounced fringing towards the edges of the frame. |
+
+A camera with no `post_process_profile` follows the server-wide profile, set with the `carla.PostProcess.Profile` console variable and defaulting to `Cinematic`. The sky rig loads the same profile at `BeginPlay`, so the spectator and those cameras always agree.
 
 The presets only change the image processing. The lens geometry is set on the camera blueprint: for an action-camera or dashcam view, also widen `fov` (for example 110 to 120) and, if needed, use the lens distortion attributes (`lens_k`, `lens_kcube`, `lens_x_size`, `lens_y_size`).
 

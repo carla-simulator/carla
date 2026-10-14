@@ -2,10 +2,13 @@
 
 This guide details the different rendering options available in CARLA, including quality levels, no-rendering mode and off-screen mode.
 
+- [__Lighting and geometry__](#lighting-and-geometry)
 - [__Graphics quality__](#graphics-quality)
 	- [Quality levels](#quality-levels)
 	- [Tier comparison](#tier-comparison)
-	- [Render features disabled across every tier](#render-features-disabled-across-every-tier)
+	- [Ray tracing defaults](#ray-tracing-defaults)
+	- [NVIDIA DLSS](#nvidia-dlss)
+	- [Ray-traced lens tuning](#ray-traced-lens-tuning)
 - [__Off-screen rendering mode__](#off-screen-rendering-mode)
 	- [Setting off-screen mode](#setting-off-screen-mode)
 
@@ -14,30 +17,52 @@ This guide details the different rendering options available in CARLA, including
     Some of the command options below are not equivalent in the CARLA packaged releases. Read the [Command line options](start_quickstart.md#command-line-options) section to learn more about this.
 
 ---
+## Lighting and geometry
+
+Two engine systems do most of the work, and neither needs configuring to use CARLA. They are worth knowing about because they explain what the quality tiers trade away.
+
+__[Lumen](https://dev.epicgames.com/documentation/en-us/unreal-engine/lumen-global-illumination-and-reflections-in-unreal-engine)__ is the dynamic global illumination and reflection system. Light bounces off the surfaces it actually hits, so a red wall tints the road beside it and a vehicle under a bridge darkens, with no baked lighting and no precomputation when the weather or the time of day changes. It is what makes the weather API visible on every surface rather than only in the sky. Lumen runs at the `High` and `Epic` tiers, on [hardware ray tracing](https://dev.epicgames.com/documentation/en-us/unreal-engine/hardware-ray-tracing-in-unreal-engine) with ray-traced shadows.
+
+__[Nanite](https://dev.epicgames.com/documentation/en-us/unreal-engine/nanite-virtualized-geometry-in-unreal-engine)__ is virtualized geometry: the engine streams and renders only the triangles a view can resolve, so the towns carry film-grade meshes without a hand-authored LOD chain. It applies to opaque and masked materials only — meshes with translucent materials, such as glass, render through the normal path.
+
+---
 ## Graphics quality
 
 ### Quality levels
 
-CARLA ships with four graphics-quality tiers selected by the `-quality-level=<Tier>` command-line flag. The tier name is case-sensitive PascalCase: `Low`, `Medium`, `High`, `Epic`. When the flag is omitted, the simulator falls back to the built-in default tier `Epic`. An unrecognised value (typo, wrong casing) falls back to the platform default without applying any Carla tier and the engine log emits a warning naming the bad value.
+CARLA ships four graphics-quality tiers, selected with `-quality-level=<Tier>`. The name is case-sensitive PascalCase — `Low`, `Medium`, `High`, `Epic` — and `Epic` is the default. An unrecognised value falls back to the platform default without applying a CARLA tier, and the log warns with the value it did not understand.
 
 ```sh
 ./CarlaUnreal.sh -quality-level=Epic
-./CarlaUnreal.sh -quality-level=High
-./CarlaUnreal.sh -quality-level=Medium
 ./CarlaUnreal.sh -quality-level=Low
 
-# When there is not a flag, Epic is the default.
+# With no flag, Epic is used.
 ./CarlaUnreal.sh
 ```
 
-Each tier sets a coherent mix of memory budgets, foliage density, scalability bucket levels, and selected render-pipeline knobs. The character of each tier, from richest to cheapest:
+__The tier changes how the world is rendered, never what is in it.__ View distance, foliage and grass density, mesh detail and the simulation itself are identical at every tier: a sensor sees the same objects in the same places on Low as on Epic, only shaded more cheaply. That is what makes a lower tier usable for data collection on a weaker GPU.
 
-* __Epic__: engine "Epic" preset across every axis with no overrides. Full anisotropy, full mesh LODs, full view distance, sharper Lumen reflections (downsample 1, two bounces). Same memory budget as High.
-* __High__: engine "Epic" preset everywhere, except six render axes (view distance, mesh LOD bias, anisotropy, virtual-texture anisotropy, Lumen reflection downsample, Lumen reflection max bounces) pulled down at `ECVF_SetByDeviceProfile` priority. Memory pools at the Epic ramp. "Epic minus" intended for hardware that can afford rich rendering but wants a smaller view bubble and cheaper reflections.
-* __Medium__: engine "Medium" preset across every scalability axis, with a moderate memory budget. Foliage and grass at full density. Engine-typical mid-range look.
-* __Low__: full-resolution rendering with sharp textures, view distance, anti-aliasing, and shading kept high. Dynamic shadows are disabled and Lumen reflections are disabled; Lumen global illumination is kept at engine "Medium" level so the shadowed side of vehicles and distant buildings still receive diffuse bounce light, avoiding crushed-dark surfaces. The scene renders flat-lit with no cast shadows but with proper indirect fill. Foliage and grass are removed (`DensityScale=0`). A `TemporalAA` sharpening preset and motion-blur-off are applied for the HD-readable feel. Compact memory footprint.
+What each tier gives up, from the top down:
 
-The flag is identical on Windows and Linux. Inside the UE editor, scalability is governed by the editor's own `Settings/Engine Scalability Settings` menu rather than this flag.
+| Tier | Global illumination | Reflections | Shadows | Also |
+| ---- | ------------------- | ----------- | ------- | ---- |
+| `Epic` | Lumen, probe spacing 4, 4096 surface cache | Lumen, full resolution, 2 bounces | 4096 px shadow maps, 10 cascades | Hardware ray tracing available to cameras |
+| `High` | Lumen, probe spacing 8, 2048 surface cache | Lumen, half resolution, 1 bounce | 2048 px, 4 cascades | No ray tracing on cameras |
+| `Medium` | None | Screen-space plus reflection captures (256 px) | 1024 px, 1 cascade, no distance-field shadows | Texture mip bias 0.5, anisotropy 4 |
+| `Low` | None | Screen-space plus reflection captures (128 px) | 512 px, 1 cascade, no distance-field shadows, far shadows culled | No motion blur, smaller streaming pools, quarter-rate particle emitters |
+
+What that buys, measured on Town10HD with an empty world and a fixed viewpoint, so only the rendering differs:
+
+| Tier | Frame rate, relative to Epic |
+| ---- | ---------------------------- |
+| `Epic` | baseline |
+| `High` | +25% |
+| `Medium` | +65% |
+| `Low` | +80% |
+
+The step from Epic to High is Lumen getting cheaper; the step from High to Medium is Lumen going away, which is where most of the gain is. Low adds little over Medium, because by then the expensive lighting is already gone and what remains is shadow resolution and particle rates. The exact figures move with the GPU, the resolution and the map, but the shape holds: the cost is in the global illumination, not the geometry.
+
+Inside the editor, scalability follows the editor's own __Settings / Engine Scalability Settings__ menu rather than this flag.
 
 #### Epic mode
 
@@ -51,42 +76,36 @@ The flag is identical on Windows and Linux. Inside the UE editor, scalability is
 
 ### Tier comparison
 
-Values quoted verbatim from the per-tier CVar set in the CARLA selector module. Entries marked *default* inherit the engine default and are not modified by the tier.
+Each tier selects the matching bucket — `Low` 0 through `Epic` 3 — in every [scalability group](https://dev.epicgames.com/documentation/en-us/unreal-engine/scalability-reference-for-unreal-engine) of `Config/DefaultScalability.ini`. The CARLA device profile selector then lowers the few CVars that a project setting pins above scalability priority. The values below are those two sources.
 
-| Aspect | Epic | High | Medium | Low |
+| Setting | Low | Medium | High | Epic |
 |---|---|---|---|---|
-| `r.Streaming.PoolSize` (MB) | 4000 | 4000 | 3000 | 3000 |
-| `r.SkinCache.SceneMemoryLimitInMB` | 1024 | 1024 | 512 | 256 |
-| `r.Nanite.Streaming.PoolSize` | 512 | 512 | 256 | 128 |
-| `r.LumenScene.SurfaceCache.AtlasSize` | 4096 | 4096 | *default* | 2048 |
-| `r.Shadow.Virtual.MaxPhysicalPages` | 8192 | 8192 | 4096 | 2048 |
-| `r.Shadow.DistanceScale` | 2.0 | 2.0 | 1.5 | *default* |
-| `r.ReflectionCaptureResolution` | 512 | 512 | 256 | 128 |
-| `foliage.DensityScale` / `grass.DensityScale` | 1.0 | 1.0 | 1.0 | 0 |
-| `Foliage.DitheredLOD` | 1 | 1 | *default* | *default* |
-| `r.CustomDepth` | 3 | 3 | *default (1)* | *default (1)* |
-| `r.DefaultFeature.AntiAliasing` | 1 (FXAA) | 1 (FXAA) | *default* | *default* |
-| `r.Lumen.Reflections.MaxRoughnessToTrace` | 0.2 | 0.2 | *default* | *default* |
-| `r.Lumen.Reflections.DownsampleFactor` | 1 | 2 | *(bucket)* | *(bucket)* |
-| `r.Lumen.Reflections.MaxBounces` | 2 | 1 | *(bucket)* | *(bucket)* |
-| `r.ViewDistanceScale` | 1.0 | 0.8 | *(bucket)* | *(bucket)* |
-| `r.SkeletalMeshLODBias` | 0 | 1 | *(bucket)* | *(bucket)* |
-| `r.MaxAnisotropy` / `r.VT.MaxAnisotropy` | *(bucket = 8)* | 4 | *(bucket)* | *(bucket)* |
-| `r.DefaultFeature.MotionBlur` | *default* | *default* | *default* | 0 (off) |
-| TAA sharpening preset | *default* | *default* | *default* | enabled |
-| `sg.ShadowQuality` | 3 | 3 | 2 | 0 (no shadows) |
-| `sg.GlobalIlluminationQuality` | 3 | 3 | 2 | 2 |
-| `sg.ReflectionQuality` | 3 | 3 | 2 | 0 |
-| `sg.PostProcessQuality` | 3 | 3 | 2 | 1 |
-| `sg.EffectsQuality` | 3 | 3 | 2 | 1 |
-| `sg.FoliageQuality` | 3 | 3 | 2 | 1 |
-| `sg.TextureQuality` | 3 | 3 | 2 | 3 |
-| `sg.ViewDistanceQuality` | 3 | 3 | 2 | 3 |
-| `sg.AntiAliasingQuality` | 3 | 3 | 2 | 3 |
-| `sg.ShadingQuality` | 3 | 3 | 2 | 3 |
-| `sg.ResolutionQuality` | 100 | 100 | 100 | 100 |
+| `r.ViewDistanceScale` | 1.0 | 1.0 | 1.0 | 1.0 |
+| `foliage.DensityScale` / `grass.DensityScale` | 1.0 | 1.0 | 1.0 | 1.0 |
+| `r.DynamicGlobalIlluminationMethod` | 0 (off) | 0 (off) | Lumen | Lumen |
+| `r.Lumen.ScreenProbeGather.DownsampleFactor` | — | — | 32 | 16 |
+| `r.LumenScene.SurfaceCache.AtlasSize` | — | — | 2048 | 4096 |
+| `r.ReflectionMethod` | 2 (SSR) | 2 (SSR) | Lumen | Lumen |
+| `r.Lumen.Reflections.DownsampleFactor` | — | — | 2 | 1 |
+| `r.Lumen.Reflections.MaxBounces` | — | — | 1 | 2 |
+| `r.SSR.Quality` | 4 | 4 | 2 | 3 |
+| `r.ReflectionCaptureResolution` | 128 | 256 | 512 | 512 |
+| `r.Shadow.MaxCSMResolution` | 512 | 1024 | 2048 | 4096 |
+| `r.Shadow.CSM.MaxCascades` | 1 | 1 | 4 | 10 |
+| `r.Shadow.DistanceScale` | 1.0 | 1.5 | 2.0 | 2.0 |
+| `r.DistanceFieldShadowing` | 0 | 0 | 1 | 1 |
+| `r.MaxAnisotropy` / `r.VT.MaxAnisotropy` | 4 | 4 | 8 | 8 |
+| `r.Streaming.MipBias` | 0.5 | 0.5 | 0 | 0 |
+| `r.Streaming.PoolSize` (MB) | 2000 | 3000 | 4000 | 4000 |
+| `r.Nanite.Streaming.StreamingPoolSize` (MB) | 768 | *default* | *default* | *default* |
+| `r.EmitterSpawnRateScale` | 0.125 | 0.25 | 0.5 | 1.0 |
+| `r.FXAA.Quality` | 0 | 2 | 4 | 5 |
+| `r.DefaultFeature.MotionBlur` | 0 (off) | *default* | *default* | *default* |
+| `r.CustomDepth` | 1 | *default* | *default* | *default* |
+| `carla.Camera.UseRayTracing` | 0 | 0 | 0 | per sensor |
 
-Rows marked *(bucket)* take their value from the `[GroupName@N]` section in `DefaultScalability.ini` selected by the corresponding `sg.*Quality` row.
+!!! Note
+    `rt_lens`, `rt_lens_distance` and `rt_lens_instance` path-trace their own primary rays and ignore `carla.Camera.UseRayTracing`, so they work at every tier. The flag only governs hardware ray tracing on the ordinary scene-capture cameras.
 
 ### Ray tracing defaults
 
@@ -95,7 +114,7 @@ The hardware ray tracing subsystem is initialized at the project level (`r.RayTr
 | CVar | Project default | Effect when enabled |
 |---|---|---|
 | `r.RayTracing` | True | Initializes the hardware ray tracing subsystem (RTX-class GPU required). Read-only after engine init. |
-| `r.PathTracing` | True | Makes the path tracer available for `sensor.camera.rt_lens`. |
+| `r.PathTracing` | True | Makes the [path tracer](https://dev.epicgames.com/documentation/en-us/unreal-engine/path-tracer-in-unreal-engine) available for `sensor.camera.rt_lens`. |
 | `r.Lumen.HardwareRayTracing` | False | Switches the main view's Lumen GI + reflections from software SDF tracing to hardware RT cores. Kept off by default: the engine keeps a single per-scene ray-tracing command cache, and mixing hardware-RT viewport effects with streaming path-traced sensors re-caches the whole scene every frame (a large flat per-frame cost on big towns). |
 | `r.RayTracing.Shadows` | False | Ray-traced direct shadows instead of Virtual Shadow Maps. Kept off by default for the same cache reason. |
 | `r.RayTracing.ForceAllRayTracingEffects` | 0 | Force-enables every RT-capable effect in the project. High BVH cost. |

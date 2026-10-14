@@ -28,9 +28,11 @@ __To change the map, the world has to change too__. The simulation will be recre
 
 - `reload_world()` creates a new instance of the world with the same map.
 - `load_world()` changes the current map and creates a new world.
+- `load_world_if_different()` loads the map only when it is not the one already running, and otherwise leaves the simulation alone. A script that needs a particular map can ask for it without destroying the actors of a session that is already on it.
 
 ```py
 world = client.load_world('Town01')
+world = client.load_world_if_different('Town01')   # no-op when Town01 is already loaded
 ```
 
 Each map has a `name` attribute that matches the name of the currently loaded city, e.g. _Town01_. To get a list of the available maps:
@@ -47,7 +49,7 @@ Traffic signs defined in the OpenDRIVE file are translated to CARLA as landmark 
 	- [`carla.LandmarkOrientation`](https://carla.readthedocs.io/en/latest/python_api/#carla.LandmarkOrientation) states the orientation of the landmark with regard to the road's geometry definition.
 	- [`carla.LandmarkType`](https://carla.readthedocs.io/en/latest/python_api/#carla.LandmarkType) contains common landmark types to facilitate translation to OpenDRIVE types.
 - __[`carla.Waypoint`](https://carla.readthedocs.io/en/latest/python_api/#carla.Waypoint)__ can get landmarks located a certain distance ahead of it. The landmark type to get can be specified.
-- __[`carla.Map`](https://carla.readthedocs.io/en/latest/python_api/#carla.Map)__ retrieves sets of landmarks. It can return all landmarks in the map, or those which have a common ID, type or group.
+- __[`carla.Map`](https://carla.readthedocs.io/en/latest/python_api/#carla.Map)__ retrieves sets of landmarks: `get_all_landmarks()`, or those sharing an id, a type or a group with `get_all_landmarks_from_id()`, `get_all_landmarks_of_type()` and `get_landmark_group()`.
 - __[`carla.World`](https://carla.readthedocs.io/en/latest/python_api/#carla.World)__ acts as intermediary between landmarks and the `carla.TrafficSign` and `carla.TrafficLight` that represent them in the simulation.
 
 ```py
@@ -100,11 +102,56 @@ lane_change = waypoint.lane_change
 
 A [`carla.Junction`](python_api.md#carla.Junction) represents an OpenDRIVE junction. This class encompasses a junction with a bounding box to identify lanes or vehicles within it.
 
-The `carla.Junction` class contains the `get_waypoints` method which returns a pair of waypoints for every lane within the junction. Each pair is located at the start and end points of the junction boundaries.
+A junction is reached from a waypoint inside it, or from the map by id, and `get_waypoints` returns a pair of waypoints for every lane of the requested type within it, at the start and end points of the junction boundaries.
 
 ```py
-waypoints_junc = my_junction.get_waypoints()
+junction = waypoint.get_junction()               # None when the waypoint is not in one
+junction = carla_map.get_junction_by_id(junction_id)
+all_junctions = carla_map.get_junctions()
+
+waypoints_junc = junction.get_waypoints(carla.LaneType.Driving)
 ```
+
+### Crosswalks
+
+`get_crosswalks()` returns the crosswalk polygons the OpenDRIVE file defines, as a flat list of [`carla.Location`](python_api.md#carla.Location) points. Each polygon repeats its first point at the end, which is what separates one from the next.
+
+```py
+points = carla_map.get_crosswalks()
+```
+
+### The road network as objects
+
+Waypoints sample the road at a distance of your choosing. [`carla.Road`](python_api.md#carla.Road), [`carla.LaneSection`](python_api.md#carla.LaneSection) and [`carla.Lane`](python_api.md#carla.Lane) instead expose the OpenDRIVE structure itself, so the network can be walked without sampling it first.
+
+| Level | Object | OpenDRIVE element |
+| ----- | ------ | ----------------- |
+| Road | [`carla.Road`](python_api.md#carla.Road) | `<road>`: its length, its junction, and the roads before and after it |
+| Lane section | [`carla.LaneSection`](python_api.md#carla.LaneSection) | `<laneSection>`: the stretch of road over which the lane layout does not change |
+| Lane | [`carla.Lane`](python_api.md#carla.Lane) | `<lane>`: its type, width, level and direction of travel |
+
+They are reached from the map by id, or listed whole, and every level produces waypoints on demand:
+
+```py
+carla_map = world.get_map()
+
+for road in carla_map.get_roads():
+    for section in road.get_sections():
+        for lane in section.get_lanes(carla.LaneType.Driving):
+            waypoints = lane.get_waypoints(2.0)      # this lane, sampled every 2 m
+            start = lane.get_transform(lane.s_start)
+```
+
+Each level reaches its neighbours, so a search can start from a waypoint and continue on the objects:
+
+```py
+lane = carla_map.get_waypoint(vehicle.get_location()).get_lane()
+overtaking_lane = lane.get_left_lane()
+lane_ahead = lane.get_next_lane()
+road = lane.get_road()
+```
+
+Junctions answer in objects too, with `get_connecting_roads()`, `get_adjacent_roads()`, `get_entry_lanes()` and `get_exit_lanes()` beside the waypoint equivalents.
 
 ### Environment Objects
 
@@ -145,7 +192,11 @@ The Waypoint API exposes methods that allow waypoints to connect to each other a
 - `next(d)` creates a list of waypoints within an approximate distance, `d`, __in the direction of the lane__. The list contains one waypoint for each possible deviation.
 - `previous(d)` creates a list of waypoints waypoint within an approximate distance, `d`, __in the opposite direction of the lane__. The list contains one waypoint for each possible deviation.
 - `next_until_lane_end(d)` and `previous_until_lane_start(d)` return a list of waypoints a distance `d` apart. The lists go from the current waypoint to the end and beginning of its lane, respectively.
-- `get_right_lane()` and `get_left_lane()` return the equivalent waypoint in an adjacent lane, if one exists. A lane change maneuver can be made by finding the next waypoint to the one on its right/left lane, and moving to it.
+- `get_right_waypoint()` and `get_left_waypoint()` return the equivalent waypoint in an adjacent lane, if one exists. A lane change maneuver can be made by finding the next waypoint to the one on its right/left lane, and moving to it.
+- `get_lane()`, `get_road()` and `get_junction()` leave the waypoints behind and return [the objects](#the-road-network-as-objects) the waypoint sits on, for a query the sampling cannot answer.
+
+!!! Warning
+    These two were called `get_right_lane()` and `get_left_lane()` until CARLA 0.10.0, which read as if they returned a lane. The old names still work and raise a `DeprecationWarning`. On [`carla.Lane`](python_api.md#carla.Lane), `get_right_lane()` and `get_left_lane()` do return lanes.
 
 ```py
 # Find next waypoint 2 meters ahead.
@@ -159,7 +210,7 @@ The client needs to make a request to the server to get the `.xodr` map file and
 To get the map object:
 
 ```py
-map = world.get_map()
+carla_map = world.get_map()
 ```
 
 The map object contains __recommended spawn points__ for the creation of vehicles. You can get a list of these spawn points, each one containing a [`carla.Transform`](python_api.md#carlatransform), using the method below. Bear in mind that the spawn points may be occupied already, resulting in failed creation of vehicles due to collisions.
@@ -172,35 +223,61 @@ You can get started with waypoints by __[getting](python_api.md#carla.Map.get_wa
 
 ```py
 # Nearest waypoint in the center of a Driving or Sidewalk lane.
-waypoint01 = map.get_waypoint(vehicle.get_location(),project_to_road=True, lane_type=(carla.LaneType.Driving | carla.LaneType.Sidewalk))
+waypoint01 = carla_map.get_waypoint(vehicle.get_location(),project_to_road=True, lane_type=(carla.LaneType.Driving | carla.LaneType.Sidewalk))
 
 #Nearest waypoint but specifying OpenDRIVE parameters. 
-waypoint02 = map.get_waypoint_xodr(road_id,lane_id,s)
+waypoint02 = carla_map.get_waypoint_xodr(road_id,lane_id,s)
 ```
 
 The below example shows how to __generate a collection of waypoints__ to visualize the city lanes. This will create waypoints all over the map, for every road and lane. All of them will approximately 2 meters apart:
 
 ```py
-waypoint_list = map.generate_waypoints(2.0)
+waypoint_list = carla_map.generate_waypoints(2.0)
 ```
 
 To __generate a minimal graph of road topology__, use the example below. This will return a list of pairs (tuples) of waypoints. The first element in each pair connects with the second element and both define the start and end points of each lane in the map. More information on this method is found in the [PythonAPI](python_api.md#carla.Map.get_topology).
 
 ```py
-waypoint_tuple_list = map.get_topology()
-```
-
-The example below __converts a `carla.Transform` to geographical latitude and longitude coordinates,__ in the form of a [`carla.GeoLocation`](python_api.md#carla.GeoLocation):
-
-```py
-my_geolocation = map.transform_to_geolocation(vehicle.transform)
+waypoint_tuple_list = carla_map.get_topology()
 ```
 
 Use the following example to __save road information__ in OpenDRIVE format to disk:
 
 ```py
-info_map = map.to_opendrive()
+info_map = carla_map.to_opendrive()     # the XML as a string
+carla_map.save_to_disk(path)            # or straight to a file
 ```
+
+---
+## Geographic coordinates
+
+The OpenDRIVE header of a map carries a `geoReference` string: the [PROJ](https://proj.org/) definition of the projection the map's coordinates came from. CARLA parses it and converts through it, so geographic coordinates agree with the data the map was built from.
+
+```py
+carla_map = world.get_map()
+
+geo = carla_map.transform_to_geolocation(vehicle.get_location())   # carla.GeoLocation
+transform = carla_map.geolocation_to_transform(geo)                # and back
+projection = carla_map.get_geoprojection()                         # the map's own projection
+```
+
+| `+proj=` in `geoReference` | Projection object |
+| -------------------------- | ----------------- |
+| `tmerc` | [`carla.GeoProjectionTM`](python_api.md#carla.GeoProjectionTM) |
+| `utm` | [`carla.GeoProjectionUTM`](python_api.md#carla.GeoProjectionUTM), which also applies the header's `<offset>` |
+| `merc` | [`carla.GeoProjectionWebMerc`](python_api.md#carla.GeoProjectionWebMerc) |
+| `lcc` | [`carla.GeoProjectionLCC2SP`](python_api.md#carla.GeoProjectionLCC2SP) |
+
+Both conversions take an optional projection, to read or write coordinates in one that is not the map's:
+
+```py
+geo = carla_map.transform_to_geolocation(location, carla.GeoProjectionUTM(zone=31, north=True))
+```
+
+`get_georeference()` returns the geographic location of the map origin declared by the header.
+
+!!! Note
+    A map whose `geoReference` is missing, or that names a projection CARLA does not implement, falls back to a transverse Mercator projection on the map origin and logs a warning.
 
 ---
 ## Left-handed traffic
@@ -220,7 +297,12 @@ CARLA supports left-hand traffic (LHT) rules defined in the OpenDRIVE file. To o
 !!! note
     RHT is the default. A road with no `rule` attribute (or an unrecognized value) is treated as RHT. You may also wish to set this explicitly with `rule="RHT"`.
 
-CARLA applies the LHT convention to every road tagged with `rule="LHT"`.
+CARLA applies the LHT convention to every road tagged with `rule="LHT"`. A client reads the rule back from `is_rht`, on both [`carla.Waypoint`](python_api.md#carla.Waypoint) and [`carla.Road`](python_api.md#carla.Road), so an agent can tell which side of the road it is on without parsing the OpenDRIVE file:
+
+```py
+if not waypoint.is_rht:
+    ...        # this road drives on the left
+```
 
 Note that the LHT/RHT convention affects not only the behaviour of traffic but also the traffic signs and signals affecting the road. Therefore, if the map has assets placed manually for right-handed traffic conventions (e.g. road signs or traffic lights), these will need to be adjusted. Traffic lights defined in the OpenDRIVE definition for left-handed traffic are automatically placed by CARLA in the appropriate position upon importing the map.
 
@@ -228,14 +310,32 @@ Note that the LHT/RHT convention affects not only the behaviour of traffic but a
 
 ## Large maps and World Partition
 
-Under Unreal Engine 5, CARLA's large maps (such as Town12) use the engine's native __World Partition__ streaming with double-precision Large World Coordinates, replacing the legacy tile-based large map system. The map is divided into cells that stream in and out automatically around streaming sources, with no rebasing and no client-visible tiling: from the Python API a World Partition town behaves like any other map.
+Town11, Town12, Town13 and Town15 are too big to keep in memory at once. Under Unreal Engine 5 they are __[World Partition](https://dev.epicgames.com/documentation/en-us/unreal-engine/world-partition-in-unreal-engine)__ maps: the level is divided into a grid of cells that the engine streams in and out around whatever is moving through it, and coordinates are double precision ([Large World Coordinates](https://dev.epicgames.com/documentation/en-us/unreal-engine/large-world-coordinates-in-unreal-engine-5)), so nothing is rebased as a vehicle drives away from the origin.
 
-Streaming sources are attached automatically:
+This replaces the tile system CARLA used before, and the difference matters mostly because it is invisible. There are no map tiles to query, no rebasing to compensate for, and no large-map-specific API: from the client a World Partition town is a map like any other, and a location stays the same number however far from the origin it is.
 
-*   Every spawned vehicle keeps the ground under itself loaded, so vehicles can be spawned anywhere on the map without falling through unloaded terrain.
-*   Hero vehicles (`role_name` set to `hero`) get a wide loading ring controlled by the same `tile_stream_distance` setting used by legacy large maps ([carla.WorldSettings](python_api.md#carla.WorldSettings)).
+### What loads, and around what
 
-Legacy tiled towns can be converted in place to World Partition with the `CarlaLargeMapConvert` commandlet, which registers the old tiles as streaming levels, reads the tiling layout from the map's `TilesInfo.txt` and removes the legacy static lighting rig (the weather-driven sky replaces it):
+A cell loads when a __streaming source__ comes near it, and CARLA registers one on every vehicle and walker it spawns:
+
+| Actor | Loading radius |
+| ----- | -------------- |
+| A vehicle or walker with `role_name` set to `hero` or `ego_vehicle` | `tile_stream_distance` on [carla.WorldSettings](python_api.md#carla.WorldSettings) |
+| Any other vehicle or walker | 200 m around itself |
+
+The hero's ring is the one to tune; the rest only need the ground under their wheels. Spawning blocks until the cells under the new actor are resident, so an actor never falls through a road that has not loaded yet.
+
+Two further settings apply only to these maps:
+
+- `actor_active_distance` — beyond this distance from the hero, actors become dormant: still registered, no longer simulated. It is never allowed to exceed `tile_stream_distance`; the server raises the streaming distance to match and warns if you set it higher.
+- `spectator_as_ego` — whether the spectator also loads cells around itself when no ego actor exists. Turn it off if your script spawns its ego immediately.
+
+!!! Warning
+    Only the loaded part of the map exists. A sensor pointed at an unloaded region sees nothing there, and a waypoint query still answers from the OpenDRIVE definition, which is always complete. Raise `tile_stream_distance` when a sensor has to see further than the hero's ring.
+
+### Converting a tiled map
+
+A legacy tiled town is converted in place with the `CarlaLargeMapConvert` commandlet, which registers the old tiles as streaming levels, reads the layout from the map's `TilesInfo.txt`, and removes the legacy static lighting rig the weather-driven sky now replaces:
 
 ```sh
 UnrealEditor CarlaUnreal.uproject -run=CarlaLargeMapConvert \

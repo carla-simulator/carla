@@ -1,6 +1,12 @@
 # CARLA Docker Dev Environment (UE5)
 
-CARLA UE5 can be built inside a Docker container running Ubuntu 22.04. This is useful when your host OS (e.g., Ubuntu 24.04) does not meet UE5's compilation requirements. The container provides the correct toolchain and dependencies while you keep all source code on the host.
+CARLA UE5 can be built inside a Docker container running Ubuntu 22.04. The container provides the toolchain and the dependencies; your source code, your engine and the build output stay on the host.
+
+Ubuntu 22.04 and 24.04 can both build CARLA directly, so this is for the cases where that is not what you want:
+
+- a host on another distribution, or an older Ubuntu
+- keeping UE5's dependency list off your workstation
+- a reproducible toolchain, the same on every machine and in CI
 
 ## Prerequisites
 

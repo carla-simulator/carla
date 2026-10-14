@@ -182,11 +182,26 @@
           ID of the actor to follow. If this is 0 then camera is disabled.
       - param_name: replay_sensors
         type: bool
+        default: False
         doc: >
           Flag to enable or disable the spawn of sensors during playback.
+      - param_name: replay_weather
+        type: bool
+        default: False
+        doc: >
+          Restores the weather stored in the recording, and the changes made to it while it was recorded. The current weather is kept when this is False.
+      - param_name: offset
+        type: carla.Transform
+        default: carla.Transform(carla.Location(-10, 0, 5), carla.Rotation(pitch=-25))
+        doc: >
+          Where the spectator sits relative to the actor given in `follow_id`. Defaults to 10 m behind and 5 m above it, pitched 25 degrees down. Ignored when `follow_id` is 0.
+      - param_name: map_override
+        type: str
+        default: "''"
+        doc: >
+          Name of the map to replay on, instead of the one the recording names. Empty keeps the recorded map.
       doc: >
-        Load a new world with default settings using `map_name` map. All actors
-        present in the current world will be destroyed, __but__ traffic manager instances will stay alive.
+        Replays a simulation recorded with `start_recorder()`. Actors in the current world that appear in the recording are moved or respawned to reproduce it; the rest carry on. Returns the recording's info string.
     # --------------------------------------
     - def_name: stop_replayer
       params:
@@ -269,8 +284,13 @@
         default: False
         doc: >
           Enables or disable recording non-essential data for reproducing the simulation (bounding box location, physics control parameters, etc)
+      - param_name: stop_replayer
+        type: bool
+        default: True
+        doc: >
+          Stops a playback in progress before recording. Set it to False to record while a replay keeps running, which captures a replayed situation with new actors or sensors in it.
       doc: >
-        Enables the recording feature, which will start saving every information possible needed by the server to replay the simulation.
+        Enables the recording feature, which will start saving every information possible needed by the server to replay the simulation. The weather and every change made to it are always recorded.
     # --------------------------------------
     - def_name: stop_recorder
       params:
@@ -656,7 +676,7 @@
       params:
       return: uint16
       doc: >
-        Returns the port where the Traffic Manager is connected. If the object is a TM-Client, it will return the port of its TM-Server. Read the [documentation](#adv_traffic_manager.md#multiclient-and-multitm-management) to learn the difference.
+        Returns the port where the Traffic Manager is connected. If the object is a TM-Client, it will return the port of its TM-Server. Read the [documentation](adv_traffic_manager.md#running-multiple-traffic-managers) to learn the difference.
     # --------------------------------------
     - def_name: set_global_distance_to_leading_vehicle
       params:
@@ -742,7 +762,7 @@
         doc: >
           If __True__, the TM synchronous mode is enabled.
       doc: >
-        Sets the Traffic Manager to [synchronous mode](adv_traffic_manager.md#synchronous-mode). In a [multiclient situation](adv_traffic_manager.md#multiclient), only the TM-Server can tick. Similarly, in a [multiTM situation](adv_traffic_manager.md#multitm), only one TM-Server must tick. Use this method in the client that does the world tick, and right after setting the world to synchronous mode, to set which TM will be the master while in sync.
+        Sets the Traffic Manager to [synchronous mode](adv_traffic_manager.md#synchronous-mode). In a [multiclient situation](adv_traffic_manager.md#multi-client-simulations), only the TM-Server can tick. Similarly, in a [multiTM situation](adv_traffic_manager.md#multi-tm-simulations), only one TM-Server must tick. Use this method in the client that does the world tick, and right after setting the world to synchronous mode, to set which TM will be the master while in sync.
       warning: >
         If the server is set to synchronous mode, the TM <b>must</b> be set to synchronous mode too in the same client that does the tick.
     # --------------------------------------

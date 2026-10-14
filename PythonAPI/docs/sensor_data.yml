@@ -187,9 +187,9 @@
     # - METHODS ----------------------------
     methods:
     - def_name: get_color_coded_flow
-      return: carla.Image
+      return: carla.FakeImage
       doc: >
-        Visualization helper. Converts the optical flow image to an RGB image.
+        Visualization helper. Converts the optical flow image to an RGB image, with the direction of motion as hue and its magnitude as saturation. The result is a carla.FakeImage, so it carries no frame or timestamp.
     # --------------------------------------
     - def_name: __getitem__
       params:
