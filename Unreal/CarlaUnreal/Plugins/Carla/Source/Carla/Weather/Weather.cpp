@@ -622,10 +622,11 @@ static float ComputeCloudDeckLightFactor(float Cloudiness)
 static float GetOvercastSkyLightTarget(float Cloudiness, float Precipitation)
 {
     const float Overcast = CVarCarlaWeatherOvercastSkyLightIntensity.GetValueOnGameThread();
-    const float Deck = CVarCarlaWeatherDeckSkyLightIntensity.GetValueOnGameThread()
-        * RainDeckScale(CVarCarlaWeatherRainDeckSkyLightScale, Precipitation);
-    if (Overcast < 0.0f || Deck < 0.0f)
+    const float DeckRaw = CVarCarlaWeatherDeckSkyLightIntensity.GetValueOnGameThread();
+    // Test the sentinel before the rain scale: a scale of 0 turns -1 into -0, which is not < 0.
+    if (Overcast < 0.0f || DeckRaw < 0.0f)
         return Overcast;
+    const float Deck = DeckRaw * RainDeckScale(CVarCarlaWeatherRainDeckSkyLightScale, Precipitation);
     return FMath::Lerp(Overcast, Deck, ComputeCloudDeckLightFactor(Cloudiness));
 }
 
