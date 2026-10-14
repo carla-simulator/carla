@@ -18,7 +18,9 @@ COLOR_INSTANCE_VAR = '#f8805a'
 COLOR_NOTE = '#8E8E8E'
 COLOR_WARNING = '#ED2F2F'
 
-QUERY = re.compile(r'([cC]arla(\.[a-zA-Z0-9_]+)+)')
+# The lookbehind keeps the hostname of a link such as
+# https://carla.readthedocs.io/... from being turned into a class anchor.
+QUERY = re.compile(r'(?<![/.])([cC]arla(\.[a-zA-Z0-9_]+)+)')
 
 
 def create_hyperlinks(text):

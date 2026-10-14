@@ -14,6 +14,46 @@
     instance_variables:
     # - METHODS ----------------------------
     methods:
+    - def_name: load_world_if_different
+      params:
+      - param_name: map_name
+        type: str
+        doc: >
+          Name of the map, which has to match the one in use exactly for it not to be reloaded.
+      - param_name: reset_settings
+        type: bool
+        default: True
+        doc: >
+          Resets the settings to their default values when the map is loaded.
+      - param_name: map_layers
+        type: carla.MapLayer
+        default: carla.MapLayer.All
+        doc: >
+          Layers to load. Only has an effect on layered maps.
+      return: carla.World
+      doc: >
+        Returns the current world, loading <b>map_name</b> first unless it is already the map in use.
+    # --------------------------------------
+    - def_name: load_world_if_different
+      params:
+      - param_name: map_name
+        type: str
+        doc: >
+          Name of the map, which has to match the one in use exactly for it not to be reloaded.
+      - param_name: reset_settings
+        type: bool
+        default: True
+        doc: >
+          Resets the settings to their default values when the map is loaded.
+      - param_name: map_layers
+        type: carla.MapLayer
+        default: carla.MapLayer.All
+        doc: >
+          Layers to load. Only has an effect on layered maps.
+      return: carla.World
+      doc: >
+        Returns the current world, loading <b>map_name</b> first unless it is already the map in use.
+    # --------------------------------------
     - def_name: __init__
       params:
       - param_name: host
@@ -414,6 +454,28 @@
     instance_variables:
     # - METHODS ----------------------------
     methods:
+    - def_name: vehicle_large_vehicle_wide_turn
+      params:
+      - param_name: actor
+        type: carla.Actor
+        doc: >
+          Vehicle to set it on.
+      - param_name: enable
+        type: bool
+        doc: >
+          True makes the vehicle take wider turns, False stops it.
+      doc: >
+        Makes a large vehicle take wider turns at junctions.
+    # --------------------------------------
+    - def_name: global_large_vehicle_wide_turn
+      params:
+      - param_name: enable
+        type: bool
+        doc: >
+          True makes large vehicles take wider turns, False stops them.
+      doc: >
+        Makes every large vehicle take wider turns at junctions.
+    # --------------------------------------
     - def_name: auto_lane_change
       params:
       - param_name: actor

@@ -365,7 +365,7 @@ void CarlaReplayer::ProcessToTime(double Time, bool IsFirstTime)
       // vehicle wheels animation
       case static_cast<char>(CarlaRecorderPacketId::AnimVehicleWheels):
         if (bFrameFound)
-          ProcessAnimVehicleWheels();
+          ProcessAnimVehicleWheels(IsFirstTime);
         else
           SkipPacket();
         break;
@@ -442,6 +442,7 @@ void CarlaReplayer::ProcessToTime(double Time, bool IsFirstTime)
   if (Enabled && bFrameFound)
   {
     UpdatePositions(Per, Time);
+    UpdateWheels(Per);
   }
 
   // save current time
@@ -602,22 +603,28 @@ void CarlaReplayer::ProcessAnimVehicle(void)
   }
 }
 
-void CarlaReplayer::ProcessAnimVehicleWheels(void)
+void CarlaReplayer::ProcessAnimVehicleWheels(bool IsFirstTime)
 {
   uint16_t i, Total;
 
+  // save current as previous
+  PrevWheels = std::move(CurrWheels);
+
   // read Total Vehicles
   ReadValue<uint16_t>(File, Total);
+  CurrWheels.clear();
+  CurrWheels.reserve(Total);
   for (i = 0; i < Total; ++i)
   {
     CarlaRecorderAnimWheels Vehicle;
     Vehicle.Read(File);
     Vehicle.DatabaseId = MappedId[Vehicle.DatabaseId];
-    // check if ignore this actor
-    if (!(IgnoreHero && IsHeroMap[Vehicle.DatabaseId]))
-    {
-      Helper.ProcessReplayerAnimVehicleWheels(Vehicle);
-    }
+    CurrWheels.push_back(std::move(Vehicle));
+  }
+
+  if (IsFirstTime)
+  {
+    PrevWheels.clear();
   }
 }
 
@@ -834,6 +841,52 @@ void CarlaReplayer::UpdatePositions(double Per, double DeltaTime)
   if (NewFollowId != 0)
   {
     Helper.SetCameraPosition(NewFollowId, FollowOffset.GetTranslation(), FollowOffset.GetRotation());
+  }
+}
+
+void CarlaReplayer::UpdateWheels(double Per)
+{
+  std::unordered_map<uint32_t, const CarlaRecorderAnimWheels *> PrevWheelsById;
+  for (const CarlaRecorderAnimWheels &Wheels : PrevWheels)
+  {
+    PrevWheelsById[Wheels.DatabaseId] = &Wheels;
+  }
+  std::unordered_map<uint32_t, const CarlaRecorderPosition *> PrevPosById, CurrPosById;
+  for (const CarlaRecorderPosition &Pos : PrevPos)
+  {
+    PrevPosById[Pos.DatabaseId] = &Pos;
+  }
+  for (const CarlaRecorderPosition &Pos : CurrPos)
+  {
+    CurrPosById[Pos.DatabaseId] = &Pos;
+  }
+
+  for (const CarlaRecorderAnimWheels &Wheels : CurrWheels)
+  {
+    // check if ignore this actor
+    if (IgnoreHero && IsHeroMap[Wheels.DatabaseId])
+    {
+      continue;
+    }
+    auto Prev = PrevWheelsById.find(Wheels.DatabaseId);
+    if (Prev == PrevWheelsById.end())
+    {
+      // assign last wheels (we don't have previous ones)
+      Helper.ProcessReplayerAnimVehicleWheels(Wheels, Wheels, 0.0, 0.0f);
+      continue;
+    }
+    // how far the body moves between the two frames, which says how far the
+    // wheels turn
+    float Travel = 0.0f;
+    auto Pos1 = PrevPosById.find(Wheels.DatabaseId);
+    auto Pos2 = CurrPosById.find(Wheels.DatabaseId);
+    if (Pos1 != PrevPosById.end() && Pos2 != CurrPosById.end())
+    {
+      const FVector Forward = FRotator::MakeFromEuler(Pos1->second->Rotation).Vector();
+      Travel = FVector::DotProduct(Pos2->second->Location - Pos1->second->Location, Forward);
+    }
+    // like the positions, no interpolation if time factor is high
+    Helper.ProcessReplayerAnimVehicleWheels(*Prev->second, Wheels, TimeFactor >= 2.0 ? 0.0 : Per, Travel);
   }
 }
 

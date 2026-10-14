@@ -90,6 +90,25 @@ class TestVehicleWheelSpin(VehicleWheelSmokeTest):
         finally:
             vehicle.destroy()
 
+    def test_spin_carries_over_when_physics_returns(self):
+        print("TestVehicleWheelSpin.test_spin_carries_over_when_physics_returns")
+        vehicle = self._spawn_four_wheeler()
+        try:
+            radius = vehicle.get_physics_control().wheels[0].wheel_radius / 100.0
+            vehicle.set_simulate_physics(False)
+            self._tick(vehicle)
+            # Half a turn away from the angle a rebuilt Chaos wheel starts at.
+            self._move(vehicle, math.pi * radius)
+            spin = vehicle.get_wheel_pitch_angle(carla.VehicleWheelLocation.FL_Wheel)
+            self.assertGreater(
+                abs((spin + 180.0) % 360.0 - 180.0), 90.0,
+                "the wheels did not roll far enough for the test to tell a jump")
+
+            vehicle.set_simulate_physics(True)
+            self._assert_no_wheel_jump(vehicle, 5, "physics re-enabled")
+        finally:
+            vehicle.destroy()
+
     def test_wheels_roll_under_chaos(self):
         print("TestVehicleWheelSpin.test_wheels_roll_under_chaos")
         vehicle = self._spawn_four_wheeler()

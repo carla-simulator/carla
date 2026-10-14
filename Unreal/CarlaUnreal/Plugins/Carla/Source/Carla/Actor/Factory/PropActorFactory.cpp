@@ -211,6 +211,9 @@ TSharedPtr<FJsonObject> APropActorFactory::FPropParametersToJsonObject(const FPr
         break;
   }
   JsonObject->SetStringField(TEXT("Size"), PropSizeString);
+
+  JsonObject->SetStringField(TEXT("BaseType"), PropParams.BaseType);
+  JsonObject->SetStringField(TEXT("SubType"), PropParams.SubType);
   return JsonObject;
 }
 
@@ -269,6 +272,11 @@ bool APropActorFactory::JsonToFPropParameters(const TSharedPtr<FJsonObject> Json
 
     FString PropSizeString;
     JsonObject->TryGetStringField(TEXT("Size"), PropSizeString);
+
+    // Optional fields: catalogs written before the prop types keep the struct
+    // default (empty) when absent.
+    JsonObject->TryGetStringField(TEXT("BaseType"), OutPropParams.BaseType);
+    JsonObject->TryGetStringField(TEXT("SubType"), OutPropParams.SubType);
 
     if(PropSizeString == FString("Tiny")){
         OutPropParams.Size = EPropSize::Tiny;
