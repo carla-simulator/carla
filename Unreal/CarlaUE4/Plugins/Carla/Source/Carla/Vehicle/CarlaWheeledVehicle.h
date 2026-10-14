@@ -3,6 +3,8 @@
 //
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
+//
+// Additional functionality added by AVL List GmbH under the terms of the MIT license.
 
 #pragma once
 
@@ -410,6 +412,15 @@ public:
 
   UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
   float GetWheelPitchAngle(EVehicleWheelLocation WheelLocation);
+
+  /// Set the height of the car wheels indicated by the user
+  /// 0 = FL_VehicleWheel, 1 = FR_VehicleWheel, 2 = BL_VehicleWheel, 3 = BR_VehicleWheel
+  /// NOTE : This is purely aesthetic. It will not modify the physics of the car in any way
+  UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
+  void SetWheelHeight(EVehicleWheelLocation WheelLocation, float Height);
+
+  UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
+  float GetWheelHeight(EVehicleWheelLocation WheelLocation);
 
   UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
   void OpenDoor(const EVehicleDoor DoorIdx);
