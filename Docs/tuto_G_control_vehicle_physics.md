@@ -10,6 +10,7 @@ which also provides the control of each wheel's physics through a
 
 - [__Vehicle control code example__](#vehicle-control-code-example)
 - [__Viewing vehicle telemetry__](#viewing-vehicle-telemetry)
+- [__Driving the wheels by hand__](#driving-the-wheels-by-hand)
 
 ---
 ## Vehicle control code example
@@ -79,3 +80,23 @@ print(telemetry.speed, telemetry.engine_rpm, telemetry.gear)
 for wheel in telemetry.wheels:
     print(wheel.lat_slip, wheel.long_slip, wheel.omega)
 ```
+
+---
+## Driving the wheels by hand
+
+The wheels normally follow the physics: Chaos turns them while it simulates the vehicle, and when it is not — physics disabled, or another component moving the vehicle — they roll by the distance the vehicle travels.
+
+A replay or a co-simulation platform that already knows where its wheels are can take them over instead:
+
+```py
+vehicle.set_wheel_animation_override(True)
+
+vehicle.set_wheel_steer_direction(carla.VehicleWheelLocation.FL_Wheel, 30.0)   # degrees
+vehicle.set_wheel_pitch_angle(carla.VehicleWheelLocation.FL_Wheel, 90.0)       # degrees of roll
+vehicle.set_wheel_suspension_offset(carla.VehicleWheelLocation.FL_Wheel, 0.05) # metres
+```
+
+While the override is on, the wheels show those values and nothing else, whether or not Chaos is simulating the vehicle. `get_wheel_steer_angle`, `get_wheel_pitch_angle` and `get_wheel_suspension_offset` read them back.
+
+!!! Note
+    The override is visual only — it moves no physics and changes no collision. The setters raise an error while it is off, and every one of these calls raises for a wheel the vehicle does not have.

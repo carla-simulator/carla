@@ -103,7 +103,7 @@ while True:
 
 ```
 
-If you now fly through the map with the spectator, you will see vehicles driving autonomously around the map.
+If you now fly through the map with the spectator, you will see vehicles driving autonomously around the map. Buses and trucks swing wide through junctions, the way a long vehicle has to; `traffic_manager.vehicle_large_vehicle_wide_turn(vehicle, False)` turns that off for one vehicle, and `global_large_vehicle_wide_turn(False)` for all of them.
 
 ![intersection_traffic](../img/tuto_G_traffic_manager/traffic.gif)
 
