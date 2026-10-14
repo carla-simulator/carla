@@ -21,7 +21,6 @@ Usage: $0 [--distro=<distro>] [--rmw=<middleware>] [--host=<host>] [--port=<port
 Runs the ROS2 demo stack in Docker against a CARLA server started with --ros2:
   * ros2_native.py        spawns the hero vehicle with camera/lidar/gnss/imu on autopilot
   * map_to_markers.py     converts the latched /carla/map OpenDRIVE into lane markers
-  * ego_tf_broadcaster.py broadcasts the map->hero TF so map and sensors compose in RViz
 
 Options:
   --distro              ROS 2 distribution to use. Supported: humble, jazzy  (default: humble)
