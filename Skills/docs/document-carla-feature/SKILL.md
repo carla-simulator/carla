@@ -29,7 +29,7 @@ one pass** — the rules differ and the review gets muddled.
 | category | audit signal | files it edits | status |
 |---|---|---|---|
 | `python-api` | `binding`, `stale` | `PythonAPI/docs/*.yml`, then regenerate | [references/python_api.md](references/python_api.md) |
-| `changelog` | `changelog` | wherever the feature belongs | not written yet |
+| `changelog` | `changelog` | `CHANGELOG.md` | [references/changelog.md](references/changelog.md) |
 | `sensors` | `sensor` | `Docs/ref_sensors.md` | [references/sensors.md](references/sensors.md) |
 | `catalogue` | `catalogue` | `Docs/catalogue_*.md` | not written yet |
 | `links` | `link` | the page holding the link | not written yet |
