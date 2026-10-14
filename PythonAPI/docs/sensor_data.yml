@@ -60,7 +60,7 @@
 
     # - PROPERTIES -------------------------
     instance_variables:
-    - var_name: None
+    - var_name: NONE
     - var_name: Buildings
     - var_name: Fences
     - var_name: Other
@@ -71,7 +71,7 @@
     - var_name: Sidewalks
     - var_name: TrafficSigns
     - var_name: Vegetation
-    - var_name: Vehicles
+    - var_name: Car
     - var_name: Walls
     - var_name: Sky
     - var_name: Ground
@@ -83,6 +83,13 @@
     - var_name: Dynamic
     - var_name: Water
     - var_name: Terrain
+    - var_name: Truck
+    - var_name: Motorcycle
+    - var_name: Bicycle
+    - var_name: Bus
+    - var_name: Rider
+    - var_name: Train
+    - var_name: Rock
     - var_name: Any
 
   - class_name: Image
@@ -784,7 +791,7 @@
         The texture "CustomStencil" contains the Unreal Engine custom stencil data.
     # --------------------------------------
 
-  - class_name: CAMData
+  - class_name: CAMMessage
     parent: carla.SensorData
     # - DESCRIPTION ------------------------
     doc: >
@@ -811,7 +818,7 @@
     parent: carla.SensorData
     # - DESCRIPTION ------------------------
     doc: >
-      Class that defines the data provided by a **sensor.other.v2x**. This is a collection type to combine returning several [CAMData](#carlacamdata).
+      Class that defines the data provided by a **sensor.other.v2x**. This is a collection type to combine returning several [CAMMessage](#carlacammessage).
     # - PROPERTIES -------------------------
     instance_variables:
 
@@ -823,14 +830,14 @@
       doc: >
         Get the number of received CAM's.
     # --------------------------------------
-    - def_name: __get_item__
+    - def_name: __getitem__
       params:
       - param_name: pos
         type: int
     # --------------------------------------
     - def_name: __iter__
       doc: > 
-        Iterate over the [CAMData](#carlacamdata) retrieved as data. 
+        Iterate over the [CAMMessage](#carlacammessage) retrieved as data. 
       # --------------------------------------
     - def_name: __len__  
     # --------------------------------------
@@ -852,7 +859,7 @@
       doc: >
         Get the number of received CAM's.
     # --------------------------------------
-    - def_name: __get_item__
+    - def_name: __getitem__
       params:
       - param_name: pos
         type: int
@@ -934,4 +941,30 @@
     # --------------------------------------
     - def_name: __str__ 
     # --------------------------------------
+  - class_name: FakeImage
+    # - DESCRIPTION ------------------------
+    doc: >
+      Colour-coded visualization of an optical flow field, returned by carla.OpticalFlowImage.get_color_coded_flow(). It is not a carla.SensorData, so it carries no frame or timestamp.
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: width
+      type: int
+      var_units: pixels
+      doc: >
+        Image width.
+    - var_name: height
+      type: int
+      var_units: pixels
+      doc: >
+        Image height.
+    - var_name: fov
+      type: float
+      var_units: degrees
+      doc: >
+        Horizontal field of view of the image.
+    - var_name: raw_data
+      type: bytes
+      doc: >
+        Flattened array of pixels, four bytes per pixel in BGRA order.
+
 ...

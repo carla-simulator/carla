@@ -123,6 +123,24 @@ class TestVehicleWheelAnimationOverride(VehicleWheelSmokeTest):
         finally:
             vehicle.destroy()
 
+    def test_release_under_chaos_keeps_spin(self):
+        print("TestVehicleWheelAnimationOverride.test_release_under_chaos_keeps_spin")
+        vehicle = self._spawn_four_wheeler()
+        try:
+            vehicle.apply_control(carla.VehicleControl(throttle=0.3))
+            self._tick(vehicle, 25)
+            vehicle.set_wheel_animation_override(True)
+            # Half a turn away from Chaos, which keeps turning its own wheels.
+            for wheel in WHEELS:
+                vehicle.set_wheel_pitch_angle(wheel, vehicle.get_wheel_pitch_angle(wheel) + 180.0)
+            # The bones read back are one frame behind.
+            self._tick(vehicle, 2)
+
+            vehicle.set_wheel_animation_override(False)
+            self._assert_no_wheel_jump(vehicle, 5, "override released")
+        finally:
+            vehicle.destroy()
+
     def test_setters_raise_without_override(self):
         print("TestVehicleWheelAnimationOverride.test_setters_raise_without_override")
         vehicle = self._spawn_four_wheeler()

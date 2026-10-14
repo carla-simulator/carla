@@ -100,7 +100,7 @@ void export_actor() {
     .value("Dormant", cr::ActorState::Dormant)
   ;
 
-  class_<std::vector<int>>("vector_of_ints")
+  class_<std::vector<int>>("VectorOfInts")
       .def(vector_indexing_suite<std::vector<int>>())
       .def(self_ns::str(self_ns::self))
   ;
@@ -235,7 +235,7 @@ void export_actor() {
       .def("restore_default_physics", &cc::Vehicle::RestoreDefaultPhysics)
       .def("restore_physx_physics", &RestorePhysXPhysics)
       .def("get_failure_state", &cc::Vehicle::GetFailureState)
-      .def("get_vehicle_bone_world_transforms", &cc::Vehicle::GetVehicleBoneWorldTransforms)
+      .def("get_vehicle_bone_world_transforms", CALL_RETURNING_LIST(cc::Vehicle, GetVehicleBoneWorldTransforms))
       .def(self_ns::str(self_ns::self))
   ;
 

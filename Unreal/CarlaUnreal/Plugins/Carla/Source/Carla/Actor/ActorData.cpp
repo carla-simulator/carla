@@ -19,8 +19,69 @@
 #include "CarlaActor.h"
 
 #include <util/ue-header-guard-begin.h>
+#include "Components/SkinnedMeshComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include <util/ue-header-guard-end.h>
+
+FActorRigSnapshot FActorRigSnapshot::FromActor(const AActor *Actor)
+{
+  FActorRigSnapshot Rig;
+  if (Actor == nullptr)
+  {
+    return Rig;
+  }
+  const FTransform ActorToWorld = Actor->GetActorTransform();
+
+  TArray<UActorComponent *> Components;
+  Actor->GetComponents(Components);
+  for (UActorComponent *ActorComponent : Components)
+  {
+    // Scene components only: the others have no transform to report.
+    USceneComponent *SceneComponent = Cast<USceneComponent>(ActorComponent);
+    if (SceneComponent == nullptr)
+    {
+      continue;
+    }
+    Rig.ComponentNames.Add(SceneComponent->GetName());
+    Rig.ComponentTransforms.Add(
+        SceneComponent->GetComponentTransform().GetRelativeTransform(ActorToWorld));
+
+    // Authored sockets only. A skinned mesh also reports each of its bones as a
+    // socket, which duplicates the bone lists and can repeat a name.
+    TArray<FComponentSocketDescription> Sockets;
+    SceneComponent->QuerySupportedSockets(Sockets);
+    for (const FComponentSocketDescription &Socket : Sockets)
+    {
+      if (Socket.Type != EComponentSocketType::Socket)
+      {
+        continue;
+      }
+      Rig.SocketNames.Add(Socket.Name.ToString());
+      Rig.SocketTransforms.Add(
+          SceneComponent->GetSocketTransform(Socket.Name, ERelativeTransformSpace::RTS_Actor));
+    }
+  }
+
+  TArray<USkinnedMeshComponent *> SkinnedMeshComponents;
+  Actor->GetComponents<USkinnedMeshComponent>(SkinnedMeshComponents);
+  for (USkinnedMeshComponent *SkinnedMeshComponent : SkinnedMeshComponents)
+  {
+    const FTransform ComponentToWorld = SkinnedMeshComponent->GetComponentTransform();
+    TArray<FName> BoneNames;
+    SkinnedMeshComponent->GetBoneNames(BoneNames);
+    // GetBoneNames walks the reference skeleton in bone-index order, the same
+    // order as GetBoneTransform, so names and transforms stay index-aligned.
+    const int32 NumBones = FMath::Min(BoneNames.Num(), SkinnedMeshComponent->GetNumBones());
+    for (int32 BoneIndex = 0; BoneIndex < NumBones; ++BoneIndex)
+    {
+      Rig.BoneNames.Add(BoneNames[BoneIndex].ToString());
+      Rig.BoneTransforms.Add(
+          SkinnedMeshComponent->GetBoneTransform(BoneIndex, ComponentToWorld)
+              .GetRelativeTransform(ActorToWorld));
+    }
+  }
+  return Rig;
+}
 
 AActor* FActorData::RespawnActor(UCarlaEpisode* CarlaEpisode, const FActorInfo& Info)
 {
@@ -44,6 +105,9 @@ void FActorData::RecordActorData(FCarlaActor* CarlaActor, UCarlaEpisode* CarlaEp
     AngularVelocity = Component->GetPhysicsAngularVelocityInDegrees();
   }
   Velocity = Actor->GetVelocity();
+  // The AActor is destroyed right after this, so the rig has to be kept here or
+  // every component, bone and socket query fails for as long as it is dormant.
+  Rig = FActorRigSnapshot::FromActor(Actor);
 }
 
 void FActorData::RestoreActorData(FCarlaActor* CarlaActor, UCarlaEpisode* CarlaEpisode)

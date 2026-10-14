@@ -365,7 +365,6 @@ void export_map() {
   class_<cc::Waypoint, boost::noncopyable, std::shared_ptr<cc::Waypoint>>("Waypoint", no_init)
     .add_property("id", &cc::Waypoint::GetId)
     .add_property("transform", CALL_RETURNING_COPY(cc::Waypoint, GetTransform))
-    .add_property("is_intersection", &cc::Waypoint::IsJunction) // deprecated
     .add_property("is_junction", &cc::Waypoint::IsJunction)
     .add_property("lane_width", &cc::Waypoint::GetLaneWidth)
     .add_property("road_id", &cc::Waypoint::GetRoadId)

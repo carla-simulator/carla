@@ -476,6 +476,46 @@
         Responsible for creating different shapes for debugging. Take a look at its class to learn more about it. 
     # - METHODS ----------------------------
     methods:    
+    - def_name: is_weather_enabled
+      return: bool
+      doc: >
+        Returns whether the map has a weather actor, and so whether the weather can be read and set.
+    # --------------------------------------
+    - def_name: set_publish_tf
+      params:
+      - param_name: publish_tf
+        type: bool
+        doc: >
+          True publishes actor transforms to the tf topic, False stops it.
+      doc: >
+        Enables or disables publishing actor transforms through the native ROS 2 interface.
+    # --------------------------------------
+    - def_name: get_publish_tf
+      return: bool
+      doc: >
+        Returns whether the native ROS 2 interface publishes actor transforms to the tf topic.
+    # --------------------------------------
+    - def_name: set_imu_sensor_gravity
+      params:
+      - param_name: gravity
+        type: float
+        param_units: m/s<sup>2</sup>
+        doc: >
+          Gravity magnitude the IMU sensors will report.
+      doc: >
+        Sets the gravity magnitude the IMU sensors report. It does not change the physics of the simulation.
+    # --------------------------------------
+    - def_name: get_imu_sensor_gravity
+      return: float
+      return_units: m/s<sup>2</sup>
+      doc: >
+        Returns the gravity magnitude the IMU sensors report.
+    # --------------------------------------
+    - def_name: get_ego_spawn_points
+      return: list(carla.Transform)
+      doc: >
+        Returns the recommended spawn points for the ego vehicle. Empty when the map defines none.
+    # --------------------------------------
     - def_name: apply_settings
       return: int
       params:
@@ -988,6 +1028,14 @@
       Helper class part of carla.World that defines methods for creating debug shapes. By default, shapes last one second. They can be permanent, but take into account the resources needed to do so. Take a look at the snipets available for this class to learn how to debug easily in CARLA.
     # - METHODS ----------------------------
     methods:
+    - def_name: clear_debug_string
+      doc: >
+        Removes every debug string currently drawn.
+    # --------------------------------------
+    - def_name: clear_debug_shape
+      doc: >
+        Removes every debug shape currently drawn.
+    # --------------------------------------
     - def_name: draw_arrow
       params:
       - param_name: begin
