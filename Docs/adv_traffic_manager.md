@@ -503,19 +503,19 @@ The script below demonstrates how to set both the server and TM to synchronous m
 init_settings = world.get_settings()
 settings = world.get_settings()
 settings.synchronous_mode = True
+world.apply_settings(settings)
 # After that, set the TM to sync mode
 my_tm.set_synchronous_mode(True)
 
 ...
 
 # Tick the world in the same client
-world.apply_settings(init_settings)
 world.tick()
 ...
 
 # Always disable sync mode before the script ends to prevent the server blocking whilst waiting for a tick
-settings.synchronous_mode = False
 my_tm.set_synchronous_mode(False)
+world.apply_settings(init_settings)
 ```
 
 The `generate_traffic.py` example script starts a TM and populates the map with vehicles and pedestrians. It automatically sets the TM and the CARLA server to synchronous mode:
