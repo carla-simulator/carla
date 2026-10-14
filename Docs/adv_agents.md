@@ -103,6 +103,15 @@ The __Basic Agent__ provides a few methods to manipulate agent behavior or progr
 - __`ignore_stop_signs(active=True)`:__ Set the agent to ignore or obey stop signs.
 - __`ignore_vehicles(active=True)`:__ Set the agent to ignore or react to other vehicles.
 
+!!! Note
+    These methods only apply to agents. They have no effect on vehicles driven by the
+    [Traffic Manager][tm_doc] through `set_autopilot()`, and the Traffic Manager settings do not
+    affect agents. To make autopilot vehicles ignore traffic lights, use
+    [`ignore_lights_percentage()`][tm_ignore_lights] instead.
+
+[tm_doc]: adv_traffic_manager.md
+[tm_ignore_lights]: python_api.md#carla.TrafficManager.ignore_lights_percentage
+
 The `automatic_control.py` script, found in `PythonAPI/examples`, is an example of the Basic and Behavior Agents in action. To try the script, navigate to the example directory and run the following command:
 
 ```sh
