@@ -1,0 +1,24 @@
+{
+  "Name":                       "Sedan RWD Driveline",
+  "Type":                       "Driveline",
+  "Template":                   "ShaftsDriveline2WD",
+
+  "Shaft Direction":
+  {
+    "Motor Block":              [1, 0, 0],
+    "Axle":                     [0, 1, 0]
+  },
+
+  "Shaft Inertia":
+  {
+    "Driveshaft":               0.5,
+    "Differential Box":         0.6
+  },
+
+  "Gear Ratio":
+  {
+    "Conical Gear":             0.2
+  },
+
+  "Axle Differential Locking Limit":  100
+}

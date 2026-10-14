@@ -166,6 +166,13 @@ namespace client {
         std::string TireJSON = "",
         std::string BaseJSONPath = "");
 
+    /// Returns the vehicle to the default (Chaos) physics, undoing
+    /// EnableChronoPhysics.
+    ///
+    /// ue4-dev called this RestorePhysXPhysics, after the default physics of
+    /// UE4; the Python API keeps `restore_physx_physics` as a deprecated alias.
+    void RestoreDefaultPhysics();
+
     /// Returns the failure state of the vehicle
     rpc::VehicleFailureState GetFailureState() const;
 

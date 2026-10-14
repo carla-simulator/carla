@@ -39,9 +39,18 @@ public:
 
   virtual float GetVehicleForwardSpeed() const;
 
+  // Hands the vehicle back to the default Chaos physics. Only a component that
+  // takes physics over needs to do anything here; Chrono does, CarSim does not
+  // override it yet.
+  virtual void DisableSpecialPhysics() {};
+
 protected:
 
   void DisableUE4VehiclePhysics();
 
   void EnableUE4VehiclePhysics(bool bResetVelocity = true);
+
+  // Hands the vehicle back to Chaos moving at LinearVelocity (cm/s); a reset
+  // also clears its angular velocity.
+  void EnableUE4VehiclePhysics(const FVector& LinearVelocity, bool bResetAngularVelocity);
 };

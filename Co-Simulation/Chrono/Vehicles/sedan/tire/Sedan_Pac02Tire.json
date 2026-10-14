@@ -1,0 +1,18 @@
+{
+    "Name": "Magic Formula Tire from ADAMS/Car TIR file",
+    "Type": "Tire",
+    "Template": "Pac02Tire",
+    "Mass": 11.5,
+    "Inertia": [
+        0.156,
+        0.679,
+        0.156
+    ],
+    "TIR Specification File" : "sedan/tire/Sedan_Pac02Tire.tir",
+    "Coefficient of Friction": 0.8,
+    "Visualization": {
+        "Mesh Filename Left":  "sedan/sedan_tire.obj",
+        "Mesh Filename Right": "sedan/sedan_tire.obj",
+        "Width": 0.245
+    }
+}
