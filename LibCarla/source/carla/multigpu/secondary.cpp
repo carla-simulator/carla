@@ -58,7 +58,7 @@ namespace multigpu {
   }
 
   void Secondary::Connect() {
-    AsyncRun(2u);
+    std::call_once(_run_flag, [this]() { AsyncRun(2u); });
 
     _commander.set_secondary(shared_from_this());
 
