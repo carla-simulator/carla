@@ -1,0 +1,85 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1260" height="720" viewBox="0 0 1260 720"><defs><marker id="ah_ink" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#2b2b2b"/></marker><marker id="ah_sub" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#5f6b73"/></marker><marker id="ah_line" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#c9d3da"/></marker><marker id="ah_card" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#f5f8fa"/></marker><marker id="ah_blue" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#2980b9"/></marker><marker id="ah_red" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#d9534f"/></marker><marker id="ah_green" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#3c9a5f"/></marker><marker id="ah_orange" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#e69138"/></marker><marker id="ah_purple" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#7e57c2"/></marker><marker id="ah_white" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#ffffff"/></marker><marker id="ah_soft_blue" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#e3f0f9"/></marker><marker id="ah_soft_red" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#fbe6e5"/></marker><marker id="ah_soft_green" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#e4f3e9"/></marker><marker id="ah_soft_orange" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#fdf0e1"/></marker><marker id="ah_soft_purple" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#efe9f8"/></marker></defs>
+<rect width="1260" height="720" fill="#ffffff"/>
+<text x="630.0" y="44" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="26" fill="#2b2b2b" font-weight="bold" text-anchor="middle" xml:space="preserve">Asynchronous vs synchronous mode</text>
+<text x="630.0" y="72" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="15" fill="#5f6b73" font-weight="normal" text-anchor="middle" xml:space="preserve">Who decides when the simulation advances, and how much simulated time each step covers</text>
+<rect x="30" y="95" width="1200" height="270" rx="14" fill="#f5f8fa" stroke="#c9d3da" stroke-width="1.5"/>
+<text x="55" y="128" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="19" fill="#2b2b2b" font-weight="bold" text-anchor="start" xml:space="preserve">Asynchronous (default)</text>
+<text x="55" y="152" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="14" fill="#5f6b73" font-weight="normal" text-anchor="start" xml:space="preserve">The server ticks as fast as it can. The client reads whatever frame is current and may miss frames.</text>
+<text x="180" y="220" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="15" fill="#3c9a5f" font-weight="bold" text-anchor="end" xml:space="preserve">server</text>
+<line x1="200" y1="215" x2="1220" y2="215" stroke="#c9d3da" stroke-width="2"/>
+<text x="180" y="305" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="15" fill="#2980b9" font-weight="bold" text-anchor="end" xml:space="preserve">client</text>
+<line x1="200" y1="300" x2="1220" y2="300" stroke="#c9d3da" stroke-width="2"/>
+<rect x="220" y="198" width="92" height="34" rx="5" fill="#e4f3e9" stroke="#3c9a5f" stroke-width="1.5"/>
+<text x="266.0" y="220" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" fill="#2b2b2b" font-weight="normal" text-anchor="middle" xml:space="preserve">f1</text>
+<rect x="320" y="198" width="62" height="34" rx="5" fill="#e4f3e9" stroke="#3c9a5f" stroke-width="1.5"/>
+<text x="351.0" y="220" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" fill="#2b2b2b" font-weight="normal" text-anchor="middle" xml:space="preserve">f2</text>
+<rect x="390" y="198" width="132" height="34" rx="5" fill="#e4f3e9" stroke="#3c9a5f" stroke-width="1.5"/>
+<text x="456.0" y="220" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" fill="#2b2b2b" font-weight="normal" text-anchor="middle" xml:space="preserve">f3</text>
+<rect x="530" y="198" width="62" height="34" rx="5" fill="#e4f3e9" stroke="#3c9a5f" stroke-width="1.5"/>
+<text x="561.0" y="220" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" fill="#2b2b2b" font-weight="normal" text-anchor="middle" xml:space="preserve">f4</text>
+<rect x="600" y="198" width="112" height="34" rx="5" fill="#e4f3e9" stroke="#3c9a5f" stroke-width="1.5"/>
+<text x="656.0" y="220" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" fill="#2b2b2b" font-weight="normal" text-anchor="middle" xml:space="preserve">f5</text>
+<rect x="720" y="198" width="72" height="34" rx="5" fill="#e4f3e9" stroke="#3c9a5f" stroke-width="1.5"/>
+<text x="756.0" y="220" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" fill="#2b2b2b" font-weight="normal" text-anchor="middle" xml:space="preserve">f6</text>
+<rect x="800" y="198" width="92" height="34" rx="5" fill="#e4f3e9" stroke="#3c9a5f" stroke-width="1.5"/>
+<text x="846.0" y="220" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" fill="#2b2b2b" font-weight="normal" text-anchor="middle" xml:space="preserve">f7</text>
+<rect x="900" y="198" width="112" height="34" rx="5" fill="#e4f3e9" stroke="#3c9a5f" stroke-width="1.5"/>
+<text x="956.0" y="220" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" fill="#2b2b2b" font-weight="normal" text-anchor="middle" xml:space="preserve">f8</text>
+<rect x="1020" y="198" width="62" height="34" rx="5" fill="#e4f3e9" stroke="#3c9a5f" stroke-width="1.5"/>
+<text x="1051.0" y="220" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" fill="#2b2b2b" font-weight="normal" text-anchor="middle" xml:space="preserve">f9</text>
+<rect x="1090" y="198" width="60" height="34" rx="5" fill="#e4f3e9" stroke="#3c9a5f" stroke-width="1.5"/>
+<text x="1120.0" y="220" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" fill="#2b2b2b" font-weight="normal" text-anchor="middle" xml:space="preserve">f10</text>
+<line x1="360" y1="236" x2="360" y2="290" stroke="#2980b9" stroke-width="2" marker-end="url(#ah_blue)" stroke-dasharray="5,4"/>
+<rect x="308" y="300" width="104" height="30" rx="5" fill="#e3f0f9" stroke="#2980b9" stroke-width="1.5"/>
+<text x="360" y="320" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" fill="#2b2b2b" font-weight="normal" text-anchor="middle" xml:space="preserve">reads f2</text>
+<line x1="760" y1="236" x2="760" y2="290" stroke="#2980b9" stroke-width="2" marker-end="url(#ah_blue)" stroke-dasharray="5,4"/>
+<rect x="708" y="300" width="104" height="30" rx="5" fill="#e3f0f9" stroke="#2980b9" stroke-width="1.5"/>
+<text x="760" y="320" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" fill="#2b2b2b" font-weight="normal" text-anchor="middle" xml:space="preserve">reads f6</text>
+<line x1="1130" y1="236" x2="1130" y2="290" stroke="#2980b9" stroke-width="2" marker-end="url(#ah_blue)" stroke-dasharray="5,4"/>
+<rect x="1078" y="300" width="104" height="30" rx="5" fill="#e3f0f9" stroke="#2980b9" stroke-width="1.5"/>
+<text x="1130" y="320" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" fill="#2b2b2b" font-weight="normal" text-anchor="middle" xml:space="preserve">reads f10</text>
+<text x="220" y="352" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13.5" fill="#5f6b73" font-weight="normal" text-anchor="start" font-style="italic" xml:space="preserve">shown with a variable time step: each frame covers as much simulated time as it took to compute</text>
+<rect x="30" y="385" width="1200" height="315" rx="14" fill="#f5f8fa" stroke="#c9d3da" stroke-width="1.5"/>
+<text x="55" y="418" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="19" fill="#2b2b2b" font-weight="bold" text-anchor="start" xml:space="preserve">Synchronous</text>
+<text x="55" y="442" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="14" fill="#5f6b73" font-weight="normal" text-anchor="start" xml:space="preserve">The server waits for the client&#x27;s tick. Every tick advances exactly one fixed time step and all sensor data of that frame arrives.</text>
+<text x="180" y="505" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="15" fill="#2980b9" font-weight="bold" text-anchor="end" xml:space="preserve">client</text>
+<line x1="200" y1="500" x2="1220" y2="500" stroke="#c9d3da" stroke-width="2"/>
+<text x="180" y="605" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="15" fill="#3c9a5f" font-weight="bold" text-anchor="end" xml:space="preserve">server</text>
+<line x1="200" y1="600" x2="1220" y2="600" stroke="#c9d3da" stroke-width="2"/>
+<rect x="220" y="483" width="110" height="34" rx="5" fill="#e3f0f9" stroke="#2980b9" stroke-width="1.5"/>
+<text x="275" y="505" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" fill="#2b2b2b" font-weight="normal" text-anchor="middle" xml:space="preserve">tick request</text>
+<line x1="275" y1="521" x2="295" y2="580" stroke="#2980b9" stroke-width="2" marker-end="url(#ah_blue)"/>
+<rect x="280" y="583" width="190" height="34" rx="5" fill="#e4f3e9" stroke="#3c9a5f" stroke-width="1.5"/>
+<text x="375" y="605" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" fill="#2b2b2b" font-weight="normal" text-anchor="middle" xml:space="preserve">frame 1: +0.05 s</text>
+<line x1="460" y1="580" x2="482" y2="521" stroke="#7e57c2" stroke-width="2" marker-end="url(#ah_purple)"/>
+<rect x="420" y="483" width="110" height="34" rx="5" fill="#efe9f8" stroke="#7e57c2" stroke-width="1.5"/>
+<text x="475" y="505" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" fill="#2b2b2b" font-weight="normal" text-anchor="middle" xml:space="preserve">sensor data</text>
+<rect x="550" y="483" width="110" height="34" rx="5" fill="#e3f0f9" stroke="#2980b9" stroke-width="1.5"/>
+<text x="605" y="505" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" fill="#2b2b2b" font-weight="normal" text-anchor="middle" xml:space="preserve">tick request</text>
+<line x1="605" y1="521" x2="625" y2="580" stroke="#2980b9" stroke-width="2" marker-end="url(#ah_blue)"/>
+<rect x="610" y="583" width="190" height="34" rx="5" fill="#e4f3e9" stroke="#3c9a5f" stroke-width="1.5"/>
+<text x="705" y="605" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" fill="#2b2b2b" font-weight="normal" text-anchor="middle" xml:space="preserve">frame 2: +0.05 s</text>
+<line x1="790" y1="580" x2="812" y2="521" stroke="#7e57c2" stroke-width="2" marker-end="url(#ah_purple)"/>
+<rect x="750" y="483" width="110" height="34" rx="5" fill="#efe9f8" stroke="#7e57c2" stroke-width="1.5"/>
+<text x="805" y="505" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" fill="#2b2b2b" font-weight="normal" text-anchor="middle" xml:space="preserve">sensor data</text>
+<rect x="880" y="483" width="110" height="34" rx="5" fill="#e3f0f9" stroke="#2980b9" stroke-width="1.5"/>
+<text x="935" y="505" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" fill="#2b2b2b" font-weight="normal" text-anchor="middle" xml:space="preserve">tick request</text>
+<line x1="935" y1="521" x2="955" y2="580" stroke="#2980b9" stroke-width="2" marker-end="url(#ah_blue)"/>
+<rect x="940" y="583" width="190" height="34" rx="5" fill="#e4f3e9" stroke="#3c9a5f" stroke-width="1.5"/>
+<text x="1035" y="605" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" fill="#2b2b2b" font-weight="normal" text-anchor="middle" xml:space="preserve">frame 3: +0.05 s</text>
+<line x1="1120" y1="580" x2="1142" y2="521" stroke="#7e57c2" stroke-width="2" marker-end="url(#ah_purple)"/>
+<rect x="1080" y="483" width="110" height="34" rx="5" fill="#efe9f8" stroke="#7e57c2" stroke-width="1.5"/>
+<text x="1135" y="505" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" fill="#2b2b2b" font-weight="normal" text-anchor="middle" xml:space="preserve">sensor data</text>
+<text x="55" y="672" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="14" fill="#e69138" font-weight="bold" text-anchor="start" xml:space="preserve">inside one tick (physics)</text>
+<rect x="300" y="652" width="34" height="30" rx="4" fill="#fdf0e1" stroke="#e69138" stroke-width="1.5"/>
+<text x="317" y="672" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#2b2b2b" font-weight="normal" text-anchor="middle" xml:space="preserve">0.01</text>
+<rect x="338" y="652" width="34" height="30" rx="4" fill="#fdf0e1" stroke="#e69138" stroke-width="1.5"/>
+<text x="355" y="672" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#2b2b2b" font-weight="normal" text-anchor="middle" xml:space="preserve">0.01</text>
+<rect x="376" y="652" width="34" height="30" rx="4" fill="#fdf0e1" stroke="#e69138" stroke-width="1.5"/>
+<text x="393" y="672" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#2b2b2b" font-weight="normal" text-anchor="middle" xml:space="preserve">0.01</text>
+<rect x="414" y="652" width="34" height="30" rx="4" fill="#fdf0e1" stroke="#e69138" stroke-width="1.5"/>
+<text x="431" y="672" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#2b2b2b" font-weight="normal" text-anchor="middle" xml:space="preserve">0.01</text>
+<rect x="452" y="652" width="34" height="30" rx="4" fill="#fdf0e1" stroke="#e69138" stroke-width="1.5"/>
+<text x="469" y="672" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#2b2b2b" font-weight="normal" text-anchor="middle" xml:space="preserve">0.01</text>
+<text x="505" y="672" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13.5" fill="#5f6b73" font-weight="normal" text-anchor="start" xml:space="preserve">a 0.05 s step simulated as 5 physics substeps of 0.01 s</text>
+</svg>
