@@ -1,36 +1,34 @@
-# C++ Reference 
-We use Doxygen to generate the documentation of our C++ code:
+# C++ reference
 
-[Libcarla/Source](http://carla.org/Doxygen/html/dir_b9166249188ce33115fd7d5eed1849f2.html)<br>
-[Unreal/CarlaUnreal/Source](http://carla.org/Doxygen/html/dir_733e9da672a36443d0957f83d26e7dbf.html)<br>
-[Unreal/CarlaUnreal/Carla/Plugins](http://carla.org/Doxygen/html/dir_8fc34afb5f07a67966c78bf5319f94ae.html)
+CARLA's C++ code is documented with [Doxygen](https://www.doxygen.nl/), from the comments in the headers.
 
-The generated documentation is available at this link **<http://carla.org/Doxygen/html/index.html>**
+!!! Warning
+    The copy hosted at <http://carla.org/Doxygen/html/index.html> was generated from the UE 4.26 line and still describes `CarlaUE4`. For this branch, generate it locally with the steps below.
 
-!!! note
-    Document updates are done automatically by GitHub.
+---
+## Generate the documentation
 
-### Create doxygen documentation
-
-!!! important
-    [Doxygen](http://www.doxygen.nl/index.html) is required to generate the documentation
-    and [Graphviz](https://www.graphviz.org/) for the graph drawing toolkit.
-
-1- Install doxygen and graphviz with the following command:
+Doxygen needs [Graphviz](https://www.graphviz.org/) for the diagrams.
 
 ```sh
-# linux
-> sudo apt-get install doxygen graphviz
+sudo apt-get install doxygen graphviz
 ```
 
-2- Once installed, go to the project root folder where the _Doxyfile_ file is situated and
-run the following command:
+From the repository root, where the `Doxyfile` lives:
 
 ```sh
-> doxygen
+doxygen
 ```
 
-It will start to build the documentation webpage.  
-The resulting webpage can be found at Doxygen/html/
+The result is written to `Doxygen/html/`. Open `Doxygen/html/index.html` in a browser.
 
-3- Open _index.html_ in a browser. Now you have your local cpp documentation!
+---
+## What is covered
+
+| Path | Contents |
+| --- | --- |
+| `LibCarla/source/carla` | The client and server library: the C++ client API, the RPC types, the geometry, the sensor serialization and the Traffic Manager. |
+| `Unreal/CarlaUnreal/Plugins/Carla/Source` | The Carla plugin: the actors, the sensors and the server side of the simulation. |
+| `Unreal/CarlaUnreal/Source` | The Unreal project itself. |
+
+For using the C++ client rather than reading its internals, start with the [C++ tutorial](tuto_cpp.md).

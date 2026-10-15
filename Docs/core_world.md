@@ -1,54 +1,55 @@
-# 1st. World and client
+# World and client
 
-The client and the world are two of the fundamentals of CARLA, a necessary abstraction to operate the simulation and its actors.  
+The client and the world are two of the fundamentals of CARLA, a necessary abstraction to operate the simulation and its actors.
 
-This tutorial goes from defining the basics and creation of these elements, to describing their possibilities. If any doubt or issue arises during the reading, the [CARLA forum](https://github.com/carla-simulator/carla/discussions/) is there to solve them.  
+This tutorial goes from defining the basics and creation of these elements, to describing their possibilities. If any doubt or issue arises during the reading, the [CARLA forum](https://github.com/carla-simulator/carla/discussions/) is there to solve them.
 
-*   [__The client__](#the-client)  
-	*   [Client creation](#client-creation)  
-	*   [World connection](#world-connection)  
-	*   [Other client utilities](#other-client-utilities)  
-*   [__The world__](#the-world)  
-	*   [Actors](#actors)  
-	*   [Weather](#weather)  
-	*   [Lights](#lights)  
-	*   [Debugging](#debugging)  
-	*   [World snapshots](#world-snapshots)  
-	*   [World settings](#world-settings)  
+*   [__The client__](#the-client)
+    *   [Client creation](#client-creation)
+    *   [World connection](#world-connection)
+    *   [Using commands](#using-commands)
+    *   [Other client utilities](#other-client-utilities)
+*   [__The world__](#the-world)
+    *   [Actors](#actors)
+    *   [Weather](#weather)
+    *   [Lights](#lights)
+    *   [Debugging](#debugging)
+    *   [World snapshots](#world-snapshots)
+    *   [World settings](#world-settings)
 
 ---
 ## The client
 
-Clients are one of the main elements in the CARLA architecture. They connect to the server, retrieve information, and command changes. That is done via scripts. The client identifies itself, and connects to the world to then operate with the simulation.  
+Clients are one of the main elements in the CARLA architecture. They connect to the server, retrieve information, and command changes. That is done via scripts. The client identifies itself, and connects to the world to then operate with the simulation.
 
-Besides that, clients are able to access advanced CARLA modules, features, and apply command batches. Only command batches will be covered in this section. These are useful for basic things such as spawning lots of actors. The rest of features are more complex, and they will be addressed in their respective pages in __Advanced steps__.  
+Besides that, clients are able to access advanced CARLA modules, features, and apply command batches. Only command batches will be covered in this section. These are useful for basic things such as spawning lots of actors. The rest of features are more complex, and they will be addressed in their respective pages in __Advanced steps__.
 
-Take a look at [__carla.Client__](python_api.md#carla.Client) in the Python API reference to learn on specific methods and variables of the class. 
+Take a look at [__carla.Client__](python_api.md#carla.Client) in the Python API reference to learn on specific methods and variables of the class.
 
 
 ### Client creation
 
-Two things are needed. The __IP__ address identifying it, and __two TCP ports__ to communicate with the server. An optional third parameter sets the amount of working threads. By default this is set to all (`0`). The [carla.Client](python_api.md#carla.Client.__init__) in the Python API reference contains a snipet that shows how to parse these as arguments when running the script. 
+Two things are needed: the __IP__ address of the server and the __RPC port__ it listens on, 2000 by default. The server also opens the next two ports, 2001 for sensor streaming and 2002 for a secondary server, but the client is given only the first one. An optional third parameter sets the number of working threads, all of them (`0`) by default. [carla.Client](python_api.md#carla.Client.__init__) in the Python API reference has a snippet that parses these as script arguments.
 
 ```py
 client = carla.Client('localhost', 2000)
 ```
-By default, CARLA uses local host IP, and port 2000 to connect but these can be changed at will. The second port will always be `n+1`, 2001 in this case.  
+By default, CARLA uses local host IP, and port 2000 to connect but these can be changed at will. The second port will always be `n+1`, 2001 in this case.
 
-Once the client is created, set its __time-out__. This limits all networking operations so that these don't block the client forever. An error will be returned if connection fails. 
+Once the client is created, set its __time-out__. This limits all networking operations so that these don't block the client forever. An error will be returned if connection fails.
 
 ```py
 client.set_timeout(10.0) # seconds
 ```
 
-It is possible to have many clients connected, as it is common to have more than one script running at a time. Working in a multiclient scheme with advanced CARLA features, such as the traffic manager, is bound to make communication more complex.  
+It is possible to have many clients connected, as it is common to have more than one script running at a time. Working in a multiclient scheme with advanced CARLA features, such as the traffic manager, is bound to make communication more complex.
 
 !!! Note
-    Client and server have different `libcarla` modules. If the versions differ, issues may arise. This can be checked using the `get_client_version()` and `get_server_version()` methods. 
+    Client and server have different `libcarla` modules. If the versions differ, issues may arise. This can be checked using the `get_client_version()` and `get_server_version()` methods.
 
 ### World connection
 
-A client can connect and retrieve the current world fairly easily. 
+A client can connect and retrieve the current world fairly easily.
 
 ```py
 world = client.get_world()
@@ -58,30 +59,30 @@ The client can also get a list of available maps to change the current one. This
 ```py
 print(client.get_available_maps())
 ...
-world = client.load_world('Town01')
+world = client.load_world('Town01_Opt')
 # client.reload_world() creates a new instance of the world with the same map. 
 ```
 
-Every world object has an `id` or episode. Everytime the client calls for `load_world()` or `reload_world()` the previous one is destroyed. A new one is created from scratch with a new episode. Unreal Engine is not rebooted in the process. 
+Every world object has an `id` or episode. Everytime the client calls for `load_world()` or `reload_world()` the previous one is destroyed. A new one is created from scratch with a new episode. Unreal Engine is not rebooted in the process.
 
 ### Using commands
 
-__Commands__ are adaptations of some of the most-common CARLA methods, that can be applied in batches. For instance, the [command.SetAutopilot](python_api.md#command.SetAutopilot) is equivalent to [Vehicle.set_autopilot()](python_api.md#carla.Vehicle.set_autopilot), enables the autopilot for a vehicle. However, using the methods [Client.apply_batch](python_api.md#carla.Client.apply_batch) or [Client.apply_batch_sync()](python_api.md#carla.Client.apply_batch_sync), a list of commands can be applied in one single simulation step. This becomes extremely useful for methods that are usually applied to even hundreds of elements.  
+__Commands__ are adaptations of some of the most-common CARLA methods, that can be applied in batches. For instance, the [command.SetAutopilot](python_api.md#command.SetAutopilot) is equivalent to [Vehicle.set_autopilot()](python_api.md#carla.Vehicle.set_autopilot), enables the autopilot for a vehicle. However, using the methods [Client.apply_batch](python_api.md#carla.Client.apply_batch) or [Client.apply_batch_sync()](python_api.md#carla.Client.apply_batch_sync), a list of commands can be applied in one single simulation step. This becomes extremely useful for methods that are usually applied to even hundreds of elements.
 
-The following example uses a batch to destroy a list of vehicles all at once.  
+The following example uses a batch to destroy a list of vehicles all at once.
 
 ```py
 client.apply_batch([carla.command.DestroyActor(x) for x in vehicles_list])
 ```
 
-All the commands available are listed in the [latest section](python_api.md#command.ApplyAngularVelocity) of the Python API reference.  
+Every available command is listed at the end of the [Python API reference](python_api.md#command.SpawnActor).
 
 ### Other client utilities
 
-The main purpose of the client object is to get or change the world, and apply commands. However, it also provides access to some additional features.  
+The main purpose of the client object is to get or change the world, and apply commands. However, it also provides access to some additional features.
 
 *   __Traffic manager.__ This module is in charge of every vehicle set to autopilot to recreate urban traffic.  
-*   __[Recorder](adv_recorder.md).__ Allows to reenact a previous simulation. Uses [snapshots](core_world.md#world-snapshots) summarizing the simulation state per frame.  
+*   __[Recorder](adv_recorder.md).__ Allows to reenact a previous simulation. Uses [snapshots](core_world.md#world-snapshots) summarizing the simulation state per frame.
 
 ---
 ## The world
@@ -93,21 +94,21 @@ The major ruler of the simulation. Its instance should be retrieved by the clien
 *   Map.  
 *   Simulation settings.  
 *   Snapshots.  
-*   Weather and light manager.  
+*   Weather and light manager.
 
-Some of its most important methods are _getters_, precisely to retrieve information or instances of these elements. Take a look at [carla.World](python_api.md#carla.World) to learn more about it.  
+Some of its most important methods are _getters_, precisely to retrieve information or instances of these elements. Take a look at [carla.World](python_api.md#carla.World) to learn more about it.
 
 ### Actors
 
-The world has different methods related with actors that allow for different functionalities.  
+The world has different methods related with actors that allow for different functionalities.
 
 *   Spawn actors (but not destroy them). 
 *   Get every actor on scene, or find one in particular.  
 *   Access the blueprint library.  
 *   Access the spectator actor, the simulation's point of view.  
-*   Retrieve a random location that is fitting to spawn an actor.  
+*   Retrieve a random location that is fitting to spawn an actor.
 
-Spawning will be explained in [2nd. Actors and blueprints](core_actors.md). It requires some understanding on the blueprint library, attributes, etc.  
+Spawning will be explained in [2nd. Actors and blueprints](core_actors.md). It requires some understanding on the blueprint library, attributes, etc.
 
 ### Weather
 
@@ -142,54 +143,40 @@ Every parameter, with the range the server accepts and its default:
 | `rayleigh_scattering_scale` | 0-2 | 0.0331 | Light scattering off air molecules, which is what makes the sky blue by day and red at dusk. |
 | `dust_storm` | 0-100 | 0 | Strength of a dust storm. |
 
-There are some weather presets that can be directly applied to the world. These are listed in [carla.WeatherParameters](python_api.md#carla.WeatherParameters) and accessible as an enum.  
+There are some weather presets that can be directly applied to the world. These are listed in [carla.WeatherParameters](python_api.md#carla.WeatherParameters) and accessible as an enum.
 
 ```py
 world.set_weather(carla.WeatherParameters.WetCloudySunset)
 ```
 
-The weather can also be customized using two scripts provided by CARLA. 
+Two scripts drive the weather from the terminal.
 
-*   __`environment.py`__ *(in `PythonAPI/util`)* — Provides access to weather and light parameters so that these can be changed in real time.  
-
-<details>
-<summary> Optional arguments in <b>environment.py</b> </summary>
+__`PythonAPI/util/set_weather.py`__ sets the weather once. It starts from a named preset and overrides individual parameters.
 
 ```sh
-  -h, --help            show this help message and exit
-  --host H              IP of the host server (default: 127.0.0.1)
-  -p P, --port P        TCP port to listen to (default: 2000)
-  --sun SUN             Sun position presets [sunset | day | night]
-  --weather WEATHER     Weather condition presets [clear | overcast | rain]
-  --altitude A, -alt A  Sun altitude [-90.0, 90.0]
-  --azimuth A, -azm A   Sun azimuth [0.0, 360.0]
-  --clouds C, -c C      Clouds amount [0.0, 100.0]
-  --rain R, -r R        Rain amount [0.0, 100.0]
-  --puddles Pd, -pd Pd  Puddles amount [0.0, 100.0]
-  --wind W, -w W        Wind intensity [0.0, 100.0]
-  --fog F, -f F         Fog intensity [0.0, 100.0]
-  --fogdist Fd, -fd Fd  Fog Distance [0.0, inf)
-  --wetness Wet, -wet Wet
-                        Wetness intensity [0.0, 100.0]
+python3 set_weather.py --list-presets             # print the preset names
+python3 set_weather.py --show                     # print the current weather, change nothing
+python3 set_weather.py --preset WetCloudySunset
+python3 set_weather.py --preset ClearNoon --fog-density 40 --wetness 60
 ```
-</details><br>
 
-*   __`dynamic_weather.py`__ *(in `PythonAPI/examples`)* — Enables a particular weather cycle prepared by developers for each CARLA map.  
+Every field of [carla.WeatherParameters](python_api.md#carla.WeatherParameters) has a flag of the same name with dashes, so `--sun-altitude-angle`, `--precipitation`, `--mie-scattering-scale` and the rest all work.
 
-<details>
-<summary> Optional arguments in <b>dynamic_weather.py</b> </summary>
+__`PythonAPI/examples/dynamic_day_night_weather_cycle.py`__ animates the weather instead, cycling the sun and the storms.
 
-```sh
-  -h, --help            show this help message and exit
-  --host H              IP of the host server (default: 127.0.0.1)
-  -p P, --port P        TCP port to listen to (default: 2000)
-  -s FACTOR, --speed FACTOR
-                        rate at which the weather changes (default: 1.0)
-```
-</details><br>
+| Flag | Default | What it does |
+| --- | --- | --- |
+| `--day-length` | 180.0 | Seconds for one full day/night cycle. |
+| `--storm-length` | 240.0 | Seconds for one full clear → storm → clear cycle. |
+| `--speed` | 1.0 | Time multiplier; `2.0` runs twice as fast. |
+| `--warmup` | 5.0 | Seconds to blend from the current weather into the cycle. |
+| `--set-weather-hz` | 10.0 | How often per second the weather is actually pushed to the server. |
+| `--time-only` | off | Animate only the sun. |
+| `--weather-only` | off | Animate only the storm cycle. |
+| `--quiet` | off | Do not print the live status line. |
 
 !!! Note
-    Changes in the weather do not affect physics. They are only visuals that can be captured by the camera sensors. 
+    Changes in the weather do not affect physics. They are only visuals that can be captured by the camera sensors.
 
 Under Unreal Engine 5, the weather parameters drive the engine's physically-based sky system directly: sun position and intensity, sky light, clouds, fog and wet surfaces all respond to [carla.WeatherParameters](python_api.md#carla.WeatherParameters) in physical lighting units, in the viewport and in every camera sensor alike.
 
@@ -210,7 +197,7 @@ The override survives weather changes but not `load_world()` or `reload_world()`
 ### Lights
 
 *   __Street lights__ automatically turn on when the simulation enters night mode. The lights are placed by the developers of the map, and accessible as [__carla.Light__](python_api.md#carla.Light) objects. Properties such as color and intensity can be changed at will. The variable __light_state__ of type [__carla.LightState__](python_api.md#carla.LightState) allows setting all of these in one call.  
-Street lights are categorized using their attribute __light_group__, of type [__carla.LightGroup__](python_api.md#carla.LightGroup). This allows to classify lights as street lights, building lights... An instance of [__carla.LightManager__](python_api.md#carla.LightManager) can be retrieved to handle groups of lights in one call.  
+Street lights are categorized using their attribute __light_group__, of type [__carla.LightGroup__](python_api.md#carla.LightGroup). This allows to classify lights as street lights, building lights... An instance of [__carla.LightManager__](python_api.md#carla.LightManager) can be retrieved to handle groups of lights in one call.
 
 ```py
 # Get the light manager and lights
@@ -221,24 +208,21 @@ mylights = lmanager.get_all_lights()
 light01 = mylights[0]
 light01.turn_on()
 light01.set_intensity(100.0)
-state01 = carla.LightState(200.0,red,carla.LightGroup.Building,True)
+state01 = carla.LightState(200.0, carla.Color(255, 0, 0), carla.LightGroup.Building, True)
 light01.set_light_state(state01)
 
 # Custom a group of lights
 my_lights = lmanager.get_light_group(carla.LightGroup.Building)
 lmanager.turn_on(my_lights)
-lmanager.set_color(my_lights,carla.Color(255,0,0))
-lmanager.set_intensities(my_lights,list_of_intensities)
+lmanager.set_color(my_lights, carla.Color(255, 0, 0))
+lmanager.set_intensities(my_lights, [200.0] * len(my_lights))
 ```
 
 In `manual_control.py`, press `U` to toggle all street lights and `Shift+U` to toggle the automatic day/night street light cycle.
 
-* __Vehicle lights__ have to be turned on/off by the user. Each vehicle has a set of lights listed in [__carla.VehicleLightState__](python_api.md#carla.VehicleLightState). So far, not all vehicles have lights integrated. Here is a list of those that are available by the time of writing.  
-	*   __Bikes.__ All of them have a front and back position light.  
-	*   __Motorcycles.__ Yamaha and Harley Davidson models.  
-	*   __Cars.__ Audi TT, Chevrolet, Dodge (the police car), Etron, Lincoln, Mustang, Tesla 3S, Wolkswagen T2 and the new guests coming to CARLA.  
+* __Vehicle lights__ are turned on and off by the user. Each vehicle has the set of lights listed in [__carla.VehicleLightState__](python_api.md#carla.VehicleLightState); not every vehicle has all of them, and which ones a model carries is listed in [Actors](core_actors.md#vehicles).
 
-The lights of a vehicle can be retrieved and updated anytime using the methods [carla.Vehicle.get_light_state](python_api.md#carla.Vehicle.get_light_state) and [carla.Vehicle.set_light_state](#python_api.md#carla.Vehicle.set_light_state). These use binary operations to customize the light setting.  
+The lights of a vehicle are read and set with [carla.Vehicle.get_light_state](python_api.md#carla.Vehicle.get_light_state) and [carla.Vehicle.set_light_state](python_api.md#carla.Vehicle.set_light_state), using binary operations to combine them.
 
 ```py
 # Turn on position lights
@@ -248,18 +232,18 @@ vehicle.set_light_state(current_lights)
 ```
 
 !!! Note
-    Lights can also be set in real time using the `environment.py` described in the [weather](#weather) section.  
+    Street lights can also be toggled from `manual_control.py` with `U`, and the automatic day/night cycle with `Shift+U`.
 
 ### Debugging
 
-World objects have a [carla.DebugHelper](python_api.md#carla.DebugHelper) object as a public attribute. It allows for different shapes to be drawn during the simulation. These are used to  trace the events happening. The following example would draw a red box at an actor's location and rotation. 
+World objects have a [carla.DebugHelper](python_api.md#carla.DebugHelper) object as a public attribute. It allows for different shapes to be drawn during the simulation. These are used to  trace the events happening. The following example would draw a red box at an actor's location and rotation.
 
 ```py
 debug = world.debug
 debug.draw_box(carla.BoundingBox(actor_snapshot.get_transform().location,carla.Vector3D(0.5,0.5,2)),actor_snapshot.get_transform().rotation, 0.05, carla.Color(255,0,0,0),0)
 ```
 
-This example is extended in a snipet in [carla.DebugHelper](python_api.md#carla.DebugHelper.draw_box) that shows how to draw boxes for every actor in a world snapshot. 
+This example is extended in a snipet in [carla.DebugHelper](python_api.md#carla.DebugHelper.draw_box) that shows how to draw boxes for every actor in a world snapshot.
 
 Shapes and strings drawn with a `life_time` of `0` are persistent: they stay until the map is reloaded. Both can be cleared on demand instead.
 
@@ -270,14 +254,14 @@ debug.clear_debug_string()    # every HUD string
 
 ### World snapshots
 
-Contains the state of every actor in the simulation at a single frame. A sort of still image of the world with a time reference. The information comes from the same simulation step, even in asynchronous mode.  
+Contains the state of every actor in the simulation at a single frame. A sort of still image of the world with a time reference. The information comes from the same simulation step, even in asynchronous mode.
 
 ```py
 # Retrieve a snapshot of the world at current frame.
 world_snapshot = world.get_snapshot()
 ```
 
-A [carla.WorldSnapshot](python_api.md#carla.WorldSnapshot) contains a [carla.Timestamp](python_api.md#carla.Timestamp) and a list of [carla.ActorSnapshot](python_api.md#carla.ActorSnapshot). Actor snapshots can be searched using the `id` of an actor. A snapshot lists the `id` of the actors appearing in it.  
+A [carla.WorldSnapshot](python_api.md#carla.WorldSnapshot) contains a [carla.Timestamp](python_api.md#carla.Timestamp) and a list of [carla.ActorSnapshot](python_api.md#carla.ActorSnapshot). Actor snapshots can be searched using the `id` of an actor. A snapshot lists the `id` of the actors appearing in it.
 
 ```py
 timestamp = world_snapshot.timestamp # Get the time reference 
@@ -294,7 +278,7 @@ actor_snapshot = world_snapshot.find(actual_actor.id) # Get an actor's snapshot
 
 ### World settings
 
-The world has access to some advanced configurations for the simulation. These determine rendering conditions, simulation time-steps, and synchrony between clients and server. They are accessible from the helper class [carla.WorldSettings](python_api.md#carla.WorldSettings).  
+The world has access to some advanced configurations for the simulation. These determine rendering conditions, simulation time-steps, and synchrony between clients and server. They are accessible from the helper class [carla.WorldSettings](python_api.md#carla.WorldSettings).
 
 For the time being, default CARLA runs with the best graphics quality, a variable time-step, and asynchronously. To dive further in this matters take a look at the __Advanced steps__ section. The pages on [synchrony and time-step](adv_synchrony_timestep.md), and [rendering options](adv_rendering_options.md) could be a great starting point.
 
@@ -310,21 +294,15 @@ world.apply_settings(settings)
     It is off by default, and only moves signs and lights that CARLA generated from OpenDRIVE. Actors placed by hand in a map are never moved. Signs are generated when the map loads, so enabling the setting later re-snaps the ones already spawned.
 
 ---
-That is a wrap on the world and client objects. The next step takes a closer look into actors and blueprints to give life to the simulation.  
+That is a wrap on the world and client objects. The next step takes a closer look at actors and blueprints.
 
-Keep reading to learn more. Visit the forum to post any doubts or suggestions that have come to mind during this reading.  
-
-<div text-align: center>
 <div class="build-buttons">
 <p>
 <a href="https://github.com/carla-simulator/carla/discussions/" target="_blank" class="btn btn-neutral" title="CARLA forum">
 CARLA forum</a>
 </p>
-</div>
-<div class="build-buttons">
 <p>
-<a href="../core_actors" target="_blank" class="btn btn-neutral" title="2nd. Actors and blueprints">
-2nd. Actors and blueprints</a>
+<a href="../core_actors" class="btn btn-neutral" title="Actors and blueprints">
+Actors and blueprints</a>
 </p>
-</div>
 </div>

@@ -7,7 +7,7 @@ The example supports two sensor backends:
 * **CARLA cameras** attach to a world that is already running. This mode works with named CARLA maps, independently initialized traffic, and a spawned or externally managed ego vehicle.
 * **NuRec cameras** load the OpenDRIVE world embedded in a NuRec recording and render its calibrated camera views with NVIDIA NRE. CARLA still owns vehicle physics and the simulation clock.
 
-The user-facing launchers are in [`PythonAPI/examples/av_stacks/alpamayo`](../PythonAPI/examples/av_stacks/alpamayo/):
+The user-facing launchers are in [`PythonAPI/examples/av_stacks/alpamayo`](https://github.com/carla-simulator/carla/tree/ue58-dev/PythonAPI/examples/av_stacks/alpamayo):
 
 | Command | Purpose |
 |---|---|
@@ -20,8 +20,16 @@ The shell scripts are the public interface. The Python files in the same directo
 
 For implementation details, see [Architecture and control](nvidia_alpamayo_architecture.md). For operational problems, see [Troubleshooting](nvidia_alpamayo_troubleshooting.md).
 
----
+- [__Requirements__](#requirements)
+- [__Install Alpamayo__](#install-alpamayo)
+- [__Start CARLA__](#start-carla)
+- [__Run with CARLA cameras__](#run-with-carla-cameras)
+- [__Run with NuRec cameras__](#run-with-nurec-cameras)
+- [__Record the dashboard and telemetry__](#record-the-dashboard-and-telemetry)
+- [__Validation modes__](#validation-modes)
+- [__Important behavior__](#important-behavior)
 
+---
 ## Requirements
 
 Before installing the integration, prepare:
@@ -41,19 +49,15 @@ Multi-GPU systems are strongly recommended. The examples below reserve GPU 0 for
 
 ## Install Alpamayo
 
-Set `CARLA_ROOT` to the source checkout and authenticate with Hugging Face:
+Accept the model license on Hugging Face first, then point `CARLA_ROOT` at the source checkout and run the installer:
 
 ```sh
 export CARLA_ROOT=/path/to/carla
-hf auth login
-```
-
-After accepting the model license, run:
-
-```sh
 cd ${CARLA_ROOT}/PythonAPI/examples/av_stacks/alpamayo
 ./install_alpamayo.sh
 ```
+
+The installer prompts for the Hugging Face login when it needs it; `export HF_TOKEN=<token>` beforehand makes it unattended. It is the installer that brings in the `hf` CLI, so logging in before running it fails on a clean host.
 
 The installer performs the following actions:
 
@@ -92,7 +96,7 @@ Start a packaged development build on GPU 0:
 ```sh
 cd ${CARLA_ROOT}
 CUDA_VISIBLE_DEVICES=0 \
-./Build/Package/Carla-0.10.0-Linux-Development/Linux/CarlaUnreal.sh \
+./Build/<preset>/Package/Carla-<version>-Linux-Development/Linux/CarlaUnreal.sh \
     -carla-rpc-port=2000
 ```
 

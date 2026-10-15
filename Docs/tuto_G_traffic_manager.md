@@ -1,10 +1,17 @@
-# Traffic manager
+# Traffic Manager tutorial
 
-When we train neural networks to control autonomous vehicles, one of the key challenges the autonomous driving agent has to contend with is other road users. On top of the task of recognising and navigating the topology of the road network and maintaining lane discipline, the autonomous driving agent must also recognise other vehicles and anticipate the impact on its planned course of action. CARLA's Traffic Manager (TM) enables the management of an ensemble of vehicles navigating through the simulation and creating obstacles and challenges for the vehicle of interest, i.e. the vehicle we are training or controlling. In the CARLA literature, we refer to this vehicle as the "Ego vehicle" to distinguish it. 
+The [Traffic Manager](adv_traffic_manager.md) (TM) drives the NPC vehicles that make up the traffic around the ego vehicle. This tutorial populates a map with traffic, then shapes its behavior: speeds, lane changes, routes and how it treats the ego.
 
-The TM manages the behavior and lifecycles of Non Player Character (NPC) vehicles within the map, populating the simulation with vehicles that act as other road users do on the real road network. In this tutorial, we will cover some of the functionality of the TM and how to use it in your simulations to create and control NPCs.
+- [__Setting up the simulator and the Traffic Manager__](#setting-up-the-simulator-and-the-traffic-manager)
+- [__Spawning vehicles__](#spawning-vehicles)
+- [__Controlling vehicles with Traffic Manager__](#controlling-vehicles-with-traffic-manager)
+- [__Specify routes for vehicles__](#specify-routes-for-vehicles)
+- [__Cleaning up__](#cleaning-up)
 
-## Setting up the simulator and initialising traffic manager
+It needs a CARLA server running and the `carla` client installed. Every snippet runs against `Town10HD_Opt`, and the spawn point indices used later are that map's.
+
+---
+## Setting up the simulator and the Traffic Manager
 
 First, we will initialise the TM and create some traffic randomly distributed around the city.
 
@@ -14,7 +21,8 @@ import random
 
 # Connect to the client and retrieve the world object
 client = carla.Client('localhost', 2000)
-world = client.get_world()
+client.set_timeout(10.0)
+world = client.load_world('Town10HD_Opt')
 
 # Set up the simulator in synchronous mode
 settings = world.get_settings()
@@ -26,24 +34,25 @@ world.apply_settings(settings)
 traffic_manager = client.get_trafficmanager()
 traffic_manager.set_synchronous_mode(True)
 
-# Set a seed so behaviour can be repeated if necessary
+# Set a seed so the run can be repeated
 traffic_manager.set_random_device_seed(0)
 random.seed(0)
 
-# We will aslo set up the spectator so we can see what we do
+# We will also set up the spectator so we can see what we do
 spectator = world.get_spectator()
 
 ```
 
+---
 ## Spawning vehicles
 
-When we create TM vehicles, they need a map location at which to spawn. We can define these ourselves using our own chosen map coordinates. However, to help with this, each CARLA map has a set of pre-defined spawn points spread evenly throughout the road network. We can use these spawn points to spawn our vehicles. 
+When we create TM vehicles, they need a map location at which to spawn. We can define these ourselves using our own chosen map coordinates. However, to help with this, each CARLA map has a set of pre-defined spawn points spread evenly throughout the road network. We can use these spawn points to spawn our vehicles.
 
 ```py
 spawn_points = world.get_map().get_spawn_points()
 ```
 
-We can use CARLA's debug functions to see where the spawn points are. Run the following code then fly through the map and inspect where the spawn points are. This will come in handy when we want to choose more specific points to use for spawning or guiding vehicles. 
+We can use CARLA's debug functions to see where the spawn points are. Run the following code then fly through the map and inspect where the spawn points are. This will come in handy when we want to choose more specific points to use for spawning or guiding vehicles.
 
 ```py
 # Draw the spawn point locations as numbers in the map
@@ -55,15 +64,13 @@ while True:
     world.tick()
 ```
 
-Now let's spawn some vehicles. 
+Now let's spawn some vehicles.
 
 ```py
 # Select some models from the blueprint library
-models = ['dodge', 'audi', 'model3', 'mini', 'mustang', 'lincoln', 'prius', 'nissan', 'crown', 'impala']
-blueprints = []
-for vehicle in world.get_blueprint_library().filter('*vehicle*'):
-    if any(model in vehicle.id for model in models):
-        blueprints.append(vehicle)
+# Cars only: skip the bikes, motorcycles and trucks
+blueprints = [bp for bp in world.get_blueprint_library().filter('*vehicle*')
+              if bp.get_attribute('base_type').as_str() == 'car']
 
 # Set a max number of vehicles and prepare a list for those we spawn
 max_vehicles = 50
@@ -85,6 +92,7 @@ while True:
 
 If you fly through the map with the spectator now, you should see stationary vehicles occupying the roads in the map.
 
+---
 ## Controlling vehicles with Traffic Manager
 
 We can now give the TM control over our vehicles and let the simulation run. Once the TM takes control of the vehicles, they will move around the roads autonomously, following features of the road network like lanes and traffic lights and avoiding collisions with other vehicles.
@@ -94,7 +102,7 @@ The TM has a number of functions that allow specific behaviors to be modified fo
 ```py
 # Parse the list of spawned vehicles and give control to the TM through set_autopilot()
 for vehicle in vehicles:
-    vehicle.set_autopilot(True)
+    vehicle.set_autopilot(True, traffic_manager.get_port())
     # Randomly set the probability that a vehicle will ignore traffic lights
     traffic_manager.ignore_lights_percentage(vehicle, random.randint(0,50))
 
@@ -105,13 +113,14 @@ while True:
 
 If you now fly through the map with the spectator, you will see vehicles driving autonomously around the map. Buses and trucks swing wide through junctions, the way a long vehicle has to; `traffic_manager.vehicle_large_vehicle_wide_turn(vehicle, False)` turns that off for one vehicle, and `global_large_vehicle_wide_turn(False)` for all of them.
 
-![intersection_traffic](../img/tuto_G_traffic_manager/traffic.gif)
+![intersection_traffic](img/tuto_G_traffic_manager/traffic.gif)
 
+---
 ## Specify routes for vehicles
 
-In the previous steps, we saw how to spawn a collection of vehicles into a map, then hand control of them over to the TM to create a busy town full of moving traffic. The TM has deeper functionality to control the behavior of vehicles more closely. 
+In the previous steps, we saw how to spawn a collection of vehicles into a map, then hand control of them over to the TM to create a busy town full of moving traffic. The TM has deeper functionality to control the behavior of vehicles more closely.
 
-We will now use the `traffic_manager.set_path()` function to guide TM vehicles along specific paths. In this case, we will create two converging streams of traffic that will converge in the center of town and create congestion. 
+We will now use the `traffic_manager.set_path()` function to guide TM vehicles along specific paths. In this case, we will create two converging streams of traffic that will converge in the center of town and create congestion.
 
 Firstly, we'll choose some waypoints to construct our path. Spawn points are convenient waypoints and in the same way as earlier we can use CARLA's debug tools to draw the locations of the spawn points on the map. By flying through the map with the spectator, we can choose the indices of the spawn points we want to use for our path. The `set_path()` function uses a list of coordinates specified as [carla.Locations](python_api.md#carla.Location).
 
@@ -125,7 +134,7 @@ while True:
     world.tick()
 ```
 
-We choose our spawn points and waypoints to create two converging streams of traffic within the town, creating congestion, which might be an interesting scenario to present to an autonomous driving agent. 
+We choose our spawn points and waypoints to create two converging streams of traffic within the town, creating congestion, which might be an interesting scenario to present to an autonomous driving agent.
 
 ```py
 spawn_points = world.get_map().get_spawn_points()
@@ -164,7 +173,7 @@ while True:
 ```
 
 
-![routes](../img/tuto_G_traffic_manager/set_paths.png)
+![routes](img/tuto_G_traffic_manager/set_paths.png)
 
 Now that we have chosen our spawn points and way points, we can now start spawning traffic and setting the spawned vehicles to follow our waypoint lists.
 
@@ -195,7 +204,7 @@ while True:
             vehicle = world.try_spawn_actor(vehicle_bp, spawn_point_2)
 
         if vehicle: # IF vehicle is succesfully spawned
-            vehicle.set_autopilot(True) # Give TM control over vehicle
+            vehicle.set_autopilot(True, traffic_manager.get_port()) # Give the TM control over the vehicle
 
             # Set parameters of TM vehicle control, we don't want lane changes
             traffic_manager.update_vehicle_lights(vehicle, True)
@@ -223,4 +232,21 @@ while True:
 
 With the above code, we have created two converging streams of traffic originating from opposite sides of the map, guided by the `set_path()` function of the TM. This results in congestion on a road in the center of town. This kind of technique could be used on a larger scale to simulate multiple tricky cases for autonomous vehicles, such as a busy roundabout or highway intersection.
 
-![converging_paths](../img/tuto_G_traffic_manager/converging_paths.gif)
+![converging_paths](img/tuto_G_traffic_manager/converging_paths.gif)
+
+---
+## Cleaning up
+
+Every snippet above leaves the server in synchronous mode and the vehicles in it. Restore the settings and destroy the actors when the script ends, or the next client to connect will hang waiting for ticks that nobody sends:
+
+```py
+settings = world.get_settings()
+settings.synchronous_mode = False
+settings.fixed_delta_seconds = None
+world.apply_settings(settings)
+traffic_manager.set_synchronous_mode(False)
+
+client.apply_batch([carla.command.DestroyActor(v) for v in vehicles])
+```
+
+Putting the loop inside `try: ... finally: ...` with that block in the `finally` is the shape to use, so a `Ctrl+C` cleans up too.

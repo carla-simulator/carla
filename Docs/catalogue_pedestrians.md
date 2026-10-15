@@ -77,7 +77,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Adult pedestrian 1
 
-![pedestrian_0015](../img/catalogue/pedestrians/pedestrian_0015.webp)
+![pedestrian_0015](img/catalogue/pedestrians/pedestrian_0015.webp)
 
 * __Blueprint ID__: <span style="color:#00a6ed;">walker.pedestrian.0015</span>
 * __Age__: adult
@@ -87,7 +87,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Adult pedestrian 2
 
-![pedestrian_0016](../img/catalogue/pedestrians/pedestrian_0016.webp)
+![pedestrian_0016](img/catalogue/pedestrians/pedestrian_0016.webp)
 
 * __Blueprint ID__: <span style="color:#00a6ed;">walker.pedestrian.0016</span>
 * __Age__: adult
@@ -97,7 +97,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Adult pedestrian 3
 
-![pedestrian_0017](../img/catalogue/pedestrians/pedestrian_0017.webp)
+![pedestrian_0017](img/catalogue/pedestrians/pedestrian_0017.webp)
 
 * __Blueprint ID__: <span style="color:#00a6ed;">walker.pedestrian.0017</span>
 * __Age__: adult
@@ -107,7 +107,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Adult pedestrian 4
 
-![pedestrian_0018](../img/catalogue/pedestrians/pedestrian_0018.webp)
+![pedestrian_0018](img/catalogue/pedestrians/pedestrian_0018.webp)
 
 * __Blueprint ID__: <span style="color:#00a6ed;">walker.pedestrian.0018</span>
 * __Age__: adult
@@ -117,7 +117,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Adult pedestrian 5
 
-![pedestrian_0019](../img/catalogue/pedestrians/pedestrian_0019.webp)
+![pedestrian_0019](img/catalogue/pedestrians/pedestrian_0019.webp)
 
 * __Blueprint ID__: <span style="color:#00a6ed;">walker.pedestrian.0019</span>
 * __Age__: adult
@@ -127,7 +127,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Adult pedestrian 6
 
-![pedestrian_0021](../img/catalogue/pedestrians/pedestrian_0021.webp)
+![pedestrian_0021](img/catalogue/pedestrians/pedestrian_0021.webp)
 
 * __Blueprint ID__: <span style="color:#00a6ed;">walker.pedestrian.0021</span>
 * __Age__: adult
@@ -137,7 +137,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Adult pedestrian 7
 
-![pedestrian_0022](../img/catalogue/pedestrians/pedestrian_0022.webp)
+![pedestrian_0022](img/catalogue/pedestrians/pedestrian_0022.webp)
 
 * __Blueprint ID__: <span style="color:#00a6ed;">walker.pedestrian.0022</span>
 * __Age__: adult
@@ -147,7 +147,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Adult pedestrian 8
 
-![pedestrian_0023](../img/catalogue/pedestrians/pedestrian_0023.webp)
+![pedestrian_0023](img/catalogue/pedestrians/pedestrian_0023.webp)
 
 * __Blueprint ID__: <span style="color:#00a6ed;">walker.pedestrian.0023</span>
 * __Age__: adult
@@ -157,7 +157,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Adult pedestrian 9
 
-![pedestrian_0024](../img/catalogue/pedestrians/pedestrian_0024.webp)
+![pedestrian_0024](img/catalogue/pedestrians/pedestrian_0024.webp)
 
 * __Blueprint ID__: <span style="color:#00a6ed;">walker.pedestrian.0024</span>
 * __Age__: adult
@@ -167,7 +167,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Adult pedestrian 10
 
-![pedestrian_0025](../img/catalogue/pedestrians/pedestrian_0025.webp)
+![pedestrian_0025](img/catalogue/pedestrians/pedestrian_0025.webp)
 
 * __Blueprint ID__: <span style="color:#00a6ed;">walker.pedestrian.0025</span>
 * __Age__: adult
@@ -177,7 +177,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Adult pedestrian 11
 
-![pedestrian_0026](../img/catalogue/pedestrians/pedestrian_0026.webp)
+![pedestrian_0026](img/catalogue/pedestrians/pedestrian_0026.webp)
 
 * __Blueprint ID__: <span style="color:#00a6ed;">walker.pedestrian.0026</span>
 * __Age__: adult
@@ -187,7 +187,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Adult pedestrian 12
 
-![pedestrian_0027](../img/catalogue/pedestrians/pedestrian_0027.webp)
+![pedestrian_0027](img/catalogue/pedestrians/pedestrian_0027.webp)
 
 * __Blueprint ID__: <span style="color:#00a6ed;">walker.pedestrian.0027</span>
 * __Age__: adult
@@ -197,7 +197,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Adult pedestrian 13
 
-![pedestrian_0028](../img/catalogue/pedestrians/pedestrian_0028.webp)
+![pedestrian_0028](img/catalogue/pedestrians/pedestrian_0028.webp)
 
 * __Blueprint ID__: <span style="color:#00a6ed;">walker.pedestrian.0028</span>
 * __Age__: adult
@@ -207,7 +207,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Adult pedestrian 14
 
-![pedestrian_0029](../img/catalogue/pedestrians/pedestrian_0029.webp)
+![pedestrian_0029](img/catalogue/pedestrians/pedestrian_0029.webp)
 
 * __Blueprint ID__: <span style="color:#00a6ed;">walker.pedestrian.0029</span>
 * __Age__: adult
@@ -217,7 +217,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Adult pedestrian 15
 
-![pedestrian_0030](../img/catalogue/pedestrians/pedestrian_0030.webp)
+![pedestrian_0030](img/catalogue/pedestrians/pedestrian_0030.webp)
 
 * __Blueprint ID__: <span style="color:#00a6ed;">walker.pedestrian.0030</span>
 * __Age__: adult
@@ -227,7 +227,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Adult pedestrian 16
 
-![pedestrian_0032](../img/catalogue/pedestrians/pedestrian_0032.webp)
+![pedestrian_0032](img/catalogue/pedestrians/pedestrian_0032.webp)
 
 * __Blueprint ID__: <span style="color:#00a6ed;">walker.pedestrian.0032</span>
 * __Age__: adult
@@ -237,7 +237,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Adult pedestrian 17
 
-![pedestrian_0033](../img/catalogue/pedestrians/pedestrian_0033.webp)
+![pedestrian_0033](img/catalogue/pedestrians/pedestrian_0033.webp)
 
 * __Blueprint ID__: <span style="color:#00a6ed;">walker.pedestrian.0033</span>
 * __Age__: adult
@@ -247,7 +247,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Adult pedestrian 18
 
-![pedestrian_0034](../img/catalogue/pedestrians/pedestrian_0034.webp)
+![pedestrian_0034](img/catalogue/pedestrians/pedestrian_0034.webp)
 
 * __Blueprint ID__: <span style="color:#00a6ed;">walker.pedestrian.0034</span>
 * __Age__: adult
@@ -257,7 +257,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Adult pedestrian 19
 
-![pedestrian_0035](../img/catalogue/pedestrians/pedestrian_0035.webp)
+![pedestrian_0035](img/catalogue/pedestrians/pedestrian_0035.webp)
 
 * __Blueprint ID__: <span style="color:#00a6ed;">walker.pedestrian.0035</span>
 * __Age__: adult
@@ -267,7 +267,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Adult pedestrian 20
 
-![pedestrian_0036](../img/catalogue/pedestrians/pedestrian_0036.webp)
+![pedestrian_0036](img/catalogue/pedestrians/pedestrian_0036.webp)
 
 * __Blueprint ID__: <span style="color:#00a6ed;">walker.pedestrian.0036</span>
 * __Age__: adult
@@ -277,7 +277,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Adult pedestrian 21
 
-![pedestrian_0037](../img/catalogue/pedestrians/pedestrian_0037.webp)
+![pedestrian_0037](img/catalogue/pedestrians/pedestrian_0037.webp)
 
 * __Blueprint ID__: <span style="color:#00a6ed;">walker.pedestrian.0037</span>
 * __Age__: adult
@@ -287,7 +287,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Adult pedestrian 22
 
-![pedestrian_0038](../img/catalogue/pedestrians/pedestrian_0038.webp)
+![pedestrian_0038](img/catalogue/pedestrians/pedestrian_0038.webp)
 
 * __Blueprint ID__: <span style="color:#00a6ed;">walker.pedestrian.0038</span>
 * __Age__: adult
@@ -297,7 +297,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Adult pedestrian 23
 
-![pedestrian_0039](../img/catalogue/pedestrians/pedestrian_0039.webp)
+![pedestrian_0039](img/catalogue/pedestrians/pedestrian_0039.webp)
 
 * __Blueprint ID__: <span style="color:#00a6ed;">walker.pedestrian.0039</span>
 * __Age__: adult
@@ -307,7 +307,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Adult pedestrian 24
 
-![pedestrian_0040](../img/catalogue/pedestrians/pedestrian_0040.webp)
+![pedestrian_0040](img/catalogue/pedestrians/pedestrian_0040.webp)
 
 * __Blueprint ID__: <span style="color:#00a6ed;">walker.pedestrian.0040</span>
 * __Age__: adult
@@ -317,7 +317,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Adult pedestrian 25
 
-![pedestrian_0041](../img/catalogue/pedestrians/pedestrian_0041.webp)
+![pedestrian_0041](img/catalogue/pedestrians/pedestrian_0041.webp)
 
 * __Blueprint ID__: <span style="color:#00a6ed;">walker.pedestrian.0041</span>
 * __Age__: adult
@@ -327,7 +327,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Adult pedestrian 26
 
-![pedestrian_0042](../img/catalogue/pedestrians/pedestrian_0042.webp)
+![pedestrian_0042](img/catalogue/pedestrians/pedestrian_0042.webp)
 
 * __Blueprint ID__: <span style="color:#00a6ed;">walker.pedestrian.0042</span>
 * __Age__: adult
@@ -337,7 +337,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Adult pedestrian 27
 
-![pedestrian_0043](../img/catalogue/pedestrians/pedestrian_0043.webp)
+![pedestrian_0043](img/catalogue/pedestrians/pedestrian_0043.webp)
 
 * __Blueprint ID__: <span style="color:#00a6ed;">walker.pedestrian.0043</span>
 * __Age__: adult
@@ -347,7 +347,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Adult pedestrian 28
 
-![pedestrian_0044](../img/catalogue/pedestrians/pedestrian_0044.webp)
+![pedestrian_0044](img/catalogue/pedestrians/pedestrian_0044.webp)
 
 * __Blueprint ID__: <span style="color:#00a6ed;">walker.pedestrian.0044</span>
 * __Age__: adult
@@ -357,7 +357,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Adult pedestrian 29
 
-![pedestrian_0045](../img/catalogue/pedestrians/pedestrian_0045.webp)
+![pedestrian_0045](img/catalogue/pedestrians/pedestrian_0045.webp)
 
 * __Blueprint ID__: <span style="color:#00a6ed;">walker.pedestrian.0045</span>
 * __Age__: adult
@@ -367,7 +367,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Adult pedestrian 30
 
-![pedestrian_0046](../img/catalogue/pedestrians/pedestrian_0046.webp)
+![pedestrian_0046](img/catalogue/pedestrians/pedestrian_0046.webp)
 
 * __Blueprint ID__: <span style="color:#00a6ed;">walker.pedestrian.0046</span>
 * __Age__: adult
@@ -377,7 +377,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Adult pedestrian 31
 
-![pedestrian_0047](../img/catalogue/pedestrians/pedestrian_0047.webp)
+![pedestrian_0047](img/catalogue/pedestrians/pedestrian_0047.webp)
 
 * __Blueprint ID__: <span style="color:#00a6ed;">walker.pedestrian.0047</span>
 * __Age__: adult
@@ -387,7 +387,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Adult pedestrian 32
 
-![pedestrian_0048](../img/catalogue/pedestrians/pedestrian_0048.webp)
+![pedestrian_0048](img/catalogue/pedestrians/pedestrian_0048.webp)
 
 * __Blueprint ID__: <span style="color:#00a6ed;">walker.pedestrian.0048</span>
 * __Age__: adult
@@ -401,7 +401,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Child pedestrian 1
 
-![pedestrian_0049](../img/catalogue/pedestrians/pedestrian_0049.webp)
+![pedestrian_0049](img/catalogue/pedestrians/pedestrian_0049.webp)
 
 * __Blueprint ID__: <span style="color:#00a6ed;">walker.pedestrian.0049</span>
 * __Age__: child
@@ -411,7 +411,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Child pedestrian 2
 
-![pedestrian_0050](../img/catalogue/pedestrians/pedestrian_0050.webp)
+![pedestrian_0050](img/catalogue/pedestrians/pedestrian_0050.webp)
 
 * __Blueprint ID__: <span style="color:#00a6ed;">walker.pedestrian.0050</span>
 * __Age__: child
@@ -421,7 +421,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Child pedestrian 3
 
-![pedestrian_0051](../img/catalogue/pedestrians/pedestrian_0051.webp)
+![pedestrian_0051](img/catalogue/pedestrians/pedestrian_0051.webp)
 
 * __Blueprint ID__: <span style="color:#00a6ed;">walker.pedestrian.0051</span>
 * __Age__: child
@@ -431,7 +431,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Child pedestrian 4
 
-![pedestrian_0052](../img/catalogue/pedestrians/pedestrian_0052.webp)
+![pedestrian_0052](img/catalogue/pedestrians/pedestrian_0052.webp)
 
 * __Blueprint ID__: <span style="color:#00a6ed;">walker.pedestrian.0052</span>
 * __Age__: child
@@ -445,7 +445,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Police pedestrian 1
 
-![pedestrian_0020](../img/catalogue/pedestrians/pedestrian_0020.webp)
+![pedestrian_0020](img/catalogue/pedestrians/pedestrian_0020.webp)
 
 * __Blueprint ID__: <span style="color:#00a6ed;">walker.pedestrian.0020</span>
 * __Age__: adult
@@ -456,7 +456,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Police pedestrian 2
 
-![pedestrian_0031](../img/catalogue/pedestrians/pedestrian_0031.webp)
+![pedestrian_0031](img/catalogue/pedestrians/pedestrian_0031.webp)
 
 * __Blueprint ID__: <span style="color:#00a6ed;">walker.pedestrian.0031</span>
 * __Age__: adult

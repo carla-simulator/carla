@@ -1,26 +1,19 @@
 # Custom assets
 
-CARLA has a wealth of assets available out of the box including full towns and cities with road networks, buildings and infrastructure, vehicles and pedestrians to populate your simulations. However, for many applications, you may want to add your own assets and CARLA is fully capable of loading new assets created entirely by the user for maximum extensability. 
+CARLA ships whole towns, vehicles, pedestrians and props, and it loads assets of your own alongside them. These are the procedures for getting one in.
 
-The following documentation details numerous techniques for creating your own assets and adding them to CARLA.
+| Page | What it covers |
+| --- | --- |
+| [__Adding props__](content_authoring_props.md) | Import a mesh and register it as a spawnable `static.prop.*`, or place one straight from a mesh path with `static.prop.mesh`. |
+| [__Adding vehicles__](tuto_content_authoring_vehicles.md) | Model, rig and import a vehicle, set up its physics asset, animation and wheel blueprints, and register it in the blueprint library. |
+| [__Vehicle materials__](tuto_content_authoring_vehicles_materials.md) | Instance the car-paint master material and tune its color, clear coat, flakes and dust. |
+| [__Material customization__](tuto_A_material_customization.md) | The building and environment master materials, and the textures they read. |
+| [__Create semantic tags__](tuto_D_create_semantic_tags.md) | Define a new semantic label so your assets are segmented as their own class. |
+| [__Generate detailed colliders__](tuto_D_generate_colliders.md) | Build accurate collision meshes for a vehicle, for physics or for ray-cast sensors. |
+| [__Customize vehicle suspension__](tuto_D_customize_vehicle_suspension.md) | Tune the Chaos suspension of a vehicle's wheels. |
+| [__Content packs__](content_packs.md) | Ship maps, props, vehicles and walkers as a package that drops into any CARLA of the same release. |
 
-- [__Adding props__](content_authoring_props.md)
-- [__Adding vehicles__](tuto_content_authoring_vehicles.md)
-- [__Packaging assets as content packs__](content_packs.md) 
-- [__Material customisation__](tuto_A_material_customization.md)
+!!! Note
+    Pedestrian import has no page yet. The vetted procedure is in the `import-carla-ue58-walker` [agent skill](agent_skills.md), which covers binding the FBX to CARLA's shared pedestrian skeleton and registering the walker.
 
-## [Adding props](content_authoring_props.md)
-
-Props are the assets populating the scene, other than the roads and vehicles. That includes streetlights, buildings, trees, and much more. The simulator can ingest new props anytime in a simple process. This is really useful to create customized environments in a map. [__This document__](content_authoring_props.md) demonstrates how to create and include custom props. 
-
-## Adding vehicles
-
-Vehicles are the bread and butter of CARLA. They serve to simulate other road users and act as a virtual emulation of the vehicle that an autonomous agent is built to control. CARLA has a large, growing library of vehicles out of the box, but for specialised applications, CARLA is capable of loading custom designed vehicles. [__This document__](tuto_content_authoring_vehicles.md) details how to create and import custom vehicles.
-
-## Packaging assets as content packs
-
-It is a common practice in CARLA to manage assets with standalone packages. Keeping them aside allows to reduce the size of the build. In CARLA UE5 these packages are __content packs__: maps, props, vehicles and walkers built once against a CARLA release and dropped into any CARLA package of that release, or mounted from the Python API at runtime. They also become really useful to easily distribute assets in an organized way. [__This document__](content_packs.md) demonstrates how to create, build and install content packs.
-
-## Custom materials
-
-The CARLA team prepares every asset to run under certain default settings. However, users that work in a build from source can modify these to best suit their needs. [__This document__](tuto_A_material_customization.md) demonstrates how to achieve this. 
+Maps are their own subject: see [Generate maps with OpenStreetMap](tuto_G_openstreetmap.md) for an OSM import and [content packs](content_packs.md) for shipping a map you have made.

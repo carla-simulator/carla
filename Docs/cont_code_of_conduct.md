@@ -5,7 +5,7 @@
 *   [__Our responsibilities__](#our-responsibilities)  
 *   [__Scope__](#scope)  
 *   [__Enforcement__](#enforcement)  
-*   [__Attribution__](#attribution)  
+*   [__Attribution__](#attribution)
 
 ---
 ## Our Pledge

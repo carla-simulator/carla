@@ -2,6 +2,15 @@
 
 This page covers common installation, launch, rendering, synchronization, control, NuRec, and recording failures. See the [Alpamayo user guide](nvidia_alpamayo.md) for the supported workflows and [Architecture and control](nvidia_alpamayo_architecture.md) for component semantics.
 
+- [__Start with a bounded mock run__](#start-with-a-bounded-mock-run)
+- [__Installation problems__](#installation-problems)
+- [__Launch and connection problems__](#launch-and-connection-problems)
+- [__Camera and dashboard problems__](#camera-and-dashboard-problems)
+- [__Control diagnosis__](#control-diagnosis)
+- [__NuRec problems__](#nurec-problems)
+- [__Recording problems__](#recording-problems)
+- [__Collect a useful bug report__](#collect-a-useful-bug-report)
+
 ---
 
 ## Start with a bounded mock run
@@ -31,7 +40,7 @@ The control interpreter must have a wheel matching its Python ABI. Build the Pyt
 
 ```sh
 cd ${CARLA_ROOT}
-cmake --build Build --target carla-python-api-install
+cmake --build <build-dir> --target carla-python-api-install
 
 cd PythonAPI/examples/av_stacks/alpamayo
 ./install_alpamayo.sh

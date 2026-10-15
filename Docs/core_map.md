@@ -1,24 +1,30 @@
 # Maps and navigation
 
-After discussing about the world and its actors, it is time to put everything into place and understand the map and how do the actors navigate it.  
+After discussing about the world and its actors, it is time to put everything into place and understand the map and how do the actors navigate it.
 
-- [__The map__](#the-map)  
-	- [Changing the map](#changing-the-map)  
-	- [Landmarks](#landmarks)  
-	- [Lanes](#lanes)  
-	- [Junctions](#junctions)  
-	- [Waypoints](#waypoints)  
-	- [Environment Objects](#environment-objects)
-- [__Navigation in CARLA__](#navigation-in-carla)  
-	- [Navigating through waypoints](#navigating-through-waypoints)  
-	- [Generating a map navigation](#generating-a-map-navigation)
+- [__The map__](#the-map)
+    - [Changing the map](#changing-the-map)
+    - [Landmarks](#landmarks)
+    - [Waypoints](#waypoints)
+    - [Lanes](#lanes)
+    - [Junctions](#junctions)
+    - [Crosswalks](#crosswalks)
+    - [The road network as objects](#the-road-network-as-objects)
+    - [Environment objects](#environment-objects)
+- [__Navigation in CARLA__](#navigation-in-carla)
+    - [Navigating through waypoints](#navigating-through-waypoints)
+    - [Generating map navigation](#generating-map-navigation)
+- [__Geographic coordinates__](#geographic-coordinates)
 - [__Left-handed traffic__](#left-handed-traffic)
+- [__Large maps and World Partition__](#large-maps-and-world-partition)
+    - [What loads, and around what](#what-loads-and-around-what)
+    - [Converting a tiled map](#converting-a-tiled-map)
 
 
 ---
 ## The map
 
-A map includes both the 3D model of a town and its road definition. A map's road definition is based on an OpenDRIVE file, a standarized, annotated road definition format. The way the [OpenDRIVE standard 1.4](http://www.opendrive.org/docs/OpenDRIVEFormatSpecRev1.4H.pdf) defines roads, lanes, junctions, etc. determines the functionality of the Python API and the reasoning behind decisions made.
+A map includes both the 3D model of a town and its road definition. A map's road definition is based on an OpenDRIVE file, a standarized, annotated road definition format. The way the [ASAM OpenDRIVE standard](https://www.asam.net/standards/detail/opendrive/) defines roads, lanes, junctions, etc. determines the functionality of the Python API and the reasoning behind decisions made.
 
 The Python API acts as a high level querying system to navigate these roads. It is constantly evolving to provide a wider set of tools.
 
@@ -31,8 +37,8 @@ __To change the map, the world has to change too__. The simulation will be recre
 - `load_world_if_different()` loads the map only when it is not the one already running, and otherwise leaves the simulation alone. A script that needs a particular map can ask for it without destroying the actors of a session that is already on it.
 
 ```py
-world = client.load_world('Town01')
-world = client.load_world_if_different('Town01')   # no-op when Town01 is already loaded
+world = client.load_world('Town01_Opt')
+world = client.load_world_if_different('Town01_Opt')   # no-op when Town01_Opt is already loaded
 ```
 
 Each map has a `name` attribute that matches the name of the currently loaded city, e.g. _Town01_. To get a list of the available maps:
@@ -45,16 +51,16 @@ print(client.get_available_maps())
 
 Traffic signs defined in the OpenDRIVE file are translated to CARLA as landmark objects that can be queried from the API. The following methods and classes can be used to manipulate and work with landmark objects:
 
-- __[`carla.Landmark`](https://carla.readthedocs.io/en/latest/python_api/#carla.Landmark)__ objects represent OpenDRIVE signals. The attributes and methods of this class describe the landmark and its area of influence.
-	- [`carla.LandmarkOrientation`](https://carla.readthedocs.io/en/latest/python_api/#carla.LandmarkOrientation) states the orientation of the landmark with regard to the road's geometry definition.
-	- [`carla.LandmarkType`](https://carla.readthedocs.io/en/latest/python_api/#carla.LandmarkType) contains common landmark types to facilitate translation to OpenDRIVE types.
-- __[`carla.Waypoint`](https://carla.readthedocs.io/en/latest/python_api/#carla.Waypoint)__ can get landmarks located a certain distance ahead of it. The landmark type to get can be specified.
-- __[`carla.Map`](https://carla.readthedocs.io/en/latest/python_api/#carla.Map)__ retrieves sets of landmarks: `get_all_landmarks()`, or those sharing an id, a type or a group with `get_all_landmarks_from_id()`, `get_all_landmarks_of_type()` and `get_landmark_group()`.
-- __[`carla.World`](https://carla.readthedocs.io/en/latest/python_api/#carla.World)__ acts as intermediary between landmarks and the `carla.TrafficSign` and `carla.TrafficLight` that represent them in the simulation.
+- __[`carla.Landmark`](python_api.md#carla.Landmark)__ objects represent OpenDRIVE signals. The attributes and methods of this class describe the landmark and its area of influence.
+	- [`carla.LandmarkOrientation`](python_api.md#carla.LandmarkOrientation) states the orientation of the landmark with regard to the road's geometry definition.
+	- [`carla.LandmarkType`](python_api.md#carla.LandmarkType) contains common landmark types to facilitate translation to OpenDRIVE types.
+- __[`carla.Waypoint`](python_api.md#carla.Waypoint)__ can get landmarks located a certain distance ahead of it. The landmark type to get can be specified.
+- __[`carla.Map`](python_api.md#carla.Map)__ retrieves sets of landmarks: `get_all_landmarks()`, or those sharing an id, a type or a group with `get_all_landmarks_from_id()`, `get_all_landmarks_of_type()` and `get_landmark_group()`.
+- __[`carla.World`](python_api.md#carla.World)__ acts as intermediary between landmarks and the `carla.TrafficSign` and `carla.TrafficLight` that represent them in the simulation.
 
 ```py
 my_waypoint.get_landmarks(200.0,True)
-``` 
+```
 
 ### Waypoints
 
@@ -69,14 +75,14 @@ A waypoint holds information about the __lane__ containing it. This information 
 
 ```py
 # Access lane information from a waypoint
-inside_junction = waypoint.is_junction()
+inside_junction = waypoint.is_junction
 width = waypoint.lane_width
 right_lm_color = waypoint.right_lane_marking.color
 ```
 
 ### Lanes
 
-The lane types defined by [OpenDRIVE standard 1.4](http://www.opendrive.org/docs/OpenDRIVEFormatSpecRev1.4H.pdf) are translated to the API in [`carla.LaneType`](python_api.md#carla.LaneType) as a series of enum values.
+The lane types defined by [ASAM OpenDRIVE standard](https://www.asam.net/standards/detail/opendrive/) are translated to the API in [`carla.LaneType`](python_api.md#carla.LaneType) as a series of enum values.
 
 The lane markings surrounding a lane are accessed through [`carla.LaneMarking`](python_api.md#carla.LaneMarking). Lane markings are defined by a series of variables:
 
@@ -92,7 +98,7 @@ The below example shows to get information about the lane type, lane markings, a
 lane_type = waypoint.lane_type
 
 # Get the type of lane marking on the left.
-left_lanemarking_type = waypoint.left_lane_marking.type()
+left_lanemarking_type = waypoint.left_lane_marking.type
 
 # Get available lane changes for this waypoint.
 lane_change = waypoint.lane_change
@@ -153,29 +159,31 @@ road = lane.get_road()
 
 Junctions answer in objects too, with `get_connecting_roads()`, `get_adjacent_roads()`, `get_entry_lanes()` and `get_exit_lanes()` beside the waypoint equivalents.
 
-### Environment Objects
+### Environment objects
 
 Every object on a CARLA map has a set of associated variables which can be found [here][env_obj]. Included in these variables is a [unique ID][env_obj_id] that can be used to [toggle][toggle_env_obj] that object's visibility on the map. You can use the Python API to [fetch][fetch_env_obj] the IDs of each environment object based on their [semantic tag][semantic_tag]:
 
-		# Get the buildings in the world
-	    world = client.get_world()
-		env_objs = world.get_environment_objects(carla.CityObjectLabel.Buildings)
+```py
+# Get the buildings in the world
+world = client.get_world()
+env_objs = world.get_environment_objects(carla.CityObjectLabel.Buildings)
 
-		# Access individual building IDs and save in a set
-		building_01 = env_objs[0]
-		building_02 = env_objs[1]
-		objects_to_toggle = {building_01.id, building_02.id}
+# Access individual building IDs and save in a set
+building_01 = env_objs[0]
+building_02 = env_objs[1]
+objects_to_toggle = {building_01.id, building_02.id}
 
-		# Toggle buildings off
-		world.enable_environment_objects(objects_to_toggle, False)
-		# Toggle buildings on
-		world.enable_environment_objects(objects_to_toggle, True)
+# Toggle buildings off
+world.enable_environment_objects(objects_to_toggle, False)
+# Toggle buildings on
+world.enable_environment_objects(objects_to_toggle, True)
+```
 
-[env_obj]: https://carla.readthedocs.io/en/latest/python_api/#carla.EnvironmentObject
-[env_obj_id]: https://carla.readthedocs.io/en/latest/python_api/#carla.EnvironmentObject.id
-[toggle_env_obj]: https://carla.readthedocs.io/en/latest/python_api/#carla.World.enable_environment_objects
-[fetch_env_obj]: https://carla.readthedocs.io/en/latest/python_api/#carla.World.get_environment_objects
-[semantic_tag]: https://carla.readthedocs.io/en/latest/python_api/#carla.CityObjectLabel
+[env_obj]: python_api.md#carla.EnvironmentObject
+[env_obj_id]: python_api.md#carla.EnvironmentObject.id
+[toggle_env_obj]: python_api.md#carla.World.enable_environment_objects
+[fetch_env_obj]: python_api.md#carla.World.get_environment_objects
+[semantic_tag]: python_api.md#carla.CityObjectLabel
 
 
 ---
@@ -199,8 +207,9 @@ The Waypoint API exposes methods that allow waypoints to connect to each other a
     These two were called `get_right_lane()` and `get_left_lane()` until CARLA 0.10.0, which read as if they returned a lane. The old names still work and raise a `DeprecationWarning`. On [`carla.Lane`](python_api.md#carla.Lane), `get_right_lane()` and `get_left_lane()` do return lanes.
 
 ```py
-# Find next waypoint 2 meters ahead.
-waypoint = waypoint.next(2.0)
+# Find next waypoint 2 meters ahead. next() returns a list, one entry
+# per possible continuation, so a junction gives several.
+waypoint = waypoint.next(2.0)[0]
 ```
 
 ### Generating map navigation
@@ -225,7 +234,7 @@ You can get started with waypoints by __[getting](python_api.md#carla.Map.get_wa
 # Nearest waypoint in the center of a Driving or Sidewalk lane.
 waypoint01 = carla_map.get_waypoint(vehicle.get_location(),project_to_road=True, lane_type=(carla.LaneType.Driving | carla.LaneType.Sidewalk))
 
-#Nearest waypoint but specifying OpenDRIVE parameters. 
+# Nearest waypoint but specifying OpenDRIVE parameters. 
 waypoint02 = carla_map.get_waypoint_xodr(road_id,lane_id,s)
 ```
 
@@ -294,7 +303,7 @@ CARLA supports left-hand traffic (LHT) rules defined in the OpenDRIVE file. To o
 </road>
 ```
 
-!!! note
+!!! Note
     RHT is the default. A road with no `rule` attribute (or an unrecognized value) is treated as RHT. You may also wish to set this explicitly with `rule="RHT"`.
 
 CARLA applies the LHT convention to every road tagged with `rule="LHT"`. A client reads the rule back from `is_rht`, on both [`carla.Waypoint`](python_api.md#carla.Waypoint) and [`carla.Road`](python_api.md#carla.Road), so an agent can tell which side of the road it is on without parsing the OpenDRIVE file:
@@ -329,6 +338,17 @@ Two further settings apply only to these maps:
 
 - `actor_active_distance` — beyond this distance from the hero, actors become dormant: still registered, no longer simulated. It is never allowed to exceed `tile_stream_distance`; the server raises the streaming distance to match and warns if you set it higher.
 - `spectator_as_ego` — whether the spectator also loads cells around itself when no ego actor exists. Turn it off if your script spawns its ego immediately.
+
+```py
+settings = world.get_settings()
+settings.tile_stream_distance = 2000.0     # metres of map kept loaded around the hero
+settings.actor_active_distance = 1000.0    # beyond this, actors go dormant
+settings.spectator_as_ego = False
+world.apply_settings(settings)
+
+ego_bp = world.get_blueprint_library().find('vehicle.lincoln.mkz')
+ego_bp.set_attribute('role_name', 'hero')  # what makes this actor a streaming source
+```
 
 !!! Warning
     Only the loaded part of the map exists. A sensor pointed at an unloaded region sees nothing there, and a waypoint query still answers from the OpenDRIVE definition, which is always complete. Raise `tile_stream_distance` when a sensor has to see further than the hero's ring.

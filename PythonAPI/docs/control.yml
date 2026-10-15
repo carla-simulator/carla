@@ -139,12 +139,12 @@
     - def_name: __eq__
       params:
       - param_name: other
-        type: carla.AckermannVehicleControl
+        type: carla.VehicleAckermannControl
     # --------------------------------------
     - def_name: __ne__
       params:
       - param_name: other
-        type: carla.AckermannVehicleControl
+        type: carla.VehicleAckermannControl
     # --------------------------------------
     - def_name: __str__
     # --------------------------------------

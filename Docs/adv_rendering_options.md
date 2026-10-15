@@ -4,17 +4,15 @@ This guide details the different rendering options available in CARLA, including
 
 - [__Lighting and geometry__](#lighting-and-geometry)
 - [__Graphics quality__](#graphics-quality)
-	- [Quality levels](#quality-levels)
-	- [Tier comparison](#tier-comparison)
-	- [Ray tracing defaults](#ray-tracing-defaults)
-	- [NVIDIA DLSS](#nvidia-dlss)
-	- [Ray-traced lens tuning](#ray-traced-lens-tuning)
+    - [Quality levels](#quality-levels)
+    - [Tier comparison](#tier-comparison)
+    - [Volumetric clouds](#volumetric-clouds)
+    - [Ray tracing defaults](#ray-tracing-defaults)
+    - [NVIDIA DLSS](#nvidia-dlss)
+    - [Ray-traced lens tuning](#ray-traced-lens-tuning)
+- [__No-rendering mode__](#no-rendering-mode)
 - [__Off-screen rendering mode__](#off-screen-rendering-mode)
-	- [Setting off-screen mode](#setting-off-screen-mode)
-
-
-!!! Important
-    Some of the command options below are not equivalent in the CARLA packaged releases. Read the [Command line options](start_quickstart.md#command-line-options) section to learn more about this.
+    - [Setting off-screen mode](#setting-off-screen-mode)
 
 ---
 ## Lighting and geometry
@@ -51,7 +49,7 @@ What each tier gives up, from the top down:
 | `Medium` | None | Screen-space plus reflection captures (256 px) | 1024 px, 1 cascade, no distance-field shadows | Texture mip bias 0.5, anisotropy 4 |
 | `Low` | None | Screen-space plus reflection captures (128 px) | 512 px, 1 cascade, no distance-field shadows, far shadows culled | No motion blur, smaller streaming pools, quarter-rate particle emitters |
 
-What that buys, measured on Town10HD with an empty world and a fixed viewpoint, so only the rendering differs:
+What that buys, measured on Town10HD_Opt with an empty world and a fixed viewpoint, so only the rendering differs:
 
 | Tier | Frame rate, relative to Epic |
 | ---- | ---------------------------- |
@@ -112,7 +110,7 @@ Each tier selects the matching bucket — `Low` 0 through `Epic` 3 — in every 
 The clouds are rendered by the `VolumetricCloudComponent` of the sky rig Blueprint
 (`Content/Carla/Blueprints/LevelDesign/BP_Carla_Sky`). Its **View Sample Count Scale** is set to `2.0` in the
 Blueprint (engine default `1.0`): twice the ray-marching samples in the main view and the camera sensors, for cleaner,
-less grainy clouds at a higher cost. Measured on Town10HD with an RTX-class GPU looking at a sky with cloudiness 70:
+less grainy clouds at a higher cost. Measured on Town10HD_Opt with an RTX-class GPU looking at a sky with cloudiness 70:
 
 | View Sample Count Scale | Frame time |
 |---|---|
@@ -136,6 +134,8 @@ The hardware ray tracing subsystem is initialized at the project level (`r.RayTr
 | `r.RayTracing.ForceAllRayTracingEffects` | 0 | Force-enables every RT-capable effect in the project. High BVH cost. |
 
 Sensor captures opt into hardware ray tracing individually through the `use_ray_tracing` camera attribute (default `True`), and the console variable `carla.Camera.UseRayTracing` can force it on (`1`) or off (`0`) for every camera at once (`-1` respects the per-sensor attribute).
+
+__The quality tier sets that variable.__ Only `Epic` leaves it at `-1`; `High`, `Medium` and `Low` all force it to `0`, so a camera's `use_ray_tracing=True` has no effect below `Epic`. That is the one rendering difference a sensor sees between the tiers.
 
 Changing project defaults requires editing `Config/DefaultEngine.ini` and rebuilding the simulator. The packaged Shipping binary strips the engine's `-execcmds=` command-line parser, so runtime overrides via that flag are not available in distributed CARLA releases; only project-side configuration takes effect.
 
@@ -165,9 +165,34 @@ The [ray-traced lens camera family](ref_sensors.md#ray-traced-lens-camera) (`sen
 
 ---
 
+## No-rendering mode
+
+No-rendering mode stops the simulator drawing anything at all. The physics, the traffic and the road network keep running, so it is the mode to use when only the simulation state matters — traffic flow experiments, route planning, or a fast replay. Cameras and other GPU sensors produce nothing while it is on.
+
+Set it from a client:
+
+```py
+settings = world.get_settings()
+settings.no_rendering_mode = True
+world.apply_settings(settings)
+```
+
+Or from the terminal, which is also how a server left in this mode is brought back:
+
+```sh
+python3 PythonAPI/util/config.py --no-rendering
+python3 PythonAPI/util/config.py --rendering
+```
+
+`PythonAPI/examples/no_rendering_mode.py` draws the simulation as a 2D map from the road network, which is the usual way to watch what is happening while rendering is off.
+
+!!! Warning
+    This is not the same as off-screen rendering. No-rendering mode disables the rendering itself, so no sensor produces images; off-screen rendering keeps rendering and only drops the window.
+
+---
 ## Off-screen rendering mode
 
-The off-screen rendering mode enables the CARLA simulator to run without the spectator. This would be the appropriate mode to use for rendering in a headless configuration, for example on a cloud virtual machine instance. Data from any cameras and other sensors in the simulation will still be rendered to disk or transmitted to other applications, but no rendering data will be passed to the screen. 
+The off-screen rendering mode enables the CARLA simulator to run without the spectator. This would be the appropriate mode to use for rendering in a headless configuration, for example on a cloud virtual machine instance. Data from any cameras and other sensors in the simulation will still be rendered to disk or transmitted to other applications, but no rendering data will be passed to the screen.
 
 ### Setting off-screen mode
 

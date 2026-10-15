@@ -2,6 +2,17 @@
 
 This page describes how the CARLA Alpamayo example connects synchronized sensors, NVIDIA Alpamayo 2 Super inference, trajectory tracking, NuRec, and the dashboard recorder. For installation and commands, start with the [Alpamayo user guide](nvidia_alpamayo.md).
 
+- [__Process architecture__](#process-architecture)
+- [__Closed-loop timing__](#closed-loop-timing)
+- [__Camera topology__](#camera-topology)
+- [__Coordinate conversion__](#coordinate-conversion)
+- [__Trajectory-to-control conversion__](#trajectory-to-control-conversion)
+- [__NuRec world and actor orchestration__](#nurec-world-and-actor-orchestration)
+- [__Dashboard recording__](#dashboard-recording)
+- [__Telemetry contract__](#telemetry-contract)
+- [__Lifecycle and cleanup__](#lifecycle-and-cleanup)
+- [__Extension points__](#extension-points)
+
 ---
 
 ## Process architecture
@@ -10,7 +21,7 @@ The integration separates simulation and inference because the two sides have di
 
 | Component | Runtime | Responsibility |
 |---|---|---|
-| CARLA server | UE58 process | World state, physics, CARLA sensors, actors, and RPC. |
+| CARLA server | CARLA on Unreal Engine 5 | World state, physics, CARLA sensors, actors, and RPC. |
 | Control client | CARLA-compatible Python | Sole synchronous tick owner, observation history, controller, dashboard, recording, and cleanup. |
 | Alpamayo model service | Isolated Python 3.12 | Model loading, request validation, inference, numerical trajectory, and reasoning response. |
 | NRE service, optional | Pinned NVIDIA container | Neural camera rendering for the selected NuRec artifact. |
@@ -178,6 +189,7 @@ The integration is split into small modules so research changes do not require r
 * `alpamayo_model_server.py`: model adapter.
 * `alpamayo_controller.py`: trajectory tracking and PID control.
 * `alpamayo_nurec.py`: NuRec lifecycle, virtual cameras, and actor policy.
+* `alpamayo_coordinates.py`: the Alpamayo ↔ CARLA frame conversion described in [Coordinate conversion](#coordinate-conversion).
 * `alpamayo_display.py`: dashboard and video clock.
 * `alpamayo_control.py`: common orchestration and command-line interface.
 

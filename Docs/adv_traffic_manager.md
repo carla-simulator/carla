@@ -48,23 +48,39 @@ Users have some control over the traffic flow by setting parameters that allow, 
 The TM implements general behavior patterns that must be taken into consideration when you set vehicles to autopilot:
 
 - __Vehicles are not goal-oriented,__ they follow a dynamically produced trajectory and choose a path randomly when approaching a junction. Their path is endless.
-- __Vehicles' target speed is 70% of their current speed limit__ unless any other value is set.
+- __Vehicles' target speed is 100% of their current speed limit__ unless any other value is set.
 - __Junction priority does not follow traffic regulations.__ The TM uses its own priority system at junctions. The resolution of this restriction is a work in progress. In the meantime, some issues may arise, for example, vehicles inside a roundabout yielding to a vehicle trying to get in.
 - __Stuck vehicles recover on their own.__ A vehicle that has not moved for a while (blocked against a curb, a prop, or another vehicle) performs a K-turn-style recovery maneuver to rejoin its lane instead of staying blocked forever.
 - __Vehicles start from realistic speeds.__ When a moving vehicle is handed to the TM its current speed seeds the controller, avoiding a brake-to-zero transient; vehicles that reach the end of their route hold position instead of drifting.
 - __Acceleration and cornering are bounded for comfort.__ Pulling away from a stop, a junction or a roundabout follows a reference that closes on the target at about 2 m/s&sup2; instead of commanding full throttle, and a turn is braked for in advance so lateral acceleration stays near 3 m/s&sup2;.
 - __Large vehicles swing wide at junctions.__ A vehicle whose blueprint `base_type` is `bus` or `truck` offsets its path at a curving junction, by an amount scaled to its length, so it tracks the turn the way a real one does instead of clipping the inside. It applies only where the junction actually curves.
 
-TM behavior can be adjusted through the Python API. For specific methods, see the TM section of the Python API [documentation](../python_api/#carla.TrafficManager). Below is a general summary of what is possible through the API:
+TM behavior is adjusted through the Python API; the full list is in the [`carla.TrafficManager`](python_api.md#carla.TrafficManager) reference. Most methods come in pairs, a `vehicle_*` one for a single vehicle and a `global_*` one for every vehicle the TM drives.
 
-| Topic | Description |
-| ----- | ----------- |
-| **General:** | - Create a TM instance connected to a port. <br> - Retrieve the port where a TM is connected. |
-| **Safety conditions:** | - Set a minimum distance between stopped vehicles (for a single vehicle or for all vehicles). This will affect the minimum moving distance. <br> - Set the desired speed as a percentage of the current speed limit (for a single vehicle or for all vehicles). <br> - Reset traffic lights. |
-| **Collision  managing:** | - Enable/Disable collisions between a vehicle and a specific actor. <br> - Make a vehicle ignore all other vehicles. <br> - Make a vehicle ignore all walkers. <br> - Make a vehicle ignore all traffic lights. |
-| **Lane  changes:** | - Force a lane change, ignoring possible collisions. <br> - Enable/Disable lane changes for a vehicle. |
-| **Hybrid physics mode:** | - Enable/Disable hybrid physics mode. <br> - Change the radius in which physics is enabled. |
-| **Large vehicles:** | - Enable/Disable the wide junction turn for one bus or truck (`vehicle_large_vehicle_wide_turn`) or for all of them (`global_large_vehicle_wide_turn`). |
+| What | Methods |
+| --- | --- |
+| Speed | [`global_percentage_speed_difference`](python_api.md#carla.TrafficManager.global_percentage_speed_difference), [`vehicle_percentage_speed_difference`](python_api.md#carla.TrafficManager.vehicle_percentage_speed_difference) |
+| Following distance | [`set_global_distance_to_leading_vehicle`](python_api.md#carla.TrafficManager.set_global_distance_to_leading_vehicle), [`distance_to_leading_vehicle`](python_api.md#carla.TrafficManager.distance_to_leading_vehicle) |
+| Ignoring other road users | [`ignore_vehicles_percentage`](python_api.md#carla.TrafficManager.ignore_vehicles_percentage), [`ignore_walkers_percentage`](python_api.md#carla.TrafficManager.ignore_walkers_percentage), [`ignore_lights_percentage`](python_api.md#carla.TrafficManager.ignore_lights_percentage), [`ignore_signs_percentage`](python_api.md#carla.TrafficManager.ignore_signs_percentage) |
+| Lane changes | [`force_lane_change`](python_api.md#carla.TrafficManager.force_lane_change), [`auto_lane_change`](python_api.md#carla.TrafficManager.auto_lane_change), [`random_left_lanechange_percentage`](python_api.md#carla.TrafficManager.random_left_lanechange_percentage), [`random_right_lanechange_percentage`](python_api.md#carla.TrafficManager.random_right_lanechange_percentage), [`vehicle_lane_offset`](python_api.md#carla.TrafficManager.vehicle_lane_offset), [`global_lane_offset`](python_api.md#carla.TrafficManager.global_lane_offset) |
+| Routes | [`set_path`](python_api.md#carla.TrafficManager.set_path), [`set_route`](python_api.md#carla.TrafficManager.set_route), [`get_next_action`](python_api.md#carla.TrafficManager.get_next_action), [`get_all_actions`](python_api.md#carla.TrafficManager.get_all_actions) |
+| Collisions | [`collision_detection`](python_api.md#carla.TrafficManager.collision_detection) |
+| Hybrid physics | [`set_hybrid_physics_mode`](python_api.md#carla.TrafficManager.set_hybrid_physics_mode), [`set_hybrid_physics_radius`](python_api.md#carla.TrafficManager.set_hybrid_physics_radius) |
+| Large maps | [`set_respawn_dormant_vehicles`](python_api.md#carla.TrafficManager.set_respawn_dormant_vehicles), [`set_boundaries_respawn_dormant_vehicles`](python_api.md#carla.TrafficManager.set_boundaries_respawn_dormant_vehicles) |
+| Determinism and modes | [`set_random_device_seed`](python_api.md#carla.TrafficManager.set_random_device_seed), [`set_synchronous_mode`](python_api.md#carla.TrafficManager.set_synchronous_mode), [`set_osm_mode`](python_api.md#carla.TrafficManager.set_osm_mode) |
+| Large vehicles | `vehicle_large_vehicle_wide_turn`, `global_large_vehicle_wide_turn` |
+| Lifecycle | [`get_port`](python_api.md#carla.TrafficManager.get_port), [`shut_down`](python_api.md#carla.TrafficManager.shut_down) |
+
+__Defaults__, for a TM that has not been configured:
+
+| Parameter | Default |
+| --- | --- |
+| Port | 8000 |
+| Target speed | 100% of the speed limit (0% difference) |
+| Distance to the leading vehicle | 2.0 m |
+| Hybrid physics | off; radius 70 m when enabled |
+| Automatic lane changes | on |
+| Random device seed | unset, so runs are not reproducible |
 
 
 
@@ -78,13 +94,13 @@ A TM instance is created by a [`carla.Client`](python_api.md#carla.Client), pass
 
 To create a TM instance:
 
-```python
+```py
 tm = client.get_trafficmanager(port)
 ```
 
 To enable autopilot for a set of vehicles, retrieve the port of the TM instance and set `set_autopilot` to `True`, passing the TM port at the same time. If no port is provided, it will try to connect to a TM in the default port (`8000`). If the TM does not exist, it will create one:
 
-```python
+```py
 tm_port = tm.get_port()
 for v in vehicles_list:
     v.set_autopilot(True,tm_port)
@@ -95,7 +111,7 @@ for v in vehicles_list:
 The `generate_traffic.py` script in `/PythonAPI/examples` provides an example of how to create a TM instance using a port passed as a script argument and register every vehicle spawned to it by setting the autopilot to `True` in a batch:
 
 ```py
-traffic_manager = client.get_trafficmanager(args.tm-port)
+traffic_manager = client.get_trafficmanager(args.tm_port)
 tm_port = traffic_manager.get_port()
 ...
 batch.append(SpawnActor(blueprint, transform).then(SetAutopilot(FutureActor, True,tm_port)))
@@ -107,7 +123,7 @@ traffic_manager.global_percentage_speed_difference(30.0)
 
 The following example creates a TM instance and configures dangerous behavior for a specific vehicle so it will ignore all traffic lights, leave no safety distance from other vehicles, and drive 20% faster than the current speed limit:
 
-```python
+```py
 tm = client.get_trafficmanager(port)
 tm_port = tm.get_port()
 for v in my_vehicles:
@@ -116,11 +132,11 @@ danger_car = my_vehicles[0]
 tm.ignore_lights_percentage(danger_car,100)
 tm.distance_to_leading_vehicle(danger_car,0)
 tm.vehicle_percentage_speed_difference(danger_car,-20)
-``` 
+```
 
 The example below sets the same list of vehicles to autopilot but instead configures them with moderate driving behavior. The vehicles drive 80% slower than the current speed limit, leaving at least 5 meters between themselves and other vehicles, and never perform lane changes:
 
-```python
+```py
 tm = client.get_trafficmanager(port)
 tm_port = tm.get_port()
 for v in my_vehicles:
@@ -130,13 +146,13 @@ tm.set_global_distance_to_leading_vehicle(5)
 tm.global_percentage_speed_difference(80)
 for v in my_vehicles: 
   tm.auto_lane_change(v,False)
-``` 
+```
 
 #### Delegating the Traffic Manager to automatically update vehicle lights
 
 By default, vehicle lights (brake, turn indicators, etc...) of the vehicles managed by the TM are never updated. It is possible to delegate the TM to update the vehicle lights of a given vehicle actor:
 
-```python
+```py
 tm = client.get_trafficmanager(port)
 for actor in my_vehicles:
   tm.update_vehicle_lights(actor, True)
@@ -194,14 +210,14 @@ python3 generate_traffic.py -n 50 --seed 9
 
 Hybrid mode allows users to disable most physics calculations for all autopilot vehicles, or for autopilot vehicles outside of a certain radius of a vehicle tagged with `hero`. This removes the vehicle physics bottleneck from a simulation. Vehicles whose physics are disabled will move by teleportation. Basic calculations for linear acceleration are maintained to ensure position updates and vehicle speed remain realistic and the toggling of physics calculations on vehicles is fluid.
 
-Hybrid mode uses the [`Actor.set_simulate_physics()`](https://carla.readthedocs.io/en/latest/python_api/#carla.Actor.set_simulate_physics) method to toggle physics calculations. It is disabled by default. There are two options to enable it:
+Hybrid mode uses the [`Actor.set_simulate_physics()`](python_api.md#carla.Actor.set_simulate_physics) method to toggle physics calculations. It is disabled by default. There are two options to enable it:
 
-*   [__`TrafficManager.set_hybrid_physics_mode(True)`__](https://carla.readthedocs.io/en/latest/python_api/#carla.TrafficManager.set_hybrid_physics_mode) — This method enables hybrid mode for the TM object calling it.
+*   [__`TrafficManager.set_hybrid_physics_mode(True)`__](python_api.md#carla.TrafficManager.set_hybrid_physics_mode) — This method enables hybrid mode for the TM object calling it.
 *   __Running `generate_traffic.py` with the flag `--hybrid`__ — This example script creates a TM and spawns vehicles in autopilot. It then sets these vehicles to hybrid mode when the `--hybrid` flag is passed as a script argument.
 
 To modify the behavior of hybrid mode, use the following two parameters:
 
-*   __Radius__ *(default = 50 meters)* — The radius is relative to vehicles tagged with `hero`. All vehicles inside this radius will have physics enabled; vehicles outside of the radius will have physics disabled. The size of the radius is modified using [`traffic_manager.set_hybrid_physics_radius(r)`](python_api.md#carla.TrafficManager.set_hybrid_physics_radius).
+*   __Radius__ *(default = 70 meters)* — The radius is relative to vehicles tagged with `hero`. All vehicles inside this radius will have physics enabled; vehicles outside of the radius will have physics disabled. The size of the radius is modified using [`traffic_manager.set_hybrid_physics_radius(r)`](python_api.md#carla.TrafficManager.set_hybrid_physics_radius).
 *   __Hero vehicle__ — A vehicle tagged with `role_name='hero'` that acts as the center of the radius.
 	*   __If there is no hero vehicle,__ all vehicles' physics will be disabled.
 	*   __If there is more than one hero vehicle,__ the radius will be considered for them all, creating different areas of influence with physics enabled.
@@ -218,7 +234,7 @@ The clip below shows how physics is enabled and disabled when hybrid mode is act
 
 A CARLA client creates a TM by specifying to the server which port to use. If a port is not specified, the default `8000` will be used. If further TMs are created on the same port, they will become __TM-Clients__ and the original TM will become a __TM-Server__. These titles define how a TM behaves within a simulation.
 
-###### TM-Server
+#### TM-Server
 
 A TM-Server is created if it was the first TM to connect to a free port and then other TMs (TM-Clients) connected to the same port it was running on. __The TM-Server will dictate the behavior of all the TM-Clients__, e.g., if the TM-Server is stopped, all TM-Clients will stop.
 
@@ -231,7 +247,7 @@ tm01 = client01.get_trafficmanager() # tm01 --> tm01 (p=8000)
 tm02 = client02.get_trafficmanager(5000) # tm02(p=5000) --> tm02 (p=5000)
 ```
 
-###### TM-Client
+#### TM-Client
 
 A TM-Client is created when a TM connects to a port occupied by another TM (TM-Server). The TM-Client behavior will be dictated by the TM-Server.
 
@@ -250,7 +266,7 @@ The CARLA server keeps a register of all TM instances by storing the port and th
 
 In a multi-client simulation, multiple TMs are created on the same port. The first TM will be a TM-Server and the rest will be TM-Clients connecting to it. The TM-Server will dictate the behavior of all the TM instances:
 
-```py
+```sh
 terminal 1: ./CarlaUnreal.sh -carla-rpc-port=4000
 terminal 2: python3 generate_traffic.py --port 4000 --tm-port 4050 # TM-Server
 terminal 3: python3 generate_traffic.py --port 4000 --tm-port 4050 # TM-Client
@@ -260,7 +276,7 @@ terminal 3: python3 generate_traffic.py --port 4000 --tm-port 4050 # TM-Client
 
 In a multi-TM simulation, multiple TM instances are created on distinct ports. Each TM instance will control its own behavior:
 
-```py
+```sh
 terminal 1: ./CarlaUnreal.sh -carla-rpc-port=4000
 terminal 2: python3 generate_traffic.py --port 4000 --tm-port 4050 # TM-Server A
 terminal 3: python3 generate_traffic.py --port 4000 --tm-port 4550 # TM-Server B
@@ -270,7 +286,7 @@ terminal 3: python3 generate_traffic.py --port 4000 --tm-port 4550 # TM-Server B
 
 Multi-simulation is when more than one CARLA server is running at the same time. The TM needs to connect to the relevant CARLA server port. As long as the computational power allows for it, the TM can run multiple simulations at a time without any problems:
 
-```py
+```sh
 terminal 1: ./CarlaUnreal.sh -carla-rpc-port=4000 # simulation A 
 terminal 2: ./CarlaUnreal.sh -carla-rpc-port=5000 # simulation B
 terminal 3: python3 generate_traffic.py --port 4000 --tm-port 4050 # TM-Server A connected to simulation A
@@ -292,25 +308,26 @@ In synchronous mode the TM runs its step on the thread that ticks the world, wit
 The script below demonstrates how to set both the server and TM to synchronous mode:
 
 ```py
-...
-
-# Set the simulation to sync mode
-init_settings = world.get_settings()
+# Set the simulation to synchronous mode
 settings = world.get_settings()
 settings.synchronous_mode = True
-# After that, set the TM to sync mode
+settings.fixed_delta_seconds = 0.05
+world.apply_settings(settings)
+
+# Then set the TM to synchronous mode too
 my_tm.set_synchronous_mode(True)
 
-...
-
-# Tick the world in the same client
-world.apply_settings(init_settings)
-world.tick()
-...
-
-# Always disable sync mode before the script ends to prevent the server blocking whilst waiting for a tick
-settings.synchronous_mode = False
-my_tm.set_synchronous_mode(False)
+try:
+    while True:
+        world.tick()
+        ...
+finally:
+    # Always restore asynchronous mode, or the server blocks forever
+    # waiting for a tick from a client that is gone.
+    settings.synchronous_mode = False
+    settings.fixed_delta_seconds = None
+    world.apply_settings(settings)
+    my_tm.set_synchronous_mode(False)
 ```
 
 The `generate_traffic.py` example script starts a TM and populates the map with vehicles and pedestrians. It automatically sets the TM and the CARLA server to synchronous mode:
@@ -320,7 +337,7 @@ cd PythonAPI/examples
 python3 generate_traffic.py -n 50
 ```
 
-If asynchronous mode is required, use the `--async` flag when running the above command.
+If asynchronous mode is required, use the `--asynch` flag when running the above command.
 
 If more than one TM is set to synchronous mode, synchrony will fail. Follow these guidelines to avoid issues:
 
@@ -338,11 +355,11 @@ If more than one TM is set to synchronous mode, synchrony will fail. Follow thes
 
 ![Architecture](img/tm_2_architecture.jpg)
 
-The above diagram is a representation of the internal architecture of the TM. The C++ code for each component can be found in `LibCarla/source/carla/trafficmanager`. Each component is explained in detail in the following sections. A simplified overview of the logic is as follows: 
+The above diagram is a representation of the internal architecture of the TM. The C++ code for each component can be found in `LibCarla/source/carla/trafficmanager`. Each component is explained in detail in the following sections. A simplified overview of the logic is as follows:
 
 __1. Store and update the current state of the simulation.__
 
-- The [Agent Lifecycle & State Management](#alsm) (ALSM) scans the world to keep track of all the vehicles and walkers present and to clean up entries for those that no longer exist. All the data is retrieved from the server and is passed through several [stages](#stages-of-the-control-loop). The ALSM is the only component that makes calls to the server.
+- The [Agent Lifecycle & State Management](#alsm) (ALSM) scans the world to keep track of all the vehicles and walkers present and to clean up entries for those that no longer exist. All the data is retrieved from the server and is passed through several [stages](#stages-of-the-control-loop). The ALSM is the only component that reads world state from the server.
 - The [vehicle registry](#vehicle-registry) contains an array of vehicles on autopilot (controlled by the TM) and a list of pedestrians and vehicles not on autopilot (not controlled by the TM).
 - The [simulation state](#simulation-state) is a cache store of the position, velocity, and additional information of all the vehicles and pedestrians in the simulation.
 
@@ -399,7 +416,7 @@ The vehicle registry:
 - Is passed an updated list of vehicles and pedestrians from the [ALSM](#alsm).
 - Stores vehicles registered to the TM in a separate array for iteration during the [control loop](#control-loop).
 
-__Related .cpp files:__ `MotionPlannerStage.cpp`.
+__Related .cpp files:__ `ALSM.cpp`, `AtomicActorSet.h`.
 
 ### Simulation state
 
@@ -429,7 +446,7 @@ __Related .cpp files:__ `TrafficManagerLocal.cpp`.
 
 ### In-Memory Map
 
-The In-Memory Map is a helper module contained within the [PBVT](#pbvt) and is used during the [Localization Stage](#stage-1-localization-stage).  
+The In-Memory Map is a helper module contained within the [PBVT](#pbvt) and is used during the [Localization Stage](#stage-1-localization-stage).
 
 The In-Memory Map:
 
@@ -459,7 +476,7 @@ The PID controller:
 - Makes adjustments depending on the specific parameterization of the controller. Parameters can be modified if desired. Read more about [PID controllers](https://en.wikipedia.org/wiki/PID_controller) to learn how to make modifications.
 - Adapts to the real simulation step. The controller measures the actual simulation-time period between control updates and discretizes its integral/derivative terms and steering rate limits with it, so vehicle control stays stable when heavy rendering (for example, high-resolution or path-traced sensors) lowers the server frame rate. In synchronous mode at the design step of 0.05 s the behavior is identical to previous releases.
 
-__Related .cpp files:__ `PIDController.cpp`.
+__Related .cpp files:__ `PIDController.h`.
 ### Command Array
 
 The Command Array represents the last step in the TM logic cycle. It receives commands for all the registered vehicles and applies them.
@@ -468,13 +485,13 @@ The Command Array:
 
 - Receives a series of [carla.VehicleControl](python_api.md#carla.VehicleControl)'s from the [Motion Planner Stage](#stage-4-motion-planner-stage).
 - Batches all commands to be applied during the same frame.
-- Sends the batch to the CARLA server calling either __apply_batch()__ or __apply_batch_synch()__ in [carla.Client](../python_api/#carla.Client) depending on whether the simulation is running in asynchronous or synchronous mode, respectively.
+- Sends the batch to the CARLA server calling either __apply_batch()__ or __apply_batch_sync()__ in [carla.Client](python_api.md#carla.Client) depending on whether the simulation is running in asynchronous or synchronous mode, respectively.
 
 __Related .cpp files:__ `TrafficManagerLocal.cpp`.
 
 ### Stages of the Control Loop
 
-##### Stage 1- Localization Stage
+#### Stage 1- Localization Stage
 
 The Localization Stage defines a near-future path for vehicles controlled by the TM.
 
@@ -488,7 +505,7 @@ The Localization Stage:
 
 __Related .cpp files:__ `LocalizationStage.cpp` and `LocalizationUtils.cpp`.
 
-##### Stage 2- Collision Stage
+#### Stage 2- Collision Stage
 
 The Collision Stage triggers collision hazards.
 
@@ -500,7 +517,7 @@ The Collision Stage:
 
 __Related .cpp files:__ `CollisionStage.cpp`.
 
-##### Stage 3- Traffic Light Stage
+#### Stage 3- Traffic Light Stage
 
 The Traffic Light stage triggers hazards due to traffic regulators such as traffic lights, stop signs, and priority at junctions.
 
@@ -511,7 +528,7 @@ The Traffic Light stage:
 
 __Related .cpp files:__ `TrafficLightStage.cpp`.
 
-##### Stage 4- Motion Planner Stage
+#### Stage 4- Motion Planner Stage
 
 The Motion Planner Stage generates the CARLA commands to be applied to vehicles.
 
@@ -522,10 +539,10 @@ The Motion Planner Stage:
 - Translates the desired movement to a [carla.VehicleControl](python_api.md#carla.VehicleControl) for application to the vehicle.
 - Sends the resulting CARLA commands to the [Command Array](#command-array).
 
-__Related .cpp files:__ `MotionPlannerStage.cpp`.
+__Related .cpp files:__ `MotionPlanStage.cpp`.
 
 
-##### Stage 5- Vehicle Lights Stage
+#### Stage 5- Vehicle Lights Stage
 
 The Vehicle Lights Stage activates the lights based on the condition of the vehicle and the surrounding environment.
 	
@@ -545,11 +562,4 @@ __Related .cpp files:__ `VehicleLightStage.cpp`.
 
 ---
 
-If you have any questions about the TM, then you can ask in the [forum](https://github.com/carla-simulator/carla/discussions).
-
-<div class="build-buttons">
-<p>
-<a href="https://github.com/carla-simulator/carla/discussions" target="_blank" class="btn btn-neutral" title="Go to the CARLA forum">
-CARLA forum</a>
-</p>
-</div>
+If you have any questions about the TM, ask in the [forum](https://github.com/carla-simulator/carla/discussions).

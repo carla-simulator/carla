@@ -16,7 +16,6 @@ nav:
   - 'Building CARLA' : 'build_carla.md'
 
 - Next steps:
-  #- 'Content authoring - maps': 'tuto_content_authoring_maps.md'  
   - 'Content authoring - vehicles': 'tuto_content_authoring_vehicles.md'  
   - 'Content authoring - content packs': 'content_packs.md'
 
@@ -38,7 +37,6 @@ nav:
   - 'Tutorials': 'tutorials.md'
   - 'Agent skills': 'agent_skills.md'
   - 'CARLA Studio': 'https://github.com/carla-simulator/carla-studio'
-  #- 'Extended documentation': 'ext_docs.md'
 
 - CARLA Ecosystem:
   - 'MathWorks': 'large_map_roadrunner.md'
@@ -57,7 +55,6 @@ nav:
   - 'Guidelines': 'cont_contribution_guidelines.md' 
   - 'Coding standards': 'cont_coding_standard.md'
   - 'Documentation standard': 'cont_doc_standard.md'
-  - '': ''
  
 markdown_extensions:
   - admonition 
