@@ -61,7 +61,9 @@ error.
 | Chase camera | `chase.py OUT` | `AttachmentType.SpringArmGhost`. |
 | Map plot with spawn indices | `map_plot.py OUT.png` | From `generate_waypoints` and `get_spawn_points`; top view with +y down, as in the editor. |
 | Diagrams | `diag_*.py OUT_DIR` | Writes the SVG and a PNG preview next to it (headless Chrome); look at the PNG before shipping (overlaps, clipped text) and do not commit it. |
-| Editor UI screenshot | console command `Shot showui` through remote execution | Renders the whole editor window (Slate) to `Unreal/CarlaUnreal/Saved/Screenshots/LinuxEditor/` without grabbing the desktop. Crop the panel you need. Delete the files afterwards. |
+| Editor UI screenshot | `xwdgrab.py <window id> OUT.png` (window id from `wmctrl -lG`) | Reads the editor window's own pixels (X11, works even when other windows cover it, no PIE needed). Drive the editor first through `ue.py`: `EditorUtilityLibrary.sync_browser_to_folders([...])` to open a Content Browser folder, `EditorActorSubsystem.set_selected_level_actors([...])` to fill Details, `UnrealEditorSubsystem.set_level_viewport_camera_info(...)` to frame the viewport. Crop the panels you need; outline what matters in red. Undo any temporary folder or selection afterwards. `Shot showui` also renders the window, but only while PIE runs, and in PIE the editor selection API sees no actors. |
+| Set-path routes | `tm_paths.py OUT.json R1S R1 R2S R2 [s]` then `routes_plot.py OUT.png OUT.json` | Runs the routes with the Traffic Manager and plots the recorded tracks (cut at the last route point, where the TM takes over). `CAM="x,y,z,yaw,pitch;dir;first_step" OVERLAY=1` adds a top-down animation with each car ringed in its route colour. |
+| Server quality levels / OpenDRIVE worlds | `run_server.sh game` (`QUALITY=Low`), then `still.py` / `odr.py` | Close the editor first (24 GB GPU: editor ~15 GB, server ~8 GB). Shoot Epic and Low from the same pose. `generate_opendrive_world` crashed the server on Town03.xodr (raster overflow in `OpenDriveGenerator.cpp`); Town01.xodr works. Above ~40 m the generated ground plane edge shows as a black void. |
 | Catalogue actors | `PythonAPI/docs/catalogue_doc_gen.py --recapture [--catalogue ...]` | Writes `img/catalogue/` and the pages. In an editor PIE session pass `--towns Town10HD_Opt --images-only` (PIE cannot switch maps; a partial run must not rewrite the pages). |
 
 ## Poses that worked
@@ -73,6 +75,8 @@ error.
 | Town10HD_Opt | `47.56,-57.23,0.6,0` | `drive.py` start (hood camera drive) |
 | Town10HD_Opt | aerial `75,-15,30,60,-38`, top `100,20,130` | `traffic.py` |
 | Town15 | `440.4,205.96,124.1,39.96,-9` with `HERO=1` | elevated campus street for weather / profile grids |
+| Town10HD_Opt | `75,-15,30,60,-38` | aerial junction (Epic vs Low quality, TM traffic) |
+| Town10HD_Opt | top-down `-35,20,60,-90,-90` | set_path convergence (routes 43 -> 45,149,151,58,153 and 83 -> 149,151,58,153) |
 
 Switching the editor to Town15: stop PIE, `LevelEditorSubsystem.load_level('/Game/Carla/Maps/Town15/Town15')`
 through `ue.py`, then begin play; World Partition PIE blocks remote execution for a minute or two, so
