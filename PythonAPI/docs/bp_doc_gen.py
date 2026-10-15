@@ -126,9 +126,9 @@ def generate_pb_docs():
     md = MarkdownFile()
     md.not_title('Blueprint Library')
     md.textn(
-        "The Blueprint Library ([`carla.BlueprintLibrary`](../python_api/#carlablueprintlibrary-class)) " +
-        "is a summary of all [`carla.ActorBlueprint`](../python_api/#carla.ActorBlueprint) " +
-        "and its attributes ([`carla.ActorAttribute`](../python_api/#carla.ActorAttribute)) " +
+        "The Blueprint Library ([`carla.BlueprintLibrary`](python_api.md#carla.BlueprintLibrary)) " +
+        "is a summary of all [`carla.ActorBlueprint`](python_api.md#carla.ActorBlueprint) " +
+        "and its attributes ([`carla.ActorAttribute`](python_api.md#carla.ActorAttribute)) " +
         "available to the user in CARLA.")
 
     md.textn("\nHere is an example code for printing all actor blueprints and their attributes:")

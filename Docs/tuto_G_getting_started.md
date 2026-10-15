@@ -111,7 +111,7 @@ You can fly the spectator around the world using the mouse to control the pitch 
 
 Left click and drag the mouse in the spectator window up and down to control pitch and left and right to control yaw.
 
-![flying_spectator](../img/tuto_G_getting_started/flying_spectator.gif)
+![flying_spectator](img/tuto_G_getting_started/flying_spectator.gif)
 
 The spectator and its properties can be accessed and manipulated through the Python API:
 
@@ -148,7 +148,7 @@ Now, let's spawn a vehicle where the spectator is:
 vehicle = world.try_spawn_actor(vehicle_bp, spectator.get_transform())
 ```
 
-![spawn_vehicle](../img/tuto_G_getting_started/spawn_vehicle.gif)
+![spawn_vehicle](img/tuto_G_getting_started/spawn_vehicle.gif)
 
 You'll now see a vehicle spawned at the point where the spectator is. It will take on both the location and the rotation of the spectator, so be sure to orient the spectator in the direction you want the vehicle to face. If you navigate close to the ground, the spectator will end up inside the vehicle, and if it is too close to the ground, the spawn may fail. If you spawn the vehicle with the spectator high in the air, the vehicle will drop to the ground.
 
@@ -195,7 +195,7 @@ for i, spawn_point in enumerate(spawn_points):
 
 ```
 
-![spawn_points](../img/tuto_G_getting_started/spawn_points.png)
+![spawn_points](img/tuto_G_getting_started/spawn_points.png)
 
 Now we can note down the spawn point indices we are interested in and fill this street with vehicles:
 
@@ -211,7 +211,7 @@ for ind in range(0, 100):
     world.try_spawn_actor(random.choice(vehicle_bps), random.choice(spawn_points))
 ```
 
-![vehicle_street](../img/tuto_G_getting_started/vehicle_street.png)
+![vehicle_street](img/tuto_G_getting_started/vehicle_street.png)
 
 ## Actors and blueprints
 

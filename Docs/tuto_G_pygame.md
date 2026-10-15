@@ -274,4 +274,4 @@ pygame.quit()
 
 ```
 
-![manual_control](../img/tuto_G_pygame/manual_control.gif)
+![manual_control](img/tuto_G_pygame/manual_control.gif)

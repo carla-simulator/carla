@@ -43,10 +43,10 @@ Collision detectors do not have any configurable attribute.
 | ----------------------- | ----------------------- | ----------------------- |
 | `frame`            | int   | Frame number when the measurement took place.      |
 | `timestamp`        | double | Simulation time of the measurement in seconds since the beginning of the episode.        |
-| `transform`        | [carla.Transform](<../python_api#carlatransform>)  | Location and rotation in world coordinates of the sensor at the time of the measurement. |
-| `actor`            | [carla.Actor](<../python_api#carlaactor>)    | Actor that measured the collision (sensor's parent).           |
-| `other_actor`      | [carla.Actor](<../python_api#carlaactor>)    | Actor against whom the parent collided.      |
-| `normal_impulse`     | [carla.Vector3D](<../python_api#carlavector3d>)    | Normal impulse result of the collision.      |
+| `transform`        | [carla.Transform](python_api.md#carla.Transform)  | Location and rotation in world coordinates of the sensor at the time of the measurement. |
+| `actor`            | [carla.Actor](python_api.md#carla.Actor)    | Actor that measured the collision (sensor's parent).           |
+| `other_actor`      | [carla.Actor](python_api.md#carla.Actor)    | Actor against whom the parent collided.      |
+| `normal_impulse`     | [carla.Vector3D](python_api.md#carla.Vector3D)    | Normal impulse result of the collision.      |
 
 
 
@@ -110,7 +110,7 @@ raw_image.save_to_disk("path/to/save/converted/image",carla.Depth)
 | ----------------------- | ----------------------- | ----------------------- |
 | `frame`            | int   | Frame number when the measurement took place.      |
 | `timestamp`        | double | Simulation time of the measurement in seconds since the beginning of the episode.        |
-| `transform`        | [carla.Transform](<../python_api#carlatransform>)  | Location and rotation in world coordinates of the sensor at the time of the measurement. |
+| `transform`        | [carla.Transform](python_api.md#carla.Transform)  | Location and rotation in world coordinates of the sensor at the time of the measurement. |
 | `width`            | int   | Image width in pixels.           |
 | `height`           | int   | Image height in pixels.          |
 | `fov` | float | Horizontal field of view in degrees.          |
@@ -149,7 +149,7 @@ Reports current [gnss position](https://www.gsa.europa.eu/european-gnss/what-gns
 | ----------------------- | ----------------------- | ----------------------- |
 | `frame`            | int   | Frame number when the measurement took place.      |
 | `timestamp`        | double | Simulation time of the measurement in seconds since the beginning of the episode.        |
-| `transform`        | [carla.Transform](<../python_api#carlatransform>)  | Location and rotation in world coordinates of the sensor at the time of the measurement. |
+| `transform`        | [carla.Transform](python_api.md#carla.Transform)  | Location and rotation in world coordinates of the sensor at the time of the measurement. |
 | `latitude`         | double | Latitude of the actor.           |
 | `longitude`        | double | Longitude of the actor.          |
 | `altitude`         | double | Altitude of the actor.           |
@@ -189,9 +189,9 @@ Provides measures that accelerometer, gyroscope and compass would retrieve for t
 | ----------------------- | ----------------------- | ----------------------- |
 | `frame`            | int   | Frame number when the measurement took place.      |
 | `timestamp`        | double | Simulation time of the measurement in seconds since the beginning of the episode.        |
-| `transform`        | [carla.Transform](<../python_api#carlatransform>)  | Location and rotation in world coordinates of the sensor at the time of the measurement. |
-| `accelerometer`      | [carla.Vector3D](<../python_api#carlavector3d>)    | Measures linear acceleration in `m/s^2`.     |
-| `gyroscope`        | [carla.Vector3D](<../python_api#carlavector3d>)    | Measures angular velocity in `rad/sec`.      |
+| `transform`        | [carla.Transform](python_api.md#carla.Transform)  | Location and rotation in world coordinates of the sensor at the time of the measurement. |
+| `accelerometer`      | [carla.Vector3D](python_api.md#carla.Vector3D)    | Measures linear acceleration in `m/s^2`.     |
+| `gyroscope`        | [carla.Vector3D](python_api.md#carla.Vector3D)    | Measures angular velocity in `rad/sec`.      |
 | `compass`          | float | Orientation in radians. North is `(0.0, -1.0, 0.0)` in UE.       |
 
 
@@ -220,9 +220,9 @@ This sensor does not have any configurable attribute.
 | ----------------------- | ----------------------- | ----------------------- |
 | `frame`            | int   | Frame number when the measurement took place.      |
 | `timestamp`        | double | Simulation time of the measurement in seconds since the beginning of the episode.        |
-| `transform`        | [carla.Transform](<../python_api#carlatransform>)  | Location and rotation in world coordinates of the sensor at the time of the measurement. |
-| `actor`            | [carla.Actor](<../python_api#carlaactor>)    | Vehicle that invaded another lane (parent actor).  |
-| `crossed_lane_markings`          | list([carla.LaneMarking](<../python_api#carlalanemarking>))      | List of lane markings that have been crossed.      |
+| `transform`        | [carla.Transform](python_api.md#carla.Transform)  | Location and rotation in world coordinates of the sensor at the time of the measurement. |
+| `actor`            | [carla.Actor](python_api.md#carla.Actor)    | Vehicle that invaded another lane (parent actor).  |
+| `crossed_lane_markings`          | list([carla.LaneMarking](python_api.md#carla.LaneMarking))      | List of lane markings that have been crossed.      |
 
 
 
@@ -291,7 +291,7 @@ The rotation of the LIDAR can be tuned to cover a specific angle on every simula
 | ----------------------- | ----------------------- | ----------------------- |
 | `frame`            | int   | Frame number when the measurement took place.      |
 | `timestamp`        | double | Simulation time of the measurement in seconds since the beginning of the episode.        |
-| `transform`        | [carla.Transform](<../python_api#carlatransform>)  | Location and rotation in world coordinates of the sensor at the time of the measurement. |
+| `transform`        | [carla.Transform](python_api.md#carla.Transform)  | Location and rotation in world coordinates of the sensor at the time of the measurement. |
 | `horizontal_angle`   | float | Angle (radians) in the XY plane of the LIDAR in the current frame.           |
 | `channels`         | int   | Number of channels (lasers) of the LIDAR.    |
 | `get_point_count(channel)`       | int   | Number of points per channel captured this frame.  |
@@ -361,7 +361,7 @@ direction, leaving angular position unaffected.
 | --- | --- | --- |
 | `frame` | int | Frame number when the measurement was taken. |
 | `timestamp` | double | Simulation time in seconds since episode start. |
-| `transform` | [carla.Transform](<../python_api#carlatransform>) | Sensor pose at measurement time. |
+| `transform` | [carla.Transform](python_api.md#carla.Transform) | Sensor pose at measurement time. |
 | `horizontal_angle` | float | Always 0 for HSS (does not rotate). |
 | `channels` | int | Number of channels (lasers). |
 | `get_point_count(channel)` | int | Points captured this frame in the given channel. |
@@ -395,9 +395,9 @@ To ensure that collisions with any kind of object are detected, the server creat
 | ----------------------- | ----------------------- | ----------------------- |
 | `frame`            | int   | Frame number when the measurement took place.      |
 | `timestamp`        | double | Simulation time of the measurement in seconds since the beginning of the episode.        |
-| `transform`        | [carla.Transform](<../python_api#carlatransform>)  | Location and rotation in world coordinates of the sensor at the time of the measurement. |
-| `actor`            | [carla.Actor](<../python_api#carlaactor>)    | Actor that detected the obstacle (parent actor).   |
-| `other_actor`      | [carla.Actor](<../python_api#carlaactor>)    | Actor detected as an obstacle.   |
+| `transform`        | [carla.Transform](python_api.md#carla.Transform)  | Location and rotation in world coordinates of the sensor at the time of the measurement. |
+| `actor`            | [carla.Actor](python_api.md#carla.Actor)    | Actor that detected the obstacle (parent actor).   |
+| `other_actor`      | [carla.Actor](python_api.md#carla.Actor)    | Actor detected as an obstacle.   |
 | `distance`         | float | Distance from `actor` to `other_actor`.      |
 
 
@@ -437,7 +437,7 @@ The provided script `manual_control.py` uses this sensor to show the points bein
 
 | Sensor data attribute | Type            | Description     |
 | ---------------- | ---------------- | ---------------- |
-| `raw_data`      | [carla.RadarDetection](<../python_api#carlaradardetection>) | The list of points detected.      |
+| `raw_data`      | [carla.RadarDetection](python_api.md#carla.RadarDetection) | The list of points detected.      |
 
 <br>
 
@@ -568,7 +568,7 @@ Since these effects are provided by UE, please make sure to check their document
 | ----------------------- | ----------------------- | ----------------------- |
 | `frame`            | int   | Frame number when the measurement took place.      |
 | `timestamp`        | double | Simulation time of the measurement in seconds since the beginning of the episode.        |
-| `transform`        | [carla.Transform](<../python_api#carlatransform>)  | Location and rotation in world coordinates of the sensor at the time of the measurement. |
+| `transform`        | [carla.Transform](python_api.md#carla.Transform)  | Location and rotation in world coordinates of the sensor at the time of the measurement. |
 | `width`            | int   | Image width in pixels.           |
 | `height`           | int   | Image height in pixels.          |
 | `fov` | float | Horizontal field of view in degrees.         |
@@ -657,7 +657,7 @@ Setting `carla.RTLens.SyncModeBlockingReadback 0` (server console) forces the as
 | ----------------------- | ----------------------- | ----------------------- |
 | `frame`            | int   | Frame number when the measurement took place.      |
 | `timestamp`        | double | Simulation time of the measurement in seconds since the beginning of the episode.        |
-| `transform`        | [carla.Transform](<../python_api#carlatransform>)  | Location and rotation in world coordinates of the sensor at the time of the measurement. |
+| `transform`        | [carla.Transform](python_api.md#carla.Transform)  | Location and rotation in world coordinates of the sensor at the time of the measurement. |
 | `width`            | int   | Image width in pixels.           |
 | `height`           | int   | Image height in pixels.          |
 | `fov` | float | Horizontal field of view in degrees.         |
@@ -701,7 +701,7 @@ distance_sensor.listen(on_distance)
 | ----------------------- | ----------------------- | ----------------------- |
 | `frame`            | int   | Frame number when the measurement took place.      |
 | `timestamp`        | double | Simulation time of the measurement in seconds since the beginning of the episode.        |
-| `transform`        | [carla.Transform](<../python_api#carlatransform>)  | Location and rotation in world coordinates of the sensor at the time of the measurement. |
+| `transform`        | [carla.Transform](python_api.md#carla.Transform)  | Location and rotation in world coordinates of the sensor at the time of the measurement. |
 | `width`            | int   | Image width in pixels.           |
 | `height`           | int   | Image height in pixels.          |
 | `fov` | float | Horizontal field of view in degrees.         |
@@ -725,7 +725,7 @@ Measured against the raster [instance segmentation camera](#instance-segmentatio
 | ----------------------- | ----------------------- | ----------------------- |
 | `frame`            | int   | Frame number when the measurement took place.      |
 | `timestamp`        | double | Simulation time of the measurement in seconds since the beginning of the episode.        |
-| `transform`        | [carla.Transform](<../python_api#carlatransform>)  | Location and rotation in world coordinates of the sensor at the time of the measurement. |
+| `transform`        | [carla.Transform](python_api.md#carla.Transform)  | Location and rotation in world coordinates of the sensor at the time of the measurement. |
 | `width`            | int   | Image width in pixels.           |
 | `height`           | int   | Image height in pixels.          |
 | `fov` | float | Horizontal field of view in degrees.         |
@@ -793,7 +793,7 @@ __2.__ Run the simulation using `python3 config.py --fps=10`.
 | ------------------------------------- | ------------------------------------- | ------------------------------------- |
 | `frame`        | int            | Frame number when the measurement took place.  |
 | `timestamp`    | double         | Simulation time of the measurement in seconds since the beginning of the episode.   |
-| `transform`    | [carla.Transform](<../python_api#carlatransform>)     | Location and rotation in world coordinates of the sensor at the time of the measurement. |
+| `transform`    | [carla.Transform](python_api.md#carla.Transform)     | Location and rotation in world coordinates of the sensor at the time of the measurement. |
 | `horizontal_angle`         | float          | Angle (radians) in the XY plane of the LIDAR in the current frame.     |
 | `channels`     | int            | Number of channels (lasers) of the LIDAR.      |
 | `get_point_count(channel)` | int            | Number of points per channel captured in the current frame.            |
@@ -908,7 +908,7 @@ The server provides an image with the tag information __encoded in the red chann
 | `height`           | int   | Image height in pixels.          |
 | `raw_data`         | bytes | Array of BGRA 32-bit pixels.     |
 | `timestamp`        | double | Simulation time of the measurement in seconds since the beginning of the episode.        |
-| `transform`        | [carla.Transform](<../python_api#carlatransform>)  | Location and rotation in world coordinates of the sensor at the time of the measurement. |
+| `transform`        | [carla.Transform](python_api.md#carla.Transform)  | Location and rotation in world coordinates of the sensor at the time of the measurement. |
 | `width`            | int   | Image width in pixels.           |
 
 
@@ -1007,7 +1007,7 @@ The Optical Flow camera captures the motion perceived from the point of view of 
 | --------------------- | ---- | ----------- |
 | `frame` | int | Frame number when the measurement took place. |
 | `timestamp` | double | Simulation time of the measurement in seconds since the beginning of the episode. |
-| `transform` | [carla.Transform](<../python_api#carlatransform>) | Location and rotation in world coordinates of the sensor at the time of the measurement. |
+| `transform` | [carla.Transform](python_api.md#carla.Transform) | Location and rotation in world coordinates of the sensor at the time of the measurement. |
 | `width` | int | Image width in pixels. |
 | `height` | int | Image height in pixels. |
 | `fov` | float | Horizontal field of view in degrees. |
@@ -1057,7 +1057,7 @@ This camera renders the surface normal of whatever each pixel sees. The three co
 | `height`           | int   | Image height in pixels.          |
 | `raw_data`         | bytes | Array of BGRA 32-bit pixels.     |
 | `timestamp`        | double | Simulation time of the measurement in seconds since the beginning of the episode.        |
-| `transform`        | [carla.Transform](<../python_api#carlatransform>)  | Location and rotation in world coordinates of the sensor at the time of the measurement. |
+| `transform`        | [carla.Transform](python_api.md#carla.Transform)  | Location and rotation in world coordinates of the sensor at the time of the measurement. |
 | `width`            | int   | Image width in pixels.           |
 
 <br>
@@ -1192,7 +1192,7 @@ A GNSS receiver for the Autoware stack. In Python it behaves exactly like [senso
 | ----------------------- | ----------------------- | ----------------------- |
 | `frame`            | int   | Frame number when the measurement took place.      |
 | `timestamp`        | double | Simulation time of the measurement in seconds since the beginning of the episode.        |
-| `transform`        | [carla.Transform](<../python_api#carlatransform>)  | Location and rotation in world coordinates of the sensor at the time of the measurement. |
+| `transform`        | [carla.Transform](python_api.md#carla.Transform)  | Location and rotation in world coordinates of the sensor at the time of the measurement. |
 | `latitude`         | double | Latitude of the actor.           |
 | `longitude`        | double | Longitude of the actor.          |
 | `altitude`         | double | Altitude of the actor.           |
@@ -1229,4 +1229,4 @@ Reports the state of the vehicle it is attached to, for the Autoware stack. It p
 | ----------------------- | ----------------------- | ----------------------- |
 | `frame`            | int   | Frame number when the measurement took place.      |
 | `timestamp`        | double | Simulation time of the measurement in seconds since the beginning of the episode.        |
-| `transform`        | [carla.Transform](<../python_api#carlatransform>)  | Location and rotation in world coordinates of the sensor at the time of the measurement. |
+| `transform`        | [carla.Transform](python_api.md#carla.Transform)  | Location and rotation in world coordinates of the sensor at the time of the measurement. |

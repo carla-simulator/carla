@@ -49,7 +49,7 @@ Please find more information about CARLA maps [__here__](core_map.md).
 
 ## Spectator navigation
 
-![town_10_default](../img/catalogue/maps/town10/town10default.png)
+![town_10_default](img/catalogue/maps/town10/town10default.png)
 
 The spectator is a view into the simulation. By default, the spectator opens in a new window when you run the CARLA server on a computer with a screen attached. 
 
@@ -185,7 +185,7 @@ ego_vehicle = world.spawn_actor(ego_bp, random.choice(spawn_points))
 ## Choose your vehicles
 
 
-![vehicles_overview](../img/catalogue/vehicles/vehicle_montage.webp)
+![vehicles_overview](img/catalogue/vehicles/vehicle_montage.webp)
 
 CARLA provides a library of vehicles to fill your simulation with traffic. Browse the vehicle models in the [CARLA vehicle catalogue](catalogue_vehicles.md). 
 

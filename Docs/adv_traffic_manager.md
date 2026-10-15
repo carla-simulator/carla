@@ -177,7 +177,7 @@ The Command Array:
 
 - Receives a series of [carla.VehicleControl](python_api.md#carla.VehicleControl)'s from the [Motion Planner Stage](#stage-4-motion-planner-stage).
 - Batches all commands to be applied during the same frame.
-- Sends the batch to the CARLA server calling either __apply_batch()__ or __apply_batch_synch()__ in [carla.Client](../python_api/#carla.Client) depending on whether the simulation is running in asynchronous or synchronous mode, respectively.
+- Sends the batch to the CARLA server calling either __apply_batch()__ or __apply_batch_synch()__ in [carla.Client](python_api.md#carla.Client) depending on whether the simulation is running in asynchronous or synchronous mode, respectively.
 
 __Related .cpp files:__ `TrafficManagerLocal.cpp`.
 
@@ -265,7 +265,7 @@ The TM implements general behavior patterns that must be taken into consideratio
 - __Stuck vehicles recover on their own.__ A vehicle that has not moved for a while (blocked against a curb, a prop, or another vehicle) performs a K-turn-style recovery maneuver to rejoin its lane instead of staying blocked forever.
 - __Vehicles start from realistic speeds.__ When a moving vehicle is handed to the TM its current speed seeds the controller, avoiding a brake-to-zero transient; vehicles that reach the end of their route hold position instead of drifting.
 
-TM behavior can be adjusted through the Python API. For specific methods, see the TM section of the Python API [documentation](../python_api/#carla.TrafficManager). Below is a general summary of what is possible through the API:
+TM behavior can be adjusted through the Python API. For specific methods, see the TM section of the Python API [documentation](python_api.md#carla.TrafficManager). Below is a general summary of what is possible through the API:
 
 | Topic | Description |
 | ----- | ----------- |

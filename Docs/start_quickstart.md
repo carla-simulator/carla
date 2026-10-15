@@ -99,7 +99,7 @@ CarlaUnreal.exe
 
 A window containing a view over Town 10 will pop up. This is the _spectator view_. To fly around the city use the mouse and `WASD` keys, holding down the right mouse button to control the direction. 
 
-![town_10_default](../img/catalogue/maps/town10/town10default.png)
+![town_10_default](img/catalogue/maps/town10/town10default.png)
 
 This window is driven by the simulator server which is now running and waiting for a client to connect and interact with the world. You can try some of the example scripts to create traffic in the city and drive a vehicle around the map. Open up two separate terminals and run the following commands:
 

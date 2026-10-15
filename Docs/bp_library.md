@@ -1,6 +1,6 @@
 
 #Blueprint Library
-The Blueprint Library ([`carla.BlueprintLibrary`](../python_api/#carlablueprintlibrary-class)) is a summary of all [`carla.ActorBlueprint`](../python_api/#carla.ActorBlueprint) and its attributes ([`carla.ActorAttribute`](../python_api/#carla.ActorAttribute)) available to the user in CARLA.  
+The Blueprint Library ([`carla.BlueprintLibrary`](python_api.md#carla.BlueprintLibrary)) is a summary of all [`carla.ActorBlueprint`](python_api.md#carla.ActorBlueprint) and its attributes ([`carla.ActorAttribute`](python_api.md#carla.ActorAttribute)) available to the user in CARLA.  
 
 Here is an example code for printing all actor blueprints and their attributes:  
 ```py

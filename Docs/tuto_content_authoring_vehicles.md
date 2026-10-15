@@ -205,7 +205,7 @@ In the content browser directory where you have your new vehicle asset, right cl
 !!! Note
     `CarlaVehicleAnimationInstance` extends the engine's `VehicleAnimationInstance`, which only animates the wheels while the Chaos vehicle simulation moves the vehicle. With the CARLA class the wheels also roll when physics is disabled and the vehicle is moved through the API, during a replay, or when another physics engine drives it. A vehicle whose animation blueprint still uses `VehicleAnimationInstance` keeps working, but its wheels stay still in those cases; change the parent class through *File > Reparent Blueprint*.
 
-<img src="../img/tuto_content_authoring_vehicles/animation_bp.png" alt= “synkrotron_logo” style="display: block; margin-left: auto; margin-right: auto; width: 50%;">
+<img src="img/tuto_content_authoring_vehicles/animation_bp.png" alt= “synkrotron_logo” style="display: block; margin-left: auto; margin-right: auto; width: 50%;">
 
 In the content browser search for an existing, completed CARLA vehicle animation blueprint from the library, open the animation blueprint and copy the nodes from it. Go back to your vehicle's animation blueprint and paste the nodes.
 

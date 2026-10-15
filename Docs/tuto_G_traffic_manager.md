@@ -105,7 +105,7 @@ while True:
 
 If you now fly through the map with the spectator, you will see vehicles driving autonomously around the map.
 
-![intersection_traffic](../img/tuto_G_traffic_manager/traffic.gif)
+![intersection_traffic](img/tuto_G_traffic_manager/traffic.gif)
 
 ## Specify routes for vehicles
 
@@ -164,7 +164,7 @@ while True:
 ```
 
 
-![routes](../img/tuto_G_traffic_manager/set_paths.png)
+![routes](img/tuto_G_traffic_manager/set_paths.png)
 
 Now that we have chosen our spawn points and way points, we can now start spawning traffic and setting the spawned vehicles to follow our waypoint lists.
 
@@ -223,4 +223,4 @@ while True:
 
 With the above code, we have created two converging streams of traffic originating from opposite sides of the map, guided by the `set_path()` function of the TM. This results in congestion on a road in the center of town. This kind of technique could be used on a larger scale to simulate multiple tricky cases for autonomous vehicles, such as a busy roundabout or highway intersection.
 
-![converging_paths](../img/tuto_G_traffic_manager/converging_paths.gif)
+![converging_paths](img/tuto_G_traffic_manager/converging_paths.gif)

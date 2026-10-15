@@ -6,21 +6,21 @@ The CARLA API can be used to modify asset textures during runtime. In this tutor
 
 Firstly, we need to load the Unreal Editor and load a CARLA map, follow the instructions for Linux or Windows to build CARLA from source and build and launch the Unreal Editor. Let's open the editor with Town 10 loaded (the default town) and select a building to work with:
 
-![select_building](../img/tuto_G_texture_streaming/building_selected.png)
+![select_building](img/tuto_G_texture_streaming/building_selected.png)
 
 We have selected __BP_Apartment04_v5_Opt__ for texture manipulation, the name can be seen in the World Outliner panel. __Make sure to hover over the name in the World Outliner and use the name defined in the tooltip__. The the internal name may differ from the title displayed in the list. In this case, the internal name is actually __BP_Apartment04_v5_Opt_2__.
 
-![tooltip](../img/tuto_G_texture_streaming/tooltip.png)
+![tooltip](img/tuto_G_texture_streaming/tooltip.png)
 
 ## Export a texture to work with
 
 Now that we have selected a building, we can modify the texture used to control the building's appearance. With the building selected, in the details panel you will see some of the details of the asset, such as location, rotation and scale. Click on __Static Mesh (inherited)__ to open the mesh properties, then in the Static Mesh section of the panel click the magnifying glass icon. This brings up the materials and textures belonging to the asset into focus in the Content Browser. In this case, we want to inspect the __T_Apartment04_D_Opt__ texture. If you double click the texture, you can inspect it in the Unreal Editor, however, in this instance we want to export it so we can modify it. Right click and choose *Asset Actions > Export*. Save the file in an appropriate format (we choose the TGA format here).
 
-![texture_export](../img/tuto_G_texture_streaming/texture_export.png)
+![texture_export](img/tuto_G_texture_streaming/texture_export.png)
 
 Open the exported texture in your preferred image manipulation software and edit the texture as needed. In the image below, the original texture is visible in the top half, the lower half shows the modified texture.
 
-![textures](../img/tuto_G_texture_streaming/textures.png)
+![textures](img/tuto_G_texture_streaming/textures.png)
 
 Export your modified texture into an appropriate location and then open up a code editor to run some Python to update the texture in the running CARLA simulation.
 
@@ -72,7 +72,7 @@ world.apply_color_texture_to_object('BP_Apartment04_v05_Opt_2', carla.MaterialPa
 
 ```
 
-![texture_change](../img/tuto_G_texture_streaming/texture_change.gif)
+![texture_change](img/tuto_G_texture_streaming/texture_change.gif)
 
 ## Find object names through the API
 
