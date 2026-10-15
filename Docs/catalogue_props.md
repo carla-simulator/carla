@@ -1,7 +1,29 @@
 <!---
 
-The images in this page were taken by hand, one scene each;
-PythonAPI/docs/catalogue_doc_gen.py only writes the page around them.
+The images in this page were captured by PythonAPI/docs/catalogue_doc_gen.py with these settings:
+
+Town: Town10HD_Opt
+
+Actor transform: Transform(Location(x=102.900002, y=-20.000000, z=0.500000), Rotation(pitch=0.000000, yaw=90.000000, roll=0.000000))
+Camera: framed on each actor's bounding box, bearing=35.0, fill=0.85, min_distance=2.5, pitch=-15.0
+Camera resolution: 1920x1080
+camera.fov = 60
+camera.post_process_profile = Cinematic
+
+weather.cloudiness = 15
+weather.dust_storm = 0.0
+weather.fog_density = 0.0056
+weather.fog_distance = 0.0
+weather.fog_falloff = 0.2
+weather.mie_scattering_scale = 0.0
+weather.precipitation = 0.0
+weather.precipitation_deposits = 0.0
+weather.rayleigh_scattering_scale = 0.0331
+weather.scattering_intensity = 0
+weather.sun_altitude_angle = 45
+weather.sun_azimuth_angle = 230
+weather.wetness = 0.0
+weather.wind_intensity = 0.35
 
 Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it.
 
@@ -151,12 +173,16 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Dumpster
 
+![static_prop_dumpster](../img/catalogue/props/static_prop_dumpster.webp)
+
 * __Blueprint ID__: <span style="color:#00a6ed;">static.prop.dumpster</span>
 * __Base type__: containers
 * __Subtype__: bins
 * __Size__: medium
 
 ### Dumpster02
+
+![static_prop_dumpster02](../img/catalogue/props/static_prop_dumpster02.webp)
 
 * __Blueprint ID__: <span style="color:#00a6ed;">static.prop.dumpster02</span>
 * __Base type__: containers
@@ -165,12 +191,16 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Recyclecardboard
 
+![static_prop_recyclecardboard](../img/catalogue/props/static_prop_recyclecardboard.webp)
+
 * __Blueprint ID__: <span style="color:#00a6ed;">static.prop.recyclecardboard</span>
 * __Base type__: containers
 * __Subtype__: bins
 * __Size__: medium
 
 ### Recycleglass
+
+![static_prop_recycleglass](../img/catalogue/props/static_prop_recycleglass.webp)
 
 * __Blueprint ID__: <span style="color:#00a6ed;">static.prop.recycleglass</span>
 * __Base type__: containers
@@ -179,12 +209,16 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Recycleorganic
 
+![static_prop_recycleorganic](../img/catalogue/props/static_prop_recycleorganic.webp)
+
 * __Blueprint ID__: <span style="color:#00a6ed;">static.prop.recycleorganic</span>
 * __Base type__: containers
 * __Subtype__: bins
 * __Size__: medium
 
 ### Recycleplastic
+
+![static_prop_recycleplastic](../img/catalogue/props/static_prop_recycleplastic.webp)
 
 * __Blueprint ID__: <span style="color:#00a6ed;">static.prop.recycleplastic</span>
 * __Base type__: containers
@@ -322,6 +356,8 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 * __Size__: small
 
 ### Trashcan05
+
+![static_prop_trashcan05](../img/catalogue/props/static_prop_trashcan05.webp)
 
 * __Blueprint ID__: <span style="color:#00a6ed;">static.prop.trashcan05</span>
 * __Base type__: garbage
