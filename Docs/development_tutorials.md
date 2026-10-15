@@ -6,6 +6,7 @@ CARLA is open source and designed to be highly extensible. This  allows users to
 - [__Upgrading content__](tuto_D_contribute_assets.md)
 - [__Create semantic tags__](tuto_D_create_semantic_tags.md)
 - [__Create new sensor__](tuto_D_create_sensor.md)
+- [__Running the tests__](testing.md)
 - [__Preformance benchmarking__](adv_benchmarking.md)
 - [__Recorder file format__](ref_recorder_binary_file_format.md)
 - [__Collision boundaries__](tuto_D_generate_colliders.md)
@@ -25,6 +26,10 @@ CARLA has a set of semantic tags already defined suitable for most use cases. Ho
 ## Creating a new sensor
 
 You can modify CARLA's C++ code to create new sensors for your custom use cases. Please find the details [__here__](tuto_D_create_sensor.md)
+
+## Running the tests
+
+How to build and run the LibCarla unit tests and the Python unit, smoke and integration tests, and what CI runs, is described [__here__](testing.md).
 
 ## Benchmarking performance
 

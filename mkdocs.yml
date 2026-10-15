@@ -68,6 +68,7 @@ not_in_nav: |
   /adv_rendering_options.md
   /adv_synchrony_timestep.md
   /adv_traffic_manager.md
+  /autoware.md
   /build_devcontainer.md
   /build_docker.md
   /build_faq.md
@@ -87,6 +88,7 @@ not_in_nav: |
   /download.md
   /ext_docs.md
   /large_map_overview.md
+  /map_content_packs.md
   /map_mine.md
   /map_town10.md
   /map_town15.md
@@ -97,6 +99,7 @@ not_in_nav: |
   /ros2_native_msgs.md
   /ros2_native_sensors.md
   /ros_documentation.md
+  /testing.md
   /tuto_A_material_customization.md
   /tuto_D_contribute_assets.md
   /tuto_D_create_semantic_tags.md

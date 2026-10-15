@@ -95,7 +95,7 @@ ego = carla.spawn_actor(bp, spawn_point)
 
 When the ego vehicle is spawned a subscriber will be created with ROS topic name: `/carla/ego/vehicle_control_cmd`. 
 
-The message definitions are in the [messages reference](ros2_native_msgs.md). The separate ROS bridge project is described in [ROS bridge](ros_documentation.md).
+The message definitions are in the [messages reference](ros2_native_msgs.md). The separate ROS bridge project is described in [ROS bridge](ros_documentation.md). To drive the ego vehicle with Autoware, see [Autoware](autoware.md).
 
 ## CarlaEgoVehicleControl.msg
 

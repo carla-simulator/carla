@@ -54,6 +54,8 @@ There are three maps to chose from. An urban environment with skyscrapers, comme
 | [__Town15__](map_town15.md) | A university campus based on the Autonomous University of Barcelona. |
 | [__Mine01__](map_mine.md) | An industrial, off-road, open-cast mining environment. |
 
+The other CARLA towns, from Town01 to Town13, are available as [content packs](map_content_packs.md).
+
 ## Vehicles
 
 CARLA provides a diverse array of vehicles, with high fidelity models of real world cars, trucks and bikes, for replicating traffic in your simulations. Browse and choose the vehicles you like in the [__vehicle catalogue__](catalogue_vehicles.md).
