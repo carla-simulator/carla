@@ -23,7 +23,7 @@
         doc: >
           The content of the input OpenStreetMap file parsed as string.
       - param_name: settings
-        type: carla.OSM2ODRSettings
+        type: carla.Osm2OdrSettings
         doc: >
           Parameterization for the conversion.
       doc: >

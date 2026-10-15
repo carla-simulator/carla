@@ -108,20 +108,20 @@ Optional installer arguments:
 
 By default the installer downloads one sample scene from the `26.04_release` sample set into `${CARLA_ROOT}/PythonAPI/examples/nvidia/nurec/PhysicalAI-Autonomous-Vehicles-NuRec/`. Browse the [dataset on Hugging Face](https://huggingface.co/datasets/nvidia/PhysicalAI-Autonomous-Vehicles-NuRec) to pick other scenes and pass their UUID with `--scene`.
 
-!!! note
+!!! Note
     If a previous download was interrupted, delete (or move) the scene folder under *PhysicalAI-Autonomous-Vehicles-NuRec* to force a re-download — the installer skips the download if the folder exists.
 
 Scenarios from older dataset releases (for example `25.07_release`) may need upgrading to the current artifact format before the NRE container can load them:
 
 ```sh
-docker run --rm --gpus all -v $(pwd):$(pwd) $NUREC_IMAGE upgrade-artifact --help
+docker run --rm --gpus all -v $(pwd):$(pwd) nvcr.io/nvidia/nre/nre-ga:26.04.01 upgrade-artifact --help
 ```
 
 ### Set up your environment variables
 
 The replay recognizes two environment variables:
 
-*   `NUREC_IMAGE` overrides the pinned NRE container image for the current shell:
+*   `NUREC_IMAGE` overrides the pinned NRE container image (`nvcr.io/nvidia/nre/nre-ga:26.04.01`) for the current shell:
 
     ```sh
     export NUREC_IMAGE="nvcr.io/nvidia/nre/nre-ga:26.04.01"
@@ -133,20 +133,29 @@ The replay recognizes two environment variables:
 
 ## Run the CARLA NuRec replays
 
-__1. Launch the CARLA server.__ From a packaged release:
+__1. Launch the CARLA server.__ From a packaged release, where the package root is `Build/<preset>/Package/Carla-<version>-Linux-Shipping/` in a source tree:
 
 ```sh
-cd ${CARLA_ROOT}
-./CarlaUnreal.sh
+cd <package root>
+./Linux/CarlaUnreal.sh
 ```
 
-From a source build, launch the standalone binary (add `-RenderOffScreen` for headless operation) or the editor:
+From a source build, run the editor binary in `-game` mode, which is the working headless server on this branch:
 
 ```sh
-./Unreal/CarlaUnreal/Binaries/Linux/CarlaUnreal -carla-rpc-port=2000 -RenderOffScreen
-# or the editor:
-cmake --build Build --target launch-only
+${CARLA_UNREAL_ENGINE_PATH}/Engine/Binaries/Linux/UnrealEditor \
+    ${CARLA_ROOT}/Unreal/CarlaUnreal/CarlaUnreal.uproject \
+    -game -RenderOffScreen -nosound -carla-rpc-port=2000
 ```
+
+Or open the editor and press Play:
+
+```sh
+cmake --build Build/Release --target launch-only
+```
+
+!!! Warning
+    `Unreal/CarlaUnreal/Binaries/Linux/CarlaUnreal` is the uncooked Development game target. It exits on the missing global shader cache ("built to load COOKED content"), so it is not a way to start a server.
 
 __2. Replay a NuRec scenario.__ In a second terminal, run the replay script with the path to a `.usdz` scenario:
 
@@ -197,8 +206,14 @@ The following table explains the command-line parameters of `nurec_runner.py`:
 | `-o` | `--output-dir` | `data` | Output directory for `--saveimages` |
 | | `--move-spectator` | Inactive | Move the spectator camera to follow the ego vehicle |
 
+---
 ## Hybrid rendering example
 
 `PythonAPI/examples/nvidia/nurec/hybrid/` renders a NuRec scene with CARLA-driven vehicles and pedestrians composited into it: the NuRec frame supplies the background, CARLA's [ray-traced lens camera family](ref_sensors.md#ray-traced-lens-camera) supplies the added actors (colour, per-pixel distance and instance id, in the recorded camera's exact lens), occlusion against the neural scene's own geometry is resolved with the distance AOV, and lighting is matched with [`world.set_sky_light_map`](python_api.md#carla.World.set_sky_light_map) fed from the scene's own recorded environment. See `PythonAPI/examples/nvidia/nurec/hybrid/README.md` for the end-to-end command and output layout.
 
-The same pipeline runs [Scenic](https://scenic-lang.org) scenarios inside the neural scene: `hybrid_run.py --scenic hwy_cutin.scenic` hands the scene's road network to Scenic, lets the scenario drive the ego (which carries the recorded camera) and every other agent, and composites the result frame by frame. Five scenarios ship with it (highway cut-in, overtake and brake wave, urban stop-and-go and pull-out); `PythonAPI/examples/nvidia/nurec/hybrid/scenic/README.md` describes the driver, the globals a scenario receives and how to write a new one.
+The same pipeline runs [Scenic](https://scenic-lang.org) scenarios inside the neural scene: `hybrid_run.py --scene <scene_uuid> --out <run dir> --scenic hwy_cutin.scenic` hands the scene's road network to Scenic, lets the scenario drive the ego (which carries the recorded camera) and every other agent, and composites the result frame by frame. Five scenarios ship with it (highway cut-in, overtake and brake wave, urban stop-and-go and pull-out); `PythonAPI/examples/nvidia/nurec/hybrid/scenic/README.md` describes the driver, the globals a scenario receives and how to write a new one.
+
+---
+## See also
+
+NuRec scenes can also be driven by the Alpamayo 2 Super stack: see [Run with NuRec cameras](nvidia_alpamayo.md#run-with-nurec-cameras), which shares this installer. Do not run `nurec_runner.py` at the same time as the Alpamayo demo; both drive the same NRE container.

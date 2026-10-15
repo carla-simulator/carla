@@ -1,18 +1,19 @@
 # Coordinate conventions
 
-CARLA's world is **left-handed**. Almost every robotics toolchain — ROS 2 / tf2,
-[REP-103][rep103], scipy, Open3D, NVIDIA's ClipGT rigs — is **right-handed**.
-This page states CARLA's convention exactly, gives the one conversion you need,
-and points at the API that performs it for you.
+CARLA's world is **left-handed**. Almost every robotics toolchain — ROS 2 / tf2, [REP-103][rep103], scipy, Open3D — is **right-handed**. This page states CARLA's convention exactly, gives the one conversion you need, and points at the API that performs it for you.
 
 [rep103]: https://www.ros.org/reps/rep-0103.html
 
+- [__CARLA's frame__](#carlas-frame)
+- [__The right-handed (FLU) frame__](#the-right-handed-flu-frame)
+- [__Converting to a right-handed frame__](#converting-to-a-right-handed-frame)
+- [__Quaternions__](#quaternions)
+- [__Typed vectors__](#typed-vectors)
+- [__Pitfalls__](#pitfalls)
+- [__Where this is enforced__](#where-this-is-enforced)
+
 !!! Important
-    `carla.Transform.get_matrix()`, `get_forward_vector()`, `get_right_vector()`
-    and `get_up_vector()` are expressed in **CARLA's frame**. They are not
-    "uncorrected" right-handed math and must not be sign-flipped to make them
-    look right-handed. Convert at the boundary instead, with
-    [`to_right_handed()`](#converting-to-a-right-handed-frame).
+    `carla.Transform.get_matrix()`, `get_forward_vector()`, `get_right_vector()` and `get_up_vector()` are expressed in **CARLA's frame**. They are not "uncorrected" right-handed math and must not be sign-flipped to make them look right-handed. Convert at the boundary instead, with [`to_right_handed()`](#converting-to-a-right-handed-frame).
 
 ---
 
@@ -24,62 +25,48 @@ and points at the API that performs it for you.
 | `y`        | **right** | out of the right door |
 | `z`        | up        | out of the roof    |
 
-Left-handed, Z-up: point your **left** thumb along `+z` and your fingers curl
-from `+x` to `+y`. Distances are in metres, angles in degrees.
+Left-handed, Z-up: point your **left** thumb along `+z` and your fingers curl from `+x` to `+y`. Distances are in meters, angles in degrees.
 
-A `carla.Rotation` is written `Rotation(pitch, yaw, roll)` (that argument order
-is CARLA's; the Unreal Editor shows the same three angles as *roll, pitch, yaw*).
-It composes as
+A `carla.Rotation` is written `Rotation(pitch, yaw, roll)` (that argument order is CARLA's; the Unreal Editor shows the same three angles as *roll, pitch, yaw*). It composes as
 
-```
+```text
 R = Rz(+yaw) · Ry(−pitch) · Rx(−roll)
 ```
 
-with the **standard** (right-handed) elementary matrices `Rx`, `Ry`, `Rz`. The
-minus signs on pitch and roll are what "left-handed" cashes out to here.
+with the **standard** (right-handed) elementary matrices `Rx`, `Ry`, `Rz`. The minus signs on pitch and roll are what "left-handed" cashes out to here.
 
 ### The three sign rules
 
-Everything else follows from these, and all three are verified against rendered
-frames from the engine:
+Everything else follows from these, and all three are verified against rendered frames from the engine:
 
-| angle    | what `+` does                    | consequence                                |
+| Angle    | What `+` does                    | Consequence                                |
 |----------|----------------------------------|--------------------------------------------|
 | `+yaw`   | turns the nose to the **right**  | `forward = (cos yaw · cos pitch, sin yaw · cos pitch, …)` |
 | `+pitch` | tilts the nose **up**            | `forward.z = +sin(pitch)`                  |
 | `+roll`  | drops the **right** side         | `right.z = −cos(pitch) · sin(roll)`        |
 
-A camera spawned at `Rotation(pitch=20)` fills its frame with sky. A camera at
-`Rotation(roll=25)` sees more ground on the right-hand side of the frame.
+A camera spawned at `Rotation(pitch=20)` fills its frame with sky. A camera at `Rotation(roll=25)` sees more ground on the right-hand side of the frame.
 
 ### The matrix
 
-`carla.Transform.get_matrix()` returns that rotation in the same frame, row
-major, with the translation in the last column:
+`carla.Transform.get_matrix()` returns that rotation in the same frame, row major, with the translation in the last column:
 
-```
+```text
     ⎡ cp·cy   cy·sp·sr − sy·cr   −cy·sp·cr − sy·sr   x ⎤
 M = ⎢ cp·sy   sy·sp·sr + cy·cr   −sy·sp·cr + cy·sr   y ⎥
     ⎢ sp      −cp·sr             cp·cr               z ⎥
     ⎣ 0       0                  0                   1 ⎦
 ```
 
-(`cy = cos(yaw)`, `sp = sin(pitch)`, `sr = sin(roll)`, …). Its columns are
-`get_forward_vector()`, `get_right_vector()` and `get_up_vector()`.
+(`cy = cos(yaw)`, `sp = sin(pitch)`, `sr = sin(roll)`, …). Its columns are `get_forward_vector()`, `get_right_vector()` and `get_up_vector()`.
 
-Read as right-handed math this matrix has `det(R) = −1`, which is the tell-tale
-sign of the handedness difference — and the reason you cannot fix the mismatch
-by permuting or negating a couple of Euler angles by hand.
+The matrix itself is a proper rotation, `det(R) = +1`. The handedness lives in the Euler-angle convention that builds it, not in the matrix, which is why the mismatch cannot be found by looking at the matrix alone — nor fixed by permuting or negating a couple of angles by hand.
 
 ---
 
 ## The right-handed (FLU) frame
 
-ROS REP-103 calls the body frame **FLU**: x **F**orward, y **L**eft, z **U**p,
-right-handed, every rotation by the right-hand rule, `roll`-`pitch`-`yaw`
-composed as intrinsic Z-Y-X. That is what
-`scipy.spatial.transform.Rotation.from_euler("xyz", …)`,
-`tf2::Quaternion::setRPY` and NVIDIA's `rig.json` all mean.
+ROS REP-103 calls the body frame **FLU**: x **F**orward, y **L**eft, z **U**p, right-handed, every rotation by the right-hand rule, `roll`-`pitch`-`yaw` composed as intrinsic Z-Y-X. That is what `scipy.spatial.transform.Rotation.from_euler("xyz", …)`, `tf2::Quaternion::setRPY` and NVIDIA's `rig.json` all mean.
 
 The two frames differ by a **mirror of the Y axis**, `S = diag(1, −1, 1)`:
 
@@ -90,17 +77,12 @@ The two frames differ by a **mirror of the Y axis**, `S = diag(1, −1, 1)`:
 | 3×3 / 4×4 | `M`                   | `S · M · S`                      |
 | quaternion| —                     | from the FLU Euler triple above  |
 
-**Pitch and yaw flip; roll does not.** Worked example: CARLA
-`(roll, pitch, yaw) = (10, 20, 30)` is FLU `(10, −20, −30)`.
+**Pitch and yaw flip; roll does not.** Worked example: CARLA `(roll, pitch, yaw) = (10, 20, 30)` is FLU `(10, −20, −30)`.
 
 !!! Note
-    The mapping is its own inverse: applying it twice gets you back where you
-    started, so the same three sign flips convert in both directions.
+    The mapping is its own inverse: applying it twice gets you back where you started, so the same three sign flips convert in both directions.
 
-Why those three and not some other set: mirroring Y turns
-`Rz(+yaw) · Ry(−pitch) · Rx(−roll)` into
-`Rz(−yaw) · Ry(+(−pitch)) · Rx(+roll)`. Roll is about the forward axis, which
-the mirror leaves alone; pitch and yaw are about axes the mirror moves.
+Why those three and not some other set: mirroring Y turns `Rz(+yaw) · Ry(−pitch) · Rx(−roll)` into `Rz(−yaw) · Ry(+(−pitch)) · Rx(+roll)`. Roll is about the forward axis, which the mirror leaves alone; pitch and yaw are about axes the mirror moves.
 
 ---
 
@@ -132,10 +114,7 @@ carla.Location.from_right_handed(rh_location)
 carla.Rotation.from_right_handed(rh_rotation)
 ```
 
-`carla.Quaternion` has always lived in the right-handed frame — it is the
-quaternion the ROS 2 bridge publishes — so
-`carla.Quaternion(rotation)` and `carla.Quaternion(rotation.to_right_handed())`
-are the same value.
+`carla.Quaternion` has always lived in the right-handed frame — it is the quaternion the ROS 2 bridge publishes — so `carla.Quaternion(rotation)` and `carla.Quaternion(rotation.to_right_handed())` are the same value.
 
 ### Publishing a pose to ROS 2
 
@@ -179,28 +158,66 @@ const carla::geom::Transform back =
     carla::geom::Transform::FromRightHanded(flu);
 ```
 
-`carla::geom::Location::ToRightHanded()` returns the existing
-`carla::geom::RightHandedVector3D`; `carla::geom::Rotation::ToRightHanded()`
-returns `carla::geom::RightHandedRotation`.
+`carla::geom::Location::ToRightHanded()` returns the existing `carla::geom::RightHandedVector3D`; `carla::geom::Rotation::ToRightHanded()` returns `carla::geom::RightHandedRotation`.
+
+---
+
+## Quaternions
+
+[`carla.Quaternion`](python_api.md#carla.Quaternion) is `(x, y, z, w)` in the __right-handed FLU frame__, the same value the ROS 2 bridge publishes. It is the only CARLA type that is right-handed by default, so building one from a `carla.Rotation` is a frame change, and it happens exactly once:
+
+```py
+q = carla.Quaternion(transform.rotation)             # left-handed Rotation -> FLU quaternion
+q = carla.Quaternion(flu.rotation)                   # already FLU, no conversion
+q = carla.Quaternion(x=0.0, y=0.0, z=0.0, w=1.0)     # identity
+```
+
+Which is why `carla.Quaternion(rotation)` and `carla.Quaternion(rotation.to_right_handed())` are the same value: the first does the conversion for you, and converting twice is not a thing you can do by accident.
+
+| Method | Returns | |
+|---|---|---|
+| `rotator()` | `carla.Rotation` | back to left-handed Euler angles; the exact inverse of `Quaternion(rotation)` |
+| `to_right_handed_rotation()` | `carla.RightHandedRotation` | FLU Euler angles, degrees, intrinsic |
+| `get_forward_vector()`, `get_right_vector()`, `get_up_vector()` | `carla.Vector3D` | the rotated axes, __back in CARLA's left-handed frame__, so they match `Transform.get_forward_vector()` |
+| `conjugate()`, `inverse()` | `carla.Quaternion` | equal for a unit quaternion |
+| `length()`, `unit_quaternion()` | float, `carla.Quaternion` | norm, and the normalised copy |
+
+Two quaternions compose with `*`, and `==` compares them componentwise.
+
+```py
+q = carla.Quaternion(vehicle.get_transform().rotation)
+yaw_90 = carla.Quaternion(carla.Rotation(yaw=90))
+
+turned = yaw_90 * q
+rotation = turned.rotator()          # usable as a carla.Rotation again
+```
+
+!!! Warning
+    `==` is componentwise, and `q` and `-q` are the same rotation. Compare rotations through `rotator()`, or compare `unit_quaternion()` values after fixing the sign of `w`.
+
+---
+
+## Typed vectors
+
+Three vector types name the unit a measurement is in. Each is a [`carla.Vector3D`](python_api.md#carla.Vector3D) and has all of its arithmetic.
+
+| Type | Unit | Measures |
+|---|---|---|
+| `carla.Velocity` | m/s | linear velocity |
+| `carla.AngularVelocity` | deg/s | angular velocity |
+| `carla.Acceleration` | m/s&sup2; | linear acceleration |
+
+No API returns or takes them: `Actor.get_velocity()`, `get_angular_velocity()` and `get_acceleration()` return a plain `carla.Vector3D`, in the world frame and in the units above. The types are there for code that wants to state the unit it is carrying instead of passing bare vectors around.
 
 ---
 
 ## Pitfalls
 
-* **Do not "correct" `get_matrix()`.** It is left-handed on purpose. A patch
-  that flips its pitch/roll signs makes LibCarla describe the mirror image of
-  the pose the engine actually builds from the same `carla.Rotation`, and the
-  break is invisible to anything that only ever uses yaw — traffic manager,
-  basic vehicle control — while silently corrupting every camera, lidar and
-  radar pose. This happened once already and had to be reverted.
-* **Do not map Euler angles between the frames by ad-hoc reasoning.** The three
-  sign flips above are the whole answer; anything else (swapping axes,
-  negating roll, transposing) will pass a yaw-only smoke test and fail on a
-  pitched or rolled sensor.
-* **Check `det(R)`.** A pose that reached a right-handed consumer without the
-  mirror has `det(R) = −1`. It is the cheapest possible assertion.
-* **Units.** CARLA's Python and C++ APIs are in metres and degrees. The Unreal
-  Editor and the engine's own `FVector` are in centimetres.
+* **Do not "correct" `get_matrix()`.** It is left-handed on purpose. A patch that flips its pitch/roll signs makes LibCarla describe the mirror image of the pose the engine actually builds from the same `carla.Rotation`, and the break is invisible to anything that only ever uses yaw — traffic manager, basic vehicle control — while silently corrupting every camera, lidar and radar pose.
+* **Do not map Euler angles between the frames by ad-hoc reasoning.** The three sign flips above are the whole answer; anything else (swapping axes, negating roll, transposing) will pass a yaw-only smoke test and fail on a pitched or rolled sensor.
+* **Check against a pitched or rolled vector.** `det(R)` tells you nothing here: both frames produce proper rotations with `det(R) = +1`. Compare the forward vector of a pose with a non-zero pitch and roll against the one your consumer computes, or round-trip the transform through `to_right_handed()`; a yaw-only test passes either way.
+* **Units.** CARLA's Python and C++ APIs are in meters and degrees. The Unreal Editor and the engine's own `FVector` are in centimeters.
+* **Rotation order.** Pitch and roll compose in the order shown by the matrix above. It was the other way round until CARLA 0.10.0, so a client that compensated for the old order has to drop that workaround.
 
 ---
 
@@ -213,3 +230,4 @@ returns `carla::geom::RightHandedRotation`.
 | ROS 2 bridge | `LibCarla/source/carla/ros2/publishers/TransformQuaternion.h` — an independent implementation of the same mapping, cross-checked by the tests above |
 | Python bindings | `PythonAPI/carla/src/Geometry.cpp` |
 | Python tests | `PythonAPI/test/unit/test_transform.py` (`TestRightHandedBoundary`) |
+

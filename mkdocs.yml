@@ -16,7 +16,6 @@ nav:
   - 'Building CARLA' : 'build_carla.md'
 
 - Next steps:
-  #- 'Content authoring - maps': 'tuto_content_authoring_maps.md'  
   - 'Content authoring - vehicles': 'tuto_content_authoring_vehicles.md'  
   - 'Content authoring - content packs': 'content_packs.md'
 
@@ -26,6 +25,7 @@ nav:
   - 'Maps': 'core_map.md'
   - 'Sensors and data': 'core_sensors.md'
   - 'Coordinate conventions': 'coordinate_conventions.md'
+  - 'OpenDRIVE standalone mode': 'adv_opendrive.md'
   - 'Traffic' : 'ts_traffic_simulation_overview.md'
 
 - Resources:
@@ -37,7 +37,6 @@ nav:
   - 'Tutorials': 'tutorials.md'
   - 'Agent skills': 'agent_skills.md'
   - 'CARLA Studio': 'https://github.com/carla-simulator/carla-studio'
-  #- 'Extended documentation': 'ext_docs.md'
 
 - CARLA Ecosystem:
   - 'MathWorks': 'large_map_roadrunner.md'
@@ -47,7 +46,6 @@ nav:
     - 'Alpamayo architecture and control': 'nvidia_alpamayo_architecture.md'
     - 'Alpamayo troubleshooting': 'nvidia_alpamayo_troubleshooting.md'
     - 'Neural reconstruction': 'nvidia_nurec.md'
-  # - 'ASAM OpenDRIVE': 'adv_opendrive.md'
   - 'ROS2': 'ros2_native.md'
   - 'Scenic': 'tuto_G_scenic.md'
   - 'SYNKROTRON': 'ecosys_synkrotron.md'
@@ -57,7 +55,6 @@ nav:
   - 'Guidelines': 'cont_contribution_guidelines.md' 
   - 'Coding standards': 'cont_coding_standard.md'
   - 'Documentation standard': 'cont_doc_standard.md'
-  - '': ''
  
 markdown_extensions:
   - admonition 

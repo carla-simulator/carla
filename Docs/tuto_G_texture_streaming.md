@@ -1,57 +1,83 @@
 # Change textures through the API
 
-The CARLA API can be used to modify asset textures during runtime. In this tutorial, we will learn how to select an asset then modify it's texture while the CARLA simulation is running. 
+The textures of map objects can be replaced while the simulation runs, which is how a building gets a different facade between two runs of the same scenario. This page covers finding the object, exporting its texture, and pushing a modified one back.
 
-## Select an asset in the Unreal Editor
+- [__Find the object__](#find-the-object)
+- [__Export a texture to work with__](#export-a-texture-to-work-with)
+- [__Update the texture through the API__](#update-the-texture-through-the-api)
+- [__Which materials can be changed__](#which-materials-can-be-changed)
 
-Firstly, we need to load the Unreal Editor and load a CARLA map, follow the instructions for Linux or Windows to build CARLA from source and build and launch the Unreal Editor. Let's open the editor with Town 10 loaded (the default town) and select a building to work with:
+---
+## Find the object
 
-![select_building](../img/tuto_G_texture_streaming/building_selected.png)
+The API needs the object's name as the server knows it, and the quickest way to get it is to ask the server:
 
-We have selected __BP_Apartment04_v5_Opt__ for texture manipulation, the name can be seen in the World Outliner panel. __Make sure to hover over the name in the World Outliner and use the name defined in the tooltip__. The the internal name may differ from the title displayed in the list. In this case, the internal name is actually __BP_Apartment04_v5_Opt_2__.
+```py
+# Filter world objects for those with 'Apartment' in the name
+list(filter(lambda k: 'Apartment' in k, world.get_names_of_all_objects()))
+```
 
-![tooltip](../img/tuto_G_texture_streaming/tooltip.png)
+That works against any server, packaged or not. The alternative is the Unreal Editor, which also shows you what you are about to change — it needs a [source build](build_linux_ue5.md). Open the editor with Town10HD_Opt loaded and select a building:
 
+![select_building](img/tuto_G_texture_streaming/building_selected.png)
+
+We have selected an apartment block for texture manipulation. Its name is in the World Outliner panel, but __hover over it and use the name in the tooltip__: the internal name, which is what the API takes, often differs from the title shown in the list.
+
+The map decides which objects exist, so confirm the name against the server before using it — see [Find the object](#find-the-object). The snippets below call it `object_name`.
+
+![tooltip](img/tuto_G_texture_streaming/tooltip.png)
+
+---
 ## Export a texture to work with
 
-Now that we have selected a building, we can modify the texture used to control the building's appearance. With the building selected, in the details panel you will see some of the details of the asset, such as location, rotation and scale. Click on __Static Mesh (inherited)__ to open the mesh properties, then in the Static Mesh section of the panel click the magnifying glass icon. This brings up the materials and textures belonging to the asset into focus in the Content Browser. In this case, we want to inspect the __T_Apartment04_D_Opt__ texture. If you double click the texture, you can inspect it in the Unreal Editor, however, in this instance we want to export it so we can modify it. Right click and choose *Asset Actions > Export*. Save the file in an appropriate format (we choose the TGA format here).
+Now that we have selected a building, we can modify the texture used to control the building's appearance. __1.__ With the building selected, open the __Details__ panel and click its __Static Mesh__ component to show the mesh properties.
 
-![texture_export](../img/tuto_G_texture_streaming/texture_export.png)
+__2.__ In the __Static Mesh__ section, click the magnifying glass icon. The Content Browser jumps to the materials and textures the asset uses.
+
+__3.__ Find the diffuse texture of the material — for this apartment block, a `T_Apartment04_D_*` asset. Double-click it to inspect it.
+
+__4.__ Right-click it and choose __Asset Actions > Export__, saving in a format your image editor reads. TGA is used here.
+
+![texture_export](img/tuto_G_texture_streaming/texture_export.png)
 
 Open the exported texture in your preferred image manipulation software and edit the texture as needed. In the image below, the original texture is visible in the top half, the lower half shows the modified texture.
 
-![textures](../img/tuto_G_texture_streaming/textures.png)
+![textures](img/tuto_G_texture_streaming/textures.png)
 
 Export your modified texture into an appropriate location and then open up a code editor to run some Python to update the texture in the running CARLA simulation.
 
+---
 ## Update the texture through the API
 
-If you havent already, launch the CARLA simulation, either from the command line, or launch the simulation within the Unreal Editor. We will use the [__Python Imaging Library (PIL)__](https://pillow.readthedocs.io/en/stable/) to read the texture from the image file we exported from our image manipulation software.
+With the simulation running, read the modified file with the [__Python Imaging Library (PIL)__](https://pillow.readthedocs.io/en/stable/) and push it to the server.
 
-## Connect to the simulator
+### Connect to the simulator
 
 ```py
-
 import carla
 from PIL import Image
 
 # Connect to client
 client = carla.Client('127.0.0.1', 2000)
-client.set_timeout(2.0)
+client.set_timeout(10.0)
+world = client.get_world()
 
 ```
 
-## Update the texture
+### Push the texture
 
 After loading the modified image, instantiate a [carla.TextureColor](python_api.md#carla.TextureColor) object and populate the pixel data from the loaded image.
 
-Use the `apply_color_texture_to_object(...)` method of the [carla.World](python_api.md#carla.World) object to update the texture. You should see the texture update in the UE4 spectator view. 
+Use the `apply_color_texture_to_object(...)` method of the [carla.World](python_api.md#carla.World) object to update the texture. You should see the texture update in the spectator view.
 
 
 ```py
+# The object to retexture, as the server names it. Confirm it against
+# world.get_names_of_all_objects() for the map you have loaded.
+object_name = 'BP_Apartment04_v01_Opt_2'
 
 # Load the modified texture
-image = Image.open('BP_Apartment04_v05_modified.tga')
+image = Image.open('modified_texture.tga').convert('RGBA')
 height = image.size[1]
 width = image.size[0]
 
@@ -68,18 +94,25 @@ for x in range(0,width):
         texture.set(x, y, carla.Color(r,g,b,a))
 
 # Now apply the texture to the building asset
-world.apply_color_texture_to_object('BP_Apartment04_v05_Opt_2', carla.MaterialParameter.Diffuse, texture)
+world.apply_color_texture_to_object(object_name, carla.MaterialParameter.Diffuse, texture)
 
 ```
 
-![texture_change](../img/tuto_G_texture_streaming/texture_change.gif)
+![texture_change](img/tuto_G_texture_streaming/texture_change.gif)
 
-## Find object names through the API
+---
+## Which materials can be changed
 
+`apply_color_texture_to_object` writes into named parameters of the object's material, so it only works on materials that expose them. [`carla.MaterialParameter`](python_api.md#carla.MaterialParameter) selects which one:
 
-To find objects without relying on the Unreal Editor, you can also use `world.get_names_of_all_objects()` to query object names. By using Python's inbuilt `filter(...)` method you can zero in on your target object.
+| Parameter | Texture it replaces |
+| --- | --- |
+| `Diffuse` | The base color map |
+| `Normal` | The normal map |
+| `AO_Roughness_Metallic_Emissive` | The packed ORME map |
+| `Emissive` | The emissive map |
 
-```py
-# Filter world objects for those with 'Apartment' in the name
-list(filter(lambda k: 'Apartment' in k, world.get_names_of_all_objects()))
-```
+CARLA's own building and road materials expose all four. A material that does not — a third-party asset, or one built in the editor without those parameter names — silently keeps its original texture.
+
+!!! Warning
+    The per-pixel loop above is slow: a 2K texture is four million boundary calls. Downscale the image first, or build the pixel data in NumPy and set it row by row, when the texture is large. Call `image.convert('RGBA')` after opening it so palette and grayscale files give four channels.

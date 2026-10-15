@@ -1,39 +1,3 @@
-<!--- 
-
-The images in this document were captured using the following settings in CARLA:
-
-Town: Town 10
-
-Vehicle location: Transform(Location(x=-46.885479, y=20.083447, z=-0.002633), Rotation(pitch=-0.000034, yaw=141.974243, roll=0.000000))
-
-Camera location, small vehicles: Transform(Location(x=-47.696186, y=24.049326, z=1.471929), Rotation(pitch=-10.843717, yaw=-77.215683, roll=0.000139))
-Camera location, standard vehicles: Transform(Location(x=-48.672256, y=24.830288, z=1.722733), Rotation(pitch=-13.396630, yaw=-75.692039, roll=0.000119))
-Camera location, large vehicles: Transform(Location(x=-49.470921, y=27.835310, z=2.931721), Rotation(pitch=-13.396630, yaw=-75.691978, roll=0.000119))
-
-The weather settings are: 
-
-weather.sun_altitude_angle = 50
-weather.sun_azimuth_angle = 260
-weather.wetness = 10
-weather.precipitation = 10
-weather.scattering_intensity = 5
-weather.mie_scattering_scale = 0.5
-weather.rayleigh_scattering_scale = 0.1
-
-Camera settings:
-
-camera_bp = bp_lib.find('sensor.camera.rgb')
-camera_bp.set_attribute('image_size_x', '1920')
-camera_bp.set_attribute('image_size_y', '1080')
-camera_bp.set_attribute('fstop', '6.0')
-
-Vehicle settings:
-
-control = vehicle.get_control()
-control.steer = -0.25
-vehicle.apply_control(control)
-
---->
 
 # CARLA catalogue
 
@@ -42,34 +6,44 @@ The CARLA simulator provides a vast library of 3D assets to populate your autono
 * [__Vehicles catalogue__](catalogue_vehicles.md)
 * [__Pedestrians catalogue__](catalogue_pedestrians.md)
 * [__Props catalogue__](catalogue_props.md)
-<!-- * [__Script catalogue__](catalogue_scripts.md) -->
+* [__Scripts catalogue__](catalogue_scripts.md)
 
 ## Maps
 
-There are two maps to chose from. An urban environment with skyscrapers, commercial units, industrial units and residential streets and an off-road, open-cast mine environment.
+The default package ships three drivable maps, plus the empty ones used for OpenDRIVE standalone mode. A source build has every town; the rest reach a package through a [content pack](content_packs.md).
 
-| Town       | Summary |
-| -----------| ------  |
-| [__Town10__](map_town10.md) | A downtown urban environment with skyscrapers, residential buildings and an ocean promenade.|
-| [__Mine01__](map_mine.md) | An industrial, off-road, open-cast mining environment. |
+![maps_overview](img/catalogue/maps/maps_montage.webp)
 
+| Map | In the default package | Summary |
+| --- | --- | --- |
+| [__Town10HD_Opt__](map_town10.md) | yes | A downtown urban environment with skyscrapers, residential buildings and an ocean promenade. |
+| [__Mine_01__](map_mine.md) | yes | An industrial, off-road, open-cast mining environment. |
+| __Town15__ | yes | A large World Partition map of a university campus and its surroundings. |
+| __Town01_Opt__ … __Town07_Opt__ | source build | The classic CARLA towns, from a small village to a highway network. |
+| __Town11__, __Town12__, __Town13__ | source build | Large World Partition maps. |
+
+Load a map by its exact name, which is the file name: `client.load_world('Town10HD_Opt')`. See [Maps](core_map.md) for what a map contains and how to navigate it.
+
+---
 ## Vehicles
 
 CARLA provides a diverse array of vehicles, with high fidelity models of real world cars, trucks and bikes, for replicating traffic in your simulations. Browse and choose the vehicles you like in the [__vehicle catalogue__](catalogue_vehicles.md).
 
-![vehicles_overview](../img/catalogue/vehicles/vehicle_montage.webp)
+![vehicles_overview](img/catalogue/vehicles/vehicle_montage.webp)
 
+---
 ## Pedestrians
 
 CARLA's asset library includes a variety of pedestrians to simulate foot traffic in the 3D environments surrounding your agent. Browse and choose the pedestrians you want in the [__pedestrian catalogue__](catalogue_pedestrians.md).
 
-![pedestrian_overview](../img/catalogue/pedestrians/pedestrians_overview.webp)
+![pedestrian_overview](img/catalogue/pedestrians/pedestrians_overview.webp)
 
+---
 ## Props
 
 CARLA's props model the various structures and items you might find on or near roads, such as kiosks, statues, benches, boxes, bins, debris or trash. The props can be placed anywhere in your simulation dynamically during runtime. Browse and choose your props in the [__props catalogue__](catalogue_props.md).
 
-![props_overview](../img/catalogue/props/props_overview.webp)
+![props_overview](img/catalogue/props/props_overview.webp)
 
 ---
 
@@ -78,8 +52,13 @@ CARLA's props model the various structures and items you might find on or near r
 To examine a vehicle from the catalogue, use the following code, retrieve the blueprint ID from the [__vehicles catalogue__](catalogue_vehicles.md) and paste it into the line `bp_lib.find('blueprint.id.goes_here')`:
 
 ```py
+import carla
+
 client = carla.Client('localhost', 2000)
-world = client.get_world()
+client.set_timeout(10.0)
+
+# The transforms below are points in Town10HD_Opt
+world = client.load_world('Town10HD_Opt')
 bp_lib = world.get_blueprint_library()
 spectator = world.get_spectator()
 
@@ -101,7 +80,6 @@ vehicle = world.spawn_actor(vehicle_bp, vehicle_trans)
 
 # Move the spectator
 spectator.set_transform(camera_trans)
-
 ```
 
 Don't forget to destroy the vehicle before you try and spawn another to avoid a collision:
@@ -110,6 +88,7 @@ Don't forget to destroy the vehicle before you try and spawn another to avoid a 
 vehicle.destroy()
 ```
 
-<!-- ## Scripts
+---
+## Scripts
 
-CARLA comes provided with a library of example scripts that can be used to explore maps, vehicles or use as guidance for using the API in various contexts. You could also use them as the basis for your own scripts. Choose a script for your application in the [__scripts catalogue__](catalogue_scripts.md). -->
+CARLA comes provided with a library of example scripts that can be used to explore maps, vehicles or use as guidance for using the API in various contexts. You could also use them as the basis for your own scripts. Choose a script for your application in the [__scripts catalogue__](catalogue_scripts.md).

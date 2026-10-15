@@ -8,13 +8,15 @@
     doc: >
       Sensors compound a specific family of actors quite diverse and unique. They are normally spawned as attachment/sons of a vehicle (take a look at carla.World to learn about actor spawning). Sensors are thoroughly designed to retrieve different types of data that they are listening to. The data they receive is shaped as different subclasses inherited from carla.SensorData (depending on the sensor).
 
-        Most sensors can be divided in two groups: those receiving data on every tick (cameras, point clouds and some specific sensors) and those who only receive under certain circumstances (trigger detectors). CARLA provides a specific set of sensors and their blueprint can be found in carla.BlueprintLibrary. All the information on their preferences and settlement can be found [here](ref_sensors.md), but the list of those available in CARLA so far goes as follow.
+        Most sensors can be divided in two groups: those receiving data on every tick (cameras, point clouds and some specific sensors) and those who only receive under certain circumstances (trigger detectors).
+
+        The G-buffer methods (`listen_to_gbuffer`, `is_listening_gbuffer`, `stop_gbuffer`), the ROS 2 methods (`enable_for_ros`, `disable_for_ros`, `is_enabled_for_ros`) and `send` exist only on server-side sensors. A client-side sensor such as `sensor.other.lane_invasion` does not have them. CARLA provides a specific set of sensors and their blueprint can be found in carla.BlueprintLibrary. All the information on their preferences and settlement can be found [here](ref_sensors.md), but the list of those available in CARLA so far goes as follow.
         <br><b>Receive data on every tick.</b>
         - [Depth camera](ref_sensors.md#depth-camera).
         - [Gnss sensor](ref_sensors.md#gnss-sensor).
         - [IMU sensor](ref_sensors.md#imu-sensor).
-        - [Lidar raycast](ref_sensors.md#lidar-raycast-sensor).
-        - [SemanticLidar raycast](ref_sensors.md#semanticlidar-raycast-sensor).
+        - [Lidar raycast](ref_sensors.md#lidar-sensor).
+        - [SemanticLidar raycast](ref_sensors.md#semantic-lidar-sensor).
         - [Radar](ref_sensors.md#radar-sensor).
         - [RGB camera](ref_sensors.md#rgb-camera). Its look comes from a camera preset chosen with the `post_process_profile` blueprint attribute ([camera post-process presets](camera_postprocess_presets.md)).
         - [Semantic Segmentation camera](ref_sensors.md#semantic-segmentation-camera).

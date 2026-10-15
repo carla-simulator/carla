@@ -56,11 +56,23 @@ RUN_SERVER = os.path.join('Skills', 'ue58', 'run-carla-ue58-server', 'scripts', 
 
 
 def colored(col, text):
+    # Kept for headings; ids and flags render as plain Markdown so they copy
+    # cleanly and survive a dark theme.
     return '<span style="color:%s;">%s</span>' % (col, text)
 
 
+# Blueprints that only exist while a particular map is loaded.
+MAP_SPECIFIC = {
+    'vehicle.miningtruck.miningtruck': 'Mine_01',
+}
+
+
+def code(text):
+    return '`%s`' % text
+
+
 def boolean(value):
-    return colored(TRUE_COLOR if value else FALSE_COLOR, str(bool(value)))
+    return 'yes' if value else 'no'
 
 
 def attribute(blueprint, name, default=''):
@@ -186,11 +198,12 @@ def pedestrian_entries(library):
             group, kind = 'Adults', 'Adult'
 
         counters[kind] = counters.get(kind, 0) + 1
-        heading = '%s pedestrian %d' % (kind, counters[kind])
+        # The id is what a reader looks a pedestrian up by, so it leads the heading.
+        heading = '%s - %s pedestrian %d' % (blueprint.id.split('.')[-1], kind.lower(), counters[kind])
         name = blueprint.id.split('.')[-1]
 
         bullets = [
-            '__Blueprint ID__: ' + colored(ID_COLOR, blueprint.id),
+            '__Blueprint ID__: ' + code(blueprint.id),
             '__Age__: ' + age,
             '__Gender__: ' + attribute(blueprint, 'gender', 'unspecified'),
             '__Generation__: ' + attribute(blueprint, 'generation', '-1'),
@@ -284,17 +297,20 @@ def vehicle_entries(library):
         special = attribute(blueprint, 'special_type')
 
         bullets = [
-            '__Blueprint ID__: ' + colored(ID_COLOR, blueprint.id),
+            '__Blueprint ID__: ' + code(blueprint.id),
             '__Base type__: ' + base,
         ]
         if special:
             bullets.append('__Special type__: ' + special)
+        generation = attribute(blueprint, 'generation', '-1')
         bullets += [
-            '__Generation__: ' + attribute(blueprint, 'generation', '-1'),
+            '__Generation__: ' + (generation if generation != '-1' else 'unspecified'),
             '__Number of wheels__: ' + attribute(blueprint, 'number_of_wheels', '-'),
             '__Has lights__: ' + boolean(flag(blueprint, 'has_lights')),
             '__Has opening doors__: ' + boolean(flag(blueprint, 'has_dynamic_doors')),
         ]
+        if blueprint.id in MAP_SPECIFIC:
+            bullets.append('__Available on__: %s only' % MAP_SPECIFIC[blueprint.id])
 
         groups[title].append(Entry(
             blueprint, VEHICLE_NAMES.get(blueprint.id, pretty_name(blueprint.id)),
@@ -488,7 +504,7 @@ def prop_entries(library):
         name = blueprint.id.split('.', 2)[2]
         subtype = attribute(blueprint, 'subtype')
         bullets = [
-            '__Blueprint ID__: ' + colored(ID_COLOR, blueprint.id),
+            '__Blueprint ID__: ' + code(blueprint.id),
             '__Base type__: ' + base,
             '__Subtype__: ' + subtype,
             '__Size__: ' + attribute(blueprint, 'size', 'unknown'),

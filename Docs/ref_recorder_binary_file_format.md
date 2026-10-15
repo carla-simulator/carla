@@ -17,7 +17,7 @@ using little endian byte order for the multibyte values.
 	*   [Packet 8 - Vehicle Animation](#packet-8-vehicle-animation)  
 	*   [Packet 9 - Walker Animation](#packet-9-walker-animation)  
 *   [__4- Frame Layout__](#4-frame-layout)  
-*   [__5- File Layout__](#5-file-layout)  
+*   [__5- File Layout__](#5-file-layout)
 
 In the next image representing the file format, we can get a quick view of all the detailed
 information. Each part that is visualized in the image will be explained in the following sections:
@@ -26,7 +26,7 @@ information. Each part that is visualized in the image will be explained in the 
 
 In summary, the file format has a small header with general info
 (version, magic string, date and the map used) and a collection of packets of different types
-(currently we use 10 types, but that will continue growing up in the future).
+(25 types at the time of writing, and the list keeps growing).
 
 ![global file format](img/RecorderFileFormat3.jpg)
 
@@ -44,8 +44,8 @@ as hex values: 06 00 54 6f 77 6e 30 36
 
 The info header has general information about the recorded file. Basically, it contains the version
 and a magic string to identify the file as a recorder file. If the header changes then the version
-will change also. Furthermore, it contains a date timestamp, with the number of seconds from the
-Epoch 1900, and also it contains a string with the name of the map that has been used for recording.
+will change also. Furthermore, it contains a date timestamp, as a `std::time_t` — seconds since the Unix epoch, 1 January 1970 —
+and a string with the name of the map that was used for the recording.
 
 ![info header](img/RecorderInfoHeader.jpg)
 
@@ -74,12 +74,27 @@ the next packet just skipping the data of the packet:
 
 ![packets size](img/RecorderPackets.jpg)
 
-The types of packets are:
+The packet ids are, from `CarlaRecorderPacketId`:
 
-![packets type list](img/RecorderPacketsList.jpg)
+| Id | Packet | Id | Packet |
+| --- | --- | --- | --- |
+| 0 | Frame start | 13 | Bounding box |
+| 1 | Frame end | 14 | Platform time |
+| 2 | Event add | 15 | Physics control |
+| 3 | Event del | 16 | Traffic light time |
+| 4 | Event parent | 17 | Trigger volume |
+| 5 | Collision | 18 | Frame counter |
+| 6 | Position | 19 | Walker bones |
+| 7 | State (traffic light) | 20 | Visual time |
+| 8 | Vehicle animation | 21 | Vehicle wheel animation |
+| 9 | Walker animation | 22 | Biker animation |
+| 10 | Vehicle light | 23 | Vehicle door |
+| 11 | Scene light | 24 | Weather |
+| 12 | Kinematics | | |
 
-We suggest to use **id** over 100 for user custom packets, because this list will keep growing in
-the future.
+The sections below describe the payload of packets 0 to 9. Packets 10 to 24 were added later and their layouts are defined by the `CarlaRecorder*` serializers under `Unreal/CarlaUnreal/Plugins/Carla/Source/Carla/Recorder/`.
+
+Use an **id** over 100 for custom packets of your own, because this list keeps growing.
 
 ### Packet 0 - Frame Start
 
@@ -88,7 +103,7 @@ All packets need to be placed between a **Frame Start** and a **Frame End**.
 
 ![frame start](img/RecorderFrameStart.jpg)
 
-So, elapsed + durationThis = elapsed time for next frame
+The elapsed time of the next frame is therefore `elapsed + durationThis`.
 
 ### Packet 1 - Frame End
 
@@ -112,7 +127,9 @@ but we need to use this id ). The **type** of actor can have these possible valu
   * 1 = Vehicle
   * 2 = Walker
   * 3 = TrafficLight
-  * 4 = INVALID
+  * 4 = TrafficSign
+  * 5 = Sensor
+  * 6 = INVALID
 
 After that, the **location** and the **rotation** where we want to create the actor is proceeded.
 
@@ -139,11 +156,14 @@ For example, this packet could be like this:
 
 ![event del](img/RecorderPacketSampleEventDel.jpg)
 
-The number 3 identifies the packet as (Event Del). The number 16 is the size of the data of
-the packet (4 fields of 4 bytes each). So if we don't want to process this packet, we could skip
-the next 16 bytes and will be directly to the start of the next packet.
-The next 3 says the total records that follows, and each record is the id of the actor to remove.
-So, we need to remove at this frame the actors 100, 101 and 120.
+The number 3 identifies the packet as Event Del. The size that follows is the size of the packet's
+data: a `uint16` record count plus one `uint32` id per record, so three deletions make
+2 + 3 &times; 4 = 14 bytes. Skipping that many bytes lands exactly on the next packet.
+The record count says how many ids follow, and each one is an actor to remove — here 100, 101 and 120.
+
+!!! Note
+    The record count is a `uint16` in every packet that has one, while the ids and the packet size
+    are `uint32`.
 
 ### Packet 4 - Event Parent
 
@@ -155,9 +175,8 @@ The first id is the child actor, and the second one will be the parent actor.
 
 ### Packet 5 - Event Collision
 
-If a collision happens between two actors, it will be registered in this packet. Currently only
-actors with a collision sensor will report collisions, so currently only hero vehicles have that
-sensor attached automatically.
+If a collision happens between two actors, it will be registered in this packet. Only actors carrying a `sensor.other.collision` report collisions, and nothing attaches that sensor
+automatically: a client has to spawn it on the actors whose collisions it wants recorded.
 
 ![event collision](img/RecorderCollision.jpg)
 
@@ -182,7 +201,7 @@ stores the state (red, orange or green) and the time it is waiting to change to 
 ### Packet 8 - Vehicle animation
 
 This packet records the animation of the vehicles, bikes and cycles. This packet stores the
-**throttle**, **sterring**, **brake**, **handbrake** and **gear** inputs, and then set them at playback.
+**throttle**, **steering**, **brake**, **handbrake** and **gear** inputs, and then set them at playback.
 
 ![state](img/RecorderVehicle.jpg)
 

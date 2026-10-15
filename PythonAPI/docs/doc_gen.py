@@ -18,9 +18,9 @@ COLOR_INSTANCE_VAR = '#f8805a'
 COLOR_NOTE = '#8E8E8E'
 COLOR_WARNING = '#ED2F2F'
 
-# The lookbehind keeps the hostname of a link such as
-# https://carla.readthedocs.io/... from being turned into a class anchor.
-QUERY = re.compile(r'(?<![/.])([cC]arla(\.[a-zA-Z0-9_]+)+)')
+# The lookbehind keeps hostnames (https://carla.readthedocs.io/...) and
+# backticked console variables (`carla.PostProcess.Profile`) out of the anchors.
+QUERY = re.compile(r'(?<![/.`])([cC]arla(\.[a-zA-Z0-9_]+)+)')
 
 
 def create_hyperlinks(text):
@@ -77,7 +77,7 @@ class MarkdownFile:
 
     def first_title(self):
         self._data = join([
-            self._data, '#Python API reference\n'])
+            self._data, '# Python API reference\n'])
 
     def title(self, strongness, buf):
         self._data = join([
@@ -109,7 +109,9 @@ class MarkdownFile:
 
 
 def italic(buf):
-    return join(['_', buf, '_'])
+    # Folded YAML scalars keep a trailing newline, which would otherwise land
+    # between the text and the closing underscore and break the emphasis.
+    return join(['_', buf.strip(), '_'])
 
 
 def bold(buf):
@@ -651,13 +653,75 @@ class Documentation:
             md.list_pop()
         return md.data()
 
+    # Groups for the index. A class lands in the first group whose predicate
+    # matches; anything left over goes to "Other".
+    INDEX_GROUPS = [
+        ('Core', lambda n: n in (
+            'Client', 'World', 'WorldSettings', 'WorldSnapshot', 'Actor', 'ActorSnapshot',
+            'ActorList', 'ActorBlueprint', 'ActorAttribute', 'ActorAttributeType',
+            'BlueprintLibrary', 'Map', 'Timestamp', 'DebugHelper', 'TextureColor', 'TextureFloatColor')),
+        ('Actors', lambda n: n in (
+            'Vehicle', 'Walker', 'WalkerAIController', 'TrafficLight', 'TrafficSign',
+            'TrafficLightState', 'VehicleControl', 'VehicleAckermannControl', 'AckermannControllerSettings',
+            'VehiclePhysicsControl', 'WheelPhysicsControl', 'VehicleTelemetryData', 'WheelTelemetryData',
+            'VehicleLightState', 'VehicleWheelLocation', 'VehicleDoor', 'VehicleFailureState',
+            'WalkerControl', 'WalkerBoneControlIn', 'WalkerBoneControlOut', 'BoneTransformDataIn',
+            'BoneTransformDataOut', 'AttachmentType')),
+        ('Sensors and data', lambda n: n.startswith('Sensor') or n.endswith(
+            ('Measurement', 'Event', 'EventArray', 'Image', 'Detection', 'Message', 'Data')) or n in (
+            'Sensor', 'LidarDetection', 'SemanticLidarDetection', 'RadarDetection', 'DVSEvent',
+            'ColorConverter', 'Color', 'OpticalFlowPixel', 'GBufferTextureID', 'CityObjectLabel',
+            'LabelledPoint', 'CAMMessage', 'CustomV2XBytes')),
+        ('Maps and navigation', lambda n: n in (
+            'Waypoint', 'Junction', 'Road', 'Lane', 'LaneSection', 'LaneType', 'LaneChange',
+            'LaneMarking', 'LaneMarkingColor', 'LaneMarkingType', 'Landmark', 'LandmarkOrientation',
+            'LandmarkType', 'MapLayer', 'OpendriveGenerationParameters', 'GeoLocation',
+            'GeoProjectionTM', 'GeoProjectionUTM', 'GeoProjectionWebMerc', 'GeoProjectionLCC2SP',
+            'GeoOffsetTransform', 'Osm2Odr', 'Osm2OdrSettings')),
+        ('Geometry', lambda n: n in (
+            'Location', 'Rotation', 'Transform', 'Vector2D', 'Vector3D', 'BoundingBox')),
+        ('Traffic and weather', lambda n: n in (
+            'TrafficManager', 'WeatherParameters', 'Light', 'LightState', 'LightGroup',
+            'LightManager', 'EnvironmentObject', 'MaterialParameter')),
+    ]
+
+    def gen_index(self):
+        """Returns a grouped index of every documented class."""
+        names = []
+        for module_name in sorted(self.master_dict):
+            module = self.master_dict[module_name]
+            if valid_dic_val(module, 'classes'):
+                names += [(module_name, cl['class_name']) for cl in module['classes']]
+        grouped = {title: [] for title, _ in self.INDEX_GROUPS}
+        grouped['Other'] = []
+        grouped['Commands'] = []
+        for module_name, name in sorted(names, key=lambda x: x[1]):
+            if module_name == 'command':
+                grouped['Commands'].append((module_name, name))
+                continue
+            for title, matches in self.INDEX_GROUPS:
+                if matches(name):
+                    grouped[title].append((module_name, name))
+                    break
+            else:
+                grouped['Other'].append((module_name, name))
+        out = []
+        for title in [t for t, _ in self.INDEX_GROUPS] + ['Commands', 'Other']:
+            entries = grouped[title]
+            if not entries:
+                continue
+            links = ', '.join('[%s.%s](#%s.%s)' % (m, n, m, n) for m, n in entries)
+            out.append('- __%s__ &mdash; %s' % (title, links))
+        return '\n'.join(out) + '\n'
+
     def gen_body(self):
         """Generates the documentation body"""
         md = MarkdownFile()
         md.first_title()
         md.textn(
-        "This reference contains all the details the Python API. To consult a previous reference for a specific CARLA release, change the documentation version using the panel in the bottom right corner.<br>"
+        "This reference contains all the details of the Python API. To consult a previous reference for a specific CARLA release, change the documentation version using the panel in the bottom right corner.<br>"
         +"This will change the whole documentation to a previous state. Remember that the <i>latest</i> version is the `dev` branch and may show features not available in any packaged versions of CARLA.<hr>")
+        md.textn(self.gen_index())
         for module_name in sorted(self.master_dict):
             module = self.master_dict[module_name]
             module_key = module_name

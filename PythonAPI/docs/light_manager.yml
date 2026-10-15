@@ -65,9 +65,9 @@
     # --------------------------------------
       - param_name: group
         type: carla.LightGroup
-        default: carla.LightGroup.None
+        default: carla.LightGroup.NONE
         doc: >
-          Group the light belongs to. Default is the generic group `None`.
+          Group the light belongs to. Default is the generic group `NONE`.
     # --------------------------------------
       - param_name: active
         type: bool
@@ -203,13 +203,13 @@
     # --------------------------------------
     - def_name: get_all_lights
       doc: >
-        Returns a list containing the lights in a certain group. By default, the group is `None`.
+        Returns a list containing the lights in a certain group. By default, the group is `NONE`.
       params:
       - param_name: light_group
         type: carla.LightGroup
-        default: carla.LightGroup.None
+        default: carla.LightGroup.NONE
         doc: >
-          Group to filter the lights returned. Default is `None`. 
+          Group to filter the lights returned. Default is `NONE`. 
       return: list(carla.Light)
     # --------------------------------------
     - def_name: get_color

@@ -1,30 +1,49 @@
-# Inverted AI 
+# Inverted AI
 
 ![inverted_ai_logo](img/logos/inverted_ai_logo.png)
 
-<iframe width="100%" height="400px" src="https://ecosystem.carla.org/video/iai-pipeline.mp4" title="Inverted AI" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+<video controls width="100%" src="https://ecosystem.carla.org/video/iai-pipeline.mp4"></video>
 
-<br>
+Inverted AI drives non-player vehicles with models learned from real human driving, through a hosted API, so the traffic around the ego behaves the way people do rather than following hand-written rules. It replaces the [Traffic Manager](adv_traffic_manager.md) for those vehicles; CARLA still owns the simulation, the ego and the sensors.
 
-Inverted AI provides a simulation engine for non-playable characters (NPCs) that simulates realistic, reactive and behaviorally diverse agents to populate your driving simulations. Inverted AI's technology is based on deep generative models providing simulation of complex, natural driving behavior derived from real-world data captured from human drivers. Their technology can be directly integrated with CARLA simulations through a web-based API. This augments the power of CARLA for both development and testing by enhancing the realism of the driving behavior within CARLA's ambient traffic.
+- [__Using Inverted AI with CARLA__](#using-inverted-ai-with-carla)
+- [__The products__](#the-products)
 
-Inverted AI presents 4 software products for traffic simulation and analysis:
+---
+## Using Inverted AI with CARLA
 
-### [DRIVE](https://www.inverted.ai/apis#DRIVE)
+`PythonAPI/examples/invertedai_traffic.py` is a working integration. It needs the `invertedai` package, which is in the examples' requirements, and an API key.
 
-Vastly improve your simulation effort with human-like non-playable character (NPCs) that exhibit driving behaviors that are diverse, realistic, and reactive. Integrating DRIVE into your simulators means letting us take care of the hard work of driving your NPCs for you. We believe that validating and training using the most realistic behavioral distribution possible is essential. That's what DRIVE gives you.
+```sh
+cd PythonAPI/examples
+pip3 install -r requirements.txt
 
-### [INITIALIZE](https://www.inverted.ai/apis#INITIALIZE)
+export IAI_API_KEY=<your key>          # or pass --iai-key
+python3 invertedai_traffic.py -n 30 -w 10
+```
 
-INITIALIZE save simulation time by allowing you to start from a realistic and diverse set of initial conditions including agent density, types, speeds, placements, and orientations. No need to "burn-in" simulations any more. Just INITIALIZE them around your ego and other scenario elements.
+| Flag | Default | What it does |
+| --- | --- | --- |
+| `--iai-key` | `IAI_API_KEY` from the environment | The API key. The environment variable wins when both are set. |
+| `--location` | `carla:Town10HD` | The map, in Inverted AI's naming. Only Town10HD has been tested. |
+| `-n`, `--number-of-vehicles` | | Vehicles for Inverted AI to drive. |
+| `-w`, `--number-of-walkers` | | Pedestrians, which CARLA's own controllers drive. |
+| `--sim-length` | | Seconds to simulate. |
+| `--capacity` | 100 | Agents per quadtree leaf before it splits, which is how the API scales to a crowded map. |
+| `--record` | off | Record the run with CARLA's recorder. |
+| `-s`, `--seed` | | Seed, for a repeatable run. |
 
-### [SCENARIO](https://www.inverted.ai/apis#SCENARIO)
+The simulation runs at a fixed 0.1 s step, which is the only step length the API supports.
 
-SCENARIO enables a whole-scene guided scenario generation with realistic, reactive, and diverse agents including pedestrians, bikes, cars, buses, and lights. Synthetic logs and/or log fuzzing are the name of the game here. Currently in private beta.
+---
+## The products
 
-### [BLAME](https://www.inverted.ai/apis#BLAME)
+Four products build on the same models. See the [Inverted AI website](https://www.inverted.ai/home) and their [Python API documentation](https://docs.inverted.ai/en/latest/pythonapi/).
 
-BLAME determines which agent(s) caused a collision and why from logs to efficiently sort through testing, training, and validation simulation run results. Don't waste time looking at infractions that weren't your fault. Currently in private beta.
-
-Visit the [Inverted AI website](https://www.inverted.ai/home) to learn more about their products or [check out the API](https://docs.inverted.ai/en/latest/pythonapi/).
+| Product | What it does |
+| --- | --- |
+| [DRIVE](https://www.inverted.ai/apis#DRIVE) | Drives the NPCs with diverse, realistic and reactive behavior. This is what the CARLA example uses. |
+| [INITIALIZE](https://www.inverted.ai/apis#INITIALIZE) | Starts a simulation from a realistic set of initial conditions — agent density, types, speeds, placements and orientations — instead of burning in. |
+| [SCENARIO](https://www.inverted.ai/apis#SCENARIO) | Whole-scene guided scenario generation, including pedestrians, bikes, buses and lights. |
+| [BLAME](https://www.inverted.ai/apis#BLAME) | Determines from logs which agents caused a collision and why, to sort through run results. |
 
