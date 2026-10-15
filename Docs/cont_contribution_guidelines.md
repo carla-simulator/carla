@@ -2,7 +2,7 @@
 
 The CARLA team is glad to accept contributions from anybody willing to collaborate. There are different ways to contribute to the project, depending on the capabilities of the contributor. The team will work as much as possible so that contributions are successfully integrated in CARLA.  
 
-Take a look and don't hesitate!  
+Take a look and don't hesitate! Everyone taking part is expected to follow the [Code of conduct](cont_code_of_conduct.md).  
 
 *   [__Report bugs__](#report-bugs)  
 *   [__Request features__](#request-features)  

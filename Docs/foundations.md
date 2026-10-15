@@ -7,6 +7,8 @@ pip install carla-simulator # Python 2
 pip3 install carla-simulator # Python 3
 ```
 
+For an overview of every topic in this section, see [Core concepts](core_concepts.md).
+
 Also make sure to import the CARLA package in your python scripts:
 
 ```py
@@ -28,6 +30,8 @@ import carla
 ---
 
 ## World and client
+
+[World and client](core_world.md) covers both objects in full, including weather, lights, debugging and world snapshots.
 
 ### Client
 

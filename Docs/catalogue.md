@@ -42,15 +42,16 @@ The CARLA simulator provides a vast library of 3D assets to populate your autono
 * [__Vehicles catalogue__](catalogue_vehicles.md)
 * [__Pedestrians catalogue__](catalogue_pedestrians.md)
 * [__Props catalogue__](catalogue_props.md)
-<!-- * [__Script catalogue__](catalogue_scripts.md) -->
+* [__Script catalogue__](catalogue_scripts.md)
 
 ## Maps
 
-There are two maps to chose from. An urban environment with skyscrapers, commercial units, industrial units and residential streets and an off-road, open-cast mine environment.
+There are three maps to chose from. An urban environment with skyscrapers, commercial units, industrial units and residential streets, a university campus and an off-road, open-cast mine environment.
 
 | Town       | Summary |
 | -----------| ------  |
 | [__Town10__](map_town10.md) | A downtown urban environment with skyscrapers, residential buildings and an ocean promenade.|
+| [__Town15__](map_town15.md) | A university campus based on the Autonomous University of Barcelona. |
 | [__Mine01__](map_mine.md) | An industrial, off-road, open-cast mining environment. |
 
 ## Vehicles

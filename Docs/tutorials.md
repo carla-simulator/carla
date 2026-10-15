@@ -9,12 +9,19 @@ Here you will find the multitude of tutorials available to help you understand h
 [__C++ tutorial__](tuto_cpp.md) — Practical C++ client workflow and API usage.  
 [__Traffic manager__](tuto_G_traffic_manager.md) — How to use traffic manager to guide traffic around your town.    
 [__Texture streaming__](tuto_G_texture_streaming.md) — Modify textures of map objects in real time to add variation.  
+[__Control vehicle physics__](tuto_G_control_vehicle_physics.md) — Set the physics parameters of a vehicle at runtime.  
+[__Add friction triggers__](tuto_G_add_friction_triggers.md) — Change the tire friction of vehicles inside a trigger volume.  
 [__Instance segmentation camera__](tuto_G_instance_segmentation_sensor.md) — Use an instance segmentation camera to distinguish objects of the same class.  
 [__Bounding boxes__](tuto_G_bounding_boxes.md) — Project bounding boxes from CARLA objects into the camera.  
 [__Pedestrian bones__](tuto_G_pedestrian_bones.md) — Project pedestrian skeleton into camera plane.  
 [__Control walker skeletons__](tuto_G_control_walker_skeletons.md) — Animate walkers using skeletons.  
 [__PyGame control__](tuto_G_pygame.md) — Use PyGame to display the output of camera sensors. 
 [__Add a new vehicle__](tuto_content_authoring_vehicles.md) — Prepare a vehicle to be used in CARLA.  
+
+## Assets and maps
+
+[__Custom assets__](custom_assets_tutorials.md) — Overview of adding props, vehicles, materials and content packs.  
+[__Custom maps__](maps_tutorials.md) — Overview of creating and importing maps.  
 
 <!-- ## Assets and maps -->
 

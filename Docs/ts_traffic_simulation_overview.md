@@ -12,6 +12,8 @@ Traffic simulation is integral to the accurate and efficient training and testin
 
 [__Traffic Manager__](adv_traffic_manager.md) is a module within CARLA that controls certain vehicles in a simulation from the client side. Vehicles are registered to Traffic Manager via the [`carla.Vehicle.set_autopilot`](https://carla.readthedocs.io/en/latest/python_api/#carla.Vehicle.set_autopilot) method or [`command.SetAutopilot`](https://carla.readthedocs.io/en/latest/python_api/#commandsetautopilot) class. Control of each vehicle is managed through a cycle of [distinct stages](adv_traffic_manager.md#stages) which each run on a different thread.
 
+To drive a vehicle along a route with your own logic instead, use the [CARLA agents](adv_agents.md).
+
 __Useful for:__
 
 - Populating a simulation with realistic urban traffic conditions. 

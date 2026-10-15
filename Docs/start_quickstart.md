@@ -53,6 +53,7 @@ pip3 install --user pygame numpy
 Download the desired CARLA package from GitHub:
 
 - [Download the package from GitHub here](https://github.com/carla-simulator/carla/releases/tag/0.10.0)
+- [Every release and its download links](download.md)
 
 This repository contains different versions of CARLA. You will find options to download the __current release__ with all the most recent fixes and features, __previous releases__ and a __nightly build__ with all the developmental fixes and features (the nightly build is the most unstable version of CARLA).
 

@@ -1,6 +1,6 @@
 # Rendering options
 
-This guide details the different rendering options available in CARLA, including quality levels, no-rendering mode and off-screen mode.
+This guide details the different rendering options available in CARLA, including quality levels, no-rendering mode and off-screen mode. To spread rendering across several GPUs, see [Multi-GPU](adv_multigpu.md).
 
 - [__Graphics quality__](#graphics-quality)
 	- [Quality levels](#quality-levels)

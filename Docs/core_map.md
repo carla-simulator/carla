@@ -18,7 +18,7 @@ After discussing about the world and its actors, it is time to put everything in
 ---
 ## The map
 
-A map includes both the 3D model of a town and its road definition. A map's road definition is based on an OpenDRIVE file, a standarized, annotated road definition format. The way the [OpenDRIVE standard 1.4](http://www.opendrive.org/docs/OpenDRIVEFormatSpecRev1.4H.pdf) defines roads, lanes, junctions, etc. determines the functionality of the Python API and the reasoning behind decisions made.
+A map includes both the 3D model of a town and its road definition. A map's road definition is based on an OpenDRIVE file, a standarized, annotated road definition format. The way the [OpenDRIVE standard 1.4](http://www.opendrive.org/docs/OpenDRIVEFormatSpecRev1.4H.pdf) defines roads, lanes, junctions, etc. determines the functionality of the Python API and the reasoning behind decisions made. To run a simulation from an OpenDRIVE file alone, without a 3D map, see [OpenDRIVE standalone mode](adv_opendrive.md).
 
 The Python API acts as a high level querying system to navigate these roads. It is constantly evolving to provide a wider set of tools.
 
