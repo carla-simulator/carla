@@ -163,6 +163,7 @@
 * Fixed code examples that failed when run, in the Python API reference snippets and in `core_actors.md`, `adv_traffic_manager.md`, `ref_sensors.md` and `tuto_G_bounding_boxes.md`.
 * Fixed broken links in the documentation: the SYNKROTRON page on the home page, the build guides in the contribution guidelines and the colliders tutorial, and Python API links in three tutorials.
 * Fixed typos in `README.md`.
+
 ## CARLA 0.10.0
 
 * Unreal Engine migration from version 4.26 to version 5.5
