@@ -93,6 +93,11 @@ namespace traffic_manager {
     /// This method is used to set the closest right waypoint for a lane change.
     void SetRightWaypoint(SimpleWaypointPtr &waypoint);
 
+    /// Drops the links to the neighbouring waypoints (next, previous, left and
+    /// right). They are shared pointers that point at each other, so a graph of
+    /// waypoints is freed only once they are dropped.
+    void ClearLinks();
+
     /// This method is used to get the closest left waypoint for a lane change.
     SimpleWaypointPtr GetLeftWaypoint();
 

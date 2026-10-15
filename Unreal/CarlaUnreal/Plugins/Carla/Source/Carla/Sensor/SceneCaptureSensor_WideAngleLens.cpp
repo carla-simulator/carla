@@ -548,9 +548,22 @@ void ASceneCaptureSensor_WideAngleLens::CaptureSceneExtended()
                 ShowOnlyFilter.ApplyTo(*FaceCapture);
     }
 
+    // Same camera-cut warm-up as ASceneCaptureSensor::EnqueueRenderSceneImmediate, on every face,
+    // so a new fisheye does not start from a default exposure and adapt for seconds.
+    static IConsoleVariable* SpawnCameraCutsVar =
+        IConsoleManager::Get().FindConsoleVariable(TEXT("carla.Camera.SpawnCameraCuts"));
+    const bool bCameraCut = SpawnCameraCutsVar != nullptr && NumCaptures < SpawnCameraCutsVar->GetInt();
+    if (bCameraCut)
+        ++NumCaptures;
+
     for (uint8 i = 0; i < 6; ++i)
         if (CubemapRenderMask & (1U << i))
+        {
+            // Reset by the renderer after the capture.
+            if (bCameraCut)
+                FaceCaptures[i]->bCameraCutThisFrame = true;
             FaceCaptures[i]->CaptureScene();
+        }
 
     // Snapshot the data the render-thread pass needs so the lambda does not
     // dereference `this` after the actor may have been destroyed. The render

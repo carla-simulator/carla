@@ -5,6 +5,7 @@
 #### Simulator
 
 * **CARLA now runs on Unreal Engine 5.8**, on CARLA's own fork of the engine. It brings World Partition streaming and Large World Coordinates for the large maps, Lumen on hardware ray tracing with ray-traced shadows, and the path tracer the ray-traced lens cameras render through.
+* **Balanced the vehicle lights across models**: every car uses the same emissive intensity, and each light group — low and high beam, position, fog, brake, reverse, blinkers — is tuned against a reference vehicle. The Dodge Charger and Kia Niro stop borrowing the police Charger's materials, the CarlaCola and firetruck lamps light the right group, the Audi TT's front left blinker no longer lights with the right one, and the Tesla Model 3's blinkers are amber. See `Docs/tuto_content_authoring_vehicles.md`.
 * **Rebuilt weather and night lighting on the UE5 sky**: the weather API drives the sky rig again (maps were near-black at noon), street lamps emit real light in lumens, vehicle headlight beams, moonlight and stars work at night, and rain falls per camera with droplets on the lens.
 * **Improved the OpenDRIVE map generator**: a ground plane and terrain that follow road elevation, crosswalks, lane markings through junctions, `lateralProfile <shape>`, PCG street furniture, and a `spawn_custom_mesh` RPC for client-supplied meshes.
 * Restored the **classic towns**: Town01 to Town07 are back alongside Town10HD, migrated to the new lighting stack. They ship only as layered maps, so load them by their `_Opt` name (`Town03_Opt`) and toggle their layers with [carla.MapLayer](https://carla.readthedocs.io/en/latest/core_map/).
@@ -20,7 +21,7 @@
 * Added **fisheye cameras** (`sensor.camera.rgb_fisheye`, `depth_fisheye`, `semantic_segmentation_fisheye`, `instance_segmentation_fisheye`) using the Kannala-Brandt model with configurable distortion coefficients. See `PythonAPI/examples/manual_control_fisheye.py`.
 * Added the **V2X sensor family**: a CAM service sensor (`sensor.other.v2x`), a custom binary-payload sensor (`sensor.other.v2x_custom`), a configurable path-loss propagation model and owner-less infrastructure (V2I) sensors.
 * Added a **Hybrid Solid-State LiDAR** (`sensor.lidar.hss_lidar`) modelled on the Hesai AT128, with configurable channels, FOV and horizontal resolution.
-* Added **camera post-process profiles**: the viewport, the spectator and every `sensor.camera.rgb` without an explicit `post_process_profile` load the same photoreal profile, selected with the `carla.PostProcess.Profile` console variable. Ships nine presets, from `Cinematic` (the photoreal default) to `AutomotiveHDR`, `Dashcam` and `Smartphone`. Your own are authored in the editor and saved as JSON under `Content/Carla/Config/PostProcess`, then selected by file name — see `Docs/camera_postprocess_presets.md`.
+* Added a **camera profile library**: a `sensor.camera.rgb` without an explicit `post_process_profile` loads `AutomotiveHDR` (`carla.PostProcess.Profile`), matched to the nuScenes front camera, while the viewport and the spectator load `Cinematic` (`carla.PostProcess.ViewportProfile`), so the sensors' look can change without changing what you see. Nine presets ship, each tuned against real frames of a driving dataset: `AutomotiveHDRClean`, `WideHDR8MP` (Zenseact ZOD), `LegacyCCD` (KITTI), `LogHDR` (Cityscapes), `Smartphone` (comma.ai), `GoPro`, `Dashcam` and `Cinematic`. With them come exposure-linked motion blur (`carla.Camera.ExposureMotionBlur`), sensor noise and optical softness that follow the auto exposure, and an FFT lens flare; `manual_control.py` cycles the profiles with K / Shift+K. Your own are authored in the editor and saved as JSON under `Content/Carla/Config/PostProcess` — see `Docs/camera_postprocess_presets.md`.
 * Added **`World.get_imu_sensor_gravity`/`set_imu_sensor_gravity`** to read and set the gravity the IMU accelerometer uses.
 * Added **`PythonAPI/examples/rig_perf_demo.py`**, a two-pass multi-camera rig benchmark: `measure` records the delivered frame rate of an N-camera rig, `render` replays it into a labelled grid video.
 
@@ -116,6 +117,7 @@
 
 * Fixed autopilot vehicles accelerating hard away from stops, junctions and roundabouts, and cutting tight corners too fast; both now stay within a comfortable acceleration bound. Also fixed the Traffic Manager's asynchronous loop drifting off the server frame rate, lights flickering on vehicles the server does not report, and an unbounded command queue on a slow server.
 * Fixed a Traffic Manager segfault when reaching a vehicle that is no longer available.
+* Fixed the Traffic Manager leaking its whole in-memory road graph — several hundred MB on a large map — every time it shut down or rebuilt its map for a new episode. Its waypoints link to each other with shared pointers, so the cycles kept them all alive; those links are now broken when the map is destroyed.
 * Fixed `BehaviorAgent.run_step` raising `AttributeError` once the local planner's waypoint queue empties, for instance at the end of a route.
 
 #### Python API and client
@@ -133,6 +135,8 @@
 
 * Fixed the walker bounding box being centred on the actor pivot rather than the skeletal mesh, so `actor.bounding_box` now lines up with the visible pedestrian.
 * Fixed the traffic sign bounding box to use the first valid trigger volume and keep its rotation, with a guard for null volumes.
+* Fixed `sensor.camera.rt_lens` rendering almost black at night: its auto exposure was pinned to a daylight range, and now follows its camera profile with only the upper end capped (`carla.RTLens.MaxAutoExposureEV`).
+* Fixed the bright flash of a newly spawned camera — pressing TAB in `manual_control.py`, for instance — whose auto exposure started from a default and took seconds to adapt. Its first captures are rendered as camera cuts (`carla.Camera.SpawnCameraCuts`), so the exposure is settled from the second image on.
 * Fixed the `color` attribute being ignored by the Lincoln MKZ and Mini Cooper, which always spawned black: their meshes imported the car-paint slot under a name `BaseVehiclePawn` does not paint.
 * Fixed a potential segfault in `LaneCrossingCalculator` with missing lane marking records, and hardened pedestrian navigation against a null dereference while collecting traffic lights for walker routing.
 * Fixed Digital Twin Tool crashes on dense metropolitan OSM data, vegetation spawning inside driving lanes on rural maps, and one-way streets being silently excluded (#9565, #9678).
@@ -159,7 +163,6 @@
 * Fixed code examples that failed when run, in the Python API reference snippets and in `core_actors.md`, `adv_traffic_manager.md`, `ref_sensors.md` and `tuto_G_bounding_boxes.md`.
 * Fixed broken links in the documentation: the SYNKROTRON page on the home page, the build guides in the contribution guidelines and the colliders tutorial, and Python API links in three tutorials.
 * Fixed typos in `README.md`.
-
 ## CARLA 0.10.0
 
 * Unreal Engine migration from version 4.26 to version 5.5

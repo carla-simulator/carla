@@ -354,6 +354,9 @@ protected:
   UPROPERTY(EditAnywhere)
   int32 FaceSize = 0;
 
+  /// Captures rendered as camera cuts since BeginPlay (carla.Camera.SpawnCameraCuts).
+  int32 NumCaptures = 0;
+
   UPROPERTY(EditAnywhere)
   float YFocalLength;
 

@@ -662,6 +662,15 @@ protected:
   virtual void PrePhysTick(float DeltaSeconds) override;
   virtual void PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaTime) override;
 
+  /// Motion blur from the auto exposure time (carla.Camera.ExposureMotionBlur).
+  void UpdateExposureMotionBlur(UWorld *World, float DeltaTime);
+
+  /// Simulation time of this sensor's previous capture (-1 before the first).
+  double LastCaptureTime = -1.0;
+
+  /// Exposure time of the last capture in seconds (exposure-linked motion blur).
+  float ExposureSeconds = 0.0f;
+
   virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
   virtual void SetUpSceneCaptureComponent(USceneCaptureComponent2D &SceneCapture) {}
@@ -743,6 +752,9 @@ protected:
 
 private:
   void ApplyRayTracingSetting();
+
+  /// Captures rendered as camera cuts since BeginPlay (carla.Camera.SpawnCameraCuts).
+  int32 NumCaptures = 0;
 
 #ifdef CARLA_HAS_GBUFFER_API
   template <

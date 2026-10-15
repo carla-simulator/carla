@@ -33,6 +33,7 @@ Use ARROWS or WASD keys for control.
     [1-9]        : change to sensor [1-9]
     G            : toggle radar visualization
     C            : change weather (Shift+C reverse)
+    K            : change camera profile (Shift+K reverse)
     Backspace    : change vehicle
 
     O            : open/close all doors of vehicle
@@ -103,6 +104,7 @@ try:
     from pygame.locals import K_g
     from pygame.locals import K_h
     from pygame.locals import K_i
+    from pygame.locals import K_k
     from pygame.locals import K_l
     from pygame.locals import K_m
     from pygame.locals import K_n
@@ -162,6 +164,13 @@ OBJECT_TO_COLOR = [
 # ==============================================================================
 # -- Global functions ----------------------------------------------------------
 # ==============================================================================
+
+
+# Camera presets shipped in Unreal/CarlaUnreal/Content/Carla/Config/PostProcess/,
+# see Docs/camera_postprocess_presets.md.
+CAMERA_PROFILES = [
+    'AutomotiveHDR', 'AutomotiveHDRClean', 'WideHDR8MP', 'LegacyCCD', 'LogHDR',
+    'Smartphone', 'Cinematic', 'GoPro', 'Dashcam']
 
 
 def find_weather_presets():
@@ -325,6 +334,10 @@ class World(object):
         self.hud.notification('Weather: %s' % preset[1])
         self.player.get_world().set_weather(preset[0])
 
+    def next_camera_profile(self, reverse=False):
+        self._post_process_profile = self.camera_manager.next_profile(reverse)
+        self.hud.notification('Camera profile: %s' % self._post_process_profile)
+
     def next_map_layer(self, reverse=False):
         self.current_map_layer += -1 if reverse else 1
         self.current_map_layer %= len(self.map_layer_names)
@@ -446,6 +459,10 @@ class KeyboardControl(object):
                     world.next_weather(reverse=True)
                 elif event.key == K_c:
                     world.next_weather()
+                elif event.key == K_k and pygame.key.get_mods() & KMOD_SHIFT:
+                    world.next_camera_profile(reverse=True)
+                elif event.key == K_k:
+                    world.next_camera_profile()
                 elif event.key == K_g:
                     world.toggle_radar()
                 elif event.key == K_BACKQUOTE:
@@ -1118,7 +1135,7 @@ class RadarSensor(object):
 
 
 class CameraManager(object):
-    def __init__(self, parent_actor, hud, gamma_correction, post_process_profile='default'):
+    def __init__(self, parent_actor, hud, gamma_correction, post_process_profile='Default'):
         self.sensor = None
         self.surface = None
         self._parent = parent_actor
@@ -1145,6 +1162,11 @@ class CameraManager(object):
                 (carla.Transform(carla.Location(x=0, y=-2.5, z=-0.0), carla.Rotation(yaw=90.0)), Attachment.Rigid)]
         world = self._parent.get_world()
         self.transform_index = 1
+        # "Default" (or any profile not in the list) joins the cycle first.
+        self._profiles = list(CAMERA_PROFILES)
+        if post_process_profile not in self._profiles:
+            self._profiles.insert(0, post_process_profile)
+        self._profile_index = self._profiles.index(post_process_profile)
         self.sensors = [
             ['sensor.camera.rgb', cc.Raw, 'Camera RGB', {'post_process_profile' : post_process_profile }],
             ['sensor.camera.depth', cc.Raw, 'Camera Depth (Raw)', {}],
@@ -1232,6 +1254,20 @@ class CameraManager(object):
 
     def next_sensor(self):
         self.set_sensor(self.index + 1)
+
+    def next_profile(self, reverse=False):
+        # The profile is a spawn attribute: update the blueprints and respawn
+        # the current sensor if it uses one.
+        self._profile_index += -1 if reverse else 1
+        self._profile_index %= len(self._profiles)
+        profile = self._profiles[self._profile_index]
+        for item in self.sensors:
+            if 'post_process_profile' in item[3]:
+                item[3]['post_process_profile'] = profile
+                item[-1].set_attribute('post_process_profile', profile)
+        if 'post_process_profile' in self.sensors[self.index][3]:
+            self.set_sensor(self.index, notify=False, force_respawn=True)
+        return profile
 
     def toggle_recording(self):
         self.recording = not self.recording
@@ -1407,11 +1443,12 @@ def main():
         '--gamma', default=1.0, type=float,
         help='Gamma correction of the camera (default: 1.0)')
     argparser.add_argument(
-        '--post-process-profile', metavar='NAME', default='default',
+        '--post-process-profile', metavar='NAME', default='Default',
         help='camera post-process profile to load, i.e. a file name (without '
              '.json) under Unreal/CarlaUnreal/Content/Carla/Config/PostProcess/ '
-             '-- e.g. "Cinematic" or "GoPro". "default" follows the server '
-             '(default: "default")')
+             '-- e.g. "Default" or "GoPro" (default: "Default", the server\'s '
+             'sensor profile, carla.PostProcess.Profile). K / Shift+K cycles '
+             'the profiles at runtime')
     argparser.add_argument(
         '--sync', action='store_true',
         help='Activate synchronous mode execution')

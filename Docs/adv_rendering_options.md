@@ -107,6 +107,22 @@ Each tier selects the matching bucket — `Low` 0 through `Epic` 3 — in every 
 !!! Note
     `rt_lens`, `rt_lens_distance` and `rt_lens_instance` path-trace their own primary rays and ignore `carla.Camera.UseRayTracing`, so they work at every tier. The flag only governs hardware ray tracing on the ordinary scene-capture cameras.
 
+### Volumetric clouds
+
+The clouds are rendered by the `VolumetricCloudComponent` of the sky rig Blueprint
+(`Content/Carla/Blueprints/LevelDesign/BP_Carla_Sky`). Its **View Sample Count Scale** is set to `2.0` in the
+Blueprint (engine default `1.0`): twice the ray-marching samples in the main view and the camera sensors, for cleaner,
+less grainy clouds at a higher cost. Measured on Town10HD with an RTX-class GPU looking at a sky with cloudiness 70:
+
+| View Sample Count Scale | Frame time |
+|---|---|
+| 0.5 | 41.0 ms |
+| 1.0 (engine default) | 45.5 ms |
+| 2.0 (CARLA default) | 53.6 ms |
+
+The value lives in the Blueprint asset, not in the placed actors, so every map's sky rig inherits it. Lower it to
+gain performance when cloud quality matters less.
+
 ### Ray tracing defaults
 
 The hardware ray tracing subsystem is initialized at the project level (`r.RayTracing=True`) and the path tracer is available (`r.PathTracing=True`) — this is what powers the [ray-traced lens camera](ref_sensors.md#ray-traced-lens-camera). Per-effect switches are configured as follows:
