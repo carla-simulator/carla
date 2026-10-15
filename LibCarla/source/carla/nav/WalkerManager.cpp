@@ -101,7 +101,10 @@ namespace nav {
                     break;
 
                 case WALKER_STOP:
-                    info.state = WALKER_IDLE;
+                    // Retry on the next update instead of recursively from
+                    // SetWalkerNextPoint. Route generation can legitimately
+                    // fail or return only the walker's current point.
+                    SetWalkerRoute(it.first);
                     break;
             }
         }
@@ -117,7 +120,8 @@ namespace nav {
 
         // set a new random target
         carla::geom::Location location;
-        _nav->GetRandomLocation(location, nullptr);
+        if (!_nav->GetRandomLocation(location, nullptr))
+            return false;
 
         // set the route
         return SetWalkerRoute(id, location);
@@ -146,19 +150,15 @@ namespace nav {
         info.state = WALKER_IDLE;
 
         // get a route from navigation
-        // if pathfinding fails (e.g. no polygon found near 'from'/'to' within
-        // tolerance) 'path'/'area' are left empty; previously this return
-        // value was ignored, so the route below silently ended up empty too.
-        // SetWalkerNextPoint() then found current index >= route size and
-        // paused the agent instead of ever requesting a crowd move target,
-        // with no error surfaced anywhere (info.state stays WALKER_IDLE here
-        // on failure, so callers see a stopped walker rather than a wrong one).
-        if (!_nav->GetAgentRoute(id, info.from, to, path, area)) {
-            return false;
-        }
+        const bool route_found = _nav->GetAgentRoute(id, info.from, to, path, area);
 
         // create each point of the route
         info.route.clear();
+        if (!route_found) {
+            info.state = WALKER_STOP;
+            _nav->PauseAgent(id, true);
+            return false;
+        }
         info.route.reserve(path.size());
         unsigned char previous_area = CARLA_AREA_SIDEWALK;
         for (unsigned int i=0; i<path.size(); ++i) {
@@ -183,9 +183,18 @@ namespace nav {
             previous_area = area[i];
         }
 
+        // The first route point is the walker's current position, so a
+        // traversable route needs at least one more point. Keep the walker
+        // paused and let Update request another route on the next tick when
+        // the target is unreachable or already reached.
+        if (info.route.size() < 2u) {
+            info.state = WALKER_STOP;
+            _nav->PauseAgent(id, true);
+            return false;
+        }
+
         // assign the first point to go (second in the list)
-        SetWalkerNextPoint(id);
-        return true;
+        return SetWalkerNextPoint(id);
     }
 
     // set the next point in the route
@@ -216,8 +225,6 @@ namespace nav {
             // change the state
             info.state = WALKER_STOP;
             _nav->PauseAgent(id, true);
-            // we need a new route from here
-            SetWalkerRoute(id);
         }
 
         return true;

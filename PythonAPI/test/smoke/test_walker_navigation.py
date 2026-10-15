@@ -96,8 +96,19 @@ class TestWalkerNavigation(SyncSmokeTest):
             self.world.tick()
 
             controller.start()
-            controller.go_to_location(self._destination_away_from(spawn_location))
             controller.set_max_speed(1.4)
+
+            # A destination at the current position can produce an empty or
+            # single-point path. WalkerManager previously requested its
+            # replacement recursively, so consecutive short routes could
+            # overflow the client stack.
+            controller.go_to_location(walker.get_location())
+            self.world.tick()
+            self.assertIsNotNone(
+                self.world.get_snapshot(),
+                "Server stopped responding after a zero-length walker route")
+
+            controller.go_to_location(self._destination_away_from(spawn_location))
 
             start = walker.get_location()
             for _ in range(120):
