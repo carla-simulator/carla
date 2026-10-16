@@ -7,6 +7,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # --- Defaults ---
 DISTRO="humble"
 RMW="fastdds"
+NO_CACHE=false
 # Holds the value of --ros-domain-id. Named differently from ROS_DOMAIN_ID so it
 # does not clobber the inherited environment variable; it defaults to that env
 # var so exporting ROS_DOMAIN_ID works without the flag, and --ros-domain-id
@@ -16,13 +17,16 @@ ROS_DOMAIN_ID_ARG="${ROS_DOMAIN_ID:-}"
 # --- Argument parsing ---
 usage() {
     cat <<EOF
-Usage: $0 [--distro=<distro>] [--rmw=<middleware>] [--ros-domain-id=<N>]
+Usage: $0 [--distro=<distro>] [--rmw=<middleware>] [--ros-domain-id=<N>] [--no-cache]
 
 Options:
   --distro          ROS 2 distribution to use. Supported: humble, jazzy  (default: humble)
   --rmw             Middleware to use. Supported: fastdds, cyclonedds, zenoh  (default: fastdds)
   --ros-domain-id   ROS 2 domain id (0-232). Must match the CARLA server's
                     --ros-domain-id. When omitted, the default domain is used.
+  --no-cache        Force a rebuild of the Docker image from the latest
+                    osrf/ros:<distro>-desktop base, ignoring the layer cache.
+                    Without it, the image is built only if it does not exist yet.
 
 Examples:
   $0 --distro=humble --rmw=fastdds
@@ -41,6 +45,7 @@ for arg in "$@"; do
         --distro=*)         DISTRO="${arg#*=}" ;;
         --rmw=*)            RMW="${arg#*=}" ;;
         --ros-domain-id=*)  ROS_DOMAIN_ID_ARG="${arg#*=}" ;;
+        --no-cache)         NO_CACHE=true ;;
         --help|-h)          usage ;;
         *) echo "Unknown argument: $arg"; usage ;;
     esac
@@ -76,7 +81,12 @@ IMAGE_NAME="carla-rviz-${DISTRO}-${RMW}"
 # --- Build ---
 function build_image() {
     echo "[RViz] Building Docker image '${IMAGE_NAME}' (distro=${DISTRO}, rmw=${RMW})..."
+    local cache_args=()
+    if [ "${NO_CACHE}" = true ]; then
+        cache_args+=(--pull --no-cache)
+    fi
     docker build \
+        "${cache_args[@]}" \
         --build-arg ROS_DISTRO="${DISTRO}" \
         --build-arg RMW_IMPLEMENTATION="${RMW_IMPLEMENTATION}" \
         --file "${SCRIPT_DIR}/Dockerfile" \
@@ -84,7 +94,7 @@ function build_image() {
         "${SCRIPT_DIR}"
 }
 
-if ! docker image inspect "${IMAGE_NAME}" &>/dev/null; then
+if [ "${NO_CACHE}" = true ] || ! docker image inspect "${IMAGE_NAME}" &>/dev/null; then
     build_image
 fi
 
