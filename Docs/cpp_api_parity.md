@@ -31,19 +31,18 @@ The goal of this track is not to rewrite the core API. It is to make the existin
 
 ## Current implementation status
 
-Implemented in current docs/examples:
+Implemented, in the [C++ tutorial](tuto_cpp.md) and `Examples/CppClient`:
 
 - C++ quickstart and run instructions
 - Python → C++ API mapping (core client/world/spawn/destroy)
 - Basic client workflow example (connect/load world/spawn/control/destroy)
-- `carla-client` decoupled from Python: `Boost::python` and the `LIBCARLA_WITH_PYTHON_SUPPORT` macro removed, `PythonUtil.h` relocated into PythonAPI. Downstream C++ projects can now link `carla-client` without pulling in any Python dependency — partial step toward #3731's underlying concern about Boost.Python footprint.
+- Batch commands, world snapshots, and recorder/replay helpers
+- Navigation agents in C++: `BasicAgent`, `BehaviorAgent`, `ConstantVelocityAgent`, `LocalPlanner` and `GlobalRoutePlanner` in `LibCarla/source/carla/agents/navigation`, the C++ equivalent requested in #9554
+- `carla-client` decoupled from Python: `Boost::python` and the `LIBCARLA_WITH_PYTHON_SUPPORT` macro removed, `PythonUtil.h` moved to `PythonAPI/carla/include/carla`. Downstream C++ projects can link `carla-client` without pulling in any Python dependency, a partial step toward the Boost.Python concern in #3731.
 
-Still pending to fully satisfy this roadmap:
+Still pending:
 
-- Dedicated C++ examples for batch command usage
-- Dedicated C++ examples for snapshots
-- Dedicated C++ examples for recorder/replay helpers
-- Explicit section documenting why/where C++ is intentionally lower-level than Python wrappers
+- An explicit section documenting why and where C++ is intentionally lower-level than the Python wrappers
 
 ## Non-goals
 
@@ -57,11 +56,6 @@ Still pending to fully satisfy this roadmap:
 - Common tasks are documented in C++ rather than only in Python
 - The public C++ API feels like a first-class path, not an internal-only layer
 
-## UE4 / UE5 compatibility target
+## Engine compatibility
 
-This track is intended to support both branches.
-
-- UE4: supported
-- UE5: supported
-
-The focus is on branch-agnostic client workflows (`carla::client::Client`, world/map/actor operations) and documentation parity, avoiding branch-specific APIs in first-step examples.
+The C++ client lives in LibCarla and talks to the server over RPC, so it does not depend on the engine the server was built with, and the examples avoid server-side, engine-specific APIs. As with the Python client, build it from the same CARLA version as the server it connects to: the RPC protocol is not compatible across versions.
