@@ -127,6 +127,8 @@ Take a shot of the world from their point of view. For cameras that return [carl
 
 
 
+Camera images also depend on the server's quality level and on each camera's post-process profile. See [Rendering options](adv_rendering_options.md) and [Camera post-process presets](camera_postprocess_presets.md).
+
 ### Detectors
 
 Retrieve data when the object they are attached to registers a specific event.

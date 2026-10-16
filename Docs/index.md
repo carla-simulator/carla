@@ -55,6 +55,7 @@ CARLA forum</a>
 - [__Tutorials__](tutorials.md) — Tutorials covering CARLA's functionality.
 - [__C++ tutorial__](tuto_cpp.md) — The C++ client workflow, batch commands, snapshots and replay.
 - [__C++ reference__](ref_cpp.md) — Classes and methods in CARLA C++.
+- [__Extended documentation__](ext_docs.md) — Advanced features covered in more depth.
 - [__Agent skills__](agent_skills.md) — The vetted procedures an agent can follow in this repository.
 - [__CARLA Studio__](https://github.com/carla-simulator/carla-studio) — The scenario authoring tool.
 

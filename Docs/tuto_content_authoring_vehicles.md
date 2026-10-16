@@ -200,6 +200,8 @@ Select all the wheels in the *Skeleton Tree* panel:
 - Adjust the wheel sphere to the size of the wheel.
 - Save and close the window.
 
+For more detailed raycast and physics colliders, see [Generate detailed colliders](tuto_D_generate_colliders.md).
+
 ### Creating the animation blueprint
 
 In the content browser directory where you have your new vehicle asset, right click in an empty space and choose `Animation > Animation Blueprint` from the context menu. In the popup that opens, search for `CarlaVehicleAnimationInstance` for the *Parent Class* and in the *Specific Skeleton* field search for the *Skeleton* file created for your new vehicle. Name the blueprint and then click *Create*.
@@ -241,6 +243,8 @@ Adjust the max steer angle as needed, the default value of 50 will suit most app
 For both front wheels enable *Affected By Steering*, ensure this parameter is disabled for the rear wheels.
 
 Leave *MaxBrakeTorque* and *MaxHandBrakeTorque* at the default values unless you have alternative figures from a vehicle specification.
+
+To tune each wheel's suspension, see [Customize vehicle suspension](tuto_D_customize_vehicle_suspension.md).
 
 ---
 ## Vehicle blueprint

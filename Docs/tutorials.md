@@ -41,6 +41,8 @@ Every tutorial in the documentation, grouped by what it is for.
 ---
 ## Assets and maps
 
+- [__Custom assets__](custom_assets_tutorials.md) — Overview of adding props, vehicles, materials and content packs.
+- [__Custom maps__](maps_tutorials.md) — Overview of creating and importing maps.
 - [__Add a new vehicle__](tuto_content_authoring_vehicles.md) — Prepare a vehicle for CARLA, from the model to the blueprint.
 - [__Vehicle materials__](tuto_content_authoring_vehicles_materials.md) — Paint a vehicle with CARLA's car-paint master material.
 - [__Material customization__](tuto_A_material_customization.md) — Building and environment materials.

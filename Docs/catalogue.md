@@ -19,9 +19,11 @@ The default package ships three drivable maps, plus the empty ones used for Open
 | --- | --- | --- |
 | [__Town10HD_Opt__](map_town10.md) | yes | A downtown urban environment with skyscrapers, residential buildings and an ocean promenade. |
 | [__Mine_01__](map_mine.md) | yes | An industrial, off-road, open-cast mining environment. |
-| __Town15__ | yes | A large World Partition map of a university campus and its surroundings. |
+| [__Town15__](map_town15.md) | yes | A large World Partition map of a university campus and its surroundings. |
 | __Town01_Opt__ … __Town07_Opt__ | source build | The classic CARLA towns, from a small village to a highway network. |
 | __Town11__, __Town12__, __Town13__ | source build | Large World Partition maps. |
+
+The classic towns and the large maps are also available as [content-pack towns](map_content_packs.md) for a packaged release.
 
 Load a map by its exact name, which is the file name: `client.load_world('Town10HD_Opt')`. See [Maps](core_map.md) for what a map contains and how to navigate it.
 

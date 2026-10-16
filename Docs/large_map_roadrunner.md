@@ -40,12 +40,12 @@ Building the map itself is beyond this guide — the [RoadRunner documentation][
 
 The road layout cannot be changed after export, so validate before you export: check the geometry, and pay attention to junction connections.
 
-![CheckGeometry](img/large_map_roadrunner/check_geometry.jpg)
+![CheckGeometry](img/shared/check_geometry.jpg)
 <div style="text-align: right"><i>A clean junction (left) and a broken one (right): check every junction before exporting.</i></div>
 
 The `OpenDRIVE Preview Tool` draws the road network as CARLA will read it, which is the quickest way to catch a bad junction:
 
-![checkopen](img/large_map_roadrunner/check_open.jpg)
+![checkopen](img/shared/check_open.jpg)
 <div style="text-align: right"><i>The OpenDRIVE Preview Tool showing the lanes and junction connections that CARLA will read.</i></div>
 
 !!! Note

@@ -145,6 +145,8 @@ When the ego vehicle is spawned, two subscribers are created for it:
 
 Send on whichever suits the stack: `vehicle_control_cmd` for a controller that already produces pedal and steering commands, `ackermann_control_cmd` for one that works in speed and steering angle.
 
+The message definitions are in the [messages reference](ros2_native_msgs.md). The separate ROS bridge project is described in [ROS bridge](ros_documentation.md). To drive the ego vehicle with Autoware, see [Autoware](autoware.md).
+
 ---
 ## CarlaEgoVehicleControl.msg
 

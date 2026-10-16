@@ -8,6 +8,8 @@ pip3 install PythonAPI/carla/dist/carla-*.whl
 
 The wheel ships inside the CARLA package; a source build writes it to `Build/<preset>/PythonAPI/dist/`. See [Quick start](start_quickstart.md) for the full installation.
 
+For an overview of every topic in this section, see [Core concepts](core_concepts.md).
+
 Also make sure to import the CARLA package in your python scripts:
 
 ```py
@@ -29,6 +31,8 @@ import carla
 ---
 
 ## World and client
+
+[World and client](core_world.md) covers both objects in full, including weather, lights, debugging and world snapshots.
 
 ![client_server_architecture](img/shared/client_server_architecture.svg)
 <div style="text-align: right"><i>CARLA client-server architecture: clients, Traffic Manager, server components and default ports.</i></div>

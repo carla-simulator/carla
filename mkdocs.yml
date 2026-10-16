@@ -16,6 +16,7 @@ nav:
   - 'Building CARLA' : 'build_carla.md'
 
 - Next steps:
+  - 'Content authoring - maps': 'tuto_content_authoring_maps.md'
   - 'Content authoring - vehicles': 'tuto_content_authoring_vehicles.md'  
   - 'Content authoring - content packs': 'content_packs.md'
 
@@ -25,18 +26,16 @@ nav:
   - 'Maps': 'core_map.md'
   - 'Sensors and data': 'core_sensors.md'
   - 'Coordinate conventions': 'coordinate_conventions.md'
-  - 'OpenDRIVE standalone mode': 'adv_opendrive.md'
   - 'Traffic' : 'ts_traffic_simulation_overview.md'
 
 - Resources:
   - 'Python API': 'python_api.md'
+  - 'Agent skills': 'agent_skills.md'
   - 'Catalogue': 'catalogue.md'
   - 'C++ tutorial': 'tuto_cpp.md'
   - 'C++ reference': 'ref_cpp.md'
   - 'Blueprint library': 'bp_library.md'
   - 'Tutorials': 'tutorials.md'
-  - 'Agent skills': 'agent_skills.md'
-  - 'CARLA Studio': 'https://github.com/carla-simulator/carla-studio'
 
 - CARLA Ecosystem:
   - 'MathWorks': 'large_map_roadrunner.md'
@@ -50,12 +49,77 @@ nav:
   - 'Scenic': 'tuto_G_scenic.md'
   - 'SYNKROTRON': 'ecosys_synkrotron.md'
   - 'InvertedAI': 'inverted_ai.md'
+  - 'Ansys': 'ecosys_ansys.md'
 
 - Contributing:
   - 'Guidelines': 'cont_contribution_guidelines.md' 
   - 'Coding standards': 'cont_coding_standard.md'
   - 'Documentation standard': 'cont_doc_standard.md'
+  - 'Development': 'development_tutorials.md'
  
+# Pages reached from a parent page instead of the sidebar
+not_in_nav: |
+  /adv_agents.md
+  /adv_benchmarking.md
+  /adv_digital_twin.md
+  /adv_multigpu.md
+  /adv_opendrive.md
+  /adv_recorder.md
+  /adv_rendering_options.md
+  /adv_synchrony_timestep.md
+  /adv_traffic_manager.md
+  /autoware.md
+  /build_devcontainer.md
+  /build_docker.md
+  /build_faq.md
+  /build_linux_ue5.md
+  /build_windows_ue5.md
+  /camera_postprocess_presets.md
+  /catalogue_pedestrians.md
+  /catalogue_props.md
+  /catalogue_scripts.md
+  /catalogue_vehicles.md
+  /cont_code_of_conduct.md
+  /content_authoring_props.md
+  /core_concepts.md
+  /core_world.md
+  /cpp_api_parity.md
+  /custom_assets_tutorials.md
+  /download.md
+  /ext_docs.md
+  /large_map_overview.md
+  /map_content_packs.md
+  /map_mine.md
+  /map_town10.md
+  /map_town15.md
+  /maps_tutorials.md
+  /ref_recorder_binary_file_format.md
+  /ref_sensors.md
+  /release_readme.md
+  /ros2_native_msgs.md
+  /ros2_native_sensors.md
+  /ros_documentation.md
+  /testing.md
+  /tuto_A_material_customization.md
+  /tuto_D_contribute_assets.md
+  /tuto_D_create_semantic_tags.md
+  /tuto_D_create_sensor.md
+  /tuto_D_customize_vehicle_suspension.md
+  /tuto_D_generate_colliders.md
+  /tuto_D_make_release.md
+  /tuto_G_add_friction_triggers.md
+  /tuto_G_bounding_boxes.md
+  /tuto_G_control_vehicle_physics.md
+  /tuto_G_control_walker_skeletons.md
+  /tuto_G_getting_started.md
+  /tuto_G_instance_segmentation_sensor.md
+  /tuto_G_openstreetmap.md
+  /tuto_G_pedestrian_bones.md
+  /tuto_G_pygame.md
+  /tuto_G_texture_streaming.md
+  /tuto_G_traffic_manager.md
+  /tuto_content_authoring_vehicles_materials.md
+
 markdown_extensions:
   - admonition 
 
