@@ -65,6 +65,14 @@ error.
 | Set-path routes | `tm_paths.py OUT.json R1S R1 R2S R2 [s]` then `routes_plot.py OUT.png OUT.json` | Runs the routes with the Traffic Manager and plots the recorded tracks (cut at the last route point, where the TM takes over). `CAM="x,y,z,yaw,pitch;dir;first_step" OVERLAY=1` adds a top-down animation with each car ringed in its route colour. |
 | Server quality levels / OpenDRIVE worlds | `run_server.sh game` (`QUALITY=Low`), then `still.py` / `odr.py` | Close the editor first (24 GB GPU: editor ~15 GB, server ~8 GB). Shoot Epic and Low from the same pose. `generate_opendrive_world` crashed the server on Town03.xodr (raster overflow in `OpenDriveGenerator.cpp`); Town01.xodr works. Above ~40 m the generated ground plane edge shows as a black void. |
 | Catalogue actors | `PythonAPI/docs/catalogue_doc_gen.py --recapture [--catalogue ...]` | Writes `img/catalogue/` and the pages. In an editor PIE session pass `--towns Town10HD_Opt --images-only` (PIE cannot switch maps; a partial run must not rewrite the pages). |
+| One view per map, montages | `mapshots.py OUT Town01_Opt Town02_Opt ... [MAP:x,y,z,yaw,pitch]`, then `montage.py OUT.webp 1280 720 2000 IMG:LABEL[:croptop] ...` | Without a pose, `mapshots.py` frames the spawn points from 30° above. The classic towns show a dark band at the top of the frame (sky edge); crop it with `:0.1`. Town11-13 are too heavy to load in a row. |
+| World Partition map (Town15) from a `-game` server | `wp_shots.py OUT "name=x,y,z,yaw,pitch;hx,hy,hz"` | Parks a `role_name=hero` vehicle at `hx,hy,hz` (physics off) under the camera and ticks 400 times; without it the shot only shows the cells around the spectator start. |
+| Town street views with traffic | `townshots.py OUT W H name=x,y,z,yaw,pitch[,fov] ...` | Populates 70 cars and 60 walkers, ticks 200, shoots each pose. Scout first at 960x540, then render the picks at 1920x1080. |
+| Same parameter at several values | `strip.py OUT.webp CROP|none W IMG:LABEL ...` | Labelled side-by-side strip (black tab with the value), for material or setting comparisons. |
+| Texture channels | export with `AssetExportTask` (see editor recipes), then `channels.py DIFFUSE.png ORME.png OUT1 OUT2` | Splits a building's Diffuse (RGB / Alpha) and ORME (R AO, G roughness, B metallic, A emissive) into labelled panels. |
+| Physics substepping convergence | `physconv.py OUT.json` then `plot_physconv.py OUT.json OUTDIR` | Same scripted drive on Town10HD_Opt spawn point 79 (a 164 m straight) for several `fixed_delta_seconds` / `max_substep_delta_time`. Plot speed, not `get_acceleration()`: it is one sample per tick, so a coarse step hides the peaks and the comparison is not fair. |
+| Vehicle telemetry | `telemetry_run.py OUT.json` then `plot_telemetry.py OUT.json OUT.png` | Launch, lane change and stop, logging `get_telemetry_data()` every tick. `long_slip` spikes to ~1700 at gear shifts on UE 5.8, so plot `omega` instead. |
+| Real recorder outputs for a page | `blocked.py OUT.log` | Records one minute of TM traffic and prints `show_recorder_actors_blocked`; `show_recorder_file_info` and `show_recorder_collisions` take the same absolute path. Paste the output in the page as a code block, trimmed with `...`. |
 
 ## Poses that worked
 
@@ -77,10 +85,54 @@ error.
 | Town15 | `440.4,205.96,124.1,39.96,-9` with `HERO=1` | elevated campus street for weather / profile grids |
 | Town10HD_Opt | `75,-15,30,60,-38` | aerial junction (Epic vs Low quality, TM traffic) |
 | Town10HD_Opt | top-down `-35,20,60,-90,-90` | set_path convergence (routes 43 -> 45,149,151,58,153 and 83 -> 149,151,58,153) |
+| Town10HD_Opt | `-172.2,183.86,27.64,-45.59,0` | the spectator's start view (what the quick start shows) |
+| Town10HD_Opt | museum `100,45,2.5,10,6`, palm boulevard `40,30,2,0,3`, skyscrapers `-60,30,2,-60,20`, town houses `-40,100,1.7,-5,3` | map page street views |
+| Town10HD_Opt | aerial `0,60,40,0,-10`, top `0,60,320,0,-90` with fov 70 | map overview, road network |
+| Town10HD_Opt | spawn point 79 | 164 m straight, for driving tests (physics, telemetry) |
+| Town15 | camera `380,155,175,40,-28`, hero at `440.4,205.96,122.6` | campus aerial |
 
 Switching the editor to Town15: stop PIE, `LevelEditorSubsystem.load_level('/Game/Carla/Maps/Town15/Town15')`
 through `ue.py`, then begin play; World Partition PIE blocks remote execution for a minute or two, so
 poll the CARLA port instead of the editor.
+
+## Editor recipes
+
+Run each through `ue.py` with the editor open (not PIE), then grab with `xwdgrab.py`.
+
+- **Asset editor in a tall window.** `AssetEditorSubsystem.open_editor_for_assets([asset])`, find the new window with
+  `wmctrl -lG`, enlarge it with `wmctrl -i -r <id> -e 0,X,Y,W,H` so the whole Details panel fits (it cannot be
+  scrolled from Python), grab, then `close_all_editors_for_asset`. The grab can come back scaled (`xwdgrab` prints
+  the real size): scale your crop coordinates.
+- **Class defaults miss the buttons.** `CallInEditor` functions (the `RoadPainter` buttons, for instance) only show
+  on an instance: spawn a temporary actor, label it `DOCS_TMP_*`, select it, grab the main Details panel, destroy
+  it. Spawning dirties the level; never save it.
+- **Renders of material variants.** Spawn the vehicle blueprint (`EditorActorSubsystem.spawn_actor_from_class`),
+  give every mesh slot that uses the paint instance one shared `create_dynamic_material_instance`, set parameters
+  on it, place the viewport camera, and run `HighResShot 1600x900`; the file lands in
+  `Unreal/CarlaUnreal/Saved/Screenshots/LinuxEditor/HighresScreenshot*.png`. Static switches cannot change on a MID.
+- **Material facts before writing.** `MaterialEditingLibrary.get_scalar/vector/static_switch/texture_parameter_names(master)`
+  lists the real parameters; `get_inputs_for_material_expression` walks the graph from
+  `get_material_property_input_node`; `AssetRegistry.get_dependencies` shows what a master reads (that is how
+  `M_RoadMaster` was found to read `RenderTexture_Town10HD` through `WorldMaskFunction`).
+- **Textures to PNG.** `AssetExportTask` with `filename=....png`, `automated=True`, run by
+  `Exporter.run_asset_export_task`.
+- **Editor Utility Widgets.** `EditorUtilitySubsystem.spawn_and_register_tab(widget)` opens it in its own window; grab
+  that window and close it with `wmctrl -i -c <id>`.
+- **Blueprint variable names** are not exposed to Python on a BP class default object; `strings -n 5 BP.uasset`
+  lists them, spelling mistakes included.
+- **Launch the editor** with `cmake --build Build/Release --target launch` (the build directory of the preset).
+  If the grab comes out grey or with a tooltip, the user is using the screen: ask before carrying on.
+
+## Checking the pages
+
+```sh
+python3 scripts/images/check_images.py          # broken refs (exit 1), images without caption, unreferenced files
+python3 scripts/images/add_captions.py caps.json # insert captions: {"page.md": {"img/...": "caption"}}
+python3 scripts/images/relayout_images.py --dry --ref=<merged branch>   # after merging a branch with old image paths
+```
+
+Build the site with `mkdocs build --strict` from a virtualenv with `Docs/requirements.txt`. Strict does not fail on
+dead in-page anchors, which only print as `INFO`; grep the output for `anchor`.
 
 ## Handing the images over
 
@@ -109,6 +161,17 @@ in the manifest notes so it lands in the page as a code block.
   `u = W/2 + f*y/x`, `v = H/2 - f*z/x`, `f = W / (2 tan(fov/2))`. Level boxes
   from `world.get_level_bbs()` are already in world space:
   `bb.get_world_vertices(carla.Transform())`.
+- **Debug shapes persist.** `draw_arrow` / `draw_box` with a long `life_time` show up in the next shots too; use a
+  few seconds and tick past it before the next camera.
+- **Labels on spawn points.** `draw_string` does not reach a camera; project the locations (formula above) and draw
+  the numbers on the image, and say so in the caption.
+- **Admonitions take no fenced code.** The site has no `superfences`: a fenced block inside `!!! Note` renders as one
+  inline code line. Put the code after the admonition, or inline.
+- **Captions are italic already.** A nested `<i>` inside the caption shows nothing; use `<b>` or `<code>`.
+- **Animated WebP size.** A 60-frame 1280 px flight is ~7 MB; 960 px, every second frame and quality 55 brings it
+  under 2 MB. Re-encode generated overviews the same way.
 - **Features that showed nothing in UE 5.8** (check before documenting them):
   `vehicle.show_debug_telemetry(True)` draws no HUD; `world.apply_color_texture_to_object()`
-  had no visible effect on `ProceduralBuilding*` or `BP_BillBoard*` objects.
+  had no visible effect on `ProceduralBuilding*` or `BP_BillBoard*` objects. Also: no shipped vehicle blueprint assigns a mesh to
+  `CustomCollision`, and `Util/Tools/Import.py` skips the pedestrian navmesh unless `RecastBuilder` is copied into
+  `Util/DockerUtils/dist/`.

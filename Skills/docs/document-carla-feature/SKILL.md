@@ -71,6 +71,19 @@ was, and then the entry moves instead of going.
   makes the reference worse, not better.
 - Re-run the audit after a pass. The counts moving is the only evidence the
   work landed.
+- **Pages written for UE4 / 0.9.x** (restored or merged from older branches)
+  repeat the same stale facts. Grep for them and check each against the tree:
+  `make launch|import|PythonAPI|package|rebuild` (now `cmake --build
+  Build/Release --target ...` and `Util/Tools/Import.py`), `UE4_ROOT` (now
+  `CARLA_UNREAL_ENGINE_PATH`), Unreal 4.26/4.27 and Visual Studio 2019 (5.8 and
+  2022), `.egg` files (wheels), `PythonAPI/carla/source` (`PythonAPI/carla/src`),
+  `boost::shared_ptr` in bindings (`std::shared_ptr`), sensors overriding `Tick`
+  (`ASensor::Tick` is `final`: override `PostPhysTick`) and `Stream.Send`
+  (`SerializeAndSend`), `CarlaUE4` paths and `../img/` links. Content paths move
+  too: list the folder before writing one.
+- **Generators that need a server** (`bp_doc_gen.py`, `catalogue_doc_gen.py`)
+  can be broken for months without anyone noticing; run them after editing
+  them. `ActorAttribute.as_str()` only works on String attributes.
 
 ## Output
 
