@@ -81,6 +81,7 @@ set (
   Eigen3::Eigen
   zlibstatic
   png_static
+  ${CARLA_PUGIXML_TARGET}
   rpc
 )
 
@@ -292,6 +293,26 @@ set (
   ${CARLA_UNREAL_OPTIONS_FILE_NAME}
   ${CARLA_UNREAL_DEFINITIONS_FILE_NAME}
 )
+
+# Keep Unreal's generated definition files synchronized even when a prior
+# build left regular files at the plugin paths.  create_symlink alone cannot
+# replace those files, which can silently leave Unreal linking stale archives.
+foreach (DEF_FILE ${CARLA_UNREAL_DEF_FILES})
+  file (REMOVE
+    ${CARLA_UE_CARLA_PATH}/${DEF_FILE}
+    ${CARLA_UE_CARLA_TOOLS_PATH}/${DEF_FILE}
+  )
+  file (CREATE_LINK
+    ${CMAKE_CURRENT_BINARY_DIR}/${DEF_FILE}
+    ${CARLA_UE_CARLA_PATH}/${DEF_FILE}
+    SYMBOLIC
+  )
+  file (CREATE_LINK
+    ${CMAKE_CURRENT_BINARY_DIR}/${DEF_FILE}
+    ${CARLA_UE_CARLA_TOOLS_PATH}/${DEF_FILE}
+    SYMBOLIC
+  )
+endforeach ()
 
 foreach (DEF_FILE ${CARLA_UNREAL_DEF_FILES})
   list (
