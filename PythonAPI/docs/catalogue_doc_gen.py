@@ -187,7 +187,8 @@ class Capture(object):
     def camera_for(self, entry, actor=None):
         """One camera for the whole catalogue, one per entry.view, or framed on the actor."""
         if self.framing is not None and actor is not None:
-            return frame_actor(actor, self.framing, self.resolution,
+            framing = dict(self.framing, **PROP_FRAMING.get(actor.type_id, {}))
+            return frame_actor(actor, framing, self.resolution,
                                float(self.camera_attributes.get('fov', 90)))
         if isinstance(self.camera, dict):
             return self.camera[entry.view]
@@ -555,14 +556,38 @@ def prop_entries(library):
     return [(title, groups[title]) for _, title in PROP_GROUPS if groups[title]]
 
 
+# Props whose mesh lies down: the rotation (degrees) added at spawn to stand
+# them up. Yaw is no use here: frame_actor places the camera relative to the
+# actor's heading, so turning the actor turns the camera with it.
+PROP_ROTATION = {
+    'static.prop.calibrator': {'pitch': -90.0},   # the colour chart lies flat; stand it up
+}
+
+# Per-prop framing that replaces the capture's defaults; `bearing` is measured
+# from the actor's heading, so 180 + the default shows a prop modelled back to front.
+PROP_FRAMING = {
+    'static.prop.vendingmachine': {'bearing': 215.0},
+    'static.prop.calibrator': {'bearing': 0.0, 'pitch': -5.0},
+}
+
+
 def ground_prop(actor):
     """Sits a prop on the road: props have no physics, so they stay where spawned.
 
     A plain ground projection can hit the prop itself, so the ray keeps only
-    road-like surfaces.
+    road-like surfaces. The lowest point comes from the world-space vertices of
+    the bounding box, which stays right for a prop turned by PROP_ROTATION.
     """
     world = actor.get_world()
     transform = actor.get_transform()
+    turn = PROP_ROTATION.get(actor.type_id)
+    if turn:
+        transform.rotation.yaw += turn.get('yaw', 0.0)
+        transform.rotation.pitch += turn.get('pitch', 0.0)
+        transform.rotation.roll += turn.get('roll', 0.0)
+        actor.set_transform(transform)
+        world.tick()
+        transform = actor.get_transform()
     ground = (carla.CityObjectLabel.Roads, carla.CityObjectLabel.RoadLines,
               carla.CityObjectLabel.Sidewalks, carla.CityObjectLabel.Ground,
               carla.CityObjectLabel.Terrain)
@@ -570,8 +595,8 @@ def ground_prop(actor):
                                       transform.location - carla.Location(z=5.0))
             if h.label in ground]
     if hits:
-        bottom = actor.bounding_box.location.z - actor.bounding_box.extent.z
-        transform.location.z = hits[0].location.z - bottom + 0.01
+        lowest = min(v.z for v in actor.bounding_box.get_world_vertices(transform))
+        transform.location.z += hits[0].location.z - lowest + 0.01
         actor.set_transform(transform)
 
 
