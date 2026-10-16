@@ -30,6 +30,9 @@ import carla
 
 ## World and client
 
+![client_server_architecture](img/shared/client_server_architecture.svg)
+<div style="text-align: right"><i>CARLA client-server architecture: clients, Traffic Manager, server components and default ports.</i></div>
+
 ### Client
 
 __The client__ is the module the user runs to ask for information or changes in the simulation. A client runs with an IP and a specific port. It communicates with the server via terminal. There can be many clients running at the same time. Advanced multiclient managing requires thorough understanding of CARLA and [synchrony](adv_synchrony_timestep.md).
@@ -73,6 +76,9 @@ blueprint_library = world.get_blueprint_library()
 
 ---
 ## Synchronous and asynchronous mode
+
+![sync_async_modes](img/shared/sync_async_modes.svg)
+<div style="text-align: right"><i>Asynchronous vs synchronous mode, and physics substeps inside one fixed time step.</i></div>
 
 CARLA has a client-server architecture. The server runs the simulation. The client retrieves information and requests changes in the simulation. This section deals with communication between client and server.
 

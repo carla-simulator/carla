@@ -100,6 +100,9 @@ Sensor data differs a lot between sensor types. Take a look at the [sensors refe
 
 ---
 ## Types of sensors
+
+![sensor_gallery](img/core_sensors/sensor_gallery.webp)
+<div style="text-align: right"><i>The same frame through nine sensor outputs: RGB, depth, semantic and instance segmentation, normals, LiDAR, semantic LiDAR, radar and raw depth. Town10HD_Opt &middot; AutomotiveHDR &middot; sunny afternoon</i></div>
  
 ### Cameras
 

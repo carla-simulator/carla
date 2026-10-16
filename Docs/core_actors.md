@@ -320,6 +320,10 @@ vehicle.set_autopilot(True)
 ```
 * __Vehicle lights__ have to be turned on and off by the user. The full set is listed in [__carla.VehicleLightState__](python_api.md#carla.VehicleLightState), but which of them a model actually carries depends on the model: bikes have a front and back position light, most cars have headlights, brake lights and indicators, and the emergency vehicles add sirens. Check a model's lights against the [vehicle catalogue](catalogue_vehicles.md), or turn them on and look.
 
+![vehicle_light_states](img/shared/vehicle_light_states.webp)
+<div style="text-align: right"><i>carla.VehicleLightState combinations on a Lincoln MKZ at night, front (top) and rear (bottom). Town10HD_Opt &middot; sensor.camera.rgb &middot; Cinematic &middot; ClearNight</i></div>
+
+
 The lights of a vehicle can be retrieved and updated anytime using the methods [carla.Vehicle.get_light_state](python_api.md#carla.Vehicle.get_light_state) and [carla.Vehicle.set_light_state](python_api.md#carla.Vehicle.set_light_state). These use binary operations to customize the light setting.
 
 ```py

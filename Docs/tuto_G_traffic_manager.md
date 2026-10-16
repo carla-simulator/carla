@@ -113,7 +113,7 @@ while True:
 
 If you now fly through the map with the spectator, you will see vehicles driving autonomously around the map. Buses and trucks swing wide through junctions, the way a long vehicle has to; `traffic_manager.vehicle_large_vehicle_wide_turn(vehicle, False)` turns that off for one vehicle, and `global_large_vehicle_wide_turn(False)` for all of them.
 
-![intersection_traffic](img/tuto_G_traffic_manager/traffic.gif)
+![intersection_traffic](img/tuto_G_traffic_manager/tm_traffic_aerial.webp)
 
 ---
 ## Specify routes for vehicles
@@ -232,7 +232,7 @@ while True:
 
 With the above code, we have created two converging streams of traffic originating from opposite sides of the map, guided by the `set_path()` function of the TM. This results in congestion on a road in the center of town. This kind of technique could be used on a larger scale to simulate multiple tricky cases for autonomous vehicles, such as a busy roundabout or highway intersection.
 
-![converging_paths](img/tuto_G_traffic_manager/converging_paths.gif)
+![converging_paths](img/tuto_G_traffic_manager/converging_paths.webp)
 
 ---
 ## Cleaning up

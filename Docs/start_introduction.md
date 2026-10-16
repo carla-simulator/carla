@@ -15,7 +15,10 @@ The CARLA simulator consists of a scalable client-server architecture. The serve
 
 The client side consists of a set of client modules controlling the behavior of actors and the state of the environment within the simulation. This is achieved by leveraging the CARLA API (in Python or C++), a layer that mediates between server and client that is constantly evolving to provide new functionalities.
 
-![CARLA Modules](img/carla_modules.png)
+![CARLA Modules](img/start_introduction/carla_modules.png)
+
+![client_server_architecture](img/shared/client_server_architecture.svg)
+<div style="text-align: right"><i>CARLA client-server architecture: clients, Traffic Manager, server components and default ports.</i></div>
 
 The CARLA simulator combines a number of different features that handle different important aspects of the driving simulation. The following is a summary of some of the key modules:
 

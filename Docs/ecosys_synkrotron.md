@@ -1,12 +1,12 @@
 # Synkrotron simulation solutions
 
-![synkrotron](img/synkrotron.jpg)
+![synkrotron](img/ecosys_synkrotron/synkrotron.jpg)
 
 Synkrotron provides advanced solutions for autonomous driving simulation built on top of CARLA. Synkrotron's product suite OASIS supports a broad range of applications including scenario generation, sensor modelling, traffic simulation and data management. Based on a flexible architecture OASIS can be deployed on the cloud at scale, or in a developer's local environment for prototyping.
 
 ---
 
-![oasis_logo](img/oasis_logo.png)
+![oasis_logo](img/ecosys_synkrotron/oasis_logo.png)
 
 <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; height: auto;">
  <iframe src="https://www.youtube.com/embed/YRI67aar3S0" frameborder="0" allowfullscreen style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;"></iframe>

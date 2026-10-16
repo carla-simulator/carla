@@ -93,11 +93,11 @@ The look of the scene through the camera is adjusted with the post-process setti
 
 At BeginPlay the sky rig loads the profile named by the `carla.PostProcess.ViewportProfile` console variable (`Cinematic` unless changed), which is what the spectator view shows; sensors load `carla.PostProcess.Profile` (`AutomotiveHDR`) instead.
 
-![postprocess_component](img/content/ue5_post_process_component.png)
+![postprocess_component](img/camera_postprocess_presets/ue5_post_process_component.png)
 
 Post-process parameter presets can be saved and loaded through the `BP_PostProcessVolumeSettings` blueprint. In the content browser navigate to `Carla/Blueprints/CameraProfiles` or search for the blueprint in the search field. Drag the blueprint into the scene and make sure it is selected in the *Outliner*, you may want to place it out of the way in the sky so it doesn't get in the way of other scene elements. In the details panel, expand the *Default* section.
 
-![postprocess_bp](img/content/bp_postprocess_volumesettings.png)
+![postprocess_bp](img/camera_postprocess_presets/bp_postprocess_volumesettings.png)
 
 To save your current post process settings, choose an appropriate name and enter it in the *Profile Name* field, then press *SaveProfile*. The profile will be saved as a JSON file in the `${CARLA_ROOT}/Unreal/CarlaUnreal/Content/Carla/Config/PostProcess` directory, where you will also find other presets. If you want to load an existing preset from this directory, enter the name of the preset (the name of the JSON file minus the `.json` suffix) in the *Profile Name* field and then press *LoadProfile*.
 

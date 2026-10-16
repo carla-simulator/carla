@@ -103,7 +103,7 @@ if __name__ == '__main__':
 
 Vehicle telemetry can be visualized by calling the [`Vehicle.show_debug_telemetry`](python_api.md#carla.Vehicle.show_debug_telemetry) method. This will provide graph views of several metrics on the server window as well as vehicle reference points on the simulation window. Only one vehicle can be shown at a time: enabling a second one disables the first.
 
-![vehicle_telemetry](img/vehicle_telemetry.png)
+![vehicle_telemetry](img/tuto_G_control_vehicle_physics/vehicle_telemetry.png)
 
 You can try the telemetry visualization tool in the example script `manual_control.py` located in `PythonAPI/examples`. Activate the telemetry view by pressing `T`.
 

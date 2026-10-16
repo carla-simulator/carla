@@ -173,7 +173,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Dumpster
 
-![static_prop_dumpster](../img/catalogue/props/static_prop_dumpster.webp)
+![static_prop_dumpster](img/catalogue/props/static_prop_dumpster.webp)
 
 * __Blueprint ID__: <span style="color:#00a6ed;">static.prop.dumpster</span>
 * __Base type__: containers
@@ -182,7 +182,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Dumpster02
 
-![static_prop_dumpster02](../img/catalogue/props/static_prop_dumpster02.webp)
+![static_prop_dumpster02](img/catalogue/props/static_prop_dumpster02.webp)
 
 * __Blueprint ID__: <span style="color:#00a6ed;">static.prop.dumpster02</span>
 * __Base type__: containers
@@ -191,7 +191,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Recyclecardboard
 
-![static_prop_recyclecardboard](../img/catalogue/props/static_prop_recyclecardboard.webp)
+![static_prop_recyclecardboard](img/catalogue/props/static_prop_recyclecardboard.webp)
 
 * __Blueprint ID__: <span style="color:#00a6ed;">static.prop.recyclecardboard</span>
 * __Base type__: containers
@@ -200,7 +200,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Recycleglass
 
-![static_prop_recycleglass](../img/catalogue/props/static_prop_recycleglass.webp)
+![static_prop_recycleglass](img/catalogue/props/static_prop_recycleglass.webp)
 
 * __Blueprint ID__: <span style="color:#00a6ed;">static.prop.recycleglass</span>
 * __Base type__: containers
@@ -209,7 +209,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Recycleorganic
 
-![static_prop_recycleorganic](../img/catalogue/props/static_prop_recycleorganic.webp)
+![static_prop_recycleorganic](img/catalogue/props/static_prop_recycleorganic.webp)
 
 * __Blueprint ID__: <span style="color:#00a6ed;">static.prop.recycleorganic</span>
 * __Base type__: containers
@@ -218,7 +218,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Recycleplastic
 
-![static_prop_recycleplastic](../img/catalogue/props/static_prop_recycleplastic.webp)
+![static_prop_recycleplastic](img/catalogue/props/static_prop_recycleplastic.webp)
 
 * __Blueprint ID__: <span style="color:#00a6ed;">static.prop.recycleplastic</span>
 * __Base type__: containers
@@ -357,7 +357,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Trashcan05
 
-![static_prop_trashcan05](../img/catalogue/props/static_prop_trashcan05.webp)
+![static_prop_trashcan05](img/catalogue/props/static_prop_trashcan05.webp)
 
 * __Blueprint ID__: <span style="color:#00a6ed;">static.prop.trashcan05</span>
 * __Base type__: garbage

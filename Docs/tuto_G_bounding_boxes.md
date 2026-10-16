@@ -235,7 +235,7 @@ cv2.destroyAllWindows()
 
 Now we are rendering 3D bounding boxes into the images so we can observe them in the camera sensor output.
 
-![3D_bbox_traffic_lights](img/tuto_G_bounding_box/3d_bbox_traffic_lights.gif)
+![3D_bbox_traffic_lights](img/tuto_G_bounding_boxes/bbox_3d_traffic_lights.webp)
 
 ---
 ## Vehicle bounding boxes
@@ -316,7 +316,7 @@ while True:
 cv2.destroyAllWindows()
 ```
 
-![3D_bbox_vehicles](img/tuto_G_bounding_box/3d_bbox_vehicle.gif)
+![3D_bbox_vehicles](img/tuto_G_bounding_boxes/bbox_3d_vehicles.webp)
 
 ---
 ## 2D bounding boxes
@@ -391,7 +391,7 @@ cv2.destroyAllWindows()
 
 ```
 
-![2D_bbox_vehicles](img/tuto_G_bounding_box/2d_bbox.gif)
+![2D_bbox_vehicles](img/tuto_G_bounding_boxes/bbox_2d.webp)
 
 ---
 ## Exporting bounding boxes
@@ -465,7 +465,7 @@ while True:
 
 For every rendered frame of your simulation, you will now export an accompanying XML file containing the details of the bounding boxes in the frame.
 
-![xml_bbox_files](img/tuto_G_bounding_box/xml_bbox_files.png)
+![xml_bbox_files](img/tuto_G_bounding_boxes/xml_bbox_files.png)
 
 In the PASCAL VOC format, the XML files contain information referring to the accompanying image file, the image dimensions and can include details such as vehicle type if needed.
 

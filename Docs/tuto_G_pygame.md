@@ -297,4 +297,4 @@ traffic_manager.set_synchronous_mode(False)
 client.apply_batch([carla.command.DestroyActor(v) for v in vehicles])
 ```
 
-![manual_control](img/tuto_G_pygame/manual_control.gif)
+![manual_control](img/tuto_G_pygame/pygame_chase_camera.webp)

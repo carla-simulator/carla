@@ -105,7 +105,7 @@ client.set_replayer_time_factor(2.0)
 
 When the time factor is around __20x__ traffic flow is easily appreciated.
 
-![flow](img/RecorderFlow2.gif)
+![flow](img/adv_recorder/recorder_replay_traffic.webp)
 
 ---
 ## Recorded file
@@ -203,7 +203,7 @@ client.replay_file("col2.log", 13, 0, 122)
 ```
 In this case, the playback showed this.
 
-![collision](img/collision1.gif)
+![collision](img/adv_recorder/recorder_collision.webp)
 
 ### Blocked actors
 
@@ -253,7 +253,7 @@ The vehicle `173` was stopped for `336` seconds at time `36` seconds. Reenact th
 client.replay_file("col3.log", 34, 0, 173)
 ```
 
-![accident](img/accident.gif)
+![accident](img/adv_recorder/recorder_collision.webp)
 
 ---
 ## Sample python scripts

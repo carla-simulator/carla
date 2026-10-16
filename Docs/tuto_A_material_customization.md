@@ -36,7 +36,7 @@ A building material combines four textures, each packing several properties into
     *   `RGB` — the base colors.
     *   `Alpha` — a mask; the white areas are the ones the shader can recolor, which is how one material yields several variants.
 
-![building_diffuse_alpha](img/building_diffuse_alpha.png)
+![building_diffuse_alpha](img/tuto_A_material_customization/building_diffuse_alpha.png)
 
 *   __ORME__ — four properties in one texture.
     *   `R` — ambient occlusion.
@@ -48,14 +48,14 @@ A building material combines four textures, each packing several properties into
 
 *   __Emissive__ — if present, the base colors of the emissive elements, in `RGB`.
 
-![emissive](img/EmissiveIntensity.gif)
+![emissive](img/tuto_A_material_customization/EmissiveIntensity.gif)
 
 ---
 ## Customize a building material
 
 Both building shaders expose their parameters on the material instance.
 
-![building_material](img/building_material.png)
+![building_material](img/tuto_A_material_customization/building_material.png)
 
 __Glass shader__ — `M_GlassMaster`:
 

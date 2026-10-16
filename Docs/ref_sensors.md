@@ -83,7 +83,7 @@ raw_image.save_to_disk("path/to/save/converted/image", carla.ColorConverter.Dept
 ```
 
 
-![ImageDepth](img/ref_sensors_depth.jpg)
+![ImageDepth](img/ref_sensors/sensor_depth_raw_vs_log.webp)
 
 
 #### Basic camera attributes
@@ -262,7 +262,7 @@ for location in lidar_measurement:
 
 The information of the LIDAR measurement is encoded 4D points. Being the first three, the space points in xyz coordinates and the last one intensity loss during the travel. This intensity is computed by the following formula.
 <br>
-![LidarIntensityComputation](img/lidar_intensity.jpg)
+![LidarIntensityComputation](img/ref_sensors/lidar_intensity.jpg)
 
 `a` — Attenuation coefficient. This may depend on the sensor's wavelength, and the conditions of the atmosphere. It can be modified with the LIDAR attribute `atmosphere_attenuation_rate`.
 `d` — Distance from the hit point to the sensor.
@@ -276,7 +276,11 @@ Additionally, the `noise_stddev` attribute makes for a noise model to simulate u
 
 The rotation of the LIDAR can be tuned to cover a specific angle on every simulation step (using a [fixed time-step](adv_synchrony_timestep.md)). For example, to rotate once per step (full circle output, as in the picture below), the rotation frequency and the simulated FPS should be equal. <br> __1.__ Set the sensor's frequency `sensors_bp['lidar'][0].set_attribute('rotation_frequency','10')`. <br> __2.__ Run the simulation using `python3 PythonAPI/util/config.py --fps 10`.
 
-![LidarPointCloud](img/lidar_point_cloud.jpg)
+![LidarPointCloud](img/ref_sensors/sensor_lidar_bev.webp)
+<div style="text-align: right"><i>One LiDAR sweep seen from above, coloured by height (64 channels, 80 m range). Town10HD_Opt &middot; sensor.lidar.ray_cast &middot; AutomotiveHDR &middot; sunny afternoon</i></div>
+
+![LidarOnCamera](img/ref_sensors/sensor_lidar_on_camera.webp)
+<div style="text-align: right"><i>The same sweep projected on the RGB image, coloured by range. Town10HD_Opt &middot; sensor.lidar.ray_cast + camera.rgb &middot; AutomotiveHDR &middot; sunny afternoon</i></div>
 
 #### Lidar attributes
 
@@ -333,7 +337,7 @@ The information of the LiDAR measurement is encoded as 4D points. The first
 three components are the hit position in the sensor's local frame (xyz);
 the fourth is the intensity after atmospheric attenuation, computed as:
 
-![LidarIntensityComputation](img/lidar_intensity.jpg)
+![LidarIntensityComputation](img/ref_sensors/lidar_intensity.jpg)
 
 `a` — Attenuation coefficient (`atmosphere_attenuation_rate`). Depends on
 the sensor's wavelength and atmospheric conditions.
@@ -440,7 +444,7 @@ points = np.reshape(points, (len(radar_data), 4))
 
 The provided script `manual_control.py` uses this sensor to show the points being detected and paint them white when static, red when moving towards the object and blue when moving away:
 
-![ImageRadar](img/ref_sensors_radar.jpg)
+![ImageRadar](img/ref_sensors/sensor_radar_on_camera.webp)
 
 | Blueprint attribute       | Type    | Default | Description   |
 | ----------------------------- | ----------------------------- | ----------------------------- | ----------------------------- |
@@ -491,7 +495,7 @@ If `enable_postprocess_effects` is enabled, a set of post-process effects is app
 The `sensor_tick` tells how fast we want the sensor to capture the data.
 A value of 1.5 means that we want the sensor to capture data each second and a half. By default a value of 0.0 means as fast as possible.
 
-![ImageRGB](img/ref_sensors_rgb.jpg)
+![ImageRGB](img/ref_sensors/sensor_rgb.webp)
 
 #### Camera attributes
 
@@ -800,7 +804,11 @@ The rotation of the LIDAR can be tuned to cover a specific angle on every simula
 __1.__ Set the sensor's frequency `sensors_bp['lidar'][0].set_attribute('rotation_frequency','10')`. <br>
 __2.__ Run the simulation using `python3 PythonAPI/util/config.py --fps 10`.
 
-![LidarPointCloud](img/semantic_lidar_point_cloud.jpg)
+![SemanticLidarBEV](img/ref_sensors/sensor_semantic_lidar_bev.webp)
+<div style="text-align: right"><i>Semantic LiDAR seen from above, points coloured by semantic tag. Town10HD_Opt &middot; sensor.lidar.ray_cast_semantic &middot; AutomotiveHDR &middot; sunny afternoon</i></div>
+
+![SemanticLidarOnCamera](img/ref_sensors/sensor_semantic_lidar_on_camera.webp)
+<div style="text-align: right"><i>The same sweep projected on the RGB image. Town10HD_Opt &middot; sensor.lidar.ray_cast_semantic + camera.rgb &middot; AutomotiveHDR &middot; sunny afternoon</i></div>
 
 #### SemanticLidar attributes
 
@@ -845,7 +853,7 @@ __2.__ Run the simulation using `python3 PythonAPI/util/config.py --fps 10`.
 This camera classifies every object in sight by displaying it in a different color according to its tags (e.g., pedestrians in a different color than vehicles).
 When the simulation starts, every element in scene is created with a tag. So it happens when an actor is spawned. The objects are classified by their relative file path in the project. For example, meshes stored in `Unreal/CarlaUnreal/Content/Carla/Static/Pedestrian` are tagged as `Pedestrian`.
 
-![ImageSemanticSegmentation](img/ref_sensors_semantic.jpg)
+![ImageSemanticSegmentation](img/ref_sensors/sensor_semantic_segmentation.webp)
 
 The server provides an image with the tag information __encoded in the red channel__: A pixel with a red value of `x` belongs to an object with tag `x`.
 This raw [carla.Image](python_api.md#carla.Image) can be stored and converted it with the help of __CityScapesPalette__  in [carla.ColorConverter](python_api.md#carla.ColorConverter) to apply the tags information and show picture with the semantic segmentation.
@@ -904,7 +912,10 @@ The following tags are currently available:
 This camera classifies every object in the field of view both by class and also by instance ID. 
 When the simulation starts, every element in scene is created with a tag. So it happens when an actor is spawned. The objects are classified by their relative file path in the project. For example, meshes stored in `Unreal/CarlaUnreal/Content/Carla/Static/Pedestrian` are tagged as `Pedestrian`.
 
-![ImageInstanceSegmentation](img/instance_segmentation.png)
+![ImageInstanceSegmentation](img/shared/sensor_instance_segmentation.webp)
+
+![InstanceSegmentationRaw](img/ref_sensors/sensor_instance_segmentation_raw.webp)
+<div style="text-align: right"><i>Raw instance segmentation: semantic tag in R, instance id in G and B. Town10HD_Opt &middot; sensor.camera.instance_segmentation &middot; AutomotiveHDR &middot; sunny afternoon</i></div>
 
 The server provides an image with the tag information __encoded in the red channel__: a pixel with a red value of `x` belongs to an object with tag `x`. The green and blue values hold the object's unique id. A pixel with the 8-bit RGB value `[14, 20, 55]` is therefore a car (semantic tag 14) with instance id `20-55`.
 
@@ -979,7 +990,7 @@ when no motion is present in the scene. In contrast, event cameras are data-driv
 latency. At the plot, a positive (resp. negative) event (blue dot, resp. red dot) is generated whenever the (signed) brightness change exceeds the
 contrast threshold `C` for one dimension `x` over time `t`. Observe how the event rate grows when the signal changes rapidly.
 
-![DVSCameraWorkingPrinciple](img/sensor_dvs_scheme.jpg)
+![DVSCameraWorkingPrinciple](img/ref_sensors/sensor_dvs_scheme.jpg)
 
 The current implementation of the DVS camera works in a uniform sampling manner between two consecutive synchronous frames. Therefore, in order to
 emulate the high temporal resolution (order of microseconds) of a real event camera, the sensor requires to execute at a high frequency (much higher
@@ -992,7 +1003,7 @@ The provided script [`manual_control.py`][manual_control] uses the DVS camera in
 
 Note that due to the sampling method of the DVS camera, if there is no pixel difference between two consecutive synchronous frames the camera will not return an image. This will always occur in the first frame, as there is no previous frame to compare to and also in the event that there has been no movement between frames.
 
-![DVSCameraWorkingPrinciple](img/sensor_dvs.gif)
+![DVSCameraWorkingPrinciple](img/ref_sensors/sensor_dvs.webp)
 
 DVS is a camera and therefore has all the attributes available in the RGB camera. Nevertheless, there are few attributes exclusive to the working principle of an Event camera.
 
@@ -1019,7 +1030,7 @@ DVS is a camera and therefore has all the attributes available in the RGB camera
 
 The optical flow camera captures the motion perceived from the point of view of the camera. Every pixel recorded by this sensor encodes the velocity of that point projected to the image plane. The velocity of a pixel is encoded in the range [-2,2]. To obtain the motion in pixel units, this information can be scaled with the image size to [-2 * image_size, 2 * image_size].
 
-![optical_flow](img/optical_flow.png)
+![optical_flow](img/ref_sensors/sensor_optical_flow.webp)
 
 `get_color_coded_flow()` turns the field into the color wheel above, where hue is the direction of motion and saturation its magnitude. It returns a [`carla.FakeImage`](python_api.md#carla.FakeImage), not a [`carla.Image`](python_api.md#carla.Image): the pixels and `save_to_disk` work the same, but it carries no `frame` or `timestamp`, because it is a visualization rather than a reading of the sensor.
 
@@ -1063,6 +1074,9 @@ The optical flow camera captures the motion perceived from the point of view of 
 
 *   __Blueprint:__ sensor.camera.normals
 *   __Output:__ [carla.Image](python_api.md#carla.Image) per step (unless `sensor_tick` says otherwise).
+
+![Normals](img/ref_sensors/sensor_normals.webp)
+<div style="text-align: right"><i>Surface normals camera output. Town10HD_Opt &middot; sensor.camera.normals &middot; AutomotiveHDR &middot; sunny afternoon</i></div>
 
 This camera renders the surface normal of whatever each pixel sees. The three components of the normal are stored in the red, green and blue channels, each remapped from [-1.0, 1.0] to [0, 255], so a channel value of `v` is a component of `v / 255 * 2 - 1`. A road seen from above gives a pixel close to `[128, 139, 254]`, a normal pointing up. The alpha channel is unused.
 

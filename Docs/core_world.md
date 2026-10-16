@@ -195,6 +195,8 @@ world.clear_sky_light_map()                                 # back to the proced
 The override survives weather changes but not `load_world()` or `reload_world()`, so set it again on a new map. Two things decide whether the result looks right, and both are detailed in [`carla.World.set_sky_light_map`](python_api.md#carla.World.set_sky_light_map): the panorama is read in CARLA's own frame, and its values are radiance in the project's photometric units, so a panorama normalized to `[0, 1]` needs an `intensity` in the thousands to hold up against daylight.
 
 ### Lights
+![vehicle_light_states](img/shared/vehicle_light_states.webp)
+<div style="text-align: right"><i>carla.VehicleLightState combinations on a Lincoln MKZ at night, front (top) and rear (bottom). Town10HD_Opt &middot; sensor.camera.rgb &middot; Cinematic &middot; ClearNight</i></div>
 
 *   __Street lights__ automatically turn on when the simulation enters night mode. The lights are placed by the developers of the map, and accessible as [__carla.Light__](python_api.md#carla.Light) objects. Properties such as color and intensity can be changed at will. The variable __light_state__ of type [__carla.LightState__](python_api.md#carla.LightState) allows setting all of these in one call.  
 Street lights are categorized using their attribute __light_group__, of type [__carla.LightGroup__](python_api.md#carla.LightGroup). This allows to classify lights as street lights, building lights... An instance of [__carla.LightManager__](python_api.md#carla.LightManager) can be retrieved to handle groups of lights in one call.

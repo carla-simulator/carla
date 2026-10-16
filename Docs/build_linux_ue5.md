@@ -13,6 +13,9 @@
 
 ## Set up the environment
 
+![build_pipeline_linux](img/build_linux_ue5/build_pipeline_linux.svg)
+<div style="text-align: right"><i>What CarlaSetup.sh does, in order: prerequisites, content, DLSS SDK, Unreal Engine 5.8, configure and build.</i></div>
+
 Clone the repository from GitHub, on the `ue58-dev` branch:
 
 ```sh

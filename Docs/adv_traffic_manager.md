@@ -224,7 +224,7 @@ To modify the behavior of hybrid mode, use the following two parameters:
 
 The clip below shows how physics is enabled and disabled when hybrid mode is active. The __hero vehicle__ is tagged with a __red square__. Vehicles with __physics disabled__ are tagged with a __blue square__. When inside the hero vehicle's radius of influence, __physics are enabled and the tag becomes green__.
 
-![Welcome to CARLA](img/tm_hybrid.gif)
+![Welcome to CARLA](img/adv_traffic_manager/tm_hybrid_physics.webp)
 
 
 ---
@@ -353,7 +353,7 @@ If more than one TM is set to synchronous mode, synchrony will fail. Follow thes
 
 ### Overview
 
-![Architecture](img/tm_2_architecture.jpg)
+![Architecture](img/adv_traffic_manager/tm_2_architecture.jpg)
 
 The above diagram is a representation of the internal architecture of the TM. The C++ code for each component can be found in `LibCarla/source/carla/trafficmanager`. Each component is explained in detail in the following sections. A simplified overview of the logic is as follows:
 

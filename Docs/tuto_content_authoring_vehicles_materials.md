@@ -13,11 +13,11 @@ CARLA provides a prototype material for replicating the glossy finish of vehicle
 
 In the Unreal Editor, move the spectator to a point near the floor and drag the skeletal mesh of the vehicle from the content browser into the scene, the body of your vehicle will now appear there.
 
-![add_model](img/tuto_content_authoring_vehicles/add_model.gif)
+![add_model](img/tuto_content_authoring_vehicles_materials/add_model.gif)
 
 Now, in the details panel on the right hand side, drag your new material instance into the *Element 0* position of the *Materials* section. You will see the bodywork take on a new grey, glossy material property.
 
-![apply_material](img/tuto_content_authoring_vehicles/apply_material.gif)
+![apply_material](img/tuto_content_authoring_vehicles_materials/apply_material.gif)
 
 Double click on the material in the content browser and we can start editing the parameters. There are numerous parameters here that alter various properties that are important to mimic real world car paint jobs. The most important parameters are the following.
 
@@ -35,23 +35,23 @@ The parameter groups on `M_CarPaintMaster`, as the editor names them:
 
 __Color__ - The color settings govern the overall color of the car. The base color is simply the primary color of the car this will govern the overall color:
 
-![change_base_color](img/tuto_content_authoring_vehicles/change_base_color.gif)
+![change_base_color](img/tuto_content_authoring_vehicles_materials/change_base_color.gif)
 
 __Clear coat__ - the clear coat settings govern the appearance of the finish and how it reacts to light. The roughness uses a texture to apply imperfections to the vehicle surface, scattering light more with higher values to create a matte look. Subtle adjustments and low values are recommended for a realistic look. Generally, car paint jobs are smooth and reflective, however, this effect might be used more generously to model specialist matte finishes of custom paint jobs.
 
-![change_roughness](img/tuto_content_authoring_vehicles/change_roughness.gif)
+![change_roughness](img/tuto_content_authoring_vehicles_materials/change_roughness.gif)
 
 An important parameter to govern the "shininess" or "glossiness" of your car is the *Clear Coat Intensity*. High values close to 1 will make the coat shiny and glossy.
 
 __Orange peel__ - finishes on real cars (particularly on mass produced cars for the general market) tend to have imperfections that appear as slight ripples in the paint. The orange peel effect mimics this and makes cars look more realistic.
 
-![change_orange_peel](img/tuto_content_authoring_vehicles/change_orange_peel.gif)
+![change_orange_peel](img/tuto_content_authoring_vehicles_materials/change_orange_peel.gif)
 
 __Flakes__ - some cars have paint jobs that include flakes of other material, such as metals or ceramics, to give the car a *metallic* or *pearlescent* appearance, adding extra glints and reflections that react in an attractive way to light. The flakes parameters allows CARLA to mimic this. To mimic a metallic finish, keep the flakes small and their color close to the base coat; for a pearlescent one, use a contrasting color and a larger scale.
 
-![flakes](img/tuto_content_authoring_vehicles/flakes.gif)
+![flakes](img/tuto_content_authoring_vehicles_materials/flakes.gif)
 
 __Dust__ - cars often accumulate grease and dust on the body that adds additional texture to the paint, affecting the way it reflects the light. The dust parameters allow you to add patches of disruption to the coat to mimic foreign materials sticking to the paint.
 
-![dust](img/tuto_content_authoring_vehicles/dust.gif)
+![dust](img/tuto_content_authoring_vehicles_materials/dust.gif)
 

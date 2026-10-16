@@ -69,7 +69,7 @@ The world is no longer just a road surface in the void. From the same file CARLA
 
 Everything comes from the `.xodr`, so an error in the file becomes an error in the simulation. Junctions are the usual source, since that is where many lanes meet.
 
-![opendrive_standalone](img/opendrive_standalone.jpg)
+![opendrive_standalone](img/adv_opendrive/opendrive_town01_overview.webp)
 
 ---
 
@@ -92,7 +92,7 @@ It is produced in chunks of `max_road_length` rather than as one object, so the 
 
 Junctions get special treatment. Where lanes meet at different heights, the raw definition makes the higher lane cut through the lower one, and a vehicle crossing the junction climbs or clips. `smooth_junctions` reinterprets those heights so the surfaces join:
 
-![opendrive_meshissue](img/opendrive_meshissue.jpg)
+![opendrive_meshissue](img/adv_opendrive/opendrive_meshissue.jpg)
 <div style="text-align: right"><i>Higher lanes blocking the ones below them at a junction. <code>smooth_junctions</code> prevents this.</i></div>
 
 Junction lanes are also widened by `additional_width`, and the outer boundary of the road is walled to `wall_height`, both to keep vehicles on the surface where the definition is least precise.

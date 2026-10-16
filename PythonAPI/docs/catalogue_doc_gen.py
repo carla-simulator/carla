@@ -30,7 +30,7 @@ ID_COLOR = '#00a6ed'
 TRUE_COLOR = '#99c635'
 FALSE_COLOR = '#f16c6c'
 
-IMAGE_DIR = '../img/catalogue'
+IMAGE_DIR = 'img/catalogue'
 WEBP_QUALITY = 90
 
 # Town10's own weather, read off a freshly loaded map; the captures start from

@@ -64,12 +64,12 @@ Inside the editor, scalability follows the editor's own __Settings / Engine Scal
 
 #### Epic mode
 
-![Epic mode screenshot](img/epic_rendering.png)
+![Epic mode screenshot](img/adv_rendering_options/rendering_epic.webp)
 *Epic quality mode screenshot*
 
 #### Low mode
 
-![Low mode screenshot](img/low_quality_rendering.png)
+![Low mode screenshot](img/adv_rendering_options/rendering_low.webp)
 *Low quality mode screenshot*
 
 ### Tier comparison

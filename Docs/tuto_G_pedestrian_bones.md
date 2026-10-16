@@ -44,7 +44,7 @@ spectator = world.get_spectator()
 
 First, we want to spawn a pedestrian in the simulation. This can be done at a random location using `world.get_random_location_from_navigation()`, or it can be chosen using coordinates gathered from the Unreal Editor. In the unreal editor, add an empty actor to the location where you want to spawn your pedestrian, then use the inspector on the right hand side to query the coordinates.
 
-![actor_location](img/tuto_G_pedestrian_bones/actor_location.png)
+![actor_location](img/tuto_G_pedestrian_bones/actor_location.webp)
 
 !!! Note
     The Unreal Editor works in units of centimeters, while CARLA works in units of meters so the units must be converted. Ensure to divide the Unreal Editor coordinates by 100 before using in the CARLA simulator.
@@ -287,7 +287,7 @@ for frame in range(0,360):
 
 In the __out/__ folder you should now have a sequence of frames with the skeleton overlaid over the camera sensor output. The following animation can be reconstructed by joining the frames into a video:
 
-![pedestrian_skeleton](img/tuto_G_pedestrian_bones/pedestrian_skeleton.gif)
+![pedestrian_skeleton](img/tuto_G_pedestrian_bones/walker_skeleton.webp)
 
 ---
 ## Cleaning up

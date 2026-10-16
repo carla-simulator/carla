@@ -29,7 +29,7 @@ __Open the Unreal Engine Editor__ and go to `Content/Carla/Static`. Create a new
 
 The label is read from the asset's path, at a fixed depth: the folder has to sit directly under `Content/Carla/Static/` (or under `Content/Carla/Static/UE5UseOnly/`), not nested deeper. A content pack uses `/<Pack>/Static/<Tag>/` instead.
 
-![ue_folder](img/tuto_D_create_semantic_tags/02_ue_folder.jpg)
+![ue_folder](img/tuto_D_create_semantic_tags/02_ue_folder.webp)
 
 !!! Note
     The UE folder and the tag do not necessarily have to be named the same. However, it is good practice to do so.

@@ -93,7 +93,7 @@ world.apply_settings(settings)
 
 The image encodes the semantic label in the __R__ channel and the instance id in __G__ and __B__.
 
-![instance_segmentation](img/instance_segmentation.png)
+![instance_segmentation](img/shared/sensor_instance_segmentation.webp)
 
 ---
 ## Decoding the instance ids
