@@ -4,6 +4,7 @@
 # Digital Twin Tool
 
 ![digital_twin_pipeline](img/adv_digital_twin/pipeline.jpg)
+<div style="text-align: right"><i>The Digital Twin Tool pipeline: an OpenStreetMap region, its road network, procedural buildings and the resulting CARLA map.</i></div>
 
 - [__Downloading and preparing OSM map data__](#downloading-and-preparing-osm-map-data)
 - [__OpenStreetMap browser__](#openstreetmap-browser)
@@ -22,6 +23,7 @@ If you are using Linux, you have the option of using the OSM renderer in the CAR
 ## Downloading and preparing OSM map data
 
 ![osm_website](img/adv_digital_twin/osm_export.png)
+<div style="text-align: right"><i>Exporting a region from openstreetmap.org.</i></div>
 
 In a web-browser, go to the [OpenStreetMap website](https:/www.openstreetmap.org) and choose an area of the map which you would like to use. Define your region and then export the data as an `.osm` file, or you can use a URL, as explained later. Alternatively, you could use other tools based on the OpenStreetMap service such as [GeoFabrik](https://download.geofabrik.de/), which allows specific map regions such as states or territories to be extracted from the OSM data.
 
@@ -44,11 +46,13 @@ cd {CARLA_ROOT}/Build/libosmcout-source/maps/
 
 To open the OSM browser, open the content browser and navigate to `CarlaToolsContent/OnroadMapGenerator`. Right click on *UW_OnRoadMainWidget* and select *Launch Editor Utility Widget* from the context menu. This will open the tool's interface. 
 
-![osm_interface_open](img/adv_digital_twin/digital_twins_widget.png)
+![osm_interface_open](img/adv_digital_twin/digital_twins_widget.webp)
+<div style="text-align: right"><i><code>UW_OnRoadMainWidget</code> in the Content Browser, under Plugins &gt; CarlaTools &gt; OnroadMapGenerator. Unreal Editor 5.8</i></div>
 
 The interface enables browsing of a region of OSM map that has been downloaded from the OSM database and baked. First, you should enter the directory location where you stored the processed OSM data in the previous step in the *Select OSM Database* field in the interface. If you are using a URL directly, paste it into the `OSM URL` field, you will not be able to use the navigator in this case. 
 
-![osm_interface](img/adv_digital_twin/digital_twins_interface.png)
+![osm_interface](img/adv_digital_twin/digital_twins_interface.webp)
+<div style="text-align: right"><i>The OnRoad map generator widget: OSM database, navigation, render, and map generation. Unreal Editor 5.8</i></div>
 
 Use the directional arrows and the zoom icons to navigate the map and find a part of the road network you want to turn into a CARLA map. The square region you see in the preview will be the extent of your map. Enter an appropriate name in the `File Name` field and then press *generate* to start the procedural generation process. The map generation process may take several minutes, or more if you are using a large region.
 
@@ -59,20 +63,24 @@ Use the directional arrows and the zoom icons to navigate the map and find a par
 The tool extracts the road network from the OSM data as the basis of the map. The road surface is decorated with realistic surface irregularities, road markings and textures. 
 
 ![road_markings](img/adv_digital_twin/road_surface.jpg)
+<div style="text-align: right"><i>Road surface detail: irregularities, texture and lane markings, cracks and tyre marks.</i></div>
 
 ### Buildings
 
 The empty spaces between the roads are populated with buildings or open areas that will adjust their shape and dimensions to fill the space between the roads. 
 
 ![procedural_buildings](img/adv_digital_twin/procedural_building_generation.jpg)
+<div style="text-align: right"><i>Procedural buildings: OSM footprints and heights are filled with building blocks to make the 3D city.</i></div>
 
 The procedural generation tool extracts the building footprints and height information from the OSM data to generate virtual buildings with similar dimensions. Detailed cladding is applied to simulate windows, doors and balconies. Different decoration styles are applied depending upon the dimensions of the building, with the tallest buildings having an office style, smaller buildings have a commercial or residential style applied according to the area of the building footprint.
 
 ![procedural_cities](img/adv_digital_twin/digital_twins_vegetation.jpg)
+<div style="text-align: right"><i>Vegetation added to the populated map.</i></div>
 
 Vegetation is also added to the pavements in the next step step for additional detail.
 
 ![residential_building_style](img/adv_digital_twin/digital_twins_buildings.jpg)
+<div style="text-align: right"><i>Examples of the building styles the tool generates.</i></div>
 *Digital Twin Tool building styles*
 
 The buildings are in a variety of styles that are randomly distributed throughout the city, the architectural style of an area is chosen based on the characteristic dimensions of the buildings extracted from the OSM data.

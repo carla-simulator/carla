@@ -45,7 +45,8 @@ In this tutorial, we'll be focusing on server-side sensors.
 In order to have a sensor running inside UE4 sending data all the way to a
 Python client, we need to cover the whole communication pipeline.
 
-![Communication pipeline](img/tuto_D_create_sensor/pipeline.png)
+![Communication pipeline](img/tuto_D_create_sensor/sensor_pipeline.svg)
+<div style="text-align: right"><i>From the sensor actor in the Carla plugin to the Python callback, through the LibCarla serializer and stream.</i></div>
 
 Thus we'll need the following classes covering the different steps of the
 pipeline
@@ -77,7 +78,8 @@ that we'll create a trigger box that detects objects within, and we'll be
 reporting status to the client every time a vehicle is inside our trigger box.
 Let's call it _Safe Distance Sensor_.
 
-![Trigger box](img/tuto_D_create_sensor/safe_distance_sensor.jpg)
+![Trigger box](img/tuto_D_create_sensor/safe_distance_sensor.webp)
+<div style="text-align: right"><i>The trigger box of a Safe Distance Sensor around a vehicle, drawn with debug.draw_box. Town10HD_Opt &middot; sensor.camera.rgb &middot; Cinematic &middot; sunny afternoon</i></div>
 
 _For the sake of simplicity we're not going to take into account all the edge
 cases, nor it will be implemented in the most efficient way. This is just an

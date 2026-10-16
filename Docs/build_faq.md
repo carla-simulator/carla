@@ -140,6 +140,7 @@ CARLA forum</a>
 ###### Cannot run example scripts or "RuntimeError: rpc::rpc_error during call in function version".
 
 > ![faq_rpc_error](img/build_faq/faq_rpc_error.jpg)
+<div style="text-align: right"><i>A script failing with <code>rpc::rpc_error during call in function version</code> while the server window is open.</i></div>
 >
 > If running a script returns an output similar to this, there is a problem with the `.egg` file in the PythonAPI. 
 

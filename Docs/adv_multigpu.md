@@ -3,6 +3,7 @@
 Multi-GPU in carla means that the user can  start several servers (called secondary servers) that will do render work for the main server (called primary server) using a dedicated GPU from the system. The primary server will distribute the sensors, that are created by the user, to the different secondary servers available.
 
 ![Multi-GPU example with 2 secondary servers](img/adv_multigpu/multigpu-example.png)
+<div style="text-align: right"><i>A primary server with two secondary servers, each rendering on its own GPU, and a client with two sensors.</i></div>
 
 We need to start the primary server (usually with a flag to avoid using any GPU). This server will process all physics and synchronize the scene data to the others secondary servers. Then we can start any secondary server as we want (usually one per dedicated GPU in the system), using the parameters we will describe further. After this, the client can connect (always to the primary server) and proceed as usual.
 All the system is transparent to the user, who don't need to know from which server comes the sensor data, he just receives the data directly from a secondary server.
