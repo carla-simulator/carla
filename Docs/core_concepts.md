@@ -41,7 +41,7 @@ __The map__ is the object representing the simulated world, the town mostly. The
 
 __Roads, lanes and junctions__ are managed by the [Python API](python_api.md) to be accessed from the client. These are used along with the __waypoint__ class to provide vehicles with a navigation path.  
 
-__Traffic signs__ and __traffic lights__ are accessible as [__carla.Landmark__](#python_api.md#carla.landmark) objects that contain information about their OpenDRIVE definition. Additionally, the simulator automatically generates stops, yields and traffic light objects when running using the information on the OpenDRIVE file. These have bounding boxes placed on the road. Vehicles become aware of them once inside their bounding box.
+__Traffic signs__ and __traffic lights__ are accessible as [__carla.Landmark__](python_api.md#carla.Landmark) objects that contain information about their OpenDRIVE definition. Additionally, the simulator automatically generates stops, yields and traffic light objects when running using the information on the OpenDRIVE file. These have bounding boxes placed on the road. Vehicles become aware of them once inside their bounding box.
 
 ### 4th- Sensors and data
 
