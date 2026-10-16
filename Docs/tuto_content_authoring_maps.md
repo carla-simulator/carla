@@ -26,11 +26,11 @@ In this tutorial we will cover the process of creating a simple map for use with
 
 ## Prerequisites
 
-To follow this guide, you will need to build CARLA from source, so that you may use the Unreal Editor. Follow the [__build instructions__](build_carla.md) for your relevant operating system. You will also need a licensed copy of RoadRunner. You may also need a 3D modelling application such as Maya, 3DS Max or Blender to create 3D assets for your custom maps. You should ensure you have completed all the steps to build CARLA and ensure that the Unreal Editor is working, this could take some time to build the application. If you want to create 3D assets for your map, you should use an appropriate 3D design application such as Blender, Maya, 3DsMax or Modo. 
+To follow this guide you need CARLA built from source, so that you can use the Unreal Editor: follow the [__build instructions__](build_carla.md) for your operating system and check that the editor opens. You also need RoadRunner (or another OpenDRIVE editor) for the road network, and a 3D modelling application such as Blender, Maya or 3ds Max if you want to create your own assets.
 
 ## Large Maps
 
-The following text details the procedures for creating and decorating a standard map. From version 0.9.12, CARLA has the Large Maps functionality. Large maps are bigger in scale than standard maps, and can be up to 100 km<sup>2</sup> in size. Large maps work in a slightly different way to standard maps, because of hardware limitations, even in high end graphics cards. Large maps are split up into tiles, and only the tiles needed immediately (i.e. those closest to the Ego vehicle) are loaded during the simulation. Other tiles sit dormant until the data is needed. This facilitates the highest performance for CARLA simulations. Most of the details that follow are similar when building a Large Map, but there are some additional steps. Please follow [this guide](large_map_overview.md) to build a Large Map for CARLA.
+The following text details the procedures for creating and decorating a standard map. CARLA also supports Large Maps. Large maps are bigger in scale than standard maps, and can be up to 100 km<sup>2</sup> in size. Large maps work in a slightly different way to standard maps, because of hardware limitations, even in high end graphics cards. Large maps are split up into tiles, and only the tiles needed immediately (i.e. those closest to the Ego vehicle) are loaded during the simulation. Other tiles sit dormant until the data is needed. This facilitates the highest performance for CARLA simulations. Most of the details that follow are similar when building a Large Map, but there are some additional steps. Please follow [this guide](large_map_overview.md) to build a Large Map for CARLA.
 
 ## Digital Twin Tool
 
@@ -79,14 +79,24 @@ RoadRunner is a proprietary software that requires MATLAB. Some institutions lik
 
 ## Importing your road network into CARLA
 
-The important export files needed for CARLA are the `.xodr` file and the `.fbx` file. Copy or move these files into the `Import` folder inside the root directory of the CARLA repository where you have built from source. 
+The export files CARLA needs are the `.xodr` and the `.fbx`, and both must have the same name. Copy or move them into the `Import` folder at the root of the CARLA source tree.
 
 ![roadrunner_imports](img/tuto_content_authoring_maps/rr_import.png)
 <div style="text-align: right"><i>The .fbx and .xodr copied into the Import folder of the CARLA tree.</i></div>
 
-Now open a terminal at the root of the CARLA source directory and run `make import`. This will import the road network into CARLA.
+Then run the importer from the root of the CARLA source tree. It runs the editor headless, so it needs the path to the Unreal Engine and the `carla` Python package installed in the interpreter that runs it:
 
-You can now see your new map inside the Unreal Editor. Run `make launch` at the root of the CARLA source directory to launch the Unreal Editor. You will now see a new directory in the content browser named `map_package`. Within this directory in the location `Content > map_package > Maps > tutorial` you will now find your new map.
+```sh
+export CARLA_UNREAL_ENGINE_PATH=/path/to/UnrealEngine_5.5
+python3 Util/Tools/Import.py --package tutorial
+```
+
+`--package` names the package the map is imported into. The importer creates a package descriptor in `Import/` if there is none, imports the geometry, applies CARLA's road materials, prepares the map for cooking and builds the Traffic Manager cache. Do not use `Util/Tools/Import.sh`: on this branch it fails before reaching `Import.py`.
+
+!!! Warning
+    The importer also tries to build the pedestrian navigation mesh, and on this branch that step silently does nothing, because `RecastBuilder` and `FBX2OBJ` are not in `Util/DockerUtils/dist/`. Without them walkers cannot navigate the new map. Copy `RecastBuilder` from the build tree into that folder before importing: `cp $(find Build -name RecastBuilder -type f | head -1) Util/DockerUtils/dist/`.
+
+Open the editor with `cmake --build Build/Release --target launch`. The map is in the new package folder of the content browser, at `Content > tutorial > Maps > <map name>`, with its OpenDRIVE file in the `OpenDrive` subfolder.
 
 ![new_loaded_map](img/tuto_content_authoring_maps/new_map.webp)
 <div style="text-align: right"><i>The folder of an imported map in the Content Browser, here the Sunnyvale digital twin, with its level and OpenDRIVE subfolder. Unreal Editor 5.8</i></div>
@@ -105,7 +115,7 @@ There are several elements needed to create an asset in CARLA:
 - [__Normal map__](https://en.wikipedia.org/wiki/Normal_mapping) - a 2D image defining the directions of the normals on the surface of the object, to add 3D variations to the object's surface
 - ORM map - a map defining the regions of metallicity, roughness and ambient occlusion
 
-The ORM map utilizes the channels of a standard RGBA encoded image to encode the map of metallic regions, roughness and ambient occlusion. As we define the map here, the red channel defines the metallic map, the green channel the roughness and the blue channel is the ambient occlusion. These maps (as well as the diffuse and normal maps) can be created using an application such as [__Adobe Substance 3D painter__](https://www.adobe.com/products/substance3d-painter.html).
+The ORM map uses the channels of a standard RGB image for three maps: the red channel holds the ambient occlusion, the green channel the roughness and the blue channel the metallic map. These maps (as well as the diffuse and normal maps) can be created using an application such as [__Adobe Substance 3D painter__](https://www.adobe.com/products/substance3d-painter.html).
 
 Create a new folder in some appropriate location using the Unreal content browser. Within this folder you can either right click and select `Import to PATH/TO/FOLDER` near the top of the context menu, or drag and drop files directly into the content browser. 
 
@@ -154,7 +164,7 @@ Now save the asset and it is ready for use in your map. You can now drag the ass
 ![asset_in_map](img/tuto_content_authoring_maps/asset_in_map.png)
 <div style="text-align: right"><i>The farmhouse placed in the map.</i></div>
 
-Now you can save the map, using the "Save Current" option in the top left of the workspace and it is ready to use. Play the simulation.
+Now save the map with __File > Save Current Level__ (`Ctrl + S`) and it is ready to use. Press __Play__ to run the simulation in the editor.
 
 This concludes the Map authorship guide. Now you know how to create a road network and import 3D assets for use in CARLA.
 
@@ -162,7 +172,7 @@ This concludes the Map authorship guide. Now you know how to create a road netwo
 
 To add traffic lights to your new map:
 
-__1.__ From the _Content Browser_, navigate to `Content > Carla > Static > TrafficLight > StreetLights_01`. You will find several different traffic light blueprints to choose from.
+__1.__ From the _Content Browser_, navigate to `Content > Carla > Blueprints > TrafficLight`. The `BP_TrafficLightNew_T10_master_*` blueprints are the traffic lights used in Town10HD_Opt; more are in `Content > Carla > Static > TrafficLight`.
 
 __2.__ Drag the traffic lights into the scene and position them in the desired location. Press the space bar on your keyboard to toggle between positioning, rotation, and scaling tools.
 
@@ -189,11 +199,11 @@ __5.__ Traffic light timing is only configurable through the Python API. See the
 
 To add traffic signs to your new map:
 
-__1.__ From the _Content Browser_, navigate to `Content > Carla > Static > TrafficSign`. You will find several different traffic light blueprints to choose from.
+__1.__ From the _Content Browser_, navigate to `Content > Carla > Static > TrafficSign`. You will find several different traffic sign blueprints to choose from.
 
-__2.__ Drag the traffic lights into the scene and position them in the desired location. Press the space bar on your keyboard to toggle between positioning, rotation, and scaling tools.
+__2.__ Drag the traffic signs into the scene and position them in the desired location. Press the space bar on your keyboard to toggle between positioning, rotation, and scaling tools.
 
-__3.__ Adjust the [`trigger volume`][triggerlink] for each traffic sign by selecting the _BoxTrigger_ component in the _Details_ panel and adjusting the values in the _Transform_ section. This will determine the traffic light's area of influence. Not all traffic signs have a trigger volume. Those that do, include the yield, stop and speed limit signs.
+__3.__ Adjust the [`trigger volume`][triggerlink] for each traffic sign by selecting the _BoxTrigger_ component in the _Details_ panel and adjusting the values in the _Transform_ section. This will determine the traffic sign's area of influence. Not all traffic signs have a trigger volume. Those that do, include the yield, stop and speed limit signs.
 
 ## Materials
 
@@ -219,66 +229,38 @@ __1. Create the `RoadPainter` actor.__
 1. In the _Content Browser_, navigate to `Content > Carla > Blueprints > LevelDesign`.
 2. Drag the `RoadPainter` into the scene.
 
-__2. Create the Render Target.__
-
-1. In the _Content Browser_, navigate to `Content > Carla > Blueprints > LevelDesign > RoadPainterAssets`.
-2. Right-click on the `RenderTarget` file and select `Duplicate`.
-3. Rename to `Tutorial_RenderTarget`.
-
-__3. Create the master material instance.__
-
-1. In the _Content Browser_, navigate to `Game > Carla > Static > GenericMaterials > RoadPainterMaterials`.
-2. Right-click on `M_RoadMaster` and select _Create Material Instance_.
-3. Rename to `Tutorial_RoadMaster`.
-
-__4. Re-calibrate the _Map Size (Cm)_ so that it is equal to the actual size of the map.__
+__2. Calibrate the _Map Size (Cm)_ so that it is equal to the actual size of the map.__
 
 1. Select the `RoadPainter` actor in the scene.
-2. Go to the _Details_ panel and press the _Z-Size_ button. You will see the value in _Map Size (Cm)_ change.
+2. Go to the _Details_ panel and press the _z_Size_ button. You will see the value in _Map Size (Cm)_ change.
 
 ![map size](img/tuto_content_authoring_maps/map_size.webp)
 <div style="text-align: right"><i>The <code>RoadPainter</code> actor selected: <b>Map Size (Cm)</b> and the <b>z_Size</b> button that recomputes it. Town10HD_Opt &middot; Unreal Editor 5.8</i></div>
 
-__5. Synchronize the map size between the `RoadPainter` and `Tutorial_RoadMaster`.__
+__3. The render target.__
 
-1. In the _Content Browser_, open `Tutorial_RoadMaster`.
-2. Copy the value _Map Size (Cm)_ from the previous step and paste it to _Global Scalar Parameter Values -> Map units (CM)_ in the `Tutorial_RoadMaster` window.
-3. Press save.
+The road painter paints into the texture set in _Paint > Render Target_, `RenderTexture` from `Content > Carla > Blueprints > LevelDesign > RoadPainterAssets` by default.
 
-__6. Create the communication link between the road painter and the master material.__
-
-The `Tutorial_RenderTarget` will be the communication link between the road painter and `Tutorial_RoadMaster`.
-
-1. In the `Tutorial_RoadMaster` window, apply the `Tutorial_RenderTarget` to _Global Texture Parameter Values -> Texture Mask_.
-2. Save and close.
-3. In the main editor window, select the road painter actor, go to the _Details_ panel and apply the `Tutorial_RenderTarget` to _Paint -> Render Target_.
+!!! Warning
+    In this release `M_RoadMaster` has no texture parameter for the painted mask. It reads the mask from `RoadPainterAssets/RenderTexture_Town10HD` through the `WorldMaskFunction` material function, scaled by its _Map units (CM)_ parameter. A mask painted into any other render target does not reach the road materials, and a mask painted into `RenderTexture_Town10HD` changes every map whose roads use `M_RoadMaster`.
 
 ---
 
 ## Prepare the master material
 
-The `Tutorial_RoadMaster` material you created holds the base material, extra material information, and parameters that will be applied via your `Tutorial_RenderTarget`. You can configure one base material and up to three additional materials.
+CARLA's road materials are instances of `M_RoadMaster`, in `Content > Carla > Static > GenericMaterials > 000_Masters`. Ready-made instances are in `Content > Carla > Static > GenericMaterials > Roads`, such as `MI_Road_Asphalt_A`. Right-click `M_RoadMaster`, select _Create Material Instance_, and rename it `Tutorial_RoadMaster`.
 
 ![master materials](img/tuto_content_authoring_maps/master_material.webp)
 <div style="text-align: right"><i>A material instance of <code>M_RoadMaster</code>, the master the road materials are made from, with its parameter groups. Unreal Editor 5.8</i></div>
 
-To configure the materials, double-click the `Tutorial_RoadMaster` file. In the window that appears, you can select and adjust the following values for each material according to your needs:
+The instance groups its parameters by layer:
 
-- Brightness
-- Hue
-- Saturation
-- AO Intensity
-- NormalMap Intensity
-- Roughness Contrast
-- Roughness Intensity
-
-You can change the textures for each material by selecting the following values and searching for a texture in the search box:
-
-- Diffuse
-- Normal
-- ORMH
-
-Explore some of the CARLA textures available in `Game > Carla > Static > GenericMaterials > Asphalt > Textures`.
+| Group | What it controls |
+| --- | --- |
+| 1-Base | The base asphalt: `Base Color`, `Base Normal` and `Base Roughness` textures, a second base (`Base 2 *`), tints, scales and sharpness. |
+| 2- Rubble, 3- OilSpill, and the following groups | Optional layers, each enabled by its switch: `Do Rubble`, `Do OilSpill`, `Do Grime`, `Do MacroVary`, `Do Patches`, `Do Cracks`, `Road Wheel Marks`, `Do Puddle`. |
+| Additional materials | The `AddNewMaterials` switch enables a second and a third material (`SecondMaterialColor`, `SecondMaterialNormal`, `SecondMaterialOrm`, and the same for `ThirdMaterial*`), blended with `BlendingSecondMaterial` and `ThirdMaterialBlendingTexture`. |
+| Global | `Map units (CM)`, which has to match the _Map Size (Cm)_ of the road painter. |
 
 ---
 
@@ -286,7 +268,7 @@ Explore some of the CARLA textures available in `Game > Carla > Static > Generic
 
 __1. Create the link between the road painter and the roads.__
 
-1. In the main editor window, search for `Road_Road` in the _World Outliner_ search box.
+1. In the main editor window, search for `Road_Road` in the _Outliner_ search box.
 2. Press `Ctrl + A` to select all the roads.
 3. In the _Details_ panel, go to the _Materials_ section and apply `Tutorial_RoadMaster` to _Element 0_, _Element 1_, _Element 2_, and _Element 3_.
 
@@ -302,11 +284,11 @@ Each of the materials we added to `Tutorial_RoadMaster` are applied to the roads
 
 __3. Set the brush and stencil parameters.__
 
-There are a variety of stencils to choose from in `GenericMaterials/RoadStencil/Alphas`. The stencil is used to paint the road according to your needs and can be adjusted using the following values:
+There are a variety of stencils to choose from in `GenericMaterials/00_LegacyMaterials/Roads/RoadStencil/Alphas`. The stencil is used to paint the road according to your needs and can be adjusted using the following values:
 
 - _Stencil size_ — Size of the brush.
-- _Brush strength_ — Roughness of the outline.
-- _Spacebeween Brushes_ — Distance between strokes.
+- _Brush Strenght_ — Roughness of the outline.
+- _Spacebeween Brushes_ — Distance between strokes (the variable names keep their original spelling).
 - _Max Jitter_ — Size variation of the brush between strokes.
 - _Stencil_ — The brush to use.
 - _Rotation_ — Rotation applied to the stroke.
@@ -335,7 +317,7 @@ This section also contains options to erase the applied changes.
 <br>
 __5. Add decals and meshes.__
 
-You can explore the available decals and meshes in `Content > Carla Static > Decals` and `Content > Carla > Static`. Add them to road painter by extending and adding to the _Decals Spawn_ and _Meshes Spawn_ arrays. For each one you can configure the following parameters:
+You can explore the available decals and meshes in `Content > Carla > Static > FX > Decals` and `Content > Carla > Static`. Add them to road painter by extending and adding to the _Decals Spawn_ and _Meshes Spawn_ arrays. For each one you can configure the following parameters:
 
 - _Number of Decals/Meshes_ - The amount of each decal or mesh to paint.
 - _Decal/Mesh Scale_ — Scale of the decal/mesh per axis.
@@ -381,40 +363,28 @@ Experiment with different materials, textures, settings, decals, and meshes to g
 
 ## Update the appearance of lane markings
 
-After you have painted the roads, you can update the appearance of the road markings by following these steps:
+Lane markings use `M_RoadMaster` too, with its `LaneMark` switch on. `Content > Carla > Static > GenericMaterials > Roads` has ready-made instances, `MI_Road_Asphalt_B_LaneMarkingWhite` and `MI_Road_Asphalt_B_LaneMarkingYellow`. To make your own:
 
-__1. Make a copy of the master material.__
-
-1. In the _Content Browser_, navigate to `Game > Carla > Static > GenericMaterials > RoadPainterMaterials`.
-2. Right-click on `Tutorial_RoadMaster` and select _Create Material Instance_.
-3. Rename to `Tutorial_LaneMarkings`.
-
-__2. Configure the lane marking material.__
-
-1. In the _Content Browser_, double-click on `Tutorial_LaneMarkings`.
-2. In the _Details_ panel, go to the _Global Static Switch Parameter Values_ section and check the boxes on the left and right of _LaneMark_.
-3. Go to the _Texture_ section and check the boxes for _LaneColor_ and _Uv Size_.
-4. Choose your preferred color for the lane markings in _LaneColor_.
-5. _Save_ and close.
-
-__3. Select the road marking meshes.__
-
-Drag the material onto the lane markings you wish to color. Repeat the whole process for different colors of lane markings if required.
+1. Right-click one of them, or your road instance, and select _Create Material Instance_. Rename it `Tutorial_LaneMarkings`.
+2. Open it, and in _Static Switch Parameter Values_ enable `LaneMark`.
+3. Set the color of the markings in `LaneColor`, and their texture scale in `UV Size HF`.
+4. Save and close.
+5. Drag the material onto the lane marking meshes you wish to color. Repeat for each color of lane marking.
 
 ---
 
 ## Trees and Vegetation
 
-The CARLA content library has a comprehensive set of vegetation blueprints for you to add further realism to the off-road areas of your maps like sidewalks, parks, hillsides, fields and forrest. 
+The CARLA content library has a comprehensive set of vegetation blueprints for you to add further realism to the off-road areas of your maps like sidewalks, parks, hillsides, fields and forests. 
 
-Navigate to the vegetation folder in the CARLA content library: `Carla > Static > Visitation`. You will find blueprints for multiple types of trees, bushes, shrubs. You can drag these elements into your map from the content browser. 
+Navigate to the vegetation folder in the CARLA content library: `Carla > Static > Vegetation`. You will find meshes and blueprints for many types of trees, bushes and shrubs. You can drag these elements into your map from the content browser. 
 
 ![map_materials](img/tuto_content_authoring_maps/add_tree.webp)
 <div style="text-align: right"><i>A tree from <code>Static/Vegetation/Trees</code> (outlined in the Content Browser) dragged into the map. Town10HD_Opt &middot; Unreal Editor 5.8</i></div>
 
 ### Foliage tool
 
-A useful tool for trees and vegetation is the [__Unreal Engine foliage tool__](https://docs.unrealengine.com/4.27/en-US/BuildingWorlds/Foliage/). Activate the tool by selecting the `mode` from the mode dropdown in the toolbar.
+A useful tool for trees and vegetation is the [__Unreal Engine foliage tool__](https://dev.epicgames.com/documentation/en-us/unreal-engine/foliage-mode-in-unreal-engine). Activate it from the _Selection Mode_ dropdown in the toolbar, or with `Shift + 3`.
 
 Drag your desired foliage item into the box labeled `+ Drop Foliage Here`. Set an appropriate density in the density field, then paint into the map with your foliage item. 
 

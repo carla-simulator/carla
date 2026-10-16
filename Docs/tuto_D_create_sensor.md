@@ -1,7 +1,7 @@
 # How to add a new sensor
 
 This tutorial explains the basics for adding a new sensor to CARLA. It provides
-the necessary steps to implement a sensor in Unreal Engine 4 (UE4) and expose
+the necessary steps to implement a sensor in Unreal Engine and expose
 its data via CARLA's Python API. We'll follow all the steps by creating a new
 sensor as an example.
 
@@ -35,14 +35,14 @@ produce data only after certain events. For instance, a camera produces an image
 on every update, but a collision sensor is only triggered in the event of a
 collision.
 
-Although most sensors compute their measurements in the server side (UE4), it's
+Although most sensors compute their measurements in the server side (Unreal Engine), it's
 worth noticing that some sensors run in the client-side only. An example of such
 sensor is the LaneInvasion, it notifies every time a lane mark has been crossed.
 For further details see [Appendix: Client-side sensors](#client-side-sensors).
 
 In this tutorial, we'll be focusing on server-side sensors.
 
-In order to have a sensor running inside UE4 sending data all the way to a
+In order to have a sensor running inside Unreal Engine sending data all the way to a
 Python client, we need to cover the whole communication pipeline.
 
 ![Communication pipeline](img/tuto_D_create_sensor/sensor_pipeline.svg)
@@ -53,7 +53,7 @@ pipeline
 
   * **Sensor actor**<br>
     Actor in charge of measuring and/or simulating data. Running in Carla plugin
-    using UE4 framework. Accessible by the user as Sensor actor.
+    using the Unreal Engine framework. Accessible by the user as Sensor actor.
 
   * **Serializer**<br>
     Object containing methods for serializing and deserializing the data
@@ -88,14 +88,14 @@ illustrative example._
 ### 1. Sensor actor
 
 This is the most complicated class we're going to create. Here we're running
-inside Unreal Engine framework, knowledge of UE4 API will be very helpful but
-not indispensable, we'll assume the reader has never worked with UE4 before.
+inside Unreal Engine framework, knowledge of the Unreal Engine API will be very helpful but
+not indispensable, we'll assume the reader has never worked with Unreal Engine before.
 
-Inside UE4, we have a similar hierarchy as we have in the client-side, `ASensor`
+Inside Unreal Engine, we have a similar hierarchy as we have in the client-side, `ASensor`
 derives from `AActor`, and an actor is roughly any object that can be dropped
 into the world. `AActor` has a virtual function called `Tick` that we can use to
 update our sensor on every simulator update. Higher in the hierarchy we have
-`UObject`, base class for most of UE4 classes. It is important to know that
+`UObject`, base class for most of Unreal Engine classes. It is important to know that
 objects deriving from `UObject` are handle via pointers and are garbage
 collected when they're no longer referenced. Class members pointing to
 `UObject`s need to be marked with `UPROPERTY` macros or they'll be garbage
@@ -111,9 +111,9 @@ new C++ class
 
 At the very minimum, the sensor is required to inherit `ASensor`, and provide a
 static method `GetSensorDefinition`; but we'll be overriding also the `Set`,
-`SetOwner`, and `Tick` methods. This sensor also needs a trigger box that will
+`SetOwner`, and `PostPhysTick` methods. This sensor also needs a trigger box that will
 be detecting other actors around us. With this and some required boiler-plate
-UE4 code, the header file looks like
+Unreal Engine code, the header file looks like
 
 ```cpp
 #pragma once
@@ -142,7 +142,7 @@ public:
 
   void SetOwner(AActor *Owner) override;
 
-  void Tick(float DeltaSeconds) override;
+  void PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaSeconds) override;
 
 private:
 
@@ -164,7 +164,7 @@ In the cpp file, first we'll need some includes
 ```
 
 Then we can proceed to implement the functionality. The constructor will create
-the trigger box, and tell UE4 that we want our tick function to be called. If
+the trigger box, and tell Unreal Engine that we want our tick function to be called. If
 our sensor were not using the tick function, we can disable it here to avoid
 unnecessary ticks
 
@@ -252,7 +252,7 @@ void ASafeDistanceSensor::Set(const FActorDescription &Description)
 ```
 
 !!! note
-    The set function is called before UE4's `BeginPlay`, we won't use this
+    The set function is called before Unreal Engine's `BeginPlay`, we won't use this
     virtual function here, but it's important for other sensors.
 
 Now we're going to extend the box volume based on the bounding box of the actor
@@ -271,29 +271,28 @@ void ASafeDistanceSensor::SetOwner(AActor *Owner)
 }
 ```
 
-The only thing left to do is the actual measurement, for that we'll use the
-`Tick` function. We're going to look for all the vehicles currently overlapping
+The only thing left to do is the actual measurement. `ASensor` keeps `Tick` to
+itself (it is `final`) and calls `PostPhysTick` once the physics of the frame has
+been computed, so that is the function we override. We're going to look for all the vehicles currently overlapping
 our box, and we'll send this list to client
 
 ```cpp
-void ASafeDistanceSensor::Tick(float DeltaSeconds)
+void ASafeDistanceSensor::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaSeconds)
 {
-  Super::Tick(DeltaSeconds);
-
   TSet<AActor *> DetectedActors;
   Box->GetOverlappingActors(DetectedActors, ACarlaWheeledVehicle::StaticClass());
   DetectedActors.Remove(GetOwner());
 
-  if (DetectedActors.Num() > 0)
+  if (DetectedActors.Num() > 0 && IsStreamReady())
   {
     auto Stream = GetDataStream(*this);
-    Stream.Send(*this, GetEpisode(), DetectedActors);
+    Stream.SerializeAndSend(*this, GetEpisode(), DetectedActors);
   }
 }
 ```
 
 !!! note
-    In production-ready sensors, the `Tick` function should be very optimized,
+    In production-ready sensors, the `PostPhysTick` function should be very optimized,
     specially if the sensor sends big chunks of data. This function is called
     every update in the game thread thus significantly affects the performance
     of the simulator.
@@ -319,7 +318,7 @@ LibCarla
   * `LibCarla/source/carla/sensor/s11n/SafeDistanceSerializer.cpp`
 
 Let's start with the `Serialize` function. This function is going to receive as
-arguments whatever we pass to the `Stream.Send(...)` function, with the only
+arguments whatever we pass to the `Stream.SerializeAndSend(...)` function, with the only
 condition that the first argument has to be a sensor and it has to return a
 buffer.
 
@@ -350,7 +349,7 @@ static Buffer Serialize(
   Buffer buffer{size_in_bytes};
   unsigned char *it = buffer.data();
   for (auto *actor : detected_actors) {
-    ActorId id = episode.FindActor(actor).GetActorId();
+    ActorId id = episode.FindCarlaActor(actor)->GetActorId();
     std::memcpy(it, &id, sizeof(ActorId));
     it += sizeof(ActorId);
   }
@@ -358,7 +357,7 @@ static Buffer Serialize(
 }
 ```
 
-> **Note**: We templatize the UE4 classes to avoid including these files within LibCarla.
+> **Note**: We templatize the Unreal Engine classes to avoid including these files within LibCarla.
 
 This buffer we're returning is going to come back to us, except that this time
 in the client-side, in the `Deserialize` function packed in a `RawData` object
@@ -402,7 +401,7 @@ namespace data {
   public:
 
     explicit SafeDistanceEvent(RawData &&data)
-      : Array<rpc::ActorId>(std::move(data)) {}
+      : Array<rpc::ActorId>(0u, std::move(data)) {}
   };
 
 } // namespace data
@@ -420,14 +419,14 @@ raw memory.
 Now we need to expose this class to Python. In our example, we haven't add any
 extra methods, so we'll just expose the methods related to Array. We do so by
 using Boost.Python bindings, add the following to
-_PythonAPI/carla/source/libcarla/SensorData.cpp_.
+_PythonAPI/carla/src/SensorData.cpp_.
 
 ```cpp
 class_<
     csd::SafeDistanceEvent,                    // actual type.
     bases<cs::SensorData>,                     // parent type.
     boost::noncopyable,                        // disable copy.
-    boost::shared_ptr<csd::SafeDistanceEvent>  // use as shared_ptr.
+    std::shared_ptr<csd::SafeDistanceEvent>    // use as shared_ptr.
   >("SafeDistanceEvent", no_init)              // name, and disable construction.
   .def("__len__", &csd::SafeDistanceEvent::size)
   .def("__iter__", iterator<csd::SafeDistanceEvent>())
@@ -457,12 +456,12 @@ std::pair<ASafeDistanceSensor *, s11n::SafeDistanceSerializer>
 With this, the sensor registry now can do its magic to dispatch the right data
 to the right serializer.
 
-Now recompile CARLA, hopefully everything goes ok and no errors. Unfortunately,
-most of the errors here will be related to templates and the error messages can
-be a bit cryptic.
+Now rebuild the server and the Python client. Most of the errors here will be
+related to templates and the error messages can be a bit cryptic.
 
-```
-make rebuild
+```sh
+cmake --build Build/Release                                      # LibCarla, the server and the plugin
+cmake --build Build/Release --target carla-python-api-install    # the Python client
 ```
 
 ### 5. Usage example
@@ -552,15 +551,13 @@ Using the data stream asynchronously is perfectly fine, as long as the stream
 itself is created in the game thread. For instance
 
 ```cpp
-void MySensor::Tick(float DeltaSeconds)
+void MySensor::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaSeconds)
 {
-  Super::Tick(DeltaSeconds);
-
   auto Stream = GetDataStream(*this);
 
-  std::async(std::launch::async, [Stream=std::move(Stream)]() {
+  std::async(std::launch::async, [this, Stream=std::move(Stream)]() mutable {
     auto Data = ComputeData();
-    Stream.Send(*this, Data);
+    Stream.SerializeAndSend(*this, Data);
   });
 }
 ```
