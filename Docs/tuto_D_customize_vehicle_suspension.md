@@ -17,8 +17,8 @@ The wheel blueprints live next to the vehicle blueprint in `Content/Carla/Bluepr
 *   `F` or `R` — front or rear.
 *   `L` or `R` — left or right.
 
-![tuto_suspension_blueprints](img/tuto_D_customize_vehicle_suspension/tuto_suspension_blueprints.jpg)
-<div style="text-align: right"><i>The front left wheel of the Audi TT is <code>BP_AudiTT_FLW</code>.</i></div>
+![wheel_blueprints](img/tuto_D_customize_vehicle_suspension/wheel_blueprints.webp)
+<div style="text-align: right"><i>The Audi TT folder: the vehicle blueprint and its four wheel blueprints; the front left wheel is <code>BP_AudiTT_FLW</code>.</i></div>
 
 ---
 ## Suspension parameters
@@ -40,6 +40,8 @@ These are the properties under the __Suspension__ category of a wheel blueprint,
 | `Sweep Shape` | `Raycast` | How the ground is found: `Raycast` (fastest), `Spherecast`, or `Shapecast` (uses the wheel's collision shape, slowest). |
 | `Sweep Type` | `SimpleSweep` | Geometry the sweep tests against: `SimpleSweep` or `ComplexSweep`. |
 
+CARLA's vehicles override several of these. The Audi TT's front left wheel, for example, uses `Suspension Max Raise` and `Max Drop` of `7.5`, a `Suspension Damping Ratio` of `1.0`, and a `Spherecast` with `ComplexSweep`.
+
 !!! Note
     A stiffer vehicle wants smaller `Suspension Max Raise` and `Max Drop` with a higher `Spring Rate` and `Damping Ratio`; a soft, off-road one wants the opposite. Raise `Rollbar Scaling` to keep a tall vehicle from leaning in corners.
 
@@ -50,8 +52,8 @@ __1.__ Open the vehicle's folder in the Unreal editor and double-click the wheel
 
 __2.__ In the __Details__ panel, open the __Suspension__ category and set the values.
 
-![tuto_suspension_parameterization](img/tuto_D_customize_vehicle_suspension/tuto_suspension_parameterization.jpg)
-<div style="text-align: right"><i>The Suspension panel inside a wheel blueprint.</i></div>
+![wheel_suspension](img/tuto_D_customize_vehicle_suspension/wheel_suspension.webp)
+<div style="text-align: right"><i>The Suspension category of <code>BP_AudiTT_FLW</code>; the arrows on the right mark the values that differ from the defaults.</i></div>
 
 __3.__ Repeat for the other three wheels, or set them all at once by selecting the four assets and editing the shared property.
 

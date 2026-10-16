@@ -106,6 +106,7 @@ client.set_replayer_time_factor(2.0)
 When the time factor is around __20x__ traffic flow is easily appreciated.
 
 ![flow](img/adv_recorder/recorder_replay_traffic.webp)
+<div style="text-align: right"><i>A replay of Traffic Manager traffic at a junction, seen from above. Town10HD_Opt &middot; sensor.camera.rgb &middot; Cinematic &middot; sunny afternoon</i></div>
 
 ---
 ## Recorded file
@@ -123,36 +124,34 @@ print(client.show_recorder_file_info("recording01.log", False))
 
 * __Closing information.__ Number of frames and total time recorded.
 
+For the one-minute traffic recording used in the queries below, trimmed (`...`):
+
 ```
 Version: 1
-Map: Town05_Opt
-Date: 02/21/19 10:46:20
+Map: Town10HD_Opt
+Date: 10/16/26 12:14:19
 
 Frame 1 at 0 seconds
- Create 2190: spectator (0) at (-260, -200, 382.001)
- Create 2191: traffic.traffic_light (3) at (4255, 10020, 0)
- Create 2192: traffic.traffic_light (3) at (4025, 7860, 0)
+ Create 1: spectator (0) at (-17219.7, 18385.9, 2763.81)
+ Create 2: traffic.stop (4) at (5745, 6115, 15)
+ Create 3: traffic.stop (4) at (2610, 7515, 15)
  ...
- Create 2258: traffic.speed_limit.90 (0) at (21651.7, -1347.59, 15)
- Create 2259: traffic.speed_limit.90 (0) at (5357, 21457.1, 15)
-
-Frame 2 at 0.0254253 seconds
- Create 2276: vehicle.mini.cooperst (1) at (4347.63, -8409.51, 120)
-  number_of_wheels = 4
-  object_type =
-  color = 255,241,0
+ Create 8: traffic.traffic_light (3) at (-4617.16, -7355.66, 25.4254)
+ Create 9: traffic.traffic_light (3) at (-3444.92, -5102.05, 25.4255)
+ ...
+ Create 25: vehicle.nissan.patrol (1) at (4040.32, 4270.69, 4.93826)
   role_name = autopilot
-... 
-Frame 2350 at 60.2805 seconds
- Destroy 2276
+  number_of_wheels = 4
+  color = 2,35,54
+  base_type = car
+  sticky_control = true
+  ...
 
-Frame 2351 at 60.3057 seconds
- Destroy 2277
-...
-
-Frames: 2354
-Duration: 60.3753 seconds
+Frames: 1200
+Duration: 59.95 seconds
 ```
+
+The number in brackets after the blueprint id is the actor type (`0` other, `1` vehicle, `2` walker, `3` traffic light, `4` traffic sign, `5` sensor), and locations are in centimetres.
 
 ---
 ## Queries
@@ -177,33 +176,32 @@ The collision query requires two flags to filter the collisions. The following e
 print(client.show_recorder_collisions("recording01.log", "v", "a"))
 ```
 
-The output summarizes time of the collision, and type, ID and description of the actors involved.
+The output summarizes time of the collision, and type, ID and description of the actors involved. For the recording in the image below, a Lincoln MKZ carrying a collision sensor driven into the side of a Nissan Patrol:
 
 ```
 Version: 1
-Map: Town05_Opt
-Date: 02/19/19 15:36:08
+Map: Town10HD_Opt
+Date: 10/15/26 11:56:04
 
     Time  Types     Id Actor 1                                 Id Actor 2
-      16   v v     122 vehicle.yamaha.yzf                     118 vehicle.dodge_charger.police
-      27   v o     122 vehicle.yamaha.yzf                       0
+       5   v v    1206 vehicle.lincoln.mkz                   1205 vehicle.nissan.patrol
 
-Frames: 790
-Duration: 46 seconds
+Frames: 140
+Duration: 7 seconds
 ```
 
 !!! Important
-    As it is the `hero` or `ego` vehicle who registers the collision, this will always be `Actor 1`.
+    Only actors with a `sensor.other.collision` attached register collisions, and the actor carrying the sensor is always `Actor 1`.
 
-
-The collision can be reenacted by using the recorder and setting it seconds before the event.
+The collision can be reenacted by using the recorder and setting it seconds before the event, following the actor that registered it.
 
 ```py
-client.replay_file("col2.log", 13, 0, 122)
+client.replay_file("crash.log", 3, 0, 1206)
 ```
 In this case, the playback showed this.
 
 ![collision](img/adv_recorder/recorder_collision.webp)
+<div style="text-align: right"><i>A recorded collision; show_recorder_collisions(log, 'v', 'v') lists it (lincoln.mkz against nissan.patrol at t = 5 s). Town10HD_Opt &middot; sensor.camera.rgb &middot; Cinematic &middot; sunny afternoon</i></div>
 
 ### Blocked actors
 
@@ -225,35 +223,37 @@ print(client.show_recorder_actors_blocked("recording01.log", min_time, min_dista
 !!! Note
     Sometimes vehicles are stopped at traffic lights for longer than expected.
 
-The following example considers that vehicles are blocked when moving less than 1 meter during 60 seconds.
+The following example considers that vehicles are blocked when moving less than 1 meter during 20 seconds. The recording is one minute of Traffic Manager traffic, 50 vehicles on Town10HD_Opt.
 
 ```py
-client.show_recorder_actors_blocked("col3.log", 60, 100)
+client.show_recorder_actors_blocked("traffic60.log", 20, 100)
 ```
 
-The output is sorted by __duration__, which states how long it took to stop being "blocked" and move the `min_distance`.
+The output is sorted by __duration__, which states how long it took to stop being "blocked" and move the `min_distance`. The list below is trimmed to its first rows:
 
 ```
 Version: 1
-Map: Town05_Opt
-Date: 02/19/19 15:45:01
+Map: Town10HD_Opt
+Date: 10/16/26 12:14:19
 
     Time     Id Actor                                 Duration
-      36    173 vehicle.nissan.patrol                      336
-      75    214 vehicle.chevrolet.impala                   295
-     302    143 vehicle.bmw.grandtourer                     67
+       0      1 spectator                                   59
+      11     72 vehicle.ue4.mercedes.ccc                    49
+       2     42 vehicle.fuso.mitsubishi                     42
+      10     40 vehicle.sprinter.mercedes                   35
+      29     53 vehicle.ue4.audi.tt                         31
+      15     61 vehicle.dodgecop.charger                    30
+      ...
 
-Frames: 6985
-Duration: 374 seconds
+Frames: 1200
+Duration: 59.95 seconds
 ```
 
-The vehicle `173` was stopped for `336` seconds at time `36` seconds. Reenact the simulation a few seconds before the second `36` to check it out.
+The spectator never moves, so it is always listed. The vehicle `72` was stopped for `49` seconds from second `11`, most likely queued at a traffic light. Reenact the simulation a few seconds before second `11` to check it out.
 
 ```py
-client.replay_file("col3.log", 34, 0, 173)
+client.replay_file("traffic60.log", 9, 0, 72)
 ```
-
-![accident](img/adv_recorder/recorder_collision.webp)
 
 ---
 ## Sample python scripts

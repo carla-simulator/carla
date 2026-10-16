@@ -41,10 +41,12 @@ Building the map itself is beyond this guide — the [RoadRunner documentation][
 The road layout cannot be changed after export, so validate before you export: check the geometry, and pay attention to junction connections.
 
 ![CheckGeometry](img/large_map_roadrunner/check_geometry.jpg)
+<div style="text-align: right"><i>A clean junction (left) and a broken one (right): check every junction before exporting.</i></div>
 
 The `OpenDRIVE Preview Tool` draws the road network as CARLA will read it, which is the quickest way to catch a bad junction:
 
 ![checkopen](img/large_map_roadrunner/check_open.jpg)
+<div style="text-align: right"><i>The OpenDRIVE Preview Tool showing the lanes and junction connections that CARLA will read.</i></div>
 
 !!! Note
     If the preview shows junction errors, open the `Maneuver Tool` and use `Rebuild Maneuver Roads`.
@@ -56,6 +58,7 @@ The `OpenDRIVE Preview Tool` draws the road network as CARLA will read it, which
 Select the whole map first: open the [World settings tool](https://www.mathworks.com/help/roadrunner/ref/worldsettingstool.html), drag the blue boundary box around everything you want to export, and click _Apply World Changes_.
 
 ![world_bounds_settings](img/large_map_roadrunner/rr_world_settings.png)
+<div style="text-align: right"><i>The World settings tool: the blue boundary box around the map, then <b>Apply World Changes</b>.</i></div>
 
 __1. Export the geometry.__ `File` → `Export` → `Filmbox (.fbx)`, with:
 
@@ -68,6 +71,7 @@ __1. Export the geometry.__ `File` → `Export` → `Filmbox (.fbx)`, with:
 | _Export Individual Tiles_ | Writes one file per tile, which is what the importer expects for a large map. |
 
 ![export_large_map_fbx](img/large_map_roadrunner/large_map_export_fbx.png)
+<div style="text-align: right"><i>The Filmbox (.fbx) export options for a large map, with 2000 x 2000 tiles.</i></div>
 
 __2. Export the road description.__ `File` → `Export` → `OpenDRIVE (.xodr)`.
 

@@ -149,6 +149,11 @@ There are some weather presets that can be directly applied to the world. These 
 world.set_weather(carla.WeatherParameters.WetCloudySunset)
 ```
 
+![weather_presets](img/core_world/weather_presets_cinematic_town10.webp)
+<div style="text-align: right"><i>The same junction under nine carla.WeatherParameters presets, Cinematic profile. Town10HD_Opt &middot; sensor.camera.rgb &middot; Cinematic &middot; nine weather presets</i></div>
+
+The same presets through the default sensor profile, `AutomotiveHDR`: [Town10HD_Opt](img/core_world/weather_presets_automotivehdr_town10.webp), [Town15](img/core_world/weather_presets_automotivehdr_town15.webp). Town15 with the `Cinematic` profile: [Town15](img/core_world/weather_presets_cinematic_town15.webp).
+
 Two scripts drive the weather from the terminal.
 
 __`PythonAPI/util/set_weather.py`__ sets the weather once. It starts from a named preset and overrides individual parameters.

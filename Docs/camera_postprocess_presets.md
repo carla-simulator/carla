@@ -43,6 +43,17 @@ consumer presets are graded by eye.
 | `GoPro` | action camera | Vivid colour, strong local tone compression, crisp detail (sharpen 0.55), light vignette and edge fringing, fast auto exposure, motion blur on. |
 | `Dashcam` | consumer dashcam | Low dynamic range (bright skies clip), contrasty, over-sharpened, strong vignette and fringing, sensor grain, slightly cool and overexposed. |
 
+
+The same Town10HD_Opt frame through the nine presets, at noon and at night. At night the automotive presets raise the gain and show sensor noise, and `AutomotiveHDR` adds its star-shaped flare around the lamps:
+
+![camera_profiles_clearnoon](img/camera_postprocess_presets/camera_profiles_clearnoon_town10.webp)
+<div style="text-align: right"><i>The nine camera profiles on the same frame, ClearNoon. Town10HD_Opt &middot; sensor.camera.rgb &middot; nine camera profiles &middot; ClearNoon</i></div>
+
+![camera_profiles_clearnight](img/camera_postprocess_presets/camera_profiles_clearnight_town10.webp)
+<div style="text-align: right"><i>The nine camera profiles on the same frame, ClearNight. Town10HD_Opt &middot; sensor.camera.rgb &middot; nine camera profiles &middot; ClearNight</i></div>
+
+The same comparison under other weathers: [HardRainNoon](img/camera_postprocess_presets/camera_profiles_hardrainnoon_town10.webp), [ClearSunset](img/camera_postprocess_presets/camera_profiles_clearsunset_town10.webp). On a Town15 street: [ClearNoon](img/camera_postprocess_presets/camera_profiles_clearnoon_town15.webp), [HardRainNoon](img/camera_postprocess_presets/camera_profiles_hardrainnoon_town15.webp), [ClearSunset](img/camera_postprocess_presets/camera_profiles_clearsunset_town15.webp), [ClearNight](img/camera_postprocess_presets/camera_profiles_clearnight_town15.webp).
+
 Resolution, field of view and lens are attributes of the camera blueprint, not of the preset. To match the camera a preset imitates:
 
 | Preset | `image_size_x` × `image_size_y` | `fov` |
@@ -94,10 +105,12 @@ The look of the scene through the camera is adjusted with the post-process setti
 At BeginPlay the sky rig loads the profile named by the `carla.PostProcess.ViewportProfile` console variable (`Cinematic` unless changed), which is what the spectator view shows; sensors load `carla.PostProcess.Profile` (`AutomotiveHDR`) instead.
 
 ![postprocess_component](img/camera_postprocess_presets/ue5_post_process_component.png)
+<div style="text-align: right"><i><code>BP_Carla_Sky</code> selected in the Outliner, with its Post Process Component and the Post Process Volume settings in Details.</i></div>
 
 Post-process parameter presets can be saved and loaded through the `BP_PostProcessVolumeSettings` blueprint. In the content browser navigate to `Carla/Blueprints/CameraProfiles` or search for the blueprint in the search field. Drag the blueprint into the scene and make sure it is selected in the *Outliner*, you may want to place it out of the way in the sky so it doesn't get in the way of other scene elements. In the details panel, expand the *Default* section.
 
 ![postprocess_bp](img/camera_postprocess_presets/bp_postprocess_volumesettings.png)
+<div style="text-align: right"><i><code>BP_PostProcessVolumeSettings</code> in Details: <b>Profile Name</b>, <b>LoadProfile</b> and <b>SaveProfile</b> under Default.</i></div>
 
 To save your current post process settings, choose an appropriate name and enter it in the *Profile Name* field, then press *SaveProfile*. The profile will be saved as a JSON file in the `${CARLA_ROOT}/Unreal/CarlaUnreal/Content/Carla/Config/PostProcess` directory, where you will also find other presets. If you want to load an existing preset from this directory, enter the name of the preset (the name of the JSON file minus the `.json` suffix) in the *Profile Name* field and then press *LoadProfile*.
 

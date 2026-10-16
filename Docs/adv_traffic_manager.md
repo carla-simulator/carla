@@ -33,6 +33,9 @@
 
 The Traffic Manager (TM) is the module that controls vehicles in autopilot mode in a simulation. Its goal is to populate a simulation with realistic urban traffic conditions. Users can customize some behaviors, for example, to set specific learning circumstances.
 
+![tm_traffic_aerial](img/tuto_G_traffic_manager/tm_traffic_aerial.webp)
+<div style="text-align: right"><i>Aerial view of Traffic Manager autopilot traffic and pedestrians at a junction. Town10HD_Opt &middot; sensor.camera.rgb &middot; Cinematic &middot; sunny afternoon</i></div>
+
 ### Structured design
 
 TM is built on CARLA's client-side. The execution flow is divided into __stages__, each with independent operations and goals. This facilitates the development of phase-related functionalities and data structures while improving computational efficiency. Each stage runs on a different thread. Communication with other stages is managed through synchronous messaging. Information flows in one direction.
@@ -225,6 +228,7 @@ To modify the behavior of hybrid mode, use the following two parameters:
 The clip below shows how physics is enabled and disabled when hybrid mode is active. The __hero vehicle__ is tagged with a __red square__. Vehicles with __physics disabled__ are tagged with a __blue square__. When inside the hero vehicle's radius of influence, __physics are enabled and the tag becomes green__.
 
 ![Welcome to CARLA](img/adv_traffic_manager/tm_hybrid_physics.webp)
+<div style="text-align: right"><i>Hybrid physics mode seen from above: inside the radius around the hero vehicle physics is on (green), outside it is off (blue). Town10HD_Opt &middot; sensor.camera.rgb &middot; Cinematic &middot; sunny afternoon</i></div>
 
 
 ---
@@ -353,7 +357,8 @@ If more than one TM is set to synchronous mode, synchrony will fail. Follow thes
 
 ### Overview
 
-![Architecture](img/adv_traffic_manager/tm_2_architecture.jpg)
+![Architecture](img/adv_traffic_manager/tm_architecture.svg)
+<div style="text-align: right"><i>Traffic Manager components and the five stages of its control loop, in the order <code>TrafficManagerLocal</code> runs them each step.</i></div>
 
 The above diagram is a representation of the internal architecture of the TM. The C++ code for each component can be found in `LibCarla/source/carla/trafficmanager`. Each component is explained in detail in the following sections. A simplified overview of the logic is as follows:
 

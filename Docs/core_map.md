@@ -228,6 +228,11 @@ The map object contains __recommended spawn points__ for the creation of vehicle
 spawn_points = world.get_map().get_spawn_points()
 ```
 
+The list is in a fixed order for each map, so tutorials refer to a spawn point by its index (`spawn_points[43]`). On Town10HD_Opt:
+
+![town10hd_spawn_points](img/shared/town10hd_spawn_points.png)
+<div style="text-align: right"><i>Town10HD_Opt road network with the index and heading of every spawn point. Town10HD_Opt</i></div>
+
 You can get started with waypoints by __[getting](python_api.md#carla.Map.get_waypoint) the closest waypoint__ to a specific location or to a particular `road_id`, `lane_id` and `s` value in the map's OpenDRIVE definition:
 
 ```py

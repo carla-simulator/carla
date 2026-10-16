@@ -114,6 +114,7 @@ while True:
 If you now fly through the map with the spectator, you will see vehicles driving autonomously around the map. Buses and trucks swing wide through junctions, the way a long vehicle has to; `traffic_manager.vehicle_large_vehicle_wide_turn(vehicle, False)` turns that off for one vehicle, and `global_large_vehicle_wide_turn(False)` for all of them.
 
 ![intersection_traffic](img/tuto_G_traffic_manager/tm_traffic_aerial.webp)
+<div style="text-align: right"><i>Aerial view of Traffic Manager autopilot traffic and pedestrians at a junction. Town10HD_Opt &middot; sensor.camera.rgb &middot; Cinematic &middot; sunny afternoon</i></div>
 
 ---
 ## Specify routes for vehicles
@@ -134,23 +135,23 @@ while True:
     world.tick()
 ```
 
-We choose our spawn points and waypoints to create two converging streams of traffic within the town, creating congestion, which might be an interesting scenario to present to an autonomous driving agent.
+We choose our spawn points and waypoints to create two converging streams of traffic within the town, creating congestion, which might be an interesting scenario to present to an autonomous driving agent. Route 1 starts at spawn point 43 and route 2 at spawn point 83; both share their last four waypoints, so the two streams meet at spawn point 149 and drive on together.
 
 ```py
 spawn_points = world.get_map().get_spawn_points()
 
 # Route 1
-spawn_point_1 =  spawn_points[32]
+spawn_point_1 = spawn_points[43]
 # Create route 1 from the chosen spawn points
-route_1_indices = [129, 28, 124, 33, 97, 119, 58, 154, 147]
+route_1_indices = [45, 149, 151, 58, 153]
 route_1 = []
 for ind in route_1_indices:
     route_1.append(spawn_points[ind].location)
 
 # Route 2
-spawn_point_2 =  spawn_points[149]
+spawn_point_2 = spawn_points[83]
 # Create route 2 from the chosen spawn points
-route_2_indices = [21, 76, 38, 34, 90, 3]
+route_2_indices = [149, 151, 58, 153]
 route_2 = []
 for ind in route_2_indices:
     route_2.append(spawn_points[ind].location)
@@ -160,11 +161,9 @@ world.debug.draw_string(spawn_point_1.location, 'Spawn point 1', life_time=30, c
 world.debug.draw_string(spawn_point_2.location, 'Spawn point 2', life_time=30, color=carla.Color(0,0,255))
 
 for ind in route_1_indices:
-    spawn_points[ind].location
     world.debug.draw_string(spawn_points[ind].location, str(ind), life_time=60, color=carla.Color(255,0,0))
     
 for ind in route_2_indices:
-    spawn_points[ind].location
     world.debug.draw_string(spawn_points[ind].location, str(ind), life_time=60, color=carla.Color(0,0,255))
     
 while True:
@@ -173,7 +172,10 @@ while True:
 ```
 
 
+The debug strings appear in the spectator view of the server window, not in camera sensor images. The plot below shows both routes as the Traffic Manager drives them:
+
 ![routes](img/tuto_G_traffic_manager/set_paths.png)
+<div style="text-align: right"><i>The two set_path() routes on Town10HD_Opt as the Traffic Manager drives them; numbers are spawn point indices, purple ones are in both routes. Town10HD_Opt</i></div>
 
 Now that we have chosen our spawn points and way points, we can now start spawning traffic and setting the spawned vehicles to follow our waypoint lists.
 
@@ -230,9 +232,10 @@ while True:
 
 ```
 
-With the above code, we have created two converging streams of traffic originating from opposite sides of the map, guided by the `set_path()` function of the TM. This results in congestion on a road in the center of town. This kind of technique could be used on a larger scale to simulate multiple tricky cases for autonomous vehicles, such as a busy roundabout or highway intersection.
+With the above code, we have created two converging streams of traffic originating from different parts of the map, guided by the `set_path()` function of the TM. This results in congestion on a road in the center of town. This kind of technique could be used on a larger scale to simulate multiple tricky cases for autonomous vehicles, such as a busy roundabout or highway intersection.
 
 ![converging_paths](img/tuto_G_traffic_manager/converging_paths.webp)
+<div style="text-align: right"><i>The two streams merging, seen from above; each car is ringed in its route colour. Town10HD_Opt &middot; sensor.camera.rgb &middot; Cinematic &middot; sunny afternoon</i></div>
 
 ---
 ## Cleaning up

@@ -19,13 +19,12 @@ list(filter(lambda k: 'Apartment' in k, world.get_names_of_all_objects()))
 
 That works against any server, packaged or not. The alternative is the Unreal Editor, which also shows you what you are about to change — it needs a [source build](build_linux_ue5.md). Open the editor with Town10HD_Opt loaded and select a building:
 
-![select_building](img/tuto_G_texture_streaming/building_selected.png)
+![select_building](img/tuto_G_texture_streaming/building_selected.webp)
+<div style="text-align: right"><i>An apartment block selected in Town10HD_Opt; its label is highlighted in the Outliner.</i></div>
 
-We have selected an apartment block for texture manipulation. Its name is in the World Outliner panel, but __hover over it and use the name in the tooltip__: the internal name, which is what the API takes, often differs from the title shown in the list.
+We have selected an apartment block for texture manipulation. Its label is in the Outliner panel, but __hover over it and use the *ID Name* in the tooltip__: the internal name, which is what the API takes, often differs from the label. Here the label is `BP_Apartment04_v08_Opt` and the internal name `BP_Apartment04_v08_Opt_0`.
 
 The map decides which objects exist, so confirm the name against the server before using it — see [Find the object](#find-the-object). The snippets below call it `object_name`.
-
-![tooltip](img/tuto_G_texture_streaming/tooltip.png)
 
 ---
 ## Export a texture to work with
@@ -38,11 +37,10 @@ __3.__ Find the diffuse texture of the material — for this apartment block, a 
 
 __4.__ Right-click it and choose __Asset Actions > Export__, saving in a format your image editor reads. TGA is used here.
 
-![texture_export](img/tuto_G_texture_streaming/texture_export.png)
-
 Open the exported texture in your preferred image manipulation software and edit the texture as needed. In the image below, the original texture is visible in the top half, the lower half shows the modified texture.
 
 ![textures](img/tuto_G_texture_streaming/textures.png)
+<div style="text-align: right"><i>The exported diffuse texture (top) and an edited version (bottom).</i></div>
 
 Export your modified texture into an appropriate location and then open up a code editor to run some Python to update the texture in the running CARLA simulation.
 
@@ -69,6 +67,9 @@ world = client.get_world()
 After loading the modified image, instantiate a [carla.TextureColor](python_api.md#carla.TextureColor) object and populate the pixel data from the loaded image.
 
 Use the `apply_color_texture_to_object(...)` method of the [carla.World](python_api.md#carla.World) object to update the texture. You should see the texture update in the spectator view.
+
+!!! Warning
+    On the UE 5.8 server, `apply_color_texture_to_object` currently returns without a visible change on the map's buildings. The call and its parameters are described here as the API defines them.
 
 
 ```py
@@ -97,8 +98,6 @@ for x in range(0,width):
 world.apply_color_texture_to_object(object_name, carla.MaterialParameter.Diffuse, texture)
 
 ```
-
-![texture_change](img/tuto_G_texture_streaming/texture_change.gif)
 
 ---
 ## Which materials can be changed

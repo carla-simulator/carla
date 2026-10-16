@@ -157,7 +157,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ![static_prop_barrel](img/catalogue/props/static_prop_barrel.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.barrel</span>
+* __Blueprint ID__: `static.prop.barrel`
 * __Base type__: containers
 * __Subtype__: barrels
 * __Size__: small
@@ -166,7 +166,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ![static_prop_container](img/catalogue/props/static_prop_container.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.container</span>
+* __Blueprint ID__: `static.prop.container`
 * __Base type__: containers
 * __Subtype__: bins
 * __Size__: medium
@@ -175,7 +175,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ![static_prop_dumpster](img/catalogue/props/static_prop_dumpster.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.dumpster</span>
+* __Blueprint ID__: `static.prop.dumpster`
 * __Base type__: containers
 * __Subtype__: bins
 * __Size__: medium
@@ -184,7 +184,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ![static_prop_dumpster02](img/catalogue/props/static_prop_dumpster02.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.dumpster02</span>
+* __Blueprint ID__: `static.prop.dumpster02`
 * __Base type__: containers
 * __Subtype__: bins
 * __Size__: medium
@@ -193,7 +193,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ![static_prop_recyclecardboard](img/catalogue/props/static_prop_recyclecardboard.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.recyclecardboard</span>
+* __Blueprint ID__: `static.prop.recyclecardboard`
 * __Base type__: containers
 * __Subtype__: bins
 * __Size__: medium
@@ -202,7 +202,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ![static_prop_recycleglass](img/catalogue/props/static_prop_recycleglass.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.recycleglass</span>
+* __Blueprint ID__: `static.prop.recycleglass`
 * __Base type__: containers
 * __Subtype__: bins
 * __Size__: medium
@@ -211,7 +211,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ![static_prop_recycleorganic](img/catalogue/props/static_prop_recycleorganic.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.recycleorganic</span>
+* __Blueprint ID__: `static.prop.recycleorganic`
 * __Base type__: containers
 * __Subtype__: bins
 * __Size__: medium
@@ -220,7 +220,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ![static_prop_recycleplastic](img/catalogue/props/static_prop_recycleplastic.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.recycleplastic</span>
+* __Blueprint ID__: `static.prop.recycleplastic`
 * __Base type__: containers
 * __Subtype__: bins
 * __Size__: medium
@@ -229,7 +229,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ![static_prop_creasedbox01](img/catalogue/props/static_prop_creasedbox01.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.creasedbox01</span>
+* __Blueprint ID__: `static.prop.creasedbox01`
 * __Base type__: containers
 * __Subtype__: boxes
 * __Size__: small
@@ -242,7 +242,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ![static_prop_trashbag](img/catalogue/props/static_prop_trashbag.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.trashbag</span>
+* __Blueprint ID__: `static.prop.trashbag`
 * __Base type__: garbage
 * __Subtype__: bags
 * __Size__: small
@@ -251,7 +251,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ![static_prop_colacan](img/catalogue/props/static_prop_colacan.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.colacan</span>
+* __Blueprint ID__: `static.prop.colacan`
 * __Base type__: garbage
 * __Subtype__: garbage
 * __Size__: tiny
@@ -260,7 +260,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ![static_prop_garbage01](img/catalogue/props/static_prop_garbage01.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.garbage01</span>
+* __Blueprint ID__: `static.prop.garbage01`
 * __Base type__: garbage
 * __Subtype__: garbage
 * __Size__: tiny
@@ -269,7 +269,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ![static_prop_garbage02](img/catalogue/props/static_prop_garbage02.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.garbage02</span>
+* __Blueprint ID__: `static.prop.garbage02`
 * __Base type__: garbage
 * __Subtype__: garbage
 * __Size__: tiny
@@ -278,7 +278,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ![static_prop_garbage03](img/catalogue/props/static_prop_garbage03.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.garbage03</span>
+* __Blueprint ID__: `static.prop.garbage03`
 * __Base type__: garbage
 * __Subtype__: garbage
 * __Size__: tiny
@@ -287,7 +287,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ![static_prop_garbage04](img/catalogue/props/static_prop_garbage04.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.garbage04</span>
+* __Blueprint ID__: `static.prop.garbage04`
 * __Base type__: garbage
 * __Subtype__: garbage
 * __Size__: tiny
@@ -296,7 +296,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ![static_prop_garbage05](img/catalogue/props/static_prop_garbage05.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.garbage05</span>
+* __Blueprint ID__: `static.prop.garbage05`
 * __Base type__: garbage
 * __Subtype__: garbage
 * __Size__: tiny
@@ -305,7 +305,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ![static_prop_garbage06](img/catalogue/props/static_prop_garbage06.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.garbage06</span>
+* __Blueprint ID__: `static.prop.garbage06`
 * __Base type__: garbage
 * __Subtype__: garbage
 * __Size__: tiny
@@ -314,7 +314,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ![static_prop_platformgarbage01](img/catalogue/props/static_prop_platformgarbage01.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.platformgarbage01</span>
+* __Blueprint ID__: `static.prop.platformgarbage01`
 * __Base type__: garbage
 * __Subtype__: platforms
 * __Size__: medium
@@ -323,7 +323,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ![static_prop_trashcan01](img/catalogue/props/static_prop_trashcan01.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.trashcan01</span>
+* __Blueprint ID__: `static.prop.trashcan01`
 * __Base type__: garbage
 * __Subtype__: trash_cans
 * __Size__: small
@@ -332,7 +332,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ![static_prop_trashcan02](img/catalogue/props/static_prop_trashcan02.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.trashcan02</span>
+* __Blueprint ID__: `static.prop.trashcan02`
 * __Base type__: garbage
 * __Subtype__: trash_cans
 * __Size__: small
@@ -341,7 +341,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ![static_prop_trashcan03](img/catalogue/props/static_prop_trashcan03.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.trashcan03</span>
+* __Blueprint ID__: `static.prop.trashcan03`
 * __Base type__: garbage
 * __Subtype__: trash_cans
 * __Size__: small
@@ -350,7 +350,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ![static_prop_trashcan04](img/catalogue/props/static_prop_trashcan04.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.trashcan04</span>
+* __Blueprint ID__: `static.prop.trashcan04`
 * __Base type__: garbage
 * __Subtype__: trash_cans
 * __Size__: small
@@ -359,7 +359,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ![static_prop_trashcan05](img/catalogue/props/static_prop_trashcan05.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.trashcan05</span>
+* __Blueprint ID__: `static.prop.trashcan05`
 * __Base type__: garbage
 * __Subtype__: trash_cans
 * __Size__: small
@@ -372,7 +372,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ![static_prop_pergola](img/catalogue/props/static_prop_pergola.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.pergola</span>
+* __Blueprint ID__: `static.prop.pergola`
 * __Base type__: park_garden
 * __Subtype__: furniture
 * __Size__: big
@@ -381,7 +381,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ![static_prop_plasticchair](img/catalogue/props/static_prop_plasticchair.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.plasticchair</span>
+* __Blueprint ID__: `static.prop.plasticchair`
 * __Base type__: park_garden
 * __Subtype__: furniture
 * __Size__: small
@@ -390,7 +390,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ![static_prop_plastictable](img/catalogue/props/static_prop_plastictable.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.plastictable</span>
+* __Blueprint ID__: `static.prop.plastictable`
 * __Base type__: park_garden
 * __Subtype__: furniture
 * __Size__: medium
@@ -399,7 +399,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ![static_prop_swing](img/catalogue/props/static_prop_swing.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.swing</span>
+* __Blueprint ID__: `static.prop.swing`
 * __Base type__: park_garden
 * __Subtype__: furniture
 * __Size__: medium
@@ -408,7 +408,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ![static_prop_swingcouch](img/catalogue/props/static_prop_swingcouch.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.swingcouch</span>
+* __Blueprint ID__: `static.prop.swingcouch`
 * __Base type__: park_garden
 * __Subtype__: furniture
 * __Size__: medium
@@ -417,7 +417,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ![static_prop_trampoline](img/catalogue/props/static_prop_trampoline.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.trampoline</span>
+* __Blueprint ID__: `static.prop.trampoline`
 * __Base type__: park_garden
 * __Subtype__: furniture
 * __Size__: big
@@ -426,7 +426,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ![static_prop_barbeque](img/catalogue/props/static_prop_barbeque.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.barbeque</span>
+* __Blueprint ID__: `static.prop.barbeque`
 * __Base type__: park_garden
 * __Subtype__: other
 * __Size__: small
@@ -435,7 +435,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ![static_prop_doghouse](img/catalogue/props/static_prop_doghouse.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.doghouse</span>
+* __Blueprint ID__: `static.prop.doghouse`
 * __Base type__: park_garden
 * __Subtype__: other
 * __Size__: small
@@ -444,7 +444,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ![static_prop_gnome](img/catalogue/props/static_prop_gnome.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.gnome</span>
+* __Blueprint ID__: `static.prop.gnome`
 * __Base type__: park_garden
 * __Subtype__: other
 * __Size__: small
@@ -453,7 +453,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ![static_prop_haybale](img/catalogue/props/static_prop_haybale.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.haybale</span>
+* __Blueprint ID__: `static.prop.haybale`
 * __Base type__: park_garden
 * __Subtype__: other
 * __Size__: medium
@@ -462,7 +462,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ![static_prop_plantpot01](img/catalogue/props/static_prop_plantpot01.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.plantpot01</span>
+* __Blueprint ID__: `static.prop.plantpot01`
 * __Base type__: park_garden
 * __Subtype__: plantpots
 * __Size__: small
@@ -471,7 +471,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ![static_prop_plantpot02](img/catalogue/props/static_prop_plantpot02.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.plantpot02</span>
+* __Blueprint ID__: `static.prop.plantpot02`
 * __Base type__: park_garden
 * __Subtype__: plantpots
 * __Size__: small
@@ -480,7 +480,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ![static_prop_plantpot03](img/catalogue/props/static_prop_plantpot03.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.plantpot03</span>
+* __Blueprint ID__: `static.prop.plantpot03`
 * __Base type__: park_garden
 * __Subtype__: plantpots
 * __Size__: small
@@ -489,7 +489,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ![static_prop_plantpot04](img/catalogue/props/static_prop_plantpot04.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.plantpot04</span>
+* __Blueprint ID__: `static.prop.plantpot04`
 * __Base type__: park_garden
 * __Subtype__: plantpots
 * __Size__: small
@@ -498,7 +498,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ![static_prop_plantpot05](img/catalogue/props/static_prop_plantpot05.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.plantpot05</span>
+* __Blueprint ID__: `static.prop.plantpot05`
 * __Base type__: park_garden
 * __Subtype__: plantpots
 * __Size__: small
@@ -507,7 +507,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ![static_prop_plantpot06](img/catalogue/props/static_prop_plantpot06.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.plantpot06</span>
+* __Blueprint ID__: `static.prop.plantpot06`
 * __Base type__: park_garden
 * __Subtype__: plantpots
 * __Size__: small
@@ -516,7 +516,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ![static_prop_plantpot07](img/catalogue/props/static_prop_plantpot07.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.plantpot07</span>
+* __Blueprint ID__: `static.prop.plantpot07`
 * __Base type__: park_garden
 * __Subtype__: plantpots
 * __Size__: small
@@ -529,7 +529,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ![static_prop_plasticbag](img/catalogue/props/static_prop_plasticbag.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.plasticbag</span>
+* __Blueprint ID__: `static.prop.plasticbag`
 * __Base type__: personal
 * __Subtype__: bags
 * __Size__: small
@@ -538,7 +538,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ![static_prop_shoppingbag](img/catalogue/props/static_prop_shoppingbag.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.shoppingbag</span>
+* __Blueprint ID__: `static.prop.shoppingbag`
 * __Base type__: personal
 * __Subtype__: bags
 * __Size__: small
@@ -547,7 +547,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ![static_prop_shoppingcart](img/catalogue/props/static_prop_shoppingcart.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.shoppingcart</span>
+* __Blueprint ID__: `static.prop.shoppingcart`
 * __Base type__: personal
 * __Subtype__: carts
 * __Size__: medium
@@ -556,7 +556,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ![static_prop_shoppingtrolley](img/catalogue/props/static_prop_shoppingtrolley.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.shoppingtrolley</span>
+* __Blueprint ID__: `static.prop.shoppingtrolley`
 * __Base type__: personal
 * __Subtype__: carts
 * __Size__: small
@@ -565,7 +565,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ![static_prop_briefcase](img/catalogue/props/static_prop_briefcase.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.briefcase</span>
+* __Blueprint ID__: `static.prop.briefcase`
 * __Base type__: personal
 * __Subtype__: cases
 * __Size__: small
@@ -574,7 +574,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ![static_prop_guitarcase](img/catalogue/props/static_prop_guitarcase.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.guitarcase</span>
+* __Blueprint ID__: `static.prop.guitarcase`
 * __Base type__: personal
 * __Subtype__: cases
 * __Size__: small
@@ -583,7 +583,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ![static_prop_travelcase](img/catalogue/props/static_prop_travelcase.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.travelcase</span>
+* __Blueprint ID__: `static.prop.travelcase`
 * __Base type__: personal
 * __Subtype__: cases
 * __Size__: small
@@ -592,7 +592,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ![static_prop_bikehelmet](img/catalogue/props/static_prop_bikehelmet.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.bikehelmet</span>
+* __Blueprint ID__: `static.prop.bikehelmet`
 * __Base type__: personal
 * __Subtype__: clothing
 * __Size__: tiny
@@ -601,7 +601,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ![static_prop_motorhelmet](img/catalogue/props/static_prop_motorhelmet.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.motorhelmet</span>
+* __Blueprint ID__: `static.prop.motorhelmet`
 * __Base type__: personal
 * __Subtype__: clothing
 * __Size__: small
@@ -610,7 +610,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ![static_prop_mobile](img/catalogue/props/static_prop_mobile.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.mobile</span>
+* __Blueprint ID__: `static.prop.mobile`
 * __Base type__: personal
 * __Subtype__: personal_effects
 * __Size__: tiny
@@ -619,7 +619,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ![static_prop_purse](img/catalogue/props/static_prop_purse.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.purse</span>
+* __Blueprint ID__: `static.prop.purse`
 * __Base type__: personal
 * __Subtype__: personal_effects
 * __Size__: small
@@ -632,7 +632,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ![static_prop_streetbarrier](img/catalogue/props/static_prop_streetbarrier.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.streetbarrier</span>
+* __Blueprint ID__: `static.prop.streetbarrier`
 * __Base type__: road
 * __Subtype__: barriers
 * __Size__: small
@@ -641,7 +641,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ![static_prop_constructioncone](img/catalogue/props/static_prop_constructioncone.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.constructioncone</span>
+* __Blueprint ID__: `static.prop.constructioncone`
 * __Base type__: road
 * __Subtype__: cones
 * __Size__: small
@@ -650,7 +650,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ![static_prop_trafficcone01](img/catalogue/props/static_prop_trafficcone01.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.trafficcone01</span>
+* __Blueprint ID__: `static.prop.trafficcone01`
 * __Base type__: road
 * __Subtype__: cones
 * __Size__: small
@@ -659,7 +659,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ![static_prop_trafficcone02](img/catalogue/props/static_prop_trafficcone02.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.trafficcone02</span>
+* __Blueprint ID__: `static.prop.trafficcone02`
 * __Base type__: road
 * __Subtype__: cones
 * __Size__: small
@@ -668,7 +668,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ![static_prop_warningconstruction](img/catalogue/props/static_prop_warningconstruction.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.warningconstruction</span>
+* __Blueprint ID__: `static.prop.warningconstruction`
 * __Base type__: road
 * __Subtype__: construction
 * __Size__: medium
@@ -677,7 +677,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ![static_prop_brokentile01](img/catalogue/props/static_prop_brokentile01.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.brokentile01</span>
+* __Blueprint ID__: `static.prop.brokentile01`
 * __Base type__: road
 * __Subtype__: debris
 * __Size__: tiny
@@ -686,7 +686,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ![static_prop_brokentile02](img/catalogue/props/static_prop_brokentile02.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.brokentile02</span>
+* __Blueprint ID__: `static.prop.brokentile02`
 * __Base type__: road
 * __Subtype__: debris
 * __Size__: tiny
@@ -695,7 +695,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ![static_prop_brokentile03](img/catalogue/props/static_prop_brokentile03.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.brokentile03</span>
+* __Blueprint ID__: `static.prop.brokentile03`
 * __Base type__: road
 * __Subtype__: debris
 * __Size__: tiny
@@ -704,7 +704,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ![static_prop_brokentile04](img/catalogue/props/static_prop_brokentile04.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.brokentile04</span>
+* __Blueprint ID__: `static.prop.brokentile04`
 * __Base type__: road
 * __Subtype__: debris
 * __Size__: tiny
@@ -713,7 +713,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ![static_prop_dirtdebris01](img/catalogue/props/static_prop_dirtdebris01.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.dirtdebris01</span>
+* __Blueprint ID__: `static.prop.dirtdebris01`
 * __Base type__: road
 * __Subtype__: debris
 * __Size__: small
@@ -722,7 +722,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ![static_prop_dirtdebris02](img/catalogue/props/static_prop_dirtdebris02.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.dirtdebris02</span>
+* __Blueprint ID__: `static.prop.dirtdebris02`
 * __Base type__: road
 * __Subtype__: debris
 * __Size__: small
@@ -731,7 +731,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ![static_prop_dirtdebris03](img/catalogue/props/static_prop_dirtdebris03.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.dirtdebris03</span>
+* __Blueprint ID__: `static.prop.dirtdebris03`
 * __Base type__: road
 * __Subtype__: debris
 * __Size__: small
@@ -740,7 +740,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ![static_prop_trafficwarning](img/catalogue/props/static_prop_trafficwarning.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.trafficwarning</span>
+* __Blueprint ID__: `static.prop.trafficwarning`
 * __Base type__: road
 * __Subtype__: signs
 * __Size__: big
@@ -749,7 +749,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ![static_prop_warningaccident](img/catalogue/props/static_prop_warningaccident.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.warningaccident</span>
+* __Blueprint ID__: `static.prop.warningaccident`
 * __Base type__: road
 * __Subtype__: signs
 * __Size__: medium
@@ -762,7 +762,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ![static_prop_chainbarrier](img/catalogue/props/static_prop_chainbarrier.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.chainbarrier</span>
+* __Blueprint ID__: `static.prop.chainbarrier`
 * __Base type__: sidewalk
 * __Subtype__: barriers
 * __Size__: medium
@@ -771,7 +771,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ![static_prop_chainbarrierend](img/catalogue/props/static_prop_chainbarrierend.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.chainbarrierend</span>
+* __Blueprint ID__: `static.prop.chainbarrierend`
 * __Base type__: sidewalk
 * __Subtype__: barriers
 * __Size__: small
@@ -780,7 +780,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ![static_prop_bench01](img/catalogue/props/static_prop_bench01.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.bench01</span>
+* __Blueprint ID__: `static.prop.bench01`
 * __Base type__: sidewalk
 * __Subtype__: benches
 * __Size__: medium
@@ -789,7 +789,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ![static_prop_bench02](img/catalogue/props/static_prop_bench02.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.bench02</span>
+* __Blueprint ID__: `static.prop.bench02`
 * __Base type__: sidewalk
 * __Subtype__: benches
 * __Size__: medium
@@ -798,7 +798,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ![static_prop_kiosk_01](img/catalogue/props/static_prop_kiosk_01.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.kiosk_01</span>
+* __Blueprint ID__: `static.prop.kiosk_01`
 * __Base type__: sidewalk
 * __Subtype__: commercial
 * __Size__: medium
@@ -807,7 +807,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ![static_prop_fountain](img/catalogue/props/static_prop_fountain.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.fountain</span>
+* __Blueprint ID__: `static.prop.fountain`
 * __Base type__: sidewalk
 * __Subtype__: monuments
 * __Size__: big
@@ -816,7 +816,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ![static_prop_maptable](img/catalogue/props/static_prop_maptable.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.maptable</span>
+* __Blueprint ID__: `static.prop.maptable`
 * __Base type__: sidewalk
 * __Subtype__: monuments
 * __Size__: medium
@@ -825,7 +825,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ![static_prop_advertisement](img/catalogue/props/static_prop_advertisement.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.advertisement</span>
+* __Blueprint ID__: `static.prop.advertisement`
 * __Base type__: sidewalk
 * __Subtype__: signs
 * __Size__: medium
@@ -834,7 +834,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ![static_prop_streetsign](img/catalogue/props/static_prop_streetsign.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.streetsign</span>
+* __Blueprint ID__: `static.prop.streetsign`
 * __Base type__: sidewalk
 * __Subtype__: signs
 * __Size__: small
@@ -843,7 +843,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ![static_prop_streetsign01](img/catalogue/props/static_prop_streetsign01.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.streetsign01</span>
+* __Blueprint ID__: `static.prop.streetsign01`
 * __Base type__: sidewalk
 * __Subtype__: signs
 * __Size__: medium
@@ -852,7 +852,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ![static_prop_streetsign04](img/catalogue/props/static_prop_streetsign04.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.streetsign04</span>
+* __Blueprint ID__: `static.prop.streetsign04`
 * __Base type__: sidewalk
 * __Subtype__: signs
 * __Size__: small
@@ -861,7 +861,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ![static_prop_busstop](img/catalogue/props/static_prop_busstop.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.busstop</span>
+* __Blueprint ID__: `static.prop.busstop`
 * __Base type__: sidewalk
 * __Subtype__: transport
 * __Size__: big
@@ -870,7 +870,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ![static_prop_atm](img/catalogue/props/static_prop_atm.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.atm</span>
+* __Blueprint ID__: `static.prop.atm`
 * __Base type__: sidewalk
 * __Subtype__: utilities
 * __Size__: medium
@@ -879,7 +879,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ![static_prop_mailbox](img/catalogue/props/static_prop_mailbox.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.mailbox</span>
+* __Blueprint ID__: `static.prop.mailbox`
 * __Base type__: sidewalk
 * __Subtype__: utilities
 * __Size__: small
@@ -888,7 +888,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ![static_prop_streetfountain](img/catalogue/props/static_prop_streetfountain.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.streetfountain</span>
+* __Blueprint ID__: `static.prop.streetfountain`
 * __Base type__: sidewalk
 * __Subtype__: utilities
 * __Size__: small
@@ -897,7 +897,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ![static_prop_vendingmachine](img/catalogue/props/static_prop_vendingmachine.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.vendingmachine</span>
+* __Blueprint ID__: `static.prop.vendingmachine`
 * __Base type__: sidewalk
 * __Subtype__: utilities
 * __Size__: medium
@@ -910,7 +910,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ![static_prop_calibrator](img/catalogue/props/static_prop_calibrator.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.calibrator</span>
+* __Blueprint ID__: `static.prop.calibrator`
 * __Base type__: utility
 * __Subtype__: calibration
 * __Size__: small

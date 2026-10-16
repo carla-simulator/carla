@@ -70,6 +70,10 @@ The world is no longer just a road surface in the void. From the same file CARLA
 Everything comes from the `.xodr`, so an error in the file becomes an error in the simulation. Junctions are the usual source, since that is where many lanes meet.
 
 ![opendrive_standalone](img/adv_opendrive/opendrive_town01_overview.webp)
+<div style="text-align: right"><i>A world generated from Town01.xodr: road mesh, ground plane, markings, signals and roadside furniture. Town01.xodr (OpenDRIVE standalone) &middot; sensor.camera.rgb &middot; Cinematic &middot; sunny afternoon</i></div>
+
+![opendrive_junction](img/adv_opendrive/opendrive_town01_junction.webp)
+<div style="text-align: right"><i>A junction of the generated Town01 world: traffic light, lamps, bus stop and sidewalks. Town01.xodr (OpenDRIVE standalone) &middot; sensor.camera.rgb &middot; Cinematic &middot; sunny afternoon</i></div>
 
 ---
 

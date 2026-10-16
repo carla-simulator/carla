@@ -65,11 +65,13 @@ Inside the editor, scalability follows the editor's own __Settings / Engine Scal
 #### Epic mode
 
 ![Epic mode screenshot](img/adv_rendering_options/rendering_epic.webp)
+<div style="text-align: right"><i>The same Town10HD_Opt junction rendered by a server started with -quality-level=Epic. Town10HD_Opt &middot; sensor.camera.rgb &middot; Cinematic &middot; sunny afternoon</i></div>
 *Epic quality mode screenshot*
 
 #### Low mode
 
 ![Low mode screenshot](img/adv_rendering_options/rendering_low.webp)
+<div style="text-align: right"><i>The same Town10HD_Opt junction rendered by a server started with -quality-level=Low. Town10HD_Opt &middot; sensor.camera.rgb &middot; Cinematic &middot; sunny afternoon</i></div>
 *Low quality mode screenshot*
 
 ### Tier comparison

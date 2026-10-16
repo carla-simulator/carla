@@ -298,3 +298,4 @@ client.apply_batch([carla.command.DestroyActor(v) for v in vehicles])
 ```
 
 ![manual_control](img/tuto_G_pygame/pygame_chase_camera.webp)
+<div style="text-align: right"><i>Third-person chase camera following a vehicle on autopilot, the view the tutorial renders in its pygame window. Town10HD_Opt &middot; sensor.camera.rgb &middot; Cinematic &middot; sunny afternoon</i></div>

@@ -36,7 +36,8 @@ A building material combines four textures, each packing several properties into
     *   `RGB` — the base colors.
     *   `Alpha` — a mask; the white areas are the ones the shader can recolor, which is how one material yields several variants.
 
-![building_diffuse_alpha](img/tuto_A_material_customization/building_diffuse_alpha.png)
+![building_diffuse_channels](img/tuto_A_material_customization/building_diffuse_channels.webp)
+<div style="text-align: right"><i>The Diffuse texture of <code>MI_House08</code> split into its colour and alpha channels.</i></div>
 
 *   __ORME__ — four properties in one texture.
     *   `R` — ambient occlusion.
@@ -48,34 +49,44 @@ A building material combines four textures, each packing several properties into
 
 *   __Emissive__ — if present, the base colors of the emissive elements, in `RGB`.
 
-![emissive](img/tuto_A_material_customization/EmissiveIntensity.gif)
+![building_orme_channels](img/tuto_A_material_customization/building_orme_channels.webp)
+<div style="text-align: right"><i>The ORME texture of <code>MI_House08</code>, one channel per panel: the lit windows of the alpha channel are what glows at night.</i></div>
 
 ---
 ## Customize a building material
 
-Both building shaders expose their parameters on the material instance.
+Both building shaders expose their parameters on the material instance, grouped as in the editor. Tick a parameter to override the master's value.
 
-![building_material](img/tuto_A_material_customization/building_material.png)
+![mi_building_parameters](img/tuto_A_material_customization/mi_building_parameters.webp)
+<div style="text-align: right"><i>The parameters of <code>MI_House08</code>, an instance of <code>M_MaterialMaster</code>; <b>Color Variation</b> tints the white area of the Diffuse alpha.</i></div>
+
+__Building shader__ — `M_MaterialMaster`:
+
+| Group | Parameter | Effect |
+| --- | --- | --- |
+| Textures | `BaseColor`, `AO / Roughness / Metallic / Emissive`, `Normal` | The Diffuse, ORME and Normal textures. |
+| Color Variation | `Change Color` | Enables the tint on the white area of the __Diffuse__ `Alpha` channel. |
+| Color Variation | `Color` | Tint multiplied with the base color in that area. |
+| Emissive | `Emissive Texture` | Takes the emissive color from the __Emissive__ texture instead of `EmissiveColor`. |
+| Emissive | `Emissive`, `EmissiveColor` | The emissive texture, or the flat color used on the white area of the __ORME__ emissive mask. |
+| Emissive | `Emissive attenuance` | Divides `EmissiveIntensity` to obtain the emissive strength. |
+| Corrections | `Hue`, `Saturation`, `Brightness` | Color corrections applied on top of the base color. |
+| Corrections | `RoughnessCorrection`, `RoughnessContrast`, `MetalCorrection`, `AO Intensity` | Adjust the ORME channels. |
+| Corrections | `NormalFlatness`, `Normal On/Off` | Flatten or disable the normal map. |
+| API Values | `EmissiveIntensity`, `On/Off` | Set at runtime by CARLA's light system when building lights turn on and off; leave them at 0 in the instance. |
+| Puddle | `Puddles On/Off` | Wet-weather puddles on the surface. |
+| Scale & Offset, UVs | `Scale X/Y`, `Offset X/Y`, `Rotation`, `World Position`, `Triplanar` | Texture tiling and projection. |
 
 __Glass shader__ — `M_GlassMaster`:
 
 | Parameter | Effect |
 | --- | --- |
-| `Opacity` | Enables color changes on the white area of the __Diffuse__ `Alpha` texture. |
-| `Color` | Tint applied to that white area. |
-
-__Building shader__ — `M_MaterialMaster`:
-
-| Parameter | Effect |
-| --- | --- |
-| `Change Color` | Enables color changes on the white area of the __Diffuse__ `Alpha` texture. |
-| `Color` | Tint applied to that white area. |
-| `Emissive Texture` | Enables the __Emissive__ texture. |
-| `EmissiveColor` | Tint applied to the white area of the __ORME__ emissive mask. |
-| `Emissive atenuance` | Divides the intensity set in __BP_Lights__ to obtain the emissive value. |
-| `RoughnessCorrection` | Scales the roughness map. |
-| `MetallicCorrection` | Scales the metallic map. |
-| `NormalFlatness` | Scales the normal map. |
+| `Diffuse Text Y/N`, `ORME Text Y/N`, `Normal Text Y/N` | Use the `Diffuse`, `ORME` and `Normal` textures, or flat values. |
+| `Color` | Tint of the glass. |
+| `Transparency` | How transparent the glass is. |
+| `Roughness`, `Metallic`, `Occlusion` | Flat values used when no ORME texture is set. |
+| `Opacity Mask Y/N` | Takes the opacity from the `Diffuse` texture instead of `Transparency`. |
+| `EmissiveColor`, `Intensity`, `Emissive attenuance`, `On/Off` | Emissive for lit windows: `EmissiveColor` times `Intensity` divided by `Emissive attenuance`, switched by `On/Off`. |
 
 !!! Note
     Textures can also be swapped at runtime, without the editor, through [`carla.World.apply_color_texture_to_object`](python_api.md#carla.World.apply_color_texture_to_object). See [Texture streaming](tuto_G_texture_streaming.md).

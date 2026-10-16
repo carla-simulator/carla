@@ -16,9 +16,19 @@ Learn how to define customized tags for semantic segmentation. These can additio
 
 ### 1. Create the tag ID
 
-__Open `ObjectLabel.h`__ in `LibCarla/source/carla/rpc`. Add your new tag by the end of the enum using the same formatting as the rest.
+__Open `ObjectLabel.h`__ in `LibCarla/source/carla/rpc`. Add your new tag by the end of the enum using the same formatting as the rest. The examples on this page add a tag called `MyNewTag`, with the next free id:
 
-![object_label_h](img/tuto_D_create_semantic_tags/01_objectlabel_tag.jpg)
+```cpp
+  enum class CityObjectLabel : uint8_t {
+    None         =    0u,
+    // ...
+    GuardRail    =   28u,
+    Rock         =   29u,
+    MyNewTag     =   30u,
+
+    Any          =  0xFF
+  };
+```
 
 !!! Note
     Tags do not have to appear in order. However, it is good practice to list them in order.
@@ -30,6 +40,7 @@ __Open the Unreal Engine Editor__ and go to `Content/Carla/Static`. Create a new
 The label is read from the asset's path, at a fixed depth: the folder has to sit directly under `Content/Carla/Static/` (or under `Content/Carla/Static/UE5UseOnly/`), not nested deeper. A content pack uses `/<Pack>/Static/<Tag>/` instead.
 
 ![ue_folder](img/tuto_D_create_semantic_tags/02_ue_folder.webp)
+<div style="text-align: right"><i>Content Browser at Content/Carla/Static with a new tag folder (MyNewTag) next to the existing tag folders.</i></div>
 
 !!! Note
     The UE folder and the tag do not necessarily have to be named the same. However, it is good practice to do so.
@@ -38,22 +49,45 @@ The label is read from the asset's path, at a fixed depth: the folder has to sit
 
 __3.1. Open `Tagger.cpp`__ in `Unreal/CarlaUnreal/Plugins/Carla/Source/Carla/Game`. Go to __`GetLabelByFolderName`__ Add the your tag by the end of the list. The string being compared is the name of the UE folder used in [__2.__](#2-create-the-ue-folder-for-assets), so use the exact same name here.
 
-![tagger_cpp](img/tuto_D_create_semantic_tags/03_tagger_cpp.jpg)
+```cpp
+  else if (String == "Rock")         return crp::CityObjectLabel::Rock;
+  else if (String == "Stone")        return crp::CityObjectLabel::Rock;
+  else if (String == "Bush")         return crp::CityObjectLabel::Vegetation;
+  else if (String == "MyNewTag")     return crp::CityObjectLabel::MyNewTag;
+  else                               return crp::CityObjectLabel::None;
+```
 
-__3.2. Go to `GetTagAsString`__ in the same `Tagger.cpp`. Add the new tag by the end of the switch.
+__3.2. Go to `GetTagAsString`__ in the same `Tagger.cpp`. Add the new tag by the end of the switch. The macro returns the enum name as the string, so the tag is reported as `MyNewTag`:
 
-![tagger_cpp_02](img/tuto_D_create_semantic_tags/04_tagger_cpp_02.jpg)
+```cpp
+    CARLA_GET_LABEL_STR(Rider)
+    CARLA_GET_LABEL_STR(Rock)
+    CARLA_GET_LABEL_STR(MyNewTag)
 
-__3.3. Go to `GetTagFromString`__, still in `Tagger.cpp`, and add the matching `if (Tag.Contains("<YourTag>")) return crp::CityObjectLabel::<YourTag>;` line. Without it the tag cannot be read back from a name, which is what `ATagger::SetLabelTag` uses to replace an existing tag.
+#undef CARLA_GET_LABEL_STR
+```
+
+__3.3. Go to `GetTagFromString`__, still in `Tagger.cpp`, and add the matching line before the final `return`. Without it the tag cannot be read back from a name, which is what `ATagger::SetLabelTag` uses to replace an existing tag.
+
+```cpp
+  if(Tag.Contains("Rock")) return crp::CityObjectLabel::Rock;
+  if(Tag.Contains("MyNewTag")) return crp::CityObjectLabel::MyNewTag;
+  return crp::CityObjectLabel::None;
+```
 
 !!! Warning
-    `GetTagFromName` builds its lookup table by walking the enum only as far as `CityObjectLabel::Rock`. A label added after `Rock` is never put in that table and will not round-trip. Either insert the new label before `Rock`, or raise the loop bound to the last enum value.
+    `GetTagFromName` builds its lookup table by walking the enum only as far as `CityObjectLabel::Rock`. A label added after `Rock` is never put in that table and will not round-trip. Either insert the new label before `Rock`, or raise the loop bound in `GetTagFromName` to the last enum value, `crp::CityObjectLabel::MyNewTag` in this example.
 
 ### 4. Define a color code
 
-__Open `CityScapesPalette.h`__ in `LibCarla/source/carla/image`. Add the color code of your new tag by the end of the array.
+__Open `CityScapesPalette.h`__ in `LibCarla/source/carla/image`. Add the color code of your new tag by the end of the array, as `{R, G, B}`:
 
-![city_scapes_palette_h](img/tuto_D_create_semantic_tags/05_city_scapes_palette_h.jpg)
+```cpp
+        {180u, 165u, 180u},   // guard rail    =  28u
+        {180u, 130u,  70u},   // rock          =  29u
+        {255u, 128u,   0u},   // my new tag    =  30u
+      };
+```
 
 !!! Warning
     The position in the array must match the tag id. The enum currently ends at `Rock = 29u`, so a new tag takes the next free value.
@@ -68,9 +102,15 @@ The new semantic tag is ready to be used. Only the meshes stored inside the UE f
 
 This step is not directly related with semantic segmentation. However, these tags can be used to filter the bounding box query in [carla.World](python_api.md#carla.World). In order to do this, the tag must be added to the [carla.CityObjectLabel](python_api.md#carla.CityObjectLabel) enum in the PythonAPI.
 
-__Open `World.cpp`__ in `PythonAPI/carla/src` and add the new tag at the end of the `CityObjectLabel` enum.
+__Open `World.cpp`__ in `PythonAPI/carla/src` and add the new tag at the end of the `CityObjectLabel` enum, before `Any`:
 
-![city_object_label](img/tuto_D_create_semantic_tags/06_city_object_label.jpg)
+```cpp
+    .value("Train", cr::CityObjectLabel::Train)
+    .value("Rock", cr::CityObjectLabel::Rock)
+    .value("MyNewTag", cr::CityObjectLabel::MyNewTag)
+    .value("Any", cr::CityObjectLabel::Any)
+  ;
+```
 
 
 ---

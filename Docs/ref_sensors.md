@@ -84,6 +84,7 @@ raw_image.save_to_disk("path/to/save/converted/image", carla.ColorConverter.Dept
 
 
 ![ImageDepth](img/ref_sensors/sensor_depth_raw_vs_log.webp)
+<div style="text-align: right"><i>Depth camera: raw 24-bit encoding (left) and the logarithmic-depth conversion (right). Town10HD_Opt &middot; sensor.camera.depth &middot; AutomotiveHDR &middot; sunny afternoon</i></div>
 
 
 #### Basic camera attributes
@@ -261,8 +262,10 @@ for location in lidar_measurement:
 ```
 
 The information of the LIDAR measurement is encoded 4D points. Being the first three, the space points in xyz coordinates and the last one intensity loss during the travel. This intensity is computed by the following formula.
-<br>
-![LidarIntensityComputation](img/ref_sensors/lidar_intensity.jpg)
+
+```
+I / I0 = exp(-a * d)
+```
 
 `a` — Attenuation coefficient. This may depend on the sensor's wavelength, and the conditions of the atmosphere. It can be modified with the LIDAR attribute `atmosphere_attenuation_rate`.
 `d` — Distance from the hit point to the sensor.
@@ -337,7 +340,9 @@ The information of the LiDAR measurement is encoded as 4D points. The first
 three components are the hit position in the sensor's local frame (xyz);
 the fourth is the intensity after atmospheric attenuation, computed as:
 
-![LidarIntensityComputation](img/ref_sensors/lidar_intensity.jpg)
+```
+I / I0 = exp(-a * d)
+```
 
 `a` — Attenuation coefficient (`atmosphere_attenuation_rate`). Depends on
 the sensor's wavelength and atmospheric conditions.
@@ -445,6 +450,7 @@ points = np.reshape(points, (len(radar_data), 4))
 The provided script `manual_control.py` uses this sensor to show the points being detected and paint them white when static, red when moving towards the object and blue when moving away:
 
 ![ImageRadar](img/ref_sensors/sensor_radar_on_camera.webp)
+<div style="text-align: right"><i>Radar detections projected on the RGB image, coloured by distance. Town10HD_Opt &middot; sensor.other.radar + sensor.camera.rgb &middot; AutomotiveHDR &middot; sunny afternoon</i></div>
 
 | Blueprint attribute       | Type    | Default | Description   |
 | ----------------------------- | ----------------------------- | ----------------------------- | ----------------------------- |
@@ -496,6 +502,7 @@ The `sensor_tick` tells how fast we want the sensor to capture the data.
 A value of 1.5 means that we want the sensor to capture data each second and a half. By default a value of 0.0 means as fast as possible.
 
 ![ImageRGB](img/ref_sensors/sensor_rgb.webp)
+<div style="text-align: right"><i>RGB camera output. Town10HD_Opt &middot; sensor.camera.rgb &middot; AutomotiveHDR &middot; sunny afternoon</i></div>
 
 #### Camera attributes
 
@@ -854,6 +861,7 @@ This camera classifies every object in sight by displaying it in a different col
 When the simulation starts, every element in scene is created with a tag. So it happens when an actor is spawned. The objects are classified by their relative file path in the project. For example, meshes stored in `Unreal/CarlaUnreal/Content/Carla/Static/Pedestrian` are tagged as `Pedestrian`.
 
 ![ImageSemanticSegmentation](img/ref_sensors/sensor_semantic_segmentation.webp)
+<div style="text-align: right"><i>Semantic segmentation with the CityScapes palette. Town10HD_Opt &middot; sensor.camera.semantic_segmentation &middot; AutomotiveHDR &middot; sunny afternoon</i></div>
 
 The server provides an image with the tag information __encoded in the red channel__: A pixel with a red value of `x` belongs to an object with tag `x`.
 This raw [carla.Image](python_api.md#carla.Image) can be stored and converted it with the help of __CityScapesPalette__  in [carla.ColorConverter](python_api.md#carla.ColorConverter) to apply the tags information and show picture with the semantic segmentation.
@@ -913,6 +921,7 @@ This camera classifies every object in the field of view both by class and also 
 When the simulation starts, every element in scene is created with a tag. So it happens when an actor is spawned. The objects are classified by their relative file path in the project. For example, meshes stored in `Unreal/CarlaUnreal/Content/Carla/Static/Pedestrian` are tagged as `Pedestrian`.
 
 ![ImageInstanceSegmentation](img/shared/sensor_instance_segmentation.webp)
+<div style="text-align: right"><i>Instance segmentation, each instance id shown in a random colour. Town10HD_Opt &middot; sensor.camera.instance_segmentation &middot; sunny afternoon</i></div>
 
 ![InstanceSegmentationRaw](img/ref_sensors/sensor_instance_segmentation_raw.webp)
 <div style="text-align: right"><i>Raw instance segmentation: semantic tag in R, instance id in G and B. Town10HD_Opt &middot; sensor.camera.instance_segmentation &middot; AutomotiveHDR &middot; sunny afternoon</i></div>
@@ -991,6 +1000,7 @@ latency. At the plot, a positive (resp. negative) event (blue dot, resp. red dot
 contrast threshold `C` for one dimension `x` over time `t`. Observe how the event rate grows when the signal changes rapidly.
 
 ![DVSCameraWorkingPrinciple](img/ref_sensors/sensor_dvs_scheme.jpg)
+<div style="text-align: right"><i>A standard camera samples frames at a fixed rate; an event camera fires a positive (blue) or negative (red) event each time the brightness change crosses the contrast threshold C.</i></div>
 
 The current implementation of the DVS camera works in a uniform sampling manner between two consecutive synchronous frames. Therefore, in order to
 emulate the high temporal resolution (order of microseconds) of a real event camera, the sensor requires to execute at a high frequency (much higher
@@ -1004,6 +1014,7 @@ The provided script [`manual_control.py`][manual_control] uses the DVS camera in
 Note that due to the sampling method of the DVS camera, if there is no pixel difference between two consecutive synchronous frames the camera will not return an image. This will always occur in the first frame, as there is no previous frame to compare to and also in the event that there has been no movement between frames.
 
 ![DVSCameraWorkingPrinciple](img/ref_sensors/sensor_dvs.webp)
+<div style="text-align: right"><i>RGB camera (left) and DVS events (right): blue positive, red negative brightness changes. Town10HD_Opt &middot; sensor.camera.dvs &middot; AutomotiveHDR &middot; sunny afternoon</i></div>
 
 DVS is a camera and therefore has all the attributes available in the RGB camera. Nevertheless, there are few attributes exclusive to the working principle of an Event camera.
 
@@ -1031,6 +1042,7 @@ DVS is a camera and therefore has all the attributes available in the RGB camera
 The optical flow camera captures the motion perceived from the point of view of the camera. Every pixel recorded by this sensor encodes the velocity of that point projected to the image plane. The velocity of a pixel is encoded in the range [-2,2]. To obtain the motion in pixel units, this information can be scaled with the image size to [-2 * image_size, 2 * image_size].
 
 ![optical_flow](img/ref_sensors/sensor_optical_flow.webp)
+<div style="text-align: right"><i>RGB camera (left) and colour-coded optical flow (right) from a moving vehicle. Town10HD_Opt &middot; sensor.camera.optical_flow &middot; AutomotiveHDR &middot; sunny afternoon</i></div>
 
 `get_color_coded_flow()` turns the field into the color wheel above, where hue is the direction of motion and saturation its magnitude. It returns a [`carla.FakeImage`](python_api.md#carla.FakeImage), not a [`carla.Image`](python_api.md#carla.Image): the pixels and `save_to_disk` work the same, but it carries no `frame` or `timestamp`, because it is a visualization rather than a reading of the sensor.
 

@@ -11,47 +11,43 @@ This page covers the vehicle paint only; the building and environment materials 
 
 CARLA provides a prototype material for replicating the glossy finish of vehicles that can mimic numerous different types of vehicle paint jobs and features. Open Unreal editor and in the content browser, locate the material in `Content > Carla > Static > GenericMaterials > 000_Masters > Vehicles`. The basic material is called *M_CarPaintMaster*. Right click on this material and choose *Create Material Instance* from the context material. Name it and move it into the folder where your new vehicle content is stored.
 
-In the Unreal Editor, move the spectator to a point near the floor and drag the skeletal mesh of the vehicle from the content browser into the scene, the body of your vehicle will now appear there.
+In the Unreal Editor, drag the skeletal mesh of the vehicle from the content browser into the scene. In the *Details* panel, drag your new material instance into the *Materials* slot of the bodywork, usually *Element 0* and named `Bodywork_Mat`. The bodywork takes the grey, glossy default of the master.
 
-![add_model](img/tuto_content_authoring_vehicles_materials/add_model.gif)
+Double click the material instance in the content browser to edit its parameters. They are grouped as follows; tick a parameter to override the master's value.
 
-Now, in the details panel on the right hand side, drag your new material instance into the *Element 0* position of the *Materials* section. You will see the bodywork take on a new grey, glossy material property.
+![mi_carpaint_parameters](img/tuto_content_authoring_vehicles_materials/mi_carpaint_parameters.webp)
+<div style="text-align: right"><i>The parameters of <code>MI_LincolnMKZ_Bodywork</code>, an instance of <code>M_CarPaintMaster</code>.</i></div>
 
-![apply_material](img/tuto_content_authoring_vehicles_materials/apply_material.gif)
+| Group | Parameters | What they control |
+| --- | --- | --- |
+| 0. Surface Corrections | `Base Color`, `Metallic`, `Roughness`, `CC Roughness` | The paint color, how metallic it is, the roughness of the paint, and the roughness of the clear coat over it. |
+| 3. Flakes | `Flakes` (switch), `Flakes Size`, `Flakes Color`, `Flake Normal` | Metallic or pearlescent flakes suspended in the paint. |
+| 4. Stickers | `Diffuse Texture` (switch), `Sticker Diffuse` | A texture over the paint, for liveries and logos. |
+| 7. Dirt | `Dirt` (switch), `DirtMasks`, `Dirt Color 1-3`, `Dirt Opacity 1-3`, `Dirt Roughness 1-3` | Up to three layers of dirt and dust, each with its mask channel, color, opacity and roughness. |
 
-Double click on the material in the content browser and we can start editing the parameters. There are numerous parameters here that alter various properties that are important to mimic real world car paint jobs. The most important parameters are the following.
+The renders below change one parameter at a time on the Lincoln MKZ, with the others as in the first image: red `Base Color`, `Metallic` 1, `CC Roughness` 0, no flakes.
 
+__Base color__ — the primary color of the bodywork. A vehicle's `color` blueprint attribute overrides it at spawn time, so the instance value is the color a vehicle shows when the client does not set one.
 
+![paint_base_color](img/tuto_content_authoring_vehicles_materials/paint_base_color.webp)
+<div style="text-align: right"><i>The same instance with three values of <code>Base Color</code>. Town10HD_Opt &middot; editor viewport</i></div>
 
-The parameter groups on `M_CarPaintMaster`, as the editor names them:
+__Clear coat roughness__ — the clear coat is the glossy layer over the paint. `CC Roughness` scatters its reflection: low values give the usual shiny finish, high values a matte one. Car paint is normally smooth and reflective; reserve high values for matte custom finishes.
 
-| Group | What it controls |
-| --- | --- |
-| Base color | The primary color of the bodywork. |
-| `ClearCoat`, `CC Roughness` | The gloss coat over the paint, and how rough it is. Low roughness is the usual, shiny finish; high roughness gives a matte one. |
-| Orange peel | The slight ripples a mass-produced paint job has. |
-| `3. Flakes` — `Flakes Size`, `Flakes Color` | Metallic or pearlescent flakes suspended in the paint. |
-| `05- Dust` — `Dirt Roughness` | Dust and grease accumulated on the body, and how much it dulls the reflection. |
+![paint_cc_roughness](img/tuto_content_authoring_vehicles_materials/paint_cc_roughness.webp)
+<div style="text-align: right"><i><code>CC Roughness</code> at 0, 0.4 and 1.0. Town10HD_Opt &middot; editor viewport</i></div>
 
-__Color__ - The color settings govern the overall color of the car. The base color is simply the primary color of the car this will govern the overall color:
+__Metallic__ — metallic paint takes its reflections tinted by the base color; with `Metallic` at 0 the paint behaves like a plain, solid color under the clear coat.
 
-![change_base_color](img/tuto_content_authoring_vehicles_materials/change_base_color.gif)
+![paint_metallic](img/tuto_content_authoring_vehicles_materials/paint_metallic.webp)
+<div style="text-align: right"><i><code>Metallic</code> at 1 and 0. Town10HD_Opt &middot; editor viewport</i></div>
 
-__Clear coat__ - the clear coat settings govern the appearance of the finish and how it reacts to light. The roughness uses a texture to apply imperfections to the vehicle surface, scattering light more with higher values to create a matte look. Subtle adjustments and low values are recommended for a realistic look. Generally, car paint jobs are smooth and reflective, however, this effect might be used more generously to model specialist matte finishes of custom paint jobs.
+__Flakes__ — some paints carry flakes of metal or ceramic that add glints under direct light, for a *metallic* or *pearlescent* look. `Flakes Size` scales the flake pattern (at 0 there are none) and `Flakes Color` their tint: keep it close to the base color for a metallic finish, use a contrasting one for a pearlescent finish. The flakes are only visible up close.
 
-![change_roughness](img/tuto_content_authoring_vehicles_materials/change_roughness.gif)
+![paint_flakes](img/tuto_content_authoring_vehicles_materials/paint_flakes.webp)
+<div style="text-align: right"><i>Close-up of the front wing with no flakes, white flakes and orange flakes at <code>Flakes Size</code> 60. Town10HD_Opt &middot; editor viewport</i></div>
 
-An important parameter to govern the "shininess" or "glossiness" of your car is the *Clear Coat Intensity*. High values close to 1 will make the coat shiny and glossy.
+__Dirt__ — cars accumulate grease and dust that dull the paint. Enable the `Dirt` switch and assign a `DirtMasks` texture: each of its channels masks one dirt layer, with its own color, opacity and roughness.
 
-__Orange peel__ - finishes on real cars (particularly on mass produced cars for the general market) tend to have imperfections that appear as slight ripples in the paint. The orange peel effect mimics this and makes cars look more realistic.
-
-![change_orange_peel](img/tuto_content_authoring_vehicles_materials/change_orange_peel.gif)
-
-__Flakes__ - some cars have paint jobs that include flakes of other material, such as metals or ceramics, to give the car a *metallic* or *pearlescent* appearance, adding extra glints and reflections that react in an attractive way to light. The flakes parameters allows CARLA to mimic this. To mimic a metallic finish, keep the flakes small and their color close to the base coat; for a pearlescent one, use a contrasting color and a larger scale.
-
-![flakes](img/tuto_content_authoring_vehicles_materials/flakes.gif)
-
-__Dust__ - cars often accumulate grease and dust on the body that adds additional texture to the paint, affecting the way it reflects the light. The dust parameters allow you to add patches of disruption to the coat to mimic foreign materials sticking to the paint.
-
-![dust](img/tuto_content_authoring_vehicles_materials/dust.gif)
-
+!!! Note
+    `Flakes`, `Dirt` and `Diffuse Texture` are static switches. They are set on the material instance in the editor and cannot be toggled at runtime.

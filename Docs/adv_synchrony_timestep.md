@@ -97,17 +97,17 @@ fixed_delta_seconds <= max_substep_delta_time * max_substeps
 In order to have an optimal physical simulation, the substep delta time should at least 
 be below `0.01666` and ideally below `0.01`.
 
-To demonstrate the effect of optimal physical sub-stepping, consider the following graphs. The first graph shown below illustrates velocity over time in simulations with different fixed simulation time steps. The physical delta time is constant in all simulations at the default value of `0.01`. We can see that velocity is not affected by the difference in simulation time steps only.
+To see the effect of sub-stepping, the graphs below drive the same Lincoln MKZ on a straight road of Town10HD_Opt (spawn point 79): full brake for 1.5 s, throttle 0.7 for 5 s, then brake 0.4 until it stops. Only the time step settings change between runs.
+
+With `max_substep_delta_time` at `0.01`, the simulation time step makes almost no difference: between `fixed_delta_seconds` of `0.01` and `0.05` the top speed varies between 16.19 and 16.27 m/s, and the vehicle stops within 0.06 s of the same moment.
 
 ![velocity with fixed physical delta time](img/adv_synchrony_timestep/physics_convergence_fixed_pdt.png)
+<div style="text-align: right"><i>Speed over time for several fixed_delta_seconds, with max_substep_delta_time = 0.01: the curves overlap. Town10HD_Opt &middot; vehicle.lincoln.mkz &middot; Chaos</i></div>
 
-The second graph shows velocity over time in simulations with a fixed simulation time step of `0.04`. We can see that once the physical delta time surpasses `0.01`, deviations start to occur in the constancy of velocity, increasing in severity as physical delta time increases.
+With `fixed_delta_seconds` at `0.04`, the physics step does change the result. A coarser `max_substep_delta_time` makes the vehicle slightly faster and longer to stop: the top speed goes from 16.0 m/s at `0.005` to 16.65 m/s at `0.04`, about 4 %. Keep the physics step at `0.01` or below when the dynamics matter.
 
 ![velocity with varied physical delta time](img/adv_synchrony_timestep/physics_convergence_fixed_dt.png)
-
-We can demonstrate this deviation again by showing the effect of the same difference in physical delta time with a fixed simulation time step in the measurement of z-acceleration, with convergence occurring only when the physical delta time is `0.01` or less.
-
-![physics convergence z acceleration](img/adv_synchrony_timestep/physics_convergence_z_acceleration.png)
+<div style="text-align: right"><i>Speed over time with fixed_delta_seconds = 0.04 and several max_substep_delta_time. Town10HD_Opt &middot; vehicle.lincoln.mkz &middot; Chaos</i></div>
 
 ---
 ## Client-server synchrony

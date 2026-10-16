@@ -73,147 +73,147 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ![dodge_charger](img/catalogue/vehicles/dodge_charger.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">vehicle.dodge.charger</span>
+* __Blueprint ID__: `vehicle.dodge.charger`
 * __Base type__: car
 * __Generation__: 3
 * __Number of wheels__: 4
-* __Has lights__: <span style="color:#99c635;">True</span>
-* __Has opening doors__: <span style="color:#99c635;">True</span>
+* __Has lights__: yes
+* __Has opening doors__: yes
 
 ### Dodge - Police Charger
 
 ![dodgecop_charger](img/catalogue/vehicles/dodgecop_charger.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">vehicle.dodgecop.charger</span>
+* __Blueprint ID__: `vehicle.dodgecop.charger`
 * __Base type__: car
 * __Special type__: emergency
 * __Generation__: 3
 * __Number of wheels__: 4
-* __Has lights__: <span style="color:#99c635;">True</span>
-* __Has opening doors__: <span style="color:#99c635;">True</span>
+* __Has lights__: yes
+* __Has opening doors__: yes
 
 ### Kia - Niro
 
 ![kia_niro](img/catalogue/vehicles/kia_niro.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">vehicle.kia.niro</span>
+* __Blueprint ID__: `vehicle.kia.niro`
 * __Base type__: car
 * __Generation__: 3
 * __Number of wheels__: 4
-* __Has lights__: <span style="color:#99c635;">True</span>
-* __Has opening doors__: <span style="color:#99c635;">True</span>
+* __Has lights__: yes
+* __Has opening doors__: yes
 
 ### Lincoln - MKZ
 
 ![lincoln_mkz](img/catalogue/vehicles/lincoln_mkz.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">vehicle.lincoln.mkz</span>
+* __Blueprint ID__: `vehicle.lincoln.mkz`
 * __Base type__: car
-* __Generation__: -1
+* __Generation__: unspecified
 * __Number of wheels__: 3
-* __Has lights__: <span style="color:#99c635;">True</span>
-* __Has opening doors__: <span style="color:#99c635;">True</span>
+* __Has lights__: yes
+* __Has opening doors__: yes
 
 ### Mini - Cooper S
 
 ![mini_cooper](img/catalogue/vehicles/mini_cooper.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">vehicle.mini.cooper</span>
+* __Blueprint ID__: `vehicle.mini.cooper`
 * __Base type__: car
 * __Generation__: 3
 * __Number of wheels__: 4
-* __Has lights__: <span style="color:#99c635;">True</span>
-* __Has opening doors__: <span style="color:#99c635;">True</span>
+* __Has lights__: yes
+* __Has opening doors__: yes
 
 ### Nissan - Patrol
 
 ![nissan_patrol](img/catalogue/vehicles/nissan_patrol.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">vehicle.nissan.patrol</span>
+* __Blueprint ID__: `vehicle.nissan.patrol`
 * __Base type__: car
 * __Generation__: 3
 * __Number of wheels__: 4
-* __Has lights__: <span style="color:#99c635;">True</span>
-* __Has opening doors__: <span style="color:#99c635;">True</span>
+* __Has lights__: yes
+* __Has opening doors__: yes
 
 ### Ford - Crown (taxi)
 
 ![taxi_ford](img/catalogue/vehicles/taxi_ford.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">vehicle.taxi.ford</span>
+* __Blueprint ID__: `vehicle.taxi.ford`
 * __Base type__: car
 * __Special type__: taxi
 * __Generation__: 3
 * __Number of wheels__: 4
-* __Has lights__: <span style="color:#99c635;">True</span>
-* __Has opening doors__: <span style="color:#99c635;">True</span>
+* __Has lights__: yes
+* __Has opening doors__: yes
 
 ### Tesla - Model 3
 
 ![tesla_model3](img/catalogue/vehicles/tesla_model3.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">vehicle.tesla.model3</span>
+* __Blueprint ID__: `vehicle.tesla.model3`
 * __Base type__: car
 * __Special type__: electric
 * __Generation__: 3
 * __Number of wheels__: 4
-* __Has lights__: <span style="color:#99c635;">True</span>
-* __Has opening doors__: <span style="color:#99c635;">True</span>
+* __Has lights__: yes
+* __Has opening doors__: yes
 
 ### Audi - TT
 
 ![ue4_audi_tt](img/catalogue/vehicles/ue4_audi_tt.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">vehicle.ue4.audi.tt</span>
+* __Blueprint ID__: `vehicle.ue4.audi.tt`
 * __Base type__: car
 * __Generation__: 2
 * __Number of wheels__: 4
-* __Has lights__: <span style="color:#99c635;">True</span>
-* __Has opening doors__: <span style="color:#f16c6c;">False</span>
+* __Has lights__: yes
+* __Has opening doors__: no
 
 ### Chevrolet - Impala
 
 ![ue4_chevrolet_impala](img/catalogue/vehicles/ue4_chevrolet_impala.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">vehicle.ue4.chevrolet.impala</span>
+* __Blueprint ID__: `vehicle.ue4.chevrolet.impala`
 * __Base type__: car
 * __Generation__: 2
 * __Number of wheels__: 4
-* __Has lights__: <span style="color:#99c635;">True</span>
-* __Has opening doors__: <span style="color:#f16c6c;">False</span>
+* __Has lights__: yes
+* __Has opening doors__: no
 
 ### Ford - Crown
 
 ![ue4_ford_crown](img/catalogue/vehicles/ue4_ford_crown.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">vehicle.ue4.ford.crown</span>
+* __Blueprint ID__: `vehicle.ue4.ford.crown`
 * __Base type__: car
-* __Generation__: -1
+* __Generation__: unspecified
 * __Number of wheels__: 4
-* __Has lights__: <span style="color:#99c635;">True</span>
-* __Has opening doors__: <span style="color:#f16c6c;">False</span>
+* __Has lights__: yes
+* __Has opening doors__: no
 
 ### Ford - Mustang
 
 ![ue4_ford_mustang](img/catalogue/vehicles/ue4_ford_mustang.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">vehicle.ue4.ford.mustang</span>
+* __Blueprint ID__: `vehicle.ue4.ford.mustang`
 * __Base type__: car
-* __Generation__: -1
+* __Generation__: unspecified
 * __Number of wheels__: 4
-* __Has lights__: <span style="color:#99c635;">True</span>
-* __Has opening doors__: <span style="color:#f16c6c;">False</span>
+* __Has lights__: yes
+* __Has opening doors__: no
 
 ### Mercedes - Coupe
 
 ![ue4_mercedes_ccc](img/catalogue/vehicles/ue4_mercedes_ccc.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">vehicle.ue4.mercedes.ccc</span>
+* __Blueprint ID__: `vehicle.ue4.mercedes.ccc`
 * __Base type__: car
 * __Generation__: 2
 * __Number of wheels__: 4
-* __Has lights__: <span style="color:#99c635;">True</span>
-* __Has opening doors__: <span style="color:#f16c6c;">False</span>
+* __Has lights__: yes
+* __Has opening doors__: no
 
 ---
 
@@ -223,45 +223,45 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ![harley-davidson_low_rider](img/catalogue/vehicles/harley-davidson_low_rider.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">vehicle.harley-davidson.low_rider</span>
+* __Blueprint ID__: `vehicle.harley-davidson.low_rider`
 * __Base type__: motorcycle
-* __Generation__: -1
+* __Generation__: unspecified
 * __Number of wheels__: 2
-* __Has lights__: <span style="color:#99c635;">True</span>
-* __Has opening doors__: <span style="color:#f16c6c;">False</span>
+* __Has lights__: yes
+* __Has opening doors__: no
 
 ### Kawasaki - Ninja
 
 ![kawasaki_ninja](img/catalogue/vehicles/kawasaki_ninja.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">vehicle.kawasaki.ninja</span>
+* __Blueprint ID__: `vehicle.kawasaki.ninja`
 * __Base type__: motorcycle
-* __Generation__: -1
+* __Generation__: unspecified
 * __Number of wheels__: 2
-* __Has lights__: <span style="color:#99c635;">True</span>
-* __Has opening doors__: <span style="color:#f16c6c;">False</span>
+* __Has lights__: yes
+* __Has opening doors__: no
 
 ### Vespa - ZX125
 
 ![vespa_zx125](img/catalogue/vehicles/vespa_zx125.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">vehicle.vespa.zx125</span>
+* __Blueprint ID__: `vehicle.vespa.zx125`
 * __Base type__: motorcycle
-* __Generation__: -1
+* __Generation__: unspecified
 * __Number of wheels__: 2
-* __Has lights__: <span style="color:#99c635;">True</span>
-* __Has opening doors__: <span style="color:#f16c6c;">False</span>
+* __Has lights__: yes
+* __Has opening doors__: no
 
 ### Yamaha - YZF
 
 ![yamaha_yzf](img/catalogue/vehicles/yamaha_yzf.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">vehicle.yamaha.yzf</span>
+* __Blueprint ID__: `vehicle.yamaha.yzf`
 * __Base type__: motorcycle
-* __Generation__: -1
+* __Generation__: unspecified
 * __Number of wheels__: 2
-* __Has lights__: <span style="color:#99c635;">True</span>
-* __Has opening doors__: <span style="color:#f16c6c;">False</span>
+* __Has lights__: yes
+* __Has opening doors__: no
 
 ---
 
@@ -271,34 +271,34 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ![bh_crossbike](img/catalogue/vehicles/bh_crossbike.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">vehicle.bh.crossbike</span>
+* __Blueprint ID__: `vehicle.bh.crossbike`
 * __Base type__: bicycle
-* __Generation__: -1
+* __Generation__: unspecified
 * __Number of wheels__: 2
-* __Has lights__: <span style="color:#99c635;">True</span>
-* __Has opening doors__: <span style="color:#f16c6c;">False</span>
+* __Has lights__: yes
+* __Has opening doors__: no
 
 ### Diamondback - Century
 
 ![diamondback_century](img/catalogue/vehicles/diamondback_century.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">vehicle.diamondback.century</span>
+* __Blueprint ID__: `vehicle.diamondback.century`
 * __Base type__: bicycle
-* __Generation__: -1
+* __Generation__: unspecified
 * __Number of wheels__: 2
-* __Has lights__: <span style="color:#99c635;">True</span>
-* __Has opening doors__: <span style="color:#f16c6c;">False</span>
+* __Has lights__: yes
+* __Has opening doors__: no
 
 ### Gazelle - Omafiets
 
 ![gazelle_omafiets](img/catalogue/vehicles/gazelle_omafiets.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">vehicle.gazelle.omafiets</span>
+* __Blueprint ID__: `vehicle.gazelle.omafiets`
 * __Base type__: bicycle
-* __Generation__: -1
+* __Generation__: unspecified
 * __Number of wheels__: 2
-* __Has lights__: <span style="color:#99c635;">True</span>
-* __Has opening doors__: <span style="color:#f16c6c;">False</span>
+* __Has lights__: yes
+* __Has opening doors__: no
 
 ---
 
@@ -308,36 +308,36 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ![ambulance_ford](img/catalogue/vehicles/ambulance_ford.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">vehicle.ambulance.ford</span>
+* __Blueprint ID__: `vehicle.ambulance.ford`
 * __Base type__: truck
 * __Special type__: emergency
 * __Generation__: 3
 * __Number of wheels__: 4
-* __Has lights__: <span style="color:#99c635;">True</span>
-* __Has opening doors__: <span style="color:#99c635;">True</span>
+* __Has lights__: yes
+* __Has opening doors__: yes
 
 ### CARLA Motors - CarlaCola
 
 ![carlacola_actors](img/catalogue/vehicles/carlacola_actors.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">vehicle.carlacola.actors</span>
+* __Blueprint ID__: `vehicle.carlacola.actors`
 * __Base type__: truck
 * __Generation__: 3
 * __Number of wheels__: 4
-* __Has lights__: <span style="color:#99c635;">True</span>
-* __Has opening doors__: <span style="color:#99c635;">True</span>
+* __Has lights__: yes
+* __Has opening doors__: yes
 
 ### CARLA Motors - Firetruck
 
 ![firetruck_actors](img/catalogue/vehicles/firetruck_actors.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">vehicle.firetruck.actors</span>
+* __Blueprint ID__: `vehicle.firetruck.actors`
 * __Base type__: truck
 * __Special type__: emergency
 * __Generation__: 3
 * __Number of wheels__: 4
-* __Has lights__: <span style="color:#99c635;">True</span>
-* __Has opening doors__: <span style="color:#99c635;">True</span>
+* __Has lights__: yes
+* __Has opening doors__: yes
 
 ---
 
@@ -347,12 +347,12 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ![sprinter_mercedes](img/catalogue/vehicles/sprinter_mercedes.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">vehicle.sprinter.mercedes</span>
+* __Blueprint ID__: `vehicle.sprinter.mercedes`
 * __Base type__: van
 * __Generation__: 3
 * __Number of wheels__: 4
-* __Has lights__: <span style="color:#99c635;">True</span>
-* __Has opening doors__: <span style="color:#99c635;">True</span>
+* __Has lights__: yes
+* __Has opening doors__: yes
 
 ---
 
@@ -362,12 +362,12 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ![fuso_mitsubishi](img/catalogue/vehicles/fuso_mitsubishi.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">vehicle.fuso.mitsubishi</span>
+* __Blueprint ID__: `vehicle.fuso.mitsubishi`
 * __Base type__: bus
 * __Generation__: 3
 * __Number of wheels__: 4
-* __Has lights__: <span style="color:#99c635;">True</span>
-* __Has opening doors__: <span style="color:#f16c6c;">False</span>
+* __Has lights__: yes
+* __Has opening doors__: no
 
 ---
 
@@ -377,10 +377,11 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ![miningtruck_miningtruck](img/catalogue/vehicles/miningtruck_miningtruck.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">vehicle.miningtruck.miningtruck</span>
+* __Blueprint ID__: `vehicle.miningtruck.miningtruck`
 * __Base type__: industrial
 * __Generation__: 3
 * __Number of wheels__: 4
-* __Has lights__: <span style="color:#99c635;">True</span>
-* __Has opening doors__: <span style="color:#f16c6c;">False</span>
+* __Has lights__: yes
+* __Has opening doors__: no
+* __Available on__: Mine_01 only
 

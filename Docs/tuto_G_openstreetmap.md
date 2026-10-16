@@ -31,6 +31,7 @@ __1.__ Navigate to the [OpenStreetMap website](https://www.openstreetmap.org). Y
 __2.__ Search for your desired location and zoom in to a specific area.
 
 ![openstreetmap_view](img/tuto_G_openstreetmap/tuto_g_osm_web.jpg)
+<div style="text-align: right"><i>The <b>Export</b> panel on openstreetmap.org.</i></div>
 
 !!! Note
     If you would like to use a map of a large area, for example, Paris, you may consider using CARLA's [large map support](core_map.md#large-maps-and-world-partition).
@@ -44,6 +45,7 @@ __5.__ Select a custom area by dragging the corners of the square area in the vi
 __6.__ Click the _Export_ button in the _Export_ panel and save the map information of the selected area as a `.osm` file.
 
 ![openstreetmap_area](img/tuto_G_openstreetmap/tuto_g_osm_area.jpg)
+<div style="text-align: right"><i>Selecting the area to export with <b>Manually select a different area</b>, then <b>Export</b>.</i></div>
 
 ---
 ## Using OpenStreetMap in CARLA

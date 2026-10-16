@@ -1,6 +1,7 @@
 # Open-cast mine (Mine_01)
 
 ![mine01](img/catalogue/maps/mine01/mine_map.webp)
+<div style="text-align: right"><i>The open-cast pit of Mine_01 from above. Mine_01 &middot; sensor.camera.rgb &middot; Cinematic &middot; sunny afternoon</i></div>
 
 A model of an open-cast mining environment of the kind used for extracting minerals around the world. The mining area is connected to a parking area by a small network of access roads. The map was contributed by CARLA consortium members and sponsors [Synkrotron](https://www.synkrotron.ai/).
 

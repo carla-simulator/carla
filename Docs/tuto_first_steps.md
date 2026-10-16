@@ -61,7 +61,8 @@ The name has to match the map file exactly, ignoring case: `Town10HD_Opt`, not `
 ---
 ## Spectator navigation
 
-![town_10_default](img/catalogue/maps/town10/town10default.png)
+![town_10_default](img/catalogue/maps/town10/town10default.webp)
+<div style="text-align: right"><i>The spectator view of Town10HD_Opt when the server starts. Town10HD_Opt &middot; sensor.camera.rgb &middot; Cinematic &middot; sunny afternoon</i></div>
 
 The spectator is a view into the simulation. It opens in a new window when the server runs on a machine with a screen, and it is the quickest way to see the result of what a script does: vehicles appearing, the weather changing, a layer toggled on or off.
 
@@ -166,6 +167,7 @@ The simulation is now running, with traffic driving around the map and a camera 
 ## Choose your map
 
 ![town_10](img/catalogue/maps/town10/town10montage.webp)
+<div style="text-align: right"><i>Town10HD_Opt from the default spectator position, from above, and at street level. Town10HD_Opt &middot; sensor.camera.rgb &middot; Cinematic &middot; sunny afternoon</i></div>
 
 CARLA ships several towns, from a dense city centre to a mining environment. Browse them in the [map catalogue](catalogue.md) and load the one that suits the scenario.
 
@@ -173,6 +175,7 @@ CARLA ships several towns, from a dense city centre to a mining environment. Bro
 ## Choose your vehicles
 
 ![vehicles_overview](img/catalogue/vehicles/vehicle_montage.webp)
+<div style="text-align: right"><i>The vehicle blueprints, one per frame.</i></div>
 
 CARLA provides a library of vehicles to fill a simulation with traffic. Browse the models in the [vehicle catalogue](catalogue_vehicles.md), or list the blueprints from a client:
 

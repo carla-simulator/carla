@@ -94,6 +94,7 @@ world.apply_settings(settings)
 The image encodes the semantic label in the __R__ channel and the instance id in __G__ and __B__.
 
 ![instance_segmentation](img/shared/sensor_instance_segmentation.webp)
+<div style="text-align: right"><i>Instance segmentation, each instance id shown in a random colour. Town10HD_Opt &middot; sensor.camera.instance_segmentation &middot; sunny afternoon</i></div>
 
 ---
 ## Decoding the instance ids

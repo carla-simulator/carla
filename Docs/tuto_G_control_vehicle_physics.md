@@ -103,7 +103,8 @@ if __name__ == '__main__':
 
 Vehicle telemetry can be visualized by calling the [`Vehicle.show_debug_telemetry`](python_api.md#carla.Vehicle.show_debug_telemetry) method. This will provide graph views of several metrics on the server window as well as vehicle reference points on the simulation window. Only one vehicle can be shown at a time: enabling a second one disables the first.
 
-![vehicle_telemetry](img/tuto_G_control_vehicle_physics/vehicle_telemetry.png)
+!!! Warning
+    On the UE 5.8 server the on-screen telemetry currently draws nothing. Read the same values from the client with `get_telemetry_data`, below.
 
 You can try the telemetry visualization tool in the example script `manual_control.py` located in `PythonAPI/examples`. Activate the telemetry view by pressing `T`.
 
@@ -116,6 +117,11 @@ print(telemetry.speed, telemetry.engine_rpm, telemetry.gear)
 for wheel in telemetry.wheels:
     print(wheel.lat_slip, wheel.long_slip, wheel.omega)
 ```
+
+Logged every tick, it shows what the solver does with the controls. Here a Lincoln MKZ launches at full throttle, changes lane and brakes to a stop; `gear` is `0` while the automatic transmission changes gear:
+
+![telemetry_plot](img/tuto_G_control_vehicle_physics/telemetry_plot.png)
+<div style="text-align: right"><i>Controls, speed, engine RPM and gear, and the angular velocity of the four wheels from <code>get_telemetry_data()</code>, at 50 Hz with 0.01 s physics substeps. Town10HD_Opt &middot; vehicle.lincoln.mkz</i></div>
 
 ---
 ## Driving the wheels by hand

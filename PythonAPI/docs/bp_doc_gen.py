@@ -37,10 +37,25 @@ def escape(buf):
     return str(buf).replace('|', '\\|').replace('\n', ' ')
 
 
+def attribute_value(attr):
+    """The attribute's value as text; as_str() only accepts String attributes."""
+    kind = attr.type
+    if kind == carla.ActorAttributeType.Bool:
+        return 'true' if attr.as_bool() else 'false'
+    if kind == carla.ActorAttributeType.Int:
+        return str(attr.as_int())
+    if kind == carla.ActorAttributeType.Float:
+        return '{:g}'.format(attr.as_float())
+    if kind == carla.ActorAttributeType.RGBColor:
+        color = attr.as_color()
+        return '{},{},{}'.format(color.r, color.g, color.b)
+    return attr.as_str()
+
+
 def attribute_rows(blueprint):
     rows = []
     for attr in sorted(blueprint, key=lambda x: x.id):
-        default = escape(attr.as_str())
+        default = escape(attribute_value(attr))
         values = ', '.join(code(escape(v)) for v in attr.recommended_values)
         rows.append('| {} | {} | {} | {} | {} |'.format(
             code(attr.id),
