@@ -16,6 +16,7 @@
 #include <Async/ParallelFor.h>
 #include <util/ue-header-guard-end.h>
 
+#include <atomic>
 #include <chrono>
 #include <thread>
 
@@ -199,6 +200,12 @@ namespace ImageUtil
 
 
 
+  // Backpressure for non-blocking GPU readbacks only.
+  // Blocking raster captures are delivered by FlushBatchedReadbacks().
+  // This is a soft cap: concurrent producers can transiently exceed it.
+  static std::atomic<int32> GReadbackInFlight{ 0 };
+  static constexpr int32 GMaxReadbackInFlight = 8;
+
   struct ReadImageDataContext
   {
     EPixelFormat Format;
@@ -221,6 +228,8 @@ namespace ImageUtil
     auto& CmdList = FRHICommandListImmediate::Get();
     auto Resource = static_cast<FTextureRenderTarget2DResource*>(
       RenderTarget.GetResource());
+    if (Resource == nullptr)
+      return;
     auto Texture = Resource->GetRenderTargetTexture();
     if (Texture == nullptr)
       return;
@@ -239,6 +248,10 @@ namespace ImageUtil
     Self.Size = Texture->GetSizeXY();
     Self.Format = Texture->GetFormat();
     auto ResolveRect = FResolveRect();
+    // Just enqueue the async copy. The readback completion is polled off-thread
+    // in ReadImageDataEndAsync via IsReady(); we intentionally do NOT flush the
+    // RHI thread or block on a GPU query here (doing so serialized the whole
+    // pipeline and caused the per-frame render-thread stall).
     Self.Readback->EnqueueCopy(CmdList, Texture, ResolveRect);
 
     // Record the copy and return -- never flush or wait for GPU completion
@@ -277,46 +290,42 @@ namespace ImageUtil
     }
   }
 
-  static void ReadImageDataEndAsync(
+    static void ReadImageDataEndAsync(
     ReadImageDataContext&& Self)
   {
-    // Poll on a BACKGROUND worker, never a named thread. ENamedThreads::
-    // HighTaskPriority can be serviced by the RHIThread, and a busy IsReady()
-    // poll there blocks GPU submission -- the copy then never completes (its
-    // fence never signals), occlusion/other RHI fences stall, and the whole
-    // server starves (proven via gdb: RHIThread stuck in this poll loop).
+    if (Self.Readback == nullptr)
+    {
+      GReadbackInFlight.fetch_sub(1, std::memory_order_relaxed);
+      return;
+    }
+
+    // Poll on a background worker so GPU submission can continue.
     AsyncTask(
       ENamedThreads::AnyBackgroundThreadNormalTask, [
       Self = std::move(Self)]() mutable
     {
-      // Poll for GPU copy completion off-thread (never blocks the render thread).
-      // Bounded: if the copy has not completed after a few seconds (e.g. the
-      // capture stopped, so its command buffer was never submitted) drop this
-      // frame and release any pool slot rather than leak a spinning task.
       uint64 Spins = 0;
       while (!Self.Readback->IsReady())
       {
         std::this_thread::sleep_for(std::chrono::microseconds(200));
-        if (++Spins > 25000u)  // ~5 s
+        if (++Spins > 25000u)
         {
           if (Self.Pool && Self.SlotIndex != INDEX_NONE)
           {
             Self.Pool->Release(Self.SlotIndex);
             Self.SlotIndex = INDEX_NONE;
           }
+
+          GReadbackInFlight.fetch_sub(1, std::memory_order_relaxed);
           return;
         }
       }
-      // The copy is complete, but FRHIGPUTextureReadback::Lock() maps via the
-      // immediate command list and asserts IsInRenderingThread(); it cannot run
-      // on this worker thread. Hand the final Lock/decode/deliver to the render
-      // thread. Because the readback is already ready, this Lock is a cheap
-      // CPU-side map -- it does NOT wait on the GPU, so the render thread is not
-      // stalled and cannot deadlock.
+
       ENQUEUE_RENDER_COMMAND(RtlReadbackDeliver)(
         [Self = MoveTemp(Self)](FRHICommandListImmediate&) mutable
         {
           ReadImageDataEnd(Self);
+          GReadbackInFlight.fetch_sub(1, std::memory_order_relaxed);
         });
     });
   }
@@ -399,20 +408,40 @@ namespace ImageUtil
     });
   }
 
-  bool ReadImageDataAsync(
+    bool ReadImageDataAsync(
     UTextureRenderTarget2D& RenderTarget,
     FRHIGPUReadbackPoolPtr Pool,
     ReadImageDataAsyncCallback&& Callback,
     bool bNonBlocking)
   {
+    // Bound outstanding non-blocking readbacks.
+    // Blocking raster captures use the per-tick batch instead.
+    if (bNonBlocking)
+    {
+      if (GReadbackInFlight.load(std::memory_order_relaxed) >=
+          GMaxReadbackInFlight)
+      {
+        return false;
+      }
+
+      GReadbackInFlight.fetch_add(1, std::memory_order_relaxed);
+    }
+
     if (IsInRenderingThread())
     {
       ReadImageDataContext Context = { };
-      ReadImageDataBegin(Context, RenderTarget, std::move(Pool), std::move(Callback));
+      ReadImageDataBegin(
+        Context, RenderTarget, std::move(Pool), std::move(Callback));
+
       if (Context.Readback == nullptr)
+      {
+        if (bNonBlocking)
+        {
+          GReadbackInFlight.fetch_sub(1, std::memory_order_relaxed);
+        }
         return false;
-      // Non-blocking variant (rt_lens): completion polled off-thread.
-      // Blocking variant (raster cameras): delivered by the per-tick batch.
+      }
+
       if (bNonBlocking)
         ReadImageDataEndAsync(std::move(Context));
       else
@@ -421,20 +450,32 @@ namespace ImageUtil
     else
     {
       ENQUEUE_RENDER_COMMAND(ReadImageDataAsyncCmd)([
-        &RenderTarget, Pool = std::move(Pool), Callback = std::move(Callback), bNonBlocking
+        &RenderTarget,
+        Pool = std::move(Pool),
+        Callback = std::move(Callback),
+        bNonBlocking
       ](auto& CmdList) mutable
       {
         ReadImageDataContext Context = { };
-        ReadImageDataBegin(Context, RenderTarget, std::move(Pool), std::move(Callback));
+        ReadImageDataBegin(
+          Context, RenderTarget, std::move(Pool), std::move(Callback));
+
         if (Context.Readback == nullptr)
+        {
+          if (bNonBlocking)
+          {
+            GReadbackInFlight.fetch_sub(1, std::memory_order_relaxed);
+          }
           return;
+        }
+
         if (bNonBlocking)
           ReadImageDataEndAsync(std::move(Context));
         else
           ReadImageDataAddToBatch(std::move(Context));
       });
-
     }
+
     return true;
   }
 
