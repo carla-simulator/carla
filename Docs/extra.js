@@ -7,15 +7,6 @@ $(document).ready(function () {
         section[0].insertBefore(banner,section[0].childNodes[0]);
     }
 
-    var nav = document.getElementsByClassName("wy-side-nav-search")
-    var img = document.createElement("img");
-    img.src = "https://raw.githubusercontent.com/carla-simulator/carla/359f723d20edd1084512c967a53e22771c9a1045/Docs/img/logos/carla_ue5_logo.png";
-    img.style.width = "100%"
-    img.style.borderRadius = "0px"
-    img.style.height = img.style.width
-    img.style.backgroundColor = "#c7e9fd"
-    nav[0].insertBefore(img, nav[0].childNodes[2])
-    
 });
 
 // Download page: show when the nightly was last built successfully.
