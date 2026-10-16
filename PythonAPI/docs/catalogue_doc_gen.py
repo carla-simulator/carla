@@ -557,17 +557,18 @@ def prop_entries(library):
 
 
 # Props whose mesh lies down: the rotation (degrees) added at spawn to stand
-# them up. Yaw is no use here: frame_actor places the camera relative to the
-# actor's heading, so turning the actor turns the camera with it.
+# them up. frame_actor places the camera relative to the actor's heading, so a
+# yaw here turns the camera too; PROP_FRAMING's bearing compensates for it.
 PROP_ROTATION = {
-    'static.prop.calibrator': {'pitch': -90.0},   # the colour chart lies flat; stand it up
+    # the colour chart lies flat: stand it up, landscape, facing the heading
+    'static.prop.calibrator': {'yaw': -90.0, 'roll': 90.0},
 }
 
 # Per-prop framing that replaces the capture's defaults; `bearing` is measured
 # from the actor's heading, so 180 + the default shows a prop modelled back to front.
 PROP_FRAMING = {
     'static.prop.vendingmachine': {'bearing': 215.0},
-    'static.prop.calibrator': {'bearing': 0.0, 'pitch': -5.0},
+    'static.prop.calibrator': {'bearing': 90.0, 'pitch': -5.0},
 }
 
 
