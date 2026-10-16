@@ -160,7 +160,7 @@ class Entry(object):
 class Overview(object):
     """The looping animation a catalogue opens with, one actor fading into the next."""
 
-    def __init__(self, image, hold_ms=1200, fade_steps=4, fade_ms=60, scale=1.0):
+    def __init__(self, image, hold_ms=1500, fade_steps=2, fade_ms=80, scale=1.0):
         self.image = image
         self.hold_ms = hold_ms
         self.fade_steps = fade_steps
@@ -595,7 +595,7 @@ CATALOGUES = {
     'vehicles': ('Vehicle catalogue', vehicle_entries,
                  [VEHICLE_CAPTURE, MINE_CAPTURE], VEHICLE_OVERVIEW),
     'props': ('Props catalogue', prop_entries, [PROP_CAPTURE],
-              Overview(image='%s/props/props_overview.webp' % IMAGE_DIR, hold_ms=700, fade_steps=0, scale=0.4)),
+              Overview(image='%s/props/props_overview.webp' % IMAGE_DIR, hold_ms=1000, fade_steps=0, scale=0.4)),
 }
 
 SCRIPT_NAME = 'PythonAPI/docs/catalogue_doc_gen.py'
@@ -806,7 +806,7 @@ def build_overview(overview, entries, out_dir):
 
     path = os.path.join(out_dir, overview.image.replace('../', ''))
     frames[0].save(path, save_all=True, append_images=frames[1:],
-                   duration=durations, loop=0, quality=80, method=4)
+                   duration=durations, loop=0, quality=60, method=4)
     print('  %d actors, %d frames -> %s (%.1f MB)'
           % (len(shots), len(frames), os.path.basename(overview.image),
              os.path.getsize(path) / 1048576.0))

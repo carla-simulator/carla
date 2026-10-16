@@ -169,7 +169,10 @@ in the manifest notes so it lands in the page as a code block.
   inline code line. Put the code after the admonition, or inline.
 - **Captions are italic already.** A nested `<i>` inside the caption shows nothing; use `<b>` or `<code>`.
 - **Animated WebP size.** A 60-frame 1280 px flight is ~7 MB; 960 px, every second frame and quality 55 brings it
-  under 2 MB. Re-encode generated overviews the same way.
+  under 2 MB. Never re-encode the catalogue overviews frame by frame: they hold each actor for `hold_ms`
+  (1.5 s) and fade in between, and Pillow reads every WebP frame duration back as `None`, so a re-save
+  flattens the timing. Rebuild them with `build_overview` from `catalogue_doc_gen.py`, and check the
+  durations in the `ANMF` chunks of the file (24-bit little-endian at offset 12 of each chunk).
 - **Features that showed nothing in UE 5.8** (check before documenting them):
   `vehicle.show_debug_telemetry(True)` draws no HUD; `world.apply_color_texture_to_object()`
   had no visible effect on `ProceduralBuilding*` or `BP_BillBoard*` objects. Also: no shipped vehicle blueprint assigns a mesh to
