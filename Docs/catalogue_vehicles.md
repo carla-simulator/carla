@@ -4,14 +4,13 @@ The images in this page were captured by PythonAPI/docs/catalogue_doc_gen.py wit
 
 Town: Town10HD_Opt
 
-Actor transform: Transform(Location(x=-46.885479, y=20.083447, z=0.300000), Rotation(pitch=-0.000034, yaw=141.974243, roll=0.000000))
-Camera transform, large: Transform(Location(x=-49.470921, y=27.835310, z=2.931721), Rotation(pitch=-13.396630, yaw=-75.691978, roll=0.000119))
-Camera transform, small: Transform(Location(x=-47.696186, y=24.049326, z=1.471929), Rotation(pitch=-10.843717, yaw=-77.215683, roll=0.000139))
-Camera transform, standard: Transform(Location(x=-48.672256, y=24.830288, z=1.722733), Rotation(pitch=-13.396630, yaw=-75.692039, roll=0.000119))
+Actor transform: Transform(Location(x=102.900002, y=-20.000000, z=0.300000), Rotation(pitch=0.000000, yaw=90.000000, roll=0.000000))
+Camera: framed on each actor's bounding box, bearing=40.0, fill=1.05, min_distance=2.5, pitch=-10.0
 Camera resolution: 1920x1080
-camera.post_process_profile = GoPro
+camera.fov = 60
+camera.post_process_profile = Cinematic
 
-weather.cloudiness = 0
+weather.cloudiness = 15
 weather.dust_storm = 0.0
 weather.fog_density = 0.0056
 weather.fog_distance = 0.0
@@ -21,8 +20,8 @@ weather.precipitation = 0.0
 weather.precipitation_deposits = 0.0
 weather.rayleigh_scattering_scale = 0.0331
 weather.scattering_intensity = 0
-weather.sun_altitude_angle = 50
-weather.sun_azimuth_angle = 350
+weather.sun_altitude_angle = 45
+weather.sun_azimuth_angle = 230
 weather.wetness = 0.0
 weather.wind_intensity = 0.35
 

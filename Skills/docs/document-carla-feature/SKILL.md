@@ -1,8 +1,8 @@
 ---
 name: document-carla-feature
-description: Writes the missing CARLA documentation that the audit found — Python API entries in PythonAPI/docs/*.yml, sensors in ref_sensors.md, catalogue actors, broken links and nav entries — one audit category at a time, in CARLA's house style. Use when the user asks to "document this feature", "write the docs for X", "fix the audit findings", or names a category such as "the Python API part".
+description: Writes the missing CARLA documentation that the audit found — Python API entries in PythonAPI/docs/*.yml, sensors in ref_sensors.md, catalogue actors, broken links and nav entries, and the images, animations and diagrams the pages need — one category at a time, in CARLA's house style. Use when the user asks to "document this feature", "write the docs for X", "fix the audit findings", "update the doc images / screenshots / catalogue pictures", or names a category such as "the Python API part".
 license: MIT
-compatibility: Any CARLA checkout. Static only — edits files on disk, no build and no running server. The python-api category regenerates Docs/python_api.md with PythonAPI/docs/doc_gen.py, which needs PyYAML.
+compatibility: Any CARLA checkout. Static only — edits files on disk, no build and no running server — except the images category, which renders with a running CARLA server (an editor PIE session works) and needs Pillow, numpy, matplotlib and Chrome for diagram previews. The python-api category regenerates Docs/python_api.md with PythonAPI/docs/doc_gen.py, which needs PyYAML.
 metadata:
   group: docs
   prerequisites: scripts/check_env.sh
@@ -34,6 +34,7 @@ one pass** — the rules differ and the review gets muddled.
 | `catalogue` | `catalogue` | `Docs/catalogue_*.md` | not written yet |
 | `links` | `link` | the page holding the link | not written yet |
 | `nav` | `orphan` | `mkdocs.yml` | not written yet |
+| `images` | UE4-era or missing images | `Docs/img/<page>/`, `Docs/img/catalogue/` | [references/images.md](references/images.md) |
 
 ## Instructions
 

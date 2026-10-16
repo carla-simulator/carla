@@ -5,10 +5,12 @@ The images in this page were captured by PythonAPI/docs/catalogue_doc_gen.py wit
 Town: Town10HD_Opt
 
 Actor transform: Transform(Location(x=-88.099998, y=-73.599998, z=1.000000), Rotation(pitch=0.000000, yaw=90.000000, roll=0.000000))
-Camera transform: Transform(Location(x=-88.099998, y=-70.800003, z=1.550000), Rotation(pitch=-5.000000, yaw=270.000000, roll=0.000000))
-Camera resolution: 1848x1016
+Camera: framed on each actor's bounding box, bearing=10.0, fill=0.95, min_distance=2.5, pitch=-4.0
+Camera resolution: 1920x1080
+camera.fov = 60
+camera.post_process_profile = Cinematic
 
-weather.cloudiness = 20
+weather.cloudiness = 15
 weather.dust_storm = 0.0
 weather.fog_density = 0.0056
 weather.fog_distance = 0.0
@@ -17,10 +19,10 @@ weather.mie_scattering_scale = 0.0
 weather.precipitation = 0.0
 weather.precipitation_deposits = 0.0
 weather.rayleigh_scattering_scale = 0.0331
-weather.scattering_intensity = 0.0
-weather.sun_altitude_angle = 50
-weather.sun_azimuth_angle = 260
-weather.wetness = 10
+weather.scattering_intensity = 0
+weather.sun_altitude_angle = 45
+weather.sun_azimuth_angle = 230
+weather.wetness = 0.0
 weather.wind_intensity = 0.35
 
 Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it.
