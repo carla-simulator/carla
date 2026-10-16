@@ -154,6 +154,8 @@ world.set_weather(carla.WeatherParameters.WetCloudySunset)
 
 The same presets through the default sensor profile, `AutomotiveHDR`: [Town10HD_Opt](img/core_world/weather_presets_automotivehdr_town10.webp), [Town15](img/core_world/weather_presets_automotivehdr_town15.webp). Town15 with the `Cinematic` profile: [Town15](img/core_world/weather_presets_cinematic_town15.webp).
 
+In the editor, the weather of a map is set on its `BP_Carla_Sky` actor, which also saves time-of-day and condition presets and the map's default weather to JSON. See [Weather presets](camera_postprocess_presets.md#weather-presets).
+
 Two scripts drive the weather from the terminal.
 
 __`PythonAPI/util/set_weather.py`__ sets the weather once. It starts from a named preset and overrides individual parameters.

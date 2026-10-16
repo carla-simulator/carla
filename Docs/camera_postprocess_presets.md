@@ -6,6 +6,8 @@ A camera's look — exposure, tonemapper, white balance, bloom, lens flare, nois
 - [__Presets shipped with CARLA__](#presets-shipped-with-carla)
     - [Sensor effects](#sensor-effects)
 - [__Creating, loading and saving presets__](#creating-loading-and-saving-presets)
+    - [Camera profiles](#camera-profiles)
+    - [Weather presets](#weather-presets)
 
 ---
 ## Using post-process presets for the RGB camera sensor
@@ -100,23 +102,51 @@ The automotive presets add camera artefacts on top of the grading:
 ---
 ## Creating, loading and saving presets
 
-The look of the scene through the camera is adjusted with the post-process settings of the `BP_Carla_Sky` blueprint. Select it in the *Outliner* panel of the Unreal Editor, then in *Details* select the *Post Process Component* and expand *Post Process Volume*. That is where the lens effects, color temperature, exposure and film grain live; the [Unreal Engine documentation](https://dev.epicgames.com/documentation/en-us/unreal-engine/API/Runtime/Engine/Engine/FPostProcessSettings) describes each parameter.
+Everything is done from the `BP_Carla_Sky` actor of the map, in the `1_Weather` folder of the *Outliner*: the camera look, the weather, and saving and loading both as presets. Select it and look at its *Details* panel.
 
-At BeginPlay the sky rig loads the profile named by the `carla.PostProcess.ViewportProfile` console variable (`Cinematic` unless changed), which is what the spectator view shows; sensors load `carla.PostProcess.Profile` (`AutomotiveHDR`) instead.
+![bp_carla_sky_parameters](img/camera_postprocess_presets/bp_carla_sky_parameters.webp)
+<div style="text-align: right"><i><code>BP_Carla_Sky</code> selected in Town10HD_Opt: <b>Custom Parameters</b> holds the <b>Weather Parameters</b> and the <b>Camera Parameters</b>. Unreal Editor 5.8</i></div>
 
-![postprocess_component](img/camera_postprocess_presets/ue5_post_process_component.png)
-<div style="text-align: right"><i><code>BP_Carla_Sky</code> selected in the Outliner, with its Post Process Component and the Post Process Volume settings in Details.</i></div>
+__Camera Parameters__ are shortcuts onto the post-process settings of the actor's *Post Process Component*: exposure (`Exposure Min EV`, `Exposure Max EV`, highlight and shadow contrast), camera (`Shutter Speed`, `Exposure Mode`, `ISO`, `Aperture`), depth of field (`Sensor Width`, `Focal Distance`) and color grading (`Temperature`, `Tint`, scene color tint, global saturation, contrast and gamma, `Vignette Intensity`). They edit the same settings as the full *Post Process Volume* category of the component, which has every other parameter; the [Unreal Engine documentation](https://dev.epicgames.com/documentation/en-us/unreal-engine/API/Runtime/Engine/Engine/FPostProcessSettings) describes each one. `ISO` and `Aperture` only have an effect with `Exposure Mode` set to manual.
 
-Post-process parameter presets can be saved and loaded through the `BP_PostProcessVolumeSettings` blueprint. In the content browser navigate to `Carla/Blueprints/CameraProfiles` or search for the blueprint in the search field. Drag the blueprint into the scene and make sure it is selected in the *Outliner*, you may want to place it out of the way in the sky so it doesn't get in the way of other scene elements. In the details panel, expand the *Default* section.
+__Weather Parameters__ are the same fields as [`carla.WeatherParameters`](python_api.md#carla.WeatherParameters): editing them changes the weather in the editor viewport.
 
-![postprocess_bp](img/camera_postprocess_presets/bp_postprocess_volumesettings.png)
-<div style="text-align: right"><i><code>BP_PostProcessVolumeSettings</code> in Details: <b>Profile Name</b>, <b>LoadProfile</b> and <b>SaveProfile</b> under Default.</i></div>
+![bp_carla_sky_presets](img/camera_postprocess_presets/bp_carla_sky_presets.webp)
+<div style="text-align: right"><i>The <b>Post Process Profile</b> and <b>Weather Preset</b> categories of <code>BP_Carla_Sky</code>. Unreal Editor 5.8</i></div>
 
-To save your current post process settings, choose an appropriate name and enter it in the *Profile Name* field, then press *SaveProfile*. The profile will be saved as a JSON file in the `${CARLA_ROOT}/Unreal/CarlaUnreal/Content/Carla/Config/PostProcess` directory, where you will also find other presets. If you want to load an existing preset from this directory, enter the name of the preset (the name of the JSON file minus the `.json` suffix) in the *Profile Name* field and then press *LoadProfile*.
+### Camera profiles
+
+The __Post Process Profile__ category saves and loads the camera presets, the JSON files in `Unreal/CarlaUnreal/Content/Carla/Config/PostProcess/`:
+
+| Control | What it does |
+| --- | --- |
+| _Profile Name_ | The preset to work with; the dropdown lists the JSON files of the folder. |
+| _LoadProfile_ | Loads `<Profile Name>.json` into the post-process settings, replacing them, and refreshes the Camera Parameters. |
+| _SaveProfile_ | Writes the current post-process settings to `<Profile Name>.json`. This is exactly what a camera with that `post_process_profile` loads at runtime. |
+| _New Profile Name_, _CreateProfile_ | Saves the current settings as a new preset, `<New Profile Name>.json`, and selects it. |
+
+To make a preset, load the closest one, adjust the Camera Parameters or the Post Process Volume while you look at the viewport, and save it, or create it under a new name. A camera spawned with `post_process_profile` set to that name uses it.
+
+The profile selected in the actor is only the editor view. When the simulation starts, the sky rig loads the profile named by the `carla.PostProcess.ViewportProfile` console variable (`Cinematic` unless changed), which is what the spectator view shows; sensors load their own `post_process_profile`, or `carla.PostProcess.Profile` (`AutomotiveHDR`) when they have none.
+
+### Weather presets
+
+The __Weather Preset__ category does the same for the weather, with two independent kinds of preset stored in `Content/Carla/Config/Weather/Presets.json`: a __time__ preset holds only the sun position (`sunAzimuthAngle`, `sunAltitudeAngle`), and a __condition__ preset holds everything else (cloudiness, precipitation, wind, fog, wetness, scattering). Any time can be combined with any condition.
+
+| Control | What it does |
+| --- | --- |
+| _Time Preset_, _Condition Preset_ | Pick a preset; it is applied as soon as it is selected. Shipped: `Sunrise`, `Noon`, `Sunset`, `Night`; `Clear`, `Cloudy`, `Rain`. |
+| _SaveTimePreset_, _SaveConditionPreset_ | Write the current sun position, or the current conditions, over the selected preset. |
+| _New Time Preset Name_, _CreateTimePreset_ | Save the current sun position as a new time preset (the same for _CreateConditionPreset_). |
+| _SetAsMapDefault_ | Make the selected time and condition pair this map's default weather. |
+| _SaveCurrentWeatherAsMapDefault_ | Store the current Weather Parameters as this map's default directly, without creating a preset. |
+| _LoadMapDefault_ | Re-apply this map's default weather. |
+
+The defaults of every map are in `Content/Carla/Config/Weather/MapDefaults.json`, either as a `time` and `condition` pair or as the full set of weather values. The server applies a map's default when the map loads.
 
 !!! Note
-    `Carla/Config` is packed into the `.pak` of a packaged release, so a new JSON preset cannot simply be dropped into the folder there. Authoring presets needs a source build; a packaged server can only use the presets it shipped with.
+    `Carla/Config` is packed into the `.pak` of a packaged release, so new presets cannot be dropped into a package. Authoring them needs a source build; a packaged server can only use the presets it shipped with.
 
-You can also create new post-process presets directly in the JSON files found in the *PostProcess* directory. Create new profiles by copying an existing JSON preset and editing specific parameters. Make sure you follow the expected JSON schema, some options may change the schema. If in doubt, save the preset from the editor interface instead.
+The presets are plain JSON and can also be edited by hand: copy an existing one and change its values. If in doubt about the schema, save the preset from the editor instead.
 
 ---
