@@ -175,7 +175,7 @@ CARLA ships several towns, from a dense city centre to a mining environment. Bro
 ## Choose your vehicles
 
 ![vehicles_overview](img/catalogue/vehicles/vehicle_montage.webp)
-<div style="text-align: right"><i>The vehicle blueprints, one per frame.</i></div>
+<div style="text-align: right"><i>The vehicle blueprints.</i></div>
 
 CARLA provides a library of vehicles to fill a simulation with traffic. Browse the models in the [vehicle catalogue](catalogue_vehicles.md), or list the blueprints from a client:
 
