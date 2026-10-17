@@ -62,7 +62,17 @@ namespace parser {
     std::vector<RoadTypeSpeed> speed;
     std::vector<LaneOffset> section_offsets;
     std::vector<LaneSection> sections;
+    bool predecessor_is_junction { false };
+    bool successor_is_junction { false };
   };
+
+  /// True when a road link's elementType is "junction" (OpenDRIVE §2.3.5:
+  /// ids are unique within a class only). Missing attribute or "road"
+  /// (files predating the attribute) resolve as road.
+  static bool StringToIsJunction(std::string &&str) {
+    StringUtil::ToLower(str);
+    return str == "junction";
+  }
 
   static road::Lane::LaneType StringToLaneType(std::string &&str) {
     StringUtil::ToLower(str);
@@ -139,9 +149,13 @@ namespace parser {
       if (link) {
         if (link.child("predecessor")) {
           road.predecessor = link.child("predecessor").attribute("elementId").as_uint();
+          road.predecessor_is_junction = StringToIsJunction(
+              std::string(link.child("predecessor").attribute("elementType").value()));
         }
         if (link.child("successor")) {
           road.successor = link.child("successor").attribute("elementId").as_uint();
+          road.successor_is_junction = StringToIsJunction(
+              std::string(link.child("successor").attribute("elementType").value()));
         }
       }
 
@@ -303,7 +317,9 @@ namespace parser {
           r.junction_id,
           r.predecessor,
           r.successor,
-          r.is_rht);
+          r.is_rht,
+          r.predecessor_is_junction,
+          r.successor_is_junction);
 
       // type speed
       for (const auto& s : r.speed) {

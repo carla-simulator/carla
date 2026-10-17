@@ -61,6 +61,15 @@ namespace road {
 
     RoadId GetPredecessor() const;
 
+    /// True when the <link><successor> element declares
+    /// elementType="junction" (ids are unique within a class only, so a
+    /// junction id may also name a road).
+    bool IsSuccessorJunction() const;
+
+    /// True when the <link><predecessor> element declares
+    /// elementType="junction".
+    bool IsPredecessorJunction() const;
+
     Lane &GetLaneById(SectionId section_id, LaneId lane_id);
 
     const Lane &GetLaneById(SectionId section_id, LaneId lane_id) const;
@@ -210,6 +219,13 @@ namespace road {
     RoadId _successor { 0 };
 
     RoadId _predecessor { 0 };
+
+    /// elementType of the <link><successor> element ("junction"), false for
+    /// "road" and for files that predate the attribute.
+    bool _successor_is_junction { false };
+
+    /// elementType of the <link><predecessor> element ("junction").
+    bool _predecessor_is_junction { false };
 
     InformationSet _info;
 
