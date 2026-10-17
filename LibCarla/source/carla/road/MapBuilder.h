@@ -32,7 +32,9 @@ namespace road {
         const JuncId junction_id,
         const RoadId predecessor,
         const RoadId successor,
-        const bool is_rht);
+        const bool is_rht,
+        const bool predecessor_is_junction = false,
+        const bool successor_is_junction = false);
 
     carla::road::LaneSection *AddRoadSection(
         carla::road::Road *road,

@@ -61,6 +61,14 @@ namespace road {
     return _predecessor;
   }
 
+  bool Road::IsSuccessorJunction() const {
+    return _successor_is_junction;
+  }
+
+  bool Road::IsPredecessorJunction() const {
+    return _predecessor_is_junction;
+  }
+
   std::vector<Road *> Road::GetNexts() const {
     return _nexts;
   }
