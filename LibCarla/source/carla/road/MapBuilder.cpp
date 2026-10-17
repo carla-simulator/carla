@@ -417,7 +417,9 @@ namespace road {
         const JuncId junction_id,
         const RoadId predecessor,
         const RoadId successor,
-        const bool is_rht)
+        const bool is_rht,
+        const bool predecessor_is_junction,
+        const bool successor_is_junction)
     {
 
       // add it
@@ -433,6 +435,8 @@ namespace road {
       road->_is_rht = is_rht;
       road->_successor = successor;
       road->_predecessor = predecessor;
+      road->_successor_is_junction = successor_is_junction;
+      road->_predecessor_is_junction = predecessor_is_junction;
 
       return road;
   }
@@ -728,7 +732,12 @@ namespace road {
     }
 
     // check to see if next is a road or a junction
-    bool next_is_junction = !_map_data.ContainsRoad(next_road);
+    // The <link> element's elementType decides (OpenDRIVE §2.3.5: ids are
+    // unique within a class only, so a junction id may also name a road).
+    // Files predating the attribute default to road.
+    bool next_is_junction = lane->IsPositiveDirection()
+        ? road.IsSuccessorJunction()
+        : road.IsPredecessorJunction();
     double s = section.GetDistance();
 
     // check if we are in a lane section in the middle
@@ -743,7 +752,7 @@ namespace road {
           result.push_back(road.GetPrevLane(s, next));
         }
       }
-    } else if (!next_is_junction) {
+    } else if (!next_is_junction && _map_data.ContainsRoad(next_road)) {
       // change to another road / junction
       if (next != 0 || (lane_id == 0 && next == 0)) {
         // single road
