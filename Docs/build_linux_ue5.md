@@ -4,146 +4,153 @@
     The Unreal Engine 5 version of CARLA supports Ubuntu 22.04 and 24.04. It has not been configured to build on older Ubuntu versions.
 
 !!! Note
-    On another distribution, or to keep UE5's dependencies off your machine, build inside the [Docker development environment](build_devcontainer.md) instead. The source stays on the host; only the toolchain lives in the container.
+    If you are using an Ubuntu version other than 22.04 or 24.04, or experiencing compilation issues, you can use the Docker-based development environment to build CARLA inside an Ubuntu 22.04 container. See [CARLA Docker Dev Environment (UE5)](build_devcontainer.md) for instructions.
 
 * __[Set up the environment](#set-up-the-environment)__
 * __[Build and run CARLA UE5](#build-and-run-carla-ue5)__
 * __[Build a package with CARLA UE5](#build-a-package-with-carla-ue5)__
+* __[Build presets](#build-presets)__
 * __[Extended build instructions](#extended-build-instructions)__
 
 ## Set up the environment
 
-![build_pipeline_linux](img/build_linux_ue5/build_pipeline_linux.svg)
-<div style="text-align: right"><i>What CarlaSetup.sh does, in order: prerequisites, content, DLSS SDK, Unreal Engine 5.8, configure and build.</i></div>
-
-Clone the repository from GitHub, on the `ue58-dev` branch:
+Clone this repository locally from GitHub, specifying the *ue58-dev* branch:
 
 ```sh
 git clone -b ue58-dev https://github.com/carla-simulator/carla.git CarlaUE5
 ```
 
-Building CARLA needs access to the CARLA fork of Unreal Engine 5.8. Link your GitHub account to Epic Games by following [this guide](https://www.unrealengine.com/en-US/ue-on-github) first, then use your git credentials to authorize the download.
-
-| Requirement | Value |
-| --- | --- |
-| Operating system | Ubuntu 22.04 or 24.04 |
-| CMake | 3.28 or later. Ubuntu 22.04 ships 3.22, so the setup script installs 3.28.3 under `/opt` |
-| Disk space | about 225 GB with the engine, 30 GB more per package |
-| Epic Games account | linked to GitHub, for the engine fork |
-| DLSS SDK | required by the engine build; the setup script fetches it |
-
-Run the setup script from the CARLA root directory:
+In order to build CARLA, you need access to the CARLA fork of Unreal Engine 5.8. In order to access this repository, you must first link your GitHub account to Epic Games by following [this guide](https://www.unrealengine.com/en-US/ue-on-github). You then also need to use your git credentials to authorise the download of the Unreal Engine 5.8 repository.
+Run the setup script from a terminal open in the CARLA root directory:
 
 ```sh
 cd CarlaUE5
 ./CarlaSetup.sh --interactive
 ```
 
-It asks for your sudo password to install the prerequisites, and then for your GitHub credentials to download the Unreal Engine repository. Pass `--launch` to open the editor once the build finishes.
+The setup script will prompt you for your sudo password, in order to install the prerequisites. It will then prompt you for your GitHub credentials in order to authorise the download of the Unreal Engine repository.
 
-`CarlaSetup.sh` takes these options:
+__Building in Linux unattended__:
 
-| Option | What it does |
-| --- | --- |
-| `--interactive` | Prompt for the GitHub credentials instead of reading `GIT_LOCAL_CREDENTIALS` |
-| `--skip-prerequisites` | Do not install the apt and Python packages, for an environment that already has them |
-| `--launch` | Open the editor once the build finishes |
-| `--python-root=PATH` | Build the Python API against an existing interpreter |
-
-__Building unattended__: store the sudo password and the git credentials in the environment first, then run the script without `--interactive`. The credentials are split on `@`, so a username containing one will not work; use `--interactive` in that case.
+If you want to run the setup script unattended, store your sudo password and your git credentials in an environment variable.
 
 ```sh
 sudo -v   # Used to cache the password for 15 minutes
 export GIT_LOCAL_CREDENTIALS=github_username@github_token
+```
 
+Then run the setup script without the interactive flag:
+
+```sh
+cd CarlaUE5
 ./CarlaSetup.sh
 ```
 
-The script installs every prerequisite — apt packages, CMake, the Python requirements, Git LFS — clones and builds Unreal Engine 5.8, clones the CARLA content, fetches the NVIDIA DLSS SDK into `~/SDKs/DLSS`, sets the environment variables, and builds CARLA. Expect it to take hours.
+The credentials are split on `@`, so a username that contains one will not work. Use `--interactive` in that case.
 
-Run it only the first time. Afterwards, rebuild with the commands in the next section.
+This will download and install Unreal Engine 5.8, install the prerequisites and build CARLA. It may take some time to complete and use a significant amount of disk space.
 
 !!! Note
-    * Set `CARLA_UNREAL_ENGINE_PATH` to an existing build of the CARLA Unreal Engine fork to skip building it, which saves two to three hours and 225 GB.
-    * `--python-root=PATH` targets an existing Python installation instead of installing one with apt. Use `whereis python3` and strip the trailing `/python3`.
-    * CARLA cannot be built on an external disk: Ubuntu does not grant the required read, write and execute permissions there.
-    * DLSS is mandatory unless you opt out explicitly with `export DLSS_SDK=disabled`, which falls back to NFOR and spatial upscaling.
+    The setup script will install by default Python 3 using apt. If you want to target an existing Python installation, you should use the `--python-root=PATH_TO_PYTHON` argument with the relevant Python installation path. You can use `whereis python3` in your chosen environment and strip the `/python3` suffix from the path.
 
-To follow the steps by hand, for instance to add libraries or because the script failed, see the [extended instructions](#extended-build-instructions).
+The CarlaSetup.sh script installs all the required packages, including CMake, debian packages, Python packages and Unreal Engine 5.8 and sets up the necessary environment variables. It also downloads the CARLA content and the NVIDIA DLSS SDK.
+
+If you pass `--launch`, the script will then launch the CARLA Unreal Engine 5 editor. **Note: This script can take a long time to complete.**
+
+The setup script should only be run the first time that you set up the build. Subsequently, when rebuilding, you should use the commands in the following section.
+
+!!! Note
+    * This version of CARLA requires the **CARLA fork of Unreal Engine 5.8**. You need to link your GitHub account to Epic Games in order to gain permission to clone the UE repository. If you have not already linked your accounts, follow [this guide](https://www.unrealengine.com/en-US/ue-on-github).
+    * For using CARLA Unreal Engine 5 previous builds, **ensure CARLA_UNREAL_ENGINE_PATH environment variable is defined** pointing to the CARLA Unreal Engine 5.8 absolute path. If this variable is not defined, the CarlaSetup.sh script will download and build CARLA Unreal Engine 5 and **this takes two to three extra hours of build and 225Gb of disk space**.
+    * CARLA cannot be built on an external disk, Ubuntu is not giving the required read/write/execution permissions for builds.
+You may want to follow the setup steps separately, if, for example, you are including additional libraries or if the CarlaSetup.sh script fails for some reason. Please refer to [the extended instructions](#extended-build-instructions) to proceed.
 
 ---
 ## Build and run CARLA UE5
 
-Configure once, with the preset for the configuration you want:
+The setup script launches the following commands itself, you will need to use the following commands once you modify the code and wish to relaunch:
+
+* Configure:
 
 ```sh
-cmake --preset Release
+cmake -G Ninja -S . -B Build --toolchain=$PWD/CMake/Toolchain.cmake -DCMAKE_BUILD_TYPE=Release -DENABLE_ROS2=ON
 ```
 
-The build then lives in `Build/Release`. There are three presets — `Debug`, `Development` and `Release` — each with its own build directory under `Build/`. `Release` gives minimal logs and debug information; `Debug` and `Development` give progressively more, to diagnose problems.
-
 !!! Note
-    To target a specific Python installation, add `-DPython_ROOT_DIR=PATH` and `-DPython3_ROOT_DIR=PATH` to the configure command.
+    If you intend to target a specific Python installation, you should add both these arguments to the above cmake command: `-DPython_ROOT_DIR=PATH` and `-DPython3_ROOT_DIR=PATH`.
+
+The command line options are as follows:
+
+* **G** - which build system to use
+* **S** - source path for CARLA repository
+* **B** - directory where the build goes
 
 Then build what you need:
 
-| Target | What it does |
+| Command | What it does |
 | --- | --- |
-| `cmake --build Build/Release` | build everything |
-| `cmake --build Build/Release --target launch` | build and open the editor |
-| `cmake --build Build/Release --target launch-only` | open the editor without rebuilding |
-| `cmake --build Build/Release --target carla-python-api-install` | build and install the Python client |
-| `cmake --build Build/Release --target package` | cook and package a shipping server |
-| `cmake --build Build/Release --target carla-help` | list every target and option |
+| `cmake --build Build` | Build CARLA |
+| `cmake --build Build --target carla-python-api-install` | Build and install the Python API |
+| `cmake --build Build --target launch` | Build and launch the editor |
+| `cmake --build Build --target launch-only` | Launch the editor without rebuilding |
+| `cmake --build Build --target package` | Build a package, see [below](#build-a-package-with-carla-ue5) |
+| `cmake --build Build --target carla-help` | List every target and configure option |
 
-Useful configure options: `-DENABLE_ROS2=ON` for the native ROS 2 interface, `-DCARLA_MAPS_TO_COOK=...` to cook a subset of maps, `-DBUILD_LIBCARLA_TESTS=ON` for the unit tests. `carla-help` prints the full list.
+`-DENABLE_ROS2=ON` builds the native ROS 2 interface. To cook only some of the maps into a package, add `-DCARLA_MAPS_TO_COOK=...` to the configure command, see [Select which maps to cook](#select-which-maps-to-cook).
 
 ---
 ## Build a package with CARLA UE5
 
+Packaging needs a Zen server that is already running. Start it in a separate terminal:
+
 ```sh
-cmake --build Build/Release --target package
+$CARLA_UNREAL_ENGINE_PATH/Engine/Binaries/Linux/zenserver --port 8558
 ```
 
-The package lands in `Build/Release/Package/Carla-<version>-Linux-Shipping/`, alongside a `.tar.gz` of the same. Use the `package-development` target instead for a package that writes debugging logs, or `package-debug` / `package-test`.
+Then build the package:
 
-Expect one to two hours and about 12 GB.
+```sh
+cmake --build Build --target package
+```
 
-!!! Note
-    The cook needs a Zen server that outlives it. On Linux this is handled by `[Zen.AutoLaunch] LimitProcessLifetime=False`, so nothing has to be started by hand. Do not copy the Windows recipe of launching `zenserver` manually.
+The package will be generated in the directory `$CARLA_PATH/Build/Package/Carla-<version>-Linux-Shipping`, alongside a `.tar.gz` of the same.
+
+To build a development package, use the `package-development` target. This will build a package that outputs logs for debugging. The `package-debug` and `package-test` targets build the other configurations.
 
 ### Select which maps to cook
 
-By default a package cooks every map listed in `DefaultGame.ini` — `Town10HD_Opt`, `OpenDriveMap`, `TestMaps/EmptyMap`, `Mine_01` and `Town15/Town15` — which produces a package of around 28 GB. To cook a subset, set `CARLA_MAPS_TO_COOK` when configuring, as a `+`-separated list of map package paths. A Town10-only package is around 16 GB.
+By default a package cooks every map listed in `DefaultGame.ini` (`Town10HD_Opt`, `OpenDriveMap`, `TestMaps/EmptyMap`, `Mine_01`, `Town15/Town15`), which produces a package of around 28 GB. If you only need a subset of the maps, set the `CARLA_MAPS_TO_COOK` option when you configure the build to a `+`-separated list of map package paths. The package then cooks only those maps and is correspondingly smaller (a Town10-only package is around 16 GB).
 
 ```sh
 # Cook a single map
-cmake --preset Release -DCARLA_MAPS_TO_COOK="/Game/Carla/Maps/Town10HD_Opt"
+cmake -G Ninja -S . -B Build --toolchain=$PWD/CMake/Toolchain.cmake -DCMAKE_BUILD_TYPE=Release -DENABLE_ROS2=ON \
+    -DCARLA_MAPS_TO_COOK="/Game/Carla/Maps/Town10HD_Opt"
 
 # Cook several maps
-cmake --preset Release -DCARLA_MAPS_TO_COOK="/Game/Carla/Maps/Town10HD_Opt+/Game/Carla/Maps/Mine_01"
+cmake -G Ninja -S . -B Build --toolchain=$PWD/CMake/Toolchain.cmake -DCMAKE_BUILD_TYPE=Release -DENABLE_ROS2=ON \
+    -DCARLA_MAPS_TO_COOK="/Game/Carla/Maps/Town10HD_Opt+/Game/Carla/Maps/Mine_01"
 ```
 
-Use the full map package path (`/Game/Carla/Maps/<MapName>`), not a filesystem path. Note that the large maps nest: Town15 is `/Game/Carla/Maps/Town15/Town15`. Leaving `CARLA_MAPS_TO_COOK` empty, the default, cooks the full list from `DefaultGame.ini`.
+Use the full map package path (`/Game/Carla/Maps/<MapName>`), not a filesystem path. The large maps nest: Town15 is `/Game/Carla/Maps/Town15/Town15`. Leaving `CARLA_MAPS_TO_COOK` empty (the default) cooks the full map list from `DefaultGame.ini`, so the standard build is unchanged.
 
 !!! Note
-    `Town10HD_Opt` is the default map a package boots into and the cooker always cooks the `GameDefaultMap` (only its persistent level, not its World Partition cells, when it is not in `CARLA_MAPS_TO_COOK`). If your selection excludes it, set a different default map in `DefaultEngine.ini` before packaging, otherwise the packaged server starts into an empty Town10.
+    `Town10HD_Opt` is the default map a package boots into. If your selection excludes it, set a different default map in `DefaultEngine.ini` before packaging, otherwise the packaged server starts with a missing-map error.
 
 ### Run the package
 
-The archive root holds `Linux/`, `PythonAPI/` and a `README`. Start the server from the root:
+Run the package with the following command from inside the package root folder.
 
 ```sh
 ./Linux/CarlaUnreal.sh
 ```
 
-To run the native ROS2 interface, add the `-ros2` argument:
+If you want to run the native ROS 2 interface, add the `-ros2` argument:
 
 ```sh
 ./Linux/CarlaUnreal.sh -ros2
 ```
 
-To install the Python API that matches the package you built:
+If you want to install the Python API corresponding to the package you have built:
 
 ```sh
 pip3 install PythonAPI/carla/dist/carla-*.whl
@@ -151,14 +158,23 @@ pip3 install PythonAPI/carla/dist/carla-*.whl
 
 ### Content packs
 
-The `package` targets also cook the package as a __base release__ (UAT `-createreleaseversion=<release>`, `carla-<version>-<platform>` by default, `CARLA_BASE_RELEASE` overrides the name). Two artifacts come out of this, next to the package:
+The `package` target also writes `<release>-release-metadata.tar.gz` (about 2 MB) next to the package, which content packs are built against. See [Content packs](content_packs.md).
 
-* `CarlaUnreal/BaseRelease` inside the package: the release name the packaged server was cooked as. Content packs record the same string and the server refuses packs built against another release.
-* `Build/Package/<release>-release-metadata.tar.gz` (about 1 MB): the release's asset registry (`<release>/Linux/AssetRegistry.bin` and `Metadata/DevelopmentAssetRegistry.bin`), which is what a content pack is cooked "based on". Publish it together with the package tarball; `carla-pack build --base <this file>` needs it and nothing else from the package build.
+## Build presets
 
-Packs under `Unreal/CarlaUnreal/Plugins/Packs/` must stay out of the base: after the cook the `package` target runs `Unreal/Package/CheckNoPackLeak.cmake`, which fails the build if any of those packs has package names under `/<Pack>/` in the cooked asset registry or files under `Plugins/Packs/<Pack>/` in the staged output (`CARLA_PACK_LEAK_IGNORE` skips a pack by name, for the rare pack named after a base content folder).
+If you are building using multiple configurations, we recommend to use the preset system. To set up a preset, use the following command:
 
-See [Content packs](content_packs.md) for authoring, building and installing packs. The `pack-<Name>` CMake targets build the packs found under `Unreal/CarlaUnreal/Plugins/Packs/` against this release, and `content-packs-test` runs the tool's unit tests.
+```sh
+cmake --preset Development
+```
+
+This will create a folder within the build directory named `Development`. All other build artifacts for this configuration should then be directed into this folder, for example to launch the editor, run:
+
+```sh
+cmake --build Build/Development/ --target launch
+```
+
+There are 3 presets to choose from, `Debug`, `Development` and `Release`. The release preset provides minimal debug information or logs. The debug and development presets provide differing levels of terminal output and logs to help diagnose problems in CARLA installations. The presets do not enable ROS 2; add `-DENABLE_ROS2=ON` to the preset command if you need the native ROS 2 interface.
 
 ---
 ## Extended build instructions
@@ -167,22 +183,28 @@ Use these instructions if you need more control over the setup process or the se
 
 ### Install prerequisites
 
-The full list is what `CarlaSetup.sh` installs, so the simplest way to get it right is to run that one step on its own:
+Before building CARLA, ensure the prerequisites are installed with the following commands:
+
+```sh
+sudo apt update
+sudo apt install build-essential make ninja-build libvulkan1 libpng-dev libtiff-dev libjpeg-dev tzdata sed curl libtool rsync libxml2-dev git git-lfs libnss3-dev libatk-bridge2.0-dev libxkbcommon-dev libgbm-dev libpango1.0-dev libasound2-dev libsdl2-dev libfreetype-dev python3 python3-dev python3-pip
+git lfs install
+```
+
+CARLA also requires CMake 3.28 or later and the Python packages listed in `requirements.txt`. Ubuntu 22.04 comes with an older version of CMake. Alternatively, you can install all of the prerequisites, including CMake, by running the following script from the CARLA repository:
 
 ```sh
 bash Util/SetupUtils/InstallPrerequisites.sh --python-path=python3
 ```
 
-It installs the apt packages (`build-essential`, `ninja-build`, `libvulkan1`, `libpng-dev`, `libtiff-dev`, `libjpeg-dev`, `curl`, `libtool`, `rsync`, `libxml2-dev`, `git`, `git-lfs`, `libnss3-dev`, `libatk-bridge2.0-dev`, `libxkbcommon-dev`, `libgbm-dev`, `libpango1.0-dev`, `libasound2-dev`, `libsdl2-dev`, `libfreetype-dev`, and Python 3 with its headers and pip), runs `git lfs install`, installs `requirements.txt`, and installs CMake 3.28.3 under `/opt` when the system CMake is older than 3.28.
-
-Then fetch the DLSS SDK, which the engine build requires:
+The Unreal Engine build requires the NVIDIA DLSS SDK. If you already have it, set `DLSS_SDK` to its location. Otherwise, download it with:
 
 ```sh
 bash Util/SetupUtils/SetupDLSS.sh
 export DLSS_SDK=$HOME/SDKs/DLSS
 ```
 
-Building without it is an explicit opt-out: `export DLSS_SDK=disabled`.
+To build without DLSS, set `DLSS_SDK=disabled` instead.
 
 ### Clone and build the Unreal Engine 5.8
 
@@ -213,7 +235,7 @@ export CARLA_UNREAL_ENGINE_PATH=<PATH_TO_UNREAL_ENGINE_FOLDER>
 Clone the CARLA repository to your local machine:
 
 ```sh
-git clone https://github.com/carla-simulator/carla.git
+git clone -b ue58-dev https://github.com/carla-simulator/carla.git
 ```
 
 Enter the cloned repository and create the content folder `Unreal/CarlaUnreal/Content` if it does not exist. From inside it, clone the content repository:
@@ -228,28 +250,28 @@ This command may take some time since it is downloading a lot of data.
 
 Once the engine is built and the CARLA code and content are in place, build CARLA from the root of the repository.
 
-Configure a preset:
+Configure the build:
 
 ```sh
-cmake --preset Release
+cmake -G Ninja -S . -B Build --toolchain=$PWD/CMake/Toolchain.cmake -DCMAKE_BUILD_TYPE=Release -DENABLE_ROS2=ON
 ```
 
 Compile the Python API:
 
 ```sh
-cmake --build Build/Release/ --target carla-python-api-install
+cmake --build Build --target carla-python-api-install
 ```
 
 To launch the editor:
 
 ```sh
-cmake --build Build/Release/ --target launch
+cmake --build Build --target launch
 ```
 
 To build a package:
 
 ```sh
-cmake --build Build/Release/ --target package
+cmake --build Build --target package
 ```
 
 From here on, use the commands in [Build and run CARLA UE5](#build-and-run-carla-ue5).
