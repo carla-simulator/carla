@@ -1,6 +1,18 @@
-# CARLA Docker Dev Environment (UE5)
+# CARLA Docker development environment
 
-CARLA UE5 can be built inside a Docker container running Ubuntu 22.04. This is useful when your host OS (e.g., Ubuntu 24.04) does not meet UE5's compilation requirements. The container provides the correct toolchain and dependencies while you keep all source code on the host.
+CARLA UE5 can be built inside a Docker container running Ubuntu 22.04. The container provides the toolchain and the dependencies; your source code, your engine and the build output stay on the host.
+
+Ubuntu 22.04 and 24.04 can both build CARLA directly, so this route is for the cases where that is not what you want:
+
+- a host on another distribution, or an older Ubuntu
+- keeping UE5's dependency list off your workstation
+- a reproducible toolchain, the same on every machine and in CI
+
+- [__Prerequisites__](#prerequisites)
+- [__Build the Docker image__](#build-the-docker-image)
+- [__Run the container__](#run-the-container)
+- [__Download CARLA content__](#download-carla-content-first-time-only)
+- [__Running commands from additional terminals__](#running-commands-from-additional-terminals)
 
 ## Prerequisites
 
@@ -29,6 +41,7 @@ Options:
 Util/Docker/build.sh --force-rebuild                  # Rebuild from scratch (no cache)
 Util/Docker/build.sh --user 1000:1000                 # Custom UID:GID
 Util/Docker/build.sh --ubuntu-distro 22.04            # Specify Ubuntu version (default: 22.04)
+Util/Docker/build.sh --docker-gid 999                 # GID of the host's docker group
 ```
 
 ---
@@ -47,6 +60,8 @@ This mounts:
 | `CARLA_UNREAL_ENGINE_PATH` | `/workspaces/unreal-engine` | Unreal Engine 5 |
 | CARLA repository | `/workspaces/carla` | Working directory |
 | `/tmp/.X11-unix` | `/tmp/.X11-unix` | X11 display forwarding |
+| `/var/run/docker.sock` | `/var/run/docker.sock` | The host's Docker daemon, so the container can run Docker itself |
+| named volume `carla-development-ue5-22.04` | `/home/carla` | The container user's home: `.bashrc`, pip packages and the DLSS SDK survive restarts |
 
 The container starts in `/workspaces/carla` with GPU support and host networking enabled.
 
@@ -107,6 +122,7 @@ The script will:
 
 - Skip prerequisite installation (already in the Docker image).
 - Skip the UE5 download (detects `CARLA_UNREAL_ENGINE_PATH` is set).
+- Fetch the NVIDIA DLSS SDK into `~/SDKs/DLSS`, inside the `/home/carla` volume, so it survives container restarts. The engine build requires it unless `DLSS_SDK=disabled` is exported.
 - Clone CARLA content from Bitbucket into `Unreal/CarlaUnreal/Content/Carla/` (large download, only needed once).
 - Configure and build CARLA with cmake.
 
@@ -114,7 +130,7 @@ If you only want to download the content without building, you can clone it manu
 
 ```sh
 mkdir -p Unreal/CarlaUnreal/Content
-git -C Unreal/CarlaUnreal/Content clone -b ue5-dev https://bitbucket.org/carla-simulator/carla-content.git Carla
+git -C Unreal/CarlaUnreal/Content clone -b ue58-dev-carla https://bitbucket.org/carla-simulator/carla-content.git Carla
 ```
 
 Since the CARLA directory is mounted from the host, the downloaded content persists after the container exits.
@@ -163,7 +179,7 @@ docker exec carla-development-ue5-22.04 cmake --build Build --target carla-pytho
 # Build a package in the background
 docker exec carla-development-ue5-22.04 cmake --build Build --target package
 
-# Run a Python example against the running simulator
+# Install the Python client first, then run an example against the simulator
 docker exec carla-development-ue5-22.04 python3 PythonAPI/examples/generate_traffic.py
 
 # Check build configuration
@@ -201,7 +217,7 @@ Create `.devcontainer/devcontainer.json` in your CARLA repository:
     "runArgs": [
       "--rm",
       "--runtime", "nvidia",
-      "--name", "carla-ue5-development-22.04",
+      "--name", "carla-development-ue5-22.04",
       "--env", "NVIDIA_VISIBLE_DEVICES=all",
       "--env", "NVIDIA_DRIVER_CAPABILITIES=all",
       "--env", "CARLA_UNREAL_ENGINE_PATH=/workspaces/unreal-engine",
@@ -210,13 +226,18 @@ Create `.devcontainer/devcontainer.json` in your CARLA repository:
       "--volume", "${localEnv:CARLA_UNREAL_ENGINE_PATH}:/workspaces/unreal-engine",
       "--mount", "source=carla-development-ue5-22.04,target=/home/carla",
       "--gpus", "all"
-    ]
+    ],
+
+    "workspaceMount": "source=${localWorkspaceFolder},target=/workspaces/carla,type=bind",
+    "workspaceFolder": "/workspaces/carla"
 }
 ```
 
+The container name has to match the one the `docker exec` commands above use, `carla-development-ue5-22.04`, which is also what `run.sh` creates.
+
 ---
 
-## Tips & Known Issues
+## Tips and known issues
 
 1. **Do not run binaries on the host** after building inside the container. Internal paths like `/workspaces/unreal-engine` do not exist on your host. Use `cmake --build Build --target package` and run from the resulting files instead.
 

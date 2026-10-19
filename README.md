@@ -17,7 +17,7 @@ environmental conditions.
 [![CARLA Video](Docs/img/carla_ue5_readme_img.webp)](https://www.youtube.com/watch?v=q4V9GYjA1pE)
 
 >[!NOTE]
-> This is the development branch `ue5-dev` for the **Unreal Engine 5.5 version of CARLA**. This branch exists in parallel with the Unreal Engine 4.26 version of CARLA, in the `ue4-dev` branch. Please be sure that this version of CARLA is suitable for your needs as there are significant differences between the UE 5.5 and UE 4.26 versions of CARLA. 
+> This is the development branch `ue58-dev` for the **Unreal Engine 5.8 version of CARLA**. This branch exists in parallel with the Unreal Engine 4.26 version of CARLA, in the `ue4-dev` branch. Please be sure that this version of CARLA is suitable for your needs as there are significant differences between the UE 5.8 and UE 4.26 versions of CARLA. 
 
 ### Recommended system
 
@@ -28,7 +28,7 @@ environmental conditions.
 * Ubuntu 22.04 or 24.04, or Windows 11
 
  >[!NOTE]
-> You must use either Ubuntu 22.04 or 24.04, or Windows 11. The Unreal Engine 5.5 version of CARLA will not work on Ubuntu 20.04 or Windows 10 or lower.
+> You must use either Ubuntu 22.04 or 24.04, or Windows 11. The Unreal Engine 5.8 version of CARLA will not work on Ubuntu 20.04 or Windows 10 or lower.
 
 ## Documentation
 
@@ -78,16 +78,16 @@ Felipe Codevilla, Antonio Lopez, Vladlen Koltun; PMLR 78:1-16
 }
 ```
 
-## Building CARLA with Unreal Engine 5.5
+## Building CARLA with Unreal Engine 5.8
 --------------
 
-Clone this repository locally from GitHub, specifying the *ue5-dev* branch:
+Clone this repository locally from GitHub, specifying the *ue58-dev* branch:
 
 ```sh
-git clone -b ue5-dev https://github.com/carla-simulator/carla.git CarlaUE5
+git clone -b ue58-dev https://github.com/carla-simulator/carla.git CarlaUE5
 ```
 
-In order to build CARLA, you need access to the CARLA fork of Unreal Engine 5.5. In order to access this repository, you must first link your GitHub account to Epic Games by following [this guide](https://www.unrealengine.com/en-US/ue-on-github). You then also need to use your git credentials to authorise the download of the Unreal Engine 5.5 repository. 
+In order to build CARLA, you need access to the CARLA fork of Unreal Engine 5.8. In order to access this repository, you must first link your GitHub account to Epic Games by following [this guide](https://www.unrealengine.com/en-US/ue-on-github). You then also need to use your git credentials to authorise the download of the Unreal Engine 5.8 repository. 
 
 __Building in Linux__:
 
@@ -117,7 +117,7 @@ cd CarlaUE5
 sudo -E ./CarlaSetup.sh
 ```
 
-This will download and install Unreal Engine 5.5, install the prerequisites and build CARLA. It may take some time to complete and use a significant amount of disk space.
+This will download and install Unreal Engine 5.8, install the prerequisites and build CARLA. It may take some time to complete and use a significant amount of disk space.
 
 If you prefer to add the git credentials in the terminal, use the following command:
 

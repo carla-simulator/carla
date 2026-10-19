@@ -10,14 +10,17 @@ We have also included our results of a separate benchmark which measures perform
     - [__Before you begin__](#before-you-begin)
     - [__Synopsis__](#synopsis)
         - [__Flags__](#flags)
-- [__CARLA performance report__](#carla-performance-report)
+- [__How to run the benchmark__](#how-to-run-the-benchmark)
 
 
 ---
 ## The benchmark script
 
-The benchmark script can be found in `PythonAPI/util`. It has several flags available to customize the scenarios to be tested which are detailed in the synopsis below.
+The benchmark script is `performance_benchmark.py`. It has several flags available to customize the scenarios to be tested which are detailed in the synopsis below.
 
+
+!!! Warning
+    `performance_benchmark.py` is not shipped in `PythonAPI/util` on this branch: it was removed from the tree. The link in the synopsis below points to the 0.9.x version of the script, written for the UE4 server; download it into `PythonAPI/util` to run the commands on this page.
 
 ### Before you begin
 
@@ -29,13 +32,13 @@ python -m pip install -U py-cpuinfo==5.0.0 psutil python-tr gpuinfo GPUtil
 
 ### Synopsis
 
-`python3` [`performance_benchmark.py`](https://github.com/carla-simulator/carla/blob/master/PythonAPI/util/performance_benchmark.py) [`[--host HOST]`](#-host-ip_address) [`[--port PORT]`](#-port-port) [`[--file FILE]`](#-file-filenamemd) [`[--tm]`](#-tm)
-[`[--ticks TICKS]`](#-ticks) [`[--sync]`](#-sync) [`[--async]`](#-async))
-[`[--fixed_dt FIXED_DT]`](#-fixed_dt) [`[--render_mode]`](#-render_mode))
-[`[--no_render_mode]`](#-no_render_mode) [`[--show_scenarios]`](#-show_scenarios))
-[`[--sensors SENSORS [SENSORS ...]]`](#-sensors-integer))
-[`[--maps MAPS [MAPS ...]]`](#-maps-townname))
-[`[--weather WEATHER [WEATHER ...]]`](#-weather-integer)
+`python3` [`performance_benchmark.py`](https://github.com/carla-simulator/carla/blob/master/PythonAPI/util/performance_benchmark.py) [`[--host HOST]`](#flags) [`[--port PORT]`](#flags) [`[--file FILE]`](#flags) [`[--tm]`](#flags)
+[`[--ticks TICKS]`](#flags) [`[--sync]`](#flags) [`[--async]`](#flags))
+[`[--fixed_dt FIXED_DT]`](#flags) [`[--render_mode]`](#flags))
+[`[--no_render_mode]`](#flags) [`[--show_scenarios]`](#flags))
+[`[--sensors SENSORS [SENSORS ...]]`](#flags))
+[`[--maps MAPS [MAPS ...]]`](#flags))
+[`[--weather WEATHER [WEATHER ...]]`](#flags)
 
 
 
@@ -117,10 +120,10 @@ Change the weather conditions:
         # Windows:
         CarlaUnreal.exe
         # Source:
-        cmake --build Build --target launch
+        cmake --build Build/Release --target launch
 
 
-2. In a separate terminal navigate to `PythonAPI/util` to find the `performance_benchmark.py` script:
+2. In a separate terminal navigate to `PythonAPI/util`, where you saved `performance_benchmark.py`:
 
 >> * Show all possible scenarios without running them:
 ```shell

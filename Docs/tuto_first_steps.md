@@ -1,32 +1,31 @@
 # First steps with CARLA
 
-The CARLA simulator is a comprehensive solution for producing synthetic training data for applications in autonomous driving (AD) and also other robotics applications. CARLA simulates a highly realistic environment emulating real world towns, cities and highways and the vehicles and other objects that occupy these driving spaces. 
+A walk through a standard CARLA workflow: launch the server, connect a client, load a map, add an ego vehicle, traffic and a camera, and set it all in motion. It is deliberately light on detail; each section links to the page that goes deeper.
 
-The CARLA simulator is further useful as an evaluation and testing environment. You can deploy the AD agents you have trained within the simulation to test and evaluate their performance and safety, all within the security of a simulated environment, with no risk to hardware or other road users.
+Before starting, you need a [running CARLA server](start_quickstart.md#running-carla) and the `carla` Python package [installed](start_quickstart.md#install-client-library).
 
-In this tutorial, we will cover a standard workflow in CARLA, from launching the server and connecting the client, through to adding vehicles, sensors and generating training data to use for machine learning. This tutorial is meant to be light on details and go as efficiently as possible through the key steps in using CARLA to produce machine learning training data. For further details on each part of the workflow, such as the multitude of vehicles available in the blueprint library or the alternative types of sensors available, please consult the links in the text or browse the left menu. 
+* [__Launching CARLA and connecting the client__](#launching-carla-and-connecting-the-client)
+* [__Loading a map__](#loading-a-map)
+* [__Spectator navigation__](#spectator-navigation)
+* [__Adding the ego vehicle__](#adding-the-ego-vehicle)
+* [__Adding NPCs__](#adding-npcs)
+* [__Add sensors__](#add-sensors)
+* [__Animate vehicles with Traffic Manager__](#animate-vehicles-with-traffic-manager)
+* [__Choose your map__](#choose-your-map)
+* [__Choose your vehicles__](#choose-your-vehicles)
+* [__The full script__](#the-full-script)
 
-* [__Launching CARLA__](#Launching-carla-and-connecting-the-client)  
-* [__Loading a map__](#loading-a-map) 
-* [__Spectator navigation__](#spectator-navigation)  
-* [__Adding NPCs__](#adding-npcs)  
-* [__Add sensors__](#add-sensors)  
-* [__Animate vehicles__](#animate-vehicles-with-traffic-manager)  
-* [__Assign a vehicle as the Ego Vehicle__](#assign-a-vehicle-as-the-ego-vehicle)
-* [__Choose your map__](#choose-your-map) 
-* [__Choose your vehicles__](#choose-your-vehicles) 
-
-
+---
 ## Launching CARLA and connecting the client
 
-CARLA can be launched using the command line using the executable in Windows or the shell script in Linux. Follow the installation instructions for [__Linux__](start_quickstart.md) and [__Windows__](start_quickstart.md) then [__launch CARLA__](start_quickstart.md#running-carla) from the command line:
+Launch CARLA with the executable on Windows or the shell script on Linux:
 
 ```sh
 cd /carla/root
 ./CarlaUnreal.sh
 ```
- 
-To manipulate CARLA through the Python API, we need to connect the Python client to the server through an open port. The client controls the simulator through the [__client and world objects__](foundations.md#world-and-client) Open a Python notebook or create a new script, then add the following code to the start of the script or the main function:
+
+To drive CARLA through the Python API, connect a client to the server port. The client controls the simulator through the [__client and world objects__](foundations.md#world-and-client). Open a Python notebook or a new script and start with:
 
 ```py
 import carla
@@ -35,39 +34,49 @@ import random
 # Connect to the client and retrieve the world object
 client = carla.Client('localhost', 2000)
 world = client.get_world()
-
 ```
 
-The [__client__](python_api.md#carla.Client) object serves to maintain the client's connection to the server and has a number of functions for applying commands and loading or exporting data. We can load an alternative map or reload the current one (resetting to initial state) using the client object.
+The [__client__](python_api.md#carla.Client) maintains the connection to the server and carries the methods that apply commands and load or export data.
 
-The port can be chosen as any available port and is set to 2000 by default, you can also choose a host different from *localhost* by using a computer's IP address. This way, the CARLA server can be run on a networked machine, while the python client can be run from a personal computer. This is particularly useful for differentiating the GPU used for running the CARLA simulator and that used for neural network training, both of which can be highly demanding on graphics hardware.
+The port defaults to 2000 and can be any free port; the host can be an IP address instead of *localhost*, so the server can run on one machine and the client on another. That is useful to keep the GPU running the simulator separate from the one training a network.
 
 !!! Note
-    The following presumes that CARLA is running in the default [__asynchronous__](adv_synchrony_timestep.md) mode. If you have engaged synchronous mode, some of the code in the following sections might not work as expected.
+    This page assumes CARLA is running in the default [__asynchronous__](adv_synchrony_timestep.md) mode. In synchronous mode some of the code below needs a `world.tick()` to advance.
 
-Please find more information about CARLA maps [__here__](core_map.md).
+---
+## Loading a map
 
+Ask the server which maps it has, then load one:
+
+```py
+print(client.get_available_maps())
+
+world = client.load_world('Town10HD_Opt')
+```
+
+The name has to match the map file exactly, ignoring case: `Town10HD_Opt`, not `Town10`. A source build ships every town; the default package cooks `Town10HD_Opt`, `Town15`, `Mine_01`, `OpenDriveMap` and `EmptyMap`, so the others are only available from a build or a [content pack](content_packs.md).
+
+`client.reload_world()` resets the current map to its initial state without changing it. More about maps in [Maps](core_map.md).
+
+---
 ## Spectator navigation
 
-![town_10_default](../img/catalogue/maps/town10/town10default.png)
+![town_10_default](img/catalogue/maps/town10/town10default.webp)
+<div style="text-align: right"><i>The spectator view of Town10HD_Opt when the server starts. Town10HD_Opt &middot; sensor.camera.rgb &middot; Cinematic &middot; sunny afternoon</i></div>
 
-The spectator is a view into the simulation. By default, the spectator opens in a new window when you run the CARLA server on a computer with a screen attached. 
+The spectator is a view into the simulation. It opens in a new window when the server runs on a machine with a screen, and it is the quickest way to see the result of what a script does: vehicles appearing, the weather changing, a layer toggled on or off.
 
-The spectator is helpful to visualize your simulation. Using the spectator, you can familiarize yourself with the map you've loaded, and see the result of any changes you are making, such as adding vehicles, changing the weather, turning on/off various layers of the map and for debugging purposes. You can also use the spectator to monitor the behavior of an autonomous agent as it navigates the environment for development iteration.
+Fly it with the mouse and the QWE-ASD keys:
 
-You can fly the spectator around the world using the mouse to control the pitch and yaw of the spectator view and the QWE-ASD keys to move the spectator:
+| Key | Movement |
+| --- | --- |
+| `W` / `S` | forward / backward |
+| `A` / `D` | left / right |
+| `E` / `Q` | up / down |
 
-- Q - move upwards (towards the top edge of the window)
-- E - move downwards (towards the lower edge of the window)
+Click and drag in the spectator window to control pitch and yaw.
 
-- W - move forwards
-- S - move backwards
-- A - move left
-- D - move right
-
-Left click and drag the mouse in the spectator window up and down to control pitch and left and right to control yaw.
-
-The spectator and its properties can be accessed and manipulated through the Python API:
+The spectator is also an actor, so a client can read and set its transform:
 
 ```py
 # Retrieve the spectator object
@@ -75,53 +84,52 @@ spectator = world.get_spectator()
 
 # Get the location and rotation of the spectator through its transform
 transform = spectator.get_transform()
-
 location = transform.location
 rotation = transform.rotation
 
-# Set the spectator with an empty transform
+# Set the spectator at the map origin, with 0 degrees pitch, yaw and roll
 spectator.set_transform(carla.Transform())
-# This will set the spectator at the origin of the map, with 0 degrees
-# pitch, yaw and roll - a good way to orient yourself in the map
-
 ```
 
+---
+## Adding the ego vehicle
+
+The __ego vehicle__ is the focus of the simulation: the one that carries the sensors and that an autonomous stack drives. It is marked by setting its `role_name` attribute to `hero` before spawning, which is what lets the simulator treat it specially — for instance in [hybrid physics mode](adv_traffic_manager.md#hybrid-physics-mode), where only the vehicles near the ego get full physics.
+
+Spawn it first, and take its spawn point out of the list so the traffic does not collide with it:
+
+```py
+spawn_points = world.get_map().get_spawn_points()
+ego_spawn = spawn_points.pop(random.randrange(len(spawn_points)))
+
+ego_bp = world.get_blueprint_library().find('vehicle.lincoln.mkz')
+ego_bp.set_attribute('role_name', 'hero')
+ego_vehicle = world.spawn_actor(ego_bp, ego_spawn)
+```
+
+---
 ## Adding NPCs
 
-Now we've loaded the map and the server is up and running we now need to populate our simulation with some vehicles to simulate a real environment with traffic and other road users or non-player characters (NPCs).
-
-To spawn vehicles, first, we need to select the vehicles we want from the blueprint library. 
+With the ego in place, populate the map with traffic. Pick the vehicles from the blueprint library and spawn them on the remaining spawn points:
 
 ```py
 # Get the blueprint library and filter for the vehicle blueprints
 vehicle_blueprints = world.get_blueprint_library().filter('*vehicle*')
+
+# Spawn 50 vehicles on random spawn points. try_spawn_actor returns None
+# instead of raising when the point is already taken.
+for spawn_point in random.sample(spawn_points, 50):
+    world.try_spawn_actor(random.choice(vehicle_blueprints), spawn_point)
 ```
 
-Now we have the blueprints, we need to find some appropriate spots in the map to spawn our vehicles. Each CARLA map provides pre-defined spawn points spread evenly throughout the map on the roads for this purpose.
+CARLA also provides pedestrians. Vehicles, pedestrians and sensors are all __actors__; see [Actors](core_actors.md).
 
-```py
-# Get the map's spawn points
-spawn_points = world.get_map().get_spawn_points()
-
-# Spawn 50 vehicles randomly distributed throughout the map 
-# for each spawn point, we choose a random vehicle from the blueprint library
-for i in range(0,50):
-    world.try_spawn_actor(random.choice(vehicle_blueprints), random.choice(spawn_points))
-```
-
-Now we should also add a vehicle that will be the centerpoint of our simulation. To train an autonomous agent we need to simulate a the vehicle that it the autonomous agent will control. In CARLA parlance, we often refer to this vehicle as the "Ego vehicle". 
-
-```py
-ego_vehicle = world.spawn_actor(random.choice(vehicle_blueprints), random.choice(spawn_points))
-```
-
-In addition to vehicles, CARLA also provides pedestrians to add to simulations to simulate realistic driving scenarios. Vehicles and pedestrians are referred to as __actors__ in the CARLA parlance, learn more about them [__here__](core_actors.md).
-
+---
 ## Add sensors
 
-Modern autonomous vehicles understand and interpret their environment through an array of attached sensors. These sensors include things such as optical video cameras, optical flow cameras, LIDARs, RADARs and accelerometers. CARLA has models of numerous types of sensors built in to create training data for machine learning. The sensors can be attached to a vehicle, or they can be attached to a fixed point to model for example a CCTV camera.
+Autonomous vehicles perceive their environment through sensors: cameras, optical flow, LIDAR, RADAR, accelerometers. CARLA models all of them, and they can be attached to a vehicle or left at a fixed point to act as, say, a CCTV camera.
 
-Here we will attach a standard camera sensor to the ego vehicle to record some video data:
+Attach an RGB camera to the ego vehicle:
 
 ```py
 # Create a transform to place the camera on top of the vehicle
@@ -134,64 +142,91 @@ camera_bp = world.get_blueprint_library().find('sensor.camera.rgb')
 camera = world.spawn_actor(camera_bp, camera_init_trans, attach_to=ego_vehicle)
 ```
 
-Once we have spawned the camera, we need to set it recording through the `listen()` method. The listen method takes as argument a callback that defines what to do with the data. You can either stream it to another program or save it to disk.
-
-We will use a lambda function as a callback to save the data to disk:
+A sensor starts producing data when `listen()` is called with a callback that says what to do with each frame. This one saves every frame to disk:
 
 ```py
-# Start camera with PyGame callback
+# Save every frame to disk as out/<frame number>.png
 camera.listen(lambda image: image.save_to_disk('out/%06d.png' % image.frame))
 ```
 
-This will save the data to the `out/` folder as a series of PNG image files named according to the simulation frame number.
+[Sensors and data](core_sensors.md) covers the rest of the sensors and what each one returns.
 
-There are a multitude of different types of sensors to choose from. [__Here__](core_sensors.md) you can delve deeper into the array of sensors available and how to use them.
+---
+## Animate vehicles with Traffic Manager
 
-## Animate vehicles with traffic manager
-
-Now we've added our traffic and ego vehicle to the simulation and started recording camera data, we now need to set the vehicles in motion using the [__Traffic manager__](adv_traffic_manager.md). The Traffic manager is a component of CARLA that controls vehicles to autonomously move around the roads of the map within the simulation, following the road conventions and behaving like real road users. 
-
-We can find all the vehicles in the simulation using the `world.get_actors()` method, filtering for all the vehicles. We can then use the `set_autopilot()` method to hand over control of the vehicle to the Traffic Manager.
+Hand the vehicles over to the [__Traffic Manager__](adv_traffic_manager.md), which drives them around the map following the road rules:
 
 ```py
 for vehicle in world.get_actors().filter('*vehicle*'):
     vehicle.set_autopilot(True)
 ```
 
-Now your simulation is running, with numerous vehicles driving around the map and a camera recording data from one of those vehicles. This data can then be used to feed a machine learning algorithm for training an autonomous driving agent. The Traffic manager has many functions for customising traffic behaviour, learn more [__here__](tuto_G_traffic_manager.md).
-
-This is the most basic possible set up for a simulation, now you can go into further details deeper into documentation about the many extra sensors you can use to generate data, and the many other features of CARLA that can make your simulations more detailed and more realistic. 
+The simulation is now running, with traffic driving around the map and a camera recording from the ego vehicle. The Traffic Manager has many knobs for customizing that traffic; see [Traffic Manager](tuto_G_traffic_manager.md).
 
 ---
+## Choose your map
 
-## Assign a vehicle as the Ego Vehicle
+![town_10](img/catalogue/maps/town10/town10montage.webp)
+<div style="text-align: right"><i>Town10HD_Opt from the default spectator position, from above, and at street level. Town10HD_Opt &middot; sensor.camera.rgb &middot; Cinematic &middot; sunny afternoon</i></div>
 
-The __Ego Vehicle__ is an important concept to bear in mind when using CARLA. The Ego Vehicle refers to the vehicle that will be the focus of the simulation. In most CARLA use cases it's likely to be the vehicle to which you will attach your sensors and/or the vehicle that your autonomous driving machine learning stack will control. It is important because it serves as the basis for some simulation operations that help improve the efficiency of the simulation, like for example:
+CARLA ships several towns, from a dense city centre to a mining environment. Browse them in the [map catalogue](catalogue.md) and load the one that suits the scenario.
 
-* __Hybrid Physics Mode__: if your simulation contains a lot of vehicles controlled by the Traffic Manager, calculating physics for all of these vehicles is very computationally expensive. The [Hybrid Physics Mode](adv_traffic_manager.md#hybrid-physics-mode) enables physics calculation to be limited to the vehicles in the vicinity of the Ego Vehicle, hence saving computing resources.
-
-To define the Ego Vehicle, you should set the `role_name` attribute of the vehicle [carla.Actor](python_api.md#carlaactor) object's [blueprint](python_api.md#carlaactorblueprint) when you are spawning your Ego Vehicle:
-
-```py
-
-ego_bp = world.get_blueprint_library().find('vehicle.lincoln.mkz')
-
-ego_bp.set_attribute('role_name', 'hero')
-
-ego_vehicle = world.spawn_actor(ego_bp, random.choice(spawn_points))
-
-```
-
+---
 ## Choose your vehicles
 
+![vehicles_overview](img/catalogue/vehicles/vehicle_montage.webp)
+<div style="text-align: right"><i>The vehicle blueprints.</i></div>
 
-![vehicles_overview](../img/catalogue/vehicles/vehicle_montage.webp)
-
-CARLA provides a library of vehicles to fill your simulation with traffic. Browse the vehicle models in the [CARLA vehicle catalogue](catalogue_vehicles.md). 
-
-You can see all available vehicle blueprints by filtering the blueprint library. 
+CARLA provides a library of vehicles to fill a simulation with traffic. Browse the models in the [vehicle catalogue](catalogue_vehicles.md), or list the blueprints from a client:
 
 ```py
 for bp in world.get_blueprint_library().filter('vehicle'):
     print(bp.id)
 ```
+
+---
+## The full script
+
+The pieces above, in order, with the cleanup that keeps the server usable afterwards:
+
+```py
+import carla
+import random
+
+client = carla.Client('localhost', 2000)
+client.set_timeout(10.0)
+world = client.load_world('Town10HD_Opt')
+
+actors = []
+camera = None
+try:
+    spawn_points = world.get_map().get_spawn_points()
+    ego_spawn = spawn_points.pop(random.randrange(len(spawn_points)))
+
+    ego_bp = world.get_blueprint_library().find('vehicle.lincoln.mkz')
+    ego_bp.set_attribute('role_name', 'hero')
+    ego_vehicle = world.spawn_actor(ego_bp, ego_spawn)
+    actors.append(ego_vehicle)
+
+    vehicle_blueprints = world.get_blueprint_library().filter('*vehicle*')
+    for spawn_point in random.sample(spawn_points, 50):
+        npc = world.try_spawn_actor(random.choice(vehicle_blueprints), spawn_point)
+        if npc is not None:
+            actors.append(npc)
+
+    camera_bp = world.get_blueprint_library().find('sensor.camera.rgb')
+    camera = world.spawn_actor(camera_bp, carla.Transform(carla.Location(z=1.5)), attach_to=ego_vehicle)
+    camera.listen(lambda image: image.save_to_disk('out/%06d.png' % image.frame))
+
+    for vehicle in world.get_actors().filter('*vehicle*'):
+        vehicle.set_autopilot(True)
+
+    input('Recording. Press enter to stop.\n')
+finally:
+    if camera is not None:
+        camera.stop()
+        camera.destroy()
+    client.apply_batch([carla.command.DestroyActor(actor) for actor in actors])
+```
+
+This is the most basic setup. From here, the rest of the documentation covers the other sensors, the weather, the recorder and everything else that makes a simulation more realistic.

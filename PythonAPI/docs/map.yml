@@ -129,7 +129,7 @@
   - class_name: Map
     # - DESCRIPTION ------------------------
     doc: >
-      Class containing the road information and waypoint managing. Data is retrieved from an OpenDRIVE file that describes the road. A query system is defined which works hand in hand with carla.Waypoint to translate geometrical information from the .xodr to natural world points. CARLA is currently working with [OpenDRIVE 1.4 standard](http://www.opendrive.org/docs/OpenDRIVEFormatSpecRev1.4H.pdf).
+      Class containing the road information and waypoint managing. Data is retrieved from an OpenDRIVE file that describes the road. A query system is defined which works hand in hand with carla.Waypoint to translate geometrical information from the .xodr to natural world points. CARLA is currently working with [OpenDRIVE 1.4 standard](https://www.asam.net/standards/detail/opendrive/).
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: name
@@ -204,6 +204,10 @@
       params:
       - param_name: location
         type: carla.Location
+      - param_name: projection
+        type: carla.GeoProjectionTM
+        doc: >
+          Projection to use. A carla.GeoProjectionUTM, carla.GeoProjectionWebMerc or carla.GeoProjectionLCC2SP is also accepted. Omit it to use the map's own projection.
       return: carla.GeoLocation
       doc: >
         Converts a given `location`, a point in the simulation, to a carla.GeoLocation, which represents world coordinates. The geographical location of the map is defined inside OpenDRIVE within the tag <b><georeference></b>.
@@ -364,7 +368,7 @@
   - class_name: LaneMarking
     # - DESCRIPTION ------------------------
     doc: >
-      Class that gathers all the information regarding a lane marking according to [OpenDRIVE 1.4 standard](http://www.opendrive.org/docs/OpenDRIVEFormatSpecRev1.4H.pdf) standard.
+      Class that gathers all the information regarding a lane marking according to [OpenDRIVE 1.4 standard](https://www.asam.net/standards/detail/opendrive/) standard.
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: color
@@ -390,7 +394,7 @@
     doc: >
       Waypoints in CARLA are described as 3D directed points. They have a carla.Transform which locates the waypoint in a road and orientates it according to the lane. They also store the road information belonging to said point regarding its lane and lane markings.  
       <br><br>
-      All the information regarding waypoints and the [waypoint API](../../core_map/#navigation-in-carla) is retrieved as provided by the OpenDRIVE file. Once the client asks for the map object to the server, no longer communication will be needed.
+      All the information regarding waypoints and the [waypoint API](core_map.md#navigation-in-carla) is retrieved as provided by the OpenDRIVE file. Once the client asks for the map object to the server, no longer communication will be needed.
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: id
@@ -416,11 +420,11 @@
     - var_name: junction_id
       type: int
       doc: >
-        OpenDRIVE junction's id. For more information refer to OpenDRIVE [documentation](http://www.opendrive.org/docs/OpenDRIVEFormatSpecRev1.4H.pdf#page=20)
+        OpenDRIVE junction's id. For more information refer to OpenDRIVE [documentation](https://www.asam.net/standards/detail/opendrive/)
     - var_name: lane_id
       type: int
       doc: >
-        OpenDRIVE lane's id, this value can be positive or negative which represents the direction of the current lane with respect to the road. For more information refer to OpenDRIVE [documentation](http://www.opendrive.org/docs/OpenDRIVEFormatSpecRev1.4H.pdf#page=20)
+        OpenDRIVE lane's id, this value can be positive or negative which represents the direction of the current lane with respect to the road. For more information refer to OpenDRIVE [documentation](https://www.asam.net/standards/detail/opendrive/)
     - var_name: s
       type: float
       param_units: meters
@@ -1091,7 +1095,7 @@
   - class_name: LandmarkType
     # - DESCRIPTION ------------------------
     doc: >
-      Helper class containing a set of commonly used landmark types as defined by the default country code in the [OpenDRIVE standard](http://opendrive.org/docs/OpenDRIVEFormatSpecRev1.5M.pdf) (Germany 2017).
+      Helper class containing a set of commonly used landmark types as defined by the default country code in the [OpenDRIVE standard](https://www.asam.net/standards/detail/opendrive/) (Germany 2017).
 
       __carla.Landmark does not reference this class__. The landmark type is a string that varies greatly depending on the country code being used. This class only makes it easier to manage some of the most commonly used in the default set by describing them as an enum.
     # - PROPERTIES -------------------------
@@ -1206,7 +1210,7 @@
   - class_name: Landmark
     # - DESCRIPTION ------------------------
     doc: >
-      Class that defines any type of traffic landmark or sign affecting a road. These class mediates between the [OpenDRIVE 1.4 standard](http://www.opendrive.org/docs/OpenDRIVEFormatSpecRev1.4H.pdf) definition of the landmarks and their representation in the simulation.
+      Class that defines any type of traffic landmark or sign affecting a road. These class mediates between the [OpenDRIVE 1.4 standard](https://www.asam.net/standards/detail/opendrive/) definition of the landmarks and their representation in the simulation.
       This class retrieves all the information defining a landmark in OpenDRIVE and facilitates information about which lanes does it affect and when.
 
       Landmarks will be accessed by carla.Waypoint objects trying to retrieve the regulation of their lane. Therefore some attributes depend on the waypoint that is consulting the landmark and so, creating the object.

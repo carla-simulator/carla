@@ -1,9 +1,19 @@
 # Bounding boxes
 
-A significant factor in the problem of enabling autonomous vehicles to understand their environments lies in estimating the position and orientation of objects surrounding the vehicle. For this purpose, it is necessary to infer the position of the object's bounding box. 
+A significant factor in the problem of enabling autonomous vehicles to understand their environments lies in estimating the position and orientation of objects surrounding the vehicle. For this purpose, it is necessary to infer the position of the object's bounding box.
 
 Objects within the CARLA simulation all have a bounding box and the CARLA Python API provides functions to access the bounding box of each object. This tutorial shows how to access bounding boxes and then project them into the camera plane.
 
+- [__Set up the simulator__](#set-up-the-simulator)
+- [__Geometric transformations__](#geometric-transformations)
+- [__Bounding boxes__](#bounding-boxes_1)
+- [__Rendering the bounding boxes__](#rendering-the-bounding-boxes)
+- [__Vehicle bounding boxes__](#vehicle-bounding-boxes)
+- [__2D bounding boxes__](#2d-bounding-boxes)
+- [__Exporting bounding boxes__](#exporting-bounding-boxes)
+- [__Cleaning up__](#cleaning-up)
+
+---
 ## Set up the simulator
 
 Let's lay down the standard CARLA boilerplate code, set up the client and world objects, spawn a vehicle and attach a camera to it:
@@ -21,30 +31,34 @@ client = carla.Client('localhost', 2000)
 world  = client.get_world()
 bp_lib = world.get_blueprint_library()
 
+# Get the map spawn points
+spawn_points = world.get_map().get_spawn_points()
+
 # spawn vehicle
-vehicle_bp =bp_lib.find('vehicle.lincoln.mkz_2020')
+vehicle_bp = bp_lib.find('vehicle.lincoln.mkz')
 vehicle = world.try_spawn_actor(vehicle_bp, random.choice(spawn_points))
 
 # spawn camera
 camera_bp = bp_lib.find('sensor.camera.rgb')
 camera_init_trans = carla.Transform(carla.Location(z=2))
 camera = world.spawn_actor(camera_bp, camera_init_trans, attach_to=vehicle)
-vehicle.set_autopilot(True)
 
-# Set up the simulator in synchronous mode
+# Set up the simulator in synchronous mode, the Traffic Manager with it
 settings = world.get_settings()
 settings.synchronous_mode = True # Enables synchronous mode
 settings.fixed_delta_seconds = 0.05
 world.apply_settings(settings)
 
-# Get the map spawn points
-spawn_points = world.get_map().get_spawn_points()
+traffic_manager = client.get_trafficmanager()
+traffic_manager.set_synchronous_mode(True)
+vehicle.set_autopilot(True)
 
 # Create a queue to store and retrieve the sensor data
 image_queue = queue.Queue()
 camera.listen(image_queue.put)
 ```
 
+---
 ## Geometric transformations
 
 We want to take 3D points from the simulation and project them into the 2D plane of the camera. Firstly, we need to construct the camera projection matrix:
@@ -62,28 +76,32 @@ def build_projection_matrix(w, h, fov):
 We want to use the camera projection matrix to project 3D to 2D points. The first step is to transform the 3D coordinates in world coordinates into camera coordinates, using the inverse camera transform that can be retrieved using `camera.get_transform().get_inverse_matrix()`. Following this, we use the camera projection matrix to project the 3D points in camera coordinates into the 2D camera plane:
 
 ```py
-
 def get_image_point(loc, K, w2c):
-        # Calculate 2D projection of 3D coordinate
+    # Calculate the 2D projection of a 3D coordinate, or None when the point
+    # is behind the camera, where the projection would come out mirrored.
 
-        # Format the input coordinate (loc is a carla.Position object)
-        point = np.array([loc.x, loc.y, loc.z, 1])
-        # transform to camera coordinates
-        point_camera = np.dot(w2c, point)
+    # Format the input coordinate (loc is a carla.Location object)
+    point = np.array([loc.x, loc.y, loc.z, 1])
+    # transform to camera coordinates
+    point_camera = np.dot(w2c, point)
 
-        # New we must change from UE4's coordinate system to an "standard"
-        # (x, y ,z) -> (y, -z, x)
-        # and we remove the fourth componebonent also
-        point_camera = [point_camera[1], -point_camera[2], point_camera[0]]
+    # Now we must change from Unreal's coordinate system to a "standard" one
+    # (x, y, z) -> (y, -z, x), and remove the fourth component
+    point_camera = [point_camera[1], -point_camera[2], point_camera[0]]
 
-        # now project 3D->2D using the camera matrix
-        point_img = np.dot(K, point_camera)
-        # normalize
-        point_img[0] /= point_img[2]
-        point_img[1] /= point_img[2]
+    if point_camera[2] <= 0:
+        return None
 
-        return point_img[0:2]
+    # now project 3D->2D using the camera matrix
+    point_img = np.dot(K, point_camera)
+    # normalize
+    point_img[0] /= point_img[2]
+    point_img[1] /= point_img[2]
+
+    return point_img[0:2]
 ```
+
+Every caller has to skip the edges whose vertices come back as `None`, otherwise a box that is partly behind the camera draws long spurious lines across the image.
 
 Now that we have the functions to project 3D -> 2D we retrieve the camera specifications:
 
@@ -101,9 +119,10 @@ fov = camera_bp.get_attribute("fov").as_float()
 K = build_projection_matrix(image_w, image_h, fov)
 ```
 
+---
 ## Bounding boxes
 
-CARLA objects all have an associated bounding box. CARLA [actors](python_api.md#carla.Actor) have a `bounding_box` attribute which has a [carla.BoundingBox](python_api.md#carla.BoundingBox) object type. The vertices for a bounding box can be retrieved through one of the getter functions `.get_world_vertices()` or `get_local_vertices()`. 
+CARLA objects all have an associated bounding box. CARLA [actors](python_api.md#carla.Actor) have a `bounding_box` attribute which has a [carla.BoundingBox](python_api.md#carla.BoundingBox) object type. The vertices for a bounding box can be retrieved through one of the getter functions `.get_world_vertices()` or `get_local_vertices()`.
 
 It is important to note that to get the 3D coordinates of the bounding box in world coordinates, you need to include the transform of the actor as an argument to the `get_world_vertices()` method like so:
 
@@ -121,10 +140,10 @@ bounding_box_set = world.get_level_bbs(carla.CityObjectLabel.TrafficLight)
 nearby_bboxes = []
 for bbox in bounding_box_set:
     if bbox.location.distance(actor.get_transform().location) < 50:
-        nearby_bboxes
+        nearby_bboxes.append(bbox)
 ```
 
-This list can be further filtered using actor location to identify objects that are nearby and therefore likely to be within the field of view of a camera attached to an actor. 
+This list can be further filtered using actor location to identify objects that are nearby and therefore likely to be within the field of view of a camera attached to an actor.
 
 In order to draw a bounding box onto the camera image, we will need to join the vertices in the appropriate order to create edges. To achieve this we need the following list of edge pairs:
 
@@ -133,9 +152,10 @@ edges = [[0,1], [1,3], [3,2], [2,0], [0,4], [4,5], [5,1], [5,7], [7,6], [6,4], [
 
 ```
 
+---
 ## Rendering the bounding boxes
 
-Now that we have our geometric projections and our simulation set up, we can progress to creating the game loop and rendering the bounding boxes into a scene. 
+Now that we have our geometric projections and our simulation set up, we can progress to creating the game loop and rendering the bounding boxes into a scene.
 
 ```py
 # Set up the set of bounding boxes from the level
@@ -196,7 +216,9 @@ while True:
                 for edge in edges:
                     # Join the vertices into edges
                     p1 = get_image_point(verts[edge[0]], K, world_2_camera)
-                    p2 = get_image_point(verts[edge[1]],  K, world_2_camera)
+                    p2 = get_image_point(verts[edge[1]], K, world_2_camera)
+                    if p1 is None or p2 is None:
+                        continue
                     # Draw the edges into the camera output
                     cv2.line(img, (int(p1[0]),int(p1[1])), (int(p2[0]),int(p2[1])), (0,0,255, 255), 1)
 
@@ -213,11 +235,13 @@ cv2.destroyAllWindows()
 
 Now we are rendering 3D bounding boxes into the images so we can observe them in the camera sensor output.
 
-![3D_bbox_traffic_lights](img/tuto_G_bounding_box/3d_bbox_traffic_lights.gif)
+![3D_bbox_traffic_lights](img/tuto_G_bounding_boxes/bbox_3d_traffic_lights.webp)
+<div style="text-align: right"><i>3D boxes of traffic-light heads (orange) and traffic signs (cyan) from world.get_level_bbs(). Town10HD_Opt &middot; sensor.camera.rgb &middot; AutomotiveHDR &middot; sunny afternoon</i></div>
 
+---
 ## Vehicle bounding boxes
 
-We may also want to render the bounding boxes for actors, particularly for vehicles. 
+We may also want to render the bounding boxes for actors, particularly for vehicles.
 
 Firstly, let's add some other vehicles to our simulation:
 
@@ -279,12 +303,13 @@ while True:
                 ray = npc.get_transform().location - vehicle.get_transform().location
 
                 if forward_vec.dot(ray) > 1:
-                    p1 = get_image_point(bb.location, K, world_2_camera)
                     verts = [v for v in bb.get_world_vertices(npc.get_transform())]
                     for edge in edges:
                         p1 = get_image_point(verts[edge[0]], K, world_2_camera)
-                        p2 = get_image_point(verts[edge[1]],  K, world_2_camera)
-                        cv2.line(img, (int(p1[0]),int(p1[1])), (int(p2[0]),int(p2[1])), (255,0,0, 255), 1)        
+                        p2 = get_image_point(verts[edge[1]], K, world_2_camera)
+                        if p1 is None or p2 is None:
+                            continue
+                        cv2.line(img, (int(p1[0]),int(p1[1])), (int(p2[0]),int(p2[1])), (255,0,0, 255), 1)
         
     cv2.imshow('ImageWindowName',img)
     if cv2.waitKey(1) == ord('q'):
@@ -292,11 +317,13 @@ while True:
 cv2.destroyAllWindows()
 ```
 
-![3D_bbox_vehicles](img/tuto_G_bounding_box/3d_bbox_vehicle.gif)
+![3D_bbox_vehicles](img/tuto_G_bounding_boxes/bbox_3d_vehicles.webp)
+<div style="text-align: right"><i>3D bounding boxes of the vehicles in view. Town10HD_Opt &middot; sensor.camera.rgb &middot; AutomotiveHDR &middot; sunny afternoon</i></div>
 
-### 2D bounding boxes
+---
+## 2D bounding boxes
 
-It is common for neural networks to be trained to detect 2D bounding boxes rather than the 3D bounding boxes demonstrated above. The previous script can be easily extended to generate 2D bounding boxes. We simply need to use the extremities of the 3D bounding boxes. We find, for each bounding box we render, the leftmost, rightmost, highest and lowest projected vertex in image coordinates. 
+It is common for neural networks to be trained to detect 2D bounding boxes rather than the 3D bounding boxes demonstrated above. The previous script can be easily extended to generate 2D bounding boxes. We simply need to use the extremities of the 3D bounding boxes. We find, for each bounding box we render, the leftmost, rightmost, highest and lowest projected vertex in image coordinates.
 
 ```py
 
@@ -330,7 +357,6 @@ while True:
                 ray = npc.get_transform().location - vehicle.get_transform().location
 
                 if forward_vec.dot(ray) > 1:
-                    p1 = get_image_point(bb.location, K, world_2_camera)
                     verts = [v for v in bb.get_world_vertices(npc.get_transform())]
                     x_max = -10000
                     x_min = 10000
@@ -339,6 +365,8 @@ while True:
 
                     for vert in verts:
                         p = get_image_point(vert, K, world_2_camera)
+                        if p is None:
+                            continue
                         # Find the rightmost vertex
                         if p[0] > x_max:
                             x_max = p[0]
@@ -365,15 +393,17 @@ cv2.destroyAllWindows()
 
 ```
 
-![2D_bbox_vehicles](img/tuto_G_bounding_box/2d_bbox.gif)
+![2D_bbox_vehicles](img/tuto_G_bounding_boxes/bbox_2d.webp)
+<div style="text-align: right"><i>2D bounding boxes of vehicles (red) and pedestrians (yellow) projected on a hood camera; hidden actors are filtered with a depth camera. Town10HD_Opt &middot; sensor.camera.rgb &middot; AutomotiveHDR &middot; sunny afternoon</i></div>
 
+---
 ## Exporting bounding boxes
 
-Rendering bounding boxes is useful for us to ensure the bounding boxes are correct for debugging purposes. However, if we wanted to use them practically in training a neural network, we will want to export them. There are a number of different formats used by the common data repositories used for autonomous driving and object detection, such as [__KITTI__](http://www.cvlibs.net/datasets/kitti/) or [__PASCAL VOC__](http://host.robots.ox.ac.uk/pascal/VOC/) or [__MicroSoft COCO__](https://cocodataset.org/#home).
+Rendering bounding boxes is useful for us to ensure the bounding boxes are correct for debugging purposes. However, if we wanted to use them practically in training a neural network, we will want to export them. There are a number of different formats used by the common data repositories used for autonomous driving and object detection, such as [__KITTI__](http://www.cvlibs.net/datasets/kitti/) or [__PASCAL VOC__](http://host.robots.ox.ac.uk/pascal/VOC/) or [__Microsoft COCO__](https://cocodataset.org/#home).
 
 ### Pascal VOC format
 
-These datasets commonly use JSON or XML formats to store annotations. There is a convenient Python library for the PASCAL VOC format. 
+These datasets commonly use JSON or XML formats to store annotations. There is a convenient Python library for the PASCAL VOC format.
 
 ```py
 
@@ -408,7 +438,6 @@ while True:
                 forward_vec = vehicle.get_transform().get_forward_vector()
                 ray = npc.get_transform().location - vehicle.get_transform().location
                 if forward_vec.dot(ray) > 1:
-                    p1 = get_image_point(bb.location, K, world_2_camera)
                     verts = [v for v in bb.get_world_vertices(npc.get_transform())]
                     x_max = -10000
                     x_min = 10000
@@ -416,6 +445,8 @@ while True:
                     y_min = 10000
                     for vert in verts:
                         p = get_image_point(vert, K, world_2_camera)
+                        if p is None:
+                            continue
                         if p[0] > x_max:
                             x_max = p[0]
                         if p[0] < x_min:
@@ -435,11 +466,12 @@ while True:
 
 ```
 
-For every rendered frame of your simulation, you will now export an accompanying XML file containing the details of the bounding boxes in the frame. 
+For every rendered frame of your simulation, you will now export an accompanying XML file containing the details of the bounding boxes in the frame.
 
-![xml_bbox_files](img/tuto_G_bounding_box/xml_bbox_files.png)
+![xml_bbox_files](img/tuto_G_bounding_boxes/xml_bbox_files.png)
+<div style="text-align: right"><i>The output folder: one image and one PASCAL VOC <code>.xml</code> annotation per frame.</i></div>
 
-In the PASCAL VOC format, the XML files contain information referring to the accompanying image file, the image dimensions and can include details such as vehicle type if needed. 
+In the PASCAL VOC format, the XML files contain information referring to the accompanying image file, the image dimensions and can include details such as vehicle type if needed.
 
 ```xml
 <!-- Example PASCAL VOC format file-->
@@ -483,14 +515,14 @@ In the PASCAL VOC format, the XML files contain information referring to the acc
 
 ```
 
-### MicroSoft COCO format
+### Microsoft COCO format
 
-Another popular export format is [__MicroSoft COCO__](https://cocodataset.org/#home). The COCO format uses JSON files to save references to images and annotations. The format includes the images and annotations in the fields of a single JSON file, along with information on the dataset and licenses. In contrast to some other formats, references to all collected images and all associated annotations go in the same file.
+Another popular export format is [__Microsoft COCO__](https://cocodataset.org/#home). The COCO format uses JSON files to save references to images and annotations. The format includes the images and annotations in the fields of a single JSON file, along with information on the dataset and licenses. In contrast to some other formats, references to all collected images and all associated annotations go in the same file.
 
-You should create a JSON dictionary similar to the following example:
+Build a Python dictionary named `simulation_dataset` with this shape (the `...` mark where entries repeat):
 
-```py
-simulation_dataset = {
+```json
+{
     "info": {},
 
     "licenses": [
@@ -544,4 +576,24 @@ with open('simulation_data.json', 'w') as json_file:
 More details about the COCO data format can be found [__here__](https://www.immersivelimit.com/tutorials/create-coco-annotations-from-scratch/#create-custom-coco-dataset)
 
 
-*It should be noted that in this tutorial we have not accounted for overlapping bounding boxes. Additional work would be required in order to identify foreground bounding boxes in the case where they overlap.*  
+!!! Note
+    This tutorial does not account for overlapping bounding boxes. Identifying which box is in the foreground when two overlap takes extra work — a depth camera, or the instance segmentation camera, resolves it.  
+---
+## Cleaning up
+
+Every snippet on this page puts the server in synchronous mode and leaves actors behind. Restore it before the script exits, or the next script connecting to this server will hang waiting for ticks that nobody sends:
+
+```py
+settings = world.get_settings()
+settings.synchronous_mode = False
+settings.fixed_delta_seconds = None
+world.apply_settings(settings)
+traffic_manager.set_synchronous_mode(False)
+
+camera.stop()
+camera.destroy()
+vehicle.destroy()
+cv2.destroyAllWindows()
+```
+
+A complete, runnable version of this workflow, with the teardown in a `finally` block, is in the `bounding-boxes` skill under [`Skills/python-api/bounding-boxes/`](https://github.com/carla-simulator/carla/tree/ue58-dev/Skills/python-api/bounding-boxes).

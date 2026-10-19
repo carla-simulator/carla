@@ -187,9 +187,9 @@
     # - METHODS ----------------------------
     methods:
     - def_name: get_color_coded_flow
-      return: carla.Image
+      return: carla.FakeImage
       doc: >
-        Visualization helper. Converts the optical flow image to an RGB image.
+        Visualization helper. Converts the optical flow image to an RGB image, with the direction of motion as hue and its magnitude as saturation. The result is a carla.FakeImage, so it carries no frame or timestamp.
     # --------------------------------------
     - def_name: __getitem__
       params:
@@ -265,7 +265,7 @@
     parent: carla.SensorData
     # - DESCRIPTION ------------------------
     doc: >
-      Class that defines the LIDAR data retrieved by a <b>sensor.lidar.ray_cast</b>. This essentially simulates a rotating LIDAR using ray-casting. Learn more about this [here](ref_sensors.md#lidar-raycast-sensor).
+      Class that defines the LIDAR data retrieved by a <b>sensor.lidar.ray_cast</b>. This essentially simulates a rotating LIDAR using ray-casting. Learn more about this [here](ref_sensors.md#lidar-sensor).
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: channels
@@ -346,7 +346,7 @@
     parent: carla.SensorData
     # - DESCRIPTION ------------------------
     doc: >
-      Class that defines the semantic LIDAR data retrieved by a <b>sensor.lidar.ray_cast_semantic</b>. This essentially simulates a rotating LIDAR using ray-casting. Learn more about this [here](ref_sensors.md#semanticlidar-raycast-sensor).
+      Class that defines the semantic LIDAR data retrieved by a <b>sensor.lidar.ray_cast_semantic</b>. This essentially simulates a rotating LIDAR using ray-casting. Learn more about this [here](ref_sensors.md#semantic-lidar-sensor).
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: channels

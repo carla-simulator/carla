@@ -1,8 +1,17 @@
-# Pygame for vehicle control 
+# Pygame for vehicle control
 
-[__PyGame__](https://www.pygame.org/news) is a cross-platform set of Python modules useful for writing video games. It provides a useful way of rendering real-time visual output from CARLA in order to monitor sensor output, such as cameras. PyGame can also capture keyboard events, so it is a good way to control actors such as vehicles.
+[__PyGame__](https://www.pygame.org/) is a cross-platform set of Python modules useful for writing video games. It provides a useful way of rendering real-time visual output from CARLA in order to monitor sensor output, such as cameras. PyGame can also capture keyboard events, so it is a good way to control actors such as vehicles.
 
 In this tutorial, we will learn to set up a simple PyGame interface that allows us to monitor autonomous traffic driving around a map controlled by the Traffic Manager (TM) and then take manual control over any vehicle using the keyboard.
+
+!!! Note
+    `PythonAPI/examples/manual_control.py` already is a full PyGame client, with every sensor, the HUD and the recorder wired up; `manual_control_5cam.py`, `manual_control_fisheye.py` and `manual_control_rtlens.py` are variants of it. This page builds a minimal one from scratch to show how the pieces fit.
+
+| Key | Action |
+| --- | --- |
+| `TAB` | Switch the camera to another randomly chosen vehicle |
+| `RETURN` | Take manual control of the current vehicle |
+| Arrow keys | Throttle, brake and steering, once in manual control |
 
 ## Setting up the simulator and initialising traffic manager
 
@@ -32,11 +41,12 @@ traffic_manager.set_synchronous_mode(True)
 traffic_manager.set_random_device_seed(0)
 random.seed(0)
 
-# We will aslo set up the spectator so we can see what we do
+# We will also set up the spectator so we can see what we do
 spectator = world.get_spectator()
 
 ```
 
+---
 ## Spawning vehicles
 
 We want to create a collection of vehicles spawned throughout the city and give the TM control over them.
@@ -45,12 +55,9 @@ We want to create a collection of vehicles spawned throughout the city and give 
 # Retrieve the map's spawn points
 spawn_points = world.get_map().get_spawn_points()
 
-# Select some models from the blueprint library
-models = ['dodge', 'audi', 'model3', 'mini', 'mustang', 'lincoln', 'prius', 'nissan', 'crown', 'impala']
-blueprints = []
-for vehicle in world.get_blueprint_library().filter('*vehicle*'):
-    if any(model in vehicle.id for model in models):
-        blueprints.append(vehicle)
+# Cars only: a substring filter on model names also matches the mining truck
+blueprints = [bp for bp in world.get_blueprint_library().filter('*vehicle*')
+              if bp.get_attribute('base_type').as_str() == 'car']
 
 # Set a max number of vehicles and prepare a list for those we spawn
 max_vehicles = 50
@@ -72,6 +79,7 @@ for vehicle in vehicles:
 
 ```
 
+---
 ## Rendering camera output and controlling vehicles with PyGame
 
 Now we have a city populated with traffic, we can set up a camera to follow one of the cars and set up a control interface to take over it with keyboard input.
@@ -101,13 +109,16 @@ Now we will create an object to handle the control logic. This can often need so
 class ControlObject(object):
     def __init__(self, veh):
         
-        # Conrol parameters to store the control state
+        # Control parameters to store the control state
         self._vehicle = veh
         self._steer = 0
         self._throttle = False
         self._brake = False
         self._steer = None
         self._steer_cache = 0
+        # Until RETURN is pressed the vehicle stays on autopilot and this
+        # class must not fight the Traffic Manager for its controls.
+        self._manual = False
         # A carla.VehicleControl object is needed to alter the 
         # vehicle's control state
         self._control = carla.VehicleControl()
@@ -118,6 +129,7 @@ class ControlObject(object):
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_RETURN:
                 self._vehicle.set_autopilot(False)
+                self._manual = True
             if event.key == pygame.K_UP:
                 self._throttle = True
             if event.key == pygame.K_DOWN:
@@ -141,10 +153,13 @@ class ControlObject(object):
     # if the key remains pressed
     def process_control(self):
         
-        if self._throttle: 
+        if not self._manual:
+            return
+
+        if self._throttle:
             self._control.throttle = min(self._control.throttle + 0.01, 1)
             self._control.gear = 1
-            self._control.brake = False
+            self._control.brake = 0.0
         elif not self._brake:
             self._control.throttle = 0.0
         
@@ -168,7 +183,7 @@ class ControlObject(object):
                 self._steer_cache += 0.03
             if self._steer == -1:
                 self._steer_cache -= 0.03
-            min(0.7, max(-0.7, self._steer_cache))
+            self._steer_cache = min(0.7, max(-0.7, self._steer_cache))
             self._control.steer = round(self._steer_cache,1)
         else:
             if self._steer_cache > 0.0:
@@ -179,7 +194,7 @@ class ControlObject(object):
                 self._steer_cache = 0.0
             self._control.steer = round(self._steer_cache,1)
             
-        # Ápply the control parameters to the ego vehicle
+        # Apply the control parameters to the ego vehicle
         self._vehicle.apply_control(self._control)
   
 ```
@@ -223,7 +238,7 @@ pygame.display.flip()
 
 ```
 
-Now we can start the game loop. The view can cycle randomly through different vehicles in the map and visualize their journey through the traffic while controlled by the TM. Pressing the TAB key switches to a randomly chosen new vehicle and pressing the RETURN key enables manual control of the vehicle through the arrow keys on the keyboard. This kind of setup could be useful for example if needing to challenge an agent with erratic driving behaviour. The selection logic could be tweaked to select a vehicle close to the one driven by the agent. 
+Now we can start the game loop. The view can cycle randomly through different vehicles in the map and visualize their journey through the traffic while controlled by the TM. Pressing the TAB key switches to a randomly chosen new vehicle and pressing the RETURN key enables manual control of the vehicle through the arrow keys on the keyboard. This kind of setup could be useful for example if needing to challenge an agent with erratic driving behaviour. The selection logic could be tweaked to select a vehicle close to the one driven by the agent.
 
 
 ```py
@@ -270,8 +285,17 @@ while not crashed:
 
 # Stop camera and quit PyGame after exiting game loop
 camera.stop()
+camera.destroy()
 pygame.quit()
 
+# Restore the server: asynchronous mode, and no vehicles left behind
+settings = world.get_settings()
+settings.synchronous_mode = False
+settings.fixed_delta_seconds = None
+world.apply_settings(settings)
+traffic_manager.set_synchronous_mode(False)
+client.apply_batch([carla.command.DestroyActor(v) for v in vehicles])
 ```
 
-![manual_control](../img/tuto_G_pygame/manual_control.gif)
+![manual_control](img/tuto_G_pygame/pygame_chase_camera.webp)
+<div style="text-align: right"><i>Third-person chase camera following a vehicle on autopilot, the view the tutorial renders in its pygame window. Town10HD_Opt &middot; sensor.camera.rgb &middot; Cinematic &middot; sunny afternoon</i></div>

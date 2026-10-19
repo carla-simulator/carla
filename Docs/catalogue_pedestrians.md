@@ -5,10 +5,12 @@ The images in this page were captured by PythonAPI/docs/catalogue_doc_gen.py wit
 Town: Town10HD_Opt
 
 Actor transform: Transform(Location(x=-88.099998, y=-73.599998, z=1.000000), Rotation(pitch=0.000000, yaw=90.000000, roll=0.000000))
-Camera transform: Transform(Location(x=-88.099998, y=-70.800003, z=1.550000), Rotation(pitch=-5.000000, yaw=270.000000, roll=0.000000))
-Camera resolution: 1848x1016
+Camera: framed on each actor's bounding box, bearing=10.0, fill=0.95, min_distance=2.5, pitch=-4.0
+Camera resolution: 1920x1080
+camera.fov = 60
+camera.post_process_profile = Cinematic
 
-weather.cloudiness = 20
+weather.cloudiness = 15
 weather.dust_storm = 0.0
 weather.fog_density = 0.0056
 weather.fog_distance = 0.0
@@ -17,10 +19,10 @@ weather.mie_scattering_scale = 0.0
 weather.precipitation = 0.0
 weather.precipitation_deposits = 0.0
 weather.rayleigh_scattering_scale = 0.0331
-weather.scattering_intensity = 0.0
-weather.sun_altitude_angle = 50
-weather.sun_azimuth_angle = 260
-weather.wetness = 10
+weather.scattering_intensity = 0
+weather.sun_altitude_angle = 45
+weather.sun_azimuth_angle = 230
+weather.wetness = 0.0
 weather.wind_intensity = 0.35
 
 Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it.
@@ -30,438 +32,438 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 # Pedestrian catalogue
 
 * __Adults__
-	* [__Adult pedestrian 1__](#adult-pedestrian-1)
-	* [__Adult pedestrian 2__](#adult-pedestrian-2)
-	* [__Adult pedestrian 3__](#adult-pedestrian-3)
-	* [__Adult pedestrian 4__](#adult-pedestrian-4)
-	* [__Adult pedestrian 5__](#adult-pedestrian-5)
-	* [__Adult pedestrian 6__](#adult-pedestrian-6)
-	* [__Adult pedestrian 7__](#adult-pedestrian-7)
-	* [__Adult pedestrian 8__](#adult-pedestrian-8)
-	* [__Adult pedestrian 9__](#adult-pedestrian-9)
-	* [__Adult pedestrian 10__](#adult-pedestrian-10)
-	* [__Adult pedestrian 11__](#adult-pedestrian-11)
-	* [__Adult pedestrian 12__](#adult-pedestrian-12)
-	* [__Adult pedestrian 13__](#adult-pedestrian-13)
-	* [__Adult pedestrian 14__](#adult-pedestrian-14)
-	* [__Adult pedestrian 15__](#adult-pedestrian-15)
-	* [__Adult pedestrian 16__](#adult-pedestrian-16)
-	* [__Adult pedestrian 17__](#adult-pedestrian-17)
-	* [__Adult pedestrian 18__](#adult-pedestrian-18)
-	* [__Adult pedestrian 19__](#adult-pedestrian-19)
-	* [__Adult pedestrian 20__](#adult-pedestrian-20)
-	* [__Adult pedestrian 21__](#adult-pedestrian-21)
-	* [__Adult pedestrian 22__](#adult-pedestrian-22)
-	* [__Adult pedestrian 23__](#adult-pedestrian-23)
-	* [__Adult pedestrian 24__](#adult-pedestrian-24)
-	* [__Adult pedestrian 25__](#adult-pedestrian-25)
-	* [__Adult pedestrian 26__](#adult-pedestrian-26)
-	* [__Adult pedestrian 27__](#adult-pedestrian-27)
-	* [__Adult pedestrian 28__](#adult-pedestrian-28)
-	* [__Adult pedestrian 29__](#adult-pedestrian-29)
-	* [__Adult pedestrian 30__](#adult-pedestrian-30)
-	* [__Adult pedestrian 31__](#adult-pedestrian-31)
-	* [__Adult pedestrian 32__](#adult-pedestrian-32)
+	* [__0015 - adult pedestrian 1__](#0015-adult-pedestrian-1)
+	* [__0016 - adult pedestrian 2__](#0016-adult-pedestrian-2)
+	* [__0017 - adult pedestrian 3__](#0017-adult-pedestrian-3)
+	* [__0018 - adult pedestrian 4__](#0018-adult-pedestrian-4)
+	* [__0019 - adult pedestrian 5__](#0019-adult-pedestrian-5)
+	* [__0021 - adult pedestrian 6__](#0021-adult-pedestrian-6)
+	* [__0022 - adult pedestrian 7__](#0022-adult-pedestrian-7)
+	* [__0023 - adult pedestrian 8__](#0023-adult-pedestrian-8)
+	* [__0024 - adult pedestrian 9__](#0024-adult-pedestrian-9)
+	* [__0025 - adult pedestrian 10__](#0025-adult-pedestrian-10)
+	* [__0026 - adult pedestrian 11__](#0026-adult-pedestrian-11)
+	* [__0027 - adult pedestrian 12__](#0027-adult-pedestrian-12)
+	* [__0028 - adult pedestrian 13__](#0028-adult-pedestrian-13)
+	* [__0029 - adult pedestrian 14__](#0029-adult-pedestrian-14)
+	* [__0030 - adult pedestrian 15__](#0030-adult-pedestrian-15)
+	* [__0032 - adult pedestrian 16__](#0032-adult-pedestrian-16)
+	* [__0033 - adult pedestrian 17__](#0033-adult-pedestrian-17)
+	* [__0034 - adult pedestrian 18__](#0034-adult-pedestrian-18)
+	* [__0035 - adult pedestrian 19__](#0035-adult-pedestrian-19)
+	* [__0036 - adult pedestrian 20__](#0036-adult-pedestrian-20)
+	* [__0037 - adult pedestrian 21__](#0037-adult-pedestrian-21)
+	* [__0038 - adult pedestrian 22__](#0038-adult-pedestrian-22)
+	* [__0039 - adult pedestrian 23__](#0039-adult-pedestrian-23)
+	* [__0040 - adult pedestrian 24__](#0040-adult-pedestrian-24)
+	* [__0041 - adult pedestrian 25__](#0041-adult-pedestrian-25)
+	* [__0042 - adult pedestrian 26__](#0042-adult-pedestrian-26)
+	* [__0043 - adult pedestrian 27__](#0043-adult-pedestrian-27)
+	* [__0044 - adult pedestrian 28__](#0044-adult-pedestrian-28)
+	* [__0045 - adult pedestrian 29__](#0045-adult-pedestrian-29)
+	* [__0046 - adult pedestrian 30__](#0046-adult-pedestrian-30)
+	* [__0047 - adult pedestrian 31__](#0047-adult-pedestrian-31)
+	* [__0048 - adult pedestrian 32__](#0048-adult-pedestrian-32)
 * __Children__
-	* [__Child pedestrian 1__](#child-pedestrian-1)
-	* [__Child pedestrian 2__](#child-pedestrian-2)
-	* [__Child pedestrian 3__](#child-pedestrian-3)
-	* [__Child pedestrian 4__](#child-pedestrian-4)
+	* [__0049 - child pedestrian 1__](#0049-child-pedestrian-1)
+	* [__0050 - child pedestrian 2__](#0050-child-pedestrian-2)
+	* [__0051 - child pedestrian 3__](#0051-child-pedestrian-3)
+	* [__0052 - child pedestrian 4__](#0052-child-pedestrian-4)
 * __Special__
-	* [__Police pedestrian 1__](#police-pedestrian-1)
-	* [__Police pedestrian 2__](#police-pedestrian-2)
+	* [__0020 - police pedestrian 1__](#0020-police-pedestrian-1)
+	* [__0031 - police pedestrian 2__](#0031-police-pedestrian-2)
 
 ---
 
 ## Adults
 
-### Adult pedestrian 1
+### 0015 - adult pedestrian 1
 
-![pedestrian_0015](../img/catalogue/pedestrians/pedestrian_0015.webp)
+![pedestrian_0015](img/catalogue/pedestrians/pedestrian_0015.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">walker.pedestrian.0015</span>
+* __Blueprint ID__: `walker.pedestrian.0015`
 * __Age__: adult
 * __Gender__: female
 * __Generation__: 2
-* __Can use wheelchair__: <span style="color:#99c635;">True</span>
+* __Can use wheelchair__: yes
 
-### Adult pedestrian 2
+### 0016 - adult pedestrian 2
 
-![pedestrian_0016](../img/catalogue/pedestrians/pedestrian_0016.webp)
+![pedestrian_0016](img/catalogue/pedestrians/pedestrian_0016.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">walker.pedestrian.0016</span>
+* __Blueprint ID__: `walker.pedestrian.0016`
 * __Age__: adult
 * __Gender__: female
 * __Generation__: 2
-* __Can use wheelchair__: <span style="color:#99c635;">True</span>
+* __Can use wheelchair__: yes
 
-### Adult pedestrian 3
+### 0017 - adult pedestrian 3
 
-![pedestrian_0017](../img/catalogue/pedestrians/pedestrian_0017.webp)
+![pedestrian_0017](img/catalogue/pedestrians/pedestrian_0017.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">walker.pedestrian.0017</span>
+* __Blueprint ID__: `walker.pedestrian.0017`
 * __Age__: adult
 * __Gender__: female
 * __Generation__: 2
-* __Can use wheelchair__: <span style="color:#f16c6c;">False</span>
+* __Can use wheelchair__: no
 
-### Adult pedestrian 4
+### 0018 - adult pedestrian 4
 
-![pedestrian_0018](../img/catalogue/pedestrians/pedestrian_0018.webp)
+![pedestrian_0018](img/catalogue/pedestrians/pedestrian_0018.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">walker.pedestrian.0018</span>
+* __Blueprint ID__: `walker.pedestrian.0018`
 * __Age__: adult
 * __Gender__: female
 * __Generation__: 2
-* __Can use wheelchair__: <span style="color:#f16c6c;">False</span>
+* __Can use wheelchair__: no
 
-### Adult pedestrian 5
+### 0019 - adult pedestrian 5
 
-![pedestrian_0019](../img/catalogue/pedestrians/pedestrian_0019.webp)
+![pedestrian_0019](img/catalogue/pedestrians/pedestrian_0019.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">walker.pedestrian.0019</span>
+* __Blueprint ID__: `walker.pedestrian.0019`
 * __Age__: adult
 * __Gender__: female
 * __Generation__: 2
-* __Can use wheelchair__: <span style="color:#f16c6c;">False</span>
+* __Can use wheelchair__: no
 
-### Adult pedestrian 6
+### 0021 - adult pedestrian 6
 
-![pedestrian_0021](../img/catalogue/pedestrians/pedestrian_0021.webp)
+![pedestrian_0021](img/catalogue/pedestrians/pedestrian_0021.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">walker.pedestrian.0021</span>
+* __Blueprint ID__: `walker.pedestrian.0021`
 * __Age__: adult
 * __Gender__: female
 * __Generation__: 2
-* __Can use wheelchair__: <span style="color:#f16c6c;">False</span>
+* __Can use wheelchair__: no
 
-### Adult pedestrian 7
+### 0022 - adult pedestrian 7
 
-![pedestrian_0022](../img/catalogue/pedestrians/pedestrian_0022.webp)
+![pedestrian_0022](img/catalogue/pedestrians/pedestrian_0022.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">walker.pedestrian.0022</span>
+* __Blueprint ID__: `walker.pedestrian.0022`
 * __Age__: adult
 * __Gender__: female
 * __Generation__: 2
-* __Can use wheelchair__: <span style="color:#f16c6c;">False</span>
+* __Can use wheelchair__: no
 
-### Adult pedestrian 8
+### 0023 - adult pedestrian 8
 
-![pedestrian_0023](../img/catalogue/pedestrians/pedestrian_0023.webp)
+![pedestrian_0023](img/catalogue/pedestrians/pedestrian_0023.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">walker.pedestrian.0023</span>
+* __Blueprint ID__: `walker.pedestrian.0023`
 * __Age__: adult
 * __Gender__: female
 * __Generation__: 2
-* __Can use wheelchair__: <span style="color:#f16c6c;">False</span>
+* __Can use wheelchair__: no
 
-### Adult pedestrian 9
+### 0024 - adult pedestrian 9
 
-![pedestrian_0024](../img/catalogue/pedestrians/pedestrian_0024.webp)
+![pedestrian_0024](img/catalogue/pedestrians/pedestrian_0024.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">walker.pedestrian.0024</span>
+* __Blueprint ID__: `walker.pedestrian.0024`
 * __Age__: adult
 * __Gender__: female
 * __Generation__: 2
-* __Can use wheelchair__: <span style="color:#f16c6c;">False</span>
+* __Can use wheelchair__: no
 
-### Adult pedestrian 10
+### 0025 - adult pedestrian 10
 
-![pedestrian_0025](../img/catalogue/pedestrians/pedestrian_0025.webp)
+![pedestrian_0025](img/catalogue/pedestrians/pedestrian_0025.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">walker.pedestrian.0025</span>
+* __Blueprint ID__: `walker.pedestrian.0025`
 * __Age__: adult
 * __Gender__: male
 * __Generation__: 2
-* __Can use wheelchair__: <span style="color:#99c635;">True</span>
+* __Can use wheelchair__: yes
 
-### Adult pedestrian 11
+### 0026 - adult pedestrian 11
 
-![pedestrian_0026](../img/catalogue/pedestrians/pedestrian_0026.webp)
+![pedestrian_0026](img/catalogue/pedestrians/pedestrian_0026.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">walker.pedestrian.0026</span>
+* __Blueprint ID__: `walker.pedestrian.0026`
 * __Age__: adult
 * __Gender__: male
 * __Generation__: 2
-* __Can use wheelchair__: <span style="color:#99c635;">True</span>
+* __Can use wheelchair__: yes
 
-### Adult pedestrian 12
+### 0027 - adult pedestrian 12
 
-![pedestrian_0027](../img/catalogue/pedestrians/pedestrian_0027.webp)
+![pedestrian_0027](img/catalogue/pedestrians/pedestrian_0027.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">walker.pedestrian.0027</span>
+* __Blueprint ID__: `walker.pedestrian.0027`
 * __Age__: adult
 * __Gender__: male
 * __Generation__: 2
-* __Can use wheelchair__: <span style="color:#f16c6c;">False</span>
+* __Can use wheelchair__: no
 
-### Adult pedestrian 13
+### 0028 - adult pedestrian 13
 
-![pedestrian_0028](../img/catalogue/pedestrians/pedestrian_0028.webp)
+![pedestrian_0028](img/catalogue/pedestrians/pedestrian_0028.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">walker.pedestrian.0028</span>
+* __Blueprint ID__: `walker.pedestrian.0028`
 * __Age__: adult
 * __Gender__: male
 * __Generation__: 2
-* __Can use wheelchair__: <span style="color:#99c635;">True</span>
+* __Can use wheelchair__: yes
 
-### Adult pedestrian 14
+### 0029 - adult pedestrian 14
 
-![pedestrian_0029](../img/catalogue/pedestrians/pedestrian_0029.webp)
+![pedestrian_0029](img/catalogue/pedestrians/pedestrian_0029.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">walker.pedestrian.0029</span>
+* __Blueprint ID__: `walker.pedestrian.0029`
 * __Age__: adult
 * __Gender__: male
 * __Generation__: 2
-* __Can use wheelchair__: <span style="color:#99c635;">True</span>
+* __Can use wheelchair__: yes
 
-### Adult pedestrian 15
+### 0030 - adult pedestrian 15
 
-![pedestrian_0030](../img/catalogue/pedestrians/pedestrian_0030.webp)
+![pedestrian_0030](img/catalogue/pedestrians/pedestrian_0030.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">walker.pedestrian.0030</span>
+* __Blueprint ID__: `walker.pedestrian.0030`
 * __Age__: adult
 * __Gender__: male
 * __Generation__: 2
-* __Can use wheelchair__: <span style="color:#f16c6c;">False</span>
+* __Can use wheelchair__: no
 
-### Adult pedestrian 16
+### 0032 - adult pedestrian 16
 
-![pedestrian_0032](../img/catalogue/pedestrians/pedestrian_0032.webp)
+![pedestrian_0032](img/catalogue/pedestrians/pedestrian_0032.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">walker.pedestrian.0032</span>
+* __Blueprint ID__: `walker.pedestrian.0032`
 * __Age__: adult
 * __Gender__: female
 * __Generation__: 2
-* __Can use wheelchair__: <span style="color:#f16c6c;">False</span>
+* __Can use wheelchair__: no
 
-### Adult pedestrian 17
+### 0033 - adult pedestrian 17
 
-![pedestrian_0033](../img/catalogue/pedestrians/pedestrian_0033.webp)
+![pedestrian_0033](img/catalogue/pedestrians/pedestrian_0033.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">walker.pedestrian.0033</span>
+* __Blueprint ID__: `walker.pedestrian.0033`
 * __Age__: adult
 * __Gender__: female
 * __Generation__: 2
-* __Can use wheelchair__: <span style="color:#f16c6c;">False</span>
+* __Can use wheelchair__: no
 
-### Adult pedestrian 18
+### 0034 - adult pedestrian 18
 
-![pedestrian_0034](../img/catalogue/pedestrians/pedestrian_0034.webp)
+![pedestrian_0034](img/catalogue/pedestrians/pedestrian_0034.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">walker.pedestrian.0034</span>
+* __Blueprint ID__: `walker.pedestrian.0034`
 * __Age__: adult
 * __Gender__: male
 * __Generation__: 2
-* __Can use wheelchair__: <span style="color:#f16c6c;">False</span>
+* __Can use wheelchair__: no
 
-### Adult pedestrian 19
+### 0035 - adult pedestrian 19
 
-![pedestrian_0035](../img/catalogue/pedestrians/pedestrian_0035.webp)
+![pedestrian_0035](img/catalogue/pedestrians/pedestrian_0035.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">walker.pedestrian.0035</span>
+* __Blueprint ID__: `walker.pedestrian.0035`
 * __Age__: adult
 * __Gender__: male
 * __Generation__: 2
-* __Can use wheelchair__: <span style="color:#f16c6c;">False</span>
+* __Can use wheelchair__: no
 
-### Adult pedestrian 20
+### 0036 - adult pedestrian 20
 
-![pedestrian_0036](../img/catalogue/pedestrians/pedestrian_0036.webp)
+![pedestrian_0036](img/catalogue/pedestrians/pedestrian_0036.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">walker.pedestrian.0036</span>
+* __Blueprint ID__: `walker.pedestrian.0036`
 * __Age__: adult
 * __Gender__: male
 * __Generation__: 2
-* __Can use wheelchair__: <span style="color:#f16c6c;">False</span>
+* __Can use wheelchair__: no
 
-### Adult pedestrian 21
+### 0037 - adult pedestrian 21
 
-![pedestrian_0037](../img/catalogue/pedestrians/pedestrian_0037.webp)
+![pedestrian_0037](img/catalogue/pedestrians/pedestrian_0037.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">walker.pedestrian.0037</span>
+* __Blueprint ID__: `walker.pedestrian.0037`
 * __Age__: adult
 * __Gender__: male
 * __Generation__: 2
-* __Can use wheelchair__: <span style="color:#f16c6c;">False</span>
+* __Can use wheelchair__: no
 
-### Adult pedestrian 22
+### 0038 - adult pedestrian 22
 
-![pedestrian_0038](../img/catalogue/pedestrians/pedestrian_0038.webp)
+![pedestrian_0038](img/catalogue/pedestrians/pedestrian_0038.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">walker.pedestrian.0038</span>
+* __Blueprint ID__: `walker.pedestrian.0038`
 * __Age__: adult
 * __Gender__: male
 * __Generation__: 2
-* __Can use wheelchair__: <span style="color:#f16c6c;">False</span>
+* __Can use wheelchair__: no
 
-### Adult pedestrian 23
+### 0039 - adult pedestrian 23
 
-![pedestrian_0039](../img/catalogue/pedestrians/pedestrian_0039.webp)
+![pedestrian_0039](img/catalogue/pedestrians/pedestrian_0039.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">walker.pedestrian.0039</span>
+* __Blueprint ID__: `walker.pedestrian.0039`
 * __Age__: adult
 * __Gender__: female
 * __Generation__: 2
-* __Can use wheelchair__: <span style="color:#f16c6c;">False</span>
+* __Can use wheelchair__: no
 
-### Adult pedestrian 24
+### 0040 - adult pedestrian 24
 
-![pedestrian_0040](../img/catalogue/pedestrians/pedestrian_0040.webp)
+![pedestrian_0040](img/catalogue/pedestrians/pedestrian_0040.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">walker.pedestrian.0040</span>
+* __Blueprint ID__: `walker.pedestrian.0040`
 * __Age__: adult
 * __Gender__: female
 * __Generation__: 2
-* __Can use wheelchair__: <span style="color:#f16c6c;">False</span>
+* __Can use wheelchair__: no
 
-### Adult pedestrian 25
+### 0041 - adult pedestrian 25
 
-![pedestrian_0041](../img/catalogue/pedestrians/pedestrian_0041.webp)
+![pedestrian_0041](img/catalogue/pedestrians/pedestrian_0041.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">walker.pedestrian.0041</span>
+* __Blueprint ID__: `walker.pedestrian.0041`
 * __Age__: adult
 * __Gender__: female
 * __Generation__: 2
-* __Can use wheelchair__: <span style="color:#f16c6c;">False</span>
+* __Can use wheelchair__: no
 
-### Adult pedestrian 26
+### 0042 - adult pedestrian 26
 
-![pedestrian_0042](../img/catalogue/pedestrians/pedestrian_0042.webp)
+![pedestrian_0042](img/catalogue/pedestrians/pedestrian_0042.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">walker.pedestrian.0042</span>
+* __Blueprint ID__: `walker.pedestrian.0042`
 * __Age__: adult
 * __Gender__: female
 * __Generation__: 2
-* __Can use wheelchair__: <span style="color:#f16c6c;">False</span>
+* __Can use wheelchair__: no
 
-### Adult pedestrian 27
+### 0043 - adult pedestrian 27
 
-![pedestrian_0043](../img/catalogue/pedestrians/pedestrian_0043.webp)
+![pedestrian_0043](img/catalogue/pedestrians/pedestrian_0043.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">walker.pedestrian.0043</span>
+* __Blueprint ID__: `walker.pedestrian.0043`
 * __Age__: adult
 * __Gender__: female
 * __Generation__: 2
-* __Can use wheelchair__: <span style="color:#f16c6c;">False</span>
+* __Can use wheelchair__: no
 
-### Adult pedestrian 28
+### 0044 - adult pedestrian 28
 
-![pedestrian_0044](../img/catalogue/pedestrians/pedestrian_0044.webp)
+![pedestrian_0044](img/catalogue/pedestrians/pedestrian_0044.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">walker.pedestrian.0044</span>
+* __Blueprint ID__: `walker.pedestrian.0044`
 * __Age__: adult
 * __Gender__: female
 * __Generation__: 2
-* __Can use wheelchair__: <span style="color:#f16c6c;">False</span>
+* __Can use wheelchair__: no
 
-### Adult pedestrian 29
+### 0045 - adult pedestrian 29
 
-![pedestrian_0045](../img/catalogue/pedestrians/pedestrian_0045.webp)
+![pedestrian_0045](img/catalogue/pedestrians/pedestrian_0045.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">walker.pedestrian.0045</span>
+* __Blueprint ID__: `walker.pedestrian.0045`
 * __Age__: adult
 * __Gender__: male
 * __Generation__: 2
-* __Can use wheelchair__: <span style="color:#f16c6c;">False</span>
+* __Can use wheelchair__: no
 
-### Adult pedestrian 30
+### 0046 - adult pedestrian 30
 
-![pedestrian_0046](../img/catalogue/pedestrians/pedestrian_0046.webp)
+![pedestrian_0046](img/catalogue/pedestrians/pedestrian_0046.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">walker.pedestrian.0046</span>
+* __Blueprint ID__: `walker.pedestrian.0046`
 * __Age__: adult
 * __Gender__: male
 * __Generation__: 2
-* __Can use wheelchair__: <span style="color:#f16c6c;">False</span>
+* __Can use wheelchair__: no
 
-### Adult pedestrian 31
+### 0047 - adult pedestrian 31
 
-![pedestrian_0047](../img/catalogue/pedestrians/pedestrian_0047.webp)
+![pedestrian_0047](img/catalogue/pedestrians/pedestrian_0047.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">walker.pedestrian.0047</span>
+* __Blueprint ID__: `walker.pedestrian.0047`
 * __Age__: adult
 * __Gender__: male
 * __Generation__: 2
-* __Can use wheelchair__: <span style="color:#f16c6c;">False</span>
+* __Can use wheelchair__: no
 
-### Adult pedestrian 32
+### 0048 - adult pedestrian 32
 
-![pedestrian_0048](../img/catalogue/pedestrians/pedestrian_0048.webp)
+![pedestrian_0048](img/catalogue/pedestrians/pedestrian_0048.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">walker.pedestrian.0048</span>
+* __Blueprint ID__: `walker.pedestrian.0048`
 * __Age__: adult
 * __Gender__: male
 * __Generation__: 2
-* __Can use wheelchair__: <span style="color:#f16c6c;">False</span>
+* __Can use wheelchair__: no
 
 ---
 
 ## Children
 
-### Child pedestrian 1
+### 0049 - child pedestrian 1
 
-![pedestrian_0049](../img/catalogue/pedestrians/pedestrian_0049.webp)
+![pedestrian_0049](img/catalogue/pedestrians/pedestrian_0049.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">walker.pedestrian.0049</span>
+* __Blueprint ID__: `walker.pedestrian.0049`
 * __Age__: child
 * __Gender__: female
 * __Generation__: 2
-* __Can use wheelchair__: <span style="color:#f16c6c;">False</span>
+* __Can use wheelchair__: no
 
-### Child pedestrian 2
+### 0050 - child pedestrian 2
 
-![pedestrian_0050](../img/catalogue/pedestrians/pedestrian_0050.webp)
+![pedestrian_0050](img/catalogue/pedestrians/pedestrian_0050.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">walker.pedestrian.0050</span>
+* __Blueprint ID__: `walker.pedestrian.0050`
 * __Age__: child
 * __Gender__: male
 * __Generation__: 2
-* __Can use wheelchair__: <span style="color:#f16c6c;">False</span>
+* __Can use wheelchair__: no
 
-### Child pedestrian 3
+### 0051 - child pedestrian 3
 
-![pedestrian_0051](../img/catalogue/pedestrians/pedestrian_0051.webp)
+![pedestrian_0051](img/catalogue/pedestrians/pedestrian_0051.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">walker.pedestrian.0051</span>
+* __Blueprint ID__: `walker.pedestrian.0051`
 * __Age__: child
 * __Gender__: female
 * __Generation__: 3
-* __Can use wheelchair__: <span style="color:#f16c6c;">False</span>
+* __Can use wheelchair__: no
 
-### Child pedestrian 4
+### 0052 - child pedestrian 4
 
-![pedestrian_0052](../img/catalogue/pedestrians/pedestrian_0052.webp)
+![pedestrian_0052](img/catalogue/pedestrians/pedestrian_0052.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">walker.pedestrian.0052</span>
+* __Blueprint ID__: `walker.pedestrian.0052`
 * __Age__: child
 * __Gender__: male
 * __Generation__: 3
-* __Can use wheelchair__: <span style="color:#f16c6c;">False</span>
+* __Can use wheelchair__: no
 
 ---
 
 ## Special
 
-### Police pedestrian 1
+### 0020 - police pedestrian 1
 
-![pedestrian_0020](../img/catalogue/pedestrians/pedestrian_0020.webp)
+![pedestrian_0020](img/catalogue/pedestrians/pedestrian_0020.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">walker.pedestrian.0020</span>
+* __Blueprint ID__: `walker.pedestrian.0020`
 * __Age__: adult
 * __Gender__: female
 * __Generation__: 2
 * __Special type__: police
-* __Can use wheelchair__: <span style="color:#f16c6c;">False</span>
+* __Can use wheelchair__: no
 
-### Police pedestrian 2
+### 0031 - police pedestrian 2
 
-![pedestrian_0031](../img/catalogue/pedestrians/pedestrian_0031.webp)
+![pedestrian_0031](img/catalogue/pedestrians/pedestrian_0031.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">walker.pedestrian.0031</span>
+* __Blueprint ID__: `walker.pedestrian.0031`
 * __Age__: adult
 * __Gender__: male
 * __Generation__: 2
 * __Special type__: police
-* __Can use wheelchair__: <span style="color:#f16c6c;">False</span>
+* __Can use wheelchair__: no
 

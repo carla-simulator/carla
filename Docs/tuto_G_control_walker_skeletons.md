@@ -9,12 +9,10 @@ all classes and methods available can be found at
 *   [__Manually control walker bones__](#manually-control-walker-bones)  
 	*   [Connect to the simulator](#connect-to-the-simulator)  
 	*   [Spawn a walker](#spawn-a-walker)  
-	*   [Control walker skeletons](#control-walker-skeletons)  
+	*   [Control walker skeletons](#control-walker-skeletons)
 
-!!! note
-    **This document assumes the user is familiar with the Python API**. <br>
-    The user should read the first steps tutorial before reading this document.
-    [Core concepts](core_concepts.md).
+!!! Note
+    This document assumes familiarity with the Python API. Read [Foundations](foundations.md) and the [first steps tutorial](tuto_first_steps.md) first.
 
 ---
 ## Walker skeleton structure
@@ -22,7 +20,7 @@ all classes and methods available can be found at
 All walkers have the same skeleton hierarchy and bone names. Below is an image of the skeleton
 hierarchy.
 
-```
+```text
 crl_root
 └── crl_hips__C
     ├── crl_spine__C
@@ -99,7 +97,7 @@ from the CARLA Python API
 
 ### Connect to the simulator
 
-Import neccessary libraries used in this example
+Import necessary libraries used in this example
 
 ```py
 import carla
@@ -120,34 +118,54 @@ Spawn a random walker at one of the map's spawn points
 ```py
 world = client.get_world()
 blueprint = random.choice(world.get_blueprint_library().filter('walker.*'))
-spawn_points = world.get_map().get_spawn_points()
-spawn_point = random.choice(spawn_points) if spawn_points else carla.Transform()
+
+# Pedestrians belong on the navigation mesh, not on a vehicle spawn point
+spawn_point = carla.Transform(world.get_random_location_from_navigation())
 walker = world.try_spawn_actor(blueprint, spawn_point)
+if walker is None:
+    raise RuntimeError('could not spawn the walker, try another location')
 ```
 
 ### Control walker skeletons
 
-A walker's skeleton can be modified by passing an instance of the WalkerBoneControlIn class
-to the walker's set_bones function. The WalkerBoneControlIn class contains the transforms
-of the bones to be modified. Its bone_transforms member is a list of tuples of value pairs
-where the first value is the bone name and the second value is the bone transform. The
-set_bones function can be called on every tick to animate a walker's skeleton. The
-location and rotation of each transform is relative to its parent. Therefore when a
-parent bone's transform is modified, the transforms of the child bones in model space
-will also be changed relatively.
+A walker's skeleton is modified by passing a [`carla.WalkerBoneControlIn`](python_api.md#carla.WalkerBoneControlIn) to [`walker.set_bones()`](python_api.md#carla.Walker.set_bones). Its `bone_transforms` member is a list of `(bone name, transform)` pairs, and it can be sent on every tick to animate the skeleton.
 
-The walker keeps playing its animation until the custom pose is shown with show_pose.
-blend_pose mixes the animation and the custom pose, and hide_pose goes back to the
-animation.
+__Each transform is relative to the bone's parent__, so moving a parent carries its children with it. That also means a transform has to be built from the bone's current one: a default `carla.Transform()` has a zero location, which collapses the bone onto its parent's pivot rather than leaving it where it is. Read the current pose with [`walker.get_bones()`](python_api.md#carla.Walker.get_bones) and change only what you mean to change.
 
-In the example below, the rotations of the walker's hands are set to be 90 degrees around
-the forward axis and the locations are set to the origin.
+The walker keeps playing its animation until the custom pose is shown with [`show_pose()`](python_api.md#carla.Walker.show_pose). [`blend_pose()`](python_api.md#carla.Walker.blend_pose) mixes the animation and the custom pose by a factor in `[0, 1]`, and [`hide_pose()`](python_api.md#carla.Walker.hide_pose) goes back to the animation.
+
+!!! Warning
+    `set_bones` needs the walker to be driven by its default controller. With a `controller.ai.walker` attached, the AI controller overwrites the pose every tick and nothing visible happens.
+
+The example below rotates both hands 90 degrees about their forward axis, keeping each bone's own location:
 
 ```py
+bones = walker.get_bones()
+current = {bone.name: bone.relative for bone in bones.bone_transforms}
+
+transforms = []
+for name in ('crl_hand__R', 'crl_hand__L'):
+    relative = current[name]
+    transforms.append((name, carla.Transform(
+        location=relative.location,
+        rotation=carla.Rotation(pitch=relative.rotation.pitch,
+                                yaw=relative.rotation.yaw,
+                                roll=relative.rotation.roll + 90))))
+
 control = carla.WalkerBoneControlIn()
-first_tuple = ('crl_hand__R', carla.Transform(rotation=carla.Rotation(roll=90)))
-second_tuple = ('crl_hand__L', carla.Transform(rotation=carla.Rotation(roll=90)))
-control.bone_transforms = [first_tuple, second_tuple]
+control.bone_transforms = transforms
 walker.set_bones(control)
 walker.show_pose()
+```
+
+To animate over time, send a new pose each tick and blend it in rather than snapping to it:
+
+```py
+for step in range(100):
+    walker.set_bones(control)
+    walker.blend_pose(min(step / 50.0, 1.0))
+    world.tick()
+
+walker.hide_pose()
+walker.destroy()
 ```

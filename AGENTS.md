@@ -4,7 +4,7 @@ Guidance for any coding agent working in this repository.
 
 ## Skills
 
-This repo ships a library of **60 vetted CARLA procedures** under
+This repo ships a library of **62 vetted CARLA procedures** under
 [`Skills/`](Skills/). Each is a directory containing a `SKILL.md` with YAML
 frontmatter (`name`, `description`, `compatibility`), the step-by-step
 procedure, and often `scripts/` and `references/` beside it.
@@ -38,6 +38,11 @@ tools automatically. Agents without MCP should read `Skills/` directly — the
 files are the source of truth either way.
 
 ## Skill catalogue
+
+### `docs`
+
+- **`audit-carla-docs`** — Finds undocumented and rotting documentation in a CARLA checkout — unreleased features, bindings missing from the API reference, documented API that no longer exists....
+- **`document-carla-feature`** — Writes the missing CARLA documentation that the audit found, one category at a time, in CARLA's house style....
 
 ### `leaderboard`
 

@@ -1,10 +1,16 @@
 # Retrieve pedestrian ground truth bones through API
 
-To train autonomous vehicles, it is essential to make sure they recognize not only buildings, roads and cars, but also the pedestrians that occupy the sidewalks and cross the roads, to ensure the safety of all road users. The CARLA simulator provides AI controlled pedestrians to populate your simulation and training data with human forms. There are many computer vision applications in which human pose estimation is an important factor including autonomous driving, but also in security, crowd control and multiple robotic applications. 
+A pedestrian's skeleton can be read from the simulation as ground truth: a set of bones, each with a root vertex and a vector giving its orientation. Together they describe the pose, which is what a pose-estimation network is trained against or evaluated on.
 
-CARLA's API provides functionality to retrieve the ground truth skeleton from pedestrians in the simulation. The skeleton is composed of a set of bones, each with a root node or vertex and a vector defining the pose (or orientation) of the bone. These bones control the movement of the limbs and body of the simulated pedestrian. By collecting together the ensemble of individual bones, a model of the virtual human's pose can be built that can be used to compare against a pose model estimated by a neural network, or even used to train a neural network for pose estimation. 
+This tutorial spawns a pedestrian, gives it an AI controller, then reads its skeleton and projects the bones onto a camera image.
 
-In this tutorial, we will go through the steps of spawning a pedestrian in a map, setting up an AI controller to move the pedestrian and then retrieving the ground truth skeleton and projecting the bones onto a 2D camera capture.
+- [__Setting up the simulator__](#setting-up-the-simulator)
+- [__AI controller to guide the pedestrian around the map__](#ai-controller-to-guide-the-pedestrian-around-the-map)
+- [__Build the skeleton__](#build-the-skeleton)
+- [__Cleaning up__](#cleaning-up)
+
+!!! Note
+    `PythonAPI/examples/draw_skeleton.py` already does this end to end. This page builds it up piece by piece.
 
 ## Setting up the simulator
 
@@ -28,22 +34,24 @@ settings.synchronous_mode = True # Enables synchronous mode
 settings.fixed_delta_seconds = 0.05
 world.apply_settings(settings)
 
-# We will aslo set up the spectator so we can see what we do
+# We will also set up the spectator so we can see what we do
 spectator = world.get_spectator()
 
 ```
 
+---
 ## Spawning a pedestrian in the CARLA simulator
 
 First, we want to spawn a pedestrian in the simulation. This can be done at a random location using `world.get_random_location_from_navigation()`, or it can be chosen using coordinates gathered from the Unreal Editor. In the unreal editor, add an empty actor to the location where you want to spawn your pedestrian, then use the inspector on the right hand side to query the coordinates.
 
-![actor_location](../img/tuto_G_pedestrian_bones/actor_location.png)
+![actor_location](img/tuto_G_pedestrian_bones/actor_location.webp)
+<div style="text-align: right"><i>An actor selected in the UE 5.8 editor; its location is read in Details > Transform (outlined in red).</i></div>
 
 !!! Note
     The Unreal Editor works in units of centimeters, while CARLA works in units of meters so the units must be converted. Ensure to divide the Unreal Editor coordinates by 100 before using in the CARLA simulator.
 
 
-Once you have chosen your coordinates, you can then spawn the pedestrian. We will also spawn a camera to gather images. We also need a [`Queue`](#https://docs.python.org/3/library/queue.html) object to allow us easy access to the data from the camera (as the camera sensor operates on its own thread, separate from the main Python thread running your script).
+Once you have chosen your coordinates, you can then spawn the pedestrian. We will also spawn a camera to gather images. We also need a [`Queue`](https://docs.python.org/3/library/queue.html) object to allow us easy access to the data from the camera (as the camera sensor operates on its own thread, separate from the main Python thread running your script).
 
 In order to see our pedestrian, we need to transform the camera so it is pointing at the pedestrian we spawn. For this we will use a function that calculates the translation and rotation needed to center the camera:
 
@@ -57,7 +65,7 @@ def center_camera(ped, rot_offset=0):
     y = math.sin(offset_radians) * 2
     trans.location.x += x
     trans.location.y += y
-    trans.location.z = 2
+    trans.location.z += 1.5
     trans.rotation.pitch = -16
     trans.rotation.roll = 0
     trans.rotation.yaw = -rot_offset
@@ -71,8 +79,11 @@ Now we'll spawn the pedestrian, the camera, a controller and move the spectator 
 ```py
 # Get the pedestrian blueprint and spawn it
 pedestrian_bp = random.choice(world.get_blueprint_library().filter('*walker.pedestrian*'))
-transform = carla.Transform(carla.Location(x=-134,y=78.1,z=1.18))
+# Any point on the navigation mesh is a valid spawn point for a pedestrian
+transform = carla.Transform(world.get_random_location_from_navigation())
 pedestrian = world.try_spawn_actor(pedestrian_bp, transform)
+if pedestrian is None:
+    raise RuntimeError('could not spawn the pedestrian, try another location')
 
 # Spawn an RGB camera
 camera_bp = world.get_blueprint_library().find('sensor.camera.rgb')
@@ -107,9 +118,10 @@ for frame in range(0,5):
 
 ```
 
+---
 ## AI controller to guide the pedestrian around the map
 
-In the previous step we also initialized an AI controller to help the pedestrian move intelligently around the map with the following code (you don't need to repeat it):
+The AI controller spawned above is what makes the pedestrian walk. It is attached to the pedestrian, started, and given a destination on the navigation mesh:
 
 ```py
 controller_bp = world.get_blueprint_library().find('controller.ai.walker')
@@ -121,6 +133,7 @@ controller.go_to_location(world.get_random_location_from_navigation())
 
 Now the pedestrian will move autonomously with each time increment (`world.tick()`) of the simulation.
 
+---
 ## Camera geometry
 
 Now we need to perform some geometric calculations. First, we want to transform the world coordinates of the bones into camera coordinates, we do this using the inverse of the camera transform. This means that the coordinates are transformed to be relative to a camera located at the origin facing in the positive x-direction.
@@ -131,7 +144,7 @@ world_2_camera = np.array(camera.get_transform().get_inverse_matrix())
 
 ```
 
-Then, we need to project the 3D points onto the 2D field of view (FOV) of the camera to overlay them on the output images using the [__camera matrix__](#https://en.wikipedia.org/wiki/Camera_matrix) or __projection matrix__. The following function produces the camera matrix needed for this 3D -> 2D transformation. 
+Then, we need to project the 3D points onto the 2D field of view (FOV) of the camera to overlay them on the output images using the [__camera matrix__](https://en.wikipedia.org/wiki/Camera_matrix) or __projection matrix__. The following function produces the camera matrix needed for this 3D -> 2D transformation.
 
 ```py
 
@@ -145,37 +158,42 @@ def build_projection_matrix(w, h, fov):
 
 ```
 
-## Build the skeleton 
+---
+## Build the skeleton
 
-Now we can put the moving parts together. First, gather the bone coordinates from the simulation using `pedestrian.get_bones()` and then put together the skeleton and project it onto the 2D imaging plane of the camera sensor. The bones are joined into the complete skeleton using the pairs defined in __skeleton.txt__ that can be downloaded [__here__](https://carla-assets.s3.eu-west-3.amazonaws.com/fbx/skeleton.txt).
+Now we can put the moving parts together. First, gather the bone coordinates from the simulation using `pedestrian.get_bones()` and then put together the skeleton and project it onto the 2D imaging plane of the camera sensor. The bones are joined into the complete skeleton using the pairs defined in __skeleton.txt__ that ships with these docs: [__skeleton.txt__](img/tuto_G_pedestrian_bones/skeleton.txt).
 
-We need a function to iterate through the bone pairs defined in __skeleton.txt__ and join the bone coordinates into lines that can be overlayed onto a camera sensor image. 
+We need a function to iterate through the bone pairs defined in __skeleton.txt__ and join the bone coordinates into lines that can be overlaid onto a camera sensor image.
 
 ```py
 
-def get_image_point(bone_trans):
-        # Calculate 2D projection of bone coordinate
-        
-        # get the world location of the bone root
-        loc = bone_trans.world.location
-        bone = np.array([loc.x, loc.y, loc.z, 1])
-        # transform to camera coordinates
-        point_camera = np.dot(world_2_camera, bone)
+def get_image_point(bone_trans, K, world_2_camera):
+    # Calculate the 2D projection of a bone root, or None when it is behind
+    # the camera, where the projection would come out mirrored.
 
-        # New we must change from UE4's coordinate system to an "standard"
-        # (x, y ,z) -> (y, -z, x)
-        # and we remove the fourth component also
-        point_camera = [point_camera[1], -point_camera[2], point_camera[0]]
+    # get the world location of the bone root
+    loc = bone_trans.world.location
+    bone = np.array([loc.x, loc.y, loc.z, 1])
+    # transform to camera coordinates
+    point_camera = np.dot(world_2_camera, bone)
 
-        # now project 3D->2D using the camera matrix
-        point_img = np.dot(K, point_camera)
-        # normalize
-        point_img[0] /= point_img[2]
-        point_img[1] /= point_img[2]
+    # Now we must change from Unreal's coordinate system to a "standard" one
+    # (x, y, z) -> (y, -z, x), and remove the fourth component
+    point_camera = [point_camera[1], -point_camera[2], point_camera[0]]
 
-        return point_img[0:2]
-    
-def build_skeleton(ped, sk_links, K):
+    if point_camera[2] <= 0:
+        return None
+
+    # now project 3D->2D using the camera matrix
+    point_img = np.dot(K, point_camera)
+    # normalize
+    point_img[0] /= point_img[2]
+    point_img[1] /= point_img[2]
+
+    return point_img[0:2]
+
+
+def build_skeleton(ped, sk_links, K, world_2_camera):
 
     ######## get the pedestrian skeleton #########
     bones = ped.get_bones()
@@ -185,7 +203,7 @@ def build_skeleton(ped, sk_links, K):
     lines = []
 
     # cycle through the bone pairs in skeleton.txt and retrieve the joint positions
-    for link in sk_links[1:]:
+    for link in sk_links:
 
         # get the roots of the two bones to be joined
         bone_transform_1 = next(filter(lambda b: b.name == link[0], bones.bone_transforms), None)
@@ -194,18 +212,14 @@ def build_skeleton(ped, sk_links, K):
         # some bone names aren't matched
         if bone_transform_1 is not None and bone_transform_2 is not None:
            
-            # Calculate 2D projection of 3D bone coordinates
-            point_image = get_image_point(bone_transform_1)
-    
-            # append line start to lines list
-            lines.append([point_image[0], point_image[1], 0, 0])
-            
-            # Calculate 2D projection of 3D bone coordinates
-            point_image = get_image_point(bone_transform_2)
-            
-            # append line end to lines list
-            lines[-1][2] = point_image[0]
-            lines[-1][3] = point_image[1]
+            # Calculate the 2D projection of both bone roots; skip the link
+            # when either of them is behind the camera
+            start = get_image_point(bone_transform_1, K, world_2_camera)
+            end = get_image_point(bone_transform_2, K, world_2_camera)
+            if start is None or end is None:
+                continue
+
+            lines.append([start[0], start[1], end[0], end[1]])
             
     return lines
 
@@ -257,7 +271,7 @@ for frame in range(0,360):
     K = build_projection_matrix(image_w, image_h, fov)
     
     # Build the list of lines that will display the skeleton
-    lines = build_skeleton(pedestrian, skeleton_links, K)
+    lines = build_skeleton(pedestrian, skeleton_links, K, world_2_camera)
 
     # Reshape the data into a 2D RBGA array
     img = np.reshape(np.copy(image.raw_data), (image.height, image.width, 4)) 
@@ -272,13 +286,33 @@ for frame in range(0,360):
 
 ```
 
-In the __out/__ folder you should now have a sequence of frames with the skeleton overlayed over the camera sensor output. The following animation can be reconstructed by joining the frames into a video:
+In the __out/__ folder you should now have a sequence of frames with the skeleton overlaid over the camera sensor output. The following animation can be reconstructed by joining the frames into a video:
 
-![pedestrian_skeleton](../img/tuto_G_pedestrian_bones/pedestrian_skeleton.gif)
+![pedestrian_skeleton](img/tuto_G_pedestrian_bones/walker_skeleton.webp)
+<div style="text-align: right"><i>Walker skeleton from get_bones() projected on a camera that follows the pedestrian (finger bones omitted). Town10HD_Opt &middot; sensor.camera.rgb &middot; AutomotiveHDR &middot; sunny afternoon</i></div>
 
+---
+## Cleaning up
+
+The loop above leaves the server in synchronous mode and the actors in it. Restore both before the script ends:
+
+```py
+controller.stop()
+camera.stop()
+camera.destroy()
+controller.destroy()
+pedestrian.destroy()
+
+settings = world.get_settings()
+settings.synchronous_mode = False
+settings.fixed_delta_seconds = None
+world.apply_settings(settings)
+```
+
+---
 ## Summary
 
-During this tutorial, you have learned how to spawn a pedestrian with an AI controller, recover the ground truth 3D coordinates of the pedestrian bones and project those bones onto the 2D image captured by the camera sensor. You could use the techniques learned in this tutorial to set up training and validation for human pose estimation frameworks using the CARLA simulator.
+You have spawned a pedestrian with an AI controller, read the ground-truth 3D coordinates of its bones, and projected them onto the camera image. The same pieces make up the training and validation loop for a human pose estimation model.
 
 
 

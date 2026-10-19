@@ -1,7 +1,19 @@
-# Open cast mine map
+# Open-cast mine (Mine_01)
 
-ID: **Mine01**
+![mine01](img/catalogue/maps/mine01/mine_map.webp)
+<div style="text-align: right"><i>The open-cast pit of Mine_01 from above. Mine_01 &middot; sensor.camera.rgb &middot; Cinematic &middot; sunny afternoon</i></div>
 
-A model of an open-cast mining environment such as those commonly used for extracting minerals around the world. The mining area is connected to a parking area through a small network of access roads. This map was contributed by CARLA consortium members and sponsors [Synkrotron](https://www.synkrotron.ai/).
+A model of an open-cast mining environment of the kind used for extracting minerals around the world. The mining area is connected to a parking area by a small network of access roads. The map was contributed by CARLA consortium members and sponsors [Synkrotron](https://www.synkrotron.ai/).
 
-![mine01](../img/catalogue/maps/mine01/mine_map.webp)
+| | |
+| --- | --- |
+| __Map name__ | `Mine_01` |
+| __In the default package__ | yes |
+| __Surface__ | unpaved access roads and open pit, rather than the asphalt grid of the towns |
+| __Map-specific assets__ | `vehicle.miningtruck.miningtruck`, the mining earth mover, is only spawnable while this map is loaded |
+
+Load it like any other map:
+
+```py
+world = client.load_world('Mine_01')
+```
