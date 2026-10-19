@@ -65,7 +65,7 @@ jobs:
 
       - name: Download content
         run: |
-          git clone -b ue5-dev --depth 1 https://bitbucket.org/carla-simulator/carla-content.git Unreal/CarlaUnreal/Content/Carla
+          git clone -b ue58-dev-carla --depth 1 https://bitbucket.org/carla-simulator/carla-content.git Unreal/CarlaUnreal/Content/Carla
 
       - name: Activate conda environment
         run: |
