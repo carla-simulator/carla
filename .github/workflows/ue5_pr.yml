@@ -3,7 +3,7 @@ name: UE5-PR
 on:
   pull_request:
     branches:
-      - ue5-dev
+      - ue58-dev
     types: [opened, synchronize, reopened]
 
 concurrency:
