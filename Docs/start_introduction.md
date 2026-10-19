@@ -1,10 +1,7 @@
 # CARLA
 
-!!! Note
-    These pages document the Unreal Engine 5 line. The Unreal Engine 4.26 line has [its own documentation](https://carla.readthedocs.io/en/latest/).
-
-- [__The simulator__](#the-simulator)
-- [__The project__](#the-project)
+!!! important
+    This document refers to the latest version of CARLA built with Unreal Engine 5. For documentation relating to the Unreal Engine 4 version of CARLA please visit the [documentation for this version](https://carla.readthedocs.io/en/latest/).
 
 CARLA is an open-source driving simulator for use in autonomous driving applications. It was built from scratch with a modular and flexible API to address a range of tasks involved in the problem of driving. One of the main goals of CARLA is to help democratize autonomous driving R&D, serving as a tool that can be easily accessed and customized by users. To do so, the simulator has to meet the requirements of different use cases within the general problem of driving, such as learning driving policies or training perception algorithms. CARLA is built on Unreal Engine 5.8 to run the simulation and uses the [ASAM OpenDRIVE](https://www.asam.net/standards/detail/opendrive/) standard to define roads and urban settings. Control over the simulation is granted through a Python and C++ API.
 
@@ -17,18 +14,17 @@ The CARLA simulator consists of a client-server architecture. The server is resp
 
 The client side consists of a set of client modules controlling the behavior of actors and the state of the environment within the simulation. This is achieved by leveraging the CARLA API (in Python or C++), a layer that mediates between server and client that is constantly evolving to provide new functionalities.
 
-![CARLA client-server architecture](img/shared/client_server_architecture.svg)
+![CARLA client-server architecture](img/start_introduction/client_server.svg)
 
-On top of this structure, CARLA provides a number of features that cover different aspects of driving simulation. These are some of the key modules:
+The CARLA simulator combines a number of different features that handle different important aspects of the driving simulation. The following is a summary of some of the key modules:
 
-* __[Traffic Manager](adv_traffic_manager.md)__: drives the vehicles that are not the ego, so a scene has realistic urban traffic around it.
-* __[Sensors](ref_sensors.md)__: cameras, LiDAR, radar, GNSS, IMU and more. Sensors are actors themselves, attached to a vehicle or another actor. Their data can be read live or saved to disk.
-* __[Recorder](adv_recorder.md)__: replays a simulation exactly, to evaluate a run afterwards or re-run it with a different sensor rig.
-* __[Native ROS 2](ros2_native.md)__: the server publishes and subscribes ROS 2 topics directly, with no bridge process.
-* __[Open assets](catalogue.md)__: maps, vehicles, pedestrians and props, all customizable, plus [content packs](content_packs.md) to ship your own.
-* __[C++ client](tuto_cpp.md)__: the same API from C++, for integrating CARLA into a native stack.
-* __[NVIDIA integrations](nvidia.md)__: DLSS, neural reconstruction (NuRec) and the Alpamayo 2 Super driving stack.
-* __[ScenarioRunner](ts_traffic_simulation_overview.md)__ and __[Scenic](tuto_G_scenic.md)__: specific scenarios and routes, including the ones behind the [CARLA Leaderboard](https://leaderboard.carla.org/).
+* __[Traffic manager](adv_traffic_manager.md)__: A built-in system that takes control of the vehicles besides the one used for learning. It acts as a conductor provided by CARLA to recreate urban-like environments with realistic behaviours.
+* __[Sensors](ref_sensors.md)__: Vehicles rely on them to gather information about their surroundings. In CARLA they are a specific kind of actor attached to the vehicle and the data they receive can be retrieved and stored to ease the process. Currently the project supports different types of these, from cameras to radars, lidar and many more.
+* __[Recorder](adv_recorder.md)__: The recorder can replay a simulation exactly to enable retrospective evaluation of the outcome of a simulation and to rerun the simulation with alternative configurations of sensors, for example.
+* __[ROS 2](ros2_native.md)__: CARLA natively supports connectivity with ROS 2, a widely used set of software libraries and tools for robotics and autonomous driving.
+* __[Open assets](catalogue.md)__: CARLA facilitates different maps for urban settings with control over weather conditions and a blueprint library with a wide set of actors to be used. However, these elements can be customized and new ones can be created following simple guidelines.
+* __[Scenario runner](ts_traffic_simulation_overview.md) & [Scenic](tuto_G_scenic.md)__: In order to ease the learning process for vehicles, CARLA provides a series of routes describing different situations to iterate on, and Scenic can generate many varied scenarios from a single definition. These also set the basis for the [CARLA challenge](https://leaderboard.carla.org/), open for everybody to test their solutions and make it to the leaderboard.
+* __[Neural reconstruction](nvidia_nurec.md)__: CARLA integrates NVIDIA Neural Reconstruction (NuRec), which turns recorded camera and lidar data from real drives into photorealistic 3D scenes. CARLA runs the actors, physics and sensors inside these scenes, so a real recording can be replayed and then altered with the full CARLA API.
 
 ---
 ## The project
