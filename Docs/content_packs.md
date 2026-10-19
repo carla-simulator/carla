@@ -14,7 +14,7 @@ Two roles, two halves of this page:
 * __[Making a pack](#making-a-pack)__
     * __[Requirements](#requirements)__
     * __[A. Existing CARLA towns: `create`](#a-existing-carla-towns-create)__
-    * __[B. Your own content: `init`, author, `add`, `build`](#b-your-own-content-init-author-add-build)__
+    * __[B. Your own content](#b-your-own-content)__
     * __[Catalog JSON shapes](#catalog-json-shapes)__
     * __[Build details](#build-details)__
     * __[Checking a pack](#checking-a-pack)__
@@ -82,7 +82,7 @@ Which towns qualify: any map the base package does __not__ ship. The default pac
 
 Measured on the Shipping package: `Town12 Town13` cook in 8 minutes to 2.4 GB; the five-town example above in 9 minutes to 3.9 GB.
 
-### B. Your own content: `init`, author, `add`, `build`
+### B. Your own content
 
 ```sh
 carla-pack init NewPack
@@ -94,13 +94,13 @@ carla-pack build NewPack
 # -> Unreal/CarlaUnreal/Plugins/Packs/NewPack/Saved/CarlaPack/out/NewPack-1.0.0-carla-0.10.0-Linux.tar.gz
 ```
 
-#### 1. `init`
+#### 1. Create the pack folder
 
 ```sh
 carla-pack init NewPack [--carla-version 0.10.0] [--pack-version 1.0.0] [--description "..."]
 ```
 
-creates `Unreal/CarlaUnreal/Plugins/Packs/NewPack/` with the plugin descriptor, an empty manifest, `Config/PluginSettings.ini` (makes the cook stage the sidecar folders as loose files; `init` and `build` merge into an existing file, your sections and comments stay) and the content folders `Content/{Maps, Maps/OpenDrive, Maps/Nav, Maps/TM, Config, Static, Static/Static, Blueprints}`. `Static/Static/` is the default home for props: it carries CARLA's `Static` semantic label, like the base's `Content/Carla/Static/Static/`. The pack name becomes the mount point `/NewPack/`, so it must start with a letter and contain only letters, digits and `_`, and names taken by the engine or the project (`Game`, `Engine`, `Carla`, `Script`, existing plugins, …) are refused. `--root` keeps packs elsewhere than `Plugins/Packs`.
+`init` creates `Unreal/CarlaUnreal/Plugins/Packs/NewPack/` with the plugin descriptor, an empty manifest, `Config/PluginSettings.ini` (makes the cook stage the sidecar folders as loose files; `init` and `build` merge into an existing file, your sections and comments stay) and the content folders `Content/{Maps, Maps/OpenDrive, Maps/Nav, Maps/TM, Config, Static, Static/Static, Blueprints}`. `Static/Static/` is the default home for props: it carries CARLA's `Static` semantic label, like the base's `Content/Carla/Static/Static/`. The pack name becomes the mount point `/NewPack/`, so it must start with a letter and contain only letters, digits and `_`, and names taken by the engine or the project (`Game`, `Engine`, `Carla`, `Script`, existing plugins, …) are refused. `--root` keeps packs elsewhere than `Plugins/Packs`.
 
 Do not add the pack to `CarlaUnreal.uproject`: an enabled plugin would be cooked into the CARLA package itself. The `package` target checks this after its cook (`Unreal/Package/CheckNoPackLeak.cmake`) and fails when a `/<Pack>/` package name appears in the base asset registry or a `Plugins/Packs/<Pack>/` file was staged. The same check is `carla-pack check-base <Releases/<release> | AssetRegistry.bin> [--pack NewPack]`.
 
@@ -114,7 +114,7 @@ $CARLA_UNREAL_ENGINE_PATH/Engine/Binaries/Linux/UnrealEditor Unreal/CarlaUnreal/
 
 Save everything the pack ships under the pack root, following CARLA's layout: maps in `Maps/`, static meshes in `Static/`, vehicle and walker blueprints in `Blueprints/`. The usual CARLA authoring guides cover importing and setting up the asset — [props](content_authoring_props.md), [vehicles](tuto_content_authoring_vehicles.md) — with two differences: the destination folder is the pack root rather than `Content/Carla/...`, and the asset is registered in the pack's own catalog instead of the base `PropParameters.json` or `VehicleParameters.json`. Referencing CARLA's own assets (`/Game/Carla/...` materials, the vehicle base classes) is fine and keeps the pack small; they are not duplicated.
 
-__New maps live under the pack root.__ To start one from an existing town, duplicate it into the pack from the editor (content browser: right click > Duplicate, or File > Save As into `NewPack Content/Maps`) or with `carla-pack add NewPack --map Town12 --import` (see `add` below). Copying a `.umap` file from another content root does not work: the file keeps its original package name and, for World Partition maps, its actors reference that path. For a map you make, generate the OpenDRIVE file, the pedestrian navigation (`.bin`) and optionally Traffic Manager data; the pack ships them as sidecar files, and [Sidecar files](#sidecar-files) explains how to produce them. A map without an `.xodr` renders but has no map API (waypoints, Traffic Manager).
+__New maps live under the pack root.__ To start one from an existing town, duplicate it into the pack from the editor (content browser: right click > Duplicate, or File > Save As into `NewPack Content/Maps`) or with `carla-pack add NewPack --map Town12 --import` (see [Add maps, sidecar files and catalogs](#3-add-maps-sidecar-files-and-catalogs)). Copying a `.umap` file from another content root does not work: the file keeps its original package name and, for World Partition maps, its actors reference that path. For a map you make, generate the OpenDRIVE file, the pedestrian navigation (`.bin`) and optionally Traffic Manager data; the pack ships them as sidecar files, and [Sidecar files](#sidecar-files) explains how to produce them. A map without an `.xodr` renders but has no map API (waypoints, Traffic Manager).
 
 __Semantic tags.__ A mesh is labelled for semantic segmentation by the folder that follows `Static` in its path, exactly as in `Content/Carla/Static`: `/NewPack/Static/<Label>/SM_Thing` with `<Label>` one of `Building`, `Fence`, `Pedestrian`, `Pole`, `Other`, `Road`, `RoadLine`, `SideWalk`, `TrafficSign`, `Vegetation`, `Car`, `Wall`, `Sky`, `Ground`, `Bridge`, `RailTrack`, `GuardRail`, `TrafficLight`, `Static`, `Dynamic`, `Water`, `Terrain`, `Truck`, `Motorcycle`, `Bicycle`, `Bus`, `Rider`, `Train`, `Rock`, `Stone`, `Bush`. Elsewhere the server labels a mesh by the nearest folder above it whose name is a label, and a mesh with no such folder gets no label. `carla-pack add --props` is stricter: it refuses a catalog entry whose pack mesh is not under `Static/<Label>/` (`--allow-untagged` accepts it with a warning). Generic props go under `Static/Static/`, the folder `init` creates.
 
@@ -140,7 +140,7 @@ unreal.get_editor_subsystem(unreal.LevelEditorSubsystem).save_current_level()
 
 Duplicating a map (`EditorAssetLibrary.duplicate_asset`) copies the `.umap` alone — a World Partition copy opens empty — and opening the copy with `load_level` in the same commandlet process is fatal ("Old world ... not cleaned up by garbage collection"). A real copy of a World Partition map is a Save As (`EditorLoadingAndSavingUtils.save_map`), which is what `add --import` runs. `print()` output is swallowed by the commandlet; use `unreal.log_warning` or write a file.
 
-#### 3. `add`
+#### 3. Add maps, sidecar files and catalogs
 
 ```sh
 carla-pack add NewPack --map <Map|/Game/.../Map|file.umap> [--map ...] [--xodr f.xodr] [--nav f.bin] [--tm <file|dir>] [--world-partition] [--import|--copy]
@@ -158,7 +158,7 @@ carla-pack add NewPack --asset SM_Thing.uasset --dest Static/Static/
 
 Re-running `add` for the same map or catalog replaces the previous entry.
 
-#### 4. `build`
+#### 4. Build the pack against a release
 
 ```sh
 carla-pack build NewPack [--base <release-metadata.tar.gz | Releases/<release>>] [--config Development|Test|Shipping|DebugGame|Debug] [--out <dir>] [--dry-run]
@@ -437,4 +437,4 @@ Yes. Cooked content is configuration independent; the same pack mounts on Develo
 
 __Can I edit a CARLA town for my pack?__
 
-Make your own copy first: `carla-pack add NewPack --map Town12 --import` performs the editor's Save As into `/NewPack/Maps/Town12/Town12` (minutes for a large World Partition town, see `add`), then edit that copy in the editor and `build`. The pack then ships the copy under `/NewPack/`, so it can be installed next to a pack that ships the original in place.
+Make your own copy first: `carla-pack add NewPack --map Town12 --import` performs the editor's Save As into `/NewPack/Maps/Town12/Town12` (minutes for a large World Partition town, see [Add maps, sidecar files and catalogs](#3-add-maps-sidecar-files-and-catalogs)), then edit that copy in the editor and `build`. The pack then ships the copy under `/NewPack/`, so it can be installed next to a pack that ships the original in place.

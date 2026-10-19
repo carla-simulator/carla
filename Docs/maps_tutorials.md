@@ -16,7 +16,7 @@ Whichever route, a finished map needs three sidecar files beside the `.umap`: th
 
 - [__Content packs — overview__](content_packs.md)
 - [__Author a map in the editor__](content_packs.md#2-author-in-the-editor)
-- [__Add the map, OpenDRIVE and navigation files to a pack__](content_packs.md#3-add)
-- [__Build the pack against a release__](content_packs.md#4-build)
+- [__Add the map, OpenDRIVE and navigation files to a pack__](content_packs.md#3-add-maps-sidecar-files-and-catalogs)
+- [__Build the pack against a release__](content_packs.md#4-build-the-pack-against-a-release)
 - [__Install the pack and load the map__](content_packs.md#installing-a-pack)
 - [__Maps and navigation__](core_map.md) — loading maps, World Partition and converting legacy tiled towns
