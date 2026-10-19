@@ -75,8 +75,8 @@ def argument_parser():
     argparser.add_argument(
         '--generationv',
         metavar='G',
-        default='All',
-        help='restrict to certain vehicle generation')
+        default='3',
+        help='restrict to certain vehicle generation (values: "1","2","3","All" - default: "3")')
     argparser.add_argument(
         '--filterw',
         metavar='PATTERN',
@@ -605,7 +605,7 @@ def get_actor_blueprints(
     try:
         int_generation = int(generation)
         # Check if generation is in available generations
-        if int_generation in [1, 2, 3, 4]:
+        if int_generation in [1, 2, 3]:
             bps = [x for x in bps if int(x.get_attribute('generation')) == int_generation]
             return bps
         else:

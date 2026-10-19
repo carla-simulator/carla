@@ -25,7 +25,7 @@ cd /carla/root
 ./CarlaUnreal.sh
 ```
 
-To drive CARLA through the Python API, connect a client to the server port. The client controls the simulator through the [__client and world objects__](foundations.md#world-and-client). Open a Python notebook or a new script and start with:
+To drive CARLA through the Python API, connect a client to the server port. The client controls the simulator through the [__client and world objects__](foundations.md#client). Open a Python notebook or a new script and start with:
 
 ```py
 import carla
@@ -54,7 +54,9 @@ print(client.get_available_maps())
 world = client.load_world('Town10HD_Opt')
 ```
 
-The name has to match the map file exactly, ignoring case: `Town10HD_Opt`, not `Town10`. A source build ships every town; the default package cooks `Town10HD_Opt`, `Town15`, `Mine_01`, `OpenDriveMap` and `EmptyMap`, so the others are only available from a build or a [content pack](content_packs.md).
+`load_world()` takes the map's own name — `Town10HD_Opt`, not `Town10`. Case does not matter, the rest of the name does.
+
+Which maps a server has depends on how it was built or packaged, so `get_available_maps()` is the list that counts. A source build has all fifteen maps; a package has whatever was cooked into it, and anything else arrives as a [content pack](content_packs.md). See [Maps](core_map.md) for what ships.
 
 `client.reload_world()` resets the current map to its initial state without changing it. More about maps in [Maps](core_map.md).
 
@@ -62,7 +64,7 @@ The name has to match the map file exactly, ignoring case: `Town10HD_Opt`, not `
 ## Spectator navigation
 
 ![town_10_default](img/catalogue/maps/town10/town10default.webp)
-<div style="text-align: right"><i>The spectator view of Town10HD_Opt when the server starts. Town10HD_Opt &middot; sensor.camera.rgb &middot; Cinematic &middot; sunny afternoon</i></div>
+<div style="text-align: right"><i>The spectator view of Town10HD_Opt when the server starts.</i></div>
 
 The spectator is a view into the simulation. It opens in a new window when the server runs on a machine with a screen, and it is the quickest way to see the result of what a script does: vehicles appearing, the weather changing, a layer toggled on or off.
 
@@ -74,7 +76,7 @@ Fly it with the mouse and the QWE-ASD keys:
 | `A` / `D` | left / right |
 | `E` / `Q` | up / down |
 
-Click and drag in the spectator window to control pitch and yaw.
+Hold down the right mouse button and move the mouse to look around.
 
 The spectator is also an actor, so a client can read and set its transform:
 
@@ -161,7 +163,7 @@ for vehicle in world.get_actors().filter('*vehicle*'):
     vehicle.set_autopilot(True)
 ```
 
-The simulation is now running, with traffic driving around the map and a camera recording from the ego vehicle. The Traffic Manager has many knobs for customizing that traffic; see [Traffic Manager](tuto_G_traffic_manager.md).
+The simulation is now running, with traffic driving around the map and a camera recording from the ego vehicle. The Traffic Manager has many knobs for shaping that traffic — speed, distance to the car in front, whether a vehicle runs lights.
 
 ---
 ## Choose your map
@@ -175,7 +177,7 @@ CARLA ships several towns, from a dense city centre to a mining environment. Bro
 ## Choose your vehicles
 
 ![vehicles_overview](img/catalogue/vehicles/vehicle_montage.webp)
-<div style="text-align: right"><i>The vehicle blueprints.</i></div>
+<div style="text-align: right"><i>Montage of several of the available vehicle blueprints: cars, vans, trucks, motorcycles and bicycles.</i></div>
 
 CARLA provides a library of vehicles to fill a simulation with traffic. Browse the models in the [vehicle catalogue](catalogue_vehicles.md), or list the blueprints from a client:
 

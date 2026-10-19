@@ -58,7 +58,6 @@ nav:
 # Pages reached from a parent page instead of the sidebar
 not_in_nav: |
   /adv_agents.md
-  /adv_benchmarking.md
   /adv_digital_twin.md
   /adv_multigpu.md
   /adv_opendrive.md
@@ -79,7 +78,6 @@ not_in_nav: |
   /catalogue_vehicles.md
   /cont_code_of_conduct.md
   /content_authoring_props.md
-  /core_concepts.md
   /core_world.md
   /cpp_api_parity.md
   /custom_assets_tutorials.md
@@ -109,11 +107,8 @@ not_in_nav: |
   /tuto_G_bounding_boxes.md
   /tuto_G_control_vehicle_physics.md
   /tuto_G_control_walker_skeletons.md
-  /tuto_G_getting_started.md
-  /tuto_G_instance_segmentation_sensor.md
   /tuto_G_openstreetmap.md
   /tuto_G_pedestrian_bones.md
-  /tuto_G_pygame.md
   /tuto_G_texture_streaming.md
   /tuto_G_traffic_manager.md
   /tuto_content_authoring_vehicles_materials.md

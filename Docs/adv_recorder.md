@@ -1,6 +1,8 @@
 # Recorder
 
-This feature allows to record and reenact a previous simulation. All the events happened are registered in the [recorder file](ref_recorder_binary_file_format.md). There are some high-level queries to trace and study those events.
+The recorder saves the state of the simulation on every frame: vehicles, pedestrians, traffic lights, weather and the rest of what the world holds at that moment.
+
+The replayer plays that file back exactly as it was recorded, so the run can be inspected afterwards: from any point in the file, at any speed, and followed with the spectator. The [queries](#queries) below search a recording for collisions and for vehicles that got stuck, and the file's layout is documented in [Recorder binary file format](ref_recorder_binary_file_format.md).
 
 *   [__Recording__](#recording)  
 *   [__Simulation playback__](#simulation-playback)  
@@ -18,15 +20,24 @@ All the data is written in a binary file on the server side only. However, the r
 
 Actors are updated on every frame according to the data contained in the recorded file. Actors in the current simulation that appear in the recording will be either moved or re-spawned to emulate it. Those that do not appear in the recording will continue their way as if nothing happened.
 
-The recorder file includes:
+Every recording holds:
 
-*   __Actors__ — creation and destruction, bounding and trigger boxes.
-*   __Traffic lights__ — state changes and time settings.
-*   __Vehicles__ — position and orientation, linear and angular velocity, light state, physics control, door state and wheel animation.
-*   __Pedestrians__ — position and orientation, linear and angular velocity, and bone poses.
+*   __Actors__ — creation and destruction.
+*   __Traffic lights__ — state changes.
+*   __Vehicles__ — position and orientation, light state, door state and wheel animation.
+*   __Pedestrians__ — position and orientation, and their animation state.
 *   __Bikers__ — the rider's animation state.
 *   __Lights__ — light states from buildings, streets and vehicles.
 *   __Weather__ — the weather parameters and every change made to them.
+
+That is what the replayer needs to reproduce the run. Recording with `additional_data` adds everything else that describes the state rather than reproduces it:
+
+*   __Kinematics__ — linear and angular velocity of vehicles and pedestrians.
+*   __Bounding boxes and trigger volumes__ of the actors.
+*   __Physics control__ of each vehicle.
+*   __Traffic light times__ — the duration configured for each state.
+*   __Walker bones__ — the full skeleton pose of each pedestrian.
+*   __Execution time__ — how long the frame took on the machine that recorded it.
 
 To start recording there is only need for a file name. Using `\`, `/` or `:` characters in the file name will define it as an absolute path. If no path is detailed, the file will be saved in `CarlaUnreal/Saved`.
 
@@ -34,14 +45,11 @@ To start recording there is only need for a file name. Using `\`, `/` or `:` cha
 client.start_recorder("/home/carla/recording01.log")
 ```
 
-By default, the recorder is set to store only the necessary information to play the simulation back. In order to save all the information previously mentioned, the argument `additional_data` has to be configured when starting the recording.
+To record the additional data as well, pass `additional_data`:
 
 ```py
 client.start_recorder("/home/carla/recording01.log", True)
 ```
-
-!!! Note
-    Additional data includes: linear and angular velocity of vehicles and pedestrians, traffic light time settings, execution time, actors' trigger and bounding boxes, and physics controls for vehicles.
 
 To stop the recording, the call is also straightforward.
 
@@ -211,10 +219,12 @@ Detects vehicles that were stuck during the recording. An actor is considered bl
 print(client.show_recorder_actors_blocked("recording01.log", min_time, min_distance))
 ```
 
-| Parameter                                                 | Description                                               | Default                                                   |
-| -------------------------------------------------------- | -------------------------------------------------------- | -------------------------------------------------------- |
-| `min_time`                                                | Minimum seconds to move \`min\_distance\`.                | 30secs.                                                   |
-| `min_distance`                                            | Minimum centimeters to move to not be considered blocked. | 10cm.                                                     |
+Both arguments are required; neither has a default.
+
+| Parameter | Description |
+| --- | --- |
+| `min_time` | Seconds the actor has to move `min_distance` in. |
+| `min_distance` | Centimetres it has to move in that time to not count as blocked. |
 
 
 

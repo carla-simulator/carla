@@ -1,6 +1,6 @@
 # ASAM OpenDRIVE standalone mode
 
-CARLA can run a full simulation from an ASAM OpenDRIVE file alone, with no 3D assets of your own. The simulator parses the `.xodr`, builds a drivable world around its road definition, and populates it with the traffic lights, signs and pedestrian navigation the file describes. Any map you have as OpenDRIVE can therefore be driven in CARLA in a few seconds.
+CARLA can run a full simulation from an ASAM OpenDRIVE file alone, with no 3D assets of your own. The simulator parses the `.xodr`, builds a drivable world around its road definition, and populates it with the traffic lights, signs and pedestrian navigation the file describes. Any map you have as OpenDRIVE can therefore be driven in CARLA. Generation takes seconds for a small map and can grow to minutes for a large one.
 
 - [__Load a map__](#load-a-map)
 - [__Generation parameters__](#generation-parameters)
@@ -27,7 +27,7 @@ python3 config.py -x /path/to/map.xodr
 ```
 
 !!! Note
-    If the server answers `opendrive could not be correctly parsed`, check that it can write to `CarlaUnreal/Content/Carla/Maps/OpenDrive/`. The server needs that directory to parse the file.
+    Generation writes as it goes: the road network to `Saved/OpenDrive/OpenDriveMap.xodr` and the navigation mesh to `Saved/Nav/`. The server needs write access to its `Saved/` directory, not to its content directory, which is inside the pak in a packaged build and deliberately read-only.
 
 ---
 
@@ -40,7 +40,7 @@ The second argument of `generate_opendrive_world()` is a [`carla.OpendriveGenera
 | `vertex_distance` | 2.0 m | Spacing of the mesh vertices. Larger is coarser; too small makes the mesh heavy to work with. |
 | `max_road_length` | 50.0 m | Length of each mesh chunk. The world is split so the engine can cull what is off screen; very small chunks trade culling for object count. |
 | `wall_height` | 1.0 m | Height of the walls raised at the outer boundary of the road, which stop a vehicle driving off into the void. |
-| `additional_width` | 0.6 m | Widening applied to junction lanes, 0.3 m per side, as a margin against falling off. |
+| `additional_width` | 0.6 m | Widening applied to each side of a driving lane inside a junction, so the default adds 1.2 m to its width, as a margin against falling off. |
 | `smooth_junctions` | True | Reinterprets the OpenDRIVE where lanes meet at different heights, so a junction does not self-occlude. False builds the junction exactly as written. |
 | `enable_mesh_visibility` | True | False keeps the road collidable but stops rendering it, which saves most of the rendering cost. |
 | `enable_pedestrian_navigation` | True | Builds the navigation mesh so walkers can use the sidewalks and crosswalks. |
@@ -58,9 +58,9 @@ client.generate_opendrive_world(xodr, params)
 
 ## What is generated
 
-The world is no longer just a road surface in the void. From the same file CARLA builds:
+Everything in the world comes from the one file. CARLA builds:
 
-- __The road mesh__, lane by lane, including the elevation and the `lateralProfile` of each road: both `superelevation` and `shape` are applied, so cambered and crowned roads are reproduced rather than flattened.
+- __The road mesh__, lane by lane, following each road's elevation profile and the `shape` of its `lateralProfile`, so a crowned road is reproduced rather than flattened.
 - __A ground plane__ around the road, following its elevation and skirted outwards past the road bounds, so the horizon is terrain instead of void.
 - __Road markings and crosswalks__, drawn as decals from the OpenDRIVE lane markings, including markings through junctions.
 - __Traffic lights, stop and yield signs__, placed from the signals in the file and wired into junction controllers.
@@ -79,12 +79,13 @@ Everything comes from the `.xodr`, so an error in the file becomes an error in t
 
 ## Console controls
 
-| Command | Effect |
-| ------- | ------ |
-| `carla.OpenDrive.StreetFurniture 0` | Generate the bare road, with no lamps, vegetation or signage. `1` is the default. |
-| `carla.MapGenQA` | Re-run the generated-map checks — road support, terrain invading the road, objects left on the roadway — and log what they find. They also run automatically after generation. |
+Two Unreal console commands change what generation does. They are typed into the server's own console, not sent from the client: open it with the `~` key in an editor or development build, or pass `-execcmds=` on the command line. A packaged Shipping build strips that parser, as [Rendering options](adv_rendering_options.md) explains.
 
-A client can add its own geometry to a generated world with the `spawn_custom_mesh` RPC, which takes vertices, triangles and a material.
+`carla.OpenDrive.StreetFurniture 0` generates the bare road, with no lamps, vegetation or signage. `1` is the default, and the command has to be set before the world is generated to have any effect.
+
+`carla.MapGenQA` re-runs the generated-map checks — road support, terrain invading the road, objects left on the roadway — and logs what they find. They also run automatically after every generation, so this is for re-reading the verdict.
+
+A client can add its own geometry to a generated world with [`World.spawn_custom_mesh()`](python_api.md#carla.World.spawn_custom_mesh), which takes vertices, triangles and a material.
 
 ---
 
@@ -107,4 +108,5 @@ Junction lanes are also widened by `additional_width`, and the outer boundary of
 
 - __Sidewalk height is fixed.__ Sidewalks must stand above the road for collisions to register, and RoadRunner does not export the height, so CARLA applies one value everywhere.
 - __Junction smoothing changes the geometry.__ It is on by default because it prevents the defect above, but the result is not a literal reading of the file. Turn it off when the mesh has to match the definition exactly.
-- __The file is the source of truth.__ Overlapping lanes, inconsistent elevations or malformed junctions are reproduced faithfully. Validate the `.xodr` before blaming the simulation.
+- __Superelevation is ignored.__ The `superelevation` and `crossfall` entries of a `lateralProfile` are parsed and discarded; only `shape` reaches the mesh. A banked curve is built flat.
+- __The file is the source of truth.__ Overlapping lanes, inconsistent elevations or malformed junctions are reproduced faithfully.

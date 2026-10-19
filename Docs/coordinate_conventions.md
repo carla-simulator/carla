@@ -10,7 +10,6 @@ CARLA's world is **left-handed**. Almost every robotics toolchain — ROS 2 / tf
 - [__Quaternions__](#quaternions)
 - [__Typed vectors__](#typed-vectors)
 - [__Pitfalls__](#pitfalls)
-- [__Where this is enforced__](#where-this-is-enforced)
 
 !!! Important
     `carla.Transform.get_matrix()`, `get_forward_vector()`, `get_right_vector()` and `get_up_vector()` are expressed in **CARLA's frame**. They are not "uncorrected" right-handed math and must not be sign-flipped to make them look right-handed. Convert at the boundary instead, with [`to_right_handed()`](#converting-to-a-right-handed-frame).
@@ -146,23 +145,6 @@ rpy = Rotation.from_matrix(m[:3, :3]).as_euler("xyz", degrees=True)
 # rpy == (flu.rotation.roll, flu.rotation.pitch, flu.rotation.yaw)
 ```
 
-### C++
-
-The same adapters exist in `LibCarla`:
-
-```cpp
-#include <carla/geom/Transform.h>
-
-const carla::geom::RightHandedTransform flu = transform.ToRightHanded();
-const carla::geom::Quaternion q = flu.GetQuaternion();
-const std::array<float, 16> m = flu.GetMatrix();
-
-const carla::geom::Transform back =
-    carla::geom::Transform::FromRightHanded(flu);
-```
-
-`carla::geom::Location::ToRightHanded()` returns the existing `carla::geom::RightHandedVector3D`; `carla::geom::Rotation::ToRightHanded()` returns `carla::geom::RightHandedRotation`.
-
 ---
 
 ## Quaternions
@@ -216,21 +198,8 @@ No API returns or takes them: `Actor.get_velocity()`, `get_angular_velocity()` a
 
 ## Pitfalls
 
-* **Do not "correct" `get_matrix()`.** It is left-handed on purpose. A patch that flips its pitch/roll signs makes LibCarla describe the mirror image of the pose the engine actually builds from the same `carla.Rotation`, and the break is invisible to anything that only ever uses yaw — traffic manager, basic vehicle control — while silently corrupting every camera, lidar and radar pose.
+* **Do not "correct" `get_matrix()`.** It is left-handed on purpose. Flipping its pitch and roll signs gives you the mirror image of the pose the simulator actually builds from the same `carla.Rotation`, and the break is invisible to anything that only ever uses yaw — traffic manager, basic vehicle control — while silently corrupting every camera, lidar and radar pose.
 * **Do not map Euler angles between the frames by ad-hoc reasoning.** The three sign flips above are the whole answer; anything else (swapping axes, negating roll, transposing) will pass a yaw-only smoke test and fail on a pitched or rolled sensor.
 * **Check against a pitched or rolled vector.** `det(R)` tells you nothing here: both frames produce proper rotations with `det(R) = +1`. Compare the forward vector of a pose with a non-zero pitch and roll against the one your consumer computes, or round-trip the transform through `to_right_handed()`; a yaw-only test passes either way.
-* **Units.** CARLA's Python and C++ APIs are in meters and degrees. The Unreal Editor and the engine's own `FVector` are in centimeters.
+* **Units.** The CARLA API is in meters and degrees. The Unreal Editor is in centimeters.
 * **Rotation order.** Pitch and roll compose in the order shown by the matrix above. It was the other way round until CARLA 0.10.0, so a client that compensated for the old order has to drop that workaround.
-
----
-
-## Where this is enforced
-
-| what | where |
-|---|---|
-| C++ adapters | `LibCarla/source/carla/geom/{Location,Rotation,Transform}.h`, `RightHandedRotation.h`, `RightHandedTransform.h`, `RightHandedVector3D.h` |
-| C++ tests | `LibCarla/source/test/common/test_geom.cpp` (`right_handed_*`) |
-| ROS 2 bridge | `LibCarla/source/carla/ros2/publishers/TransformQuaternion.h` — an independent implementation of the same mapping, cross-checked by the tests above |
-| Python bindings | `PythonAPI/carla/src/Geometry.cpp` |
-| Python tests | `PythonAPI/test/unit/test_transform.py` (`TestRightHandedBoundary`) |
-

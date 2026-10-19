@@ -42,7 +42,7 @@ On each [carla.WheelPhysicsControl](python_api.md#carla.WheelPhysicsControl) in 
 | `max_brake_torque`, `max_hand_brake_torque` | Nm | Braking force on that wheel. |
 | `suspension_*`, `spring_rate` | see [suspension](tuto_D_customize_vehicle_suspension.md) | The suspension of that wheel. |
 
-The wheels are ordered front-left, front-right, rear-left, rear-right.
+The wheels are ordered as [`carla.VehicleWheelLocation`](python_api.md#carla.VehicleWheelLocation) numbers them: `FL_Wheel`, `FR_Wheel`, `BL_Wheel`, `BR_Wheel` — front-left, front-right, back-left, back-right. Two-wheelers have two entries instead, `Front_Wheel` and `Back_Wheel`.
 
 ---
 ## Vehicle control code example
@@ -101,14 +101,23 @@ if __name__ == '__main__':
 
 ## Viewing vehicle telemetry
 
-Vehicle telemetry can be visualized by calling the [`Vehicle.show_debug_telemetry`](python_api.md#carla.Vehicle.show_debug_telemetry) method. This will provide graph views of several metrics on the server window as well as vehicle reference points on the simulation window. Only one vehicle can be shown at a time: enabling a second one disables the first.
+[`Vehicle.get_telemetry_data`](python_api.md#carla.Vehicle.get_telemetry_data) returns what the physics solver last computed for a vehicle:
 
-!!! Warning
-    On the UE 5.8 server the on-screen telemetry currently draws nothing. Read the same values from the client with `get_telemetry_data`, below.
+| Field | Units | What it is |
+| --- | --- | --- |
+| `speed` | m/s | Forward speed. |
+| `steer`, `throttle`, `brake` | — | The control the solver last applied, as it was received. |
+| `engine_rpm` | rpm | Engine speed. |
+| `gear` | — | Current gear. `0` while an automatic gearbox is changing gear. |
+| `wheels` | list | One entry per wheel, in `FL_Wheel`, `FR_Wheel`, `BL_Wheel`, `BR_Wheel` order. |
 
-You can try the telemetry visualization tool in the example script `manual_control.py` located in `PythonAPI/examples`. Activate the telemetry view by pressing `T`.
+And per wheel:
 
-To read the same state from the client instead of watching it, [`Vehicle.get_telemetry_data`](python_api.md#carla.Vehicle.get_telemetry_data) returns what the solver last computed: the applied control, forward speed, engine RPM and gear, and the slip and angular velocity of each wheel.
+| Field | Units | What it is |
+| --- | --- | --- |
+| `lat_slip` | degrees | Slip angle of the tyre. |
+| `long_slip` | — | Longitudinal slip ratio of the tyre. |
+| `omega` | rad/s | Angular velocity of the wheel. |
 
 ```py
 telemetry = vehicle.get_telemetry_data()
@@ -118,7 +127,9 @@ for wheel in telemetry.wheels:
     print(wheel.lat_slip, wheel.long_slip, wheel.omega)
 ```
 
-Logged every tick, it shows what the solver does with the controls. Here a Lincoln MKZ launches at full throttle, changes lane and brakes to a stop; `gear` is `0` while the automatic transmission changes gear:
+[`Vehicle.show_debug_telemetry`](python_api.md#carla.Vehicle.show_debug_telemetry) is a separate thing, and not a view of the same data: it prints each wheel's load in newtons and the friction of the surface under it as a text overlay on a rendered server window. Those two quantities are not in `get_telemetry_data`, and nothing it reports is on the overlay. `manual_control.py` toggles it with `T`, and only one vehicle can be shown at a time.
+
+Logged every tick, `get_telemetry_data` shows what the solver does with the controls. Here a Lincoln MKZ launches at full throttle, changes lane and brakes to a stop; `gear` is `0` while the automatic transmission changes gear:
 
 ![telemetry_plot](img/tuto_G_control_vehicle_physics/telemetry_plot.png)
 <div style="text-align: right"><i>Controls, speed, engine RPM and gear, and the angular velocity of the four wheels from <code>get_telemetry_data()</code>, at 50 Hz with 0.01 s physics substeps. Town10HD_Opt &middot; vehicle.lincoln.mkz</i></div>
