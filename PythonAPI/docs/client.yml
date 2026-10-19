@@ -330,7 +330,7 @@
           Path on the server host of the pack directory (or its `carla-pack.json`).
       return: carla.ContentPackInfo
       doc: >
-        Mounts a content pack (a content-only Unreal plugin cooked against this CARLA release, with a `carla-pack.json` manifest) into the running server without a restart. Its maps are listed by carla.Client.get_available_maps and loadable with carla.Client.load_world, and its catalogs (`Config/*.json`) are added to the blueprint library on the next episode. Raises a RuntimeError naming the reason when the path is not a pack, the pack was built for another base release or platform, or a pack of that name is already mounted.
+        Mounts a content pack (a content-only Unreal plugin cooked against this CARLA release, with a `carla-pack.json` manifest) into the running server without a restart. Its maps are listed by carla.Client.get_available_maps and loadable with carla.Client.load_world, and its vehicles, walkers, props and blueprints (`Config/*.json`) are in the blueprint library at once; an entry that overrides an existing blueprint takes effect at the next episode. Raises a RuntimeError naming the reason when the path is not a pack, the pack was built for another base release or platform, or a pack of that name is already mounted.
     # --------------------------------------
     - def_name: unmount_content_pack
       params:
