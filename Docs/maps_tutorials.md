@@ -6,17 +6,17 @@ A map is the 3D model of a town plus the definition of its road network, written
 | --- | --- | --- | --- |
 | __Import an FBX + OpenDRIVE__ | Bringing a RoadRunner export into a source build and decorating it in the editor | yes | [Content authoring - maps](tuto_content_authoring_maps.md#importing-your-road-network-into-carla); `Util/Tools/Import.py` and the `import-carla-ue58-map` [agent skill](agent_skills.md) |
 | __Content pack__ | Shipping a finished map that drops into any CARLA package of the same release | to build the pack, not to use it | [Content packs](content_packs.md) |
-| __Digital Twin Tool__ | Generating a decorated town (roads, buildings, vegetation) from an OpenStreetMap region in the editor; experimental | yes | [Digital Twin Tool](adv_digital_twin.md) |
+| __Digital Twin Tool__ | Generating a decorated town (roads, buildings, vegetation) from an OpenStreetMap region in the editor; not usable end to end in this release | yes | [Digital Twin Tool](adv_digital_twin.md) |
 | __OpenDRIVE standalone mode__ | Driving on a road network with no scenery, generated at runtime from an `.xodr` | no | [OpenDRIVE standalone mode](adv_opendrive.md) |
-| __OpenStreetMap__ | Turning a real place into a drivable road network with no scenery | yes: the Python API built with `-DENABLE_OSM2ODR=ON` | [Generate maps with OpenStreetMap](tuto_G_openstreetmap.md) |
+| __OpenStreetMap__ | Turning a real place into a drivable road network with no scenery; not available in this release (the `osm2odr` converter is not in the repository) | — | [Generate maps with OpenStreetMap](tuto_G_openstreetmap.md) |
 
-A map with scenery (a `.umap`, from an import, a content pack or the Digital Twin Tool) needs three sidecar files beside it: the `.xodr` road network, the `.bin` pedestrian navigation mesh and, optionally, the Traffic Manager data. [Content packs — sidecar files](content_packs.md#sidecar-files) explains how to produce them, including the `RecastBuilder` and `FBX2OBJ` binaries that, when missing, silently leave a map with no navigation.
+A map with scenery (a `.umap`, from an import or a content pack) needs three sidecar files beside it: the `.xodr` road network, the `.bin` pedestrian navigation mesh and, optionally, the Traffic Manager data. [Content packs — sidecar files](content_packs.md#sidecar-files) explains how to produce them, including the `RecastBuilder` and `FBX2OBJ` binaries that, when missing, silently leave a map with no navigation.
 
 __Create a map in the editor__
 
 - [__Content authoring - maps__](tuto_content_authoring_maps.md) — road network in RoadRunner, import into CARLA, then assets, traffic lights, signs, materials, road painter and vegetation
 - [__Create a large map in RoadRunner__](large_map_roadrunner.md)
-- [__Digital Twin Tool__](adv_digital_twin.md) — procedural town from OpenStreetMap
+- [__Digital Twin Tool__](adv_digital_twin.md) — procedural town from OpenStreetMap, and its traffic light, sign and vegetation tools
 
 __Ship a map as a content pack__
 
