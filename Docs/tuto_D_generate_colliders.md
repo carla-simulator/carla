@@ -41,7 +41,7 @@ __2.1__ Open a 3D modelling software and, using the original mesh as reference, 
 ![manual_meshgen](img/tuto_D_generate_colliders/tuto_D_colliders_mesh.jpg)
 <div style="text-align: right"><i>Modelling a low-density collider over the original body mesh, used as reference.</i></div>
 
-__2.2__ Save the new mesh as FBX. Name the mesh as `sm_sc_<model_of_vehicle>.fbx`. E.g. `sm_sc_audiTT.fbx`.
+__2.2__ Save the new mesh as FBX. Name the mesh as `SM_sc_<model_of_vehicle>.fbx`. E.g. `SM_sc_audiTT.fbx`.
 
 !!! Note
     As for the wheels and additional elements such as roofs, mudguards, etc. the new mesh should follow the geometry quite accurately. Placing simple cubes will not do it.
@@ -49,7 +49,7 @@ __2.2__ Save the new mesh as FBX. Name the mesh as `sm_sc_<model_of_vehicle>.fbx
 ### 3-Import the mesh into UE
 
 __3.1__ Open CARLA in UE and go to `Content/Carla/Static/Car/4Wheeled/<model_of_vehicle>`.  
-__3.2__ Press `right-click` to import the new mesh `SM_sc_<model_of_vehicle>.fbx`.
+__3.2__ Right-click to import the new mesh `SM_sc_<model_of_vehicle>.fbx`.
 
 ### 4-Add the mesh as collider
 
@@ -80,7 +80,7 @@ __4.3__ Press `Compile` in the toolbar above and save the changes.
 
 *   __Build CARLA from source__ on [Linux](build_linux_ue5.md) or [Windows](build_windows_ue5.md).  
 *   __Blender 2.80 or newer__ from the [official site](https://www.blender.org/download/) for free (open-source 3D modelling software).  
-*   __VHACD Plugin for Blender__ following the using the instructions in [here](https://github.com/andyp123/blender_vhacd). This plugin automatically creates an approximation of a selected object using a collection of convex hulls. [Read more](https://github.com/kmammou/v-hacd).
+*   __VHACD Plugin for Blender__ following the instructions [here](https://github.com/andyp123/blender_vhacd). This plugin automatically creates an approximation of a selected object using a collection of convex hulls. [Read more](https://github.com/kmammou/v-hacd).
 
 !!! Note
     This [series](https://www.youtube.com/watch?v=ppASl6yaguU) may be a good introduction to Blender for newcomers.
@@ -116,7 +116,7 @@ __4.2__ Create separate boundaries for side mirrors using the VHACD tool.
 <div style="text-align: right"><i>Video: separate boundaries for the side mirrors.</i></div>
 
 !!! Warning
-    Be very careful about naming the object. Each boundary should have begin with `UCX_`, and the rest of the name has to be __exactly__ the same as the original mesh.
+    Be very careful about naming the object. Each boundary should begin with `UCX_`, and the rest of the name has to be __exactly__ the same as the original mesh.
 
 ### 5-Export from Blender to FBX
 
@@ -137,6 +137,14 @@ __Step 8.__ *(in UE)* — Create constraints that connect the different joints a
 <div style="text-align: right"><i>Video: importing the collider into the physics asset and creating the constraints.</i></div>
 
 ---
+## After replacing a collider
+
+Two things are easy to miss and both leave the vehicle behaving as if nothing had changed:
+
+*   __Assign and save the physics asset__ on `SK_<Vehicle>`. An inherited template physics asset can survive the whole procedure, so re-check it after reopening the editor.
+*   __Rebuild__ so the Chaos collision is cooked again: `cmake --build Build/Release --target carla-server`, or just reopen the editor for an editor-only test.
+
+---
 
 That is a wrap on how to change the default colliders for vehicles in CARLA.
 
@@ -148,11 +156,3 @@ Open CARLA and mess around for a while. If there are any doubts, feel free to po
 CARLA forum</a>
 </p>
 </div>
-
----
-## After replacing a collider
-
-Two things are easy to miss and both leave the vehicle behaving as if nothing had changed:
-
-*   __Assign and save the physics asset__ on `SK_<Vehicle>`. An inherited template physics asset can survive the whole procedure, so re-check it after reopening the editor.
-*   __Rebuild__ so the Chaos collision is cooked again: `cmake --build Build/Release --target carla-server`, or just reopen the editor for an editor-only test.

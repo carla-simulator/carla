@@ -110,7 +110,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 * __Blueprint ID__: `vehicle.lincoln.mkz`
 * __Base type__: car
 * __Generation__: unspecified
-* __Number of wheels__: 3
+* __Number of wheels__: 4
 * __Has lights__: yes
 * __Has opening doors__: yes
 
