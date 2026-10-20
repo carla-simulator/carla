@@ -142,7 +142,7 @@ __Step 8.__ *(in UE)* — Create constraints that connect the different joints a
 Two things are easy to miss and both leave the vehicle behaving as if nothing had changed:
 
 *   __Assign and save the physics asset__ on `SK_<Vehicle>`. An inherited template physics asset can survive the whole procedure, so re-check it after reopening the editor.
-*   __Rebuild__ so the Chaos collision is cooked again: `cmake --build Build/Release --target carla-server`, or just reopen the editor for an editor-only test.
+*   __Repackage__ so the Chaos collision is cooked again: `cmake --build Build/Release --target package`, or just reopen the editor for an editor-only test.
 
 ---
 
@@ -156,11 +156,3 @@ Open CARLA and mess around for a while. If there are any doubts, feel free to po
 CARLA forum</a>
 </p>
 </div>
-
----
-## After replacing a collider
-
-Two things are easy to miss and both leave the vehicle behaving as if nothing had changed:
-
-*   __Assign and save the physics asset__ on `SK_<Vehicle>`. An inherited template physics asset can survive the whole procedure, so re-check it after reopening the editor.
-*   __Rebuild__ so the Chaos collision is cooked again: `cmake --build Build/Release --target carla-server`, or just reopen the editor for an editor-only test.
