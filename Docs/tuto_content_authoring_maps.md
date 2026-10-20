@@ -1,6 +1,6 @@
 # Content authoring - Maps
 
-CARLA comes with a generous compliment of assets for creating driving simulations out of the box. However, the real power of CARLA comes in its comprehensive extensibility, allowing users to create entirely custom environments populated with bespoke assets like buildings, benches, trash cans, statues, street lights and bus stops. 
+CARLA comes with a generous complement of assets for creating driving simulations out of the box. However, the real power of CARLA comes in its comprehensive extensibility, allowing users to create entirely custom environments populated with bespoke assets like buildings, benches, trash cans, statues, street lights and bus stops. 
 
 In this tutorial we will cover the process of creating a simple map for use with CARLA. We will use two software packages to create parts of the map. We will create the road network using [__RoadRunner__](https://es.mathworks.com/products/roadrunner.html) and then add assets to the map through the [__Unreal Editor__](https://www.unrealengine.com/en-US/features/the-unreal-editor).
 
@@ -8,6 +8,7 @@ In this tutorial we will cover the process of creating a simple map for use with
 * __[Large maps](#large-maps)__
 * __[Digital Twin Tool](#digital-twin-tool)__
 * __[RoadRunner](#create-a-road-network-using-roadrunner)__  
+* __[TrueVision designer](#truevision-designer)__
 * __[Importing into CARLA](#importing-your-road-network-into-carla)__
 * __[Importing assets](#importing-assets-and-adding-them-to-the-map)__
 * __[Traffic lights](#traffic-lights)__
@@ -91,7 +92,7 @@ export CARLA_UNREAL_ENGINE_PATH=/path/to/UnrealEngine_5.5
 python3 Util/Tools/Import.py --package tutorial
 ```
 
-`--package` names the package the map is imported into. The importer creates a package descriptor in `Import/` if there is none, imports the geometry, applies CARLA's road materials, prepares the map for cooking and builds the Traffic Manager cache. Do not use `Util/Tools/Import.sh`: on this branch it fails before reaching `Import.py`.
+`--package` names the package the map is imported into. The importer creates a package descriptor in `Import/` if there is none, imports the geometry, applies CARLA's road materials, prepares the map for cooking and builds the Traffic Manager cache.
 
 !!! Warning
     The importer also tries to build the pedestrian navigation mesh, and on this branch that step silently does nothing, because `RecastBuilder` and `FBX2OBJ` are not in `Util/DockerUtils/dist/`. Without them walkers cannot navigate the new map. Copy `RecastBuilder` from the build tree into that folder before importing: `cp $(find Build -name RecastBuilder -type f | head -1) Util/DockerUtils/dist/`.
@@ -166,8 +167,6 @@ Now save the asset and it is ready for use in your map. You can now drag the ass
 
 Now save the map with __File > Save Current Level__ (`Ctrl + S`) and it is ready to use. Press __Play__ to run the simulation in the editor.
 
-This concludes the Map authorship guide. Now you know how to create a road network and import 3D assets for use in CARLA.
-
 ## Traffic lights
 
 To add traffic lights to your new map:
@@ -190,8 +189,6 @@ __5.__ Traffic light timing is only configurable through the Python API. See the
 
 ![ue_tlsigns_example](img/tuto_content_authoring_maps/ue_tlsigns_example.webp)
 <div style="text-align: right"><i>A Town10HD_Opt junction with its traffic lights and signs placed. Town10HD_Opt &middot; Unreal Editor 5.8</i></div>
-
-> _Example: Traffic Signs, Traffic lights and Turn based stop._
 
 [triggerlink]: python_api.md#carla.TrafficSign.trigger_volume
 
@@ -264,7 +261,7 @@ The instance groups its parameters by layer:
 
 ---
 
-### Paint the road
+## Paint the road
 
 __1. Create the link between the road painter and the roads.__
 
@@ -336,7 +333,7 @@ Once you have configured your meshes and decals, spawn them by pressing `Spawn d
 !!! Note
     Make sure that meshes and decals do not have collisions enabled that can interfere with cars on the road and lower any bounding boxes to the level of the road.
 
-__7. Experiment to get your desired appearance.__ 
+__6. Experiment to get your desired appearance.__ 
 
 Experiment with different materials, textures, settings, decals, and meshes to get your desired look. Below are some example images of how the appearance of the road changes during the process of painting each material.
 
