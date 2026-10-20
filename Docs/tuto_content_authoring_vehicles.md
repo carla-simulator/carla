@@ -236,7 +236,7 @@ Open each blueprint individually and repeat the following configuration steps:
 - Set the *Axle Type* according to the wheel position (front or rear)
 - Set the *Wheel Radius*, *Wheel Width* and *Wheel mass* according to the dimensions and specifications of your vehicle model, you may need to measure these dimensions in your 3D application
 - Set the *Friction Force Multiplier* to 3.5
-- Set the *Brake*, *Handbrake*, *Engine*, *ABS* and *Traction control*, *Front wheel drive*, *Rear wheel drive*, *Four wheel drive* settings according to the specification of your vehicle
+- Set the *Brake*, *Handbrake*, *Engine*, *ABS* and *Traction control* settings according to the specification of your vehicle. Front, rear or four wheel drive is set in the *Differential Setup* of the vehicle movement component, not in the wheel
 
 Adjust the max steer angle as needed, the default value of 50 will suit most applications. Most vehicles have a max steering angle between 30 and 50.
 
@@ -348,7 +348,7 @@ of the lamps must use a translucent material; an opaque lamp housing hides the l
 The brightness of a group is the product of two values:
 
 - `Intensity` of the vehicle class in `Content/Carla/Config/Lights/Defaults.json` (`perVehicleClass`), the same for
-  every group of the vehicle. The CARLA vehicles use `200000`. `GroupIntensity` in the same file sets the real
+  every group of the vehicle. Most CARLA vehicles use `200000`. `GroupIntensity` in the same file sets the real
   spot/point lights of each group, which light the scene but do not glow.
 - The group color on the material instance (table above). Balance the groups of a new vehicle by eye against an
   existing one at night: CARLA uses the Audi TT as the reference for the front lamps and the Mercedes CCC for the rear
