@@ -1,13 +1,5 @@
 # Building CARLA in Windows with Unreal Engine 5.8
 
-!!! Note
-    The Windows build is less exercised than the Linux one, and packaging in particular is not fully tested. Report what breaks.
-
-* __[Set up the environment](#set-up-the-environment)__
-* __[Build and run CARLA UE5](#build-and-run-carla-ue5)__
-* __[Build a package with CARLA UE5](#build-a-package-with-carla-ue5)__
-
----
 ## Set up the environment
 
 This guide details how to build CARLA from source on Windows with Unreal Engine 5.8. If you are building CARLA for the first time, ensure that you **link your GitHub account to Epic Games** by following [this guide](https://www.unrealengine.com/en-US/ue-on-github).
@@ -46,21 +38,29 @@ It installs Python 3.8.10 when no Python is found at the top of `PATH`; 3.9 and 
 
 Run every command below from the __x64 Native Tools Command Prompt for VS 2022__, opened at the CarlaUE5 folder.
 
-Configure once, with the preset for the configuration you want:
+Configure the build:
 
 ```sh
-cmake --preset Release
+cmake -G Ninja -S . -B Build --toolchain=CMake/Toolchain.cmake -DCMAKE_BUILD_TYPE=Release
 ```
 
-The build then lives in `Build\Release`. There are three presets — `Debug`, `Development` and `Release` — each with its own directory under `Build\`. `Release` gives minimal logs and debug information; the other two give progressively more.
+If you passed `--python-root` to `CarlaSetup.bat`, add both `-DPython_ROOT_DIR=PATH` and `-DPython3_ROOT_DIR=PATH` to the above cmake command.
+
+The command line options are as follows:
+
+* **G** - which build system to use
+* **S** - source path for CARLA repository
+* **B** - directory where the build goes
+
+Then build what you need:
 
 | Target | What it does |
 | --- | --- |
-| `cmake --build Build\Release` | build everything |
-| `cmake --build Build\Release --target launch` | build and open the editor |
-| `cmake --build Build\Release --target carla-python-api-install` | build and install the Python client |
-| `cmake --build Build\Release --target package` | cook and package a shipping server |
-| `cmake --build Build\Release --target carla-help` | list every target and option |
+| `cmake --build Build` | build everything |
+| `cmake --build Build --target launch` | build and open the editor |
+| `cmake --build Build --target carla-python-api-install` | build and install the Python client |
+| `cmake --build Build --target package` | cook and package a shipping server |
+| `cmake --build Build --target carla-help` | list every target and option |
 
 !!! Note
     The native ROS 2 interface (`-DENABLE_ROS2=ON`) is built on Linux only; `CarlaSetup.bat` does not enable it.
@@ -68,23 +68,28 @@ The build then lives in `Build\Release`. There are three presets — `Debug`, `D
 ---
 ## Build a package with CARLA UE5
 
+Packaging needs a Zen server that is already running. Start it in a separate terminal and leave it running until the package is done:
+
 ```sh
-cmake --build Build\Release --target package
+%CARLA_UNREAL_ENGINE_PATH%\Engine\Binaries\Win64\zenserver.exe --port 8558
+```
+
+Then build the package:
+
+```sh
+cmake --build Build --target package
 ```
 
 Use `package-development` instead for a package that writes debugging logs.
 
-The package lands in `Build\Release\Package\Carla-<version>-Win64-Shipping\`, alongside a `.zip` of the same. The Python wheel that matches it is in `PythonAPI\carla\dist` inside the package.
-
-!!! Warning
-    On Windows the cook needs a Zen server already running, because the package target passes `-NoZenAutoLaunch`. Start `zenserver.exe --port 8558` before packaging, and leave it running until the stage step finishes.
+The package lands in `Build\Package\Carla-<version>-Win64-Shipping\`, alongside a `.zip` of the same. The Python wheel that matches it is in `PythonAPI\carla\dist` inside the package.
 
 ### Select which maps to cook
 
 By default a package cooks every map listed in `DefaultGame.ini` — `Town10HD_Opt`, `OpenDriveMap`, `TestMaps/EmptyMap`, `Mine_01` and `Town15/Town15`. To cook a subset, set `CARLA_MAPS_TO_COOK` when configuring, as a `+`-separated list of map package paths:
 
 ```sh
-cmake --preset Release -DCARLA_MAPS_TO_COOK="/Game/Carla/Maps/Town10HD_Opt+/Game/Carla/Maps/Mine_01"
+cmake -G Ninja -S . -B Build --toolchain=CMake/Toolchain.cmake -DCMAKE_BUILD_TYPE=Release -DCARLA_MAPS_TO_COOK="/Game/Carla/Maps/Town10HD_Opt+/Game/Carla/Maps/Mine_01"
 ```
 
 Use the full map package path (`/Game/Carla/Maps/<MapName>`), not a filesystem path. Note that the large maps nest: Town15 is `/Game/Carla/Maps/Town15/Town15`. Leaving `CARLA_MAPS_TO_COOK` empty, the default, cooks the full list from `DefaultGame.ini`.

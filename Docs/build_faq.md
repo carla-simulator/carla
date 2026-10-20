@@ -189,9 +189,9 @@ CARLA forum</a>
 
 <!-- ======================================================================= -->
 
-###### Packaging hangs or fails at the cook on Windows.
+###### Packaging hangs or fails at the cook.
 
-> On Windows the `package` target passes `-NoZenAutoLaunch` to the cook, so a Zen server has to be running already. Start `zenserver.exe --port 8558` before packaging, and leave it running until the package is done. See [Build a package](build_windows_ue5.md).
+> The `package` target passes `-NoZenAutoLaunch` to the cook, so a Zen server has to be running already. Start `zenserver --port 8558` on Linux or `zenserver.exe --port 8558` on Windows before packaging, from `Engine/Binaries/<platform>` in the engine directory, and leave it running until the package is done. See Build a package for [Linux](build_linux_ue5.md#build-a-package-with-carla-ue5) or [Windows](build_windows_ue5.md#build-a-package-with-carla-ue5).
 
 ---
 
