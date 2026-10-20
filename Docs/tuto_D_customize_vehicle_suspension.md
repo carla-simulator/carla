@@ -2,13 +2,13 @@
 
 CARLA vehicles run on Unreal's Chaos vehicle physics, where the suspension is defined per wheel. This page covers the parameters, where to change them permanently in the editor, and how to change them at runtime from the Python API.
 
-*   [__The suspension of a wheel__](#the-suspension-of-a-wheel)
+*   [__Wheel suspension__](#wheel-suspension)
 *   [__Suspension parameters__](#suspension-parameters)
 *   [__Editing a wheel blueprint__](#editing-a-wheel-blueprint)
 *   [__Changing the suspension at runtime__](#changing-the-suspension-at-runtime)
 
 ---
-## The suspension of a wheel
+## Wheel suspension
 
 Each wheel of a vehicle is a `UChaosVehicleWheel` asset with its own parameters, the suspension among them. A four-wheeled vehicle therefore has four independent suspensions, which CARLA's vehicles set to the same values unless the vehicle calls for otherwise.
 
@@ -32,7 +32,7 @@ These are the properties under the __Suspension__ category of a wheel blueprint,
 | `Suspension Max Raise` | `10.0` | How far the wheel can travel above its resting position, in cm. |
 | `Suspension Max Drop` | `10.0` | How far the wheel can drop below its resting position, in cm. |
 | `Suspension Damping Ratio` | `0.5` | How fast the spring comes to rest, in `[0, 1]`. Higher damps the bouncing sooner. |
-| `Wheel Load Ratio` | `0.5` | How much the load on the wheel affects its friction, in `[0, 1]`. `0` ignores the load, `1` is the realistic end and cures lift-off oversteer. |
+| `Wheel Load Ratio` | `0.5` | How much the load on the wheel affects its friction, in `[0, 1]`. `0` ignores the load, `1` is the realistic end; lower values cure lift-off oversteer. |
 | `Spring Rate` | `250.0` | Spring force, in N/m. |
 | `Spring Preload` | `50.0` | Spring preload, in N/m. |
 | `Suspension Smoothing` | `0` | Smoothing of the suspension length, `0` off to `10` maximum. High values can make a wheel visibly sink into the ground for a frame. |
