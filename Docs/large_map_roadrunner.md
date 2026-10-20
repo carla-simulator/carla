@@ -71,9 +71,12 @@ __1. Export the geometry.__ `File` → `Export` → `Filmbox (.fbx)`, with:
 | _Export Individual Tiles_ | Writes one file per tile, which is what the importer expects for a large map. |
 
 ![export_large_map_fbx](img/large_map_roadrunner/large_map_export_fbx.png)
-<div style="text-align: right"><i>The Filmbox (.fbx) export options for a large map, with 2000 x 2000 tiles.</i></div>
+<div style="text-align: right"><i>The Filmbox (.fbx) export options for a large map, with 1000 x 1000 tiles.</i></div>
 
 __2. Export the road description.__ `File` → `Export` → `OpenDRIVE (.xodr)`.
+
+![export_large_map_xodr](img/large_map_roadrunner/large_map_export_xodr.png)
+<div style="text-align: right"><i>The OpenDRIVE (.xodr) export options, saved with the same name as the .fbx.</i></div>
 
 !!! Warning
     The `.xodr` and the `.fbx` must share a name. A tiled export produces `<Name>_Tile_<X>_<Y>.fbx` files beside a single `<Name>.xodr`, which is the pairing the importer looks for.
