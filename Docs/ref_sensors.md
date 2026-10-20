@@ -368,6 +368,12 @@ Two independent drop-off mechanisms simulate point loss:
 The `noise_stddev` attribute applies per-ray Gaussian noise along the laser
 direction, leaving angular position unaffected.
 
+![HSSLidarOnCamera](img/ref_sensors/sensor_hss_lidar_on_camera.webp)
+<div style="text-align: right"><i>One HSS LiDAR scan projected on the RGB image, coloured by range (128 channels, 120&deg; horizontal field of view). Town10HD_Opt &middot; sensor.lidar.hss_lidar + sensor.camera.rgb &middot; Cinematic &middot; sunny afternoon</i></div>
+
+![HSSLidarBEV](img/ref_sensors/sensor_hss_lidar_bev.webp)
+<div style="text-align: right"><i>The same scan seen from above: the forward 120&deg; fan, coloured by range. Town10HD_Opt &middot; sensor.lidar.hss_lidar &middot; sunny afternoon</i></div>
+
 #### LiDAR attributes
 
 | Blueprint attribute | Type | Default | Description |
@@ -599,6 +605,9 @@ Wide-angle versions of the four raster cameras. The scene is rendered into six c
 
 The lens models and their coefficients are the ones [`sensor.camera.rt_lens`](#ray-traced-lens-camera) uses, with one difference that matters: these cameras rasterize, so they cost about what their pinhole counterparts cost, while `rt_lens` path-traces the scene and generates its primary rays through the lens itself. Use `rt_lens` when the projection has to be exact; use these when you need a wide-angle image at raster speed.
 
+![Fisheye](img/ref_sensors/sensor_fisheye.webp)
+<div style="text-align: right"><i>The four fisheye cameras with a 180&deg; Kannala-Brandt lens: RGB, depth (logarithmic), semantic segmentation and instance segmentation. Town10HD_Opt &middot; sensor.camera.*_fisheye &middot; Cinematic &middot; sunny afternoon</i></div>
+
 #### Fisheye attributes
 
 | Blueprint attribute | Type | Default | Description |
@@ -681,6 +690,9 @@ Setting `carla.RTLens.SyncModeBlockingReadback 0` (server console) forces the as
 
 `manual_control.py` includes ready-made presets in its camera cycle (pinhole, Kannala-Brandt fisheye 150°, Brown-Conrady barrel), and `manual_control_rtlens.py` boots directly into the fisheye configuration.
 
+![RTLens](img/ref_sensors/sensor_rt_lens.webp)
+<div style="text-align: right"><i>Ray-traced lens camera with a 150&deg; Kannala-Brandt fisheye lens. Town10HD_Opt &middot; sensor.camera.rt_lens &middot; Cinematic &middot; sunny afternoon</i></div>
+
 #### Ray-traced lens camera attributes
 
 <br>
@@ -758,6 +770,9 @@ def on_distance(image):
 distance_sensor.listen(on_distance)
 ```
 
+![RTLensDistance](img/ref_sensors/sensor_rt_lens_distance.webp)
+<div style="text-align: right"><i>Distance per pixel through the same 150&deg; lens, on a logarithmic colour scale up to 120 m; sky in black. Town10HD_Opt &middot; sensor.camera.rt_lens_distance &middot; sunny afternoon</i></div>
+
 #### Output attributes
 
 | Sensor data attribute            | Type  | Description        |
@@ -784,6 +799,9 @@ The labelling twin of [`sensor.camera.rt_lens`](#ray-traced-lens-camera): same s
 Depth of field is disabled (a defocused ray would blend two actors' ids into one pixel), and — like the distance camera — `samples_per_pixel`/`enable_denoiser` default to `1`/`False` (the AOV is an exact integer read off the primary hit, nothing for a denoiser to do) and post-process attributes are not present.
 
 Measured against the raster [instance segmentation camera](#instance-segmentation-camera) on the same view, per-pixel instance agreement is about 98%. The disagreements are concentrated on silhouette edges (anti-aliasing/coverage differences between the two renderers) and on windscreens and other translucent materials, where the path-traced AOV reports the surface *behind* the glass (the primary ray continues to its geometric hit) while the rasterizer reports the glass itself.
+
+![RTLensInstance](img/ref_sensors/sensor_rt_lens_instance.webp)
+<div style="text-align: right"><i>Instance ids through the same 150&deg; lens, one random colour per instance. Town10HD_Opt &middot; sensor.camera.rt_lens_instance &middot; sunny afternoon</i></div>
 
 #### Output attributes
 
