@@ -70,7 +70,7 @@ To register the asset as a prop and use it through the CARLA API, add it to `Pro
 The keys are case-sensitive: the factory reads `Name`, `Mesh` and `Size`, plus the optional `BaseType` and `SubType` that put the prop in a catalogue group. A lowercase `path` is simply ignored, and the prop registers with no mesh.
 
 !!! Warning
-    The file is read once at startup. Restart the editor or the server after editing it, otherwise the new prop never appears in the blueprint library. The mesh also has to stay under `/Game/Carla` to survive a package cook.
+    The file is read again every time an episode starts. After editing it, press __Play__ again in the editor, or call `client.reload_world()` on a running server, otherwise the new prop does not appear in the blueprint library. The mesh also has to stay under `/Game/Carla` to survive a package cook.
 
 ---
 
