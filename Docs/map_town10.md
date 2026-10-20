@@ -9,22 +9,31 @@ Town10 mixes inner-city features: glossy skyscrapers and industrial buildings be
 | --- | --- |
 | __Map name__ | `Town10HD_Opt` |
 | __In the default package__ | yes, and it is the map a server boots into |
-| __Layers__ | an `_Opt` map, so its layers can be toggled with [`world.load_map_layer`](python_api.md#carla.World.load_map_layer) |
-| __Spawn points__ | `world.get_map().get_spawn_points()` |
+| __Size__ | about 225 x 210 m of roads |
+| __Spawn points__ | 155, from `world.get_map().get_spawn_points()` |
+
+Load it like any other map:
+
+```py
+world = client.load_world('Town10HD_Opt')
+```
 
 - [__Road network__](#road-network)
 - [__Skyscrapers with commercial units__](#skyscrapers-with-commercial-units)
 - [__Tree-lined boulevards__](#tree-lined-boulevards)
 - [__Public buildings with classical architecture__](#public-buildings-with-classical-architecture)
-- [__Town houses and alleyways__](#town-houses-and-alleyways)
+- [__Residential streets with town houses__](#residential-streets-with-town-houses)
 
 ---
 ## Road network
 
-The road network consists of a grid layout, including numerous different junctions including a 4-way yellow-box junction, dedicated turning lanes and central reservations.
+The road network is a grid with several kinds of junctions, among them a 4-way yellow-box junction, dedicated turning lanes and central reservations.
 
 ![town_10_road_network](img/catalogue/maps/town10/town10roadnetwork.webp)
 <div style="text-align: right"><i>Town10HD_Opt from above: the central plaza and the grid of streets around it. Town10HD_Opt &middot; sensor.camera.rgb &middot; Cinematic &middot; sunny afternoon</i></div>
+
+![town_10_roads](img/catalogue/maps/town10/town10roads.webp)
+<div style="text-align: right"><i>The road network of Town10HD_Opt from the Map API, with the index of each spawn point.</i></div>
 
 ---
 ## Skyscrapers with commercial units
@@ -51,9 +60,9 @@ The map also includes public buildings with classical architecture styles such a
 <div style="text-align: right"><i>The museum, one of the public buildings in classical style. Town10HD_Opt &middot; sensor.camera.rgb &middot; Cinematic &middot; sunny afternoon</i></div>
 
 ---
-## Town houses and alleyways
+## Residential streets with town houses
 
-Town houses line some of the streets of Town10 similar to those found in the residential areas of many North American cities.
+Town houses, similar to those of many North American cities, line some of the streets of Town10, with bus stops, street furniture and kerbside bins along the sidewalks.
 
 ![town_10_town_houses](img/catalogue/maps/town10/town10townhouses.webp)
-<div style="text-align: right"><i>Town houses on a pedestrian street. Town10HD_Opt &middot; sensor.camera.rgb &middot; Cinematic &middot; sunny afternoon</i></div>
+<div style="text-align: right"><i>A residential street with town houses and a bus stop, with traffic. Town10HD_Opt &middot; sensor.camera.rgb &middot; Cinematic &middot; sunny afternoon</i></div>
