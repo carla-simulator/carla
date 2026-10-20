@@ -13,7 +13,7 @@ Two roles, two halves of this page:
 * __[Quick start](#quick-start)__
 * __[Making a pack](#making-a-pack)__
     * __[Requirements](#requirements)__
-    * __[A. Existing CARLA towns: `create`](#a-existing-carla-towns-create)__
+    * __[A. Existing CARLA towns](#a-existing-carla-towns)__
     * __[B. Your own content](#b-your-own-content)__
     * __[Catalog JSON shapes](#catalog-json-shapes)__
     * __[Build details](#build-details)__
@@ -68,7 +68,7 @@ world = client.load_world('Town12')
 
 `carla-pack <command> --help` lists every option. Exit codes: `0` ok, `1` error, `2` usage error, `3` "pack not compatible with `--server`" (`inspect`). The tool finds the project from its own location; `--project` overrides.
 
-### A. Existing CARLA towns: `create`
+### A. Existing CARLA towns
 
 ```sh
 carla-pack create <Pack> <Map> [<Map> ...] [--base <release-metadata.tar.gz>] [--config Shipping] [--description "..."]
