@@ -166,8 +166,8 @@ python3 config.py --osm-path=/path/to/OSM/file
 [Default parameters](python_api.md#carla.OpendriveGenerationParameters) will be used.
 
 
-!!! Warning
-    __TODO: this section needs a capture of a generated OSM world.__ The image that was here showed a 2D road-network plot, not a CARLA render, and contradicted the list below it. Producing a real one needs a build configured with `-DENABLE_OSM2ODR=ON`, since `carla.Osm2Odr` does not exist otherwise.
+![osm_generated_world](img/tuto_G_openstreetmap/tuto_g_osm_generated_world.webp)
+<div style="text-align: right"><i>A world generated at runtime from an OpenStreetMap extract of about 400 x 400 m: terrain, lane markings, bus stops, street lights and trees come from the OpenDRIVE description alone. The .osm was converted to OpenDRIVE with SUMO netconvert. Generated OpenDRIVE world &middot; sensor.camera.rgb &middot; AutomotiveHDR &middot; sunny afternoon</i></div>
 
 ### What the generated map includes
 
