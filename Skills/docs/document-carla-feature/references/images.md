@@ -192,6 +192,11 @@ in the manifest notes so it lands in the page as a code block.
   `u = W/2 + f*y/x`, `v = H/2 - f*z/x`, `f = W / (2 tan(fov/2))`. Level boxes
   from `world.get_level_bbs()` are already in world space:
   `bb.get_world_vertices(carla.Transform())`.
+- **Streaming before the shot.** On World Partition maps the textures and the foliage of a cell arrive well after
+  its geometry: trees showed bare branches and planters empty 20 s after parking the hero. Wait about 90 s after the
+  hero is in place, parked within a few metres of the camera, and 60 s with the camera spawned before capturing
+  (decals on walls and tree leaves are the last to arrive). A weather change also takes 30-45 s to settle
+  (rain, clouds); shoot the same weather in a row instead of switching it per shot.
 - **Debug shapes persist.** `draw_arrow` / `draw_box` with a long `life_time` show up in the next shots too; use a
   few seconds and tick past it before the next camera.
 - **Labels on spawn points.** `draw_string` does not reach a camera; project the locations (formula above) and draw
