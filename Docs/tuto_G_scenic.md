@@ -1,18 +1,14 @@
 # Scenic
 
+![scenic_logo](img/logos/scenic_logo.svg)
+
 This guide provides an overview of how to use Scenic with CARLA to generate multiple, diverse scenarios with a single scenario definition. It assumes that users have prior knowledge of the Scenic syntax. If you need to learn more about Scenic, then read their ["Getting Started with Scenic"](https://scenic-lang.readthedocs.io/en/latest/quickstart.html) guide and check out the tutorials in the documentation.
-
-By the end of the guide you will know:
-
-- The minimum requirements needed to run a Scenic script on CARLA.
-- How to write a simple scenario definition to generate a multitude of scenario simulations.
-- How to run a Scenic script on CARLA.
-- Parameters used to configure Scenic simulations on CARLA.
 
 - [__Before you begin__](#before-you-begin)
 - [__Scenic domains__](#scenic-domains)
 - [__Creating a Scenic scenario to use with CARLA__](#creating-a-scenic-scenario-to-use-with-carla)
 - [__Run the scenario__](#run-the-scenario)
+- [__Parameters of the CARLA model__](#parameters-of-the-carla-model)
 - [__The full scenario__](#the-full-scenario)
 
 ---
@@ -42,7 +38,7 @@ Of particular importance within each domain are the behavior and actions definit
 
 ## Creating a Scenic scenario to use with CARLA
 
-This section walks through how to write a basic Scenic script in which a leading vehicle decelerates suddenly due to an obstacle in the road. An ego vehicle then needs to brake suddenly to avoid a collision with the leading vehicle. The [full script](https://github.com/BerkeleyLearnVerify/Scenic/blob/master/examples/carla/Carla_Challenge/carlaChallenge2.scenic) is found in the Scenic repository along with other examples involving more complex road networks.
+This section walks through how to write a basic Scenic script in which a leading vehicle decelerates suddenly due to an obstacle in the road. An ego vehicle then needs to brake suddenly to avoid a collision with the leading vehicle. The [full script](https://github.com/Scenic-Foundation/Scenic/blob/main/examples/carla/Carla_Challenge/carlaChallenge2.scenic) is found in the Scenic repository along with other examples involving more complex road networks.
 
 __1.__ Set the map parameters and declare the model to be used in the scenario:
 
@@ -174,6 +170,22 @@ scenic path/to/scenic/script.scenic --simulate --2d --param port 3000 --param ca
 ```
 
 ---
+## Parameters of the CARLA model
+
+The CARLA model declares the global parameters below. Override them in the script with the [`param` statement](https://scenic-lang.readthedocs.io/en/latest/syntax_details.html#param-identifier-value), or on the command line with [`--param`](https://scenic-lang.readthedocs.io/en/latest/options.html#cmdoption-p).
+
+| Name | Type | Default | What it does |
+|---|---|---|---|
+| `carla_map` | `str` | none | Map to load, e.g. `Town10HD_Opt`. With `None`, CARLA builds the world from the `map` `.xodr` in [OpenDRIVE standalone mode](adv_opendrive.md). |
+| `map` | `str` | none | Path to the `.xodr` the road network is generated from. |
+| `timestep` | `float` | 0.1 | Seconds between the ticks at which Scenic runs behaviors and checks requirements. |
+| `weather` | `str` or `dict` | a random preset | A [preset](python_api.md#carla.WeatherParameters) name such as `ClearSunset`, or a dictionary of weather parameters. |
+| `address` | `str` | `127.0.0.1` | Address of the CARLA server. |
+| `port` | `int` | 2000 | Port of the CARLA server. |
+| `timeout` | `float` | 10 | Seconds to wait for the connection. |
+| `render` | `int` | 1 | Open a window showing the simulation from the ego's point of view. `0` turns it off. |
+| `record` | `str` | empty | Folder for the [recorder](adv_recorder.md) logs of each simulation. Nothing is recorded while it is empty. |
+| `snapToGroundDefault` | `bool` | `--2d` | Place objects on the ground by default. True in 2D compatibility mode, false otherwise. |
 
 ---
 ## The full scenario
@@ -230,4 +242,4 @@ require (distance to intersection) > 80
 terminate when ego.speed < 0.1 and (distance to obstacle) < 30
 ```
 
-The [full script in the Scenic repository](https://github.com/BerkeleyLearnVerify/Scenic/blob/master/examples/carla/Carla_Challenge/carlaChallenge2.scenic) is the same scenario written against `scenic.simulators.carla.model` and another map; ScenarioRunner's `ue5-master` branch carries a port of it under `srunner/scenic/`.
+The [full script in the Scenic repository](https://github.com/Scenic-Foundation/Scenic/blob/main/examples/carla/Carla_Challenge/carlaChallenge2.scenic) is the same scenario written against `scenic.simulators.carla.model` and another map; ScenarioRunner's `ue5-master` branch carries a port of it under `srunner/scenic/`.

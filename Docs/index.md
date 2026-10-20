@@ -62,10 +62,9 @@ CARLA forum</a>
 ## CARLA ecosystem
 
 - [__MathWorks__](large_map_roadrunner.md) — Creating a map in RoadRunner.
-- [__NVIDIA__](nvidia.md) — Alpamayo 2 Super, neural reconstruction (NuRec) and DLSS.
+- [__NVIDIA__](nvidia.md) — Alpamayo 2 Super, neural reconstruction (NuRec), Cosmos and DLSS.
 - [__ROS 2__](ros2_native.md) — The native ROS 2 interface.
 - [__Scenic__](tuto_G_scenic.md) — Generate scenarios with Scenic.
-- [__SYNKROTRON__](ecosys_synkrotron.md) — SYNKROTRON's CARLA-based simulation products.
 - [__Inverted AI__](inverted_ai.md) — Inverted AI's generative traffic simulation.
 
 ---

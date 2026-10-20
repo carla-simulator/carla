@@ -54,11 +54,10 @@ Every tutorial in the documentation, grouped by what it is for.
 - [__Create semantic tags__](tuto_D_create_semantic_tags.md) — Define a new tag for semantic segmentation.
 - [__Customize vehicle suspension__](tuto_D_customize_vehicle_suspension.md) — Tune the Chaos suspension of a vehicle.
 - [__Generate detailed colliders__](tuto_D_generate_colliders.md) — Build accurate collision meshes for vehicles.
+- [__Upgrade the content package__](tuto_D_contribute_assets.md) — Point the repository at a newer build of the content.
 
 ---
 ## Video tutorials
-
-Recorded with CARLA 0.9.x on Unreal Engine 4, so the map names, blueprint ids and some API calls differ from this version. The concepts still hold.
 
 - [__Fundamentals__](https://www.youtube.com/watch?v=pONr1R1dy88) — The fundamental concepts of CARLA, and a first script.
 - [__An in depth look at CARLA's sensors__](https://www.youtube.com/watch?v=om8klsBj4rc) — What each sensor produces and how to use it.

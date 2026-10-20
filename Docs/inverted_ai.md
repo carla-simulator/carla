@@ -2,9 +2,9 @@
 
 ![inverted_ai_logo](img/logos/inverted_ai_logo.png)
 
-<video controls width="100%" src="https://ecosystem.carla.org/video/iai-pipeline.mp4"></video>
-
 Inverted AI drives non-player vehicles with models learned from real human driving, through a hosted API, so the traffic around the ego behaves the way people do rather than following hand-written rules. It replaces the [Traffic Manager](adv_traffic_manager.md) for those vehicles; CARLA still owns the simulation, the ego and the sensors.
+
+<video controls width="100%" src="https://ecosystem.carla.org/video/iai-pipeline.mp4"></video>
 
 - [__Using Inverted AI with CARLA__](#using-inverted-ai-with-carla)
 - [__The products__](#the-products)
@@ -23,15 +23,26 @@ python3 invertedai_traffic.py -n 30 -w 10
 ```
 
 | Flag | Default | What it does |
-| --- | --- | --- |
-| `--iai-key` | `IAI_API_KEY` from the environment | The API key. The environment variable wins when both are set. |
-| `--location` | `carla:Town10HD` | The map, in Inverted AI's naming. Only Town10HD has been tested. |
-| `-n`, `--number-of-vehicles` | | Vehicles for Inverted AI to drive. |
-| `-w`, `--number-of-walkers` | | Pedestrians, which CARLA's own controllers drive. |
-| `--sim-length` | | Seconds to simulate. |
-| `--capacity` | 100 | Agents per quadtree leaf before it splits, which is how the API scales to a crowded map. |
+|---|---|---|
+| `--iai-key` | `IAI_API_KEY` | API key. The environment variable wins over the flag. |
+| `--location` | `carla:Town10HD` | Map, in Inverted AI's naming. Only Town10HD is tested. |
+| `--number-of-vehicles`, `-n` | 50 | Vehicles for Inverted AI to drive. |
+| `--number-of-walkers`, `-w` | 0 | Pedestrians, driven by CARLA's own controllers. |
+| `--sim-length` | 60 | Seconds to simulate. |
+| `--width` | 250 | Width in metres of the area Inverted AI populates. |
+| `--height` | 250 | Height of that area, also in metres. |
+| `--map-center` | `-50 20` | Its centre, as `X Y`. |
+| `--capacity` | 100 | Agents per quadtree leaf before it splits. |
+| `--api-model` | `nBu1` | Inverted AI model version. |
+| `--iai-async` | `True` | Call the API asynchronously. |
+| `--seed`, `-s` | random | Seed, for a repeatable run. |
 | `--record` | off | Record the run with CARLA's recorder. |
-| `-s`, `--seed` | | Seed, for a repeatable run. |
+| `--iai-log` | off | Write an Inverted AI log and a birdview GIF. |
+| `--capture-video` | off | Record video from a camera on one of the vehicles. |
+
+The quadtree covers the `--width` by `--height` area around `--map-center`, and splits a leaf once more than `--capacity` agents fall inside it, which is how the API scales to a crowded map.
+
+`--iai-log` and `--capture-video` both write into a new directory named after the run's timestamp, created in the working directory. The log is a `.json` plus a `.gif`, and it can be reopened later with [Inverted AI's own tools](https://github.com/inverted-ai/invertedai/blob/master/examples/scenario_log_example.py).
 
 The simulation runs at a fixed 0.1 s step, which is the only step length the API supports.
 

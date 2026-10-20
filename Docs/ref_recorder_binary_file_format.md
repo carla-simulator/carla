@@ -1,11 +1,12 @@
 # Recorder Binary File Format
 
-The recorder system saves all the info needed to replay the simulation in a binary file,
-using little endian byte order for the multibyte values.
+This page describes the layout of a recording on disk, for writing a reader of your own. How to make and play back a recording is in [Recorder](adv_recorder.md); nothing here is needed to use it.
 
-*   [__1- Strings in binary__](#1-strings-in-binary)  
-*   [__2- Info header__](#2-info-header)  
-*   [__3- Packets__](#3-packets)  
+The recorder saves everything the replayer needs in a binary file, with little-endian byte order for the multibyte values.
+
+*   [__Strings in binary__](#strings-in-binary)  
+*   [__Info header__](#info-header)  
+*   [__Packets__](#packets)  
 	*   [Packet 0 - Frame Start](#packet-0-frame-start)  
 	*   [Packet 1 - Frame End](#packet-1-frame-end)  
 	*   [Packet 2 - Event Add](#packet-2-event-add)  
@@ -16,8 +17,9 @@ using little endian byte order for the multibyte values.
 	*   [Packet 7 - TrafficLight](#packet-7-trafficlight)  
 	*   [Packet 8 - Vehicle Animation](#packet-8-vehicle-animation)  
 	*   [Packet 9 - Walker Animation](#packet-9-walker-animation)  
-*   [__4- Frame Layout__](#4-frame-layout)  
-*   [__5- File Layout__](#5-file-layout)
+	*   [Packets 10 to 24](#packet-10-vehicle-light)  
+*   [__Frame layout__](#frame-layout)  
+*   [__File layout__](#file-layout)
 
 In the next image representing the file format, we can get a quick view of all the detailed
 information. Each part that is visualized in the image will be explained in the following sections:
@@ -28,7 +30,7 @@ information. Each part that is visualized in the image will be explained in the 
 In summary, the file format has a small header with general info (version, magic string, date and the map used) and a collection of packets of different types (25 types at the time of writing, and the list keeps growing). Every packet starts with the same two fields, its id (`uint8`) and the size of its payload in bytes (`uint32`), so a reader can skip a packet it does not know.
 
 ---
-## 1- Strings in binary
+## Strings in binary
 
 Strings are written as their length in bytes (`uint16`), followed by their UTF-8 characters with no null terminator. For example, the string `Town06` is saved as:
 
@@ -40,7 +42,7 @@ length  T  o  w  n  0  6
 All values are little-endian. In the tables below, `string` means this encoding, and a vector (`double x, y, z`) is three `double` values.
 
 ---
-## 2- Info header
+## Info header
 
 The info header has general information about the recorded file. Basically, it contains the version
 and a magic string to identify the file as a recorder file. If the header changes then the version
@@ -64,7 +66,7 @@ map      0c 00 54 6f 77 6e 31 30 48 44 5f 4f 70 74        # "Town10HD_Opt" (leng
 ```
 
 ---
-## 3- Packets
+## Packets
 
 Each packet starts with a little header of two fields (5 bytes):
 
@@ -103,7 +105,7 @@ The packet ids are, from `CarlaRecorderPacketId`:
 | 11 | Scene light | 24 | Weather |
 | 12 | Kinematics | | |
 
-The sections below describe the payload of packets 0 to 9. Packets 10 to 24 were added later and their layouts are defined by the `CarlaRecorder*` serializers under `Unreal/CarlaUnreal/Plugins/Carla/Source/Carla/Recorder/`.
+Most packets hold a record count (`uint16`) followed by that many fixed-size records, each one starting with the id of the actor it belongs to. The exceptions are noted below.
 
 Use an **id** over 100 for custom packets of your own, because this list keeps growing.
 
@@ -285,19 +287,187 @@ that is used in the animation.
 | `uint32` | id | Per record: the walker. |
 | `float` | speed | Walker speed, used to drive its animation. |
 
+### Packet 10 - Vehicle light
+
+The light state of each vehicle, as the bit field of [`carla.VehicleLightState`](python_api.md#carla.VehicleLightState).
+
+| Type | Field | Description |
+| --- | --- | --- |
+| `uint16` | total | Number of records that follow. |
+| `uint32` | id | Per record: the vehicle. |
+| `uint32` | state | Light state bit field. |
+
+### Packet 11 - Scene light
+
+The lights of the map, those the [light manager](python_api.md#carla.LightManager) controls. Written only when at least one light changed.
+
+| Type | Field | Description |
+| --- | --- | --- |
+| `uint16` | total | Number of records that follow. |
+| `int32` | id | Per record: the light. |
+| `float` | intensity | Light intensity. |
+| `float` &times; 4 | color | Linear RGBA. |
+| `bool` | on | Whether the light is on. |
+| `uint8` | type | Light group: street, building, other. |
+
+### Packet 12 - Kinematics
+
+Linear and angular velocity of each actor. Recorded only with `additional_data`.
+
+| Type | Field | Description |
+| --- | --- | --- |
+| `uint16` | total | Number of records that follow. |
+| `uint32` | id | Per record: the actor. |
+| `double` &times; 3 | linear velocity | In centimetres per second. |
+| `double` &times; 3 | angular velocity | In degrees per second. |
+
+### Packet 13 - Bounding box
+
+The bounding box of each actor, written in the frame the actor is created. Recorded only with `additional_data`.
+
+| Type | Field | Description |
+| --- | --- | --- |
+| `uint16` | total | Number of records that follow. |
+| `uint32` | id | Per record: the actor. |
+| `double` &times; 3 | origin | Centre of the box, relative to the actor. |
+| `double` &times; 3 | extension | Half-size of the box. |
+
+### Packet 14 - Platform time
+
+How long the frame took on the machine that recorded it. Recorded only with `additional_data`. This packet has no record count: its payload is always 8 bytes.
+
+| Type | Field | Description |
+| --- | --- | --- |
+| `double` | time | Platform time of the frame, in seconds. |
+
+### Packet 15 - Physics control
+
+The full [`carla.VehiclePhysicsControl`](python_api.md#carla.VehiclePhysicsControl) of each vehicle, written in the frame the vehicle is created. Recorded only with `additional_data`.
+
+| Type | Field | Description |
+| --- | --- | --- |
+| `uint16` | total | Number of records that follow. |
+| `uint32` | id | Per record: the vehicle. |
+| &mdash; | physics control | Every field of the physics control, in the order of the struct, ending with the per-wheel controls. Records are not fixed size, because the number of wheels and the length of the curves vary. |
+
+### Packet 16 - Traffic light time
+
+The configured duration of each traffic light state, written in the frame the traffic light is created. Recorded only with `additional_data`.
+
+| Type | Field | Description |
+| --- | --- | --- |
+| `uint16` | total | Number of records that follow. |
+| `uint32` | id | Per record: the traffic light. |
+| `float` | green time | Seconds the light stays green. |
+| `float` | yellow time | Seconds it stays yellow. |
+| `float` | red time | Seconds it stays red. |
+
+### Packet 17 - Trigger volume
+
+The trigger volume of each traffic sign, written in the frame the sign is created. Same layout as the bounding box packet. Recorded only with `additional_data`.
+
+| Type | Field | Description |
+| --- | --- | --- |
+| `uint16` | total | Number of records that follow. |
+| `uint32` | id | Per record: the traffic sign. |
+| `double` &times; 3 | origin | Centre of the volume, relative to the sign. |
+| `double` &times; 3 | extension | Half-size of the volume. |
+
+### Packet 18 - Frame counter
+
+The engine's frame number. __The recorder never writes this packet__, so it does not appear in a `.log` and `show_recorder_file_info` has no case for it. The id belongs to the same enum as the frame-data streaming path, which does write it. No record count: the payload is always 8 bytes.
+
+| Type | Field | Description |
+| --- | --- | --- |
+| `uint64` | frame counter | Engine frame number. |
+
+### Packet 19 - Walker bones
+
+The full skeleton pose of each pedestrian. Recorded only with `additional_data`, and the only packet whose records are variable length, because each bone carries its name.
+
+| Type | Field | Description |
+| --- | --- | --- |
+| `uint16` | total | Number of walkers that follow. |
+| `uint32` | id | Per walker: the pedestrian. |
+| `uint16` | bones | Number of bones for this walker. |
+| `string` | name | Per bone: its name. |
+| `double` &times; 3 | location | Bone location, relative to the walker. |
+| `double` &times; 3 | rotation | Bone rotation as roll, pitch, yaw. |
+
+### Packet 20 - Visual time
+
+The simulation time the frame was shown at, used to keep playback in step. No record count: the payload is always 8 bytes.
+
+| Type | Field | Description |
+| --- | --- | --- |
+| `double` | time | Simulation time in seconds. |
+
+### Packet 21 - Vehicle wheel animation
+
+The steering angle and rolling rotation of each wheel, so the wheels turn during a replay.
+
+| Type | Field | Description |
+| --- | --- | --- |
+| `uint16` | total | Number of vehicles that follow. |
+| `uint32` | id | Per vehicle: the vehicle. |
+| `uint32` | wheels | Number of wheels for this vehicle. |
+| `uint8` | location | Per wheel: `0` FL, `1` FR, `2` BL, `3` BR. |
+| `float` | steering angle | Steering angle in degrees. |
+| `float` | tire rotation | Rolling rotation of the tyre in degrees. |
+
+### Packet 22 - Biker animation
+
+The rider's animation state on a bicycle or motorcycle.
+
+| Type | Field | Description |
+| --- | --- | --- |
+| `uint16` | total | Number of records that follow. |
+| `uint32` | id | Per record: the vehicle. |
+| `float` | forward speed | Speed used to drive the rider's animation. |
+| `float` | engine rotation | Engine rotation used for the same. |
+
+### Packet 23 - Vehicle door
+
+Doors opening and closing. Holds records only in the frames where a door changed.
+
+| Type | Field | Description |
+| --- | --- | --- |
+| `uint16` | total | Number of records that follow. |
+| `uint32` | id | Per record: the vehicle. |
+| `uint8` | doors | Which door, as [`carla.VehicleDoor`](python_api.md#carla.VehicleDoor). |
+| `bool` | open | `true` when opening, `false` when closing. |
+
+### Packet 24 - Weather
+
+The weather parameters, written when the weather is set and whenever it changes.
+
+| Type | Field | Description |
+| --- | --- | --- |
+| `uint16` | total | Number of records that follow. |
+| `float` &times; 14 | parameters | Cloudiness, precipitation, precipitation deposits, wind intensity, sun azimuth, sun altitude, fog density, fog distance, fog falloff, wetness, scattering intensity, Mie scattering scale, Rayleigh scattering scale and dust storm, in that order. |
+
 ---
-## 4- Frame Layout
+## Frame layout
 
-A frame is a __Frame Start__ packet, the rest of the packets in a fixed order, and a __Frame End__ packet. The order is the one in the layout image above: visual time, the events, positions and traffic light states, the animation packets and, when recording with additional data, the additional-data packets.
+A frame is a __Frame Start__ packet, the packets below in this exact order, and a __Frame End__ packet:
 
-The recorder writes __every packet in every frame__, even when it has nothing to store: an empty packet is its header plus a record count of `0`. This is what the replayer expects, although it skips any packet it does not need.
+```
+FrameStart  VisualTime  EventAdd  EventDel  EventParent  Collision  VehicleDoor
+Position  State  AnimVehicle  AnimWalker  VehicleLight  SceneLight
+AnimVehicleWheels  AnimBiker  Weather  Kinematics  BoundingBox  TriggerVolume
+PlatformTime  PhysicsControl  TrafficLightTime  WalkerBones  FrameEnd
+```
+
+Most packets are written in every frame even when they have nothing to store, as a header plus a record count of `0`. A few skip themselves entirely when empty, so a frame does not always hold all of them: `SceneLight`, `Weather`, `Kinematics`, `TriggerVolume`, `PhysicsControl` and `TrafficLightTime`. Either way a reader works the same, since every packet carries its own size.
+
+The order on disk is not the order `show_recorder_file_info` prints, since the query groups what it shows. A reader that meets an id it does not know skips the packet using the size in its header, which is why a new packet type never breaks an old reader — and why one that nobody taught it about disappears from its output without an error.
 
 *   __Event__ packets (`EventAdd`, `EventDel`, `EventParent`, `Collision`, `VehicleDoor`) hold records only in the frame where the event happens.
 *   __Position__ and __traffic light state__ packets hold one record per actor in every frame. Without them, the replayer cannot move the actors or set the traffic lights.
 *   __Animation__ packets are recorded by default, so walkers are animated and vehicle wheels follow the vehicle during a replay.
 
 ---
-## 5- File Layout
+## File layout
 
 The file starts with the __info header__, followed by the frames one after another. Each frame repeats the same packet sequence, so what changes from one frame to the next is the number of records inside each packet.
 

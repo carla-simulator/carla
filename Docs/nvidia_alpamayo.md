@@ -100,7 +100,7 @@ CUDA_VISIBLE_DEVICES=0 \
     -carla-rpc-port=2000
 ```
 
-Equivalent packaged or locally built `CarlaUnreal` executables can be used. Add `-RenderOffScreen` for headless automation; an X11 or Wayland display is still required when the Alpamayo dashboard itself is enabled.
+Replace `<preset>` with the preset the package was built from, such as `Release`, and `<version>` with the packaged CARLA version. Equivalent packaged or locally built `CarlaUnreal` executables can be used. Add `-RenderOffScreen` for headless automation; an X11 or Wayland display is still required when the Alpamayo dashboard itself is enabled.
 
 ---
 
@@ -135,7 +135,7 @@ cd ${CARLA_ROOT}/PythonAPI/examples/av_stacks/alpamayo
 
 The default role is `hero`. The default vehicle is `vehicle.lincoln.mkz`, which best matches the reference sensor geometry.
 
-Press **ESC** or **Q** to stop. `--max-cycles N` is useful for bounded runs.
+Press **ESC** or **Q** to stop; the loop runs until then unless `--max-cycles N` bounds it. `--seed` fixes the model's sampling, so a run can be repeated; it defaults to 42.
 
 ### Keep the model loaded
 

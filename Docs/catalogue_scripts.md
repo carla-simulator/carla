@@ -13,7 +13,7 @@ python3 manual_control.py
 ```
 
 !!! Note
-    Only one client may put the simulation in synchronous mode. `generate_traffic.py` uses it by default, so run `manual_control.py` beside it as it comes (asynchronous) rather than with `--sync`.
+    Running two scripts against the same server is normal — one driving traffic, another watching it. Only one of them may put the simulation in synchronous mode, though: if two clients both tick, they fight over the clock and the simulation stutters. Let whichever one owns the traffic run synchronously and leave the rest asynchronous.
 
 ---
 

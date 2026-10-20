@@ -20,11 +20,13 @@ nav:
 
 - CARLA topics:
   - 'Foundations': 'foundations.md'
+  - 'World and client': 'core_world.md'
   - 'Actors': 'core_actors.md'
   - 'Maps': 'core_map.md'
   - 'Sensors and data': 'core_sensors.md'
   - 'Coordinate conventions': 'coordinate_conventions.md'
   - 'Traffic' : 'ts_traffic_simulation_overview.md'
+  - 'Traffic Manager': 'adv_traffic_manager.md'
 
 - Resources:
   - 'Python API': 'python_api.md'
@@ -45,9 +47,7 @@ nav:
     - 'Neural reconstruction': 'nvidia_nurec.md'
   - 'ROS2': 'ros2_native.md'
   - 'Scenic': 'tuto_G_scenic.md'
-  - 'SYNKROTRON': 'ecosys_synkrotron.md'
   - 'InvertedAI': 'inverted_ai.md'
-  - 'Ansys': 'ecosys_ansys.md'
 
 - Contributing:
   - 'Guidelines': 'cont_contribution_guidelines.md' 
@@ -64,7 +64,6 @@ not_in_nav: |
   /adv_recorder.md
   /adv_rendering_options.md
   /adv_synchrony_timestep.md
-  /adv_traffic_manager.md
   /autoware.md
   /build_devcontainer.md
   /build_docker.md
@@ -78,7 +77,6 @@ not_in_nav: |
   /catalogue_vehicles.md
   /cont_code_of_conduct.md
   /content_authoring_props.md
-  /core_world.md
   /cpp_api_parity.md
   /custom_assets_tutorials.md
   /download.md

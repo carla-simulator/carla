@@ -26,17 +26,15 @@ import carla
 
 ## Client
 
-__The client__ is the module the user runs to ask for information or changes in the simulation. It reaches the server over the network, at an IP address and a port. There can be many clients running at the same time. Advanced multiclient managing requires thorough understanding of CARLA and [synchrony](adv_synchrony_timestep.md).
-
-Set up the client using the CARLA client object:
+__The client__ is the module the user runs to ask for information or changes in the simulation. It reaches the server over the network, at an IP address and a port:
 
 ```py
 client = carla.Client('localhost', 2000)
 ```
 
-This sets up the client to communicate with a CARLA server running on `localhost`, the local machine. Alternatively, the IP address of a network machine can be used if running the client on a separate machine. The second argument is the port number. By default, the CARLA server will run on port 2000, you can alter this in the settings when you launch CARLA if necessary.
+Use the address of another machine to drive a server across the network. The port defaults to 2000 and is set when the server is launched. Several clients can be connected at once, though more than one taking control needs care with [synchrony](adv_synchrony_timestep.md).
 
-The client object can be used for a number of functions including loading new maps, recording the simulation and initialising the traffic manager:
+From the client come the operations that affect the whole simulation rather than one actor — loading a map, recording, the Traffic Manager:
 
 ```py
 client.load_world('Town10HD_Opt')

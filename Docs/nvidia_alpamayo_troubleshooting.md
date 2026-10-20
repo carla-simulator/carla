@@ -46,6 +46,8 @@ cd PythonAPI/examples/av_stacks/alpamayo
 ./install_alpamayo.sh
 ```
 
+`<build-dir>` is the configured build directory, such as `Build/Release`.
+
 Check which interpreter the launcher uses:
 
 ```sh
@@ -77,7 +79,7 @@ Then rerun `install_alpamayo.sh`. The model environment is isolated from the CAR
 
 ### Installation runs out of disk space
 
-Allow approximately 67 GB for model weights. NuRec additionally needs roughly 13.3 GB of compressed image transfer, about 27.8 GB of local container layers, one sample scene, and temporary space. Reserve at least 40 GB beyond Alpamayo. Do not use `install_nurec.sh --full-dataset` unless approximately 1.5 TB is available.
+Allow approximately 67 GB for model weights. NuRec additionally needs the pinned NRE image, its expanded container layers, one sample scene, and temporary space: reserve at least 40 GB beyond Alpamayo. Do not use `install_nurec.sh --full-dataset` unless approximately 1.5 TB is available.
 
 Inspect the major consumers before deleting anything:
 

@@ -1,6 +1,6 @@
 # Synchrony and time-step
 
-This section deals with two fundamental concepts in CARLA. Their configuration defines how does time go by in the simulation, and how does the server make the simulation move forward.
+Two settings decide how a CARLA simulation advances: the __time-step__, how much simulated time passes between one step and the next, and __synchrony__, whether the server waits for the client before taking that step. Together they decide how repeatable a run is.
 
 *   [__Simulation time-step__](#simulation-time-step)
 	*   [Variable time-step](#variable-time-step)
@@ -11,7 +11,7 @@ This section deals with two fundamental concepts in CARLA. Their configuration d
 	*   [Setting synchronous mode](#setting-synchronous-mode)
 	*   [Using synchronous mode](#using-synchronous-mode)
 *   [__Possible configurations__](#possible-configurations)
-* [__Physics determinism__](#physics-determinism)
+*   [__Physics determinism__](#physics-determinism)
 
 ---
 ## Simulation time-step
@@ -23,7 +23,7 @@ To clarify, the server can take a few milliseconds to compute two steps of a sim
 Time-step can be fixed or variable depending on user preferences.
 
 !!! Note
-    Time-step and synchrony are intertwined concepts. Make sure to read both sections to get a full understanding of how does CARLA work.
+    Time-step and synchrony are intertwined concepts. Read both sections to understand how either one behaves.
 
 ### Variable time-step
 
@@ -102,12 +102,12 @@ To see the effect of sub-stepping, the graphs below drive the same Lincoln MKZ o
 With `max_substep_delta_time` at `0.01`, the simulation time step makes almost no difference: between `fixed_delta_seconds` of `0.01` and `0.05` the top speed varies between 16.19 and 16.27 m/s, and the vehicle stops within 0.06 s of the same moment.
 
 ![velocity with fixed physical delta time](img/adv_synchrony_timestep/physics_convergence_fixed_pdt.png)
-<div style="text-align: right"><i>Speed over time for several fixed_delta_seconds, with max_substep_delta_time = 0.01: the curves overlap. Town10HD_Opt &middot; vehicle.lincoln.mkz &middot; Chaos</i></div>
+<div style="text-align: right"><i>Speed over time for several fixed_delta_seconds, with max_substep_delta_time = 0.01: the curves overlap.</i></div>
 
 With `fixed_delta_seconds` at `0.04`, the physics step does change the result. A coarser `max_substep_delta_time` makes the vehicle slightly faster and longer to stop: the top speed goes from 16.0 m/s at `0.005` to 16.65 m/s at `0.04`, about 4 %. Keep the physics step at `0.01` or below when the dynamics matter.
 
 ![velocity with varied physical delta time](img/adv_synchrony_timestep/physics_convergence_fixed_dt.png)
-<div style="text-align: right"><i>Speed over time with fixed_delta_seconds = 0.04 and several max_substep_delta_time. Town10HD_Opt &middot; vehicle.lincoln.mkz &middot; Chaos</i></div>
+<div style="text-align: right"><i>Speed over time with fixed_delta_seconds = 0.04 and several max_substep_delta_time.</i></div>
 
 ---
 ## Client-server synchrony
@@ -178,23 +178,15 @@ world.on_tick(lambda world_snapshot: do_something(world_snapshot))
 ---
 ## Possible configurations
 
-The configuration of time-step and synchrony, leads for different settings. Here is a brief summary on the possibilities.
+The two settings combine into four states.
 
-|                                                                        | **Fixed time-step**                                                    | **Variable time-step**                                                 |
-| ---------------------------------------------------------------------- | ---------------------------------------------------------------------- | ---------------------------------------------------------------------- |
-| **Synchronous mode**                                                   | Client is in total control over the simulation and its information.    | Risk of non reliable simulations.                                      |
-| **Asynchronous mode**                                                  | Good time references for information. Server runs as fast as possible. | Non easily repeatable simulations.                                     |
+* __Synchronous mode with a fixed time-step.__ The client rules the simulation: the server computes nothing until it ticks, and every step covers the same simulated time. Use this whenever the result has to be repeatable, or whenever several sensors have to agree on when a reading was taken.
 
-<br>
+* __Asynchronous mode with a variable time-step.__ CARLA's default. The server runs as fast as it can and simulated time follows real time, so two runs of the same script never match exactly.
 
+* __Asynchronous mode with a fixed time-step.__ The server still runs as fast as it can, but every reading maps to an exact moment in simulated time. This is how a long period is simulated in much less real time, if the server can keep up.
 
-* __Synchronous mode + variable time-step.__ This is almost for sure a non-desirable state. Physics cannot run properly with a time-step bigger than 0.1 s, and that is what happens when the server waits for a slow client. Simulation time and physics will not be in synchrony. The simulation will not be reliable.
-
-* __Asynchronous mode + variable time-step.__ This is the default CARLA state. Client and server are asynchronous. The simulation time flows according to the real time. Reenacting the simulation needs to take into account float-arithmetic error, and possible differences in time steps between servers.
-
-* __Asynchronous mode + fixed time-step.__ The server will run as fast as possible. The information retrieved will be easily related with an exact moment in the simulation. This configuration makes possible to simulate long periods of time in much less real time, if the server is fast enough.
-
-* __Synchronous mode + fixed time-step.__ The client will rule the simulation. The time step will be fixed. The server will not compute the following step until the client sends a tick. This is the best mode when synchrony and precision is relevant. Especially when dealing with slow clients or different elements retrieving information.
+* __Synchronous mode with a variable time-step.__ Avoid this one. The server waits for the client, so a slow client produces a huge time-step, and physics above 0.1 s per step is not reliable.
 
 !!! Warning 
     __In synchronous mode, always use a fixed time-step__. If the server has to wait for the user, and it is using a variable time-step, time-steps will be too big. Physics will not be reliable. This is what [physics substepping](#physics-substepping) exists to avoid.
@@ -274,12 +266,3 @@ Running these steps will ensure the same outcome for every simulation run.
 ---
 
 That is all there is to know about the roles of simulation time and client-server synchrony in CARLA.
-
-Open CARLA and mess around for a while. Any suggestions or doubts are welcome in the forum.
-
-<div class="build-buttons">
-<p>
-<a href="https://github.com/carla-simulator/carla/discussions/" target="_blank" class="btn btn-neutral" title="Go to the CARLA forum">
-CARLA forum</a>
-</p>
-</div>

@@ -7,7 +7,10 @@ Traffic simulation is integral to the accurate and efficient training and testin
 | [Traffic Manager](#traffic-manager) | no, it is part of CARLA | Python API calls on individual vehicles | Background traffic, and ego testing against it |
 | [ScenarioRunner](#scenariorunner-and-openscenario) | yes, separately | Python classes or OpenSCENARIO `.xosc` | Specific, repeatable maneuvers with several vehicles |
 | [Scenic](#scenic) | yes, separately | Scenic, a probabilistic language | Many variations of one situation, sampled |
-| [Inverted AI](#inverted-ai) | yes, with an API key | Python API, through their service | Learned, human-like traffic |
+| [Inverted AI](#inverted-ai) | an API key and the `invertedai` package | a shipped example script | Learned, human-like traffic |
+
+!!! Note
+    SUMO and PTV-Vissim co-simulation were part of the Unreal Engine 4.26 line. They are not in the Unreal Engine 5 builds.
 
 - [__Traffic Manager__](#traffic-manager)
 - [__ScenarioRunner and OpenSCENARIO__](#scenariorunner-and-openscenario)
@@ -35,6 +38,7 @@ Go to Traffic Manager</a>
 </p>
 </div>
 
+
 ---
 
 ## ScenarioRunner and OpenSCENARIO
@@ -43,15 +47,14 @@ ScenarioRunner provides [predefined traffic scenarios](https://scenario-runner.r
 
 The primary use of OpenSCENARIO is the description of complex maneuvers that involve multiple vehicles. Users can see which features of OpenSCENARIO are supported by ScenarioRunner [here](https://scenario-runner.readthedocs.io/en/latest/openscenario_support/). These features include Maneuvers, Actions, Conditions, Stories and the Storyboard.
 
-ScenarioRunner has to be installed [separately](https://github.com/carla-simulator/scenario_runner) from the main CARLA package.
-
-!!! Note
-    Match the branch to the CARLA line: the UE 5 branch is `ue5-master`, and it is a partial port — it runs on `Town10HD_Opt`, and only a subset of the scenario configurations has been brought across. `master` targets the 0.9.x (UE 4.26) API and will not work here.
+ScenarioRunner is [its own repository](https://github.com/carla-simulator/scenario_runner) and has to be installed separately. Use the `ue5-master` branch, which is the one for Unreal Engine 5; `master` targets the 0.9.x API of the Unreal Engine 4.26 line and does not work here.
 
 __Useful for:__
 
-- Creating complex traffic scenarios and routes to prepare AD agents for evaluation in the [CARLA leaderboard](https://leaderboard.carla.org/).
-- Defining bespoke [metrics](https://scenario-runner.readthedocs.io/en/latest/metrics_module/) that can be run against recordings of the scenario simulation, foregoing the need to run simulations repeatedly.
+- Scripting a specific situation — a cut-in, a pedestrian stepping out, a vehicle running a light — and replaying it against an agent as many times as needed.
+- Writing those situations in OpenSCENARIO, so they can be exchanged with other simulators.
+- Defining bespoke [metrics](https://scenario-runner.readthedocs.io/en/latest/metrics_module/) that run against a recording of the scenario, instead of simulating it again.
+- Running routes: the [CARLA Leaderboard](https://leaderboard.carla.org/) is built on ScenarioRunner, so an agent evaluated there is being driven through it.
 
 <div class="build-buttons">
 <p>
@@ -59,6 +62,7 @@ __Useful for:__
 Go to ScenarioRunner</a>
 </p>
 </div>
+
 
 ---
 
@@ -80,6 +84,7 @@ Go to Scenic Tutorial</a>
 </p>
 </div>
 
+
 ---
 
 ## Inverted AI
@@ -90,21 +95,3 @@ __Useful for:__
 
 - Realistic, human-like background traffic, especially in dense junctions.
 - Testing an ego against behavior that was not written by the person running the test.
-
----
-
-## Co-simulation
-
-CARLA's SUMO and PTV-Vissim co-simulation are part of the UE 4.26 line and have not been ported to this one.
-
----
-
-If you have any doubts about the different options available to simulate traffic in CARLA, feel free to post in the forum or in [Discord](https://discord.gg/8kqACuC).
-
-<div class="build-buttons">
-<p>
-<a href="https://github.com/carla-simulator/carla/discussions/" target="_blank" class="btn btn-neutral" title="Go to the CARLA forum">
-CARLA forum</a>
-</p>
-</div>
-

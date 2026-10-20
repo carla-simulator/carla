@@ -17,7 +17,7 @@ This guide details the different rendering options available in CARLA, including
 ---
 ## Lighting and geometry
 
-Two engine systems do most of the work, and neither needs configuring to use CARLA. They are worth knowing about because they explain what the quality tiers trade away.
+Two Unreal Engine systems do most of the work, and neither needs configuring to use CARLA. They are worth knowing about because they explain what the quality tiers trade away.
 
 __[Lumen](https://dev.epicgames.com/documentation/en-us/unreal-engine/lumen-global-illumination-and-reflections-in-unreal-engine)__ is the dynamic global illumination and reflection system. Light bounces off the surfaces it actually hits, so a red wall tints the road beside it and a vehicle under a bridge darkens, with no baked lighting and no precomputation when the weather or the time of day changes. It is what makes the weather API visible on every surface rather than only in the sky. Lumen runs at the `High` and `Epic` tiers, on [hardware ray tracing](https://dev.epicgames.com/documentation/en-us/unreal-engine/hardware-ray-tracing-in-unreal-engine) with ray-traced shadows.
 
@@ -44,8 +44,8 @@ What each tier gives up, from the top down:
 
 | Tier | Global illumination | Reflections | Shadows | Also |
 | ---- | ------------------- | ----------- | ------- | ---- |
-| `Epic` | Lumen, probe spacing 4, 4096 surface cache | Lumen, full resolution, 2 bounces | 4096 px shadow maps, 10 cascades | Hardware ray tracing available to cameras |
-| `High` | Lumen, probe spacing 8, 2048 surface cache | Lumen, half resolution, 1 bounce | 2048 px, 4 cascades | No ray tracing on cameras |
+| `Epic` | Lumen, probe spacing 4, 4096 surface cache | Lumen, full resolution, 2 bounces | 2048 px shadow maps, 10 cascades | Hardware ray tracing available to cameras |
+| `High` | Lumen, probe spacing 8, 2048 surface cache | Lumen, half resolution, 1 bounce | 1024 px, 4 cascades | No ray tracing on cameras |
 | `Medium` | None | Screen-space plus reflection captures (256 px) | 1024 px, 1 cascade, no distance-field shadows | Texture mip bias 0.5, anisotropy 4 |
 | `Low` | None | Screen-space plus reflection captures (128 px) | 512 px, 1 cascade, no distance-field shadows, far shadows culled | No motion blur, smaller streaming pools, quarter-rate particle emitters |
 
@@ -60,19 +60,17 @@ What that buys, measured on Town10HD_Opt with an empty world and a fixed viewpoi
 
 The step from Epic to High is Lumen getting cheaper; the step from High to Medium is Lumen going away, which is where most of the gain is. Low adds little over Medium, because by then the expensive lighting is already gone and what remains is shadow resolution and particle rates. The exact figures move with the GPU, the resolution and the map, but the shape holds: the cost is in the global illumination, not the geometry.
 
-Inside the editor, scalability follows the editor's own __Settings / Engine Scalability Settings__ menu rather than this flag.
+Inside the editor, scalability follows the editor's own __Settings / Engine Scalability Settings__ menu rather than this flag. On a server, the selector re-applies the tier after Unreal loads its saved scalability settings, so a previous run cannot shadow the tier you asked for.
 
 #### Epic mode
 
 ![Epic mode screenshot](img/adv_rendering_options/rendering_epic.webp)
-<div style="text-align: right"><i>The same Town10HD_Opt junction rendered by a server started with -quality-level=Epic. Town10HD_Opt &middot; sensor.camera.rgb &middot; Cinematic &middot; sunny afternoon</i></div>
-*Epic quality mode screenshot*
+<div style="text-align: right"><i>A Town10HD_Opt junction at <code>-quality-level=Epic</code>.</i></div>
 
 #### Low mode
 
 ![Low mode screenshot](img/adv_rendering_options/rendering_low.webp)
-<div style="text-align: right"><i>The same Town10HD_Opt junction rendered by a server started with -quality-level=Low. Town10HD_Opt &middot; sensor.camera.rgb &middot; Cinematic &middot; sunny afternoon</i></div>
-*Low quality mode screenshot*
+<div style="text-align: right"><i>The same junction at <code>-quality-level=Low</code>.</i></div>
 
 ### Tier comparison
 
@@ -112,13 +110,7 @@ Each tier selects the matching bucket — `Low` 0 through `Epic` 3 — in every 
 The clouds are rendered by the `VolumetricCloudComponent` of the sky rig Blueprint
 (`Content/Carla/Blueprints/LevelDesign/BP_Carla_Sky`). Its **View Sample Count Scale** is set to `2.0` in the
 Blueprint (engine default `1.0`): twice the ray-marching samples in the main view and the camera sensors, for cleaner,
-less grainy clouds at a higher cost. Measured on Town10HD_Opt with an RTX-class GPU looking at a sky with cloudiness 70:
-
-| View Sample Count Scale | Frame time |
-|---|---|
-| 0.5 | 41.0 ms |
-| 1.0 (engine default) | 45.5 ms |
-| 2.0 (CARLA default) | 53.6 ms |
+less grainy clouds at a higher cost.
 
 The value lives in the Blueprint asset, not in the placed actors, so every map's sky rig inherits it. Lower it to
 gain performance when cloud quality matters less.
@@ -152,18 +144,14 @@ The example `PythonAPI/examples/manual_control_5cam.py` spawns a five-camera 108
 
 ### Ray-traced lens tuning
 
-The [ray-traced lens camera family](ref_sensors.md#ray-traced-lens-camera) (`sensor.camera.rt_lens`, `sensor.camera.rt_lens_distance`, `sensor.camera.rt_lens_instance`) is driven by a handful of engine console variables, set project-wide in `Unreal/CarlaUnreal/Config/DefaultEngine.ini` (`[SystemSettings]` and `[/Script/Engine.RendererSettings]` sections). Changing project defaults requires editing that file and rebuilding/repackaging the simulator; the packaged Shipping binary strips the `-execcmds=` command-line parser, so runtime overrides via the launch command are not available in distributed releases. A running editor or development build can still be tuned live from the in-game console.
+The [ray-traced lens camera family](ref_sensors.md#ray-traced-lens-camera) (`sensor.camera.rt_lens`, `sensor.camera.rt_lens_distance`, `sensor.camera.rt_lens_instance`) is driven by a handful of engine console variables, set project-wide in `Unreal/CarlaUnreal/Config/DefaultEngine.ini` (`[SystemSettings]` and `[/Script/Engine.RendererSettings]` sections). An editor or development build can also be tuned live from the in-game console.
 
 | CVar | Default | What it does | When to change it |
 |---|---|---|---|
 | `r.PathTracing.FramePassCount` | Engine: `1`. CARLA project (`DefaultEngine.ini`): `0` | Sample passes the path tracer runs per rendered frame. `0` = automatic: run as many passes as needed to finish the sensor's remaining `samples_per_pixel` that frame (capped at 16 by the engine). `N` = run up to N passes per frame (also capped at 16). | Leave at the CARLA default (`0`). It is what lets a *moving* camera reach and denoise its full `samples_per_pixel` budget every frame instead of restarting accumulation at 1 sample; without it only `samples_per_pixel=1` sensors reach the denoise gate while driving. |
-| `r.PathTracing.MaxFramePassCount` | Engine: `16`. CARLA project: `64` | Upper bound on `r.PathTracing.FramePassCount`, i.e. the most sample passes one rendered frame may run. A sensor's `samples_per_pixel` above this value cannot finish (and denoise) within one tick, and with a moving camera never reaches the denoise gate at all: `sensor.camera.rt_lens`'s `Set()` clamps `samples_per_pixel` to this cvar and logs a warning when it does. | Raise it to allow higher `samples_per_pixel` sensors to converge every frame (CARLA already raises it to 64); lower it to cap the worst-case per-frame path-tracing cost. Measured 2026-09-08: 32 samples/pixel run under a 16-pass cap was about 4&times; noisier than the same count run under a cap that lets it finish. |
+| `r.PathTracing.MaxFramePassCount` | Engine: `16`. CARLA project: `64` | Upper bound on `r.PathTracing.FramePassCount`, i.e. the most sample passes one rendered frame may run. A sensor's `samples_per_pixel` above this value cannot finish (and denoise) within one tick, and with a moving camera never reaches the denoise gate at all: `sensor.camera.rt_lens`'s `Set()` clamps `samples_per_pixel` to this cvar and logs a warning when it does. | Raise it to allow higher `samples_per_pixel` sensors to converge every frame (CARLA already raises it to 64); lower it to cap the worst-case per-frame path-tracing cost. Measured: 32 samples/pixel under a 16-pass cap was about 4&times; noisier than the same count under a cap that lets it finish. |
 | `r.PathTracing.DLSSRR.FeatureIdleReleaseSeconds` | `0` (off) | Optional wall-clock fallback: seconds a DLSS Ray Reconstruction / DLSS Super Resolution feature (one per distinct view/lens configuration) may sit unused before its GPU memory is released. `0` disables it. | Not normally needed. A sensor's DLSS-RR feature (measured ~342 MB at 1080p) is released within about a second of the sensor being destroyed, because its lifetime is tied to the sensor's view state rather than to a timeout. That is what lets a live sensor go arbitrarily long between captures (a slow synchronous client, a sparse `sensor_tick`) without losing the denoiser's temporal history: the previous default of `10.0` re-created the feature and reset that history on every capture slower than 10 s. Set a value only as a safety net for a leak you have actually observed; any live sensor slower than the value then pays the reset again. |
 | `carla.RTLens.SyncModeBlockingReadback` | `1` | In synchronous mode, `1` delivers each `rt_lens*` image captured on the *same* tick, through a per-tick batched blocking GPU readback shared by every camera. `0` forces the asynchronous, one-tick-late, droppable readback (see [Readback and synchronous-mode delivery](ref_sensors.md#ray-traced-lens-camera)) even in synchronous mode. | Rollback valve. Leave at the default (`1`) for frame-accurate synchronous captures; set to `0` only to debug or work around a regression in the batched readback path. |
-
- The selector module re-applies the active tier's scalability after `UGameUserSettings::ApplyNonResolutionSettings` runs, so cross-run scalability state cannot shadow the current tier.
-
-<br>
 
 ---
 
@@ -188,11 +176,10 @@ python3 PythonAPI/util/config.py --rendering
 
 `PythonAPI/examples/no_rendering_mode.py` draws the simulation as a 2D map from the road network, which is the usual way to watch what is happening while rendering is off.
 
-!!! Warning
-    This is not the same as off-screen rendering. No-rendering mode disables the rendering itself, so no sensor produces images; off-screen rendering keeps rendering and only drops the window.
-
 ---
 ## Off-screen rendering mode
+
+Off-screen rendering is the opposite trade: the simulator keeps rendering, it just has no window. Sensors produce images as normal. It is the mode for a headless machine, not a cheaper one.
 
 The off-screen rendering mode enables the CARLA simulator to run without the spectator. This would be the appropriate mode to use for rendering in a headless configuration, for example on a cloud virtual machine instance. Data from any cameras and other sensors in the simulation will still be rendered to disk or transmitted to other applications, but no rendering data will be passed to the screen.
 

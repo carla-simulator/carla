@@ -1,9 +1,6 @@
-# Walker Bone Control
+# Control walker skeletons
 
-In this tutorial we describe how to manually control and animate the
-skeletons of walkers from the CARLA Python API. The reference of
-all classes and methods available can be found at
-[Python API reference](python_api.md).
+In this tutorial we describe how to manually control and animate the skeletons of walkers from the CARLA Python API. The reference of all classes and methods available can be found at [Python API reference](python_api.md).
 
 *   [__Walker skeleton structure__](#walker-skeleton-structure)  
 *   [__Manually control walker bones__](#manually-control-walker-bones)  
@@ -17,8 +14,7 @@ all classes and methods available can be found at
 ---
 ## Walker skeleton structure
 
-All walkers have the same skeleton hierarchy and bone names. Below is an image of the skeleton
-hierarchy.
+All walkers have the same skeleton hierarchy and bone names. Below is an image of the skeleton hierarchy.
 
 ```text
 crl_root
@@ -28,27 +24,7 @@ crl_root
     │       ├── crl_shoulder__L
     │       │   └── crl_arm__L
     │       │       └── crl_foreArm__L
-    │       │           └── crl_hand__L
-    │       │               ├── crl_handThumb__L
-    │       │               │   └── crl_handThumb01__L
-    │       │               │       └── crl_handThumb02__L
-    │       │               │           └── crl_handThumbEnd__L
-    │       │               ├── crl_handIndex__L
-    │       │               │   └── crl_handIndex01__L
-    │       │               │       └── crl_handIndex02__L
-    │       │               │           └── crl_handIndexEnd__L
-    │       │               ├── crl_handMiddle__L
-    │       │               │   └── crl_handMiddle01__L
-    │       │               │       └── crl_handMiddle02__L
-    │       │               │           └── crl_handMiddleEnd__L
-    │       │               ├── crl_handRing__L
-    │       │               │   └── crl_handRing01__L
-    │       │               │       └── crl_handRing02__L
-    │       │               │           └── crl_handRingEnd__L
-    │       │               └── crl_handPinky__L
-    │       │                   └── crl_handPinky01__L
-    │       │                       └── crl_handPinky02__L
-    │       │                           └── crl_handPinkyEnd__L
+    │       │           └── crl_hand__L ....... 5 finger chains
     │       ├── crl_neck__C
     │       │   └── crl_Head__C
     │       │       ├── crl_eye__L
@@ -56,27 +32,7 @@ crl_root
     │       └── crl_shoulder__R
     │           └── crl_arm__R
     │               └── crl_foreArm__R
-    │                   └── crl_hand__R
-    │                       ├── crl_handThumb__R
-    │                       │   └── crl_handThumb01__R
-    │                       │       └── crl_handThumb02__R
-    │                       │           └── crl_handThumbEnd__R
-    │                       ├── crl_handIndex__R
-    │                       │   └── crl_handIndex01__R
-    │                       │       └── crl_handIndex02__R
-    │                       │           └── crl_handIndexEnd__R
-    │                       ├── crl_handMiddle__R
-    │                       │   └── crl_handMiddle01__R
-    │                       │       └── crl_handMiddle02__R
-    │                       │           └── crl_handMiddleEnd__R
-    │                       ├── crl_handRing__R
-    │                       │   └── crl_handRing01__R
-    │                       │       └── crl_handRing02__R
-    │                       │           └── crl_handRingEnd__R
-    │                       └── crl_handPinky__R
-    │                           └── crl_handPinky01__R
-    │                               └── crl_handPinky02__R
-    │                                   └── crl_handPinkyEnd__R
+    │                   └── crl_hand__R ....... 5 finger chains
     ├── crl_thigh__L
     │   └── crl_leg__L
     │       └── crl_foot__L
@@ -89,11 +45,23 @@ crl_root
                     └── crl_toeEnd__R
 ```
 
+Each hand carries the same five chains, four bones deep:
+
+```text
+crl_hand__L
+├── crl_handThumb__L  →  crl_handThumb01__L  →  crl_handThumb02__L  →  crl_handThumbEnd__L
+├── crl_handIndex__L  →  crl_handIndex01__L  →  crl_handIndex02__L  →  crl_handIndexEnd__L
+├── crl_handMiddle__L →  crl_handMiddle01__L →  crl_handMiddle02__L →  crl_handMiddleEnd__L
+├── crl_handRing__L   →  crl_handRing01__L   →  crl_handRing02__L   →  crl_handRingEnd__L
+└── crl_handPinky__L  →  crl_handPinky01__L  →  crl_handPinky02__L  →  crl_handPinkyEnd__L
+```
+
+Every name is `crl_` plus the bone, plus a side: `__L` left, `__R` right, `__C` centre. The right hand repeats the block above with `__R`. `walker.get_bones()` returns the live list if you would rather read the names from the simulator than from this page.
+
 ---
 ## Manually control walker bones
 
-Following is a detailed step-by-step example of how to change the bone transforms of a walker
-from the CARLA Python API
+Following is a detailed step-by-step example of how to change the bone transforms of a walker from the CARLA Python API
 
 ### Connect to the simulator
 
@@ -108,7 +76,15 @@ Initialize the carla client
 
 ```py
 client = carla.Client('127.0.0.1', 2000)
-client.set_timeout(2.0)
+client.set_timeout(10.0)
+
+world = client.get_world()
+
+# The animation loop below ticks the server, so it has to own the clock
+settings = world.get_settings()
+settings.synchronous_mode = True
+settings.fixed_delta_seconds = 0.05
+world.apply_settings(settings)
 ```
 
 ### Spawn a walker
@@ -116,7 +92,6 @@ client.set_timeout(2.0)
 Spawn a random walker at one of the map's spawn points
 
 ```py
-world = client.get_world()
 blueprint = random.choice(world.get_blueprint_library().filter('walker.*'))
 
 # Pedestrians belong on the navigation mesh, not on a vehicle spawn point
@@ -168,4 +143,9 @@ for step in range(100):
 
 walker.hide_pose()
 walker.destroy()
+
+# Put the server back as it was, or the next script will hang waiting for ticks
+settings.synchronous_mode = False
+settings.fixed_delta_seconds = None
+world.apply_settings(settings)
 ```

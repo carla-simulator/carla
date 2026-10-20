@@ -34,7 +34,7 @@
 The Traffic Manager (TM) is the module that controls vehicles in autopilot mode in a simulation. Its goal is to populate a simulation with realistic urban traffic conditions. Users can customize some behaviors, for example, to set specific learning circumstances.
 
 ![tm_traffic_aerial](img/tuto_G_traffic_manager/tm_traffic_aerial.webp)
-<div style="text-align: right"><i>Aerial view of Traffic Manager autopilot traffic and pedestrians at a junction. Town10HD_Opt &middot; sensor.camera.rgb &middot; Cinematic &middot; sunny afternoon</i></div>
+<div style="text-align: right"><i>Aerial view of Traffic Manager autopilot traffic and pedestrians at a junction.</i></div>
 
 ### Structured design
 
@@ -71,7 +71,7 @@ TM behavior is adjusted through the Python API; the full list is in the [`carla.
 | Hybrid physics | [`set_hybrid_physics_mode`](python_api.md#carla.TrafficManager.set_hybrid_physics_mode), [`set_hybrid_physics_radius`](python_api.md#carla.TrafficManager.set_hybrid_physics_radius) |
 | Large maps | [`set_respawn_dormant_vehicles`](python_api.md#carla.TrafficManager.set_respawn_dormant_vehicles), [`set_boundaries_respawn_dormant_vehicles`](python_api.md#carla.TrafficManager.set_boundaries_respawn_dormant_vehicles) |
 | Determinism and modes | [`set_random_device_seed`](python_api.md#carla.TrafficManager.set_random_device_seed), [`set_synchronous_mode`](python_api.md#carla.TrafficManager.set_synchronous_mode), [`set_osm_mode`](python_api.md#carla.TrafficManager.set_osm_mode) |
-| Large vehicles | `vehicle_large_vehicle_wide_turn`, `global_large_vehicle_wide_turn` |
+| Large vehicles | [`vehicle_large_vehicle_wide_turn`](python_api.md#carla.TrafficManager.vehicle_large_vehicle_wide_turn), [`global_large_vehicle_wide_turn`](python_api.md#carla.TrafficManager.global_large_vehicle_wide_turn) |
 | Lifecycle | [`get_port`](python_api.md#carla.TrafficManager.get_port), [`shut_down`](python_api.md#carla.TrafficManager.shut_down) |
 
 __Defaults__, for a TM that has not been configured:
@@ -228,7 +228,7 @@ To modify the behavior of hybrid mode, use the following two parameters:
 The clip below shows how physics is enabled and disabled when hybrid mode is active. The __hero vehicle__ is tagged with a __red square__. Vehicles with __physics disabled__ are tagged with a __blue square__. When inside the hero vehicle's radius of influence, __physics are enabled and the tag becomes green__.
 
 ![Welcome to CARLA](img/adv_traffic_manager/tm_hybrid_physics.webp)
-<div style="text-align: right"><i>Hybrid physics mode seen from above: inside the radius around the hero vehicle physics is on (green), outside it is off (blue). Town10HD_Opt &middot; sensor.camera.rgb &middot; Cinematic &middot; sunny afternoon</i></div>
+<div style="text-align: right"><i>Hybrid physics mode seen from above: inside the radius around the hero vehicle physics is on (green), outside it is off (blue).</i></div>
 
 
 ---

@@ -2,7 +2,7 @@
 
 The client and the world are two of the fundamentals of CARLA, a necessary abstraction to operate the simulation and its actors.
 
-This tutorial goes from defining the basics and creation of these elements, to describing their possibilities. If any doubt or issue arises during the reading, the [CARLA forum](https://github.com/carla-simulator/carla/discussions/) is there to solve them.
+This page covers both objects: how they are created, what they hold, and what can be done through them.
 
 *   [__The client__](#the-client)
     *   [Client creation](#client-creation)
@@ -22,7 +22,7 @@ This tutorial goes from defining the basics and creation of these elements, to d
 
 Clients are one of the main elements in the CARLA architecture. They connect to the server, retrieve information, and command changes. That is done via scripts. The client identifies itself, and connects to the world to then operate with the simulation.
 
-Besides that, clients are able to access advanced CARLA modules, features, and apply command batches. Only command batches will be covered in this section. These are useful for basic things such as spawning lots of actors. The rest of features are more complex, and they will be addressed in their respective pages in __Advanced steps__.
+Besides that, clients are able to access advanced CARLA modules, features, and apply command batches. Only command batches will be covered in this section. These are useful for basic things such as spawning lots of actors. The rest are covered in their own pages.
 
 Take a look at [__carla.Client__](python_api.md#carla.Client) in the Python API reference to learn on specific methods and variables of the class.
 
@@ -150,7 +150,7 @@ world.set_weather(carla.WeatherParameters.WetCloudySunset)
 ```
 
 ![weather_presets](img/core_world/weather_presets_cinematic_town10.webp)
-<div style="text-align: right"><i>The same junction under nine carla.WeatherParameters presets, Cinematic profile. Town10HD_Opt &middot; sensor.camera.rgb &middot; Cinematic &middot; nine weather presets</i></div>
+<div style="text-align: right"><i>The same junction under nine carla.WeatherParameters presets, Cinematic profile.</i></div>
 
 The same presets through the default sensor profile, `AutomotiveHDR`: [Town10HD_Opt](img/core_world/weather_presets_automotivehdr_town10.webp), [Town15](img/core_world/weather_presets_automotivehdr_town15.webp). Town15 with the `Cinematic` profile: [Town15](img/core_world/weather_presets_cinematic_town15.webp).
 
@@ -203,7 +203,7 @@ The override survives weather changes but not `load_world()` or `reload_world()`
 
 ### Lights
 ![vehicle_light_states](img/shared/vehicle_light_states.webp)
-<div style="text-align: right"><i>carla.VehicleLightState combinations on a Lincoln MKZ at night, front (top) and rear (bottom). Town10HD_Opt &middot; sensor.camera.rgb &middot; Cinematic &middot; ClearNight</i></div>
+<div style="text-align: right"><i>carla.VehicleLightState combinations on a Lincoln MKZ at night, front (top) and rear (bottom).</i></div>
 
 *   __Street lights__ automatically turn on when the simulation enters night mode. The lights are placed by the developers of the map, and accessible as [__carla.Light__](python_api.md#carla.Light) objects. Properties such as color and intensity can be changed at will. The variable __light_state__ of type [__carla.LightState__](python_api.md#carla.LightState) allows setting all of these in one call.  
 Street lights are categorized using their attribute __light_group__, of type [__carla.LightGroup__](python_api.md#carla.LightGroup). This allows to classify lights as street lights, building lights... An instance of [__carla.LightManager__](python_api.md#carla.LightManager) can be retrieved to handle groups of lights in one call.
@@ -303,15 +303,4 @@ world.apply_settings(settings)
     It is off by default, and only moves signs and lights that CARLA generated from OpenDRIVE. Actors placed by hand in a map are never moved. Signs are generated when the map loads, so enabling the setting later re-snaps the ones already spawned.
 
 ---
-That is a wrap on the world and client objects. The next step takes a closer look at actors and blueprints.
-
-<div class="build-buttons">
-<p>
-<a href="https://github.com/carla-simulator/carla/discussions/" target="_blank" class="btn btn-neutral" title="CARLA forum">
-CARLA forum</a>
-</p>
-<p>
-<a href="../core_actors" class="btn btn-neutral" title="Actors and blueprints">
-Actors and blueprints</a>
-</p>
-</div>
+That is a wrap on the world and client objects. The next step takes a closer look at [actors and blueprints](core_actors.md).

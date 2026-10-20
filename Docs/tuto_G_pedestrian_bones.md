@@ -5,9 +5,12 @@ A pedestrian's skeleton can be read from the simulation as ground truth: a set o
 This tutorial spawns a pedestrian, gives it an AI controller, then reads its skeleton and projects the bones onto a camera image.
 
 - [__Setting up the simulator__](#setting-up-the-simulator)
+- [__Spawning a pedestrian in the CARLA simulator__](#spawning-a-pedestrian-in-the-carla-simulator)
 - [__AI controller to guide the pedestrian around the map__](#ai-controller-to-guide-the-pedestrian-around-the-map)
+- [__Camera geometry__](#camera-geometry)
 - [__Build the skeleton__](#build-the-skeleton)
 - [__Cleaning up__](#cleaning-up)
+- [__Summary__](#summary)
 
 !!! Note
     `PythonAPI/examples/draw_skeleton.py` already does this end to end. This page builds it up piece by piece.
@@ -42,16 +45,7 @@ spectator = world.get_spectator()
 ---
 ## Spawning a pedestrian in the CARLA simulator
 
-First, we want to spawn a pedestrian in the simulation. This can be done at a random location using `world.get_random_location_from_navigation()`, or it can be chosen using coordinates gathered from the Unreal Editor. In the unreal editor, add an empty actor to the location where you want to spawn your pedestrian, then use the inspector on the right hand side to query the coordinates.
-
-![actor_location](img/tuto_G_pedestrian_bones/actor_location.webp)
-<div style="text-align: right"><i>An actor selected in the UE 5.8 editor; its location is read in Details > Transform (outlined in red).</i></div>
-
-!!! Note
-    The Unreal Editor works in units of centimeters, while CARLA works in units of meters so the units must be converted. Ensure to divide the Unreal Editor coordinates by 100 before using in the CARLA simulator.
-
-
-Once you have chosen your coordinates, you can then spawn the pedestrian. We will also spawn a camera to gather images. We also need a [`Queue`](https://docs.python.org/3/library/queue.html) object to allow us easy access to the data from the camera (as the camera sensor operates on its own thread, separate from the main Python thread running your script).
+A pedestrian is spawned anywhere on the navigation mesh, and `world.get_random_location_from_navigation()` returns such a point. To put one somewhere specific instead, fly the spectator there and spawn at `spectator.get_transform()`, as [Maps](core_map.md#spawning-somewhere-of-your-own) describes. We will also spawn a camera to gather images. We also need a [`Queue`](https://docs.python.org/3/library/queue.html) object to allow us easy access to the data from the camera (as the camera sensor operates on its own thread, separate from the main Python thread running your script).
 
 In order to see our pedestrian, we need to transform the camera so it is pointing at the pedestrian we spawn. For this we will use a function that calculates the translation and rotation needed to center the camera:
 
@@ -114,7 +108,7 @@ controller.go_to_location(world.get_random_location_from_navigation())
 # Move the world a few frames to let the pedestrian spawn
 for frame in range(0,5):
     world.tick()
-    trash = image_queue.get() 
+    _ = image_queue.get()
 
 ```
 
@@ -225,7 +219,7 @@ def build_skeleton(ped, sk_links, K, world_2_camera):
 
 ```
 
-Next, let's read the bone pairs from __skeleton.txt__:
+Next, read the bone pairs from [__skeleton.txt__](img/tuto_G_pedestrian_bones/skeleton.txt). Download it next to your script, or give `open()` the path you saved it to:
 
 ```py
 skeleton_links = []
@@ -239,7 +233,17 @@ with open('skeleton.txt') as f:
 
 
 world.tick()
-trash = image_queue.get()
+_ = image_queue.get()
+```
+
+The camera's resolution and field of view do not change, so its projection matrix is built once, before the loop:
+
+```py
+image_w = camera_bp.get_attribute("image_size_x").as_int()
+image_h = camera_bp.get_attribute("image_size_y").as_int()
+fov = camera_bp.get_attribute("fov").as_float()
+
+K = build_projection_matrix(image_w, image_h, fov)
 ```
 
 Now we can iterate a few frames, building the skeleton in each frame and projecting the skeleton onto the camera sensor output. We use OpenCV to draw the skeleton onto the sensor output and save the image:
@@ -259,21 +263,13 @@ for frame in range(0,360):
     # Retrieve the frame from the queue
     image = image_queue.get()
     
-    # get 4x4 matrix to transform points from world to camera coordinates
+    # The camera moved, so its world-to-camera matrix has to be rebuilt
     world_2_camera = np.array(camera.get_transform().get_inverse_matrix())
 
-    # get some attributes from the camera
-    image_w = camera_bp.get_attribute("image_size_x").as_int()
-    image_h = camera_bp.get_attribute("image_size_y").as_int()
-    fov = camera_bp.get_attribute("fov").as_float()
-
-    # calculate the camera matrix to project from 3D -> 2D
-    K = build_projection_matrix(image_w, image_h, fov)
-    
     # Build the list of lines that will display the skeleton
     lines = build_skeleton(pedestrian, skeleton_links, K, world_2_camera)
 
-    # Reshape the data into a 2D RBGA array
+    # Reshape the data into a 2D BGRA array
     img = np.reshape(np.copy(image.raw_data), (image.height, image.width, 4)) 
 
     # Draw the lines into the image using OpenCV

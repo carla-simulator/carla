@@ -11,7 +11,10 @@ Every sensor CARLA ships, what it returns and what it is configured with.
 | `sensor.camera.normals` | [carla.Image](python_api.md#carla.Image) | [Normals camera](#normals-camera) |
 | `sensor.camera.optical_flow` | [carla.OpticalFlowImage](python_api.md#carla.OpticalFlowImage) | [Optical flow camera](#optical-flow-camera) |
 | `sensor.camera.dvs` | [carla.DVSEventArray](python_api.md#carla.DVSEventArray) | [DVS camera](#dvs-camera) |
-| `sensor.camera.rgb_fisheye`, `depth_fisheye`, `semantic_segmentation_fisheye`, `instance_segmentation_fisheye` | as the pinhole camera each one mirrors | [Fisheye cameras](#fisheye-cameras) |
+| `sensor.camera.rgb_fisheye` | [carla.Image](python_api.md#carla.Image) | [Fisheye cameras](#fisheye-cameras) |
+| `sensor.camera.depth_fisheye` | [carla.Image](python_api.md#carla.Image) | [Fisheye cameras](#fisheye-cameras) |
+| `sensor.camera.semantic_segmentation_fisheye` | [carla.Image](python_api.md#carla.Image) | [Fisheye cameras](#fisheye-cameras) |
+| `sensor.camera.instance_segmentation_fisheye` | [carla.Image](python_api.md#carla.Image) | [Fisheye cameras](#fisheye-cameras) |
 | `sensor.camera.rt_lens` | [carla.Image](python_api.md#carla.Image) | [Ray-traced lens camera](#ray-traced-lens-camera) |
 | `sensor.camera.rt_lens_distance` | [carla.DistanceImage](python_api.md#carla.DistanceImage) | [Ray-traced lens distance camera](#ray-traced-lens-distance-camera) |
 | `sensor.camera.rt_lens_instance` | [carla.Image](python_api.md#carla.Image) | [Ray-traced lens instance camera](#ray-traced-lens-instance-camera) |
@@ -84,7 +87,7 @@ raw_image.save_to_disk("path/to/save/converted/image", carla.ColorConverter.Dept
 
 
 ![ImageDepth](img/ref_sensors/sensor_depth_raw_vs_log.webp)
-<div style="text-align: right"><i>Depth camera: raw 24-bit encoding (left) and the logarithmic-depth conversion (right). Town10HD_Opt &middot; sensor.camera.depth &middot; AutomotiveHDR &middot; sunny afternoon</i></div>
+<div style="text-align: right"><i>Depth camera: raw 24-bit encoding (left) and the logarithmic-depth conversion (right).</i></div>
 
 
 #### Basic camera attributes
@@ -280,10 +283,10 @@ Additionally, the `noise_stddev` attribute makes for a noise model to simulate u
 The rotation of the LIDAR can be tuned to cover a specific angle on every simulation step (using a [fixed time-step](adv_synchrony_timestep.md)). For example, to rotate once per step (full circle output, as in the picture below), the rotation frequency and the simulated FPS should be equal. <br> __1.__ Set the sensor's frequency `sensors_bp['lidar'][0].set_attribute('rotation_frequency','10')`. <br> __2.__ Run the simulation using `python3 PythonAPI/util/config.py --fps 10`.
 
 ![LidarPointCloud](img/ref_sensors/sensor_lidar_bev.webp)
-<div style="text-align: right"><i>One LiDAR sweep seen from above, coloured by height (64 channels, 80 m range). Town10HD_Opt &middot; sensor.lidar.ray_cast &middot; AutomotiveHDR &middot; sunny afternoon</i></div>
+<div style="text-align: right"><i>One LiDAR sweep seen from above, coloured by height (64 channels, 80 m range).</i></div>
 
 ![LidarOnCamera](img/ref_sensors/sensor_lidar_on_camera.webp)
-<div style="text-align: right"><i>The same sweep projected on the RGB image, coloured by range. Town10HD_Opt &middot; sensor.lidar.ray_cast + camera.rgb &middot; AutomotiveHDR &middot; sunny afternoon</i></div>
+<div style="text-align: right"><i>The same sweep projected on the RGB image, coloured by range.</i></div>
 
 #### Lidar attributes
 
@@ -328,6 +331,9 @@ The rotation of the LIDAR can be tuned to cover a specific angle on every simula
 
 * __Blueprint:__ sensor.lidar.hss_lidar
 * __Output:__ [carla.LidarMeasurement](python_api.md#carla.LidarMeasurement) per step (unless `sensor_tick` says otherwise).
+
+!!! Warning
+    __TODO: this section needs a capture.__ The fixed scan pattern looks nothing like the rotating LiDAR's, and both of that sensor's images are on this page while this one has none.
 
 This sensor simulates a Hybrid Solid-State LiDAR implemented using
 ray-casting. The default parameters are based on the Hesai AT128
@@ -450,7 +456,7 @@ points = np.reshape(points, (len(radar_data), 4))
 The provided script `manual_control.py` uses this sensor to show the points being detected and paint them white when static, red when moving towards the object and blue when moving away:
 
 ![ImageRadar](img/ref_sensors/sensor_radar_on_camera.webp)
-<div style="text-align: right"><i>Radar detections projected on the RGB image, coloured by distance. Town10HD_Opt &middot; sensor.other.radar + sensor.camera.rgb &middot; AutomotiveHDR &middot; sunny afternoon</i></div>
+<div style="text-align: right"><i>Radar detections projected on the RGB image, coloured by distance.</i></div>
 
 | Blueprint attribute       | Type    | Default | Description   |
 | ----------------------------- | ----------------------------- | ----------------------------- | ----------------------------- |
@@ -502,7 +508,7 @@ The `sensor_tick` tells how fast we want the sensor to capture the data.
 A value of 1.5 means that we want the sensor to capture data each second and a half. By default a value of 0.0 means as fast as possible.
 
 ![ImageRGB](img/ref_sensors/sensor_rgb.webp)
-<div style="text-align: right"><i>RGB camera output. Town10HD_Opt &middot; sensor.camera.rgb &middot; AutomotiveHDR &middot; sunny afternoon</i></div>
+<div style="text-align: right"><i>RGB camera output.</i></div>
 
 #### Camera attributes
 
@@ -586,6 +592,9 @@ sky every time a client respawns a camera, e.g. `manual_control.py` changing the
 * __Blueprints:__ sensor.camera.rgb_fisheye, sensor.camera.depth_fisheye, sensor.camera.semantic_segmentation_fisheye, sensor.camera.instance_segmentation_fisheye
 * __Output:__ the same data as the pinhole camera each one mirrors — [carla.Image](python_api.md#carla.Image) per step (unless `sensor_tick` says otherwise).
 
+!!! Warning
+    __TODO: this section needs a capture.__ The distortion is the point of these cameras and there is no picture of it. One image per lens model, or one per variant beside its pinhole counterpart.
+
 Wide-angle versions of the four raster cameras. The scene is rendered into six cube faces and resampled through the chosen lens model, so a field of view past 180&deg; is possible without the stretching a single pinhole render suffers towards its borders. The depth and segmentation variants are distorted the same way as the RGB one, so their pixels stay aligned with it.
 
 The lens models and their coefficients are the ones [`sensor.camera.rt_lens`](#ray-traced-lens-camera) uses, with one difference that matters: these cameras rasterize, so they cost about what their pinhole counterparts cost, while `rt_lens` path-traces the scene and generates its primary rays through the lens itself. Use `rt_lens` when the projection has to be exact; use these when you need a wide-angle image at raster speed.
@@ -627,6 +636,9 @@ See `PythonAPI/examples/manual_control_fisheye.py` for a working rig.
 
 * __Blueprint:__ sensor.camera.rt_lens
 * __Output:__ [carla.Image](python_api.md#carla.Image) per step (unless `sensor_tick` says otherwise).
+
+!!! Warning
+    __TODO: this section needs a capture.__ Nothing on the page shows what the path-traced lens looks like, or how the lens models differ from the raster cameras.
 
 The ray-traced lens camera renders the scene with Unreal Engine's __path tracer__ and generates its primary rays directly through a configurable physical lens model. Where the RGB camera approximates lens distortion as a post-process on a pinhole render, `sensor.camera.rt_lens` distorts the rays themselves, so wide-angle and fisheye projections are geometrically exact, with no resolution loss towards the image borders and no missing field of view.
 
@@ -717,6 +729,9 @@ Setting `carla.RTLens.SyncModeBlockingReadback 0` (server console) forces the as
 * __Blueprint:__ sensor.camera.rt_lens_distance
 * __Output:__ [carla.DistanceImage](python_api.md#carla.DistanceImage) per step (unless `sensor_tick` says otherwise).
 
+!!! Warning
+    __TODO: this section needs a capture.__ The distance output is unillustrated; a frame beside the RGB one it matches would show what it returns.
+
 The geometric twin of [`sensor.camera.rt_lens`](#ray-traced-lens-camera): it shares the exact same lens attributes (`camera_model`, `distortion_coeffs`, `lut`, `fx`/`fy`/`cx`/`cy`, `theta_max_deg`, `fov`, `aperture_fstop`, `focus_distance_m`, `show_only_tags`, `shadow_catcher_tags`, `show_only_actor_ids`, `sensor_tick`, …) so a color/distance pair can be configured from the same dictionary and stay pixel-aligned, but it renders a single geometry AOV instead of a shaded image: for every pixel, the __Euclidean distance__, in meters, from the camera origin to the primary hit, measured along that pixel's (possibly heavily distorted) lens ray. This is the only meaningful "depth" for a non-pinhole lens, where a pinhole camera's planar view-space Z collapses to zero at 90° off axis.
 
 Depth of field is disabled for this sensor (`focus_distance_m`/`aperture_fstop` have no effect): a defocused primary ray would scatter its origin across the aperture and turn a distance measurement into an average over the circle of confusion. The AOV is exact by construction — one ray through the pixel centre, no anti-aliasing jitter, no temporal blending — so `samples_per_pixel` and `enable_denoiser` default to `1` and `False` and normally should not be changed: extra samples only cost time, and the denoiser must never touch metric data. Post-process attributes (`enable_postprocess_effects`, `post_process_profile`) are not present: this capture never goes through the post-process chain.
@@ -760,6 +775,9 @@ distance_sensor.listen(on_distance)
 
 * __Blueprint:__ sensor.camera.rt_lens_instance
 * __Output:__ [carla.Image](python_api.md#carla.Image) per step (unless `sensor_tick` says otherwise).
+
+!!! Warning
+    __TODO: this section needs a capture.__ The instance output is unillustrated; a frame beside the RGB one it matches would show what it returns.
 
 The labelling twin of [`sensor.camera.rt_lens`](#ray-traced-lens-camera): same shared lens attribute surface as the distance camera above, but the geometry AOV it renders is the primary hit's CARLA tag rather than a distance. The output byte layout is identical to the [instance segmentation camera](#instance-segmentation-camera): red channel `R` carries the semantic label, and the green/blue channels carry the 16-bit instance id (`G` low byte, `B` high byte). The id is the __engine's internal actor unique id__ used to build the tag on the GPU, not the id returned by the Python `actor.id` property — treat it as an opaque per-instance key within one episode, not as a value to compare against `actor.id`.
 
@@ -812,10 +830,10 @@ __1.__ Set the sensor's frequency `sensors_bp['lidar'][0].set_attribute('rotatio
 __2.__ Run the simulation using `python3 PythonAPI/util/config.py --fps 10`.
 
 ![SemanticLidarBEV](img/ref_sensors/sensor_semantic_lidar_bev.webp)
-<div style="text-align: right"><i>Semantic LiDAR seen from above, points coloured by semantic tag. Town10HD_Opt &middot; sensor.lidar.ray_cast_semantic &middot; AutomotiveHDR &middot; sunny afternoon</i></div>
+<div style="text-align: right"><i>Semantic LiDAR seen from above, points coloured by semantic tag.</i></div>
 
 ![SemanticLidarOnCamera](img/ref_sensors/sensor_semantic_lidar_on_camera.webp)
-<div style="text-align: right"><i>The same sweep projected on the RGB image. Town10HD_Opt &middot; sensor.lidar.ray_cast_semantic + camera.rgb &middot; AutomotiveHDR &middot; sunny afternoon</i></div>
+<div style="text-align: right"><i>The same sweep projected on the RGB image.</i></div>
 
 #### SemanticLidar attributes
 
@@ -861,7 +879,7 @@ This camera classifies every object in sight by displaying it in a different col
 When the simulation starts, every element in scene is created with a tag. So it happens when an actor is spawned. The objects are classified by their relative file path in the project. For example, meshes stored in `Unreal/CarlaUnreal/Content/Carla/Static/Pedestrian` are tagged as `Pedestrian`.
 
 ![ImageSemanticSegmentation](img/ref_sensors/sensor_semantic_segmentation.webp)
-<div style="text-align: right"><i>Semantic segmentation with the CityScapes palette. Town10HD_Opt &middot; sensor.camera.semantic_segmentation &middot; AutomotiveHDR &middot; sunny afternoon</i></div>
+<div style="text-align: right"><i>Semantic segmentation with the CityScapes palette.</i></div>
 
 The server provides an image with the tag information __encoded in the red channel__: A pixel with a red value of `x` belongs to an object with tag `x`.
 This raw [carla.Image](python_api.md#carla.Image) can be stored and converted it with the help of __CityScapesPalette__  in [carla.ColorConverter](python_api.md#carla.ColorConverter) to apply the tags information and show picture with the semantic segmentation.
@@ -921,10 +939,10 @@ This camera classifies every object in the field of view both by class and also 
 When the simulation starts, every element in scene is created with a tag. So it happens when an actor is spawned. The objects are classified by their relative file path in the project. For example, meshes stored in `Unreal/CarlaUnreal/Content/Carla/Static/Pedestrian` are tagged as `Pedestrian`.
 
 ![ImageInstanceSegmentation](img/shared/sensor_instance_segmentation.webp)
-<div style="text-align: right"><i>Instance segmentation, each instance id shown in a random colour. Town10HD_Opt &middot; sensor.camera.instance_segmentation &middot; sunny afternoon</i></div>
+<div style="text-align: right"><i>Instance segmentation, each instance id shown in a random colour.</i></div>
 
 ![InstanceSegmentationRaw](img/ref_sensors/sensor_instance_segmentation_raw.webp)
-<div style="text-align: right"><i>Raw instance segmentation: semantic tag in R, instance id in G and B. Town10HD_Opt &middot; sensor.camera.instance_segmentation &middot; AutomotiveHDR &middot; sunny afternoon</i></div>
+<div style="text-align: right"><i>Raw instance segmentation: semantic tag in R, instance id in G and B.</i></div>
 
 The server provides an image with the tag information __encoded in the red channel__: a pixel with a red value of `x` belongs to an object with tag `x`. The green and blue channels hold the object's id as a 16-bit number, with __G as the low byte and B as the high byte__. A pixel with the 8-bit RGB value `[14, 20, 55]` is therefore a car (semantic tag 14) belonging to the object with id `20 + 55 * 256 = 14100`.
 
@@ -1034,7 +1052,7 @@ The provided script [`manual_control.py`][manual_control] uses the DVS camera in
 Note that due to the sampling method of the DVS camera, if there is no pixel difference between two consecutive synchronous frames the camera will not return an image. This will always occur in the first frame, as there is no previous frame to compare to and also in the event that there has been no movement between frames.
 
 ![DVSCameraWorkingPrinciple](img/ref_sensors/sensor_dvs.webp)
-<div style="text-align: right"><i>RGB camera (left) and DVS events (right): blue positive, red negative brightness changes. Town10HD_Opt &middot; sensor.camera.dvs &middot; AutomotiveHDR &middot; sunny afternoon</i></div>
+<div style="text-align: right"><i>RGB camera (left) and DVS events (right): blue positive, red negative brightness changes.</i></div>
 
 DVS is a camera and therefore has all the attributes available in the RGB camera. Nevertheless, there are few attributes exclusive to the working principle of an Event camera.
 
@@ -1062,7 +1080,7 @@ DVS is a camera and therefore has all the attributes available in the RGB camera
 The optical flow camera captures the motion perceived from the point of view of the camera. Every pixel recorded by this sensor encodes the velocity of that point projected to the image plane. The velocity of a pixel is encoded in the range [-2,2]. To obtain the motion in pixel units, this information can be scaled with the image size to [-2 * image_size, 2 * image_size].
 
 ![optical_flow](img/ref_sensors/sensor_optical_flow.webp)
-<div style="text-align: right"><i>RGB camera (left) and colour-coded optical flow (right) from a moving vehicle. Town10HD_Opt &middot; sensor.camera.optical_flow &middot; AutomotiveHDR &middot; sunny afternoon</i></div>
+<div style="text-align: right"><i>RGB camera (left) and colour-coded optical flow (right) from a moving vehicle.</i></div>
 
 `get_color_coded_flow()` turns the field into the color wheel above, where hue is the direction of motion and saturation its magnitude. It returns a [`carla.FakeImage`](python_api.md#carla.FakeImage), not a [`carla.Image`](python_api.md#carla.Image): the pixels and `save_to_disk` work the same, but it carries no `frame` or `timestamp`, because it is a visualization rather than a reading of the sensor.
 
@@ -1108,7 +1126,7 @@ The optical flow camera captures the motion perceived from the point of view of 
 *   __Output:__ [carla.Image](python_api.md#carla.Image) per step (unless `sensor_tick` says otherwise).
 
 ![Normals](img/ref_sensors/sensor_normals.webp)
-<div style="text-align: right"><i>Surface normals camera output. Town10HD_Opt &middot; sensor.camera.normals &middot; AutomotiveHDR &middot; sunny afternoon</i></div>
+<div style="text-align: right"><i>Surface normals camera output.</i></div>
 
 This camera renders the surface normal of whatever each pixel sees. The three components of the normal are stored in the red, green and blue channels, each remapped from [-1.0, 1.0] to [0, 255], so a channel value of `v` is a component of `v / 255 * 2 - 1`. A road seen from above gives a pixel close to `[128, 139, 254]`, a normal pointing up. The alpha channel is unused.
 

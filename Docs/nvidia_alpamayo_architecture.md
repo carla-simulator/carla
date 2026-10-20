@@ -71,7 +71,7 @@ The dashboard adds an eighth CARLA-only third-person camera. This view makes a b
 
 The default backend attaches seven calibrated sensors to the ego. The public PhysicalAI-AV translations and full roll, pitch, and yaw are converted from the source rear-axle frame into the MKZ actor frame. The two forward-center cameras retain their calibrated horizontal pose but are raised just enough to clear the actual vehicle bounding box.
 
-The default `sensor.camera.rt_lens` cameras use fitted Kannala-Brandt coefficients and preserve the source fisheye projection. DLSS Ray Reconstruction denoises the path-traced model cameras; DLSS Super Resolution is used independently by the dashboard chase camera. `--no-dlss` disables both DLSS paths without changing camera calibration.
+The default [`sensor.camera.rt_lens`](ref_sensors.md#ray-traced-lens-camera) cameras use fitted Kannala-Brandt coefficients and preserve the source fisheye projection. [DLSS](adv_rendering_options.md#nvidia-dlss) Ray Reconstruction denoises the path-traced model cameras; DLSS Super Resolution is used independently by the dashboard chase camera. `--no-dlss` disables both DLSS paths without changing camera calibration.
 
 ### NuRec camera backend
 
@@ -81,7 +81,7 @@ NuRec artifacts expose the six cameras consumed by the trajectory profile. NRE r
 
 ## Coordinate conversion
 
-Alpamayo uses a right-handed ego frame with `x` forward and `y` left. CARLA uses a left-handed frame. The bridge reflects the lateral coordinate:
+Alpamayo uses a right-handed ego frame with `x` forward and `y` left. CARLA uses a [left-handed frame](coordinate_conventions.md). The bridge reflects the lateral coordinate:
 
 ```text
 x_carla =  x_alpamayo
