@@ -10,7 +10,7 @@ carla-pack create MyTowns Town03_Opt Town12
 carla-pack install MyTowns-1.0.0-<release>.tar.gz --server /opt/carla/Linux
 ```
 
-Once installed, the towns load like any other map: `client.load_world('Town12')`. See [Existing CARLA towns: `create`](content_packs.md#a-existing-carla-towns-create) for the build options and [Installing a pack](content_packs.md#installing-a-pack) for mounting a pack from the Python API.
+Once installed, the towns load like any other map: `client.load_world('Town12')`. See [Existing CARLA towns](content_packs.md#a-existing-carla-towns) for the build options and [Installing a pack](content_packs.md#installing-a-pack) for mounting a pack from the Python API.
 
 | Map name | Summary |
 | -----------| ------  |
