@@ -82,7 +82,7 @@ __2. Export the road description.__ `File` → `Export` → `OpenDRIVE (.xodr)`.
 
 ## Import it into CARLA
 
-Place the tiles and the `.xodr` together and run the import; the importer recognises a `*_Tile_*.fbx` set and treats it as one tiled map. Once imported, convert the tiled map to World Partition with the `CarlaLargeMapConvert` commandlet so it streams like the towns that ship with CARLA — see [Large maps and World Partition](core_map.md#large-maps-and-world-partition).
+Copy the tiles and the `.xodr` into the `Import` folder and run the importer as described in [Importing your road network into CARLA](tuto_content_authoring_maps.md#importing-your-road-network-into-carla); the importer recognises a `*_Tile_*.fbx` set and treats it as one tiled map. Once imported, convert the tiled map to World Partition with the `CarlaLargeMapConvert` commandlet so it streams like the towns that ship with CARLA — see [Large maps and World Partition](core_map.md#large-maps-and-world-partition).
 
 ---
 
