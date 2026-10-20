@@ -60,7 +60,7 @@ Textures can be named using the format `T_CarPart_CarName`, e.g, `T_Bodywork_Mus
 ---
 ## Rigging the vehicle using an armature
 
-To look realistic within the simulation, the car needs to have rotating and wheels, the front pair of which can turn with steering inputs. Therefore to prepare a vehicle for CARLA, an armature needs to be rigged to the car to identify the wheels and allow their movement.
+To look realistic within the simulation, the car needs to have rotating wheels, the front pair of which can turn with steering inputs. Therefore to prepare a vehicle for CARLA, an armature needs to be rigged to the car to identify the wheels and allow their movement.
 
 ### Import
 
@@ -107,7 +107,7 @@ Finally, repeat this process with the vehicle base bone and the chassis and body
 
 Select the Vehicle_Base bone in the outliner and ensure that all Translate and Rotate fields are zero in the Channel Box / Layer Editor and all the scale fields are set to 1.
 
-Select the bone for each wheel, press E to activate the rotation widget, rotate the the bone around the axis of the wheel and ensure that the wheel geometry turns with the bone, this shows that the geometry is properly bound to the bone.
+Select the bone for each wheel, press E to activate the rotation widget, rotate the bone around the axis of the wheel and ensure that the wheel geometry turns with the bone, this shows that the geometry is properly bound to the bone.
 
 ![test_armature](img/tuto_content_authoring_vehicles/check_wheel_turning.png)
 <div style="text-align: right"><i>Rotating a wheel bone to check that the wheel geometry turns with it.</i></div>
@@ -135,7 +135,7 @@ When exporting the bodywork/chassis and wheels, you should select all the mesh i
 Launch the Unreal Editor from the CARLA root directory using the following command:
 
 ```sh
-cmake --build Build --target launch
+cmake --build Build/Release --target launch
 ```
 
 ![regenerate_body](img/tuto_content_authoring_vehicles/vehicle_folder.png)

@@ -1,12 +1,16 @@
 # CARLA Agents
 
-CARLA agents drive a vehicle along a route, either to a destination or endlessly around the map, obeying traffic lights and reacting to obstacles. Three agents ship with CARLA, and each can be configured — target speed, braking distance, tailgating — or subclassed into one of your own.
+An agent is a Python class that drives a vehicle. You build one around a vehicle you have already spawned, and from then on it decides how that vehicle moves: every step it returns a [`carla.VehicleControl`](python_api.md#carla.VehicleControl), which you apply to the vehicle. It plans the route, stops for traffic lights and reacts to what is in the way.
 
-| Agent | What it does |
-| --- | --- |
-| `BasicAgent` | Drives to a destination by the shortest route, stopping for traffic lights and for vehicles in the way. |
-| `BehaviorAgent` | Adds a driving profile on top: it keeps a distance, overtakes, tailgates and negotiates junctions according to the behavior type chosen. |
-| `ConstantVelocityAgent` | A `BasicAgent` that holds a constant speed regardless of the traffic, for reproducible test runs. |
+Agents run entirely on the client, in the [`agents`](https://github.com/carla-simulator/carla/tree/ue58-dev/PythonAPI/carla/agents) package under `PythonAPI/carla`. Nothing is added to the server and the vehicle is an ordinary actor, so an agent can be swapped for autopilot, or for your own control, at any point.
+
+Three agents ship with CARLA.
+
+`BasicAgent` is the base class and is usable on its own: it plans a route, follows it, and stops for traffic lights and for whatever is in its way.
+
+`BehaviorAgent` and `ConstantVelocityAgent` both subclass it for a particular purpose. `BehaviorAgent` drives to a chosen profile — how close it follows, when it overtakes, when it tailgates. `ConstantVelocityAgent` holds a fixed speed whatever the traffic does, so a run can be repeated exactly.
+
+Any of the three can be configured through its constructor and methods, or subclassed into one of your own.
 
 - [__Use the provided agents__](#use-the-provided-agents)
 - [__Behavior types__](#behavior-types)
@@ -51,7 +55,7 @@ agent = ConstantVelocityAgent(vehicle, 20)
 
 Read more about behavior types and how to configure your own in the section [__behavior types__](#behavior-types).
 
-__3.__ You can set a destination for the agent to travel to. If you don't set a destination for the agent, it will roam endlessly around the map. To set the destination, provide the agent with a [location](python_api.md#carlalocation):
+__3.__ You can set a destination for the agent to travel to. If you don't set a destination for the agent, it will roam endlessly around the map. To set the destination, provide the agent with a [location](python_api.md#carla.Location):
 
 ```py
 destination = random.choice(spawn_points).location
@@ -101,7 +105,7 @@ The __Basic Agent__ provides a few methods to manipulate agent behavior or progr
 - __`ignore_stop_signs(active=True)`:__ Set the agent to ignore or obey stop signs.
 - __`ignore_vehicles(active=True)`:__ Set the agent to ignore or react to other vehicles.
 
-The `automatic_control.py` script, found in `PythonAPI/examples`, is an example of the Basic and Behavior Agents in action. To try the script, navigate to the example directory and run the following command:
+The [`automatic_control.py`](https://github.com/carla-simulator/carla/blob/ue58-dev/PythonAPI/examples/automatic_control.py) script, found in `PythonAPI/examples`, is an example of the Basic and Behavior Agents in action. To try the script, navigate to the example directory and run the following command:
 
 ```sh
 # To run with a basic agent
@@ -118,7 +122,7 @@ python3 automatic_control.py --agent=Constant
 
 ## Behavior types
 
-Behavior types for the behavior agent are defined in `behavior_types.py`. The three pre-configured profiles are __'cautious'__, __'normal'__ and __'aggressive'__; use them as they are, modify them, or write your own.
+Behavior types for the behavior agent are defined in [`behavior_types.py`](https://github.com/carla-simulator/carla/blob/ue58-dev/PythonAPI/carla/agents/navigation/behavior_types.py). The three pre-configured profiles are __'cautious'__, __'normal'__ and __'aggressive'__; use them as they are, modify them, or write your own.
 
 | Parameter | Cautious | Normal | Aggressive |
 | --- | --- | --- | --- |
@@ -144,7 +148,7 @@ What each one does:
 
 To create your own behavior type:
 
-__1.__ Create the class for your behavior type in `behavior_types.py`:
+__1.__ Create the class for your behavior type in [`behavior_types.py`](https://github.com/carla-simulator/carla/blob/ue58-dev/PythonAPI/carla/agents/navigation/behavior_types.py):
 
 ```py
 class ProfileName:
@@ -158,7 +162,7 @@ class ProfileName:
     tailgate_counter = 0
 ```
 
-__2.__ Define and instantiate your behavior type in the `behavior_agent.py` script:
+__2.__ Define and instantiate your behavior type in the [`behavior_agent.py`](https://github.com/carla-simulator/carla/blob/ue58-dev/PythonAPI/carla/agents/navigation/behavior_agent.py) script:
 
 ```py
 # Parameters for agent behavior
@@ -179,21 +183,21 @@ elif behavior == 'profile_name':
 
 ## Overview of agent scripts
 
-The main scripts involved in the CARLA Agents are found in `PythonAPI/carla/agents/navigation`. They fall into two categories; __planning and control__ and __agent behaviors__.
+The main scripts involved in the CARLA Agents are found in [`PythonAPI/carla/agents/navigation`](https://github.com/carla-simulator/carla/tree/ue58-dev/PythonAPI/carla/agents/navigation). They fall into two categories; __planning and control__ and __agent behaviors__.
 
 ### Planning and control
 
-- __`controller.py`:__ Combines longitudinal and lateral PID controllers into a single class, __VehiclePIDController__, used for low-level control of vehicles from the client side of CARLA.
-- __`global_route_planner.py`:__ Gets detailed topology from the CARLA server to build a graph representation of the world map, providing waypoint and road option information for the __Local Planner__.
-- __`local_planner.py`:__ Follows waypoints based on control inputs from the __VehiclePIDController__. Waypoints can either be provided by the __Global Route Planner__ or be calculated dynamically, choosing random paths at junctions, similar to the [Traffic Manager](adv_traffic_manager.md).
+- __[`controller.py`](https://github.com/carla-simulator/carla/blob/ue58-dev/PythonAPI/carla/agents/navigation/controller.py):__ Combines longitudinal and lateral PID controllers into a single class, __VehiclePIDController__, used for low-level control of vehicles from the client side of CARLA.
+- __[`global_route_planner.py`](https://github.com/carla-simulator/carla/blob/ue58-dev/PythonAPI/carla/agents/navigation/global_route_planner.py):__ Gets detailed topology from the CARLA server to build a graph representation of the world map, providing waypoint and road option information for the __Local Planner__.
+- __[`local_planner.py`](https://github.com/carla-simulator/carla/blob/ue58-dev/PythonAPI/carla/agents/navigation/local_planner.py):__ Follows waypoints based on control inputs from the __VehiclePIDController__. Waypoints can either be provided by the __Global Route Planner__ or be calculated dynamically, choosing random paths at junctions, similar to the [Traffic Manager](adv_traffic_manager.md).
 
 ### Agent behaviors
 
-- __`basic_agent.py`:__ Contains the base class that implements a __Basic Agent__: it roams around the map or reaches a target destination by the shortest route, avoiding other vehicles and responding to traffic lights, but ignoring stop signs.
-- __`behavior_agent.py`:__ Contains a class that implements a more complex __Behavior Agent__ that reaches a target destination by the shortest route, following traffic lights and speed limits, overtaking and tailgating other vehicles. Three predefined types condition how it behaves. It does not handle stop signs: `BasicAgent.ignore_stop_signs` exists but has no effect, because no agent reads stop signs in the first place.
-- __`behavior_types.py`:__ Contains the parameters for the behavior types that condition the __Behavior Agent__: Cautious, Normal and Aggressive.
-- __`constant_velocity_agent.py`:__ A __Basic Agent__ that holds a constant speed, for runs where the ego's motion has to be repeatable. `automatic_control.py --agent=Constant` drives with it.
-- __`agents/tools/hints.py`:__ The named tuples the detection helpers return: `ObstacleDetectionResult(obstacle_was_found, obstacle, distance)` and `TrafficLightDetectionResult(traffic_light_was_found, traffic_light)`. A custom agent reads the fields by name rather than unpacking a plain tuple.
+- __[`basic_agent.py`](https://github.com/carla-simulator/carla/blob/ue58-dev/PythonAPI/carla/agents/navigation/basic_agent.py):__ Contains the base class that implements a __Basic Agent__: it roams around the map or reaches a target destination by the shortest route, avoiding other vehicles and responding to traffic lights, but ignoring stop signs.
+- __[`behavior_agent.py`](https://github.com/carla-simulator/carla/blob/ue58-dev/PythonAPI/carla/agents/navigation/behavior_agent.py):__ Contains a class that implements a more complex __Behavior Agent__ that reaches a target destination by the shortest route, following traffic lights and speed limits, overtaking and tailgating other vehicles. Three predefined types condition how it behaves. It does not handle stop signs: `BasicAgent.ignore_stop_signs` exists but has no effect, because no agent reads stop signs in the first place.
+- __[`behavior_types.py`](https://github.com/carla-simulator/carla/blob/ue58-dev/PythonAPI/carla/agents/navigation/behavior_types.py):__ Contains the parameters for the behavior types that condition the __Behavior Agent__: Cautious, Normal and Aggressive.
+- __[`constant_velocity_agent.py`](https://github.com/carla-simulator/carla/blob/ue58-dev/PythonAPI/carla/agents/navigation/constant_velocity_agent.py):__ A __Basic Agent__ that holds a constant speed, for runs where the ego's motion has to be repeatable. `automatic_control.py --agent=Constant` drives with it.
+- __[`agents/tools/hints.py`](https://github.com/carla-simulator/carla/blob/ue58-dev/PythonAPI/carla/agents/tools/hints.py):__ The named tuples the detection helpers return: `ObstacleDetectionResult(obstacle_was_found, obstacle, distance)` and `TrafficLightDetectionResult(traffic_light_was_found, traffic_light)`. A custom agent reads the fields by name rather than unpacking a plain tuple.
 
 The agent and planner modules carry type hints throughout, so an editor or a type checker can follow what a method takes and returns while you subclass them.
 
@@ -229,7 +233,7 @@ class CustomAgent(BasicAgent):
         return control
 ```
 
-Check out the `basic_agent.py` and `behavior_agent.py` scripts to explore their structure and functions for more ideas on how to create your own.
+Check out the [`basic_agent.py`](https://github.com/carla-simulator/carla/blob/ue58-dev/PythonAPI/carla/agents/navigation/basic_agent.py) and [`behavior_agent.py`](https://github.com/carla-simulator/carla/blob/ue58-dev/PythonAPI/carla/agents/navigation/behavior_agent.py) scripts to explore their structure and functions for more ideas on how to create your own.
 
 ---
 

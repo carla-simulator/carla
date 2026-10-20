@@ -41,11 +41,13 @@ world = client.load_world('Town01_Opt')
 world = client.load_world_if_different('Town01_Opt')   # no-op when Town01_Opt is already loaded
 ```
 
-Each map has a `name` attribute that matches the name of the currently loaded city, e.g. _Town01_. To get a list of the available maps:
+A map's `name` is its content path, not a bare town name: on Town10HD_Opt it reads `Carla/Maps/Town10HD_Opt`. To get a list of what the server can load:
 
 ```py
 print(client.get_available_maps())
 ```
+
+CARLA ships fifteen maps: `Town01_Opt` to `Town07_Opt` and `Town10HD_Opt`, the four large maps `Town11`, `Town12`, `Town13` and `Town15`, `Town_C`, `Mine_01` for off-road machinery, and `Eixample`, a district of Barcelona built with the [digital twin](adv_digital_twin.md) tool.
 
 ### Landmarks
 
@@ -64,7 +66,7 @@ my_waypoint.get_landmarks(200.0,True)
 
 ### Waypoints
 
-A [`carla.Waypoint`](python_api.md#carla.Waypoint) is a 3D-directed point in the CARLA world corresponding to an OpenDRIVE lane. Everything related to waypoints happens on the client-side; communication with the server is only needed once to get the [map object](python_api.md#carlamap) containing the waypoint information.
+A [`carla.Waypoint`](python_api.md#carla.Waypoint) is a 3D-directed point in the CARLA world corresponding to an OpenDRIVE lane. Everything related to waypoints happens on the client-side; communication with the server is only needed once to get the [map object](python_api.md#carla.Map) containing the waypoint information.
 
 Each waypoint contains a [`carla.Transform`](python_api.md#carla.Transform) which states its location on the map and the orientation of the lane containing it. The variables `road_id`,`section_id`,`lane_id` and `s` correspond to the OpenDRIVE road. The `id` of the waypoint is constructed from a hash combination of these four values.
 
@@ -222,7 +224,7 @@ To get the map object:
 carla_map = world.get_map()
 ```
 
-The map object contains __recommended spawn points__ for the creation of vehicles. You can get a list of these spawn points, each one containing a [`carla.Transform`](python_api.md#carlatransform), using the method below. Bear in mind that the spawn points may be occupied already, resulting in failed creation of vehicles due to collisions.
+The map object contains __recommended spawn points__ for the creation of vehicles. You can get a list of these spawn points, each one containing a [`carla.Transform`](python_api.md#carla.Transform), using the method below. Bear in mind that the spawn points may be occupied already, resulting in failed creation of vehicles due to collisions.
 
 ```py
 spawn_points = world.get_map().get_spawn_points()
@@ -232,6 +234,41 @@ The list is in a fixed order for each map, so tutorials refer to a spawn point b
 
 ![town10hd_spawn_points](img/shared/town10hd_spawn_points.png)
 <div style="text-align: right"><i>Town10HD_Opt road network with the index and heading of every spawn point. Town10HD_Opt</i></div>
+
+To find the indices you want without leaving the simulator, draw them into the world. `draw_string` labels each point and `draw_arrow` shows which way a vehicle spawned there will face:
+
+```py
+spawn_points = world.get_map().get_spawn_points()
+
+for i, spawn_point in enumerate(spawn_points):
+    world.debug.draw_string(spawn_point.location, str(i), life_time=100)
+    world.debug.draw_arrow(spawn_point.location,
+                           spawn_point.location + spawn_point.get_forward_vector(),
+                           life_time=100)
+```
+
+![spawn_points](img/core_map/spawn_points.webp)
+<div style="text-align: right"><i>Spawn points drawn with draw_arrow, labelled with their index. draw_string text only shows in the spectator window, so the numbers here were added to the image. Town10HD_Opt</i></div>
+
+Both are drawn in the spectator window only, so a rendered server is needed; they do not appear in sensor captures.
+
+### Spawning somewhere of your own
+
+A map's spawn points are on the road and facing along it, which is what traffic needs. For a scenario that starts somewhere specific, fly the spectator to the spot instead and spawn there: the transform carries both its position and its heading.
+
+```py
+spectator = world.get_spectator()
+vehicle = world.try_spawn_actor(vehicle_bp, spectator.get_transform())
+```
+
+![spawn_vehicle](img/core_map/spawn_vehicle.webp)
+<div style="text-align: right"><i>A vehicle spawned at the spectator's transform drops onto the road and settles. Town10HD_Opt</i></div>
+
+The vehicle takes the spectator's rotation as well as its location, so point the spectator the way the vehicle should face. Spawn from high up and the vehicle falls to the ground; spawn too close to it and the spawn fails on collision. Print the transform to keep the spot:
+
+```py
+print(spectator.get_transform())
+```
 
 You can get started with waypoints by __[getting](python_api.md#carla.Map.get_waypoint) the closest waypoint__ to a specific location or to a particular `road_id`, `lane_id` and `s` value in the map's OpenDRIVE definition:
 

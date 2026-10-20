@@ -36,7 +36,7 @@ spawn_points = world.get_map().get_spawn_points()
 
 # spawn vehicle
 vehicle_bp = bp_lib.find('vehicle.lincoln.mkz')
-vehicle = world.try_spawn_actor(vehicle_bp, random.choice(spawn_points))
+vehicle = world.spawn_actor(vehicle_bp, random.choice(spawn_points))
 
 # spawn camera
 camera_bp = bp_lib.find('sensor.camera.rgb')
@@ -158,10 +158,14 @@ edges = [[0,1], [1,3], [3,2], [2,0], [0,4], [4,5], [5,1], [5,7], [7,6], [6,4], [
 Now that we have our geometric projections and our simulation set up, we can progress to creating the game loop and rendering the bounding boxes into a scene.
 
 ```py
-# Set up the set of bounding boxes from the level
-# We filter for traffic lights and traffic signs
-bounding_box_set = world.get_level_bbs(carla.CityObjectLabel.TrafficLight)
-bounding_box_set.extend(world.get_level_bbs(carla.CityObjectLabel.TrafficSigns))
+# Set up the bounding boxes from the level, one set per label so each can be
+# drawn in its own colour. OpenCV colours are BGRA.
+ORANGE = (0, 165, 255, 255)
+CYAN = (255, 255, 0, 255)
+labelled_boxes = [
+    (world.get_level_bbs(carla.CityObjectLabel.TrafficLight), ORANGE),
+    (world.get_level_bbs(carla.CityObjectLabel.TrafficSigns), CYAN),
+]
 
 # Remember the edge pairs
 edges = [[0,1], [1,3], [3,2], [2,0], [0,4], [4,5], [5,1], [5,7], [7,6], [6,4], [6,2], [7,3]]
@@ -198,29 +202,30 @@ while True:
     # Get the camera matrix 
     world_2_camera = np.array(camera.get_transform().get_inverse_matrix())
     
-    for bb in bounding_box_set:
+    for bounding_box_set, colour in labelled_boxes:
+        for bb in bounding_box_set:
 
-        # Filter for distance from ego vehicle
-        if bb.location.distance(vehicle.get_transform().location) < 50:
+            # Filter for distance from ego vehicle
+            if bb.location.distance(vehicle.get_transform().location) < 50:
 
-            # Calculate the dot product between the forward vector
-            # of the vehicle and the vector between the vehicle
-            # and the bounding box. We threshold this dot product
-            # to limit to drawing bounding boxes IN FRONT OF THE CAMERA
-            forward_vec = vehicle.get_transform().get_forward_vector()
-            ray = bb.location - vehicle.get_transform().location
+                # Calculate the dot product between the forward vector
+                # of the vehicle and the vector between the vehicle
+                # and the bounding box. We threshold this dot product
+                # to limit to drawing bounding boxes IN FRONT OF THE CAMERA
+                forward_vec = vehicle.get_transform().get_forward_vector()
+                ray = bb.location - vehicle.get_transform().location
 
-            if forward_vec.dot(ray) > 1:
-                # Cycle through the vertices
-                verts = [v for v in bb.get_world_vertices(carla.Transform())]
-                for edge in edges:
-                    # Join the vertices into edges
-                    p1 = get_image_point(verts[edge[0]], K, world_2_camera)
-                    p2 = get_image_point(verts[edge[1]], K, world_2_camera)
-                    if p1 is None or p2 is None:
-                        continue
-                    # Draw the edges into the camera output
-                    cv2.line(img, (int(p1[0]),int(p1[1])), (int(p2[0]),int(p2[1])), (0,0,255, 255), 1)
+                if forward_vec.dot(ray) > 1:
+                    # Cycle through the vertices
+                    verts = [v for v in bb.get_world_vertices(carla.Transform())]
+                    for edge in edges:
+                        # Join the vertices into edges
+                        p1 = get_image_point(verts[edge[0]], K, world_2_camera)
+                        p2 = get_image_point(verts[edge[1]], K, world_2_camera)
+                        if p1 is None or p2 is None:
+                            continue
+                        # Draw the edges into the camera output
+                        cv2.line(img, (int(p1[0]),int(p1[1])), (int(p2[0]),int(p2[1])), colour, 1)
 
     # Now draw the image into the OpenCV display window
     cv2.imshow('ImageWindowName',img)
@@ -295,10 +300,10 @@ while True:
             # Filter for the vehicles within 50m
             if dist < 50:
 
-            # Calculate the dot product between the forward vector
-            # of the vehicle and the vector between the vehicle
-            # and the other vehicle. We threshold this dot product
-            # to limit to drawing bounding boxes IN FRONT OF THE CAMERA
+                # Calculate the dot product between the forward vector
+                # of the vehicle and the vector between the vehicle
+                # and the other vehicle. We threshold this dot product
+                # to limit to drawing bounding boxes IN FRONT OF THE CAMERA
                 forward_vec = vehicle.get_transform().get_forward_vector()
                 ray = npc.get_transform().location - vehicle.get_transform().location
 
@@ -338,7 +343,13 @@ while True:
     # Get the camera matrix 
     world_2_camera = np.array(camera.get_transform().get_inverse_matrix())
 
-    for npc in world.get_actors().filter('*vehicle*'):
+    # One colour per kind, as in the figure below. OpenCV colours are BGRA.
+    RED = (0, 0, 255, 255)
+    YELLOW = (0, 255, 255, 255)
+    targets = [(a, RED) for a in world.get_actors().filter('*vehicle*')]
+    targets += [(a, YELLOW) for a in world.get_actors().filter('*walker.pedestrian*')]
+
+    for npc, colour in targets:
 
         # Filter out the ego vehicle
         if npc.id != vehicle.id:
@@ -346,13 +357,13 @@ while True:
             bb = npc.bounding_box
             dist = npc.get_transform().location.distance(vehicle.get_transform().location)
 
-            # Filter for the vehicles within 50m
+            # Filter for the actors within 50m
             if dist < 50:
 
-            # Calculate the dot product between the forward vector
-            # of the vehicle and the vector between the vehicle
-            # and the other vehicle. We threshold this dot product
-            # to limit to drawing bounding boxes IN FRONT OF THE CAMERA
+                # Calculate the dot product between the forward vector
+                # of the vehicle and the vector between the vehicle
+                # and the other actor. We threshold this dot product
+                # to limit to drawing bounding boxes IN FRONT OF THE CAMERA
                 forward_vec = vehicle.get_transform().get_forward_vector()
                 ray = npc.get_transform().location - vehicle.get_transform().location
 
@@ -380,10 +391,10 @@ while True:
                         if p[1] < y_min:
                             y_min = p[1]
 
-                    cv2.line(img, (int(x_min),int(y_min)), (int(x_max),int(y_min)), (0,0,255, 255), 1)
-                    cv2.line(img, (int(x_min),int(y_max)), (int(x_max),int(y_max)), (0,0,255, 255), 1)
-                    cv2.line(img, (int(x_min),int(y_min)), (int(x_min),int(y_max)), (0,0,255, 255), 1)
-                    cv2.line(img, (int(x_max),int(y_min)), (int(x_max),int(y_max)), (0,0,255, 255), 1)
+                    cv2.line(img, (int(x_min),int(y_min)), (int(x_max),int(y_min)), colour, 1)
+                    cv2.line(img, (int(x_min),int(y_max)), (int(x_max),int(y_max)), colour, 1)
+                    cv2.line(img, (int(x_min),int(y_min)), (int(x_min),int(y_max)), colour, 1)
+                    cv2.line(img, (int(x_max),int(y_min)), (int(x_max),int(y_max)), colour, 1)
 
 
     cv2.imshow('ImageWindowName',img)
@@ -394,7 +405,7 @@ cv2.destroyAllWindows()
 ```
 
 ![2D_bbox_vehicles](img/tuto_G_bounding_boxes/bbox_2d.webp)
-<div style="text-align: right"><i>2D bounding boxes of vehicles (red) and pedestrians (yellow) projected on a hood camera; hidden actors are filtered with a depth camera. Town10HD_Opt &middot; sensor.camera.rgb &middot; AutomotiveHDR &middot; sunny afternoon</i></div>
+<div style="text-align: right"><i>2D bounding boxes of vehicles (red) and pedestrians (yellow). Town10HD_Opt &middot; sensor.camera.rgb &middot; AutomotiveHDR &middot; sunny afternoon</i></div>
 
 ---
 ## Exporting bounding boxes
@@ -592,7 +603,8 @@ traffic_manager.set_synchronous_mode(False)
 
 camera.stop()
 camera.destroy()
-vehicle.destroy()
+for npc in world.get_actors().filter('*vehicle*'):
+    npc.destroy()
 cv2.destroyAllWindows()
 ```
 

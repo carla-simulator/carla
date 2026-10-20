@@ -1,24 +1,18 @@
 # Foundations
 
-This page introduces the fundamental concepts required to understand how the CARLA server and client operate and communicate through the API. CARLA operates using a server-client architecture, whereby the CARLA server runs the simulation and instructions are sent to it by the client(s). The client code communicates with the server using the [__API__](python_api.md). To use the Python API you must install the module through PIP:
+CARLA runs as a server that holds the simulation, and one or more clients that ask it for information and tell it what to change. This page covers the two objects a client works through — the client itself and the world — and how the two sides keep time with each other.
 
-```sh
-pip3 install PythonAPI/carla/dist/carla-*.whl
-```
+![client_server_architecture](img/shared/client_server_architecture.svg)
+<div style="text-align: right"><i>CARLA client-server architecture: clients, Traffic Manager, server components and default ports.</i></div>
 
-The wheel ships inside the CARLA package; a source build writes it to `Build/<preset>/PythonAPI/dist/`. See [Quick start](start_quickstart.md) for the full installation.
-
-For an overview of every topic in this section, see [Core concepts](core_concepts.md).
-
-Also make sure to import the CARLA package in your python scripts:
+Everything here goes through the [__Python API__](python_api.md). Installing it is covered in [Quick start](start_quickstart.md) for a package, and in [Building CARLA](build_carla.md) for a source build. Every script starts by importing it:
 
 ```py
 import carla
 ```
 
-- [__World and client__](#world-and-client)
-    - [Client](#client)
-    - [World](#world)
+- [__Client__](#client)
+- [__World__](#world)
 - [__Synchronous and asynchronous mode__](#synchronous-and-asynchronous-mode)
     - [Setting synchronous mode](#setting-synchronous-mode)
     - [Using synchronous mode](#using-synchronous-mode)
@@ -30,16 +24,9 @@ import carla
 
 ---
 
-## World and client
+## Client
 
-[World and client](core_world.md) covers both objects in full, including weather, lights, debugging and world snapshots.
-
-![client_server_architecture](img/shared/client_server_architecture.svg)
-<div style="text-align: right"><i>CARLA client-server architecture: clients, Traffic Manager, server components and default ports.</i></div>
-
-### Client
-
-__The client__ is the module the user runs to ask for information or changes in the simulation. A client runs with an IP and a specific port. It communicates with the server via terminal. There can be many clients running at the same time. Advanced multiclient managing requires thorough understanding of CARLA and [synchrony](adv_synchrony_timestep.md).
+__The client__ is the module the user runs to ask for information or changes in the simulation. It reaches the server over the network, at an IP address and a port. There can be many clients running at the same time. Advanced multiclient managing requires thorough understanding of CARLA and [synchrony](adv_synchrony_timestep.md).
 
 Set up the client using the CARLA client object:
 
@@ -52,12 +39,13 @@ This sets up the client to communicate with a CARLA server running on `localhost
 The client object can be used for a number of functions including loading new maps, recording the simulation and initialising the traffic manager:
 
 ```py
-client.load_world('Town07_Opt')
+client.load_world('Town10HD_Opt')
 
 client.start_recorder('recording.log')
 ```
 
-### World
+---
+## World
 
 __The world__ is an object representing the simulation. It acts as an abstract layer containing the main methods to spawn actors, change the weather, get the current state of the world, etc. There is only one world per simulation. It will be destroyed and substituted for a new one when the map is changed.
 
@@ -78,17 +66,15 @@ weather = world.get_weather()
 blueprint_library = world.get_blueprint_library()
 ```
 
+[World and client](core_world.md) covers both objects in full, including weather, lights, debugging and world snapshots.
+
 ---
 ## Synchronous and asynchronous mode
 
 ![sync_async_modes](img/shared/sync_async_modes.svg)
 <div style="text-align: right"><i>Asynchronous vs synchronous mode, and physics substeps inside one fixed time step.</i></div>
 
-CARLA has a client-server architecture. The server runs the simulation. The client retrieves information and requests changes in the simulation. This section deals with communication between client and server.
-
-By default, CARLA runs in __asynchronous mode__.
-
-Essentially, in __asynchronous mode__ the CARLA server runs as fast as it can. Client requests are handled on the fly. In __synchronous mode__ the client, running your Python code, takes the reins and tells the server when to update.
+The mode decides who controls time. In __asynchronous mode__, the default, the server simulates as fast as it can and handles client requests as they arrive. In __synchronous mode__ the client takes the reins: the server computes nothing until the client calls `world.tick()`, and then advances exactly one step.
 
 __Asynchronous mode__ is an appropriate mode to run CARLA if you are experimenting or setting up a simulation, so you can fly around the map with the spectator as you place your actors. When you want to start producing training data or deploying an agent within the simulation, it is advised that you use the __synchronous mode__ since this will give you more control and predictability.
 
@@ -96,7 +82,7 @@ Read more about [__synchronous and asynchronous modes__](adv_synchrony_timestep.
 
 
 !!! Note
-    In a multiclient architecture, only one client should tick. The server reacts to every tick received as if it came from the same client. Ticks from several clients will create inconsistencies between server and clients.
+    Only one client should tick. The server reacts to every tick received as if it came from the same client. Ticks from several clients will create inconsistencies between server and clients.
 
 ### Setting synchronous mode
 
@@ -205,12 +191,12 @@ client.stop_recorder()
 A playback can be started at any point during a simulation. Besides the path to the log file, this method needs some parameters.
 
 ```py
-client.replay_file("recording01.log", start, duration, follow_id)
+client.replay_file("recording01.log", time_start, duration, follow_id)
 ```
 
 | Parameter | Description |
 | --- | --- |
-| `start` | Recording time in seconds to start at. Positive counts from the beginning of the recording, negative from the end. |
+| `time_start` | Recording time in seconds to start at. Positive counts from the beginning of the recording, negative from the end. |
 | `duration` | Seconds to play back. `0` plays the whole recording. |
 | `follow_id` | ID of the actor the spectator follows. `0` leaves the spectator free. |
 

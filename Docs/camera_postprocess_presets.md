@@ -20,6 +20,8 @@ camera_bp.set_attribute('post_process_profile', 'GoPro')
 camera = world.spawn_actor(camera_bp, carla.Transform(carla.Location(0,0,1.5), carla.Rotation()))
 ```
 
+The fisheye RGB camera (`sensor.camera.rgb_fisheye`) and the ray-traced lens camera (`sensor.camera.rt_lens`) take the same attribute; see [Fisheye cameras](ref_sensors.md#fisheye-cameras) and [Ray-traced lens camera](ref_sensors.md#ray-traced-lens-camera).
+
 The profile is read when the sensor spawns: to change it, set the attribute again and respawn the camera. `PythonAPI/examples/manual_control.py` does this to compare the presets live: `--post-process-profile NAME` picks the first profile and K / Shift+K cycles through the presets shipped with CARLA.
 
 
@@ -29,18 +31,16 @@ The profile is read when the sensor spawns: to change it, set the attribute agai
 
 Nine profiles ship in `Content/Carla/Config/PostProcess`. They change the image processing only, never the geometry of the lens.
 
-Each automotive preset reproduces the look of the camera of a public driving dataset, tuned on Town10HD_Opt against frames
-of that dataset (exposure and contrast percentiles, saturation, white balance, sharpness, noise per brightness). The
-consumer presets are graded by eye.
+Each automotive preset reproduces the look of the camera of a public driving dataset, tuned on Town10HD_Opt against frames of that dataset (exposure and contrast percentiles, saturation, white balance, sharpness, noise per brightness). The consumer presets are graded by eye.
 
 | Preset | Imitates | Look |
 | --- | --- | --- |
 | `AutomotiveHDR` (__sensor default__) | nuScenes front camera (Basler acA1600-60gc) | Flat machine-vision camera: neutral, low saturation, fast auto exposure capped at 20 ms (gain and noise rise in the dark), star-shaped lens flare and bloom on lights, sensor noise, slight optical softness. |
 | `AutomotiveHDRClean` | same camera, better sensor and optics | Same tone mapping and exposure as `AutomotiveHDR`, with the bloom cut from 1.0 to 0.35 and little noise. For ground truth that should not carry glare or sensor artefacts. |
 | `WideHDR8MP` | 8 MP 120° ADAS front camera (Zenseact ZOD; Mobileye / Tesla HW4 class, 120–140 dB sensors) | Flat multi-exposure HDR: no clipped highlights, lifted blacks, crisp lamps without star flare, strong noise reduction (soft, smeared detail), edge fringing. |
-| `LegacyCCD` | KITTI (Point Grey Flea2 CCD, 2011) | Low dynamic range: hard clipped skies, deep contrasty shadows, saturated colour, sharp, little bloom. |
+| `LegacyCCD` | KITTI (Point Grey Flea2 CCD, 2011) | Low dynamic range: hard clipped skies, deep contrasty shadows, sharp, little bloom. |
 | `LogHDR` | Cityscapes (onsemi AR0331, 16-bit HDR log-compressed to 8 bit) | No clipped highlights, dark mid-tones, green-yellow cast, moderate saturation. |
-| `Smartphone` | comma.ai road camera (Sony IMX298, phone ISP, HEVC) | Warm 5600 K, dark mid-tones, saturated, no sharpening, soft codec detail. |
+| `Smartphone` | comma.ai road camera (Sony IMX298, phone ISP, HEVC) | Cool 5600 K white balance, dark mid-tones, saturated, no sharpening, soft codec detail. |
 | `Cinematic` (viewport default) | photo / film camera | Neutral 6500 K grading with a filmic curve, slow histogram auto exposure with a brightness-dependent bias curve (shade, dusk and night stay darker as on a real camera), moderate bloom, a noticeable vignette and motion blur. |
 | `GoPro` | action camera | Vivid colour, strong local tone compression, crisp detail (sharpen 0.55), light vignette and edge fringing, fast auto exposure, motion blur on. |
 | `Dashcam` | consumer dashcam | Low dynamic range (bright skies clip), contrasty, over-sharpened, strong vignette and fringing, sensor grain, slightly cool and overexposed. |
@@ -54,7 +54,12 @@ The same Town10HD_Opt frame through the nine presets, at noon and at night. At n
 ![camera_profiles_clearnight](img/camera_postprocess_presets/camera_profiles_clearnight_town10.webp)
 <div style="text-align: right"><i>The nine camera profiles on the same frame, ClearNight. Town10HD_Opt &middot; sensor.camera.rgb &middot; nine camera profiles &middot; ClearNight</i></div>
 
-The same comparison under other weathers: [HardRainNoon](img/camera_postprocess_presets/camera_profiles_hardrainnoon_town10.webp), [ClearSunset](img/camera_postprocess_presets/camera_profiles_clearsunset_town10.webp). On a Town15 street: [ClearNoon](img/camera_postprocess_presets/camera_profiles_clearnoon_town15.webp), [HardRainNoon](img/camera_postprocess_presets/camera_profiles_hardrainnoon_town15.webp), [ClearSunset](img/camera_postprocess_presets/camera_profiles_clearsunset_town15.webp), [ClearNight](img/camera_postprocess_presets/camera_profiles_clearnight_town15.webp).
+The same comparison under four weathers in Town10HD_Opt and on a Town15 street, three seconds each:
+
+![camera_profiles_all](img/camera_postprocess_presets/camera_profiles_all.webp)
+<div style="text-align: right"><i>The nine camera profiles in ClearNoon, HardRainNoon, ClearSunset and ClearNight. Town10HD_Opt and Town15 &middot; sensor.camera.rgb &middot; nine camera profiles &middot; four weathers</i></div>
+
+Each comparison as a still image: Town10HD_Opt [HardRainNoon](img/camera_postprocess_presets/camera_profiles_hardrainnoon_town10.webp), [ClearSunset](img/camera_postprocess_presets/camera_profiles_clearsunset_town10.webp); Town15 [ClearNoon](img/camera_postprocess_presets/camera_profiles_clearnoon_town15.webp), [HardRainNoon](img/camera_postprocess_presets/camera_profiles_hardrainnoon_town15.webp), [ClearSunset](img/camera_postprocess_presets/camera_profiles_clearsunset_town15.webp), [ClearNight](img/camera_postprocess_presets/camera_profiles_clearnight_town15.webp).
 
 Resolution, field of view and lens are attributes of the camera blueprint, not of the preset. To match the camera a preset imitates:
 
@@ -80,24 +85,10 @@ camera_bp.set_attribute('fov', '82')
 
 The automotive presets add camera artefacts on top of the grading:
 
-- __Sensor noise and optical softness.__ A post-process material, `M_SensorNoise` (in
-  `Content/Carla/Blueprints/CameraProfiles`), blurs the image slightly (lens, demosaicing and ISP) and adds photon and
-  read noise in linear light. The gain follows the camera's own auto exposure: once the exposure time reaches its cap
-  the gain rises, so noise grows in the dark as on a real camera. Each preset references a material instance,
-  `MI_SensorNoise_<Preset>`, with its own parameters (`Strength`, `BlurSigma`, `NoiseCell`, `ChromaScale`,
-  `FullWell`, `ReadNoise`, `MaxExposureMs`). Instances exist for `AutomotiveHDRClean`, `WideHDR8MP`, `LegacyCCD`,
-  `LogHDR` and `Smartphone`; the other presets use the parent material's defaults. Remove the
-  material from *Weighted Blendables* to turn both off.
-- __Lens flare.__ `AutomotiveHDR` and `AutomotiveHDRClean` use the convolution (FFT) bloom with a lens kernel,
-  `Kernels/T_LensPSF_Star`, modelled on the nuScenes night frames: a soft halo and faint star spikes around bright
-  lights. The other presets use the standard bloom.
-- __Small lights and temporal anti-aliasing.__ With TSR (the default anti-aliasing) distant or thin lights —
-  small vehicle lamps, far street lights — lose most of their glow, because TSR blends each frame with the
-  previous ones and flattens bright features of a few pixels before the bloom. A real camera has no such filter. FXAA
-  (`r.AntiAliasingMethod 1`) keeps their glow at the cost of more aliasing, shimmer and moiré on foliage, fences
-  and distant lines.
-- __Exposure-linked motion blur.__ Applies to every preset: see [RGB camera — exposure-linked motion
-  blur](ref_sensors.md#exposure-linked-motion-blur).
+- __Sensor noise and optical softness.__ A post-process material, `M_SensorNoise` (in `Content/Carla/Blueprints/CameraProfiles`), blurs the image slightly (lens, demosaicing and ISP) and adds photon and read noise in linear light. The gain follows the camera's own auto exposure: once the exposure time reaches its cap the gain rises, so noise grows in the dark as on a real camera. `AutomotiveHDRClean`, `WideHDR8MP`, `LegacyCCD`, `LogHDR` and `Smartphone` each reference a material instance, `MI_SensorNoise_<Preset>`, with its own parameters (`Strength`, `BlurSigma`, `NoiseCell`, `ChromaScale`, `FullWell`, `ReadNoise`, `MaxExposureMs`); `AutomotiveHDR` uses `M_SensorNoise` itself, with its default values. `Cinematic`, `GoPro` and `Dashcam` have no sensor-noise material; the grain of `Dashcam` is Unreal's film grain. Remove the material from *Weighted Blendables* to turn both effects off.
+- __Lens flare.__ `AutomotiveHDR` and `AutomotiveHDRClean` use the convolution (FFT) bloom with a lens kernel, `Kernels/T_LensPSF_Star`, modelled on the nuScenes night frames: a soft halo and faint star spikes around bright lights. The other presets use the standard bloom.
+- __Small lights and temporal anti-aliasing.__ With TSR (the default anti-aliasing) distant or thin lights — small vehicle lamps, far street lights — lose most of their glow, because TSR blends each frame with the previous ones and flattens bright features of a few pixels before the bloom. A real camera has no such filter. FXAA (`r.AntiAliasingMethod 1`) keeps their glow at the cost of more aliasing, shimmer and moiré on foliage, fences and distant lines.
+- __Exposure-linked motion blur.__ Applies to every preset: see [RGB camera — exposure-linked motion blur](ref_sensors.md#exposure-linked-motion-blur).
 
 ---
 ## Creating, loading and saving presets
@@ -111,12 +102,12 @@ __Camera Parameters__ are shortcuts onto the post-process settings of the actor'
 
 __Weather Parameters__ are the same fields as [`carla.WeatherParameters`](python_api.md#carla.WeatherParameters): editing them changes the weather in the editor viewport.
 
-![bp_carla_sky_presets](img/camera_postprocess_presets/bp_carla_sky_presets.webp)
-<div style="text-align: right"><i>The <b>Post Process Profile</b> and <b>Weather Preset</b> categories of <code>BP_Carla_Sky</code>. Unreal Editor 5.8</i></div>
-
 ### Camera profiles
 
-The __Post Process Profile__ category saves and loads the camera presets, the JSON files in `Unreal/CarlaUnreal/Content/Carla/Config/PostProcess/`:
+The __Post Process Profile__ category saves and loads the camera presets, the JSON files in `Content/Carla/Config/PostProcess/`:
+
+![bp_carla_sky_profile_tool](img/camera_postprocess_presets/bp_carla_sky_profile_tool.webp)
+<div style="text-align: right"><i>The <b>Post Process Profile</b> category of <code>BP_Carla_Sky</code>. Unreal Editor 5.8</i></div>
 
 | Control | What it does |
 | --- | --- |
@@ -129,9 +120,26 @@ To make a preset, load the closest one, adjust the Camera Parameters or the Post
 
 The profile selected in the actor is only the editor view. When the simulation starts, the sky rig loads the profile named by the `carla.PostProcess.ViewportProfile` console variable (`Cinematic` unless changed), which is what the spectator view shows; sensors load their own `post_process_profile`, or `carla.PostProcess.Profile` (`AutomotiveHDR`) when they have none.
 
+The variable is read when the simulation starts, so set it before. In the editor, type it in the console before pressing Play:
+
+```sh
+carla.PostProcess.ViewportProfile AutomotiveHDR
+```
+
+For a server, pass it on the command line:
+
+```sh
+-ini:Engine:[ConsoleVariables]:carla.PostProcess.ViewportProfile=AutomotiveHDR
+```
+
+`-ExecCmds` runs too late: the sky has already loaded its profile, and the new one only applies after the map reloads (`client.reload_world()`).
+
 ### Weather presets
 
 The __Weather Preset__ category does the same for the weather, with two independent kinds of preset stored in `Content/Carla/Config/Weather/Presets.json`: a __time__ preset holds only the sun position (`sunAzimuthAngle`, `sunAltitudeAngle`), and a __condition__ preset holds everything else (cloudiness, precipitation, wind, fog, wetness, scattering). Any time can be combined with any condition.
+
+![bp_carla_sky_weather_tool](img/camera_postprocess_presets/bp_carla_sky_weather_tool.webp)
+<div style="text-align: right"><i>The <b>Weather Preset</b> category of <code>BP_Carla_Sky</code>. Unreal Editor 5.8</i></div>
 
 | Control | What it does |
 | --- | --- |
@@ -144,8 +152,10 @@ The __Weather Preset__ category does the same for the weather, with two independ
 
 The defaults of every map are in `Content/Carla/Config/Weather/MapDefaults.json`, either as a `time` and `condition` pair or as the full set of weather values. The server applies a map's default when the map loads.
 
+Presets are saved into the content repository, `Unreal/CarlaUnreal/Content/Carla`: commit the new or changed JSON files there so that other users and the next package get them.
+
 !!! Note
-    `Carla/Config` is packed into the `.pak` of a packaged release, so new presets cannot be dropped into a package. Authoring them needs a source build; a packaged server can only use the presets it shipped with.
+    `Carla/Config` is packed into the `.pak` of a packaged release, so a package cannot change the camera profiles it ships with, nor its time and condition presets (they all live in `Presets.json`). A camera profile with a new name can be added to a package by copying its JSON file into `CarlaUnreal/Content/Carla/Config/PostProcess/` of the package. Authoring presets in the editor needs a source build.
 
 The presets are plain JSON and can also be edited by hand: copy an existing one and change its values. If in doubt about the schema, save the preset from the editor instead.
 

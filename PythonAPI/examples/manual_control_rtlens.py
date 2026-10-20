@@ -185,7 +185,7 @@ def get_actor_blueprints(world, filter, generation):
     try:
         int_generation = int(generation)
         # Check if generation is in available generations
-        if int_generation in [1, 2, 3, 4]:
+        if int_generation in [1, 2, 3]:
             bps = [x for x in bps if int(x.get_attribute('generation')) == int_generation]
             return bps
         else:
@@ -1367,8 +1367,8 @@ def main():
         '--filter', metavar='PATTERN', default='vehicle.*',
         help='actor filter (default: "vehicle.*")')
     argparser.add_argument(
-        '--generation', metavar='G', default='All',
-        help='restrict to certain actor generation (values: "2","3","All" - default: "All")')
+        '--generation', metavar='G', default='3',
+        help='restrict to certain actor generation (values: "1","2","3","All" - default: "3")')
     argparser.add_argument(
         '--rolename', metavar='NAME', default='hero',
         help='actor role name (default: "hero")')

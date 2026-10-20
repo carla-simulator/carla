@@ -926,7 +926,27 @@ When the simulation starts, every element in scene is created with a tag. So it 
 ![InstanceSegmentationRaw](img/ref_sensors/sensor_instance_segmentation_raw.webp)
 <div style="text-align: right"><i>Raw instance segmentation: semantic tag in R, instance id in G and B. Town10HD_Opt &middot; sensor.camera.instance_segmentation &middot; AutomotiveHDR &middot; sunny afternoon</i></div>
 
-The server provides an image with the tag information __encoded in the red channel__: a pixel with a red value of `x` belongs to an object with tag `x`. The green and blue values hold the object's unique id. A pixel with the 8-bit RGB value `[14, 20, 55]` is therefore a car (semantic tag 14) with instance id `20-55`.
+The server provides an image with the tag information __encoded in the red channel__: a pixel with a red value of `x` belongs to an object with tag `x`. The green and blue channels hold the object's id as a 16-bit number, with __G as the low byte and B as the high byte__. A pixel with the 8-bit RGB value `[14, 20, 55]` is therefore a car (semantic tag 14) belonging to the object with id `20 + 55 * 256 = 14100`.
+
+Unpacking a frame into one mask per object:
+
+```py
+import numpy as np
+
+array = np.frombuffer(image.raw_data, dtype=np.uint8)
+array = array.reshape((image.height, image.width, 4))       # BGRA
+
+semantic = array[:, :, 2]                                   # R: semantic tag
+instance = array[:, :, 1].astype(np.uint16) | (array[:, :, 0].astype(np.uint16) << 8)
+
+for value in np.unique(instance):
+    mask = instance == value
+```
+
+!!! Warning
+    The id is the engine's actor id truncated to 16 bits, so it wraps after 65535 actors and two objects in a long session can end up sharing one. It is also __not__ the `actor.id` the Python API returns, so the two cannot be compared; to tie a mask back to a [`carla.Actor`](python_api.md#carla.Actor), project the actor's [bounding box](tuto_G_bounding_boxes.md) instead.
+
+A GPU sensor takes a few frames to produce a filled image, so the first one back after `listen()` is black. Tick a few times and keep the last.
 
 #### Basic camera attributes
 

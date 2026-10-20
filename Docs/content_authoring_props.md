@@ -31,7 +31,7 @@ If the model is not already in FBX format or needed modification, export it as F
 
 ## Import the asset into the Unreal Editor
 
-Now that we have an asset in FBX format, we can import it into the CARLA content library. Launch the CARLA Unreal Engine editor by running `cmake --build Build --target launch` in the root directory of the CARLA source code repository. Once the editor is open, navigate to an appropriate place in the content directories (`Content/Carla/Static/Static` in this example). Drag the FBX file into the content browser, import with the default options. Once the import is complete we can see our new prop as a static mesh in the content folder:
+Now that we have an asset in FBX format, we can import it into the CARLA content library. Launch the CARLA Unreal Engine editor by running `cmake --build Build/Release --target launch` in the root directory of the CARLA source code repository. Once the editor is open, navigate to an appropriate place in the content directories (`Content/Carla/Static/Static` in this example). Drag the FBX file into the content browser, import with the default options. Once the import is complete we can see our new prop as a static mesh in the content folder:
 
 ![police_barrier](img/content_authoring_props/police_barrier_imported_ue5.png)
 <div style="text-align: right"><i>The imported <code>Police_barrier</code> static mesh in the Content Browser, with its asset details.</i></div>

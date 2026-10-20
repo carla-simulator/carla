@@ -1,22 +1,16 @@
 # Generate maps with OpenStreetMap
 
-In this guide you will learn:
-
-- How to export a map from OpenStreetMap.
-- The different formats of map that can be used in CARLA and each format's limitations.
-- How to convert the native `.osm` format to `.xodr`.
-- How to include traffic light information in the `.xodr` file.
-- How to run the final map in a CARLA simulation.
-
-[OpenStreetMap](https://www.openstreetmap.org) is an open data map of the world developed by thousands of contributors and licensed under the [Open Data Commons Open Database License](https://opendatacommons.org/licenses/odbl/). Sections of the map can be exported to an XML formatted `.osm` file. CARLA can convert this file to an OpenDRIVE format and ingest it using the [OpenDRIVE Standalone Mode](adv_opendrive.md).
+[OpenStreetMap](https://www.openstreetmap.org) is an open data map of the world developed by thousands of contributors and licensed under the [Open Data Commons Open Database License](https://opendatacommons.org/licenses/odbl/). Sections of the map can be exported to an XML formatted `.osm` file. CARLA converts that file to OpenDRIVE and then builds the world with [OpenDRIVE standalone mode](adv_opendrive.md) — the same pipeline, and the same result: not just the roads, but terrain, markings, signals and roadside furniture.
 
 - [__Export a map with OpenStreetMap__](#export-a-map-with-openstreetmap)
 - [__Using OpenStreetMap in CARLA__](#using-openstreetmap-in-carla)
 - [__Convert OpenStreetMap format to OpenDRIVE format__](#convert-openstreetmap-format-to-opendrive-format)
-    - [Linux](#linux)
-    - [Windows](#windows)
-    - [Generate Traffic Lights](#generate-traffic-lights)
+    - [Generate traffic lights](#generate-traffic-lights)
 - [__Ingest into CARLA__](#ingest-into-carla)
+    - [A) Use your own script](#a-use-your-own-script)
+    - [B) Pass `.xodr` to `config.py`](#b-pass-xodr-to-configpy)
+    - [C) Pass `.osm` to `config.py`](#c-pass-osm-to-configpy)
+    - [What the generated map includes](#what-the-generated-map-includes)
 
 !!! Warning
     The OSM to OpenDRIVE conversion (`carla.Osm2Odr`, `carla.Osm2OdrSettings` and `config.py --osm-path`) is only compiled when the build is configured with `-DENABLE_OSM2ODR=ON`, which is __off by default__. Without it, those names raise `AttributeError` and the build log says "Building CARLA PythonAPI without OSM2ODR support". Reconfigure and rebuild the Python API to use this page.
@@ -68,15 +62,12 @@ This section demonstrates how to use the Python API to convert the `.osm` file w
 
 The [carla.Osm2OdrSettings](python_api.md#carla.Osm2OdrSettings) class is used to configure conversion settings such as offset values, traffic light generation, origin coordinates, and more. The full list of configurable parameters is found in the Python API [documentation](python_api.md#carla.Osm2OdrSettings). The [carla.Osm2Odr](python_api.md#carla.Osm2Odr) class uses these settings to parse the `.osm` data and output it in `.xodr` format.
 
-In Windows, the `.osm` file must be encoded to `UTF-8`. This is not necessary in Linux. Below are example code snippets that show how to perform the file conversion depending on your operating system:
-
-#### Linux
+Read the `.osm` file, convert it, and write the `.xodr` out. Pass `encoding='utf-8'` on both ends: OpenStreetMap exports are UTF-8, and on Windows Python would otherwise use the system code page and mangle any non-ASCII street name.
 
 ```py
 # Read the .osm data
-f = open("path/to/osm/file", 'r')
-osm_data = f.read()
-f.close()
+with open('path/to/osm/file', encoding='utf-8') as f:
+    osm_data = f.read()
 
 # Define the desired settings. In this case, default values.
 settings = carla.Osm2OdrSettings()
@@ -85,38 +76,13 @@ settings.set_osm_way_types(["motorway", "motorway_link", "trunk", "trunk_link", 
 # Convert to .xodr
 xodr_data = carla.Osm2Odr.convert(osm_data, settings)
 
-# save opendrive file
-f = open("path/to/output/file", 'w')
-f.write(xodr_data)
-f.close()
+# Save the OpenDRIVE file
+with open('path/to/output/file', 'w', encoding='utf-8') as f:
+    f.write(xodr_data)
 ```
-
-#### Windows
-
-```py
-import io
-
-# Read the .osm data
-f = io.open("test", mode="r", encoding="utf-8")
-osm_data = f.read()
-f.close()
-
-# Define the desired settings. In this case, default values.
-settings = carla.Osm2OdrSettings()
-# Set OSM road types to export to OpenDRIVE
-settings.set_osm_way_types(["motorway", "motorway_link", "trunk", "trunk_link", "primary", "primary_link", "secondary", "secondary_link", "tertiary", "tertiary_link", "unclassified", "residential"])
-# Convert to .xodr
-xodr_data = carla.Osm2Odr.convert(osm_data, settings)
-
-# save opendrive file
-f = open("path/to/output/file", 'w')
-f.write(xodr_data)
-f.close()
-```
-<br>
 
 ---
-### Generate Traffic Lights
+### Generate traffic lights
 
 OpenStreetMap data can define which junctions are controlled with traffic lights. To use this traffic light data in CARLA, you need to enable it in the OSM map settings via the Python API before converting the `.osm` file to `.xodr` format:
 
@@ -137,7 +103,7 @@ settings.all_junctions_with_traffic_lights = True
 
 You can also exclude certain roads, e.g., motorway links, from generating traffic lights:
 
-```
+```py
 settings.set_traffic_light_excluded_way_types(["motorway_link"])
 ```
 
@@ -146,7 +112,7 @@ settings.set_traffic_light_excluded_way_types(["motorway_link"])
 
 This section explains how to use the different options available to ingest your OpenStreetMap information into CARLA using the [OpenDRIVE Standalone Mode](adv_opendrive.md).
 
-#### A) Use your own script
+### A) Use your own script
 
 Generate the new map and block the simulation until it is ready by calling [`client.generate_opendrive_world()`](python_api.md#carla.Client.generate_opendrive_world). Use the [carla.OpendriveGenerationParameters](python_api.md#carla.OpendriveGenerationParameters) class to configure the mesh generation. See below for an example:
 
@@ -176,7 +142,7 @@ world = client.generate_opendrive_world(
 !!! Note
     `wall_height = 0.0` is strongly recommended. OpenStreetMap defines lanes in opposing directions as different roads. If walls are generated, this will result in wall overlapping and undesired collisions.
 
-#### B) Pass `.xodr` to `config.py`
+### B) Pass `.xodr` to `config.py`
 
 After you have started a CARLA server, run the following command in a separate terminal to load your OpenStreetMap:
 
@@ -187,7 +153,7 @@ python3 config.py -x=/path/to/xodr/file
 ```
 
 [Default parameters](python_api.md#carla.OpendriveGenerationParameters) will be used.
-#### C) Pass `.osm` to `config.py`
+### C) Pass `.osm` to `config.py`
 
 After you have started a CARLA server, run the following command in a separate terminal to load your OpenStreetMap:
 
@@ -200,10 +166,8 @@ python3 config.py --osm-path=/path/to/OSM/file
 [Default parameters](python_api.md#carla.OpendriveGenerationParameters) will be used.
 
 
-Regardless of the method used, the map will be ingested into CARLA and the result should be similar to the image below:
-
-![opendrive_meshissue](img/tuto_G_openstreetmap/tuto_g_osm_carla.jpg)
-<div style="text-align: right"><i>Outcome of the CARLA map generation using OpenStreetMap.</i></div>
+!!! Warning
+    __TODO: this section needs a capture of a generated OSM world.__ The image that was here showed a 2D road-network plot, not a CARLA render, and contradicted the list below it. Producing a real one needs a build configured with `-DENABLE_OSM2ODR=ON`, since `carla.Osm2Odr` does not exist otherwise.
 
 ### What the generated map includes
 
@@ -211,7 +175,7 @@ Runtime map generation builds a complete drivable environment from the OpenDRIVE
 
 *   __Terrain that follows the roads.__ A ground heightfield is generated under and around the road network, following the road elevation profile, so the world does not float over a flat plane. Gaps between carriageways (medians) are filled and kept flush with the road surface.
 *   __Road detail.__ Lane markings are generated for the whole network, including through junctions; crosswalks defined in the OpenDRIVE file get real zebra markings; road materials and semantic segmentation tags are applied so camera and LiDAR ground truth works on generated maps.
-*   __Elevation profiles.__ `lateralProfile` `<shape>` records in the OpenDRIVE file are honored, so banked and crowned roads reproduce their real cross-sections.
+*   __Elevation profiles.__ Each road follows its elevation profile, and the `shape` records of its `lateralProfile` are honored, so a crowned road keeps its real cross-section. `superelevation` is not applied: a banked curve is built flat.
 *   __Street furniture.__ Street lights and other roadside props are procedurally scattered along the network, grounded on the terrain, and their lamps light up at night like the ones on the built-in maps.
 
 Additional static geometry can be added at runtime with [`world.spawn_custom_mesh()`](python_api.md#carla.World.spawn_custom_mesh), which spawns a procedural mesh with collision from a vertex/triangle list and a material hint (`"grass"`, `"road"`, `"dirt"`, `"sidewalk"`, or a full Unreal material path).

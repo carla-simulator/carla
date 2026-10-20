@@ -19,7 +19,6 @@ Every tutorial in the documentation, grouped by what it is for.
 ---
 ## Python API
 
-- [__PyGame control__](tuto_G_pygame.md) — Display the output of camera sensors in a window and drive from it.
 - [__Control walker skeletons__](tuto_G_control_walker_skeletons.md) — Animate walkers bone by bone.
 - [__Control vehicle physics__](tuto_G_control_vehicle_physics.md) — Change a vehicle's physics at runtime.
 - [__Add friction triggers__](tuto_G_add_friction_triggers.md) — Define box triggers that change the friction under a vehicle's wheels.
@@ -29,7 +28,6 @@ Every tutorial in the documentation, grouped by what it is for.
 ## Sensors
 
 - [__Bounding boxes__](tuto_G_bounding_boxes.md) — Project the bounding boxes of CARLA objects into a camera image.
-- [__Instance segmentation camera__](tuto_G_instance_segmentation_sensor.md) — Tell apart objects of the same class.
 - [__Pedestrian bones__](tuto_G_pedestrian_bones.md) — Project a pedestrian's skeleton into the camera plane.
 
 ---

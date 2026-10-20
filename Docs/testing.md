@@ -135,8 +135,6 @@ __Standalone scripts__ in `PythonAPI/test/` connect to a running server and prin
 | `test_raycast_sensor.py` | LiDAR and radar output and throughput |
 | `test_ground_truth.py` | A sensor's output on a seeded, synchronous drive against a saved capture. `--generate` writes the capture to `_ground_truth/` first |
 
-For performance measurement see [Benchmarking performance](adv_benchmarking.md).
-
 ## What CI runs
 
 Pull requests to `ue5-dev` run `.github/workflows/ue5_pr.yml` on Ubuntu. It configures with the `Release` preset, `-DENABLE_ROS2=ON` and `-DBUILD_LIBCARLA_TESTS=ON`, builds the client, the Python API and the server, then builds and runs the LibCarla unit tests:

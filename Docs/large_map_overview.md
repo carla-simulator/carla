@@ -1,86 +1,69 @@
 # Large maps overview
 
-- [__Large maps overview__](#large-maps-overview)
-- [__Tile streaming__](#tile-streaming)
-- [__Dormant actors__](#dormant-actors)
+Town11, Town12, Town13 and Town15 are too big to keep in memory at once. They are __World Partition__ maps: the level is a grid of cells that the engine streams in and out around the actors that move through it. There are no tiles, no origin rebasing and no large-map API: from the client they load and behave like any other map, and the only thing to tune is how much of the map stays loaded around your ego vehicle. [Maps and navigation](core_map.md#large-maps-and-world-partition) introduces World Partition and how a legacy tiled town is converted.
+
+- [__What loads, and around what__](#what-loads-and-around-what)
+- [__Setting the streaming distance__](#setting-the-streaming-distance)
+- [__Settings that no longer apply__](#settings-that-no-longer-apply)
+- [__Synchronous mode__](#synchronous-mode)
 
 ---
+## What loads, and around what
 
-## Large maps overview
+A cell loads when a __streaming source__ is near it. The server adds one to every vehicle and walker it spawns, and the spectator is one too:
 
-The large map feature in CARLA allows users to perform simulations at a vast scale. In CARLA, large maps are divided into square tiles no larger than 2kmx2km. Tiles are streamed in and out of the server based on their proximity (streaming distance) to the ego vehicle. Other actors on the map are also managed according to their streaming distance from the ego vehicle.
+| Source | Loading radius |
+| --- | --- |
+| A vehicle or walker whose `role_name` contains `hero` or `ego_vehicle` (in any case: `Hero` counts) | `tile_stream_distance` of [carla.WorldSettings](python_api.md#carla.WorldSettings), 3000 m by default |
+| Any other vehicle or walker | 200 m |
+| The spectator | the engine's own loading range (on Town15, fully loaded to about 250 m), whatever `spectator_as_ego` says |
 
----
+Background traffic only needs the ground under its wheels; the ego's radius is the one that decides what sensors can see. Spawning waits until the cells under the new actor are loaded, which can take tens of seconds with a large radius, so the actor does not fall through a road that is not there yet. With a radius of 1500 m or more, a hero spawned at the western end of Town15 has been seen to fall through the map, because the spawn returned before its cell had loaded; spawn the ego with a smaller radius, or further into the map, if that happens.
 
-## Tile streaming
+The engine loads whole cells, so the loaded area is wider than the radius and follows the cell grid rather than a circle. On Town15, a radius of 400 m kept the ground fully loaded up to 500–800 m from the ego, depending on the spot, and scattered cells up to about 2 km.
 
-The ego vehicle is integral to the loading and unloading of map tiles. Tiles are streamed in and out of the server based on the value of the streaming distance from the ego vehicle. For example, tiles located outside the streaming distance will not be rendered in the simulation, and tiles within the streaming distance will be rendered. The rendered tiles will change as the hero vehicle moves.
+![streaming_distance](img/large_map_overview/streaming_distance.webp)
+<div style="text-align: right"><i>What is loaded around an ego vehicle in the middle of the map, seen from 2 km above: the cells of a 500 m radius (left) and of the default 3000 m (right). Town15 &middot; sensor.camera.rgb &middot; Cinematic &middot; ClearNoon</i></div>
 
-To set a vehicle as ego, use the [`set_attribute`](python_api.md#carla.ActorBlueprint.set_attribute) method as shown below:
+![streaming_ring](img/large_map_overview/streaming_ring.webp)
+<div style="text-align: right"><i>An ego vehicle at the western end of the map with a 400 m radius (red circle): the loaded cells reach beyond the circle, the rest of the map is not loaded. Town15 &middot; sensor.camera.rgb &middot; Cinematic &middot; ClearNoon</i></div>
 
-```py
-blueprint.set_attribute('role_name', 'hero' )
-world.spawn_actor(blueprint, spawn_point)
-```
-
-Use the code snippet below to set the streaming distance so tiles will be loaded within a 2km radius of the ego vehicle:
-
-```py
-settings = world.get_settings()
-settings.tile_stream_distance = 2000
-world.apply_settings(settings)
-```
-
-You can also set the streaming distance using `config.py`:
-
-```sh
-cd PythonAPI/util
-python3 config.py --tile-stream-distance 2000
-```
-
-!!! Note
-    Large maps currently supports only one ego vehicle at a time.
+!!! Warning
+    Only the loaded part of the map exists. A sensor pointed at an unloaded region sees nothing there, while waypoint and OpenDRIVE queries still answer for the whole map. Raise `tile_stream_distance` when a sensor has to see further than the ego's cells.
 
 ---
+## Setting the streaming distance
 
-## Dormant actors
-
-The large map feature introduces the concept of dormant actors to CARLA. Dormant actors exist within the context of large maps only. Dormant actors are non-ego-vehicle actors in the simulation that are located outside of the __actor active distance__ of the ego vehicle, e.g., vehicles far from the ego vehicle. The actor active distance can be equal to or less than the streaming distance.
-
-If an actor finds itself outside of the actor active distance of the ego vehicle, it will become dormant. The actor will still exist, but it will not be rendered. Physics will not be calculated (unless running in hybrid mode via the traffic manager), although [location](python_api.md#carla.Actor.set_location) and [transformation](python_api.md#carla.Actor.set_transform) can still be set. Once the dormant actor comes within actor active distance of the ego vehicle again, it will wake up, and its rendering and physics will resume as normal. 
-
-Actors controlled by the Traffic Manager have distinct behaviors that can be configured when operating within a large map. Read more in the [Traffic Manager documentation](adv_traffic_manager.md) to find out about how this works.
-
-An actor will become dormant or wake up on a [`world.tick()`](python_api.md#carla.World.tick).
-
-To set the actor active distance to a 2 km radius around the ego vehicle:
+The radius of a source is set when its actor spawns. Changing `tile_stream_distance` afterwards does not change the area around an ego that already exists: apply the setting first, then spawn the ego (or destroy and respawn it).
 
 ```py
 settings = world.get_settings()
-settings.actor_active_distance = 2000
+settings.tile_stream_distance = 1500.0   # metres around the ego
+settings.actor_active_distance = 1500.0  # keep it at or below tile_stream_distance, see below
 world.apply_settings(settings)
+
+ego_bp = world.get_blueprint_library().find('vehicle.lincoln.mkz')
+ego_bp.set_attribute('role_name', 'hero')
+ego = world.spawn_actor(ego_bp, world.get_map().get_spawn_points()[0])
 ```
 
-You can also set the actor active distance using `config.py`:
+From the command line, set both values, or the default `actor_active_distance` of 2000 m raises the distance back to 2000 (see below):
 
 ```sh
-cd PythonAPI/util
-python3 config.py --actor-active-distance 2000
-```
-
-To check if an actor is dormant, you can use the Python API:
-
-```py
-actor.is_dormant
+python3 PythonAPI/util/config.py --tile-stream-distance 1500 --actor-active-distance 1500
 ```
 
 ---
+## Settings that no longer apply
 
-If you have any questions about large maps, then you can ask in the [forum](https://github.com/carla-simulator/carla/discussions).
+These belonged to the tiled maps of earlier releases. On World Partition maps the server retires the old large-map manager that implemented them:
 
-<div class="build-buttons">
-<p>
-<a href="https://github.com/carla-simulator/carla/discussions" target="_blank" class="btn btn-neutral" title="Go to the CARLA forum">
-CARLA forum</a>
-</p>
-</div>
+- __Dormant actors.__ No actor becomes dormant: `actor.is_dormant` is always `False`, and physics and rendering run for every actor whatever its distance to the ego. `actor_active_distance` has one effect left: when it is larger than `tile_stream_distance`, the server raises `tile_stream_distance` to match and logs `TileStreamingDistance will be increased`. Its default is 2000 m, so to stream less than 2000 m around the ego, lower `actor_active_distance` as well.
+- __`spectator_as_ego`.__ The spectator streams the map around itself in both cases.
+- __The Traffic Manager's dormant respawn__ ([`set_respawn_dormant_vehicles`](python_api.md#carla.TrafficManager.set_respawn_dormant_vehicles)) relies on dormant actors, so it has nothing to respawn on these maps.
+- __A single ego.__ There can be more than one: every actor with a `hero` or `ego_vehicle` role gets the ego radius.
+
+---
+## Synchronous mode
+
+Spawning loads the cells under the new actor in any mode, and a vehicle that drives keeps its cells loaded in synchronous mode too: on Town15, an ego on autopilot drove 3.8 km in synchronous mode (0.05 s steps) without losing the ground under it. Long jumps are different: a vehicle teleported 2 km away got none of its new cells in 600 synchronous ticks, while in asynchronous mode they loaded in about 10 s. To move an actor far away, spawn it again at the destination instead of teleporting it.

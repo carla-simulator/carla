@@ -10,7 +10,6 @@
 """Generates Docs/bp_library.md from the blueprints of a running server."""
 
 import argparse
-import datetime
 import os
 import sys
 
@@ -60,7 +59,7 @@ def attribute_rows(blueprint):
         rows.append('| {} | {} | {} | {} | {} |'.format(
             code(attr.id),
             str(attr.type).replace('ActorAttributeType.', ''),
-            code(default) if default else '',
+            code(default) if default else '`""`',
             values,
             'yes' if attr.is_modifiable else 'no'))
     return rows
@@ -84,9 +83,6 @@ def generate_bp_docs(host, port, timeout):
                '([`carla.ActorBlueprint`](python_api.md#carla.ActorBlueprint)) that can be spawned, with the attributes '
                '([`carla.ActorAttribute`](python_api.md#carla.ActorAttribute)) each one accepts. '
                'Start with the [introduction to blueprints](core_actors.md).')
-    out.append('')
-    out.append('Generated from CARLA {} on {}. A server built with other options, or with content packs loaded, lists a different set.'.format(
-        client.get_server_version(), datetime.date.today().isoformat()))
     out.append('')
     out.append('```py')
     out.append("blueprints = [bp for bp in world.get_blueprint_library().filter('*')]")

@@ -119,6 +119,7 @@
 * Fixed a Traffic Manager segfault when reaching a vehicle that is no longer available.
 * Fixed the Traffic Manager leaking its whole in-memory road graph — several hundred MB on a large map — every time it shut down or rebuilt its map for a new episode. Its waypoints link to each other with shared pointers, so the cycles kept them all alive; those links are now broken when the map is destroyed.
 * Fixed `BehaviorAgent.run_step` raising `AttributeError` once the local planner's waypoint queue empties, for instance at the end of a route.
+* Fixed the Traffic Manager's localization stage never forgetting the junction a vehicle is entering (`vehicles_at_junction_entrance`) when the vehicle is removed or the Traffic Manager is reset.
 
 #### Python API and client
 
