@@ -69,6 +69,8 @@ error.
 | World Partition map (Town15) from a `-game` server | `wp_shots.py OUT "name=x,y,z,yaw,pitch;hx,hy,hz"` | Parks a `role_name=hero` vehicle at `hx,hy,hz` (physics off) under the camera and ticks 400 times; without it the shot only shows the cells around the spectator start. |
 | Town street views with traffic | `townshots.py OUT W H name=x,y,z,yaw,pitch[,fov] ...` | Populates 70 cars and 60 walkers, ticks 200, shoots each pose. Scout first at 960x540, then render the picks at 1920x1080. |
 | Same parameter at several values | `strip.py OUT.webp CROP|none W IMG:LABEL ...` | Labelled side-by-side strip (black tab with the value), for material or setting comparisons. |
+| Material examples in a town | `pie_shot.py SHOTS.json OUT` against an editor PIE session (see *Material examples in a town* in the editor recipes) | Same pose for every variant; weather from the presets (`carla.WeatherParameters.WetNoon`), not extreme values. |
+| Material instance parameters, one crop per group | `xwdgrab.py`, then `mi_groups.py GRAB.png OUTPREFIX` | See *Fit the whole Details panel*. |
 | Texture channels | export with `AssetExportTask` (see editor recipes), then `channels.py DIFFUSE.png ORME.png OUT1 OUT2` | Splits a building's Diffuse (RGB / Alpha) and ORME (R AO, G roughness, B metallic, A emissive) into labelled panels. |
 | Physics substepping convergence | `physconv.py OUT.json` then `plot_physconv.py OUT.json OUTDIR` | Same scripted drive on Town10HD_Opt spawn point 79 (a 164 m straight) for several `fixed_delta_seconds` / `max_substep_delta_time`. Plot speed, not `get_acceleration()`: it is one sample per tick, so a coarse step hides the peaks and the comparison is not fair. |
 | Vehicle telemetry | `telemetry_run.py OUT.json` then `plot_telemetry.py OUT.json OUT.png` | Launch, lane change and stop, logging `get_telemetry_data()` every tick. `long_slip` spikes to ~1700 at gear shifts on UE 5.8, so plot `omega` instead. |
@@ -99,6 +101,13 @@ poll the CARLA port instead of the editor.
 
 Run each through `ue.py` with the editor open (not PIE), then grab with `xwdgrab.py`.
 
+- **Fit the whole Details panel.** Before launching the editor, set `ApplicationScale=0.600000` under
+  `[/Script/UnrealEd.EditorStyleSettings]` in `Unreal/CarlaUnreal/Saved/Config/LinuxEditor/EditorPerProjectUserSettings.ini`
+  (it is not reachable from Python and needs a restart); keep a copy of the file and restore it when done. At 0.6 a
+  2100 px tall window shows every group of `M_GeneralMaster` and most of `M_RoadMaster`. Then split the grab per group
+  with `mi_groups.py GRAB.png OUTPREFIX`. Parameters behind a static switch only show when it is ticked: tick them in an
+  unsaved copy (`AssetTools.duplicate_asset` into a `/Game/ZZ_*` folder) and grab the copy. Ticking a texture switch
+  can hide the flat values it replaces (`M_GlassMaster` hides *1.Plain Glass*): grab both versions.
 - **Asset editor in a tall window.** `AssetEditorSubsystem.open_editor_for_assets([asset])`, find the new window with
   `wmctrl -lG`, enlarge it with `wmctrl -i -r <id> -e 0,X,Y,W,H` so the whole Details panel fits (it cannot be
   scrolled from Python), grab, then `close_all_editors_for_asset`. The grab can come back scaled (`xwdgrab` prints
@@ -115,7 +124,29 @@ Run each through `ue.py` with the editor open (not PIE), then grab with `xwdgrab
   `get_material_property_input_node`; `AssetRegistry.get_dependencies` shows what a master reads (that is how
   `M_RoadMaster` was found to read `RenderTexture_Town10HD` through `WorldMaskFunction`).
 - **Textures to PNG.** `AssetExportTask` with `filename=....png`, `automated=True`, run by
-  `Exporter.run_asset_export_task`.
+  `Exporter.run_asset_export_task`. `TextureExporterPNG` fails with a fatal assertion (`SupportsTexture(Texture)`,
+  the editor dies) on formats it does not support: render targets, HDR and some others. Export only
+  `Texture2D` assets whose `compression_settings` is `TC_DEFAULT`, `TC_NORMALMAP`, `TC_MASKS`, `TC_GRAYSCALE`,
+  `TC_BC7` or `TC_ALPHA`, and do it in an `UnrealEditor-Cmd -run=pythonscript -NullRHI` commandlet with a progress
+  file, never in the editor you are using: a crash then costs one rerun that skips the bad texture. 4K and 8K
+  exports are 50-100 MB each; export only the ones you need. Measure the alpha channel (`std`) of a candidate before
+  using it in a panel: most UE5-era building textures have a flat alpha.
+- **Scene captures in the editor.** `SceneCapture2D` renders nothing while the editor is in the background:
+  run `t.IdleWhenNotForeground 0` first. `TestMaps/EmptyMap` has no lighting at all and renders black at any
+  exposure; `TestMaps/L_DrivingTest` has sun, sky and clouds. For anything that has to look like CARLA, prefer the
+  PIE recipe below.
+- **Material examples in a town (PIE).** Open the town in the editor, place demo actors in the editor world first
+  (`EditorActorSubsystem.spawn_actor_from_class`; PIE copies the editor world, actors spawned during PIE are not
+  needed), create instances that need a different static switch as unsaved `MaterialInstanceConstant`s in a
+  `/Game/ZZ_*` folder, then `LevelEditorSubsystem.editor_request_begin_play()` (`editor_play_simulate` does not
+  start the CARLA server). Wait for port 2000 with `ss -ltn` (zsh has no `/dev/tcp`). Change materials on the PIE
+  actors from `UnrealEditorSubsystem.get_game_world()`: `create_dynamic_material_instance` and set scalars or vectors,
+  `set_material` to swap in a different instance, `set_actor_hidden_in_game` to hide one. Shoot with the CARLA camera
+  through the client (`pie_shot.py SHOTS.json OUT`), so the look is the simulator's. When done, kill the editor (the
+  `ZZ_*` assets are never saved) and check that the Content repository is clean and that no `ZZ_*` folder exists.
+  CARLA lights fake interiors and street lamps at night by itself; other emissives need `EmissiveIntensity` and
+  `On/Off` set on the instance or the MID. Night shots auto-expose brighter than they look: an emissive needs a
+  much higher intensity than the instance default to stand out.
 - **Editor Utility Widgets.** `EditorUtilitySubsystem.spawn_and_register_tab(widget)` opens it in its own window; grab
   that window and close it with `wmctrl -i -c <id>`.
 - **Blueprint variable names** are not exposed to Python on a BP class default object; `strings -n 5 BP.uasset`
