@@ -14,18 +14,18 @@ Once installed, the towns load like any other map: `client.load_world('Town12')`
 
 | Map name | Summary | |
 | --- | --- | --- |
-| `Town01_Opt` | A small town with numerous T-junctions and a variety of buildings, surrounded by coniferous trees, with several small bridges over a river that divides the town in two. | ![town01_opt](img/map_content_packs/town01_opt.webp) |
-| `Town02_Opt` | A small town with numerous T-junctions, a variety of buildings, patches of coniferous trees, a park and a residential and commercial area. | ![town02_opt](img/map_content_packs/town02_opt.webp) |
-| `Town03_Opt` | A larger town with features of a downtown urban area: a central roundabout, underpasses and overpasses, a raised metro track and a large building under construction. | ![town03_opt](img/map_content_packs/town03_opt.webp) |
-| `Town04_Opt` | A small town with a backdrop of snow-capped mountains and conifers, circled by a multi-lane "figure of 8" ring road with an underpass and overpass at its crossing. | ![town04_opt](img/map_content_packs/town04_opt.webp) |
-| `Town05_Opt` | An urban environment set among conifer-covered hills, with a raised highway and large multi-lane roads and junctions. | ![town05_opt](img/map_content_packs/town05_opt.webp) |
-| `Town06_Opt` | A low-density town in a coniferous landscape, with long 4 to 6 lane roads and special junctions such as the Michigan left. | ![town06_opt](img/map_content_packs/town06_opt.webp) |
-| `Town07_Opt` | A quiet rural community with cornfields, barns, grain silos and windmills, unmarked roads and a simple set of junctions. | ![town07_opt](img/map_content_packs/town07_opt.webp) |
-| `Town11` | A [World Partition](large_map_overview.md) map without decoration (no buildings, sidewalks or vegetation): sprawling single-lane roads with small clusters of gridded junctions over hilly, grass-textured terrain. | ![town11](img/map_content_packs/town11.webp) |
-| `Town12` | A 10x10 km<sup>2</sup> [World Partition](large_map_overview.md) map partially inspired by Amarillo, Texas, with urban, residential and rural regions and a highway system with a ring road around the city. | ![town12](img/map_content_packs/town12.webp) |
-| `Town13` | A [World Partition](large_map_overview.md) map of about 13x10 km of roads, with urban, residential and rural regions and a ring road, designed as a train-test pair with Town12: same kind of layout, different building styles, textures and vegetation. | ![town13](img/map_content_packs/town13.webp) |
-| `Town_C` | A city with high-rise blocks, a stadium and an industrial area of warehouses, on flat open land. | ![town_c](img/map_content_packs/town_c.webp) |
-| `Eixample` | A [digital twin](content_authoring_maps_digital_twin.md) of the Eixample district of Barcelona, a World Partition map with the street grid of the district; the buildings are simple untextured volumes. | ![eixample](img/map_content_packs/eixample.webp) |
+| [`Town01_Opt`](map_town01.md) | A small town with numerous T-junctions and a variety of buildings, surrounded by coniferous trees, with several small bridges over a river that divides the town in two. | ![town01_opt](img/map_content_packs/town01_opt.webp) |
+| [`Town02_Opt`](map_town02.md) | A small town with numerous T-junctions, a variety of buildings, patches of coniferous trees, a park and a residential and commercial area. | ![town02_opt](img/map_content_packs/town02_opt.webp) |
+| [`Town03_Opt`](map_town03.md) | A larger town with features of a downtown urban area: a central roundabout, underpasses and overpasses, a raised metro track and a large building under construction. | ![town03_opt](img/map_content_packs/town03_opt.webp) |
+| [`Town04_Opt`](map_town04.md) | A small town with a backdrop of snow-capped mountains and conifers, circled by a multi-lane "figure of 8" ring road with an underpass and overpass at its crossing. | ![town04_opt](img/map_content_packs/town04_opt.webp) |
+| [`Town05_Opt`](map_town05.md) | An urban environment set among conifer-covered hills, with a raised highway and large multi-lane roads and junctions. | ![town05_opt](img/map_content_packs/town05_opt.webp) |
+| [`Town06_Opt`](map_town06.md) | A low-density town in a coniferous landscape, with long 4 to 6 lane roads and special junctions such as the Michigan left. | ![town06_opt](img/map_content_packs/town06_opt.webp) |
+| [`Town07_Opt`](map_town07.md) | A quiet rural community with cornfields, barns, grain silos and windmills, unmarked roads and a simple set of junctions. | ![town07_opt](img/map_content_packs/town07_opt.webp) |
+| [`Town11`](map_town11.md) | A [World Partition](large_map_overview.md) map without decoration (no buildings, sidewalks or vegetation): sprawling single-lane roads with small clusters of gridded junctions over hilly, grass-textured terrain. | ![town11](img/map_content_packs/town11.webp) |
+| [`Town12`](map_town12.md) | A 10x10 km<sup>2</sup> [World Partition](large_map_overview.md) map partially inspired by Amarillo, Texas, with urban, residential and rural regions and a highway system with a ring road around the city. | ![town12](img/map_content_packs/town12.webp) |
+| [`Town13`](map_town13.md) | A [World Partition](large_map_overview.md) map of about 13x10 km of roads, with urban, residential and rural regions and a ring road, designed as a train-test pair with Town12: same kind of layout, different building styles, textures and vegetation. | ![town13](img/map_content_packs/town13.webp) |
+| [`Town_C`](map_town_c.md) | A city contributed by Synkrotron, modelled on the Shanghai International Automobile City in Jiading, with recreations of its landmark buildings. | ![town_c](img/map_content_packs/town_c.webp) |
+| [`Eixample`](map_eixample.md) | A [digital twin](content_authoring_maps_digital_twin.md) of the Eixample district of Barcelona, a World Partition map with the street grid of the district; the buildings are simple untextured volumes. | ![eixample](img/map_content_packs/eixample.webp) |
 
 <div class="img-caption">One view per map from above its spawn points.</div>
 
