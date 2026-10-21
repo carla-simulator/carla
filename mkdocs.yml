@@ -112,6 +112,9 @@ not_in_nav: |
   /tuto_G_traffic_manager.md
   /tuto_content_authoring_vehicles_materials.md
 
+hooks:
+  - docs_hooks.py
+
 markdown_extensions:
   - admonition 
 

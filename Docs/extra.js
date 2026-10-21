@@ -121,7 +121,9 @@ $(document).ready(function () {
         if (image.closest("a") || image.src.indexOf("/img/btn/") !== -1) { return; }
         image.classList.add("zoomable");
         image.addEventListener("click", function () {
-            openOverlay(image.src, image.alt);
+            // Catalogue pages load <name>_thumb.webp; the full shot sits
+            // beside it under the same name.
+            openOverlay(image.src.replace(/_thumb\.webp$/, ".webp"), image.alt);
         });
     });
 });

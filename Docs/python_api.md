@@ -2181,7 +2181,7 @@ Reads a right-handed (FLU) location back into CARLA's left-handed frame. Inverse
         - `location` (_[carla.RightHandedVector3D](#carla.RightHandedVector3D)_) - Location in the right-handed (FLU) frame.  
     - **Return:** _[carla.Location](#carla.Location)_  
 - <a name="carla.Location.to_right_handed"></a>**<font color="#7fb800">to_right_handed</font>**(<font color="#00a6ed">**self**</font>)  
-Converts this location to a right-handed, x-forward / y-**left** / z-up frame (ROS REP-103 "FLU") by mirroring the Y axis: `(x, y, z)` becomes `(x, -y, z)`. See [Coordinate conventions](/coordinate_conventions).  
+Converts this location to a right-handed, x-forward / y-**left** / z-up frame (ROS REP-103 "FLU") by mirroring the Y axis: `(x, y, z)` becomes `(x, -y, z)`. See [Coordinate conventions](coordinate_conventions.md).  
     - **Return:** _[carla.RightHandedVector3D](#carla.RightHandedVector3D)_  
 
 ##### Dunder methods
@@ -2612,7 +2612,7 @@ Iterate over the [carla.RadarDetection](#carla.RadarDetection) retrieved as data
 ## carla.RightHandedRotation<a name="carla.RightHandedRotation"></a>
 Euler angles of a rotation in a **right-handed** frame: x forward, y **left**, z up (ROS [REP-103](https://www.ros.org/reps/rep-0103.html) "FLU"), every axis turned by the right-hand rule.  <br>
 <br>The three angles compose as the intrinsic Z-Y-X sequence `Rz(yaw) * Ry(pitch) * Rx(roll)` with the standard right-handed elementary matrices — the same thing `scipy.spatial.transform.Rotation.from_euler("xyz", ...)` and `tf2::Quaternion::setRPY` mean by "roll pitch yaw".  <br>
-<br>This is **not** `carla.Rotation`. Get one from `carla.Rotation.to_right_handed()`; see [Coordinate conventions](/coordinate_conventions).  
+<br>This is **not** `carla.Rotation`. Get one from `carla.Rotation.to_right_handed()`; see [Coordinate conventions](coordinate_conventions.md).  
 
 ### Instance Variables
 - <a name="carla.RightHandedRotation.roll"></a>**<font color="#f8805a">roll</font>** (_float<small> - degrees</small>_)  
@@ -2650,7 +2650,7 @@ Parses the angles to string.
 ## carla.RightHandedTransform<a name="carla.RightHandedTransform"></a>
 A location and a rotation in a **right-handed** frame: x forward, y **left**, z up (ROS [REP-103](https://www.ros.org/reps/rep-0103.html) "FLU").  <br>
 <br>This is the explicit boundary type between CARLA's left-handed world and every right-handed consumer (ROS 2 / tf2, NVIDIA ClipGT rigs, scipy, Open3D). Build one with `carla.Transform.to_right_handed()` and go back with `carla.Transform.from_right_handed()`; the handedness change then happens exactly once, here, instead of at every call site.  <br>
-<br>See [Coordinate conventions](/coordinate_conventions).  
+<br>See [Coordinate conventions](coordinate_conventions.md).  
 
 ### Instance Variables
 - <a name="carla.RightHandedTransform.location"></a>**<font color="#f8805a">location</font>** (_[carla.RightHandedVector3D](#carla.RightHandedVector3D)<small> - meters</small>_)  
@@ -2687,7 +2687,7 @@ Parses both location and rotation to string.
 
 ## carla.RightHandedVector3D<a name="carla.RightHandedVector3D"></a>
 A 3D vector in a **right-handed** frame: x forward, y **left**, z up (ROS [REP-103](https://www.ros.org/reps/rep-0103.html) "FLU").  <br>
-<br>This is a boundary type. The simulator never returns one; you get it from `carla.Location.to_right_handed()` and hand it back with `carla.Location.from_right_handed()`. See [Coordinate conventions](/coordinate_conventions).  
+<br>This is a boundary type. The simulator never returns one; you get it from `carla.Location.to_right_handed()` and hand it back with `carla.Location.from_right_handed()`. See [Coordinate conventions](coordinate_conventions.md).  
 
 ### Instance Variables
 - <a name="carla.RightHandedVector3D.x"></a>**<font color="#f8805a">x</font>** (_float<small> - meters</small>_)  
@@ -2834,7 +2834,7 @@ Reads a right-handed (FLU) rotation back into CARLA's left-handed frame. Inverse
         - `rotation` (_[carla.RightHandedRotation](#carla.RightHandedRotation)_) - Rotation in the right-handed (FLU) frame.  
     - **Return:** _[carla.Rotation](#carla.Rotation)_  
 - <a name="carla.Rotation.to_right_handed"></a>**<font color="#7fb800">to_right_handed</font>**(<font color="#00a6ed">**self**</font>)  
-Converts this rotation to a right-handed, x-forward / y-**left** / z-up frame (ROS REP-103 "FLU"). Mirroring the Y axis negates **pitch and yaw** and leaves roll alone, so `(roll, pitch, yaw) = (10, 20, 30)` becomes `(10, -20, -30)`. See [Coordinate conventions](/coordinate_conventions).  
+Converts this rotation to a right-handed, x-forward / y-**left** / z-up frame (ROS REP-103 "FLU"). Mirroring the Y axis negates **pitch and yaw** and leaves roll alone, so `(roll, pitch, yaw) = (10, 20, 30)` becomes `(10, -20, -30)`. See [Coordinate conventions](coordinate_conventions.md).  
     - **Return:** _[carla.RightHandedRotation](#carla.RightHandedRotation)_  
 
 ##### Getters
@@ -3420,7 +3420,7 @@ Reads a right-handed (FLU) transform back into CARLA's left-handed frame. Invers
         - `transform` (_[carla.RightHandedTransform](#carla.RightHandedTransform)_) - Transform in the right-handed (FLU) frame.  
     - **Return:** _[carla.Transform](#carla.Transform)_  
 - <a name="carla.Transform.to_right_handed"></a>**<font color="#7fb800">to_right_handed</font>**(<font color="#00a6ed">**self**</font>)  
-Converts this transform to a right-handed, x-forward / y-**left** / z-up frame (ROS REP-103 "FLU"). The location becomes `(x, -y, z)` and the rotation `(roll, -pitch, -yaw)`; equivalently the pose matrix becomes `S * get_matrix() * S` with `S = diag(1, -1, 1, 1)`. See [Coordinate conventions](/coordinate_conventions).  
+Converts this transform to a right-handed, x-forward / y-**left** / z-up frame (ROS REP-103 "FLU"). The location becomes `(x, -y, z)` and the rotation `(roll, -pitch, -yaw)`; equivalently the pose matrix becomes `S * get_matrix() * S` with `S = diag(1, -1, 1, 1)`. See [Coordinate conventions](coordinate_conventions.md).  
     - **Return:** _[carla.RightHandedTransform](#carla.RightHandedTransform)_  
 - <a name="carla.Transform.transform"></a>**<font color="#7fb800">transform</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**in_point**</font>)  
 Translates a 3D point from local to global coordinates using the current transformation as frame of reference.  

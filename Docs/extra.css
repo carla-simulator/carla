@@ -276,6 +276,8 @@ table tbody td{
 .img-caption {
 	text-align: center;
 	font-style: italic;
+	font-size: 85%;
+	color: #666;
 	margin-bottom: 24px;
 }
 
