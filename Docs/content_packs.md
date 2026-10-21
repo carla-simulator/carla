@@ -10,24 +10,6 @@ Two roles, two halves of this page:
 ![content_pack_lifecycle](img/content_packs/content_pack_lifecycle.svg)
 <div style="text-align: right"><i>How a pack goes from a CARLA source build to a CARLA package of the same release.</i></div>
 
-* __[Quick start](#quick-start)__
-* __[Making a pack](#making-a-pack)__
-    * __[Requirements](#requirements)__
-    * __[A. Existing CARLA towns: `create`](#a-existing-carla-towns-create)__
-    * __[B. Your own content](#b-your-own-content)__
-    * __[Catalog JSON shapes](#catalog-json-shapes)__
-    * __[Build details](#build-details)__
-    * __[Checking a pack](#checking-a-pack)__
-    * __[Sidecar files](#sidecar-files)__
-    * __[Traffic-light phase files](#traffic-light-phase-files)__
-* __[Installing a pack](#installing-a-pack)__
-    * __[Drop-in install](#drop-in-install)__
-    * __[From the Python API](#from-the-python-api)__
-    * __[Updating and removing](#updating-and-removing)__
-* __[What a pack is](#what-a-pack-is)__
-* __[Limits](#limits)__
-* __[FAQ](#faq)__
-
 ---
 
 ## Quick start
@@ -37,7 +19,7 @@ On a CARLA source checkout that has built the package (or has the package's rele
 ```sh
 # five towns the CARLA package does not ship, as one pack
 carla-pack create Towns5 Town01_Opt Town03_Opt Town05_Opt Town12 Town13
-# -> Unreal/CarlaUnreal/Plugins/Packs/Towns5/Saved/CarlaPack/out/Towns5-1.0.0-carla-0.10.0-Linux.tar.gz
+# -> Unreal/CarlaUnreal/Plugins/Packs/Towns5/Saved/CarlaPack/out/Towns5-1.0.0-carla-<version>-Linux.tar.gz
 ```
 
 Registering the towns takes a second; the cook takes minutes (about 9 for these five, 3.9 GB). Ship the tarball.
@@ -45,7 +27,7 @@ Registering the towns takes a second; the cook takes minutes (about 9 for these 
 On any machine with the CARLA package of that release:
 
 ```sh
-carla-pack install Towns5-1.0.0-carla-0.10.0-Linux.tar.gz --server /opt/carla/Linux
+carla-pack install Towns5-1.0.0-carla-<version>-Linux.tar.gz --server /opt/carla/Linux
 /opt/carla/Linux/CarlaUnreal.sh
 ```
 
@@ -64,7 +46,7 @@ world = client.load_world('Town12')
 ### Requirements
 
 * A CARLA [source build](build_carla.md) with the Unreal Editor (the cooker is the editor binary). `CARLA_UNREAL_ENGINE_PATH` must point at the engine, as for any CARLA build (`--engine` overrides).
-* The __release metadata__ of the CARLA package the pack targets: `<release>-release-metadata.tar.gz` (about 2 MB, the base asset registry). The `package` target writes it next to the package tarball in `Build/Release/Package/`, and it is published alongside the official package (see [Building CARLA on Linux](build_linux_ue5.md#content-packs)). `carla-pack` finds it by itself when it is the only one under this checkout's `Build/`; `--base <file>` otherwise.
+* The __release metadata__ of the CARLA package the pack targets: `<release>-release-metadata.tar.gz` (about 2 MB, the base asset registry). The `package` target writes it next to the package in `Build/Package/`, and it is published alongside the official package __(TODO: confirm the metadata tarball is published with the 1.0.0 release once it is out)__ (see [Building CARLA on Linux](build_linux_ue5.md#content-packs)). `carla-pack` finds it by itself when it is the only one under this checkout's `Build/`; `--base <file>` otherwise. If you configured with a preset, replace `Build` with `Build/<preset>`.
 
 `carla-pack <command> --help` lists every option. Exit codes: `0` ok, `1` error, `2` usage error, `3` "pack not compatible with `--server`" (`inspect`). The tool finds the project from its own location; `--project` overrides.
 
@@ -91,22 +73,22 @@ carla-pack add NewPack --map Unreal/CarlaUnreal/Plugins/Packs/NewPack/Content/Ma
 carla-pack add NewPack --props props.json --vehicles vehicles.json
 carla-pack add NewPack --map Town12                     # existing towns mix in freely
 carla-pack build NewPack
-# -> Unreal/CarlaUnreal/Plugins/Packs/NewPack/Saved/CarlaPack/out/NewPack-1.0.0-carla-0.10.0-Linux.tar.gz
+# -> Unreal/CarlaUnreal/Plugins/Packs/NewPack/Saved/CarlaPack/out/NewPack-1.0.0-carla-<version>-Linux.tar.gz
 ```
 
 #### 1. Create the pack folder
 
 ```sh
-carla-pack init NewPack [--carla-version 0.10.0] [--pack-version 1.0.0] [--description "..."]
+carla-pack init NewPack [--carla-version <version>] [--pack-version 1.0.0] [--description "..."]
 ```
 
 `init` creates `Unreal/CarlaUnreal/Plugins/Packs/NewPack/` with the plugin descriptor, an empty manifest, `Config/PluginSettings.ini` (makes the cook stage the sidecar folders as loose files; `init` and `build` merge into an existing file, your sections and comments stay) and the content folders `Content/{Maps, Maps/OpenDrive, Maps/Nav, Maps/TM, Config, Static, Static/Static, Blueprints}`. `Static/Static/` is the default home for props: it carries CARLA's `Static` semantic label, like the base's `Content/Carla/Static/Static/`. The pack name becomes the mount point `/NewPack/`, so it must start with a letter and contain only letters, digits and `_`, and names taken by the engine or the project (`Game`, `Engine`, `Carla`, `Script`, existing plugins, …) are refused. `--root` keeps packs elsewhere than `Plugins/Packs`.
 
-Do not add the pack to `CarlaUnreal.uproject`: an enabled plugin would be cooked into the CARLA package itself. The `package` target checks this after its cook (`Unreal/Package/CheckNoPackLeak.cmake`) and fails when a `/<Pack>/` package name appears in the base asset registry or a `Plugins/Packs/<Pack>/` file was staged. The same check is `carla-pack check-base <Releases/<release> | AssetRegistry.bin> [--pack NewPack]`.
+Do not add the pack to `CarlaUnreal.uproject`: an enabled plugin would be cooked into the CARLA package itself. The `package` target checks this after its cook (`Unreal/Package/CheckNoPackLeak.cmake`) and fails when a `/<Pack>/` package name appears in the base asset registry or a `Plugins/Packs/<Pack>/` file was staged. The same check is `carla-pack check-base <Releases/<release> | AssetRegistry.bin> [--pack NewPack]`. A pack whose name equals a base content folder can be skipped with `-DCARLA_PACK_LEAK_IGNORE=<Pack>`.
 
 #### 2. Author in the editor
 
-Open the CARLA editor (`cmake --build Build/Release --target launch`). The Carla plugin mounts every pack under `Plugins/Packs/` when the editor starts, so the pack appears in the content browser as __NewPack Content__ (the editor logs `Content pack plugin 'NewPack' mounted for the editor/cooker ...`). In a plain Unreal Editor session without the Carla plugin, or in a commandlet — the Carla plugin deliberately skips commandlets so a base cook never sees pack content — start the editor with `-EnablePlugins=NewPack` after temporarily setting `"ExplicitlyLoaded": false` in `NewPack.uplugin`, and set it back to `true` afterwards:
+Open the CARLA editor (`cmake --build Build --target launch`). The Carla plugin mounts every pack under `Plugins/Packs/` when the editor starts, so the pack appears in the content browser as __NewPack Content__ (the editor logs `Content pack plugin 'NewPack' mounted for the editor/cooker ...`). In a plain Unreal Editor session without the Carla plugin, or in a commandlet — the Carla plugin deliberately skips commandlets so a base cook never sees pack content — start the editor with `-EnablePlugins=NewPack` after temporarily setting `"ExplicitlyLoaded": false` in `NewPack.uplugin`, and set it back to `true` afterwards:
 
 ```sh
 $CARLA_UNREAL_ENGINE_PATH/Engine/Binaries/Linux/UnrealEditor Unreal/CarlaUnreal/CarlaUnreal.uproject -EnablePlugins=NewPack
@@ -234,19 +216,18 @@ RunUAT.sh BuildCookRun -project=<uproject> -nocompileeditor -nop4 -skipbuild -co
 
 * Everything under `/NewPack/` is cooked, plus the project maps the manifest ships in place, which go on `-MapsToCook` (`--maps` adds more entries).
 * `-DLCIncludeEngineContent` is passed by default: it makes the cook include the `/Game` and `/Engine` assets the pack references that the base release did not cook (every CARLA town has some, its vegetation for one) instead of stopping with "Uncooked Engine or Game content ... is being referenced by DLC". `--no-base-content` drops the flag when you want that error, to keep a pack free of base-project assets.
-* Project maps already in the base asset registry are refused before the cook starts.
 * `--dry-run` prints the exact UAT command line and exits (a tarball `--base` is still extracted into the work dir; the pack sources are not touched). `--uat-arg=-Flag` appends flags. `--platform`, `--engine`, `--project`, `--work`, `--staged`, `--asset-registry`, `--skip-cook`: see `--help`.
-* Configuration (`Development` by default): cooked data does not depend on it, `--config` only selects which client configuration the cook is staged for. The same pack mounts on Development, Test and Shipping packages of the same release.
+* Configuration (`Development` by default): cooked data does not depend on it, `--config` only selects which client configuration the cook is staged for.
 
 The staged output is assembled into the pack layout: the containers (`--rename` names them `NewPack-Linux.*` instead of UAT's `NewPackCarlaUnreal-Linux.*`; the server mounts either), the cooked `AssetRegistry.bin`, the loose sidecar files, and the descriptor — your `.uplugin` with `ExplicitlyLoaded` and `CanContainContent` set to `true`, `EnabledByDefault` to `false` and an empty `Modules` list dropped; a pack that declares code modules is refused. The manifest is completed (`base_release`, `engine`, `platform`, one SHA-256 per file).
 
-The same build is available as CMake targets once the package target has produced the base release: `cmake --build Build/Release --target pack-NewPack` (and `pack-NewPack-dry-run`). They differ from the command line in where they read and write: the base is the extracted `Unreal/CarlaUnreal/Releases/<release>` (`CARLA_CONTENT_PACKS_BASE` points them at a downloaded metadata tarball instead), the output goes to `Build/Release/Packs/`, the configuration comes from `CARLA_CONTENT_PACKS_CONFIG` (`Development`), and `CARLA_CONTENT_PACKS` adds targets for packs kept outside `Plugins/Packs`. `content-packs-test` runs the tool's unit tests.
+The same build is available as CMake targets once the package target has produced the base release: `cmake --build Build --target pack-NewPack` (and `pack-NewPack-dry-run`). They differ from the command line in where they read and write: the base is the extracted `Unreal/CarlaUnreal/Releases/<release>` (`CARLA_CONTENT_PACKS_BASE` points them at a downloaded metadata tarball instead), the output goes to `Build/Packs/`, the configuration comes from `CARLA_CONTENT_PACKS_CONFIG` (`Development`), and `CARLA_CONTENT_PACKS` adds targets for packs kept outside `Plugins/Packs`. `<release>` is `CARLA_BASE_RELEASE`, or `carla-<version>-<platform>` (`carla-1.0.0-Linux`) when it is empty; the same name is on the metadata tarball, the package's `BaseRelease` stamp and the pack tarballs. `content-packs-test` runs the tool's unit tests.
 
 ### Checking a pack
 
 ```sh
-carla-pack inspect NewPack-1.0.0-carla-0.10.0-Linux.tar.gz [--json] [--server /path/to/package]
-carla-pack verify  NewPack-1.0.0-carla-0.10.0-Linux.tar.gz
+carla-pack inspect NewPack-1.0.0-carla-<version>-Linux.tar.gz [--json] [--server /path/to/package]
+carla-pack verify  NewPack-1.0.0-carla-<version>-Linux.tar.gz
 ```
 
 `inspect` prints the manifest: maps, catalogs, file sizes; with `--server` it also says whether the pack fits that package (base release and platform), exit code `3` if not. `verify` checks every listed file against its checksum and that no unlisted file is present (`carla-pack.json` is the only implicit one). Both work on the tarball or on an extracted pack folder.
@@ -261,7 +242,7 @@ A map needs three files beside the `.umap`, which the pack ships and the server 
 | `<Map>.bin` | `Maps/Nav/` | The pedestrian navigation mesh. Without it walkers cannot navigate. |
 | `<Map>/` | `Maps/TM/` | Traffic Manager data. Optional. |
 
-The `.xodr` comes from the map's own authoring (RoadRunner exports it alongside the FBX). The `.bin` is produced by `RecastBuilder`, which the build writes to `Build/<preset>/_deps/recastnavigation-build/RecastBuilder/` and a package ships as `Tools/RecastBuilder`.
+The `.xodr` comes from the map's own authoring (RoadRunner exports it alongside the FBX). The `.bin` is produced by `RecastBuilder`, which the build writes to `Build/_deps/recastnavigation-build/RecastBuilder/` and a package ships as `Tools/RecastBuilder`.
 
 !!! Warning
     `Util/DockerUtils/dist/build.sh` looks for `RecastBuilder` and `FBX2OBJ` inside `Util/DockerUtils/dist/`, and nothing in the build copies them there. The import then exits successfully without writing a `.bin`, and walkers silently cannot navigate the map. Copy both binaries into that folder before importing.
@@ -278,7 +259,7 @@ A CARLA package finds packs in three places, all read at start: `<package>/Linux
 ### Drop-in install
 
 ```sh
-carla-pack install NewPack-1.0.0-carla-0.10.0-Linux.tar.gz --server /path/to/carla-package [--force]
+carla-pack install NewPack-1.0.0-carla-<version>-Linux.tar.gz --server /path/to/carla-package [--force]
 ```
 
 verifies every checksum (refusing files the manifest does not list), checks the base release against the server's `BaseRelease` stamp and the platform, then extracts the pack into `<package>/Linux/CarlaUnreal/Packs/NewPack/`. `--server` accepts the package root (the directory that holds `Linux/`), the `Linux/` directory (where `CarlaUnreal.sh` is) or `Linux/CarlaUnreal` itself. `--force` replaces an installed pack of the same name and overrides the base-release check (do not, unless you know the cook settings match). Extracting the tarball into `CarlaUnreal/Packs/` by hand is equivalent, minus the verification.
@@ -371,7 +352,7 @@ The manifest, `carla-pack.json`, is what CARLA reads when it mounts the pack. Th
 ```json
 {
   "name": "NewPack", "version": "1.0.0",
-  "carla_version": "0.10.0", "base_release": "carla-0.10.0-Linux",
+  "carla_version": "<version>", "base_release": "carla-<version>-Linux",
   "engine": { "version": "5.8.0", "commit": "abcdef012345" }, "platform": "Linux",
   "maps": [ { "name": "NewTown", "package": "/NewPack/Maps/NewTown",
               "xodr": "Maps/OpenDrive/NewTown.xodr", "nav": "Maps/Nav/NewTown.bin", "world_partition": true },
@@ -399,7 +380,7 @@ The manifest, `carla-pack.json`, is what CARLA reads when it mounts the pack. Th
 
 ## FAQ
 
-__`base release mismatch: pack built against 'carla-0.10.0-Linux', server is 'carla-0.10.1-Linux'`__
+__`base release mismatch: pack built against 'carla-1.0.0-Linux', server is 'carla-1.0.1-Linux'`__
 
 `carla-pack install` and `inspect` print this; the server's own message, when it refuses the pack at start or from `mount_content_pack`, is `pack '<Pack>' was built against base release '<A>' but this server is '<B>'; rebuild the pack against this release`. The pack was cooked against another CARLA release and the server refuses it — cooked data is only valid against the asset registry it was cooked with. Rebuild the pack with that server's release metadata: `carla-pack build NewPack --base carla-0.10.1-Linux-release-metadata.tar.gz`. `carla-pack inspect <pack> --server <dir>` shows both strings; `<package>/BaseRelease` (and `<package>/Linux/CarlaUnreal/BaseRelease`) holds the server's.
 
@@ -409,7 +390,7 @@ The package was built without content pack support (before the `package` target 
 
 __`no base release found` / `several base releases found`__
 
-`carla-pack` looks for a single `*-release-metadata.tar.gz` under this checkout's `Build/`, or a single extracted `Unreal/CarlaUnreal/Releases/<release>`. Build the package first (`cmake --build Build/Release --target package`), or pass `--base` with the metadata tarball published with the package you target.
+`carla-pack` looks for a single `*-release-metadata.tar.gz` under this checkout's `Build/`, or a single extracted `Unreal/CarlaUnreal/Releases/<release>`. [Build the package](build_linux_ue5.md#build-a-package-with-carla-ue5) first (`cmake --build Build --target package`), or pass `--base` with the metadata tarball published with the package you target.
 
 __`the base release already ships /Game/Carla/Maps/Town10HD_Opt`__
 
