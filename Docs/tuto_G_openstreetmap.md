@@ -25,7 +25,7 @@ __1.__ Navigate to the [OpenStreetMap website](https://www.openstreetmap.org). Y
 __2.__ Search for your desired location and zoom in to a specific area.
 
 ![openstreetmap_view](img/tuto_G_openstreetmap/tuto_g_osm_web.jpg)
-<div style="text-align: right"><i>The <b>Export</b> panel on openstreetmap.org.</i></div>
+<div class="img-caption">The <b>Export</b> panel on openstreetmap.org.</div>
 
 !!! Note
     If you would like to use a map of a large area, for example, Paris, you may consider using CARLA's [large map support](core_map.md#large-maps-and-world-partition).
@@ -39,7 +39,7 @@ __5.__ Select a custom area by dragging the corners of the square area in the vi
 __6.__ Click the _Export_ button in the _Export_ panel and save the map information of the selected area as a `.osm` file.
 
 ![openstreetmap_area](img/tuto_G_openstreetmap/tuto_g_osm_area.jpg)
-<div style="text-align: right"><i>Selecting the area to export with <b>Manually select a different area</b>, then <b>Export</b>.</i></div>
+<div class="img-caption">Selecting the area to export with <b>Manually select a different area</b>, then <b>Export</b>.</div>
 
 ---
 ## Using OpenStreetMap in CARLA
@@ -167,7 +167,7 @@ python3 config.py --osm-path=/path/to/OSM/file
 
 
 ![osm_generated_world](img/tuto_G_openstreetmap/tuto_g_osm_generated_world.webp)
-<div style="text-align: right"><i>A world generated at runtime from an OpenStreetMap extract of about 400 x 400 m: terrain, lane markings, bus stops, street lights and trees come from the OpenDRIVE description alone. The .osm was converted to OpenDRIVE with SUMO netconvert. Generated OpenDRIVE world &middot; sensor.camera.rgb &middot; AutomotiveHDR &middot; sunny afternoon</i></div>
+<div class="img-caption">A world generated at runtime from an OpenStreetMap extract of about 400 x 400 m: terrain, lane markings, bus stops, street lights and trees come from the OpenDRIVE description alone. The .osm was converted to OpenDRIVE with SUMO netconvert. Generated OpenDRIVE world.</div>
 
 ### What the generated map includes
 
@@ -185,11 +185,11 @@ Additional static geometry can be added at runtime with [`world.spawn_custom_mes
 
 ---
 
-Any issues and doubts related with this topic can be posted in the CARLA forum.
+Any issues or doubts about this topic can be posted in [GitHub Discussions](https://github.com/carla-simulator/carla/discussions).
 
 <div class="build-buttons">
 <p>
-<a href="https://github.com/carla-simulator/carla/discussions/" target="_blank" class="btn btn-neutral" title="Go to the CARLA forum">
-CARLA forum</a>
+<a href="https://github.com/carla-simulator/carla/discussions" target="_blank" class="btn btn-neutral" title="Go to CARLA's GitHub Discussions">
+GitHub Discussions</a>
 </p>
 </div>

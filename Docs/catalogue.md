@@ -13,7 +13,7 @@ The CARLA simulator provides a vast library of 3D assets to populate your autono
 The default package ships three drivable maps, plus the empty ones used for OpenDRIVE standalone mode. A source build has every town; the rest reach a package through a [content pack](content_packs.md).
 
 ![maps_overview](img/catalogue/maps/maps_montage.webp)
-<div style="text-align: right"><i>Town10HD_Opt, Mine_01, Town15 and the classic towns Town01_Opt to Town07_Opt, one view each. sensor.camera.rgb &middot; Cinematic &middot; sunny afternoon</i></div>
+<div class="img-caption">Town10HD_Opt, Mine_01, Town15 and the classic towns Town01_Opt to Town07_Opt, one view each.</div>
 
 | Map | In the default package | Summary |
 | --- | --- | --- |
@@ -33,7 +33,7 @@ Load a map by its exact name, which is the file name: `client.load_world('Town10
 CARLA provides a diverse array of vehicles, with high fidelity models of real world cars, trucks and bikes, for replicating traffic in your simulations. Browse and choose the vehicles you like in the [__vehicle catalogue__](catalogue_vehicles.md).
 
 ![vehicles_overview](img/catalogue/vehicles/vehicle_montage.webp)
-<div style="text-align: right"><i>A showcase of some of the vehicle blueprints available in CARLA.</i></div>
+<div class="img-caption">A showcase of some of the vehicle blueprints available in CARLA.</div>
 
 ---
 ## Pedestrians
@@ -41,7 +41,7 @@ CARLA provides a diverse array of vehicles, with high fidelity models of real wo
 CARLA's asset library includes a variety of pedestrians to simulate foot traffic in the 3D environments surrounding your agent. Browse and choose the pedestrians you want in the [__pedestrian catalogue__](catalogue_pedestrians.md).
 
 ![pedestrian_overview](img/catalogue/pedestrians/pedestrians_overview.webp)
-<div style="text-align: right"><i>A showcase of some of the pedestrian blueprints available in CARLA.</i></div>
+<div class="img-caption">A showcase of some of the pedestrian blueprints available in CARLA.</div>
 
 ---
 ## Props
@@ -49,7 +49,7 @@ CARLA's asset library includes a variety of pedestrians to simulate foot traffic
 CARLA's props model the various structures and items you might find on or near roads, such as kiosks, statues, benches, boxes, bins, debris or trash. The props can be placed anywhere in your simulation dynamically during runtime. Browse and choose your props in the [__props catalogue__](catalogue_props.md).
 
 ![props_overview](img/catalogue/props/props_overview.webp)
-<div style="text-align: right"><i>A showcase of some of the prop blueprints available in CARLA.</i></div>
+<div class="img-caption">A showcase of some of the prop blueprints available in CARLA.</div>
 
 ---
 

@@ -49,15 +49,15 @@ Each automotive preset reproduces the look of the camera of a public driving dat
 The same Town10HD_Opt frame through the nine presets, at noon and at night. At night the automotive presets raise the gain and show sensor noise, and `AutomotiveHDR` adds its star-shaped flare around the lamps:
 
 ![camera_profiles_clearnoon](img/camera_postprocess_presets/camera_profiles_clearnoon_town10.webp)
-<div style="text-align: right"><i>The nine camera profiles on the same frame, ClearNoon. Town10HD_Opt &middot; sensor.camera.rgb &middot; nine camera profiles &middot; ClearNoon</i></div>
+<div class="img-caption">The nine camera profiles on the same frame, ClearNoon.</div>
 
 ![camera_profiles_clearnight](img/camera_postprocess_presets/camera_profiles_clearnight_town10.webp)
-<div style="text-align: right"><i>The nine camera profiles on the same frame, ClearNight. Town10HD_Opt &middot; sensor.camera.rgb &middot; nine camera profiles &middot; ClearNight</i></div>
+<div class="img-caption">The nine camera profiles on the same frame, ClearNight.</div>
 
 The same comparison under four weathers in Town10HD_Opt and on a Town15 street, three seconds each:
 
 ![camera_profiles_all](img/camera_postprocess_presets/camera_profiles_all.webp)
-<div style="text-align: right"><i>The nine camera profiles in ClearNoon, HardRainNoon, ClearSunset and ClearNight. Town10HD_Opt and Town15 &middot; sensor.camera.rgb &middot; nine camera profiles &middot; four weathers</i></div>
+<div class="img-caption">The nine camera profiles in ClearNoon, HardRainNoon, ClearSunset and ClearNight.</div>
 
 Each comparison as a still image: Town10HD_Opt [HardRainNoon](img/camera_postprocess_presets/camera_profiles_hardrainnoon_town10.webp), [ClearSunset](img/camera_postprocess_presets/camera_profiles_clearsunset_town10.webp); Town15 [ClearNoon](img/camera_postprocess_presets/camera_profiles_clearnoon_town15.webp), [HardRainNoon](img/camera_postprocess_presets/camera_profiles_hardrainnoon_town15.webp), [ClearSunset](img/camera_postprocess_presets/camera_profiles_clearsunset_town15.webp), [ClearNight](img/camera_postprocess_presets/camera_profiles_clearnight_town15.webp).
 
@@ -96,7 +96,7 @@ The automotive presets add camera artefacts on top of the grading:
 Everything is done from the `BP_Carla_Sky` actor of the map, in the `1_Weather` folder of the *Outliner*: the camera look, the weather, and saving and loading both as presets. Select it and look at its *Details* panel.
 
 ![bp_carla_sky_parameters](img/camera_postprocess_presets/bp_carla_sky_parameters.webp)
-<div style="text-align: right"><i><code>BP_Carla_Sky</code> selected in Town10HD_Opt: <b>Custom Parameters</b> holds the <b>Weather Parameters</b> and the <b>Camera Parameters</b>. Unreal Editor 5.8</i></div>
+<div class="img-caption"><code>BP_Carla_Sky</code> selected in Town10HD_Opt: <b>Custom Parameters</b> holds the <b>Weather Parameters</b> and the <b>Camera Parameters</b>.</div>
 
 __Camera Parameters__ are shortcuts onto the post-process settings of the actor's *Post Process Component*: exposure (`Exposure Min EV`, `Exposure Max EV`, highlight and shadow contrast), camera (`Shutter Speed`, `Exposure Mode`, `ISO`, `Aperture`), depth of field (`Sensor Width`, `Focal Distance`) and color grading (`Temperature`, `Tint`, scene color tint, global saturation, contrast and gamma, `Vignette Intensity`). They edit the same settings as the full *Post Process Volume* category of the component, which has every other parameter; the [Unreal Engine documentation](https://dev.epicgames.com/documentation/en-us/unreal-engine/API/Runtime/Engine/Engine/FPostProcessSettings) describes each one. `ISO` and `Aperture` only have an effect with `Exposure Mode` set to manual.
 
@@ -107,7 +107,7 @@ __Weather Parameters__ are the same fields as [`carla.WeatherParameters`](python
 The __Post Process Profile__ category saves and loads the camera presets, the JSON files in `Content/Carla/Config/PostProcess/`:
 
 ![bp_carla_sky_profile_tool](img/camera_postprocess_presets/bp_carla_sky_profile_tool.webp)
-<div style="text-align: right"><i>The <b>Post Process Profile</b> category of <code>BP_Carla_Sky</code>. Unreal Editor 5.8</i></div>
+<div class="img-caption">The <b>Post Process Profile</b> category of <code>BP_Carla_Sky</code>.</div>
 
 | Control | What it does |
 | --- | --- |
@@ -139,7 +139,7 @@ For a server, pass it on the command line:
 The __Weather Preset__ category does the same for the weather, with two independent kinds of preset stored in `Content/Carla/Config/Weather/Presets.json`: a __time__ preset holds only the sun position (`sunAzimuthAngle`, `sunAltitudeAngle`), and a __condition__ preset holds everything else (cloudiness, precipitation, wind, fog, wetness, scattering). Any time can be combined with any condition.
 
 ![bp_carla_sky_weather_tool](img/camera_postprocess_presets/bp_carla_sky_weather_tool.webp)
-<div style="text-align: right"><i>The <b>Weather Preset</b> category of <code>BP_Carla_Sky</code>. Unreal Editor 5.8</i></div>
+<div class="img-caption">The <b>Weather Preset</b> category of <code>BP_Carla_Sky</code>.</div>
 
 | Control | What it does |
 | --- | --- |

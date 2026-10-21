@@ -18,7 +18,7 @@ The wheel blueprints live next to the vehicle blueprint in `Content/Carla/Bluepr
 *   `L` or `R` — left or right.
 
 ![wheel_blueprints](img/tuto_D_customize_vehicle_suspension/wheel_blueprints.webp)
-<div style="text-align: right"><i>The Audi TT folder: the vehicle blueprint and its four wheel blueprints; the front left wheel is <code>BP_AudiTT_FLW</code>.</i></div>
+<div class="img-caption">The Audi TT folder: the vehicle blueprint and its four wheel blueprints; the front left wheel is <code>BP_AudiTT_FLW</code>.</div>
 
 ---
 ## Suspension parameters
@@ -53,7 +53,7 @@ __1.__ Open the vehicle's folder in the Unreal editor and double-click the wheel
 __2.__ In the __Details__ panel, open the __Suspension__ category and set the values.
 
 ![wheel_suspension](img/tuto_D_customize_vehicle_suspension/wheel_suspension.webp)
-<div style="text-align: right"><i>The Suspension category of <code>BP_AudiTT_FLW</code>; the arrows on the right mark the values that differ from the defaults.</i></div>
+<div class="img-caption">The Suspension category of <code>BP_AudiTT_FLW</code>; the arrows on the right mark the values that differ from the defaults.</div>
 
 __3.__ Repeat for the other three wheels, or set them all at once by selecting the four assets and editing the shared property.
 

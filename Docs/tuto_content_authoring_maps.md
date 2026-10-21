@@ -42,12 +42,12 @@ CARLA offers a procedural map generation tool, which ingests road network data f
 Open RoadRunner and create a new scene. Choose the Road Plan Tool and right click in the workspace to drop the first control point for the road. Click and drag elsewhere in the workspace to extend the road. 
 
 ![roadrunner_draw](img/tuto_content_authoring_maps/drawing_roads.gif)
-<div style="text-align: right"><i>Drawing a road with the Road Plan Tool in RoadRunner.</i></div>
+<div class="img-caption">Drawing a road with the Road Plan Tool in RoadRunner.</div>
 
 For the purpose of this tutorial we use a simple oval road with a junction in the middle. For building more advanced networks please refer to the [__roadrunner documentation__](https://es.mathworks.com/products/roadrunner.html).
 
 ![roadrunner_road](img/tuto_content_authoring_maps/simple_crossroads.png)
-<div style="text-align: right"><i>The tutorial road network: an oval with a junction in the middle.</i></div>
+<div class="img-caption">The tutorial road network: an oval with a junction in the middle.</div>
 
 Once you have made your map in RoadRunner you will be able to export it. Be aware that __the road layout cannot be modified after it has been exported.__ Before exporting, ensure that:
 
@@ -57,12 +57,12 @@ Once you have made your map in RoadRunner you will be able to export it. Be awar
 
 
 ![CheckGeometry](img/shared/check_geometry.jpg)
-<div style="text-align: right"><i>A clean junction (left) and a broken one (right): check every junction before exporting.</i></div>
+<div class="img-caption">A clean junction (left) and a broken one (right): check every junction before exporting.</div>
 
 Once the map is ready, click on the `OpenDRIVE Preview Tool` button to visualize the OpenDRIVE road network and give everything one last check.
 
 ![checkopen](img/shared/check_open.jpg)
-<div style="text-align: right"><i>The OpenDRIVE Preview Tool showing the lanes and junction connections that CARLA will read.</i></div>
+<div class="img-caption">The OpenDRIVE Preview Tool showing the lanes and junction connections that CARLA will read.</div>
 
 !!! note
     _OpenDrive Preview Tool_ makes it easier to test the integrity of the map. If there are any errors with junctions, click on `Maneuver Tool`, and `Rebuild Maneuver Roads`.
@@ -70,7 +70,7 @@ Once the map is ready, click on the `OpenDRIVE Preview Tool` button to visualize
 Once you have created your desired road network, in the RoadRunner menu bar choose `File > Export > Carla (.fbx, .xodr, .rrdata, .xml)` and export to an appropriate location. 
 
 ![roadrunner_exports](img/tuto_content_authoring_maps/roadrunner_exports.png)
-<div style="text-align: right"><i>The files RoadRunner writes with the CARLA export: meshes, textures, the .fbx, the .xodr and the .rrdata.xml.</i></div>
+<div class="img-caption">The files RoadRunner writes with the CARLA export: meshes, textures, the .fbx, the .xodr and the .rrdata.xml.</div>
 
 RoadRunner is the best application for creating custom maps. There are alternatives such as [__OpenStreetMap__](tuto_G_openstreetmap.md) that focus on generating maps from real road maps. 
 
@@ -83,7 +83,7 @@ RoadRunner is a proprietary software that requires MATLAB. Some institutions lik
 The export files CARLA needs are the `.xodr` and the `.fbx`, and both must have the same name. Copy or move them into the `Import` folder at the root of the CARLA source tree.
 
 ![roadrunner_imports](img/tuto_content_authoring_maps/rr_import.png)
-<div style="text-align: right"><i>The .fbx and .xodr copied into the Import folder of the CARLA tree.</i></div>
+<div class="img-caption">The .fbx and .xodr copied into the Import folder of the CARLA tree.</div>
 
 Then run the importer from the root of the CARLA source tree. It runs the editor headless, so it needs the path to the Unreal Engine and the `carla` Python package installed in the interpreter that runs it:
 
@@ -100,7 +100,7 @@ python3 Util/Tools/Import.py --package tutorial
 Open the editor with `cmake --build Build/Release --target launch`. The map is in the new package folder of the content browser, at `Content > tutorial > Maps > <map name>`, with its OpenDRIVE file in the `OpenDrive` subfolder.
 
 ![new_loaded_map](img/tuto_content_authoring_maps/new_map.webp)
-<div style="text-align: right"><i>The folder of an imported map in the Content Browser, here the Sunnyvale digital twin, with its level and OpenDRIVE subfolder. Unreal Editor 5.8</i></div>
+<div class="img-caption">The folder of an imported map in the Content Browser, here the Sunnyvale digital twin, with its level and OpenDRIVE subfolder.</div>
 
 You have now created the road network, the basis of your map.
 
@@ -123,7 +123,7 @@ Create a new folder in some appropriate location using the Unreal content browse
 We will import an FBX file containing the base mesh and the UV map, that we have exported from Blender.
 
 ![farmhouse_blender](img/tuto_content_authoring_maps/farmhouse_in_blender.png)
-<div style="text-align: right"><i>The farmhouse mesh and its UV map in Blender.</i></div>
+<div class="img-caption">The farmhouse mesh and its UV map in Blender.</div>
 
 In the context menu, ensure that in the __Mesh__ section `Import Normals` is selected
  for `Normal Import Method` and that in the __Material__ section that `Do Not Create Material` is selected. Deselect `Import Textures` in the __Materials__ section since we will import them manually. These choices would differ if you wanted to use some textures already embedded in your FBX file. 
@@ -131,7 +131,7 @@ In the context menu, ensure that in the __Mesh__ section `Import Normals` is sel
  Select `Import All`. Once the import has completed, double click on the imported asset that appears in the content browser to edit it. 
 
 ![farmhouse_edit](img/tuto_content_authoring_maps/farmhouse_ue_edit.png)
-<div style="text-align: right"><i>The imported farmhouse in the static mesh editor, before its material is assigned.</i></div>
+<div class="img-caption">The imported farmhouse in the static mesh editor, before its material is assigned.</div>
 
 We should now import the textures, the diffuse texture for the diffuse colors, the normal map and the ORM map. 
 
@@ -140,7 +140,7 @@ Open the ORM map by double clicking and deselect the `sRGB` option, to ensure th
 Right click in the content browser and select `Material` from the menu. A new material will be created in the content browser. Double click to edit it. Shift select the textures you imported and drag them into the material edit window, you will now get 3 new nodes in the material node editor. 
 
 ![material_init](img/tuto_content_authoring_maps/initialise_material.png)
-<div style="text-align: right"><i>A new material with the imported textures dragged into the material editor.</i></div>
+<div class="img-caption">A new material with the imported textures dragged into the material editor.</div>
 
 Now connect the nodes according to the following rules:
 
@@ -153,17 +153,17 @@ Now connect the nodes according to the following rules:
 Your material node graph should now look similar to this: 
 
 ![material_final](img/tuto_content_authoring_maps/material_connected.png)
-<div style="text-align: right"><i>The textures connected: diffuse to Base Color, normal to Normal, ORM channels to Ambient Occlusion, Roughness and Metallic.</i></div>
+<div class="img-caption">The textures connected: diffuse to Base Color, normal to Normal, ORM channels to Ambient Occlusion, Roughness and Metallic.</div>
 
 Save the material, then open the asset again and drag the material into the material slot. Your asset should now be fully textured.
 
 ![textured_asset](img/tuto_content_authoring_maps/textured_asset.png)
-<div style="text-align: right"><i>The farmhouse with its material assigned.</i></div>
+<div class="img-caption">The farmhouse with its material assigned.</div>
 
 Now save the asset and it is ready for use in your map. You can now drag the asset from the content browser and place it into your map:
 
 ![asset_in_map](img/tuto_content_authoring_maps/asset_in_map.png)
-<div style="text-align: right"><i>The farmhouse placed in the map.</i></div>
+<div class="img-caption">The farmhouse placed in the map.</div>
 
 Now save the map with __File > Save Current Level__ (`Ctrl + S`) and it is ready to use. Press __Play__ to run the simulation in the editor.
 
@@ -178,17 +178,17 @@ __2.__ Drag the traffic lights into the scene and position them in the desired l
 __3.__ Adjust the [`trigger volume`][triggerlink] for each traffic light by selecting the _BoxTrigger_ component in the _Details_ panel and adjusting the values in the _Transform_ section. This will determine the traffic light's area of influence.
 
 ![ue_trafficlight](img/tuto_content_authoring_maps/ue_trafficlight.webp)
-<div style="text-align: right"><i>A traffic light selected in Town10HD_Opt (yellow outline); its <code>BoxTrigger</code> component, outlined in the component list, is the trigger volume drawn over the lane in front of it. Town10HD_Opt &middot; Unreal Editor 5.8</i></div>
+<div class="img-caption">A traffic light selected in Town10HD_Opt (yellow outline); its <code>BoxTrigger</code> component, outlined in the component list, is the trigger volume drawn over the lane in front of it.</div>
 
 __4.__ For junctions, drag the `BP_TrafficLightGroup` actor into the level. Assign all the traffic lights in the junction to the traffic light group by adding them to the _Traffic Lights_ array in the _Details_ panel.
 
 ![ue_tl_group](img/tuto_content_authoring_maps/ue_tl_group.webp)
-<div style="text-align: right"><i>A <code>BP_TrafficLightGroup</code> selected: its <b>Traffic Lights</b> array holds the lights of the junction. Town10HD_Opt &middot; Unreal Editor 5.8</i></div>
+<div class="img-caption">A <code>BP_TrafficLightGroup</code> selected: its <b>Traffic Lights</b> array holds the lights of the junction.</div>
 
 __5.__ Traffic light timing is only configurable through the Python API. See the documentation [here](core_actors.md#traffic-signs-and-traffic-lights) for more information.
 
 ![ue_tlsigns_example](img/tuto_content_authoring_maps/ue_tlsigns_example.webp)
-<div style="text-align: right"><i>A Town10HD_Opt junction with its traffic lights and signs placed. Town10HD_Opt &middot; Unreal Editor 5.8</i></div>
+<div class="img-caption">A Town10HD_Opt junction with its traffic lights and signs placed.</div>
 
 [triggerlink]: python_api.md#carla.TrafficSign.trigger_volume
 
@@ -232,7 +232,7 @@ __2. Calibrate the _Map Size (Cm)_ so that it is equal to the actual size of the
 2. Go to the _Details_ panel and press the _z_Size_ button. You will see the value in _Map Size (Cm)_ change.
 
 ![map size](img/tuto_content_authoring_maps/map_size.webp)
-<div style="text-align: right"><i>The <code>RoadPainter</code> actor selected: <b>Map Size (Cm)</b> and the <b>z_Size</b> button that recomputes it. Town10HD_Opt &middot; Unreal Editor 5.8</i></div>
+<div class="img-caption">The <code>RoadPainter</code> actor selected: <b>Map Size (Cm)</b> and the <b>z_Size</b> button that recomputes it.</div>
 
 __3. The render target.__
 
@@ -248,7 +248,7 @@ The road painter paints into the texture set in _Paint > Render Target_, `Render
 CARLA's road materials are instances of `M_RoadMaster`, in `Content > Carla > Static > GenericMaterials > 000_Masters`. Ready-made instances are in `Content > Carla > Static > GenericMaterials > Roads`, such as `MI_Road_Asphalt_A`. Right-click `M_RoadMaster`, select _Create Material Instance_, and rename it `Tutorial_RoadMaster`.
 
 ![master materials](img/tuto_content_authoring_maps/master_material.webp)
-<div style="text-align: right"><i>A material instance of <code>M_RoadMaster</code>, the master the road materials are made from, with its parameter groups. Unreal Editor 5.8</i></div>
+<div class="img-caption">A material instance of <code>M_RoadMaster</code>, the master the road materials are made from, with its parameter groups.</div>
 
 The instance groups its parameters by layer:
 
@@ -277,7 +277,7 @@ Each of the materials we added to `Tutorial_RoadMaster` are applied to the roads
 2. In the _Details_ panel, select the material to work with in the _Mask Color_ dropdown menu.
 
 ![choose material](img/tuto_content_authoring_maps/choose_material.webp)
-<div style="text-align: right"><i><b>Mask Color</b> selects which material the next strokes paint. Town10HD_Opt &middot; Unreal Editor 5.8</i></div>
+<div class="img-caption"><b>Mask Color</b> selects which material the next strokes paint.</div>
 
 __3. Set the brush and stencil parameters.__
 
@@ -292,7 +292,7 @@ There are a variety of stencils to choose from in `GenericMaterials/00_LegacyMat
 
 <br>
 ![materials_roadpaint_typesofbrushes](img/tuto_content_authoring_maps/road_brushes.webp)
-<div style="text-align: right"><i>The brush stencils in <code>GenericMaterials/00_LegacyMaterials/Roads/RoadStencil/Alphas</code>. Unreal Editor 5.8</i></div>
+<div class="img-caption">The brush stencils in <code>GenericMaterials/00_LegacyMaterials/Roads/RoadStencil/Alphas</code>.</div>
 <br>
 __4. Apply each material to the desired portions of the road.__
 
@@ -310,7 +310,7 @@ This section also contains options to erase the applied changes.
 * _Clear material by actor_ — Remove the material closest to the selected actor.
 
 ![materials_roadpaint_brushes](img/tuto_content_authoring_maps/roadpainter_default.webp)
-<div style="text-align: right"><i>The <code>RoadPainter</code> buttons in the Default category of its Details panel. Town10HD_Opt &middot; Unreal Editor 5.8</i></div>
+<div class="img-caption">The <code>RoadPainter</code> buttons in the Default category of its Details panel.</div>
 <br>
 __5. Add decals and meshes.__
 
@@ -325,7 +325,7 @@ You can explore the available decals and meshes in `Content > Carla > Static > F
 - _Decal/Mesh Max Scale_ — Max random scale applied to the decal/mesh.
 
 ![materials_](img/tuto_content_authoring_maps/decals_meshes.webp)
-<div style="text-align: right"><i>The Decals and Meshes categories of the <code>RoadPainter</code>. Unreal Editor 5.8</i></div>
+<div class="img-caption">The Decals and Meshes categories of the <code>RoadPainter</code>.</div>
 <br>
 
 Once you have configured your meshes and decals, spawn them by pressing `Spawn decals` and `Spawn meshes`.
@@ -338,22 +338,22 @@ __6. Experiment to get your desired appearance.__
 Experiment with different materials, textures, settings, decals, and meshes to get your desired look. Below are some example images of how the appearance of the road changes during the process of painting each material.
 
 ![materials_roadpaint_mat00](img/tuto_content_authoring_maps/Materials_Road_MaterialBase.jpg)
-<div style="text-align: right"><i>Example of base road material. Captured on the UE4 version of CARLA.</i></div>
+<div class="img-caption">Example of base road material. Captured on the UE4 version of CARLA.</div>
 <br>
 ![materials_roadpaint_mat01](img/tuto_content_authoring_maps/Materials_Road_Material1.jpg)
-<div style="text-align: right"><i>Example after material 1 is applied. Captured on the UE4 version of CARLA.</i></div>
+<div class="img-caption">Example after material 1 is applied. Captured on the UE4 version of CARLA.</div>
 <br>
 ![materials_roadpaint_mat02](img/tuto_content_authoring_maps/Materials_Road_Material2.jpg)
-<div style="text-align: right"><i>Example after material 2 is applied. Captured on the UE4 version of CARLA.</i></div>
+<div class="img-caption">Example after material 2 is applied. Captured on the UE4 version of CARLA.</div>
 <br>
 ![materials_roadpaint_mat03](img/tuto_content_authoring_maps/Materials_Road_Material3.jpg)
-<div style="text-align: right"><i>Example after material 3 is applied. Captured on the UE4 version of CARLA.</i></div>
+<div class="img-caption">Example after material 3 is applied. Captured on the UE4 version of CARLA.</div>
 <br>
 ![materials_roadpaint_mat03](img/tuto_content_authoring_maps/Materials_Road_Decals.jpg)
-<div style="text-align: right"><i>Example after decals are applied. Captured on the UE4 version of CARLA.</i></div>
+<div class="img-caption">Example after decals are applied. Captured on the UE4 version of CARLA.</div>
 <br>
 ![materials_roadpaint_mat03](img/tuto_content_authoring_maps/Materials_Road_Meshes.jpg)
-<div style="text-align: right"><i>Example after meshes are applied. Captured on the UE4 version of CARLA.</i></div>
+<div class="img-caption">Example after meshes are applied. Captured on the UE4 version of CARLA.</div>
 <br>
 
 ---
@@ -377,7 +377,7 @@ The CARLA content library has a comprehensive set of vegetation blueprints for y
 Navigate to the vegetation folder in the CARLA content library: `Carla > Static > Vegetation`. You will find meshes and blueprints for many types of trees, bushes and shrubs. You can drag these elements into your map from the content browser. 
 
 ![map_materials](img/tuto_content_authoring_maps/add_tree.webp)
-<div style="text-align: right"><i>A tree from <code>Static/Vegetation/Trees</code> (outlined in the Content Browser) dragged into the map. Town10HD_Opt &middot; Unreal Editor 5.8</i></div>
+<div class="img-caption">A tree from <code>Static/Vegetation/Trees</code> (outlined in the Content Browser) dragged into the map.</div>
 
 ### Foliage tool
 
@@ -387,11 +387,11 @@ Drag your desired foliage item into the box labeled `+ Drop Foliage Here`. Set a
 
 ---
 
-If you have any questions about the process, then you can ask in the [forum](https://github.com/carla-simulator/carla/discussions).
+If you have any questions about the process, then you can ask in the [GitHub Discussions](https://github.com/carla-simulator/carla/discussions).
 
 <div class="build-buttons">
 <p>
-<a href="https://github.com/carla-simulator/carla/discussions" target="_blank" class="btn btn-neutral" title="Go to the CARLA forum">
-CARLA forum</a>
+<a href="https://github.com/carla-simulator/carla/discussions" target="_blank" class="btn btn-neutral" title="Go to CARLA's GitHub Discussions">
+GitHub Discussions</a>
 </p>
 </div>

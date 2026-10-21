@@ -40,7 +40,7 @@ __Open the Unreal Engine Editor__ and go to `Content/Carla/Static`. Create a new
 The label is read from the asset's path, at a fixed depth: the folder has to sit directly under `Content/Carla/Static/` (or under `Content/Carla/Static/UE5UseOnly/`), not nested deeper. A content pack uses `/<Pack>/Static/<Tag>/` instead.
 
 ![ue_folder](img/tuto_D_create_semantic_tags/02_ue_folder.webp)
-<div style="text-align: right"><i>Content Browser at Content/Carla/Static with a new tag folder (MyNewTag) next to the existing tag folders.</i></div>
+<div class="img-caption">Content Browser at Content/Carla/Static with a new tag folder (MyNewTag) next to the existing tag folders.</div>
 
 !!! Note
     The UE folder and the tag do not necessarily have to be named the same. However, it is good practice to do so.
@@ -115,7 +115,7 @@ __Open `World.cpp`__ in `PythonAPI/carla/src` and add the new tag at the end of 
 
 ---
 
-Post in the [CARLA forum](https://github.com/carla-simulator/carla/discussions) for any issues, doubts or suggestions.
+Post in the [GitHub Discussions](https://github.com/carla-simulator/carla/discussions) for any issues, doubts or suggestions.
 
 __What's next?__ The [sensors reference](ref_sensors.md) covers the semantic segmentation camera that consumes these tags, and [adding props](content_authoring_props.md) covers importing the meshes to tag.
 

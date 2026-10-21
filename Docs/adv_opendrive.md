@@ -70,10 +70,10 @@ Everything in the world comes from the one file. CARLA builds:
 Everything comes from the `.xodr`, so an error in the file becomes an error in the simulation. Junctions are the usual source, since that is where many lanes meet.
 
 ![opendrive_standalone](img/adv_opendrive/opendrive_town01_overview.webp)
-<div style="text-align: right"><i>A world generated from Town01.xodr: road mesh, ground plane, markings, signals and roadside furniture. Town01.xodr (OpenDRIVE standalone) &middot; sensor.camera.rgb &middot; Cinematic &middot; sunny afternoon</i></div>
+<div class="img-caption">A world generated from Town01.xodr: road mesh, ground plane, markings, signals and roadside furniture.</div>
 
 ![opendrive_junction](img/adv_opendrive/opendrive_town01_junction.webp)
-<div style="text-align: right"><i>A junction of the generated Town01 world: traffic light, lamps, bus stop and sidewalks. Town01.xodr (OpenDRIVE standalone) &middot; sensor.camera.rgb &middot; Cinematic &middot; sunny afternoon</i></div>
+<div class="img-caption">A junction of the generated Town01 world: traffic light, lamps, bus stop and sidewalks.</div>
 
 ---
 
@@ -98,7 +98,7 @@ It is produced in chunks of `max_road_length` rather than as one object, so the 
 Junctions get special treatment. Where lanes meet at different heights, the raw definition makes the higher lane cut through the lower one, and a vehicle crossing the junction climbs or clips. `smooth_junctions` reinterprets those heights so the surfaces join:
 
 ![opendrive_meshissue](img/adv_opendrive/opendrive_meshissue.jpg)
-<div style="text-align: right"><i>Higher lanes blocking the ones below them at a junction. <code>smooth_junctions</code> prevents this.</i></div>
+<div class="img-caption">Higher lanes blocking the ones below them at a junction. <code>smooth_junctions</code> prevents this.</div>
 
 Junction lanes are also widened by `additional_width`, and the outer boundary of the road is walled to `wall_height`, both to keep vehicles on the surface where the definition is least precise.
 

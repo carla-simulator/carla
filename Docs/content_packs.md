@@ -8,7 +8,7 @@ Two roles, two halves of this page:
 * __Installing a pack__ needs only a CARLA package. One command, or one Python call.
 
 ![content_pack_lifecycle](img/content_packs/content_pack_lifecycle.svg)
-<div style="text-align: right"><i>How a pack goes from a CARLA source build to a CARLA package of the same release.</i></div>
+<div class="img-caption">How a pack goes from a CARLA source build to a CARLA package of the same release.</div>
 
 * __[Quick start](#quick-start)__
 * __[Making a pack](#making-a-pack)__

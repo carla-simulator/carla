@@ -1,11 +1,11 @@
 # F.A.Q.
 
-Some of the most common issues regarding CARLA installation and builds are listed here. Some more can be found in the [GitHub issues](https://github.com/carla-simulator/carla/issues?utf8=%E2%9C%93&q=label%3Aquestion+) for the project. In case you don't find your doubt listed here, have a look in the forum and feel free to ask there.
+Some of the most common issues regarding CARLA installation and builds are listed here. Some more can be found in the [GitHub issues](https://github.com/carla-simulator/carla/issues?utf8=%E2%9C%93&q=label%3Aquestion+) for the project. In case you don't find your doubt listed here, have a look in [GitHub Discussions](https://github.com/carla-simulator/carla/discussions) and feel free to ask there.
 
 <div class="build-buttons">
 <p>
-<a href="https://github.com/carla-simulator/carla/discussions/" target="_blank" class="btn btn-neutral" title="Go to the CARLA forum">
-CARLA forum</a>
+<a href="https://github.com/carla-simulator/carla/discussions" target="_blank" class="btn btn-neutral" title="Go to CARLA's GitHub Discussions">
+GitHub Discussions</a>
 </p>
 </div>
 
@@ -90,7 +90,7 @@ CARLA forum</a>
 > * __Check the system.__ The UE5 version of CARLA supports Ubuntu 22.04 and 24.04, and cannot be built on an external disk.
 > * __Check dependencies.__ `bash Util/SetupUtils/InstallPrerequisites.sh --python-path=python3` installs the same prerequisites as `CarlaSetup.sh`.
 >
-> Other specific reasons for a system to show conflicts with CARLA may occur. Please, post these on the [forum](https://github.com/carla-simulator/carla/discussions/) so the team can get to know more about them.
+> Other specific reasons for a system to show conflicts with CARLA may occur. Please, post these on the [GitHub Discussions](https://github.com/carla-simulator/carla/discussions) so the team can get to know more about them.
 
 <!-- ======================================================================= -->
 
@@ -179,7 +179,7 @@ CARLA forum</a>
 > * __Visual Studio 2022.__ See [CMake or compiler errors on Windows](#cmake-or-compiler-errors-on-windows).
 > * __Do not build on an external disk.__ Windows does not give the required permissions there.
 >
-> Other specific reasons for a system to show conflicts with CARLA may occur. Please, post these on the [forum](https://github.com/carla-simulator/carla/discussions/) so the team can get to know more about them.
+> Other specific reasons for a system to show conflicts with CARLA may occur. Please, post these on the [GitHub Discussions](https://github.com/carla-simulator/carla/discussions) so the team can get to know more about them.
 
 <!-- ======================================================================= -->
 
@@ -222,7 +222,7 @@ CARLA forum</a>
 
 ###### Can't run CARLA neither binary nor source build.
 
-> NVIDIA drivers may be outdated, or the GPU may not support Vulkan (Linux) or DirectX 12 (Windows). Update the drivers first. If the issue is still unresolved, take a look at the [forum](https://github.com/carla-simulator/carla/discussions/) and post the specific issue.
+> NVIDIA drivers may be outdated, or the GPU may not support Vulkan (Linux) or DirectX 12 (Windows). Update the drivers first. If the issue is still unresolved, take a look at the [GitHub Discussions](https://github.com/carla-simulator/carla/discussions) and post the specific issue.
 
 <!-- ======================================================================= -->
 

@@ -39,7 +39,7 @@ __1.2__ Right-click the vehicle's skeletal mesh, `SK_<model_of_vehicle>`, and ex
 __2.1__ Open a 3D modelling software and, using the original mesh as reference, model a low density mesh that stays reliable to the original.
 
 ![manual_meshgen](img/tuto_D_generate_colliders/tuto_D_colliders_mesh.jpg)
-<div style="text-align: right"><i>Modelling a low-density collider over the original body mesh, used as reference.</i></div>
+<div class="img-caption">Modelling a low-density collider over the original body mesh, used as reference.</div>
 
 __2.2__ Save the new mesh as FBX. Name the mesh as `SM_sc_<model_of_vehicle>.fbx`. E.g. `SM_sc_audiTT.fbx`.
 
@@ -58,7 +58,7 @@ __4.1__ Go to `Content/Carla/Blueprints/Vehicles/<model_of_vehicle>` and open th
 __4.2__ In the *Components* panel select `CustomCollision`, and in *Details* set its `Static Mesh` property to `SM_sc_<model_of_vehicle>`. The component already uses the `CustomSensorCollision` collision preset: it is invisible, does not take part in physics, and only answers the trace channel of raycast sensors such as the LIDAR.
 
 ![bp_customcollision](img/tuto_D_generate_colliders/bp_customcollision.webp)
-<div style="text-align: right"><i>The <code>CustomCollision</code> component in the Components panel of <code>BP_LincolnMKZ</code>.</i></div>
+<div class="img-caption">The <code>CustomCollision</code> component in the Components panel of <code>BP_LincolnMKZ</code>.</div>
 
 !!! Note
     In the vehicles that ship with CARLA, `CustomCollision` has no mesh assigned. The `SM_sc_<model>` meshes in the vehicle folders are there to be assigned.
@@ -91,7 +91,7 @@ __4.3__ Press `Compile` in the toolbar above and save the changes.
 __Step 1.__ *(in UE)* — Add collision boundaries for the wheels. The steps are detailed in the following video.
 
 [![auto_step01](img/tuto_D_generate_colliders/tuto_D_colliders_01.jpg)](https://www.youtube.com/watch?v=bECnsTw6ehI)
-<div style="text-align: right"><i>Video: adding collision boundaries for the wheels in the Unreal Editor.</i></div>
+<div class="img-caption">Video: adding collision boundaries for the wheels in the Unreal Editor.</div>
 
 ### 2-Export the vehicle as FBX
 
@@ -108,12 +108,12 @@ __Step 4.__ *(in Blender)* — Add convex hull meshes to form the new collision 
 __4.1__ Cut out the bottom parts of the wheels, the side mirrors and the top part of the car's body to create the first boundary using the VHACD tool. Cut out the bottom half of the car to create the second boundary (top part of the car) using the VHACD tool.
 
 [![auto_step03](img/tuto_D_generate_colliders/tuto_D_colliders_03.jpg)](https://www.youtube.com/watch?v=oROkK3OCuOA)
-<div style="text-align: right"><i>Video: creating the body boundary with VHACD in Blender.</i></div>
+<div class="img-caption">Video: creating the body boundary with VHACD in Blender.</div>
 
 __4.2__ Create separate boundaries for side mirrors using the VHACD tool.
 
 [![auto_step04](img/tuto_D_generate_colliders/tuto_D_colliders_04.jpg)](https://www.youtube.com/watch?v=L3upzdC602s)
-<div style="text-align: right"><i>Video: separate boundaries for the side mirrors.</i></div>
+<div class="img-caption">Video: separate boundaries for the side mirrors.</div>
 
 !!! Warning
     Be very careful about naming the object. Each boundary should begin with `UCX_`, and the rest of the name has to be __exactly__ the same as the original mesh.
@@ -125,7 +125,7 @@ __5.1__ Select only the original vehicle and all the newly added objects for col
 __5.2__ In the export menu, check `selected objects` and select only "Mesh".
 
 [![auto_step05](img/tuto_D_generate_colliders/tuto_D_colliders_05.jpg)](https://youtu.be/aJPyskYjzWo)
-<div style="text-align: right"><i>Video: exporting the boundaries from Blender to FBX.</i></div>
+<div class="img-caption">Video: exporting the boundaries from Blender to FBX.</div>
 
 ### 6 to 8-Import collider and define physics
 
@@ -134,7 +134,7 @@ __Step 7.__ *(in UE)* — Import the custom collider into the physics asset for 
 __Step 8.__ *(in UE)* — Create constraints that connect the different joints and define the physics of all parts.
 
 [![auto_step0608](img/tuto_D_generate_colliders/tuto_D_colliders_0608.jpg)](https://www.youtube.com/watch?v=aqFNwAyj2CA)
-<div style="text-align: right"><i>Video: importing the collider into the physics asset and creating the constraints.</i></div>
+<div class="img-caption">Video: importing the collider into the physics asset and creating the constraints.</div>
 
 ---
 ## After replacing a collider
@@ -148,11 +148,11 @@ Two things are easy to miss and both leave the vehicle behaving as if nothing ha
 
 That is a wrap on how to change the default colliders for vehicles in CARLA.
 
-Open CARLA and mess around for a while. If there are any doubts, feel free to post these in the forum.
+Open CARLA and experiment for a while. If any doubts come up, post them in [GitHub Discussions](https://github.com/carla-simulator/carla/discussions).
 
 <div class="build-buttons">
 <p>
-<a href="https://github.com/carla-simulator/carla/discussions/" target="_blank" class="btn btn-neutral" title="Go to the CARLA forum">
-CARLA forum</a>
+<a href="https://github.com/carla-simulator/carla/discussions" target="_blank" class="btn btn-neutral" title="Go to CARLA's GitHub Discussions">
+GitHub Discussions</a>
 </p>
 </div>

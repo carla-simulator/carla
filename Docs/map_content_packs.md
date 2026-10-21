@@ -27,7 +27,7 @@ Once installed, the towns load like any other map: `client.load_world('Town12')`
 | `Town_C` | A city with high-rise blocks, a stadium and an industrial area of warehouses, on flat open land. | ![town_c](img/map_content_packs/town_c.webp) |
 | `Eixample` | A [digital twin](adv_digital_twin.md) of the Eixample district of Barcelona, a World Partition map with the street grid of the district; the buildings are simple untextured volumes. | ![eixample](img/map_content_packs/eixample.webp) |
 
-<div style="text-align: right"><i>One view per map from above its spawn points. sensor.camera.rgb &middot; Cinematic &middot; sunny afternoon</i></div>
+<div class="img-caption">One view per map from above its spawn points.</div>
 
 !!! Note
     Two packs that ship the same town collide on a server. Put each town in one pack only.

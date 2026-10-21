@@ -67,7 +67,7 @@ To look realistic within the simulation, the car needs to have rotating wheels, 
 Import or model the vehicle model mesh in your 3D modeling application. In this guide we will use Autodesk Maya. Ensure that the wheels are separable from the main body. Each wheel must be accessible as a distinct object in the scene.
 
 ![model_in_blender](img/tuto_content_authoring_vehicles/import_model_maya.png)
-<div style="text-align: right"><i>The vehicle model in Maya, with each wheel as a separate object.</i></div>
+<div class="img-caption">The vehicle model in Maya, with each wheel as a separate object.</div>
 
 It is important to ensure that the vehicle faces in the positive X direction, so the hood and windshield should be facing towards positive X. The car should also be oriented such that the floor to roof direction is in the positive Z direction. The wheels should be just grazing the X-Y plane and the origin should be situated where you would expect the vehicle's center of mass to be in the X-Y plane (not in the Z plane).
 
@@ -76,7 +76,7 @@ It is important to ensure that the vehicle faces in the positive X direction, so
 Firstly add a bone to the center of the vehicle, ensure the object is properly centered, the root of the bone should be set at the origin. Name the bone `Vehicle_Base`.
 
 ![armature_init](img/tuto_content_authoring_vehicles/maya_vehicle_base.png)
-<div style="text-align: right"><i>The <code>Vehicle_Base</code> root bone at the origin and one bone per wheel, parented to it.</i></div>
+<div class="img-caption">The <code>Vehicle_Base</code> root bone at the origin and one bone per wheel, parented to it.</div>
 
 From the vehicle base bone and add 4 more child bones (drag the child bones into the vehicle base in the outliner). Each of these bones needs to be located such that the root of the bone coincides with the center of the each wheel. It should be in the center both of the diameter and depth of the wheel It's important that the vehicle is laterally symmetric
 
@@ -101,7 +101,7 @@ The door bones have their bases located at the expected pivot point of the door,
 Change to rigging mode. In the skin section, select *Bind skin* then select the relevant wheel bone (e.g. Wheel_Front_Right) and then shift click on the geometry you want to parent to that bone (e.g. the front right wheel). Repeat this with each wheel.
 
 ![assign_bone](img/tuto_content_authoring_vehicles/assign_wheel_to_bone.png)
-<div style="text-align: right"><i>Binding a wheel's geometry to its bone with <b>Bind skin</b>.</i></div>
+<div class="img-caption">Binding a wheel's geometry to its bone with <b>Bind skin</b>.</div>
 
 Finally, repeat this process with the vehicle base bone and the chassis and bodywork geometry.
 
@@ -110,7 +110,7 @@ Select the Vehicle_Base bone in the outliner and ensure that all Translate and R
 Select the bone for each wheel, press E to activate the rotation widget, rotate the bone around the axis of the wheel and ensure that the wheel geometry turns with the bone, this shows that the geometry is properly bound to the bone.
 
 ![test_armature](img/tuto_content_authoring_vehicles/check_wheel_turning.png)
-<div style="text-align: right"><i>Rotating a wheel bone to check that the wheel geometry turns with it.</i></div>
+<div class="img-caption">Rotating a wheel bone to check that the wheel geometry turns with it.</div>
 
 If you have added bones for the doors, you do not need to bind the door geometry to these since the door geometry must be exported and then imported into Unreal Engine separately.
 
@@ -139,7 +139,7 @@ cmake --build Build/Release --target launch
 ```
 
 ![regenerate_body](img/tuto_content_authoring_vehicles/vehicle_folder.png)
-<div style="text-align: right"><i>A new folder for the vehicle under <code>Content/Carla/Static/Car/4Wheeled</code>.</i></div>
+<div class="img-caption">A new folder for the vehicle under <code>Content/Carla/Static/Car/4Wheeled</code>.</div>
 
 Open the content browser and create a new folder for your vehicle, for example `Carla > Static > Car > 4Wheeled > TutorialVehicle`. Note that the chosen directory will affect the semantic label of the vehicle in the semantic camera and LIDAR sensors. For example, if you are importing a truck model, you should create your directory in `Carla > Static > Truck`.
 
@@ -148,14 +148,14 @@ Drag the FBX containing the vehicle's chassis, bodywork, wheels and bones/armatu
 The importer should create a *Physics Asset* and a *Skeleton*. Select the skeletal mesh edit mode with the option highlighted in red:
 
 ![regenerate_body](img/tuto_content_authoring_vehicles/save_skeletal_mesh.png)
-<div style="text-align: right"><i>The imported skeletal mesh; the button outlined in red opens the skeletal mesh editor.</i></div>
+<div class="img-caption">The imported skeletal mesh; the button outlined in red opens the skeletal mesh editor.</div>
 
 Select *File > Save As* to save a *Skeletal Mesh* file, which you will need later. You may want to add a prefix of *SK_* to identify the file as a skeletal mesh.
 
 Drag the other FBX files you exported from Maya or Blender into the new directory in the content browser. Keep the default import options. To keep the folder more organized, you may want to add separate folders for the glass and lights meshes and drag those parts in separately. These parts should all be imported as *Static Mesh* items. If they appear as a *Skeleton* item, you may need to revise your export process in Maya or Blender and ensure you haven't accidentally included bones or other types of object in the export. You may want to add a prefix of *SM_* to any *Static Mesh* items you import for organization.
 
 ![regenerate_body](img/tuto_content_authoring_vehicles/imported_vehicle.png)
-<div style="text-align: right"><i>The vehicle folder with the skeletal mesh, physics asset, skeleton and the static meshes for glass and lights.</i></div>
+<div class="img-caption">The vehicle folder with the skeletal mesh, physics asset, skeleton and the static meshes for glass and lights.</div>
 
 ### Setting up the physics asset
 
@@ -166,22 +166,22 @@ You should have a *Physics Asset* file in the directory which was created on imp
 __Automatically generated collision mesh__: First, we need to define the collision mesh. This can either be generated automatically by Unreal Engine or modeled manually. To generate it automatically, in the *Tools* panel, normally in the lower right corner of the *Physics asset* editor, in the *Body Creation* section, change the *Primitive Type* to *Single Convex Hull* then press *Generate All Bodies*. This will generate a single convex hull that covers most of the vehicle's body. If your vehicle is a more complicated shape, this might not capture the shape too well. In this case you can try selecting *Multi Convex Hull* as the *Primitive Type*. Press *Generate All Bodies* again and inspect the result. You may also wish to try other options like *Box*, *Capsule* or *Sphere* for the primitive type, these may suit vehicles with simpler geometric profiles.
 
 ![regenerate_body](img/tuto_content_authoring_vehicles/single_convex_hull.png)
-<div style="text-align: right"><i>The physics asset with a collision generated automatically as a single convex hull.</i></div>
+<div class="img-caption">The physics asset with a collision generated automatically as a single convex hull.</div>
 
 __Modelled collision mesh__: If the built-in or automatically generated collision primitives do not fit the vehicle well, model the collision hull by hand. It should be a low poly analogue of the surface profile of your vehicle. High poly collision meshes may degrade physics performance. Generally for vehicles it's best not to include the wheel profile in the collision mesh.
 
 ![regenerate_body](img/tuto_content_authoring_vehicles/collision_mesh.png)
-<div style="text-align: right"><i>A hand-modelled, low-poly collision hull following the body of the vehicle.</i></div>
+<div class="img-caption">A hand-modelled, low-poly collision hull following the body of the vehicle.</div>
 
 To use the manually modeled collision mesh, first import it by dragging it into the vehicle's content folder. Right click on the *Vehicle_Base* item in the *Skeleton Tree* panel of the *Physics Asset* editor and select *Copy Collision From StaticMesh*.
 
 ![regenerate_body](img/tuto_content_authoring_vehicles/copy_collision.png)
-<div style="text-align: right"><i><b>Copy Collision From StaticMesh</b> on <code>Vehicle_Base</code> in the Skeleton Tree of the physics asset.</i></div>
+<div class="img-caption"><b>Copy Collision From StaticMesh</b> on <code>Vehicle_Base</code> in the Skeleton Tree of the physics asset.</div>
 
 Search for the collision mesh that you imported in the dialogue and select it. You should see the outline of the collision mesh in the viewport with a blue/purple hue. In the viewport, select and delete all parts of the automatically generated collision mesh was already there, to leave just the modeled collision mesh.
 
 ![regenerate_body](img/tuto_content_authoring_vehicles/modelled_collision_mesh.png)
-<div style="text-align: right"><i>The modelled collision mesh, in blue, replacing the generated one.</i></div>
+<div class="img-caption">The modelled collision mesh, in blue, replacing the generated one.</div>
 
 __Wheels__:
 
@@ -210,12 +210,12 @@ In the content browser directory where you have your new vehicle asset, right cl
     `CarlaVehicleAnimationInstance` extends the engine's `VehicleAnimationInstance`, which only animates the wheels while the Chaos vehicle simulation moves the vehicle. With the CARLA class the wheels also roll when physics is disabled and the vehicle is moved through the API, during a replay, or when another physics engine drives it. A vehicle whose animation blueprint still uses `VehicleAnimationInstance` keeps working, but its wheels stay still in those cases; change the parent class through *File > Reparent Blueprint*.
 
 ![animation_bp](img/tuto_content_authoring_vehicles/animation_bp.png)
-<div style="text-align: right"><i>Creating the animation blueprint for the vehicle's skeleton.</i></div>
+<div class="img-caption">Creating the animation blueprint for the vehicle's skeleton.</div>
 
 In the content browser search for an existing, completed CARLA vehicle animation blueprint from the library, open the animation blueprint and copy the nodes from it. Go back to your vehicle's animation blueprint and paste the nodes.
 
 ![copy_nodes](img/tuto_content_authoring_vehicles/animation_nodes.png)
-<div style="text-align: right"><i>The AnimGraph nodes copied from an existing CARLA vehicle animation blueprint.</i></div>
+<div class="img-caption">The AnimGraph nodes copied from an existing CARLA vehicle animation blueprint.</div>
 
 Save the animation blueprint.
 
@@ -266,14 +266,14 @@ Click on the mesh in the component's panel:
 - Fill the *Wheel setups* variable with the Chaos vehicle wheels and respective bone names for each of the wheels
 
 ![vehicle_wheel_setups](img/tuto_content_authoring_vehicles/vehicle_wheel_setups.png)
-<div style="text-align: right"><i><b>Wheel Setups</b>: one entry per wheel, with its wheel blueprint and bone name.</i></div>
+<div class="img-caption"><b>Wheel Setups</b>: one entry per wheel, with its wheel blueprint and bone name.</div>
 
 - Add points to the torque curve in the **Engine Setup** according to a reference or model
 - Set the *Steering Curve* according to a reference or model
 - Set the number of gears and gear ratios in the *Transmission setup
 
 ![transmission_setup](img/tuto_content_authoring_vehicles/transmission_setup.png)
-<div style="text-align: right"><i><b>Differential Setup</b> and <b>Transmission Setup</b> of the Chaos vehicle movement component.</i></div>
+<div class="img-caption"><b>Differential Setup</b> and <b>Transmission Setup</b> of the Chaos vehicle movement component.</div>
 
 - In the *Steering Setup*, set the *Steering Type* to *Ackermann*
 - Modify the mass, chassis width and height according to reference

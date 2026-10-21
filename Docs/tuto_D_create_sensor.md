@@ -46,7 +46,7 @@ In order to have a sensor running inside Unreal Engine sending data all the way 
 Python client, we need to cover the whole communication pipeline.
 
 ![Communication pipeline](img/tuto_D_create_sensor/sensor_pipeline.svg)
-<div style="text-align: right"><i>From the sensor actor in the Carla plugin to the Python callback, through the LibCarla serializer and stream.</i></div>
+<div class="img-caption">From the sensor actor in the Carla plugin to the Python callback, through the LibCarla serializer and stream.</div>
 
 Thus we'll need the following classes covering the different steps of the
 pipeline
@@ -79,7 +79,7 @@ reporting status to the client every time a vehicle is inside our trigger box.
 Let's call it _Safe Distance Sensor_.
 
 ![Trigger box](img/tuto_D_create_sensor/safe_distance_sensor.webp)
-<div style="text-align: right"><i>The trigger box of a Safe Distance Sensor around a vehicle, drawn with debug.draw_box. Town10HD_Opt &middot; sensor.camera.rgb &middot; Cinematic &middot; sunny afternoon</i></div>
+<div class="img-caption">The trigger box of a Safe Distance Sensor around a vehicle, drawn with debug.draw_box.</div>
 
 _For the sake of simplicity we're not going to take into account all the edge
 cases, nor it will be implemented in the most efficient way. This is just an

@@ -237,4 +237,4 @@ Check out the [`basic_agent.py`](https://github.com/carla-simulator/carla/blob/u
 
 ---
 
-You can explore the provided agent scripts, expand upon them or use them as a baseline to create your own. If you have any questions about the agents, feel free to post in the [forum](https://github.com/carla-simulator/carla/discussions/).
+You can explore the provided agent scripts, expand upon them or use them as a baseline to create your own. If you have any questions about the agents, feel free to post in the [GitHub Discussions](https://github.com/carla-simulator/carla/discussions).

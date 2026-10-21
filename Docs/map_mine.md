@@ -1,7 +1,7 @@
 # Open-cast mine (Mine_01)
 
 ![mine01](img/catalogue/maps/mine01/mine_map.webp)
-<div style="text-align: right"><i>The open-cast pit of Mine_01 seen from the rim. Mine_01 &middot; sensor.camera.rgb &middot; Cinematic &middot; sunny afternoon</i></div>
+<div class="img-caption">The open-cast pit of Mine_01 seen from the rim.</div>
 
 A model of an open-cast mining environment of the kind used for extracting minerals around the world. The mining area is connected to a parking area by a small network of access roads. The map was contributed by CARLA consortium members and sponsors [Synkrotron](https://www.synkrotron.ai/).
 
@@ -26,7 +26,7 @@ world = client.load_world('Mine_01')
 A loop of two-lane haul roads runs around the pit, with two junctions. Dead-end branches go down to the pit floor and up to the north-east, and a long road leads west to the parking area at the top of the map.
 
 ![mine_roads](img/catalogue/maps/mine01/mine_roads.webp)
-<div style="text-align: right"><i>The road network of Mine_01 from the Map API, with the index of each spawn point. Some spawn points share a location, so their numbers overlap.</i></div>
+<div class="img-caption">The road network of Mine_01 from the Map API, with the index of each spawn point. Some spawn points share a location, so their numbers overlap.</div>
 
 ---
 ## Open pit
@@ -34,7 +34,7 @@ A loop of two-lane haul roads runs around the pit, with two junctions. Dead-end 
 The pit floor is the lowest part of the map, about 65 m below the origin, surrounded by steep walls. The haul road reaches it from the eastern junction.
 
 ![mine_pit](img/catalogue/maps/mine01/mine_pit.webp)
-<div style="text-align: right"><i>The pit floor from the end of the road near spawn point 25. Mine_01 &middot; sensor.camera.rgb &middot; Cinematic &middot; sunny afternoon</i></div>
+<div class="img-caption">The pit floor from the end of the road near spawn point 25.</div>
 
 ---
 ## Haul roads on the rim
@@ -42,7 +42,7 @@ The pit floor is the lowest part of the map, about 65 m below the origin, surrou
 The roads around the pit are wide dirt tracks along the rim, with the mountains around the mine in the distance.
 
 ![mine_rim](img/catalogue/maps/mine01/mine_rim.webp)
-<div style="text-align: right"><i>The rim road from the western junction, near spawn point 21, looking towards the pit. Mine_01 &middot; sensor.camera.rgb &middot; Cinematic &middot; sunny afternoon</i></div>
+<div class="img-caption">The rim road from the western junction, near spawn point 21, looking towards the pit.</div>
 
 ---
 ## Parking area
@@ -50,7 +50,7 @@ The roads around the pit are wide dirt tracks along the rim, with the mountains 
 The western road ends in a flat area at the top of the map, the highest point of the network, where the level places a mining truck.
 
 ![mine_parking](img/catalogue/maps/mine01/mine_parking.webp)
-<div style="text-align: right"><i>The mining truck placed in the parking area by the level. Mine_01 &middot; sensor.camera.rgb &middot; Cinematic &middot; sunny afternoon</i></div>
+<div class="img-caption">The mining truck placed in the parking area by the level.</div>
 
 ---
 ## The mining earth mover
@@ -65,6 +65,6 @@ truck = world.spawn_actor(blueprint, spawn_point)
 ```
 
 ![mine_truck](img/catalogue/maps/mine01/mine_truck.webp)
-<div style="text-align: right"><i><code>vehicle.miningtruck.miningtruck</code> spawned at spawn point 21. Mine_01 &middot; sensor.camera.rgb &middot; Cinematic &middot; sunny afternoon</i></div>
+<div class="img-caption"><code>vehicle.miningtruck.miningtruck</code> spawned at spawn point 21.</div>
 
 See the [vehicle catalogue](catalogue_vehicles.md#mining-earth-mover) for its attributes.

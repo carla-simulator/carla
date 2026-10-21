@@ -16,7 +16,7 @@ In the Unreal Editor, drag the skeletal mesh of the vehicle from the content bro
 Double click the material instance in the content browser to edit its parameters. They are grouped as follows; tick a parameter to override the master's value.
 
 ![mi_carpaint_parameters](img/tuto_content_authoring_vehicles_materials/mi_carpaint_parameters.webp)
-<div style="text-align: right"><i>The parameters of <code>MI_LincolnMKZ_Bodywork</code>, an instance of <code>M_CarPaintMaster</code>.</i></div>
+<div class="img-caption">The parameters of <code>MI_LincolnMKZ_Bodywork</code>, an instance of <code>M_CarPaintMaster</code>.</div>
 
 | Group | Parameters | What they control |
 | --- | --- | --- |
@@ -30,22 +30,22 @@ The renders below change one parameter at a time on the Lincoln MKZ, with the ot
 __Base color__ — the primary color of the bodywork. A vehicle's `color` blueprint attribute overrides it at spawn time, so the instance value is the color a vehicle shows when the client does not set one.
 
 ![paint_base_color](img/tuto_content_authoring_vehicles_materials/paint_base_color.webp)
-<div style="text-align: right"><i>The same instance with three values of <code>Base Color</code>. Town10HD_Opt &middot; editor viewport</i></div>
+<div class="img-caption">The same instance with three values of <code>Base Color</code>.</div>
 
 __Clear coat roughness__ — the clear coat is the glossy layer over the paint. `CC Roughness` scatters its reflection: low values give the usual shiny finish, high values a matte one. Car paint is normally smooth and reflective; reserve high values for matte custom finishes.
 
 ![paint_cc_roughness](img/tuto_content_authoring_vehicles_materials/paint_cc_roughness.webp)
-<div style="text-align: right"><i><code>CC Roughness</code> at 0, 0.4 and 1.0. Town10HD_Opt &middot; editor viewport</i></div>
+<div class="img-caption"><code>CC Roughness</code> at 0, 0.4 and 1.0.</div>
 
 __Metallic__ — metallic paint takes its reflections tinted by the base color; with `Metallic` at 0 the paint behaves like a plain, solid color under the clear coat.
 
 ![paint_metallic](img/tuto_content_authoring_vehicles_materials/paint_metallic.webp)
-<div style="text-align: right"><i><code>Metallic</code> at 1 and 0. Town10HD_Opt &middot; editor viewport</i></div>
+<div class="img-caption"><code>Metallic</code> at 1 and 0.</div>
 
 __Flakes__ — some paints carry flakes of metal or ceramic that add glints under direct light, for a *metallic* or *pearlescent* look. `Flakes Size` scales the flake pattern (at 0 there are none) and `Flakes Color` their tint: keep it close to the base color for a metallic finish, use a contrasting one for a pearlescent finish. The flakes are only visible up close.
 
 ![paint_flakes](img/tuto_content_authoring_vehicles_materials/paint_flakes.webp)
-<div style="text-align: right"><i>Close-up of the front wing with no flakes, white flakes and orange flakes at <code>Flakes Size</code> 60. Town10HD_Opt &middot; editor viewport</i></div>
+<div class="img-caption">Close-up of the front wing with no flakes, white flakes and orange flakes at <code>Flakes Size</code> 60.</div>
 
 __Dirt__ — cars accumulate grease and dust that dull the paint. Enable the `Dirt` switch and assign a `DirtMasks` texture: each of its channels masks one dirt layer, with its own color, opacity and roughness.
 

@@ -233,7 +233,7 @@ spawn_points = world.get_map().get_spawn_points()
 The list is in a fixed order for each map, so tutorials refer to a spawn point by its index (`spawn_points[43]`). On Town10HD_Opt:
 
 ![town10hd_spawn_points](img/shared/town10hd_spawn_points.png)
-<div style="text-align: right"><i>Town10HD_Opt road network with the index and heading of every spawn point. Town10HD_Opt</i></div>
+<div class="img-caption">Town10HD_Opt road network with the index and heading of every spawn point.</div>
 
 To find the indices you want without leaving the simulator, draw them into the world. `draw_string` labels each point and `draw_arrow` shows which way a vehicle spawned there will face:
 
@@ -248,7 +248,7 @@ for i, spawn_point in enumerate(spawn_points):
 ```
 
 ![spawn_points](img/core_map/spawn_points.webp)
-<div style="text-align: right"><i>Spawn points drawn with draw_arrow, labelled with their index. draw_string text only shows in the spectator window, so the numbers here were added to the image. Town10HD_Opt</i></div>
+<div class="img-caption">Spawn points drawn with draw_arrow, labelled with their index. draw_string text only shows in the spectator window, so the numbers here were added to the image.</div>
 
 Both are drawn in the spectator window only, so a rendered server is needed; they do not appear in sensor captures.
 
@@ -262,7 +262,7 @@ vehicle = world.try_spawn_actor(vehicle_bp, spectator.get_transform())
 ```
 
 ![spawn_vehicle](img/core_map/spawn_vehicle.webp)
-<div style="text-align: right"><i>A vehicle spawned at the spectator's transform drops onto the road and settles. Town10HD_Opt</i></div>
+<div class="img-caption">A vehicle spawned at the spectator's transform drops onto the road and settles.</div>
 
 The vehicle takes the spectator's rotation as well as its location, so point the spectator the way the vehicle should face. Spawn from high up and the vehicle falls to the ground; spawn too close to it and the spawn fails on collision. Print the transform to keep the spot:
 

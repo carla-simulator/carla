@@ -150,7 +150,7 @@ world.set_weather(carla.WeatherParameters.WetCloudySunset)
 ```
 
 ![weather_presets](img/core_world/weather_presets_cinematic_town10.webp)
-<div style="text-align: right"><i>The same junction under nine carla.WeatherParameters presets, Cinematic profile.</i></div>
+<div class="img-caption">The same junction under nine carla.WeatherParameters presets, Cinematic profile.</div>
 
 The same presets through the default sensor profile, `AutomotiveHDR`: [Town10HD_Opt](img/core_world/weather_presets_automotivehdr_town10.webp), [Town15](img/core_world/weather_presets_automotivehdr_town15.webp). Town15 with the `Cinematic` profile: [Town15](img/core_world/weather_presets_cinematic_town15.webp).
 
@@ -203,7 +203,7 @@ The override survives weather changes but not `load_world()` or `reload_world()`
 
 ### Lights
 ![vehicle_light_states](img/shared/vehicle_light_states.webp)
-<div style="text-align: right"><i>carla.VehicleLightState combinations on a Lincoln MKZ at night, front (top) and rear (bottom).</i></div>
+<div class="img-caption">carla.VehicleLightState combinations on a Lincoln MKZ at night, front (top) and rear (bottom).</div>
 
 *   __Street lights__ automatically turn on when the simulation enters night mode. The lights are placed by the developers of the map, and accessible as [__carla.Light__](python_api.md#carla.Light) objects. Properties such as color and intensity can be changed at will. The variable __light_state__ of type [__carla.LightState__](python_api.md#carla.LightState) allows setting all of these in one call.  
 Street lights are categorized using their attribute __light_group__, of type [__carla.LightGroup__](python_api.md#carla.LightGroup). This allows to classify lights as street lights, building lights... An instance of [__carla.LightManager__](python_api.md#carla.LightManager) can be retrieved to handle groups of lights in one call.

@@ -116,7 +116,7 @@ while True:
 If you now fly through the map with the spectator, you will see vehicles driving autonomously around the map. Buses and trucks swing wide through junctions, the way a long vehicle has to; `traffic_manager.vehicle_large_vehicle_wide_turn(vehicle, False)` turns that off for one vehicle, and `global_large_vehicle_wide_turn(False)` for all of them.
 
 ![intersection_traffic](img/tuto_G_traffic_manager/tm_traffic_aerial.webp)
-<div style="text-align: right"><i>Aerial view of Traffic Manager autopilot traffic and pedestrians at a junction.</i></div>
+<div class="img-caption">Aerial view of Traffic Manager autopilot traffic and pedestrians at a junction.</div>
 
 ---
 ## Specify routes for vehicles
@@ -177,7 +177,7 @@ while True:
 The debug strings appear in the spectator view of the server window, not in camera sensor images. The plot below shows both routes as the Traffic Manager drives them:
 
 ![routes](img/tuto_G_traffic_manager/set_paths.png)
-<div style="text-align: right"><i>The two set_path() routes on Town10HD_Opt as the Traffic Manager drives them; numbers are spawn point indices, purple ones are in both routes. Town10HD_Opt</i></div>
+<div class="img-caption">The two set_path() routes on Town10HD_Opt as the Traffic Manager drives them; numbers are spawn point indices, purple ones are in both routes.</div>
 
 Now that we have chosen our spawn points and way points, we can now start spawning traffic and setting the spawned vehicles to follow our waypoint lists.
 
@@ -237,7 +237,7 @@ while True:
 With the above code, we have created two converging streams of traffic originating from different parts of the map, guided by the `set_path()` function of the TM. This results in congestion on a road in the center of town. This kind of technique could be used on a larger scale to simulate multiple tricky cases for autonomous vehicles, such as a busy roundabout or highway intersection.
 
 ![converging_paths](img/tuto_G_traffic_manager/converging_paths.webp)
-<div style="text-align: right"><i>The two streams merging, seen from above; each car is ringed in its route colour.</i></div>
+<div class="img-caption">The two streams merging, seen from above; each car is ringed in its route colour.</div>
 
 ---
 ## Cleaning up

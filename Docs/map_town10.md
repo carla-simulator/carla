@@ -1,7 +1,7 @@
 # Town10
 
 ![town_10_slideshow](img/catalogue/maps/town10/town10montage.webp)
-<div style="text-align: right"><i>Town10HD_Opt from the default spectator position, from above, and at street level: the museum, a palm boulevard, the skyscrapers and the town houses. Town10HD_Opt &middot; sensor.camera.rgb &middot; Cinematic &middot; sunny afternoon</i></div>
+<div class="img-caption">Town10HD_Opt from the default spectator position, from above, and at street level: the museum, a palm boulevard, the skyscrapers and the town houses.</div>
 
 Town10 mixes inner-city features: glossy skyscrapers and industrial buildings beside waterfront promenades, apartment blocks, hotels, public buildings and tree-lined boulevards. Its road network has a variety of junction arrangements, lane markings, crossings and signal types.
 
@@ -30,10 +30,10 @@ world = client.load_world('Town10HD_Opt')
 The road network is a grid with several kinds of junctions, among them a 4-way yellow-box junction, dedicated turning lanes and central reservations.
 
 ![town_10_road_network](img/catalogue/maps/town10/town10roadnetwork.webp)
-<div style="text-align: right"><i>Town10HD_Opt from above: the central plaza and the grid of streets around it. Town10HD_Opt &middot; sensor.camera.rgb &middot; Cinematic &middot; sunny afternoon</i></div>
+<div class="img-caption">Town10HD_Opt from above: the central plaza and the grid of streets around it.</div>
 
 ![town_10_roads](img/catalogue/maps/town10/town10roads.webp)
-<div style="text-align: right"><i>The road network of Town10HD_Opt from the Map API, with the index of each spawn point.</i></div>
+<div class="img-caption">The road network of Town10HD_Opt from the Map API, with the index of each spawn point.</div>
 
 ---
 ## Skyscrapers with commercial units
@@ -41,7 +41,7 @@ The road network is a grid with several kinds of junctions, among them a 4-way y
 A multitude of skyscrapers occupy the skyline and city blocks, with commercial units in the ground floors.
 
 ![town_10_skyscrapers](img/catalogue/maps/town10/town10skyscrapers.webp)
-<div style="text-align: right"><i>The skyscrapers of the Town10HD_Opt centre. Town10HD_Opt &middot; sensor.camera.rgb &middot; Cinematic &middot; sunny afternoon</i></div>
+<div class="img-caption">The skyscrapers of the Town10HD_Opt centre.</div>
 
 ---
 ## Tree-lined boulevards
@@ -49,7 +49,7 @@ A multitude of skyscrapers occupy the skyline and city blocks, with commercial u
 Town10 has tree-lined boulevards adorned with tropical vegetation.
 
 ![town_10_tree_boulevard](img/catalogue/maps/town10/town10treeboulevard.webp)
-<div style="text-align: right"><i>A tree-lined boulevard with palm trees, leading to the museum. Town10HD_Opt &middot; sensor.camera.rgb &middot; Cinematic &middot; sunny afternoon</i></div>
+<div class="img-caption">A tree-lined boulevard with palm trees, leading to the museum.</div>
 
 ---
 ## Public buildings with classical architecture
@@ -57,7 +57,7 @@ Town10 has tree-lined boulevards adorned with tropical vegetation.
 The map also includes public buildings with classical architecture styles such as the museum.
 
 ![town_10_museum](img/catalogue/maps/town10/town10museum.webp)
-<div style="text-align: right"><i>The museum, one of the public buildings in classical style. Town10HD_Opt &middot; sensor.camera.rgb &middot; Cinematic &middot; sunny afternoon</i></div>
+<div class="img-caption">The museum, one of the public buildings in classical style.</div>
 
 ---
 ## Residential streets with town houses
@@ -65,4 +65,4 @@ The map also includes public buildings with classical architecture styles such a
 Town houses, similar to those of many North American cities, line some of the streets of Town10, with bus stops, street furniture and kerbside bins along the sidewalks.
 
 ![town_10_town_houses](img/catalogue/maps/town10/town10townhouses.webp)
-<div style="text-align: right"><i>A residential street with town houses and a bus stop, with traffic. Town10HD_Opt &middot; sensor.camera.rgb &middot; Cinematic &middot; sunny afternoon</i></div>
+<div class="img-caption">A residential street with town houses and a bus stop, with traffic.</div>

@@ -2,7 +2,7 @@
 
 Actors in CARLA are the elements that perform actions within the simulation, and they can affect other actors. Actors in CARLA includes vehicles and walkers and also sensors, traffic signs, traffic lights and the spectator. It is crucial to have full understanding on how to operate on them.
 
-This section will cover spawning, destruction, types, and how to manage them. However, the possibilities are almost endless. Experiment, take a look at the [__tutorials__](tutorials.md) in this documentation and share doubts and ideas in the [CARLA forum](https://github.com/carla-simulator/carla/discussions/).
+This section will cover spawning, destruction, types, and how to manage them. However, the possibilities are almost endless. Experiment, take a look at the [__tutorials__](tutorials.md) in this documentation and share doubts and ideas in the [GitHub Discussions](https://github.com/carla-simulator/carla/discussions).
 
 - [__Blueprints__](#blueprints)  
 	- [Managing the blueprint library](#managing-the-blueprint-library)  
@@ -328,7 +328,7 @@ vehicle.set_autopilot(True)
 * __Vehicle lights__ have to be turned on and off by the user. The full set is listed in [__carla.VehicleLightState__](python_api.md#carla.VehicleLightState), but which of them a model actually carries depends on the model: bikes have a front and back position light, most cars have headlights, brake lights and indicators, and the emergency vehicles add sirens. Check a model's lights against the [vehicle catalogue](catalogue_vehicles.md), or turn them on and look.
 
 ![vehicle_light_states](img/shared/vehicle_light_states.webp)
-<div style="text-align: right"><i>carla.VehicleLightState combinations on a Lincoln MKZ at night, front (top) and rear (bottom). Town10HD_Opt &middot; sensor.camera.rgb &middot; Cinematic &middot; ClearNight</i></div>
+<div class="img-caption">carla.VehicleLightState combinations on a Lincoln MKZ at night, front (top) and rear (bottom).</div>
 
 
 The lights of a vehicle can be retrieved and updated anytime using the methods [carla.Vehicle.get_light_state](python_api.md#carla.Vehicle.get_light_state) and [carla.Vehicle.set_light_state](python_api.md#carla.Vehicle.set_light_state). These use binary operations to customize the light setting.
@@ -376,12 +376,12 @@ When a walker reaches the target location, they will automatically walk to anoth
 ---
 That is a wrap as regarding actors in CARLA. The next step takes a closer look into the map, roads and traffic in CARLA.
 
-Keep reading to learn more or visit the forum to post any doubts or suggestions that have come to mind during this reading. 
+Keep reading to learn more, or post any doubts and suggestions in [GitHub Discussions](https://github.com/carla-simulator/carla/discussions). 
 <div text-align: center>
 <div class="build-buttons">
 <p>
-<a href="https://github.com/carla-simulator/carla/discussions/" target="_blank" class="btn btn-neutral" title="CARLA forum">
-CARLA forum</a>
+<a href="https://github.com/carla-simulator/carla/discussions" target="_blank" class="btn btn-neutral" title="Go to CARLA's GitHub Discussions">
+GitHub Discussions</a>
 </p>
 </div>
 <div class="build-buttons">

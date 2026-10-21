@@ -285,7 +285,7 @@ for frame in range(0,360):
 In the __out/__ folder you should now have a sequence of frames with the skeleton overlaid over the camera sensor output. The following animation can be reconstructed by joining the frames into a video:
 
 ![pedestrian_skeleton](img/tuto_G_pedestrian_bones/walker_skeleton.webp)
-<div style="text-align: right"><i>Walker skeleton from get_bones() projected on a camera that follows the pedestrian (finger bones omitted). Town10HD_Opt &middot; sensor.camera.rgb &middot; AutomotiveHDR &middot; sunny afternoon</i></div>
+<div class="img-caption">Walker skeleton from get_bones() projected on a camera that follows the pedestrian (finger bones omitted).</div>
 
 ---
 ## Cleaning up

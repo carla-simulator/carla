@@ -114,7 +114,7 @@ client.set_replayer_time_factor(2.0)
 When the time factor is around __20x__ traffic flow is easily appreciated.
 
 ![flow](img/adv_recorder/recorder_replay_traffic.webp)
-<div style="text-align: right"><i>A replay of Traffic Manager traffic at a junction, seen from above. Town10HD_Opt &middot; sensor.camera.rgb &middot; Cinematic &middot; sunny afternoon</i></div>
+<div class="img-caption">A replay of Traffic Manager traffic at a junction, seen from above.</div>
 
 ---
 ## Recorded file
@@ -209,7 +209,7 @@ client.replay_file("crash.log", 3, 0, 1206)
 In this case, the playback showed this.
 
 ![collision](img/adv_recorder/recorder_collision.webp)
-<div style="text-align: right"><i>A recorded collision; show_recorder_collisions(log, 'v', 'v') lists it (lincoln.mkz against nissan.patrol at t = 5 s). Town10HD_Opt &middot; sensor.camera.rgb &middot; Cinematic &middot; sunny afternoon</i></div>
+<div class="img-caption">A recorded collision; show_recorder_collisions(log, 'v', 'v') lists it (lincoln.mkz against nissan.patrol at t = 5 s).</div>
 
 ### Blocked actors
 
@@ -313,11 +313,11 @@ __`PythonAPI/examples/recorder_replay.py`__ — a fuller replay example, with we
 Every one of them also takes `--host` and `-p`/`--port`.
 
 ---
-Now it is time to experiment for a while. Use the recorder to playback a simulation, trace back events, make changes to see new outcomes. Feel free to say your word in the CARLA forum about this matter.
+Now it is time to experiment for a while. Use the recorder to playback a simulation, trace back events, make changes to see new outcomes. Feel free to share what you find in [GitHub Discussions](https://github.com/carla-simulator/carla/discussions).
 
 <div class="build-buttons">
 <p>
-<a href="https://github.com/carla-simulator/carla/discussions/" target="_blank" class="btn btn-neutral" title="Go to the CARLA forum">
-CARLA forum</a>
+<a href="https://github.com/carla-simulator/carla/discussions" target="_blank" class="btn btn-neutral" title="Go to CARLA's GitHub Discussions">
+GitHub Discussions</a>
 </p>
 </div>

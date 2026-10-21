@@ -64,7 +64,7 @@ Which maps a server has depends on how it was built or packaged, so `get_availab
 ## Spectator navigation
 
 ![town_10_default](img/catalogue/maps/town10/town10default.webp)
-<div style="text-align: right"><i>The spectator view of Town10HD_Opt when the server starts.</i></div>
+<div class="img-caption">The spectator view of Town10HD_Opt when the server starts.</div>
 
 The spectator is a view into the simulation. It opens in a new window when the server runs on a machine with a screen, and it is the quickest way to see the result of what a script does: vehicles appearing, the weather changing, a layer toggled on or off.
 
@@ -169,7 +169,7 @@ The simulation is now running, with traffic driving around the map and a camera 
 ## Choose your map
 
 ![town_10](img/catalogue/maps/town10/town10montage.webp)
-<div style="text-align: right"><i>Town10HD_Opt from the default spectator position, from above, and at street level. Town10HD_Opt &middot; sensor.camera.rgb &middot; Cinematic &middot; sunny afternoon</i></div>
+<div class="img-caption">Town10HD_Opt from the default spectator position, from above, and at street level.</div>
 
 CARLA ships several towns, from a dense city centre to a mining environment. Browse them in the [map catalogue](catalogue.md) and load the one that suits the scenario.
 
@@ -177,7 +177,7 @@ CARLA ships several towns, from a dense city centre to a mining environment. Bro
 ## Choose your vehicles
 
 ![vehicles_overview](img/catalogue/vehicles/vehicle_montage.webp)
-<div style="text-align: right"><i>Montage of several of the available vehicle blueprints: cars, vans, trucks, motorcycles and bicycles.</i></div>
+<div class="img-caption">Montage of several of the available vehicle blueprints: cars, vans, trucks, motorcycles and bicycles.</div>
 
 CARLA provides a library of vehicles to fill a simulation with traffic. Browse the models in the [vehicle catalogue](catalogue_vehicles.md), or list the blueprints from a client:
 

@@ -41,7 +41,7 @@ Some parameters only appear when the switch they depend on is ticked: for exampl
 ### Textures
 
 ![general_textures](img/tuto_A_material_customization/general_textures.webp)
-<div style="text-align: right"><i>The textures of House08.</i></div>
+<div class="img-caption">The textures of House08.</div>
 
 *   __BaseColor__ — the `RGB` channels are the base color. The `Alpha` channel is the color mask: the white areas are the ones __Change Color__ tints. On House08 only the siding panels are white, so the tint never reaches the windows, the roof or the garage.
 *   __AO / Roughness / Metallic / Emissive__ (ORME) — four properties in one texture, one per channel: the `R` channel is ambient occlusion, `G` roughness, `B` metallic, and the `Alpha` channel is the emissive mask (the areas that can glow; on House08 the garage windows, the door and the porch lamps).
@@ -70,7 +70,7 @@ __3. Color Variation__
 *   `Color` — multiplied with the base color in the white area of the BaseColor alpha channel. One texture set gives as many variants as instances.
 
 ![general_color_variation](img/tuto_A_material_customization/general_color_variation.webp)
-<div style="text-align: right"><i>Two instances of House08 in Town02 that differ only in <b>Color</b>. The tint follows the mask: only the siding changes.</i></div>
+<div class="img-caption">Two instances of House08 in Town02 that differ only in <b>Color</b>. The tint follows the mask: only the siding changes.</div>
 
 ![grp_general_color_corrections](img/tuto_A_material_customization/grp_general_color_corrections.webp)
 
@@ -83,7 +83,7 @@ __4. Color Corrections__ — applied to the base color after the tint.
 *   `Tint Color`, `Tint Intensity` — a second tint over the whole material, weighted by `Tint Intensity`.
 
 ![general_color_corrections](img/tuto_A_material_customization/general_color_corrections.webp)
-<div style="text-align: right"><i>The same house with one color correction at a time.</i></div>
+<div class="img-caption">The same house with one color correction at a time.</div>
 
 ![grp_general_surface_corrections](img/tuto_A_material_customization/grp_general_surface_corrections.webp)
 
@@ -118,10 +118,10 @@ where *color* is the flat `EmissiveColor`, or the RGB of the `Emissive` texture 
 *   __Flat color or RGB texture__ — a flat `EmissiveColor` lights the whole emissive mask with one color, which is right for a lamp. For a sign or an advertising panel, which has to glow with its own image, tick `Emissive Texture` and set the `Emissive` texture: its RGB gives the color of each texel, still masked by the ORME alpha channel.
 
 ![general_emissive_sign](img/tuto_A_material_customization/general_emissive_sign.webp)
-<div style="text-align: right"><i>The shop sign of Skysc19 in Town10 with an instance of <code>M_GeneralMaster</code> made from the textures of <code>MI_Shop02_Btt_Details_A</code>. At night the flat <code>EmissiveColor</code> lights the whole band in one color; the <code>Emissive</code> texture lights the letters with their own colors.</i></div>
+<div class="img-caption">The shop sign of Skysc19 in Town10 with an instance of <code>M_GeneralMaster</code> made from the textures of <code>MI_Shop02_Btt_Details_A</code>. At night the flat <code>EmissiveColor</code> lights the whole band in one color; the <code>Emissive</code> texture lights the letters with their own colors.</div>
 
 ![emissive_attenuance](img/tuto_A_material_customization/emissive_attenuance.webp)
-<div style="text-align: right"><i>The same sign with the same <code>EmissiveIntensity</code> and three values of <b>Emissive attenuance</b>.</i></div>
+<div class="img-caption">The same sign with the same <code>EmissiveIntensity</code> and three values of <b>Emissive attenuance</b>.</div>
 
 ---
 ## Simple master
@@ -129,7 +129,7 @@ where *color* is the flat `EmissiveColor`, or the RGB of the `Emissive` texture 
 `M_SimpleMaster` is an ultra-light master for assets that need no color variation, emissive or weather effects, which make the general master heavier: props such as trash cans, cones and speed bumps, poles and vehicle parts. Each channel can come from a texture or from a flat value.
 
 ![simple_textures](img/tuto_A_material_customization/simple_textures.webp)
-<div style="text-align: right"><i>The textures of <code>MI_TrashCan_3</code>: <code>Diffuse</code>, the three channels of the ORME texture, and <code>Normal</code>.</i></div>
+<div class="img-caption">The textures of <code>MI_TrashCan_3</code>: <code>Diffuse</code>, the three channels of the ORME texture, and <code>Normal</code>.</div>
 
 ### Parameters
 
@@ -154,7 +154,7 @@ __4. Color Corrections__ and __5. Surface Corrections__ — the same corrections
 The master also has up to three dirt layers (`Dirt Texture 1-3`, `DirtMasks`, `Dirt Color`, `Dirt Opacity`, `Dirt Roughness`, `Rim Color`), used on some vehicles.
 
 ![simple_example](img/tuto_A_material_customization/simple_example.webp)
-<div style="text-align: right"><i><code>MI_TrashCan_3</code> on a Town10 sidewalk.</i></div>
+<div class="img-caption"><code>MI_TrashCan_3</code> on a Town10 sidewalk.</div>
 
 ---
 ## Glass master
@@ -172,7 +172,7 @@ __1. Plain Glass__ — the flat values used when no texture is set.
 *   `Roughness`, `Metallic`, `Occlusion` — how blurred and how metallic the reflections are.
 
 ![glass_transparency](img/tuto_A_material_customization/glass_transparency.webp)
-<div style="text-align: right"><i>A shop window of Town10 (<code>MI_Glass</code>) with three values of <b>Transparency</b>.</i></div>
+<div class="img-caption">A shop window of Town10 (<code>MI_Glass</code>) with three values of <b>Transparency</b>.</div>
 
 ![grp_glass_texture_options](img/tuto_A_material_customization/grp_glass_texture_options_on.webp)
 
@@ -194,7 +194,7 @@ __API Values__ — `EmissiveColor` times `Intensity` divided by `Emissive attenu
 The rooms behind building windows are not modelled. A separate mesh slot behind the glass uses an instance of `M_FakeInterior`, which samples a cubemap of a room so that the room shifts with the view angle, and the same material makes the windows glow at night. It reads two cubemaps, `FakeInterior` (the room by day) and `FakeInteriorEmissive` (its lights by night), instead of 2D textures.
 
 ![fake_interior](img/tuto_A_material_customization/fake_interior.webp)
-<div style="text-align: right"><i>Skysc19 in Town10, whose windows use <code>MI_Skysc19_FakeInterior_A</code>: by day, at night as CARLA lights it, and at night with <code>On/Off</code> forced to 0.</i></div>
+<div class="img-caption">Skysc19 in Town10, whose windows use <code>MI_Skysc19_FakeInterior_A</code>: by day, at night as CARLA lights it, and at night with <code>On/Off</code> forced to 0.</div>
 
 ### Parameters
 
@@ -232,10 +232,10 @@ To make a new building light up at night, give its window slot an instance of `M
 `M_DecalMaster` is the master of the decals in `Content/Carla/Static/FX/Decals`: potholes, cracks, oil, manholes, tar snakes and fallen leaves. Place a __Decal__ actor, assign a decal instance and scale the actor to set the projected area. The decal paints over whatever surface is below it.
 
 ![decal_textures](img/tuto_A_material_customization/decal_textures.webp)
-<div style="text-align: right"><i>The textures of <code>DI_PotHole01</code>: the alpha channel of the Difuse texture is the opacity, so only the hole is painted.</i></div>
+<div class="img-caption">The textures of <code>DI_PotHole01</code>: the alpha channel of the Difuse texture is the opacity, so only the hole is painted.</div>
 
 ![decal_example](img/tuto_A_material_customization/decal_example.webp)
-<div style="text-align: right"><i><code>DI_PotHole01</code> on a Town10 road, and the same road with the decal actor hidden.</i></div>
+<div class="img-caption"><code>DI_PotHole01</code> on a Town10 road, and the same road with the decal actor hidden.</div>
 
 ### Parameters
 
@@ -272,10 +272,10 @@ __2. UVs__, __4. Color Corrections__, __5. Surface Corrections__ and __8. Wet Su
 `M_RoadMaster` is the master of the road surfaces and lane markings. It builds the asphalt from a base layer plus optional layers of rubble, oil, grime, large-scale variation, patches, cracks and wheel marks, each with its own `Do ...` switch, and it reacts to the weather with puddles and wetness. Painting roads with it is covered in [Content authoring - maps](tuto_content_authoring_maps.md#prepare-the-master-material).
 
 ![road_textures](img/tuto_A_material_customization/road_textures.webp)
-<div style="text-align: right"><i>Some of the textures of <code>MI_Road_Asphalt_B</code>, the asphalt of Town10.</i></div>
+<div class="img-caption">Some of the textures of <code>MI_Road_Asphalt_B</code>, the asphalt of Town10.</div>
 
 ![road_wet](img/tuto_A_material_customization/road_wet.webp)
-<div style="text-align: right"><i>The same Town10 street dry and with the <code>WetNoon</code> weather preset, <code>precipitation_deposits</code> 40 and <code>wetness</code> 80. The road (<code>M_RoadMaster</code>) and the sidewalks (<code>M_GeneralMaster</code>) take the puddles and the darkening from the weather.</i></div>
+<div class="img-caption">The same Town10 street dry and with the <code>WetNoon</code> weather preset, <code>precipitation_deposits</code> 40 and <code>wetness</code> 80. The road (<code>M_RoadMaster</code>) and the sidewalks (<code>M_GeneralMaster</code>) take the puddles and the darkening from the weather.</div>
 
 ### Parameters
 
@@ -317,10 +317,10 @@ __91- Puddle__, __0b Decals__, __99 -LaneMarking__ — `Do Puddle` adds the mate
 `M_VegetationMaster` is the master of trees, palms, bushes and grass. It is two-sided and masked, it moves with the wind of the weather, and it can vary its color across a forest.
 
 ![vegetation_textures](img/tuto_A_material_customization/vegetation_textures.webp)
-<div style="text-align: right"><i>The textures of <code>MI_Palm_Leaf</code>.</i></div>
+<div class="img-caption">The textures of <code>MI_Palm_Leaf</code>.</div>
 
 ![vegetation_example](img/tuto_A_material_customization/vegetation_example.webp)
-<div style="text-align: right"><i>A palm of Town10.</i></div>
+<div class="img-caption">A palm of Town10.</div>
 
 ### Parameters
 

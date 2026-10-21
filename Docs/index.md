@@ -9,10 +9,10 @@ This home page is an index of the documentation. Read it in any order; for a new
 * __Start using CARLA:__ The [Foundations](foundations.md) section is an introduction to the most important concepts in CARLA and the [First Steps tutorial](tuto_first_steps.md) shows you how to get started creating simulations.
 * __Check the API:__ there is a handy [Python API reference](python_api.md) to look up the classes and methods available.
 
-The CARLA forums are available to connect with other CARLA community members for support.
+CARLA's GitHub Discussions are the place to ask questions and connect with other users.
 <div class="build-buttons">
-<a href="https://github.com/carla-simulator/carla/discussions/" target="_blank" class="btn btn-neutral" title="Go to the CARLA forum">
-CARLA forum</a>
+<a href="https://github.com/carla-simulator/carla/discussions" target="_blank" class="btn btn-neutral" title="Go to CARLA's GitHub Discussions">
+GitHub Discussions</a>
 </div>
 
 <br>

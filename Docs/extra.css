@@ -274,3 +274,17 @@ table tbody td{
 	text-align: center;
 	border-radius: 5px;
 }
+
+/************************* FIGURE CAPTIONS **************************/
+
+.img-caption {
+	text-align: center;
+	font-style: italic;
+	margin-bottom: 24px;
+}
+
+/* An image sits alone in a paragraph with a 24px bottom margin; pull the
+   caption back up so it reads as part of the figure. */
+p:has(> img) + .img-caption {
+	margin-top: -18px;
+}

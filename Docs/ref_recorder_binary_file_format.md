@@ -25,7 +25,7 @@ In the next image representing the file format, we can get a quick view of all t
 information. Each part that is visualized in the image will be explained in the following sections:
 
 ![Recorder file layout](img/ref_recorder_binary_file_format/recorder_file_layout.svg)
-<div style="text-align: right"><i>Recorder .log layout: info header, frames, packet header, and the 25 packet ids in the order each frame writes them.</i></div>
+<div class="img-caption">Recorder .log layout: info header, frames, packet header, and the 25 packet ids in the order each frame writes them.</div>
 
 In summary, the file format has a small header with general info (version, magic string, date and the map used) and a collection of packets of different types (25 types at the time of writing, and the list keeps growing). Every packet starts with the same two fields, its id (`uint8`) and the size of its payload in bytes (`uint32`), so a reader can skip a packet it does not know.
 
@@ -472,6 +472,6 @@ The order on disk is not the order `show_recorder_file_info` prints, since the q
 The file starts with the __info header__, followed by the frames one after another. Each frame repeats the same packet sequence, so what changes from one frame to the next is the number of records inside each packet.
 
 ![Recorder frames example](img/ref_recorder_binary_file_format/recorder_frames_example.svg)
-<div style="text-align: right"><i>Four consecutive frames of a recording: the event packets fill only in the frame where something happens.</i></div>
+<div class="img-caption">Four consecutive frames of a recording: the event packets fill only in the frame where something happens.</div>
 
 In __frame 1__ three actors are spawned and one of them is attached to another, so `EventAdd` and `EventParent` hold records. In __frame 2__ nothing happens and every event packet is empty. In __frame 3__ two vehicles collide, which adds a `Collision` record. In __frame 4__ the three actors are destroyed.

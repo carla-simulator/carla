@@ -3,7 +3,7 @@
 CARLA runs as a server that holds the simulation, and one or more clients that ask it for information and tell it what to change. This page covers the two objects a client works through — the client itself and the world — and how the two sides keep time with each other.
 
 ![client_server_architecture](img/shared/client_server_architecture.svg)
-<div style="text-align: right"><i>CARLA client-server architecture: clients, Traffic Manager, server components and default ports.</i></div>
+<div class="img-caption">CARLA client-server architecture: clients, Traffic Manager, server components and default ports.</div>
 
 Everything here goes through the [__Python API__](python_api.md). Installing it is covered in [Quick start](start_quickstart.md) for a package, and in [Building CARLA](build_carla.md) for a source build. Every script starts by importing it:
 
@@ -70,7 +70,7 @@ blueprint_library = world.get_blueprint_library()
 ## Synchronous and asynchronous mode
 
 ![sync_async_modes](img/shared/sync_async_modes.svg)
-<div style="text-align: right"><i>Asynchronous vs synchronous mode, and physics substeps inside one fixed time step.</i></div>
+<div class="img-caption">Asynchronous vs synchronous mode, and physics substeps inside one fixed time step.</div>
 
 The mode decides who controls time. In __asynchronous mode__, the default, the server simulates as fast as it can and handles client requests as they arrive. In __synchronous mode__ the client takes the reins: the server computes nothing until the client calls `world.tick()`, and then advances exactly one step.
 

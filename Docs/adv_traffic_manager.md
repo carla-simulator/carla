@@ -34,7 +34,7 @@
 The Traffic Manager (TM) is the module that controls vehicles in autopilot mode in a simulation. Its goal is to populate a simulation with realistic urban traffic conditions. Users can customize some behaviors, for example, to set specific learning circumstances.
 
 ![tm_traffic_aerial](img/tuto_G_traffic_manager/tm_traffic_aerial.webp)
-<div style="text-align: right"><i>Aerial view of Traffic Manager autopilot traffic and pedestrians at a junction.</i></div>
+<div class="img-caption">Aerial view of Traffic Manager autopilot traffic and pedestrians at a junction.</div>
 
 ### Structured design
 
@@ -228,7 +228,7 @@ To modify the behavior of hybrid mode, use the following two parameters:
 The clip below shows how physics is enabled and disabled when hybrid mode is active. The __hero vehicle__ is tagged with a __red square__. Vehicles with __physics disabled__ are tagged with a __blue square__. When inside the hero vehicle's radius of influence, __physics are enabled and the tag becomes green__.
 
 ![Welcome to CARLA](img/adv_traffic_manager/tm_hybrid_physics.webp)
-<div style="text-align: right"><i>Hybrid physics mode seen from above: inside the radius around the hero vehicle physics is on (green), outside it is off (blue).</i></div>
+<div class="img-caption">Hybrid physics mode seen from above: inside the radius around the hero vehicle physics is on (green), outside it is off (blue).</div>
 
 
 ---
@@ -358,7 +358,7 @@ If more than one TM is set to synchronous mode, synchrony will fail. Follow thes
 ### Overview
 
 ![Architecture](img/adv_traffic_manager/tm_architecture.svg)
-<div style="text-align: right"><i>Traffic Manager components and the five stages of its control loop, in the order <code>TrafficManagerLocal</code> runs them each step.</i></div>
+<div class="img-caption">Traffic Manager components and the five stages of its control loop, in the order <code>TrafficManagerLocal</code> runs them each step.</div>
 
 The above diagram is a representation of the internal architecture of the TM. The C++ code for each component can be found in `LibCarla/source/carla/trafficmanager`. Each component is explained in detail in the following sections. A simplified overview of the logic is as follows:
 
@@ -567,4 +567,4 @@ __Related .cpp files:__ `VehicleLightStage.cpp`.
 
 ---
 
-If you have any questions about the TM, ask in the [forum](https://github.com/carla-simulator/carla/discussions).
+If you have any questions about the TM, ask in the [GitHub Discussions](https://github.com/carla-simulator/carla/discussions).
