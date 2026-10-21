@@ -39,3 +39,89 @@ $(document).ready(function () {
         if (linkElement) { linkElement.setAttribute('href', result.url); }
     });
 });
+
+// Copy button on every code block: the readthedocs theme has none and the
+// markdown pipeline emits a plain <pre><code>, so it is added from the DOM.
+function carlaCopyText(text) {
+    if (navigator.clipboard && window.isSecureContext) {
+        return navigator.clipboard.writeText(text).then(function () { return true; },
+                                                        function () { return false; });
+    }
+    // file:// and plain http: have no clipboard API; fall back to a textarea.
+    var area = document.createElement("textarea");
+    area.value = text;
+    area.style.position = "fixed";
+    area.style.opacity = "0";
+    document.body.appendChild(area);
+    area.select();
+    var ok = false;
+    try { ok = document.execCommand("copy"); } catch (e) { ok = false; }
+    document.body.removeChild(area);
+    return Promise.resolve(ok);
+}
+
+$(document).ready(function () {
+    var blocks = document.querySelectorAll(".rst-content pre > code");
+    Array.prototype.forEach.call(blocks, function (code) {
+        // The API snippets carry their own copy button.
+        if (code.closest(".SnipetContent")) { return; }
+        var pre = code.parentNode;
+        var wrapper = document.createElement("div");
+        wrapper.className = "code-block";
+        pre.parentNode.insertBefore(wrapper, pre);
+        wrapper.appendChild(pre);
+
+        // FontAwesome 4.7 ships with the theme, so the glyph costs nothing.
+        var button = document.createElement("button");
+        button.type = "button";
+        button.className = "code-copy";
+        button.title = "Copy to clipboard";
+        button.setAttribute("aria-label", "Copy to clipboard");
+        var icon = document.createElement("span");
+        icon.className = "fa fa-clipboard";
+        button.appendChild(icon);
+        button.addEventListener("click", function () {
+            carlaCopyText(code.innerText).then(function (ok) {
+                icon.className = ok ? "fa fa-check" : "fa fa-times";
+                setTimeout(function () { icon.className = "fa fa-clipboard"; }, 1500);
+            });
+        });
+        wrapper.appendChild(button);
+    });
+});
+
+// Click an image to see it full size: the pages are ~800px wide while the
+// images are up to 1920px, so the detail is there but never shown.
+$(document).ready(function () {
+    var overlay = null;
+
+    function closeOverlay() {
+        if (overlay) { overlay.remove(); overlay = null; }
+    }
+
+    function openOverlay(src, alt) {
+        closeOverlay();
+        overlay = document.createElement("div");
+        overlay.className = "img-lightbox";
+        var big = document.createElement("img");
+        big.src = src;
+        big.alt = alt || "";
+        overlay.appendChild(big);
+        overlay.addEventListener("click", closeOverlay);
+        document.body.appendChild(overlay);
+    }
+
+    document.addEventListener("keydown", function (event) {
+        if (event.key === "Escape") { closeOverlay(); }
+    });
+
+    var images = document.querySelectorAll(".rst-content img");
+    Array.prototype.forEach.call(images, function (image) {
+        // Leave the badges and anything that is already a link alone.
+        if (image.closest("a") || image.src.indexOf("/img/btn/") !== -1) { return; }
+        image.classList.add("zoomable");
+        image.addEventListener("click", function () {
+            openOverlay(image.src, image.alt);
+        });
+    });
+});
