@@ -4271,7 +4271,7 @@ Returns the road this waypoint samples.
 
 ## carla.WeatherParameters<a name="carla.WeatherParameters"></a>
 This class defines objects containing lighting and weather specifications that can later be applied in [carla.World](#carla.World). So far, these conditions only intervene with [sensor.camera.rgb](ref_sensors.md#rgb-camera). They neither affect the actor's physics nor other sensors.        
-  Each of these parameters acts indepently from the rest. Increasing the rainfall will not automatically create puddles nor change the road's humidity. That makes for a better customization but means that realistic conditions need to be scripted. However an example of dynamic weather conditions working realistically can be found [here](https://github.com/carla-simulator/carla/blob/ue58-dev/PythonAPI/examples/dynamic_weather.py).  
+  Each of these parameters acts indepently from the rest. Increasing the rainfall will not automatically create puddles nor change the road's humidity. That makes for a better customization but means that realistic conditions need to be scripted. However an example of dynamic weather conditions working realistically can be found [here](https://github.com/carla-simulator/carla/blob/ue58-dev/PythonAPI/examples/dynamic_day_night_weather_cycle.py).  
 
 ### Instance Variables
 - <a name="carla.WeatherParameters.cloudiness"></a>**<font color="#f8805a">cloudiness</font>** (_float_)  
