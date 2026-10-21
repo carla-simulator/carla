@@ -54,7 +54,7 @@ Every tutorial in the documentation, grouped by what it is for.
 - [__Create semantic tags__](tuto_D_create_semantic_tags.md) — Define a new tag for semantic segmentation.
 - [__Customize vehicle suspension__](tuto_D_customize_vehicle_suspension.md) — Tune the Chaos suspension of a vehicle.
 - [__Generate detailed colliders__](tuto_D_generate_colliders.md) — Build accurate collision meshes for vehicles.
-- [__Upgrade the content package__](tuto_D_contribute_assets.md) — Point the repository at a newer build of the content.
+- [__Update the content__](tuto_D_contribute_assets.md) — Work with the `carla-content` repository the assets live in.
 
 ---
 ## Video tutorials

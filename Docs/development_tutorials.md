@@ -3,7 +3,7 @@
 CARLA is open source and designed to be highly extensible. This  allows users to create custom functionality or content to suit specialized applications or specific needs. The following tutorials detail how to achieve specific development aims with the CARLA codebase:  
 
 - [__Make release__](tuto_D_make_release.md)
-- [__Upgrading content__](tuto_D_contribute_assets.md)
+- [__Updating the content__](tuto_D_contribute_assets.md)
 - [__Create semantic tags__](tuto_D_create_semantic_tags.md)
 - [__Create new sensor__](tuto_D_create_sensor.md)
 - [__Running the tests__](testing.md)
@@ -14,9 +14,9 @@ CARLA is open source and designed to be highly extensible. This  allows users to
 
 If you want to develop your own fork of CARLA and publish releases of your code, follow [__this guide__](tuto_D_make_release.md).
 
-## Upgrading content
+## Updating the content
 
-Our content resides on a separate Git LFS repository. As part of our build system, we generate and upload a package containing the latest version of this content tagged with the current date and commit. Regularly, we upgrade the CARLA repository with a link to the latest version of the content package. Please follow [__these instructions__](tuto_D_contribute_assets.md) to upgrade content.
+The maps, vehicles, walkers and props live in a Git LFS repository of their own, `carla-content`, with a content branch for each code branch. [__Updating the content__](tuto_D_contribute_assets.md) covers how a checkout gets it, how to update it, and how a content change is merged.
 
 ## Create semantic tags
 
