@@ -70,7 +70,7 @@ __3.3. Go to `GetTagFromString`__, still in `Tagger.cpp`, and add the matching l
 ```
 
 !!! Warning
-    `GetTagFromName` builds its lookup table by walking the enum only as far as `CityObjectLabel::Rock`. A label added after `Rock` is never put in that table and will not round-trip. Either insert the new label before `Rock`, or raise the loop bound in `GetTagFromName` to the last enum value, `crp::CityObjectLabel::MyNewTag` in this example.
+    `GetTagFromName` builds its lookup table by walking the enum only as far as `CityObjectLabel::Rock`. A label added after `Rock` is never put in that table, so it cannot be looked up by name. Either insert the new label before `Rock`, or raise the loop bound in `GetTagFromName` to the last enum value, `crp::CityObjectLabel::MyNewTag` in this example.
 
 ### 4. Define a color code
 

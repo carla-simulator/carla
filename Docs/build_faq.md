@@ -57,7 +57,7 @@ CARLA forum</a>
 
 ###### Expected disk space to build CARLA.
 
-> Plan for about 225 GB with the Unreal Engine 5.8 fork, plus about 30 GB for each package you build. Setting `CARLA_UNREAL_ENGINE_PATH` to an existing build of the engine saves the engine's share. See the [Linux](build_linux_ue5.md) and [Windows](build_windows_ue5.md) build guides.
+> Plan for about 225 GB with the Unreal Engine 5.8 fork, plus about 30 GB for each package you build. Setting `CARLA_UNREAL_ENGINE_PATH` to an existing build of the engine skips the engine build and its disk space. See the [Linux](build_linux_ue5.md) and [Windows](build_windows_ue5.md) build guides.
 
 <!-- ======================================================================= -->
 
@@ -86,7 +86,7 @@ CARLA forum</a>
 > * __Use the CARLA fork of Unreal Engine 5.8.__ CARLA does not build against a stock engine. Check that `CARLA_UNREAL_ENGINE_PATH` points at a build of the `ue58-dev-carla` branch of the fork, and that its editor starts on its own.
 > * __Set `CARLA_UNREAL_ENGINE_PATH` for every shell.__ Add `export CARLA_UNREAL_ENGINE_PATH=<path_to_the_engine>` to `~/.bashrc` or `~/.profile`, otherwise it has to be set in every new terminal.
 > * __Download the content.__ The server will not run without it. The content repository has to be cloned into `Unreal/CarlaUnreal/Content/Carla`.
-> * __Set the DLSS SDK.__ The CARLA configure looks for the NVIDIA DLSS SDK in `DLSS_SDK`, then in `~/SDKs/DLSS` (where `CarlaSetup.sh` fetches it), clones it there if it is missing, and stops with "Could not resolve the NVIDIA DLSS SDK" if that fails. Configure with `-DCARLA_DLSS_SDK_PATH=disabled` to build CARLA without it. A build of the project outside CARLA's CMake fails with "DLSS_SDK is not set" unless `DLSS_SDK` points at the SDK, or is `disabled` to opt out.
+> * __Set the DLSS SDK.__ The CMake configure step looks for the NVIDIA DLSS SDK in `DLSS_SDK`, then in `~/SDKs/DLSS` (where `CarlaSetup.sh` fetches it), clones it there if it is missing, and stops with "Could not resolve the NVIDIA DLSS SDK" if that fails. Configure with `-DCARLA_DLSS_SDK_PATH=disabled` to build CARLA without it. A build of the project outside CARLA's CMake fails with "DLSS_SDK is not set" unless `DLSS_SDK` points at the SDK, or is `disabled` to opt out.
 > * __Configure before building.__ Run `cmake -G Ninja -S . -B Build --toolchain=$PWD/CMake/Toolchain.cmake -DCMAKE_BUILD_TYPE=Release -DENABLE_ROS2=ON` once, and run every build command against that same `Build` directory. A preset (`cmake --preset <name>`) builds into `Build/<name>` instead.
 > * __Check the system.__ The UE5 version of CARLA supports Ubuntu 22.04 and 24.04, and cannot be built on an external disk.
 > * __Check dependencies.__ `bash Util/SetupUtils/InstallPrerequisites.sh --python-path=python3` installs the same prerequisites as `CarlaSetup.sh`.
@@ -153,7 +153,7 @@ CARLA forum</a>
 > * __Restart the computer.__ There is a lot going on during the Windows setup. Restart and make sure that everything is updated properly.
 > * __Use the CARLA fork of Unreal Engine 5.8.__ `CARLA_UNREAL_ENGINE_PATH` must hold the absolute path of the engine build. `CarlaSetup.bat` sets it; a setup done by other means may not have.
 > * __Download the content.__ The server will not run without it.
-> * __Set the DLSS SDK.__ The CARLA configure looks for the NVIDIA DLSS SDK in `DLSS_SDK`, then in `%USERPROFILE%\SDKs\DLSS`, clones it there if it is missing, and stops with "Could not resolve the NVIDIA DLSS SDK" if that fails. Configure with `-DCARLA_DLSS_SDK_PATH=disabled` to build CARLA without it. A build of the project outside CARLA's CMake, such as from Visual Studio, fails with "DLSS_SDK is not set" unless `DLSS_SDK` points at the SDK, or is `disabled` to opt out.
+> * __Set the DLSS SDK.__ The CMake configure step looks for the NVIDIA DLSS SDK in `DLSS_SDK`, then in `%USERPROFILE%\SDKs\DLSS`, clones it there if it is missing, and stops with "Could not resolve the NVIDIA DLSS SDK" if that fails. Configure with `-DCARLA_DLSS_SDK_PATH=disabled` to build CARLA without it. A build of the project outside CARLA's CMake, such as from Visual Studio, fails with "DLSS_SDK is not set" unless `DLSS_SDK` points at the SDK, or is `disabled` to opt out.
 > * __Visual Studio 2022.__ See [CMake or compiler errors on Windows](#cmake-or-compiler-errors-on-windows).
 > * __Do not build on an external disk.__ Windows does not give the required permissions there.
 >

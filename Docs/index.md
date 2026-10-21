@@ -1,7 +1,7 @@
 # CARLA Unreal Engine 5 Documentation
 
 !!! Note
-    These pages document the Unreal Engine 5 line of CARLA, built from the `ue58-dev` branch on Unreal Engine 5.8. The Unreal Engine 4.26 line has [its own documentation](https://carla.readthedocs.io/en/latest/), and the two differ in features, blueprint ids and build procedure.
+    These pages document the Unreal Engine 5 version of CARLA, built from the `ue58-dev` branch on Unreal Engine 5.8. The Unreal Engine 4.26 version has [its own documentation](https://carla.readthedocs.io/en/latest/), and the two differ in features, blueprint ids and build procedure.
 
 This home page is an index of the documentation. Read it in any order; for a newcomer, the suggestions below are a good path.
 
@@ -56,7 +56,7 @@ CARLA forum</a>
 - [__C++ tutorial__](tuto_cpp.md) — The C++ client workflow, batch commands, snapshots and replay.
 - [__C++ reference__](ref_cpp.md) — Classes and methods in CARLA C++.
 - [__Extended documentation__](ext_docs.md) — Advanced features covered in more depth.
-- [__Agent skills__](agent_skills.md) — The vetted procedures an agent can follow in this repository.
+- [__Agent skills__](agent_skills.md) — Step-by-step procedures for AI coding agents working in this repository.
 
 ---
 ## CARLA ecosystem

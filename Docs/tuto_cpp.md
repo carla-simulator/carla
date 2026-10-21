@@ -181,7 +181,7 @@ while (!agent.Done()) {
 }
 ```
 
-`BasicAgent::Options` carries the same knobs as the Python `opt_dict`: `ignore_traffic_lights`, `ignore_vehicles`, `sampling_resolution`, `max_brake` and the rest.
+`BasicAgent::Options` has the same options as the Python `opt_dict`: `ignore_traffic_lights`, `ignore_vehicles`, `sampling_resolution`, `max_brake` and the rest.
 
 The `carla-agent-demo` example drives a `BehaviorAgent` to a distant spawn point. It is built with the other examples; the optional arguments are host, port, map and behavior (`cautious`, `normal` or `aggressive`):
 
