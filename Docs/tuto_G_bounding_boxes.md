@@ -479,7 +479,7 @@ while True:
 
 For every rendered frame of your simulation, you will now export an accompanying XML file containing the details of the bounding boxes in the frame.
 
-![xml_bbox_files](img/tuto_G_bounding_boxes/xml_bbox_files.png)
+![xml_bbox_files](img/tuto_G_bounding_boxes/xml_bbox_files.webp)
 <div class="img-caption">The output folder: one image and one PASCAL VOC <code>.xml</code> annotation per frame.</div>
 
 In the PASCAL VOC format, the XML files contain information referring to the accompanying image file, the image dimensions and can include details such as vehicle type if needed.

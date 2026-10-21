@@ -1,6 +1,6 @@
 # NVIDIA in CARLA
 
-![nvidia_logo](img/logos/nvidia_hor.png)
+![nvidia_logo](img/logos/nvidia_hor.webp)
 
 NVIDIA sponsors CARLA's development and contributes the technologies below to the Unreal Engine 5 line.
 

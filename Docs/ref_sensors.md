@@ -1055,7 +1055,7 @@ when no motion is present in the scene. In contrast, event cameras are data-driv
 latency. At the plot, a positive (resp. negative) event (blue dot, resp. red dot) is generated whenever the (signed) brightness change exceeds the
 contrast threshold `C` for one dimension `x` over time `t`. Observe how the event rate grows when the signal changes rapidly.
 
-![DVSCameraWorkingPrinciple](img/ref_sensors/sensor_dvs_scheme.jpg)
+![DVSCameraWorkingPrinciple](img/ref_sensors/sensor_dvs_scheme.webp)
 <div class="img-caption">A standard camera samples frames at a fixed rate; an event camera fires a positive (blue) or negative (red) event each time the brightness change crosses the contrast threshold C.</div>
 
 The current implementation of the DVS camera works in a uniform sampling manner between two consecutive synchronous frames. Therefore, in order to

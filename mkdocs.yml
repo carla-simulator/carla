@@ -117,7 +117,7 @@ markdown_extensions:
 
 theme:
   name: 'readthedocs'
-  logo: img/logos/carla_ue5_logo.png
+  logo: img/logos/carla_ue5_logo.webp
   palette:
         # Dark mode
     - scheme: slate

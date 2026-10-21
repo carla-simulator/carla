@@ -131,7 +131,7 @@ for wheel in telemetry.wheels:
 
 Logged every tick, `get_telemetry_data` shows what the solver does with the controls. Here a Lincoln MKZ launches at full throttle, changes lane and brakes to a stop; `gear` is `0` while the automatic transmission changes gear:
 
-![telemetry_plot](img/tuto_G_control_vehicle_physics/telemetry_plot.png)
+![telemetry_plot](img/tuto_G_control_vehicle_physics/telemetry_plot.webp)
 <div class="img-caption">Controls, speed, engine RPM and gear, and the angular velocity of the four wheels from <code>get_telemetry_data()</code>, at 50 Hz with 0.01 s physics substeps.</div>
 
 ---

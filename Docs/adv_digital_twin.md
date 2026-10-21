@@ -54,7 +54,7 @@ The entry point is the editor utility widget `UW_OnRoadMainWidget`, in the Conte
 | _Generate_ | Downloads the OSM data, converts it to OpenDRIVE and builds the map. |
 | _Save Map_ | Saves the generated map. |
 
-![osm_website](img/adv_digital_twin/osm_export.png)
+![osm_website](img/adv_digital_twin/osm_export.webp)
 <div class="img-caption">Exporting a region from openstreetmap.org.</div>
 
 When the converter is available, *Generate* runs these steps:

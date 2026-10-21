@@ -40,12 +40,12 @@ Building the map itself is beyond this guide — the [RoadRunner documentation][
 
 The road layout cannot be changed after export, so validate before you export: check the geometry, and pay attention to junction connections.
 
-![CheckGeometry](img/shared/check_geometry.jpg)
+![CheckGeometry](img/shared/check_geometry.webp)
 <div class="img-caption">A clean junction (left) and a broken one (right): check every junction before exporting.</div>
 
 The `OpenDRIVE Preview Tool` draws the road network as CARLA will read it, which is the quickest way to catch a bad junction:
 
-![checkopen](img/shared/check_open.jpg)
+![checkopen](img/shared/check_open.webp)
 <div class="img-caption">The OpenDRIVE Preview Tool showing the lanes and junction connections that CARLA will read.</div>
 
 !!! Note
@@ -57,7 +57,7 @@ The `OpenDRIVE Preview Tool` draws the road network as CARLA will read it, which
 
 Select the whole map first: open the [World settings tool](https://www.mathworks.com/help/roadrunner/ref/worldsettingstool.html), drag the blue boundary box around everything you want to export, and click _Apply World Changes_.
 
-![world_bounds_settings](img/large_map_roadrunner/rr_world_settings.png)
+![world_bounds_settings](img/large_map_roadrunner/rr_world_settings.webp)
 <div class="img-caption">The World settings tool: the blue boundary box around the map, then <b>Apply World Changes</b>.</div>
 
 __1. Export the geometry.__ `File` → `Export` → `Filmbox (.fbx)`, with:
@@ -70,12 +70,12 @@ __1. Export the geometry.__ `File` → `Export` → `Filmbox (.fbx)`, with:
 | _Export to Tiles_ | Splits the map into tiles. __2000 x 2000 is the largest tile CARLA accepts.__ |
 | _Export Individual Tiles_ | Writes one file per tile, which is what the importer expects for a large map. |
 
-![export_large_map_fbx](img/large_map_roadrunner/large_map_export_fbx.png)
+![export_large_map_fbx](img/large_map_roadrunner/large_map_export_fbx.webp)
 <div class="img-caption">The Filmbox (.fbx) export options for a large map, with 1000 x 1000 tiles.</div>
 
 __2. Export the road description.__ `File` → `Export` → `OpenDRIVE (.xodr)`.
 
-![export_large_map_xodr](img/large_map_roadrunner/large_map_export_xodr.png)
+![export_large_map_xodr](img/large_map_roadrunner/large_map_export_xodr.webp)
 <div class="img-caption">The OpenDRIVE (.xodr) export options, saved with the same name as the .fbx.</div>
 
 !!! Warning

@@ -176,7 +176,7 @@ while True:
 
 The debug strings appear in the spectator view of the server window, not in camera sensor images. The plot below shows both routes as the Traffic Manager drives them:
 
-![routes](img/tuto_G_traffic_manager/set_paths.png)
+![routes](img/tuto_G_traffic_manager/set_paths.webp)
 <div class="img-caption">The two set_path() routes on Town10HD_Opt as the Traffic Manager drives them; numbers are spawn point indices, purple ones are in both routes.</div>
 
 Now that we have chosen our spawn points and way points, we can now start spawning traffic and setting the spawned vehicles to follow our waypoint lists.

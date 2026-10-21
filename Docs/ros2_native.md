@@ -1,6 +1,6 @@
 # ROS 2 native interface
 
-![ros_carla_logo](img/logos/ros_carla.png)
+![ros_carla_logo](img/logos/ros_carla.webp)
 
 CARLA speaks ROS 2 from the server itself — there is no bridge process. Sensors publish and vehicles subscribe as soon as the simulator is started with `-ros2`:
 

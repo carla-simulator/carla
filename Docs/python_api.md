@@ -5413,7 +5413,7 @@ for actor_snapshot in world_snapshot:
 <button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.DebugHelper.draw_box-code')">Copy snippet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snippet</button><br><br>
   
 
-<img src="/img/snipets_images/carla.DebugHelper.draw_box.webp">
+<img src="../img/snipets_images/carla.DebugHelper.draw_box.webp">
   
 </div>
   
@@ -5485,7 +5485,7 @@ print("R lane marking change: " + str(waypoint.right_lane_marking.lane_change))
 <button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.Map.get_waypoint-code')">Copy snippet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snippet</button><br><br>
   
 
-<img src="/img/snipets_images/carla.Map.get_waypoint.webp">
+<img src="../img/snipets_images/carla.Map.get_waypoint.webp">
   
 </div>
   
@@ -5556,7 +5556,7 @@ if vehicle.is_at_traffic_light():
 <button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.TrafficLight.set_state-code')">Copy snippet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snippet</button><br><br>
   
 
-<img src="/img/snipets_images/carla.TrafficLight.set_state.webp">
+<img src="../img/snipets_images/carla.TrafficLight.set_state.webp">
   
 </div>
   

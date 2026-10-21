@@ -232,7 +232,7 @@ spawn_points = world.get_map().get_spawn_points()
 
 The list is in a fixed order for each map, so tutorials refer to a spawn point by its index (`spawn_points[43]`). On Town10HD_Opt:
 
-![town10hd_spawn_points](img/shared/town10hd_spawn_points.png)
+![town10hd_spawn_points](img/shared/town10hd_spawn_points.webp)
 <div class="img-caption">Town10HD_Opt road network with the index and heading of every spawn point.</div>
 
 To find the indices you want without leaving the simulator, draw them into the world. `draw_string` labels each point and `draw_arrow` shows which way a vehicle spawned there will face:

@@ -97,7 +97,7 @@ It is produced in chunks of `max_road_length` rather than as one object, so the 
 
 Junctions get special treatment. Where lanes meet at different heights, the raw definition makes the higher lane cut through the lower one, and a vehicle crossing the junction climbs or clips. `smooth_junctions` reinterprets those heights so the surfaces join:
 
-![opendrive_meshissue](img/adv_opendrive/opendrive_meshissue.jpg)
+![opendrive_meshissue](img/adv_opendrive/opendrive_meshissue.webp)
 <div class="img-caption">Higher lanes blocking the ones below them at a junction. <code>smooth_junctions</code> prevents this.</div>
 
 Junction lanes are also widened by `additional_width`, and the outer boundary of the road is walled to `wall_height`, both to keep vehicles on the surface where the definition is least precise.

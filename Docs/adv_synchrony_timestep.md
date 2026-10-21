@@ -101,12 +101,12 @@ To see the effect of sub-stepping, the graphs below drive the same Lincoln MKZ o
 
 With `max_substep_delta_time` at `0.01`, the simulation time step makes almost no difference: between `fixed_delta_seconds` of `0.01` and `0.05` the top speed varies between 16.19 and 16.27 m/s, and the vehicle stops within 0.06 s of the same moment.
 
-![velocity with fixed physical delta time](img/adv_synchrony_timestep/physics_convergence_fixed_pdt.png)
+![velocity with fixed physical delta time](img/adv_synchrony_timestep/physics_convergence_fixed_pdt.webp)
 <div class="img-caption">Speed over time for several fixed_delta_seconds, with max_substep_delta_time = 0.01: the curves overlap.</div>
 
 With `fixed_delta_seconds` at `0.04`, the physics step does change the result. A coarser `max_substep_delta_time` makes the vehicle slightly faster and longer to stop: the top speed goes from 16.0 m/s at `0.005` to 16.65 m/s at `0.04`, about 4 %. Keep the physics step at `0.01` or below when the dynamics matter.
 
-![velocity with varied physical delta time](img/adv_synchrony_timestep/physics_convergence_fixed_dt.png)
+![velocity with varied physical delta time](img/adv_synchrony_timestep/physics_convergence_fixed_dt.webp)
 <div class="img-caption">Speed over time with fixed_delta_seconds = 0.04 and several max_substep_delta_time.</div>
 
 ---

@@ -24,7 +24,7 @@ __1.__ Navigate to the [OpenStreetMap website](https://www.openstreetmap.org). Y
 
 __2.__ Search for your desired location and zoom in to a specific area.
 
-![openstreetmap_view](img/tuto_G_openstreetmap/tuto_g_osm_web.jpg)
+![openstreetmap_view](img/tuto_G_openstreetmap/tuto_g_osm_web.webp)
 <div class="img-caption">The <b>Export</b> panel on openstreetmap.org.</div>
 
 !!! Note
@@ -38,7 +38,7 @@ __5.__ Select a custom area by dragging the corners of the square area in the vi
 
 __6.__ Click the _Export_ button in the _Export_ panel and save the map information of the selected area as a `.osm` file.
 
-![openstreetmap_area](img/tuto_G_openstreetmap/tuto_g_osm_area.jpg)
+![openstreetmap_area](img/tuto_G_openstreetmap/tuto_g_osm_area.webp)
 <div class="img-caption">Selecting the area to export with <b>Manually select a different area</b>, then <b>Export</b>.</div>
 
 ---

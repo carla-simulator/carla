@@ -17,7 +17,7 @@ Running the Unreal Engine editor is required for this process, therefore you nee
 
 You may find ready-made 3D assets on sites such as [TurboSquid](https://www.turbosquid.com/) or [Sketchfab](https://sketchfab.com/) that suit your use case (**make sure to check that the license suits your intended use**). Alternatively, if you are adept at 3D modelling, you may choose to model the object in a 3D modelling application such as Blender or Maya.
 
-![police_barrier](img/content_authoring_props/police_barrier_model.png)
+![police_barrier](img/content_authoring_props/police_barrier_model.webp)
 <div class="img-caption">The police barrier model in Blender, ready to export as FBX.</div>
 
 For this example, we [download an asset](https://skfb.ly/ozJB6) from Sketchfab that has a creative commons license. First, import the asset into Blender to inspect it to ensure it suits our intended use. For this asset, a couple of modifications were required to prepare it for use in CARLA:
@@ -33,7 +33,7 @@ If the model is not already in FBX format or needed modification, export it as F
 
 Now that we have an asset in FBX format, we can import it into the CARLA content library. Launch the CARLA Unreal Engine editor by running `cmake --build Build/Release --target launch` in the root directory of the CARLA source code repository. Once the editor is open, navigate to an appropriate place in the content directories (`Content/Carla/Static/Static` in this example). Drag the FBX file into the content browser, import with the default options. Once the import is complete we can see our new prop as a static mesh in the content folder:
 
-![police_barrier](img/content_authoring_props/police_barrier_imported_ue5.png)
+![police_barrier](img/content_authoring_props/police_barrier_imported_ue5.webp)
 <div class="img-caption">The imported <code>Police_barrier</code> static mesh in the Content Browser, with its asset details.</div>
 
 !!! Warning
@@ -107,7 +107,7 @@ for spawn_point in world.get_map().get_spawn_points()[:3]:
 
 ```
 
-![police_barrier_in_sim](img/content_authoring_props/police_barriers_sim_ue5.png)
+![police_barrier_in_sim](img/content_authoring_props/police_barriers_sim_ue5.webp)
 <div class="img-caption">Police barriers spawned through the Python API in Town10HD_Opt.</div>
 
 ---
@@ -131,7 +131,7 @@ The result is an archive under `Build/Release/Package/` — `.tar.gz` on Linux, 
 
 Static meshes already included in the CARLA content library can be nominated for use as props through the Python API using the `static.prop.mesh` blueprint. Locate the desired mesh in the CARLA content browser and take note of its path. For this example we will choose the Dodge Charger model from the `/Game/Carla/Static/Car/4Wheeled/DodgeCharger/Parked` directory.
 
-![parked_charger_in_content](img/content_authoring_props/charger_parked_ue5.png)
+![parked_charger_in_content](img/content_authoring_props/charger_parked_ue5.webp)
 <div class="img-caption"><code>SM_DodgeCharger_Parked</code> in the Content Browser: its path is what <code>mesh_path</code> takes.</div>
 
 We can use the following code to place the vehicle in the map as a prop:
@@ -148,7 +148,7 @@ parked_vehicle_bp.set_attribute('mesh_path', mesh_path)
 parked_vehicle = world.spawn_actor(parked_vehicle_bp, spawn_point)
 ```
 
-![parked_charger_in_sim](img/content_authoring_props/charger_in_sim_ue5.png)
+![parked_charger_in_sim](img/content_authoring_props/charger_in_sim_ue5.webp)
 <div class="img-caption">The parked Dodge Charger spawned as a <code>static.prop.mesh</code> prop.</div>
 
 This method works both with the built-from-source version of CARLA and also a package version of CARLA, as long as the package contains the nominated static mesh in the correct location.

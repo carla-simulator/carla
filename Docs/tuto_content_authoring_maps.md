@@ -46,7 +46,7 @@ Open RoadRunner and create a new scene. Choose the Road Plan Tool and right clic
 
 For the purpose of this tutorial we use a simple oval road with a junction in the middle. For building more advanced networks please refer to the [__roadrunner documentation__](https://es.mathworks.com/products/roadrunner.html).
 
-![roadrunner_road](img/tuto_content_authoring_maps/simple_crossroads.png)
+![roadrunner_road](img/tuto_content_authoring_maps/simple_crossroads.webp)
 <div class="img-caption">The tutorial road network: an oval with a junction in the middle.</div>
 
 Once you have made your map in RoadRunner you will be able to export it. Be aware that __the road layout cannot be modified after it has been exported.__ Before exporting, ensure that:
@@ -56,12 +56,12 @@ Once you have made your map in RoadRunner you will be able to export it. Be awar
 - The map validation is correct, paying close attention to connections and geometries.
 
 
-![CheckGeometry](img/shared/check_geometry.jpg)
+![CheckGeometry](img/shared/check_geometry.webp)
 <div class="img-caption">A clean junction (left) and a broken one (right): check every junction before exporting.</div>
 
 Once the map is ready, click on the `OpenDRIVE Preview Tool` button to visualize the OpenDRIVE road network and give everything one last check.
 
-![checkopen](img/shared/check_open.jpg)
+![checkopen](img/shared/check_open.webp)
 <div class="img-caption">The OpenDRIVE Preview Tool showing the lanes and junction connections that CARLA will read.</div>
 
 !!! note
@@ -69,7 +69,7 @@ Once the map is ready, click on the `OpenDRIVE Preview Tool` button to visualize
 
 Once you have created your desired road network, in the RoadRunner menu bar choose `File > Export > Carla (.fbx, .xodr, .rrdata, .xml)` and export to an appropriate location. 
 
-![roadrunner_exports](img/tuto_content_authoring_maps/roadrunner_exports.png)
+![roadrunner_exports](img/tuto_content_authoring_maps/roadrunner_exports.webp)
 <div class="img-caption">The files RoadRunner writes with the CARLA export: meshes, textures, the .fbx, the .xodr and the .rrdata.xml.</div>
 
 RoadRunner is the best application for creating custom maps. There are alternatives such as [__OpenStreetMap__](tuto_G_openstreetmap.md) that focus on generating maps from real road maps. 
@@ -82,7 +82,7 @@ RoadRunner is a proprietary software that requires MATLAB. Some institutions lik
 
 The export files CARLA needs are the `.xodr` and the `.fbx`, and both must have the same name. Copy or move them into the `Import` folder at the root of the CARLA source tree.
 
-![roadrunner_imports](img/tuto_content_authoring_maps/rr_import.png)
+![roadrunner_imports](img/tuto_content_authoring_maps/rr_import.webp)
 <div class="img-caption">The .fbx and .xodr copied into the Import folder of the CARLA tree.</div>
 
 Then run the importer from the root of the CARLA source tree. It runs the editor headless, so it needs the path to the Unreal Engine and the `carla` Python package installed in the interpreter that runs it:
@@ -122,7 +122,7 @@ Create a new folder in some appropriate location using the Unreal content browse
 
 We will import an FBX file containing the base mesh and the UV map, that we have exported from Blender.
 
-![farmhouse_blender](img/tuto_content_authoring_maps/farmhouse_in_blender.png)
+![farmhouse_blender](img/tuto_content_authoring_maps/farmhouse_in_blender.webp)
 <div class="img-caption">The farmhouse mesh and its UV map in Blender.</div>
 
 In the context menu, ensure that in the __Mesh__ section `Import Normals` is selected
@@ -130,7 +130,7 @@ In the context menu, ensure that in the __Mesh__ section `Import Normals` is sel
 
  Select `Import All`. Once the import has completed, double click on the imported asset that appears in the content browser to edit it. 
 
-![farmhouse_edit](img/tuto_content_authoring_maps/farmhouse_ue_edit.png)
+![farmhouse_edit](img/tuto_content_authoring_maps/farmhouse_ue_edit.webp)
 <div class="img-caption">The imported farmhouse in the static mesh editor, before its material is assigned.</div>
 
 We should now import the textures, the diffuse texture for the diffuse colors, the normal map and the ORM map. 
@@ -139,7 +139,7 @@ Open the ORM map by double clicking and deselect the `sRGB` option, to ensure th
 
 Right click in the content browser and select `Material` from the menu. A new material will be created in the content browser. Double click to edit it. Shift select the textures you imported and drag them into the material edit window, you will now get 3 new nodes in the material node editor. 
 
-![material_init](img/tuto_content_authoring_maps/initialise_material.png)
+![material_init](img/tuto_content_authoring_maps/initialise_material.webp)
 <div class="img-caption">A new material with the imported textures dragged into the material editor.</div>
 
 Now connect the nodes according to the following rules:
@@ -152,17 +152,17 @@ Now connect the nodes according to the following rules:
 
 Your material node graph should now look similar to this: 
 
-![material_final](img/tuto_content_authoring_maps/material_connected.png)
+![material_final](img/tuto_content_authoring_maps/material_connected.webp)
 <div class="img-caption">The textures connected: diffuse to Base Color, normal to Normal, ORM channels to Ambient Occlusion, Roughness and Metallic.</div>
 
 Save the material, then open the asset again and drag the material into the material slot. Your asset should now be fully textured.
 
-![textured_asset](img/tuto_content_authoring_maps/textured_asset.png)
+![textured_asset](img/tuto_content_authoring_maps/textured_asset.webp)
 <div class="img-caption">The farmhouse with its material assigned.</div>
 
 Now save the asset and it is ready for use in your map. You can now drag the asset from the content browser and place it into your map:
 
-![asset_in_map](img/tuto_content_authoring_maps/asset_in_map.png)
+![asset_in_map](img/tuto_content_authoring_maps/asset_in_map.webp)
 <div class="img-caption">The farmhouse placed in the map.</div>
 
 Now save the map with __File > Save Current Level__ (`Ctrl + S`) and it is ready to use. Press __Play__ to run the simulation in the editor.
@@ -337,22 +337,22 @@ __6. Experiment to get your desired appearance.__
 
 Experiment with different materials, textures, settings, decals, and meshes to get your desired look. Below are some example images of how the appearance of the road changes during the process of painting each material.
 
-![materials_roadpaint_mat00](img/tuto_content_authoring_maps/Materials_Road_MaterialBase.jpg)
+![materials_roadpaint_mat00](img/tuto_content_authoring_maps/Materials_Road_MaterialBase.webp)
 <div class="img-caption">Example of base road material. Captured on the UE4 version of CARLA.</div>
 <br>
-![materials_roadpaint_mat01](img/tuto_content_authoring_maps/Materials_Road_Material1.jpg)
+![materials_roadpaint_mat01](img/tuto_content_authoring_maps/Materials_Road_Material1.webp)
 <div class="img-caption">Example after material 1 is applied. Captured on the UE4 version of CARLA.</div>
 <br>
-![materials_roadpaint_mat02](img/tuto_content_authoring_maps/Materials_Road_Material2.jpg)
+![materials_roadpaint_mat02](img/tuto_content_authoring_maps/Materials_Road_Material2.webp)
 <div class="img-caption">Example after material 2 is applied. Captured on the UE4 version of CARLA.</div>
 <br>
-![materials_roadpaint_mat03](img/tuto_content_authoring_maps/Materials_Road_Material3.jpg)
+![materials_roadpaint_mat03](img/tuto_content_authoring_maps/Materials_Road_Material3.webp)
 <div class="img-caption">Example after material 3 is applied. Captured on the UE4 version of CARLA.</div>
 <br>
-![materials_roadpaint_mat03](img/tuto_content_authoring_maps/Materials_Road_Decals.jpg)
+![materials_roadpaint_mat03](img/tuto_content_authoring_maps/Materials_Road_Decals.webp)
 <div class="img-caption">Example after decals are applied. Captured on the UE4 version of CARLA.</div>
 <br>
-![materials_roadpaint_mat03](img/tuto_content_authoring_maps/Materials_Road_Meshes.jpg)
+![materials_roadpaint_mat03](img/tuto_content_authoring_maps/Materials_Road_Meshes.webp)
 <div class="img-caption">Example after meshes are applied. Captured on the UE4 version of CARLA.</div>
 <br>
 

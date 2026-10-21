@@ -41,7 +41,7 @@ __4.__ Right-click it and choose __Asset Actions > Export__, saving in a format 
 
 Open the exported texture in your preferred image manipulation software and edit the texture as needed. In the image below, the original texture is visible in the top half, the lower half shows the modified texture.
 
-![textures](img/tuto_G_texture_streaming/textures.png)
+![textures](img/tuto_G_texture_streaming/textures.webp)
 <div class="img-caption">The exported diffuse texture (top) and an edited version (bottom).</div>
 
 Export your modified texture into an appropriate location and then open up a code editor to run some Python to update the texture in the running CARLA simulation.
