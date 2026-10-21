@@ -85,7 +85,7 @@ cmake --build Build/Client --target carla-client -j
 cmake --install Build/Client --prefix /opt/carla
 ```
 
-The install carries CARLA's own targets; Boost, rpclib, Recast/Detour, libpng and zlib are external, so the consuming project has to find them itself.
+The install carries CARLA's own targets; Boost, rpclib, Recast/Detour, libpng and zlib are external, so your project has to find them itself.
 
 In your own project's `CMakeLists.txt`:
 
@@ -100,7 +100,7 @@ cmake -B build --toolchain=/path/to/carla/CMake/Toolchain.cmake -DCMAKE_PREFIX_P
 cmake --build build -j
 ```
 
-The consuming project must be built with CARLA's toolchain, and `Toolchain.cmake` needs `CARLA_UNREAL_ENGINE_PATH` set, as for the CARLA build.
+Your project must be built with CARLA's toolchain, and `Toolchain.cmake` needs `CARLA_UNREAL_ENGINE_PATH` set, as for the CARLA build.
 
 A complete end-to-end demo project lives at [`Examples/CppClient/Standalone/`](https://github.com/carla-simulator/carla/tree/ue58-dev/Examples/CppClient/Standalone) — covers install, configure, build, and run.
 
