@@ -7,26 +7,15 @@ Two roles, two halves of this page:
 * __Making a pack__ needs a CARLA source build with the editor. A pack of existing CARLA towns is one command; a pack of your own content is the usual authoring flow plus two commands.
 * __Installing a pack__ needs only a CARLA package. One command, or one Python call.
 
-![content_pack_lifecycle](img/content_packs/content_pack_lifecycle.svg)
+![content_pack_lifecycle](img/content_authoring_packs/content_pack_lifecycle.svg)
 <div class="img-caption">How a pack goes from a CARLA source build to a CARLA package of the same release.</div>
 
-* __[Quick start](#quick-start)__
-* __[Making a pack](#making-a-pack)__
-    * __[Requirements](#requirements)__
-    * __[A. Existing CARLA towns](#a-existing-carla-towns)__
-    * __[B. Your own content](#b-your-own-content)__
-    * __[Catalog JSON shapes](#catalog-json-shapes)__
-    * __[Build details](#build-details)__
-    * __[Checking a pack](#checking-a-pack)__
-    * __[Sidecar files](#sidecar-files)__
-    * __[Traffic-light phase files](#traffic-light-phase-files)__
-* __[Installing a pack](#installing-a-pack)__
-    * __[Drop-in install](#drop-in-install)__
-    * __[From the Python API](#from-the-python-api)__
-    * __[Updating and removing](#updating-and-removing)__
-* __[What a pack is](#what-a-pack-is)__
-* __[Limits](#limits)__
-* __[FAQ](#faq)__
+- [__Quick start__](#quick-start)
+- [__Making a pack__](#making-a-pack)
+- [__Installing a pack__](#installing-a-pack)
+- [__What a pack is__](#what-a-pack-is)
+- [__Limits__](#limits)
+- [__FAQ__](#faq)
 
 ---
 
@@ -112,7 +101,7 @@ Open the CARLA editor (`cmake --build Build/Release --target launch`). The Carla
 $CARLA_UNREAL_ENGINE_PATH/Engine/Binaries/Linux/UnrealEditor Unreal/CarlaUnreal/CarlaUnreal.uproject -EnablePlugins=NewPack
 ```
 
-Save everything the pack ships under the pack root, following CARLA's layout: maps in `Maps/`, static meshes in `Static/`, vehicle and walker blueprints in `Blueprints/`. The usual CARLA authoring guides cover importing and setting up the asset — [props](content_authoring_props.md), [vehicles](tuto_content_authoring_vehicles.md) — with two differences: the destination folder is the pack root rather than `Content/Carla/...`, and the asset is registered in the pack's own catalog instead of the base `PropParameters.json` or `VehicleParameters.json`. Referencing CARLA's own assets (`/Game/Carla/...` materials, the vehicle base classes) is fine and keeps the pack small; they are not duplicated.
+Save everything the pack ships under the pack root, following CARLA's layout: maps in `Maps/`, static meshes in `Static/`, vehicle and walker blueprints in `Blueprints/`. The usual CARLA authoring guides cover importing and setting up the asset — [props](content_authoring_props.md), [vehicles](content_authoring_vehicles.md) — with two differences: the destination folder is the pack root rather than `Content/Carla/...`, and the asset is registered in the pack's own catalog instead of the base `PropParameters.json` or `VehicleParameters.json`. Referencing CARLA's own assets (`/Game/Carla/...` materials, the vehicle base classes) is fine and keeps the pack small; they are not duplicated.
 
 __New maps live under the pack root.__ To start one from an existing town, duplicate it into the pack from the editor (content browser: right click > Duplicate, or File > Save As into `NewPack Content/Maps`) or with `carla-pack add NewPack --map Town12 --import` (see [Add maps, sidecar files and catalogs](#3-add-maps-sidecar-files-and-catalogs)). Copying a `.umap` file from another content root does not work: the file keeps its original package name and, for World Partition maps, its actors reference that path. For a map you make, generate the OpenDRIVE file, the pedestrian navigation (`.bin`) and optionally Traffic Manager data; the pack ships them as sidecar files, and [Sidecar files](#sidecar-files) explains how to produce them. A map without an `.xodr` renders but has no map API (waypoints, Traffic Manager).
 

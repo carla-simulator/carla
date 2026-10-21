@@ -2,6 +2,10 @@
 
 What each CARLA sensor publishes over the [native ROS 2 interface](ros2_native.md), and on which topic.
 
+- [__Topic names__](#topic-names)
+- [__Published sensors__](#published-sensors)
+- [__Quality of service__](#quality-of-service)
+
 ---
 ## Topic names
 

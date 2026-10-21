@@ -34,26 +34,26 @@ Every tutorial in the documentation, grouped by what it is for.
 ## Traffic
 
 - [__Traffic Manager__](tuto_G_traffic_manager.md) — Populate a map with traffic and shape how it behaves.
-- [__Scenic__](tuto_G_scenic.md) — Write probabilistic scenarios and run them on CARLA.
+- [__Scenic__](scenic.md) — Write probabilistic scenarios and run them on CARLA.
 
 ---
 ## Assets and maps
 
-- [__Custom assets__](custom_assets_tutorials.md) — Overview of adding props, vehicles, materials and content packs.
-- [__Custom maps__](maps_tutorials.md) — Overview of creating and importing maps.
-- [__Add a new vehicle__](tuto_content_authoring_vehicles.md) — Prepare a vehicle for CARLA, from the model to the blueprint.
-- [__Vehicle materials__](tuto_content_authoring_vehicles_materials.md) — Paint a vehicle with CARLA's car-paint master material.
-- [__Material customization__](tuto_A_material_customization.md) — Building and environment materials.
+- [__Custom assets__](content_authoring_overview.md) — Overview of adding props, vehicles, materials and content packs.
+- [__Custom maps__](content_authoring_maps_overview.md) — Overview of creating and importing maps.
+- [__Add a new vehicle__](content_authoring_vehicles.md) — Prepare a vehicle for CARLA, from the model to the blueprint.
+- [__Vehicle materials__](content_authoring_vehicles_materials.md) — Paint a vehicle with CARLA's car-paint master material.
+- [__Material customization__](content_authoring_materials.md) — Building and environment materials.
 - [__Add new props__](content_authoring_props.md) — Import meshes as spawnable props.
-- [__Content packs__](content_packs.md) — Ship maps, props and vehicles as a package of their own.
-- [__Generate maps with OpenStreetMap__](tuto_G_openstreetmap.md) — Turn an OSM export into a drivable map.
+- [__Content packs__](content_authoring_packs.md) — Ship maps, props and vehicles as a package of their own.
+- [__Generate maps with OpenStreetMap__](content_authoring_maps_openstreetmap.md) — Turn an OSM export into a drivable map.
 
 ---
 ## Development
 
 - [__Create semantic tags__](tuto_D_create_semantic_tags.md) — Define a new tag for semantic segmentation.
-- [__Customize vehicle suspension__](tuto_D_customize_vehicle_suspension.md) — Tune the Chaos suspension of a vehicle.
-- [__Generate detailed colliders__](tuto_D_generate_colliders.md) — Build accurate collision meshes for vehicles.
+- [__Vehicle suspension__](content_authoring_vehicles_suspension.md) — Set the Chaos suspension of a vehicle's wheels.
+- [__Generate detailed colliders__](content_authoring_vehicles_colliders.md) — Build accurate collision meshes for vehicles.
 - [__Update the content__](tuto_D_contribute_assets.md) — Work with the `carla-content` repository the assets live in.
 
 ---

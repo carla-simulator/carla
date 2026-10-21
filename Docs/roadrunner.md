@@ -1,12 +1,13 @@
-# Create a large map in RoadRunner
+# RoadRunner
 
-RoadRunner is the recommended tool for authoring large maps for CARLA. This page covers what it is, how to build a map that imports cleanly, and the export settings CARLA expects.
+RoadRunner is the recommended tool for authoring the road network of a CARLA map. This page covers what it is, how to build a map that imports cleanly, the export settings CARLA expects, and what changes when the map is large enough to need tiles.
 
 - [__Introduction to RoadRunner__](#introduction-to-roadrunner)
 - [__Before you start__](#before-you-start)
 - [__Build the map__](#build-the-map)
 - [__Export the map__](#export-the-map)
 - [__Import it into CARLA__](#import-it-into-carla)
+- [__Large maps__](#large-maps)
 
 ---
 
@@ -33,10 +34,7 @@ Install RoadRunner by following the [installation guide][rr_docs] on the MathWor
 
 ## Build the map
 
-Building the map itself is beyond this guide — the [RoadRunner documentation][rr_tutorials] has video tutorials. Two constraints matter for CARLA:
-
-- __Keep a map with elevation at or below 20 km by 20 km.__ Larger maps tend to crash RoadRunner on export.
-- __Centre the map on (0, 0).__ A map built away from the origin does not line up when it reaches Unreal Engine.
+Building the map itself is beyond this guide — the [RoadRunner documentation][rr_tutorials] has video tutorials. One constraint matters for CARLA: __centre the map on (0, 0)__, because a map built away from the origin does not line up when it reaches Unreal Engine.
 
 The road layout cannot be changed after export, so validate before you export: check the geometry, and pay attention to junction connections.
 
@@ -57,7 +55,7 @@ The `OpenDRIVE Preview Tool` draws the road network as CARLA will read it, which
 
 Select the whole map first: open the [World settings tool](https://www.mathworks.com/help/roadrunner/ref/worldsettingstool.html), drag the blue boundary box around everything you want to export, and click _Apply World Changes_.
 
-![world_bounds_settings](img/large_map_roadrunner/rr_world_settings.webp)
+![world_bounds_settings](img/roadrunner/rr_world_settings.webp)
 <div class="img-caption">The World settings tool: the blue boundary box around the map, then <b>Apply World Changes</b>.</div>
 
 __1. Export the geometry.__ `File` → `Export` → `Filmbox (.fbx)`, with:
@@ -67,25 +65,40 @@ __1. Export the geometry.__ `File` → `Export` → `Filmbox (.fbx)`, with:
 | _Split by Segmentation_ | Divides the mesh by semantic tag, which also improves pedestrian navigation. |
 | _Power of Two Texture Dimensions_ | Faster to render. |
 | _Embed Textures_ | Keeps the textures inside the mesh file. |
-| _Export to Tiles_ | Splits the map into tiles. __2000 x 2000 is the largest tile CARLA accepts.__ |
-| _Export Individual Tiles_ | Writes one file per tile, which is what the importer expects for a large map. |
 
-![export_large_map_fbx](img/large_map_roadrunner/large_map_export_fbx.webp)
-<div class="img-caption">The Filmbox (.fbx) export options for a large map, with 1000 x 1000 tiles.</div>
+![export_large_map_fbx](img/roadrunner/large_map_export_fbx.webp)
+<div class="img-caption">The Filmbox (.fbx) export options, here with the tiling a large map needs.</div>
 
 __2. Export the road description.__ `File` → `Export` → `OpenDRIVE (.xodr)`.
 
-![export_large_map_xodr](img/large_map_roadrunner/large_map_export_xodr.webp)
+![export_large_map_xodr](img/roadrunner/large_map_export_xodr.webp)
 <div class="img-caption">The OpenDRIVE (.xodr) export options, saved with the same name as the .fbx.</div>
 
 !!! Warning
-    The `.xodr` and the `.fbx` must share a name. A tiled export produces `<Name>_Tile_<X>_<Y>.fbx` files beside a single `<Name>.xodr`, which is the pairing the importer looks for.
+    The `.xodr` and the `.fbx` must share a name; that pairing is what the importer looks for.
 
 ---
 
 ## Import it into CARLA
 
-Copy the tiles and the `.xodr` into the `Import` folder and run the importer as described in [Importing your road network into CARLA](tuto_content_authoring_maps.md#importing-your-road-network-into-carla); the importer recognises a `*_Tile_*.fbx` set and treats it as one tiled map. Once imported, convert the tiled map to World Partition with the `CarlaLargeMapConvert` commandlet so it streams like the towns that ship with CARLA — see [Large maps and World Partition](core_map.md#large-maps-and-world-partition).
+Copy the `.fbx` and the `.xodr` into the `Import` folder and run the importer as described in [Importing your road network into CARLA](content_authoring_maps.md#import-the-road-network-into-carla). From there the map is decorated in the editor like any other, which [Create a map](content_authoring_maps.md) covers.
+
+---
+
+## Large maps
+
+A map too big to keep in memory at once is exported in tiles and converted to [World Partition](core_map.md#large-maps-and-world-partition) after the import, so the engine streams it around the actors that move through it. Two things change.
+
+__Size.__ Keep a map with elevation at or below 20 km by 20 km; larger maps tend to crash RoadRunner on export.
+
+__Export.__ Add two options to the Filmbox (.fbx) export above:
+
+| Option | Why |
+| ------ | --- |
+| _Export to Tiles_ | Splits the map into tiles. __2000 x 2000 is the largest tile CARLA accepts.__ |
+| _Export Individual Tiles_ | Writes one file per tile, which is what the importer expects for a large map. |
+
+A tiled export produces `<Name>_Tile_<X>_<Y>.fbx` files beside a single `<Name>.xodr`. The importer recognises that set and treats it as one tiled map; once it is in, convert it with the `CarlaLargeMapConvert` commandlet so it streams like the towns that ship with CARLA.
 
 ---
 

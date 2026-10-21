@@ -10,6 +10,7 @@ which also provides the control of each wheel's physics through a
 
 - [__The fields worth changing__](#the-fields-worth-changing)
 - [__Vehicle control code example__](#vehicle-control-code-example)
+- [__Changing the suspension at runtime__](#changing-the-suspension-at-runtime)
 - [__Viewing vehicle telemetry__](#viewing-vehicle-telemetry)
 - [__Driving the wheels by hand__](#driving-the-wheels-by-hand)
 
@@ -40,7 +41,7 @@ On each [carla.WheelPhysicsControl](python_api.md#carla.WheelPhysicsControl) in 
 | `max_steer_angle` | degrees | How far the wheel turns. `0` on the rear wheels of a normal car. |
 | `wheel_radius`, `wheel_width` | cm | Wheel dimensions. Changing these without checking the vehicle rests on the road is what makes a car float or sink. |
 | `max_brake_torque`, `max_hand_brake_torque` | Nm | Braking force on that wheel. |
-| `suspension_*`, `spring_rate` | see [suspension](tuto_D_customize_vehicle_suspension.md) | The suspension of that wheel. |
+| `suspension_*`, `spring_rate` | see [below](#changing-the-suspension-at-runtime) | The suspension of that wheel. |
 
 The wheels are ordered as [`carla.VehicleWheelLocation`](python_api.md#carla.VehicleWheelLocation) numbers them: `FL_Wheel`, `FR_Wheel`, `BL_Wheel`, `BR_Wheel` — front-left, front-right, back-left, back-right. Two-wheelers have two entries instead, `Front_Wheel` and `Back_Wheel`.
 
@@ -96,6 +97,32 @@ def main():
 if __name__ == '__main__':
     main()
 ```
+
+---
+
+## Changing the suspension at runtime
+
+Each wheel's suspension is defined in its wheel blueprint, which [Content authoring - vehicle suspension](content_authoring_vehicles_suspension.md) covers along with what every parameter means. The same values are exposed per wheel on [carla.WheelPhysicsControl](python_api.md#carla.WheelPhysicsControl), so a client can change them without rebuilding the content. Read the current control, modify the wheels, and apply it back:
+
+```py
+vehicle = world.get_actor(vehicle_id)
+physics_control = vehicle.get_physics_control()
+
+# Keep the existing wheels and change only what is needed: a fresh
+# WheelPhysicsControl would reset every other field to its default.
+wheels = []
+for wheel in physics_control.wheels:
+    wheel.suspension_max_raise = 15.0
+    wheel.suspension_max_drop = 15.0
+    wheel.suspension_damping_ratio = 0.4
+    wheel.spring_rate = 200.0
+    wheels.append(wheel)
+
+physics_control.wheels = wheels
+vehicle.apply_physics_control(physics_control)
+```
+
+Runtime changes last until the vehicle is destroyed or the map is reloaded.
 
 ---
 

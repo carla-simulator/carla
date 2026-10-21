@@ -13,6 +13,7 @@ This page summarizes everything necessary to start handling sensors. It introduc
 	*   [Cameras](#cameras)  
 	*   [Detectors](#detectors)  
 	*   [Other](#other) 
+* [__Semantic classes__](#semantic-classes)
 * [__Sensors reference__](ref_sensors.md)
 
 ---
@@ -193,4 +194,7 @@ Different functionalities such as navigation, measurement of physical properties
 | [Vehicle status](ref_sensors.md#vehicle-status-sensor) | [carla.SensorData](<python_api.md#carla.SensorData>) | The parent vehicle's kinematic and control state, for the Autoware bridge. |
 | [Autoware GNSS](ref_sensors.md#autoware-gnss-sensor) | [carla.GnssMeasurement](<python_api.md#carla.GnssMeasurement>) | A GNSS sensor publishing in the shape the Autoware stack expects. |
 
+---
+## Semantic classes
 
+The semantic segmentation camera, the instance segmentation camera and the semantic LiDAR label what they see with the tags in [`carla.CityObjectLabel`](python_api.md#carla.CityObjectLabel). An asset of your own is labelled by the folder it lives in, and a class of your own is added in [Create semantic tags](tuto_D_create_semantic_tags.md).

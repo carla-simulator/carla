@@ -87,7 +87,7 @@ The [catalogue](catalogue.md) shows what the blueprint library ships: every [veh
 
 ### Creating your own actors
 
-Vehicles, walkers and props can all be assets of your own. [Custom assets](custom_assets_tutorials.md) is the entry point: it covers [props](content_authoring_props.md), [vehicles](tuto_content_authoring_vehicles.md), and [content packs](content_packs.md) to ship them with. 
+Vehicles, walkers and props can all be assets of your own. [Custom assets](content_authoring_overview.md) is the entry point: it covers [props](content_authoring_props.md), [vehicles](content_authoring_vehicles.md), and [content packs](content_authoring_packs.md) to ship them with. 
 
 ---
 ## Actor life cycle

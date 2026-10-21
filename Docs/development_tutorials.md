@@ -8,7 +8,7 @@ CARLA is open source and designed to be highly extensible. This  allows users to
 - [__Create new sensor__](tuto_D_create_sensor.md)
 - [__Running the tests__](testing.md)
 - [__Recorder file format__](ref_recorder_binary_file_format.md)
-- [__Collision boundaries__](tuto_D_generate_colliders.md)
+- [__Collision boundaries__](content_authoring_vehicles_colliders.md)
 
 ## Make a release
 
@@ -36,4 +36,4 @@ Details on the binary file format for the recorder can be found [__here__](ref_r
 
 ## Generating collision boundaries
 
-Details on generating more accurate collision boundaries for vehicles can be found in [__this guide__](tuto_D_generate_colliders.md)
+Details on generating more accurate collision boundaries for vehicles can be found in [__this guide__](content_authoring_vehicles_colliders.md)

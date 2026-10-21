@@ -40,9 +40,9 @@ GitHub Discussions</a>
 ---
 ## Content authoring
 
-- [__Custom assets__](custom_assets_tutorials.md) — Bring your own props, vehicles and materials into CARLA.
-- [__Vehicles__](tuto_content_authoring_vehicles.md) — Prepare a vehicle, from the model to the blueprint.
-- [__Content packs__](content_packs.md) — Ship maps, props and vehicles as a package of their own.
+- [__Custom assets__](content_authoring_overview.md) — Bring your own props, vehicles and materials into CARLA.
+- [__Vehicles__](content_authoring_vehicles.md) — Prepare a vehicle, from the model to the blueprint.
+- [__Content packs__](content_authoring_packs.md) — Ship maps, props and vehicles as a package of their own.
 - [__OpenDRIVE standalone mode__](adv_opendrive.md) — Drive on a road network with no map around it.
 
 ---
@@ -61,10 +61,10 @@ GitHub Discussions</a>
 ---
 ## CARLA ecosystem
 
-- [__MathWorks__](large_map_roadrunner.md) — Creating a map in RoadRunner.
+- [__RoadRunner__](roadrunner.md) — MathWorks' editor for the road network of a map.
 - [__NVIDIA__](nvidia.md) — Alpamayo 2 Super, neural reconstruction (NuRec), Cosmos and DLSS.
 - [__ROS 2__](ros2_native.md) — The native ROS 2 interface.
-- [__Scenic__](tuto_G_scenic.md) — Generate scenarios with Scenic.
+- [__Scenic__](scenic.md) — Generate scenarios with Scenic.
 - [__Inverted AI__](inverted_ai.md) — Inverted AI's generative traffic simulation.
 
 ---

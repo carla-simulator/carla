@@ -119,7 +119,7 @@ pip3 install numpy opencv-python scipy pytest
 pytest . -q
 ```
 
-__Content pack tool__ tests, covered in [Content packs](content_packs.md):
+__Content pack tool__ tests, covered in [Content packs](content_authoring_packs.md):
 
 ```sh
 cmake --build Build --target content-packs-test

@@ -167,4 +167,4 @@ The CARLA message types come from the [ros-carla-msgs package](https://github.co
 - [ROS 2 sensors](ros2_native_sensors.md) — what each sensor publishes, on which topic and in which message.
 - [ROS 2 messages](ros2_native_msgs.md) — the definition of each message, field by field.
 - [Autoware](autoware.md) — driving the ego vehicle with the Autoware stack over this interface.
-- [ROS bridge](ros_documentation.md) — the separate bridge project, which targets the Unreal Engine 4 line.
+- [ROS bridge](ros_bridge.md) — the separate bridge project, which targets the Unreal Engine 4 line.

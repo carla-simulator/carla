@@ -1,23 +1,20 @@
-# Customize vehicle suspension
+# Content authoring - vehicle suspension
 
-CARLA vehicles run on Unreal's Chaos vehicle physics, where the suspension is defined per wheel. This page covers the parameters, where to change them permanently in the editor, and how to change them at runtime from the Python API.
+Every wheel of a CARLA vehicle is a `UChaosVehicleWheel` asset with its own suspension, so a four-wheeled vehicle has four independent suspensions. This page covers what the parameters mean and how to set them in the editor, which is where a vehicle's permanent values live. To change them on a running vehicle instead, see [Changing the suspension at runtime](tuto_G_control_vehicle_physics.md#changing-the-suspension-at-runtime).
 
-*   [__Wheel suspension__](#wheel-suspension)
-*   [__Suspension parameters__](#suspension-parameters)
-*   [__Editing a wheel blueprint__](#editing-a-wheel-blueprint)
-*   [__Changing the suspension at runtime__](#changing-the-suspension-at-runtime)
+- [__Wheel blueprints__](#wheel-blueprints)
+- [__Suspension parameters__](#suspension-parameters)
+- [__Editing a wheel blueprint__](#editing-a-wheel-blueprint)
 
 ---
-## Wheel suspension
+## Wheel blueprints
 
-Each wheel of a vehicle is a `UChaosVehicleWheel` asset with its own parameters, the suspension among them. A four-wheeled vehicle therefore has four independent suspensions, which CARLA's vehicles set to the same values unless the vehicle calls for otherwise.
-
-The wheel blueprints live next to the vehicle blueprint in `Content/Carla/Blueprints/Vehicles/<VehicleName>/` and are named `BP_<VehicleName>_<F|R><L|R>W`:
+CARLA's vehicles give their four wheels the same values unless the vehicle calls for otherwise. The wheel blueprints live next to the vehicle blueprint in `Content/Carla/Blueprints/Vehicles/<VehicleName>/` and are named `BP_<VehicleName>_<F|R><L|R>W`:
 
 *   `F` or `R` — front or rear.
 *   `L` or `R` — left or right.
 
-![wheel_blueprints](img/tuto_D_customize_vehicle_suspension/wheel_blueprints.webp)
+![wheel_blueprints](img/content_authoring_vehicles_suspension/wheel_blueprints.webp)
 <div class="img-caption">The Audi TT folder: the vehicle blueprint and its four wheel blueprints; the front left wheel is <code>BP_AudiTT_FLW</code>.</div>
 
 ---
@@ -52,7 +49,7 @@ __1.__ Open the vehicle's folder in the Unreal editor and double-click the wheel
 
 __2.__ In the __Details__ panel, open the __Suspension__ category and set the values.
 
-![wheel_suspension](img/tuto_D_customize_vehicle_suspension/wheel_suspension.webp)
+![wheel_suspension](img/content_authoring_vehicles_suspension/wheel_suspension.webp)
 <div class="img-caption">The Suspension category of <code>BP_AudiTT_FLW</code>; the arrows on the right mark the values that differ from the defaults.</div>
 
 __3.__ Repeat for the other three wheels, or set them all at once by selecting the four assets and editing the shared property.
@@ -61,28 +58,3 @@ __4.__ Compile, save, and drive the vehicle to check the result.
 
 !!! Warning
     `Wheel Radius` has to keep the wheel resting on the road, neither hovering above it nor sunk into it. Changing the suspension travel without checking the radius is the usual cause of a floating vehicle.
-
----
-## Changing the suspension at runtime
-
-The same values are exposed per wheel on [carla.WheelPhysicsControl](python_api.md#carla.WheelPhysicsControl), so a client can change them without rebuilding the content. Read the current control, modify the wheels, and apply it back:
-
-```py
-vehicle = world.get_actor(vehicle_id)
-physics_control = vehicle.get_physics_control()
-
-# Keep the existing wheels and change only what is needed: a fresh
-# WheelPhysicsControl would reset every other field to its default.
-wheels = []
-for wheel in physics_control.wheels:
-    wheel.suspension_max_raise = 15.0
-    wheel.suspension_max_drop = 15.0
-    wheel.suspension_damping_ratio = 0.4
-    wheel.spring_rate = 200.0
-    wheels.append(wheel)
-
-physics_control.wheels = wheels
-vehicle.apply_physics_control(physics_control)
-```
-
-Runtime changes last until the vehicle is destroyed or the map is reloaded. See [Control vehicle physics](tuto_G_control_vehicle_physics.md) for the rest of the physics control.

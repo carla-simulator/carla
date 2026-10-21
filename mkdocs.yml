@@ -13,17 +13,14 @@ nav:
   - 'First steps' : 'tuto_first_steps.md'
   - 'Building CARLA' : 'build_carla.md'
 
-- Next steps:
-  - 'Content authoring - maps': 'tuto_content_authoring_maps.md'
-  - 'Content authoring - vehicles': 'tuto_content_authoring_vehicles.md'  
-  - 'Content authoring - content packs': 'content_packs.md'
-
 - CARLA topics:
   - 'Foundations': 'foundations.md'
   - 'World and client': 'core_world.md'
   - 'Actors': 'core_actors.md'
   - 'Maps': 'core_map.md'
-  - 'Sensors and data': 'core_sensors.md'
+  - Sensors and data:
+    - 'Overview': 'core_sensors.md'
+    - 'Create semantic tags': 'tuto_D_create_semantic_tags.md'
   - 'Coordinate conventions': 'coordinate_conventions.md'
   - 'Traffic' : 'ts_traffic_simulation_overview.md'
   - 'Traffic Manager': 'adv_traffic_manager.md'
@@ -37,8 +34,28 @@ nav:
   - 'Blueprint library': 'bp_library.md'
   - 'Tutorials': 'tutorials.md'
 
+- Content authoring:
+  - 'Overview': 'content_authoring_overview.md'
+  - Maps:
+    - 'Overview': 'content_authoring_maps_overview.md'
+    - 'Create a map': 'content_authoring_maps.md'
+    - 'Map assets': 'content_authoring_maps_assets.md'
+    - 'Materials and road painter': 'content_authoring_maps_road_painter.md'
+    - 'Traffic lights and signs': 'content_authoring_maps_traffic_lights.md'
+    - 'Trees and vegetation': 'content_authoring_maps_vegetation.md'
+    - 'OpenStreetMap': 'content_authoring_maps_openstreetmap.md'
+    - 'Digital Twin Tool': 'content_authoring_maps_digital_twin.md'
+  - Vehicles:
+    - 'Create a vehicle': 'content_authoring_vehicles.md'
+    - 'Vehicle materials': 'content_authoring_vehicles_materials.md'
+    - 'Collision meshes': 'content_authoring_vehicles_colliders.md'
+    - 'Suspension': 'content_authoring_vehicles_suspension.md'
+  - 'Props': 'content_authoring_props.md'
+  - 'Material customization': 'content_authoring_materials.md'
+  - 'Content packs': 'content_authoring_packs.md'
+
 - CARLA Ecosystem:
-  - 'MathWorks': 'large_map_roadrunner.md'
+  - 'RoadRunner': 'roadrunner.md'
   - NVIDIA:
     - 'Overview': 'nvidia.md'
     - 'Alpamayo 2 Super user guide': 'nvidia_alpamayo.md'
@@ -50,8 +67,9 @@ nav:
     - 'Sensors': 'ros2_native_sensors.md'
     - 'Messages': 'ros2_native_msgs.md'
     - 'Autoware': 'autoware.md'
-  - 'Scenic': 'tuto_G_scenic.md'
-  - 'InvertedAI': 'inverted_ai.md'
+    - 'ROS bridge': 'ros_bridge.md'
+  - 'Scenic': 'scenic.md'
+  - 'Inverted AI': 'inverted_ai.md'
 
 - Contributing:
   - 'Guidelines': 'cont_contribution_guidelines.md' 
@@ -62,7 +80,6 @@ nav:
 # Pages reached from a parent page instead of the sidebar
 not_in_nav: |
   /adv_agents.md
-  /adv_digital_twin.md
   /adv_multigpu.md
   /adv_opendrive.md
   /adv_recorder.md
@@ -79,9 +96,7 @@ not_in_nav: |
   /catalogue_scripts.md
   /catalogue_vehicles.md
   /cont_code_of_conduct.md
-  /content_authoring_props.md
   /cpp_api_parity.md
-  /custom_assets_tutorials.md
   /download.md
   /ext_docs.md
   /large_map_overview.md
@@ -89,28 +104,20 @@ not_in_nav: |
   /map_mine.md
   /map_town10.md
   /map_town15.md
-  /maps_tutorials.md
   /ref_recorder_binary_file_format.md
   /ref_sensors.md
   /release_readme.md
-  /ros_documentation.md
   /testing.md
-  /tuto_A_material_customization.md
   /tuto_D_contribute_assets.md
-  /tuto_D_create_semantic_tags.md
   /tuto_D_create_sensor.md
-  /tuto_D_customize_vehicle_suspension.md
-  /tuto_D_generate_colliders.md
   /tuto_D_make_release.md
   /tuto_G_add_friction_triggers.md
   /tuto_G_bounding_boxes.md
   /tuto_G_control_vehicle_physics.md
   /tuto_G_control_walker_skeletons.md
-  /tuto_G_openstreetmap.md
   /tuto_G_pedestrian_bones.md
   /tuto_G_texture_streaming.md
   /tuto_G_traffic_manager.md
-  /tuto_content_authoring_vehicles_materials.md
 
 hooks:
   - docs_hooks.py

@@ -102,7 +102,7 @@ __5. Keep the branch in sync__ with `ue58-dev-carla`, and push it when the contr
 
 __6. Wait for the art team to review it__ before it is merged.
 
-See the [asset tutorials](custom_assets_tutorials.md) for how to author each kind of asset.
+See the [asset tutorials](content_authoring_overview.md) for how to author each kind of asset.
 
 ---
 ## Docs contributions

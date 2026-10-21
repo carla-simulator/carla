@@ -12,7 +12,7 @@ The message types are defined in `LibCarla/source/carla/ros2/types/msg/` and ser
 - [__Quality of service__](#quality-of-service)
 
 !!! Note
-    The [ROS bridge](ros_documentation.md) defines a much larger set of `carla_msgs` for the Unreal Engine 4 line — actor lists, world info, traffic light status, scenario control. The native interface does not use them; they are documented in the [bridge's own messages reference](https://carla.readthedocs.io/projects/ros-bridge/en/latest/ros_msgs/).
+    The [ROS bridge](ros_bridge.md) defines a much larger set of `carla_msgs` for the Unreal Engine 4 line — actor lists, world info, traffic light status, scenario control. The native interface does not use them; they are documented in the [bridge's own messages reference](https://carla.readthedocs.io/projects/ros-bridge/en/latest/ros_msgs/).
 
 ---
 ## Published

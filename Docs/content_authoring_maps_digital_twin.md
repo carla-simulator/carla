@@ -30,7 +30,7 @@ The __Digital Twin Tool__ builds a CARLA map of a real place from [OpenStreetMap
 ---
 ## How the tool is organised
 
-![digital_twin_tool](img/adv_digital_twin/digital_twin_tool.svg)
+![digital_twin_tool](img/content_authoring_maps_digital_twin/digital_twin_tool.svg)
 <div class="img-caption">The stages of the Digital Twin Tool and which of them work in this release.</div>
 
 The tool lives in the `CarlaTools` editor plugin, with the OSM import of the `StreetMap` plugin (built by default) and the PCG plugin. The current version of the generator, ported from the `carla-digitaltwins` project, keeps its blueprints and assets in a separate content plugin, `CarlaDigitalTwinsTool`, under the mount point `/CarlaDigitalTwinsTool/`.
@@ -40,10 +40,10 @@ The tool lives in the `CarlaTools` editor plugin, with the OSM import of the `St
 
 The entry point is the editor utility widget `UW_OnRoadMainWidget`, in the Content Browser under *Plugins > CarlaTools > OnroadMapGenerator* (enable *Show Plugin Content* in the Content Browser settings if the *Plugins* folder is not listed). Right click it and launch it as an editor utility widget. The `LevelCreator` blueprint next to it does not compile in this release, so the editor reports a blueprint compilation error for it.
 
-![digital_twins_widget](img/adv_digital_twin/digital_twins_widget.webp)
+![digital_twins_widget](img/content_authoring_maps_digital_twin/digital_twins_widget.webp)
 <div class="img-caption"><code>UW_OnRoadMainWidget</code> in the Content Browser, under Plugins &gt; CarlaTools &gt; OnroadMapGenerator.</div>
 
-![onroad_widget](img/adv_digital_twin/onroad_widget.webp)
+![onroad_widget](img/content_authoring_maps_digital_twin/onroad_widget.webp)
 <div class="img-caption">The widget as it opens in this release: the map preview on the left and its controls at the top right no longer work; <b>OSM URL</b>, <b>File Name</b>, <b>Generate</b> and <b>Save Map</b> are the generation controls.</div>
 
 | Field or button | What it does |
@@ -54,7 +54,7 @@ The entry point is the editor utility widget `UW_OnRoadMainWidget`, in the Conte
 | _Generate_ | Downloads the OSM data, converts it to OpenDRIVE and builds the map. |
 | _Save Map_ | Saves the generated map. |
 
-![osm_website](img/adv_digital_twin/osm_export.webp)
+![osm_website](img/content_authoring_maps_digital_twin/osm_export.webp)
 <div class="img-caption">Exporting a region from openstreetmap.org.</div>
 
 When the converter is available, *Generate* runs these steps:
@@ -68,9 +68,9 @@ When the converter is available, *Generate* runs these steps:
 ---
 ## Traffic lights
 
-__Window > Traffic Light Tool__ (the last entry of the *Window* menu) opens an editor tab to build and edit traffic lights: poles, heads and lamp modules, imported from or exported to JSON. The pole, head and module meshes come from the `CarlaDigitalTwinsTool` content; without it the tab opens, but *Add Pole* crashes the editor, and *Add Head* and *Add Module* only appear once a pole exists. The phases of a twin map's traffic lights live in a `map_logic.json` next to its OpenDRIVE file; the server reads it when the map loads and drives the lights from it. A content pack ships the file with the map (see [Content packs](content_packs.md#traffic-light-phase-files)).
+__Window > Traffic Light Tool__ (the last entry of the *Window* menu) opens an editor tab to build and edit traffic lights: poles, heads and lamp modules, imported from or exported to JSON. The pole, head and module meshes come from the `CarlaDigitalTwinsTool` content; without it the tab opens, but *Add Pole* crashes the editor, and *Add Head* and *Add Module* only appear once a pole exists. The phases of a twin map's traffic lights live in a `map_logic.json` next to its OpenDRIVE file; the server reads it when the map loads and drives the lights from it. A content pack ships the file with the map (see [Content packs](content_authoring_packs.md#traffic-light-phase-files)).
 
-![traffic_light_tool](img/adv_digital_twin/traffic_light_tool.webp)
+![traffic_light_tool](img/content_authoring_maps_digital_twin/traffic_light_tool.webp)
 <div class="img-caption">The Traffic Light Tool tab before a pole is added.</div>
 
 ---
@@ -78,7 +78,7 @@ __Window > Traffic Light Tool__ (the last entry of the *Window* menu) opens an e
 
 The __Sign Generation Controller__ actor (`ASignGenerationController`) places traffic signs from the OSM sign nodes (`traffic_sign`, `highway`, `crossing`, `maxspeed` tags) on the roads of the current map. Drop one in the level, set its fields in the *Details* panel and press *SignGenerationForCurrentMap*.
 
-![sign_generation_controller](img/adv_digital_twin/sign_generation_controller.webp)
+![sign_generation_controller](img/content_authoring_maps_digital_twin/sign_generation_controller.webp)
 <div class="img-caption">The SignGeneration fields of the Sign Generation Controller.</div>
 
 | Field | What it does |
@@ -103,7 +103,7 @@ Two actors place trees and street furniture with PCG from a placement plan, a JS
 
 Set *Plan File* to the plan. The *Details* panel has two buttons: *Preview* generates the instances with the PCG graph in *Graph* (`PCG_TwinVegetation` for vegetation by default) and *ClearGenerated* removes them. Reading the plan and baking the instances into instanced static meshes saved with the level are not buttons: call `import_plan()` before *Preview* and `bake()` after it from the editor's Python console. *Status*, *Points* and *Baked Instance Count* show the result.
 
-![procedural_vegetation_tool](img/adv_digital_twin/procedural_vegetation_tool.webp)
+![procedural_vegetation_tool](img/content_authoring_maps_digital_twin/procedural_vegetation_tool.webp)
 <div class="img-caption">The Vegetation category of the Procedural Vegetation Tool.</div>
 
 ---
@@ -115,9 +115,9 @@ The content has four twin maps under `Content/Carla/Maps/Twins/`, each with its 
 world = client.load_world('Eixample')
 ```
 
-`Eixample` loads with no missing assets: extruded buildings without façade detail, roads, sidewalks, crosswalks, traffic lights and signs, and no vegetation. `EixampleDemo`, `Sf_Soma` and `Sunnyvale` reference assets of the `CarlaDigitalTwinsTool` content, so without it they load with those assets missing. The default package does not ship the twin maps; a [content pack](content_packs.md) can.
+`Eixample` loads with no missing assets: extruded buildings without façade detail, roads, sidewalks, crosswalks, traffic lights and signs, and no vegetation. `EixampleDemo`, `Sf_Soma` and `Sunnyvale` reference assets of the `CarlaDigitalTwinsTool` content, so without it they load with those assets missing. The default package does not ship the twin maps; a [content pack](content_authoring_packs.md) can.
 
-![eixample](img/adv_digital_twin/eixample.webp)
+![eixample](img/content_authoring_maps_digital_twin/eixample.webp)
 <div class="img-caption">A junction of the Eixample twin map.</div>
 
 ---

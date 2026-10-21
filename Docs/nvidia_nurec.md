@@ -10,19 +10,12 @@ __NuRec__ is the technology; the __Neural Reconstruction Engine (NRE)__ is the p
 
 Because CARLA owns the simulation loop, the replay can be perturbed with the full CARLA API: the ego can be re-driven with CARLA vehicle physics or handed to the Traffic Manager, other vehicles can be handed to the Traffic Manager, and scene assets can be swapped or inserted through the asset-editing API.
 
-* __[Before you begin](#before-you-begin)__
-    * [Prerequisites](#prerequisites)
-    * [Hugging Face account](#hugging-face-account)
-* __[Setup](#setup)__
-    * [Prerequisite installation](#prerequisite-installation)
-    * [Run the installer script](#run-the-installer-script)
-    * [Example datasets](#example-datasets)
-    * [Set up your environment variables](#set-up-your-environment-variables)
-* __[Run the CARLA NuRec replays](#run-the-carla-nurec-replays)__
-    * [Demo configuration file](#demo-configuration-file)
-* __[Command line parameters](#command-line-parameters)__
-* __[Hybrid rendering example](#hybrid-rendering-example)__
-* __[See also](#see-also)__
+- [__Before you begin__](#before-you-begin)
+- [__Setup__](#setup)
+- [__Run the CARLA NuRec replays__](#run-the-carla-nurec-replays)
+- [__Command line parameters__](#command-line-parameters)
+- [__Hybrid rendering example__](#hybrid-rendering-example)
+- [__See also__](#see-also)
 
 ---
 

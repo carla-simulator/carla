@@ -56,7 +56,7 @@ world = client.load_world('Town10HD_Opt')
 
 `load_world()` takes the map's own name — `Town10HD_Opt`, not `Town10`. Case does not matter, the rest of the name does.
 
-Which maps a server has depends on how it was built or packaged, so `get_available_maps()` is the list that counts. A source build has all fifteen maps; a package has whatever was cooked into it, and anything else arrives as a [content pack](content_packs.md). See [Maps](core_map.md) for what ships.
+Which maps a server has depends on how it was built or packaged, so `get_available_maps()` is the list that counts. A source build has all fifteen maps; a package has whatever was cooked into it, and anything else arrives as a [content pack](content_authoring_packs.md). See [Maps](core_map.md) for what ships.
 
 `client.reload_world()` resets the current map to its initial state without changing it. More about maps in [Maps](core_map.md).
 

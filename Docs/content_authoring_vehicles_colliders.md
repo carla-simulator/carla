@@ -9,21 +9,9 @@ There are two approaches to create the new colliders, but they are not completel
 
 ---
 
-*   [__Raycast colliders__](#raycast-colliders)  
-	*   [1-Export the vehicle FBX](#1-export-the-vehicle-fbx)  
-	*   [2-Generate a low density mesh](#2-generate-a-low-density-mesh)  
-	*   [3-Import the mesh into UE](#3-import-the-mesh-into-ue)  
-	*   [4-Add the mesh as collider](#4-add-the-mesh-as-collider)
-
----
-
-*   [__Physics colliders__](#physics-colliders)  
-	*   [0-Prerequisites](#0-prerequisites)  
-	*   [1-Define custom collision for wheels in Unreal Editor](#1-define-custom-collision-for-wheels-in-unreal-editor)  
-	*   [2-Export the vehicle as FBX](#2-export-the-vehicle-as-fbx)  
-	*   [3 to 4-Import to Blender and create custom boundary](#3-to-4-import-to-blender-and-create-custom-boundary)  
-	*   [5-Export from Blender to FBX](#5-export-from-blender-to-fbx)  
-	*   [6 to 8-Import collider and define physics](#6-to-8-import-collider-and-define-physics)
+- [__Raycast colliders__](#raycast-colliders)
+- [__Physics colliders__](#physics-colliders)
+- [__After replacing a collider__](#after-replacing-a-collider)
 
 ---
 ## Raycast colliders
@@ -38,7 +26,7 @@ __1.2__ Right-click the vehicle's skeletal mesh, `SK_<model_of_vehicle>`, and ex
 
 __2.1__ Open a 3D modelling software and, using the original mesh as reference, model a low density mesh that stays reliable to the original.
 
-![manual_meshgen](img/tuto_D_generate_colliders/tuto_D_colliders_mesh.webp)
+![manual_meshgen](img/content_authoring_vehicles_colliders/tuto_D_colliders_mesh.webp)
 <div class="img-caption">Modelling a low-density collider over the original body mesh, used as reference.</div>
 
 __2.2__ Save the new mesh as FBX. Name the mesh as `SM_sc_<model_of_vehicle>.fbx`. E.g. `SM_sc_audiTT.fbx`.
@@ -57,7 +45,7 @@ __4.1__ Go to `Content/Carla/Blueprints/Vehicles/<model_of_vehicle>` and open th
 
 __4.2__ In the *Components* panel select `CustomCollision`, and in *Details* set its `Static Mesh` property to `SM_sc_<model_of_vehicle>`. The component already uses the `CustomSensorCollision` collision preset: it is invisible, does not take part in physics, and only answers the trace channel of raycast sensors such as the LIDAR.
 
-![bp_customcollision](img/tuto_D_generate_colliders/bp_customcollision.webp)
+![bp_customcollision](img/content_authoring_vehicles_colliders/bp_customcollision.webp)
 <div class="img-caption">The <code>CustomCollision</code> component in the Components panel of <code>BP_LincolnMKZ</code>.</div>
 
 !!! Note
@@ -90,7 +78,7 @@ __4.3__ Press `Compile` in the toolbar above and save the changes.
 
 __Step 1.__ *(in UE)* — Add collision boundaries for the wheels. The steps are detailed in the following video.
 
-[![auto_step01](img/tuto_D_generate_colliders/tuto_D_colliders_01.webp)](https://www.youtube.com/watch?v=bECnsTw6ehI)
+[![auto_step01](img/content_authoring_vehicles_colliders/tuto_D_colliders_01.webp)](https://www.youtube.com/watch?v=bECnsTw6ehI)
 <div class="img-caption">Video: adding collision boundaries for the wheels in the Unreal Editor.</div>
 
 ### 2-Export the vehicle as FBX
@@ -107,12 +95,12 @@ __Step 4.__ *(in Blender)* — Add convex hull meshes to form the new collision 
 
 __4.1__ Cut out the bottom parts of the wheels, the side mirrors and the top part of the car's body to create the first boundary using the VHACD tool. Cut out the bottom half of the car to create the second boundary (top part of the car) using the VHACD tool.
 
-[![auto_step03](img/tuto_D_generate_colliders/tuto_D_colliders_03.webp)](https://www.youtube.com/watch?v=oROkK3OCuOA)
+[![auto_step03](img/content_authoring_vehicles_colliders/tuto_D_colliders_03.webp)](https://www.youtube.com/watch?v=oROkK3OCuOA)
 <div class="img-caption">Video: creating the body boundary with VHACD in Blender.</div>
 
 __4.2__ Create separate boundaries for side mirrors using the VHACD tool.
 
-[![auto_step04](img/tuto_D_generate_colliders/tuto_D_colliders_04.webp)](https://www.youtube.com/watch?v=L3upzdC602s)
+[![auto_step04](img/content_authoring_vehicles_colliders/tuto_D_colliders_04.webp)](https://www.youtube.com/watch?v=L3upzdC602s)
 <div class="img-caption">Video: separate boundaries for the side mirrors.</div>
 
 !!! Warning
@@ -124,7 +112,7 @@ __Step 5.__ *(in Blender)* — Export the custom collision boundaries into an FB
 __5.1__ Select only the original vehicle and all the newly added objects for collision.  
 __5.2__ In the export menu, check `selected objects` and select only "Mesh".
 
-[![auto_step05](img/tuto_D_generate_colliders/tuto_D_colliders_05.webp)](https://youtu.be/aJPyskYjzWo)
+[![auto_step05](img/content_authoring_vehicles_colliders/tuto_D_colliders_05.webp)](https://youtu.be/aJPyskYjzWo)
 <div class="img-caption">Video: exporting the boundaries from Blender to FBX.</div>
 
 ### 6 to 8-Import collider and define physics
@@ -133,7 +121,7 @@ __Step 6.__ *(in UE)* — Import the new FBX into CARLA as an Unreal asset file 
 __Step 7.__ *(in UE)* — Import the custom collider into the physics asset for the specific vehicle, so that it is used for computations.  
 __Step 8.__ *(in UE)* — Create constraints that connect the different joints and define the physics of all parts.
 
-[![auto_step0608](img/tuto_D_generate_colliders/tuto_D_colliders_0608.webp)](https://www.youtube.com/watch?v=aqFNwAyj2CA)
+[![auto_step0608](img/content_authoring_vehicles_colliders/tuto_D_colliders_0608.webp)](https://www.youtube.com/watch?v=aqFNwAyj2CA)
 <div class="img-caption">Video: importing the collider into the physics asset and creating the constraints.</div>
 
 ---

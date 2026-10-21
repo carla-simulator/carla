@@ -5,12 +5,7 @@
 - [__Export a map with OpenStreetMap__](#export-a-map-with-openstreetmap)
 - [__Using OpenStreetMap in CARLA__](#using-openstreetmap-in-carla)
 - [__Convert OpenStreetMap format to OpenDRIVE format__](#convert-openstreetmap-format-to-opendrive-format)
-    - [Generate traffic lights](#generate-traffic-lights)
 - [__Ingest into CARLA__](#ingest-into-carla)
-    - [A) Use your own script](#a-use-your-own-script)
-    - [B) Pass `.xodr` to `config.py`](#b-pass-xodr-to-configpy)
-    - [C) Pass `.osm` to `config.py`](#c-pass-osm-to-configpy)
-    - [What the generated map includes](#what-the-generated-map-includes)
 
 !!! Warning
     The OSM to OpenDRIVE conversion (`carla.Osm2Odr`, `carla.Osm2OdrSettings` and `config.py --osm-path`) is only compiled when the build is configured with `-DENABLE_OSM2ODR=ON`, which is __off by default__. Without it, those names raise `AttributeError` and the build log says "Building CARLA PythonAPI without OSM2ODR support". Reconfigure and rebuild the Python API to use this page.
@@ -24,7 +19,7 @@ __1.__ Navigate to the [OpenStreetMap website](https://www.openstreetmap.org). Y
 
 __2.__ Search for your desired location and zoom in to a specific area.
 
-![openstreetmap_view](img/tuto_G_openstreetmap/tuto_g_osm_web.webp)
+![openstreetmap_view](img/content_authoring_maps_openstreetmap/tuto_g_osm_web.webp)
 <div class="img-caption">The <b>Export</b> panel on openstreetmap.org.</div>
 
 !!! Note
@@ -38,7 +33,7 @@ __5.__ Select a custom area by dragging the corners of the square area in the vi
 
 __6.__ Click the _Export_ button in the _Export_ panel and save the map information of the selected area as a `.osm` file.
 
-![openstreetmap_area](img/tuto_G_openstreetmap/tuto_g_osm_area.webp)
+![openstreetmap_area](img/content_authoring_maps_openstreetmap/tuto_g_osm_area.webp)
 <div class="img-caption">Selecting the area to export with <b>Manually select a different area</b>, then <b>Export</b>.</div>
 
 ---
@@ -166,7 +161,7 @@ python3 config.py --osm-path=/path/to/OSM/file
 [Default parameters](python_api.md#carla.OpendriveGenerationParameters) will be used.
 
 
-![osm_generated_world](img/tuto_G_openstreetmap/tuto_g_osm_generated_world.webp)
+![osm_generated_world](img/content_authoring_maps_openstreetmap/tuto_g_osm_generated_world.webp)
 <div class="img-caption">A world generated at runtime from an OpenStreetMap extract of about 400 x 400 m: terrain, lane markings, bus stops, street lights and trees come from the OpenDRIVE description alone. The .osm was converted to OpenDRIVE with SUMO netconvert. Generated OpenDRIVE world.</div>
 
 ### What the generated map includes

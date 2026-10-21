@@ -1,6 +1,6 @@
 # Towns available as content packs
 
-The CARLA package ships Town10HD_Opt, Town15 and Mine_01. The towns below are kept in the CARLA content repository but are not cooked into the package: to use one, build a [content pack](content_packs.md) with it from a CARLA source checkout and install the pack into your package.
+The CARLA package ships Town10HD_Opt, Town15 and Mine_01. The towns below are kept in the CARLA content repository but are not cooked into the package: to use one, build a [content pack](content_authoring_packs.md) with it from a CARLA source checkout and install the pack into your package.
 
 ```sh
 # on the source checkout that built the package
@@ -10,7 +10,7 @@ carla-pack create MyTowns Town03_Opt Town12
 carla-pack install MyTowns-1.0.0-<release>.tar.gz --server /opt/carla/Linux
 ```
 
-Once installed, the towns load like any other map: `client.load_world('Town12')`. See [Existing CARLA towns](content_packs.md#a-existing-carla-towns) for the build options and [Installing a pack](content_packs.md#installing-a-pack) for mounting a pack from the Python API.
+Once installed, the towns load like any other map: `client.load_world('Town12')`. See [Existing CARLA towns](content_authoring_packs.md#a-existing-carla-towns) for the build options and [Installing a pack](content_authoring_packs.md#installing-a-pack) for mounting a pack from the Python API.
 
 | Map name | Summary | |
 | --- | --- | --- |
@@ -25,7 +25,7 @@ Once installed, the towns load like any other map: `client.load_world('Town12')`
 | `Town12` | A 10x10 km<sup>2</sup> [World Partition](large_map_overview.md) map partially inspired by Amarillo, Texas, with urban, residential and rural regions and a highway system with a ring road around the city. | ![town12](img/map_content_packs/town12.webp) |
 | `Town13` | A [World Partition](large_map_overview.md) map of about 13x10 km of roads, with urban, residential and rural regions and a ring road, designed as a train-test pair with Town12: same kind of layout, different building styles, textures and vegetation. | ![town13](img/map_content_packs/town13.webp) |
 | `Town_C` | A city with high-rise blocks, a stadium and an industrial area of warehouses, on flat open land. | ![town_c](img/map_content_packs/town_c.webp) |
-| `Eixample` | A [digital twin](adv_digital_twin.md) of the Eixample district of Barcelona, a World Partition map with the street grid of the district; the buildings are simple untextured volumes. | ![eixample](img/map_content_packs/eixample.webp) |
+| `Eixample` | A [digital twin](content_authoring_maps_digital_twin.md) of the Eixample district of Barcelona, a World Partition map with the street grid of the district; the buildings are simple untextured volumes. | ![eixample](img/map_content_packs/eixample.webp) |
 
 <div class="img-caption">One view per map from above its spawn points.</div>
 

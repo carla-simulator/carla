@@ -7,6 +7,13 @@ CARLA can be driven by [Autoware](https://autoware.org/) with no bridge process:
 
 Everything lives in `PythonAPI/examples/av_stacks/autoware/`: an installer for Autoware, a launcher that starts CARLA and Autoware together, and the tools that build the maps Autoware needs. Its `README.md` covers each step in more detail than this page.
 
+- [__Before you start__](#before-you-start)
+- [__Run Autoware__](#run-autoware)
+- [__Drive the ego from your own script__](#drive-the-ego-from-your-own-script)
+- [__Topics__](#topics)
+- [__Prepare a map__](#prepare-a-map)
+- [__Known limitations__](#known-limitations)
+
 ## Before you start
 
 | Requirement | Detail |

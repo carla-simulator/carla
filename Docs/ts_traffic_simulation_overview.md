@@ -70,7 +70,7 @@ Go to ScenarioRunner</a>
 
 [Scenic](https://scenic-lang.readthedocs.io) is a domain-specific probabilistic programming language for modeling the environments of cyber-physical systems like robots and autonomous cars. Scenic provides a [specialized domain](https://scenic-lang.readthedocs.io/en/latest/modules/scenic.simulators.carla.html) to facilitate execution of Scenic scripts on the CARLA simulator.
 
-Scenic scenario definitions are easy to read and construct. A tutorial to create a simple scenario is provided [here](tuto_G_scenic.md).
+Scenic scenario definitions are easy to read and construct. A tutorial to create a simple scenario is provided [here](scenic.md).
 
 __Useful for:__
 
@@ -79,7 +79,7 @@ __Useful for:__
 
 <div class="build-buttons">
 <p>
-<a href="../tuto_G_scenic" class="btn btn-neutral" title="Go to Scenic Tutorial">
+<a href="../scenic" class="btn btn-neutral" title="Go to Scenic Tutorial">
 Go to Scenic Tutorial</a>
 </p>
 </div>

@@ -2,12 +2,12 @@
 
 Creating a custom prop in CARLA is quick and straightforward. Follow these steps to import and use a custom asset as a prop inside a CARLA simulation.
 
-* __[Download or model an asset](#download-or-model-an-asset)__ 
-* __[Import the asset](#import-the-asset-into-the-unreal-editor)__ 
-* __[Add the new prop to the JSON configuration](#add-the-new-prop-to-the-json-configuration-file)__ 
-* __[Use the new prop in simulation](#use-the-new-prop-in-the-simulation)__
-* __[Make a CARLA package with new props](#make-a-carla-package-with-new-props)__ 
-* __[Use a static mesh as a prop](#use-static-mesh-as-a-prop-through-the-api)__
+- [__Download or model an asset__](#download-or-model-an-asset)
+- [__Import the asset into the Unreal Editor__](#import-the-asset-into-the-unreal-editor)
+- [__Add the new prop to the JSON configuration file__](#add-the-new-prop-to-the-json-configuration-file)
+- [__Use the new prop in the simulation__](#use-the-new-prop-in-the-simulation)
+- [__Make a CARLA package with new props__](#make-a-carla-package-with-new-props)
+- [__Use static mesh as a prop through the API__](#use-static-mesh-as-a-prop-through-the-api)
 
 Running the Unreal Engine editor is required for this process, therefore you need to [build CARLA from source](build_carla.md).
 
@@ -123,7 +123,7 @@ cmake --build Build/Release --target package
 The result is an archive under `Build/Release/Package/` — `.tar.gz` on Linux, `.zip` on Windows — where `Release` is whichever preset you configured with.
 
 !!! Note
-    Rebuilding the whole simulator to ship a handful of props is rarely what you want. A [content pack](content_packs.md) carries new props on their own and drops into any CARLA package of the same release.
+    Rebuilding the whole simulator to ship a handful of props is rarely what you want. A [content pack](content_authoring_packs.md) carries new props on their own and drops into any CARLA package of the same release.
 
 ---
 

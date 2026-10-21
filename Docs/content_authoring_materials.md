@@ -2,14 +2,14 @@
 
 CARLA ships a set of master materials in `Content/Carla/Static/GenericMaterials/000_Masters`, and the assets of the simulator use instances of them. Editing an instance changes how that asset looks without touching the master or the mesh. This page explains the seven masters most static assets are built on: what each one is for, the textures it reads, the parameters you can change on an instance, and an example in a CARLA town.
 
-*   [__Master materials__](#master-materials)
-*   [__General master__](#general-master)
-*   [__Simple master__](#simple-master)
-*   [__Glass master__](#glass-master)
-*   [__Fake interior master__](#fake-interior-master)
-*   [__Decal master__](#decal-master)
-*   [__Road master__](#road-master)
-*   [__Vegetation master__](#vegetation-master)
+- [__Master materials__](#master-materials)
+- [__General master__](#general-master)
+- [__Simple master__](#simple-master)
+- [__Glass master__](#glass-master)
+- [__Fake interior master__](#fake-interior-master)
+- [__Decal master__](#decal-master)
+- [__Road master__](#road-master)
+- [__Vegetation master__](#vegetation-master)
 
 !!! Important
     This tutorial applies to users working from a source build, with access to the Unreal Editor.
@@ -27,7 +27,7 @@ CARLA ships a set of master materials in `Content/Carla/Static/GenericMaterials/
 | `M_RoadMaster` | Road surfaces and lane markings. |
 | `M_VegetationMaster` | Trees, palms, bushes and grass, with wind and color variation. |
 
-Vehicles have their own masters in `000_Masters/Vehicles`, covered in [Content authoring - vehicle materials](tuto_content_authoring_vehicles_materials.md) and [Content authoring - vehicles](tuto_content_authoring_vehicles.md#lights).
+Vehicles have their own masters in `000_Masters/Vehicles`, covered in [Content authoring - vehicle materials](content_authoring_vehicles_materials.md) and [Content authoring - vehicles](content_authoring_vehicles.md#lights).
 
 To customize an asset, right-click the master, choose __Create Material Instance__, move the instance into the asset's own folder and assign it to the mesh. Open the instance and tick a parameter to override the master's value; unticked parameters keep the master's value. Editing the master itself changes every asset that uses it.
 
@@ -40,7 +40,7 @@ Some parameters only appear when the switch they depend on is ticked: for exampl
 
 ### Textures
 
-![general_textures](img/tuto_A_material_customization/general_textures.webp)
+![general_textures](img/content_authoring_materials/general_textures.webp)
 <div class="img-caption">The textures of House08.</div>
 
 *   __BaseColor__ — the `RGB` channels are the base color. The `Alpha` channel is the color mask: the white areas are the ones __Change Color__ tints. On House08 only the siding panels are white, so the tint never reaches the windows, the roof or the garage.
@@ -50,11 +50,11 @@ Some parameters only appear when the switch they depend on is ticked: for exampl
 
 ### Parameters
 
-![grp_general_textures](img/tuto_A_material_customization/grp_general_textures.webp)
+![grp_general_textures](img/content_authoring_materials/grp_general_textures.webp)
 
 __1. Textures__ — `BaseColor`, `AO / Roughness / Metallic / Emissive` and `Normal`, the three textures above.
 
-![grp_general_uvs](img/tuto_A_material_customization/grp_general_uvs.webp)
+![grp_general_uvs](img/content_authoring_materials/grp_general_uvs.webp)
 
 __2. UVs__
 
@@ -62,17 +62,17 @@ __2. UVs__
 *   `Triplanar` — with `World Position`, projects the texture from the three axes, so vertical and horizontal faces are covered without stretching.
 *   `Scale X/Y`, `Offset X/Y`, `Rotation` — tiling, offset and rotation of the textures. With `World Position` the scale applies to world units, so it is small: `MI_Facade01` uses `0.002`.
 
-![grp_general_color_variation](img/tuto_A_material_customization/grp_general_color_variation.webp)
+![grp_general_color_variation](img/content_authoring_materials/grp_general_color_variation.webp)
 
 __3. Color Variation__
 
 *   `Change Color` — enables the tint.
 *   `Color` — multiplied with the base color in the white area of the BaseColor alpha channel. One texture set gives as many variants as instances.
 
-![general_color_variation](img/tuto_A_material_customization/general_color_variation.webp)
+![general_color_variation](img/content_authoring_materials/general_color_variation.webp)
 <div class="img-caption">Two instances of House08 in Town02 that differ only in <b>Color</b>. The tint follows the mask: only the siding changes.</div>
 
-![grp_general_color_corrections](img/tuto_A_material_customization/grp_general_color_corrections.webp)
+![grp_general_color_corrections](img/content_authoring_materials/grp_general_color_corrections.webp)
 
 __4. Color Corrections__ — applied to the base color after the tint.
 
@@ -82,24 +82,24 @@ __4. Color Corrections__ — applied to the base color after the tint.
 *   `Saturation` — below 1 the color moves towards grey; `0` is fully grey.
 *   `Tint Color`, `Tint Intensity` — a second tint over the whole material, weighted by `Tint Intensity`.
 
-![general_color_corrections](img/tuto_A_material_customization/general_color_corrections.webp)
+![general_color_corrections](img/content_authoring_materials/general_color_corrections.webp)
 <div class="img-caption">The same house with one color correction at a time.</div>
 
-![grp_general_surface_corrections](img/tuto_A_material_customization/grp_general_surface_corrections.webp)
+![grp_general_surface_corrections](img/content_authoring_materials/grp_general_surface_corrections.webp)
 
 __5. Surface Corrections__ — adjust the ORME and normal channels: `Roughness Correction` and `Roughness Contrast` (roughness), `SpecularCorrection`, `MetalCorrection` (metallic), `AO Intensity` (ambient occlusion), `Normal On/Off` and `Normal Intensity` (disable or scale the normal map).
 
-![grp_general_emissive](img/tuto_A_material_customization/grp_general_emissive.webp)
+![grp_general_emissive](img/content_authoring_materials/grp_general_emissive.webp)
 
-![grp_general_api_values](img/tuto_A_material_customization/grp_general_api_values.webp)
+![grp_general_api_values](img/content_authoring_materials/grp_general_api_values.webp)
 
 __6. Emissive__ and __7. API Values__ — see [Emissive](#emissive).
 
-![grp_general_wet_surface](img/tuto_A_material_customization/grp_general_wet_surface.webp)
+![grp_general_wet_surface](img/content_authoring_materials/grp_general_wet_surface.webp)
 
 __8. Wet Surface FX__ — `Puddles On/Off` enables puddles when the weather is wet; `Puddles Size`, `PuddleColor`, `Raindrops UV Scale` and `Raindrops Fading` shape the puddles and the ripples of the rain. The surface also darkens with the weather's wetness, set by CARLA through a material parameter collection; see the [Road master](#road-master) example.
 
-![grp_general_variations](img/tuto_A_material_customization/grp_general_variations.webp)
+![grp_general_variations](img/content_authoring_materials/grp_general_variations.webp)
 
 __8. Variations__ — with `AddVariations`, extra tiling textures (`ColorVariation`, `RoughnessVariation`, `NormalVariationTexture`) break up large surfaces, each with its `Scale`, `Hardness`, `Offset` and `Intensity`.
 
@@ -117,10 +117,10 @@ where *color* is the flat `EmissiveColor`, or the RGB of the `Emissive` texture 
 *   __`Emissive attenuance`__ — at runtime, the general emissive intensity comes from the API through the light blueprint `BP_Lights`, and it is the same for every emissive material lit by that light; its value comes from the light defaults in `Content/Carla/Config/Lights/Defaults.json` (the file the Light Defaults tool edits). `Emissive attenuance` divides that general value for one instance, so you can tune the emissive of a single material without changing the global one: from 1 to 4 the instance is four times dimmer. The value is a divisor, not a subtraction.
 *   __Flat color or RGB texture__ — a flat `EmissiveColor` lights the whole emissive mask with one color, which is right for a lamp. For a sign or an advertising panel, which has to glow with its own image, tick `Emissive Texture` and set the `Emissive` texture: its RGB gives the color of each texel, still masked by the ORME alpha channel.
 
-![general_emissive_sign](img/tuto_A_material_customization/general_emissive_sign.webp)
+![general_emissive_sign](img/content_authoring_materials/general_emissive_sign.webp)
 <div class="img-caption">The shop sign of Skysc19 in Town10 with an instance of <code>M_GeneralMaster</code> made from the textures of <code>MI_Shop02_Btt_Details_A</code>. At night the flat <code>EmissiveColor</code> lights the whole band in one color; the <code>Emissive</code> texture lights the letters with their own colors.</div>
 
-![emissive_attenuance](img/tuto_A_material_customization/emissive_attenuance.webp)
+![emissive_attenuance](img/content_authoring_materials/emissive_attenuance.webp)
 <div class="img-caption">The same sign with the same <code>EmissiveIntensity</code> and three values of <b>Emissive attenuance</b>.</div>
 
 ---
@@ -128,32 +128,32 @@ where *color* is the flat `EmissiveColor`, or the RGB of the `Emissive` texture 
 
 `M_SimpleMaster` is an ultra-light master for assets that need no color variation, emissive or weather effects, which make the general master heavier: props such as trash cans, cones and speed bumps, poles and vehicle parts. Each channel can come from a texture or from a flat value.
 
-![simple_textures](img/tuto_A_material_customization/simple_textures.webp)
+![simple_textures](img/content_authoring_materials/simple_textures.webp)
 <div class="img-caption">The textures of <code>MI_TrashCan_3</code>: <code>Diffuse</code>, the three channels of the ORME texture, and <code>Normal</code>.</div>
 
 ### Parameters
 
-![grp_simple_textures](img/tuto_A_material_customization/grp_simple_textures.webp)
+![grp_simple_textures](img/content_authoring_materials/grp_simple_textures.webp)
 
 __Textures__ — `Diffuse`, `Normal` and `ORME`, with the same channel layout as the general master.
 
-![grp_simple_enable_disable](img/tuto_A_material_customization/grp_simple_enable_disable.webp)
+![grp_simple_enable_disable](img/content_authoring_materials/grp_simple_enable_disable.webp)
 
 __Enable/Disable__ — one switch per channel: `Diffuse`, `AO`, `Metallic`, `NormalMap`, `Roughness`, `Specular`. Ticked, the channel comes from its texture; unticked, from the flat value of __Parameters__ (`Base Color Value` replaces the Diffuse). `OpacityMap` takes the opacity from the Diffuse alpha channel.
 
-![grp_simple_parameters](img/tuto_A_material_customization/grp_simple_parameters.webp)
+![grp_simple_parameters](img/content_authoring_materials/grp_simple_parameters.webp)
 
 __Parameters__ — the flat `Roughness`, `Metallic` and `Specular` values used when their switch is off, and `Tiling` of the mesh UVs.
 
-![grp_simple_color_corrections](img/tuto_A_material_customization/grp_simple_color_corrections.webp)
+![grp_simple_color_corrections](img/content_authoring_materials/grp_simple_color_corrections.webp)
 
-![grp_simple_surface_corrections](img/tuto_A_material_customization/grp_simple_surface_corrections.webp)
+![grp_simple_surface_corrections](img/content_authoring_materials/grp_simple_surface_corrections.webp)
 
 __4. Color Corrections__ and __5. Surface Corrections__ — the same corrections as the [general master](#general-master).
 
 The master also has up to three dirt layers (`Dirt Texture 1-3`, `DirtMasks`, `Dirt Color`, `Dirt Opacity`, `Dirt Roughness`, `Rim Color`), used on some vehicles.
 
-![simple_example](img/tuto_A_material_customization/simple_example.webp)
+![simple_example](img/content_authoring_materials/simple_example.webp)
 <div class="img-caption"><code>MI_TrashCan_3</code> on a Town10 sidewalk.</div>
 
 ---
@@ -163,7 +163,7 @@ The master also has up to three dirt layers (`Dirt Texture 1-3`, `DirtMasks`, `D
 
 ### Parameters
 
-![grp_glass_plain_glass](img/tuto_A_material_customization/grp_glass_plain_glass.webp)
+![grp_glass_plain_glass](img/content_authoring_materials/grp_glass_plain_glass.webp)
 
 __1. Plain Glass__ — the flat values used when no texture is set.
 
@@ -171,20 +171,20 @@ __1. Plain Glass__ — the flat values used when no texture is set.
 *   `Transparency` — the opacity of the glass in percent, despite its name: 0 is fully transparent, 100 fully opaque. The master's default is 50; `MI_Glass` uses 40.
 *   `Roughness`, `Metallic`, `Occlusion` — how blurred and how metallic the reflections are.
 
-![glass_transparency](img/tuto_A_material_customization/glass_transparency.webp)
+![glass_transparency](img/content_authoring_materials/glass_transparency.webp)
 <div class="img-caption">A shop window of Town10 (<code>MI_Glass</code>) with three values of <b>Transparency</b>.</div>
 
-![grp_glass_texture_options](img/tuto_A_material_customization/grp_glass_texture_options_on.webp)
+![grp_glass_texture_options](img/content_authoring_materials/grp_glass_texture_options_on.webp)
 
 __2. Texture Options__ — `Diffuse Text Y/N`, `ORME Text Y/N`, `Normal Text Y/N` take the color, the ORME values and the normal from textures instead of flat values; `Opacity Mask Y/N` takes the opacity from the Diffuse texture instead of `Transparency`. Ticking them shows the __Textures__ and __UVs__ groups below and hides the flat values they replace.
 
-![grp_glass_textures](img/tuto_A_material_customization/grp_glass_textures.webp)
+![grp_glass_textures](img/content_authoring_materials/grp_glass_textures.webp)
 
-![grp_glass_uvs](img/tuto_A_material_customization/grp_glass_uvs.webp)
+![grp_glass_uvs](img/content_authoring_materials/grp_glass_uvs.webp)
 
 __Textures__ and __2. UVs__ — the `Diffuse`, `Normal` and `ORME` textures, and their tiling and projection as in the general master.
 
-![grp_glass_api_values](img/tuto_A_material_customization/grp_glass_api_values.webp)
+![grp_glass_api_values](img/content_authoring_materials/grp_glass_api_values.webp)
 
 __API Values__ — `EmissiveColor` times `Intensity` divided by `Emissive attenuance`, switched by `On/Off`. No CARLA code sets them at runtime; lit windows use the [fake interior master](#fake-interior-master).
 
@@ -193,32 +193,32 @@ __API Values__ — `EmissiveColor` times `Intensity` divided by `Emissive attenu
 
 The rooms behind building windows are not modelled. A separate mesh slot behind the glass uses an instance of `M_FakeInterior`, which samples a cubemap of a room so that the room shifts with the view angle, and the same material makes the windows glow at night. It reads two cubemaps, `FakeInterior` (the room by day) and `FakeInteriorEmissive` (its lights by night), instead of 2D textures.
 
-![fake_interior](img/tuto_A_material_customization/fake_interior.webp)
+![fake_interior](img/content_authoring_materials/fake_interior.webp)
 <div class="img-caption">Skysc19 in Town10, whose windows use <code>MI_Skysc19_FakeInterior_A</code>: by day, at night as CARLA lights it, and at night with <code>On/Off</code> forced to 0.</div>
 
 ### Parameters
 
-![grp_fake_textures](img/tuto_A_material_customization/grp_fake_textures.webp)
+![grp_fake_textures](img/content_authoring_materials/grp_fake_textures.webp)
 
 __1. Textures__ — `FakeInterior` and `FakeInteriorEmissive`, the two cubemaps.
 
-![grp_fake_uvs](img/tuto_A_material_customization/grp_fake_uvs.webp)
+![grp_fake_uvs](img/content_authoring_materials/grp_fake_uvs.webp)
 
 __2. UVs__ — `Tiling`, `X` and `Y`: how many rooms fit in the window and their offset.
 
-![grp_fake_properties](img/tuto_A_material_customization/grp_fake_properties.webp)
+![grp_fake_properties](img/content_authoring_materials/grp_fake_properties.webp)
 
 __3. Properties__ — `Enable Glass` turns on the glass roughness over the room; `Transparency` blends between `GlassColor` (0) and the room (1); `Cleanliness` removes the roughness noise (1 is clean glass).
 
-![grp_fake_surface_corrections](img/tuto_A_material_customization/grp_fake_surface_corrections.webp)
+![grp_fake_surface_corrections](img/content_authoring_materials/grp_fake_surface_corrections.webp)
 
 __4. Surface Corrections__ — `Brightness` and `Saturation` of the room, `GlassColor`, and the glass `Roughness` with the noise that varies it (`RoughnessNoisePower`, `RoughnessNoiseStrength`, `RoughnessNoiseTiling`).
 
-![grp_fake_emissive](img/tuto_A_material_customization/grp_fake_emissive.webp)
+![grp_fake_emissive](img/content_authoring_materials/grp_fake_emissive.webp)
 
-![grp_fake_api_values](img/tuto_A_material_customization/grp_fake_api_values.webp)
+![grp_fake_api_values](img/content_authoring_materials/grp_fake_api_values.webp)
 
-![grp_fake_global](img/tuto_A_material_customization/grp_fake_global.webp)
+![grp_fake_global](img/content_authoring_materials/grp_fake_global.webp)
 
 __5. Emissive__, __6. API Values__ and `PercentLitThreshold` — the window glow is `FakeInteriorEmissive` times `EmissiveIntensity / Emissive atenuance` times `Emissive Color`, switched by `On/Off`, and faded in by the weather's night factor as the sun goes down.
 
@@ -231,83 +231,83 @@ To make a new building light up at night, give its window slot an instance of `M
 
 `M_DecalMaster` is the master of the decals in `Content/Carla/Static/FX/Decals`: potholes, cracks, oil, manholes, tar snakes and fallen leaves. Place a __Decal__ actor, assign a decal instance and scale the actor to set the projected area. The decal paints over whatever surface is below it.
 
-![decal_textures](img/tuto_A_material_customization/decal_textures.webp)
+![decal_textures](img/content_authoring_materials/decal_textures.webp)
 <div class="img-caption">The textures of <code>DI_PotHole01</code>: the alpha channel of the Difuse texture is the opacity, so only the hole is painted.</div>
 
-![decal_example](img/tuto_A_material_customization/decal_example.webp)
+![decal_example](img/content_authoring_materials/decal_example.webp)
 <div class="img-caption"><code>DI_PotHole01</code> on a Town10 road, and the same road with the decal actor hidden.</div>
 
 ### Parameters
 
-![grp_decal_textures](img/tuto_A_material_customization/grp_decal_textures.webp)
+![grp_decal_textures](img/content_authoring_materials/grp_decal_textures.webp)
 
 __1. Textures__ — `Difuse texture` (color, with the opacity in its alpha channel), `ORM texture` and `Normal texture`.
 
-![grp_decal_opacity](img/tuto_A_material_customization/grp_decal_opacity.webp)
+![grp_decal_opacity](img/content_authoring_materials/grp_decal_opacity.webp)
 
 __6. Opacity__
 
 *   `Separate Opacity Mask`, `Opacity texture` — take the opacity from a separate texture instead of the alpha channel of `Difuse texture`; `DI_OilSplat01` uses a mask this way over an asphalt texture.
 *   `DirectionalMask`, `Horizontal`, `FalloffDirectionalMask`, `HardnessDirectionalMask`, `DeformationSize`, `Strength` — fade the decal along one axis of the decal box, with a noisy edge; `Horizontal` picks the axis.
 
-![grp_decal_emissive](img/tuto_A_material_customization/grp_decal_emissive.webp)
+![grp_decal_emissive](img/content_authoring_materials/grp_decal_emissive.webp)
 
-![grp_decal_api_values](img/tuto_A_material_customization/grp_decal_api_values.webp)
+![grp_decal_api_values](img/content_authoring_materials/grp_decal_api_values.webp)
 
 __3. Emissive__ and __5. API Values__ — `Emissive` makes the decal emit its own color. Unlike the other masters, `EmissiveIntensity` (5) and `On/Off` (1) default to on, so a decal with `Emissive` ticked glows by itself.
 
-![grp_decal_uvs](img/tuto_A_material_customization/grp_decal_uvs.webp)
+![grp_decal_uvs](img/content_authoring_materials/grp_decal_uvs.webp)
 
-![grp_decal_color_corrections](img/tuto_A_material_customization/grp_decal_color_corrections.webp)
+![grp_decal_color_corrections](img/content_authoring_materials/grp_decal_color_corrections.webp)
 
-![grp_decal_surface_corrections](img/tuto_A_material_customization/grp_decal_surface_corrections.webp)
+![grp_decal_surface_corrections](img/content_authoring_materials/grp_decal_surface_corrections.webp)
 
-![grp_decal_wet_surface](img/tuto_A_material_customization/grp_decal_wet_surface.webp)
+![grp_decal_wet_surface](img/content_authoring_materials/grp_decal_wet_surface.webp)
 
 __2. UVs__, __4. Color Corrections__, __5. Surface Corrections__ and __8. Wet Surface FX__ — the same controls as the [general master](#general-master).
 
 ---
 ## Road master
 
-`M_RoadMaster` is the master of the road surfaces and lane markings. It builds the asphalt from a base layer plus optional layers of rubble, oil, grime, large-scale variation, patches, cracks and wheel marks, each with its own `Do ...` switch, and it reacts to the weather with puddles and wetness. Painting roads with it is covered in [Content authoring - maps](tuto_content_authoring_maps.md#prepare-the-master-material).
+`M_RoadMaster` is the master of the road surfaces and lane markings. It builds the asphalt from a base layer plus optional layers of rubble, oil, grime, large-scale variation, patches, cracks and wheel marks, each with its own `Do ...` switch, and it reacts to the weather with puddles and wetness. Painting roads with it is covered in [Content authoring - maps](content_authoring_maps_road_painter.md#prepare-the-master-material).
 
-![road_textures](img/tuto_A_material_customization/road_textures.webp)
+![road_textures](img/content_authoring_materials/road_textures.webp)
 <div class="img-caption">Some of the textures of <code>MI_Road_Asphalt_B</code>, the asphalt of Town10.</div>
 
-![road_wet](img/tuto_A_material_customization/road_wet.webp)
+![road_wet](img/content_authoring_materials/road_wet.webp)
 <div class="img-caption">The same Town10 street dry and with the <code>WetNoon</code> weather preset, <code>precipitation_deposits</code> 40 and <code>wetness</code> 80. The road (<code>M_RoadMaster</code>) and the sidewalks (<code>M_GeneralMaster</code>) take the puddles and the darkening from the weather.</div>
 
 ### Parameters
 
-![grp_road_base](img/tuto_A_material_customization/grp_road_base.webp)
+![grp_road_base](img/content_authoring_materials/grp_road_base.webp)
 
 __1-Base__ — the base asphalt: `Base Color`, `Base Normal`, `Base Roughness` and a second set (`Base 2 ...`) blended by `Alpha_Bases`, with their tints, roughness multipliers and scale. `Base Random Offset Variation` and `Normal Cell Scale` break the repetition of the tiles.
 
-![grp_road_rubble](img/tuto_A_material_customization/grp_road_rubble.webp)
+![grp_road_rubble](img/content_authoring_materials/grp_road_rubble.webp)
 
-![grp_road_oilspill](img/tuto_A_material_customization/grp_road_oilspill.webp)
+![grp_road_oilspill](img/content_authoring_materials/grp_road_oilspill.webp)
 
-![grp_road_grime](img/tuto_A_material_customization/grp_road_grime.webp)
+![grp_road_grime](img/content_authoring_materials/grp_road_grime.webp)
 
 __2- Rubble__, __3- OilSpill__, __4- Grime__ — layers of loose gravel, oil stains and grime, each enabled by its `Do ...` switch and controlled by its tint, roughness, scale and noise texture.
 
-![grp_road_macrovary](img/tuto_A_material_customization/grp_road_macrovary.webp)
+![grp_road_macrovary](img/content_authoring_materials/grp_road_macrovary.webp)
 
 __5- MacroVary__ — large-scale light and dark variation (`5MV Tint Dark`, `5MV Tint Light`), so long roads do not look uniform from a distance.
 
-![grp_road_patches](img/tuto_A_material_customization/grp_road_patches.webp)
+![grp_road_patches](img/content_authoring_materials/grp_road_patches.webp)
 
-![grp_road_cracks](img/tuto_A_material_customization/grp_road_cracks.webp)
+![grp_road_cracks](img/content_authoring_materials/grp_road_cracks.webp)
 
-![grp_road_wheelmarks](img/tuto_A_material_customization/grp_road_wheelmarks.webp)
+![grp_road_wheelmarks](img/content_authoring_materials/grp_road_wheelmarks.webp)
 
 __6- Patches__, __7- Cracks__, __8- WheelMarks__ — repaired patches, cracks, and the darker tracks left by tyres. Their parameters appear when the switch is ticked.
 
-![grp_road_puddle](img/tuto_A_material_customization/grp_road_puddle.webp)
+![grp_road_puddle](img/content_authoring_materials/grp_road_puddle.webp)
 
-![grp_road_decals](img/tuto_A_material_customization/grp_road_decals.webp)
+![grp_road_decals](img/content_authoring_materials/grp_road_decals.webp)
 
-![grp_road_lanemarking](img/tuto_A_material_customization/grp_road_lanemarking.webp)
+![grp_road_lanemarking](img/content_authoring_materials/grp_road_lanemarking.webp)
 
 __91- Puddle__, __0b Decals__, __99 -LaneMarking__ — `Do Puddle` adds the material's own puddles; `Enable Decal 0b` lets decals paint on the road; `LaneMark` turns the instance into a lane-marking material, as in `MI_Road_Asphalt_B_LaneMarkingWhite`.
 
@@ -316,43 +316,43 @@ __91- Puddle__, __0b Decals__, __99 -LaneMarking__ — `Do Puddle` adds the mate
 
 `M_VegetationMaster` is the master of trees, palms, bushes and grass. It is two-sided and masked, it moves with the wind of the weather, and it can vary its color across a forest.
 
-![vegetation_textures](img/tuto_A_material_customization/vegetation_textures.webp)
+![vegetation_textures](img/content_authoring_materials/vegetation_textures.webp)
 <div class="img-caption">The textures of <code>MI_Palm_Leaf</code>.</div>
 
-![vegetation_example](img/tuto_A_material_customization/vegetation_example.webp)
+![vegetation_example](img/content_authoring_materials/vegetation_example.webp)
 <div class="img-caption">A palm of Town10.</div>
 
 ### Parameters
 
-![grp_veg_textures](img/tuto_A_material_customization/grp_veg_textures.webp)
+![grp_veg_textures](img/content_authoring_materials/grp_veg_textures.webp)
 
 __0 - Textures__ — `Albedo`, `Normal`, and `RDO (Roughness // Displacement // Occlusion)`. With `UseOpacityMask`, the leaf cut-out comes from the `Opacity Mask` texture instead of the Albedo alpha channel.
 
-![grp_veg_global](img/tuto_A_material_customization/grp_veg_global.webp)
+![grp_veg_global](img/content_authoring_materials/grp_veg_global.webp)
 
-![grp_veg_grass](img/tuto_A_material_customization/grp_veg_grass.webp)
+![grp_veg_grass](img/content_authoring_materials/grp_veg_grass.webp)
 
 __00 - Global__ and __05-Grass__ — `Plant` and `GrassGradient` select variants of the shader for plants and grass; `GrassGradient` blends the color with a world-position gradient.
 
-![grp_veg_uvs](img/tuto_A_material_customization/grp_veg_uvs.webp)
+![grp_veg_uvs](img/content_authoring_materials/grp_veg_uvs.webp)
 
 __1. Uvs__ — `UseUniformTiling` and `Tiling`.
 
-![grp_veg_color_variation](img/tuto_A_material_customization/grp_veg_color_variation.webp)
+![grp_veg_color_variation](img/content_authoring_materials/grp_veg_color_variation.webp)
 
 __13 - ColorVariation__ — with `ColorVariations`, tints the vegetation with `Color Var Color 01-03`, varying with the world position, so the same tree does not look identical everywhere; `Random Color Int` and `Random Color Variation Amount` control the strength.
 
-![grp_veg_adjustments](img/tuto_A_material_customization/grp_veg_adjustments.webp)
+![grp_veg_adjustments](img/content_authoring_materials/grp_veg_adjustments.webp)
 
 __2. Adjustments__ — `Albedo Controls`, `AlbedoTint`, `Tint Intensity`, `Spec/Rough/Normal Intensities`, `AO Controls`, `UseFresnelSpecular`, and sharpening of the albedo and normal.
 
-![grp_veg_subsurface](img/tuto_A_material_customization/grp_veg_subsurface.webp)
+![grp_veg_subsurface](img/content_authoring_materials/grp_veg_subsurface.webp)
 
 __3. SubSurfaceScattering__ — light passing through the leaves: `Subsurface Intensity`, `Thickness`, and a custom color or texture.
 
-![grp_veg_wind](img/tuto_A_material_customization/grp_veg_wind.webp)
+![grp_veg_wind](img/content_authoring_materials/grp_veg_wind.webp)
 
-![grp_veg_wind_contrast](img/tuto_A_material_customization/grp_veg_wind_contrast.webp)
+![grp_veg_wind_contrast](img/content_authoring_materials/grp_veg_wind_contrast.webp)
 
 __4 - Wind__ and __2 - Wind__ — `EnableWind` moves the mesh with the wind intensity of the weather; `Wind Multiplyer` scales it and `Vertical Offset` shifts the motion. The second wind group holds a `Contrast` value.
 

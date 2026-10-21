@@ -158,7 +158,7 @@ pip3 install PythonAPI/carla/dist/carla-*.whl
 
 ### Content packs
 
-The `package` target also writes `<release>-release-metadata.tar.gz` (about 2 MB) next to the package, which content packs are built against. See [Content packs](content_packs.md).
+The `package` target also writes `<release>-release-metadata.tar.gz` (about 2 MB) next to the package, which content packs are built against. See [Content packs](content_authoring_packs.md).
 
 ## Build presets
 

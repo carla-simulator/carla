@@ -2457,7 +2457,7 @@ Initializes the Optical Flow Pixel. Zero by default.
 ---
 
 ## carla.Osm2Odr<a name="carla.Osm2Odr"></a>
-Class that converts an OpenStreetMap map to OpenDRIVE format, so that it can be loaded in CARLA. Find out more about this feature in the [docs](tuto_G_openstreetmap.md).  
+Class that converts an OpenStreetMap map to OpenDRIVE format, so that it can be loaded in CARLA. Find out more about this feature in the [docs](content_authoring_maps_openstreetmap.md).  
 
 ### Methods
 - <a name="carla.Osm2Odr.convert"></a>**<font color="#7fb800">convert</font>**(<font color="#00a6ed">**osm_file**</font>, <font color="#00a6ed">**settings**</font>)  
@@ -2470,7 +2470,7 @@ Takes the content of an <code>.osm</code> file (OpenStreetMap format) and return
 ---
 
 ## carla.Osm2OdrSettings<a name="carla.Osm2OdrSettings"></a>
-Helper class that contains the parameterization that will be used by [carla.Osm2Odr](#carla.Osm2Odr) to convert an OpenStreetMap map to OpenDRIVE format. Find out more about this feature in the [docs](tuto_G_openstreetmap.md).  
+Helper class that contains the parameterization that will be used by [carla.Osm2Odr](#carla.Osm2Odr) to convert an OpenStreetMap map to OpenDRIVE format. Find out more about this feature in the [docs](content_authoring_maps_openstreetmap.md).  
 
 ### Instance Variables
 - <a name="carla.Osm2OdrSettings.use_offsets"></a>**<font color="#f8805a">use_offsets</font>** (_bool_)  
@@ -3344,7 +3344,7 @@ With hybrid physics on, changes the radius of the area of influence where physic
     - **Parameters:**
         - `r` (_float<small> - meters</small>_) - New radius where physics are enabled.  
 - <a name="carla.TrafficManager.set_osm_mode"></a>**<font color="#7fb800">set_osm_mode</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**mode_switch**=True</font>)  
-Enables or disables the OSM mode. This mode allows the user to run TM in a map created with the [OSM feature](tuto_G_openstreetmap.md). These maps allow having dead-end streets. Normally, if vehicles cannot find the next waypoint, TM crashes. If OSM mode is enabled, it will show a warning, and destroy vehicles when necessary.  
+Enables or disables the OSM mode. This mode allows the user to run TM in a map created with the [OSM feature](content_authoring_maps_openstreetmap.md). These maps allow having dead-end streets. Normally, if vehicles cannot find the next waypoint, TM crashes. If OSM mode is enabled, it will show a warning, and destroy vehicles when necessary.  
     - **Parameters:**
         - `mode_switch` (_bool_) - If __True__, the OSM mode is enabled.  
 - <a name="carla.TrafficManager.set_path"></a>**<font color="#7fb800">set_path</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**path**</font>, <font color="#00a6ed">**empty_buffer**=True</font>)  
