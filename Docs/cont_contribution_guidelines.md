@@ -11,7 +11,7 @@ __1. Check if the bug has been reported.__ Look it up in that same issue section
 
 __2. Read the docs.__ Make sure that the issue is a bug, not a misunderstanding on how CARLA is supposed to work. Read the pages related to the issue in the [documentation][docslink] and take a look at the [FAQ][faqlink] page.
 
-__3. Say which version you are on.__ The branch and commit you built from, the Unreal Engine version, the platform and the Python version. A bug on the UE 4.26 line and the same bug on the UE 5.8 line are usually two different bugs.
+__3. Say which version you are on.__ The branch and commit you built from, the Unreal Engine version, the platform and the Python version.
 
 [issueslink]: https://github.com/carla-simulator/carla/issues
 [docslink]: https://carla-ue5.readthedocs.io
@@ -43,17 +43,12 @@ Follow the [coding standard](cont_coding_standard.md) when submitting new code.
 
 ### Submission
 
-CARLA is developed on two parallel lines, and a contribution goes to the one it was written for.
+Contributions and new features are merged to the development branch, `ue58-dev`. Its content is in the `ue58-dev-carla` branch of the content repository.
 
-| Branch | Engine | Content branch |
-| --- | --- | --- |
-| `ue58-dev` | Unreal Engine 5.8, the main line | `ue58-dev-carla` |
-| `ue4-dev` | Unreal Engine 4.26, maintenance only | pinned in `Util/ContentVersions.txt` |
-
-*   Develop the contribution in a branch named `username/name_of_the_contribution`, taken from the branch you target.
-*   Keep it rebased on the latest version of that branch.
-*   Open a pull request against that same branch and fill in the template: what changed, where it was tested, and the possible drawbacks.
-*   On `ue58-dev`, continuous integration builds the client, the Python API, the server and the package on Ubuntu, and builds and runs the LibCarla tests ([What CI runs](testing.md#what-ci-runs)). It does not run the Python tests, so run them locally. A red mark means the build or the tests failed; fix it before asking for a review.
+*   Always keep your branch updated with the latest changes in `ue58-dev`.
+*   Develop the contribution in a child branch from `ue58-dev` named `username/name_of_the_contribution`.
+*   Once the contribution is ready, submit a pull request from your branch to `ue58-dev`. Try to be as descriptive as possible when filling in the template: what changed, where it was tested, and the possible drawbacks.
+*   Continuous integration builds the client, the Python API, the server and the package on Ubuntu, and builds and runs the LibCarla tests ([What CI runs](testing.md#what-ci-runs)). It does not run the Python tests, so run them locally. A green tick mark appears if the checks pass; if there is a red mark, correct the code accordingly.
 
 ### Checklist
 
