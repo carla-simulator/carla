@@ -2,14 +2,6 @@
 
 CARLA has C++ unit tests for LibCarla, Python unit tests for the client module, and Python smoke and integration tests that drive a running server. Run the unit tests after any change to LibCarla or the Python API, and the smoke tests after any change that reaches the simulator.
 
-* __[Test suites](#test-suites)__
-* __[LibCarla unit tests](#libcarla-unit-tests)__
-* __[Python API unit tests](#python-api-unit-tests)__
-* __[Smoke tests](#smoke-tests)__
-* __[Integration tests](#integration-tests)__
-* __[Other test suites](#other-test-suites)__
-* __[What CI runs](#what-ci-runs)__
-
 ## Test suites
 
 | Suite | Location | Needs a server | Runner |
@@ -41,6 +33,9 @@ rm -rf Build/test-content
 git clone --depth 1 -b 0.1.4 https://github.com/carla-simulator/opendrive-test-files.git Build/test-content
 ```
 
+!!! Note
+    `Build/test-content` is compiled into the binaries as an absolute path under the source tree. Clone it there even when the binaries live in a preset directory such as `Build/Release`.
+
 Run the binaries:
 
 ```sh
@@ -53,9 +48,6 @@ Both link `gtest_main`, so the standard GoogleTest flags work. To run a subset:
 ```sh
 ./Build/LibCarla/libcarla_test_client --gtest_filter='road.*'
 ```
-
-!!! Note
-    `Build/test-content` is compiled into the binaries as an absolute path under the source tree. Clone it there even when the binaries live in a preset directory such as `Build/Release`.
 
 ## Python API unit tests
 
@@ -73,7 +65,7 @@ python3 -m nose2 -v
 The smoke tests connect to `localhost:3654`, not the default port 2000, so start a dedicated server on that port. From a package:
 
 ```sh
-./CarlaUnreal.sh -carla-rpc-port=3654
+./Linux/CarlaUnreal.sh -carla-rpc-port=3654
 ```
 
 With the Python API and the test requirements installed (see [Python API unit tests](#python-api-unit-tests)), check that the server answers, then run the list from the `test` folder:
@@ -96,7 +88,7 @@ Add `-c smoke/unittest.cfg -X` to write the results as JUnit XML to `test-result
 The tests load maps and change world settings, and restore the starting map after each test, so do not run them against a server you are using for something else.
 
 !!! Note
-    `smoke.test_ros2` needs a server launched with `--ros2` (`./CarlaUnreal.sh -carla-rpc-port=3654 --ros2`). Without it, those tests fail.
+    `smoke.test_ros2` needs a server launched with `-ros2` (`./Linux/CarlaUnreal.sh -carla-rpc-port=3654 -ros2`). Without it, those tests fail. The tests check whichever middleware the server runs, so run them once per middleware, launching with `-rmw=fastdds`, `-rmw=cyclonedds` or `-rmw=zenoh`.
 
 ## Integration tests
 
@@ -137,7 +129,7 @@ __Standalone scripts__ in `PythonAPI/test/` connect to a running server and prin
 
 ## What CI runs
 
-Pull requests to `ue5-dev` run `.github/workflows/ue5_pr.yml` on Ubuntu. It configures with the `Release` preset, `-DENABLE_ROS2=ON` and `-DBUILD_LIBCARLA_TESTS=ON`, builds the client, the Python API and the server, then builds and runs the LibCarla unit tests:
+Pull requests to `ue58-dev` run `.github/workflows/ue5_pr.yml` on Ubuntu. It configures with the `Release` preset, `-DENABLE_ROS2=ON` and `-DBUILD_LIBCARLA_TESTS=ON`, builds the client, the Python API and the server, then builds and runs the LibCarla unit tests:
 
 ```sh
 cmake --preset Release -DENABLE_ROS2=ON -DBUILD_LIBCARLA_TESTS=ON
