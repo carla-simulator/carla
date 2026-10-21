@@ -84,19 +84,19 @@ The export files CARLA needs are the `.xodr` and the `.fbx`, and both must have 
 ![roadrunner_imports](img/tuto_content_authoring_maps/rr_import.png)
 <div style="text-align: right"><i>The .fbx and .xodr copied into the Import folder of the CARLA tree.</i></div>
 
-Then run the importer from the root of the CARLA source tree. It runs the editor headless, so it needs the path to the Unreal Engine and the `carla` Python package installed in the interpreter that runs it:
+Then run the importer from the root of the CARLA source tree. It runs the editor headless, so it needs the path to the Unreal Engine and the `carla` Python package installed in the interpreter that runs it (`cmake --build Build --target carla-python-api-install` installs it). If the setup script downloaded the engine, it already added the `export` line to `~/.bashrc`; set it yourself only if your shell does not have it:
 
 ```sh
-export CARLA_UNREAL_ENGINE_PATH=/path/to/UnrealEngine_5.5
+export CARLA_UNREAL_ENGINE_PATH=/path/to/UnrealEngine5_carla
 python3 Util/Tools/Import.py --package tutorial
 ```
 
-`--package` names the package the map is imported into. The importer creates a package descriptor in `Import/` if there is none, imports the geometry, applies CARLA's road materials, prepares the map for cooking and builds the Traffic Manager cache. Do not use `Util/Tools/Import.sh`: on this branch it fails before reaching `Import.py`.
+`--package` names the package the map is imported into. The importer creates a package descriptor in `Import/` if there is none, imports the geometry, applies CARLA's road materials, prepares the map for cooking and builds the Traffic Manager cache.
 
 !!! Warning
-    The importer also tries to build the pedestrian navigation mesh, and on this branch that step silently does nothing, because `RecastBuilder` and `FBX2OBJ` are not in `Util/DockerUtils/dist/`. Without them walkers cannot navigate the new map. Copy `RecastBuilder` from the build tree into that folder before importing: `cp $(find Build -name RecastBuilder -type f | head -1) Util/DockerUtils/dist/`.
+    The importer also tries to build the pedestrian navigation mesh, and that step silently does nothing unless `FBX2OBJ` and `RecastBuilder` are in `Util/DockerUtils/dist/`. Without them walkers cannot navigate the new map. Build `FBX2OBJ` from `Util/DockerUtils/fbx`, which needs the Autodesk FBX SDK 2020.0.1 and installs into `Util/DockerUtils/dist/`, and copy `RecastBuilder` from the build tree before importing: `cp Build/_deps/recastnavigation-build/RecastBuilder/RecastBuilder Util/DockerUtils/dist/`. The step calls `python`, so `python` must run Python 3.
 
-Open the editor with `cmake --build Build/Release --target launch`. The map is in the new package folder of the content browser, at `Content > tutorial > Maps > <map name>`, with its OpenDRIVE file in the `OpenDrive` subfolder.
+Open the editor with `cmake --build Build --target launch`. The map is in the new package folder of the content browser, at `Content > tutorial > Maps > <map name>`, with its OpenDRIVE file in the `OpenDrive` subfolder.
 
 ![new_loaded_map](img/tuto_content_authoring_maps/new_map.webp)
 <div style="text-align: right"><i>The folder of an imported map in the Content Browser, here the Sunnyvale digital twin, with its level and OpenDRIVE subfolder. Unreal Editor 5.8</i></div>
@@ -165,6 +165,8 @@ Now save the asset and it is ready for use in your map. You can now drag the ass
 <div style="text-align: right"><i>The farmhouse placed in the map.</i></div>
 
 Now save the map with __File > Save Current Level__ (`Ctrl + S`) and it is ready to use. Press __Play__ to run the simulation in the editor.
+
+A CARLA package does not include your map. To load it in a packaged CARLA, build it into a [content pack](content_packs.md#a-existing-carla-towns-create): `Util/ContentPacks/carla-pack create` takes any map under the project's `Content` folder, together with the OpenDRIVE, navigation and Traffic Manager files the importer wrote next to it.
 
 This concludes the Map authorship guide. Now you know how to create a road network and import 3D assets for use in CARLA.
 
