@@ -12,3 +12,4 @@ The Unreal Engine 5 version of CARLA requires a minimum of Windows 11 or Ubuntu 
 * [__Linux build__](build_linux_ue5.md)
 * [__Windows build__](build_windows_ue5.md)
 * [__Docker__](build_docker.md)
+* [__Build FAQ__](build_faq.md)

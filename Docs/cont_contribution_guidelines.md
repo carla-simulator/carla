@@ -20,12 +20,13 @@ Issues can be reported in the [issue section][issueslink] on GitHub. Before repo
 
 __1. Check if the bug has been reported.__ Look it up in that same issue section on GitHub.
 
-__2. Read the docs.__ Make sure that the issue is a bug, not a misunderstanding on how CARLA is supposed to work. Read the pages related to the issue in the [documentation][docslink].
+__2. Read the docs.__ Make sure that the issue is a bug, not a misunderstanding on how CARLA is supposed to work. Read the pages related to the issue in the [documentation][docslink] and take a look at the [FAQ][faqlink] page.
 
 __3. Say which version you are on.__ The branch and commit you built from, the Unreal Engine version, the platform and the Python version. A bug on the UE 4.26 line and the same bug on the UE 5.8 line are usually two different bugs.
 
 [issueslink]: https://github.com/carla-simulator/carla/issues
 [docslink]: https://carla-ue5.readthedocs.io
+[faqlink]: build_faq.md
 
 ---
 ## Request features

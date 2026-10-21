@@ -125,3 +125,5 @@ Finally, rebuild the server and the Python API so both sides know the new label,
 cmake --build Build/Release --target carla-server
 cmake --build Build/Release --target carla-python-api-install
 ```
+
+Read the **[F.A.Q.](build_faq.md)** page or post in the [CARLA forum](https://github.com/carla-simulator/carla/discussions) for any issues, doubts or suggestions.
