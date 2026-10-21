@@ -45,7 +45,11 @@ nav:
     - 'Alpamayo architecture and control': 'nvidia_alpamayo_architecture.md'
     - 'Alpamayo troubleshooting': 'nvidia_alpamayo_troubleshooting.md'
     - 'Neural reconstruction': 'nvidia_nurec.md'
-  - 'ROS2': 'ros2_native.md'
+  - ROS 2:
+    - 'Native interface': 'ros2_native.md'
+    - 'Sensors': 'ros2_native_sensors.md'
+    - 'Messages': 'ros2_native_msgs.md'
+    - 'Autoware': 'autoware.md'
   - 'Scenic': 'tuto_G_scenic.md'
   - 'InvertedAI': 'inverted_ai.md'
 
@@ -64,7 +68,6 @@ not_in_nav: |
   /adv_recorder.md
   /adv_rendering_options.md
   /adv_synchrony_timestep.md
-  /autoware.md
   /build_devcontainer.md
   /build_docker.md
   /build_faq.md
@@ -90,8 +93,6 @@ not_in_nav: |
   /ref_recorder_binary_file_format.md
   /ref_sensors.md
   /release_readme.md
-  /ros2_native_msgs.md
-  /ros2_native_sensors.md
   /ros_documentation.md
   /testing.md
   /tuto_A_material_customization.md

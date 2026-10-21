@@ -101,7 +101,7 @@ python3 ../util/config.py -m Town05_Opt
 | `rig_perf_demo.py` | Measures the delivered frame rate of an N-camera rig, then replays the run into a labelled grid video. |
 | `lw_suite.py`, `lightweather_test.py` | Functional tests of the light and weather API. |
 | `dvs_suite.py` | DVS camera tests: synchronous mode, attributes, resolution and lifecycle. |
-| `autoware_demo.py` | The TIER IV sensor-kit rig, for the [Autoware](ros2_native.md) integration. |
+| `autoware_demo.py` | The TIER IV sensor-kit rig, for the [Autoware](autoware.md) integration. |
 
 ---
 

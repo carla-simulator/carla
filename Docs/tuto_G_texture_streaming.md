@@ -17,6 +17,8 @@ The API needs the object's name as the server knows it, and the quickest way to 
 list(filter(lambda k: 'Apartment' in k, world.get_names_of_all_objects()))
 ```
 
+On Town10HD_Opt that returns names such as `BP_Apartment04_v07_Opt_0`. [`world.get_environment_objects()`](python_api.md#carla.World.get_environment_objects) is useful for finding where an object is, but it names each mesh component rather than the object — `BP_Apartment04_v07_Opt_0_SM_1` — and the texture calls take the object name, so strip the `_SM_<n>` suffix before using it.
+
 That works against any server, packaged or not. The alternative is the Unreal Editor, which also shows you what you are about to change — it needs a [source build](build_linux_ue5.md). Open the editor with Town10HD_Opt loaded and select a building:
 
 ![select_building](img/tuto_G_texture_streaming/building_selected.webp)
@@ -68,14 +70,14 @@ After loading the modified image, instantiate a [carla.TextureColor](python_api.
 
 Use the `apply_color_texture_to_object(...)` method of the [carla.World](python_api.md#carla.World) object to update the texture. You should see the texture update in the spectator view.
 
-!!! Warning
-    On the UE 5.8 server, `apply_color_texture_to_object` currently returns without a visible change on the map's buildings. The call and its parameters are described here as the API defines them.
+The change is applied to every static mesh component of that object, but only the materials that expose the parameter actually change, so a building often repaints in part: applying a `Diffuse` texture to an apartment block in Town10HD_Opt repaints its railings and fire escapes and leaves the brick facade as it was, because the two are different materials.
 
+A name the server does not know raises `RuntimeError: unable to find Actor to apply the texture`, so a typo fails loudly rather than silently. The new texture lasts for the rest of the session and is undone by [`client.reload_world()`](python_api.md#carla.Client.reload_world).
 
 ```py
 # The object to retexture, as the server names it. Confirm it against
 # world.get_names_of_all_objects() for the map you have loaded.
-object_name = 'BP_Apartment04_v01_Opt_2'
+object_name = 'BP_Apartment04_v07_Opt_0'
 
 # Load the modified texture
 image = Image.open('modified_texture.tga').convert('RGBA')
@@ -102,16 +104,16 @@ world.apply_color_texture_to_object(object_name, carla.MaterialParameter.Diffuse
 ---
 ## Which materials can be changed
 
-`apply_color_texture_to_object` writes into named parameters of the object's material, so it only works on materials that expose them. [`carla.MaterialParameter`](python_api.md#carla.MaterialParameter) selects which one:
+`apply_color_texture_to_object` writes into named texture parameters of the object's material, so it only reaches materials that expose them. [`carla.MaterialParameter`](python_api.md#carla.MaterialParameter) selects which one, and each value writes a small set of parameter names:
 
-| Parameter | Texture it replaces |
-| --- | --- |
-| `Diffuse` | The base color map |
-| `Normal` | The normal map |
-| `AO_Roughness_Metallic_Emissive` | The packed ORME map |
-| `Emissive` | The emissive map |
+| Parameter | Texture it replaces | Material parameters written |
+| --- | --- | --- |
+| `Diffuse` | The base color map | `BaseColor`, `Difuse`, `Difuse 2`, `Difuse 3`, `Difuse 4` |
+| `Normal` | The normal map | `Normal`, `Normal 2`, `Normal 3`, `Normal 4` |
+| `AO_Roughness_Metallic_Emissive` | The packed ORME map | `AO / Roughness / Metallic / Emissive`, `ORMH` |
+| `Emissive` | The emissive map | `Emissive` |
 
-CARLA's own building and road materials expose all four. A material that does not — a third-party asset, or one built in the editor without those parameter names — silently keeps its original texture.
+CARLA's generic master material, which most buildings and props use, exposes `BaseColor`, `Normal`, `Emissive` and `AO / Roughness / Metallic / Emissive`, so all four values reach it. The road master exposes only `BaseColor` and `Normal`, so `Emissive` and `AO_Roughness_Metallic_Emissive` do nothing on roads. A material that exposes none of the names above — a third-party asset, or one authored without them — silently keeps its original texture.
 
 !!! Warning
     The per-pixel loop above is slow: a 2K texture is four million boundary calls. Downscale the image first, or build the pixel data in NumPy and set it row by row, when the texture is large. Call `image.convert('RGBA')` after opening it so palette and grayscale files give four channels.
