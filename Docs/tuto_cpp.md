@@ -21,7 +21,7 @@ Not covered here:
 ## Prerequisites
 
 - CARLA [built from source](build_linux_ue5.md) on Linux or [on Windows](build_windows_ue5.md)
-- A CARLA server running (`localhost:2000` by default)
+- A CARLA server running (`localhost:2000` by default), built from the same CARLA version as the client: the RPC protocol is not compatible across versions
 
 ---
 ## Build and run the C++ example client
