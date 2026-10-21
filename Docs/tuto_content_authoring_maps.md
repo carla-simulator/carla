@@ -209,17 +209,17 @@ The CARLA content library has a multitude of useful materials ready to use to ch
 You can test the materials rapidly by dragging them onto map elements.
 
 
-# Road Painter
+## Road Painter
 
 The road painter is a tool that can be used to customize the appearance of the road, adding extra realism with additional textures, decals and meshes.
 
-## What is the road painter?
+### What is the road painter?
 
 The Road Painter tool is a blueprint that uses OpenDRIVE information to paint roads quickly. It takes a master material and applies it to a render target of the road to use as a canvas. The master material is made up of a collection of materials that can be blended using brushes and applied as masks. There is no need to apply photometry techniques nor consider the UVs of the geometry.
 
 The road painter uses the OpenDRIVE information to paint the roads. Make sure that your `.xodr` file has the same name as your map for this to work correctly.
 
-## Establish the road painter, master material and render target
+### Establish the road painter, master material and render target
 
 __1. Create the `RoadPainter` actor.__
 
@@ -243,7 +243,7 @@ The road painter paints into the texture set in _Paint > Render Target_, `Render
 
 ---
 
-## Prepare the master material
+### Prepare the master material
 
 CARLA's road materials are instances of `M_RoadMaster`, in `Content > Carla > Static > GenericMaterials > 000_Masters`. Ready-made instances are in `Content > Carla > Static > GenericMaterials > Roads`, such as `MI_Road_Asphalt_A`. Right-click `M_RoadMaster`, select _Create Material Instance_, and rename it `Tutorial_RoadMaster`.
 
@@ -261,7 +261,7 @@ The instance groups its parameters by layer:
 
 ---
 
-## Paint the road
+### Paint the road
 
 __1. Create the link between the road painter and the roads.__
 
@@ -358,7 +358,7 @@ Experiment with different materials, textures, settings, decals, and meshes to g
 
 ---
 
-## Update the appearance of lane markings
+### Update the appearance of lane markings
 
 Lane markings use `M_RoadMaster` too, with its `LaneMark` switch on. `Content > Carla > Static > GenericMaterials > Roads` has ready-made instances, `MI_Road_Asphalt_B_LaneMarkingWhite` and `MI_Road_Asphalt_B_LaneMarkingYellow`. To make your own:
 
