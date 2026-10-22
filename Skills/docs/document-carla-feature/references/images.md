@@ -36,9 +36,11 @@ error.
    wide, under 3 MB (`anim.py`). Diagrams: SVG (`svgkit.py`), white background,
    palette and fonts from `svgkit.C`. Charts or map plots: PNG from matplotlib.
    Never GIF (the UE4-era GIFs were 9-55 MB).
-6. **Every image gets a caption record**: what it shows in one sentence, and
-   for renders the town, sensor, camera profile and weather. Keep it next to
-   the image list you hand to whoever writes the page (`manifest.py`).
+6. **Every image gets a manifest record**: what it shows in one sentence, and
+   for renders the town, sensor, camera profile and weather (`manifest.py`).
+   That record is for whoever writes the page, not for the page: a caption goes
+   on the page only when it tells the reader something the text does not, and
+   provenance never does.
 7. **Towns.** Town10HD_Opt is the default. Town15 also gives good shots; it is
    World Partition, so it only streams around a vehicle with
    `role_name=hero` (spawn one near the camera, physics off). Do not jump the
