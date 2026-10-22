@@ -197,12 +197,14 @@ CARLA also requires CMake 3.28 or later and the Python packages listed in `requi
 bash Util/SetupUtils/InstallPrerequisites.sh --python-path=python3
 ```
 
-The Unreal Engine build requires the NVIDIA DLSS SDK. If you already have it, set `DLSS_SDK` to its location. Otherwise, download it with:
+The CARLA build uses the NVIDIA DLSS SDK for the ray-traced lens cameras. If you already have it, set `DLSS_SDK` to its location. Otherwise, download it with:
 
 ```sh
 bash Util/SetupUtils/SetupDLSS.sh
 export DLSS_SDK=$HOME/SDKs/DLSS
 ```
+
+To build without it, configure with `-DCARLA_DLSS_SDK_PATH=disabled`.
 
 To build without DLSS, set `DLSS_SDK=disabled` instead.
 
