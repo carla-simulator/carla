@@ -75,6 +75,17 @@ void ARayCastLidar::SendData(const float DeltaTime)
     TRACE_CPUPROFILER_EVENT_SCOPE_STR("ROS2 Send");
     auto StreamId = carla::streaming::detail::token_type(GetToken()).get_stream_id();
     AActor* ParentActor = GetAttachParentActor();
+    // Driver mode (rotating 360 deg sensors only): the publisher assembles the
+    // steps into full rotations; it needs the sweep of this step. Every ray is
+    // cast from the sensor pose at the step stamp (time_span 0).
+    carla::ros2::LidarDriverOptions Driver;
+    Driver.enabled = Description.RosDriverMode && Description.HorizontalFov >= 360.0f;
+    Driver.cut_angle = Description.RosScanCutAngle;
+    Driver.slice.delta_time = DeltaTime;
+    Driver.slice.time_span = 0.0;
+    Driver.slice.start_angle = LastSweepStartAngle;
+    Driver.slice.sweep_angle = LastSweepAngle;
+    Driver.slice.rays_per_channel = LastRaysPerChannel;
     // Passing the channel count and vertical FOV limits routes the publisher
     // through the extended Autoware XYZIRCAEDT layout (tier4 autoware-support
     // port); see ROS2::ProcessDataFromLidar.
@@ -82,12 +93,12 @@ void ARayCastLidar::SendData(const float DeltaTime)
     {
       FTransform LocalTransformRelativeToParent = GetActorTransform().GetRelativeTransform(ParentActor->GetActorTransform());
       ROS2->ProcessDataFromLidar(DataStream.GetSensorType(), StreamId, LocalTransformRelativeToParent,
-                                 Description.Channels, Description.UpperFovLimit, Description.LowerFovLimit, LidarData, this);
+                                 Description.Channels, Description.UpperFovLimit, Description.LowerFovLimit, Driver, LidarData, this);
     }
     else
     {
       ROS2->ProcessDataFromLidar(DataStream.GetSensorType(), StreamId, SensorTransform,
-                                 Description.Channels, Description.UpperFovLimit, Description.LowerFovLimit, LidarData, this);
+                                 Description.Channels, Description.UpperFovLimit, Description.LowerFovLimit, Driver, LidarData, this);
     }
   }
   #endif

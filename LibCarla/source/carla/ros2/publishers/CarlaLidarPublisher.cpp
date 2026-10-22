@@ -32,27 +32,6 @@ static_assert(
     sizeof(LidarPoint) == 16u,
     "LidarPoint must be tightly packed (4 float32s) for the wire layout");
 
-// Wire POD for the extended Autoware PointXYZIRCAEDT layout (tier4
-// SetDataEx). Natural alignment yields no padding: the uint16 channel lands
-// on offset 14 and the trailing uint32 closes the struct at 32 B, matching
-// kLidarFieldsEx in PointCloudFieldsLayout.h byte for byte.
-struct LidarPointEx {
-  float x{0.0f};
-  float y{0.0f};
-  float z{0.0f};
-  std::uint8_t intensity{0u};
-  std::uint8_t return_type{0u};
-  std::uint16_t channel{0u};
-  float azimuth{0.0f};
-  float elevation{0.0f};
-  float distance{0.0f};
-  std::uint32_t time_stamp{0u};
-};
-
-static_assert(
-    sizeof(LidarPointEx) == 32u,
-    "LidarPointEx must match the kLidarFieldsEx wire layout (32 B stride)");
-
 }  // namespace
 
 std::size_t CarlaLidarPublisher::GetPointSize() const {
@@ -105,16 +84,22 @@ std::vector<std::uint8_t> CarlaLidarPublisher::ComputePointCloud(
     return bytes;
   }
 
-  // Extended path (tier4 SetDataEx semantics): expand each XYZI detection
-  // into a LidarPointEx.
+  // Extended path (tier4 SetDataEx semantics).
+  const auto points = ExpandPoints(total_points, data);
+  std::vector<std::uint8_t> bytes(points.size() * sizeof(LidarPointEx));
+  std::memcpy(bytes.data(), points.data(), bytes.size());
+  return bytes;
+}
+
+std::vector<LidarPointEx> CarlaLidarPublisher::ExpandPoints(
+    std::size_t total_points, const std::uint8_t *data) const {
+  // Expand each XYZI detection into a LidarPointEx.
   const auto *input = reinterpret_cast<const LidarPoint *>(data);
 
-  std::vector<std::uint8_t> bytes(total_points * sizeof(LidarPointEx));
-  auto *points = reinterpret_cast<LidarPointEx *>(bytes.data());
+  std::vector<LidarPointEx> points(total_points);
 
   for (std::size_t i = 0; i < total_points; ++i) {
     auto &point = points[i];
-    point = LidarPointEx{};
     point.x = input[i].x;
     point.y = -input[i].y;  // ROS right-handed frame, same flip as XYZI path.
     // tier4 truncates CARLA's [0, 1] float intensity straight into the uint8
@@ -128,7 +113,8 @@ std::vector<std::uint8_t> CarlaLidarPublisher::ComputePointCloud(
     point.azimuth = std::atan2(point.y, point.x);
     // Autoware's distortion corrector reads time_stamp as a nanosecond offset
     // from header.stamp. CARLA casts every ray of a scan at the same sim
-    // instant, so the offset is zero for all points.
+    // instant, so the offset is zero for all points (driver mode sets it per
+    // point when it assembles the rotation).
     point.time_stamp = 0u;
   }
 
@@ -147,7 +133,51 @@ std::vector<std::uint8_t> CarlaLidarPublisher::ComputePointCloud(
     accumulated += count;
   }
 
-  return bytes;
+  return points;
+}
+
+bool CarlaLidarPublisher::WriteDriverScan(
+    const LidarDriverOptions &options,
+    std::uint32_t width,
+    const std::uint8_t *data,
+    const std::uint32_t *channel_point_counts,
+    std::size_t channel_count,
+    const std::vector<float> &vertical_angles) {
+  _extended = true;
+  _channel_point_counts.assign(
+      channel_point_counts, channel_point_counts + channel_count);
+  _vertical_angles = vertical_angles;
+
+  auto points = ExpandPoints(width, data);
+  for (auto &point : points) {
+    // Lidar driver azimuth (nebula): clockwise from +Y, growing with the
+    // firing order of this clockwise sensor.
+    constexpr float kTwoPi = 6.28318530717958647692f;
+    const float azimuth = std::atan2(point.x, point.y);
+    point.azimuth = azimuth < 0.0f ? azimuth + kTwoPi : azimuth;
+  }
+
+  if (_assembler == nullptr || _cut_angle != options.cut_angle) {
+    _assembler = std::make_unique<LidarScanAssembler<LidarPointEx>>(options.cut_angle);
+    _cut_angle = options.cut_angle;
+  }
+  auto scan = _assembler->Add(options.slice, std::move(points));
+  if (!scan.has_value()) {
+    return false;
+  }
+
+  std::vector<std::uint8_t> bytes(scan->points.size() * sizeof(LidarPointEx));
+  std::memcpy(bytes.data(), scan->points.data(), bytes.size());
+  const double seconds = std::floor(scan->stamp);
+  auto nanoseconds = static_cast<std::uint32_t>(std::llround((scan->stamp - seconds) * 1e9));
+  auto whole_seconds = static_cast<std::int32_t>(seconds);
+  if (nanoseconds >= 1000000000u) {
+    nanoseconds -= 1000000000u;
+    ++whole_seconds;
+  }
+  return CarlaPointCloudPublisher::WritePointCloud(
+      whole_seconds, nanoseconds, 1u,
+      static_cast<std::uint32_t>(scan->points.size()), std::move(bytes));
 }
 
 }  // namespace ros2

@@ -1550,8 +1550,21 @@ void UActorBlueprintFunctionLibrary::MakeLidarDefinition(
   StdDevLidar.Type = EActorAttributeType::Float;
   StdDevLidar.RecommendedValues = {TEXT("0.0")};
 
+  // ROS 2 output like a lidar driver (full rotations, per-point times).
+  FActorVariation RosDriverMode;
+  RosDriverMode.Id = TEXT("ros_driver_mode");
+  RosDriverMode.Type = EActorAttributeType::Bool;
+  RosDriverMode.RecommendedValues = {TEXT("false")};
+  RosDriverMode.bRestrictToRecommended = false;
+  // Driver-mode cut angle (ROS sensor frame, degrees).
+  FActorVariation RosScanCutAngle;
+  RosScanCutAngle.Id = TEXT("ros_scan_cut_angle");
+  RosScanCutAngle.Type = EActorAttributeType::Float;
+  RosScanCutAngle.RecommendedValues = {TEXT("180.0")};
+
   if (Id == "ray_cast")
   {
+    Definition.Variations.Append({RosDriverMode, RosScanCutAngle});
     Definition.Variations.Append({Channels,
                                   Range,
                                   PointsPerSecond,
@@ -2562,6 +2575,10 @@ void UActorBlueprintFunctionLibrary::SetLidar(
       RetrieveActorAttributeToFloat("noise_stddev", Description.Variations, Lidar.NoiseStdDev);
   Lidar.HorizontalResolution =
       RetrieveActorAttributeToFloat("horizontal_resolution", Description.Variations, Lidar.HorizontalResolution);
+  Lidar.RosDriverMode =
+      RetrieveActorAttributeToBool("ros_driver_mode", Description.Variations, Lidar.RosDriverMode);
+  Lidar.RosScanCutAngle =
+      RetrieveActorAttributeToFloat("ros_scan_cut_angle", Description.Variations, Lidar.RosScanCutAngle);
 }
 
 void UActorBlueprintFunctionLibrary::SetGnss(
