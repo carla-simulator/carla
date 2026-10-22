@@ -6,13 +6,12 @@ Guidance for any coding agent working in this repository.
 
 This repo ships a library of **62 vetted CARLA procedures** under
 [`Skills/`](Skills/). Each is a directory containing a `SKILL.md` with YAML
-frontmatter (`name`, `description`, `compatibility`), the step-by-step
+frontmatter (`name`, `description`, `compatibility`, `metadata`), the step-by-step
 procedure, and often `scripts/` and `references/` beside it.
 
 **These skills are the source of truth** for building, packaging, cooking,
-map/vehicle/asset import, running servers, scenarios and ROS 2. The raw
-`Makefile` and `Util/BuildTools` scripts are a fallback for tasks no skill
-covers.
+map/vehicle/asset import, running servers, scenarios and ROS 2, and they cover
+most of the commands those tasks need.
 
 ### How to use them
 

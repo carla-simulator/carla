@@ -31,6 +31,10 @@ TRUE_COLOR = '#99c635'
 FALSE_COLOR = '#f16c6c'
 
 IMAGE_DIR = 'img/catalogue'
+
+# The pages show a thumbnail of every shot; the full image is one click away.
+THUMBNAIL_WIDTH = 720
+THUMBNAIL_QUALITY = 85
 WEBP_QUALITY = 90
 
 # Town10's own weather, read off a freshly loaded map; the captures start from
@@ -653,8 +657,10 @@ def render(title, groups, capture):
         for entry in entries:
             out += ['### ' + entry.heading, '']
             if entry.image:
-                out += ['![%s](%s)' % (os.path.basename(entry.image).rsplit('.', 1)[0],
-                                       entry.image), '']
+                # The page loads the thumbnail; the lightbox in Docs/extra.js
+                # swaps _thumb.webp for the full shot when it is clicked.
+                base = entry.image.rsplit('.', 1)[0]
+                out += ['![%s](%s_thumb.webp)' % (os.path.basename(base), base), '']
             out += ['* ' + bullet for bullet in entry.bullets]
             out.append('')
 
@@ -721,7 +727,20 @@ def save_image(image, path):
     from PIL import Image
     frame = Image.frombuffer('RGBA', (image.width, image.height),
                              image.raw_data, 'raw', 'BGRA', 0, 1)
-    frame.convert('RGB').save(path, 'WEBP', quality=WEBP_QUALITY, method=6)
+    frame = frame.convert('RGB')
+    frame.save(path, 'WEBP', quality=WEBP_QUALITY, method=6)
+    save_thumbnail(frame, path)
+
+
+def save_thumbnail(frame, path):
+    """Writes the <name>_thumb.webp the catalogue pages actually load."""
+    from PIL import Image
+    if frame.width <= THUMBNAIL_WIDTH:
+        return
+    height = round(frame.height * THUMBNAIL_WIDTH / frame.width)
+    thumb = frame.resize((THUMBNAIL_WIDTH, height), Image.LANCZOS)
+    thumb.save(path[:-len('.webp')] + '_thumb.webp', 'WEBP',
+               quality=THUMBNAIL_QUALITY, method=6)
 
 
 def prepare(client, capture):

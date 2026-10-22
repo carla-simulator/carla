@@ -2,8 +2,6 @@
 
 The blueprint library ([`carla.BlueprintLibrary`](python_api.md#carla.BlueprintLibrary)) lists every actor ([`carla.ActorBlueprint`](python_api.md#carla.ActorBlueprint)) that can be spawned, with the attributes ([`carla.ActorAttribute`](python_api.md#carla.ActorAttribute)) each one accepts. Start with the [introduction to blueprints](core_actors.md).
 
-Generated from CARLA 0.10.0 on 2026-10-16. A server built with other options, or with content packs loaded, lists a different set.
-
 ```py
 blueprints = [bp for bp in world.get_blueprint_library().filter('*')]
 for blueprint in blueprints:
@@ -35,7 +33,7 @@ Spawnable vehicles. See the [vehicle catalogue](catalogue_vehicles.md) for image
 | `has_dynamic_doors` | Bool | `true` |  | no |
 | `has_lights` | Bool | `true` |  | no |
 | `number_of_wheels` | Int | `4` |  | no |
-| `object_type` | String |  |  | no |
+| `object_type` | String | `""` |  | no |
 | `role_name` | String | `autopilot` | `autopilot`, `scenario`, `ego_vehicle` | yes |
 | `ros2_ackermann_control` | Bool | `false` | `false` | yes |
 | `ros2_autoware_control` | Bool | `false` | `false` | yes |
@@ -50,17 +48,17 @@ Spawnable vehicles. See the [vehicle catalogue](catalogue_vehicles.md) for image
 | Attribute | Type | Default | Values | Modifiable |
 | --- | --- | --- | --- | --- |
 | `base_type` | String | `bicycle` |  | no |
-| `generation` | Int | `-1` |  | no |
+| `generation` | Int | `1` |  | no |
 | `has_dynamic_doors` | Bool | `false` |  | no |
 | `has_lights` | Bool | `true` |  | no |
 | `number_of_wheels` | Int | `2` |  | no |
-| `object_type` | String |  |  | no |
+| `object_type` | String | `""` |  | no |
 | `role_name` | String | `autopilot` | `autopilot`, `scenario`, `ego_vehicle` | yes |
 | `ros2_ackermann_control` | Bool | `false` | `false` | yes |
 | `ros2_autoware_control` | Bool | `false` | `false` | yes |
 | `ros_name` | String | `vehicle.bh.crossbike` | `vehicle.bh.crossbike` | yes |
 | `ros_topic_name` | String | `vehicle.bh.crossbike` | `vehicle.bh.crossbike` | yes |
-| `special_type` | String |  |  | no |
+| `special_type` | String | `""` |  | no |
 | `sticky_control` | Bool | `true` | `true` | yes |
 | `terramechanics` | Bool | `false` | `false` | yes |
 
@@ -74,13 +72,13 @@ Spawnable vehicles. See the [vehicle catalogue](catalogue_vehicles.md) for image
 | `has_dynamic_doors` | Bool | `true` |  | no |
 | `has_lights` | Bool | `true` |  | no |
 | `number_of_wheels` | Int | `4` |  | no |
-| `object_type` | String |  |  | no |
+| `object_type` | String | `""` |  | no |
 | `role_name` | String | `autopilot` | `autopilot`, `scenario`, `ego_vehicle` | yes |
 | `ros2_ackermann_control` | Bool | `false` | `false` | yes |
 | `ros2_autoware_control` | Bool | `false` | `false` | yes |
 | `ros_name` | String | `vehicle.carlacola.actors` | `vehicle.carlacola.actors` | yes |
 | `ros_topic_name` | String | `vehicle.carlacola.actors` | `vehicle.carlacola.actors` | yes |
-| `special_type` | String |  |  | no |
+| `special_type` | String | `""` |  | no |
 | `sticky_control` | Bool | `true` | `true` | yes |
 | `terramechanics` | Bool | `false` | `false` | yes |
 
@@ -89,17 +87,17 @@ Spawnable vehicles. See the [vehicle catalogue](catalogue_vehicles.md) for image
 | Attribute | Type | Default | Values | Modifiable |
 | --- | --- | --- | --- | --- |
 | `base_type` | String | `bicycle` |  | no |
-| `generation` | Int | `-1` |  | no |
+| `generation` | Int | `1` |  | no |
 | `has_dynamic_doors` | Bool | `false` |  | no |
 | `has_lights` | Bool | `true` |  | no |
 | `number_of_wheels` | Int | `2` |  | no |
-| `object_type` | String |  |  | no |
+| `object_type` | String | `""` |  | no |
 | `role_name` | String | `autopilot` | `autopilot`, `scenario`, `ego_vehicle` | yes |
 | `ros2_ackermann_control` | Bool | `false` | `false` | yes |
 | `ros2_autoware_control` | Bool | `false` | `false` | yes |
 | `ros_name` | String | `vehicle.diamondback.century` | `vehicle.diamondback.century` | yes |
 | `ros_topic_name` | String | `vehicle.diamondback.century` | `vehicle.diamondback.century` | yes |
-| `special_type` | String |  |  | no |
+| `special_type` | String | `""` |  | no |
 | `sticky_control` | Bool | `true` | `true` | yes |
 | `terramechanics` | Bool | `false` | `false` | yes |
 
@@ -113,13 +111,13 @@ Spawnable vehicles. See the [vehicle catalogue](catalogue_vehicles.md) for image
 | `has_dynamic_doors` | Bool | `true` |  | no |
 | `has_lights` | Bool | `true` |  | no |
 | `number_of_wheels` | Int | `4` |  | no |
-| `object_type` | String |  |  | no |
+| `object_type` | String | `""` |  | no |
 | `role_name` | String | `autopilot` | `autopilot`, `scenario`, `ego_vehicle` | yes |
 | `ros2_ackermann_control` | Bool | `false` | `false` | yes |
 | `ros2_autoware_control` | Bool | `false` | `false` | yes |
 | `ros_name` | String | `vehicle.dodge.charger` | `vehicle.dodge.charger` | yes |
 | `ros_topic_name` | String | `vehicle.dodge.charger` | `vehicle.dodge.charger` | yes |
-| `special_type` | String |  |  | no |
+| `special_type` | String | `""` |  | no |
 | `sticky_control` | Bool | `true` | `true` | yes |
 | `terramechanics` | Bool | `false` | `false` | yes |
 
@@ -133,7 +131,7 @@ Spawnable vehicles. See the [vehicle catalogue](catalogue_vehicles.md) for image
 | `has_dynamic_doors` | Bool | `true` |  | no |
 | `has_lights` | Bool | `true` |  | no |
 | `number_of_wheels` | Int | `4` |  | no |
-| `object_type` | String |  |  | no |
+| `object_type` | String | `""` |  | no |
 | `role_name` | String | `autopilot` | `autopilot`, `scenario`, `ego_vehicle` | yes |
 | `ros2_ackermann_control` | Bool | `false` | `false` | yes |
 | `ros2_autoware_control` | Bool | `false` | `false` | yes |
@@ -153,7 +151,7 @@ Spawnable vehicles. See the [vehicle catalogue](catalogue_vehicles.md) for image
 | `has_dynamic_doors` | Bool | `true` |  | no |
 | `has_lights` | Bool | `true` |  | no |
 | `number_of_wheels` | Int | `4` |  | no |
-| `object_type` | String |  |  | no |
+| `object_type` | String | `""` |  | no |
 | `role_name` | String | `autopilot` | `autopilot`, `scenario`, `ego_vehicle` | yes |
 | `ros2_ackermann_control` | Bool | `false` | `false` | yes |
 | `ros2_autoware_control` | Bool | `false` | `false` | yes |
@@ -173,13 +171,13 @@ Spawnable vehicles. See the [vehicle catalogue](catalogue_vehicles.md) for image
 | `has_dynamic_doors` | Bool | `false` |  | no |
 | `has_lights` | Bool | `true` |  | no |
 | `number_of_wheels` | Int | `4` |  | no |
-| `object_type` | String |  |  | no |
+| `object_type` | String | `""` |  | no |
 | `role_name` | String | `autopilot` | `autopilot`, `scenario`, `ego_vehicle` | yes |
 | `ros2_ackermann_control` | Bool | `false` | `false` | yes |
 | `ros2_autoware_control` | Bool | `false` | `false` | yes |
 | `ros_name` | String | `vehicle.fuso.mitsubishi` | `vehicle.fuso.mitsubishi` | yes |
 | `ros_topic_name` | String | `vehicle.fuso.mitsubishi` | `vehicle.fuso.mitsubishi` | yes |
-| `special_type` | String |  |  | no |
+| `special_type` | String | `""` |  | no |
 | `sticky_control` | Bool | `true` | `true` | yes |
 | `terramechanics` | Bool | `false` | `false` | yes |
 
@@ -188,17 +186,17 @@ Spawnable vehicles. See the [vehicle catalogue](catalogue_vehicles.md) for image
 | Attribute | Type | Default | Values | Modifiable |
 | --- | --- | --- | --- | --- |
 | `base_type` | String | `bicycle` |  | no |
-| `generation` | Int | `-1` |  | no |
+| `generation` | Int | `1` |  | no |
 | `has_dynamic_doors` | Bool | `false` |  | no |
 | `has_lights` | Bool | `true` |  | no |
 | `number_of_wheels` | Int | `2` |  | no |
-| `object_type` | String |  |  | no |
+| `object_type` | String | `""` |  | no |
 | `role_name` | String | `autopilot` | `autopilot`, `scenario`, `ego_vehicle` | yes |
 | `ros2_ackermann_control` | Bool | `false` | `false` | yes |
 | `ros2_autoware_control` | Bool | `false` | `false` | yes |
 | `ros_name` | String | `vehicle.gazelle.omafiets` | `vehicle.gazelle.omafiets` | yes |
 | `ros_topic_name` | String | `vehicle.gazelle.omafiets` | `vehicle.gazelle.omafiets` | yes |
-| `special_type` | String |  |  | no |
+| `special_type` | String | `""` |  | no |
 | `sticky_control` | Bool | `true` | `true` | yes |
 | `terramechanics` | Bool | `false` | `false` | yes |
 
@@ -207,17 +205,17 @@ Spawnable vehicles. See the [vehicle catalogue](catalogue_vehicles.md) for image
 | Attribute | Type | Default | Values | Modifiable |
 | --- | --- | --- | --- | --- |
 | `base_type` | String | `motorcycle` |  | no |
-| `generation` | Int | `-1` |  | no |
+| `generation` | Int | `1` |  | no |
 | `has_dynamic_doors` | Bool | `false` |  | no |
 | `has_lights` | Bool | `true` |  | no |
 | `number_of_wheels` | Int | `2` |  | no |
-| `object_type` | String |  |  | no |
+| `object_type` | String | `""` |  | no |
 | `role_name` | String | `autopilot` | `autopilot`, `scenario`, `ego_vehicle` | yes |
 | `ros2_ackermann_control` | Bool | `false` | `false` | yes |
 | `ros2_autoware_control` | Bool | `false` | `false` | yes |
 | `ros_name` | String | `vehicle.harley-davidson.low_rider` | `vehicle.harley-davidson.low_rider` | yes |
 | `ros_topic_name` | String | `vehicle.harley-davidson.low_rider` | `vehicle.harley-davidson.low_rider` | yes |
-| `special_type` | String |  |  | no |
+| `special_type` | String | `""` |  | no |
 | `sticky_control` | Bool | `true` | `true` | yes |
 | `terramechanics` | Bool | `false` | `false` | yes |
 
@@ -226,17 +224,17 @@ Spawnable vehicles. See the [vehicle catalogue](catalogue_vehicles.md) for image
 | Attribute | Type | Default | Values | Modifiable |
 | --- | --- | --- | --- | --- |
 | `base_type` | String | `motorcycle` |  | no |
-| `generation` | Int | `-1` |  | no |
+| `generation` | Int | `1` |  | no |
 | `has_dynamic_doors` | Bool | `false` |  | no |
 | `has_lights` | Bool | `true` |  | no |
 | `number_of_wheels` | Int | `2` |  | no |
-| `object_type` | String |  |  | no |
+| `object_type` | String | `""` |  | no |
 | `role_name` | String | `autopilot` | `autopilot`, `scenario`, `ego_vehicle` | yes |
 | `ros2_ackermann_control` | Bool | `false` | `false` | yes |
 | `ros2_autoware_control` | Bool | `false` | `false` | yes |
 | `ros_name` | String | `vehicle.kawasaki.ninja` | `vehicle.kawasaki.ninja` | yes |
 | `ros_topic_name` | String | `vehicle.kawasaki.ninja` | `vehicle.kawasaki.ninja` | yes |
-| `special_type` | String |  |  | no |
+| `special_type` | String | `""` |  | no |
 | `sticky_control` | Bool | `true` | `true` | yes |
 | `terramechanics` | Bool | `false` | `false` | yes |
 
@@ -250,13 +248,13 @@ Spawnable vehicles. See the [vehicle catalogue](catalogue_vehicles.md) for image
 | `has_dynamic_doors` | Bool | `true` |  | no |
 | `has_lights` | Bool | `true` |  | no |
 | `number_of_wheels` | Int | `4` |  | no |
-| `object_type` | String |  |  | no |
+| `object_type` | String | `""` |  | no |
 | `role_name` | String | `autopilot` | `autopilot`, `scenario`, `ego_vehicle` | yes |
 | `ros2_ackermann_control` | Bool | `false` | `false` | yes |
 | `ros2_autoware_control` | Bool | `false` | `false` | yes |
 | `ros_name` | String | `vehicle.kia.niro` | `vehicle.kia.niro` | yes |
 | `ros_topic_name` | String | `vehicle.kia.niro` | `vehicle.kia.niro` | yes |
-| `special_type` | String |  |  | no |
+| `special_type` | String | `""` |  | no |
 | `sticky_control` | Bool | `true` | `true` | yes |
 | `terramechanics` | Bool | `false` | `false` | yes |
 
@@ -266,17 +264,17 @@ Spawnable vehicles. See the [vehicle catalogue](catalogue_vehicles.md) for image
 | --- | --- | --- | --- | --- |
 | `base_type` | String | `car` |  | no |
 | `color` | RGBColor | `0,0,0` | `0,0,0` | yes |
-| `generation` | Int | `-1` |  | no |
+| `generation` | Int | `2` |  | no |
 | `has_dynamic_doors` | Bool | `true` |  | no |
 | `has_lights` | Bool | `true` |  | no |
-| `number_of_wheels` | Int | `3` |  | no |
-| `object_type` | String |  |  | no |
+| `number_of_wheels` | Int | `4` |  | no |
+| `object_type` | String | `""` |  | no |
 | `role_name` | String | `autopilot` | `autopilot`, `scenario`, `ego_vehicle` | yes |
 | `ros2_ackermann_control` | Bool | `false` | `false` | yes |
 | `ros2_autoware_control` | Bool | `false` | `false` | yes |
 | `ros_name` | String | `vehicle.lincoln.mkz` | `vehicle.lincoln.mkz` | yes |
 | `ros_topic_name` | String | `vehicle.lincoln.mkz` | `vehicle.lincoln.mkz` | yes |
-| `special_type` | String |  |  | no |
+| `special_type` | String | `""` |  | no |
 | `sticky_control` | Bool | `true` | `true` | yes |
 | `terramechanics` | Bool | `false` | `false` | yes |
 
@@ -290,13 +288,13 @@ Spawnable vehicles. See the [vehicle catalogue](catalogue_vehicles.md) for image
 | `has_dynamic_doors` | Bool | `true` |  | no |
 | `has_lights` | Bool | `true` |  | no |
 | `number_of_wheels` | Int | `4` |  | no |
-| `object_type` | String |  |  | no |
+| `object_type` | String | `""` |  | no |
 | `role_name` | String | `autopilot` | `autopilot`, `scenario`, `ego_vehicle` | yes |
 | `ros2_ackermann_control` | Bool | `false` | `false` | yes |
 | `ros2_autoware_control` | Bool | `false` | `false` | yes |
 | `ros_name` | String | `vehicle.mini.cooper` | `vehicle.mini.cooper` | yes |
 | `ros_topic_name` | String | `vehicle.mini.cooper` | `vehicle.mini.cooper` | yes |
-| `special_type` | String |  |  | no |
+| `special_type` | String | `""` |  | no |
 | `sticky_control` | Bool | `true` | `true` | yes |
 | `terramechanics` | Bool | `false` | `false` | yes |
 
@@ -310,13 +308,13 @@ Spawnable vehicles. See the [vehicle catalogue](catalogue_vehicles.md) for image
 | `has_dynamic_doors` | Bool | `true` |  | no |
 | `has_lights` | Bool | `true` |  | no |
 | `number_of_wheels` | Int | `4` |  | no |
-| `object_type` | String |  |  | no |
+| `object_type` | String | `""` |  | no |
 | `role_name` | String | `autopilot` | `autopilot`, `scenario`, `ego_vehicle` | yes |
 | `ros2_ackermann_control` | Bool | `false` | `false` | yes |
 | `ros2_autoware_control` | Bool | `false` | `false` | yes |
 | `ros_name` | String | `vehicle.nissan.patrol` | `vehicle.nissan.patrol` | yes |
 | `ros_topic_name` | String | `vehicle.nissan.patrol` | `vehicle.nissan.patrol` | yes |
-| `special_type` | String |  |  | no |
+| `special_type` | String | `""` |  | no |
 | `sticky_control` | Bool | `true` | `true` | yes |
 | `terramechanics` | Bool | `false` | `false` | yes |
 
@@ -330,13 +328,13 @@ Spawnable vehicles. See the [vehicle catalogue](catalogue_vehicles.md) for image
 | `has_dynamic_doors` | Bool | `true` |  | no |
 | `has_lights` | Bool | `true` |  | no |
 | `number_of_wheels` | Int | `4` |  | no |
-| `object_type` | String |  |  | no |
+| `object_type` | String | `""` |  | no |
 | `role_name` | String | `autopilot` | `autopilot`, `scenario`, `ego_vehicle` | yes |
 | `ros2_ackermann_control` | Bool | `false` | `false` | yes |
 | `ros2_autoware_control` | Bool | `false` | `false` | yes |
 | `ros_name` | String | `vehicle.sprinter.mercedes` | `vehicle.sprinter.mercedes` | yes |
 | `ros_topic_name` | String | `vehicle.sprinter.mercedes` | `vehicle.sprinter.mercedes` | yes |
-| `special_type` | String |  |  | no |
+| `special_type` | String | `""` |  | no |
 | `sticky_control` | Bool | `true` | `true` | yes |
 | `terramechanics` | Bool | `false` | `false` | yes |
 
@@ -350,7 +348,7 @@ Spawnable vehicles. See the [vehicle catalogue](catalogue_vehicles.md) for image
 | `has_dynamic_doors` | Bool | `true` |  | no |
 | `has_lights` | Bool | `true` |  | no |
 | `number_of_wheels` | Int | `4` |  | no |
-| `object_type` | String |  |  | no |
+| `object_type` | String | `""` |  | no |
 | `role_name` | String | `autopilot` | `autopilot`, `scenario`, `ego_vehicle` | yes |
 | `ros2_ackermann_control` | Bool | `false` | `false` | yes |
 | `ros2_autoware_control` | Bool | `false` | `false` | yes |
@@ -370,7 +368,7 @@ Spawnable vehicles. See the [vehicle catalogue](catalogue_vehicles.md) for image
 | `has_dynamic_doors` | Bool | `true` |  | no |
 | `has_lights` | Bool | `true` |  | no |
 | `number_of_wheels` | Int | `4` |  | no |
-| `object_type` | String |  |  | no |
+| `object_type` | String | `""` |  | no |
 | `role_name` | String | `autopilot` | `autopilot`, `scenario`, `ego_vehicle` | yes |
 | `ros2_ackermann_control` | Bool | `false` | `false` | yes |
 | `ros2_autoware_control` | Bool | `false` | `false` | yes |
@@ -390,13 +388,13 @@ Spawnable vehicles. See the [vehicle catalogue](catalogue_vehicles.md) for image
 | `has_dynamic_doors` | Bool | `false` |  | no |
 | `has_lights` | Bool | `true` |  | no |
 | `number_of_wheels` | Int | `4` |  | no |
-| `object_type` | String |  |  | no |
+| `object_type` | String | `""` |  | no |
 | `role_name` | String | `autopilot` | `autopilot`, `scenario`, `ego_vehicle` | yes |
 | `ros2_ackermann_control` | Bool | `false` | `false` | yes |
 | `ros2_autoware_control` | Bool | `false` | `false` | yes |
 | `ros_name` | String | `vehicle.ue4.audi.tt` | `vehicle.ue4.audi.tt` | yes |
 | `ros_topic_name` | String | `vehicle.ue4.audi.tt` | `vehicle.ue4.audi.tt` | yes |
-| `special_type` | String |  |  | no |
+| `special_type` | String | `""` |  | no |
 | `sticky_control` | Bool | `true` | `true` | yes |
 | `terramechanics` | Bool | `false` | `false` | yes |
 
@@ -410,13 +408,13 @@ Spawnable vehicles. See the [vehicle catalogue](catalogue_vehicles.md) for image
 | `has_dynamic_doors` | Bool | `false` |  | no |
 | `has_lights` | Bool | `true` |  | no |
 | `number_of_wheels` | Int | `4` |  | no |
-| `object_type` | String |  |  | no |
+| `object_type` | String | `""` |  | no |
 | `role_name` | String | `autopilot` | `autopilot`, `scenario`, `ego_vehicle` | yes |
 | `ros2_ackermann_control` | Bool | `false` | `false` | yes |
 | `ros2_autoware_control` | Bool | `false` | `false` | yes |
 | `ros_name` | String | `vehicle.ue4.chevrolet.impala` | `vehicle.ue4.chevrolet.impala` | yes |
 | `ros_topic_name` | String | `vehicle.ue4.chevrolet.impala` | `vehicle.ue4.chevrolet.impala` | yes |
-| `special_type` | String |  |  | no |
+| `special_type` | String | `""` |  | no |
 | `sticky_control` | Bool | `true` | `true` | yes |
 | `terramechanics` | Bool | `false` | `false` | yes |
 
@@ -426,17 +424,17 @@ Spawnable vehicles. See the [vehicle catalogue](catalogue_vehicles.md) for image
 | --- | --- | --- | --- | --- |
 | `base_type` | String | `car` |  | no |
 | `color` | RGBColor | `254,211,0` | `254,211,0` | yes |
-| `generation` | Int | `-1` |  | no |
+| `generation` | Int | `2` |  | no |
 | `has_dynamic_doors` | Bool | `false` |  | no |
 | `has_lights` | Bool | `true` |  | no |
 | `number_of_wheels` | Int | `4` |  | no |
-| `object_type` | String |  |  | no |
+| `object_type` | String | `""` |  | no |
 | `role_name` | String | `autopilot` | `autopilot`, `scenario`, `ego_vehicle` | yes |
 | `ros2_ackermann_control` | Bool | `false` | `false` | yes |
 | `ros2_autoware_control` | Bool | `false` | `false` | yes |
 | `ros_name` | String | `vehicle.ue4.ford.crown` | `vehicle.ue4.ford.crown` | yes |
 | `ros_topic_name` | String | `vehicle.ue4.ford.crown` | `vehicle.ue4.ford.crown` | yes |
-| `special_type` | String |  |  | no |
+| `special_type` | String | `""` |  | no |
 | `sticky_control` | Bool | `true` | `true` | yes |
 | `terramechanics` | Bool | `false` | `false` | yes |
 
@@ -446,17 +444,17 @@ Spawnable vehicles. See the [vehicle catalogue](catalogue_vehicles.md) for image
 | --- | --- | --- | --- | --- |
 | `base_type` | String | `car` |  | no |
 | `color` | RGBColor | `0,0,0` | `0,0,0`, `27,54,118`, `104,4,8`, `230,216,205`, `108,108,108` | yes |
-| `generation` | Int | `-1` |  | no |
+| `generation` | Int | `2` |  | no |
 | `has_dynamic_doors` | Bool | `false` |  | no |
 | `has_lights` | Bool | `true` |  | no |
 | `number_of_wheels` | Int | `4` |  | no |
-| `object_type` | String |  |  | no |
+| `object_type` | String | `""` |  | no |
 | `role_name` | String | `autopilot` | `autopilot`, `scenario`, `ego_vehicle` | yes |
 | `ros2_ackermann_control` | Bool | `false` | `false` | yes |
 | `ros2_autoware_control` | Bool | `false` | `false` | yes |
 | `ros_name` | String | `vehicle.ue4.ford.mustang` | `vehicle.ue4.ford.mustang` | yes |
 | `ros_topic_name` | String | `vehicle.ue4.ford.mustang` | `vehicle.ue4.ford.mustang` | yes |
-| `special_type` | String |  |  | no |
+| `special_type` | String | `""` |  | no |
 | `sticky_control` | Bool | `true` | `true` | yes |
 | `terramechanics` | Bool | `false` | `false` | yes |
 
@@ -470,13 +468,13 @@ Spawnable vehicles. See the [vehicle catalogue](catalogue_vehicles.md) for image
 | `has_dynamic_doors` | Bool | `false` |  | no |
 | `has_lights` | Bool | `true` |  | no |
 | `number_of_wheels` | Int | `4` |  | no |
-| `object_type` | String |  |  | no |
+| `object_type` | String | `""` |  | no |
 | `role_name` | String | `autopilot` | `autopilot`, `scenario`, `ego_vehicle` | yes |
 | `ros2_ackermann_control` | Bool | `false` | `false` | yes |
 | `ros2_autoware_control` | Bool | `false` | `false` | yes |
 | `ros_name` | String | `vehicle.ue4.mercedes.ccc` | `vehicle.ue4.mercedes.ccc` | yes |
 | `ros_topic_name` | String | `vehicle.ue4.mercedes.ccc` | `vehicle.ue4.mercedes.ccc` | yes |
-| `special_type` | String |  |  | no |
+| `special_type` | String | `""` |  | no |
 | `sticky_control` | Bool | `true` | `true` | yes |
 | `terramechanics` | Bool | `false` | `false` | yes |
 
@@ -485,17 +483,17 @@ Spawnable vehicles. See the [vehicle catalogue](catalogue_vehicles.md) for image
 | Attribute | Type | Default | Values | Modifiable |
 | --- | --- | --- | --- | --- |
 | `base_type` | String | `motorcycle` |  | no |
-| `generation` | Int | `-1` |  | no |
+| `generation` | Int | `1` |  | no |
 | `has_dynamic_doors` | Bool | `false` |  | no |
 | `has_lights` | Bool | `true` |  | no |
 | `number_of_wheels` | Int | `2` |  | no |
-| `object_type` | String |  |  | no |
+| `object_type` | String | `""` |  | no |
 | `role_name` | String | `autopilot` | `autopilot`, `scenario`, `ego_vehicle` | yes |
 | `ros2_ackermann_control` | Bool | `false` | `false` | yes |
 | `ros2_autoware_control` | Bool | `false` | `false` | yes |
 | `ros_name` | String | `vehicle.vespa.zx125` | `vehicle.vespa.zx125` | yes |
 | `ros_topic_name` | String | `vehicle.vespa.zx125` | `vehicle.vespa.zx125` | yes |
-| `special_type` | String |  |  | no |
+| `special_type` | String | `""` |  | no |
 | `sticky_control` | Bool | `true` | `true` | yes |
 | `terramechanics` | Bool | `false` | `false` | yes |
 
@@ -504,17 +502,17 @@ Spawnable vehicles. See the [vehicle catalogue](catalogue_vehicles.md) for image
 | Attribute | Type | Default | Values | Modifiable |
 | --- | --- | --- | --- | --- |
 | `base_type` | String | `motorcycle` |  | no |
-| `generation` | Int | `-1` |  | no |
+| `generation` | Int | `1` |  | no |
 | `has_dynamic_doors` | Bool | `false` |  | no |
 | `has_lights` | Bool | `true` |  | no |
 | `number_of_wheels` | Int | `2` |  | no |
-| `object_type` | String |  |  | no |
+| `object_type` | String | `""` |  | no |
 | `role_name` | String | `autopilot` | `autopilot`, `scenario`, `ego_vehicle` | yes |
 | `ros2_ackermann_control` | Bool | `false` | `false` | yes |
 | `ros2_autoware_control` | Bool | `false` | `false` | yes |
 | `ros_name` | String | `vehicle.yamaha.yzf` | `vehicle.yamaha.yzf` | yes |
 | `ros_topic_name` | String | `vehicle.yamaha.yzf` | `vehicle.yamaha.yzf` | yes |
-| `special_type` | String |  |  | no |
+| `special_type` | String | `""` |  | no |
 | `sticky_control` | Bool | `true` | `true` | yes |
 | `terramechanics` | Bool | `false` | `false` | yes |
 
@@ -536,7 +534,7 @@ Spawnable pedestrians. See the [pedestrian catalogue](catalogue_pedestrians.md);
 | `role_name` | String | `pedestrian` | `pedestrian` | yes |
 | `ros_name` | String | `walker.pedestrian.0015` | `walker.pedestrian.0015` | yes |
 | `ros_topic_name` | String | `walker.pedestrian.0015` | `walker.pedestrian.0015` | yes |
-| `special_type` | String |  |  | no |
+| `special_type` | String | `""` |  | no |
 | `speed` | Float | `0` | `0.0`, `1.7`, `4.0` | yes |
 | `use_wheelchair` | Bool | `false` | `false`, `true` | yes |
 
@@ -552,7 +550,7 @@ Spawnable pedestrians. See the [pedestrian catalogue](catalogue_pedestrians.md);
 | `role_name` | String | `pedestrian` | `pedestrian` | yes |
 | `ros_name` | String | `walker.pedestrian.0016` | `walker.pedestrian.0016` | yes |
 | `ros_topic_name` | String | `walker.pedestrian.0016` | `walker.pedestrian.0016` | yes |
-| `special_type` | String |  |  | no |
+| `special_type` | String | `""` |  | no |
 | `speed` | Float | `0` | `0.0`, `1.7`, `4.0` | yes |
 | `use_wheelchair` | Bool | `false` | `false`, `true` | yes |
 
@@ -568,7 +566,7 @@ Spawnable pedestrians. See the [pedestrian catalogue](catalogue_pedestrians.md);
 | `role_name` | String | `pedestrian` | `pedestrian` | yes |
 | `ros_name` | String | `walker.pedestrian.0017` | `walker.pedestrian.0017` | yes |
 | `ros_topic_name` | String | `walker.pedestrian.0017` | `walker.pedestrian.0017` | yes |
-| `special_type` | String |  |  | no |
+| `special_type` | String | `""` |  | no |
 | `speed` | Float | `0` | `0.0`, `1.7`, `4.0` | yes |
 | `use_wheelchair` | Bool | `false` | `false` | yes |
 
@@ -584,7 +582,7 @@ Spawnable pedestrians. See the [pedestrian catalogue](catalogue_pedestrians.md);
 | `role_name` | String | `pedestrian` | `pedestrian` | yes |
 | `ros_name` | String | `walker.pedestrian.0018` | `walker.pedestrian.0018` | yes |
 | `ros_topic_name` | String | `walker.pedestrian.0018` | `walker.pedestrian.0018` | yes |
-| `special_type` | String |  |  | no |
+| `special_type` | String | `""` |  | no |
 | `speed` | Float | `0` | `0.0`, `1.7`, `4.0` | yes |
 | `use_wheelchair` | Bool | `false` | `false` | yes |
 
@@ -600,7 +598,7 @@ Spawnable pedestrians. See the [pedestrian catalogue](catalogue_pedestrians.md);
 | `role_name` | String | `pedestrian` | `pedestrian` | yes |
 | `ros_name` | String | `walker.pedestrian.0019` | `walker.pedestrian.0019` | yes |
 | `ros_topic_name` | String | `walker.pedestrian.0019` | `walker.pedestrian.0019` | yes |
-| `special_type` | String |  |  | no |
+| `special_type` | String | `""` |  | no |
 | `speed` | Float | `0` | `0.0`, `1.7`, `4.0` | yes |
 | `use_wheelchair` | Bool | `false` | `false` | yes |
 
@@ -632,7 +630,7 @@ Spawnable pedestrians. See the [pedestrian catalogue](catalogue_pedestrians.md);
 | `role_name` | String | `pedestrian` | `pedestrian` | yes |
 | `ros_name` | String | `walker.pedestrian.0021` | `walker.pedestrian.0021` | yes |
 | `ros_topic_name` | String | `walker.pedestrian.0021` | `walker.pedestrian.0021` | yes |
-| `special_type` | String |  |  | no |
+| `special_type` | String | `""` |  | no |
 | `speed` | Float | `0` | `0.0`, `1.7`, `4.0` | yes |
 | `use_wheelchair` | Bool | `false` | `false` | yes |
 
@@ -648,7 +646,7 @@ Spawnable pedestrians. See the [pedestrian catalogue](catalogue_pedestrians.md);
 | `role_name` | String | `pedestrian` | `pedestrian` | yes |
 | `ros_name` | String | `walker.pedestrian.0022` | `walker.pedestrian.0022` | yes |
 | `ros_topic_name` | String | `walker.pedestrian.0022` | `walker.pedestrian.0022` | yes |
-| `special_type` | String |  |  | no |
+| `special_type` | String | `""` |  | no |
 | `speed` | Float | `0` | `0.0`, `1.7`, `4.0` | yes |
 | `use_wheelchair` | Bool | `false` | `false` | yes |
 
@@ -664,7 +662,7 @@ Spawnable pedestrians. See the [pedestrian catalogue](catalogue_pedestrians.md);
 | `role_name` | String | `pedestrian` | `pedestrian` | yes |
 | `ros_name` | String | `walker.pedestrian.0023` | `walker.pedestrian.0023` | yes |
 | `ros_topic_name` | String | `walker.pedestrian.0023` | `walker.pedestrian.0023` | yes |
-| `special_type` | String |  |  | no |
+| `special_type` | String | `""` |  | no |
 | `speed` | Float | `0` | `0.0`, `1.7`, `4.0` | yes |
 | `use_wheelchair` | Bool | `false` | `false` | yes |
 
@@ -680,7 +678,7 @@ Spawnable pedestrians. See the [pedestrian catalogue](catalogue_pedestrians.md);
 | `role_name` | String | `pedestrian` | `pedestrian` | yes |
 | `ros_name` | String | `walker.pedestrian.0024` | `walker.pedestrian.0024` | yes |
 | `ros_topic_name` | String | `walker.pedestrian.0024` | `walker.pedestrian.0024` | yes |
-| `special_type` | String |  |  | no |
+| `special_type` | String | `""` |  | no |
 | `speed` | Float | `0` | `0.0`, `1.7`, `4.0` | yes |
 | `use_wheelchair` | Bool | `false` | `false` | yes |
 
@@ -696,7 +694,7 @@ Spawnable pedestrians. See the [pedestrian catalogue](catalogue_pedestrians.md);
 | `role_name` | String | `pedestrian` | `pedestrian` | yes |
 | `ros_name` | String | `walker.pedestrian.0025` | `walker.pedestrian.0025` | yes |
 | `ros_topic_name` | String | `walker.pedestrian.0025` | `walker.pedestrian.0025` | yes |
-| `special_type` | String |  |  | no |
+| `special_type` | String | `""` |  | no |
 | `speed` | Float | `0` | `0.0`, `1.7`, `4.0` | yes |
 | `use_wheelchair` | Bool | `false` | `false`, `true` | yes |
 
@@ -712,7 +710,7 @@ Spawnable pedestrians. See the [pedestrian catalogue](catalogue_pedestrians.md);
 | `role_name` | String | `pedestrian` | `pedestrian` | yes |
 | `ros_name` | String | `walker.pedestrian.0026` | `walker.pedestrian.0026` | yes |
 | `ros_topic_name` | String | `walker.pedestrian.0026` | `walker.pedestrian.0026` | yes |
-| `special_type` | String |  |  | no |
+| `special_type` | String | `""` |  | no |
 | `speed` | Float | `0` | `0.0`, `1.7`, `4.0` | yes |
 | `use_wheelchair` | Bool | `false` | `false`, `true` | yes |
 
@@ -728,7 +726,7 @@ Spawnable pedestrians. See the [pedestrian catalogue](catalogue_pedestrians.md);
 | `role_name` | String | `pedestrian` | `pedestrian` | yes |
 | `ros_name` | String | `walker.pedestrian.0027` | `walker.pedestrian.0027` | yes |
 | `ros_topic_name` | String | `walker.pedestrian.0027` | `walker.pedestrian.0027` | yes |
-| `special_type` | String |  |  | no |
+| `special_type` | String | `""` |  | no |
 | `speed` | Float | `0` | `0.0`, `1.7`, `4.0` | yes |
 | `use_wheelchair` | Bool | `false` | `false` | yes |
 
@@ -744,7 +742,7 @@ Spawnable pedestrians. See the [pedestrian catalogue](catalogue_pedestrians.md);
 | `role_name` | String | `pedestrian` | `pedestrian` | yes |
 | `ros_name` | String | `walker.pedestrian.0028` | `walker.pedestrian.0028` | yes |
 | `ros_topic_name` | String | `walker.pedestrian.0028` | `walker.pedestrian.0028` | yes |
-| `special_type` | String |  |  | no |
+| `special_type` | String | `""` |  | no |
 | `speed` | Float | `0` | `0.0`, `1.7`, `4.0` | yes |
 | `use_wheelchair` | Bool | `false` | `false`, `true` | yes |
 
@@ -760,7 +758,7 @@ Spawnable pedestrians. See the [pedestrian catalogue](catalogue_pedestrians.md);
 | `role_name` | String | `pedestrian` | `pedestrian` | yes |
 | `ros_name` | String | `walker.pedestrian.0029` | `walker.pedestrian.0029` | yes |
 | `ros_topic_name` | String | `walker.pedestrian.0029` | `walker.pedestrian.0029` | yes |
-| `special_type` | String |  |  | no |
+| `special_type` | String | `""` |  | no |
 | `speed` | Float | `0` | `0.0`, `1.7`, `4.0` | yes |
 | `use_wheelchair` | Bool | `false` | `false`, `true` | yes |
 
@@ -776,7 +774,7 @@ Spawnable pedestrians. See the [pedestrian catalogue](catalogue_pedestrians.md);
 | `role_name` | String | `pedestrian` | `pedestrian` | yes |
 | `ros_name` | String | `walker.pedestrian.0030` | `walker.pedestrian.0030` | yes |
 | `ros_topic_name` | String | `walker.pedestrian.0030` | `walker.pedestrian.0030` | yes |
-| `special_type` | String |  |  | no |
+| `special_type` | String | `""` |  | no |
 | `speed` | Float | `0` | `0.0`, `1.7`, `4.0` | yes |
 | `use_wheelchair` | Bool | `false` | `false` | yes |
 
@@ -808,7 +806,7 @@ Spawnable pedestrians. See the [pedestrian catalogue](catalogue_pedestrians.md);
 | `role_name` | String | `pedestrian` | `pedestrian` | yes |
 | `ros_name` | String | `walker.pedestrian.0032` | `walker.pedestrian.0032` | yes |
 | `ros_topic_name` | String | `walker.pedestrian.0032` | `walker.pedestrian.0032` | yes |
-| `special_type` | String |  |  | no |
+| `special_type` | String | `""` |  | no |
 | `speed` | Float | `0` | `0.0`, `1.7`, `4.0` | yes |
 | `use_wheelchair` | Bool | `false` | `false` | yes |
 
@@ -824,7 +822,7 @@ Spawnable pedestrians. See the [pedestrian catalogue](catalogue_pedestrians.md);
 | `role_name` | String | `pedestrian` | `pedestrian` | yes |
 | `ros_name` | String | `walker.pedestrian.0033` | `walker.pedestrian.0033` | yes |
 | `ros_topic_name` | String | `walker.pedestrian.0033` | `walker.pedestrian.0033` | yes |
-| `special_type` | String |  |  | no |
+| `special_type` | String | `""` |  | no |
 | `speed` | Float | `0` | `0.0`, `1.7`, `4.0` | yes |
 | `use_wheelchair` | Bool | `false` | `false` | yes |
 
@@ -840,7 +838,7 @@ Spawnable pedestrians. See the [pedestrian catalogue](catalogue_pedestrians.md);
 | `role_name` | String | `pedestrian` | `pedestrian` | yes |
 | `ros_name` | String | `walker.pedestrian.0034` | `walker.pedestrian.0034` | yes |
 | `ros_topic_name` | String | `walker.pedestrian.0034` | `walker.pedestrian.0034` | yes |
-| `special_type` | String |  |  | no |
+| `special_type` | String | `""` |  | no |
 | `speed` | Float | `0` | `0.0`, `1.7`, `4.0` | yes |
 | `use_wheelchair` | Bool | `false` | `false` | yes |
 
@@ -856,7 +854,7 @@ Spawnable pedestrians. See the [pedestrian catalogue](catalogue_pedestrians.md);
 | `role_name` | String | `pedestrian` | `pedestrian` | yes |
 | `ros_name` | String | `walker.pedestrian.0035` | `walker.pedestrian.0035` | yes |
 | `ros_topic_name` | String | `walker.pedestrian.0035` | `walker.pedestrian.0035` | yes |
-| `special_type` | String |  |  | no |
+| `special_type` | String | `""` |  | no |
 | `speed` | Float | `0` | `0.0`, `1.7`, `4.0` | yes |
 | `use_wheelchair` | Bool | `false` | `false` | yes |
 
@@ -872,7 +870,7 @@ Spawnable pedestrians. See the [pedestrian catalogue](catalogue_pedestrians.md);
 | `role_name` | String | `pedestrian` | `pedestrian` | yes |
 | `ros_name` | String | `walker.pedestrian.0036` | `walker.pedestrian.0036` | yes |
 | `ros_topic_name` | String | `walker.pedestrian.0036` | `walker.pedestrian.0036` | yes |
-| `special_type` | String |  |  | no |
+| `special_type` | String | `""` |  | no |
 | `speed` | Float | `0` | `0.0`, `1.7`, `4.0` | yes |
 | `use_wheelchair` | Bool | `false` | `false` | yes |
 
@@ -888,7 +886,7 @@ Spawnable pedestrians. See the [pedestrian catalogue](catalogue_pedestrians.md);
 | `role_name` | String | `pedestrian` | `pedestrian` | yes |
 | `ros_name` | String | `walker.pedestrian.0037` | `walker.pedestrian.0037` | yes |
 | `ros_topic_name` | String | `walker.pedestrian.0037` | `walker.pedestrian.0037` | yes |
-| `special_type` | String |  |  | no |
+| `special_type` | String | `""` |  | no |
 | `speed` | Float | `0` | `0.0`, `1.7`, `4.0` | yes |
 | `use_wheelchair` | Bool | `false` | `false` | yes |
 
@@ -904,7 +902,7 @@ Spawnable pedestrians. See the [pedestrian catalogue](catalogue_pedestrians.md);
 | `role_name` | String | `pedestrian` | `pedestrian` | yes |
 | `ros_name` | String | `walker.pedestrian.0038` | `walker.pedestrian.0038` | yes |
 | `ros_topic_name` | String | `walker.pedestrian.0038` | `walker.pedestrian.0038` | yes |
-| `special_type` | String |  |  | no |
+| `special_type` | String | `""` |  | no |
 | `speed` | Float | `0` | `0.0`, `1.7`, `4.0` | yes |
 | `use_wheelchair` | Bool | `false` | `false` | yes |
 
@@ -920,7 +918,7 @@ Spawnable pedestrians. See the [pedestrian catalogue](catalogue_pedestrians.md);
 | `role_name` | String | `pedestrian` | `pedestrian` | yes |
 | `ros_name` | String | `walker.pedestrian.0039` | `walker.pedestrian.0039` | yes |
 | `ros_topic_name` | String | `walker.pedestrian.0039` | `walker.pedestrian.0039` | yes |
-| `special_type` | String |  |  | no |
+| `special_type` | String | `""` |  | no |
 | `speed` | Float | `0` | `0.0`, `1.7`, `4.0` | yes |
 | `use_wheelchair` | Bool | `false` | `false` | yes |
 
@@ -936,7 +934,7 @@ Spawnable pedestrians. See the [pedestrian catalogue](catalogue_pedestrians.md);
 | `role_name` | String | `pedestrian` | `pedestrian` | yes |
 | `ros_name` | String | `walker.pedestrian.0040` | `walker.pedestrian.0040` | yes |
 | `ros_topic_name` | String | `walker.pedestrian.0040` | `walker.pedestrian.0040` | yes |
-| `special_type` | String |  |  | no |
+| `special_type` | String | `""` |  | no |
 | `speed` | Float | `0` | `0.0`, `1.7`, `4.0` | yes |
 | `use_wheelchair` | Bool | `false` | `false` | yes |
 
@@ -952,7 +950,7 @@ Spawnable pedestrians. See the [pedestrian catalogue](catalogue_pedestrians.md);
 | `role_name` | String | `pedestrian` | `pedestrian` | yes |
 | `ros_name` | String | `walker.pedestrian.0041` | `walker.pedestrian.0041` | yes |
 | `ros_topic_name` | String | `walker.pedestrian.0041` | `walker.pedestrian.0041` | yes |
-| `special_type` | String |  |  | no |
+| `special_type` | String | `""` |  | no |
 | `speed` | Float | `0` | `0.0`, `1.7`, `4.0` | yes |
 | `use_wheelchair` | Bool | `false` | `false` | yes |
 
@@ -968,7 +966,7 @@ Spawnable pedestrians. See the [pedestrian catalogue](catalogue_pedestrians.md);
 | `role_name` | String | `pedestrian` | `pedestrian` | yes |
 | `ros_name` | String | `walker.pedestrian.0042` | `walker.pedestrian.0042` | yes |
 | `ros_topic_name` | String | `walker.pedestrian.0042` | `walker.pedestrian.0042` | yes |
-| `special_type` | String |  |  | no |
+| `special_type` | String | `""` |  | no |
 | `speed` | Float | `0` | `0.0`, `1.7`, `4.0` | yes |
 | `use_wheelchair` | Bool | `false` | `false` | yes |
 
@@ -984,7 +982,7 @@ Spawnable pedestrians. See the [pedestrian catalogue](catalogue_pedestrians.md);
 | `role_name` | String | `pedestrian` | `pedestrian` | yes |
 | `ros_name` | String | `walker.pedestrian.0043` | `walker.pedestrian.0043` | yes |
 | `ros_topic_name` | String | `walker.pedestrian.0043` | `walker.pedestrian.0043` | yes |
-| `special_type` | String |  |  | no |
+| `special_type` | String | `""` |  | no |
 | `speed` | Float | `0` | `0.0`, `1.7`, `4.0` | yes |
 | `use_wheelchair` | Bool | `false` | `false` | yes |
 
@@ -1000,7 +998,7 @@ Spawnable pedestrians. See the [pedestrian catalogue](catalogue_pedestrians.md);
 | `role_name` | String | `pedestrian` | `pedestrian` | yes |
 | `ros_name` | String | `walker.pedestrian.0044` | `walker.pedestrian.0044` | yes |
 | `ros_topic_name` | String | `walker.pedestrian.0044` | `walker.pedestrian.0044` | yes |
-| `special_type` | String |  |  | no |
+| `special_type` | String | `""` |  | no |
 | `speed` | Float | `0` | `0.0`, `1.7`, `4.0` | yes |
 | `use_wheelchair` | Bool | `false` | `false` | yes |
 
@@ -1016,7 +1014,7 @@ Spawnable pedestrians. See the [pedestrian catalogue](catalogue_pedestrians.md);
 | `role_name` | String | `pedestrian` | `pedestrian` | yes |
 | `ros_name` | String | `walker.pedestrian.0045` | `walker.pedestrian.0045` | yes |
 | `ros_topic_name` | String | `walker.pedestrian.0045` | `walker.pedestrian.0045` | yes |
-| `special_type` | String |  |  | no |
+| `special_type` | String | `""` |  | no |
 | `speed` | Float | `0` | `0.0`, `1.7`, `4.0` | yes |
 | `use_wheelchair` | Bool | `false` | `false` | yes |
 
@@ -1032,7 +1030,7 @@ Spawnable pedestrians. See the [pedestrian catalogue](catalogue_pedestrians.md);
 | `role_name` | String | `pedestrian` | `pedestrian` | yes |
 | `ros_name` | String | `walker.pedestrian.0046` | `walker.pedestrian.0046` | yes |
 | `ros_topic_name` | String | `walker.pedestrian.0046` | `walker.pedestrian.0046` | yes |
-| `special_type` | String |  |  | no |
+| `special_type` | String | `""` |  | no |
 | `speed` | Float | `0` | `0.0`, `1.7`, `4.0` | yes |
 | `use_wheelchair` | Bool | `false` | `false` | yes |
 
@@ -1048,7 +1046,7 @@ Spawnable pedestrians. See the [pedestrian catalogue](catalogue_pedestrians.md);
 | `role_name` | String | `pedestrian` | `pedestrian` | yes |
 | `ros_name` | String | `walker.pedestrian.0047` | `walker.pedestrian.0047` | yes |
 | `ros_topic_name` | String | `walker.pedestrian.0047` | `walker.pedestrian.0047` | yes |
-| `special_type` | String |  |  | no |
+| `special_type` | String | `""` |  | no |
 | `speed` | Float | `0` | `0.0`, `1.7`, `4.0` | yes |
 | `use_wheelchair` | Bool | `false` | `false` | yes |
 
@@ -1064,7 +1062,7 @@ Spawnable pedestrians. See the [pedestrian catalogue](catalogue_pedestrians.md);
 | `role_name` | String | `pedestrian` | `pedestrian` | yes |
 | `ros_name` | String | `walker.pedestrian.0048` | `walker.pedestrian.0048` | yes |
 | `ros_topic_name` | String | `walker.pedestrian.0048` | `walker.pedestrian.0048` | yes |
-| `special_type` | String |  |  | no |
+| `special_type` | String | `""` |  | no |
 | `speed` | Float | `0` | `0.0`, `1.7`, `4.0` | yes |
 | `use_wheelchair` | Bool | `false` | `false` | yes |
 
@@ -1080,7 +1078,7 @@ Spawnable pedestrians. See the [pedestrian catalogue](catalogue_pedestrians.md);
 | `role_name` | String | `pedestrian` | `pedestrian` | yes |
 | `ros_name` | String | `walker.pedestrian.0049` | `walker.pedestrian.0049` | yes |
 | `ros_topic_name` | String | `walker.pedestrian.0049` | `walker.pedestrian.0049` | yes |
-| `special_type` | String |  |  | no |
+| `special_type` | String | `""` |  | no |
 | `speed` | Float | `0` | `0.0`, `1.1`, `2.0` | yes |
 | `use_wheelchair` | Bool | `false` | `false` | yes |
 
@@ -1096,7 +1094,7 @@ Spawnable pedestrians. See the [pedestrian catalogue](catalogue_pedestrians.md);
 | `role_name` | String | `pedestrian` | `pedestrian` | yes |
 | `ros_name` | String | `walker.pedestrian.0050` | `walker.pedestrian.0050` | yes |
 | `ros_topic_name` | String | `walker.pedestrian.0050` | `walker.pedestrian.0050` | yes |
-| `special_type` | String |  |  | no |
+| `special_type` | String | `""` |  | no |
 | `speed` | Float | `0` | `0.0`, `1.1`, `2.0` | yes |
 | `use_wheelchair` | Bool | `false` | `false` | yes |
 
@@ -1112,7 +1110,7 @@ Spawnable pedestrians. See the [pedestrian catalogue](catalogue_pedestrians.md);
 | `role_name` | String | `pedestrian` | `pedestrian` | yes |
 | `ros_name` | String | `walker.pedestrian.0051` | `walker.pedestrian.0051` | yes |
 | `ros_topic_name` | String | `walker.pedestrian.0051` | `walker.pedestrian.0051` | yes |
-| `special_type` | String |  |  | no |
+| `special_type` | String | `""` |  | no |
 | `speed` | Float | `0` | `0.0`, `1.1`, `2.0` | yes |
 | `use_wheelchair` | Bool | `false` | `false` | yes |
 
@@ -1128,7 +1126,7 @@ Spawnable pedestrians. See the [pedestrian catalogue](catalogue_pedestrians.md);
 | `role_name` | String | `pedestrian` | `pedestrian` | yes |
 | `ros_name` | String | `walker.pedestrian.0052` | `walker.pedestrian.0052` | yes |
 | `ros_topic_name` | String | `walker.pedestrian.0052` | `walker.pedestrian.0052` | yes |
-| `special_type` | String |  |  | no |
+| `special_type` | String | `""` |  | no |
 | `speed` | Float | `0` | `0.0`, `0.85`, `2.0` | yes |
 | `use_wheelchair` | Bool | `false` | `false` | yes |
 
@@ -1171,9 +1169,9 @@ Sensors attachable to an actor. Each one is documented in [Sensors reference](re
 | `ros_name` | String | `sensor.camera.depth` | `sensor.camera.depth` | yes |
 | `ros_topic_name` | String | `sensor.camera.depth` | `sensor.camera.depth` | yes |
 | `sensor_tick` | Float | `0` | `0.0` | yes |
-| `shadow_catcher_tags` | String |  | `` | yes |
-| `show_only_actor_ids` | String |  | `` | yes |
-| `show_only_tags` | String |  | `` | yes |
+| `shadow_catcher_tags` | String | `""` | `` | yes |
+| `show_only_actor_ids` | String | `""` | `` | yes |
+| `show_only_tags` | String | `""` | `` | yes |
 | `use_ray_tracing` | Bool | `true` | `true` | yes |
 
 ### sensor.camera.depth_fisheye
@@ -1204,15 +1202,15 @@ Sensors attachable to an actor. Each one is documented in [Sensors reference](re
 | `lens_x_size` | Float | `0.08` | `0.08` | yes |
 | `lens_y_size` | Float | `0.08` | `0.08` | yes |
 | `longitude_offset` | Float | `0` | `0.0` | yes |
-| `lut` | String |  | `` | yes |
+| `lut` | String | `""` | `` | yes |
 | `perspective` | Bool | `false` | `false` | yes |
 | `role_name` | String | `front` | `front`, `back`, `left`, `right`, `front_left`, `front_right`, `back_left`, `back_right` | yes |
 | `ros_name` | String | `sensor.camera.depth_fisheye` | `sensor.camera.depth_fisheye` | yes |
 | `ros_topic_name` | String | `sensor.camera.depth_fisheye` | `sensor.camera.depth_fisheye` | yes |
 | `sensor_tick` | Float | `0` | `0.0` | yes |
-| `shadow_catcher_tags` | String |  | `` | yes |
-| `show_only_actor_ids` | String |  | `` | yes |
-| `show_only_tags` | String |  | `` | yes |
+| `shadow_catcher_tags` | String | `""` | `` | yes |
+| `show_only_actor_ids` | String | `""` | `` | yes |
+| `show_only_tags` | String | `""` | `` | yes |
 | `theta_max_deg` | Float | `0` | `0.0` | yes |
 
 ### sensor.camera.dvs
@@ -1234,15 +1232,15 @@ Sensors attachable to an actor. Each one is documented in [Sensors reference](re
 | `log_eps` | Float | `0.001` | `0.001` | yes |
 | `negative_threshold` | Float | `0.3` | `0.3` | yes |
 | `positive_threshold` | Float | `0.3` | `0.3` | yes |
-| `post_process_profile` | String |  | `` | yes |
+| `post_process_profile` | String | `""` | `` | yes |
 | `refractory_period_ns` | Int | `0` | `0` | yes |
 | `role_name` | String | `front` | `front`, `back`, `left`, `right`, `front_left`, `front_right`, `back_left`, `back_right` | yes |
 | `ros_name` | String | `sensor.camera.dvs` | `sensor.camera.dvs` | yes |
 | `ros_topic_name` | String | `sensor.camera.dvs` | `sensor.camera.dvs` | yes |
 | `sensor_tick` | Float | `0` | `0.0` | yes |
-| `shadow_catcher_tags` | String |  | `` | yes |
-| `show_only_actor_ids` | String |  | `` | yes |
-| `show_only_tags` | String |  | `` | yes |
+| `shadow_catcher_tags` | String | `""` | `` | yes |
+| `show_only_actor_ids` | String | `""` | `` | yes |
+| `show_only_tags` | String | `""` | `` | yes |
 | `sigma_negative_threshold` | Float | `0` | `0.0` | yes |
 | `sigma_positive_threshold` | Float | `0` | `0.0` | yes |
 | `use_log` | Bool | `true` | `True` | yes |
@@ -1267,9 +1265,9 @@ Sensors attachable to an actor. Each one is documented in [Sensors reference](re
 | `ros_name` | String | `sensor.camera.instance_segmentation` | `sensor.camera.instance_segmentation` | yes |
 | `ros_topic_name` | String | `sensor.camera.instance_segmentation` | `sensor.camera.instance_segmentation` | yes |
 | `sensor_tick` | Float | `0` | `0.0` | yes |
-| `shadow_catcher_tags` | String |  | `` | yes |
-| `show_only_actor_ids` | String |  | `` | yes |
-| `show_only_tags` | String |  | `` | yes |
+| `shadow_catcher_tags` | String | `""` | `` | yes |
+| `show_only_actor_ids` | String | `""` | `` | yes |
+| `show_only_tags` | String | `""` | `` | yes |
 | `use_ray_tracing` | Bool | `true` | `true` | yes |
 
 ### sensor.camera.instance_segmentation_fisheye
@@ -1300,15 +1298,15 @@ Sensors attachable to an actor. Each one is documented in [Sensors reference](re
 | `lens_x_size` | Float | `0.08` | `0.08` | yes |
 | `lens_y_size` | Float | `0.08` | `0.08` | yes |
 | `longitude_offset` | Float | `0` | `0.0` | yes |
-| `lut` | String |  | `` | yes |
+| `lut` | String | `""` | `` | yes |
 | `perspective` | Bool | `false` | `false` | yes |
 | `role_name` | String | `front` | `front`, `back`, `left`, `right`, `front_left`, `front_right`, `back_left`, `back_right` | yes |
 | `ros_name` | String | `sensor.camera.instance_segmentation_fisheye` | `sensor.camera.instance_segmentation_fisheye` | yes |
 | `ros_topic_name` | String | `sensor.camera.instance_segmentation_fisheye` | `sensor.camera.instance_segmentation_fisheye` | yes |
 | `sensor_tick` | Float | `0` | `0.0` | yes |
-| `shadow_catcher_tags` | String |  | `` | yes |
-| `show_only_actor_ids` | String |  | `` | yes |
-| `show_only_tags` | String |  | `` | yes |
+| `shadow_catcher_tags` | String | `""` | `` | yes |
+| `show_only_actor_ids` | String | `""` | `` | yes |
+| `show_only_tags` | String | `""` | `` | yes |
 | `theta_max_deg` | Float | `0` | `0.0` | yes |
 
 ### sensor.camera.normals
@@ -1349,9 +1347,9 @@ Sensors attachable to an actor. Each one is documented in [Sensors reference](re
 | `ros_name` | String | `sensor.camera.optical_flow` | `sensor.camera.optical_flow` | yes |
 | `ros_topic_name` | String | `sensor.camera.optical_flow` | `sensor.camera.optical_flow` | yes |
 | `sensor_tick` | Float | `0` | `0.0` | yes |
-| `shadow_catcher_tags` | String |  | `` | yes |
-| `show_only_actor_ids` | String |  | `` | yes |
-| `show_only_tags` | String |  | `` | yes |
+| `shadow_catcher_tags` | String | `""` | `` | yes |
+| `show_only_actor_ids` | String | `""` | `` | yes |
+| `show_only_tags` | String | `""` | `` | yes |
 | `use_ray_tracing` | Bool | `true` | `true` | yes |
 
 ### sensor.camera.rgb
@@ -1370,14 +1368,14 @@ Sensors attachable to an actor. Each one is documented in [Sensors reference](re
 | `lens_kcube` | Float | `0` | `0.0` | yes |
 | `lens_x_size` | Float | `0.08` | `0.08` | yes |
 | `lens_y_size` | Float | `0.08` | `0.08` | yes |
-| `post_process_profile` | String |  | `` | yes |
+| `post_process_profile` | String | `""` | `` | yes |
 | `role_name` | String | `front` | `front`, `back`, `left`, `right`, `front_left`, `front_right`, `back_left`, `back_right` | yes |
 | `ros_name` | String | `sensor.camera.rgb` | `sensor.camera.rgb` | yes |
 | `ros_topic_name` | String | `sensor.camera.rgb` | `sensor.camera.rgb` | yes |
 | `sensor_tick` | Float | `0` | `0.0` | yes |
-| `shadow_catcher_tags` | String |  | `` | yes |
-| `show_only_actor_ids` | String |  | `` | yes |
-| `show_only_tags` | String |  | `` | yes |
+| `shadow_catcher_tags` | String | `""` | `` | yes |
+| `show_only_actor_ids` | String | `""` | `` | yes |
+| `show_only_tags` | String | `""` | `` | yes |
 | `use_ray_tracing` | Bool | `true` | `true` | yes |
 
 ### sensor.camera.rgb_fisheye
@@ -1428,21 +1426,21 @@ Sensors attachable to an actor. Each one is documented in [Sensors reference](re
 | `lens_x_size` | Float | `0.08` | `0.08` | yes |
 | `lens_y_size` | Float | `0.08` | `0.08` | yes |
 | `longitude_offset` | Float | `0` | `0.0` | yes |
-| `lut` | String |  | `` | yes |
+| `lut` | String | `""` | `` | yes |
 | `min_fstop` | Float | `1.2` | `1.2` | yes |
 | `motion_blur_intensity` | Float | `0.45` | `0.45` | yes |
 | `motion_blur_max_distortion` | Float | `0.35` | `0.35` | yes |
 | `motion_blur_min_object_screen_size` | Float | `0.1` | `0.1` | yes |
 | `perspective` | Bool | `false` | `false` | yes |
-| `post_process_profile` | String |  | `` | yes |
+| `post_process_profile` | String | `""` | `` | yes |
 | `role_name` | String | `front` | `front`, `back`, `left`, `right`, `front_left`, `front_right`, `back_left`, `back_right` | yes |
 | `ros_name` | String | `sensor.camera.rgb_fisheye` | `sensor.camera.rgb_fisheye` | yes |
 | `ros_topic_name` | String | `sensor.camera.rgb_fisheye` | `sensor.camera.rgb_fisheye` | yes |
 | `sensor_tick` | Float | `0` | `0.0` | yes |
-| `shadow_catcher_tags` | String |  | `` | yes |
+| `shadow_catcher_tags` | String | `""` | `` | yes |
 | `shoulder` | Float | `0.26` | `0.26` | yes |
-| `show_only_actor_ids` | String |  | `` | yes |
-| `show_only_tags` | String |  | `` | yes |
+| `show_only_actor_ids` | String | `""` | `` | yes |
+| `show_only_tags` | String | `""` | `` | yes |
 | `shutter_speed` | Float | `200` | `200.0` | yes |
 | `slope` | Float | `0.88` | `0.88` | yes |
 | `temp` | Float | `6500` | `6500.0` | yes |
@@ -1461,7 +1459,7 @@ Sensors attachable to an actor. Each one is documented in [Sensors reference](re
 | `camera_model` | String | `perspective` | `perspective`, `stereographic`, `equidistant`, `equisolid`, `orthographic`, `kannala_brandt`, `brown_conrady`, `lut`, `ftheta` | yes |
 | `cx` | Float | `0.5` | `0.5` | yes |
 | `cy` | Float | `0.5` | `0.5` | yes |
-| `distortion_coeffs` | String |  | `` | yes |
+| `distortion_coeffs` | String | `""` | `` | yes |
 | `enable_denoiser` | Bool | `true` | `true` | yes |
 | `enable_postprocess_effects` | Bool | `true` | `true` | yes |
 | `exposure_compensation` | Float | `0` | `0.0` | yes |
@@ -1472,16 +1470,16 @@ Sensors attachable to an actor. Each one is documented in [Sensors reference](re
 | `fy` | Float | `0` | `0.0` | yes |
 | `image_size_x` | Int | `800` | `800` | yes |
 | `image_size_y` | Int | `600` | `600` | yes |
-| `lut` | String |  | `` | yes |
-| `post_process_profile` | String |  | `` | yes |
+| `lut` | String | `""` | `` | yes |
+| `post_process_profile` | String | `""` | `` | yes |
 | `role_name` | String | `front` | `front`, `back`, `left`, `right`, `front_left`, `front_right`, `back_left`, `back_right` | yes |
 | `ros_name` | String | `sensor.camera.rt_lens` | `sensor.camera.rt_lens` | yes |
 | `ros_topic_name` | String | `sensor.camera.rt_lens` | `sensor.camera.rt_lens` | yes |
 | `samples_per_pixel` | Int | `16` | `16` | yes |
 | `sensor_tick` | Float | `0` | `0.0` | yes |
-| `shadow_catcher_tags` | String |  | `` | yes |
-| `show_only_actor_ids` | String |  | `` | yes |
-| `show_only_tags` | String |  | `` | yes |
+| `shadow_catcher_tags` | String | `""` | `` | yes |
+| `show_only_actor_ids` | String | `""` | `` | yes |
+| `show_only_tags` | String | `""` | `` | yes |
 | `theta_max_deg` | Float | `0` | `0.0` | yes |
 | `use_ray_tracing` | Bool | `true` | `true` | yes |
 
@@ -1495,7 +1493,7 @@ Sensors attachable to an actor. Each one is documented in [Sensors reference](re
 | `camera_model` | String | `perspective` | `perspective`, `stereographic`, `equidistant`, `equisolid`, `orthographic`, `kannala_brandt`, `brown_conrady`, `lut`, `ftheta` | yes |
 | `cx` | Float | `0.5` | `0.5` | yes |
 | `cy` | Float | `0.5` | `0.5` | yes |
-| `distortion_coeffs` | String |  | `` | yes |
+| `distortion_coeffs` | String | `""` | `` | yes |
 | `enable_denoiser` | Bool | `false` | `false` | yes |
 | `exposure_compensation` | Float | `0` | `0.0` | yes |
 | `exposure_mode` | String | `auto` | `auto`, `manual` | yes |
@@ -1505,15 +1503,15 @@ Sensors attachable to an actor. Each one is documented in [Sensors reference](re
 | `fy` | Float | `0` | `0.0` | yes |
 | `image_size_x` | Int | `800` | `800` | yes |
 | `image_size_y` | Int | `600` | `600` | yes |
-| `lut` | String |  | `` | yes |
+| `lut` | String | `""` | `` | yes |
 | `role_name` | String | `front` | `front`, `back`, `left`, `right`, `front_left`, `front_right`, `back_left`, `back_right` | yes |
 | `ros_name` | String | `sensor.camera.rt_lens_distance` | `sensor.camera.rt_lens_distance` | yes |
 | `ros_topic_name` | String | `sensor.camera.rt_lens_distance` | `sensor.camera.rt_lens_distance` | yes |
 | `samples_per_pixel` | Int | `1` | `1` | yes |
 | `sensor_tick` | Float | `0` | `0.0` | yes |
-| `shadow_catcher_tags` | String |  | `` | yes |
-| `show_only_actor_ids` | String |  | `` | yes |
-| `show_only_tags` | String |  | `` | yes |
+| `shadow_catcher_tags` | String | `""` | `` | yes |
+| `show_only_actor_ids` | String | `""` | `` | yes |
+| `show_only_tags` | String | `""` | `` | yes |
 | `theta_max_deg` | Float | `0` | `0.0` | yes |
 | `use_ray_tracing` | Bool | `true` | `true` | yes |
 
@@ -1527,7 +1525,7 @@ Sensors attachable to an actor. Each one is documented in [Sensors reference](re
 | `camera_model` | String | `perspective` | `perspective`, `stereographic`, `equidistant`, `equisolid`, `orthographic`, `kannala_brandt`, `brown_conrady`, `lut`, `ftheta` | yes |
 | `cx` | Float | `0.5` | `0.5` | yes |
 | `cy` | Float | `0.5` | `0.5` | yes |
-| `distortion_coeffs` | String |  | `` | yes |
+| `distortion_coeffs` | String | `""` | `` | yes |
 | `enable_denoiser` | Bool | `false` | `false` | yes |
 | `exposure_compensation` | Float | `0` | `0.0` | yes |
 | `exposure_mode` | String | `auto` | `auto`, `manual` | yes |
@@ -1537,15 +1535,15 @@ Sensors attachable to an actor. Each one is documented in [Sensors reference](re
 | `fy` | Float | `0` | `0.0` | yes |
 | `image_size_x` | Int | `800` | `800` | yes |
 | `image_size_y` | Int | `600` | `600` | yes |
-| `lut` | String |  | `` | yes |
+| `lut` | String | `""` | `` | yes |
 | `role_name` | String | `front` | `front`, `back`, `left`, `right`, `front_left`, `front_right`, `back_left`, `back_right` | yes |
 | `ros_name` | String | `sensor.camera.rt_lens_instance` | `sensor.camera.rt_lens_instance` | yes |
 | `ros_topic_name` | String | `sensor.camera.rt_lens_instance` | `sensor.camera.rt_lens_instance` | yes |
 | `samples_per_pixel` | Int | `1` | `1` | yes |
 | `sensor_tick` | Float | `0` | `0.0` | yes |
-| `shadow_catcher_tags` | String |  | `` | yes |
-| `show_only_actor_ids` | String |  | `` | yes |
-| `show_only_tags` | String |  | `` | yes |
+| `shadow_catcher_tags` | String | `""` | `` | yes |
+| `show_only_actor_ids` | String | `""` | `` | yes |
+| `show_only_tags` | String | `""` | `` | yes |
 | `theta_max_deg` | Float | `0` | `0.0` | yes |
 | `use_ray_tracing` | Bool | `true` | `true` | yes |
 
@@ -1568,9 +1566,9 @@ Sensors attachable to an actor. Each one is documented in [Sensors reference](re
 | `ros_name` | String | `sensor.camera.semantic_segmentation` | `sensor.camera.semantic_segmentation` | yes |
 | `ros_topic_name` | String | `sensor.camera.semantic_segmentation` | `sensor.camera.semantic_segmentation` | yes |
 | `sensor_tick` | Float | `0` | `0.0` | yes |
-| `shadow_catcher_tags` | String |  | `` | yes |
-| `show_only_actor_ids` | String |  | `` | yes |
-| `show_only_tags` | String |  | `` | yes |
+| `shadow_catcher_tags` | String | `""` | `` | yes |
+| `show_only_actor_ids` | String | `""` | `` | yes |
+| `show_only_tags` | String | `""` | `` | yes |
 | `use_ray_tracing` | Bool | `true` | `true` | yes |
 
 ### sensor.camera.semantic_segmentation_fisheye
@@ -1601,15 +1599,15 @@ Sensors attachable to an actor. Each one is documented in [Sensors reference](re
 | `lens_x_size` | Float | `0.08` | `0.08` | yes |
 | `lens_y_size` | Float | `0.08` | `0.08` | yes |
 | `longitude_offset` | Float | `0` | `0.0` | yes |
-| `lut` | String |  | `` | yes |
+| `lut` | String | `""` | `` | yes |
 | `perspective` | Bool | `false` | `false` | yes |
 | `role_name` | String | `front` | `front`, `back`, `left`, `right`, `front_left`, `front_right`, `back_left`, `back_right` | yes |
 | `ros_name` | String | `sensor.camera.semantic_segmentation_fisheye` | `sensor.camera.semantic_segmentation_fisheye` | yes |
 | `ros_topic_name` | String | `sensor.camera.semantic_segmentation_fisheye` | `sensor.camera.semantic_segmentation_fisheye` | yes |
 | `sensor_tick` | Float | `0` | `0.0` | yes |
-| `shadow_catcher_tags` | String |  | `` | yes |
-| `show_only_actor_ids` | String |  | `` | yes |
-| `show_only_tags` | String |  | `` | yes |
+| `shadow_catcher_tags` | String | `""` | `` | yes |
+| `show_only_actor_ids` | String | `""` | `` | yes |
+| `show_only_tags` | String | `""` | `` | yes |
 | `theta_max_deg` | Float | `0` | `0.0` | yes |
 
 ### sensor.lidar.hss_lidar
@@ -2324,7 +2322,7 @@ Static meshes that can be spawned as actors. See the [prop catalogue](catalogue_
 | Attribute | Type | Default | Values | Modifiable |
 | --- | --- | --- | --- | --- |
 | `mass` | Float | `0` | `` | yes |
-| `mesh_path` | String |  | `` | yes |
+| `mesh_path` | String | `""` | `` | yes |
 | `role_name` | String | `default` | `default` | yes |
 | `ros_name` | String | `static.prop.mesh` | `static.prop.mesh` | yes |
 | `ros_topic_name` | String | `static.prop.mesh` | `static.prop.mesh` | yes |

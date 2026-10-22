@@ -1,6 +1,6 @@
 # ROS 2 native interface
 
-![ros_carla_logo](img/logos/ros_carla.png)
+![ros_carla_logo](img/logos/ros_carla.webp)
 
 CARLA speaks ROS 2 from the server itself — there is no bridge process. Sensors publish and vehicles subscribe as soon as the simulator is started with `-ros2`:
 
@@ -8,29 +8,33 @@ CARLA speaks ROS 2 from the server itself — there is no bridge process. Sensor
 ./CarlaUnreal.sh -ros2
 ```
 
+- [__Quick start__](#quick-start)
 - [__Middleware (RMW)__](#middleware-rmw)
 - [__ROS 2 domain id__](#ros-2-domain-id)
 - [__Sensor data__](#sensor-data)
 - [__Control data__](#control-data)
-- [__CarlaEgoVehicleControl.msg__](#carlaegovehiclecontrolmsg)
+- [__Related pages__](#related-pages)
 
 !!! Note
     The flag is single-dash, `-ros2`; `--ros2` is also accepted on this branch. A source build has to be configured with `-DENABLE_ROS2=ON`, which is the default in CI but not in a plain configure.
 
-### Quick start
+---
+## Quick start
 
 ```sh
 # Terminal 1: the server
 ./CarlaUnreal.sh -ros2
 
-# Terminal 2: spawn a hero vehicle with a camera
-python3 PythonAPI/examples/ros2/ros2_native.py
+# Terminal 2: spawn a hero vehicle with a camera, LIDAR, GNSS and IMU
+cd PythonAPI/examples/ros2
+python3 ros2_native.py --file stack.json
 
 # Terminal 3: see what it publishes
 ros2 topic list
 ros2 topic echo /clock
 ```
 
+---
 ## Middleware (RMW)
 
 The native connector can publish through any of three middlewares. Select one with the `--rmw=` option, which is only valid together with `--ros2`:
@@ -39,7 +43,7 @@ The native connector can publish through any of three middlewares. Select one wi
 ./CarlaUnreal.sh --ros2 --rmw=cyclonedds
 ```
 
-Accepted values are `fastdds` (the default), `cyclonedds`, and `zenoh`. CycloneDDS and Zenoh are only available on Linux; on Windows only `fastdds` is supported. If the value is not recognized, or names a middleware that was not compiled into the binary, ROS 2 is disabled for that session and an error is logged listing the available middlewares. The published topics and message formats are identical across all middlewares.
+Accepted values are `fastdds` (the default), `cyclonedds`, and `zenoh`. The native interface itself is built on Linux only, so all three are Linux-only. If the value is not recognized, or names a middleware that was not compiled into the binary, ROS 2 is disabled for that session and an error is logged listing the available middlewares. The published topics and message formats are identical across all middlewares.
 
 `--rmw=zenoh` is compatible with `rmw_zenoh_cpp` peers and requires a Zenoh router (`ros2 run rmw_zenoh_cpp rmw_zenohd`) running before the simulator starts. The session connects to `tcp/localhost:7447` by default; set `ZENOH_SESSION_CONFIG_URI` to point at a different rmw_zenoh config file, or `ZENOH_CONFIG_OVERRIDE` to patch individual keys.
 
@@ -111,11 +115,13 @@ ego = world.spawn_actor(ego_bp, spawn_point)
 camera = world.spawn_actor(bp, transform, attach_to=ego)
 ```
 
-If a stack expects a topic that does not follow that convention, `ros_topic_name` replaces the generated name outright:
+If a stack expects a topic that does not follow that convention, `ros_topic_name` replaces the generated name:
 
 ```py
-bp.set_attribute('ros_topic_name', '/sensing/camera/traffic_light/image_raw')
+bp.set_attribute('ros_topic_name', '/sensing/camera/traffic_light')
 ```
+
+The camera then publishes on `/sensing/camera/traffic_light/image` and `/sensing/camera/traffic_light/camera_info`: the override replaces the `/carla/<parent>/<sensor>` part and the per-sensor suffix is still appended under it. LIDAR, semantic LIDAR, HSS LIDAR and radar are the exception and publish on the overridden name verbatim, with no `/point_cloud` suffix.
 
 Two topics are global rather than per sensor: the simulation clock on `/clock`, and the transform tree on `/tf`. The tree is on by default and is turned off with `world.set_publish_tf(False)`.
 
@@ -134,35 +140,31 @@ bp.set_attribute('ros_name', 'ego')     # the name the topics are built from
 ego = world.spawn_actor(bp, spawn_point)
 ```
 
-The `role_name` is what makes the server create the control subscribers at all: it has to be `hero` or `ego`. The `ros_name` is what the topic is named after, so the pair above gives `/carla/ego/vehicle_control_cmd`.
+The `role_name` is what makes the server create a control subscriber at all: it has to be `hero` or `ego`. The `ros_name` is what the topic is named after, so the pair above gives `/carla/ego/vehicle_control_cmd`.
 
-When the ego vehicle is spawned, two subscribers are created for it:
+__A vehicle listens on exactly one command surface__, chosen at spawn time by two blueprint attributes, so two topics can never fight over the same frame:
 
-| Topic | Message | Control |
-| ----- | ------- | ------- |
-| `/carla/ego/vehicle_control_cmd` | [`carla_msgs/CarlaEgoVehicleControl`](#carlaegovehiclecontrolmsg) | Throttle, steer and brake directly |
-| `/carla/ego/ackermann_control_cmd` | [`ackermann_msgs/AckermannDriveStamped`](https://docs.ros.org/en/api/ackermann_msgs/html/msg/AckermannDriveStamped.html) | Target speed, acceleration and steering angle, converted to vehicle control by the server |
+| Attribute | Topic | Message | Control |
+| --- | --- | --- | --- |
+| none, the default | `/carla/ego/vehicle_control_cmd` | [`carla_msgs/CarlaEgoVehicleControl`](ros2_native_msgs.md#carlaegovehiclecontrol) | Throttle, steer and brake directly |
+| `ros2_ackermann_control` | `/carla/ego/ackermann_control_cmd` | [`ackermann_msgs/AckermannDriveStamped`](ros2_native_msgs.md#ackermanndrivestamped) | Target speed, acceleration and steering angle, converted to vehicle control by the server |
+| `ros2_autoware_control` | the fixed `/control/command/*` topics | [Autoware messages](ros2_native_msgs.md#autoware-messages) | Autoware's own vehicle interface, see [Autoware](autoware.md) |
 
-Send on whichever suits the stack: `vehicle_control_cmd` for a controller that already produces pedal and steering commands, `ackermann_control_cmd` for one that works in speed and steering angle.
+Set the attribute before spawning:
 
-The message definitions are in the [messages reference](ros2_native_msgs.md). The separate ROS bridge project is described in [ROS bridge](ros_documentation.md). To drive the ego vehicle with Autoware, see [Autoware](autoware.md).
+```py
+bp.set_attribute('ros2_ackermann_control', 'true')
+```
+
+Choose whichever suits the stack: `vehicle_control_cmd` for a controller that already produces pedal and steering commands, `ackermann_control_cmd` for one that works in speed and steering angle. `ros2_autoware_control` wins when both it and the Ackermann attribute are set.
+
+The CARLA message types come from the [ros-carla-msgs package](https://github.com/carla-simulator/ros-carla-msgs); every message is defined field by field in [ROS 2 messages](ros2_native_msgs.md).
+
 
 ---
-## CarlaEgoVehicleControl.msg
+## Related pages
 
-To send control messages, install the [ros-carla-msgs package](https://github.com/carla-simulator/ros-carla-msgs). The control message has the following fields:
-
-| Field                                                                                                   | Type                                                                                                    | Description                                                                                             |
-| ------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| `header`                                                                                                | [Header](https://docs.ros.org/en/jazzy/p/std_msgs/interfaces/msg/Header.html)                               | Time stamp and frame ID when the message is published.                                                  |
-| `throttle`                                                                                              | float32                                                                                                 | Scalar value to control the vehicle throttle: **[0.0, 1.0]**                                             |
-| `steer`                                                                                                 | float32                                                                                                 | Scalar value to control the vehicle steering direction: **[-1.0, 1.0]** to control the vehicle steering |
-| `brake`                                                                                                 | float32                                                                                                 | Scalar value to control the vehicle brakes: **[0.0, 1.0]**                                              |
-| `hand_brake`                                                                                            | bool                                                                                                    | If **True**, the hand brake is enabled.                                                                 |
-| `reverse`                                                                                               | bool                                                                                                    | If **True**, the vehicle will move reverse.                                                             |
-| `gear`                                                                                                  | int32                                                                                                   | Changes between the available gears in a vehicle.                                                       |
-| `manual_gear_shift`                                                                                     | bool                                                                                                    | If **True**, the gears will be shifted using `gear`.                                                    |
-
----
-
-
+- [ROS 2 sensors](ros2_native_sensors.md) — what each sensor publishes, on which topic and in which message.
+- [ROS 2 messages](ros2_native_msgs.md) — the definition of each message, field by field.
+- [Autoware](autoware.md) — driving the ego vehicle with the Autoware stack over this interface.
+- [ROS bridge](ros_bridge.md) — the separate bridge project, which targets the Unreal Engine 4 line.

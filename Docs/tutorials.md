@@ -1,66 +1,53 @@
 # Tutorials
 
-Every tutorial in the documentation, grouped by what it is for.
+Step-by-step guides that solve one problem each, with the code to run. The sections of this documentation cover the subjects in full; these are the worked examples.
 
-- [__Getting started__](#getting-started)
 - [__Python API__](#python-api)
 - [__Sensors__](#sensors)
 - [__Traffic__](#traffic)
-- [__Assets and maps__](#assets-and-maps)
-- [__Development__](#development)
+- [__C++__](#c)
+- [__Where the rest lives__](#where-the-rest-lives)
 - [__Video tutorials__](#video-tutorials)
-
----
-## Getting started
-
-- [__First steps__](tuto_first_steps.md) — Connect a client, load a map, add an ego vehicle, traffic and a camera.
-- [__C++ tutorial__](tuto_cpp.md) — The same workflow from a C++ client.
 
 ---
 ## Python API
 
-- [__PyGame control__](tuto_G_pygame.md) — Display the output of camera sensors in a window and drive from it.
-- [__Control walker skeletons__](tuto_G_control_walker_skeletons.md) — Animate walkers bone by bone.
-- [__Control vehicle physics__](tuto_G_control_vehicle_physics.md) — Change a vehicle's physics at runtime.
-- [__Add friction triggers__](tuto_G_add_friction_triggers.md) — Define box triggers that change the friction under a vehicle's wheels.
-- [__Texture streaming__](tuto_G_texture_streaming.md) — Change the textures of map objects at runtime.
+- [__Control vehicle physics__](tuto_vehicle_physics.md) — Read a vehicle's physics control, change it at runtime, and watch its telemetry.
+- [__Control walker skeletons__](tuto_walker_skeletons.md) — Pose and animate a pedestrian bone by bone.
+- [__Texture streaming__](tuto_texture_streaming.md) — Replace the textures of map objects while the simulation runs.
+- [__Add friction triggers__](tuto_friction_triggers.md) — Define box triggers that change the friction under a vehicle's wheels.
 
 ---
 ## Sensors
 
-- [__Bounding boxes__](tuto_G_bounding_boxes.md) — Project the bounding boxes of CARLA objects into a camera image.
-- [__Instance segmentation camera__](tuto_G_instance_segmentation_sensor.md) — Tell apart objects of the same class.
-- [__Pedestrian bones__](tuto_G_pedestrian_bones.md) — Project a pedestrian's skeleton into the camera plane.
+- [__Bounding boxes__](tuto_bounding_boxes.md) — Project the 3D boxes of vehicles, pedestrians and map objects into a camera image.
+- [__Pedestrian bones__](tuto_pedestrian_bones.md) — Project a pedestrian's skeleton into the camera plane, the way a dataset annotation would.
 
 ---
 ## Traffic
 
-- [__Traffic Manager__](tuto_G_traffic_manager.md) — Populate a map with traffic and shape how it behaves.
-- [__Scenic__](tuto_G_scenic.md) — Write probabilistic scenarios and run them on CARLA.
+- [__Traffic Manager__](tuto_traffic_manager.md) — Populate a map with traffic, shape how it behaves and send it along set routes.
 
 ---
-## Assets and maps
+## C++
 
-- [__Custom assets__](custom_assets_tutorials.md) — Overview of adding props, vehicles, materials and content packs.
-- [__Custom maps__](maps_tutorials.md) — Overview of creating and importing maps.
-- [__Add a new vehicle__](tuto_content_authoring_vehicles.md) — Prepare a vehicle for CARLA, from the model to the blueprint.
-- [__Vehicle materials__](tuto_content_authoring_vehicles_materials.md) — Paint a vehicle with CARLA's car-paint master material.
-- [__Material customization__](tuto_A_material_customization.md) — Building and environment materials.
-- [__Add new props__](content_authoring_props.md) — Import meshes as spawnable props.
-- [__Content packs__](content_packs.md) — Ship maps, props and vehicles as a package of their own.
-- [__Generate maps with OpenStreetMap__](tuto_G_openstreetmap.md) — Turn an OSM export into a drivable map.
+- [__C++ tutorial__](tuto_cpp.md) — The client workflow from C++: connect, spawn with batch commands, read snapshots, record and replay, and drive with the navigation agents.
 
 ---
-## Development
+## Where the rest lives
 
-- [__Create semantic tags__](tuto_D_create_semantic_tags.md) — Define a new tag for semantic segmentation.
-- [__Customize vehicle suspension__](tuto_D_customize_vehicle_suspension.md) — Tune the Chaos suspension of a vehicle.
-- [__Generate detailed colliders__](tuto_D_generate_colliders.md) — Build accurate collision meshes for vehicles.
+Much of what used to be a tutorial is now a section of its own, written as a sequence rather than a single page:
+
+| Subject | Where |
+| --- | --- |
+| First steps with the API | [First steps](start_first_steps.md) |
+| Making maps, vehicles, props and materials | [Content authoring](content_authoring_overview.md) |
+| Shipping what you made | [Content packs](content_authoring_packs.md) |
+| Adding a semantic class for your assets | [Create semantic tags](core_sensors_semantic_tags.md) |
+| Working on CARLA itself | [Development](dev_overview.md) |
 
 ---
 ## Video tutorials
-
-Recorded with CARLA 0.9.x on Unreal Engine 4, so the map names, blueprint ids and some API calls differ from this version. The concepts still hold.
 
 - [__Fundamentals__](https://www.youtube.com/watch?v=pONr1R1dy88) — The fundamental concepts of CARLA, and a first script.
 - [__An in depth look at CARLA's sensors__](https://www.youtube.com/watch?v=om8klsBj4rc) — What each sensor produces and how to use it.

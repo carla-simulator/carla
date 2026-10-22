@@ -155,7 +155,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Barrel
 
-![static_prop_barrel](img/catalogue/props/static_prop_barrel.webp)
+![static_prop_barrel](img/catalogue/props/static_prop_barrel_thumb.webp)
 
 * __Blueprint ID__: `static.prop.barrel`
 * __Base type__: containers
@@ -164,7 +164,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Garbage container
 
-![static_prop_container](img/catalogue/props/static_prop_container.webp)
+![static_prop_container](img/catalogue/props/static_prop_container_thumb.webp)
 
 * __Blueprint ID__: `static.prop.container`
 * __Base type__: containers
@@ -173,7 +173,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Dumpster
 
-![static_prop_dumpster](img/catalogue/props/static_prop_dumpster.webp)
+![static_prop_dumpster](img/catalogue/props/static_prop_dumpster_thumb.webp)
 
 * __Blueprint ID__: `static.prop.dumpster`
 * __Base type__: containers
@@ -182,7 +182,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Dumpster02
 
-![static_prop_dumpster02](img/catalogue/props/static_prop_dumpster02.webp)
+![static_prop_dumpster02](img/catalogue/props/static_prop_dumpster02_thumb.webp)
 
 * __Blueprint ID__: `static.prop.dumpster02`
 * __Base type__: containers
@@ -191,7 +191,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Recyclecardboard
 
-![static_prop_recyclecardboard](img/catalogue/props/static_prop_recyclecardboard.webp)
+![static_prop_recyclecardboard](img/catalogue/props/static_prop_recyclecardboard_thumb.webp)
 
 * __Blueprint ID__: `static.prop.recyclecardboard`
 * __Base type__: containers
@@ -200,7 +200,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Recycleglass
 
-![static_prop_recycleglass](img/catalogue/props/static_prop_recycleglass.webp)
+![static_prop_recycleglass](img/catalogue/props/static_prop_recycleglass_thumb.webp)
 
 * __Blueprint ID__: `static.prop.recycleglass`
 * __Base type__: containers
@@ -209,7 +209,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Recycleorganic
 
-![static_prop_recycleorganic](img/catalogue/props/static_prop_recycleorganic.webp)
+![static_prop_recycleorganic](img/catalogue/props/static_prop_recycleorganic_thumb.webp)
 
 * __Blueprint ID__: `static.prop.recycleorganic`
 * __Base type__: containers
@@ -218,7 +218,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Recycleplastic
 
-![static_prop_recycleplastic](img/catalogue/props/static_prop_recycleplastic.webp)
+![static_prop_recycleplastic](img/catalogue/props/static_prop_recycleplastic_thumb.webp)
 
 * __Blueprint ID__: `static.prop.recycleplastic`
 * __Base type__: containers
@@ -227,7 +227,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Creased box 01
 
-![static_prop_creasedbox01](img/catalogue/props/static_prop_creasedbox01.webp)
+![static_prop_creasedbox01](img/catalogue/props/static_prop_creasedbox01_thumb.webp)
 
 * __Blueprint ID__: `static.prop.creasedbox01`
 * __Base type__: containers
@@ -240,7 +240,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Trash bag
 
-![static_prop_trashbag](img/catalogue/props/static_prop_trashbag.webp)
+![static_prop_trashbag](img/catalogue/props/static_prop_trashbag_thumb.webp)
 
 * __Blueprint ID__: `static.prop.trashbag`
 * __Base type__: garbage
@@ -249,7 +249,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Cola can
 
-![static_prop_colacan](img/catalogue/props/static_prop_colacan.webp)
+![static_prop_colacan](img/catalogue/props/static_prop_colacan_thumb.webp)
 
 * __Blueprint ID__: `static.prop.colacan`
 * __Base type__: garbage
@@ -258,7 +258,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Garbage 01
 
-![static_prop_garbage01](img/catalogue/props/static_prop_garbage01.webp)
+![static_prop_garbage01](img/catalogue/props/static_prop_garbage01_thumb.webp)
 
 * __Blueprint ID__: `static.prop.garbage01`
 * __Base type__: garbage
@@ -267,7 +267,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Garbage 02
 
-![static_prop_garbage02](img/catalogue/props/static_prop_garbage02.webp)
+![static_prop_garbage02](img/catalogue/props/static_prop_garbage02_thumb.webp)
 
 * __Blueprint ID__: `static.prop.garbage02`
 * __Base type__: garbage
@@ -276,7 +276,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Garbage 03
 
-![static_prop_garbage03](img/catalogue/props/static_prop_garbage03.webp)
+![static_prop_garbage03](img/catalogue/props/static_prop_garbage03_thumb.webp)
 
 * __Blueprint ID__: `static.prop.garbage03`
 * __Base type__: garbage
@@ -285,7 +285,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Garbage 04
 
-![static_prop_garbage04](img/catalogue/props/static_prop_garbage04.webp)
+![static_prop_garbage04](img/catalogue/props/static_prop_garbage04_thumb.webp)
 
 * __Blueprint ID__: `static.prop.garbage04`
 * __Base type__: garbage
@@ -294,7 +294,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Garbage 05
 
-![static_prop_garbage05](img/catalogue/props/static_prop_garbage05.webp)
+![static_prop_garbage05](img/catalogue/props/static_prop_garbage05_thumb.webp)
 
 * __Blueprint ID__: `static.prop.garbage05`
 * __Base type__: garbage
@@ -303,7 +303,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Garbage 06
 
-![static_prop_garbage06](img/catalogue/props/static_prop_garbage06.webp)
+![static_prop_garbage06](img/catalogue/props/static_prop_garbage06_thumb.webp)
 
 * __Blueprint ID__: `static.prop.garbage06`
 * __Base type__: garbage
@@ -312,7 +312,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Garbage platform 01
 
-![static_prop_platformgarbage01](img/catalogue/props/static_prop_platformgarbage01.webp)
+![static_prop_platformgarbage01](img/catalogue/props/static_prop_platformgarbage01_thumb.webp)
 
 * __Blueprint ID__: `static.prop.platformgarbage01`
 * __Base type__: garbage
@@ -321,7 +321,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Trash can 01
 
-![static_prop_trashcan01](img/catalogue/props/static_prop_trashcan01.webp)
+![static_prop_trashcan01](img/catalogue/props/static_prop_trashcan01_thumb.webp)
 
 * __Blueprint ID__: `static.prop.trashcan01`
 * __Base type__: garbage
@@ -330,7 +330,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Trash can 02
 
-![static_prop_trashcan02](img/catalogue/props/static_prop_trashcan02.webp)
+![static_prop_trashcan02](img/catalogue/props/static_prop_trashcan02_thumb.webp)
 
 * __Blueprint ID__: `static.prop.trashcan02`
 * __Base type__: garbage
@@ -339,7 +339,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Trash can 03
 
-![static_prop_trashcan03](img/catalogue/props/static_prop_trashcan03.webp)
+![static_prop_trashcan03](img/catalogue/props/static_prop_trashcan03_thumb.webp)
 
 * __Blueprint ID__: `static.prop.trashcan03`
 * __Base type__: garbage
@@ -348,7 +348,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Trash can 04
 
-![static_prop_trashcan04](img/catalogue/props/static_prop_trashcan04.webp)
+![static_prop_trashcan04](img/catalogue/props/static_prop_trashcan04_thumb.webp)
 
 * __Blueprint ID__: `static.prop.trashcan04`
 * __Base type__: garbage
@@ -357,7 +357,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Trashcan05
 
-![static_prop_trashcan05](img/catalogue/props/static_prop_trashcan05.webp)
+![static_prop_trashcan05](img/catalogue/props/static_prop_trashcan05_thumb.webp)
 
 * __Blueprint ID__: `static.prop.trashcan05`
 * __Base type__: garbage
@@ -370,7 +370,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Pergola
 
-![static_prop_pergola](img/catalogue/props/static_prop_pergola.webp)
+![static_prop_pergola](img/catalogue/props/static_prop_pergola_thumb.webp)
 
 * __Blueprint ID__: `static.prop.pergola`
 * __Base type__: park_garden
@@ -379,7 +379,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Plastic chair
 
-![static_prop_plasticchair](img/catalogue/props/static_prop_plasticchair.webp)
+![static_prop_plasticchair](img/catalogue/props/static_prop_plasticchair_thumb.webp)
 
 * __Blueprint ID__: `static.prop.plasticchair`
 * __Base type__: park_garden
@@ -388,7 +388,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Plastic table
 
-![static_prop_plastictable](img/catalogue/props/static_prop_plastictable.webp)
+![static_prop_plastictable](img/catalogue/props/static_prop_plastictable_thumb.webp)
 
 * __Blueprint ID__: `static.prop.plastictable`
 * __Base type__: park_garden
@@ -397,7 +397,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Swing
 
-![static_prop_swing](img/catalogue/props/static_prop_swing.webp)
+![static_prop_swing](img/catalogue/props/static_prop_swing_thumb.webp)
 
 * __Blueprint ID__: `static.prop.swing`
 * __Base type__: park_garden
@@ -406,7 +406,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Swingcouch
 
-![static_prop_swingcouch](img/catalogue/props/static_prop_swingcouch.webp)
+![static_prop_swingcouch](img/catalogue/props/static_prop_swingcouch_thumb.webp)
 
 * __Blueprint ID__: `static.prop.swingcouch`
 * __Base type__: park_garden
@@ -415,7 +415,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Trampoline
 
-![static_prop_trampoline](img/catalogue/props/static_prop_trampoline.webp)
+![static_prop_trampoline](img/catalogue/props/static_prop_trampoline_thumb.webp)
 
 * __Blueprint ID__: `static.prop.trampoline`
 * __Base type__: park_garden
@@ -424,7 +424,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Barbeque
 
-![static_prop_barbeque](img/catalogue/props/static_prop_barbeque.webp)
+![static_prop_barbeque](img/catalogue/props/static_prop_barbeque_thumb.webp)
 
 * __Blueprint ID__: `static.prop.barbeque`
 * __Base type__: park_garden
@@ -433,7 +433,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Doghouse
 
-![static_prop_doghouse](img/catalogue/props/static_prop_doghouse.webp)
+![static_prop_doghouse](img/catalogue/props/static_prop_doghouse_thumb.webp)
 
 * __Blueprint ID__: `static.prop.doghouse`
 * __Base type__: park_garden
@@ -442,7 +442,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Gnome
 
-![static_prop_gnome](img/catalogue/props/static_prop_gnome.webp)
+![static_prop_gnome](img/catalogue/props/static_prop_gnome_thumb.webp)
 
 * __Blueprint ID__: `static.prop.gnome`
 * __Base type__: park_garden
@@ -451,7 +451,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Haybale
 
-![static_prop_haybale](img/catalogue/props/static_prop_haybale.webp)
+![static_prop_haybale](img/catalogue/props/static_prop_haybale_thumb.webp)
 
 * __Blueprint ID__: `static.prop.haybale`
 * __Base type__: park_garden
@@ -460,7 +460,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Plantpot 01
 
-![static_prop_plantpot01](img/catalogue/props/static_prop_plantpot01.webp)
+![static_prop_plantpot01](img/catalogue/props/static_prop_plantpot01_thumb.webp)
 
 * __Blueprint ID__: `static.prop.plantpot01`
 * __Base type__: park_garden
@@ -469,7 +469,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Plantpot 02
 
-![static_prop_plantpot02](img/catalogue/props/static_prop_plantpot02.webp)
+![static_prop_plantpot02](img/catalogue/props/static_prop_plantpot02_thumb.webp)
 
 * __Blueprint ID__: `static.prop.plantpot02`
 * __Base type__: park_garden
@@ -478,7 +478,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Plantpot 03
 
-![static_prop_plantpot03](img/catalogue/props/static_prop_plantpot03.webp)
+![static_prop_plantpot03](img/catalogue/props/static_prop_plantpot03_thumb.webp)
 
 * __Blueprint ID__: `static.prop.plantpot03`
 * __Base type__: park_garden
@@ -487,7 +487,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Plantpot 04
 
-![static_prop_plantpot04](img/catalogue/props/static_prop_plantpot04.webp)
+![static_prop_plantpot04](img/catalogue/props/static_prop_plantpot04_thumb.webp)
 
 * __Blueprint ID__: `static.prop.plantpot04`
 * __Base type__: park_garden
@@ -496,7 +496,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Plantpot 05
 
-![static_prop_plantpot05](img/catalogue/props/static_prop_plantpot05.webp)
+![static_prop_plantpot05](img/catalogue/props/static_prop_plantpot05_thumb.webp)
 
 * __Blueprint ID__: `static.prop.plantpot05`
 * __Base type__: park_garden
@@ -505,7 +505,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Plantpot 06
 
-![static_prop_plantpot06](img/catalogue/props/static_prop_plantpot06.webp)
+![static_prop_plantpot06](img/catalogue/props/static_prop_plantpot06_thumb.webp)
 
 * __Blueprint ID__: `static.prop.plantpot06`
 * __Base type__: park_garden
@@ -514,7 +514,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Plantpot 07
 
-![static_prop_plantpot07](img/catalogue/props/static_prop_plantpot07.webp)
+![static_prop_plantpot07](img/catalogue/props/static_prop_plantpot07_thumb.webp)
 
 * __Blueprint ID__: `static.prop.plantpot07`
 * __Base type__: park_garden
@@ -527,7 +527,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Plastic bag
 
-![static_prop_plasticbag](img/catalogue/props/static_prop_plasticbag.webp)
+![static_prop_plasticbag](img/catalogue/props/static_prop_plasticbag_thumb.webp)
 
 * __Blueprint ID__: `static.prop.plasticbag`
 * __Base type__: personal
@@ -536,7 +536,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Shopping bag
 
-![static_prop_shoppingbag](img/catalogue/props/static_prop_shoppingbag.webp)
+![static_prop_shoppingbag](img/catalogue/props/static_prop_shoppingbag_thumb.webp)
 
 * __Blueprint ID__: `static.prop.shoppingbag`
 * __Base type__: personal
@@ -545,7 +545,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Shopping cart
 
-![static_prop_shoppingcart](img/catalogue/props/static_prop_shoppingcart.webp)
+![static_prop_shoppingcart](img/catalogue/props/static_prop_shoppingcart_thumb.webp)
 
 * __Blueprint ID__: `static.prop.shoppingcart`
 * __Base type__: personal
@@ -554,7 +554,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Shopping trolley
 
-![static_prop_shoppingtrolley](img/catalogue/props/static_prop_shoppingtrolley.webp)
+![static_prop_shoppingtrolley](img/catalogue/props/static_prop_shoppingtrolley_thumb.webp)
 
 * __Blueprint ID__: `static.prop.shoppingtrolley`
 * __Base type__: personal
@@ -563,7 +563,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Briefcase
 
-![static_prop_briefcase](img/catalogue/props/static_prop_briefcase.webp)
+![static_prop_briefcase](img/catalogue/props/static_prop_briefcase_thumb.webp)
 
 * __Blueprint ID__: `static.prop.briefcase`
 * __Base type__: personal
@@ -572,7 +572,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Guitarcase
 
-![static_prop_guitarcase](img/catalogue/props/static_prop_guitarcase.webp)
+![static_prop_guitarcase](img/catalogue/props/static_prop_guitarcase_thumb.webp)
 
 * __Blueprint ID__: `static.prop.guitarcase`
 * __Base type__: personal
@@ -581,7 +581,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Travel case
 
-![static_prop_travelcase](img/catalogue/props/static_prop_travelcase.webp)
+![static_prop_travelcase](img/catalogue/props/static_prop_travelcase_thumb.webp)
 
 * __Blueprint ID__: `static.prop.travelcase`
 * __Base type__: personal
@@ -590,7 +590,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Bike helmet
 
-![static_prop_bikehelmet](img/catalogue/props/static_prop_bikehelmet.webp)
+![static_prop_bikehelmet](img/catalogue/props/static_prop_bikehelmet_thumb.webp)
 
 * __Blueprint ID__: `static.prop.bikehelmet`
 * __Base type__: personal
@@ -599,7 +599,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Motor helmet
 
-![static_prop_motorhelmet](img/catalogue/props/static_prop_motorhelmet.webp)
+![static_prop_motorhelmet](img/catalogue/props/static_prop_motorhelmet_thumb.webp)
 
 * __Blueprint ID__: `static.prop.motorhelmet`
 * __Base type__: personal
@@ -608,7 +608,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Mobile
 
-![static_prop_mobile](img/catalogue/props/static_prop_mobile.webp)
+![static_prop_mobile](img/catalogue/props/static_prop_mobile_thumb.webp)
 
 * __Blueprint ID__: `static.prop.mobile`
 * __Base type__: personal
@@ -617,7 +617,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Purse
 
-![static_prop_purse](img/catalogue/props/static_prop_purse.webp)
+![static_prop_purse](img/catalogue/props/static_prop_purse_thumb.webp)
 
 * __Blueprint ID__: `static.prop.purse`
 * __Base type__: personal
@@ -630,7 +630,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Street barrier
 
-![static_prop_streetbarrier](img/catalogue/props/static_prop_streetbarrier.webp)
+![static_prop_streetbarrier](img/catalogue/props/static_prop_streetbarrier_thumb.webp)
 
 * __Blueprint ID__: `static.prop.streetbarrier`
 * __Base type__: road
@@ -639,7 +639,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Construction cone
 
-![static_prop_constructioncone](img/catalogue/props/static_prop_constructioncone.webp)
+![static_prop_constructioncone](img/catalogue/props/static_prop_constructioncone_thumb.webp)
 
 * __Blueprint ID__: `static.prop.constructioncone`
 * __Base type__: road
@@ -648,7 +648,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Traffic cone 01
 
-![static_prop_trafficcone01](img/catalogue/props/static_prop_trafficcone01.webp)
+![static_prop_trafficcone01](img/catalogue/props/static_prop_trafficcone01_thumb.webp)
 
 * __Blueprint ID__: `static.prop.trafficcone01`
 * __Base type__: road
@@ -657,7 +657,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Traffic cone 02
 
-![static_prop_trafficcone02](img/catalogue/props/static_prop_trafficcone02.webp)
+![static_prop_trafficcone02](img/catalogue/props/static_prop_trafficcone02_thumb.webp)
 
 * __Blueprint ID__: `static.prop.trafficcone02`
 * __Base type__: road
@@ -666,7 +666,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Warning construction
 
-![static_prop_warningconstruction](img/catalogue/props/static_prop_warningconstruction.webp)
+![static_prop_warningconstruction](img/catalogue/props/static_prop_warningconstruction_thumb.webp)
 
 * __Blueprint ID__: `static.prop.warningconstruction`
 * __Base type__: road
@@ -675,7 +675,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Brokentile 01
 
-![static_prop_brokentile01](img/catalogue/props/static_prop_brokentile01.webp)
+![static_prop_brokentile01](img/catalogue/props/static_prop_brokentile01_thumb.webp)
 
 * __Blueprint ID__: `static.prop.brokentile01`
 * __Base type__: road
@@ -684,7 +684,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Brokentile 02
 
-![static_prop_brokentile02](img/catalogue/props/static_prop_brokentile02.webp)
+![static_prop_brokentile02](img/catalogue/props/static_prop_brokentile02_thumb.webp)
 
 * __Blueprint ID__: `static.prop.brokentile02`
 * __Base type__: road
@@ -693,7 +693,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Brokentile 03
 
-![static_prop_brokentile03](img/catalogue/props/static_prop_brokentile03.webp)
+![static_prop_brokentile03](img/catalogue/props/static_prop_brokentile03_thumb.webp)
 
 * __Blueprint ID__: `static.prop.brokentile03`
 * __Base type__: road
@@ -702,7 +702,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Brokentile 04
 
-![static_prop_brokentile04](img/catalogue/props/static_prop_brokentile04.webp)
+![static_prop_brokentile04](img/catalogue/props/static_prop_brokentile04_thumb.webp)
 
 * __Blueprint ID__: `static.prop.brokentile04`
 * __Base type__: road
@@ -711,7 +711,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Dirt debris 01
 
-![static_prop_dirtdebris01](img/catalogue/props/static_prop_dirtdebris01.webp)
+![static_prop_dirtdebris01](img/catalogue/props/static_prop_dirtdebris01_thumb.webp)
 
 * __Blueprint ID__: `static.prop.dirtdebris01`
 * __Base type__: road
@@ -720,7 +720,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Dirt debris 02
 
-![static_prop_dirtdebris02](img/catalogue/props/static_prop_dirtdebris02.webp)
+![static_prop_dirtdebris02](img/catalogue/props/static_prop_dirtdebris02_thumb.webp)
 
 * __Blueprint ID__: `static.prop.dirtdebris02`
 * __Base type__: road
@@ -729,7 +729,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Dirt debris 03
 
-![static_prop_dirtdebris03](img/catalogue/props/static_prop_dirtdebris03.webp)
+![static_prop_dirtdebris03](img/catalogue/props/static_prop_dirtdebris03_thumb.webp)
 
 * __Blueprint ID__: `static.prop.dirtdebris03`
 * __Base type__: road
@@ -738,7 +738,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Traffic warning
 
-![static_prop_trafficwarning](img/catalogue/props/static_prop_trafficwarning.webp)
+![static_prop_trafficwarning](img/catalogue/props/static_prop_trafficwarning_thumb.webp)
 
 * __Blueprint ID__: `static.prop.trafficwarning`
 * __Base type__: road
@@ -747,7 +747,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Warning accident
 
-![static_prop_warningaccident](img/catalogue/props/static_prop_warningaccident.webp)
+![static_prop_warningaccident](img/catalogue/props/static_prop_warningaccident_thumb.webp)
 
 * __Blueprint ID__: `static.prop.warningaccident`
 * __Base type__: road
@@ -760,7 +760,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Chain barrier
 
-![static_prop_chainbarrier](img/catalogue/props/static_prop_chainbarrier.webp)
+![static_prop_chainbarrier](img/catalogue/props/static_prop_chainbarrier_thumb.webp)
 
 * __Blueprint ID__: `static.prop.chainbarrier`
 * __Base type__: sidewalk
@@ -769,7 +769,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Chain barrier end
 
-![static_prop_chainbarrierend](img/catalogue/props/static_prop_chainbarrierend.webp)
+![static_prop_chainbarrierend](img/catalogue/props/static_prop_chainbarrierend_thumb.webp)
 
 * __Blueprint ID__: `static.prop.chainbarrierend`
 * __Base type__: sidewalk
@@ -778,7 +778,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Bench 01
 
-![static_prop_bench01](img/catalogue/props/static_prop_bench01.webp)
+![static_prop_bench01](img/catalogue/props/static_prop_bench01_thumb.webp)
 
 * __Blueprint ID__: `static.prop.bench01`
 * __Base type__: sidewalk
@@ -787,7 +787,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Bench 02
 
-![static_prop_bench02](img/catalogue/props/static_prop_bench02.webp)
+![static_prop_bench02](img/catalogue/props/static_prop_bench02_thumb.webp)
 
 * __Blueprint ID__: `static.prop.bench02`
 * __Base type__: sidewalk
@@ -796,7 +796,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Kiosk 01
 
-![static_prop_kiosk_01](img/catalogue/props/static_prop_kiosk_01.webp)
+![static_prop_kiosk_01](img/catalogue/props/static_prop_kiosk_01_thumb.webp)
 
 * __Blueprint ID__: `static.prop.kiosk_01`
 * __Base type__: sidewalk
@@ -805,7 +805,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Fountain
 
-![static_prop_fountain](img/catalogue/props/static_prop_fountain.webp)
+![static_prop_fountain](img/catalogue/props/static_prop_fountain_thumb.webp)
 
 * __Blueprint ID__: `static.prop.fountain`
 * __Base type__: sidewalk
@@ -814,7 +814,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Map table
 
-![static_prop_maptable](img/catalogue/props/static_prop_maptable.webp)
+![static_prop_maptable](img/catalogue/props/static_prop_maptable_thumb.webp)
 
 * __Blueprint ID__: `static.prop.maptable`
 * __Base type__: sidewalk
@@ -823,7 +823,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Advertisement
 
-![static_prop_advertisement](img/catalogue/props/static_prop_advertisement.webp)
+![static_prop_advertisement](img/catalogue/props/static_prop_advertisement_thumb.webp)
 
 * __Blueprint ID__: `static.prop.advertisement`
 * __Base type__: sidewalk
@@ -832,7 +832,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Street sign
 
-![static_prop_streetsign](img/catalogue/props/static_prop_streetsign.webp)
+![static_prop_streetsign](img/catalogue/props/static_prop_streetsign_thumb.webp)
 
 * __Blueprint ID__: `static.prop.streetsign`
 * __Base type__: sidewalk
@@ -841,7 +841,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Street sign 01
 
-![static_prop_streetsign01](img/catalogue/props/static_prop_streetsign01.webp)
+![static_prop_streetsign01](img/catalogue/props/static_prop_streetsign01_thumb.webp)
 
 * __Blueprint ID__: `static.prop.streetsign01`
 * __Base type__: sidewalk
@@ -850,7 +850,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Street sign 04
 
-![static_prop_streetsign04](img/catalogue/props/static_prop_streetsign04.webp)
+![static_prop_streetsign04](img/catalogue/props/static_prop_streetsign04_thumb.webp)
 
 * __Blueprint ID__: `static.prop.streetsign04`
 * __Base type__: sidewalk
@@ -859,7 +859,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Bus stop
 
-![static_prop_busstop](img/catalogue/props/static_prop_busstop.webp)
+![static_prop_busstop](img/catalogue/props/static_prop_busstop_thumb.webp)
 
 * __Blueprint ID__: `static.prop.busstop`
 * __Base type__: sidewalk
@@ -868,7 +868,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### ATM
 
-![static_prop_atm](img/catalogue/props/static_prop_atm.webp)
+![static_prop_atm](img/catalogue/props/static_prop_atm_thumb.webp)
 
 * __Blueprint ID__: `static.prop.atm`
 * __Base type__: sidewalk
@@ -877,7 +877,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Mailbox
 
-![static_prop_mailbox](img/catalogue/props/static_prop_mailbox.webp)
+![static_prop_mailbox](img/catalogue/props/static_prop_mailbox_thumb.webp)
 
 * __Blueprint ID__: `static.prop.mailbox`
 * __Base type__: sidewalk
@@ -886,7 +886,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Street fountain
 
-![static_prop_streetfountain](img/catalogue/props/static_prop_streetfountain.webp)
+![static_prop_streetfountain](img/catalogue/props/static_prop_streetfountain_thumb.webp)
 
 * __Blueprint ID__: `static.prop.streetfountain`
 * __Base type__: sidewalk
@@ -895,7 +895,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Vending machine
 
-![static_prop_vendingmachine](img/catalogue/props/static_prop_vendingmachine.webp)
+![static_prop_vendingmachine](img/catalogue/props/static_prop_vendingmachine_thumb.webp)
 
 * __Blueprint ID__: `static.prop.vendingmachine`
 * __Base type__: sidewalk
@@ -908,7 +908,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Calibrator
 
-![static_prop_calibrator](img/catalogue/props/static_prop_calibrator.webp)
+![static_prop_calibrator](img/catalogue/props/static_prop_calibrator_thumb.webp)
 
 * __Blueprint ID__: `static.prop.calibrator`
 * __Base type__: utility

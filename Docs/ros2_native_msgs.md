@@ -1,331 +1,188 @@
-# CARLA messages reference
+# ROS 2 native messages
 
-The following reference lists all the CARLA messages available in the ROS bridge.  
+Every message the [native ROS 2 interface](ros2_native.md) publishes or subscribes to, and what each field means.
+Most of them are standard ROS 2 messages, so a stack built on `sensor_msgs` and `geometry_msgs` reads CARLA without a translation layer.
 
-Any doubts regarding these messages or the CARLA-ROS bridge can be solved in the forum.
+The message types are defined in `LibCarla/source/carla/ros2/types/msg/` and serialized to the DDS type names the ROS 2 tooling expects, so `ros2 topic info -v` reports the same type a native ROS 2 publisher would.
 
-<div class="build-buttons">
-<!-- Latest release button -->
-<p>
-<a href="https://forum.carla.org/c/carla-ecosystem/ros-bridge" target="_blank" class="btn btn-neutral" title="Go to the CARLA Forum, ROS bridge section">
-CARLA forum</a>
-</p>
-</div>
+- [__Published__](#published)
+- [__Subscribed__](#subscribed)
+- [__CARLA messages__](#carla-messages)
+- [__Autoware messages__](#autoware-messages)
+- [__Quality of service__](#quality-of-service)
 
----
-## CarlaActorInfo.msg
-
-Information shared between ROS and CARLA regarding an actor. 
-
-| Field                                                     | Type                                                      | Description                                               |
-| ---------------------------------------------------------- | ---------------------------------------------------------- | ---------------------------------------------------------- |
-| `id`                                                      | uint32                                                    | The ID of the actor.                                      |
-| `parent_id`                                               | uint32                                                    | The ID of the parent actor. \`0\` if no parent available. |
-| `type`                                                    | string                                                    | The identifier of the blueprint this actor was based on.  |
-| `rolename`                                                | string                                                    | Role assigned to the actor when spawned.                  |
-
-
-
+!!! Note
+    The [ROS bridge](ros_bridge.md) defines a much larger set of `carla_msgs` for the Unreal Engine 4 line — actor lists, world info, traffic light status, scenario control. The native interface does not use them; they are documented in the [bridge's own messages reference](https://carla.readthedocs.io/projects/ros-bridge/en/latest/ros_msgs/).
 
 ---
-## CarlaActorList.msg
+## Published
 
-A list of messages with some basic information for CARLA actors.
+| Message | Published on | Source |
+|---|---|---|
+| [`rosgraph_msgs/Clock`](https://docs.ros.org/en/jazzy/p/rosgraph_msgs/interfaces/msg/Clock.html) | `/clock` | The simulation clock, every frame |
+| [`tf2_msgs/TFMessage`](https://docs.ros.org/en/jazzy/p/tf2_msgs/interfaces/msg/TFMessage.html) | `/tf` | One transform per actor |
+| [`sensor_msgs/Image`](https://docs.ros.org/en/jazzy/p/sensor_msgs/interfaces/msg/Image.html) | `<sensor>/image` | RGB, depth, semantic, instance, normals, optical flow and DVS cameras |
+| [`sensor_msgs/CameraInfo`](https://docs.ros.org/en/jazzy/p/sensor_msgs/interfaces/msg/CameraInfo.html) | `<sensor>/camera_info` | The same cameras |
+| [`sensor_msgs/PointCloud2`](https://docs.ros.org/en/jazzy/p/sensor_msgs/interfaces/msg/PointCloud2.html) | `<sensor>/point_cloud` | LIDAR, semantic LIDAR, HSS LIDAR, radar, and the DVS camera's events |
+| [`sensor_msgs/Imu`](https://docs.ros.org/en/jazzy/p/sensor_msgs/interfaces/msg/Imu.html) | `<sensor>` | `sensor.other.imu` |
+| [`sensor_msgs/NavSatFix`](https://docs.ros.org/en/jazzy/p/sensor_msgs/interfaces/msg/NavSatFix.html) | `<sensor>` | `sensor.other.gnss` |
+| [`geometry_msgs/PoseStamped`](https://docs.ros.org/en/jazzy/p/geometry_msgs/interfaces/msg/PoseStamped.html) | `<sensor>/pose` | `sensor.other.autoware_gnss` |
+| [`geometry_msgs/PoseWithCovarianceStamped`](https://docs.ros.org/en/jazzy/p/geometry_msgs/interfaces/msg/PoseWithCovarianceStamped.html) | `<sensor>/pose_with_covariance` | `sensor.other.autoware_gnss` |
+| [`carla_msgs/CarlaCollisionEvent`](#carlacollisionevent) | `<sensor>` | `sensor.other.collision` |
+| [`autoware_vehicle_msgs/VelocityReport`](#velocityreport) | `/vehicle/status/velocity_status` | `sensor.other.vehicle_status` |
+| [`autoware_vehicle_msgs/SteeringReport`](#steeringreport) | `/vehicle/status/steering_status` | `sensor.other.vehicle_status` |
+| [`autoware_vehicle_msgs/ControlModeReport`](#controlmodereport) | `/vehicle/status/control_mode` | `sensor.other.vehicle_status` |
+| [`autoware_vehicle_msgs/GearReport`](#gearreport) | `/vehicle/status/gear_status` | `sensor.other.vehicle_status` |
+| [`autoware_vehicle_msgs/TurnIndicatorsReport`](#turnindicatorsreport-and-hazardlightsreport) | `/vehicle/status/turn_indicators_status` | `sensor.other.vehicle_status` |
+| [`autoware_vehicle_msgs/HazardLightsReport`](#turnindicatorsreport-and-hazardlightsreport) | `/vehicle/status/hazard_lights_status` | `sensor.other.vehicle_status` |
 
-| Field                                      | Type                                       | Description                                |
-| -------------------------------------------------------- | -------------------------------------------------------- | -------------------------------------------------------- |
-| `actors`                                   | [CarlaActorInfo](<#carlaactorinfomsg>)     | List of messages with actors' information. |
-
-
-
----
-## CarlaCollisionEvent.msg
-
-Data retrieved on a collision event detected by the collision sensor of an actor.
-
-| Field                                                                     | Type                                                                      | Description                                                               |
-| ------------------------------------------------------------------------- | ------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
-| `header`                                                                  | [Header](https://docs.ros.org/en/melodic/api/std_msgs/html/msg/Header.html) | Time stamp and frame ID when the message is published.                    |
-| `other_actor_id`                                                          | uint32                                                                    | ID of the actor against whom the collision was detected.                  |
-| `normal_impulse`                                                          | geometry\_msgs/Vector3                                                    | Vector representing resulting impulse from the collision.                 |
-
-
-
-
----
-## CarlaControl.msg
-
-These messages control the simulation while in synchronous, non-passive mode. The constant defined is translated as stepping commands.  
-
-| Field                                               | Type                                                | Description                                         |
-| ----------------------------------------------------------- | ----------------------------------------------------------- | ----------------------------------------------------------- |
-| `command`                                           | int8                                                | **PLAY**=0 <br>**PAUSE**=1 <br>**STEP\_ONCE**=2 |
+`<sensor>` is the topic built from the sensor's `ros_name` and its parent's, as [ROS 2 sensors](ros2_native_sensors.md) describes.
 
 ---
+## Subscribed
 
-## CarlaEgoVehicleControl.msg
+A vehicle is subscribed to only when its `role_name` is `hero` or `ego`, and the three command surfaces are mutually exclusive: it listens on exactly one of them.
+Autoware control wins when `ros2_autoware_control` is set, then Ackermann when `ros2_ackermann_control` is set, and the direct control topic otherwise.
 
-Messages sent to apply a control to a vehicle in both modes, autopilot and manual. These are published in a stack. 
+| Message | Subscribed on | Effect |
+|---|---|---|
+| [`carla_msgs/CarlaEgoVehicleControl`](#carlaegovehiclecontrol) | `<vehicle>/vehicle_control_cmd` | Throttle, steer and brake applied directly |
+| [`ackermann_msgs/AckermannDriveStamped`](#ackermanndrivestamped) | `<vehicle>/ackermann_control_cmd` | Target speed and steering angle, converted by the server |
+| [`autoware_control_msgs/Control`](#control) | `/control/command/control_cmd` | Drives the vehicle in Autoware mode |
+| [`autoware_vehicle_msgs/GearCommand`](#gearcommand) | `/control/command/gear_cmd` | Received, not applied |
+| [`autoware_vehicle_msgs/TurnIndicatorsCommand`](#turnindicatorscommand-and-hazardlightscommand) | `/control/command/turn_indicators_cmd` | Received, not applied |
+| [`autoware_vehicle_msgs/HazardLightsCommand`](#turnindicatorscommand-and-hazardlightscommand) | `/control/command/hazard_lights_cmd` | Received, not applied |
+| [`tier4_vehicle_msgs/VehicleEmergencyStamped`](#vehicleemergencystamped-and-engage) | `/control/command/emergency_cmd` | Received, not applied |
+| [`autoware_vehicle_msgs/Engage`](#vehicleemergencystamped-and-engage) | `/vehicle/engage` | Received, not applied |
 
-| Field                                                                                                   | Type                                                                                                    | Description                                                                                             |
-| ------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| `header`                                                                                                | [Header](https://docs.ros.org/en/melodic/api/std_msgs/html/msg/Header.html)                               | Time stamp and frame ID when the message is published.                                                  |
-| `throttle`                                                                                              | float32                                                                                                 | Scalar value to cotrol the vehicle throttle: **[0.0, 1.0]**                                             |
-| `steer`                                                                                                 | float32                                                                                                 | Scalar value to control the vehicle steering direction: **[-1.0, 1.0]** to control the vehicle steering |
-| `brake`                                                                                                 | float32                                                                                                 | Scalar value to control the vehicle brakes: **[0.0, 1.0]**                                              |
-| `hand_brake`                                                                                            | bool                                                                                                    | If **True**, the hand brake is enabled.                                                                 |
-| `reverse`                                                                                               | bool                                                                                                    | If **True**, the vehicle will move reverse.                                                             |
-| `gear`                                                                                                  | int32                                                                                                   | Changes between the available gears in a vehicle.                                                       |
-| `manual_gear_shift`                                                                                     | bool                                                                                                    | If **True**, the gears will be shifted using `gear`.                                                    |
-
----
-
-## CarlaEgoVehicleInfo.msg
-
-Static information regarding a vehicle, mostly the attributes used to define the vehicle's physics.  
-
-| Field                                                          | Type                                                           | Description                                                    |
-| -------------------------------------------------------------- | -------------------------------------------------------------- | -------------------------------------------------------------- |
-| `id`                                                           | uint32                                                         | ID of the vehicle actor.                                       |
-| `type`                                                         | string                                                         | The identifier of the blueprint this vehicle was based on.     |
-| `type`                                                         | string                                                         | The identifier of the blueprint this vehicle was based on.     |
-| `rolename`                                                     | string                                                         | Role assigned to the vehicle.                                  |
-| `wheels`                                                       | [CarlaEgoVehicleInfoWheel](<#carlaegovehicleinfowheelmsg>)     | List of messages with information regarding wheels.            |
-| `max_rpm`                                                      | float32                                                        | Maximum RPM of the vehicle's engine.                           |
-| `moi`                                                          | float32                                                        | Moment of inertia of the vehicle's engine.                     |
-| `damping_rate_full_throttle`                                   | float32                                                        | Damping rate when the throttle is at maximum.                  |
-| `damping_rate_zero_throttle`<br>`_clutch_engaged`            | float32                                                        | Damping rate when the throttle is zero with clutch engaged.    |
-| `damping_rate_zero_throttle`<br>`_clutch_disengaged`         | float32                                                        | Damping rate when the throttle is zero with clutch disengaged. |
-| `use_gear_autobox`                                             | bool                                                           | If **True**, the vehicle will have an automatic transmission.  |
-| `gear_switch_time`                                             | float32                                                        | Switching time between gears.                                  |
-| `clutch_strength`                                              | float32                                                        | The clutch strength of the vehicle. Measured in **Kgm^2/s**.   |
-| `mass`                                                         | float32                                                        | The mass of the vehicle measured in Kg.                        |
-| `drag_coefficient`                                             | float32                                                        | Drag coefficient of the vehicle's chassis.                     |
-| `center_of_mass`                                               | geometry\_msgs/Vector3                                         | The center of mass of the vehicle.                             |
+The Autoware topics are fixed names, so one Autoware vehicle runs per ROS domain. See [Autoware](autoware.md).
 
 ---
+## CARLA messages
 
-## CarlaEgoVehicleInfoWheel.msg
+Two messages are CARLA's own. Install them from the [ros-carla-msgs package](https://github.com/carla-simulator/ros-carla-msgs).
 
-Static information regarding a wheel that will be part of a [CarlaEgoVehicleInfo.msg](#carlaegovehicleinfomsg) message.
+### CarlaEgoVehicleControl
 
-| Field                                                    | Type                                                     | Description                                              |
-| -------------------------------------------------------- | -------------------------------------------------------- | -------------------------------------------------------- |
-| `tire_friction`                                          | float32                                                  | A scalar value that indicates the friction of the wheel. |
-| `damping_rate`                                           | float32                                                  | The damping rate of the wheel.                           |
-| `max_steer_angle`                                        | float32                                                  | The maximum angle in degrees that the wheel can steer.   |
-| `radius`                                                 | float32                                                  | The radius of the wheel in centimeters.                  |
-| `max_brake_torque`                                       | float32                                                  | The maximum brake torque in Nm.                          |
-| `max_handbrake_torque`                                   | float32                                                  | The maximum handbrake torque in Nm.                      |
-| `position`                                               | geometry\_msgs/Vector3                                   | World position of the wheel.                             |
+The direct control command, equivalent to [carla.VehicleControl](python_api.md#carla.VehicleControl).
 
----
+| Field | Type | Description |
+|---|---|---|
+| `header` | [Header](https://docs.ros.org/en/jazzy/p/std_msgs/interfaces/msg/Header.html) | Time stamp and frame id of the command. |
+| `throttle` | float32 | Throttle, `[0.0, 1.0]`. |
+| `steer` | float32 | Steering, `[-1.0, 1.0]`, positive to the right. |
+| `brake` | float32 | Brake, `[0.0, 1.0]`. |
+| `hand_brake` | bool | Engages the hand brake. |
+| `reverse` | bool | Puts the vehicle in reverse. |
+| `gear` | int32 | Gear to select when `manual_gear_shift` is set. |
+| `manual_gear_shift` | bool | Shifts with `gear` instead of the automatic gearbox. |
 
-## CarlaEgoVehicleStatus.msg
+### CarlaCollisionEvent
 
-Current status of the vehicle as an object in the world.  
+Published by `sensor.other.collision` on every impact.
 
-| Field                                                                     | Type                                                                      | Description                                                               |
-| ------------------------------------------------------------------------- | ------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
-| `header`                                                                  | [Header](https://docs.ros.org/en/melodic/api/std_msgs/html/msg/Header.html) | Time stamp and frame ID when the message is published.                    |
-| `velocity`                                                                | float32                                                                   | Current speed of the vehicle.                                             |
-| `acceleration`                                                            | geometry\_msgs/Accel                                                      | Current acceleration of the vehicle.                                      |
-| `orientation`                                                             | geometry\_msgs/Quaternion                                                 | Current orientation of the vehicle.                                       |
-| `control`                                                                 | [CarlaEgoVehicleControl](<#carlaegovehiclecontrolmsg>)                    | Current control values as reported by CARLA.                              |
+| Field | Type | Description |
+|---|---|---|
+| `header` | [Header](https://docs.ros.org/en/jazzy/p/std_msgs/interfaces/msg/Header.html) | Time stamp and frame id of the event. |
+| `other_actor_id` | uint32 | Id of the actor that was hit. |
+| `normal_impulse` | [geometry_msgs/Vector3](https://docs.ros.org/en/jazzy/p/geometry_msgs/interfaces/msg/Vector3.html) | Impulse resulting from the collision. |
 
----
+### AckermannDriveStamped
 
-## CarlaLaneInvasionEvent.msg
+The standard [ackermann_msgs](https://docs.ros.org/en/api/ackermann_msgs/html/msg/AckermannDriveStamped.html) command: a `header` and a `drive` field whose contents are below. All five fields map onto [carla.VehicleAckermannControl](python_api.md#carla.VehicleAckermannControl), which CARLA's own Ackermann controller turns into throttle, brake and steering.
 
-These messages publish lane invasions detected by a lane-invasion sensor attached to a vehicle. The invasions detected in the last step are passed as a list with a constant definition to identify the lane crossed.  
-
-
-
-| Field                                                                                         | Type                                                                                          | Description                                                                                   |
-| ---------------------------------------------------- | ---------------------------------------------------- | ---------------------------------------------------- |
-| `header`                                                                                      | [header](https://docs.ros.org/en/melodic/api/std_msgs/html/msg/Header.html)                     | Time stamp and frame ID when the message is published.                                        |
-| `crossed_lane_markings`                                                                       | int32[]                                                                                       | **LANE\_MARKING\_OTHER**=0 <br>**LANE\_MARKING\_BROKEN**=1 <br>**LANE\_MARKING\_SOLID**=2 |
-
----
-
-## CarlaScenario.msg
-
-Details for a test scenario. 
-
-
-| Field                              | Type                               | Description                        |
-| ---------------------------------- | ---------------------------------- | ---------------------------------- |
-| `name`                             | string                             | Name of the scenario.              |
-| `scenario_file`                    | string                             | Test file for the scenario.        |
-| `destination`                      | geometry\_msgs/Pose                | Goal location of the scenario.     |
-| `target_speed`                     | float64                            | Desired speed during the scenario. |
+| Field of `drive` | Type | Description |
+|---|---|---|
+| `steering_angle` | float32 | Target steering angle, radians. |
+| `steering_angle_velocity` | float32 | Rate of change of the steering angle, rad/s. |
+| `speed` | float32 | Target speed, m/s. |
+| `acceleration` | float32 | Target acceleration, m/s². |
+| `jerk` | float32 | Target jerk, m/s³. |
 
 ---
+## Autoware messages
 
-## CarlaScenarioList.msg
+These come from Autoware's own interface packages. CARLA implements the subset below, which is what the vehicle interface needs; every field is as Autoware defines it.
 
-List of test scenarios to run in ScenarioRunner. 
+### Control
 
+`autoware_control_msgs/Control`, the only command that moves the vehicle in Autoware mode.
 
-| Field                                  | Type                                   | Description                            |
-| -------------------------------------- | -------------------------------------- | -------------------------------------- |
-| `scenarios`                            | [CarlaScenario[]](<#carlascenariomsg>) | List of scenarios.                     |
+| Field | Type | Description |
+|---|---|---|
+| `stamp` | builtin_interfaces/Time | Time the command was produced. |
+| `control_time` | builtin_interfaces/Time | Time the command applies to. |
+| `lateral` | Lateral | Steering part of the command. |
+| `longitudinal` | Longitudinal | Speed part of the command. |
 
----
+__`Lateral`__ carries `stamp`, `control_time`, `steering_tire_angle` (float32, radians), `steering_tire_rotation_rate` (float32, rad/s) and `is_defined_steering_tire_rotation_rate` (bool).
 
-## CarlaScenarioRunnerStatus.msg
+__`Longitudinal`__ carries `stamp`, `control_time`, `velocity` (float32, m/s), `acceleration` (float32, m/s²), `jerk` (float32, m/s³), and the `is_defined_acceleration` and `is_defined_jerk` flags.
 
-Current state of the ScenarioRunner. It is managed using a constant. 
+### VelocityReport
 
+| Field | Type | Description |
+|---|---|---|
+| `header` | Header | Time stamp and frame id. |
+| `longitudinal_velocity` | float32 | Forward speed, m/s. |
+| `lateral_velocity` | float32 | Sideways speed, m/s. |
+| `heading_rate` | float32 | Yaw rate, rad/s. |
 
-| Field                                                                                                                                             | Type                                                                                                                                              | Description                                                                                                                                       |
-| ------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `status`                                                                                                                                          | uint8                                                                                                                                             | Current state of the scenario as an enum: <br>**STOPPED**=0 <br>**STARTING**=1 <br>**RUNNING**=2 <br>**SHUTTINGDOWN**=3 <br>**ERROR**=4 |
+### SteeringReport
 
----
+| Field | Type | Description |
+|---|---|---|
+| `stamp` | builtin_interfaces/Time | Time of the report. |
+| `steering_tire_angle` | float32 | Current steering angle at the tire, radians. |
 
-## CarlaStatus.msg
+### ControlModeReport
 
-Current world settings of the simulation. 
+| Field | Type | Description |
+|---|---|---|
+| `stamp` | builtin_interfaces/Time | Time of the report. |
+| `mode` | uint8 | `NO_COMMAND`=0, `AUTONOMOUS`=1, `AUTONOMOUS_STEER_ONLY`=2, `AUTONOMOUS_VELOCITY_ONLY`=3, `MANUAL`=4, `DISENGAGED`=5, `NOT_READY`=6. CARLA always reports `AUTONOMOUS`. |
 
+### GearReport
 
-| Field   | Type    | Description    |
-| -------------------------------------------------- | -------------------------------------------------- | -------------------------------------------------- |
-| `frame`      | uint64        | Current frame number.    |
-| `fixed_delta_seconds`    | float32    | Simulation time between last and current step.  |
-| `synchronous_mode`   | bool  | If **True**, synchronous mode is enabled.   |
-| `synchronous_mode_running`   | bool    | **True** when the simulation is running. **False** when it is paused. |
+| Field | Type | Description |
+|---|---|---|
+| `stamp` | builtin_interfaces/Time | Time of the report. |
+| `report` | uint8 | `NONE`=0, `NEUTRAL`=1, `DRIVE`=2 through `DRIVE_18`=19, `REVERSE`=20, `REVERSE_2`=21, `PARK`=22, `LOW`=23, `LOW_2`=24. |
 
----
+### GearCommand
 
-## CarlaTrafficLightStatus.msg
+Same constants as `GearReport`, in a `command` field.
 
-Constant definition regarding the state of a traffic light. 
+| Field | Type | Description |
+|---|---|---|
+| `stamp` | builtin_interfaces/Time | Time of the command. |
+| `command` | uint8 | Requested gear. Received, not applied. |
 
-| Field                                                                              | Type                                                                               | Description                                                                        |
-| ---------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
-| `id`                                                                               | uint32                                                                             | ID of the traffic light actor.                                                     |
-| `state`                                                                            | uint8                                                                              | **RED**=0 <br>**YELLOW**=1 <br>**GREEN**=2 <br>**OFF**=3 <br>**UNKNOWN**=4 |
+### TurnIndicatorsReport and HazardLightsReport
 
----
+| Field | Type | Description |
+|---|---|---|
+| `stamp` | builtin_interfaces/Time | Time of the report. |
+| `report` | uint8 | Indicators: `DISABLE`=1, `ENABLE_LEFT`=2, `ENABLE_RIGHT`=3. Hazards: `DISABLE`=1, `ENABLE`=2. |
 
-## CarlaTrafficLightStatusList.msg
+### TurnIndicatorsCommand and HazardLightsCommand
 
-List of traffic lights with their status. 
+| Field | Type | Description |
+|---|---|---|
+| `stamp` | builtin_interfaces/Time | Time of the command. |
+| `command` | uint8 | The same constants as the reports, plus `NO_COMMAND`=0. Received, not applied. |
 
-| Field                                                      | Type                                                       | Description                                                |
-| ---------------------------------------------------------- | ---------------------------------------------------------- | ---------------------------------------------------------- |
-| `scenarios`                                                | [CarlaTrafficLightStatus[]](<#carlatrafficlightstatusmsg>) | A list of messages summarizing traffic light states.       |
+### VehicleEmergencyStamped and Engage
 
----
-
-## CarlaWalkerControl.msg
-
-Information needed to apply a movement controller to a walker. 
-
-| Field                                             | Type                                              | Description                                       |
-| ------------------------------------------------- | ------------------------------------------------- | ------------------------------------------------- |
-| `direction`                                       | geometry\_msgs/Vector3                            | Vector that controls the direction of the walker. |
-| `speed`                                           | float32                                           | A scalar value to control the walker's speed.     |
-| `jump`                                            | bool                                              | If **True**, the walker will jump.                |
-
----
-
-## CarlaWaypoint.msg
-
-Data contained in a waypoint object. 
-
-| Field                                                                                                                                    | Type                                                                                                                                     | Description                                                                                                                              |
-| ---------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| `road_id`                                                                                                                                | int32                                                                                                                                    | OpenDRIVE road's id.                                                                                                                     |
-| `section_id`                                                                                                                             | int32                                                                                                                                    | OpenDRIVE section's id, based on the order that they are originally defined.                                                             |
-| `lane_id`                                                                                                                                | int32                                                                                                                                    | OpenDRIVE lane's id, this value can be positive or negative which represents the direction of the current lane with respect to the road. |
-| `is_junction`                                                                                                                            | bool                                                                                                                                     | **True**, if the current Waypoint is on a junction as defined by OpenDRIVE.                                                              |
-| `is_junction`                                                                                                                            | [geometry\_msgs/Pose](https://docs.ros.org/en/api/geometry_msgs/html/msg/Pose.html)                                                        | **True** when the simulation is running. **False** when it is paused.                                                                    |
+| Field | Type | Description |
+|---|---|---|
+| `stamp` | builtin_interfaces/Time | Time of the command. |
+| `emergency` / `engage` | bool | Emergency stop request, engage request. Received, not applied. |
 
 ---
+## Quality of service
 
-## CarlaWorldInfo.msg
+Everything is published __reliable__, __volatile__, with a __keep-last__ history of depth 1 — the Fast-DDS writer defaults, and what an Autoware-style stack expects.
+A subscriber created with a best-effort policy still matches a reliable publisher; the opposite does not.
 
-Information about the current CARLA map. 
-
-| Field                                                | Type                                                 | Description                                          |
-| ---------------------------------------------------- | ---------------------------------------------------- | ---------------------------------------------------- |
-| `map_name`                                           | string                                               | Name of the CARLA map loaded in the current world.   |
-| `opendrive`                                          | string                                               | .xodr OpenDRIVE file of the current map as a string. |
-
----
-
-## EgoVehicleControlCurrent.msg
-
-Current time, speed and acceleration values of the vehicle. Used by the controller. It is part of a `Carla_Ackermann_Control.EgoVehicleControlInfo.msg` message.
-
-| Field                                           | Type                                            | Description                                     |
-| ----------------------------------------------- | ----------------------------------------------- | ----------------------------------------------- |
-| `time_sec`                                      | float32                                         | Current time when the controller is applied.    |
-| `speed`                                         | float32                                         | Current speed applied by the controller.        |
-| `speed_abs`                                     | float32                                         | Speed as an absolute value.                     |
-| `accel`                                         | float32                                         | Current acceleration applied by the controller. |
-
----
-
-## EgoVehicleControlInfo.msg
-
-Current values within an Ackermann controller. These messages are useful for debugging. 
-
-| Field                                                                     | Type                                                                      | Description                                                               |
-| ------------------------------------------------------------------------- | ------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
-| `header`                                                                  | [header](https://docs.ros.org/en/melodic/api/std_msgs/html/msg/Header.html) | Time stamp and frame ID when the message is published.                    |
-| `restrictions`                                                            | [EgoVehicleControlMaxima](<#egovehiclecontrolmaximamsg>)                  | Limits to the controller values.                                          |
-| `target`                                                                  | [EgoVehicleControlTarget](<#egovehiclecontroltargetmsg>)                  | Limits to the controller values.                                          |
-| `current`                                                                 | [EgoVehicleControlCurrent](<#egovehiclecontrolcurrentmsg>)                | Limits to the controller values.                                          |
-| `status`                                                                  | [EgoVehicleControlStatus](<#egovehiclecontrolstatusmsg>)                  | Limits to the controller values.                                          |
-| `output`                                                                  | [CarlaEgoVehicleControl](<#carlaegovehiclecontrolmsg>)                    | Limits to the controller values.                                          |
-
----
-
-## EgoVehicleControlMaxima.msg
-
-Controller restrictions (limit values). It is part of a `Carla_Ackermann_Control.EgoVehicleControlInfo.msg` message.
-
-| Field                                                                                                                | Type                                                                                                                 | Description                                                                                                          |
-| -------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
-| `max_steering_angle`                                                                                                 | float32                                                                                                              | Max. steering angle for a vehicle.                                                                                   |
-| `max_speed`                                                                                                          | float32                                                                                                              | Max. speed for a vehicle.                                                                                            |
-| `max_accel`                                                                                                          | float32                                                                                                              | Max. acceleration for a vehicle.                                                                                     |
-| `max_decel`                                                                                                          | float32                                                                                                              | Max. deceleration for a vehicle. Default: **8m/s^2**                                                                 |
-| `min_accel`                                                                                                          | float32                                                                                                              | Min. acceleration for a vehicle. When the Ackermann taget accel. exceeds this value, the input accel. is controlled. |
-| `max_pedal`                                                                                                          | float32                                                                                                              | Min. pedal.                                                                                                          |
-
----
-
-## EgoVehicleControlStatus.msg
-
-Current status of the ego vehicle controller. It is part of a `Carla_Ackermann_Control.EgoVehicleControlInfo.msg` message.
-
-| Field                            | Type                             | Description                      |
-| -------------------------------- | -------------------------------- | -------------------------------- |
-| `status`                         | string                           | Current control status.          |
-| `speed_control_activation_count` | uint8                            | Speed controller.                |
-| `speed_control_accel_delta`      | float32                          | Speed controller.                |
-| `speed_control_accel_target`     | float32                          | Speed controller.                |
-| `accel_control_pedal_delta`      | float32                          | Acceleration controller.         |
-| `accel_control_pedal_target`     | float32                          | Acceleration controller.         |
-| `brake_upper_border`             | float32                          | Borders for lay off pedal.       |
-| `throttle_lower_border`          | float32                          | Borders for lay off pedal.       |
-
----
-
-## EgoVehicleControlTarget.msg
-
-Target values of the ego vehicle controller. It is part of a `Carla_Ackermann_Control.EgoVehicleControlInfo.msg` message.
-
-| Field                                     | Type                                      | Description                               |
-| ----------------------------------------- | ----------------------------------------- | ----------------------------------------- |
-| `steering_angle`                          | float32                                   | Target steering angle for the controller. |
-| `speed`                                   | float32                                   | Target speed for the controller.          |
-| `speed_abs`                               | float32                                   | Speed as an absolute value.               |
-| `accel`                                   | float32                                   | Target acceleration for the controller.   |
-| `jerk`                                    | float32                                   | Target jerk for the controller.           |
-
-<br>
+The Autoware command subscribers are the one exception: they are __transient local__, so a command published before the vehicle was spawned still reaches it.

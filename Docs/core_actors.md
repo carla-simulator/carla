@@ -2,27 +2,18 @@
 
 Actors in CARLA are the elements that perform actions within the simulation, and they can affect other actors. Actors in CARLA includes vehicles and walkers and also sensors, traffic signs, traffic lights and the spectator. It is crucial to have full understanding on how to operate on them.
 
-This section will cover spawning, destruction, types, and how to manage them. However, the possibilities are almost endless. Experiment, take a look at the __tutorials__ in this documentation and share doubts and ideas in the [CARLA forum](https://github.com/carla-simulator/carla/discussions/).
+This section will cover spawning, destruction, types, and how to manage them. However, the possibilities are almost endless. Experiment, take a look at the [__tutorials__](tutorials.md) in this documentation and share doubts and ideas in the [GitHub Discussions](https://github.com/carla-simulator/carla/discussions).
 
-- [__Blueprints__](#blueprints)  
-	- [Managing the blueprint library](#managing-the-blueprint-library)  
-- [__Actor life cycle__](#actor-life-cycle)  
-	- [Spawning](#spawning)  
-	- [Handling](#handling)  
-	- [Destruction](#destruction)  
-- [__Types of actors__](#types-of-actors)  
-	- [Sensors](#sensors)  
-	- [Spectator](#spectator)  
-	- [Traffic signs and traffic lights](#traffic-signs-and-traffic-lights)  
-	- [Vehicles](#vehicles)  
-	- [Walkers](#walkers)
+- [__Blueprints__](#blueprints)
+- [__Actor life cycle__](#actor-life-cycle)
+- [__Types of actors__](#types-of-actors)
 
 ---
 ## Blueprints
 
 These layouts allow the user to smoothly incorporate new actors into the simulation. They are already-made models with animations and a series of attributes. Some of these are modifiable and others are not. These attributes include, among others, vehicle color, amount of channels in a lidar sensor, a walker's speed, and much more.
 
-Available blueprints are listed in the [blueprint library](bp_library.md), along with their attributes. Vehicle and walker blueprints have a generation attribute that indicates if they are a new (gen 2) or old (gen 1) asset.
+Available blueprints are listed in the [blueprint library](bp_library.md), along with their attributes.
 
 ### Managing the blueprint library
 
@@ -68,8 +59,6 @@ cones = [bp for bp in blueprint_library.filter('static.prop.*')
          if bp.get_attribute('subtype') == 'cones']
 ```
 
-The [catalogue](catalogue.md) groups its pages by these same attributes, so a blueprint found there can be filtered for in the library.
-
 !!! Note
     A map can ship its own vehicles, in `Config/<map>/Vehicles.json`, with values of their own. They are in the blueprint library only while that map is loaded.
 
@@ -80,8 +69,13 @@ for attr in blueprint:
     if attr.is_modifiable:
         blueprint.set_attribute(attr.id, random.choice(attr.recommended_values))
 ```
-!!! Note
-    Users can create their own vehicles. See [Vehicle authoring](tuto_content_authoring_vehicles.md) and the other [asset tutorials](custom_assets_tutorials.md).
+### The catalogue
+
+The [catalogue](catalogue.md) shows what the blueprint library ships: every [vehicle](catalogue_vehicles.md), [pedestrian](catalogue_pedestrians.md) and [prop](catalogue_props.md), with a picture of each one and the blueprint id to spawn it with.
+
+### Creating your own actors
+
+Vehicles, walkers and props can all be assets of your own. [Custom assets](content_authoring_overview.md) is the entry point: it covers [props](content_authoring_props.md), [vehicles](content_authoring_vehicles.md), and [content packs](content_authoring_packs.md) to ship them with. 
 
 ---
 ## Actor life cycle
@@ -104,7 +98,7 @@ actor = world.spawn_actor(blueprint, transform)
 ```
 
 !!! Important
-    CARLA uses the [Unreal Engine coordinates system](python_api.md#carlarotation). Remember that [`carla.Rotation`](python_api.md#carlarotation) constructor is defined as `(pitch, yaw, roll)`, that differs from Unreal Engine Editor `(roll, pitch, yaw)`.
+    CARLA uses the [Unreal Engine coordinate system](core_coordinate_conventions.md). Remember that the [`carla.Rotation`](python_api.md#carla.Rotation) constructor is defined as `(pitch, yaw, roll)`, which differs from the Unreal Engine editor's `(roll, pitch, yaw)`.
 
 The actor will not be spawned in case of collision at the specified location. No matter if this happens with a static object or another actor. It is possible to try avoiding these undesired spawning collisions.
 
@@ -136,9 +130,9 @@ Once spawned, the world object adds the actors to a list. This can be easily sea
 actor_list = world.get_actors()
 # Find an actor by id.
 actor = actor_list.find(id)
-# Print the location of all the speed limit signs in the world.
-for speed_sign in actor_list.filter('traffic.speed_limit.*'):
-    print(speed_sign.get_location())
+# Print the location of every vehicle in the world.
+for vehicle in actor_list.filter('vehicle.*'):
+    print(vehicle.get_location())
 ```
 
 ### Handling
@@ -226,10 +220,7 @@ carla.Rotation(pitch=-90)))
 
 Stops, yields, speed limit signs and traffic lights are actors in CARLA. The rest of the OpenDRIVE signs are accessible from the API as [__carla.Landmark__](python_api.md#carla.Landmark). Their information is accessible using these instances, but they do no exist in the simulation as actors. Landmarks are explained in detail in [Maps and navigation](core_map.md).
 
-When the simulation starts, stop, yields and traffic light are automatically generated using the information in the OpenDRIVE file. __None of these can be found in the blueprint library__ and thus, cannot be spawned.
-
-!!! Note
-    CARLA maps do not have traffic signs nor lights in the OpenDRIVE file. These are manually placed by developers.
+When the simulation starts, stops, yields and traffic lights are generated automatically from the signals in the map's OpenDRIVE file, if not already present in the scene. They are actors like any other and can be found with `world.get_actors()`, but __none of them is in the blueprint library__, so they cannot be spawned.
 
 [__Traffic signs__](python_api.md#carla.TrafficSign) are not defined in the road map itself, as explained in the following page. Instead, they have a [carla.BoundingBox](python_api.md#carla.BoundingBox) to affect vehicles inside of it.  
 ```py
@@ -250,15 +241,19 @@ if traffic_light.get_state() == carla.TrafficLightState.Red:
 ```
 
 !!! Note
-    Vehicles will only be aware of a traffic light if the light is red.
+    A vehicle is aware of a traffic light while it stands inside the light's trigger box, whatever colour the light is showing. Outside one, [`carla.Vehicle.get_traffic_light_state`](python_api.md#carla.Vehicle.get_traffic_light_state) reports `Green` and [`is_at_traffic_light`](python_api.md#carla.Vehicle.is_at_traffic_light) is `False`.
 
 ### Vehicles
 
-[__carla.Vehicle__](python_api.md#carla.Vehicle) is a special type of actor. It incorporates special internal components that simulate the physics of wheeled vehicles. This is achieved by applying four types of different controls:
+[__carla.Vehicle__](python_api.md#carla.Vehicle) is a special type of actor. It incorporates special internal components that simulate the physics of wheeled vehicles. This is achieved by applying three types of control:
 
 * __[carla.VehicleControl](python_api.md#carla.VehicleControl)__ provides input for driving commands such as throttle, steering, brake, etc. 
 ```py
 vehicle.apply_control(carla.VehicleControl(throttle=1.0, steer=-1.0))
+```
+* __[carla.VehicleAckermannControl](python_api.md#carla.VehicleAckermannControl)__ drives the vehicle by target speed and steering angle instead of by throttle and brake, and a PID controller works out the rest. Its gains are set with [`apply_ackermann_controller_settings()`](python_api.md#carla.Vehicle.apply_ackermann_controller_settings).
+```py
+vehicle.apply_ackermann_control(carla.VehicleAckermannControl(steer=0.0, speed=10.0))
 ```
 * __[carla.VehiclePhysicsControl](python_api.md#carla.VehiclePhysicsControl)__ defines physical attributes of the vehicle and contains one controller:
 
@@ -313,7 +308,7 @@ vehicle.set_wheel_suspension_offset(carla.VehicleWheelLocation.FL_Wheel, 0.05)
 
 Vehicles include other functionalities unique to them:
 
-* __Autopilot mode__ will subscribe a vehicle to the [Traffic Manager](adv_traffic_manager.md) to simulate real urban conditions. This module is hard-coded, not based on machine learning.
+* __Autopilot mode__ will subscribe a vehicle to the [Traffic Manager](core_traffic_manager.md) to simulate real urban conditions. This module is hard-coded, not based on machine learning.
 
 ```py
 vehicle.set_autopilot(True)
@@ -321,7 +316,7 @@ vehicle.set_autopilot(True)
 * __Vehicle lights__ have to be turned on and off by the user. The full set is listed in [__carla.VehicleLightState__](python_api.md#carla.VehicleLightState), but which of them a model actually carries depends on the model: bikes have a front and back position light, most cars have headlights, brake lights and indicators, and the emergency vehicles add sirens. Check a model's lights against the [vehicle catalogue](catalogue_vehicles.md), or turn them on and look.
 
 ![vehicle_light_states](img/shared/vehicle_light_states.webp)
-<div style="text-align: right"><i>carla.VehicleLightState combinations on a Lincoln MKZ at night, front (top) and rear (bottom). Town10HD_Opt &middot; sensor.camera.rgb &middot; Cinematic &middot; ClearNight</i></div>
+<div class="img-caption">carla.VehicleLightState combinations on a Lincoln MKZ at night, front (top) and rear (bottom).</div>
 
 
 The lights of a vehicle can be retrieved and updated anytime using the methods [carla.Vehicle.get_light_state](python_api.md#carla.Vehicle.get_light_state) and [carla.Vehicle.set_light_state](python_api.md#carla.Vehicle.set_light_state). These use binary operations to customize the light setting.
@@ -338,7 +333,7 @@ vehicle.set_light_state(current_lights)
 [__carla.Walker__](python_api.md#carla.Walker) work in a similar way as vehicles do. Control over them is provided by controllers.
 
 * [__carla.WalkerControl__](python_api.md#carla.WalkerControl) moves the pedestrian around with a certain direction and speed. It also allows them to jump. 
-* [__carla.WalkerBoneControlIn__](python_api.md#carla.WalkerBoneControlIn) provides control over the 3D skeleton. [This tutorial](tuto_G_control_walker_skeletons.md) explains how to control it.
+* [__carla.WalkerBoneControlIn__](python_api.md#carla.WalkerBoneControlIn) provides control over the 3D skeleton. [This tutorial](tuto_walker_skeletons.md) explains how to control it.
 
 Walkers can be AI controlled. They do not have an autopilot mode. The [__carla.WalkerAIController__](python_api.md#carla.WalkerAIController) actor moves around the actor it is attached to.
 
@@ -355,7 +350,7 @@ __Each AI controller needs initialization, a goal and, optionally, a speed__. St
 ```py
 ai_controller.start()
 ai_controller.go_to_location(world.get_random_location_from_navigation())
-ai_controller.set_max_speed(1 + random.random())  # Between 1 and 2 m/s (default is 1.4 m/s).
+ai_controller.set_max_speed(1 + random.random())  # Between 1 and 2 m/s (default is 1.47 m/s).
 ...
 ai_controller.stop()
 ```
@@ -369,12 +364,12 @@ When a walker reaches the target location, they will automatically walk to anoth
 ---
 That is a wrap as regarding actors in CARLA. The next step takes a closer look into the map, roads and traffic in CARLA.
 
-Keep reading to learn more or visit the forum to post any doubts or suggestions that have come to mind during this reading. 
+Keep reading to learn more, or post any doubts and suggestions in [GitHub Discussions](https://github.com/carla-simulator/carla/discussions). 
 <div text-align: center>
 <div class="build-buttons">
 <p>
-<a href="https://github.com/carla-simulator/carla/discussions/" target="_blank" class="btn btn-neutral" title="CARLA forum">
-CARLA forum</a>
+<a href="https://github.com/carla-simulator/carla/discussions" target="_blank" class="btn btn-neutral" title="Go to CARLA's GitHub Discussions">
+GitHub Discussions</a>
 </p>
 </div>
 <div class="build-buttons">

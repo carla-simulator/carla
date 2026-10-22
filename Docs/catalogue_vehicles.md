@@ -71,7 +71,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Dodge - Charger
 
-![dodge_charger](img/catalogue/vehicles/dodge_charger.webp)
+![dodge_charger](img/catalogue/vehicles/dodge_charger_thumb.webp)
 
 * __Blueprint ID__: `vehicle.dodge.charger`
 * __Base type__: car
@@ -82,7 +82,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Dodge - Police Charger
 
-![dodgecop_charger](img/catalogue/vehicles/dodgecop_charger.webp)
+![dodgecop_charger](img/catalogue/vehicles/dodgecop_charger_thumb.webp)
 
 * __Blueprint ID__: `vehicle.dodgecop.charger`
 * __Base type__: car
@@ -94,7 +94,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Kia - Niro
 
-![kia_niro](img/catalogue/vehicles/kia_niro.webp)
+![kia_niro](img/catalogue/vehicles/kia_niro_thumb.webp)
 
 * __Blueprint ID__: `vehicle.kia.niro`
 * __Base type__: car
@@ -105,18 +105,18 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Lincoln - MKZ
 
-![lincoln_mkz](img/catalogue/vehicles/lincoln_mkz.webp)
+![lincoln_mkz](img/catalogue/vehicles/lincoln_mkz_thumb.webp)
 
 * __Blueprint ID__: `vehicle.lincoln.mkz`
 * __Base type__: car
 * __Generation__: unspecified
-* __Number of wheels__: 3
+* __Number of wheels__: 4
 * __Has lights__: yes
 * __Has opening doors__: yes
 
 ### Mini - Cooper S
 
-![mini_cooper](img/catalogue/vehicles/mini_cooper.webp)
+![mini_cooper](img/catalogue/vehicles/mini_cooper_thumb.webp)
 
 * __Blueprint ID__: `vehicle.mini.cooper`
 * __Base type__: car
@@ -127,7 +127,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Nissan - Patrol
 
-![nissan_patrol](img/catalogue/vehicles/nissan_patrol.webp)
+![nissan_patrol](img/catalogue/vehicles/nissan_patrol_thumb.webp)
 
 * __Blueprint ID__: `vehicle.nissan.patrol`
 * __Base type__: car
@@ -138,7 +138,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Ford - Crown (taxi)
 
-![taxi_ford](img/catalogue/vehicles/taxi_ford.webp)
+![taxi_ford](img/catalogue/vehicles/taxi_ford_thumb.webp)
 
 * __Blueprint ID__: `vehicle.taxi.ford`
 * __Base type__: car
@@ -150,7 +150,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Tesla - Model 3
 
-![tesla_model3](img/catalogue/vehicles/tesla_model3.webp)
+![tesla_model3](img/catalogue/vehicles/tesla_model3_thumb.webp)
 
 * __Blueprint ID__: `vehicle.tesla.model3`
 * __Base type__: car
@@ -162,7 +162,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Audi - TT
 
-![ue4_audi_tt](img/catalogue/vehicles/ue4_audi_tt.webp)
+![ue4_audi_tt](img/catalogue/vehicles/ue4_audi_tt_thumb.webp)
 
 * __Blueprint ID__: `vehicle.ue4.audi.tt`
 * __Base type__: car
@@ -173,7 +173,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Chevrolet - Impala
 
-![ue4_chevrolet_impala](img/catalogue/vehicles/ue4_chevrolet_impala.webp)
+![ue4_chevrolet_impala](img/catalogue/vehicles/ue4_chevrolet_impala_thumb.webp)
 
 * __Blueprint ID__: `vehicle.ue4.chevrolet.impala`
 * __Base type__: car
@@ -184,7 +184,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Ford - Crown
 
-![ue4_ford_crown](img/catalogue/vehicles/ue4_ford_crown.webp)
+![ue4_ford_crown](img/catalogue/vehicles/ue4_ford_crown_thumb.webp)
 
 * __Blueprint ID__: `vehicle.ue4.ford.crown`
 * __Base type__: car
@@ -195,7 +195,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Ford - Mustang
 
-![ue4_ford_mustang](img/catalogue/vehicles/ue4_ford_mustang.webp)
+![ue4_ford_mustang](img/catalogue/vehicles/ue4_ford_mustang_thumb.webp)
 
 * __Blueprint ID__: `vehicle.ue4.ford.mustang`
 * __Base type__: car
@@ -206,7 +206,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Mercedes - Coupe
 
-![ue4_mercedes_ccc](img/catalogue/vehicles/ue4_mercedes_ccc.webp)
+![ue4_mercedes_ccc](img/catalogue/vehicles/ue4_mercedes_ccc_thumb.webp)
 
 * __Blueprint ID__: `vehicle.ue4.mercedes.ccc`
 * __Base type__: car
@@ -221,7 +221,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Harley-Davidson - Low Rider
 
-![harley-davidson_low_rider](img/catalogue/vehicles/harley-davidson_low_rider.webp)
+![harley-davidson_low_rider](img/catalogue/vehicles/harley-davidson_low_rider_thumb.webp)
 
 * __Blueprint ID__: `vehicle.harley-davidson.low_rider`
 * __Base type__: motorcycle
@@ -232,7 +232,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Kawasaki - Ninja
 
-![kawasaki_ninja](img/catalogue/vehicles/kawasaki_ninja.webp)
+![kawasaki_ninja](img/catalogue/vehicles/kawasaki_ninja_thumb.webp)
 
 * __Blueprint ID__: `vehicle.kawasaki.ninja`
 * __Base type__: motorcycle
@@ -243,7 +243,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Vespa - ZX125
 
-![vespa_zx125](img/catalogue/vehicles/vespa_zx125.webp)
+![vespa_zx125](img/catalogue/vehicles/vespa_zx125_thumb.webp)
 
 * __Blueprint ID__: `vehicle.vespa.zx125`
 * __Base type__: motorcycle
@@ -254,7 +254,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Yamaha - YZF
 
-![yamaha_yzf](img/catalogue/vehicles/yamaha_yzf.webp)
+![yamaha_yzf](img/catalogue/vehicles/yamaha_yzf_thumb.webp)
 
 * __Blueprint ID__: `vehicle.yamaha.yzf`
 * __Base type__: motorcycle
@@ -269,7 +269,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### BH - Crossbike
 
-![bh_crossbike](img/catalogue/vehicles/bh_crossbike.webp)
+![bh_crossbike](img/catalogue/vehicles/bh_crossbike_thumb.webp)
 
 * __Blueprint ID__: `vehicle.bh.crossbike`
 * __Base type__: bicycle
@@ -280,7 +280,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Diamondback - Century
 
-![diamondback_century](img/catalogue/vehicles/diamondback_century.webp)
+![diamondback_century](img/catalogue/vehicles/diamondback_century_thumb.webp)
 
 * __Blueprint ID__: `vehicle.diamondback.century`
 * __Base type__: bicycle
@@ -291,7 +291,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Gazelle - Omafiets
 
-![gazelle_omafiets](img/catalogue/vehicles/gazelle_omafiets.webp)
+![gazelle_omafiets](img/catalogue/vehicles/gazelle_omafiets_thumb.webp)
 
 * __Blueprint ID__: `vehicle.gazelle.omafiets`
 * __Base type__: bicycle
@@ -306,7 +306,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Ford - Ambulance
 
-![ambulance_ford](img/catalogue/vehicles/ambulance_ford.webp)
+![ambulance_ford](img/catalogue/vehicles/ambulance_ford_thumb.webp)
 
 * __Blueprint ID__: `vehicle.ambulance.ford`
 * __Base type__: truck
@@ -318,7 +318,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### CARLA Motors - CarlaCola
 
-![carlacola_actors](img/catalogue/vehicles/carlacola_actors.webp)
+![carlacola_actors](img/catalogue/vehicles/carlacola_actors_thumb.webp)
 
 * __Blueprint ID__: `vehicle.carlacola.actors`
 * __Base type__: truck
@@ -329,7 +329,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### CARLA Motors - Firetruck
 
-![firetruck_actors](img/catalogue/vehicles/firetruck_actors.webp)
+![firetruck_actors](img/catalogue/vehicles/firetruck_actors_thumb.webp)
 
 * __Blueprint ID__: `vehicle.firetruck.actors`
 * __Base type__: truck
@@ -345,7 +345,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Mercedes - Sprinter
 
-![sprinter_mercedes](img/catalogue/vehicles/sprinter_mercedes.webp)
+![sprinter_mercedes](img/catalogue/vehicles/sprinter_mercedes_thumb.webp)
 
 * __Blueprint ID__: `vehicle.sprinter.mercedes`
 * __Base type__: van
@@ -360,7 +360,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Mitsubishi - Fusorosa
 
-![fuso_mitsubishi](img/catalogue/vehicles/fuso_mitsubishi.webp)
+![fuso_mitsubishi](img/catalogue/vehicles/fuso_mitsubishi_thumb.webp)
 
 * __Blueprint ID__: `vehicle.fuso.mitsubishi`
 * __Base type__: bus
@@ -375,7 +375,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Mining earth mover
 
-![miningtruck_miningtruck](img/catalogue/vehicles/miningtruck_miningtruck.webp)
+![miningtruck_miningtruck](img/catalogue/vehicles/miningtruck_miningtruck_thumb.webp)
 
 * __Blueprint ID__: `vehicle.miningtruck.miningtruck`
 * __Base type__: industrial

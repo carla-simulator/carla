@@ -116,7 +116,9 @@ class Documentation:
             for snipet_path_to_image in self._snipets_images:
                 snipet_image_name = os.path.splitext(os.path.basename(snipet_path_to_image))[0]
                 if snipet_name == snipet_image_name:
-                    md.textn("\n<img src=\"/img/snipets_images/"+os.path.basename(snipet_path_to_image)+"\">\n")
+                    # Relative to the page, not "/img/...": the site is served
+                    # under a version prefix, where an absolute path 404s.
+                    md.textn("\n<img src=\"../img/snipets_images/"+os.path.basename(snipet_path_to_image)+"\">\n")
             md.textn("</div>\n")
         # Closing div
         md.textn("\n</div>\n")

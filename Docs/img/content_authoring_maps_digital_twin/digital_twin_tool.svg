@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1260" height="500" viewBox="0 0 1260 500"><defs><marker id="ah_ink" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#2b2b2b"/></marker><marker id="ah_sub" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#5f6b73"/></marker><marker id="ah_line" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#c9d3da"/></marker><marker id="ah_card" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#f5f8fa"/></marker><marker id="ah_blue" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#2980b9"/></marker><marker id="ah_red" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#d9534f"/></marker><marker id="ah_green" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#3c9a5f"/></marker><marker id="ah_orange" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#e69138"/></marker><marker id="ah_purple" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#7e57c2"/></marker><marker id="ah_white" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#ffffff"/></marker><marker id="ah_soft_blue" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#e3f0f9"/></marker><marker id="ah_soft_red" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#fbe6e5"/></marker><marker id="ah_soft_green" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#e4f3e9"/></marker><marker id="ah_soft_orange" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#fdf0e1"/></marker><marker id="ah_soft_purple" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#efe9f8"/></marker></defs>
+<rect width="1260" height="500" fill="#ffffff"/>
+<text x="630.0" y="44" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="26" fill="#2b2b2b" font-weight="bold" text-anchor="middle" xml:space="preserve">Digital Twin Tool: stages in this release</text>
+<text x="630.0" y="72" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="15" fill="#5f6b73" font-weight="normal" text-anchor="middle" xml:space="preserve">From OpenStreetMap data to a CARLA map, in the CARLA editor</text>
+<rect x="30" y="95" width="1200" height="165" rx="14" fill="#f5f8fa" stroke="#c9d3da" stroke-width="1.5"/>
+<text x="55" y="125" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="18" fill="#2b2b2b" font-weight="bold" text-anchor="start" xml:space="preserve">Generation (UW_OnRoadMainWidget, GenerateTile commandlet)</text>
+<rect x="50" y="140" width="214" height="100" rx="10" fill="#e3f0f9" stroke="#2980b9" stroke-width="2"/>
+<text x="157.0" y="179.0" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="16" fill="#2b2b2b" font-weight="bold" text-anchor="middle" xml:space="preserve">OSM data</text>
+<text x="157.0" y="197.0" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" fill="#5f6b73" font-weight="normal" text-anchor="middle" xml:space="preserve">URL from openstreetmap.org</text>
+<text x="157.0" y="215.0" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" fill="#5f6b73" font-weight="normal" text-anchor="middle" xml:space="preserve">(Overpass API export)</text>
+<rect x="282" y="140" width="214" height="100" rx="10" fill="#fbe6e5" stroke="#d9534f" stroke-width="2"/>
+<text x="389.0" y="179.0" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="16" fill="#2b2b2b" font-weight="bold" text-anchor="middle" xml:space="preserve">OSM to OpenDRIVE</text>
+<text x="389.0" y="197.0" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" fill="#5f6b73" font-weight="normal" text-anchor="middle" xml:space="preserve">osm2odr converter</text>
+<text x="389.0" y="215.0" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" fill="#5f6b73" font-weight="normal" text-anchor="middle" xml:space="preserve">not in the repository</text>
+<line x1="266" y1="190" x2="279" y2="190" stroke="#5f6b73" stroke-width="2.5" marker-end="url(#ah_sub)"/>
+<rect x="514" y="140" width="214" height="100" rx="10" fill="#fdf0e1" stroke="#e69138" stroke-width="2"/>
+<text x="621.0" y="179.0" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="16" fill="#2b2b2b" font-weight="bold" text-anchor="middle" xml:space="preserve">Roads and terrain</text>
+<text x="621.0" y="197.0" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" fill="#5f6b73" font-weight="normal" text-anchor="middle" xml:space="preserve">road meshes, lane marks,</text>
+<text x="621.0" y="215.0" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" fill="#5f6b73" font-weight="normal" text-anchor="middle" xml:space="preserve">terrain</text>
+<line x1="498" y1="190" x2="511" y2="190" stroke="#5f6b73" stroke-width="2.5" marker-end="url(#ah_sub)"/>
+<rect x="746" y="140" width="214" height="100" rx="10" fill="#fdf0e1" stroke="#e69138" stroke-width="2"/>
+<text x="853.0" y="179.0" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="16" fill="#2b2b2b" font-weight="bold" text-anchor="middle" xml:space="preserve">Curbs, sidewalks</text>
+<text x="853.0" y="197.0" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" fill="#5f6b73" font-weight="normal" text-anchor="middle" xml:space="preserve">detected from a render</text>
+<text x="853.0" y="215.0" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" fill="#5f6b73" font-weight="normal" text-anchor="middle" xml:space="preserve">by Python scripts</text>
+<line x1="730" y1="190" x2="743" y2="190" stroke="#5f6b73" stroke-width="2.5" marker-end="url(#ah_sub)"/>
+<rect x="978" y="140" width="214" height="100" rx="10" fill="#fdf0e1" stroke="#e69138" stroke-width="2"/>
+<text x="1085.0" y="179.0" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="16" fill="#2b2b2b" font-weight="bold" text-anchor="middle" xml:space="preserve">Buildings</text>
+<text x="1085.0" y="197.0" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" fill="#5f6b73" font-weight="normal" text-anchor="middle" xml:space="preserve">extruded from OSM</text>
+<text x="1085.0" y="215.0" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" fill="#5f6b73" font-weight="normal" text-anchor="middle" xml:space="preserve">footprints and heights</text>
+<line x1="962" y1="190" x2="975" y2="190" stroke="#5f6b73" stroke-width="2.5" marker-end="url(#ah_sub)"/>
+<rect x="30" y="290" width="1200" height="165" rx="14" fill="#f5f8fa" stroke="#c9d3da" stroke-width="1.5"/>
+<text x="1205" y="320" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="18" fill="#2b2b2b" font-weight="bold" text-anchor="end" xml:space="preserve">Tools that work on a map (editor)</text>
+<rect x="50" y="335" width="214" height="100" rx="10" fill="#fdf0e1" stroke="#e69138" stroke-width="2"/>
+<text x="157.0" y="374.0" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="16" fill="#2b2b2b" font-weight="bold" text-anchor="middle" xml:space="preserve">Traffic lights</text>
+<text x="157.0" y="392.0" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" fill="#5f6b73" font-weight="normal" text-anchor="middle" xml:space="preserve">Traffic Light Tool (meshes from the</text>
+<text x="157.0" y="410.0" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" fill="#5f6b73" font-weight="normal" text-anchor="middle" xml:space="preserve">content); map_logic.json phases</text>
+<rect x="282" y="335" width="214" height="100" rx="10" fill="#e4f3e9" stroke="#3c9a5f" stroke-width="2"/>
+<text x="389.0" y="374.0" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="16" fill="#2b2b2b" font-weight="bold" text-anchor="middle" xml:space="preserve">Traffic signs</text>
+<text x="389.0" y="392.0" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" fill="#5f6b73" font-weight="normal" text-anchor="middle" xml:space="preserve">Sign Generation Controller,</text>
+<text x="389.0" y="410.0" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" fill="#5f6b73" font-weight="normal" text-anchor="middle" xml:space="preserve">Europe / America / China</text>
+<line x1="266" y1="385" x2="279" y2="385" stroke="#5f6b73" stroke-width="2.5" marker-end="url(#ah_sub)"/>
+<rect x="514" y="335" width="214" height="100" rx="10" fill="#e4f3e9" stroke="#3c9a5f" stroke-width="2"/>
+<text x="621.0" y="374.0" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="16" fill="#2b2b2b" font-weight="bold" text-anchor="middle" xml:space="preserve">Vegetation</text>
+<text x="621.0" y="392.0" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" fill="#5f6b73" font-weight="normal" text-anchor="middle" xml:space="preserve">Procedural Vegetation Tool</text>
+<text x="621.0" y="410.0" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" fill="#5f6b73" font-weight="normal" text-anchor="middle" xml:space="preserve">(PCG, JSON plan)</text>
+<line x1="498" y1="385" x2="511" y2="385" stroke="#5f6b73" stroke-width="2.5" marker-end="url(#ah_sub)"/>
+<rect x="746" y="335" width="214" height="100" rx="10" fill="#e4f3e9" stroke="#3c9a5f" stroke-width="2"/>
+<text x="853.0" y="374.0" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="16" fill="#2b2b2b" font-weight="bold" text-anchor="middle" xml:space="preserve">Street furniture</text>
+<text x="853.0" y="392.0" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" fill="#5f6b73" font-weight="normal" text-anchor="middle" xml:space="preserve">Procedural Furniture Tool</text>
+<text x="853.0" y="410.0" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" fill="#5f6b73" font-weight="normal" text-anchor="middle" xml:space="preserve">(PCG, JSON plan)</text>
+<line x1="730" y1="385" x2="743" y2="385" stroke="#5f6b73" stroke-width="2.5" marker-end="url(#ah_sub)"/>
+<rect x="978" y="335" width="214" height="100" rx="10" fill="#e3f0f9" stroke="#2980b9" stroke-width="2"/>
+<text x="1085.0" y="374.0" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="16" fill="#2b2b2b" font-weight="bold" text-anchor="middle" xml:space="preserve">Twin map</text>
+<text x="1085.0" y="392.0" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" fill="#5f6b73" font-weight="normal" text-anchor="middle" xml:space="preserve">load_world(name),</text>
+<text x="1085.0" y="410.0" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" fill="#5f6b73" font-weight="normal" text-anchor="middle" xml:space="preserve">or ship as a content pack</text>
+<line x1="962" y1="385" x2="975" y2="385" stroke="#5f6b73" stroke-width="2.5" marker-end="url(#ah_sub)"/>
+<path d="M1085.0,240 L1085.0,266 Q1085.0,275 1076.0,275 L166.0,275 Q157.0,275 157.0,284 L157.0,332" stroke="#5f6b73" stroke-width="2.5" fill="none" marker-end="url(#ah_sub)"/>
+<rect x="120" y="465" width="18" height="18" rx="4" fill="#fbe6e5" stroke="#d9534f" stroke-width="2"/>
+<text x="146" y="479" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="14" fill="#5f6b73" font-weight="normal" text-anchor="start" xml:space="preserve">not available</text>
+<rect x="278.8" y="465" width="18" height="18" rx="4" fill="#fdf0e1" stroke="#e69138" stroke-width="2"/>
+<text x="304.8" y="479" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="14" fill="#5f6b73" font-weight="normal" text-anchor="start" xml:space="preserve">needs the CarlaDigitalTwinsTool content</text>
+<rect x="635.2" y="465" width="18" height="18" rx="4" fill="#e4f3e9" stroke="#3c9a5f" stroke-width="2"/>
+<text x="661.2" y="479" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="14" fill="#5f6b73" font-weight="normal" text-anchor="start" xml:space="preserve">available in the editor</text>
+<rect x="870.0" y="465" width="18" height="18" rx="4" fill="#e3f0f9" stroke="#2980b9" stroke-width="2"/>
+<text x="896.0" y="479" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="14" fill="#5f6b73" font-weight="normal" text-anchor="start" xml:space="preserve">input / result</text>
+</svg>

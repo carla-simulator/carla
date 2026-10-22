@@ -3,7 +3,7 @@
 CARLA's C++ code is documented with [Doxygen](https://www.doxygen.nl/), from the comments in the headers.
 
 !!! Warning
-    The copy hosted at <http://carla.org/Doxygen/html/index.html> was generated from the UE 4.26 line and still describes `CarlaUE4`. For this branch, generate it locally with the steps below.
+    The copy hosted at <http://carla.org/Doxygen/html/index.html> was generated from the UE 4.26 version and still describes `CarlaUE4`. For CARLA 1.0.0, generate it locally with the steps below.
 
 ---
 ## Generate the documentation
@@ -27,7 +27,7 @@ The result is written to `Doxygen/html/`. Open `Doxygen/html/index.html` in a br
 
 | Path | Contents |
 | --- | --- |
-| `LibCarla/source/carla` | The client and server library: the C++ client API, the RPC types, the geometry, the sensor serialization and the Traffic Manager. |
+| `LibCarla/source` | The client and server library: the C++ client API, the RPC types, the geometry, the sensor serialization, the Traffic Manager and the navigation agents. |
 | `Unreal/CarlaUnreal/Plugins/Carla/Source` | The Carla plugin: the actors, the sensors and the server side of the simulation. |
 | `Unreal/CarlaUnreal/Source` | The Unreal project itself. |
 

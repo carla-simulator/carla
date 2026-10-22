@@ -9,7 +9,7 @@
     doc: >
       The Client connects CARLA to the server which runs the simulation. Both server and client contain a CARLA library (libcarla) with some differences that allow communication between them. Many clients can be created and each of these will connect to the RPC server inside the simulation to send commands. The simulation runs server-side. Once the connection is established, the client will only receive data retrieved from the simulation. Walkers are the exception. The client is in charge of managing pedestrians so, if you are running a simulation with multiple clients, some issues may arise. For example, if you spawn walkers through different clients, collisions may happen, as each client is only aware of the ones it is in charge of.
 
-        The client also has a recording feature that saves all the information of a simulation while running it. This allows the server to replay it at will to obtain information and experiment with it. [Here](adv_recorder.md) is some information about how to use this recorder.
+        The client also has a recording feature that saves all the information of a simulation while running it. This allows the server to replay it at will to obtain information and experiment with it. [Here](core_recorder.md) is some information about how to use this recorder.
     # - PROPERTIES -------------------------
     instance_variables:
     # - METHODS ----------------------------
@@ -330,7 +330,7 @@
           Path on the server host of the pack directory (or its `carla-pack.json`).
       return: carla.ContentPackInfo
       doc: >
-        Mounts a content pack (a content-only Unreal plugin cooked against this CARLA release, with a `carla-pack.json` manifest) into the running server without a restart. Its maps are listed by carla.Client.get_available_maps and loadable with carla.Client.load_world, and its catalogs (`Config/*.json`) are added to the blueprint library on the next episode. Raises a RuntimeError naming the reason when the path is not a pack, the pack was built for another base release or platform, or a pack of that name is already mounted.
+        Mounts a content pack (a content-only Unreal plugin cooked against this CARLA release, with a `carla-pack.json` manifest) into the running server without a restart. Its maps are listed by carla.Client.get_available_maps and loadable with carla.Client.load_world, and its vehicles, walkers, props and blueprints (`Config/*.json`) are in the blueprint library at once; an entry that overrides an existing blueprint takes effect at the next episode. Raises a RuntimeError naming the reason when the path is not a pack, the pack was built for another base release or platform, or a pack of that name is already mounted.
     # --------------------------------------
     - def_name: unmount_content_pack
       params:
@@ -475,7 +475,7 @@
     doc: >
       The traffic manager is a module built on top of the CARLA API in C++. It handles any group of vehicles set to autopilot mode to populate the simulation with realistic urban traffic conditions and give the chance to user to customize some behaviours. The architecture of the traffic manager is divided in five different goal-oriented stages and a PID controller where the information flows until eventually, a carla.VehicleControl is applied to every vehicle registered in a traffic manager.
 
-      In order to learn more, visit the [documentation](adv_traffic_manager.md) regarding this module.
+      In order to learn more, visit the [documentation](core_traffic_manager.md) regarding this module.
     # - PROPERTIES -------------------------
     instance_variables:
     # - METHODS ----------------------------
@@ -682,7 +682,7 @@
       params:
       return: uint16
       doc: >
-        Returns the port where the Traffic Manager is connected. If the object is a TM-Client, it will return the port of its TM-Server. Read the [documentation](adv_traffic_manager.md#running-multiple-traffic-managers) to learn the difference.
+        Returns the port where the Traffic Manager is connected. If the object is a TM-Client, it will return the port of its TM-Server. Read the [documentation](core_traffic_manager.md#running-multiple-traffic-managers) to learn the difference.
     # --------------------------------------
     - def_name: set_global_distance_to_leading_vehicle
       params:
@@ -736,7 +736,7 @@
         doc: >
           If __True__, the OSM mode is enabled.
       doc: >
-        Enables or disables the OSM mode. This mode allows the user to run TM in a map created with the [OSM feature](tuto_G_openstreetmap.md). These maps allow having dead-end streets. Normally, if vehicles cannot find the next waypoint, TM crashes. If OSM mode is enabled, it will show a warning, and destroy vehicles when necessary.
+        Enables or disables the OSM mode. This mode allows the user to run TM in a map created with the [OSM feature](content_authoring_maps_openstreetmap.md). These maps allow having dead-end streets. Normally, if vehicles cannot find the next waypoint, TM crashes. If OSM mode is enabled, it will show a warning, and destroy vehicles when necessary.
     # --------------------------------------
     - def_name: keep_slow_lane_rule_percentage
       params:
@@ -768,7 +768,7 @@
         doc: >
           If __True__, the TM synchronous mode is enabled.
       doc: >
-        Sets the Traffic Manager to [synchronous mode](adv_traffic_manager.md#synchronous-mode). In a [multiclient situation](adv_traffic_manager.md#multi-client-simulations), only the TM-Server can tick. Similarly, in a [multiTM situation](adv_traffic_manager.md#multi-tm-simulations), only one TM-Server must tick. Use this method in the client that does the world tick, and right after setting the world to synchronous mode, to set which TM will be the master while in sync.
+        Sets the Traffic Manager to [synchronous mode](core_traffic_manager.md#synchronous-mode). In a [multiclient situation](core_traffic_manager.md#multi-client-simulations), only the TM-Server can tick. Similarly, in a [multiTM situation](core_traffic_manager.md#multi-tm-simulations), only one TM-Server must tick. Use this method in the client that does the world tick, and right after setting the world to synchronous mode, to set which TM will be the master while in sync.
       warning: >
         If the server is set to synchronous mode, the TM <b>must</b> be set to synchronous mode too in the same client that does the tick.
     # --------------------------------------

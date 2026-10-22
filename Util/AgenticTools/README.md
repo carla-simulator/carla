@@ -7,7 +7,7 @@
 A library of **vetted CARLA procedures** ("skills") for any agent. Each skill is
 a `SKILL.md` plus executable scripts with its failure modes encoded, so an agent
 discovers the right procedure and checks its prerequisites instead of improvising
-from the Makefile.
+it.
 
 ## Quick start
 

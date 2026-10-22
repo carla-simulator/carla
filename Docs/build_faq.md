@@ -1,13 +1,24 @@
 # F.A.Q.
 
-Some of the most common issues regarding CARLA installation and builds are listed here. Some more can be found in the [GitHub issues](https://github.com/carla-simulator/carla/issues?utf8=%E2%9C%93&q=label%3Aquestion+) for the project. In case you don't find your doubt listed here, have a look in the forum and feel free to ask there.
+Some of the most common issues regarding CARLA installation and builds are listed here. Some more can be found in the [GitHub issues](https://github.com/carla-simulator/carla/issues?utf8=%E2%9C%93&q=label%3Aquestion+) for the project. In case you don't find your doubt listed here, have a look in [GitHub Discussions](https://github.com/carla-simulator/carla/discussions) and feel free to ask there.
 
 <div class="build-buttons">
 <p>
-<a href="https://github.com/carla-simulator/carla/discussions/" target="_blank" class="btn btn-neutral" title="Go to the CARLA forum">
-CARLA forum</a>
+<a href="https://github.com/carla-simulator/carla/discussions" target="_blank" class="btn btn-neutral" title="Go to CARLA's GitHub Discussions">
+GitHub Discussions</a>
 </p>
 </div>
+
+- [__System requirements__](#system-requirements)
+- [__Linux build__](#linux-build)
+- [__Windows build__](#windows-build)
+- [__Running CARLA__](#running-carla)
+- [__Other__](#other)
+- [__System requirements__](#system-requirements)
+- [__Linux build__](#linux-build)
+- [__Windows build__](#windows-build)
+- [__Running CARLA__](#running-carla)
+- [__Other__](#other)
 
 ---
 
@@ -21,8 +32,6 @@ CARLA forum</a>
 * ["CarlaUnreal.sh" script does not appear when downloading from GitHub.](#carlaunrealsh-script-does-not-appear-when-downloading-from-github)
 * [The editor does not build or does not open on Linux.](#the-editor-does-not-build-or-does-not-open-on-linux)
 * [Cloning the Unreal Engine repository shows an error.](#cloning-the-unreal-engine-repository-shows-an-error)
-* [AttributeError: module 'carla' has no attribute 'Client' when running a script.](#attributeerror-module-carla-has-no-attribute-client-when-running-a-script)
-* [Cannot run example scripts or "RuntimeError: rpc::rpc_error during call in function version".](#cannot-run-example-scripts-or-runtimeerror-rpcrpc_error-during-call-in-function-version)
 
 ## Windows build
 
@@ -31,7 +40,6 @@ CARLA forum</a>
 * [CMake or compiler errors on Windows.](#cmake-or-compiler-errors-on-windows)
 * [The editor does not build or does not open on Windows.](#the-editor-does-not-build-or-does-not-open-on-windows)
 * [Modules are missing or built with a different engine version.](#modules-are-missing-or-built-with-a-different-engine-version)
-* [Packaging hangs or fails at the cook on Windows.](#packaging-hangs-or-fails-at-the-cook-on-windows)
 
 ## Running CARLA
 
@@ -41,10 +49,14 @@ CARLA forum</a>
 * [Can't run CARLA neither binary nor source build.](#cant-run-carla-neither-binary-nor-source-build)
 * [ImportError: DLL load failed while importing libcarla: %1 is not a valid Win32 app.](#importerror-dll-load-failed-while-importing-libcarla-1-is-not-a-valid-win32-app)
 * [ImportError: No module named 'carla'](#importerror-no-module-named-carla)
+* [AttributeError: module 'carla' has no attribute 'Client' when running a script.](#attributeerror-module-carla-has-no-attribute-client-when-running-a-script)
+* [Cannot run example scripts or "RuntimeError: rpc::rpc_error during call in function version".](#cannot-run-example-scripts-or-runtimeerror-rpcrpc_error-during-call-in-function-version)
+* [CARLA server failed to start on RPC port 2000.](#carla-server-failed-to-start-on-rpc-port-2000)
 
 ## Other
 
 * [Create a binary version of CARLA.](#create-a-binary-version-of-carla)
+* [Packaging hangs or fails at the cook.](#packaging-hangs-or-fails-at-the-cook)
 * [Can I package CARLA for Windows on a Linux machine and vice versa?](#can-i-package-carla-for-windows-on-a-linux-machine-and-vice-versa)
 * [How do I uninstall the CARLA client library?](#how-do-i-uninstall-the-carla-client-library)
 
@@ -56,7 +68,7 @@ CARLA forum</a>
 
 ###### Expected disk space to build CARLA.
 
-> Plan for about 225 GB with the Unreal Engine 5.8 fork, plus about 30 GB for each package you build. Setting `CARLA_UNREAL_ENGINE_PATH` to an existing build of the engine saves the engine's share. See the [Linux](build_linux_ue5.md) and [Windows](build_windows_ue5.md) build guides.
+> Plan for about 225 GB with the Unreal Engine 5.8 fork, plus about 30 GB for each package you build. Setting `CARLA_UNREAL_ENGINE_PATH` to an existing build of the engine skips the engine build and its disk space. See the [Linux](build_linux_ue5.md) and [Windows](build_windows_ue5.md) build guides.
 
 <!-- ======================================================================= -->
 
@@ -74,23 +86,23 @@ CARLA forum</a>
 
 > There is no `CarlaUnreal.sh` script in the source version of CARLA. Follow the [build instructions](build_linux_ue5.md) to build CARLA from source.
 >
-> To run CARLA using `CarlaUnreal.sh`, follow the [quick start installation](start_quickstart.md), or build a package with `cmake --build Build/Release --target package`.
+> To run CARLA using `CarlaUnreal.sh`, follow the [quick start installation](start_quickstart.md), or [build a package](#create-a-binary-version-of-carla).
 
 <!-- ======================================================================= -->
 
 ###### The editor does not build or does not open on Linux.
 
-> Many different issues show up as a failing `cmake --build Build/Release --target launch`. These are the most likely reasons:
+> Many different issues show up as a failing `cmake --build Build --target launch`. These are the most likely reasons:
 >
 > * __Use the CARLA fork of Unreal Engine 5.8.__ CARLA does not build against a stock engine. Check that `CARLA_UNREAL_ENGINE_PATH` points at a build of the `ue58-dev-carla` branch of the fork, and that its editor starts on its own.
 > * __Set `CARLA_UNREAL_ENGINE_PATH` for every shell.__ Add `export CARLA_UNREAL_ENGINE_PATH=<path_to_the_engine>` to `~/.bashrc` or `~/.profile`, otherwise it has to be set in every new terminal.
 > * __Download the content.__ The server will not run without it. The content repository has to be cloned into `Unreal/CarlaUnreal/Content/Carla`.
-> * __Set the DLSS SDK.__ The engine build needs `DLSS_SDK` pointing at the SDK (`CarlaSetup.sh` fetches it into `~/SDKs/DLSS`), or `export DLSS_SDK=disabled` to opt out.
-> * __Configure before building.__ Run `cmake --preset Release` once; the build then lives in `Build/Release`.
+> * __Set the DLSS SDK.__ The CMake configure step looks for the NVIDIA DLSS SDK in `DLSS_SDK`, then in `~/SDKs/DLSS` (where `CarlaSetup.sh` fetches it), clones it there if it is missing, and stops with "Could not resolve the NVIDIA DLSS SDK" if that fails. Configure with `-DCARLA_DLSS_SDK_PATH=disabled` to build CARLA without it. A build of the project outside CARLA's CMake fails with "DLSS_SDK is not set" unless `DLSS_SDK` points at the SDK, or is `disabled` to opt out.
+> * __Configure before building.__ Run `cmake -G Ninja -S . -B Build --toolchain=$PWD/CMake/Toolchain.cmake -DCMAKE_BUILD_TYPE=Release -DENABLE_ROS2=ON` once, and run every build command against that same `Build` directory. A preset (`cmake --preset <name>`) builds into `Build/<name>` instead.
 > * __Check the system.__ The UE5 version of CARLA supports Ubuntu 22.04 and 24.04, and cannot be built on an external disk.
 > * __Check dependencies.__ `bash Util/SetupUtils/InstallPrerequisites.sh --python-path=python3` installs the same prerequisites as `CarlaSetup.sh`.
 >
-> Other specific reasons for a system to show conflicts with CARLA may occur. Please, post these on the [forum](https://github.com/carla-simulator/carla/discussions/) so the team can get to know more about them.
+> Other specific reasons for a system to show conflicts with CARLA may occur. Please, post these on the [GitHub Discussions](https://github.com/carla-simulator/carla/discussions) so the team can get to know more about them.
 
 <!-- ======================================================================= -->
 
@@ -104,32 +116,6 @@ CARLA forum</a>
 >
 >      sudo apt-get remove git
 >      sudo apt install git git-lfs
-
-<!-- ======================================================================= -->
-
-###### AttributeError: module 'carla' has no attribute 'Client' when running a script.
-
-> Python is importing a `carla` folder that does not contain the compiled client, most often `PythonAPI/carla` itself when the script runs from inside it. Check which module is loaded:
->
->      python3 -c "import carla; print(carla.__file__)"
->
-> Run the script from another directory, and install the client into the interpreter you use:
->
->      cmake --build Build/Release --target carla-python-api-install
-
-<!-- ======================================================================= -->
-
-###### Cannot run example scripts or "RuntimeError: rpc::rpc_error during call in function version".
-
-> The output looks like this:
->
->      RuntimeError: rpc::rpc_error during call in function version
->
-> The client could not get the version from the server. The server is not running, is still loading a map, or listens on another port, or the client and the server are different versions of CARLA.
->
-> * Wait until the server has finished loading, and check the port: `carla.Client('localhost', 2000)` by default, `-carla-rpc-port=N` on the server otherwise.
-> * Use the client that matches the server. For a source build, rebuild and reinstall it with `cmake --build Build/Release --target carla-python-api-install`. For a package, install the wheel shipped with it: `pip3 install PythonAPI/carla/dist/carla-*.whl`.
-> * Check the installed client with `pip3 show carla`, and remove any other copy that `python3 -c "import carla; print(carla.__file__)"` finds first.
 
 ---
 
@@ -146,7 +132,7 @@ CARLA forum</a>
 
 > Something went wrong when building CARLA. Rebuild from a terminal to see the first error, which is the one that matters:
 >
->      cmake --build Build\Release
+>      cmake --build Build
 >
 > If the error comes from the Unreal modules, generate the Visual Studio project files (right-click `Unreal\CarlaUnreal\CarlaUnreal.uproject` and select __Generate Visual Studio project files__), open the solution with Visual Studio 2022 and build it to see the errors in context.
 
@@ -155,6 +141,8 @@ CARLA forum</a>
 ###### CMake or compiler errors on Windows.
 
 > CARLA builds with Visual Studio 2022, which `CarlaSetup.bat` installs. Other Visual Studio versions installed side by side can make CMake or the Unreal Build Tool pick the wrong compiler, and show errors such as C2440 or C2672.
+>
+> With Visual Studio 2022, Unreal Engine 5.8 needs the MSVC toolset 14.38 (14.38.33130 or later) or 14.44.35211 or later, and rejects 14.39 to 14.43 and 14.44 builds older than 14.44.35211. `CarlaSetup.bat` installs the 14.38 toolset only when it installs Visual Studio itself; if Visual Studio 2022 Community, Professional or Enterprise was already there and has neither, update it or add the 14.38 toolset (component `Microsoft.VisualStudio.Component.VC.14.38.17.8.x86.x64`) with the Visual Studio Installer.
 >
 > Run the build from the __x64 Native Tools Command Prompt for VS 2022__, so that the right compiler is on the path. To keep other versions installed but force Unreal to use 2022, edit `%appdata%\Unreal Engine\UnrealBuildTool\BuildConfiguration.xml`:
 >
@@ -171,27 +159,22 @@ CARLA forum</a>
 
 ###### The editor does not build or does not open on Windows.
 
-> Many different issues show up as a failing `cmake --build Build\Release --target launch`. These are the most likely reasons:
+> Many different issues show up as a failing `cmake --build Build --target launch`. These are the most likely reasons:
 >
 > * __Restart the computer.__ There is a lot going on during the Windows setup. Restart and make sure that everything is updated properly.
 > * __Use the CARLA fork of Unreal Engine 5.8.__ `CARLA_UNREAL_ENGINE_PATH` must hold the absolute path of the engine build. `CarlaSetup.bat` sets it; a setup done by other means may not have.
 > * __Download the content.__ The server will not run without it.
+> * __Set the DLSS SDK.__ The CMake configure step looks for the NVIDIA DLSS SDK in `DLSS_SDK`, then in `%USERPROFILE%\SDKs\DLSS`, clones it there if it is missing, and stops with "Could not resolve the NVIDIA DLSS SDK" if that fails. Configure with `-DCARLA_DLSS_SDK_PATH=disabled` to build CARLA without it. A build of the project outside CARLA's CMake, such as from Visual Studio, fails with "DLSS_SDK is not set" unless `DLSS_SDK` points at the SDK, or is `disabled` to opt out.
 > * __Visual Studio 2022.__ See [CMake or compiler errors on Windows](#cmake-or-compiler-errors-on-windows).
 > * __Do not build on an external disk.__ Windows does not give the required permissions there.
 >
-> Other specific reasons for a system to show conflicts with CARLA may occur. Please, post these on the [forum](https://github.com/carla-simulator/carla/discussions/) so the team can get to know more about them.
+> Other specific reasons for a system to show conflicts with CARLA may occur. Please, post these on the [GitHub Discussions](https://github.com/carla-simulator/carla/discussions) so the team can get to know more about them.
 
 <!-- ======================================================================= -->
 
 ###### Modules are missing or built with a different engine version.
 
 > Click on __Accept__ to rebuild them.
-
-<!-- ======================================================================= -->
-
-###### Packaging hangs or fails at the cook on Windows.
-
-> On Windows the `package` target passes `-NoZenAutoLaunch` to the cook, so a Zen server has to be running already. Start `zenserver.exe --port 8558` before packaging, and leave it running until the package is done. See [Build a package](build_windows_ue5.md).
 
 ---
 
@@ -222,7 +205,7 @@ CARLA forum</a>
 
 ###### Can't run CARLA neither binary nor source build.
 
-> NVIDIA drivers may be outdated, or the GPU may not support Vulkan (Linux) or DirectX 12 (Windows). Update the drivers first. If the issue is still unresolved, take a look at the [forum](https://github.com/carla-simulator/carla/discussions/) and post the specific issue.
+> NVIDIA drivers may be outdated, or the GPU may not support Vulkan (Linux) or DirectX 12 (Windows). Update the drivers first. If the issue is still unresolved, take a look at the [GitHub Discussions](https://github.com/carla-simulator/carla/discussions) and post the specific issue.
 
 <!-- ======================================================================= -->
 
@@ -236,7 +219,7 @@ CARLA forum</a>
 
 > Python cannot find the CARLA client library. It is distributed as a wheel (`.whl`), and has to be installed into the interpreter that runs the script:
 >
-> * From a source build: `cmake --build Build/Release --target carla-python-api-install` builds the wheel and installs it with pip.
+> * From a source build: `cmake --build Build --target carla-python-api-install` builds the wheel and installs it with pip.
 > * From a package: `pip3 install PythonAPI/carla/dist/carla-*.whl`.
 >
 > The wheel is built for one Python version. Check that the interpreter running the script is the one the wheel was built or installed for:
@@ -246,6 +229,38 @@ CARLA forum</a>
 >
 > Virtual environments and Conda can complicate this: activate the environment before installing the wheel, so that pip installs it where the script will look for it. See [Install the client library](start_quickstart.md#install-client-library) for the other ways to get it.
 
+<!-- ======================================================================= -->
+
+###### AttributeError: module 'carla' has no attribute 'Client' when running a script.
+
+> Python is importing a `carla` folder that does not contain the compiled client, most often `PythonAPI/carla` itself when the script runs from inside it. Check which module is loaded:
+>
+>      python3 -c "import carla; print(carla.__file__)"
+>
+> Run the script from another directory, and install the client into the interpreter you use:
+>
+>      cmake --build Build --target carla-python-api-install
+
+<!-- ======================================================================= -->
+
+###### Cannot run example scripts or "RuntimeError: rpc::rpc_error during call in function version".
+
+> The output looks like this:
+>
+>      RuntimeError: rpc::rpc_error during call in function version
+>
+> The client could not get the version from the server. The server is not running, is still loading a map, or listens on another port, or the client and the server are different versions of CARLA.
+>
+> * Wait until the server has finished loading, and check the port: `carla.Client('localhost', 2000)` by default, `-carla-rpc-port=N` on the server otherwise.
+> * Use the client that matches the server, installed as in [ImportError: No module named 'carla'](#importerror-no-module-named-carla).
+> * Check the installed client with `pip3 show carla`, and remove any other copy that `python3 -c "import carla; print(carla.__file__)"` finds first.
+
+<!-- ======================================================================= -->
+
+###### CARLA server failed to start on RPC port 2000.
+
+> Another CARLA server is already using the port. Close it, or start this one on another port with `-carla-rpc-port=N`. The server also takes ports N+1 and N+2, so leave at least 3 between the ports of two servers.
+
 ---
 
 ## Other
@@ -253,7 +268,13 @@ CARLA forum</a>
 
 ###### Create a binary version of CARLA.
 
-> Run `cmake --build Build/Release --target package` from the root of the repository. The package lands in `Build/Release/Package/`, with the server and the matching Python wheel. See [Build a package](build_linux_ue5.md#build-a-package-with-carla-ue5) for the options, such as the maps to cook.
+> Run `cmake --build Build --target package` from the root of the repository. The package lands in `Build/Package/`, with the server and the matching Python wheel. Start a Zen server first, see [Packaging hangs or fails at the cook](#packaging-hangs-or-fails-at-the-cook). See [Build a package](build_linux_ue5.md#build-a-package-with-carla-ue5) for the options, such as the maps to cook.
+
+<!-- ======================================================================= -->
+
+###### Packaging hangs or fails at the cook.
+
+> The `package` target passes `-NoZenAutoLaunch` to the cook, so a Zen server has to be running already. Start `zenserver --port 8558` on Linux or `zenserver.exe --port 8558` on Windows before packaging, from `Engine/Binaries/<platform>` in the engine directory, and leave it running until the package is done. See Build a package for [Linux](build_linux_ue5.md#build-a-package-with-carla-ue5) or [Windows](build_windows_ue5.md#build-a-package-with-carla-ue5).
 
 <!-- ======================================================================= -->
 

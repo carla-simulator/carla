@@ -8,20 +8,37 @@ The CARLA simulator provides a vast library of 3D assets to populate your autono
 * [__Props catalogue__](catalogue_props.md)
 * [__Scripts catalogue__](catalogue_scripts.md)
 
+- [__Maps__](#maps)
+- [__Vehicles__](#vehicles)
+- [__Pedestrians__](#pedestrians)
+- [__Props__](#props)
+- [__Inspect the vehicles in the simulator__](#inspect-the-vehicles-in-the-simulator)
+- [__Scripts__](#scripts)
+
 ## Maps
 
-The default package ships three drivable maps, plus the empty ones used for OpenDRIVE standalone mode. A source build has every town; the rest reach a package through a [content pack](content_packs.md).
+The default package ships three drivable maps, plus the empty ones used for OpenDRIVE standalone mode. A source build has every town; the rest reach a package through a [content pack](content_authoring_packs.md).
 
-![maps_overview](img/catalogue/maps/maps_montage.webp)
-<div style="text-align: right"><i>Town10HD_Opt, Mine_01, Town15 and the classic towns Town01_Opt to Town07_Opt, one view each. sensor.camera.rgb &middot; Cinematic &middot; sunny afternoon</i></div>
+![maps_overview](img/catalogue/maps/maps_montage_thumb.webp)
+<div class="img-caption">Town10HD_Opt, Mine_01, Town15 and the classic towns Town01_Opt to Town07_Opt, one view each.</div>
 
 | Map | In the default package | Summary |
 | --- | --- | --- |
 | [__Town10HD_Opt__](map_town10.md) | yes | A downtown urban environment with skyscrapers, residential buildings and an ocean promenade. |
 | [__Mine_01__](map_mine.md) | yes | An industrial, off-road, open-cast mining environment. |
 | [__Town15__](map_town15.md) | yes | A large World Partition map of a university campus and its surroundings. |
-| __Town01_Opt__ … __Town07_Opt__ | source build | The classic CARLA towns, from a small village to a highway network. |
-| __Town11__, __Town12__, __Town13__ | source build | Large World Partition maps. |
+| [__Town01_Opt__](map_town01.md) | no, content pack | A small town with T-junctions, divided in two by a river with several bridges. |
+| [__Town02_Opt__](map_town02.md) | no, content pack | A small town with T-junctions, a park, a high street and residential and commercial areas. |
+| [__Town03_Opt__](map_town03.md) | no, content pack | A larger urban town with a central roundabout, an underpass and a raised metro track. |
+| [__Town04_Opt__](map_town04.md) | no, content pack | A small mountain town circled by a multi-lane "figure of 8" ring road with an overpass. |
+| [__Town05_Opt__](map_town05.md) | no, content pack | A grid town of multi-lane roads and large junctions, with a raised highway around it. |
+| [__Town06_Opt__](map_town06.md) | no, content pack | Long multi-lane parallel roads with slip roads, U-turn loops and the Michigan left. |
+| [__Town07_Opt__](map_town07.md) | no, content pack | A rural community of cornfields, barns, silos and windmills, with narrow unmarked roads. |
+| [__Town11__](map_town11.md) | no, content pack | A large World Partition map without decoration: single-lane roads over hills between clusters of gridded junctions. |
+| [__Town12__](map_town12.md) | no, content pack | A 10 x 10 km World Partition city with downtown, residential and rural zones and a highway ring road. |
+| [__Town13__](map_town13.md) | no, content pack | A World Partition city of Town12's scale with different styles, designed as its train-test pair. |
+| [__Town_C__](map_town_c.md) | no, content pack | A Synkrotron city modelled on the Shanghai International Automobile City, with recreations of its landmark buildings. |
+| [__Eixample__](map_eixample.md) | no, content pack | A digital twin of the street grid of the Eixample district of Barcelona, with untextured buildings. |
 
 The classic towns and the large maps are also available as [content-pack towns](map_content_packs.md) for a packaged release.
 
@@ -32,24 +49,24 @@ Load a map by its exact name, which is the file name: `client.load_world('Town10
 
 CARLA provides a diverse array of vehicles, with high fidelity models of real world cars, trucks and bikes, for replicating traffic in your simulations. Browse and choose the vehicles you like in the [__vehicle catalogue__](catalogue_vehicles.md).
 
-![vehicles_overview](img/catalogue/vehicles/vehicle_montage.webp)
-<div style="text-align: right"><i>The vehicle blueprints.</i></div>
+![vehicles_overview](img/catalogue/vehicles/vehicle_montage_thumb.webp)
+<div class="img-caption">A showcase of some of the vehicle blueprints available in CARLA.</div>
 
 ---
 ## Pedestrians
 
 CARLA's asset library includes a variety of pedestrians to simulate foot traffic in the 3D environments surrounding your agent. Browse and choose the pedestrians you want in the [__pedestrian catalogue__](catalogue_pedestrians.md).
 
-![pedestrian_overview](img/catalogue/pedestrians/pedestrians_overview.webp)
-<div style="text-align: right"><i>The pedestrian blueprints.</i></div>
+![pedestrian_overview](img/catalogue/pedestrians/pedestrians_overview_thumb.webp)
+<div class="img-caption">A showcase of some of the pedestrian blueprints available in CARLA.</div>
 
 ---
 ## Props
 
 CARLA's props model the various structures and items you might find on or near roads, such as kiosks, statues, benches, boxes, bins, debris or trash. The props can be placed anywhere in your simulation dynamically during runtime. Browse and choose your props in the [__props catalogue__](catalogue_props.md).
 
-![props_overview](img/catalogue/props/props_overview.webp)
-<div style="text-align: right"><i>The prop blueprints.</i></div>
+![props_overview](img/catalogue/props/props_overview_thumb.webp)
+<div class="img-caption">A showcase of some of the prop blueprints available in CARLA.</div>
 
 ---
 

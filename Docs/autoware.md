@@ -2,16 +2,23 @@
 
 CARLA can be driven by [Autoware](https://autoware.org/) with no bridge process: the server publishes sensor data and vehicle status straight onto ROS 2 and applies Autoware's control commands to the ego vehicle. The integration ships with two driving modes:
 
-- **`classical`**: the full Autoware stack, with NDT localization against a point-cloud map, lidar and camera perception, planning and the trajectory-follower controller.
+- **`classical`**: the full Autoware stack, with NDT localization against a point-cloud map, lidar perception (`perception_mode:=lidar`), planning and the trajectory-follower controller. Traffic-light states come from the simulator, see [Known limitations](#known-limitations).
 - **`e2e`**: the camera-only VAD end-to-end model, fed by six surround cameras, with ground-truth localization and the same trajectory follower.
 
 Everything lives in `PythonAPI/examples/av_stacks/autoware/`: an installer for Autoware, a launcher that starts CARLA and Autoware together, and the tools that build the maps Autoware needs. Its `README.md` covers each step in more detail than this page.
+
+- [__Before you start__](#before-you-start)
+- [__Run Autoware__](#run-autoware)
+- [__Drive the ego from your own script__](#drive-the-ego-from-your-own-script)
+- [__Topics__](#topics)
+- [__Prepare a map__](#prepare-a-map)
+- [__Known limitations__](#known-limitations)
 
 ## Before you start
 
 | Requirement | Detail |
 |---|---|
-| CARLA build | Built with `-DENABLE_ROS2=ON` (off by default, see [Linux build](build_linux_ue5.md)) and packaged. The launcher looks for `CarlaUnreal.sh` in `$CARLA_ROOT` or under `Build/*/Package/`. |
+| CARLA build | Built with `-DENABLE_ROS2=ON` (off by default, see [Linux build](build_linux_ue5.md)). The launcher prefers a packaged server, looking for `CarlaUnreal.sh` in `$CARLA_ROOT` or under `Build/*/Package/`, and falls back to the editor in `-game` mode when `UE_ROOT` is set. `--server editor` forces that fallback, which always runs the plugin binaries currently built in the tree. |
 | OS and ROS 2 | Ubuntu 22.04 with ROS 2 Humble, or Ubuntu 24.04 with ROS 2 Jazzy. |
 | GPU | NVIDIA GPU recommended; required for `e2e`, with CUDA, cuDNN and TensorRT already installed. |
 | Disk | About 100 GB for an Autoware source build. |
@@ -140,7 +147,7 @@ CARLA subscribes to these:
 | `/sensing/imu/tamagawa/imu_raw` | `sensor_msgs/Imu` | `sensor.other.imu`, 30 Hz |
 | `/sensing/gnss/pose`, `/sensing/gnss/pose_with_covariance` | `geometry_msgs/Pose`, `geometry_msgs/PoseWithCovarianceStamped` | `sensor.other.autoware_gnss`, every tick |
 
-In `e2e` mode, `run/spawn_vad_rig.py` adds six 800×450 cameras on `/sensing/camera/CAM_*/image_raw`.
+In `e2e` mode, `run/spawn_vad_rig.py` adds six 800×450 cameras with `ros_topic_name` set to `/sensing/camera/CAM_*/image_raw`, so each one publishes on `/sensing/camera/CAM_*/image_raw/image` and `/image_raw/camera_info`.
 
 ## Prepare a map
 
@@ -164,9 +171,9 @@ python3 -m venv ~/.venvs/carla-map-tools
 
 ## Known limitations
 
-- **Traffic lights are ignored.** Prebuilt maps carry no traffic-light regulatory elements, and those injected by `generate_map_artifacts.py` are not yet usable by Autoware, so the launcher disables the traffic-light module.
+- **Traffic lights come from the simulator, not from perception.** In `classical` mode the launcher starts two helpers that read CARLA's traffic-light states, match each light to its lanelet2 regulatory element and publish them on Autoware's external input, `/perception/traffic_light_recognition/external/traffic_signals`. The camera classifier is deliberately left unfed, because it reports `UNKNOWN` for CARLA's rendered lights and that would be merged with the authoritative state. `e2e` mode publishes no traffic-light state at all.
 - **Only `control_cmd` moves the vehicle.** Gear, indicator, hazard, emergency and engage commands are received but not applied, and `control_mode` always reports `AUTONOMOUS`.
 - **Steering is tuned for the Lincoln MKZ.** Steering compensation was measured on it and Autoware's `sample_vehicle` gains match it; other vehicles track their path more loosely until re-tuned.
 - **Goals must be on a driving lane.** An off-lane goal is rejected by Autoware's mission planner after startup, and the vehicle never moves.
-- **The simulation step drives sensor rates.** Changing `--hz_rate` changes the effective sensor frequencies Autoware sees.
+- **The simulation step drives sensor rates.** Changing `--hz_rate` changes the effective sensor frequencies Autoware sees. The launcher runs `autoware_demo.py --hz_rate 20 --resync`, which is the validated configuration, rather than the script's own default of 100.
 - **VAD is not validated on Unreal Engine 5.8 visuals.** Its weights were trained on CARLA 0.9.15 imagery; treat `e2e` as a pipeline reference. Its first run builds TensorRT engines, which takes a long time once and is then cached.

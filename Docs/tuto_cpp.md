@@ -10,6 +10,7 @@ This tutorial is a practical C++ workflow for CARLA users who want to build and 
 - [__World snapshots__](#world-snapshots)
 - [__Recorder and replay__](#recorder-and-replay)
 - [__Navigation agents in C++__](#navigation-agents-in-c)
+- [__See also__](#see-also)
 
 ---
 ## Scope
@@ -29,12 +30,13 @@ Not covered here:
 ---
 ## Prerequisites
 
-- CARLA [built from source](build_linux_ue5.md) on Linux or [on Windows](build_windows_ue5.md), or a [packaged release](start_quickstart.md)
-- A CARLA server running (`localhost:2000` by default)
-- The C++ client target available from this repository's build
+- CARLA [built from source](build_linux_ue5.md) on Linux or [on Windows](build_windows_ue5.md)
+- A CARLA server running (`localhost:2000` by default), built from the same CARLA version as the client: the RPC protocol is not compatible across versions
 
 ---
 ## Build and run the C++ example client
+
+The commands below run from the CARLA root directory and assume the `Build` directory from [Building CARLA in Linux](build_linux_ue5.md). If you configured with a preset, replace `Build` with `Build/<preset>`. The examples are built by default (`BUILD_EXAMPLES` is `ON`), so no extra configure flag is needed.
 
 Build:
 
@@ -82,20 +84,18 @@ int main() {
 
 ### Linking against an installed CARLA
 
-CARLA ships a `find_package(Carla CONFIG REQUIRED)` integration. Build CARLA
-once with the C++ client enabled, install it to a prefix, then consume from
-any external CMake project:
+CARLA ships a `find_package(Carla CONFIG REQUIRED)` integration. Build CARLA once with the C++ client enabled, install it to a prefix, then consume from any external CMake project:
 
 ```sh
 # in CARLA's source tree, with the same toolchain the normal build uses
-cmake -G Ninja -S . -B Build --toolchain=$PWD/CMake/Toolchain.cmake \
+cmake -G Ninja -S . -B Build/Client --toolchain=$PWD/CMake/Toolchain.cmake \
     -DCMAKE_BUILD_TYPE=Release \
-    -DBUILD_CARLA_CLIENT=ON -DBUILD_PYTHON_API=OFF -DBUILD_CARLA_UNREAL=OFF
-cmake --build Build --target carla-client -j
-cmake --install Build --prefix /opt/carla
+    -DBUILD_CARLA_CLIENT=ON -DBUILD_CARLA_UNREAL=OFF
+cmake --build Build/Client --target carla-client -j
+cmake --install Build/Client --prefix /opt/carla
 ```
 
-The install carries CARLA's own targets; Boost and zlib are external, so the consuming project has to find them itself.
+The install carries CARLA's own targets; Boost, rpclib, Recast/Detour, libpng and zlib are external, so your project has to find them itself.
 
 In your own project's `CMakeLists.txt`:
 
@@ -106,13 +106,13 @@ target_link_libraries(myapp PRIVATE Carla::carla-client)
 ```
 
 ```sh
-cmake -B build -DCMAKE_PREFIX_PATH=/opt/carla
+cmake -B build --toolchain=/path/to/carla/CMake/Toolchain.cmake -DCMAKE_PREFIX_PATH=/opt/carla
 cmake --build build -j
 ```
 
-A complete end-to-end demo project lives at
-[`Examples/CppClient/Standalone/`](https://github.com/carla-simulator/carla/tree/ue58-dev/Examples/CppClient/Standalone)
-— covers install, configure, build, and run.
+Your project must be built with CARLA's toolchain, and `Toolchain.cmake` needs `CARLA_UNREAL_ENGINE_PATH` set, as for the CARLA build.
+
+A complete end-to-end demo project lives at [`Examples/CppClient/Standalone/`](https://github.com/carla-simulator/carla/tree/ue58-dev/Examples/CppClient/Standalone) — covers install, configure, build, and run.
 
 ---
 ## Batch commands
@@ -172,23 +172,33 @@ Replay:
 client.ReplayFile("session.log", 0.0, 0.0, 0u, false);
 ```
 
+`ReplayFile` also takes the optional trailing arguments `replay_weather`, `offset` and `map_override`, and `StartRecorder` stops a running replay by default (`stop_replayer`). The [recorder page](core_recorder.md) explains what they do.
+
 ---
 ## Navigation agents in C++
 
-The navigation agents are available in C++ as well as in Python, under [`LibCarla/source/carla/agents/navigation/`](https://github.com/carla-simulator/carla/tree/ue58-dev/LibCarla/source/carla/agents/navigation): `BasicAgent`, `BehaviorAgent` and `ConstantVelocityAgent`, the same classes [the Python agents](adv_agents.md) expose.
+The navigation agents are available in C++ as well as in Python, under [`LibCarla/source/carla/agents/navigation/`](https://github.com/carla-simulator/carla/tree/ue58-dev/LibCarla/source/carla/agents/navigation): `BasicAgent`, `BehaviorAgent` and `ConstantVelocityAgent`, the same classes [the Python agents](core_agents.md) expose.
 
 ```cpp
 #include <carla/agents/navigation/BasicAgent.h>
 
+auto vehicle = std::static_pointer_cast<carla::client::Vehicle>(world.SpawnActor(blueprint, transform));
 carla::agents::navigation::BasicAgent agent(vehicle, 20.0f);  // target speed in km/h
 agent.SetDestination(destination);
 while (!agent.Done()) {
   vehicle->ApplyControl(agent.RunStep());
-  world.Tick(std::chrono::seconds(10));
+  world.Tick(std::chrono::seconds(10));  // synchronous mode; use world.WaitForTick() in asynchronous mode
 }
 ```
 
-`BasicAgent::Options` carries the same knobs as the Python `opt_dict`: `ignore_traffic_lights`, `ignore_vehicles`, `sampling_resolution`, `max_brake` and the rest.
+`BasicAgent::Options` has the same options as the Python `opt_dict`: `ignore_traffic_lights`, `ignore_vehicles`, `sampling_resolution`, `max_brake` and the rest.
+
+The `carla-agent-demo` example drives a `BehaviorAgent` to a distant spawn point. It is built with the other examples; the optional arguments are host, port, map and behavior (`cautious`, `normal` or `aggressive`):
+
+```sh
+cmake --build Build --target carla-agent-demo
+./Build/Examples/carla-agent-demo localhost 2000 Town01 normal
+```
 
 For traffic that does not need a planner, register the vehicle with the Traffic Manager instead, exactly as a Python client would.
 

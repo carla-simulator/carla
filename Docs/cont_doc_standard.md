@@ -2,13 +2,13 @@
 
 House rules for the pages under `Docs/`. They are short on purpose: the deliverable is the page a reader lands on, not the process that produced it.
 
-*   [__What a page is for__](#what-a-page-is-for)
-*   [__Shape__](#shape)
-*   [__Markdown__](#markdown)
-*   [__Correctness__](#correctness)
-*   [__Placement__](#placement)
-*   [__Generated pages__](#generated-pages)
-*   [__Building the docs__](#building-the-docs)
+- [__What a page is for__](#what-a-page-is-for)
+- [__Shape__](#shape)
+- [__Markdown__](#markdown)
+- [__Correctness__](#correctness)
+- [__Placement__](#placement)
+- [__Generated pages__](#generated-pages)
+- [__Building the docs__](#building-the-docs)
 
 ---
 ## What a page is for

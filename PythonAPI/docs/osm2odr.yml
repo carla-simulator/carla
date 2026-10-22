@@ -6,7 +6,7 @@
   - class_name: Osm2Odr
     # - DESCRIPTION ------------------------
     doc: >
-      Class that converts an OpenStreetMap map to OpenDRIVE format, so that it can be loaded in CARLA. Find out more about this feature in the [docs](tuto_G_openstreetmap.md).
+      Class that converts an OpenStreetMap map to OpenDRIVE format, so that it can be loaded in CARLA. Find out more about this feature in the [docs](content_authoring_maps_openstreetmap.md).
     # - PROPERTIES -------------------------
     instance_variables:
     # - METHODS ----------------------------
@@ -33,7 +33,7 @@
   - class_name: Osm2OdrSettings
     # - DESCRIPTION ------------------------
     doc: >
-      Helper class that contains the parameterization that will be used by carla.Osm2Odr to convert an OpenStreetMap map to OpenDRIVE format. Find out more about this feature in the [docs](tuto_G_openstreetmap.md).
+      Helper class that contains the parameterization that will be used by carla.Osm2Odr to convert an OpenStreetMap map to OpenDRIVE format. Find out more about this feature in the [docs](content_authoring_maps_openstreetmap.md).
     instance_variables:
     - var_name: use_offsets
       type: bool

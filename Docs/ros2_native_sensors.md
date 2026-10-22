@@ -2,6 +2,10 @@
 
 What each CARLA sensor publishes over the [native ROS 2 interface](ros2_native.md), and on which topic.
 
+- [__Topic names__](#topic-names)
+- [__Published sensors__](#published-sensors)
+- [__Quality of service__](#quality-of-service)
+
 ---
 ## Topic names
 
@@ -11,7 +15,10 @@ A sensor's topic is built from the `ros_name` of its parent chain and its own `r
 /carla/<parent ros_name>/<sensor ros_name><suffix>
 ```
 
-A sensor with no parent drops the parent segment, and one with `ros_topic_name` set publishes on exactly that name, suffix included. A sensor whose `ros_name` is not set falls back to its type and stream id, such as `rgb123`.
+A sensor with no parent drops the parent segment, and one whose `ros_name` is not set falls back to its type and stream id, such as `rgb123`.
+
+`ros_topic_name` replaces the whole `/carla/<parent>/<sensor>` part, and the suffix is then appended under it: a camera with `ros_topic_name` set to `/sensing/camera/front` publishes on `/sensing/camera/front/image` and `/sensing/camera/front/camera_info`.
+The single-topic point-cloud sensors are the exception — LIDAR, semantic LIDAR, HSS LIDAR and radar publish on the overridden name verbatim, with no `/point_cloud` suffix.
 
 Two topics are global rather than per sensor:
 
@@ -40,11 +47,13 @@ Two topics are global rather than per sensor:
 | `sensor.other.gnss` | — | [sensor_msgs/NavSatFix](https://docs.ros.org/en/jazzy/p/sensor_msgs/interfaces/msg/NavSatFix.html) |
 | `sensor.other.collision` | — | `carla_msgs/CarlaCollisionEvent` |
 | `sensor.other.autoware_gnss` | `/pose`, `/pose_with_covariance` | [geometry_msgs/PoseStamped](https://docs.ros.org/en/jazzy/p/geometry_msgs/interfaces/msg/PoseStamped.html), geometry_msgs/PoseWithCovarianceStamped |
-| `sensor.other.vehicle_status` | the six `/vehicle/status/*` topics | The Autoware vehicle report messages |
+| `sensor.other.vehicle_status` | the six `/vehicle/status/*` topics | The Autoware vehicle report messages. Only publishes when its parent vehicle was spawned with `ros2_autoware_control`; otherwise it logs a warning and sends nothing. |
 
-The sensors that have no publisher — `sensor.other.lane_invasion`, `sensor.other.obstacle`, `sensor.other.v2x`, `sensor.other.v2x_custom` and the ray-traced lens and fisheye cameras — are read from the Python API instead.
+The sensors that have no publisher — `sensor.other.lane_invasion`, `sensor.other.obstacle`, `sensor.other.v2x`, `sensor.other.v2x_custom`, `sensor.other.rss`, and the ray-traced lens and fisheye cameras — are read from the Python API instead.
 
 ---
 ## Quality of service
 
-Sensor topics are published as __reliable__ with a __keep-last__ history of depth 1, which is what an Autoware-style stack expects. A subscriber created with a best-effort policy still matches a reliable publisher; the opposite does not.
+Sensor topics are published as __reliable__ and __volatile__, with a __keep-last__ history of depth 1, which is what an Autoware-style stack expects. A subscriber created with a best-effort policy still matches a reliable publisher; the opposite does not.
+
+The message each sensor publishes is defined in [ROS 2 messages](ros2_native_msgs.md).
