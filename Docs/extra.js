@@ -127,3 +127,66 @@ $(document).ready(function () {
         });
     });
 });
+
+
+/*************************** JUSTIFIED PROSE ****************************/
+
+// Justifying a line that ends just before a long function name stretches its
+// spaces; measure first and justify only the blocks that come out tight.
+document.addEventListener("DOMContentLoaded", function () {
+    var MAX_SLACK = 0.12;
+    var skip = "table, .build-buttons, .vector-zero, .img-caption, .admonition-title";
+
+    var blocks = Array.prototype.filter.call(
+        document.querySelectorAll(".rst-content p, .rst-content li"),
+        function (node) {
+            return !node.closest(skip) && !node.querySelector("img") &&
+                node.textContent.trim().length > 0;
+        });
+
+    // A range reports one rect per inline box, so merge the rects that share a
+    // top edge back into the line they belong to.
+    function lineWidths(node) {
+        var range = document.createRange();
+        range.selectNodeContents(node);
+        var rects = range.getClientRects();
+        var lines = {};
+        for (var i = 0; i < rects.length; i++) {
+            var rect = rects[i];
+            if (!rect.width && !rect.height) { continue; }
+            var key = Math.round(rect.top);
+            var line = lines[key];
+            if (!line) { lines[key] = { left: rect.left, right: rect.right }; continue; }
+            line.left = Math.min(line.left, rect.left);
+            line.right = Math.max(line.right, rect.right);
+        }
+        return Object.keys(lines).sort(function (a, b) { return a - b; })
+            .map(function (key) { return lines[key].right - lines[key].left; });
+    }
+
+    function justify() {
+        blocks.forEach(function (node) { node.classList.remove("justified"); });
+
+        var keep = blocks.filter(function (node) {
+            var lines = lineWidths(node);
+            if (lines.length < 2) { return false; }
+            var full = Math.max.apply(null, lines);
+            // The last line is never stretched, so it does not count.
+            for (var i = 0; i < lines.length - 1; i++) {
+                if ((full - lines[i]) / full > MAX_SLACK) { return false; }
+            }
+            return true;
+        });
+
+        keep.forEach(function (node) { node.classList.add("justified"); });
+    }
+
+    var pending;
+    window.addEventListener("resize", function () {
+        clearTimeout(pending);
+        pending = setTimeout(justify, 150);
+    });
+
+    justify();
+    window.addEventListener("load", justify);
+});

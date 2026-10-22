@@ -273,8 +273,18 @@ table tbody td{
 
 /************************* FIGURE CAPTIONS **************************/
 
+/************************* JUSTIFIED PROSE **************************/
+
+/* Fill the line, never breaking a word across two of them. extra.js adds the
+   class only where the lines are already full enough to justify cleanly. */
+.rst-content p.justified,
+.rst-content li.justified {
+	text-align: justify;
+	hyphens: none;
+}
+
 .img-caption {
-	text-align: center;
+	text-align: right;
 	font-style: italic;
 	font-size: 85%;
 	color: #666;
