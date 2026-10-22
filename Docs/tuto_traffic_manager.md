@@ -1,6 +1,6 @@
 # Control traffic with the Traffic Manager
 
-The [Traffic Manager](adv_traffic_manager.md) (TM) drives the NPC vehicles that make up the traffic around the ego vehicle. This tutorial populates a map with traffic, then shapes its behavior: speeds, lane changes, routes and how it treats the ego.
+The [Traffic Manager](core_traffic_manager.md) (TM) drives the NPC vehicles that make up the traffic around the ego vehicle. This tutorial populates a map with traffic, then shapes its behavior: speeds, lane changes, routes and how it treats the ego.
 
 - [__Setting up the simulator and the Traffic Manager__](#setting-up-the-simulator-and-the-traffic-manager)
 - [__Spawning vehicles__](#spawning-vehicles)
@@ -97,7 +97,7 @@ If you fly through the map with the spectator now, you should see stationary veh
 
 We can now give the TM control over our vehicles and let the simulation run. Once the TM takes control of the vehicles, they will move around the roads autonomously, following features of the road network like lanes and traffic lights and avoiding collisions with other vehicles.
 
-The TM has a function for each behaviour it can change, set per vehicle or for all of them at once. The example below gives every vehicle its own chance of running a red light. Speed, distance to the vehicle in front, lane changes and the rest are covered in [Traffic Manager](adv_traffic_manager.md#configuring-autopilot-behavior).
+The TM has a function for each behaviour it can change, set per vehicle or for all of them at once. The example below gives every vehicle its own chance of running a red light. Speed, distance to the vehicle in front, lane changes and the rest are covered in [Traffic Manager](core_traffic_manager.md#configuring-autopilot-behavior).
 
 ```py
 # Parse the list of spawned vehicles and give control to the TM through set_autopilot()
@@ -115,7 +115,7 @@ while True:
 
 If you now fly through the map with the spectator, you will see vehicles driving autonomously around the map. Buses and trucks swing wide through junctions, the way a long vehicle has to; `traffic_manager.vehicle_large_vehicle_wide_turn(vehicle, False)` turns that off for one vehicle, and `global_large_vehicle_wide_turn(False)` for all of them.
 
-![intersection_traffic](img/tuto_G_traffic_manager/tm_traffic_aerial.webp)
+![intersection_traffic](img/tuto_traffic_manager/tm_traffic_aerial.webp)
 <div class="img-caption">Aerial view of Traffic Manager autopilot traffic and pedestrians at a junction.</div>
 
 ---
@@ -176,7 +176,7 @@ while True:
 
 The debug strings appear in the spectator view of the server window, not in camera sensor images. The plot below shows both routes as the Traffic Manager drives them:
 
-![routes](img/tuto_G_traffic_manager/set_paths.webp)
+![routes](img/tuto_traffic_manager/set_paths.webp)
 <div class="img-caption">The two set_path() routes on Town10HD_Opt as the Traffic Manager drives them; numbers are spawn point indices, purple ones are in both routes.</div>
 
 Now that we have chosen our spawn points and way points, we can now start spawning traffic and setting the spawned vehicles to follow our waypoint lists.
@@ -236,7 +236,7 @@ while True:
 
 With the above code, we have created two converging streams of traffic originating from different parts of the map, guided by the `set_path()` function of the TM. This results in congestion on a road in the center of town. This kind of technique could be used on a larger scale to simulate multiple tricky cases for autonomous vehicles, such as a busy roundabout or highway intersection.
 
-![converging_paths](img/tuto_G_traffic_manager/converging_paths.webp)
+![converging_paths](img/tuto_traffic_manager/converging_paths.webp)
 <div class="img-caption">The two streams merging, seen from above; each car is ringed in its route colour.</div>
 
 ---

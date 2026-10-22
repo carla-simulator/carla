@@ -3,13 +3,13 @@
 ![eixample_slideshow](img/catalogue/maps/eixample/eixample_montage.webp)
 <div class="img-caption">Eixample from above at an angle and from almost overhead: the street grid of the district between untextured building volumes.</div>
 
-Eixample is a [digital twin](content_authoring_maps_digital_twin.md) of part of the Eixample district of Barcelona: the street grid of the district, generated from map data, with the buildings as simple untextured volumes. It is a small [World Partition](large_map_overview.md) map.
+Eixample is a [digital twin](content_authoring_maps_digital_twin.md) of part of the Eixample district of Barcelona: the street grid of the district, generated from map data, with the buildings as simple untextured volumes. It is a small [World Partition](core_large_maps.md) map.
 
 | | |
 | --- | --- |
 | __Map name__ | `Eixample` |
 | __In the default package__ | no: use a source build, or install it from a [content pack](map_content_packs.md) |
-| __Map type__ | a [World Partition](large_map_overview.md) map: the server streams the cells around the vehicle with `role_name=hero` |
+| __Map type__ | a [World Partition](core_large_maps.md) map: the server streams the cells around the vehicle with `role_name=hero` |
 | __Size__ | about 510 x 455 m of roads |
 | __Spawn points__ | 274, from `world.get_map().get_spawn_points()` |
 | __Junctions__ | 15, with 27 traffic lights |
@@ -20,7 +20,7 @@ Load it like any other map:
 world = client.load_world('Eixample')
 ```
 
-Only the cells around the ego vehicle are loaded. Spawn the ego with `role_name=hero` before placing sensors, as described in [Large maps](large_map_overview.md).
+Only the cells around the ego vehicle are loaded. Spawn the ego with `role_name=hero` before placing sensors, as described in [Large maps](core_large_maps.md).
 
 !!! Note
     The buildings are volumes without textures or windows, so street-level camera images are mostly flat walls. The map is best suited to driving and planning tests on a real street layout.

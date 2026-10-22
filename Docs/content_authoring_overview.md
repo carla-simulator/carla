@@ -50,7 +50,7 @@ Two steps make a vehicle, in this order, and two more refine it.
 ---
 ## See also
 
-* [__Create semantic tags__](tuto_D_create_semantic_tags.md) — give your assets a semantic class of their own, so the segmentation sensors label them separately.
+* [__Create semantic tags__](core_sensors_semantic_tags.md) — give your assets a semantic class of their own, so the segmentation sensors label them separately.
 * [__Catalogue__](catalogue.md) — what CARLA already ships, before you make something new.
 
 !!! Note

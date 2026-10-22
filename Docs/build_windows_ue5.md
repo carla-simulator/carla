@@ -1,5 +1,9 @@
 # Building CARLA in Windows with Unreal Engine 5.8
 
+- [__Set up the environment__](#set-up-the-environment)
+- [__Build and run CARLA UE5__](#build-and-run-carla-ue5)
+- [__Build a package with CARLA UE5__](#build-a-package-with-carla-ue5)
+
 ## Set up the environment
 
 This guide details how to build CARLA from source on Windows with Unreal Engine 5.8. If you are building CARLA for the first time, ensure that you **link your GitHub account to Epic Games** by following [this guide](https://www.unrealengine.com/en-US/ue-on-github).
@@ -107,4 +111,4 @@ CarlaUnreal.exe
 
 ### Content packs
 
-The `package` target also writes `carla-<version>-Win64-release-metadata.tar.gz` in `Build\Package`, next to the package, which content packs are built against. See [Content packs](content_packs.md).
+The `package` target also writes `carla-<version>-Win64-release-metadata.tar.gz` in `Build\Package`, next to the package, which content packs are built against. See [Content packs](content_authoring_packs.md).

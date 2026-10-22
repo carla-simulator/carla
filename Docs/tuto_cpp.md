@@ -2,6 +2,16 @@
 
 This tutorial is a practical C++ workflow for CARLA users who want to build and run client-side logic without relying on Python wrappers.
 
+- [__Scope__](#scope)
+- [__Prerequisites__](#prerequisites)
+- [__Build and run the C++ example client__](#build-and-run-the-c-example-client)
+- [__Use the CARLA C++ API in another project__](#use-the-carla-c-api-in-another-project)
+- [__Batch commands__](#batch-commands)
+- [__World snapshots__](#world-snapshots)
+- [__Recorder and replay__](#recorder-and-replay)
+- [__Navigation agents in C++__](#navigation-agents-in-c)
+- [__See also__](#see-also)
+
 ---
 ## Scope
 
@@ -162,12 +172,12 @@ Replay:
 client.ReplayFile("session.log", 0.0, 0.0, 0u, false);
 ```
 
-`ReplayFile` also takes the optional trailing arguments `replay_weather`, `offset` and `map_override`, and `StartRecorder` stops a running replay by default (`stop_replayer`). The [recorder page](adv_recorder.md) explains what they do.
+`ReplayFile` also takes the optional trailing arguments `replay_weather`, `offset` and `map_override`, and `StartRecorder` stops a running replay by default (`stop_replayer`). The [recorder page](core_recorder.md) explains what they do.
 
 ---
 ## Navigation agents in C++
 
-The navigation agents are available in C++ as well as in Python, under [`LibCarla/source/carla/agents/navigation/`](https://github.com/carla-simulator/carla/tree/ue58-dev/LibCarla/source/carla/agents/navigation): `BasicAgent`, `BehaviorAgent` and `ConstantVelocityAgent`, the same classes [the Python agents](adv_agents.md) expose.
+The navigation agents are available in C++ as well as in Python, under [`LibCarla/source/carla/agents/navigation/`](https://github.com/carla-simulator/carla/tree/ue58-dev/LibCarla/source/carla/agents/navigation): `BasicAgent`, `BehaviorAgent` and `ConstantVelocityAgent`, the same classes [the Python agents](core_agents.md) expose.
 
 ```cpp
 #include <carla/agents/navigation/BasicAgent.h>

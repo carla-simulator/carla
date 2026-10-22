@@ -33,7 +33,7 @@ The label is read from the asset's path. The folder directly under `Content/Carl
 
 A content pack uses `/<Pack>/Static/<Tag>/` instead. For a content pack, also add the folder name to `SEMANTIC_LABELS` in `Util/ContentPacks/carla_pack.py`, or the pack tool rejects the meshes in that folder as untagged.
 
-![ue_folder](img/tuto_D_create_semantic_tags/02_ue_folder.webp)
+![ue_folder](img/core_sensors_semantic_tags/02_ue_folder.webp)
 <div class="img-caption">Content Browser at Content/Carla/Static with a new tag folder (MyNewTag) next to the existing tag folders.</div>
 
 !!! Note

@@ -46,7 +46,7 @@ cd PythonAPI/examples/av_stacks/alpamayo
 ./install_alpamayo.sh
 ```
 
-`<build-dir>` is the configured build directory, such as `Build/Release`.
+`<build-dir>` is the configured build directory, `Build` by default.
 
 Check which interpreter the launcher uses:
 

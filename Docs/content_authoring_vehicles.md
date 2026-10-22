@@ -122,7 +122,7 @@ When exporting the bodywork/chassis and wheels, you should select all the mesh i
 Launch the Unreal Editor from the CARLA root directory using the following command:
 
 ```sh
-cmake --build Build/Release --target launch
+cmake --build Build --target launch
 ```
 
 ![regenerate_body](img/content_authoring_vehicles/vehicle_folder.webp)

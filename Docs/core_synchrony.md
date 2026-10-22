@@ -2,16 +2,10 @@
 
 Two settings decide how a CARLA simulation advances: the __time-step__, how much simulated time passes between one step and the next, and __synchrony__, whether the server waits for the client before taking that step. Together they decide how repeatable a run is.
 
-*   [__Simulation time-step__](#simulation-time-step)
-	*   [Variable time-step](#variable-time-step)
-	*   [Fixed time-step](#fixed-time-step)
-	*   [Tips when recording the simulation](#tips-when-recording-the-simulation)
-	*   [Physics substepping](#physics-substepping)
-*   [__Client-server synchrony__](#client-server-synchrony)
-	*   [Setting synchronous mode](#setting-synchronous-mode)
-	*   [Using synchronous mode](#using-synchronous-mode)
-*   [__Possible configurations__](#possible-configurations)
-*   [__Physics determinism__](#physics-determinism)
+- [__Simulation time-step__](#simulation-time-step)
+- [__Client-server synchrony__](#client-server-synchrony)
+- [__Possible configurations__](#possible-configurations)
+- [__Physics determinism__](#physics-determinism)
 
 ---
 ## Simulation time-step
@@ -58,7 +52,7 @@ cd PythonAPI/util && python3 config.py --delta-seconds 0.05
 
 ### Tips when recording the simulation
 
-CARLA has a [recorder feature](adv_recorder.md) that allows a simulation to be recorded and then reenacted. However, when looking for precision, some things need to be taken into account.
+CARLA has a [recorder feature](core_recorder.md) that allows a simulation to be recorded and then reenacted. However, when looking for precision, some things need to be taken into account.
 
 * With a __fixed time-step__, reenacting it will be easy. The server can be set to the same time-step used in the original simulation.
 
@@ -101,12 +95,12 @@ To see the effect of sub-stepping, the graphs below drive the same Lincoln MKZ o
 
 With `max_substep_delta_time` at `0.01`, the simulation time step makes almost no difference: between `fixed_delta_seconds` of `0.01` and `0.05` the top speed varies between 16.19 and 16.27 m/s, and the vehicle stops within 0.06 s of the same moment.
 
-![velocity with fixed physical delta time](img/adv_synchrony_timestep/physics_convergence_fixed_pdt.webp)
+![velocity with fixed physical delta time](img/core_synchrony/physics_convergence_fixed_pdt.webp)
 <div class="img-caption">Speed over time for several fixed_delta_seconds, with max_substep_delta_time = 0.01: the curves overlap.</div>
 
 With `fixed_delta_seconds` at `0.04`, the physics step does change the result. A coarser `max_substep_delta_time` makes the vehicle slightly faster and longer to stop: the top speed goes from 16.0 m/s at `0.005` to 16.65 m/s at `0.04`, about 4 %. Keep the physics step at `0.01` or below when the dynamics matter.
 
-![velocity with varied physical delta time](img/adv_synchrony_timestep/physics_convergence_fixed_dt.webp)
+![velocity with varied physical delta time](img/core_synchrony/physics_convergence_fixed_dt.webp)
 <div class="img-caption">Speed over time with fixed_delta_seconds = 0.04 and several max_substep_delta_time.</div>
 
 ---
@@ -131,7 +125,7 @@ settings.synchronous_mode = True # Enables synchronous mode
 world.apply_settings(settings)
 ```
 !!! Warning
-    If synchronous mode is enabled, and there is a Traffic Manager running, this must be set to sync mode too. Read [this](adv_traffic_manager.md#synchronous-mode) to learn how to do it.
+    If synchronous mode is enabled, and there is a Traffic Manager running, this must be set to sync mode too. Read [this](core_traffic_manager.md#synchronous-mode) to learn how to do it.
 
 To disable synchronous mode just set the variable to false or use the script `PythonAPI/util/config.py`. 
 ```sh

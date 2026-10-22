@@ -3,28 +3,16 @@
 After discussing about the world and its actors, it is time to put everything into place and understand the map and how do the actors navigate it.
 
 - [__The map__](#the-map)
-    - [Changing the map](#changing-the-map)
-    - [Landmarks](#landmarks)
-    - [Waypoints](#waypoints)
-    - [Lanes](#lanes)
-    - [Junctions](#junctions)
-    - [Crosswalks](#crosswalks)
-    - [The road network as objects](#the-road-network-as-objects)
-    - [Environment objects](#environment-objects)
 - [__Navigation in CARLA__](#navigation-in-carla)
-    - [Navigating through waypoints](#navigating-through-waypoints)
-    - [Generating map navigation](#generating-map-navigation)
 - [__Geographic coordinates__](#geographic-coordinates)
 - [__Left-handed traffic__](#left-handed-traffic)
 - [__Large maps and World Partition__](#large-maps-and-world-partition)
-    - [What loads, and around what](#what-loads-and-around-what)
-    - [Converting a tiled map](#converting-a-tiled-map)
 
 
 ---
 ## The map
 
-A map includes both the 3D model of a town and its road definition. A map's road definition is based on an OpenDRIVE file, a standarized, annotated road definition format. The way the [ASAM OpenDRIVE standard](https://www.asam.net/standards/detail/opendrive/) defines roads, lanes, junctions, etc. determines the functionality of the Python API and the reasoning behind decisions made. To run a simulation from an OpenDRIVE file alone, without a 3D map, see [OpenDRIVE standalone mode](adv_opendrive.md).
+A map includes both the 3D model of a town and its road definition. A map's road definition is based on an OpenDRIVE file, a standarized, annotated road definition format. The way the [ASAM OpenDRIVE standard](https://www.asam.net/standards/detail/opendrive/) defines roads, lanes, junctions, etc. determines the functionality of the Python API and the reasoning behind decisions made. To run a simulation from an OpenDRIVE file alone, without a 3D map, see [OpenDRIVE standalone mode](core_opendrive.md).
 
 The Python API acts as a high level querying system to navigate these roads. It is constantly evolving to provide a wider set of tools.
 

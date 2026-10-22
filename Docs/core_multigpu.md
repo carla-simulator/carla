@@ -2,7 +2,7 @@
 
 Multi-GPU spreads the rendering of a single simulation across several GPUs. One __primary server__ owns the world — physics, actors and the client connection — and hands the sensor rendering to one or more __secondary servers__, each bound to its own GPU. The primary itself usually renders nothing.
 
-![Multi-GPU example with 2 secondary servers](img/adv_multigpu/multigpu-example.webp)
+![Multi-GPU example with 2 secondary servers](img/core_multigpu/multigpu-example.webp)
 <div class="img-caption">A primary server with two secondary servers, each rendering on its own GPU, and a client with two sensors.</div>
 
 It is transparent to the client: it connects to the primary as always, spawns sensors as always, and receives their data directly from whichever secondary rendered it.

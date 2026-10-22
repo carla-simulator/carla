@@ -1,5 +1,10 @@
 # Coding standard
 
+- [__General__](#general)
+- [__Python__](#python)
+- [__C++__](#c)
+- [__Before you submit__](#before-you-submit)
+
 ---
 ## General
 

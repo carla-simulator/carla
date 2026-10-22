@@ -9,6 +9,17 @@ GitHub Discussions</a>
 </p>
 </div>
 
+- [__System requirements__](#system-requirements)
+- [__Linux build__](#linux-build)
+- [__Windows build__](#windows-build)
+- [__Running CARLA__](#running-carla)
+- [__Other__](#other)
+- [__System requirements__](#system-requirements)
+- [__Linux build__](#linux-build)
+- [__Windows build__](#windows-build)
+- [__Running CARLA__](#running-carla)
+- [__Other__](#other)
+
 ---
 
 ## System requirements

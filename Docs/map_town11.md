@@ -3,7 +3,7 @@
 ![town_11_slideshow](img/catalogue/maps/town11/town11_montage.webp)
 <div class="img-caption">Town11 from above: a road over the hills, a cluster of gridded junctions and a single-lane road across the grassland.</div>
 
-Town11 is a large [World Partition](large_map_overview.md) map without decoration such as buildings, sidewalks or vegetation. The road network consists of sprawling single-lane roads interspersed with small clusters of gridded junctions. The landscape has some hills and elevations and a grass-like texture.
+Town11 is a large [World Partition](core_large_maps.md) map without decoration such as buildings, sidewalks or vegetation. The road network consists of sprawling single-lane roads interspersed with small clusters of gridded junctions. The landscape has some hills and elevations and a grass-like texture.
 
 Town11 was the first large map integrated into CARLA, as a proof of concept for large maps. Its asset files in the Unreal Editor are a simple example of how a large map is organised.
 
@@ -11,7 +11,7 @@ Town11 was the first large map integrated into CARLA, as a proof of concept for 
 | --- | --- |
 | __Map name__ | `Town11` |
 | __In the default package__ | no: use a source build, or install it from a [content pack](map_content_packs.md) |
-| __Map type__ | a large [World Partition](large_map_overview.md) map: the server streams the cells around the vehicle with `role_name=hero` |
+| __Map type__ | a large [World Partition](core_large_maps.md) map: the server streams the cells around the vehicle with `role_name=hero` |
 | __Size__ | about 20 x 21.5 km of roads, between 20 and 790 m of altitude |
 | __Spawn points__ | 3166, from `world.get_map().get_spawn_points()` |
 | __Junctions__ | 174, with 547 traffic lights |
@@ -22,7 +22,11 @@ Load it like any other map:
 world = client.load_world('Town11')
 ```
 
-Only the cells around the ego vehicle are loaded. Spawn the ego with `role_name=hero` before placing sensors, as described in [Large maps](large_map_overview.md).
+Only the cells around the ego vehicle are loaded. Spawn the ego with `role_name=hero` before placing sensors, as described in [Large maps](core_large_maps.md).
+
+- [__Road network__](#road-network)
+- [__Hills and grassland__](#hills-and-grassland)
+- [__Gridded junctions__](#gridded-junctions)
 
 ---
 ## Road network

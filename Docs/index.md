@@ -6,7 +6,7 @@
 This home page is an index of the documentation. Read it in any order; for a newcomer, the suggestions below are a good path.
 
 * __Install CARLA:__ Either follow the [Quick Start Installation](start_quickstart.md) to get a CARLA release or [build CARLA from source](build_carla.md) for a desired platform.
-* __Start using CARLA:__ The [Foundations](foundations.md) section is an introduction to the most important concepts in CARLA and the [First Steps tutorial](start_first_steps.md) shows you how to get started creating simulations.
+* __Start using CARLA:__ The [Foundations](core_foundations.md) section is an introduction to the most important concepts in CARLA and the [First Steps tutorial](start_first_steps.md) shows you how to get started creating simulations.
 * __Check the API:__ there is a handy [Python API reference](python_api.md) to look up the classes and methods available.
 
 CARLA's GitHub Discussions are the place to ask questions and connect with other users.
@@ -30,12 +30,12 @@ GitHub Discussions</a>
 ---
 ## CARLA components
 
-- [__Foundations__](foundations.md) — Overview of the fundamental building blocks of CARLA.
+- [__Foundations__](core_foundations.md) — Overview of the fundamental building blocks of CARLA.
 - [__Actors__](core_actors.md) — Learn about actors and how to handle them.
 - [__Maps__](core_map.md) — The maps, and how vehicles move around them.
 - [__Sensors and data__](core_sensors.md) — Retrieve simulation data using sensors.
-- [__Coordinate conventions__](coordinate_conventions.md) — CARLA's frame, and how to convert to a right-handed one.
-- [__Traffic__](ts_traffic_simulation_overview.md) — The options available to populate a scene with traffic.
+- [__Coordinate conventions__](core_coordinate_conventions.md) — CARLA's frame, and how to convert to a right-handed one.
+- [__Traffic__](core_traffic.md) — The options available to populate a scene with traffic.
 
 ---
 ## Content authoring
@@ -43,7 +43,7 @@ GitHub Discussions</a>
 - [__Custom assets__](content_authoring_overview.md) — Bring your own props, vehicles and materials into CARLA.
 - [__Vehicles__](content_authoring_vehicles.md) — Prepare a vehicle, from the model to the blueprint.
 - [__Content packs__](content_authoring_packs.md) — Ship maps, props and vehicles as a package of their own.
-- [__OpenDRIVE standalone mode__](adv_opendrive.md) — Drive on a road network with no map around it.
+- [__OpenDRIVE standalone mode__](core_opendrive.md) — Drive on a road network with no map around it.
 
 ---
 ## Resources
@@ -55,7 +55,6 @@ GitHub Discussions</a>
 - [__Tutorials__](tutorials.md) — Tutorials covering CARLA's functionality.
 - [__C++ tutorial__](tuto_cpp.md) — The C++ client workflow, batch commands, snapshots and replay.
 - [__C++ reference__](ref_cpp.md) — Classes and methods in CARLA C++.
-- [__Extended documentation__](ext_docs.md) — Advanced features covered in more depth.
 - [__Agent skills__](agent_skills.md) — Step-by-step procedures for AI coding agents working in this repository.
 
 ---

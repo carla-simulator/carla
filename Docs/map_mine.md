@@ -20,6 +20,12 @@ Load it like any other map:
 world = client.load_world('Mine_01')
 ```
 
+- [__Road network__](#road-network)
+- [__Open pit__](#open-pit)
+- [__Haul roads on the rim__](#haul-roads-on-the-rim)
+- [__Parking area__](#parking-area)
+- [__The mining earth mover__](#the-mining-earth-mover)
+
 ---
 ## Road network
 

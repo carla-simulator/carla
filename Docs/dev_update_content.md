@@ -8,7 +8,7 @@ CARLA's maps, vehicles, walkers, props and materials live in a repository of the
 - [__Merging a change__](#merging-a-change)
 - [__Releases__](#releases)
 
-![content_flow](img/tuto_D_contribute_assets/content_flow.svg)
+![content_flow](img/dev_update_content/content_flow.svg)
 <div class="img-caption">How a change to the content repository reaches source checkouts, releases and packages.</div>
 
 ---

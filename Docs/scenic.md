@@ -43,7 +43,7 @@ This section walks through how to write a basic Scenic script in which a leading
 __1.__ Set the map parameters and declare the model to be used in the scenario:
 
 - An `.xodr` file should be set as the value for the [`map`][scenic_map] parameter, this will be used later to generate road network information. 
-- The parameter `carla_map` refers to the name of the CARLA map you would like to use in the simulation. If this is defined then Scenic will load all the assets of the map (buildings, trees, etc.), and if not, then the [OpenDRIVE standalone mode](adv_opendrive.md) will be used.
+- The parameter `carla_map` refers to the name of the CARLA map you would like to use in the simulation. If this is defined then Scenic will load all the assets of the map (buildings, trees, etc.), and if not, then the [OpenDRIVE standalone mode](core_opendrive.md) will be used.
 - The model includes all the utilities specific to running scenarios on CARLA. This should be defined in all the scripts you want to run on CARLA.
 
 ```py
@@ -176,7 +176,7 @@ The CARLA model declares the global parameters below. Override them in the scrip
 
 | Name | Type | Default | What it does |
 |---|---|---|---|
-| `carla_map` | `str` | none | Map to load, e.g. `Town10HD_Opt`. With `None`, CARLA builds the world from the `map` `.xodr` in [OpenDRIVE standalone mode](adv_opendrive.md). |
+| `carla_map` | `str` | none | Map to load, e.g. `Town10HD_Opt`. With `None`, CARLA builds the world from the `map` `.xodr` in [OpenDRIVE standalone mode](core_opendrive.md). |
 | `map` | `str` | none | Path to the `.xodr` the road network is generated from. |
 | `timestep` | `float` | 0.1 | Seconds between the ticks at which Scenic runs behaviors and checks requirements. |
 | `weather` | `str` or `dict` | a random preset | A [preset](python_api.md#carla.WeatherParameters) name such as `ClearSunset`, or a dictionary of weather parameters. |
@@ -184,7 +184,7 @@ The CARLA model declares the global parameters below. Override them in the scrip
 | `port` | `int` | 2000 | Port of the CARLA server. |
 | `timeout` | `float` | 10 | Seconds to wait for the connection. |
 | `render` | `int` | 1 | Open a window showing the simulation from the ego's point of view. `0` turns it off. |
-| `record` | `str` | empty | Folder for the [recorder](adv_recorder.md) logs of each simulation. Nothing is recorded while it is empty. |
+| `record` | `str` | empty | Folder for the [recorder](core_recorder.md) logs of each simulation. Nothing is recorded while it is empty. |
 | `snapToGroundDefault` | `bool` | `--2d` | Place objects on the ground by default. True in 2D compatibility mode, false otherwise. |
 
 ---

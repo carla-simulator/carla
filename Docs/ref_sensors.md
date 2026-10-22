@@ -40,6 +40,30 @@ Every sensor takes a `sensor_tick` attribute, the simulation seconds between cap
 !!! Important
     All the sensors use the UE coordinate system (__x__-*forward*, __y__-*right*, __z__-*up*), and return coordinates in local space. When using any visualization software, pay attention to its coordinate system. Many invert the Y-axis, so visualizing the sensor data directly may result in mirrored outputs.
 
+- [__Collision detector__](#collision-detector)
+- [__Depth camera__](#depth-camera)
+- [__GNSS sensor__](#gnss-sensor)
+- [__IMU sensor__](#imu-sensor)
+- [__Lane invasion detector__](#lane-invasion-detector)
+- [__LIDAR sensor__](#lidar-sensor)
+- [__Hybrid Solid-State LiDAR sensor__](#hybrid-solid-state-lidar-sensor)
+- [__Obstacle detector__](#obstacle-detector)
+- [__Radar sensor__](#radar-sensor)
+- [__RGB camera__](#rgb-camera)
+- [__Fisheye cameras__](#fisheye-cameras)
+- [__Ray-traced lens camera__](#ray-traced-lens-camera)
+- [__Ray-traced lens distance camera__](#ray-traced-lens-distance-camera)
+- [__Ray-traced lens instance camera__](#ray-traced-lens-instance-camera)
+- [__Semantic LIDAR sensor__](#semantic-lidar-sensor)
+- [__Semantic segmentation camera__](#semantic-segmentation-camera)
+- [__Instance segmentation camera__](#instance-segmentation-camera)
+- [__DVS camera__](#dvs-camera)
+- [__Optical flow camera__](#optical-flow-camera)
+- [__Normals camera__](#normals-camera)
+- [__V2X sensor__](#v2x-sensor)
+- [__Autoware GNSS sensor__](#autoware-gnss-sensor)
+- [__Vehicle status sensor__](#vehicle-status-sensor)
+
 ---
 ## Collision detector
 
@@ -280,7 +304,7 @@ For a better realism, points in the cloud can be dropped off. This is an easy wa
 
 Additionally, the `noise_stddev` attribute makes for a noise model to simulate unexpected deviations that appear in real-life sensors. For positive values, each point is randomly perturbed along the vector of the laser ray. The result is a LIDAR sensor with perfect angular positioning, but noisy distance measurement.
 
-The rotation of the LIDAR can be tuned to cover a specific angle on every simulation step (using a [fixed time-step](adv_synchrony_timestep.md)). For example, to rotate once per step (full circle output, as in the picture below), the rotation frequency and the simulated FPS should be equal. <br> __1.__ Set the sensor's frequency `sensors_bp['lidar'][0].set_attribute('rotation_frequency','10')`. <br> __2.__ Run the simulation using `python3 PythonAPI/util/config.py --fps 10`.
+The rotation of the LIDAR can be tuned to cover a specific angle on every simulation step (using a [fixed time-step](core_synchrony.md)). For example, to rotate once per step (full circle output, as in the picture below), the rotation frequency and the simulated FPS should be equal. <br> __1.__ Set the sensor's frequency `sensors_bp['lidar'][0].set_attribute('rotation_frequency','10')`. <br> __2.__ Run the simulation using `python3 PythonAPI/util/config.py --fps 10`.
 
 ![LidarPointCloud](img/ref_sensors/sensor_lidar_bev.webp)
 <div class="img-caption">One LiDAR sweep seen from above, coloured by height (64 channels, 80 m range).</div>
@@ -530,7 +554,7 @@ A value of 1.5 means that we want the sensor to capture data each second and a h
 | `enable_dlss` | bool | False | Enable NVIDIA DLSS Super Resolution: the image renders internally at `dlss_screen_percentage` of the output resolution and is reconstructed to full size, keeping its `image_size_x`&times;`image_size_y` output. Requires `enable_postprocess_effects=True`, and falls back to a bilinear upscale on non-NVIDIA hardware. Not for ground-truth cameras: reconstructed pixels corrupt label and depth maps. |
 | `dlss_screen_percentage` | float | 50.0 | Internal rendering resolution as a percentage of the output, when `enable_dlss` is on. Clamped to [25.0, 100.0]. `50.0` renders a quarter of the pixels (DLSS "Performance"), `33.0` about one ninth ("Ultra Performance"). |
 
-__The look of the camera comes from its preset__, not from individual attributes. Exposure, tonemapper, white balance, bloom, lens flare, depth of field, motion blur and chromatic aberration all live in the post-process profile, and are changed by picking another preset or writing one. See [Camera post-process presets](camera_postprocess_presets.md) for what each preset contains and how to author one.
+__The look of the camera comes from its preset__, not from individual attributes. Exposure, tonemapper, white balance, bloom, lens flare, depth of field, motion blur and chromatic aberration all live in the post-process profile, and are changed by picking another preset or writing one. See [Camera post-process presets](core_camera_presets.md) for what each preset contains and how to author one.
 
 !!! Note
     `use_ray_tracing`, `enable_dlss` and `dlss_screen_percentage` are available on every scene-capture camera (`sensor.camera.rgb`, `depth`, `semantic_segmentation`, `instance_segmentation`, `optical_flow`, `dvs`), not only on the RGB camera.
@@ -669,7 +693,7 @@ __Lens models.__ The `camera_model` attribute selects the radial projection:
 
 If `fx` is left at `0.0`, the focal length is derived automatically so that the requested `fov` spans the image width through the selected projection. An explicit calibration (`fx` > 0, in normalized units where the image half-width is 0.5) always wins over `fov`. `camera_model=ftheta` and `camera_model=lut` need an explicit `fx` (their coefficients are defined against a pixel-space radius, not the normalized one the other models use); if left at `0.0` the sensor logs a warning and falls back to `fx=1.0` (coefficients then act in units of the full image width). Measured against an NVIDIA rig calibration, `ftheta` reprojects with a median error of about 1 pixel.
 
-__Denoising and convergence.__ The path tracer accumulates one batch of `samples_per_pixel` samples per simulation tick and denoises with NVIDIA DLSS Ray Reconstruction (the engine default, `r.PathTracing.Denoiser.Name=DLSSRR`). A static camera converges over successive ticks; a moving camera relies on the denoiser every frame. Low sample counts (`samples_per_pixel` of 4&ndash;16) with the denoiser enabled are the intended real-time operating point; high sample counts approach ground-truth path tracing at a heavy cost per frame. `samples_per_pixel` is clamped to the console variable `r.PathTracing.MaxFramePassCount` (see [Ray-traced lens tuning](adv_rendering_options.md#ray-traced-lens-tuning)), with a warning logged when it clamps: a sensor asking for more samples than the engine can run in one frame can never finish (and denoise) within its tick, and would deliver a partially accumulated — and therefore noisier — image every frame instead of a smaller, fully converged one. Measured on car pixels at 1080p, noise (in 8-bit levels) falls from about 5.7 at 8 samples/pixel to 3.7 at 64, at roughly 54, 54, 74 and 116 ms per tick for 8/16/32/64 samples/pixel respectively (color + instance sensors together); requesting a count above the pass cap measured about four times noisier than the same count kept under the cap.
+__Denoising and convergence.__ The path tracer accumulates one batch of `samples_per_pixel` samples per simulation tick and denoises with NVIDIA DLSS Ray Reconstruction (the engine default, `r.PathTracing.Denoiser.Name=DLSSRR`). A static camera converges over successive ticks; a moving camera relies on the denoiser every frame. Low sample counts (`samples_per_pixel` of 4&ndash;16) with the denoiser enabled are the intended real-time operating point; high sample counts approach ground-truth path tracing at a heavy cost per frame. `samples_per_pixel` is clamped to the console variable `r.PathTracing.MaxFramePassCount` (see [Ray-traced lens tuning](core_rendering.md#ray-traced-lens-tuning)), with a warning logged when it clamps: a sensor asking for more samples than the engine can run in one frame can never finish (and denoise) within its tick, and would deliver a partially accumulated — and therefore noisier — image every frame instead of a smaller, fully converged one. Measured on car pixels at 1080p, noise (in 8-bit levels) falls from about 5.7 at 8 samples/pixel to 3.7 at 64, at roughly 54, 54, 74 and 116 ms per tick for 8/16/32/64 samples/pixel respectively (color + instance sensors together); requesting a count above the pass cap measured about four times noisier than the same count kept under the cap.
 
 __Exposure.__ `exposure_mode` selects between `auto` (default) and `manual`. `auto` uses the auto exposure of the camera profile (`post_process_profile`), like `sensor.camera.rgb`, so the path-traced frames follow day and night like the RGB camera; only the upper end of its range is capped by the `carla.RTLens.MaxAutoExposureEV` console variable (EV100 `12` by default), so the path-traced view cannot meter the raw sun disk and go black. `manual` switches to the profile's physical camera exposure, deterministic from frame to frame. Use `manual` when the frame is composited against an external render (e.g. a `show_only_*` layer over an otherwise black background) and the content itself must not drive the histogram. In both modes `exposure_compensation` (in EV, `0.0` = no adjustment, negative darkens, positive brightens) is added to the profile's exposure bias.
 
@@ -843,7 +867,7 @@ for detection in semantic_lidar_measurement:
     print(detection)
 ```
 
-The rotation of the LIDAR can be tuned to cover a specific angle on every simulation step (using a [fixed time-step](adv_synchrony_timestep.md)). For example, to rotate once per step (full circle output, as in the picture below), the rotation frequency and the simulated FPS should be equal. <br>
+The rotation of the LIDAR can be tuned to cover a specific angle on every simulation step (using a [fixed time-step](core_synchrony.md)). For example, to rotate once per step (full circle output, as in the picture below), the rotation frequency and the simulated FPS should be equal. <br>
 __1.__ Set the sensor's frequency `sensors_bp['lidar'][0].set_attribute('rotation_frequency','10')`. <br>
 __2.__ Run the simulation using `python3 PythonAPI/util/config.py --fps 10`.
 
@@ -945,7 +969,7 @@ The following tags are currently available:
 <br>
 
 !!! Note
-    Read [this](tuto_D_create_semantic_tags.md) tutorial to create new semantic tags.
+    Read [this](core_sensors_semantic_tags.md) tutorial to create new semantic tags.
 
 ---
 ## Instance segmentation camera
@@ -980,7 +1004,7 @@ for value in np.unique(instance):
 ```
 
 !!! Warning
-    The id is the engine's actor id truncated to 16 bits, so it wraps after 65535 actors and two objects in a long session can end up sharing one. It is also __not__ the `actor.id` the Python API returns, so the two cannot be compared; to tie a mask back to a [`carla.Actor`](python_api.md#carla.Actor), project the actor's [bounding box](tuto_G_bounding_boxes.md) instead.
+    The id is the engine's actor id truncated to 16 bits, so it wraps after 65535 actors and two objects in a long session can end up sharing one. It is also __not__ the `actor.id` the Python API returns, so the two cannot be compared; to tie a mask back to a [`carla.Actor`](python_api.md#carla.Actor), project the actor's [bounding box](tuto_bounding_boxes.md) instead.
 
 A GPU sensor takes a few frames to produce a filled image, so the first one back after `listen()` is black. Tick a few times and keep the last.
 

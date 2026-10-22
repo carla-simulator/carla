@@ -31,7 +31,7 @@ If the model is not already in FBX format or needed modification, export it as F
 
 ## Import the asset into the Unreal Editor
 
-Now that we have an asset in FBX format, we can import it into the CARLA content library. Launch the CARLA Unreal Engine editor by running `cmake --build Build/Release --target launch` in the root directory of the CARLA source code repository. Once the editor is open, navigate to an appropriate place in the content directories (`Content/Carla/Static/Static` in this example). Drag the FBX file into the content browser, import with the default options. Once the import is complete we can see our new prop as a static mesh in the content folder:
+Now that we have an asset in FBX format, we can import it into the CARLA content library. Launch the CARLA Unreal Engine editor by running `cmake --build Build --target launch` in the root directory of the CARLA source code repository. Once the editor is open, navigate to an appropriate place in the content directories (`Content/Carla/Static/Static` in this example). Drag the FBX file into the content browser, import with the default options. Once the import is complete we can see our new prop as a static mesh in the content folder:
 
 ![police_barrier](img/content_authoring_props/police_barrier_imported_ue5.webp)
 <div class="img-caption">The imported <code>Police_barrier</code> static mesh in the Content Browser, with its asset details.</div>
@@ -117,10 +117,10 @@ for spawn_point in world.get_map().get_spawn_points()[:3]:
 Once the props are imported and everything is saved in the Unreal Editor, build a package that contains them:
 
 ```sh
-cmake --build Build/Release --target package
+cmake --build Build --target package
 ```
 
-The result is an archive under `Build/Release/Package/` — `.tar.gz` on Linux, `.zip` on Windows — where `Release` is whichever preset you configured with.
+The result is an archive under `Build/Package/` — `.tar.gz` on Linux, `.zip` on Windows. A build configured with a preset writes to `Build/<preset>/Package/` instead.
 
 !!! Note
     Rebuilding the whole simulator to ship a handful of props is rarely what you want. A [content pack](content_authoring_packs.md) carries new props on their own and drops into any CARLA package of the same release.

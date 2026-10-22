@@ -69,17 +69,17 @@ Everything in the world comes from the one file. CARLA builds:
 
 Everything comes from the `.xodr`, so an error in the file becomes an error in the simulation. Junctions are the usual source, since that is where many lanes meet.
 
-![opendrive_standalone](img/adv_opendrive/opendrive_town01_overview.webp)
+![opendrive_standalone](img/core_opendrive/opendrive_town01_overview.webp)
 <div class="img-caption">A world generated from Town01.xodr: road mesh, ground plane, markings, signals and roadside furniture.</div>
 
-![opendrive_junction](img/adv_opendrive/opendrive_town01_junction.webp)
+![opendrive_junction](img/core_opendrive/opendrive_town01_junction.webp)
 <div class="img-caption">A junction of the generated Town01 world: traffic light, lamps, bus stop and sidewalks.</div>
 
 ---
 
 ## Console controls
 
-Two Unreal console commands change what generation does. They are typed into the server's own console, not sent from the client: open it with the `~` key in an editor or development build, or pass `-execcmds=` on the command line. A packaged Shipping build strips that parser, as [Rendering options](adv_rendering_options.md) explains.
+Two Unreal console commands change what generation does. They are typed into the server's own console, not sent from the client: open it with the `~` key in an editor or development build, or pass `-execcmds=` on the command line. A packaged Shipping build strips that parser, as [Rendering options](core_rendering.md) explains.
 
 `carla.OpenDrive.StreetFurniture 0` generates the bare road, with no lamps, vegetation or signage. `1` is the default, and the command has to be set before the world is generated to have any effect.
 
@@ -97,7 +97,7 @@ It is produced in chunks of `max_road_length` rather than as one object, so the 
 
 Junctions get special treatment. Where lanes meet at different heights, the raw definition makes the higher lane cut through the lower one, and a vehicle crossing the junction climbs or clips. `smooth_junctions` reinterprets those heights so the surfaces join:
 
-![opendrive_meshissue](img/adv_opendrive/opendrive_meshissue.webp)
+![opendrive_meshissue](img/core_opendrive/opendrive_meshissue.webp)
 <div class="img-caption">Higher lanes blocking the ones below them at a junction. <code>smooth_junctions</code> prevents this.</div>
 
 Junction lanes are also widened by `additional_width`, and the outer boundary of the road is walled to `wall_height`, both to keep vehicles on the surface where the definition is least precise.

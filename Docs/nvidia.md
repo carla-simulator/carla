@@ -34,4 +34,4 @@ NVIDIA's Deep Learning Super Sampling (DLSS) is integrated into the CARLA simula
 - __DLSS Ray Reconstruction__ denoises the path-traced frames of the [ray-traced lens camera](ref_sensors.md#ray-traced-lens-camera) (`sensor.camera.rt_lens`), enabling real-time path tracing with physically exact lens distortion at low sample counts.
 - __DLSS Super Resolution__ can upscale any camera sensor: the camera renders internally at a fraction of its output resolution and DLSS reconstructs the full-size image, reducing the GPU cost of large multi-camera rigs.
 
-The [rendering options page](adv_rendering_options.md#nvidia-dlss) covers both in detail.
+The [rendering options page](core_rendering.md#nvidia-dlss) covers both in detail.

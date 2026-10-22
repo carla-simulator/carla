@@ -17,7 +17,7 @@ This tutorial spawns a pedestrian, gives it an AI controller, then reads its ske
 
 ## Setting up the simulator
 
-First, launch the CARLA simulator as per your standard workflow, either in standalone mode or inside the Unreal Editor. We will import several utility libraries to use for maths and plotting. To give us more control over the simulation, we will use [__synchronous mode__](adv_synchrony_timestep.md) in this tutorial. This means that our Python client controls the time progression of the simulator.
+First, launch the CARLA simulator as per your standard workflow, either in standalone mode or inside the Unreal Editor. We will import several utility libraries to use for maths and plotting. To give us more control over the simulation, we will use [__synchronous mode__](core_synchrony.md) in this tutorial. This means that our Python client controls the time progression of the simulator.
 
 ```py
 import carla
@@ -155,7 +155,7 @@ def build_projection_matrix(w, h, fov):
 ---
 ## Build the skeleton
 
-Now we can put the moving parts together. First, gather the bone coordinates from the simulation using `pedestrian.get_bones()` and then put together the skeleton and project it onto the 2D imaging plane of the camera sensor. The bones are joined into the complete skeleton using the pairs defined in __skeleton.txt__ that ships with these docs: [__skeleton.txt__](img/tuto_G_pedestrian_bones/skeleton.txt).
+Now we can put the moving parts together. First, gather the bone coordinates from the simulation using `pedestrian.get_bones()` and then put together the skeleton and project it onto the 2D imaging plane of the camera sensor. The bones are joined into the complete skeleton using the pairs defined in __skeleton.txt__ that ships with these docs: [__skeleton.txt__](img/tuto_pedestrian_bones/skeleton.txt).
 
 We need a function to iterate through the bone pairs defined in __skeleton.txt__ and join the bone coordinates into lines that can be overlaid onto a camera sensor image.
 
@@ -219,7 +219,7 @@ def build_skeleton(ped, sk_links, K, world_2_camera):
 
 ```
 
-Next, read the bone pairs from [__skeleton.txt__](img/tuto_G_pedestrian_bones/skeleton.txt). Download it next to your script, or give `open()` the path you saved it to:
+Next, read the bone pairs from [__skeleton.txt__](img/tuto_pedestrian_bones/skeleton.txt). Download it next to your script, or give `open()` the path you saved it to:
 
 ```py
 skeleton_links = []
@@ -284,7 +284,7 @@ for frame in range(0,360):
 
 In the __out/__ folder you should now have a sequence of frames with the skeleton overlaid over the camera sensor output. The following animation can be reconstructed by joining the frames into a video:
 
-![pedestrian_skeleton](img/tuto_G_pedestrian_bones/walker_skeleton.webp)
+![pedestrian_skeleton](img/tuto_pedestrian_bones/walker_skeleton.webp)
 <div class="img-caption">Walker skeleton from get_bones() projected on a camera that follows the pedestrian (finger bones omitted).</div>
 
 ---

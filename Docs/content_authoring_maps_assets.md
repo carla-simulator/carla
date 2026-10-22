@@ -73,6 +73,9 @@ Now save the asset and it is ready for use in your map. You can now drag the ass
 <div class="img-caption">The farmhouse placed in the map.</div>
 
 Now save the map with __File > Save Current Level__ (`Ctrl + S`) and it is ready to use. Press __Play__ to run the simulation in the editor.
+
+A CARLA package does not include your map. To load it in a packaged CARLA, build it into a [content pack](content_authoring_packs.md#b-your-own-content): `Util/ContentPacks/carla-pack create` takes any map under the project's `Content` folder, together with the OpenDRIVE, navigation and Traffic Manager files the importer wrote next to it.
+
 ---
 
 If you have any questions about the process, then you can ask in the [GitHub Discussions](https://github.com/carla-simulator/carla/discussions).

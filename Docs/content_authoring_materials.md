@@ -357,6 +357,6 @@ __3. SubSurfaceScattering__ — light passing through the leaves: `Subsurface In
 __4 - Wind__ and __2 - Wind__ — `EnableWind` moves the mesh with the wind intensity of the weather; `Wind Multiplyer` scales it and `Vertical Offset` shifts the motion. The second wind group holds a `Contrast` value.
 
 !!! Note
-    Textures can also be swapped at runtime, without the editor, through [`carla.World.apply_color_texture_to_object`](python_api.md#carla.World.apply_color_texture_to_object). See [Texture streaming](tuto_G_texture_streaming.md).
+    Textures can also be swapped at runtime, without the editor, through [`carla.World.apply_color_texture_to_object`](python_api.md#carla.World.apply_color_texture_to_object). See [Texture streaming](tuto_texture_streaming.md).
 
 Generic material documentation is in the [Unreal Engine docs](https://dev.epicgames.com/documentation/en-us/unreal-engine/unreal-engine-materials).

@@ -18,7 +18,7 @@ CARLA's world is **left-handed**. Almost every robotics toolchain — ROS 2 / tf
 
 ## CARLA's frame
 
-![coordinate_frames](img/coordinate_conventions/coordinate_frames.svg)
+![coordinate_frames](img/core_coordinate_conventions/coordinate_frames.svg)
 <div class="img-caption">CARLA (left-handed, +y right) vs ROS 2 REP-103 FLU (right-handed, +y left) seen from above, with the sign flips.</div>
 
 |            | axis      | positive direction |

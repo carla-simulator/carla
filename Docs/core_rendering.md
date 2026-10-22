@@ -1,18 +1,11 @@
 # Rendering options
 
-This guide details the different rendering options available in CARLA, including quality levels, no-rendering mode and off-screen mode. To spread rendering across several GPUs, see [Multi-GPU](adv_multigpu.md).
+This guide details the different rendering options available in CARLA, including quality levels, no-rendering mode and off-screen mode. To spread rendering across several GPUs, see [Multi-GPU](core_multigpu.md).
 
 - [__Lighting and geometry__](#lighting-and-geometry)
 - [__Graphics quality__](#graphics-quality)
-    - [Quality levels](#quality-levels)
-    - [Tier comparison](#tier-comparison)
-    - [Volumetric clouds](#volumetric-clouds)
-    - [Ray tracing defaults](#ray-tracing-defaults)
-    - [NVIDIA DLSS](#nvidia-dlss)
-    - [Ray-traced lens tuning](#ray-traced-lens-tuning)
 - [__No-rendering mode__](#no-rendering-mode)
 - [__Off-screen rendering mode__](#off-screen-rendering-mode)
-    - [Setting off-screen mode](#setting-off-screen-mode)
 
 ---
 ## Lighting and geometry
@@ -64,12 +57,12 @@ Inside the editor, scalability follows the editor's own __Settings / Engine Scal
 
 #### Epic mode
 
-![Epic mode screenshot](img/adv_rendering_options/rendering_epic.webp)
+![Epic mode screenshot](img/core_rendering/rendering_epic.webp)
 <div class="img-caption">A Town10HD_Opt junction at <code>-quality-level=Epic</code>.</div>
 
 #### Low mode
 
-![Low mode screenshot](img/adv_rendering_options/rendering_low.webp)
+![Low mode screenshot](img/core_rendering/rendering_low.webp)
 <div class="img-caption">The same junction at <code>-quality-level=Low</code>.</div>
 
 ### Tier comparison

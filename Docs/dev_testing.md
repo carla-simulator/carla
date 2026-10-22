@@ -2,6 +2,14 @@
 
 CARLA has C++ unit tests for LibCarla, Python unit tests for the client module, and Python smoke and integration tests that drive a running server. Run the unit tests after any change to LibCarla or the Python API, and the smoke tests after any change to the server.
 
+- [__Test suites__](#test-suites)
+- [__LibCarla unit tests__](#libcarla-unit-tests)
+- [__Python API unit tests__](#python-api-unit-tests)
+- [__Smoke tests__](#smoke-tests)
+- [__Integration tests__](#integration-tests)
+- [__Other test suites__](#other-test-suites)
+- [__What CI runs__](#what-ci-runs)
+
 ## Test suites
 
 | Suite | Location | Needs a server | Runner |

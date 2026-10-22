@@ -9,7 +9,7 @@ Town15 is a map based on the road layout of the Autonomous University of Barcelo
 | --- | --- |
 | __Map name__ | `Town15` |
 | __In the default package__ | yes |
-| __Map type__ | a large [World Partition](large_map_overview.md) map: the server streams the cells around the vehicle with `role_name=hero` |
+| __Map type__ | a large [World Partition](core_large_maps.md) map: the server streams the cells around the vehicle with `role_name=hero` |
 | __Size__ | about 2.1 x 1.7 km of roads |
 | __Spawn points__ | 1039, from `world.get_map().get_spawn_points()` |
 
@@ -19,7 +19,14 @@ Load it like any other map:
 world = client.load_world('Town15')
 ```
 
-Only the cells around the ego vehicle are loaded. Spawn the ego with `role_name=hero` before placing sensors, as described in [Large maps](large_map_overview.md).
+Only the cells around the ego vehicle are loaded. Spawn the ego with `role_name=hero` before placing sensors, as described in [Large maps](core_large_maps.md).
+
+- [__Road network__](#road-network)
+- [__Computer Vision Center__](#computer-vision-center)
+- [__Humanities Library__](#humanities-library)
+- [__Faculty of Medicine__](#faculty-of-medicine)
+- [__CRAG__](#crag)
+- [__Vila Universitària__](#vila-universitaria)
 
 ---
 ## Road network

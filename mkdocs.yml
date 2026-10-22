@@ -21,25 +21,69 @@ nav:
     - 'Build FAQ': 'build_faq.md'
 
 - CARLA topics:
-  - 'Foundations': 'foundations.md'
-  - 'World and client': 'core_world.md'
-  - 'Actors': 'core_actors.md'
-  - 'Maps': 'core_map.md'
+  - 'Foundations': 'core_foundations.md'
+  - World and client:
+    - 'The client': 'core_client.md'
+    - 'The world': 'core_world.md'
+    - 'Synchrony and time-step': 'core_synchrony.md'
+    - 'Rendering options': 'core_rendering.md'
+    - 'Camera post-process presets': 'core_camera_presets.md'
+    - 'Recorder': 'core_recorder.md'
+    - 'Multi-GPU': 'core_multigpu.md'
+  - Actors:
+    - 'Overview': 'core_actors.md'
+    - 'Agents': 'core_agents.md'
+  - Maps:
+    - 'Overview': 'core_map.md'
+    - 'Large maps': 'core_large_maps.md'
+    - 'OpenDRIVE standalone mode': 'core_opendrive.md'
   - Sensors and data:
     - 'Overview': 'core_sensors.md'
-    - 'Create semantic tags': 'tuto_D_create_semantic_tags.md'
-  - 'Coordinate conventions': 'coordinate_conventions.md'
-  - 'Traffic' : 'ts_traffic_simulation_overview.md'
-  - 'Traffic Manager': 'adv_traffic_manager.md'
+    - 'Create semantic tags': 'core_sensors_semantic_tags.md'
+  - 'Coordinate conventions': 'core_coordinate_conventions.md'
+  - Traffic:
+    - 'Overview': 'core_traffic.md'
+    - 'Traffic Manager': 'core_traffic_manager.md'
 
 - Resources:
-  - 'Python API': 'python_api.md'
   - 'Agent skills': 'agent_skills.md'
-  - 'Catalogue': 'catalogue.md'
-  - 'C++ tutorial': 'tuto_cpp.md'
+  - 'Python API': 'python_api.md'
   - 'C++ reference': 'ref_cpp.md'
+  - 'Sensors reference': 'ref_sensors.md'
+  - Catalogue:
+    - 'Overview': 'catalogue.md'
+    - Maps:
+      - 'Town10HD_Opt': 'map_town10.md'
+      - 'Mine_01': 'map_mine.md'
+      - 'Town15': 'map_town15.md'
+      - 'Town01_Opt': 'map_town01.md'
+      - 'Town02_Opt': 'map_town02.md'
+      - 'Town03_Opt': 'map_town03.md'
+      - 'Town04_Opt': 'map_town04.md'
+      - 'Town05_Opt': 'map_town05.md'
+      - 'Town06_Opt': 'map_town06.md'
+      - 'Town07_Opt': 'map_town07.md'
+      - 'Town11': 'map_town11.md'
+      - 'Town12': 'map_town12.md'
+      - 'Town13': 'map_town13.md'
+      - 'Town_C': 'map_town_c.md'
+      - 'Eixample': 'map_eixample.md'
+      - 'Towns as content packs': 'map_content_packs.md'
+    - 'Vehicles': 'catalogue_vehicles.md'
+    - 'Pedestrians': 'catalogue_pedestrians.md'
+    - 'Props': 'catalogue_props.md'
+    - 'Example scripts': 'catalogue_scripts.md'
   - 'Blueprint library': 'bp_library.md'
-  - 'Tutorials': 'tutorials.md'
+  - Tutorials:
+    - 'Overview': 'tutorials.md'
+    - 'Traffic Manager': 'tuto_traffic_manager.md'
+    - 'Control vehicle physics': 'tuto_vehicle_physics.md'
+    - 'Control walker skeletons': 'tuto_walker_skeletons.md'
+    - 'Pedestrian bones': 'tuto_pedestrian_bones.md'
+    - 'Bounding boxes': 'tuto_bounding_boxes.md'
+    - 'Texture streaming': 'tuto_texture_streaming.md'
+    - 'Add friction triggers': 'tuto_friction_triggers.md'
+    - 'C++ tutorial': 'tuto_cpp.md'
 
 - Content authoring:
   - 'Overview': 'content_authoring_overview.md'
@@ -84,54 +128,16 @@ nav:
   - 'Coding standard': 'cont_coding_standard.md'
   - 'Documentation standard': 'cont_doc_standard.md'
   - Development:
-    - 'Overview': 'development_tutorials.md'
-    - 'Create a sensor': 'tuto_D_create_sensor.md'
-    - 'Updating the content': 'tuto_D_contribute_assets.md'
-    - 'Running the tests': 'testing.md'
-    - 'Make a release': 'tuto_D_make_release.md'
+    - 'Overview': 'dev_overview.md'
+    - 'Create a sensor': 'dev_create_sensor.md'
+    - 'Updating the content': 'dev_update_content.md'
+    - 'Running the tests': 'dev_testing.md'
+    - 'Make a release': 'dev_make_release.md'
  
 # Pages reached from a parent page instead of the sidebar
 not_in_nav: |
-  /adv_agents.md
-  /adv_multigpu.md
-  /adv_opendrive.md
-  /adv_recorder.md
-  /adv_rendering_options.md
-  /adv_synchrony_timestep.md
-  /camera_postprocess_presets.md
-  /catalogue_pedestrians.md
-  /catalogue_props.md
-  /catalogue_scripts.md
-  /catalogue_vehicles.md
-  /cpp_api_parity.md
-  /ext_docs.md
-  /large_map_overview.md
-  /map_content_packs.md
-  /map_mine.md
-  /map_town01.md
-  /map_town02.md
-  /map_town03.md
-  /map_town04.md
-  /map_town05.md
-  /map_town06.md
-  /map_town07.md
-  /map_town11.md
-  /map_town12.md
-  /map_town13.md
-  /map_town_c.md
-  /map_eixample.md
-  /map_town10.md
-  /map_town15.md
   /ref_recorder_binary_file_format.md
-  /ref_sensors.md
   /release_readme.md
-  /tuto_G_add_friction_triggers.md
-  /tuto_G_bounding_boxes.md
-  /tuto_G_control_vehicle_physics.md
-  /tuto_G_control_walker_skeletons.md
-  /tuto_G_pedestrian_bones.md
-  /tuto_G_texture_streaming.md
-  /tuto_G_traffic_manager.md
 
 hooks:
   - docs_hooks.py

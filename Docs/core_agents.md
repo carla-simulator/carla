@@ -14,10 +14,7 @@ Any of the three can be configured through its constructor and methods, or subcl
 
 - [__Use the provided agents__](#use-the-provided-agents)
 - [__Behavior types__](#behavior-types)
-    - [Create your own behavior type](#create-your-own-behavior-type)
 - [__Overview of agent scripts__](#overview-of-agent-scripts)
-    - [Planning and control](#planning-and-control)
-    - [Agent behaviors](#agent-behaviors)
 - [__Write a custom agent__](#write-a-custom-agent)
 
 ---
@@ -189,7 +186,7 @@ The main scripts involved in the CARLA Agents are found in [`PythonAPI/carla/age
 
 - __[`controller.py`](https://github.com/carla-simulator/carla/blob/ue58-dev/PythonAPI/carla/agents/navigation/controller.py):__ Combines longitudinal and lateral PID controllers into a single class, __VehiclePIDController__, used for low-level control of vehicles from the client side of CARLA.
 - __[`global_route_planner.py`](https://github.com/carla-simulator/carla/blob/ue58-dev/PythonAPI/carla/agents/navigation/global_route_planner.py):__ Gets detailed topology from the CARLA server to build a graph representation of the world map, providing waypoint and road option information for the __Local Planner__.
-- __[`local_planner.py`](https://github.com/carla-simulator/carla/blob/ue58-dev/PythonAPI/carla/agents/navigation/local_planner.py):__ Follows waypoints based on control inputs from the __VehiclePIDController__. Waypoints can either be provided by the __Global Route Planner__ or be calculated dynamically, choosing random paths at junctions, similar to the [Traffic Manager](adv_traffic_manager.md).
+- __[`local_planner.py`](https://github.com/carla-simulator/carla/blob/ue58-dev/PythonAPI/carla/agents/navigation/local_planner.py):__ Follows waypoints based on control inputs from the __VehiclePIDController__. Waypoints can either be provided by the __Global Route Planner__ or be calculated dynamically, choosing random paths at junctions, similar to the [Traffic Manager](core_traffic_manager.md).
 
 ### Agent behaviors
 

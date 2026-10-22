@@ -3,13 +3,13 @@
 ![town_12_slideshow](img/catalogue/maps/town12/town12_montage.webp)
 <div class="img-caption">Town12: the high-rise downtown, a high-density residential street, the low-density suburbs, a highway roundabout and the farmland.</div>
 
-Town12 is a large [World Partition](large_map_overview.md) map of about 10 x 10 km. Its road layout is partially inspired by the city of [Amarillo in Texas, USA](https://www.google.com/maps/place/Amarillo,+TX,+USA/@35.2018863,-101.9450251,11z). It has numerous contrasting regions, including urban, residential and rural areas, along with a large highway system with a ring road around the city. The architectural styles reflect those of many medium to large cities across North America.
+Town12 is a large [World Partition](core_large_maps.md) map of about 10 x 10 km. Its road layout is partially inspired by the city of [Amarillo in Texas, USA](https://www.google.com/maps/place/Amarillo,+TX,+USA/@35.2018863,-101.9450251,11z). It has numerous contrasting regions, including urban, residential and rural areas, along with a large highway system with a ring road around the city. The architectural styles reflect those of many medium to large cities across North America.
 
 | | |
 | --- | --- |
 | __Map name__ | `Town12` |
 | __In the default package__ | no: use a source build, or install it from a [content pack](map_content_packs.md) |
-| __Map type__ | a large [World Partition](large_map_overview.md) map: the server streams the cells around the vehicle with `role_name=hero` |
+| __Map type__ | a large [World Partition](core_large_maps.md) map: the server streams the cells around the vehicle with `role_name=hero` |
 | __Size__ | about 9.4 x 8.3 km of roads |
 | __Spawn points__ | 10422, from `world.get_map().get_spawn_points()` |
 | __Junctions__ | 628, with 1101 traffic lights |
@@ -20,7 +20,7 @@ Load it like any other map:
 world = client.load_world('Town12')
 ```
 
-Only the cells around the ego vehicle are loaded. Spawn the ego with `role_name=hero` before placing sensors, as described in [Large maps](large_map_overview.md).
+Only the cells around the ego vehicle are loaded. Spawn the ego with `role_name=hero` before placing sensors, as described in [Large maps](core_large_maps.md).
 
 !!! Note
     [Town13](map_town13.md) is designed as a train-test pair with Town12: same kind of layout, different building styles, textures and vegetation.

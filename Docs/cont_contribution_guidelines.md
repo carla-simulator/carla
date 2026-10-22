@@ -2,6 +2,12 @@
 
 The CARLA team is glad to accept contributions from anybody willing to collaborate. There are different ways to contribute to the project, depending on the capabilities of the contributor. Everyone taking part is expected to follow the [Code of conduct](cont_code_of_conduct.md).
 
+- [__Report bugs__](#report-bugs)
+- [__Request features__](#request-features)
+- [__Code contributions__](#code-contributions)
+- [__Art contributions__](#art-contributions)
+- [__Docs contributions__](#docs-contributions)
+
 ---
 ## Report bugs
 
@@ -33,7 +39,7 @@ To start working, [fork the CARLA repository](https://docs.github.com/en/pull-re
 
 ### Before getting started
 
-A basic introduction to C++ programming with Unreal is in Unreal's [C++ programming tutorials][ue5tutorials]. Build CARLA from source first, following [Linux](build_linux_ue5.md) or [Windows](build_windows_ue5.md), and read [Foundations](foundations.md) to see which module a new feature belongs in.
+A basic introduction to C++ programming with Unreal is in Unreal's [C++ programming tutorials][ue5tutorials]. Build CARLA from source first, following [Linux](build_linux_ue5.md) or [Windows](build_windows_ue5.md), and read [Foundations](core_foundations.md) to see which module a new feature belongs in.
 
 [ue5tutorials]: https://dev.epicgames.com/documentation/en-us/unreal-engine/unreal-engine-cpp-programming-tutorials
 
@@ -48,7 +54,7 @@ Contributions and new features are merged to the development branch, `ue58-dev`.
 *   Always keep your branch updated with the latest changes in `ue58-dev`.
 *   Develop the contribution in a child branch from `ue58-dev` named `username/name_of_the_contribution`.
 *   Once the contribution is ready, submit a pull request from your branch to `ue58-dev`. Try to be as descriptive as possible when filling in the template: what changed, where it was tested, and the possible drawbacks.
-*   Continuous integration builds the client, the Python API, the server and the package on Ubuntu, and builds and runs the LibCarla tests ([What CI runs](testing.md#what-ci-runs)). It does not run the Python tests, so run them locally. A green tick mark appears if the checks pass; if there is a red mark, correct the code accordingly.
+*   Continuous integration builds the client, the Python API, the server and the package on Ubuntu, and builds and runs the LibCarla tests ([What CI runs](dev_testing.md#what-ci-runs)). It does not run the Python tests, so run them locally. A green tick mark appears if the checks pass; if there is a red mark, correct the code accordingly.
 
 ### Checklist
 
@@ -56,8 +62,8 @@ Before a pull request to `ue58-dev`:
 
 *   [ ] The branch is up-to-date with `ue58-dev` and tested with the latest changes.
 *   [ ] The code compiles: `cmake --build Build --target carla-client carla-python-api carla-server`.
-*   [ ] The LibCarla unit tests pass ([LibCarla unit tests](testing.md#libcarla-unit-tests)).
-*   [ ] The smoke tests pass against a running server on port 3654 ([Smoke tests](testing.md#smoke-tests)). On Linux: `cd PythonAPI/test && python3 -m nose2 -v $(cat smoke_test_list.txt)`.
+*   [ ] The LibCarla unit tests pass ([LibCarla unit tests](dev_testing.md#libcarla-unit-tests)).
+*   [ ] The smoke tests pass against a running server on port 3654 ([Smoke tests](dev_testing.md#smoke-tests)). On Linux: `cd PythonAPI/test && python3 -m nose2 -v $(cat smoke_test_list.txt)`.
 *   [ ] `CHANGELOG.md` has an entry under `## LATEST Changes` for any user-visible change.
 *   [ ] The documentation was extended, if necessary.
 

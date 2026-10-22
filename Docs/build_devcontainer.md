@@ -2,6 +2,16 @@
 
 CARLA UE5 can be built inside a Docker container running Ubuntu 22.04. This is useful when your host OS does not meet UE5's compilation requirements. The container provides the correct toolchain and dependencies while you keep all source code on the host.
 
+- [__Prerequisites__](#prerequisites)
+- [__Build the Docker image__](#build-the-docker-image)
+- [__Run the container__](#run-the-container)
+- [__Build Unreal Engine inside the container (first time only)__](#build-unreal-engine-inside-the-container-first-time-only)
+- [__Download CARLA content (first time only)__](#download-carla-content-first-time-only)
+- [__Build CARLA inside the container__](#build-carla-inside-the-container)
+- [__Running commands from additional terminals__](#running-commands-from-additional-terminals)
+- [__Using a VS Code Devcontainer__](#using-a-vs-code-devcontainer)
+- [__Tips and known issues__](#tips-and-known-issues)
+
 ## Prerequisites
 
 - [Docker](https://docs.docker.com/engine/install/) installed and configured for non-root use

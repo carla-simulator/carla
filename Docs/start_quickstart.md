@@ -2,12 +2,12 @@
 
 This guide shows how to download and install the packaged version of CARLA. The package includes the CARLA server and the Python client library. There are [additional assets](content_authoring_packs.md) that can be downloaded and imported into the package. Advanced customization and development options that require use of the Unreal Engine editor are not available but these can be accessed by using the build version of CARLA for either [Windows](build_windows_ue5.md) or [Linux](build_linux_ue5.md).
 
-* __[Before you begin](#before-you-begin)__
-* __[CARLA package installation](#carla-package-installation)__
-* __[Install client library](#install-client-library)__
-* __[Running CARLA](#running-carla)__
-* __[Running CARLA with a Docker container](#running-carla-using-a-docker-container)__
-* __[Follow-up](#follow-up)__
+- [__Before you begin__](#before-you-begin)
+- [__CARLA package installation__](#carla-package-installation)
+- [__Install client library__](#install-client-library)
+- [__Running CARLA__](#running-carla)
+- [__Running CARLA using a Docker container__](#running-carla-using-a-docker-container)
+- [__Follow-up__](#follow-up)
 
 ---
 ## Before you begin
@@ -160,4 +160,4 @@ See [CARLA in Docker](build_docker.md) for the legacy NVIDIA runtime, getting th
 
 By now you should have a packaged version of CARLA up and running. If you came across any difficulties during the installation process, feel free to post in the [GitHub Discussions](https://github.com/carla-simulator/carla/discussions) or in the [Discord](https://discord.gg/8kqACuC) channel.
 
-The next step is to learn more about the core concepts in CARLA. Start with the [__First steps__](start_first_steps.md) tutorial to start learning and then refer to the [Foundations](foundations.md), [Actors](core_actors.md), [Maps](core_map.md) and [Sensors](core_sensors.md) sections to form a deeper understanding of CARLA's functionality. You should also familiarize yourself with the Python API classes and methods in the [Python API reference](python_api.md).
+The next step is to learn more about the core concepts in CARLA. Start with the [__First steps__](start_first_steps.md) tutorial to start learning and then refer to the [Foundations](core_foundations.md), [Actors](core_actors.md), [Maps](core_map.md) and [Sensors](core_sensors.md) sections to form a deeper understanding of CARLA's functionality. You should also familiarize yourself with the Python API classes and methods in the [Python API reference](python_api.md).

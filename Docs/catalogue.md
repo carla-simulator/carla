@@ -8,6 +8,13 @@ The CARLA simulator provides a vast library of 3D assets to populate your autono
 * [__Props catalogue__](catalogue_props.md)
 * [__Scripts catalogue__](catalogue_scripts.md)
 
+- [__Maps__](#maps)
+- [__Vehicles__](#vehicles)
+- [__Pedestrians__](#pedestrians)
+- [__Props__](#props)
+- [__Inspect the vehicles in the simulator__](#inspect-the-vehicles-in-the-simulator)
+- [__Scripts__](#scripts)
+
 ## Maps
 
 The default package ships three drivable maps, plus the empty ones used for OpenDRIVE standalone mode. A source build has every town; the rest reach a package through a [content pack](content_authoring_packs.md).

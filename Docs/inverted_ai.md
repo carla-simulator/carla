@@ -2,7 +2,7 @@
 
 ![inverted_ai_logo](img/logos/inverted_ai_logo.webp)
 
-Inverted AI drives non-player vehicles with models learned from real human driving, through a hosted API, so the traffic around the ego behaves the way people do rather than following hand-written rules. It replaces the [Traffic Manager](adv_traffic_manager.md) for those vehicles; CARLA still owns the simulation, the ego and the sensors.
+Inverted AI drives non-player vehicles with models learned from real human driving, through a hosted API, so the traffic around the ego behaves the way people do rather than following hand-written rules. It replaces the [Traffic Manager](core_traffic_manager.md) for those vehicles; CARLA still owns the simulation, the ego and the sensors.
 
 <video controls width="100%" src="https://ecosystem.carla.org/video/iai-pipeline.mp4"></video>
 

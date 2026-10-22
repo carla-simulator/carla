@@ -2,14 +2,11 @@
 
 In this tutorial we describe how to manually control and animate the skeletons of walkers from the CARLA Python API. The reference of all classes and methods available can be found at [Python API reference](python_api.md).
 
-*   [__Walker skeleton structure__](#walker-skeleton-structure)  
-*   [__Manually control walker bones__](#manually-control-walker-bones)  
-	*   [Connect to the simulator](#connect-to-the-simulator)  
-	*   [Spawn a walker](#spawn-a-walker)  
-	*   [Control walker skeletons](#control-walker-skeletons)
+- [__Walker skeleton structure__](#walker-skeleton-structure)
+- [__Manually control walker bones__](#manually-control-walker-bones)
 
 !!! Note
-    This document assumes familiarity with the Python API. Read [Foundations](foundations.md) and the [first steps tutorial](start_first_steps.md) first.
+    This document assumes familiarity with the Python API. Read [Foundations](core_foundations.md) and the [first steps tutorial](start_first_steps.md) first.
 
 ---
 ## Walker skeleton structure

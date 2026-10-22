@@ -2,6 +2,10 @@
 
 Where to get CARLA, and which build matches which engine version. The [quick start](start_quickstart.md) covers installing what you download.
 
+- [__Latest release__](#latest-release)
+- [__Nightly build__](#nightly-build)
+- [__Docker__](#docker)
+
 ---
 ## Latest release
 

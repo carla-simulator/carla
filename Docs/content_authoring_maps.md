@@ -15,7 +15,7 @@ This page is the route through making one: the road network, the import into CAR
 To follow this guide you need CARLA built from source, so that you can use the Unreal Editor: follow the [__build instructions__](build_carla.md) for your operating system and check that the editor opens. You also need RoadRunner (or another OpenDRIVE editor) for the road network, and a 3D modelling application such as Blender, Maya or 3ds Max if you want to create your own assets.
 
 !!! Note
-    A map larger than a town is a [large map](large_map_overview.md): it is exported in tiles and streamed with World Partition. The steps below are the same, with the additions described in [RoadRunner — large maps](roadrunner.md#large-maps).
+    A map larger than a town is a [large map](core_large_maps.md): it is exported in tiles and streamed with World Partition. The steps below are the same, with the additions described in [RoadRunner — large maps](roadrunner.md#large-maps).
 
 ---
 ## Create the road network
@@ -37,19 +37,19 @@ The export files CARLA needs are the `.xodr` and the `.fbx`, and both must have 
 ![roadrunner_imports](img/content_authoring_maps/rr_import.webp)
 <div class="img-caption">The .fbx and .xodr copied into the Import folder of the CARLA tree.</div>
 
-Then run the importer from the root of the CARLA source tree. It runs the editor headless, so it needs the path to the Unreal Engine and the `carla` Python package installed in the interpreter that runs it:
+Then run the importer from the root of the CARLA source tree. It runs the editor headless, so it needs the path to the Unreal Engine and the `carla` Python package installed in the interpreter that runs it (`cmake --build Build --target carla-python-api-install` installs it). If the setup script downloaded the engine, it already added the `export` line to `~/.bashrc`; set it yourself only if your shell does not have it:
 
 ```sh
-export CARLA_UNREAL_ENGINE_PATH=/path/to/UnrealEngine_5.5
+export CARLA_UNREAL_ENGINE_PATH=/path/to/UnrealEngine5_carla
 python3 Util/Tools/Import.py --package tutorial
 ```
 
 `--package` names the package the map is imported into. The importer creates a package descriptor in `Import/` if there is none, imports the geometry, applies CARLA's road materials, prepares the map for cooking and builds the Traffic Manager cache.
 
 !!! Warning
-    The importer also tries to build the pedestrian navigation mesh, and on this branch that step silently does nothing, because `RecastBuilder` and `FBX2OBJ` are not in `Util/DockerUtils/dist/`. Without them walkers cannot navigate the new map. Copy `RecastBuilder` from the build tree into that folder before importing: `cp $(find Build -name RecastBuilder -type f | head -1) Util/DockerUtils/dist/`.
+    The importer also tries to build the pedestrian navigation mesh, and that step silently does nothing unless `FBX2OBJ` and `RecastBuilder` are in `Util/DockerUtils/dist/`. Without them walkers cannot navigate the new map. Build `FBX2OBJ` from `Util/DockerUtils/fbx`, which needs the Autodesk FBX SDK 2020.0.1 and installs into `Util/DockerUtils/dist/`, and copy `RecastBuilder` from the build tree before importing: `cp Build/_deps/recastnavigation-build/RecastBuilder/RecastBuilder Util/DockerUtils/dist/`. The step calls `python`, so `python` must run Python 3.
 
-Open the editor with `cmake --build Build/Release --target launch`. The map is in the new package folder of the content browser, at `Content > tutorial > Maps > <map name>`, with its OpenDRIVE file in the `OpenDrive` subfolder.
+Open the editor with `cmake --build Build --target launch`. The map is in the new package folder of the content browser, at `Content > tutorial > Maps > <map name>`, with its OpenDRIVE file in the `OpenDrive` subfolder.
 
 ![new_loaded_map](img/content_authoring_maps/new_map.webp)
 <div class="img-caption">The folder of an imported map in the Content Browser, here the Sunnyvale digital twin, with its level and OpenDRIVE subfolder.</div>

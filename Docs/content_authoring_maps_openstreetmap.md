@@ -1,6 +1,6 @@
 # Generate maps with OpenStreetMap
 
-[OpenStreetMap](https://www.openstreetmap.org) is an open data map of the world developed by thousands of contributors and licensed under the [Open Data Commons Open Database License](https://opendatacommons.org/licenses/odbl/). Sections of the map can be exported to an XML formatted `.osm` file. CARLA converts that file to OpenDRIVE and then builds the world with [OpenDRIVE standalone mode](adv_opendrive.md) — the same pipeline, and the same result: not just the roads, but terrain, markings, signals and roadside furniture.
+[OpenStreetMap](https://www.openstreetmap.org) is an open data map of the world developed by thousands of contributors and licensed under the [Open Data Commons Open Database License](https://opendatacommons.org/licenses/odbl/). Sections of the map can be exported to an XML formatted `.osm` file. CARLA converts that file to OpenDRIVE and then builds the world with [OpenDRIVE standalone mode](core_opendrive.md) — the same pipeline, and the same result: not just the roads, but terrain, markings, signals and roadside furniture.
 
 - [__Export a map with OpenStreetMap__](#export-a-map-with-openstreetmap)
 - [__Using OpenStreetMap in CARLA__](#using-openstreetmap-in-carla)
@@ -105,7 +105,7 @@ settings.set_traffic_light_excluded_way_types(["motorway_link"])
 ---
 ## Ingest into CARLA
 
-This section explains how to use the different options available to ingest your OpenStreetMap information into CARLA using the [OpenDRIVE Standalone Mode](adv_opendrive.md).
+This section explains how to use the different options available to ingest your OpenStreetMap information into CARLA using the [OpenDRIVE Standalone Mode](core_opendrive.md).
 
 ### A) Use your own script
 

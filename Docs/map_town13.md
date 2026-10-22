@@ -3,7 +3,7 @@
 ![town_13_slideshow](img/catalogue/maps/town13/town13_montage.webp)
 <div class="img-caption">Town13: the high-rise downtown, a high-density residential street, the low-density suburbs, the causeway over the lake and the farmland.</div>
 
-Town13 is a large [World Partition](large_map_overview.md) map of a scale similar to [Town12](map_town12.md), with distinct features. It has numerous contrasting regions, including urban, residential and rural areas and a large lake with a central island, along with a large highway system with a ring road around the city. The architectural styles reflect those of many medium to large cities across North America and Europe.
+Town13 is a large [World Partition](core_large_maps.md) map of a scale similar to [Town12](map_town12.md), with distinct features. It has numerous contrasting regions, including urban, residential and rural areas and a large lake with a central island, along with a large highway system with a ring road around the city. The architectural styles reflect those of many medium to large cities across North America and Europe.
 
 !!! Note
     Town13 is designed as a __train-test pair__ with Town12. The two towns share many features, but differ in the styles of buildings, road and pavement textures, and vegetation. Producing training data in one and testing in the other helps expose overfitting in an autonomous driving stack.
@@ -12,7 +12,7 @@ Town13 is a large [World Partition](large_map_overview.md) map of a scale simila
 | --- | --- |
 | __Map name__ | `Town13` |
 | __In the default package__ | no: use a source build, or install it from a [content pack](map_content_packs.md) |
-| __Map type__ | a large [World Partition](large_map_overview.md) map: the server streams the cells around the vehicle with `role_name=hero` |
+| __Map type__ | a large [World Partition](core_large_maps.md) map: the server streams the cells around the vehicle with `role_name=hero` |
 | __Size__ | about 13 x 10 km of roads |
 | __Spawn points__ | 12478, from `world.get_map().get_spawn_points()` |
 | __Junctions__ | 774, with 1138 traffic lights |
@@ -23,7 +23,7 @@ Load it like any other map:
 world = client.load_world('Town13')
 ```
 
-Only the cells around the ego vehicle are loaded. Spawn the ego with `role_name=hero` before placing sensors, as described in [Large maps](large_map_overview.md).
+Only the cells around the ego vehicle are loaded. Spawn the ego with `role_name=hero` before placing sensors, as described in [Large maps](core_large_maps.md).
 
 - [__Zones and coordinates__](#zones-and-coordinates)
 - [__High-rise downtown__](#high-rise-downtown)

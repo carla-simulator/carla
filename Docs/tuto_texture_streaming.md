@@ -21,7 +21,7 @@ On Town10HD_Opt that returns names such as `BP_Apartment04_v07_Opt_0`. [`world.g
 
 That works against any server, packaged or not. The alternative is the Unreal Editor, which also shows you what you are about to change — it needs a [source build](build_linux_ue5.md). Open the editor with Town10HD_Opt loaded and select a building:
 
-![select_building](img/tuto_G_texture_streaming/building_selected.webp)
+![select_building](img/tuto_texture_streaming/building_selected.webp)
 <div class="img-caption">An apartment block selected in Town10HD_Opt; its label is highlighted in the Outliner.</div>
 
 We have selected an apartment block for texture manipulation. Its label is in the Outliner panel, but __hover over it and use the *ID Name* in the tooltip__: the internal name, which is what the API takes, often differs from the label. Here the label is `BP_Apartment04_v08_Opt` and the internal name `BP_Apartment04_v08_Opt_0`.
@@ -41,7 +41,7 @@ __4.__ Right-click it and choose __Asset Actions > Export__, saving in a format 
 
 Open the exported texture in your preferred image manipulation software and edit the texture as needed. In the image below, the original texture is visible in the top half, the lower half shows the modified texture.
 
-![textures](img/tuto_G_texture_streaming/textures.webp)
+![textures](img/tuto_texture_streaming/textures.webp)
 <div class="img-caption">The exported diffuse texture (top) and an edited version (bottom).</div>
 
 Export your modified texture into an appropriate location and then open up a code editor to run some Python to update the texture in the running CARLA simulation.

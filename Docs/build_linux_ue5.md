@@ -6,11 +6,11 @@
 !!! Note
     If you are using an Ubuntu version other than 22.04 or 24.04, or experiencing compilation issues, you can use the Docker-based development environment to build CARLA inside an Ubuntu 22.04 container. See [CARLA Docker Dev Environment (UE5)](build_devcontainer.md) for instructions.
 
-* __[Set up the environment](#set-up-the-environment)__
-* __[Build and run CARLA UE5](#build-and-run-carla-ue5)__
-* __[Build a package with CARLA UE5](#build-a-package-with-carla-ue5)__
-* __[Build presets](#build-presets)__
-* __[Extended build instructions](#extended-build-instructions)__
+- [__Set up the environment__](#set-up-the-environment)
+- [__Build and run CARLA UE5__](#build-and-run-carla-ue5)
+- [__Build a package with CARLA UE5__](#build-a-package-with-carla-ue5)
+- [__Build presets__](#build-presets)
+- [__Extended build instructions__](#extended-build-instructions)
 
 ## Set up the environment
 

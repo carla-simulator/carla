@@ -1,25 +1,14 @@
 # Recorder Binary File Format
 
-This page describes the layout of a recording on disk, for writing a reader of your own. How to make and play back a recording is in [Recorder](adv_recorder.md); nothing here is needed to use it.
+This page describes the layout of a recording on disk, for writing a reader of your own. How to make and play back a recording is in [Recorder](core_recorder.md); nothing here is needed to use it.
 
 The recorder saves everything the replayer needs in a binary file, with little-endian byte order for the multibyte values.
 
-*   [__Strings in binary__](#strings-in-binary)  
-*   [__Info header__](#info-header)  
-*   [__Packets__](#packets)  
-	*   [Packet 0 - Frame Start](#packet-0-frame-start)  
-	*   [Packet 1 - Frame End](#packet-1-frame-end)  
-	*   [Packet 2 - Event Add](#packet-2-event-add)  
-	*   [Packet 3 - Event Del](#packet-3-event-del)  
-	*   [Packet 4 - Event Parent](#packet-4-event-parent)  
-	*   [Packet 5 - Event Collision](#packet-5-event-collision)  
-	*   [Packet 6 - Position](#packet-6-position)  
-	*   [Packet 7 - TrafficLight](#packet-7-trafficlight)  
-	*   [Packet 8 - Vehicle Animation](#packet-8-vehicle-animation)  
-	*   [Packet 9 - Walker Animation](#packet-9-walker-animation)  
-	*   [Packets 10 to 24](#packet-10-vehicle-light)  
-*   [__Frame layout__](#frame-layout)  
-*   [__File layout__](#file-layout)
+- [__Strings in binary__](#strings-in-binary)
+- [__Info header__](#info-header)
+- [__Packets__](#packets)
+- [__Frame layout__](#frame-layout)
+- [__File layout__](#file-layout)
 
 In the next image representing the file format, we can get a quick view of all the detailed
 information. Each part that is visualized in the image will be explained in the following sections:

@@ -4,16 +4,9 @@ Sensors are actors that retrieve data from their surroundings. They are crucial 
 
 This page summarizes everything necessary to start handling sensors. It introduces the types available and a step-by-step guide of their life cycle. The specifics for every sensor can be found in the [sensors reference](ref_sensors.md).
 
-* [__Sensors step-by-step__](#sensors-step-by-step)  
-	*   [Setting](#setting)  
-	*   [Spawning](#spawning)  
-	*   [Listening](#listening)  
-	*   [Data](#data)  
-* [__Types of sensors__](#types-of-sensors)  
-	*   [Cameras](#cameras)  
-	*   [Detectors](#detectors)  
-	*   [Other](#other) 
-* [__Semantic classes__](#semantic-classes)
+- [__Sensors step-by-step__](#sensors-step-by-step)
+- [__Types of sensors__](#types-of-sensors)
+- [__Semantic classes__](#semantic-classes)
 * [__Sensors reference__](ref_sensors.md)
 
 ---
@@ -160,7 +153,7 @@ Take a shot of the world from their point of view. For cameras that return [carl
 | [Ray-traced lens](ref_sensors.md#ray-traced-lens-camera) | [carla.Image](<python_api.md#carla.Image>) | Path-traced camera with a physical lens model, plus its distance and instance twins. |
 
 
-Camera images also depend on the server's quality level and on each camera's post-process profile. See [Rendering options](adv_rendering_options.md) and [Camera post-process presets](camera_postprocess_presets.md).
+Camera images also depend on the server's quality level and on each camera's post-process profile. See [Rendering options](core_rendering.md) and [Camera post-process presets](core_camera_presets.md).
 
 ### Detectors
 
@@ -197,4 +190,4 @@ Different functionalities such as navigation, measurement of physical properties
 ---
 ## Semantic classes
 
-The semantic segmentation camera, the instance segmentation camera and the semantic LiDAR label what they see with the tags in [`carla.CityObjectLabel`](python_api.md#carla.CityObjectLabel). An asset of your own is labelled by the folder it lives in, and a class of your own is added in [Create semantic tags](tuto_D_create_semantic_tags.md).
+The semantic segmentation camera, the instance segmentation camera and the semantic LiDAR label what they see with the tags in [`carla.CityObjectLabel`](python_api.md#carla.CityObjectLabel). An asset of your own is labelled by the folder it lives in, and a class of your own is added in [Create semantic tags](core_sensors_semantic_tags.md).

@@ -14,12 +14,7 @@ import carla
 - [__Client__](#client)
 - [__World__](#world)
 - [__Synchronous and asynchronous mode__](#synchronous-and-asynchronous-mode)
-    - [Setting synchronous mode](#setting-synchronous-mode)
-    - [Using synchronous mode](#using-synchronous-mode)
 - [__Recorder__](#recorder)
-    - [Recording](#recording)
-    - [Simulation playback](#simulation-playback)
-    - [Recorder file format](#recorder-file-format)
 
 
 ---
@@ -32,7 +27,7 @@ __The client__ is the module the user runs to ask for information or changes in 
 client = carla.Client('localhost', 2000)
 ```
 
-Use the address of another machine to drive a server across the network. The port defaults to 2000 and is set when the server is launched. Several clients can be connected at once, though more than one taking control needs care with [synchrony](adv_synchrony_timestep.md).
+Use the address of another machine to drive a server across the network. The port defaults to 2000 and is set when the server is launched. Several clients can be connected at once, though more than one taking control needs care with [synchrony](core_synchrony.md).
 
 From the client come the operations that affect the whole simulation rather than one actor — loading a map, recording, the Traffic Manager:
 
@@ -64,7 +59,7 @@ weather = world.get_weather()
 blueprint_library = world.get_blueprint_library()
 ```
 
-[World and client](core_world.md) covers both objects in full, including weather, lights, debugging and world snapshots.
+[The client](core_client.md) and [The world](core_world.md) cover both objects in full, including weather, lights, debugging and world snapshots.
 
 ---
 ## Synchronous and asynchronous mode
@@ -76,7 +71,7 @@ The mode decides who controls time. In __asynchronous mode__, the default, the s
 
 __Asynchronous mode__ is an appropriate mode to run CARLA if you are experimenting or setting up a simulation, so you can fly around the map with the spectator as you place your actors. When you want to start producing training data or deploying an agent within the simulation, it is advised that you use the __synchronous mode__ since this will give you more control and predictability.
 
-Read more about [__synchronous and asynchronous modes__](adv_synchrony_timestep.md).
+Read more about [__synchronous and asynchronous modes__](core_synchrony.md).
 
 
 !!! Note
@@ -92,7 +87,7 @@ settings.fixed_delta_seconds = 0.05
 world.apply_settings(settings)
 ```
 !!! Warning
-    If synchronous mode is enabled, and there is a Traffic Manager running, this must be set to sync mode too. Read [this](adv_traffic_manager.md#synchronous-mode) to learn how to do it.
+    If synchronous mode is enabled, and there is a Traffic Manager running, this must be set to sync mode too. Read [this](core_traffic_manager.md#synchronous-mode) to learn how to do it.
 
 To disable it, set the same variable to `False`:
 
@@ -148,7 +143,7 @@ The recorder enables all data required to reproduce a previous simulation to be 
 Actors are updated on every frame according to the data contained in the recorded file. Actors in the current simulation that appear in the recording will be either moved or re-spawned to emulate it. Those that do not appear in the recording will continue their way as if nothing happened.
 
 !!! Note
-    At the end of the playback, vehicles may be returned to autopilot and pedestrians stop, depending on how the replayer was configured. See [Recorder](adv_recorder.md).
+    At the end of the playback, vehicles may be returned to autopilot and pedestrians stop, depending on how the replayer was configured. See [Recorder](core_recorder.md).
 
 The recorder file includes information regarding many different elements.
 
@@ -198,7 +193,7 @@ client.replay_file("recording01.log", time_start, duration, follow_id)
 | `duration` | Seconds to play back. `0` plays the whole recording. |
 | `follow_id` | ID of the actor the spectator follows. `0` leaves the spectator free. |
 
-`replay_file` also takes `replay_sensors`, `replay_weather`, `offset` and `map_override`. See [Recorder](adv_recorder.md) for the full list.
+`replay_file` also takes `replay_sensors`, `replay_weather`, `offset` and `map_override`. See [Recorder](core_recorder.md) for the full list.
 
 ### Recorder file format
 

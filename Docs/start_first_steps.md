@@ -4,16 +4,16 @@ A walk through a standard CARLA workflow: launch the server, connect a client, l
 
 Before starting, you need a [running CARLA server](start_quickstart.md#running-carla) and the `carla` Python package [installed](start_quickstart.md#install-client-library).
 
-* [__Launching CARLA and connecting the client__](#launching-carla-and-connecting-the-client)
-* [__Loading a map__](#loading-a-map)
-* [__Spectator navigation__](#spectator-navigation)
-* [__Adding the ego vehicle__](#adding-the-ego-vehicle)
-* [__Adding NPCs__](#adding-npcs)
-* [__Add sensors__](#add-sensors)
-* [__Animate vehicles with Traffic Manager__](#animate-vehicles-with-traffic-manager)
-* [__Choose your map__](#choose-your-map)
-* [__Choose your vehicles__](#choose-your-vehicles)
-* [__The full script__](#the-full-script)
+- [__Launching CARLA and connecting the client__](#launching-carla-and-connecting-the-client)
+- [__Loading a map__](#loading-a-map)
+- [__Spectator navigation__](#spectator-navigation)
+- [__Adding the ego vehicle__](#adding-the-ego-vehicle)
+- [__Adding NPCs__](#adding-npcs)
+- [__Add sensors__](#add-sensors)
+- [__Animate vehicles with Traffic Manager__](#animate-vehicles-with-traffic-manager)
+- [__Choose your map__](#choose-your-map)
+- [__Choose your vehicles__](#choose-your-vehicles)
+- [__The full script__](#the-full-script)
 
 ---
 ## Launching CARLA and connecting the client
@@ -25,7 +25,7 @@ cd /carla/root
 ./CarlaUnreal.sh
 ```
 
-To drive CARLA through the Python API, connect a client to the server port. The client controls the simulator through the [__client and world objects__](foundations.md#client). Open a Python notebook or a new script and start with:
+To drive CARLA through the Python API, connect a client to the server port. The client controls the simulator through the [__client and world objects__](core_foundations.md#client). Open a Python notebook or a new script and start with:
 
 ```py
 import carla
@@ -41,7 +41,7 @@ The [__client__](python_api.md#carla.Client) maintains the connection to the ser
 The port defaults to 2000 and can be any free port; the host can be an IP address instead of *localhost*, so the server can run on one machine and the client on another. That is useful to keep the GPU running the simulator separate from the one training a network.
 
 !!! Note
-    This page assumes CARLA is running in the default [__asynchronous__](adv_synchrony_timestep.md) mode. In synchronous mode some of the code below needs a `world.tick()` to advance.
+    This page assumes CARLA is running in the default [__asynchronous__](core_synchrony.md) mode. In synchronous mode some of the code below needs a `world.tick()` to advance.
 
 ---
 ## Loading a map
@@ -96,7 +96,7 @@ spectator.set_transform(carla.Transform())
 ---
 ## Adding the ego vehicle
 
-The __ego vehicle__ is the focus of the simulation: the one that carries the sensors and that an autonomous stack drives. It is marked by setting its `role_name` attribute to `hero` before spawning, which is what lets the simulator treat it specially — for instance in [hybrid physics mode](adv_traffic_manager.md#hybrid-physics-mode), where only the vehicles near the ego get full physics.
+The __ego vehicle__ is the focus of the simulation: the one that carries the sensors and that an autonomous stack drives. It is marked by setting its `role_name` attribute to `hero` before spawning, which is what lets the simulator treat it specially — for instance in [hybrid physics mode](core_traffic_manager.md#hybrid-physics-mode), where only the vehicles near the ego get full physics.
 
 Spawn it first, and take its spawn point out of the list so the traffic does not collide with it:
 
@@ -156,7 +156,7 @@ camera.listen(lambda image: image.save_to_disk('out/%06d.png' % image.frame))
 ---
 ## Animate vehicles with Traffic Manager
 
-Hand the vehicles over to the [__Traffic Manager__](adv_traffic_manager.md), which drives them around the map following the road rules:
+Hand the vehicles over to the [__Traffic Manager__](core_traffic_manager.md), which drives them around the map following the road rules:
 
 ```py
 for vehicle in world.get_actors().filter('*vehicle*'):

@@ -2,16 +2,14 @@
 
 The recorder saves the state of the simulation on every frame: vehicles, pedestrians, traffic lights, weather and the rest of what the world holds at that moment.
 
-The replayer plays that file back exactly as it was recorded, so the run can be inspected afterwards: from any point in the file, at any speed, and followed with the spectator. The [queries](#queries) below search a recording for collisions and for vehicles that got stuck, and the file's layout is documented in [Recorder binary file format](ref_recorder_binary_file_format.md).
+The replayer plays that file back exactly as it was recorded, so the run can be inspected afterwards: from any point in the file, at any speed, and followed with the spectator. The [queries](#queries) below search a recording for collisions and for vehicles that got stuck, and [Recorder format](#recorder-format) covers the layout of the file itself.
 
-*   [__Recording__](#recording)  
-*   [__Simulation playback__](#simulation-playback)  
-	*   [Setting a time factor](#setting-a-time-factor)  
-*   [__Recorded file__](#recorded-file)  
-*   [__Queries__](#queries)  
-	*   [Collisions](#collisions)  
-	*   [Blocked actors](#blocked-actors)  
-*   [__Sample Python scripts__](#sample-python-scripts)
+- [__Recording__](#recording)
+- [__Simulation playback__](#simulation-playback)
+- [__Recorded file__](#recorded-file)
+- [__Queries__](#queries)
+- [__Sample Python scripts__](#sample-python-scripts)
+- [__Recorder format__](#recorder-format)
 
 ---
 ## Recording
@@ -113,13 +111,13 @@ client.set_replayer_time_factor(2.0)
 
 When the time factor is around __20x__ traffic flow is easily appreciated.
 
-![flow](img/adv_recorder/recorder_replay_traffic.webp)
+![flow](img/core_recorder/recorder_replay_traffic.webp)
 <div class="img-caption">A replay of Traffic Manager traffic at a junction, seen from above.</div>
 
 ---
 ## Recorded file
 
-The details of a recording can be retrieved using a simple API call. By default, it only retrieves those frames where an event was registered. Setting the parameter `show_all` would return all the information for every frame. The specifics on how the data is stored are detailed in the [recorder's reference](ref_recorder_binary_file_format.md).
+The details of a recording can be retrieved using a simple API call. By default, it only retrieves those frames where an event was registered. Setting the parameter `show_all` would return all the information for every frame. The specifics of how the data is stored are in [Recorder format](#recorder-format).
 
 ```py
 # Show info for relevant frames
@@ -208,7 +206,7 @@ client.replay_file("crash.log", 3, 0, 1206)
 ```
 In this case, the playback showed this.
 
-![collision](img/adv_recorder/recorder_collision.webp)
+![collision](img/core_recorder/recorder_collision.webp)
 <div class="img-caption">A recorded collision; show_recorder_collisions(log, 'v', 'v') lists it (lincoln.mkz against nissan.patrol at t = 5 s).</div>
 
 ### Blocked actors
@@ -311,6 +309,13 @@ __`PythonAPI/examples/recorder_replay.py`__ — a fuller replay example, with we
 | `--factor` | Playback speed. |
 
 Every one of them also takes `--host` and `-p`/`--port`.
+
+---
+## Recorder format
+
+A recording is a binary file of its own, not a text log: a header naming the map and the duration, then one block per frame holding the packets that describe what changed in it. Reading it does not need CARLA — the layout is fully specified, so a recording can be parsed, filtered or converted by a tool of your own.
+
+[__Recorder binary file format__](ref_recorder_binary_file_format.md) documents all of it: how strings and vectors are written, the info header, every one of the packet types with its fields, and the order packets appear in within a frame.
 
 ---
 Now it is time to experiment for a while. Use the recorder to playback a simulation, trace back events, make changes to see new outcomes. Feel free to share what you find in [GitHub Discussions](https://github.com/carla-simulator/carla/discussions).

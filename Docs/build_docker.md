@@ -6,6 +6,12 @@ Linux users can pull an image based on a CARLA release to run in a Docker contai
 - Run multiple CARLA servers and perform GPU mapping
 - Run the CARLA server without a display
 
+- [__Before you begin__](#before-you-begin)
+- [__Pull the CARLA Docker image__](#pull-the-carla-docker-image)
+- [__Run the image__](#run-the-image)
+- [__Get the client library__](#get-the-client-library)
+- [__Run several servers on different GPUs__](#run-several-servers-on-different-gpus)
+
 ---
 ## Before you begin
 

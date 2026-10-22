@@ -22,10 +22,10 @@ Background traffic only needs the ground under its wheels; the ego's radius is t
 
 The engine loads whole cells, so the loaded area is wider than the radius and follows the cell grid rather than a circle. On Town15, a radius of 400 m kept the ground fully loaded up to 500–800 m from the ego, depending on the spot, and scattered cells up to about 2 km.
 
-![streaming_distance](img/large_map_overview/streaming_distance.webp)
+![streaming_distance](img/core_large_maps/streaming_distance.webp)
 <div class="img-caption">What is loaded around an ego vehicle in the middle of the map, seen from 2 km above: the cells of a 500 m radius (left) and of the default 3000 m (right).</div>
 
-![streaming_ring](img/large_map_overview/streaming_ring.webp)
+![streaming_ring](img/core_large_maps/streaming_ring.webp)
 <div class="img-caption">An ego vehicle at the western end of the map with a 400 m radius (red circle): the loaded cells reach beyond the circle, the rest of the map is not loaded.</div>
 
 !!! Warning

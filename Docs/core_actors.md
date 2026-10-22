@@ -4,21 +4,9 @@ Actors in CARLA are the elements that perform actions within the simulation, and
 
 This section will cover spawning, destruction, types, and how to manage them. However, the possibilities are almost endless. Experiment, take a look at the [__tutorials__](tutorials.md) in this documentation and share doubts and ideas in the [GitHub Discussions](https://github.com/carla-simulator/carla/discussions).
 
-- [__Blueprints__](#blueprints)  
-	- [Managing the blueprint library](#managing-the-blueprint-library)  
-	- [The catalogue](#the-catalogue)  
-	- [Creating your own actors](#creating-your-own-actors)  
-- [__Actor life cycle__](#actor-life-cycle)  
-	- [Spawning](#spawning)  
-	- [Handling](#handling)  
-	- [Components, bones and sockets](#components-bones-and-sockets)  
-	- [Destruction](#destruction)  
-- [__Types of actors__](#types-of-actors)  
-	- [Sensors](#sensors)  
-	- [Spectator](#spectator)  
-	- [Traffic signs and traffic lights](#traffic-signs-and-traffic-lights)  
-	- [Vehicles](#vehicles)  
-	- [Walkers](#walkers)
+- [__Blueprints__](#blueprints)
+- [__Actor life cycle__](#actor-life-cycle)
+- [__Types of actors__](#types-of-actors)
 
 ---
 ## Blueprints
@@ -110,7 +98,7 @@ actor = world.spawn_actor(blueprint, transform)
 ```
 
 !!! Important
-    CARLA uses the [Unreal Engine coordinate system](coordinate_conventions.md). Remember that the [`carla.Rotation`](python_api.md#carla.Rotation) constructor is defined as `(pitch, yaw, roll)`, which differs from the Unreal Engine editor's `(roll, pitch, yaw)`.
+    CARLA uses the [Unreal Engine coordinate system](core_coordinate_conventions.md). Remember that the [`carla.Rotation`](python_api.md#carla.Rotation) constructor is defined as `(pitch, yaw, roll)`, which differs from the Unreal Engine editor's `(roll, pitch, yaw)`.
 
 The actor will not be spawned in case of collision at the specified location. No matter if this happens with a static object or another actor. It is possible to try avoiding these undesired spawning collisions.
 
@@ -320,7 +308,7 @@ vehicle.set_wheel_suspension_offset(carla.VehicleWheelLocation.FL_Wheel, 0.05)
 
 Vehicles include other functionalities unique to them:
 
-* __Autopilot mode__ will subscribe a vehicle to the [Traffic Manager](adv_traffic_manager.md) to simulate real urban conditions. This module is hard-coded, not based on machine learning.
+* __Autopilot mode__ will subscribe a vehicle to the [Traffic Manager](core_traffic_manager.md) to simulate real urban conditions. This module is hard-coded, not based on machine learning.
 
 ```py
 vehicle.set_autopilot(True)
@@ -345,7 +333,7 @@ vehicle.set_light_state(current_lights)
 [__carla.Walker__](python_api.md#carla.Walker) work in a similar way as vehicles do. Control over them is provided by controllers.
 
 * [__carla.WalkerControl__](python_api.md#carla.WalkerControl) moves the pedestrian around with a certain direction and speed. It also allows them to jump. 
-* [__carla.WalkerBoneControlIn__](python_api.md#carla.WalkerBoneControlIn) provides control over the 3D skeleton. [This tutorial](tuto_G_control_walker_skeletons.md) explains how to control it.
+* [__carla.WalkerBoneControlIn__](python_api.md#carla.WalkerBoneControlIn) provides control over the 3D skeleton. [This tutorial](tuto_walker_skeletons.md) explains how to control it.
 
 Walkers can be AI controlled. They do not have an autopilot mode. The [__carla.WalkerAIController__](python_api.md#carla.WalkerAIController) actor moves around the actor it is attached to.
 

@@ -15,13 +15,21 @@ python3 manual_control.py
 !!! Note
     Running two scripts against the same server is normal — one driving traffic, another watching it. Only one of them may put the simulation in synchronous mode, though: if two clients both tick, they fight over the clock and the simulation stutters. Let whichever one owns the traffic run synchronously and leave the rest asynchronous.
 
+- [__Drive and look around__](#drive-and-look-around)
+- [__Traffic__](#traffic)
+- [__Sensors__](#sensors)
+- [__Recording and replay__](#recording-and-replay)
+- [__Weather and light__](#weather-and-light)
+- [__Benchmarks and test suites__](#benchmarks-and-test-suites)
+- [__Map and world utilities__](#map-and-world-utilities)
+
 ---
 
 ## Drive and look around
 
 | Script | What it does |
 | ------ | ------------ |
-| `manual_control.py` | Drive a vehicle with the keyboard in a Pygame window, cycling sensors, weather and vehicles live. The first script to run on a new install. `--autopilot` hands it to the Traffic Manager, `--post-process-profile` picks a [camera preset](camera_postprocess_presets.md). |
+| `manual_control.py` | Drive a vehicle with the keyboard in a Pygame window, cycling sensors, weather and vehicles live. The first script to run on a new install. `--autopilot` hands it to the Traffic Manager, `--post-process-profile` picks a [camera preset](core_camera_presets.md). |
 | `manual_control_fisheye.py` | The same, with the [fisheye cameras](ref_sensors.md#fisheye-cameras) in the sensor cycle. |
 | `manual_control_rtlens.py` | The same, starting on the [ray-traced lens camera](ref_sensors.md#ray-traced-lens-camera) with its lens models. |
 | `manual_control_5cam.py` | A five-camera AV rig on the vehicle, with DLSS Super Resolution toggled live on `D`. |
@@ -43,7 +51,7 @@ python3 manual_control.py --res 1280x720 --autopilot
 | Script | What it does |
 | ------ | ------------ |
 | `generate_traffic.py` | Fills the map with vehicles and pedestrians on the Traffic Manager. `-n` vehicles, `-w` walkers, `--hybrid` for hybrid physics, `--asynch` to leave the simulation asynchronous. |
-| `automatic_control.py` | Drives one vehicle to a destination with a [navigation agent](adv_agents.md), replanning when it arrives. |
+| `automatic_control.py` | Drives one vehicle to a destination with a [navigation agent](core_agents.md), replanning when it arrives. |
 | `invertedai_traffic.py` | Replaces the Traffic Manager with InvertedAI's behaviour models. See [InvertedAI](inverted_ai.md). |
 
 ```sh
@@ -76,7 +84,7 @@ python3 generate_traffic.py -n 80 -w 40
 | `util/show_recorder_file_info.py` | Prints what is inside a recording: actors, frames, collisions and blocked actors. |
 | `util/recorder_comparer.py` | Compares two recordings frame by frame, for determinism checks. |
 
-See [Recorder](adv_recorder.md) for the API behind these.
+See [Recorder](core_recorder.md) for the API behind these.
 
 ---
 
