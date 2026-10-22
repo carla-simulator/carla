@@ -27,7 +27,6 @@ Step-by-step guides that solve one problem each, with the code to run. The secti
 ## Traffic
 
 - [__Traffic Manager__](tuto_traffic_manager.md) — Populate a map with traffic, shape how it behaves and send it along set routes.
-- [__Scenic__](scenic.md) — Write probabilistic scenarios and run them on CARLA.
 
 ---
 ## C++
