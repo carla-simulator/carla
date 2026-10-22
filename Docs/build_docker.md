@@ -6,12 +6,6 @@ Linux users can pull an image based on a CARLA release to run in a Docker contai
 - Run multiple CARLA servers and perform GPU mapping
 - Run the CARLA server without a display
 
-- [__Before you begin__](#before-you-begin)
-- [__Pull the CARLA Docker image__](#pull-the-carla-docker-image)
-- [__Run the image__](#run-the-image)
-- [__Get the client library__](#get-the-client-library)
-- [__Run several servers on different GPUs__](#run-several-servers-on-different-gpus)
-
 ---
 ## Before you begin
 
@@ -26,10 +20,17 @@ You will need to have installed:
     sudo systemctl restart docker
     ```
 
+    The legacy runtime commands below use `--runtime=nvidia` instead, which needs the toolkit registered as a Docker runtime:
+
+    ```sh
+    sudo nvidia-ctk runtime configure --runtime=docker
+    sudo systemctl restart docker
+    ```
+
 ---
 ## Pull the CARLA Docker image
 
-Pull the image with the following command __(TODO: confirm the image tag and the `CarlaUnreal.sh` path once the 1.0.0 image is published)__:
+Pull the image with the following command __(TODO: confirm the image tag, and the `CarlaUnreal.sh` and wheel paths inside the image, once the 1.0.0 image is published)__:
 
 ```sh
 docker pull carlasim/carla:1.0.0

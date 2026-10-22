@@ -2,14 +2,6 @@
 
 Learn how to define customized tags for semantic segmentation. These can additionally be added to [carla.CityObjectLabel](python_api.md#carla.CityObjectLabel) to filter the bounding boxes that [carla.World](python_api.md#carla.World) retrieves.
 
-*   [__Create a new semantic tag__](#create-a-new-semantic-tag)  
-	*   [1. Create the tag ID](#1-create-the-tag-id)  
-	*   [2. Create the UE folder for assets](#2-create-the-ue-folder-for-assets)  
-	*   [3. Create two-way correspondence between UE and the code tag](#3-create-two-way-correspondence-between-ue-and-the-code-tag)  
-	*   [4. Define a color code](#4-define-a-color-code)  
-    *   [5. Add the tagged meshes](#5-add-the-tagged-meshes)
-*   [__Add a tag to carla.CityObjectLabel__](#add-a-tag-to-carlacityobjectlabel)
-
 ---
 
 ## Create a new semantic tag
@@ -37,7 +29,9 @@ __Open `ObjectLabel.h`__ in `LibCarla/source/carla/rpc`. Add your new tag by the
 
 __Open the Unreal Engine Editor__ and go to `Content/Carla/Static`. Create a new folder named after your tag.
 
-The label is read from the asset's path, at a fixed depth: the folder has to sit directly under `Content/Carla/Static/` (or under `Content/Carla/Static/UE5UseOnly/`), not nested deeper. A content pack uses `/<Pack>/Static/<Tag>/` instead.
+The label is read from the asset's path. The folder directly under `Content/Carla/Static/` (or under `Content/Carla/Static/UE5UseOnly/`) is checked first. If that folder is not a tag, the nearest folder above the asset that is a tag is used instead, so `Static/MyProps/MyNewTag/` is tagged `MyNewTag` but `Static/Vegetation/MyNewTag/` is tagged `Vegetation`.
+
+A content pack uses `/<Pack>/Static/<Tag>/` instead. For a content pack, also add the folder name to `SEMANTIC_LABELS` in `Util/ContentPacks/carla_pack.py`, or the pack tool rejects the meshes in that folder as untagged.
 
 ![ue_folder](img/tuto_D_create_semantic_tags/02_ue_folder.webp)
 <div class="img-caption">Content Browser at Content/Carla/Static with a new tag folder (MyNewTag) next to the existing tag folders.</div>
@@ -47,7 +41,7 @@ The label is read from the asset's path, at a fixed depth: the folder has to sit
 
 ### 3. Create two-way correspondence between UE and the code tag
 
-__3.1. Open `Tagger.cpp`__ in `Unreal/CarlaUnreal/Plugins/Carla/Source/Carla/Game`. Go to __`GetLabelByFolderName`__ Add the your tag by the end of the list. The string being compared is the name of the UE folder used in [__2.__](#2-create-the-ue-folder-for-assets), so use the exact same name here.
+__3.1. Open `Tagger.cpp`__ in `Unreal/CarlaUnreal/Plugins/Carla/Source/Carla/Game`. Go to __`GetLabelByFolderName`__. Add your tag by the end of the list. The string being compared is the name of the UE folder used in [__2.__](#2-create-the-ue-folder-for-assets), so use the exact same name here.
 
 ```cpp
   else if (String == "Rock")         return crp::CityObjectLabel::Rock;
@@ -67,7 +61,7 @@ __3.2. Go to `GetTagAsString`__ in the same `Tagger.cpp`. Add the new tag by the
 #undef CARLA_GET_LABEL_STR
 ```
 
-__3.3. Go to `GetTagFromString`__, still in `Tagger.cpp`, and add the matching line before the final `return`. Without it the tag cannot be read back from a name, which is what `ATagger::SetLabelTag` uses to replace an existing tag.
+__3.3. Go to `GetTagFromString`__, still in `Tagger.cpp`, and add the matching line before the final `return`. Without it the tag cannot be read back from a name, which is what `ATagger_SetLabelTag` uses to replace an existing tag.
 
 ```cpp
   if(Tag.Contains("Rock")) return crp::CityObjectLabel::Rock;
@@ -76,7 +70,7 @@ __3.3. Go to `GetTagFromString`__, still in `Tagger.cpp`, and add the matching l
 ```
 
 !!! Warning
-    `GetTagFromName` builds its lookup table by walking the enum only as far as `CityObjectLabel::Rock`. A label added after `Rock` is never put in that table and will not round-trip. Either insert the new label before `Rock`, or raise the loop bound in `GetTagFromName` to the last enum value, `crp::CityObjectLabel::MyNewTag` in this example.
+    `GetTagFromName` builds its lookup table by walking the enum only as far as `CityObjectLabel::Rock`. A label added after `Rock` is never put in that table, so it cannot be looked up by name. Either insert the new label before `Rock`, or raise the loop bound in `GetTagFromName` to the last enum value, `crp::CityObjectLabel::MyNewTag` in this example.
 
 ### 4. Define a color code
 
@@ -90,11 +84,18 @@ __Open `CityScapesPalette.h`__ in `LibCarla/source/carla/image`. Add the color c
 ```
 
 !!! Warning
-    The position in the array must match the tag id. The enum currently ends at `Rock = 29u`, so a new tag takes the next free value.
+    The position in the array must match the tag id.
 
 ### 5. Add the tagged meshes
 
-The new semantic tag is ready to be used. Only the meshes stored inside the UE folder of a tag are tagged as such. Move or import the corresponding meshes to the new folder, in order for the to be tagged properly.
+Rebuild CARLA, which compiles the new tag into the simulator, and the Python API, which holds the color code that `carla.ColorConverter.CityScapesPalette` uses:
+
+```sh
+cmake --build Build --target carla-unreal-editor
+cmake --build Build --target carla-python-api-install
+```
+
+The new semantic tag is ready to be used. Move or import the corresponding meshes to the new folder, in order for them to be tagged properly.
 
 ---
 
@@ -112,16 +113,10 @@ __Open `World.cpp`__ in `PythonAPI/carla/src` and add the new tag at the end of 
   ;
 ```
 
+Finally, rerun the `carla-python-api-install` build from [__5.__](#5-add-the-tagged-meshes) so the Python API exposes the new value, and add it to `PythonAPI/docs/sensor_data.yml` and the semantic tag table in `ref_sensors.md`.
 
 ---
 
-Post in the [GitHub Discussions](https://github.com/carla-simulator/carla/discussions) for any issues, doubts or suggestions.
+Read the **[F.A.Q.](build_faq.md)** page or post in the [CARLA forum](https://github.com/carla-simulator/carla/discussions) for any issues, doubts or suggestions.
 
 __What's next?__ The [sensors reference](ref_sensors.md) covers the semantic segmentation camera that consumes these tags, and [adding props](content_authoring_props.md) covers importing the meshes to tag.
-
-Finally, rebuild the server and the Python API so both sides know the new label, and add it to `PythonAPI/docs/world.yml` and the semantic tag table in `ref_sensors.md`:
-
-```sh
-cmake --build Build/Release --target carla-server
-cmake --build Build/Release --target carla-python-api-install
-```
