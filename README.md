@@ -36,7 +36,7 @@ The [CARLA documentation](https://carla-ue5.readthedocs.io/en/latest/) is hosted
 
 - [Building on Linux](https://carla-ue5.readthedocs.io/en/latest/build_linux_ue5/)
 - [Building on Windows](https://carla-ue5.readthedocs.io/en/latest/build_windows_ue5/)
-- [First steps](https://carla-ue5.readthedocs.io/en/latest/tuto_first_steps/)
+- [First steps](https://carla-ue5.readthedocs.io/en/latest/start_first_steps/)
 - [CARLA asset catalogue](https://carla-ue5.readthedocs.io/en/latest/catalogue/)
 - [Python API reference](https://carla-ue5.readthedocs.io/en/latest/python_api/)
 - [Blueprint library](https://carla-ue5.readthedocs.io/en/latest/bp_library/)

@@ -13,7 +13,7 @@ Every tutorial in the documentation, grouped by what it is for.
 ---
 ## Getting started
 
-- [__First steps__](tuto_first_steps.md) — Connect a client, load a map, add an ego vehicle, traffic and a camera.
+- [__First steps__](start_first_steps.md) — Connect a client, load a map, add an ego vehicle, traffic and a camera.
 - [__C++ tutorial__](tuto_cpp.md) — The same workflow from a C++ client.
 
 ---

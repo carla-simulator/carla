@@ -6,7 +6,7 @@
 This home page is an index of the documentation. Read it in any order; for a newcomer, the suggestions below are a good path.
 
 * __Install CARLA:__ Either follow the [Quick Start Installation](start_quickstart.md) to get a CARLA release or [build CARLA from source](build_carla.md) for a desired platform.
-* __Start using CARLA:__ The [Foundations](foundations.md) section is an introduction to the most important concepts in CARLA and the [First Steps tutorial](tuto_first_steps.md) shows you how to get started creating simulations.
+* __Start using CARLA:__ The [Foundations](foundations.md) section is an introduction to the most important concepts in CARLA and the [First Steps tutorial](start_first_steps.md) shows you how to get started creating simulations.
 * __Check the API:__ there is a handy [Python API reference](python_api.md) to look up the classes and methods available.
 
 CARLA's GitHub Discussions are the place to ask questions and connect with other users.
@@ -24,7 +24,7 @@ GitHub Discussions</a>
 - [__Introduction__](start_introduction.md) — What to expect from CARLA.
 - [__Quick start package installation__](start_quickstart.md) — Install the CARLA package and get started.
 - [__Download__](download.md) — Releases, nightly builds and Docker images.
-- [__First steps__](tuto_first_steps.md) — Taking the first steps in CARLA with the Python API.
+- [__First steps__](start_first_steps.md) — Taking the first steps in CARLA with the Python API.
 - [__Building CARLA__](build_carla.md) — How to build CARLA from source on Linux and Windows.
 
 ---

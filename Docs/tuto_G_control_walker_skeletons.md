@@ -9,7 +9,7 @@ In this tutorial we describe how to manually control and animate the skeletons o
 	*   [Control walker skeletons](#control-walker-skeletons)
 
 !!! Note
-    This document assumes familiarity with the Python API. Read [Foundations](foundations.md) and the [first steps tutorial](tuto_first_steps.md) first.
+    This document assumes familiarity with the Python API. Read [Foundations](foundations.md) and the [first steps tutorial](start_first_steps.md) first.
 
 ---
 ## Walker skeleton structure

@@ -10,8 +10,15 @@ nav:
 - Getting started:
   - 'Introduction': 'start_introduction.md'
   - 'Quick start package installation': 'start_quickstart.md'
-  - 'First steps' : 'tuto_first_steps.md'
-  - 'Building CARLA' : 'build_carla.md'
+  - 'First steps' : 'start_first_steps.md'
+  - Building CARLA:
+    - 'Overview': 'build_carla.md'
+    - 'Linux': 'build_linux_ue5.md'
+    - 'Windows': 'build_windows_ue5.md'
+    - 'Docker': 'build_docker.md'
+    - 'Development container': 'build_devcontainer.md'
+    - 'Download': 'download.md'
+    - 'Build FAQ': 'build_faq.md'
 
 - CARLA topics:
   - 'Foundations': 'foundations.md'
@@ -72,10 +79,16 @@ nav:
   - 'Inverted AI': 'inverted_ai.md'
 
 - Contributing:
-  - 'Guidelines': 'cont_contribution_guidelines.md' 
-  - 'Coding standards': 'cont_coding_standard.md'
+  - 'Guidelines': 'cont_contribution_guidelines.md'
+  - 'Code of conduct': 'cont_code_of_conduct.md'
+  - 'Coding standard': 'cont_coding_standard.md'
   - 'Documentation standard': 'cont_doc_standard.md'
-  - 'Development': 'development_tutorials.md'
+  - Development:
+    - 'Overview': 'development_tutorials.md'
+    - 'Create a sensor': 'tuto_D_create_sensor.md'
+    - 'Updating the content': 'tuto_D_contribute_assets.md'
+    - 'Running the tests': 'testing.md'
+    - 'Make a release': 'tuto_D_make_release.md'
  
 # Pages reached from a parent page instead of the sidebar
 not_in_nav: |
@@ -85,19 +98,12 @@ not_in_nav: |
   /adv_recorder.md
   /adv_rendering_options.md
   /adv_synchrony_timestep.md
-  /build_devcontainer.md
-  /build_docker.md
-  /build_faq.md
-  /build_linux_ue5.md
-  /build_windows_ue5.md
   /camera_postprocess_presets.md
   /catalogue_pedestrians.md
   /catalogue_props.md
   /catalogue_scripts.md
   /catalogue_vehicles.md
-  /cont_code_of_conduct.md
   /cpp_api_parity.md
-  /download.md
   /ext_docs.md
   /large_map_overview.md
   /map_content_packs.md
@@ -119,10 +125,6 @@ not_in_nav: |
   /ref_recorder_binary_file_format.md
   /ref_sensors.md
   /release_readme.md
-  /testing.md
-  /tuto_D_contribute_assets.md
-  /tuto_D_create_sensor.md
-  /tuto_D_make_release.md
   /tuto_G_add_friction_triggers.md
   /tuto_G_bounding_boxes.md
   /tuto_G_control_vehicle_physics.md
