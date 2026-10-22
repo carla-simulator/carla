@@ -256,32 +256,7 @@ table tbody td{
 	left: 1100px;
 }
 
-/************************* LATEST WARNING BANNER **************************/
-
-.dev-version-warning {
-	padding-top: 15px;
-	padding-bottom: 15px;
-	padding-left: 15px;
-	padding-right: 15px;
-	margin-bottom: 8px;
-	color: #404040;
-	font-weight: bold;
-	background-color: #f55c47;
-	text-align: center;
-	border-radius: 5px;
-}
-
 /************************* FIGURE CAPTIONS **************************/
-
-/************************* JUSTIFIED PROSE **************************/
-
-/* Fill the line, never breaking a word across two of them. extra.js adds the
-   class only where the lines are already full enough to justify cleanly. */
-.rst-content p.justified,
-.rst-content li.justified {
-	text-align: justify;
-	hyphens: none;
-}
 
 .img-caption {
 	text-align: right;
@@ -295,6 +270,16 @@ table tbody td{
    caption back up so it reads as part of the figure. */
 p:has(> img) + .img-caption {
 	margin-top: -18px;
+}
+
+/************************* JUSTIFIED PROSE **************************/
+
+/* Fill the line, never breaking a word across two of them. extra.js adds the
+   class only where the lines are already full enough to justify cleanly. */
+.rst-content p.justified,
+.rst-content li.justified {
+	text-align: justify;
+	hyphens: none;
 }
 
 /************************* CODE BLOCK COPY BUTTON **************************/

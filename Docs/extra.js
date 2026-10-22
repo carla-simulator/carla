@@ -1,14 +1,3 @@
-$(document).ready(function () {
-    if(window.location.href.indexOf("/latest/") != -1) {
-        var banner = document.createElement("div");
-        var section = document.getElementsByClassName("section");
-        banner.className = "dev-version-warning";
-        banner.innerHTML = "You are currently reading documentation for the \"ue58-dev\" branch of the Unreal Engine 5 version of CARLA. The functionality referred to in this documentation may exhibit instability or unexpected behavior.";
-        section[0].insertBefore(banner,section[0].childNodes[0]);
-    }
-
-});
-
 // Download page: show when the nightly was last built successfully.
 async function getLastWorkflowRun(owner, repo, workflowFileName) {
     const url = `https://api.github.com/repos/${owner}/${repo}/actions/workflows/${workflowFileName}/runs?status=success&per_page=1`;

@@ -1,7 +1,7 @@
 CARLA Simulator
 ===============
 
-[![Documentation](https://readthedocs.org/projects/carla/badge/?version=latest)](https://carla-ue5.readthedocs.io)
+[![Documentation](https://readthedocs.org/projects/carla-ue5/badge/?version=latest)](https://carla-ue5.readthedocs.io)
 
 [![carla.org](Docs/img/btn/web.webp)](http://carla.org)
 [![download](Docs/img/btn/download.webp)](https://github.com/carla-simulator/carla/releases)
