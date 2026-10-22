@@ -29,6 +29,7 @@ nav:
     - 'Rendering options': 'core_rendering.md'
     - 'Camera post-process presets': 'core_camera_presets.md'
     - 'Recorder': 'core_recorder.md'
+    - 'Recorder file format': 'ref_recorder_binary_file_format.md'
     - 'Multi-GPU': 'core_multigpu.md'
   - Actors:
     - 'Overview': 'core_actors.md'
@@ -84,6 +85,12 @@ nav:
     - 'Texture streaming': 'tuto_texture_streaming.md'
     - 'Add friction triggers': 'tuto_friction_triggers.md'
     - 'C++ tutorial': 'tuto_cpp.md'
+  - Development:
+    - 'Overview': 'dev_overview.md'
+    - 'Create a sensor': 'dev_create_sensor.md'
+    - 'Updating the content': 'dev_update_content.md'
+    - 'Running the tests': 'dev_testing.md'
+    - 'Make a release': 'dev_make_release.md'
 
 - Content authoring:
   - 'Overview': 'content_authoring_overview.md'
@@ -127,16 +134,9 @@ nav:
   - 'Code of conduct': 'cont_code_of_conduct.md'
   - 'Coding standard': 'cont_coding_standard.md'
   - 'Documentation standard': 'cont_doc_standard.md'
-  - Development:
-    - 'Overview': 'dev_overview.md'
-    - 'Create a sensor': 'dev_create_sensor.md'
-    - 'Updating the content': 'dev_update_content.md'
-    - 'Running the tests': 'dev_testing.md'
-    - 'Make a release': 'dev_make_release.md'
  
 # Pages reached from a parent page instead of the sidebar
 not_in_nav: |
-  /ref_recorder_binary_file_format.md
   /release_readme.md
 
 hooks:
