@@ -1,0 +1,54 @@
+name: Streaming listener regression tests
+
+on:
+  push:
+    paths:
+      - LibCarla/source/carla/streaming/**
+      - LibCarla/source/test/common/test_stream_listener_state.cpp
+      - Util/Tests/StreamListeners/**
+      - .github/workflows/stream_listeners.yml
+  pull_request:
+    branches: [ue58-dev]
+    paths:
+      - LibCarla/source/carla/streaming/**
+      - LibCarla/source/test/common/test_stream_listener_state.cpp
+      - Util/Tests/StreamListeners/**
+      - .github/workflows/stream_listeners.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  native-tests:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        sanitizers: [thread, 'address,undefined']
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install native test dependencies
+        run: sudo apt-get update && sudo apt-get install -y cmake ninja-build g++ libboost-dev libgtest-dev
+      - name: Get CARLA rpclib headers
+        run: git clone --depth 1 --branch carla https://github.com/carla-simulator/rpclib.git Build/stream-rpclib
+      - name: Configure production streaming tests without Unreal
+        run: >-
+          cmake -S Util/Tests/StreamListeners -B Build/StreamListeners -G Ninja
+          -DCMAKE_BUILD_TYPE=Debug
+          "-DCARLA_STREAM_SANITIZERS=${{ matrix.sanitizers }}"
+          "-DCARLA_RPCLIB_INCLUDE_DIR=$PWD/Build/stream-rpclib/include"
+      - name: Build
+        run: cmake --build Build/StreamListeners --parallel 2
+      - name: Repeat ThreadSanitizer tests
+        if: matrix.sanitizers == 'thread'
+        env:
+          TSAN_OPTIONS: halt_on_error=1
+        run: setarch "$(uname -m)" -R ./Build/StreamListeners/carla-stream-listener-tests --gtest_repeat=20
+      - name: Repeat AddressSanitizer and UndefinedBehaviorSanitizer tests
+        if: matrix.sanitizers == 'address,undefined'
+        env:
+          ASAN_OPTIONS: detect_leaks=1:detect_stack_use_after_return=1
+          UBSAN_OPTIONS: halt_on_error=1
+        run: ./Build/StreamListeners/carla-stream-listener-tests --gtest_repeat=20
