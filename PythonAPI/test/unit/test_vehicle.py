@@ -106,3 +106,52 @@ class TestVehiclePhysicsControl(unittest.TestCase):
             self.assertTrue(abs(pc.wheels[i].location.x - wheels[i].location.x) <= error)
             self.assertTrue(abs(pc.wheels[i].location.y - wheels[i].location.y) <= error)
             self.assertTrue(abs(pc.wheels[i].location.z - wheels[i].location.z) <= error)
+
+
+class TestVehicleGearRatios(unittest.TestCase):
+    def assert_ratios_equal(self, actual, expected):
+        self.assertIsInstance(actual, list)
+        self.assertEqual(len(actual), len(expected))
+        for actual_ratio, expected_ratio in zip(actual, expected):
+            self.assertAlmostEqual(actual_ratio, expected_ratio, places=6)
+
+    def test_default_ratios_are_readable(self):
+        control = carla.VehiclePhysicsControl()
+        for name in ("forward_gear_ratios", "reverse_gear_ratios"):
+            with self.subTest(property=name):
+                ratios = getattr(control, name)
+                self.assertIsInstance(ratios, list)
+                self.assertGreater(len(ratios), 0)
+                self.assertTrue(all(isinstance(ratio, float) for ratio in ratios))
+
+    def test_ratio_setters_accept_numbers_and_empty_lists(self):
+        control = carla.VehiclePhysicsControl()
+        for name in ("forward_gear_ratios", "reverse_gear_ratios"):
+            for ratios in ([3, 2.5, 1], [], [1.25]):
+                with self.subTest(property=name, ratios=ratios):
+                    setattr(control, name, ratios)
+                    self.assert_ratios_equal(getattr(control, name), ratios)
+
+    def test_constructor_accepts_ratio_lists(self):
+        for forward, reverse in (([3, 2.5, 1], [2, 1.25]), ([], [])):
+            with self.subTest(forward=forward, reverse=reverse):
+                control = carla.VehiclePhysicsControl(
+                    forward_gear_ratios=forward,
+                    reverse_gear_ratios=reverse)
+                self.assert_ratios_equal(control.forward_gear_ratios, forward)
+                self.assert_ratios_equal(control.reverse_gear_ratios, reverse)
+
+    def test_invalid_ratio_preserves_previous_values(self):
+        control = carla.VehiclePhysicsControl()
+        for name in ("forward_gear_ratios", "reverse_gear_ratios"):
+            with self.subTest(property=name):
+                setattr(control, name, [3, 2.5, 1])
+                with self.assertRaises(TypeError):
+                    setattr(control, name, [4, object(), 2])
+                self.assert_ratios_equal(getattr(control, name), [3, 2.5, 1])
+
+    def test_constructor_rejects_invalid_ratios(self):
+        for name in ("forward_gear_ratios", "reverse_gear_ratios"):
+            with self.subTest(property=name):
+                with self.assertRaises(TypeError):
+                    carla.VehiclePhysicsControl(**{name: [1, object()]})
