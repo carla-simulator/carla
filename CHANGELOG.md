@@ -57,6 +57,7 @@
 
 #### Performance
 
+* Client snapshot futures now publish only to active waiters, releasing completed and timed-out registrations instead of retaining values and copying every update to inactive threads.
 * **Reworked the quality levels** (`-quality-level=<Low|Medium|High|Epic>`, case-sensitive, Epic by default) on UE 5.8 scalability groups. Every tier now keeps the full view distance, foliage density and simulation content — Low used to cut them, which changed what a sensor saw — and lowering the tier only costs image quality. Epic looks exactly as before; only Epic uses hardware ray tracing on ordinary cameras, and `rt_lens` works on all of them.
 * **Multi-camera rigs are much faster**: all raster, fisheye and ray-traced cameras now share one GPU synchronisation per tick and a pooled readback instead of one drain per camera. A 5-camera 1080p rig gains about 30% (9.4 to 12.0 fps per camera), and the marginal cost of an extra camera drops from 19 to 13.4 ms. A single camera is unchanged, and so is the image.
 * **Ray-cast LiDARs are much faster** (`sensor.lidar.ray_cast`, `ray_cast_semantic`, `hss_lidar`): they simulate on background tasks that overlap the other sensors' work, and several LiDARs run in parallel. Three semantic LiDARs on Town10 went from 130 to 86 ms per frame. Output is unchanged for a given seed; `carla.Lidar.Batch 0` restores sequential simulation.

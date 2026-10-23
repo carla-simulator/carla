@@ -50,6 +50,7 @@ TEST(recurrent_shared_future, timeout) {
   ASSERT_FALSE(result.has_value());
 }
 
+#ifndef LIBCARLA_NO_EXCEPTIONS
 TEST(recurrent_shared_future, exception) {
   using namespace carla;
   ThreadGroup threads;
@@ -66,3 +67,4 @@ TEST(recurrent_shared_future, exception) {
   // wrapper reaches the waiter with its type intact (no slicing).
   ASSERT_THROW(future.WaitFor(1s), carla::detail::SharedException);
 }
+#endif // LIBCARLA_NO_EXCEPTIONS
