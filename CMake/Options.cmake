@@ -107,7 +107,7 @@ carla_option (
 
 carla_option (
   ENABLE_PEP517
-  "Whether to use PEP 517."
+  "Use PEP 517 (required when BUILD_PYTHON_API is enabled)."
   ON
 )
 

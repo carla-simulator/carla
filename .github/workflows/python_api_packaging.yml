@@ -1,0 +1,43 @@
+name: Python API packaging regression tests
+
+on:
+  push:
+    paths:
+      - CMake/Util.cmake
+      - PythonAPI/CMakeLists.txt
+      - PythonAPI/carla/CMakeLists.txt.in
+      - PythonAPI/carla/pyproject.toml.in
+      - PythonAPI/test/unit/test_python_api_packaging.py
+      - .github/workflows/python_api_packaging.yml
+  pull_request:
+    branches: [ue58-dev]
+    paths:
+      - CMake/Util.cmake
+      - PythonAPI/CMakeLists.txt
+      - PythonAPI/carla/CMakeLists.txt.in
+      - PythonAPI/carla/pyproject.toml.in
+      - PythonAPI/test/unit/test_python_api_packaging.py
+      - .github/workflows/python_api_packaging.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  native-wheel:
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: ilammy/msvc-dev-cmd@v1
+        if: runner.os == 'Windows'
+      - name: Install Python packaging tools
+        run: python -m pip install build scikit-build-core wheel "cmake>=3.27.2" ninja
+      - name: Build and import the native packaging fixture
+        run: python -m unittest discover -s PythonAPI/test/unit -p test_python_api_packaging.py -v

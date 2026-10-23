@@ -148,6 +148,7 @@
 
 #### Build and packaging
 
+* Fixed Python API wheel builds from source and build directories containing spaces, and rejected the unsupported setuptools-only backend instead of producing a wheel without the native client.
 * Fixed the Windows build: the setup installs the MSVC 14.38 toolset the engine fork needs, MSVC builds use `/W4`, and two compile and link errors in LibCarla.
 * Fixed the CMake toolchain picking the oldest clang sysroot when an upgraded engine keeps several side by side.
 
