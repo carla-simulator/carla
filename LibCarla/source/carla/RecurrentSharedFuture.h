@@ -7,6 +7,7 @@
 #pragma once
 
 #include "carla/Exception.h"
+#include "carla/NonCopyable.h"
 #include "carla/Time.h"
 
 #include <optional>
@@ -22,8 +23,10 @@
 
 #include <condition_variable>
 #include <exception>
-#include <map>
+#include <memory>
 #include <mutex>
+#include <type_traits>
+#include <vector>
 
 namespace carla {
 
@@ -69,12 +72,29 @@ namespace detail {
 
     std::condition_variable _cv;
 
-    struct mapped_type {
-      bool should_wait;
-      std::variant<SharedException, T> value;
+    struct Waiter : private NonCopyable {
+      struct Unset {};
+
+      explicit Waiter(std::vector<Waiter *> &waiters)
+        : waiters(waiters), index(waiters.size()) {
+        waiters.push_back(this);
+      }
+
+      ~Waiter() {
+        waiters.back()->index = index;
+        waiters[index] = waiters.back();
+        waiters.pop_back();
+      }
+
+      bool should_wait = true;
+      std::variant<Unset, SharedException, T> value;
+
+      std::vector<Waiter *> &waiters;
+      size_t index;
     };
 
-    std::map<const char *, mapped_type> _map;
+    // Registration and removal both happen while _mutex is held.
+    std::vector<Waiter *> _waiters;
   };
 
   // ===========================================================================
@@ -82,8 +102,6 @@ namespace detail {
   // ===========================================================================
 
 namespace detail {
-
-  static thread_local const char thread_tag{};
 
   class SharedException : public std::exception {
   public:
@@ -112,12 +130,11 @@ namespace detail {
   template <typename T>
   std::optional<T> RecurrentSharedFuture<T>::WaitFor(time_duration timeout) {
     std::unique_lock<std::mutex> lock(_mutex);
-    auto &r = _map[&detail::thread_tag];
-    r.should_wait = true;
+    Waiter r(_waiters);
     if (!_cv.wait_for(lock, timeout.to_chrono(), [&]() { return !r.should_wait; })) {
       return {};
     }
-    if (r.value.index() == 0) {
+    if (std::holds_alternative<SharedException>(r.value)) {
       throw_exception(std::get<SharedException>(r.value));
     }
     return std::get<T>(std::move(r.value));
@@ -127,17 +144,23 @@ namespace detail {
   template <typename T2>
   void RecurrentSharedFuture<T>::SetValue(const T2 &value) {
     std::scoped_lock<std::mutex> lock(_mutex);
-    for (auto &pair : _map) {
-      pair.second.should_wait = false;
-      pair.second.value = value;
+    struct NotifyOnExit {
+      std::condition_variable &cv;
+      ~NotifyOnExit() { cv.notify_all(); }
+    } notify{_cv};
+
+    for (auto *waiter : _waiters) {
+      waiter->should_wait = true;
+      waiter->value = value;
+      waiter->should_wait = false;
     }
-    _cv.notify_all();
   }
 
   template <typename T>
   template <typename ExceptionT>
   void RecurrentSharedFuture<T>::SetException(ExceptionT &&e) {
-    SetValue(SharedException(std::make_shared<ExceptionT>(std::forward<ExceptionT>(e))));
+    SetValue(SharedException(
+        std::make_shared<std::decay_t<ExceptionT>>(std::forward<ExceptionT>(e))));
   }
 
 } // namespace carla
