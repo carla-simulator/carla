@@ -148,6 +148,7 @@
 
 #### Build and packaging
 
+* Fixed Windows setup reusing an engine checkout without passing its path to CMake, skipping a missing content checkout after an interrupted download, and parsing Python installation paths containing spaces.
 * Fixed the Windows build: the setup installs the MSVC 14.38 toolset the engine fork needs, MSVC builds use `/W4`, and two compile and link errors in LibCarla.
 * Fixed the CMake toolchain picking the oldest clang sysroot when an upgraded engine keeps several side by side.
 

@@ -1,4 +1,5 @@
 @echo off
+setlocal EnableDelayedExpansion
 
 set ninja_version=1.12.1
 
@@ -23,22 +24,34 @@ set visual_studio_components=^
 rem -- PARSE COMMAND LINE ARGUMENTS --
 
 :parse
-    if "%1"=="" (
+    if "%~1"=="" (
         goto main
     )
-    echo %1 | findstr /B /C:"--python-path=" >nul
-    if not errorlevel 1 (
-        set python_path="%1"
-        set python_path="!python_path:--python-path=!"
-    ) else if "%1"=="--python-path" (
-        set python_path=%2
+    set "argument=%~1"
+    if "!argument:~0,14!"=="--python-path=" (
+        set "python_path=!argument:~14!"
+        set "python_path=!python_path:"=!"
+        if not defined python_path (
+            echo Missing value for --python-path.
+            exit /b 1
+        )
+    ) else if "!argument!"=="--python-path" (
+        if "%~2"=="" (
+            echo Missing value for --python-path.
+            exit /b 1
+        )
+        set "python_path=%~2"
         shift
-    ) else if "%1"=="-pypath" (
-        set python_path=%2
+    ) else if "!argument!"=="-pypath" (
+        if "%~2"=="" (
+            echo Missing value for -pypath.
+            exit /b 1
+        )
+        set "python_path=%~2"
         shift
     ) else (
-        echo Unknown argument "%1"
-        exit /b
+        echo Unknown argument "!argument!"
+        exit /b 1
     )
     shift
     goto parse
@@ -48,7 +61,6 @@ rem -- MAIN --
 :main
 
 rem -- INSTALL VISUAL STUDIO IF NOT FOUND --
-setlocal EnableDelayedExpansion
 set "vs_found=false"
 if exist "%PROGRAMFILES%\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat" (
     set "vs_found=true"
@@ -94,7 +106,7 @@ if errorlevel 1 (
 )
 
 rem -- INSTALL PYTHON --
-%python_path% -V >nul 2>nul
+"%python_path%" -V >nul 2>nul
 if errorlevel 1 (
     echo Could not find Python. Downloading...
     echo Installing Python %python_version_default%...
@@ -108,5 +120,5 @@ if errorlevel 1 (
 )
 
 rem -- INSTALL PYTHON PACKAGES --
-%python_path% -m pip install --upgrade pip || exit /b
-%python_path% -m pip install -r requirements.txt || exit /b
+"%python_path%" -m pip install --upgrade pip || exit /b
+"%python_path%" -m pip install -r requirements.txt || exit /b
