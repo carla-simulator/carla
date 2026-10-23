@@ -9,7 +9,7 @@
 This guide details how to build CARLA from source on Windows with Unreal Engine 5.8. If you are building CARLA for the first time, ensure that you **link your GitHub account to Epic Games** by following [this guide](https://www.unrealengine.com/en-US/ue-on-github).
 
 !!! Note
-    * For using CARLA Unreal Engine 5 previous builds, ensure CARLA_UNREAL_ENGINE_PATH environment variable is defined pointing to the CARLA Unreal Engine 5 absolute path. If it is not defined and there is no `..\UnrealEngine5_carla` folder, `CarlaSetup.bat` downloads the engine into `..\UnrealEngine5_carla`, next to the CARLA folder, builds it and sets the variable, which takes __more than one extra hour of build and about 225 GB of disk space__. `CarlaSetup.bat` sets it only when it downloads the engine itself.
+    * To use an existing CARLA Unreal Engine 5.8 build, set `CARLA_UNREAL_ENGINE_PATH` to its absolute path. If it is not set, `CarlaSetup.bat` uses an existing `..\UnrealEngine5_carla` folder for that setup invocation. If neither is available, it downloads the engine into `..\UnrealEngine5_carla`, next to the CARLA folder, builds it and saves the variable for future terminals, which takes __more than one extra hour of build and about 225 GB of disk space__.
     * An existing Visual Studio 2022 (Community, Professional or Enterprise) is used as it is. It needs the MSVC v14.38 toolset, or v14.44.35211 or later; to add v14.38, import `Unreal\CarlaUnreal\.vsconfig` in the Visual Studio Installer.
     * **Windows Developer Mode should be active**, otherwise build will fail. Please see [here](https://learn.microsoft.com/en-us/gaming/game-bar/guide/developer-mode) for instructions on how to activate Developer Mode.
     * **CARLA cannot be built on an external disk**, Windows does not give the required read/write/execution permissions for builds.
@@ -30,6 +30,12 @@ CarlaSetup.bat
 The CarlaSetup.bat script installs all the required packages, including Visual Studio 2022 with CMake (if no Visual Studio 2022 is installed), Ninja, Python packages and the CARLA fork of Unreal Engine 5.8. It also downloads the CARLA content into `Unreal\CarlaUnreal\Content\Carla` and builds CARLA. This batch file can therefore take a long time to complete.
 
 It installs Python 3.8.10 when no Python is found at the top of `PATH`; 3.9 and 3.10 work too. To target an existing installation, pass `--python-root=C:\Path\To\PythonDir`, the folder that contains `python.exe`.
+
+Quote the path when it contains spaces, for example:
+
+```sh
+CarlaSetup.bat --python-root "C:\Path With Spaces\PythonDir"
+```
 
 Pass `--skip-prerequisites` (`-p`) to skip installing Visual Studio, Ninja, Python and its packages, and `--launch` (`-l`) to open the editor once the build finishes.
 

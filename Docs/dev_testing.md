@@ -20,6 +20,7 @@ CARLA has C++ unit tests for LibCarla, Python unit tests for the client module, 
 | Integration tests | `PythonAPI/test/API/`, listed in `PythonAPI/test/integration_tests_list.txt` | Yes, on port 2000 | `nose2` |
 | Lens validation | `PythonAPI/test/lens_validation/` | Only for the capture tests | `pytest` |
 | Content pack tool tests | `Util/ContentPacks/test_carla_pack.py` | No | CMake target `content-packs-test` |
+| Windows setup tests | `Util/SetupUtils/tests/` | No | Python `unittest` on Windows |
 
 All commands on this page run from the CARLA root directory unless they start with a `cd`, and assume the `Build` directory from [Building CARLA in Linux](build_linux_ue5.md). If you configured with a preset, replace `Build` with `Build/<preset>`.
 
@@ -111,6 +112,12 @@ python3 -m nose2 -v $(cat integration_tests_list.txt)
 
 ## Other test suites
 
+__Windows setup__ tests run the batch scripts with recording executables instead of downloading dependencies or building Unreal. They require Windows, Python and the .NET Framework C# compiler included with Windows. No CARLA build is needed:
+
+```sh
+python -m unittest discover -s Util/SetupUtils/tests -v
+```
+
 __Lens validation__ checks the `sensor.camera.rt_lens` lens models. The math tests run offline; the capture tests skip unless you point them at a server. The full procedure is in `PythonAPI/test/lens_validation/README.md`.
 
 ```sh
@@ -148,3 +155,5 @@ cmake --build Build/Release --target libcarla_test_client
 ```
 
 It then builds the package. CI does not run the Python unit, smoke or integration tests, so run them locally before opening a pull request that touches the Python API or the server.
+
+Changes to the Windows setup scripts or their tests also run `.github/workflows/windows_setup.yml` on Windows. This runs the setup regression tests above, independently of the Ubuntu build.
