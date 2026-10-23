@@ -59,23 +59,23 @@ namespace detail {
     }
 
     void ForceActive() {
-      _force_active = true;
+      _listening_flags.fetch_or(Forced, std::memory_order_relaxed);
     }
 
     void EnableForROS() {
-      _enabled_for_ros = true;
+      _listening_flags.fetch_or(ROS, std::memory_order_relaxed);
     }
 
     void DisableForROS() {
-      _enabled_for_ros = false;
+      _listening_flags.fetch_and(~ROS, std::memory_order_relaxed);
     }
 
     bool IsEnabledForROS() {
-      return _enabled_for_ros;
+      return (_listening_flags.load(std::memory_order_relaxed) & ROS) != 0u;
     }
 
     bool AreClientsListening() {
-      return (_sessions.size() > 0 || _force_active || _enabled_for_ros);
+      return _listening_flags.load(std::memory_order_relaxed) != 0u;
     }
 
     void ConnectSession(std::shared_ptr<Session> session) final {
@@ -89,6 +89,7 @@ namespace detail {
       else if (_sessions.size() > 1) {
         _session.store(nullptr);
       }
+      _listening_flags.fetch_or(Clients, std::memory_order_relaxed);
     }
 
     void DisconnectSession(std::shared_ptr<Session> session) final {
@@ -100,7 +101,7 @@ namespace detail {
         DEBUG_ASSERT(session == _session.load());
         _session.store(nullptr);
         _sessions.clear();
-        _force_active = false;
+        _listening_flags.fetch_and(~(Clients | Forced), std::memory_order_relaxed);
         log_debug("Last session disconnected");
       } else {
         _sessions.erase(
@@ -112,6 +113,8 @@ namespace detail {
           _session.store(_sessions[0]);
         else
           _session.store(nullptr);
+        if (_sessions.empty())
+          _listening_flags.fetch_and(~Clients, std::memory_order_relaxed);
       }
       log_debug("Disconnecting multistream sessions:", _sessions.size());
     }
@@ -124,7 +127,7 @@ namespace detail {
         }
       }
       _sessions.clear();
-      _force_active = false;
+      _listening_flags.fetch_and(~(Clients | Forced), std::memory_order_relaxed);
       _session.store(nullptr);
       log_debug("Disconnecting all multistream sessions");
     }
@@ -137,8 +140,10 @@ namespace detail {
     AtomicSharedPtr<Session> _session;
     // if there are more than one session, we use vector of sessions with mutex
     std::vector<std::shared_ptr<Session>> _sessions;
-    bool _force_active {false};
-    bool _enabled_for_ros {false};
+    enum : unsigned int { Clients = 1u, Forced = 2u, ROS = 4u };
+
+    // These flags gate sensor work; session ownership is protected separately.
+    std::atomic<unsigned int> _listening_flags{0u};
   };
 
 } // namespace detail

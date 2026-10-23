@@ -108,6 +108,7 @@
 
 #### Sensors
 
+* Fixed data races in streaming listener checks and ROS 2 visibility changes while subscribers connect, disconnect, or streams are created and closed. Forced activity still resets on the last disconnect or session clear, and ROS visibility is retained.
 * Fixed every native sensor (LiDAR, radar, IMU, cameras) simulating only the last physics substep instead of the true elapsed time when `sensor_tick` spanned more than one substep, which halved LiDAR's swept angle and skewed IMU and radar readings.
 * Fixed the `noise_seed` attribute of `sensor.lidar.ray_cast` being ignored, so every ray-cast LiDAR used the default seed.
 * Fixed the IMU sensor's compass yaw orientation, and the order in which sensors are disposed when their parent actor is destroyed.
