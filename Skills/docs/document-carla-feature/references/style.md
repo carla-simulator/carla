@@ -1,27 +1,51 @@
 # House style for CARLA documentation
 
-Read it before writing. First decide which kind of page you are editing; each has its own rules, and applying one kind's rules to another is the most common reason an edit gets rejected.
+Read it before writing or reviewing. First decide which kind of page you are editing; each has its own rules, and applying one kind's rules to another is the most common reason an edit gets rejected.
 
 | Page type | Examples | Rules |
 |---|---|---|
 | Reference entry | `PythonAPI/docs/*.yml`, `ref_sensors.md` attribute tables, `bp_library` | [Reference entries](#reference-entries) |
-| Narrative | `start_introduction.md`, `foundations.md`, overviews, tutorials | [Narrative pages](#narrative-pages) |
+| Narrative | `start_introduction.md`, `core_foundations.md`, overviews, tutorials | [Narrative pages](#narrative-pages) |
 | Task | `start_quickstart.md`, `build_*.md`, `build_docker.md`, install and run instructions | [Task pages](#task-pages) |
 
 The rules in [Every page](#every-page) apply to all three.
 
 ## Every page
 
-- **Keep the wording, update the facts, add what is new.** Start from the page's original text (`git show 0.10.0:Docs/<page>.md`, or older). Change a sentence only when it is wrong for the target release; add new material in the voice of the text around it. A shorter rewrite of a correct paragraph is a regression, however tidy.
+- **Keep the wording, update the facts, add what is new.** Start from the page's last reviewed text: the current page if the team has already reviewed or rewritten it for the target release (`git log -- Docs/<page>.md`), otherwise the previous release's (`git show 0.10.0:Docs/<page>.md`, or older). Change a sentence only when it is wrong for the target release; add new material in the voice of the text around it. A shorter rewrite of a correct paragraph is a regression, however tidy. A rewrite the team already made is the page's wording now, not a finding.
 - **Write for the target release** (1.0.0), even before it exists. No caveats about the previous release or about what has not shipped yet. Where something cannot exist yet (a release link, an image tag), write it for the target and put a visible `__(TODO: ...)__` next to it, see [evidence.md](evidence.md).
 - **Linux first, Windows second**, always: subsections, code blocks, table rows, inline mentions. Per-platform content goes under `### Linux` and `### Windows`, each with that platform's own command. Do not split by platform when the command is the same on both. Do not explain in prose why the platforms differ; just show each command.
 - **Code blocks are compact**: no blank lines between commands, a short `#` comment only where two commands go to different terminals.
 - **Never hard-wrap prose.** A paragraph or a bullet is one line.
-- **Do not add what nobody asked for.** No new items in a conceptual list for integrations or language bindings, no justification ("with no bridge process", "the same API from C++"), no marketing. A new item enters a list only if it is the same kind of thing as the items already there.
-- **No in-page table of contents.** The site already shows the page's headings in the sidebar; remove one if the page has it. **Do not add "this is useful for" bullet lists under the intro** either; keep one only if it is in the page's original text.
+- **Do not add what nobody asked for.** No justification ("with no bridge process", "the same API from C++"), no marketing. A new item enters a list only if it is the same kind of thing as the items already there; items the team has already put in a list (NuRec in the introduction's key modules) stay.
+- **Page layout.** One `#` heading per page, the title; sections are `##` and below. Under the intro paragraph, the page lists its `##` sections as `- [__Heading__](#anchor)` lines, and each `##` heading has a `---` line right above it. Keep the list in step with the headings when you add, rename or remove a section. **Do not add "this is useful for" bullet lists under the intro**; keep one only if it is in the page's original text.
 - **Do not merge a walkthrough away.** A quick start keeps the commands its reader needs to finish, even if a deeper page repeats them; link out for variants, not for the main path.
 - **Do not coin labels.** Don't name a thing the page hasn't introduced with an invented noun phrase ("the consuming project", "the base release" without saying what it is); say what it is ("your project"). Original wording stays as it is.
 - **Avoid generated-sounding prose**: one sentence packed with facts, colon-led fragments in place of sentences, stock lines ("contributions are welcome"), em-dash asides.
+- **Document what is current.** When the code or content holds an old and a new generation of the same thing, document only the current one, even if old assets still use the old one. Ask the user when usage and age disagree.
+- **When another page already explains a subject in depth**, write two or three lines and link to it.
+- **Only the table columns the reader acts on.** A column that repeats the same folder for every row is noise; say the folder once in the text.
+- **Names exactly as they are.** Use an asset or parameter name as the code spells it (`Emissive atenuance`, `Difuse texture`) and say nothing about the spelling: fixing it is a separate task.
+- **Admonitions take no fenced code.** The site has no `superfences`: a fenced block inside `!!! Note` renders as one inline code line. Put the code after the admonition, or inline.
+
+## New sections and pages
+
+Copy the shape of a neighbouring section on the same page first; a new layout stands out. When there is none:
+
+- **A feature** (on a narrative or reference page): what it is and what the reader can do with it, in one paragraph; the code to use it; a table of its parameters or values; then the caveat, in one admonition at most.
+- **A task**: the prerequisites; the steps, each with its command per platform (Linux first); what the reader sees when it worked.
+- **A new page**: one of the above, under an intro paragraph that says what the page covers. Add it to the `mkdocs.yml` nav next to its siblings and link it from the page a reader comes from.
+
+### Content-authoring pages
+
+For an artist-facing page (materials, blueprints, tools in the editor):
+
+- **Say what a parameter is for, from the user's side.** The `EmissiveIntensity` and `On/Off` parameters of the *API Values* groups simulate what the CARLA API sends at runtime, so an artist can preview the lit material without launching PIE.
+- **Name the channel**: "the `R` channel of the ORME texture", "the BaseColor alpha channel", in the text and in image titles, never a bare "ORME R".
+- **Examples must not mislead.** If an example was made for the picture (textures of one asset in another master, a demo placed in a town), the caption says so.
+- **Render the effect before describing it.** `Brightness`, `Contrast` and similar corrections were described wrong from their names until a render showed what they do.
+
+A master material page takes this order: what the master is for (one paragraph); a panel with the textures it reads, each channel separated and titled; a crop of each parameter group of the instance editor with its explanation right below it, with every switch ticked in an unsaved copy so all parameters show; examples in a CARLA town, shot with the CARLA camera, where they help (variants of one asset, emissive on and off by day and night, dry and wet road). How to produce those images is in [images.md](images.md#editor-recipes).
 
 ## Reference entries
 
@@ -107,7 +131,7 @@ Install, build and run instructions. The reader follows them step by step and co
 - **Every command is one the reader can paste**, for the target release, on the platform named above it.
 - **Keep the original explanation around commands.** "This repository contains different versions of CARLA. You will find options to download the current release [...]" stays; it is not filler.
 - **Prerequisites before the first command that needs them.** If the page recommends a virtual environment, it says how to create one before the first `pip3`.
-- **Do not pin a version the original left generic.** "The package is a compressed file named CARLA_version.number" is right; a file name with a specific version goes stale.
+- **Do not pin a version the original left generic.** `pip3 install carla-*.whl` is right; a file name with a specific version goes stale. A generic name still has to match the real one: check the package or the packaging code for its pattern.
 
 ```markdown
 <!-- good -->
@@ -129,6 +153,4 @@ On Windows, the command prompt does not expand `*`, so type the full name of the
 
 ## Images
 
-- A caption only when it tells the reader something the page does not. Render provenance (town, sensor, profile, weather) belongs in the image manifest, never on the page.
-- A diagram on an introductory page shows the concept (clients connected to a server), not the internals. Component-level detail goes on the page about that component.
-- The rest is in [images.md](images.md).
+Captions, formats, folders and diagrams follow [images.md](images.md).

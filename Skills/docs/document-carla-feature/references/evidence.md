@@ -1,6 +1,6 @@
 # Evidence
 
-Every fact a writer adds or changes on a page gets one row in the page's ledger. The verifier checks the rows, and the user spot-checks them, so a row must let someone confirm the claim in one step.
+Every fact on a page, or about to go on one, gets one row in the page's ledger before any text is written. The researcher writes the rows for new content, the verifier writes them for an existing page, and a fresh verifier confirms each one. The writer only uses confirmed rows, and the user spot-checks them, so a row must let someone confirm the claim in one step.
 
 ## What counts as evidence
 
@@ -13,6 +13,10 @@ Every fact a writer adds or changes on a page gets one row in the page's ledger.
 
 Leads are fine for finding where to look. A claim is only confirmed by the left column.
 
+- **Uncommitted code** counts, but the row says `(working tree)`: the claim is only true once that code is committed, so the page edit goes in with it.
+- **Examples are not claims.** Text the page offers as an illustration (a sample sentence in a style guide, placeholder values in a snippet) gets no row; the snippet itself still has to run.
+- **Another project** (ScenarioRunner, Scenic, the Leaderboard, NVIDIA's tools) is checked against that project's own repository or published docs, cited by URL. A claim no such source settles stays `unconfirmed`; it is not an error on the page.
+
 ## How it was checked
 
 Each row says one of:
@@ -21,11 +25,11 @@ Each row says one of:
 - **run**: the command or snippet was run and produced what the page says.
 - **inferred**: reasoned from something else. Never enough on its own.
 
-A command the page tells the reader to run is either **run**, or listed as not run in the hand-off.
+A command the page tells the reader to run is either **run**, or listed as not run in the hand-off. How to run a whole page without leaving anything behind is in [review.md](review.md#running-the-page).
 
 ## Ledger format
 
-`Build/docs-release/ledger/<page>.md`, one table per page:
+`Build/docs-work/ledger/<page>.md`, one table per page (or `ledger/<page>/<section>.md` when the page is verified by section):
 
 ```markdown
 | # | Change | Claim on the page | Evidence | Checked |
@@ -35,7 +39,7 @@ A command the page tells the reader to run is either **run**, or listed as not r
 | 3 | wheel name | The 1.0.0 wheel is cp310 | CI uses Python 3.10 (`.github/workflows/ue5_dev.yml:23`) | inferred |
 ```
 
-`Change` is the id from `changes.json`, so the coverage report can be built from the ledgers.
+`Change` is a short label for the part of the target the claim belongs to, or the finding number from the review report. A row the writer adds because it needs a fact nobody confirmed has `pending` in `Checked`; it goes back to the verifier before the fact reaches the page.
 
 ## When it cannot be confirmed
 
@@ -45,4 +49,11 @@ A command the page tells the reader to run is either **run**, or listed as not r
 
 ## Verdicts
 
-The verifier writes `Build/docs-release/verdicts/<page>.md`, one line per ledger row: `confirmed`, `wrong` (with what the evidence actually says) or `unconfirmed` (with what is missing). It also lists claims in the diff that have no ledger row; those count as `unconfirmed`.
+The verifier writes `Build/docs-work/verdicts/<page>.md`, one line per ledger row:
+
+- `confirmed`;
+- `wrong`, with what the evidence actually says;
+- `unconfirmed`, with what is missing;
+- `needs-run`, with the exact command or snippet that would settle it. The run agent replaces it with `confirmed` or `wrong` and the output.
+
+Only `confirmed` rows reach the page as fact.
