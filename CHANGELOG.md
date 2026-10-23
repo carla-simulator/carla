@@ -125,6 +125,7 @@
 #### Python API and client
 
 * Fixed clients failing `get_world()` against a packaged server: `get_required_files` leaked pak-relative paths that escaped the client cache. The server now sends content-relative names and refuses paths that resolve outside the content folder — previously an arbitrary-file-read vector.
+* Fixed uninitialized type-dependent data in empty actor snapshots, which could return invalid vehicle controls and telemetry before the actor's first streamed update.
 * Fixed `from carla.command import ...` by registering the `command` submodule in `sys.modules`.
 * Fixed `actor.destroy()` returning False right after `spawn_actor()`, because the client consulted an uninitialised snapshot state and refused to contact the server.
 * Fixed `str(carla.WorldSettings(...))` raising `bad_optional_access` when `fixed_delta_seconds` was unset — the default for any settings object that has not pinned the time step. It now prints `fixed_delta_seconds=None`.
