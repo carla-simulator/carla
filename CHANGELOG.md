@@ -132,6 +132,7 @@
 * Fixed actor aliasing on replay caused by reusing actors with the same id, recorder crashes during actor cleanup, and the replayer spawning the wrong blueprints.
 * Fixed a `ServerSession::CloseNow` double invocation that let a dropped client evict a still-alive subscriber.
 * Fixed an RPC server deadlock on shutdown, an overly strict `Vector3D` assert, OpenDRIVE lane width for centre lanes, busy-wait `yield()` calls and strict `RELEASE_ASSERT`s in road `Map`.
+* Fixed `RecurrentSharedFuture::SetException` rejecting mutable and const lvalue exception objects during template instantiation.
 
 #### Simulation and content
 

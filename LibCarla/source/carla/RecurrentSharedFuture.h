@@ -25,6 +25,7 @@
 #include <exception>
 #include <memory>
 #include <mutex>
+#include <type_traits>
 #include <vector>
 
 namespace carla {
@@ -158,7 +159,8 @@ namespace detail {
   template <typename T>
   template <typename ExceptionT>
   void RecurrentSharedFuture<T>::SetException(ExceptionT &&e) {
-    SetValue(SharedException(std::make_shared<ExceptionT>(std::forward<ExceptionT>(e))));
+    SetValue(SharedException(
+        std::make_shared<std::decay_t<ExceptionT>>(std::forward<ExceptionT>(e))));
   }
 
 } // namespace carla
