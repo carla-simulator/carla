@@ -211,12 +211,12 @@ alphabetically. 74–78 warnings per cook.
 Solution: none needed; it keeps the name the map expects. Worth removing properly
 by scoping the mount, but it is not a failure.
 
-**Problem: Zen server does not survive cook → stage**
-Cause: known both platforms, different fixes. On Linux the route used is
-`[Zen.AutoLaunch] LimitProcessLifetime=False`, which needs no manual server;
-Windows uses `-NoZenAutoLaunch` and requires `zenserver.exe --port 8558` already
-running.
-Solution: the Linux setting; do not copy the Windows recipe.
+**Problem: staging stops at `Reading oplog from Zen` and fails after 20 min**
+Cause: an engine older than the oplog reader fix (`0e9b85970da9`): UAT downloads
+one attachment per package in an unbounded `Parallel.ForEach` and starves its
+thread pool (`HttpClient.Timeout of 1200 seconds`). Not a dead Zen server: the
+cook starts Zen, and staging restarts it on the same store when the cook's exits.
+Solution: pull `ue58-dev-carla` in the engine and rerun. Start no Zen by hand.
 
 **Problem: packaged map switching does not work / `get_available_maps()` is empty**
 Cause: two raw-filesystem checks that cannot work inside a `.pak`

@@ -225,11 +225,13 @@ runtime is correct. Not a failure; worth fixing by scoping the mount.
 
 ### Zen server across cook → stage
 
-Hit on both platforms with different fixes. Linux uses
-`[Zen.AutoLaunch] LimitProcessLifetime=False`, which needs no manual server.
-Windows uses `-NoZenAutoLaunch=127.0.0.1` and requires `zenserver.exe --port 8558`
-already running — `-NoZenAutoLaunch` points UAT at an external server, it does not
-start one. Do not copy the Windows recipe onto Linux.
+The engine manages Zen; nothing is started by hand. The cook auto-launches it on
+the editor store (`~/.config/Epic/UnrealEngine/Common/Zen/Data`) with the cook as
+owner, so it exits with the cook. Staging finds no server and has UnrealPak start
+one on the same store (`-StartZenServerForStage`,
+`CopyBuildToStagingDirectory.Automation.cs:968-991`), which lives until UAT exits.
+The 20-minute `HttpClient.Timeout` once blamed on this was the oplog reader
+starving its thread pool, fixed in the engine at `0e9b85970da9`.
 
 ### DLSS is not staged
 
@@ -248,7 +250,7 @@ be redistributed inside a built application is a licensing question first.
 | `-pak -iostore` | needed | **yes**, upstream |
 | AssetRegistry map discovery (Issue 1) | needed | **no** |
 | `-culturesToStage=en` ICU (Issue 2) | needed | **no** — never bit on Linux |
-| Zen survives cook→stage (Issue 7) | `-NoZenAutoLaunch` | different route |
+| Zen survives cook→stage (Issue 7) | engine-managed, untested | **yes**, no flag; needs the engine reader fix |
 | Town12 `DirectoriesToAlwaysStageAsUFS` (Issue 13) | needed | **no** — and it needs to cover Town13 + `Config/PostProcess` too |
 | Cook-scope exclusion | — | Linux-side, not upstream |
 
