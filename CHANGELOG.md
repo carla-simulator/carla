@@ -131,6 +131,7 @@
 * Fixed client snapshot data for OpenDRIVE traffic lights outside junctions, by giving their groups fallback controllers (#9853).
 * Fixed actor aliasing on replay caused by reusing actors with the same id, recorder crashes during actor cleanup, and the replayer spawning the wrong blueprints.
 * Fixed a `ServerSession::CloseNow` double invocation that let a dropped client evict a still-alive subscriber.
+* Corrected an invalid compare-exchange failure memory order in the client's atomic shared-state pointer.
 * Fixed an RPC server deadlock on shutdown, an overly strict `Vector3D` assert, OpenDRIVE lane width for centre lanes, busy-wait `yield()` calls and strict `RELEASE_ASSERT`s in road `Map`.
 
 #### Simulation and content
