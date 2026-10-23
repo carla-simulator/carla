@@ -72,13 +72,7 @@ Then build what you need:
 ---
 ## Build a package with CARLA UE5
 
-Packaging needs a Zen server that is already running. Start it in a separate terminal and leave it running until the package is done:
-
-```sh
-%CARLA_UNREAL_ENGINE_PATH%\Engine\Binaries\Win64\zenserver.exe --port 8558
-```
-
-Then build the package:
+Build the package:
 
 ```sh
 cmake --build Build --target package

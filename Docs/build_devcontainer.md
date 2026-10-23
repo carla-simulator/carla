@@ -150,14 +150,11 @@ cmake --build Build --target carla-python-api-install
 # Launch the Unreal Editor
 cmake --build Build --target launch
 
-# Start a Zen server, needed by the package target (second terminal)
-/workspaces/unreal-engine/Engine/Binaries/Linux/zenserver --port 8558
-
 # Build a distributable package
 cmake --build Build --target package
 ```
 
-`launch` and `zenserver` stay in the foreground, so run each from its own shell, opened with `docker exec -it` as shown in [Running commands from additional terminals](#running-commands-from-additional-terminals).
+`launch` stays in the foreground, so run it from its own shell, opened with `docker exec -it` as shown in [Running commands from additional terminals](#running-commands-from-additional-terminals).
 
 ---
 
