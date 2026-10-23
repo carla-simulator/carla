@@ -138,7 +138,7 @@ TEST(streaming, low_level_tcp_small_message) {
   using namespace carla::streaming::detail;
 
   boost::asio::io_context io_context;
-  tcp::Server::endpoint ep(boost::asio::ip::tcp::v4(), TESTING_PORT);
+  tcp::Server::endpoint ep(boost::asio::ip::address_v4::loopback(), TESTING_PORT);
 
   tcp::Server srv(io_context, ep);
   srv.SetTimeout(1s);

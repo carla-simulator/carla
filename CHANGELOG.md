@@ -1,5 +1,7 @@
 ## LATEST Changes
 
+* Fixed native RPC tests exhausting their game-thread polling loop before the client runs, and a streaming test trying to connect to a wildcard address on Windows. RPC test failures now finish with a bounded client timeout and report worker exceptions.
+
 ### New features
 
 #### Simulator
