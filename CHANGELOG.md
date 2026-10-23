@@ -1,6 +1,6 @@
 ## LATEST Changes
 
-* Fixed Python API wheel builds from source and build directories containing spaces, and rejected the unsupported setuptools-only backend instead of producing a wheel without the native client.
+* Fixed Python API wheel builds from source and build directories containing spaces, rejected the unsupported setuptools-only backend instead of producing a wheel without the native client, and fixed client-only configuration requesting Boost.Python while disabling it.
 
 ### New features
 

@@ -4,19 +4,23 @@ on:
   push:
     paths:
       - CMake/Util.cmake
+      - CMake/Dependencies.cmake
       - PythonAPI/CMakeLists.txt
       - PythonAPI/carla/CMakeLists.txt.in
       - PythonAPI/carla/pyproject.toml.in
       - PythonAPI/test/unit/test_python_api_packaging.py
+      - PythonAPI/test/unit/test_boost_version.py
       - .github/workflows/python_api_packaging.yml
   pull_request:
     branches: [ue58-dev]
     paths:
       - CMake/Util.cmake
+      - CMake/Dependencies.cmake
       - PythonAPI/CMakeLists.txt
       - PythonAPI/carla/CMakeLists.txt.in
       - PythonAPI/carla/pyproject.toml.in
       - PythonAPI/test/unit/test_python_api_packaging.py
+      - PythonAPI/test/unit/test_boost_version.py
       - .github/workflows/python_api_packaging.yml
   workflow_dispatch:
 
@@ -41,3 +45,5 @@ jobs:
         run: python -m pip install build scikit-build-core wheel "cmake>=3.27.2" ninja
       - name: Build and import the native packaging fixture
         run: python -m unittest discover -s PythonAPI/test/unit -p test_python_api_packaging.py -v
+      - name: Check Boost component selection with and without the Python API
+        run: python -m unittest PythonAPI.test.unit.test_boost_version.TestBoostPythonSelection -v
