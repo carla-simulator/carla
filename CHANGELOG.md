@@ -148,6 +148,7 @@
 
 #### Build and packaging
 
+* Fixed native RPC tests exhausting their game-thread polling loop before the client runs, and a streaming test trying to connect to a wildcard address on Windows. RPC test failures now finish with a bounded client timeout and report worker exceptions. The Python client version test now compares installed package metadata instead of requiring Git tags.
 * Fixed the Windows build: the setup installs the MSVC 14.38 toolset the engine fork needs, MSVC builds use `/W4`, and two compile and link errors in LibCarla.
 * Fixed the CMake toolchain picking the oldest clang sysroot when an upgraded engine keeps several side by side.
 
