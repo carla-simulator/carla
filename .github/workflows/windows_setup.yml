@@ -1,0 +1,31 @@
+name: Windows setup regression tests
+
+on:
+  push:
+    paths:
+      - CarlaSetup.bat
+      - Util/SetupUtils/InstallPrerequisites.bat
+      - Util/SetupUtils/tests/**
+      - .github/workflows/windows_setup.yml
+  pull_request:
+    branches: [ue58-dev]
+    paths:
+      - CarlaSetup.bat
+      - Util/SetupUtils/InstallPrerequisites.bat
+      - Util/SetupUtils/tests/**
+      - .github/workflows/windows_setup.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  windows-setup:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Test batch setup without installing prerequisites or Unreal
+        run: python -m unittest discover -s Util/SetupUtils/tests -v

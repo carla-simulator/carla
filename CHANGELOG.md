@@ -1,5 +1,7 @@
 ## LATEST Changes
 
+* Fixed Windows setup reusing an engine checkout without passing its path to CMake, skipping a missing content checkout after an interrupted download, and parsing Python installation paths containing spaces.
+
 ### New features
 
 #### Simulator
