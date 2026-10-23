@@ -14,6 +14,7 @@
 #include <carla/rpc/Server.h>
 
 #include <thread>
+#include <future>
 
 using namespace carla::rpc;
 using namespace std::chrono_literals;
@@ -40,25 +41,38 @@ TEST(rpc, server_bind_sync_run_on_game_thread) {
 
   server.AsyncRun(1u);
 
-  std::atomic_bool done{false};
+  std::promise<void> completed;
+  auto completion = completed.get_future();
+  unsigned int completed_calls = 0u;
 
   carla::ThreadGroup threads;
   threads.CreateThread([&]() {
-    Client client("localhost", port);
-    for (auto i = 0; i < 300; ++i) {
-      auto result = client.call("do_the_thing", i, 1).as<int>();
-      EXPECT_EQ(result, i + 1);
+    try {
+      Client client("localhost", port);
+      client.set_timeout(5000);
+      for (auto i = 0; i < 300; ++i) {
+        auto result = client.call("do_the_thing", i, 1).as<int>();
+        EXPECT_EQ(result, i + 1);
+        ++completed_calls;
+      }
+      completed.set_value();
+    } catch (...) {
+      completed.set_exception(std::current_exception());
     }
-    done = true;
   });
 
+  const auto deadline = std::chrono::steady_clock::now() + 30s;
   auto i = 0u;
-  for (; i < 1'000'000u; ++i) {
+  while (completion.wait_for(0s) != std::future_status::ready &&
+         std::chrono::steady_clock::now() < deadline) {
     server.SyncRunFor(2ms);
-    if (done) {
-      break;
-    }
+    std::this_thread::yield();
+    ++i;
   }
   std::cout << "game thread: run " << i << " slices.\n";
-  ASSERT_TRUE(done);
+  EXPECT_EQ(completion.wait_for(0s), std::future_status::ready);
+  server.Stop();
+  threads.JoinAll();
+  EXPECT_NO_THROW(completion.get());
+  EXPECT_EQ(completed_calls, 300u);
 }
