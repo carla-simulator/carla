@@ -15,6 +15,9 @@ no longer compiles against).
 
 import os
 import re
+import shutil
+import subprocess
+import tempfile
 import unittest
 
 EXPECTED_BOOST_VERSION = "1.90.0"
@@ -72,6 +75,48 @@ class TestBoostInstallVersion(unittest.TestCase):
                 stale,
                 contents,
                 f"CMake/Options.cmake still references stale Boost {stale}")
+
+
+@unittest.skipUnless(shutil.which("cmake"), "CMake is required")
+class TestBoostPythonSelection(unittest.TestCase):
+    """Execute the production component selection without fetching dependencies."""
+
+    def check_python_selection(self, enabled):
+        path = os.path.join(REPO_ROOT, "CMake", "Dependencies.cmake")
+        with open(path) as source:
+            contents = source.read()
+        option_macro = re.search(
+            r"macro \(carla_dependency_option NAME VALUE\).*?endmacro \(\)",
+            contents, re.DOTALL)
+        self.assertIsNotNone(option_macro)
+        boost_section = contents.split("# ==== BOOST ====", 1)[1].split(
+            "# ==== EIGEN ====", 1)[0]
+        with tempfile.TemporaryDirectory(prefix="carla-boost-selection-") as directory:
+            output = os.path.join(directory, "selection.txt").replace("\\", "/")
+            script = os.path.join(directory, "selection.cmake")
+            with open(script, "w") as destination:
+                destination.write(
+                    "set(BUILD_PYTHON_API " + ("ON" if enabled else "OFF") + ")\n"
+                    + option_macro.group() + "\n"
+                    + "macro(carla_dependency_add)\nendmacro()\n"
+                    + boost_section + "\n"
+                    + 'file(WRITE "' + output + '" "${BOOST_INCLUDE_LIBRARIES}\\n${BOOST_ENABLE_PYTHON}")\n')
+            result = subprocess.run(
+                ["cmake", "-P", script], capture_output=True, text=True, timeout=30)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            with open(output) as selection:
+                projects, python_enabled = selection.read().splitlines()
+        projects = projects.split(";")
+        self.assertEqual("python" in projects, enabled)
+        self.assertEqual(python_enabled, "ON" if enabled else "OFF")
+        for project in ("asio", "geometry", "gil"):
+            self.assertIn(project, projects)
+
+    def test_client_only_does_not_request_boost_python(self):
+        self.check_python_selection(False)
+
+    def test_python_api_requests_boost_python(self):
+        self.check_python_selection(True)
 
 
 class TestNumpyRequirementsCeiling(unittest.TestCase):
