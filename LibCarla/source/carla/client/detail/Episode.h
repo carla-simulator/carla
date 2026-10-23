@@ -17,6 +17,9 @@
 #include "carla/client/detail/EpisodeProxy.h"
 #include "carla/rpc/EpisodeInfo.h"
 
+#include <atomic>
+#include <mutex>
+#include <optional>
 #include <vector>
 
 namespace carla {
@@ -93,8 +96,8 @@ namespace detail {
     void SetPedestriansSeed(unsigned int seed);
 
     void AddPendingException(std::string e) {
-      _pending_exceptions = true;
-      _pending_exceptions_msg = e;
+      std::scoped_lock<std::mutex> lock(_pending_exception_mutex);
+      _pending_exception = std::move(e);
     }
 
     bool HasMapChangedSinceLastCall();
@@ -113,7 +116,9 @@ namespace detail {
 
     AtomicSharedPtr<const EpisodeState> _state;
 
-    std::string _pending_exceptions_msg;
+    std::mutex _pending_exception_mutex;
+
+    std::optional<std::string> _pending_exception;
 
     CachedActorList _actors;
 
@@ -129,9 +134,7 @@ namespace detail {
 
     const streaming::Token _token;
 
-    bool _pending_exceptions = false;
-
-    bool _should_update_map = true;
+    std::atomic_bool _should_update_map{true};
 
     std::weak_ptr<Simulator> _simulator;
   };
