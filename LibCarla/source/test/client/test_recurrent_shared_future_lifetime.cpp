@@ -81,6 +81,31 @@ namespace {
 
     std::shared_ptr<CopyFailureState> state;
   };
+
+  template <typename ExceptionT>
+  void ExpectLvalueExceptionDelivery(ExceptionT &exception) {
+    carla::RecurrentSharedFuture<int> future;
+    std::atomic_bool completed{false};
+    std::thread waiter([&]() {
+      try {
+        future.WaitFor(2s);
+        ADD_FAILURE() << "Expected the published exception";
+      } catch (const carla::detail::SharedException &received) {
+        EXPECT_STREQ(received.what(), exception.what());
+        EXPECT_NE(received.GetException().get(), &exception);
+      } catch (const std::exception &unexpected) {
+        ADD_FAILURE() << unexpected.what();
+      }
+      completed = true;
+    });
+
+    const auto deadline = std::chrono::steady_clock::now() + 2s;
+    while (!completed.load() && std::chrono::steady_clock::now() < deadline) {
+      future.SetException(exception);
+      std::this_thread::sleep_for(1ms);
+    }
+    waiter.join();
+  }
 #endif // LIBCARLA_NO_EXCEPTIONS
 
 } // namespace
@@ -248,6 +273,16 @@ TEST(recurrent_shared_future, repeated_waits_race_delivery_and_timeout) {
 }
 
 #ifndef LIBCARLA_NO_EXCEPTIONS
+TEST(recurrent_shared_future, accepts_mutable_lvalue_exception) {
+  std::runtime_error exception("mutable lvalue exception");
+  ExpectLvalueExceptionDelivery(exception);
+}
+
+TEST(recurrent_shared_future, accepts_const_lvalue_exception) {
+  const std::runtime_error exception("const lvalue exception");
+  ExpectLvalueExceptionDelivery(exception);
+}
+
 TEST(recurrent_shared_future, failed_result_move_releases_waiter) {
   carla::RecurrentSharedFuture<ThrowingMoveValue> future;
   std::atomic_bool completed{false};
