@@ -1,0 +1,41 @@
+name: Client primitive regression tests
+
+on:
+  push:
+    paths:
+      - LibCarla/source/carla/RecurrentSharedFuture.h
+      - LibCarla/source/test/client/test_recurrent_shared_future*.cpp
+      - Util/Tests/ClientPrimitives/**
+      - .github/workflows/client_primitives.yml
+  pull_request:
+    branches: [ue58-dev]
+    paths:
+      - LibCarla/source/carla/RecurrentSharedFuture.h
+      - LibCarla/source/test/client/test_recurrent_shared_future*.cpp
+      - Util/Tests/ClientPrimitives/**
+      - .github/workflows/client_primitives.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  native-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      matrix:
+        sanitizers: ['', 'address,undefined']
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install native test dependencies
+        run: sudo apt-get update && sudo apt-get install -y cmake ninja-build libboost-dev libgtest-dev
+      - name: Configure production-header tests without Unreal
+        run: cmake -S Util/Tests/ClientPrimitives -B Build/ClientPrimitives -G Ninja -DCMAKE_BUILD_TYPE=RelWithDebInfo "-DCARLA_PRIMITIVE_SANITIZERS=${{ matrix.sanitizers }}"
+      - name: Build
+        run: cmake --build Build/ClientPrimitives --parallel 2
+      - name: Repeat lifetime and concurrency tests
+        env:
+          ASAN_OPTIONS: detect_leaks=1:detect_stack_use_after_return=1
+          UBSAN_OPTIONS: halt_on_error=1
+        run: ctest --test-dir Build/ClientPrimitives --output-on-failure --repeat until-fail:20

@@ -57,6 +57,24 @@ Both link `gtest_main`, so the standard GoogleTest flags work. To run a subset:
 ./Build/LibCarla/libcarla_test_client --gtest_filter='road.*'
 ```
 
+### Client future tests without a simulator build
+
+The snapshot future's lifetime and concurrency tests can also be built separately,
+using CMake 3.20+, a C++20 compiler, Boost headers, GoogleTest and Threads:
+
+```sh
+cmake -S Util/Tests/ClientPrimitives -B Build/ClientPrimitives -G Ninja -DCMAKE_BUILD_TYPE=Release
+cmake --build Build/ClientPrimitives
+ctest --test-dir Build/ClientPrimitives --output-on-failure
+```
+
+On GCC or Clang, add `-DCARLA_PRIMITIVE_SANITIZERS=address,undefined` when
+configuring to check memory and undefined behavior. This small target covers the
+future primitive; run the full LibCarla tests for broader client changes.
+
+The repeatable publication benchmark and its dependencies are documented in
+`Util/Benchmarks/README.md`.
+
 ## Python API unit tests
 
 These tests import the `carla` module but do not connect to a server. Install the Python API and the test requirements, then run `nose2` from the `unit` folder:
@@ -136,6 +154,10 @@ __Standalone scripts__ in `PythonAPI/test/` connect to a running server and prin
 | `test_ground_truth.py` | A sensor's output on a seeded, synchronous drive against a saved capture. `--generate` writes the capture to `_ground_truth/` first |
 
 ## What CI runs
+
+Changes to the snapshot future or its tests also run
+`.github/workflows/client_primitives.yml` on Ubuntu, using both a normal build
+and AddressSanitizer/UndefinedBehaviorSanitizer. Each test is repeated 20 times.
 
 Pull requests to `ue58-dev` run `.github/workflows/ue5_pr.yml` on Ubuntu. It configures with the `Release` preset, `-DENABLE_ROS2=ON` and `-DBUILD_LIBCARLA_TESTS=ON`, builds the client, the Python API and the server, then builds and runs the LibCarla unit tests:
 
