@@ -151,13 +151,15 @@ set (
   BOOST_INCLUDED_PROJECTS
   asio
   iterator
-  python
   date_time
   geometry
   container
   variant2
   gil
 )
+if (BUILD_PYTHON_API)
+  list (APPEND BOOST_INCLUDED_PROJECTS python)
+endif ()
 set (
   BOOST_EXCLUDED_PROJECTS
   # filesystem # <- Boost.GIL links with Boost.filesystem, so we can't remove the dependency yet.

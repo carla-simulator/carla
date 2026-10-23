@@ -84,7 +84,7 @@ on every re-configure or they revert to the default.**
 | `ENABLE_RSS` | **OFF** | ad-rss-lib; why `sensor.other.rss` and the `Rss*` classes are absent |
 | `ENABLE_OSM2ODR` | **OFF** | |
 | `ENABLE_PYTORCH` | **OFF** | |
-| `ENABLE_PEP517` | ON | wheel build path |
+| `ENABLE_PEP517` | ON | required for the Python API's scikit-build-core wheel backend; OFF is rejected when building the Python API |
 | `ENABLE_STREETMAP` | ON | fetches the StreetMap plugin (`ue5-dev-carla` tag) |
 | `CARLA_UNREAL_ENGINE_PATH` | *(env)* | the engine fork |
 | `CARLA_UNREAL_RHI` | `vulkan` | |
