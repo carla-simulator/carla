@@ -1,5 +1,7 @@
 ## LATEST Changes
 
+* Fixed Python API wheel builds from source and build directories containing spaces, and rejected the unsupported setuptools-only backend instead of producing a wheel without the native client.
+
 ### New features
 
 #### Simulator

@@ -1,3 +1,10 @@
+if (NOT ENABLE_PEP517)
+  carla_error (
+    "The CARLA Python API requires the PEP 517 scikit-build-core backend. "
+    "Configure with -DENABLE_PEP517=ON; setuptools alone cannot build its native extension."
+  )
+endif ()
+
 find_package (
   Python3
   COMPONENTS
@@ -129,29 +136,13 @@ file (
   DESTINATION ${CARLA_PYTHON_API_CARLA_PATH}
 )
 
-if (ENABLE_PEP517)
-  set (
-    CARLA_PYTHON_API_BUILD_COMMAND
-    ${Python3_EXECUTABLE}
-    -m build
-    --outdir ${CARLA_PYTHON_API_DIST_PATH}
-    --wheel
-  )
-else ()
-  file (
-    WRITE
-    ${CARLA_PYTHON_API_CARLA_PATH}/setup.py
-    "from setuptools import setup\n"
-    "setup()\n"
-  )
-  set (
-    CARLA_PYTHON_API_BUILD_COMMAND
-    ${Python3_EXECUTABLE}
-    setup.py
-    bdist_wheel
-    --dist-dir ${CARLA_PYTHON_API_DIST_PATH}
-  )
-endif ()
+set (
+  CARLA_PYTHON_API_BUILD_COMMAND
+  ${Python3_EXECUTABLE}
+  -m build
+  --outdir ${CARLA_PYTHON_API_DIST_PATH}
+  --wheel
+)
 
 carla_add_custom_target (
   carla-python-api
