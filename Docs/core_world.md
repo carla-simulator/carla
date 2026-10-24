@@ -143,7 +143,7 @@ state01 = carla.LightState(200.0, carla.Color(255, 0, 0), carla.LightGroup.Build
 light01.set_light_state(state01)
 
 # Custom a group of lights
-my_lights = lmanager.get_light_group(carla.LightGroup.Building)
+my_lights = lmanager.get_all_lights(carla.LightGroup.Building)
 lmanager.turn_on(my_lights)
 lmanager.set_color(my_lights, carla.Color(255, 0, 0))
 lmanager.set_intensities(my_lights, [200.0] * len(my_lights))
