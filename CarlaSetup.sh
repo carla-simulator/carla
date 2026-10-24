@@ -80,13 +80,29 @@ else
 fi
 
 # -- CLONE CONTENT --
-if [ -d $workspace_path/Unreal/CarlaUnreal/Content ]; then
+content_parent="$workspace_path/Unreal/CarlaUnreal/Content"
+content_checkout="$content_parent/Carla"
+if [ -d "$content_checkout" ] &&
+    content_repository_root=$(git -C "$content_checkout" rev-parse --show-toplevel 2>/dev/null) &&
+    [ "$content_repository_root" -ef "$content_checkout" ] &&
+    git -C "$content_checkout" rev-parse --verify 'HEAD^{commit}' >/dev/null 2>&1; then
     echo "Found CARLA content."
 else
+    content_entries=
+    if [ -d "$content_checkout" ]; then
+        content_entries=$(ls -A "$content_checkout") || exit 1
+    fi
+    if [ -L "$content_checkout" ] ||
+        { [ -e "$content_checkout" ] &&
+          { [ ! -d "$content_checkout" ] || [ -n "$content_entries" ]; }; }; then
+        echo "Existing content path is not a valid Git checkout: $content_checkout" >&2
+        echo "Restore that checkout or move it aside before running setup again; its files were preserved." >&2
+        exit 1
+    fi
     echo "Could not find CARLA content. Downloading..."
-    mkdir -p $workspace_path/Unreal/CarlaUnreal/Content
+    mkdir -p "$content_parent"
     git \
-        -C $workspace_path/Unreal/CarlaUnreal/Content \
+        -C "$content_parent" \
         clone \
         -b ue58-dev-carla \
         https://bitbucket.org/carla-simulator/carla-content.git \
