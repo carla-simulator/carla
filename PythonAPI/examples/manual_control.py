@@ -1334,7 +1334,12 @@ class CameraManager(object):
             array = array[:, :, ::-1]
             self.surface = pygame.surfarray.make_surface(array.swapaxes(0, 1))
         if self.recording:
-            image.save_to_disk('_out/%08d' % image.frame)
+            if self.sensors[self.index][0].startswith('sensor.camera.dvs'):
+                # DVS events have no native image writer; record their preview.
+                os.makedirs('_out', exist_ok=True)
+                pygame.image.save(self.surface, '_out/%08d.png' % image.frame)
+            else:
+                image.save_to_disk('_out/%08d' % image.frame)
 
 
 # ==============================================================================
