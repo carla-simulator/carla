@@ -105,12 +105,19 @@ options worth knowing:
 | `-DCARLA_UNREAL_ENGINE_PATH=` | engine fork path (else the env var) |
 | `-DCARLA_UNREAL_RHI=vulkan` | RHI for the editor/game |
 | `-DCARLA_DLSS_SDK_PATH=` | DLSS SDK; `disabled` builds without it |
-| `-DENABLE_RSS=ON`, `-DENABLE_OSM2ODR=ON`, `-DENABLE_PYTORCH=ON` | all default **OFF** |
+| `-DENABLE_RSS=ON`, `-DENABLE_PYTORCH=ON` | both default **OFF** |
+| `ENABLE_OSM2ODR` | keep **OFF**: the converter dependency is not fetched and the Unreal module rules throw when it is enabled |
 | `-DCARLA_UNREAL_PACKAGE_BUILD_TYPE=Shipping` | package configuration |
 | `-DCMAKE_DISABLE_FIND_PACKAGE_Qt5=ON -DCMAKE_DISABLE_FIND_PACKAGE_Qt6=ON` | when system Qt is installed but not linkable with the UE toolchain |
 
 `bash scripts/build.sh options` prints the full list with defaults, read from the
 tree rather than from this table.
+
+The built-in `carla.Osm2Odr` converter is unavailable on `ue58-dev`; enabling
+`ENABLE_OSM2ODR` does not restore it. `OSM2ODR=1 bash scripts/build.sh configure`
+is rejected before CMake runs. Convert `.osm` files with an external tool such as
+SUMO `netconvert`, then load the resulting `.xodr`; see
+[the OpenStreetMap tutorial](../../../Docs/content_authoring_maps_openstreetmap.md).
 
 ### Step 4: Build
 

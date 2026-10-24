@@ -13,8 +13,9 @@
 #   bash build.sh target <NAME>        any target by name
 #   bash build.sh verify               check the ARTIFACTS, not the exit codes
 #
-# configure knobs (env): ROS2=1  DLSS=<path|disabled>  RSS=1  OSM2ODR=1  PYTORCH=1
+# configure knobs (env): ROS2=1  DLSS=<path|disabled>  RSS=1  PYTORCH=1
 #                        MAPS="Town10HD_Opt,Town12"    NO_QT=1   EXTRA="-DFoo=Bar"
+# OSM2ODR=1 is unsupported on ue58-dev and is rejected before configuring.
 set -uo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck disable=SC1091
@@ -65,10 +66,14 @@ cache)
   ;;
 
 configure)
+  if [ "${OSM2ODR:-0}" = "1" ]; then
+    echo "ERROR: OSM2ODR conversion is unavailable on ue58-dev; ENABLE_OSM2ODR=ON does not supply the missing converter." >&2
+    echo "       Keep it off and convert .osm files externally with SUMO netconvert before loading the .xodr." >&2
+    exit 2
+  fi
   ARGS=(--preset "${CARLA_PRESET}")
   [ "${ROS2:-0}" = "1" ]     && ARGS+=(-DENABLE_ROS2=ON)
   [ "${RSS:-0}" = "1" ]      && ARGS+=(-DENABLE_RSS=ON)
-  [ "${OSM2ODR:-0}" = "1" ]  && ARGS+=(-DENABLE_OSM2ODR=ON)
   [ "${PYTORCH:-0}" = "1" ]  && ARGS+=(-DENABLE_PYTORCH=ON)
   [ -n "${DLSS:-}" ]         && ARGS+=(-DCARLA_DLSS_SDK_PATH="${DLSS}")
   # System Qt is often installed but not linkable against the UE toolchain; the

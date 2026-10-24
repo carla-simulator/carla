@@ -1,6 +1,6 @@
 # Generate maps with OpenStreetMap
 
-[OpenStreetMap](https://www.openstreetmap.org) is an open data map of the world developed by thousands of contributors and licensed under the [Open Data Commons Open Database License](https://opendatacommons.org/licenses/odbl/). Sections of the map can be exported to an XML formatted `.osm` file. CARLA converts that file to OpenDRIVE and then builds the world with [OpenDRIVE standalone mode](core_opendrive.md) — the same pipeline, and the same result: not just the roads, but terrain, markings, signals and roadside furniture.
+[OpenStreetMap](https://www.openstreetmap.org) is an open data map of the world developed by thousands of contributors and licensed under the [Open Data Commons Open Database License](https://opendatacommons.org/licenses/odbl/). Sections of the map can be exported to an XML formatted `.osm` file. Convert that file to OpenDRIVE with an external tool such as SUMO `netconvert`, then load the `.xodr` into CARLA with [OpenDRIVE standalone mode](core_opendrive.md).
 
 - [__Export a map with OpenStreetMap__](#export-a-map-with-openstreetmap)
 - [__Using OpenStreetMap in CARLA__](#using-openstreetmap-in-carla)
@@ -8,7 +8,7 @@
 - [__Ingest into CARLA__](#ingest-into-carla)
 
 !!! Warning
-    The OSM to OpenDRIVE conversion (`carla.Osm2Odr`, `carla.Osm2OdrSettings` and `config.py --osm-path`) is only compiled when the build is configured with `-DENABLE_OSM2ODR=ON`, which is __off by default__. Without it, those names raise `AttributeError` and the build log says "Building CARLA PythonAPI without OSM2ODR support". Reconfigure and rebuild the Python API to use this page.
+    The built-in OSM converter is __not available on `ue58-dev`__. The build does not fetch the `osm2odr` dependency, so `carla.Osm2Odr`, `carla.Osm2OdrSettings` and `config.py --osm-path` cannot be used with a standard build. Setting `-DENABLE_OSM2ODR=ON` does not supply the missing converter and makes the Unreal modules fail to build. Keep that option off and convert the file externally before loading it into CARLA. This is the same converter limitation described for the [Digital Twin Tool](content_authoring_maps_digital_twin.md).
 
 ---
 ## Export a map with OpenStreetMap
@@ -39,68 +39,28 @@ __6.__ Click the _Export_ button in the _Export_ panel and save the map informat
 ---
 ## Using OpenStreetMap in CARLA
 
-There are three ways in, and which one you can use depends on whether the data is still in `.osm` or has been converted to `.xodr`. Keeping it as `.osm` is the most restrictive: the mesh generation cannot be parameterized.
+First convert the `.osm` file to `.xodr` with an external converter. Then load the OpenDRIVE file with either of these methods:
 
 | Input | Method | Parameterizable |
 | --- | --- | --- |
 | `.xodr` | [Your own script](#a-use-your-own-script), through `client.generate_opendrive_world()` | yes |
 | `.xodr` | [`config.py --xodr-path`](#b-pass-xodr-to-configpy) | no |
-| `.osm` | [`config.py --osm-path`](#c-pass-osm-to-configpy) | no |
 
-The sections below cover the conversion and then each of the three.
+The sections below cover conversion and both loading methods.
 
 ---
 
 ## Convert OpenStreetMap format to OpenDRIVE format
 
-This section demonstrates how to use the Python API to convert the `.osm` file we exported in the previous section to `.xodr` format so that it is ready for use in CARLA.
+Install [Eclipse SUMO](https://sumo.dlr.de/docs/Downloads.php) separately and make its `netconvert` executable available on your `PATH`. SUMO supports [OpenStreetMap import](https://sumo.dlr.de/docs/Networks/Import/OpenStreetMap.html) and [OpenDRIVE export](https://sumo.dlr.de/docs/Networks/Export.html#opendrive).
 
-The [carla.Osm2OdrSettings](python_api.md#carla.Osm2OdrSettings) class is used to configure conversion settings such as offset values, traffic light generation, origin coordinates, and more. The full list of configurable parameters is found in the Python API [documentation](python_api.md#carla.Osm2OdrSettings). The [carla.Osm2Odr](python_api.md#carla.Osm2Odr) class uses these settings to parse the `.osm` data and output it in `.xodr` format.
+For an exported file named `map.osm`, run:
 
-Read the `.osm` file, convert it, and write the `.xodr` out. Pass `encoding='utf-8'` on both ends: OpenStreetMap exports are UTF-8, and on Windows Python would otherwise use the system code page and mangle any non-ASCII street name.
-
-```py
-# Read the .osm data
-with open('path/to/osm/file', encoding='utf-8') as f:
-    osm_data = f.read()
-
-# Define the desired settings. In this case, default values.
-settings = carla.Osm2OdrSettings()
-# Set OSM road types to export to OpenDRIVE
-settings.set_osm_way_types(["motorway", "motorway_link", "trunk", "trunk_link", "primary", "primary_link", "secondary", "secondary_link", "tertiary", "tertiary_link", "unclassified", "residential"])
-# Convert to .xodr
-xodr_data = carla.Osm2Odr.convert(osm_data, settings)
-
-# Save the OpenDRIVE file
-with open('path/to/output/file', 'w', encoding='utf-8') as f:
-    f.write(xodr_data)
+```sh
+netconvert --osm-files map.osm --opendrive-output map.xodr
 ```
 
----
-### Generate traffic lights
-
-OpenStreetMap data can define which junctions are controlled with traffic lights. To use this traffic light data in CARLA, you need to enable it in the OSM map settings via the Python API before converting the `.osm` file to `.xodr` format:
-
-```py
-# Define the desired settings. In this case, default values.
-settings = carla.Osm2OdrSettings()
-# enable traffic light generation from OSM data
-settings.generate_traffic_lights = True
-# Convert to .xodr
-xodr_data = carla.Osm2Odr.convert(osm_data, settings)
-```
-
-Traffic light data quality can vary depending on the region from which you extract data. Some traffic light information may be missing completely. To work within these limitations, you can use the Python API to configure all junctions to be controlled with traffic lights:
-
-```py
-settings.all_junctions_with_traffic_lights = True
-```
-
-You can also exclude certain roads, e.g., motorway links, from generating traffic lights:
-
-```py
-settings.set_traffic_light_excluded_way_types(["motorway_link"])
-```
+`--osm-files` selects the input and `--opendrive-output` writes the OpenDRIVE road network. Road types, sidewalks and traffic-light inference are configured in the external converter; see SUMO's [OpenStreetMap import options](https://sumo.dlr.de/docs/Networks/Import/OpenStreetMap.html) and [netconvert reference](https://sumo.dlr.de/docs/netconvert.html). Check the conversion warnings and inspect the resulting network before using it for a simulation.
 
 ---
 ## Ingest into CARLA
@@ -147,18 +107,7 @@ cd PythonAPI/util
 python3 config.py -x=/path/to/xodr/file
 ```
 
-[Default parameters](python_api.md#carla.OpendriveGenerationParameters) will be used.
-### C) Pass `.osm` to `config.py`
-
-After you have started a CARLA server, run the following command in a separate terminal to load your OpenStreetMap:
-
-```sh
-cd PythonAPI/util
-
-python3 config.py --osm-path=/path/to/OSM/file
-```
-
-[Default parameters](python_api.md#carla.OpendriveGenerationParameters) will be used.
+`config.py` uses fixed mesh-generation settings, including `wall_height=1.0`. Use your own script as shown above to set `wall_height=0.0` or change other [generation parameters](python_api.md#carla.OpendriveGenerationParameters).
 
 
 ![osm_generated_world](img/content_authoring_maps_openstreetmap/tuto_g_osm_generated_world.webp)

@@ -162,6 +162,7 @@
 #### Documentation
 
 * Clarified that `WorldSnapshot.id` identifies the loaded episode and remains stable across its ticks; use `frame` to identify a snapshot's tick (#7377).
+* Corrected the OpenStreetMap tutorial to use external SUMO conversion before loading OpenDRIVE; the UE5.8 build helper now rejects the unsupported OSM2ODR option (#9988).
 * Fixed the Python API reference listing keyword names the bindings do not accept (`World.get_level_bbs(actor_type=...)` raised `ArgumentError`; it is `bb_type`), and the same on `Vehicle.set_autopilot`, `Walker.blend_pose`, `Client.apply_batch_sync`, `Client.get_trafficmanager`, the `Client` recorder methods, `BoundingBox.get_world_vertices` and `World.apply_settings`.
 * Fixed the semantic segmentation class table in `Docs/ref_sensors.md`, which still described the 0.8.x 22-class taxonomy instead of the actual 29 classes, breaking ground-truth mapping.
 * Fixed code examples that failed when run, in the Python API reference snippets and in `core_actors.md`, `adv_traffic_manager.md`, `ref_sensors.md` and `tuto_G_bounding_boxes.md`.
