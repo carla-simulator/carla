@@ -3,3 +3,6 @@ This is the Python package for the CARLA Python API used for controlling and com
 This package allows you to control the CARLA simulator and retrieve simulation data through the Python API. For instance, you can control any actor (vehicle, pedestrian, traffic light, etc...) in the simulation, attach sensors to vehicles, and read the sensor data etc.
 
 For more information, refer to the [Guide for getting started with CARLA](https://carla.readthedocs.io/en/latest/getting_started/).
+
+JPEG-enabled builds use libjpeg-turbo. This software is based in part on the
+work of the Independent JPEG Group.

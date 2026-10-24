@@ -76,6 +76,16 @@ The setup script launches the following commands itself, you will need to use th
 cmake -G Ninja -S . -B Build --toolchain=$PWD/CMake/Toolchain.cmake -DCMAKE_BUILD_TYPE=Release -DENABLE_ROS2=ON
 ```
 
+Image output supports PNG by default. To also save JPEG files, add
+`-DLIBCARLA_IMAGE_SUPPORTED_FORMATS="png;jpeg"` to the configure command and
+rebuild the Python API and server. JPEG-only builds can use `"jpeg"` instead.
+Selecting JPEG downloads and builds a pinned static libjpeg-turbo codec; no
+separate JPEG DLL or system JPEG installation is needed. PNG-only builds do
+not download or build this codec. An identical local source archive can be
+selected with `-DCARLA_LIBJPEG_TURBO_URL=/path/to/archive.zip` for offline builds.
+The filename extension selects JPEG output only in a JPEG-enabled build;
+otherwise image output uses the enabled default format.
+
 !!! Note
     If you intend to target a specific Python installation, you should add both these arguments to the above cmake command: `-DPython_ROOT_DIR=PATH` and `-DPython3_ROOT_DIR=PATH`.
 

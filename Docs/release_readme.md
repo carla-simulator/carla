@@ -59,3 +59,6 @@ Running options
 For more details and running options, refer to the online documentation:
 
 <https://carla-ue5.readthedocs.io>
+
+JPEG-enabled builds use libjpeg-turbo. This software is based in part on the
+work of the Independent JPEG Group.

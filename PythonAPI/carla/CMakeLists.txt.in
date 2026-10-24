@@ -159,6 +159,7 @@ target_include_directories (
   $<TARGET_PROPERTY:rpc,INTERFACE_INCLUDE_DIRECTORIES>
   @libpng_SOURCE_DIR@ @libpng_BINARY_DIR@
   @zlib_SOURCE_DIR@ @zlib_BINARY_DIR@
+  @CARLA_PYTHON_API_JPEG_INCLUDE_DIRS@
 )
 
 set (
@@ -203,4 +204,5 @@ target_link_libraries (
   $<TARGET_FILE:png_static>
   $<TARGET_FILE:zlibstatic>
   $<TARGET_FILE:rpc>
+  @CARLA_PYTHON_API_JPEG_LIBRARIES@
 )

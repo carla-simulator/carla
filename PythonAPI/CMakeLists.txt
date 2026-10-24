@@ -30,6 +30,7 @@ set (
   rpc
   png_static
   zlibstatic
+  ${CARLA_JPEG_LIBRARIES}
   Boost::asio
   Boost::python${Python3_VERSION_MAJOR}${Python3_VERSION_MINOR}
   Boost::geometry
@@ -38,6 +39,13 @@ set (
   RecastNavigation::Detour
   RecastNavigation::DetourCrowd
 )
+
+set (CARLA_PYTHON_API_JPEG_LIBRARIES)
+set (CARLA_PYTHON_API_JPEG_INCLUDE_DIRS)
+if (CARLA_JPEG_ENABLED)
+  set (CARLA_PYTHON_API_JPEG_LIBRARIES "$<TARGET_FILE:carla-jpeg>")
+  set (CARLA_PYTHON_API_JPEG_INCLUDE_DIRS ${CARLA_JPEG_PREFIX}/include)
+endif ()
 
 get_target_property (
   Boost_asio_TARGET_NAME

@@ -144,6 +144,8 @@ include_directories (
   ${libpng_BINARY_DIR}
 ) # @TODO HACK
 
+include (${CARLA_WORKSPACE_PATH}/CMake/Jpeg.cmake)
+
 
 
 # ==== BOOST ====

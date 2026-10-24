@@ -46,7 +46,7 @@
 #  endif
 #endif
 
-#if LIBCARLA_IMAGE_WITH_JPEG_SUPPORT
+#if LIBCARLA_IMAGE_SUPPORT_JPEG
 #  include <boost/gil/extension/io/jpeg.hpp>
 #endif
 
@@ -120,7 +120,7 @@ namespace detail {
 
     static constexpr bool is_supported = has_jpeg_support();
 
-#if LIBCARLA_IMAGE_WITH_JPEG_SUPPORT
+#if LIBCARLA_IMAGE_SUPPORT_JPEG
 
     static constexpr const char *get_default_extension() {
       return "jpeg";
@@ -152,7 +152,7 @@ namespace detail {
           boost::gil::jpeg_tag());
     }
 
-#endif // LIBCARLA_IMAGE_WITH_JPEG_SUPPORT
+#endif // LIBCARLA_IMAGE_SUPPORT_JPEG
   };
 
   struct io_tiff {

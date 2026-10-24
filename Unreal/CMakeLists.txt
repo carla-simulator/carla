@@ -81,6 +81,7 @@ set (
   Eigen3::Eigen
   zlibstatic
   png_static
+  ${CARLA_JPEG_LIBRARIES}
   rpc
 )
 

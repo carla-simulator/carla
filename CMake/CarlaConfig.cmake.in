@@ -32,6 +32,19 @@ if (NOT TARGET Carla::carla-client)
     INTERFACE_COMPILE_DEFINITIONS "${Carla_INTERFACE_DEFINITIONS}"
     INTERFACE_COMPILE_FEATURES    cxx_std_20
   )
+  if (@CARLA_JPEG_ENABLED@)
+    set_and_check (Carla_JPEG_LIBRARY
+      "${Carla_LIBRARY_DIR}/@CARLA_JPEG_ARCHIVE_NAME@")
+    if (NOT TARGET Carla::jpeg)
+      add_library (Carla::jpeg STATIC IMPORTED)
+      set_target_properties (Carla::jpeg PROPERTIES
+        IMPORTED_LOCATION "${Carla_JPEG_LIBRARY}"
+        INTERFACE_INCLUDE_DIRECTORIES "${Carla_INCLUDE_DIR}"
+      )
+    endif ()
+    set_property (TARGET Carla::carla-client APPEND PROPERTY
+      INTERFACE_LINK_LIBRARIES Carla::jpeg)
+  endif ()
 endif ()
 
 check_required_components (Carla)

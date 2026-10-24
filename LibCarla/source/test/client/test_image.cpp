@@ -10,6 +10,10 @@
 #include <carla/image/ImageIO.h>
 #include <carla/image/ImageView.h>
 
+#include <algorithm>
+#include <array>
+#include <filesystem>
+#include <fstream>
 #include <memory>
 
 template <typename ViewT, typename PixelT>
@@ -38,6 +42,90 @@ TEST(image, support) {
   carla::logging::log("TIFF support =", has_tiff_support());
 }
 #endif // PLATFORM_WINDOWS
+
+namespace {
+
+  class ImageTestDirectory {
+  public:
+    ImageTestDirectory() {
+      const auto timestamp = std::chrono::high_resolution_clock::now().time_since_epoch().count();
+      _path = std::filesystem::temp_directory_path() /
+          ("carla-image-test-" + std::to_string(timestamp));
+      if (!std::filesystem::create_directory(_path)) {
+        throw std::runtime_error("Could not create image test directory");
+      }
+    }
+
+    ~ImageTestDirectory() {
+      std::error_code error;
+      std::filesystem::remove_all(_path, error);
+    }
+
+    std::filesystem::path Path(const std::string &name) const {
+      return _path / name;
+    }
+
+  private:
+    std::filesystem::path _path;
+  };
+
+  template <typename PixelT>
+  void CheckImageRoundtrip(const std::string &extension, bool jpeg) {
+    ImageTestDirectory directory;
+    boost::gil::image<PixelT, false> image(16, 12);
+    PixelT color;
+    boost::gil::color_convert(boost::gil::rgb8_pixel_t(40, 100, 180), color);
+    boost::gil::fill_pixels(boost::gil::view(image), color);
+    const auto filename = carla::image::ImageIO::WriteView(
+        directory.Path("roundtrip." + extension).string(), boost::gil::const_view(image));
+
+    std::ifstream input(filename, std::ios::binary);
+    std::array<unsigned char, 8> signature{};
+    ASSERT_TRUE(input.read(reinterpret_cast<char *>(signature.data()), signature.size()));
+    if (jpeg) {
+      const std::array<unsigned char, 3> expected{0xff, 0xd8, 0xff};
+      ASSERT_TRUE(std::equal(expected.begin(), expected.end(), signature.begin()));
+    } else {
+      const std::array<unsigned char, 8> expected{137, 80, 78, 71, 13, 10, 26, 10};
+      ASSERT_EQ(signature, expected);
+    }
+
+    boost::gil::rgb8_image_t decoded;
+    carla::image::ImageIO::ReadImage(filename, decoded);
+    ASSERT_EQ(decoded.width(), 16);
+    ASSERT_EQ(decoded.height(), 12);
+    const auto view = boost::gil::const_view(decoded);
+    const std::array<int, 3> expected{40, 100, 180};
+    for (int y = 0; y < 12; ++y) {
+      for (int x = 0; x < 16; ++x) {
+        for (int channel = 0; channel < 3; ++channel) {
+          EXPECT_NEAR(int(view(x, y)[channel]), expected[channel], jpeg ? 5 : 0);
+        }
+      }
+    }
+  }
+
+} // namespace
+
+#if LIBCARLA_IMAGE_SUPPORT_PNG
+TEST(image, png_roundtrip) {
+  CheckImageRoundtrip<boost::gil::rgb8_pixel_t>("png", false);
+  CheckImageRoundtrip<boost::gil::bgra8_pixel_t>("png", false);
+}
+
+#if !LIBCARLA_IMAGE_SUPPORT_JPEG
+TEST(image, unsupported_jpeg_uses_png) {
+  CheckImageRoundtrip<boost::gil::bgra8_pixel_t>("jpg", false);
+}
+#endif
+#endif
+
+#if LIBCARLA_IMAGE_SUPPORT_JPEG
+TEST(image, jpeg_roundtrip) {
+  CheckImageRoundtrip<boost::gil::rgb8_pixel_t>("jpg", true);
+  CheckImageRoundtrip<boost::gil::bgra8_pixel_t>("jpeg", true);
+}
+#endif
 
 TEST(image, depth) {
 #ifndef NDEBUG

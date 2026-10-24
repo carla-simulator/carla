@@ -234,6 +234,7 @@ if (BUILD_CARLA_SERVER)
     RecastNavigation::DetourCrowd
     png_static
     zlibstatic
+    ${CARLA_JPEG_LIBRARIES}
     rpc
   )
   
@@ -391,6 +392,7 @@ if (BUILD_CARLA_CLIENT)
     RecastNavigation::DetourCrowd
     png_static
     zlibstatic
+    ${CARLA_JPEG_LIBRARIES}
     rpc
   )
   target_include_directories (
@@ -417,6 +419,21 @@ if (BUILD_CARLA_CLIENT)
   # README.md for the practical recipe.
   include (GNUInstallDirs)
   include (CMakePackageConfigHelpers)
+
+  if (CARLA_JPEG_ENABLED)
+    # The static codec travels with an installed JPEG-enabled client. Include
+    # jerror.h as well: Boost.GIL's JPEG reader uses its error definitions.
+    install (FILES ${CARLA_JPEG_ARCHIVE}
+      DESTINATION ${CMAKE_INSTALL_LIBDIR})
+    install (FILES
+      ${CARLA_JPEG_PREFIX}/include/jpeglib.h
+      ${CARLA_JPEG_PREFIX}/include/jconfig.h
+      ${CARLA_JPEG_PREFIX}/include/jmorecfg.h
+      ${CARLA_JPEG_PREFIX}/include/jerror.h
+      DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+    install (DIRECTORY ${CARLA_JPEG_PREFIX}/share/doc/libjpeg-turbo/
+      DESTINATION ${CMAKE_INSTALL_DATADIR}/doc/Carla/libjpeg-turbo)
+  endif ()
 
   install (
     TARGETS carla-client
