@@ -5,6 +5,7 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "carla/ros2/ROS2.h"
+#include "carla/ros2/TopicNames.h"
 
 #include "carla/Logging.h"
 #include "carla/ros2/middleware/MiddlewareFactory.h"
@@ -189,12 +190,7 @@ std::string ROS2::GetActorRosName(void *actor) {
 
 std::string ROS2::GetActorBaseTopicName(void *actor) {
   std::lock_guard<std::recursive_mutex> lock(_mutex);
-  auto it = _actor_parent_map.find(actor);
-  if (it != _actor_parent_map.end()) {
-    return GetActorBaseTopicName(it->second) + "/" + GetActorRosName(actor);
-  } else {
-    return "rt/carla/" + GetActorRosName(actor);
-  }
+  return detail::BuildActorBaseTopicName(actor, _actor_parent_map, _registered_actors);
 }
 
 std::string ROS2::GetFrameId(void *actor) {
