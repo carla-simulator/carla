@@ -1282,6 +1282,7 @@ class CameraManager(object):
         self = weak_self()
         if not self:
             return
+        dvs_surface = None
         if self.sensors[self.index][0] == 'sensor.lidar.ray_cast':
             points = np.frombuffer(image.raw_data, dtype=np.dtype('f4'))
             points = np.reshape(points, (int(points.shape[0] / 4), 4))
@@ -1318,7 +1319,8 @@ class CameraManager(object):
             dvs_img = np.zeros((image.height, image.width, 3), dtype=np.uint8)
             # Blue is positive, red is negative
             dvs_img[dvs_events[:]['y'], dvs_events[:]['x'], dvs_events[:]['pol'] * 2] = 255
-            self.surface = pygame.surfarray.make_surface(dvs_img.swapaxes(0, 1))
+            dvs_surface = pygame.surfarray.make_surface(dvs_img.swapaxes(0, 1))
+            self.surface = dvs_surface
         elif self.sensors[self.index][0].startswith('sensor.camera.optical_flow'):
             image = image.get_color_coded_flow()
             array = np.frombuffer(image.raw_data, dtype=np.dtype("uint8"))
@@ -1334,10 +1336,10 @@ class CameraManager(object):
             array = array[:, :, ::-1]
             self.surface = pygame.surfarray.make_surface(array.swapaxes(0, 1))
         if self.recording:
-            if self.sensors[self.index][0].startswith('sensor.camera.dvs'):
+            if dvs_surface is not None:
                 # DVS events have no native image writer; record their preview.
                 os.makedirs('_out', exist_ok=True)
-                pygame.image.save(self.surface, '_out/%08d.png' % image.frame)
+                pygame.image.save(dvs_surface, '_out/%08d.png' % image.frame)
             else:
                 image.save_to_disk('_out/%08d' % image.frame)
 

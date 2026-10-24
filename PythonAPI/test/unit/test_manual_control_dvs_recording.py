@@ -133,6 +133,23 @@ class TestManualControlDVSRecording(unittest.TestCase):
         self.assertFalse(self.mkdir_calls)
         self.assertFalse(self.saved)
 
+    def test_recording_keeps_this_frame_if_preview_changes_during_directory_io(self):
+        mkdir = self.module.os.makedirs
+        self.manager.sensors.append(['sensor.camera.rgb', 0])
+
+        def concurrent_preview_update(path, exist_ok=False):
+            mkdir(path, exist_ok=exist_ok)
+            self.manager.surface = Surface(np.zeros((4, 3, 3), dtype=np.uint8))
+            self.manager.index = 1
+
+        self.module.os.makedirs = concurrent_preview_update
+        self.parse(DVSEventArray([(3, 2, 100, True)]))
+
+        self.assertEqual(self.saved[0][1], '_out/00000037.png')
+        self.assertEqual(self.saved[0][0].pixels[3, 2, 2], 255)
+        self.assertIsNot(self.saved[0][0], self.manager.surface)
+        self.assertEqual(self.manager.index, 1)
+
     def test_rgb_recording_keeps_native_image_writer(self):
         self.manager.sensors = [['sensor.camera.rgb', 0]]
         image = NativeImage()
