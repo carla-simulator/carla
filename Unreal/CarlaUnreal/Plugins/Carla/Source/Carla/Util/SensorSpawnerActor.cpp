@@ -296,7 +296,7 @@ void ASensorSpawnerActor::DrawRadarSensorPoints() const
   float velocity_range = VelocityRange; // m/s
   for(const ASensor* CurrentSensor : SpawnedSensorsArray)
   {
-    if(const ARadar* RadarSensor = Cast<ARadar>(CurrentSensor); CurrentSensor)
+    if(const ARadar* RadarSensor = Cast<ARadar>(CurrentSensor); RadarSensor)
     {
       FRotator CurrentRot = RadarSensor->GetActorRotation(); 
       for( auto& detect : RadarSensor->GetRadarData().GetDetections() )
