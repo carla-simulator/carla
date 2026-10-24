@@ -4334,28 +4334,28 @@ Returns <b>True</b> if both objects' variables are different.
 ---
 
 ## carla.WheelPhysicsControl<a name="carla.WheelPhysicsControl"></a>
-Class that defines specific physical parameters for wheel objects that will be part of a [carla.VehiclePhysicsControl](#carla.VehiclePhysicsControl) to simulate vehicle it as a material object.  
+Physical parameters for one wheel in a [carla.VehiclePhysicsControl](#carla.VehiclePhysicsControl).  
 
 ### Instance Variables
 - <a name="carla.WheelPhysicsControl.wheel_index"></a>**<font color="#f8805a">wheel_index</font>** (_int_)  
 Index of the wheel in the vehicle's wheel list, being -1 when it has not been assigned yet.  
-- <a name="carla.WheelPhysicsControl.velocity"></a>**<font color="#f8805a">velocity</font>** (_[carla.Vector3D](#carla.Vector3D)<small> - cm/s</small>_)  
-Velocity of the wheel, relative to the vehicle.  
+- <a name="carla.WheelPhysicsControl.velocity"></a>**<font color="#f8805a">velocity</font>** (_[carla.Location](#carla.Location)<small> - m/s</small>_)  
+Velocity of the wheel center in world space.  
 - <a name="carla.WheelPhysicsControl.sweep_type"></a>**<font color="#f8805a">sweep_type</font>** (_int_)  
 Geometry the sweep tests against, being 0 simple collision and 1 complex collision.  
 - <a name="carla.WheelPhysicsControl.sweep_shape"></a>**<font color="#f8805a">sweep_shape</font>** (_int_)  
 Shape used to find the ground under the wheel, being 0 a ray, 1 a sphere and 2 the wheel's own collision shape. The later the slower.  
-- <a name="carla.WheelPhysicsControl.old_location"></a>**<font color="#f8805a">old_location</font>** (_[carla.Location](#carla.Location)<small> - centimeters</small>_)  
-Position the wheel had on the previous simulation step, relative to the vehicle.  
-- <a name="carla.WheelPhysicsControl.location"></a>**<font color="#f8805a">location</font>** (_[carla.Location](#carla.Location)<small> - centimeters</small>_)  
-Position of the wheel, relative to the vehicle.  
+- <a name="carla.WheelPhysicsControl.old_location"></a>**<font color="#f8805a">old_location</font>** (_[carla.Location](#carla.Location)<small> - meters</small>_)  
+Position of the wheel in world space on the previous simulation step.  
+- <a name="carla.WheelPhysicsControl.location"></a>**<font color="#f8805a">location</font>** (_[carla.Location](#carla.Location)<small> - meters</small>_)  
+Position of the wheel in world space.  
 - <a name="carla.WheelPhysicsControl.lateral_slip_graph"></a>**<font color="#f8805a">lateral_slip_graph</font>** (_list([carla.Vector2D](#carla.Vector2D))_)  
 Curve of lateral friction against slip angle, as a list of points where x is the slip angle in degrees and y the friction multiplier.  
 - <a name="carla.WheelPhysicsControl.external_torque_combine_method"></a>**<font color="#f8805a">external_torque_combine_method</font>** (_int_)  
 How an external torque is combined with the ones the vehicle already applies, being 0 ignore it, 1 replace them and 2 add to them.  
-- <a name="carla.WheelPhysicsControl.axle_type"></a>**<font color="#f8805a">axle_type</font>** (_float<small> - unitless</small>_)  
-The axle of the wheel, used by the differntial setup to decide which wheels to give power to. Use a value of 1.0 to set the wheel at the front axle and a value of 2.0 for rear ones. The value 0.0 can also be used as an 'other' case, and in this case the `affected_by_engine` value will be used to decide whether or not it is given power. (default 0.0).  
-- <a name="carla.WheelPhysicsControl.offset"></a>**<font color="#f8805a">offset</font>** (_float<small> - meters</small>_)  
+- <a name="carla.WheelPhysicsControl.axle_type"></a>**<font color="#f8805a">axle_type</font>** (_int<small> - unitless</small>_)  
+The axle of the wheel: 0 is undefined, 1 is front and 2 is rear. When undefined, `affected_by_engine` determines whether the wheel receives power; otherwise the differential setup determines it.  
+- <a name="carla.WheelPhysicsControl.offset"></a>**<font color="#f8805a">offset</font>** (_[carla.Vector3D](#carla.Vector3D)<small> - centimeters</small>_)  
 Wheel's offset (default 0.0, 0.0, 0.0).  
 - <a name="carla.WheelPhysicsControl.max_steer_angle"></a>**<font color="#f8805a">max_steer_angle</font>** (_float<small> - degrees</small>_)  
 Maximum angle that the wheel can steer.  
@@ -4364,17 +4364,17 @@ Radius of the wheel in centimeters.
 - <a name="carla.WheelPhysicsControl.wheel_width"></a>**<font color="#f8805a">wheel_width</font>** (_float<small> - centimeters</small>_)  
 Width of the widest part of the wheel in centimeters.  
 - <a name="carla.WheelPhysicsControl.wheel_mass"></a>**<font color="#f8805a">wheel_mass</font>** (_float<small> - kilograms</small>_)  
-Mass of the wheel in kg (default 1.0).  
+Mass of the wheel. Default is 30.0.  
 - <a name="carla.WheelPhysicsControl.cornering_stiffness"></a>**<font color="#f8805a">cornering_stiffness</font>** (_float_)  
 Tyre cornering ability.  
-- <a name="carla.WheelPhysicsControl.friction_force_multiplier"></a>**<font color="#f8805a">friction_force_multiplier</font>** (_float_)  
-Multiplier of the friction force (default 1.0).  
-- <a name="carla.WheelPhysicsControl.side_slip_modifier"></a>**<font color="#f8805a">side_slip_modifier</font>** (_float_)  
-The wheel's lateral skid grid loss (default 0.5).  
+- <a name="carla.WheelPhysicsControl.friction_force_multiplier"></a>**<font color="#f8805a">friction_force_multiplier</font>** (_float<small> - unitless</small>_)  
+Multiplier of the friction force. Default is 3.0.  
+- <a name="carla.WheelPhysicsControl.side_slip_modifier"></a>**<font color="#f8805a">side_slip_modifier</font>** (_float<small> - unitless</small>_)  
+The wheel's lateral skid grip loss. Default is 1.0.  
 - <a name="carla.WheelPhysicsControl.slip_threshold"></a>**<font color="#f8805a">slip_threshold</font>** (_float_)  
-The wheel's longitudinal slip threshold (default 1.0).  
+The wheel's longitudinal slip threshold. Default is 20.0.  
 - <a name="carla.WheelPhysicsControl.skid_threshold"></a>**<font color="#f8805a">skid_threshold</font>** (_float_)  
-The wheel's lateral skid threshold (default 1.0).  
+The wheel's lateral skid threshold. Default is 20.0.  
 - <a name="carla.WheelPhysicsControl.affected_by_steering"></a>**<font color="#f8805a">affected_by_steering</font>** (_bool_)  
 Flag indicating wether or not the wheel is affected by the steering. (default True).  
 - <a name="carla.WheelPhysicsControl.affected_by_brake"></a>**<font color="#f8805a">affected_by_brake</font>** (_bool_)  
@@ -4384,69 +4384,77 @@ Flag indicating wether or not the wheel is affected by the handbrake. (default T
 - <a name="carla.WheelPhysicsControl.affected_by_engine"></a>**<font color="#f8805a">affected_by_engine</font>** (_bool_)  
 Flag indicating wether or not the wheel is affected by the engine. (default True).  
 - <a name="carla.WheelPhysicsControl.abs_enabled"></a>**<font color="#f8805a">abs_enabled</font>** (_bool_)  
-Indicates if the Advanced Braking System is enabled. (default True).  
+Indicates if the anti-lock braking system is enabled. Default is False.  
 - <a name="carla.WheelPhysicsControl.traction_control_enabled"></a>**<font color="#f8805a">traction_control_enabled</font>** (_bool_)  
-Indicates if the Straight Line Traction Control is enabled. (default True).  
+Indicates if traction control is enabled. Default is False.  
 - <a name="carla.WheelPhysicsControl.max_wheelspin_rotation"></a>**<font color="#f8805a">max_wheelspin_rotation</font>** (_float<small> - rad/s</small>_)  
-Maximum wheelspin rotation. (default 1.0).  
+Maximum wheelspin rotation. Default is 30.0.  
 - <a name="carla.WheelPhysicsControl.max_brake_torque"></a>**<font color="#f8805a">max_brake_torque</font>** (_float<small> - N*m</small>_)  
 Maximum brake torque.  
 - <a name="carla.WheelPhysicsControl.max_hand_brake_torque"></a>**<font color="#f8805a">max_hand_brake_torque</font>** (_float<small> - N*m</small>_)  
 Maximum handbrake torque.  
 - <a name="carla.WheelPhysicsControl.suspension_axis"></a>**<font color="#f8805a">suspension_axis</font>** (_[carla.Vector3D](#carla.Vector3D)_)  
-Local direction in which the suspension force is applied. (default 0.0, 0.0, 1.0).  
-- <a name="carla.WheelPhysicsControl.suspension_force_offset"></a>**<font color="#f8805a">suspension_force_offset</font>** (_float_)  
-Offset from which the direction is applied. (default 1.0).  
-- <a name="carla.WheelPhysicsControl.suspension_max_raise"></a>**<font color="#f8805a">suspension_max_raise</font>** (_float<small> - meters</small>_)  
-How far the wheel can displace above it's resting position. (default 1.0).  
-- <a name="carla.WheelPhysicsControl.suspension_max_drop"></a>**<font color="#f8805a">suspension_max_drop</font>** (_float<small> - meters</small>_)  
-How far the wheel can displace below it's resting position. (default 1.0).  
+Local direction in which the suspension force is applied. Default is [carla.Vector3D](#carla.Vector3D)(0.0, 0.0, -1.0).  
+- <a name="carla.WheelPhysicsControl.suspension_force_offset"></a>**<font color="#f8805a">suspension_force_offset</font>** (_[carla.Vector3D](#carla.Vector3D)<small> - centimeters</small>_)  
+Offset from which the suspension force is applied. Default is [carla.Vector3D](#carla.Vector3D)(0.0, 0.0, 0.0).  
+- <a name="carla.WheelPhysicsControl.suspension_max_raise"></a>**<font color="#f8805a">suspension_max_raise</font>** (_float<small> - centimeters</small>_)  
+How far the wheel can move above its resting position. Default is 10.0.  
+- <a name="carla.WheelPhysicsControl.suspension_max_drop"></a>**<font color="#f8805a">suspension_max_drop</font>** (_float<small> - centimeters</small>_)  
+How far the wheel can move below its resting position. Default is 10.0.  
 - <a name="carla.WheelPhysicsControl.suspension_damping_ratio"></a>**<font color="#f8805a">suspension_damping_ratio</font>** (_float<small> - unitless</small>_)  
 Suspension dampig ratio. (default 0.5).  
 - <a name="carla.WheelPhysicsControl.wheel_load_ratio"></a>**<font color="#f8805a">wheel_load_ratio</font>** (_float<small> - unitless</small>_)  
 Amount that the wheel load effects wheel friction. At 0.0, the whee friction is completely independent of the loading on the wheel. At 1.0, the wheel friction is based on the force pressing the wheel into the ground. (default 0.5).  
-- <a name="carla.WheelPhysicsControl.spring_rate"></a>**<font color="#f8805a">spring_rate</font>** (_float<small> - unitless</small>_)  
-Force of the wheel's spring. (default 1.0).  
-- <a name="carla.WheelPhysicsControl.spring_preload"></a>**<font color="#f8805a">spring_preload</font>** (_float<small> - unitless</small>_)  
-Spring preloads. (default 1.0).  
-- <a name="carla.WheelPhysicsControl.suspension_smoothing"></a>**<font color="#f8805a">suspension_smoothing</font>** (_float<small> - unitless</small>_)  
-Suspension smoothing, scales between 0.0 and 1.0.  
+- <a name="carla.WheelPhysicsControl.spring_rate"></a>**<font color="#f8805a">spring_rate</font>** (_float<small> - N/m</small>_)  
+Force of the wheel's spring. Default is 250.0.  
+- <a name="carla.WheelPhysicsControl.spring_preload"></a>**<font color="#f8805a">spring_preload</font>** (_float<small> - N/m</small>_)  
+Spring preload. Default is 50.0.  
+- <a name="carla.WheelPhysicsControl.suspension_smoothing"></a>**<font color="#f8805a">suspension_smoothing</font>** (_int<small> - unitless</small>_)  
+Suspension smoothing, from 0 (off) to 10 (maximum). Default is 0.  
 - <a name="carla.WheelPhysicsControl.rollbar_scaling"></a>**<font color="#f8805a">rollbar_scaling</font>** (_float<small> - unitless</small>_)  
 Anti-roll effect, scales between 0.0 and 1.0.  
 
 ### Methods
-- <a name="carla.WheelPhysicsControl.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**axel_type**=0.0</font>, <font color="#00a6ed">**offset**=[carla.Vector3D](#carla.Vector3D)(0.0, 0.0, 0.0)</font>, <font color="#00a6ed">**max_steer_angle**=70.0</font>, <font color="#00a6ed">**wheel_radius**=1.0</font>, <font color="#00a6ed">**wheel_width**=1.0</font>, <font color="#00a6ed">**wheel_mass**=1.0</font>, <font color="#00a6ed">**cornering_stiffness**=1000.0</font>, <font color="#00a6ed">**friction_force_multiplier**=1.0</font>, <font color="#00a6ed">**side_slip_modifier**=0.5</font>, <font color="#00a6ed">**slip_threshold**=1.0</font>, <font color="#00a6ed">**skid_threshold**=1.0</font>, <font color="#00a6ed">**affected_by_steering**=True</font>, <font color="#00a6ed">**affected_by_brake**=True</font>, <font color="#00a6ed">**affected_by_handbrake**=True</font>, <font color="#00a6ed">**affected_by_engine**=True</font>, <font color="#00a6ed">**abs_enabled**=True</font>, <font color="#00a6ed">**traction_control_enabled**=True</font>, <font color="#00a6ed">**max_wheelspin_rotation**=1.0</font>, <font color="#00a6ed">**max_brake_torque**=1500.0</font>, <font color="#00a6ed">**max_handbrake_torque**=3000.0</font>, <font color="#00a6ed">**suspension_axis**=[carla.Vector3D](#carla.Vector3D)(0.0,0.0,0.0)</font>, <font color="#00a6ed">**suspension_force_offset**=1.0</font>, <font color="#00a6ed">**suspension_max_raise**=1.0</font>, <font color="#00a6ed">**suspension_max_drop**=1.0</font>, <font color="#00a6ed">**suspension_damping_ratio**=0.5</font>, <font color="#00a6ed">**wheel_load_ratio**=0.5</font>, <font color="#00a6ed">**spring_rate**=1.0</font>, <font color="#00a6ed">**spring_preload**=1.0</font>, <font color="#00a6ed">**suspension_smoothing**=1.0</font>, <font color="#00a6ed">**rollbar_scaling**=1.0</font>)  
+- <a name="carla.WheelPhysicsControl.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**axle_type**=0</font>, <font color="#00a6ed">**offset**=[carla.Vector3D](#carla.Vector3D)(0.0, 0.0, 0.0)</font>, <font color="#00a6ed">**wheel_radius**=30.0</font>, <font color="#00a6ed">**wheel_width**=30.0</font>, <font color="#00a6ed">**wheel_mass**=30.0</font>, <font color="#00a6ed">**cornering_stiffness**=1000.0</font>, <font color="#00a6ed">**friction_force_multiplier**=3.0</font>, <font color="#00a6ed">**side_slip_modifier**=1.0</font>, <font color="#00a6ed">**slip_threshold**=20.0</font>, <font color="#00a6ed">**skid_threshold**=20.0</font>, <font color="#00a6ed">**max_steer_angle**=70.0</font>, <font color="#00a6ed">**affected_by_steering**=True</font>, <font color="#00a6ed">**affected_by_brake**=True</font>, <font color="#00a6ed">**affected_by_handbrake**=True</font>, <font color="#00a6ed">**affected_by_engine**=True</font>, <font color="#00a6ed">**abs_enabled**=False</font>, <font color="#00a6ed">**traction_control_enabled**=False</font>, <font color="#00a6ed">**max_wheelspin_rotation**=30.0</font>, <font color="#00a6ed">**external_torque_combine_method**=0</font>, <font color="#00a6ed">**lateral_slip_graph**=[]</font>, <font color="#00a6ed">**suspension_axis**=[carla.Vector3D](#carla.Vector3D)(0.0, 0.0, -1.0)</font>, <font color="#00a6ed">**suspension_force_offset**=[carla.Vector3D](#carla.Vector3D)(0.0, 0.0, 0.0)</font>, <font color="#00a6ed">**suspension_max_raise**=10.0</font>, <font color="#00a6ed">**suspension_max_drop**=10.0</font>, <font color="#00a6ed">**suspension_damping_ratio**=0.5</font>, <font color="#00a6ed">**wheel_load_ratio**=0.5</font>, <font color="#00a6ed">**spring_rate**=250.0</font>, <font color="#00a6ed">**spring_preload**=50.0</font>, <font color="#00a6ed">**suspension_smoothing**=0</font>, <font color="#00a6ed">**rollbar_scaling**=0.15</font>, <font color="#00a6ed">**sweep_shape**=0</font>, <font color="#00a6ed">**sweep_type**=0</font>, <font color="#00a6ed">**max_brake_torque**=1500.0</font>, <font color="#00a6ed">**max_hand_brake_torque**=3000.0</font>, <font color="#00a6ed">**wheel_index**=-1</font>, <font color="#00a6ed">**location**=[carla.Location](#carla.Location)(0.0, 0.0, 0.0)</font>, <font color="#00a6ed">**old_location**=[carla.Location](#carla.Location)(0.0, 0.0, 0.0)</font>, <font color="#00a6ed">**velocity**=[carla.Location](#carla.Location)(0.0, 0.0, 0.0)</font>)  
     - **Parameters:**
-        - `axel_type` (_float_)  
-        - `offset` (_float_)  
-        - `max_steer_angle` (_float<small> - degrees</small>_)  
-        - `wheel_radius` (_float_)  
-        - `wheel_width` (_float_)  
-        - `wheel_mass` (_float_)  
+        - `axle_type` (_int_)  
+        - `offset` (_[carla.Vector3D](#carla.Vector3D)<small> - centimeters</small>_)  
+        - `wheel_radius` (_float<small> - centimeters</small>_)  
+        - `wheel_width` (_float<small> - centimeters</small>_)  
+        - `wheel_mass` (_float<small> - kilograms</small>_)  
         - `cornering_stiffness` (_float_)  
         - `friction_force_multiplier` (_float_)  
         - `side_slip_modifier` (_float_)  
         - `slip_threshold` (_float_)  
         - `skid_threshold` (_float_)  
+        - `max_steer_angle` (_float<small> - degrees</small>_)  
         - `affected_by_steering` (_bool_)  
         - `affected_by_brake` (_bool_)  
         - `affected_by_handbrake` (_bool_)  
         - `affected_by_engine` (_bool_)  
         - `abs_enabled` (_bool_)  
         - `traction_control_enabled` (_bool_)  
-        - `max_wheelspin_rotation` (_float_)  
-        - `max_brake_torque` (_float<small> - N*m</small>_)  
-        - `max_handbrake_torque` (_float<small> - N*m</small>_)  
+        - `max_wheelspin_rotation` (_float<small> - rad/s</small>_)  
+        - `external_torque_combine_method` (_int_)  
+        - `lateral_slip_graph` (_list([carla.Vector2D](#carla.Vector2D))_)  
         - `suspension_axis` (_[carla.Vector3D](#carla.Vector3D)_)  
-        - `suspension_force_offset` (_float_)  
-        - `suspension_max_raise` (_float_)  
-        - `suspension_max_drop` (_float_)  
+        - `suspension_force_offset` (_[carla.Vector3D](#carla.Vector3D)<small> - centimeters</small>_)  
+        - `suspension_max_raise` (_float<small> - centimeters</small>_)  
+        - `suspension_max_drop` (_float<small> - centimeters</small>_)  
         - `suspension_damping_ratio` (_float_)  
         - `wheel_load_ratio` (_float_)  
-        - `spring_rate` (_float_)  
-        - `spring_preload` (_float_)  
-        - `suspension_smoothing` (_float_)  
+        - `spring_rate` (_float<small> - N/m</small>_)  
+        - `spring_preload` (_float<small> - N/m</small>_)  
+        - `suspension_smoothing` (_int_)  
         - `rollbar_scaling` (_float_)  
+        - `sweep_shape` (_int_)  
+        - `sweep_type` (_int_)  
+        - `max_brake_torque` (_float<small> - N*m</small>_)  
+        - `max_hand_brake_torque` (_float<small> - N*m</small>_)  
+        - `wheel_index` (_int_)  
+        - `location` (_[carla.Location](#carla.Location)<small> - meters</small>_)  
+        - `old_location` (_[carla.Location](#carla.Location)<small> - meters</small>_)  
+        - `velocity` (_[carla.Location](#carla.Location)<small> - m/s</small>_)  
 
 ##### Dunder methods
 - <a name="carla.WheelPhysicsControl.__eq__"></a>**<font color="#7fb800">\__eq__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**=[carla.WheelPhysicsControl](#carla.WheelPhysicsControl)</font>)  

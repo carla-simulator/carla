@@ -135,6 +135,25 @@ static void SetSteeringCurve(carla::rpc::VehiclePhysicsControl &self, const boos
   self.steering_curve = GetVectorOfVector2DFromList(list);
 }
 
+static auto GetLateralSlipGraph(const carla::rpc::WheelPhysicsControl &self) {
+  boost::python::list points;
+  for (const auto &point : self.lateral_slip_graph) {
+    points.append(point);
+  }
+  return points;
+}
+
+static void SetLateralSlipGraph(
+    carla::rpc::WheelPhysicsControl &self,
+    const boost::python::object &points) {
+  boost::python::extract<const std::vector<carla::geom::Vector2D> &> vector(points);
+  if (vector.check()) {
+    self.lateral_slip_graph = vector();
+  } else {
+    self.lateral_slip_graph = GetVectorOfVector2DFromList(boost::python::list(points));
+  }
+}
+
 boost::python::object VehiclePhysicsControl_init(boost::python::tuple args, boost::python::dict kwargs) {
   // Args names
   const char* const args_names[] = {
@@ -452,7 +471,7 @@ void export_control() {
     .def_readwrite("traction_control_enabled", &cr::WheelPhysicsControl::traction_control_enabled)
     .def_readwrite("max_wheelspin_rotation", &cr::WheelPhysicsControl::max_wheelspin_rotation)
     .def_readwrite("external_torque_combine_method", &cr::WheelPhysicsControl::external_torque_combine_method)
-    .def_readwrite("lateral_slip_graph", &cr::WheelPhysicsControl::lateral_slip_graph)
+    .add_property("lateral_slip_graph", &GetLateralSlipGraph, &SetLateralSlipGraph)
     .def_readwrite("suspension_axis", &cr::WheelPhysicsControl::suspension_axis)
     .def_readwrite("suspension_force_offset", &cr::WheelPhysicsControl::suspension_force_offset)
     .def_readwrite("suspension_max_raise", &cr::WheelPhysicsControl::suspension_max_raise)

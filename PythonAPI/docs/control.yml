@@ -657,7 +657,7 @@
   
   - class_name: WheelPhysicsControl
     doc: >
-      Class that defines specific physical parameters for wheel objects that will be part of a carla.VehiclePhysicsControl to simulate vehicle it as a material object.
+      Physical parameters for one wheel in a carla.VehiclePhysicsControl.
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: wheel_index
@@ -666,10 +666,10 @@
         Index of the wheel in the vehicle's wheel list, being -1 when it has not been assigned yet.
     # --------------------------------------
     - var_name: velocity
-      type: carla.Vector3D
-      var_units: cm/s
+      type: carla.Location
+      var_units: m/s
       doc: >
-        Velocity of the wheel, relative to the vehicle.
+        Velocity of the wheel center in world space.
     # --------------------------------------
     - var_name: sweep_type
       type: int
@@ -683,15 +683,15 @@
     # --------------------------------------
     - var_name: old_location
       type: carla.Location
-      var_units: centimeters
+      var_units: meters
       doc: >
-        Position the wheel had on the previous simulation step, relative to the vehicle.
+        Position of the wheel in world space on the previous simulation step.
     # --------------------------------------
     - var_name: location
       type: carla.Location
-      var_units: centimeters
+      var_units: meters
       doc: >
-        Position of the wheel, relative to the vehicle.
+        Position of the wheel in world space.
     # --------------------------------------
     - var_name: lateral_slip_graph
       type: list(carla.Vector2D)
@@ -704,14 +704,14 @@
         How an external torque is combined with the ones the vehicle already applies, being 0 ignore it, 1 replace them and 2 add to them.
     # --------------------------------------
     - var_name: axle_type
-      type: float
+      type: int
       var_units: unitless
       doc: >
-        The axle of the wheel, used by the differntial setup to decide which wheels to give power to. Use a value of 1.0 to set the wheel at the front axle and a value of 2.0 for rear ones. The value 0.0 can also be used as an 'other' case, and in this case the `affected_by_engine` value will be used to decide whether or not it is given power. (default 0.0)
+        The axle of the wheel: 0 is undefined, 1 is front and 2 is rear. When undefined, `affected_by_engine` determines whether the wheel receives power; otherwise the differential setup determines it.
     # --------------------------------------
     - var_name: offset
-      type: float
-      var_units: meters
+      type: carla.Vector3D
+      var_units: centimeters
       doc: >
         Wheel's offset (default 0.0, 0.0, 0.0).
     # --------------------------------------
@@ -737,7 +737,7 @@
       type: float
       var_units: kilograms
       doc: >
-        Mass of the wheel in kg (default 1.0).
+        Mass of the wheel. Default is 30.0.
     # --------------------------------------
     - var_name: cornering_stiffness
       type: float
@@ -746,25 +746,25 @@
     # --------------------------------------
     - var_name: friction_force_multiplier
       type: float
-      var_unit: unitless
+      var_units: unitless
       doc: >
-        Multiplier of the friction force (default 1.0).
+        Multiplier of the friction force. Default is 3.0.
     # --------------------------------------
     - var_name: side_slip_modifier
       type: float
-      var_unit: unitless
+      var_units: unitless
       doc: >
-        The wheel's lateral skid grid loss (default 0.5)
+        The wheel's lateral skid grip loss. Default is 1.0.
     # --------------------------------------
     - var_name: slip_threshold
       type: float
       doc: >
-        The wheel's longitudinal slip threshold (default 1.0)
+        The wheel's longitudinal slip threshold. Default is 20.0.
     # --------------------------------------
     - var_name: skid_threshold
       type: float
       doc: >
-        The wheel's lateral skid threshold (default 1.0)
+        The wheel's lateral skid threshold. Default is 20.0.
     # --------------------------------------
     - var_name: affected_by_steering
       type: bool
@@ -789,18 +789,18 @@
     - var_name: abs_enabled
       type: bool
       doc: >
-        Indicates if the Advanced Braking System is enabled. (default True)
+        Indicates if the anti-lock braking system is enabled. Default is False.
     # --------------------------------------
     - var_name: traction_control_enabled
       type: bool
       doc: >
-        Indicates if the Straight Line Traction Control is enabled. (default True)
+        Indicates if traction control is enabled. Default is False.
     # --------------------------------------
     - var_name: max_wheelspin_rotation
       type: float
       var_units: rad/s
       doc: >
-        Maximum wheelspin rotation. (default 1.0)
+        Maximum wheelspin rotation. Default is 30.0.
     # --------------------------------------
     - var_name: max_brake_torque
       type: float
@@ -817,24 +817,25 @@
     - var_name: suspension_axis
       type: carla.Vector3D
       doc: >
-        Local direction in which the suspension force is applied. (default 0.0, 0.0, 1.0)
+        Local direction in which the suspension force is applied. Default is carla.Vector3D(0.0, 0.0, -1.0).
     # --------------------------------------
     - var_name: suspension_force_offset
-      type: float
+      type: carla.Vector3D
+      var_units: centimeters
       doc: >
-        Offset from which the direction is applied. (default 1.0)
+        Offset from which the suspension force is applied. Default is carla.Vector3D(0.0, 0.0, 0.0).
     # --------------------------------------
     - var_name: suspension_max_raise
       type: float
-      var_units: meters
+      var_units: centimeters
       doc: >
-        How far the wheel can displace above it's resting position. (default 1.0)
+        How far the wheel can move above its resting position. Default is 10.0.
     # --------------------------------------
     - var_name: suspension_max_drop
       type: float
-      var_units: meters
+      var_units: centimeters
       doc: >
-        How far the wheel can displace below it's resting position. (default 1.0)
+        How far the wheel can move below its resting position. Default is 10.0.
     # --------------------------------------
     - var_name: suspension_damping_ratio
       type: float
@@ -850,21 +851,21 @@
     # --------------------------------------
     - var_name: spring_rate
       type: float
-      var_units: unitless
+      var_units: N/m
       doc: >
-        Force of the wheel's spring. (default 1.0)
+        Force of the wheel's spring. Default is 250.0.
     # --------------------------------------
     - var_name: spring_preload
       type: float
-      var_units: unitless
+      var_units: N/m
       doc: >
-        Spring preloads. (default 1.0)
+        Spring preload. Default is 50.0.
     # --------------------------------------
     - var_name: suspension_smoothing
-      type: float
+      type: int
       var_units: unitless
       doc: >
-        Suspension smoothing, scales between 0.0 and 1.0.
+        Suspension smoothing, from 0 (off) to 10 (maximum). Default is 0.
     # --------------------------------------
     - var_name: rollbar_scaling
       type: float
@@ -875,40 +876,44 @@
     methods:
     - def_name: __init__
       params:
-      - param_name: axel_type
-        default: 0.0
-        type: float
+      - param_name: axle_type
+        default: 0
+        type: int
       - param_name: offset
         default: carla.Vector3D(0.0, 0.0, 0.0)
+        type: carla.Vector3D
+        param_units: centimeters
+      - param_name: wheel_radius
+        default: 30.0
+        type: float
+        param_units: centimeters
+      - param_name: wheel_width
+        default: 30.0
+        type: float
+        param_units: centimeters
+      - param_name: wheel_mass
+        default: 30.0
+        type: float
+        param_units: kilograms
+      - param_name: cornering_stiffness
+        default: 1000.0
+        type: float
+      - param_name: friction_force_multiplier
+        default: 3.0
+        type: float
+      - param_name: side_slip_modifier
+        default: 1.0
+        type: float
+      - param_name: slip_threshold
+        default: 20.0
+        type: float
+      - param_name: skid_threshold
+        default: 20.0
         type: float
       - param_name: max_steer_angle
         default: 70.0
         type: float
         param_units: degrees
-      - param_name: wheel_radius
-        default: 1.0
-        type: float
-      - param_name: wheel_width
-        default: 1.0
-        type: float
-      - param_name: wheel_mass
-        default: 1.0
-        type: float
-      - param_name: cornering_stiffness
-        default: 1000.0
-        type: float
-      - param_name: friction_force_multiplier
-        default: 1.0
-        type: float
-      - param_name: side_slip_modifier
-        default: 0.5
-        type: float
-      - param_name: slip_threshold
-        default: 1.0
-        type: float
-      - param_name: skid_threshold
-        default: 1.0
-        type: float
       - param_name: affected_by_steering
         default: True
         type: bool
@@ -922,34 +927,36 @@
         default: True
         type: bool
       - param_name: abs_enabled
-        default: True
+        default: False
         type: bool
       - param_name: traction_control_enabled
-        default: True
+        default: False
         type: bool
       - param_name: max_wheelspin_rotation
-        default: 1.0
+        default: 30.0
         type: float
-      - param_name: max_brake_torque
-        default: 1500.0
-        type: float
-        param_units: N*m
-      - param_name: max_handbrake_torque
-        default: 3000.0
-        type: float
-        param_units: N*m
+        param_units: rad/s
+      - param_name: external_torque_combine_method
+        default: 0
+        type: int
+      - param_name: lateral_slip_graph
+        default: []
+        type: list(carla.Vector2D)
       - param_name: suspension_axis
-        default: carla.Vector3D(0.0,0.0,0.0)
+        default: carla.Vector3D(0.0, 0.0, -1.0)
         type: carla.Vector3D
       - param_name: suspension_force_offset
-        default: 1.0
-        type: float
+        default: carla.Vector3D(0.0, 0.0, 0.0)
+        type: carla.Vector3D
+        param_units: centimeters
       - param_name: suspension_max_raise
-        default: 1.0
+        default: 10.0
         type: float
+        param_units: centimeters
       - param_name: suspension_max_drop
-        default: 1.0
+        default: 10.0
         type: float
+        param_units: centimeters
       - param_name: suspension_damping_ratio
         default: 0.5
         type: float
@@ -957,17 +964,48 @@
         default: 0.5
         type: float
       - param_name: spring_rate
-        default: 1.0
+        default: 250.0
         type: float
+        param_units: N/m
       - param_name: spring_preload
-        default: 1.0
+        default: 50.0
         type: float
+        param_units: N/m
       - param_name: suspension_smoothing
-        default: 1.0
-        type: float
+        default: 0
+        type: int
       - param_name: rollbar_scaling
-        default: 1.0
+        default: 0.15
         type: float
+      - param_name: sweep_shape
+        default: 0
+        type: int
+      - param_name: sweep_type
+        default: 0
+        type: int
+      - param_name: max_brake_torque
+        default: 1500.0
+        type: float
+        param_units: N*m
+      - param_name: max_hand_brake_torque
+        default: 3000.0
+        type: float
+        param_units: N*m
+      - param_name: wheel_index
+        default: -1
+        type: int
+      - param_name: location
+        default: carla.Location(0.0, 0.0, 0.0)
+        type: carla.Location
+        param_units: meters
+      - param_name: old_location
+        default: carla.Location(0.0, 0.0, 0.0)
+        type: carla.Location
+        param_units: meters
+      - param_name: velocity
+        default: carla.Location(0.0, 0.0, 0.0)
+        type: carla.Location
+        param_units: m/s
     # --------------------------------------
     - def_name: __eq__
       params:
