@@ -98,6 +98,11 @@ class BehaviorAgent(BasicAgent):
             :param vehicle_list: list of all the nearby vehicles
         """
 
+        plan = self._local_planner.get_plan()
+        if not plan:
+            return
+        end_waypoint = plan[-1][0]
+
         left_turn = waypoint.left_lane_marking.lane_change
         right_turn = waypoint.right_lane_marking.lane_change
 
@@ -113,7 +118,6 @@ class BehaviorAgent(BasicAgent):
                     self._behavior.min_proximity_threshold, self._speed_limit / 2), up_angle_th=180, lane_offset=1)
                 if not new_vehicle_state:
                     print("Tailgating, moving to the right!")
-                    end_waypoint = self._local_planner.target_waypoint
                     self._behavior.tailgate_counter = 200
                     self.set_destination(end_waypoint.transform.location,
                                          right_wpt.transform.location)
@@ -122,7 +126,6 @@ class BehaviorAgent(BasicAgent):
                     self._behavior.min_proximity_threshold, self._speed_limit / 2), up_angle_th=180, lane_offset=-1)
                 if not new_vehicle_state:
                     print("Tailgating, moving to the left!")
-                    end_waypoint = self._local_planner.target_waypoint
                     self._behavior.tailgate_counter = 200
                     self.set_destination(end_waypoint.transform.location,
                                          left_wpt.transform.location)
