@@ -1,5 +1,7 @@
 ## Latest Changes
 
+* Clarified that `Map.generate_waypoints` samples lanes of type `LaneType.Driving` (#6822).
+
 * Fixed the walker batch-spawn documentation example to initialize its collections and handle unavailable navigation locations and failed controller spawns.
  * Fixed the documented keyword for `World.get_level_bbs` to match the Python binding's `bb_type` argument.
  * Consolidated duplicate `Transform.inverse_transform` documentation into one entry covering `Vector3D` and `Location` inputs and the returned transformed point.
