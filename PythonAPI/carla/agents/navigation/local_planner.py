@@ -165,6 +165,9 @@ class LocalPlanner:
         :param k: how many waypoints to compute
         :return:
         """
+        if not self._waypoints_queue:
+            return
+
         # check we do not overflow the queue
         available_entries = self._waypoints_queue.maxlen - len(self._waypoints_queue)
         k = min(available_entries, k)
