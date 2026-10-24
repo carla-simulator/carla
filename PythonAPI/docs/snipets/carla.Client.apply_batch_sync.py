@@ -6,9 +6,10 @@ walker_bp = random.choice(blueprintsWalkers)
 # 1. Take all the random locations to spawn
 spawn_points = []
 for i in range(50):
-    spawn_point = carla.Transform()
-    spawn_point.location = world.get_random_location_from_navigation()
-    if (spawn_point.location != None):
+    location = world.get_random_location_from_navigation()
+    if location is not None:
+        spawn_point = carla.Transform()
+        spawn_point.location = location
         spawn_points.append(spawn_point)
 
 # 2. Build the batch of commands to spawn the pedestrians
@@ -18,6 +19,7 @@ for spawn_point in spawn_points:
     batch.append(carla.command.SpawnActor(walker_bp, spawn_point))
 
 # 2.1 apply the batch
+walkers_list = []
 results = client.apply_batch_sync(batch, True)
 for i in range(len(results)):
     if results[i].error:
@@ -36,10 +38,14 @@ results = client.apply_batch_sync(batch, True)
 for i in range(len(results)):
     if results[i].error:
         logging.error(results[i].error)
+        # A walker without a controller cannot be initialized below.
+        client.apply_batch([carla.command.DestroyActor(walkers_list[i]["id"])])
     else:
         walkers_list[i]["con"] = results[i].actor_id
 
 # 4. Put altogether the walker and controller ids
+walkers_list = [walker for walker in walkers_list if "con" in walker]
+all_id = []
 for i in range(len(walkers_list)):
     all_id.append(walkers_list[i]["con"])
     all_id.append(walkers_list[i]["id"])
@@ -53,6 +59,8 @@ for i in range(0, len(all_actors), 2):
     # start walker
     all_actors[i].start()
     # set walk to random point
-    all_actors[i].go_to_location(world.get_random_location_from_navigation())
+    destination = world.get_random_location_from_navigation()
+    if destination is not None:
+        all_actors[i].go_to_location(destination)
     # random max speed
     all_actors[i].set_max_speed(1 + random.random())    # max speed between 1 and 2 (default is 1.4 m/s)
