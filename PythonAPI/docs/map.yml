@@ -185,7 +185,7 @@
           Approximate distance between waypoints.
       return: list(carla.Waypoint)
       doc: >
-        Returns a list of waypoints with a certain distance between them for every lane and centered inside of it. Waypoints are not listed in any particular order. Remember that waypoints closer than 2cm within the same road, section and lane will have the same identificator.
+        Returns a list of waypoints approximately the given distance apart, centered in lanes of type carla.LaneType.Driving. Waypoints are not listed in any particular order. Remember that waypoints closer than 2cm within the same road, section and lane will have the same identificator.
     # --------------------------------------
     - def_name: save_to_disk
       params:

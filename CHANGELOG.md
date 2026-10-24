@@ -102,6 +102,7 @@
 
 #### Documentation
 
+* Clarified that `Map.generate_waypoints` samples lanes of type `LaneType.Driving` (#6822).
 * **Improved the documentation** of many classes and functions with information that was missing or wrong, and documented the Python API that the bindings exposed but the reference never listed — the actor component, bone and socket queries, the ego spawn points and IMU gravity, the geographic projection, the physics control settings, `Client.load_world_if_different`, and the `VehicleTelemetryData`, `WheelTelemetryData`, `Quaternion`, `BoneTransformDataIn`, `BoneTransformDataOut` and `FakeImage` classes.
 * **Updated the walker skeleton tutorial** to `carla.WalkerBoneControlIn`, `Walker.set_bones` and `Walker.show_pose`, and fixed the bone names in its skeleton tree.
 

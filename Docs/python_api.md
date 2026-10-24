@@ -2219,7 +2219,7 @@ Generates a binary file from the CARLA map containing information used by the Tr
     - **Parameters:**
         - `path` (_str_) - Path to the intended location of the stored binary map file.  
 - <a name="carla.Map.generate_waypoints"></a>**<font color="#7fb800">generate_waypoints</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**distance**</font>)  
-Returns a list of waypoints with a certain distance between them for every lane and centered inside of it. Waypoints are not listed in any particular order. Remember that waypoints closer than 2cm within the same road, section and lane will have the same identificator.  
+Returns a list of waypoints approximately the given distance apart, centered in lanes of type [carla.LaneType.Driving](#carla.LaneType.Driving). Waypoints are not listed in any particular order. Remember that waypoints closer than 2cm within the same road, section and lane will have the same identificator.  
     - **Parameters:**
         - `distance` (_float<small> - meters</small>_) - Approximate distance between waypoints.  
     - **Return:** _list([carla.Waypoint](#carla.Waypoint))_  
