@@ -62,7 +62,7 @@ Util/Docker/build.sh --monolith --epic-user=<GITHUB_USERNAME> --epic-token=<GITH
 To build a specific branch or tag of the CARLA repository, use the following command:
 
 ```sh
-./build.sh --monolith --branch <BRANCH_OR_TAG_NAME> --epic-user=<GITHUB_USERNAME> --epic-token=<GITHUB_ACCESS_TOKEN>
+Util/Docker/build.sh --monolith --branch <BRANCH_OR_TAG_NAME> --epic-user=<GITHUB_USERNAME> --epic-token=<GITHUB_ACCESS_TOKEN>
 ```
 
 ---

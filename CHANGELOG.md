@@ -1,5 +1,7 @@
 ## Latest Changes
 
+* Corrected the branch-selecting Docker build command to run from the CARLA root directory (#5287).
+
 * Corrected the world lighting example to retrieve building lights with `LightManager.get_all_lights` (#6176).
  * Corrected the walker skeleton example to retain the spawned walker and use `WalkerBoneControlIn`, `set_bones` and `show_pose` (#6848).
  * Linked the manual map package guide to the existing large-map folder and JSON instructions (#7976).
