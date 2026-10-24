@@ -77,24 +77,16 @@ if exist "%cd%\Unreal\CarlaUnreal\Content" (
 )
 
 rem Activate VS terminal development environment:
-set "vs_env_bat="
-if exist "%PROGRAMFILES%\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat" (
-    set "vs_env_bat=%PROGRAMFILES%\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat"
+rem Preserve literal exclamation marks in the discovered installation path.
+setlocal DisableDelayedExpansion
+call "%~dp0Util\SetupUtils\FindVisualStudio.bat" || (
+    echo Could not find a usable Visual Studio 2022 C++ installation, aborting setup...
+    exit /b 1
 )
-if exist "%PROGRAMFILES%\Microsoft Visual Studio\2022\Professional\VC\Auxiliary\Build\vcvars64.bat" (
-    set "vs_env_bat=%PROGRAMFILES%\Microsoft Visual Studio\2022\Professional\VC\Auxiliary\Build\vcvars64.bat"
-)
-if exist "%PROGRAMFILES%\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat" (
-    set "vs_env_bat=%PROGRAMFILES%\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
-)
-
-if not "%vs_env_bat%"=="" (
-    echo Activating "x64 Native Tools Command Prompt" terminal environment.
-    call "%vs_env_bat%" || exit /b
-) else (
-    echo Could not find vcvars64.bat for VS 2022, aborting setup...
-    exit 1
-)
+echo Activating "x64 Native Tools Command Prompt" terminal environment.
+call "%vs_env_bat%" || exit /b
+rem Restore expansion without discarding the environment set by vcvars64.bat.
+setlocal EnableDelayedExpansion
 
 rem -- DOWNLOAD + BUILD UNREAL ENGINE --
 if exist "%CARLA_UNREAL_ENGINE_PATH%" (
