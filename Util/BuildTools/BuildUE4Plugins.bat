@@ -57,16 +57,26 @@ rem ============================================================================
 
 rem Set the visual studio solution directory
 rem
-set CARLA_PLUGINS_PATH=%ROOT_PATH:/=\%Unreal\CarlaUE4\Plugins\
-set CARLA_STREETMAP_PLUGINS_PATH=%ROOT_PATH:/=\%Unreal\CarlaUE4\Plugins\StreetMap\
+set "CARLA_PLUGINS_PATH=%ROOT_PATH:/=\%Unreal\CarlaUE4\Plugins\"
+set "CARLA_STREETMAP_PLUGINS_PATH=%ROOT_PATH:/=\%Unreal\CarlaUE4\Plugins\StreetMap"
 
 rem Build STREETMAP
 
 if  %GIT_PULL% == true (
-    if not exist "%CARLA_STREETMAP_PLUGINS_PATH%" git clone -b %STREETMAP_BRANCH% %STREETMAP_REPO% %CARLA_STREETMAP_PLUGINS_PATH%
-    cd "%CARLA_STREETMAP_PLUGINS_PATH%"
+    if not exist "%CARLA_STREETMAP_PLUGINS_PATH%" (
+        git clone -b "%STREETMAP_BRANCH%" "%STREETMAP_REPO%" "%CARLA_STREETMAP_PLUGINS_PATH%"
+        if errorlevel 1 goto bad_exit
+        if not errorlevel 0 goto bad_exit
+    )
+    cd /d "%CARLA_STREETMAP_PLUGINS_PATH%"
+    if errorlevel 1 goto bad_exit
+    if not errorlevel 0 goto bad_exit
     git fetch
-    git checkout %CURRENT_STREETMAP_COMMIT%
+    if errorlevel 1 goto bad_exit
+    if not errorlevel 0 goto bad_exit
+    git checkout "%CURRENT_STREETMAP_COMMIT%"
+    if errorlevel 1 goto bad_exit
+    if not errorlevel 0 goto bad_exit
 )
 
 
@@ -85,5 +95,4 @@ rem ============================================================================
     exit /b 0
 
 :bad_exit
-    endlocal
-    exit /b %errorlevel%
+    endlocal & exit /b %errorlevel%
