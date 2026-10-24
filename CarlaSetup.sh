@@ -212,7 +212,7 @@ if [[ "$OSTYPE" == "darwin"* ]] || [ "$(uname -s 2>/dev/null)" = "Darwin" ]; the
     cmake -G Ninja -S . -B Build \
         --toolchain=$PWD/CMake/Toolchain.cmake \
         -DCMAKE_BUILD_TYPE=Release \
-        -DENABLE_ROS2=OFF \
+        -DENABLE_ROS2=ON \
         -DCARLA_DLSS_SDK_PATH=disabled \
         -DCMAKE_DISABLE_FIND_PACKAGE_Qt5=ON \
         -DCMAKE_DISABLE_FIND_PACKAGE_Qt6=ON \

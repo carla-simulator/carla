@@ -189,7 +189,7 @@ If you ever need to manually reconfigure CMake from scratch:
 ```sh
 cmake -B Build \
   -DCARLA_DLSS_SDK_PATH=disabled \
-  -DENABLE_ROS2=OFF \
+  -DENABLE_ROS2=ON \
   -DPython_EXECUTABLE=/opt/homebrew/bin/python3.10 \
   -DPython3_EXECUTABLE=/opt/homebrew/bin/python3.10
 ```

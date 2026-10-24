@@ -159,7 +159,7 @@ __Configure__:
 macOS:
 
 ```sh
-cmake -G Ninja -S . -B Build --toolchain=$PWD/CMake/Toolchain.cmake -DCMAKE_BUILD_TYPE=Release -DENABLE_ROS2=OFF -DCARLA_DLSS_SDK_PATH=disabled
+cmake -G Ninja -S . -B Build --toolchain=$PWD/CMake/Toolchain.cmake -DCMAKE_BUILD_TYPE=Release -DENABLE_ROS2=ON -DCARLA_DLSS_SDK_PATH=disabled
 ```
 
 >[!NOTE]

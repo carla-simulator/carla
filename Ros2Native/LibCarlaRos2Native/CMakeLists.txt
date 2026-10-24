@@ -65,18 +65,39 @@ target_compile_definitions (
   CARLA_ROS2_MIDDLEWARE_ZENOH
 )
 
+set (
+  CARLA_ROS2_NATIVE_SYSTEM_LIBS
+  pthread
+  ${CMAKE_DL_LIBS}
+  m
+)
+if (APPLE)
+  list (
+    APPEND
+    CARLA_ROS2_NATIVE_SYSTEM_LIBS
+    "-framework CoreFoundation"
+    "-framework Foundation"
+    "-framework Security"
+    "-framework SystemConfiguration"
+  )
+else ()
+  list (
+    APPEND
+    CARLA_ROS2_NATIVE_SYSTEM_LIBS
+    rt
+  )
+endif ()
+
 target_link_libraries (
   carla-ros2-native PUBLIC
-  ${CMAKE_INSTALL_PREFIX}/lib/libfastrtps.so
-  ${CMAKE_INSTALL_PREFIX}/lib/libddsc.so
+  ${CMAKE_INSTALL_PREFIX}/lib/libfastcdr${CMAKE_SHARED_LIBRARY_SUFFIX}
+  ${CMAKE_INSTALL_PREFIX}/lib/libfastrtps${CMAKE_SHARED_LIBRARY_SUFFIX}
+  ${CMAKE_INSTALL_PREFIX}/lib/libddsc${CMAKE_SHARED_LIBRARY_SUFFIX}
   # zenoh-c is a static PIC archive (Rust); link it into the shared lib and
   # pull in the system libraries the Rust runtime needs. dl is also required
   # by ZenohSharedSession's dladdr-based config path resolution.
   ${CMAKE_INSTALL_PREFIX}/lib/libzenohc.a
-  pthread
-  ${CMAKE_DL_LIBS}
-  m
-  rt
+  ${CARLA_ROS2_NATIVE_SYSTEM_LIBS}
 )
 
 install (

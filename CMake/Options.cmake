@@ -54,7 +54,7 @@ carla_option (
 carla_option (
   ENABLE_ROS2
   "Enable ROS2."
-  OFF
+  ON
 )
 
 carla_option (
@@ -154,6 +154,16 @@ cmake_path (
   CARLA_UNREAL_ENGINE_PATH_INFERRED
   NORMALIZE
 )
+
+if ("${CARLA_UNREAL_ENGINE_PATH_INFERRED}" STREQUAL "" AND EXISTS "${CARLA_WORKSPACE_PATH}/../UnrealEngine5_carla")
+  cmake_path (
+    ABSOLUTE_PATH
+      CARLA_UNREAL_ENGINE_PATH_INFERRED
+    BASE_DIRECTORY
+      "${CARLA_WORKSPACE_PATH}/../UnrealEngine5_carla"
+    NORMALIZE
+  )
+endif ()
 
 carla_string_option (
   CARLA_UNREAL_ENGINE_PATH

@@ -201,18 +201,22 @@ PY
   echo "== ROS 2 =="
   R="$(carla_ue58_cmake_opt ENABLE_ROS2)"
   if [ "${R}" = "ON" ]; then
-    if [ -f "${PB}/libcarla-ros2-native.so" ]; then
-      echo "  PASS libcarla-ros2-native.so present"
+    if [ -f "${PB}/libcarla-ros2-native.${LIB_EXT}" ]; then
+      echo "  PASS libcarla-ros2-native.${LIB_EXT} present"
     else
-      echo "  FAIL ENABLE_ROS2=ON but libcarla-ros2-native.so is missing"
+      echo "  FAIL ENABLE_ROS2=ON but libcarla-ros2-native.${LIB_EXT} is missing"
     fi
     # A relink can succeed against cached objects and leave a plugin with no ROS
     # symbols at all, so assert on the symbols rather than on the build log.
     # grep -c, never grep -q: -q exits on the first match, nm dies of SIGPIPE,
     # and `set -o pipefail` would turn that into a failed pipeline.
-    SO="$(ls -1t "${PB}"/*Carla*.so 2>/dev/null | head -1)"
+    SO="$(ls -1t "${PB}"/*Carla*.${LIB_EXT} 2>/dev/null | head -1)"
     if [ -n "${SO}" ] && command -v nm >/dev/null 2>&1; then
-      C="$(nm -DC "${SO}" 2>/dev/null | grep -c 'carla::ros2' || true)"
+      if [ "$(uname -s 2>/dev/null)" = "Darwin" ]; then
+        C="$(nm "${SO}" 2>/dev/null | c++filt | grep -c 'carla::ros2' || true)"
+      else
+        C="$(nm -DC "${SO}" 2>/dev/null | grep -c 'carla::ros2' || true)"
+      fi
       [ "${C:-0}" -gt 0 ] && echo "  PASS ${C} carla::ros2 symbols in $(basename "${SO}")" \
         || echo "  FAIL 0 carla::ros2 symbols in $(basename "${SO}") — the plugin has no ROS 2 in it"
     fi

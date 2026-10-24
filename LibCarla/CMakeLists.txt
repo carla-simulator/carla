@@ -535,21 +535,28 @@ if (BUILD_LIBCARLA_TESTS)
       )
       target_link_libraries (
         libcarla_test_server PRIVATE
-        ${CARLA_ROS2_NATIVE_INSTALL_PATH}/lib/libfastcdr.so
-        ${CARLA_ROS2_NATIVE_INSTALL_PATH}/lib/libfastrtps.so
+        ${CARLA_ROS2_NATIVE_INSTALL_PATH}/lib/libfastcdr${CMAKE_SHARED_LIBRARY_SUFFIX}
+        ${CARLA_ROS2_NATIVE_INSTALL_PATH}/lib/libfastrtps${CMAKE_SHARED_LIBRARY_SUFFIX}
       )
-      # libfastrtps.so privately depends on the foonathan_memory shared lib,
-      # whose file name is version- and config-dependent (e.g.
-      # libfoonathan_memory-0.7.4-dbg.so in Debug). -rpath-link lets the linker
-      # resolve those transitive symbols, and --disable-new-dtags emits DT_RPATH
-      # (instead of DT_RUNPATH) so the dynamic loader also searches this
-      # directory for libfastrtps.so's own dependencies at run time.
-      target_link_options (
-        libcarla_test_server PRIVATE
-        "LINKER:-rpath-link,${CARLA_ROS2_NATIVE_INSTALL_PATH}/lib"
-        "LINKER:-rpath,${CARLA_ROS2_NATIVE_INSTALL_PATH}/lib"
-        "LINKER:--disable-new-dtags"
-      )
+      if (APPLE)
+        target_link_options (
+          libcarla_test_server PRIVATE
+          "LINKER:-rpath,${CARLA_ROS2_NATIVE_INSTALL_PATH}/lib"
+        )
+      else ()
+        # libfastrtps.so privately depends on the foonathan_memory shared lib,
+        # whose file name is version- and config-dependent (e.g.
+        # libfoonathan_memory-0.7.4-dbg.so in Debug). -rpath-link lets the linker
+        # resolve those transitive symbols, and --disable-new-dtags emits DT_RPATH
+        # (instead of DT_RUNPATH) so the dynamic loader also searches this
+        # directory for libfastrtps.so's own dependencies at run time.
+        target_link_options (
+          libcarla_test_server PRIVATE
+          "LINKER:-rpath-link,${CARLA_ROS2_NATIVE_INSTALL_PATH}/lib"
+          "LINKER:-rpath,${CARLA_ROS2_NATIVE_INSTALL_PATH}/lib"
+          "LINKER:--disable-new-dtags"
+        )
+      endif ()
       add_dependencies (libcarla_test_server fastdds)
     endif ()
 

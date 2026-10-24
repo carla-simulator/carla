@@ -188,12 +188,6 @@ public class Carla :
       TestOptionalFeature(EnableRos2, "Ros2 support", "WITH_ROS2");
       TestOptionalFeature(EnableRos2Demo, "Ros2 demo", "WITH_ROS2_DEMO");
 
-      // The ROS2 native bridge is currently only built for Linux. The hardcoded
-      // .so library names below would not resolve on macOS or Windows. Gating
-      // this block on Linux keeps the plugin compilable on other platforms when
-      // EnableRos2 is true; ROS2 functionality on Mac/Windows is a separate
-      // workstream (the Ros2Native CMake target itself has Linux-only binary
-      // copy paths, see Ros2Native/CMakeLists.txt).
       if (Target.Platform == UnrealTargetPlatform.Linux)
       {
         string CarlaPluginSourcePath = Path.GetFullPath(ModuleDirectory);
@@ -213,6 +207,23 @@ public class Carla :
         // no Zenoh runtime .so to stage. Only the session config is a runtime
         // dependency; it is resolved next to the shared library via dladdr.
         RuntimeDependencies.Add(Path.Combine(CarlaPluginBinariesLinuxPath, "zenoh_session_config.json5"));
+      }
+      else if (Target.Platform == UnrealTargetPlatform.Mac)
+      {
+        string CarlaPluginSourcePath = Path.GetFullPath(ModuleDirectory);
+        string CarlaPluginBinariesMacPath = Path.Combine(CarlaPluginSourcePath, "..", "..", "Binaries", "Mac");
+        AddDynamicLibrary(Path.Combine(CarlaPluginBinariesMacPath, "libcarla-ros2-native.dylib"));
+        RuntimeDependencies.Add(Path.Combine(CarlaPluginBinariesMacPath, "libfoonathan_memory-0.7.4.dylib"));
+        RuntimeDependencies.Add(Path.Combine(CarlaPluginBinariesMacPath, "libfastcdr.dylib"));
+        RuntimeDependencies.Add(Path.Combine(CarlaPluginBinariesMacPath, "libfastcdr.2.dylib"));
+        RuntimeDependencies.Add(Path.Combine(CarlaPluginBinariesMacPath, "libfastcdr.2.2.7.dylib"));
+        RuntimeDependencies.Add(Path.Combine(CarlaPluginBinariesMacPath, "libfastrtps.dylib"));
+        RuntimeDependencies.Add(Path.Combine(CarlaPluginBinariesMacPath, "libfastrtps.2.14.dylib"));
+        RuntimeDependencies.Add(Path.Combine(CarlaPluginBinariesMacPath, "libfastrtps.2.14.6.dylib"));
+        RuntimeDependencies.Add(Path.Combine(CarlaPluginBinariesMacPath, "libddsc.dylib"));
+        RuntimeDependencies.Add(Path.Combine(CarlaPluginBinariesMacPath, "libddsc.0.dylib"));
+        RuntimeDependencies.Add(Path.Combine(CarlaPluginBinariesMacPath, "libddsc.0.10.5.dylib"));
+        RuntimeDependencies.Add(Path.Combine(CarlaPluginBinariesMacPath, "zenoh_session_config.json5"));
       }
     }
   }

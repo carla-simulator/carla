@@ -253,6 +253,43 @@ set (
 	CACHE STRING ""
 )
 
+set (UE_ROOT $ENV{CARLA_UNREAL_ENGINE_PATH})
+
+if (NOT UE_ROOT)
+	set (UE_ROOT $ENV{UE_ROOT})
+endif ()
+
+if ("${UE_ROOT}" STREQUAL "")
+	set (UE_ROOT ${CARLA_UNREAL_ENGINE_PATH})
+endif ()
+
+if ("${UE_ROOT}" STREQUAL "" AND EXISTS "${CMAKE_CURRENT_LIST_DIR}/../../UnrealEngine5_carla")
+	cmake_path (
+		ABSOLUTE_PATH
+			UE_ROOT
+		BASE_DIRECTORY
+			"${CMAKE_CURRENT_LIST_DIR}/../../UnrealEngine5_carla"
+		NORMALIZE
+	)
+endif ()
+
+if (EXISTS "${UE_ROOT}/Engine/Source/ThirdParty")
+	set (
+		UE_THIRD_PARTY
+		${UE_ROOT}/Engine/Source/ThirdParty CACHE PATH ""
+	)
+
+	set (
+		UE_OPENSSL_INCLUDE
+		${UE_THIRD_PARTY}/OpenSSL/1.1.1t/include/Mac CACHE PATH ""
+	)
+
+	set (
+		UE_OPENSSL_LIBS
+		${UE_THIRD_PARTY}/OpenSSL/1.1.1t/lib/Mac CACHE PATH ""
+	)
+endif ()
+
 # Apple Clang defaults to libc++ on Darwin; explicit for clarity and to match
 # the libcarla / boost / rpclib build configurations.
 add_compile_options (
