@@ -49,8 +49,8 @@ BUILD_CI=false
 
 # CARLA target branch for monolith build
 BRANCH="ue4-dev"
-EPIC_USER=
-EPIC_TOKEN=
+EPIC_USER=${EPIC_USER:-}
+EPIC_TOKEN=${EPIC_TOKEN:-}
 
 HOST_UID=$(id -u)
 HOST_GID=$(id -g)
@@ -157,6 +157,7 @@ if ${BUILD_MONOLITH}; then
   fi
 
   echo "Building development image carla-monolith:${BRANCH} with user ${HOST_UID}:${HOST_GID}"
+  export EPIC_USER EPIC_TOKEN
   docker build ${FORCE_REBUILD:+--no-cache} \
     --build-arg UBUNTU_DISTRO=${UBUNTU_DISTRO} \
     --build-arg BRANCH=${BRANCH} \
