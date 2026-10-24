@@ -97,18 +97,21 @@ rem
 if %BUILD_PYTHONAPI%==true (
     echo Building Python API wheel for Python 3.
     python -m build --wheel --outdir dist\.tmp .
+    if not "!errorlevel!"=="0" goto error_build_wheel
 
-    set WHEEL_FILE=
-    for %%f in (dist\.tmp\*.whl) do set WHEEL_FILE=%%f
+    set "WHEEL_FILE="
+    for %%f in (dist\.tmp\*.whl) do if exist "%%f" set "WHEEL_FILE=%%f"
+    if not defined WHEEL_FILE goto error_build_wheel
 
     if %INSTALL_PYTHONAPI%==true (
         python -m pip install --force-reinstall "!WHEEL_FILE!"
+        if not "!errorlevel!"=="0" goto error_build_wheel
     )
 
     copy "!WHEEL_FILE!" dist
+    if not "!errorlevel!"=="0" goto error_build_wheel
     rmdir /s /q dist\.tmp
-
-    if %errorlevel% neq 0 goto error_build_wheel
+    if not "!errorlevel!"=="0" goto error_build_wheel
 )
 
 goto success
@@ -146,6 +149,7 @@ rem ============================================================================
     exit /b 0
 
 :bad_exit
-    endlocal
-    exit /b %errorlevel%
+    set "BUILD_PYTHONAPI_EXIT_CODE=%errorlevel%"
+    if "%BUILD_PYTHONAPI_EXIT_CODE%"=="0" set "BUILD_PYTHONAPI_EXIT_CODE=1"
+    endlocal & exit /b %BUILD_PYTHONAPI_EXIT_CODE%
 

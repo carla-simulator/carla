@@ -18,36 +18,38 @@ rem ============================================================================
 set DEL_SRC=false
 
 :arg-parse
-if not "%1"=="" (
+if not "%~1"=="" (
 
-    if "%1"=="--build-dir" (
-        set BUILD_DIR=%~dpn2
-    )
-    if "%1"=="--generator" (
-        set GENERATOR=%2
+    if "%~1"=="--build-dir" (
+        set "BUILD_DIR=%~dpn2"
         shift
     )
-    if "%1"=="--delete-src" (
+    if "%~1"=="--generator" (
+        set "GENERATOR=%~2"
+        shift
+    )
+    if "%~1"=="--delete-src" (
         set DEL_SRC=true
     )
     shift  
     goto :arg-parse
 )
 
-if %GENERATOR% == "" set GENERATOR="Visual Studio 17 2022"
+if defined GENERATOR set "GENERATOR=%GENERATOR:"=%"
+if not defined GENERATOR set "GENERATOR=Visual Studio 17 2022"
 
 rem If not set set the build dir to the current dir
-if "%BUILD_DIR%" == "" set BUILD_DIR=%~dp0
-if not "%BUILD_DIR:~-1%"=="\" set BUILD_DIR=%BUILD_DIR%\
+if "%BUILD_DIR%" == "" set "BUILD_DIR=%~dp0"
+if not "%BUILD_DIR:~-1%"=="\" set "BUILD_DIR=%BUILD_DIR%\"
 
 set RPC_VERSION=carla-callbacks
 set RPC_SRC=rpclib-src
-set RPC_SRC_DIR=%BUILD_DIR%%RPC_SRC%\
+set "RPC_SRC_DIR=%BUILD_DIR%%RPC_SRC%\"
 set RPC_INSTALL=rpclib-install
-set RPC_INSTALL_DIR=%BUILD_DIR%%RPC_INSTALL%\
-set RPC_BUILD_DIR=%RPC_SRC_DIR%build\
+set "RPC_INSTALL_DIR=%BUILD_DIR%%RPC_INSTALL%\"
+set "RPC_BUILD_DIR=%RPC_SRC_DIR%build\"
 
-set PUSHD_RPC=%RPC_SRC_DIR%
+set "PUSHD_RPC=%RPC_SRC_DIR%"
 
 if exist "%RPC_INSTALL_DIR%" (
     goto already_build
@@ -78,12 +80,12 @@ echo.%GENERATOR% | findstr /C:"Visual Studio" >nul && (
 )
 
 
-cmake .. -G %GENERATOR% %PLATFORM%^
+cmake .. -G "%GENERATOR%" %PLATFORM%^
         -DCMAKE_BUILD_TYPE=Release^
         -DRPCLIB_BUILD_EXAMPLES=OFF^
         -DCMAKE_CXX_FLAGS_RELEASE="/MD /MP"^
         -DCMAKE_INSTALL_PREFIX="%RPC_INSTALL_DIR:\=/%"^
-        "%RPC_SRC_DIR%"
+        "%RPC_SRC_DIR:~0,-1%"
 if %errorlevel% neq 0 goto error_cmake
 
 echo %FILE_N% Building...
