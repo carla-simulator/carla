@@ -123,15 +123,17 @@ namespace client {
     double remaining_length;
     double road_length = _parent->GetMap().GetLane(_waypoint).GetRoad()->GetLength();
     if(IsPositiveDirection()) {
-      remaining_length = road_length - current_s;
-    } else {
       remaining_length = current_s;
+    } else {
+      remaining_length = road_length - current_s;
     }
     remaining_length -= std::numeric_limits<double>::epsilon();
-    if(result.size()) {
-      result.emplace_back(result.back()->GetPrevious(remaining_length).front());
-    } else {
-      result.emplace_back(GetPrevious(remaining_length).front());
+    if (remaining_length > 0.0) {
+      const auto *last = result.empty() ? this : result.back().get();
+      const auto previous = last->GetPrevious(remaining_length);
+      if (!previous.empty()) {
+        result.emplace_back(previous.front());
+      }
     }
 
     return result;
