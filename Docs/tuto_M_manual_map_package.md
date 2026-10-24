@@ -5,9 +5,9 @@ A map package follows a certain folder structure and must contain a `.json` file
 - [__Standard Maps__](#standard-maps)
     - [Create the folder structure for the standard maps](#create-the-folder-structure-for-the-standard-maps)
     - [Create the JSON description for the standard maps](#create-the-json-description-for-the-standard-maps)
-- [__Large Maps__](#large-maps)
-    - [Create the folder structure for the large maps](#create-the-folder-structure-for-the-large-maps)
-    - [Create the JSON description for the large maps](#create-the-json-description-for-the-large-maps)
+- [__Large Maps__](large_map_import.md)
+    - [Create the folder structure for the large maps](large_map_import.md#files-and-folders)
+    - [Create the JSON description for the large maps](large_map_import.md#create-the-json-description-optional)
 
 ---
 

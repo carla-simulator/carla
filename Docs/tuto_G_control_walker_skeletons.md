@@ -119,30 +119,44 @@ Spawn a random walker at one of the map's spawn points
 
 ```py
 world = client.get_world()
-blueprint = random.choice(self.world.get_blueprint_library().filter('walker.*'))
+blueprint = random.choice(world.get_blueprint_library().filter('walker.pedestrian.*'))
 spawn_points = world.get_map().get_spawn_points()
 spawn_point = random.choice(spawn_points) if spawn_points else carla.Transform()
-world.try_spawn_actor(blueprint, spawn_point)
+walker = world.try_spawn_actor(blueprint, spawn_point)
+if walker is None:
+    raise RuntimeError('could not spawn the walker, try another location')
 ```
 
 ### Control walker skeletons
 
-A walker's skeleton can be modified by passing an instance of the WalkerBoneControl class
-to the walker's apply_control function. The WalkerBoneControl class contains the transforms
+A walker's skeleton can be modified by passing an instance of the WalkerBoneControlIn class
+to the walker's set_bones function. The WalkerBoneControlIn class contains the transforms
 of the bones to be modified. Its bone_transforms member is a list of tuples of value pairs
 where the first value is the bone name and the second value is the bone transform. The
-apply_control function can be called on every tick to animate a walker's skeleton. The
+set_bones function can be called on every tick to animate a walker's skeleton. The
 location and rotation of each transform is relative to its parent. Therefore when a
 parent bone's transform is modified, the transforms of the child bones in model space
 will also be changed relatively.
 
-In the example below, the rotations of the walker's hands are set to be 90 degrees around
-the forward axis and the locations are set to the origin.
+The example below rotates both hands by 90 degrees around their forward axes while
+preserving each bone's current location and other rotation components. The current
+transforms are read with get_bones, and show_pose displays the custom pose.
 
 ```py
-control = carla.WalkerBoneControl()
-first_tuple = ('crl_hand__R', carla.Transform(rotation=carla.Rotation(roll=90)))
-second_tuple = ('crl_hand__L', carla.Transform(rotation=carla.Rotation(roll=90)))
-control.bone_transforms = [first_tuple, second_tuple]
-world.player.apply_control(control)
+bones = walker.get_bones()
+current = {bone.name: bone.relative for bone in bones.bone_transforms}
+
+transforms = []
+for name in ('crl_hand__R', 'crl_hand__L'):
+    relative = current[name]
+    transforms.append((name, carla.Transform(
+        location=relative.location,
+        rotation=carla.Rotation(pitch=relative.rotation.pitch,
+                                yaw=relative.rotation.yaw,
+                                roll=relative.rotation.roll + 90))))
+
+control = carla.WalkerBoneControlIn()
+control.bone_transforms = transforms
+walker.set_bones(control)
+walker.show_pose()
 ```

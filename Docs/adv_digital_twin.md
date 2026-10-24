@@ -19,7 +19,7 @@ The __Digital Twin Tool__ enables procedural generation of unique 3D environment
 
 ## Building the OSM renderer
 
-If you are using Linux, you have the option of using the OSM renderer in the CARLA interface to navigate a large OSM map region that you have downloaded. You first need to build the OSM renderer before proceeding to build CARLA. Run `make osmrenderer` inside the CARLA root directory. You may need to upgrade your version of CMake to v3.2 or above in order for this to work. This will create two folders in your build directory called `libosmcout-source` and `libosmcout-build`. Before proceeding to build CARLA, you need to then edit the `Build.sh` file in the directory `$CARLA_ROOT/Build/libosmcout-source/maps` like so, to ensure the executable is found:
+If you are using Linux, you have the option of using the OSM renderer in the CARLA interface to navigate a large OSM map region that you have downloaded. You first need to build the OSM renderer before proceeding to build CARLA. Run `make osmrenderer` inside the CARLA root directory. You may need to upgrade your version of CMake to v3.2 or above in order for this to work. This will create two folders in your build directory called `libosmscout-source` and `libosmscout-build`. Before proceeding to build CARLA, you need to then edit the `build.sh` file in the directory `$CARLA_ROOT/Build/libosmscout-source/maps` like so, to ensure the executable is found:
 
 ```bash
 if [[ -x ../Import/src/Import ]]; then
@@ -54,16 +54,16 @@ In the [OpenStreetMap website](https:/www.openstreetmap.org) website, navigate t
 
 ### Downloading an OSM file and navigating in the interface
 
-This option is only available to Linux users. You may download a larger region of map, for example an entire state or territory, then use the OSM interface in CARLA to navigate the map using the arrow and zoom buttons. Download your desired region of OSM data as a `.osm` file, then place this file in the `{CARLA_ROOT}/Build/libosmcout-source/maps/` folder. Open a terminal inside this folder and run the following command:
+This option is only available to Linux users. You may download a larger region of map, for example an entire state or territory, then use the OSM interface in CARLA to navigate the map using the arrow and zoom buttons. Download your desired region of OSM data as a `.osm` file, then place this file in the `{CARLA_ROOT}/Build/libosmscout-source/maps/` folder. Open a terminal inside this folder and run the following command with Bash:
 
 ```sh
-cd {CARLA_ROOT}/Build/libosmcout-source/maps/
-./build.sh <path_to_osm_file>
+cd {CARLA_ROOT}/Build/libosmscout-source/maps/
+bash ./build.sh <path_to_osm_file>
 ```
 
 ## OpenStreetMap browser
 
-To open the OSM browser, open the content browser and navigate to `CarlaToolsContent/OnroadMapGenerator`. Right click on *UW_OnRoadMainWidget* and select *Launch Editor Utility Widget* from the context menu. This will open the tool's interface. 
+To open the OSM browser, open the Content Browser's *View Options* menu and enable *Show Plugin Content*. Navigate to `CarlaTools Content/OnroadMapGenerator` in the CarlaTools plugin content. Right click on *UW_OnRoadMainWidget* and select *Launch Editor Utility Widget* from the context menu. This will open the tool's interface.
 
 ![osm_interface_open](img/digital_twins_widget.png)
 

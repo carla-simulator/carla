@@ -1,4 +1,9 @@
 ## Latest Changes
+
+* Corrected the world lighting example to retrieve building lights with `LightManager.get_all_lights` (#6176).
+ * Corrected the walker skeleton example to retain the spawned walker and use `WalkerBoneControlIn`, `set_bones` and `show_pose` (#6848).
+ * Linked the manual map package guide to the existing large-map folder and JSON instructions (#7976).
+ * Corrected Digital Twin OSM paths, Bash invocation and plugin content visibility instructions (#7013).
  * Corrected the instance segmentation camera documentation example to use the car semantic tag (14) and explain how the instance ID is encoded in the green and blue channels.
  * Added `UVehicleAuthoringLibrary` to the CarlaTools editor plugin: editor-only `CallInEditor` UFUNCTIONs (exposed to Python via the PythonScriptPlugin) that assemble and register a drivable 4-wheeled vehicle headlessly — create/retarget the AnimBlueprint, build a dedicated per-mesh PhysicsAsset (auto convex chassis hull + kinematic wheel spheres), configure wheel BPs, duplicate/repoint the vehicle blueprint, and append the vehicle to the shipped VehicleFactory — automating steps 8–19 of the "Add a new vehicle" tutorial without the editor GUI.
  * Upgraded the bundled eProsima Fast-DDS used by the native ROS 2 integration from v2.11.2 to the v2.14.6 LTS line, moving serialization onto Fast-CDR 2.x while keeping the classic XCDRv1 wire format so published topics stay compatible with every ROS 2 distribution.
