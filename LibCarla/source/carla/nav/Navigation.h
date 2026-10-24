@@ -121,6 +121,7 @@ namespace nav {
   private:
 
     bool _ready { false };
+    bool _has_sidewalk_polygons { false };
     std::vector<uint8_t> _binary_mesh;
     double _delta_seconds { 0.0 };
     /// meshes

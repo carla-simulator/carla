@@ -188,6 +188,30 @@ namespace nav {
     _nav_query = dtAllocNavMeshQuery();
     _nav_query->init(_nav_mesh, MAX_QUERY_SEARCH_NODES);
 
+    // Prefer sidewalks when the mesh has any usable sidewalk polygons. Some
+    // OpenDRIVE meshes contain only crosswalks or grass, which are also accepted
+    // by the default non-crossing walker filter.
+    _has_sidewalk_polygons = false;
+    const dtNavMesh &nav_mesh = *_nav_mesh;
+    for (int i = 0; i < nav_mesh.getMaxTiles() && !_has_sidewalk_polygons; ++i) {
+      const dtMeshTile *tile = nav_mesh.getTile(i);
+      if (tile == nullptr || tile->header == nullptr) {
+        continue;
+      }
+      for (int j = 0; j < tile->header->polyCount; ++j) {
+        const dtPoly *poly = &tile->polys[j];
+        if (poly->getType() == DT_POLYTYPE_GROUND &&
+            (poly->flags & CARLA_TYPE_SIDEWALK) != 0 &&
+            (poly->flags & (CARLA_TYPE_NONE | CARLA_TYPE_ROAD)) == 0) {
+          _has_sidewalk_polygons = true;
+          break;
+        }
+      }
+    }
+    if (!_has_sidewalk_polygons) {
+      log_warning("Nav: no usable sidewalk polygons; random walker locations use crosswalk or grass areas");
+    }
+
     // copy
     _binary_mesh = std::move(content);
     _ready = true;
@@ -1071,32 +1095,31 @@ namespace nav {
     // filter
     dtQueryFilter filter2;
     if (filter == nullptr) {
-      filter2.setIncludeFlags(CARLA_TYPE_SIDEWALK);
-      filter2.setExcludeFlags(CARLA_TYPE_NONE);
+      filter2.setIncludeFlags(_has_sidewalk_polygons ? CARLA_TYPE_SIDEWALK :
+          CARLA_TYPE_SIDEWALK | CARLA_TYPE_CROSSWALK | CARLA_TYPE_GRASS);
+      filter2.setExcludeFlags(CARLA_TYPE_NONE | CARLA_TYPE_ROAD);
       filter = &filter2;
     }
 
     // we will try up to 10 rounds, otherwise we failed to find a good location
     dtPolyRef random_ref { 0 };
     float point[3] { 0.0f, 0.0f, 0.0f };
-    int rounds = 10;
     {
-      dtStatus status;
       // critical section, force single thread running this
       std::scoped_lock<std::mutex> lock(_mutex);
-      do {
-        status = _nav_query->findRandomPoint(filter, frand, &random_ref, point);
+      for (int round = 0; round < 10; ++round) {
+        const dtStatus status = _nav_query->findRandomPoint(filter, frand, &random_ref, point);
         // set the location in Unreal coords
-        if (status == DT_SUCCESS) {
+        if (dtStatusSucceed(status)) {
           location.x = point[0];
           location.y = point[2];
           location.z = point[1];
+          return true;
         }
-        --rounds;
-      } while (status != DT_SUCCESS && rounds > 0);
+      }
     }
 
-    return (rounds > 0);
+    return false;
   }
 
   // assign a filter index to an agent
