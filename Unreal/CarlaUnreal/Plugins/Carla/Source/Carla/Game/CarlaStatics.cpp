@@ -7,6 +7,8 @@
 #include "Carla/Game/CarlaStatics.h"
 #include "Carla.h"
 #include "Carla/ContentPacks/ContentPackManager.h"
+#include "Carla/Game/CarlaGameInstance.h"
+#include "Carla/MapGen/CarlaMapBundle.h"
 
 #include <util/ue-header-guard-begin.h>
 #include "AssetRegistry/ARFilter.h"
@@ -186,6 +188,14 @@ TArray<FString> UCarlaStatics::GetAllMapNames()
     }
   }
 
+  // Maps declared by discovered .carlamap bundles.
+  const TMap<FString, FString> Bundles = FCarlaMapBundle::FindAllBundles();
+  for (const auto &Pair : Bundles)
+  {
+    MapNameList.AddUnique(Pair.Key);
+    MapNameList.AddUnique(FString::Printf(TEXT("/Game/Carla/Maps/%s"), *Pair.Key));
+  }
+
   return MapNameList;
 }
 
@@ -194,6 +204,70 @@ FString UCarlaStatics::FindMapPath(const FString &MapName)
   if (MapName.IsEmpty())
   {
     return FString();
+  }
+
+  // Check if MapName matches a discovered .carlamap bundle
+  const FString CleanBundleName = FPaths::GetBaseFilename(MapName);
+  const TMap<FString, FString> Bundles = FCarlaMapBundle::FindAllBundles();
+  const FString *FoundBundleDir = Bundles.Find(CleanBundleName);
+  if (FoundBundleDir == nullptr)
+  {
+    FoundBundleDir = Bundles.Find(MapName);
+  }
+
+  if (FoundBundleDir != nullptr)
+  {
+    FCarlaMapBundle Bundle;
+    FString LoadError;
+    if (FCarlaMapBundle::LoadBundleFromDir(*FoundBundleDir, Bundle, LoadError))
+    {
+      FString StageError;
+      if (Bundle.StageBundle(StageError))
+      {
+        if (GEngine)
+        {
+          for (const FWorldContext &Context : GEngine->GetWorldContexts())
+          {
+            if (Context.World() != nullptr)
+            {
+              if (UCarlaGameInstance *GI = Cast<UCarlaGameInstance>(Context.World()->GetGameInstance()))
+              {
+                GI->SetActiveMapBundle(Bundle);
+                GI->SetOpendriveGenerationParameters(Bundle.GenerationParams);
+              }
+            }
+          }
+        }
+        UE_LOG(LogCarla, Log, TEXT("FindMapPath: discovered and staged map bundle '%s' from '%s'"),
+            *Bundle.MapName, *Bundle.BundleDir);
+        return TEXT("/Game/Carla/Maps/OpenDriveMap");
+      }
+      else
+      {
+        UE_LOG(LogCarla, Error, TEXT("FindMapPath: failed to stage map bundle '%s': %s"),
+            *MapName, *StageError);
+      }
+    }
+    else
+    {
+      UE_LOG(LogCarla, Error, TEXT("FindMapPath: failed to load map bundle '%s': %s"),
+          *MapName, *LoadError);
+    }
+  }
+
+  // If loading a non-bundle map, clear any active bundle on game instance
+  if (GEngine)
+  {
+    for (const FWorldContext &Context : GEngine->GetWorldContexts())
+    {
+      if (Context.World() != nullptr)
+      {
+        if (UCarlaGameInstance *GI = Cast<UCarlaGameInstance>(Context.World()->GetGameInstance()))
+        {
+          GI->ClearActiveMapBundle();
+        }
+      }
+    }
   }
 
   // Look for matching map files

@@ -120,6 +120,13 @@ namespace client {
           std::move(opendrive), params, reset_settings)};
     }
 
+    World LoadMapBundleFiles(
+        const std::string &map_name,
+        const std::unordered_map<std::string, std::vector<uint8_t>> &files,
+        bool reset_settings = true) const {
+      return World{_simulator->LoadMapBundleFiles(map_name, files, reset_settings)};
+    }
+
     /// Return an instance of the world currently active in the simulator.
     World GetWorld() const {
       return World{_simulator->GetCurrentEpisode()};

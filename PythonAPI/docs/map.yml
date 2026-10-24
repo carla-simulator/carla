@@ -162,6 +162,11 @@
       doc: >
         Returns the geographic coordinates of the map's origin, as declared by its OpenDRIVE.
     # --------------------------------------
+    - def_name: cook_in_memory_map
+      return: bytes
+      doc: >
+        Pre-cooks and serializes the Traffic Manager in-memory waypoint topology graph into binary bytes (`TM/<MapName>.bin`) for zero-latency loading and offline `.carlamap` bundle compilation.
+    # --------------------------------------
     - def_name: __init__
       params:
       - param_name: name

@@ -1,0 +1,53 @@
+{
+  "format_version": "1.0",
+  "map_name": "BundleTestTown",
+  "xodr_file": "OpenDrive/BundleTestTown.xodr",
+  "nav_file": "Nav/BundleTestTown.bin",
+  "opendrive_parameters": {
+    "generate_road_mesh": false,
+    "generate_ground_mesh": false,
+    "generate_traffic_signals": true,
+    "generate_street_furniture": false
+  },
+  "layers": [
+    {
+      "name": "CustomRoads",
+      "mesh_file": "Meshes/roads.cmesh",
+      "semantic_label": "Roads",
+      "material_preset": "road_asphalt",
+      "enable_collision": true
+    },
+    {
+      "name": "CustomSidewalks",
+      "mesh_file": "Meshes/sidewalks.cmesh",
+      "semantic_label": "Sidewalks",
+      "material_preset": "sidewalk_concrete",
+      "enable_collision": true
+    },
+    {
+      "name": "CustomBuildings",
+      "mesh_file": "Meshes/buildings.cmesh",
+      "semantic_label": "Buildings",
+      "material_preset": "building_brick",
+      "enable_collision": true
+    }
+  ],
+  "placements": [
+    {
+      "asset_path": "/Game/Carla/Static/Buildings/Building_01.Building_01",
+      "transforms": [
+        {
+          "location": [50.0, 50.0, 0.0],
+          "rotation": [0.0, 0.0, 0.0],
+          "scale": [1.0, 1.0, 1.0]
+        }
+      ]
+    }
+  ],
+  "spawn_points": [
+    {
+      "location": [0.0, 0.0, 0.5],
+      "rotation": [0.0, 0.0, 0.0]
+    }
+  ]
+}

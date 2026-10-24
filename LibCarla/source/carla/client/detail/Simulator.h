@@ -78,6 +78,11 @@ namespace detail {
 
     EpisodeProxy LoadEpisode(std::string map_name, bool reset_settings = true, rpc::MapLayer map_layers = rpc::MapLayer::All);
 
+    EpisodeProxy LoadMapBundleFiles(
+        const std::string &map_name,
+        const std::unordered_map<std::string, std::vector<uint8_t>> &files,
+        bool reset_settings = true);
+
     void LoadLevelLayer(rpc::MapLayer map_layers) const {
       _client.LoadLevelLayer(map_layers);
     }
@@ -902,6 +907,15 @@ namespace detail {
         const std::vector<uint32_t> &triangles,
         const std::string &material) {
       _client.SpawnCustomMesh(vertices, triangles, material);
+    }
+
+    uint64_t SpawnCustomMeshEx(const rpc::CustomMeshDescription &description) {
+      return _client.SpawnCustomMeshEx(description);
+    }
+
+    std::vector<uint64_t> SpawnCustomMeshes(
+        const std::vector<rpc::CustomMeshDescription> &descriptions) {
+      return _client.SpawnCustomMeshes(descriptions);
     }
 
     /// @}

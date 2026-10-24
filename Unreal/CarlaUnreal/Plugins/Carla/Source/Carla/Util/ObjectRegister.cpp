@@ -7,11 +7,13 @@
 #include "Carla/Util/ObjectRegister.h"
 #include "Carla.h"
 #include "Carla/Game/Tagger.h"
+#include "Carla/OpenDrive/OpenDriveGenerator.h"
 #include "Carla/Util/BoundingBoxCalculator.h"
 
 #include <util/ue-header-guard-begin.h>
 #include "InstancedFoliageActor.h"
 #include "GameFramework/Character.h"
+#include "ProceduralMeshComponent.h"
 #if WITH_EDITOR
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"
@@ -76,6 +78,8 @@ void UObjectRegister::RegisterObjects(TArray<AActor*> Actors)
     RegisterSMComponents(Actor);
 
     RegisterSKMComponents(Actor);
+
+    RegisterPMCComponents(Actor);
   }
 
 #if WITH_EDITOR
@@ -346,6 +350,72 @@ void UObjectRegister::RegisterSKMComponents(AActor* Actor)
 
   }
 
+}
+
+uint64 UObjectRegister::RegisterPMCComponents(AActor* Actor)
+{
+  check(Actor);
+
+  TArray<UProceduralMeshComponent*> ProceduralMeshComps;
+  Actor->GetComponents<UProceduralMeshComponent>(ProceduralMeshComps);
+  if (ProceduralMeshComps.Num() == 0)
+  {
+    return 0;
+  }
+
+  TArray<FBoundingBox> BBs;
+  TArray<uint8> Tags;
+  UBoundingBoxCalculator::GetBBsOfProceduralMeshComponents(ProceduralMeshComps, BBs, Tags);
+  check(BBs.Num() == Tags.Num());
+
+  const FTransform Transform = Actor->GetTransform();
+  const FString ActorName = Actor->GetName();
+  const bool IsActorTickEnabled = Actor->IsActorTickEnabled();
+  ACarlaProceduralMeshActor* ProcActor = Cast<ACarlaProceduralMeshActor>(Actor);
+
+  uint64 FirstId = 0;
+  for (int i = 0; i < BBs.Num(); i++)
+  {
+    FString DisplayName;
+    if (ProcActor && !ProcActor->CustomMeshName.IsEmpty())
+    {
+      DisplayName = (BBs.Num() == 1)
+          ? ProcActor->CustomMeshName
+          : FString::Printf(TEXT("%s_PMC_%d"), *ProcActor->CustomMeshName, i);
+    }
+    else
+    {
+      DisplayName = FString::Printf(TEXT("%s_PMC_%d"), *ActorName, i);
+    }
+
+    const FString IdKey = FString::Printf(TEXT("%s_%s_%d"), *ActorName, *DisplayName, i);
+    uint64 ObjId = (ProcActor && ProcActor->EnvironmentObjectId != 0 && i == 0)
+        ? ProcActor->EnvironmentObjectId
+        : CityHash64(TCHAR_TO_ANSI(*IdKey), IdKey.Len());
+
+    if (ProcActor && i == 0)
+    {
+      ProcActor->EnvironmentObjectId = ObjId;
+    }
+    if (i == 0)
+    {
+      FirstId = ObjId;
+    }
+
+    FEnvironmentObject EnvironmentObject;
+    EnvironmentObject.Transform = Transform;
+    EnvironmentObject.Id = ObjId;
+    EnvironmentObject.Name = DisplayName;
+    EnvironmentObject.IdStr = IdKey;
+    EnvironmentObject.Actor = Actor;
+    EnvironmentObject.CanTick = IsActorTickEnabled;
+    EnvironmentObject.BoundingBox = BBs[i];
+    EnvironmentObject.Type = EnvironmentObjectType::SMComp;
+    EnvironmentObject.ObjectLabel = static_cast<crp::CityObjectLabel>(Tags[i]);
+    EnvironmentObjects.Emplace(EnvironmentObject);
+  }
+
+  return FirstId;
 }
 
 void UObjectRegister::EnableEnvironmentObject(

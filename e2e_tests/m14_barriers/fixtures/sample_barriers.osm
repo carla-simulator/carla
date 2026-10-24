@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<osm version="0.6" generator="CARLAMapMakerTest">
+  <bounds minlat="48.1390" minlon="11.5640" maxlat="48.1415" maxlon="11.5670"/>
+
+  <!-- Road nodes forming a T-junction -->
+  <node id="101" lat="48.1400" lon="11.5645"/>
+  <node id="102" lat="48.1400" lon="11.5655"/>
+  <node id="103" lat="48.1400" lon="11.5665"/>
+  <node id="104" lat="48.1410" lon="11.5655"/>
+
+  <!-- Road way A -->
+  <way id="1001">
+    <nd ref="101"/>
+    <nd ref="102"/>
+    <nd ref="103"/>
+    <tag k="highway" v="secondary"/>
+    <tag k="name" v="BarrierTestBoulevard"/>
+    <tag k="lanes" v="2"/>
+  </way>
+
+  <!-- Road way B intersecting at node 102 -->
+  <way id="1002">
+    <nd ref="104"/>
+    <nd ref="102"/>
+    <tag k="highway" v="residential"/>
+    <tag k="name" v="CrossStreet"/>
+    <tag k="lanes" v="2"/>
+  </way>
+
+  <!-- Barrier 1: Perimeter Masonry Wall -->
+  <node id="201" lat="48.1405" lon="11.5645"/>
+  <node id="202" lat="48.1405" lon="11.5655"/>
+  <node id="203" lat="48.1408" lon="11.5655"/>
+  <way id="2001">
+    <nd ref="201"/>
+    <nd ref="202"/>
+    <nd ref="203"/>
+    <tag k="barrier" v="wall"/>
+    <tag k="material" v="brick"/>
+    <tag k="height" v="2.2m"/>
+    <tag k="width" v="0.4m"/>
+  </way>
+
+  <!-- Barrier 2: Metal Railing / Fence -->
+  <node id="301" lat="48.1396" lon="11.5648"/>
+  <node id="302" lat="48.1396" lon="11.5660"/>
+  <way id="3001">
+    <nd ref="301"/>
+    <nd ref="302"/>
+    <tag k="barrier" v="fence"/>
+    <tag k="fence_type" v="railing"/>
+    <tag k="material" v="metal"/>
+    <tag k="height" v="1.1m"/>
+  </way>
+
+  <!-- Barrier 3: Highway Guard Rail -->
+  <node id="401" lat="48.1398" lon="11.5646"/>
+  <node id="402" lat="48.1398" lon="11.5662"/>
+  <way id="4001">
+    <nd ref="401"/>
+    <nd ref="402"/>
+    <tag k="barrier" v="guard_rail"/>
+    <tag k="height" v="0.85m"/>
+  </way>
+
+  <!-- Barrier 4: Living Hedge -->
+  <node id="501" lat="48.1409" lon="11.5646"/>
+  <node id="502" lat="48.1409" lon="11.5652"/>
+  <way id="5001">
+    <nd ref="501"/>
+    <nd ref="502"/>
+    <tag k="barrier" v="hedge"/>
+    <tag k="height" v="1.6m"/>
+    <tag k="width" v="0.8m"/>
+  </way>
+
+  <!-- Barrier 5: Underground Metro Barrier (must be filtered out!) -->
+  <node id="601" lat="48.1401" lon="11.5650"/>
+  <node id="602" lat="48.1401" lon="11.5655"/>
+  <way id="6001">
+    <nd ref="601"/>
+    <nd ref="602"/>
+    <tag k="barrier" v="wall"/>
+    <tag k="level" v="-2"/>
+  </way>
+</osm>

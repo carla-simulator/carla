@@ -75,6 +75,11 @@
       type: bool
       doc: >
         When disabled, the converter will generate traffic light data from the OpenStreetMaps data only. When enabled, all junctions will generate traffic lights.
+    - var_name: default_sidewalk_width
+      type: float
+      var_units: meters
+      doc: >
+        Default width in meters of pedestrian sidewalks generated along roads. Default value is __2.0__.
     methods:
     - def_name: set_osm_way_types
       doc: >

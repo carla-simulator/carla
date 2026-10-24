@@ -1,0 +1,58 @@
+<?xml version="1.0" standalone="yes"?>
+<OpenDRIVE>
+    <header revMajor="1" revMinor="4" name="M2HybridTestMap" version="1.00" date="2026-10-17" north="50.0" south="-50.0" east="100.0" west="0.0">
+        <geoReference><![CDATA[+proj=tmerc +lat_0=0 +lon_0=0 +k=1 +x_0=0 +y_0=0 +ellps=WGS84 +units=m +no_defs]]></geoReference>
+    </header>
+    <road name="StraightRoad" length="100.0" id="1" junction="-1">
+        <link/>
+        <type s="0.0" type="town">
+            <speed max="50" unit="km/h"/>
+        </type>
+        <planView>
+            <geometry s="0.0" x="0.0" y="0.0" hdg="0.0" length="100.0">
+                <line/>
+            </geometry>
+        </planView>
+        <elevationProfile>
+            <elevation s="0.0" a="0.0" b="0.0" c="0.0" d="0.0"/>
+        </elevationProfile>
+        <lateralProfile/>
+        <lanes>
+            <laneOffset s="0.0" a="0.0" b="0.0" c="0.0" d="0.0"/>
+            <laneSection s="0.0">
+                <left>
+                    <lane id="2" type="sidewalk" level="false">
+                        <link/>
+                        <width sOffset="0.0" a="2.0" b="0.0" c="0.0" d="0.0"/>
+                    </lane>
+                    <lane id="1" type="driving" level="false">
+                        <link/>
+                        <width sOffset="0.0" a="3.5" b="0.0" c="0.0" d="0.0"/>
+                        <roadMark sOffset="0.0" type="solid" weight="standard" color="white" width="0.15"/>
+                    </lane>
+                </left>
+                <center>
+                    <lane id="0" type="none" level="false">
+                        <roadMark sOffset="0.0" type="broken" weight="standard" color="yellow" width="0.15"/>
+                    </lane>
+                </center>
+                <right>
+                    <lane id="-1" type="driving" level="false">
+                        <link/>
+                        <width sOffset="0.0" a="3.5" b="0.0" c="0.0" d="0.0"/>
+                        <roadMark sOffset="0.0" type="solid" weight="standard" color="white" width="0.15"/>
+                    </lane>
+                    <lane id="-2" type="sidewalk" level="false">
+                        <link/>
+                        <width sOffset="0.0" a="2.0" b="0.0" c="0.0" d="0.0"/>
+                    </lane>
+                </right>
+            </laneSection>
+        </lanes>
+        <objects/>
+        <signals>
+            <signal s="20.0" t="-4.5" id="101" name="SpeedLimit50" dynamic="no" orientation="+" zOffset="2.0" country="OpenDRIVE" type="274" subtype="50" value="50" unit="km/h" height="0.6" width="0.6"/>
+        </signals>
+    </road>
+</OpenDRIVE>
+

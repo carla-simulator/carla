@@ -138,7 +138,7 @@ namespace geom {
       float resolution                  =  2.0f;
       float max_road_len                = 50.0f;
       float extra_lane_width            =  1.0f;
-      float wall_height                 =  0.6f;
+      float wall_height                 =  0.0f;
       float vertex_width_resolution     =  4.0f;
       // Road mesh smoothness:
       float max_weight_distance         =  5.0f;

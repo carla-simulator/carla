@@ -35,6 +35,11 @@ public:
 
   UPROPERTY(Category = "Procedural Mesh Actor", VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
   TObjectPtr<UProceduralMeshComponent> MeshComponent;
+
+  UPROPERTY(Category = "Procedural Mesh Actor", EditAnywhere, BlueprintReadWrite)
+  FString CustomMeshName;
+
+  uint64 EnvironmentObjectId = 0;
 };
 
 /// Invisible marker placed along a generated road to anchor PCG-scattered
@@ -214,7 +219,7 @@ protected:
   /// Material applied to driving-lane mesh sections.
   UPROPERTY(Category = "Materials", EditAnywhere)
   TSoftObjectPtr<UMaterialInterface> RoadMaterial = TSoftObjectPtr<UMaterialInterface>(
-      FSoftObjectPath(TEXT("/Game/Carla/Static/GenericMaterials/Roads/MI_RoadAsphalt_Town15.MI_RoadAsphalt_Town15")));
+      FSoftObjectPath(TEXT("/Game/Carla/Static/GenericMaterials/Roads/MI_Road_Asphalt_A.MI_Road_Asphalt_A")));
 
   /// Material applied to sidewalk mesh sections.
   UPROPERTY(Category = "Materials", EditAnywhere)

@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<osm version="0.6" generator="CARLAMapMakerTest">
+  <bounds minlat="48.1390" minlon="11.5640" maxlat="48.1415" maxlon="11.5670"/>
+
+  <!-- Road nodes forming a T-junction -->
+  <node id="101" lat="48.1400" lon="11.5645"/>
+  <node id="102" lat="48.1400" lon="11.5655"/>
+  <node id="103" lat="48.1400" lon="11.5665"/>
+  <node id="104" lat="48.1410" lon="11.5655"/>
+
+  <!-- Road way A -->
+  <way id="1001">
+    <nd ref="101"/>
+    <nd ref="102"/>
+    <nd ref="103"/>
+    <tag k="highway" v="secondary"/>
+    <tag k="name" v="UtilityTestAvenue"/>
+    <tag k="lanes" v="2"/>
+    <tag k="sidewalk" v="both"/>
+  </way>
+
+  <!-- Road way B intersecting at node 102 -->
+  <way id="1002">
+    <nd ref="104"/>
+    <nd ref="102"/>
+    <tag k="highway" v="residential"/>
+    <tag k="name" v="CrossStreet"/>
+    <tag k="lanes" v="2"/>
+    <tag k="sidewalk" v="both"/>
+  </way>
+
+  <!-- 1. Authentic Pillar Fire Hydrant on sidewalk -->
+  <node id="2001" lat="48.1401" lon="11.5648">
+    <tag k="emergency" v="fire_hydrant"/>
+    <tag k="fire_hydrant:type" v="pillar"/>
+    <tag k="fire_hydrant:diameter" v="100"/>
+    <tag k="fire_hydrant:position" v="sidewalk"/>
+    <tag k="operator" v="Feuerwehr München"/>
+  </node>
+
+  <!-- 2. Authentic Underground Fire Hydrant (DIN 4055) -->
+  <node id="2002" lat="48.1401" lon="11.5658">
+    <tag k="emergency" v="fire_hydrant"/>
+    <tag k="fire_hydrant:type" v="underground"/>
+    <tag k="fire_hydrant:diameter" v="150"/>
+    <tag k="fire_hydrant:style" v="rectangle"/>
+    <tag k="operator" v="SWM"/>
+    <tag k="ref" v="H102"/>
+  </node>
+
+  <!-- 3. Street Cabinet: Telecom Distribution -->
+  <node id="3001" lat="48.14015" lon="11.5652">
+    <tag k="man_made" v="street_cabinet"/>
+    <tag k="utility" v="telecom"/>
+    <tag k="ref" v="TC-991"/>
+    <tag k="operator" v="Telekom Deutschland"/>
+  </node>
+
+  <!-- 4. Street Cabinet: Power / Electric -->
+  <node id="3002" lat="48.14015" lon="11.5662">
+    <tag k="man_made" v="street_cabinet"/>
+    <tag k="utility" v="power"/>
+    <tag k="ref" v="PWR-404"/>
+  </node>
+
+  <!-- 5. Street Cabinet: Postal Service -->
+  <node id="3003" lat="48.14015" lon="11.5646">
+    <tag k="man_made" v="street_cabinet"/>
+    <tag k="street_cabinet" v="postal_service"/>
+    <tag k="operator" v="Deutsche Post"/>
+  </node>
+
+  <!-- 6. Manhole Access Cover: Storm Drain -->
+  <node id="4001" lat="48.1399" lon="11.5650">
+    <tag k="man_made" v="manhole"/>
+    <tag k="manhole" v="drain"/>
+    <tag k="diameter" v="600"/>
+  </node>
+
+  <!-- 7. Manhole Access Cover: Telecom -->
+  <node id="4002" lat="48.1399" lon="11.5660">
+    <tag k="man_made" v="manhole"/>
+    <tag k="manhole" v="telecom"/>
+    <tag k="operator" v="colt"/>
+  </node>
+
+  <!-- 8. Underground Metro Hydrant (level < 0: MUST be filtered out!) -->
+  <node id="5001" lat="48.1400" lon="11.5651">
+    <tag k="emergency" v="fire_hydrant"/>
+    <tag k="fire_hydrant:type" v="pillar"/>
+    <tag k="level" v="-2"/>
+  </node>
+
+  <!-- 9. Indoor Station Cabinet (indoor=yes: MUST be filtered out!) -->
+  <node id="5002" lat="48.1400" lon="11.5652">
+    <tag k="man_made" v="street_cabinet"/>
+    <tag k="indoor" v="yes"/>
+  </node>
+</osm>

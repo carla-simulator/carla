@@ -124,6 +124,30 @@ namespace detail {
     return LoadEpisode(custom_opendrive_map, reset_settings);
   }
 
+  EpisodeProxy Simulator::LoadMapBundleFiles(
+      const std::string &map_name,
+      const std::unordered_map<std::string, std::vector<uint8_t>> &files,
+      bool reset_settings) {
+    const auto id = GetCurrentEpisode().GetId();
+    _client.LoadMapBundleFiles(map_name, files, reset_settings);
+
+    size_t number_of_attempts = _client.GetTimeout().milliseconds() / 50u;
+
+    for (auto i = 0u; i < number_of_attempts; ++i) {
+      using namespace std::literals::chrono_literals;
+      if (_client.GetEpisodeSettings().synchronous_mode)
+        _client.SendTickCue();
+
+      _episode->WaitForState(50ms);
+      auto episode = GetCurrentEpisode();
+
+      if (episode.GetId() != id) {
+        return episode;
+      }
+    }
+    throw_exception(std::runtime_error("failed to connect to newly created map"));
+  }
+
   // ===========================================================================
   // -- Access to current episode ----------------------------------------------
   // ===========================================================================

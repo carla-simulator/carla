@@ -16,6 +16,7 @@
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/Character.h"
 #include "Components/BoxComponent.h"
+#include "ProceduralMeshComponent.h"
 #include "Rendering/SkeletalMeshRenderData.h"
 #include "Engine/SkeletalMeshSocket.h"
 
@@ -477,6 +478,46 @@ void UBoundingBoxCalculator::GetBBsOfSkeletalMeshComponents(
   }
 }
 
+void UBoundingBoxCalculator::GetBBsOfProceduralMeshComponents(
+    const TArray<UProceduralMeshComponent*>& ProceduralMeshComps,
+    TArray<FBoundingBox>& OutBB,
+    TArray<uint8>& OutTag,
+    uint8 InTagQueried)
+{
+  crp::CityObjectLabel TagQueried = (crp::CityObjectLabel)InTagQueried;
+  bool FilterByTagEnabled = (TagQueried != crp::CityObjectLabel::Any);
+
+  for (UProceduralMeshComponent* Comp : ProceduralMeshComps)
+  {
+    if (!Comp || !Comp->IsVisible() ||
+        (Comp->GetOwner() && Comp->GetOwner()->IsHidden()) ||
+        Comp->GetNumSections() == 0)
+    {
+      continue;
+    }
+
+    crp::CityObjectLabel Tag = ATagger::GetTagOfTaggedComponent(*Comp);
+    if (FilterByTagEnabled && Tag != TagQueried)
+    {
+      continue;
+    }
+
+    const FBoxSphereBounds LocalBounds = Comp->CalcBounds(FTransform::Identity);
+    FVector Extent = LocalBounds.BoxExtent;
+    if (Extent.X > 0.0f || Extent.Y > 0.0f || Extent.Z > 0.0f)
+    {
+      Extent.X = FMath::Max(Extent.X, 1.0f);
+      Extent.Y = FMath::Max(Extent.Y, 1.0f);
+      Extent.Z = FMath::Max(Extent.Z, 1.0f);
+      FBoundingBox BoundingBox{LocalBounds.Origin, Extent};
+      const FTransform& CompToWorldTransform = Comp->GetComponentTransform();
+      BoundingBox = ApplyTransformToBB(BoundingBox, CompToWorldTransform);
+      OutBB.Emplace(BoundingBox);
+      OutTag.Emplace(static_cast<uint8>(Tag));
+    }
+  }
+}
+
 TArray<FBoundingBox> UBoundingBoxCalculator::GetBoundingBoxOfActors(
   const TArray<AActor*>& Actors,
   uint8 InTagQueried)
@@ -563,6 +604,12 @@ TArray<FBoundingBox> UBoundingBoxCalculator::GetBBsOfActor(
   Tags.Reset();
   Actor->GetComponents<USkeletalMeshComponent>(SkeletalMeshComps);
   GetBBsOfSkeletalMeshComponents(SkeletalMeshComps, Result, Tags, InTagQueried);
+
+  // Calculate FBoundingBox of ProceduralMeshComponent
+  TArray<UProceduralMeshComponent*> ProceduralMeshComps;
+  Tags.Reset();
+  Actor->GetComponents<UProceduralMeshComponent>(ProceduralMeshComps);
+  GetBBsOfProceduralMeshComponents(ProceduralMeshComps, Result, Tags, InTagQueried);
 
   return Result;
 }

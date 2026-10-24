@@ -79,6 +79,114 @@ static auto GetRequiredFiles(const carla::client::Client &self, const std::strin
   return result;
 }
 
+static auto LoadMapBundle(
+    carla::client::Client &self,
+    const std::string &bundle_path,
+    bool reset_settings) {
+  namespace py = boost::python;
+  py::object py_tarfile = py::import("tarfile");
+  py::object py_os = py::import("os");
+  py::object py_json = py::import("json");
+  py::object py_builtins = py::import("builtins");
+
+  std::unordered_map<std::string, std::vector<uint8_t>> files;
+  std::string map_name;
+
+  py::object p_path(bundle_path);
+  if (py::extract<bool>(py_os.attr("path").attr("isdir")(p_path))) {
+    py::object walk = py_os.attr("walk")(p_path);
+    for (py::stl_input_iterator<py::tuple> it(walk); it != py::stl_input_iterator<py::tuple>(); ++it) {
+      py::tuple t = *it;
+      std::string root = py::extract<std::string>(t[0]);
+      py::list file_list = py::extract<py::list>(t[2]);
+      for (int i = 0; i < len(file_list); ++i) {
+        std::string fname = py::extract<std::string>(file_list[i]);
+        std::string full_path = py::extract<std::string>(py_os.attr("path").attr("join")(root, fname));
+        std::string rel_path = py::extract<std::string>(py_os.attr("path").attr("relpath")(full_path, bundle_path));
+
+        py::object f = py_builtins.attr("open")(full_path, "rb");
+        py::object data = f.attr("read")();
+        f.attr("close")();
+
+        Py_buffer view;
+        if (PyObject_GetBuffer(data.ptr(), &view, PyBUF_SIMPLE) == 0) {
+          const uint8_t *bytes = static_cast<const uint8_t *>(view.buf);
+          files[rel_path] = std::vector<uint8_t>(bytes, bytes + view.len);
+          PyBuffer_Release(&view);
+        }
+      }
+    }
+  } else if (py::extract<bool>(py_os.attr("path").attr("isfile")(p_path))) {
+    py::object tar = py_tarfile.attr("open")(p_path, "r:*");
+    py::list members = py::extract<py::list>(tar.attr("getmembers")());
+    for (int i = 0; i < len(members); ++i) {
+      py::object member = members[i];
+      if (py::extract<bool>(member.attr("isfile")())) {
+        std::string member_name = py::extract<std::string>(member.attr("name"));
+        py::object f = tar.attr("extractfile")(member);
+        if (f.ptr() != Py_None) {
+          py::object data = f.attr("read")();
+          f.attr("close")();
+          Py_buffer view;
+          if (PyObject_GetBuffer(data.ptr(), &view, PyBUF_SIMPLE) == 0) {
+            const uint8_t *bytes = static_cast<const uint8_t *>(view.buf);
+            files[member_name] = std::vector<uint8_t>(bytes, bytes + view.len);
+            PyBuffer_Release(&view);
+          }
+        }
+      }
+    }
+    tar.attr("close")();
+  } else {
+    throw std::invalid_argument("bundle_path does not exist or is not accessible: " + bundle_path);
+  }
+
+  std::string json_key;
+  for (const auto &pair : files) {
+    if (pair.first == "carla-map.json" ||
+        (pair.first.length() > 15 && pair.first.substr(pair.first.length() - 15) == "/carla-map.json")) {
+      json_key = pair.first;
+      break;
+    }
+  }
+
+  if (json_key.empty()) {
+    throw std::runtime_error("carla-map.json not found in bundle archive or directory");
+  }
+
+  if (json_key != "carla-map.json") {
+    std::string prefix = json_key.substr(0, json_key.length() - 14);
+    std::unordered_map<std::string, std::vector<uint8_t>> stripped_files;
+    for (auto &pair : files) {
+      if (pair.first.substr(0, prefix.length()) == prefix) {
+        stripped_files[pair.first.substr(prefix.length())] = std::move(pair.second);
+      } else {
+        stripped_files[pair.first] = std::move(pair.second);
+      }
+    }
+    files = std::move(stripped_files);
+    json_key = "carla-map.json";
+  }
+
+  const auto &json_data = files[json_key];
+  std::string json_str(reinterpret_cast<const char*>(json_data.data()), json_data.size());
+  py::object parsed_json = py_json.attr("loads")(json_str);
+  if (parsed_json.contains("map_name")) {
+    map_name = py::extract<std::string>(parsed_json["map_name"]);
+  }
+  if (map_name.empty()) {
+    py::object stem = py_os.attr("path").attr("splitext")(py_os.attr("path").attr("basename")(p_path))[0];
+    map_name = py::extract<std::string>(stem);
+  }
+
+  carla::client::World result(carla::client::detail::EpisodeProxy{nullptr});
+  {
+    carla::PythonUtil::ReleaseGIL unlock;
+    result = self.LoadMapBundleFiles(map_name, files, reset_settings);
+  }
+  return result;
+}
+
 static void ApplyBatchCommands(
     const carla::client::Client &self,
     const boost::python::object &commands,
@@ -227,7 +335,18 @@ void export_client() {
   ;
 
   class_<rpc::OpendriveGenerationParameters>("OpendriveGenerationParameters",
-      init<double, double, double, double, bool, bool, bool>((arg("vertex_distance")=2.0, arg("max_road_length")=50.0, arg("wall_height")=1.0, arg("additional_width")=0.6, arg("smooth_junctions")=true, arg("enable_mesh_visibility")=true, arg("enable_pedestrian_navigation")=true)))
+      init<double, double, double, double, bool, bool, bool, bool, bool, bool, bool>((
+          arg("vertex_distance")=2.0,
+          arg("max_road_length")=50.0,
+          arg("wall_height")=1.0,
+          arg("additional_width")=0.6,
+          arg("smooth_junctions")=true,
+          arg("enable_mesh_visibility")=true,
+          arg("enable_pedestrian_navigation")=true,
+          arg("generate_road_mesh")=true,
+          arg("generate_ground_mesh")=true,
+          arg("generate_street_furniture")=true,
+          arg("generate_traffic_signals")=true)))
     .def_readwrite("vertex_distance", &rpc::OpendriveGenerationParameters::vertex_distance)
     .def_readwrite("max_road_length", &rpc::OpendriveGenerationParameters::max_road_length)
     .def_readwrite("wall_height", &rpc::OpendriveGenerationParameters::wall_height)
@@ -235,6 +354,10 @@ void export_client() {
     .def_readwrite("smooth_junctions", &rpc::OpendriveGenerationParameters::smooth_junctions)
     .def_readwrite("enable_mesh_visibility", &rpc::OpendriveGenerationParameters::enable_mesh_visibility)
     .def_readwrite("enable_pedestrian_navigation", &rpc::OpendriveGenerationParameters::enable_pedestrian_navigation)
+    .def_readwrite("generate_road_mesh", &rpc::OpendriveGenerationParameters::generate_road_mesh)
+    .def_readwrite("generate_ground_mesh", &rpc::OpendriveGenerationParameters::generate_ground_mesh)
+    .def_readwrite("generate_street_furniture", &rpc::OpendriveGenerationParameters::generate_street_furniture)
+    .def_readwrite("generate_traffic_signals", &rpc::OpendriveGenerationParameters::generate_traffic_signals)
   ;
 
 #define REPLAY_FILE_WITHOUT_GIL(fn) +[]( \
@@ -276,6 +399,7 @@ void export_client() {
     .def("reload_world", CONST_CALL_WITHOUT_GIL_1(cc::Client, ReloadWorld, bool), (arg("reset_settings")=true))
     .def("load_world", CONST_CALL_WITHOUT_GIL_3(cc::Client, LoadWorld, std::string, bool, rpc::MapLayer), (arg("map_name"), arg("reset_settings")=true, arg("map_layers")=rpc::MapLayer::All))
     .def("load_world_if_different", CONST_CALL_WITHOUT_GIL_3(cc::Client, LoadWorldIfDifferent, std::string, bool, rpc::MapLayer), (arg("map_name"), arg("reset_settings")=true, arg("map_layers")=rpc::MapLayer::All))
+    .def("load_map_bundle", &LoadMapBundle, (arg("bundle_path"), arg("reset_settings")=true))
     .def("generate_opendrive_world", CONST_CALL_WITHOUT_GIL_3(cc::Client, GenerateOpenDriveWorld, std::string,
         rpc::OpendriveGenerationParameters, bool), (arg("opendrive"), arg("parameters")=rpc::OpendriveGenerationParameters(),
         arg("reset_settings")=true))

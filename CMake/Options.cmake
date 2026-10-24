@@ -66,7 +66,7 @@ carla_option (
 carla_option (
   ENABLE_OSM2ODR
   "Enable OSM2ODR."
-  OFF
+  ON
 )
 
 carla_option (
@@ -434,6 +434,14 @@ carla_string_option (
   CARLA_XERCESC_TAG
   "Target xerces-c git tag."
   v${CARLA_XERCESC_VERSION}
+)
+
+# ==== OSM2ODR ====
+
+carla_string_option (
+  CARLA_OSM2ODR_TAG
+  "Target osm2odr (sumo) git commit/tag."
+  1da3c07e39f3e2e0d97f8f709a7255a0df8c6200
 )
 
 # ==== ZLIB ====

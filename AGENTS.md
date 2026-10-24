@@ -47,6 +47,10 @@ files are the source of truth either way.
 - **`run-leaderboard-evaluation`** — Runs the CARLA Leaderboard evaluator over a set of routes with your agent — routes/routes-subset/repetitions/track selection, checkpoint and....
 - **`write-leaderboard-agent`** — Writes an autonomous agent for the CARLA Leaderboard — an AutonomousAgent subclass with setup/sensors/run_step/destroy, a sensor suite inside the....
 
+### `map-maker`
+
+- **`create-carla-map`** — Creates, compiles, inspects, and installs standalone, editor-free CARLA map bundles (.carlamap.tar.gz) completely offline using the carla-map CLI without Unreal Engine source or Editor access — OSM 3D buildings, custom OBJ/glTF meshes, offline Recast NavMesh, and zero-Z-fighting road replacement.
+
 ### `python-api`
 
 - **`bounding-boxes`** — Gets actor and level 3D bounding boxes and projects them into a camera image as 2D boxes — the dataset-annotation workflow.

@@ -7,6 +7,7 @@
 #include "OpenDriveGenerator.h"
 #include "Carla/Game/CarlaStatics.h"
 #include "Carla/Game/Tagger.h"
+#include "Carla/MapGen/CarlaMapBundle.h"
 #include "Carla.h"
 #include "Traffic/TrafficLightManager.h"
 #include "Traffic/TrafficSignBase.h"
@@ -612,7 +613,23 @@ void AOpenDriveGenerator::GenerateRoadMesh()
   const auto Meshes = CarlaMap->GenerateChunkedMesh(Parameters);
 
   UMaterialInterface* ResolvedRoadMaterial = RoadMaterial.LoadSynchronous();
+  if (!ResolvedRoadMaterial)
+  {
+    ResolvedRoadMaterial = LoadObject<UMaterialInterface>(
+        nullptr, TEXT("/Game/Carla/Static/GenericMaterials/Roads/MI_Road_Asphalt_A.MI_Road_Asphalt_A"));
+  }
+  if (!ResolvedRoadMaterial)
+  {
+    ResolvedRoadMaterial = LoadObject<UMaterialInterface>(
+        nullptr, TEXT("/Game/Carla/Static/GenericMaterials/Roads/MI_Road_Asphalt_B.MI_Road_Asphalt_B"));
+  }
+
   UMaterialInterface* ResolvedSidewalkMaterial = SidewalkMaterial.LoadSynchronous();
+  if (!ResolvedSidewalkMaterial)
+  {
+    ResolvedSidewalkMaterial = LoadObject<UMaterialInterface>(
+        nullptr, TEXT("/Game/Carla/Static/GenericMaterials/Sidewalk/MI_Sidewalk_Apartment.MI_Sidewalk_Apartment"));
+  }
 
   // Reset so re-running GenerateRoadMesh (e.g. regenerating the map) doesn't
   // leave GenerateGroundPlane sizing the fill heightfield off stale geometry.
@@ -712,6 +729,11 @@ void AOpenDriveGenerator::GenerateRoadMesh()
       }
     }
     RoadRaster.BuildDistanceFields();
+  }
+
+  if (!Parameters.generate_road_mesh)
+  {
+    return;
   }
 
   for (const auto &Section : PendingSections)
@@ -1209,7 +1231,13 @@ void AOpenDriveGenerator::GenerateGroundPlane()
       TArray<FProcMeshTangent>(), // Tangents
       true); // Create collision
 
-  if (UMaterialInterface* ResolvedGroundMaterial = GroundMaterial.LoadSynchronous())
+  UMaterialInterface* ResolvedGroundMaterial = GroundMaterial.LoadSynchronous();
+  if (!ResolvedGroundMaterial)
+  {
+    ResolvedGroundMaterial = LoadObject<UMaterialInterface>(
+        nullptr, TEXT("/Game/Carla/Static/GenericMaterials/Ground/MI_LargeLandscape_Grass.MI_LargeLandscape_Grass"));
+  }
+  if (ResolvedGroundMaterial)
   {
     TempPMC->SetMaterial(0, ResolvedGroundMaterial);
   }
@@ -1976,19 +2004,40 @@ void AOpenDriveGenerator::GenerateSpawnPoints()
 
 void AOpenDriveGenerator::GenerateAll()
 {
-  GenerateRoadMesh();
-  GenerateMedianFill();
-  GenerateGroundPlane();
-  GenerateCrosswalkMesh();
-  GenerateLaneMarkings();
-  GenerateSpawnPoints();
-  GeneratePoles();
+  carla::rpc::OpendriveGenerationParameters Parameters;
+  if (UCarlaGameInstance *GameInstance = UCarlaStatics::GetGameInstance(GetWorld()))
+  {
+    Parameters = GameInstance->GetOpendriveGenerationParameters();
+  }
 
-  // Deferred so the asynchronous PCG scatter has spawned its content
-  // before the object-placement pass measures it.
-  FTimerHandle QATimerHandle;
-  GetWorldTimerManager().SetTimer(
-      QATimerHandle, this, &AOpenDriveGenerator::RunGenerationQA, 3.0f, false);
+  if (Parameters.generate_road_mesh || Parameters.generate_ground_mesh || Parameters.generate_street_furniture)
+  {
+    GenerateRoadMesh();
+  }
+  if (Parameters.generate_ground_mesh)
+  {
+    GenerateMedianFill();
+    GenerateGroundPlane();
+  }
+  if (Parameters.generate_road_mesh)
+  {
+    GenerateCrosswalkMesh();
+    GenerateLaneMarkings();
+  }
+  GenerateSpawnPoints();
+  if (Parameters.generate_street_furniture)
+  {
+    GeneratePoles();
+  }
+
+  if (Parameters.generate_road_mesh && Parameters.generate_ground_mesh)
+  {
+    // Deferred so the asynchronous PCG scatter has spawned its content
+    // before the object-placement pass measures it.
+    FTimerHandle QATimerHandle;
+    GetWorldTimerManager().SetTimer(
+        QATimerHandle, this, &AOpenDriveGenerator::RunGenerationQA, 3.0f, false);
+  }
 }
 
 void AOpenDriveGenerator::RunGenerationQA()
@@ -2213,9 +2262,40 @@ void AOpenDriveGenerator::BeginPlay()
   auto World = GetWorld();
   check(World != nullptr);
 
-  // Autogenerate signals
-  AActor* TrafficLightManagerActor =  UGameplayStatics::GetActorOfClass(World, ATrafficLightManager::StaticClass());
-  if(TrafficLightManagerActor == nullptr) {
-    World->SpawnActor<ATrafficLightManager>();
+  carla::rpc::OpendriveGenerationParameters Parameters;
+  UCarlaGameInstance *GameInstance = UCarlaStatics::GetGameInstance(World);
+  if (GameInstance)
+  {
+    Parameters = GameInstance->GetOpendriveGenerationParameters();
+  }
+
+  if (Parameters.generate_traffic_signals)
+  {
+    // Autogenerate signals
+    AActor* TrafficLightManagerActor = UGameplayStatics::GetActorOfClass(World, ATrafficLightManager::StaticClass());
+    if(TrafficLightManagerActor == nullptr) {
+      World->SpawnActor<ATrafficLightManager>();
+    }
+  }
+
+  if (GameInstance && GameInstance->HasActiveMapBundle())
+  {
+    FString BundleError;
+    int32 NumSpawned = GameInstance->GetActiveMapBundle().InstantiateInWorld(
+        World, UCarlaStatics::GetGameMode(World), BundleError);
+    if (!BundleError.IsEmpty())
+    {
+      UE_LOG(LogCarla, Error, TEXT("AOpenDriveGenerator: error instantiating map bundle: %s"), *BundleError);
+    }
+    else
+    {
+      UE_LOG(LogCarla, Log, TEXT("AOpenDriveGenerator: instantiated %d custom mesh layers/placements for map bundle '%s'"),
+          NumSpawned, *GameInstance->GetActiveMapBundle().MapName);
+    }
+  }
+
+  if (ACarlaGameModeBase *GameMode = UCarlaStatics::GetGameMode(World))
+  {
+    GameMode->RegisterEnvironmentObjects();
   }
 }

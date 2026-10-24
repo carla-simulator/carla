@@ -707,6 +707,26 @@
       doc: >
         Spawns a static procedural mesh with collision in the world. The mesh lives until the world is reloaded. Useful to add custom terrain or static geometry to maps generated at runtime from OpenDRIVE.
     # --------------------------------------
+    - def_name: spawn_custom_mesh_ex
+      params:
+      - param_name: mesh_description
+        type: carla.CustomMeshDescription
+        doc: >
+          Full specification of the custom procedural mesh including transform, geometry, normals, UVs, colors, collision, material preset, and semantic label.
+      return: int
+      doc: >
+        Spawns a custom mesh actor with full transform, normals, UVs, collision, material presets, and CityObjectLabel ground-truth semantic segmentation tagging. Returns the unique actor/object ID.
+    # --------------------------------------
+    - def_name: spawn_custom_meshes
+      params:
+      - param_name: mesh_descriptions
+        type: list(carla.CustomMeshDescription)
+        doc: >
+          List of custom procedural mesh specifications to instantiate.
+      return: list(int)
+      doc: >
+        Batch spawns multiple custom procedural meshes in a single efficient RPC call. Returns a list of spawned actor/object IDs.
+    # --------------------------------------
     - def_name: freeze_all_traffic_lights
       params:
         - param_name: frozen
@@ -1196,4 +1216,98 @@
       doc: >
         Draws a string in a given location of the simulation which can only be seen server-side.
     # --------------------------------------
+
+  - class_name: CustomMaterialParameters
+    # - DESCRIPTION ------------------------
+    doc: >
+      Fine-grained material customization parameters for custom procedural meshes.
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: base_color
+      type: carla.Color
+      doc: >
+        Base color tint applied to the material.
+    - var_name: roughness
+      type: float
+      doc: >
+        Surface roughness (0.0 = mirror/smooth, 1.0 = rough/diffuse).
+    - var_name: metallic
+      type: float
+      doc: >
+        Surface metallic reflectance (0.0 = dielectric, 1.0 = metal).
+    - var_name: specular
+      type: float
+      doc: >
+        Surface specular reflectance multiplier.
+    - var_name: uv_scale
+      type: carla.Vector2D
+      doc: >
+        UV texture tiling multiplier.
+    - var_name: albedo_texture_path
+      type: str
+      doc: >
+        Optional file path to custom albedo diffuse texture.
+    - var_name: normal_texture_path
+      type: str
+      doc: >
+        Optional file path to custom normal map texture.
+    - var_name: roughness_texture_path
+      type: str
+      doc: >
+        Optional file path to custom roughness map texture.
+
+  - class_name: CustomMeshDescription
+    # - DESCRIPTION ------------------------
+    doc: >
+      Specification of a static custom procedural mesh to spawn in the CARLA simulation world.
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: name
+      type: str
+      doc: >
+        Unique name or identifier for this custom mesh instance.
+    - var_name: transform
+      type: carla.Transform
+      doc: >
+        World transform (location and rotation) where the mesh will be instantiated.
+    - var_name: scale
+      type: carla.Vector3D
+      doc: >
+        Non-uniform 3D scale vector applied to the mesh geometry.
+    - var_name: vertices
+      type: list(float)
+      doc: >
+        Flat array of 3D vertex coordinates (x, y, z) in meters in the client frame.
+    - var_name: triangles
+      type: list(int)
+      doc: >
+        Flat array of 3-tuple triangle indices referencing the vertex array.
+    - var_name: normals
+      type: list(float)
+      doc: >
+        Flat array of normal vectors (nx, ny, nz) per vertex.
+    - var_name: uvs
+      type: list(float)
+      doc: >
+        Flat array of texture coordinates (u, v) per vertex.
+    - var_name: vertex_colors
+      type: list(carla.Color)
+      doc: >
+        Array of per-vertex RGBA color tints.
+    - var_name: material_preset
+      type: str
+      doc: >
+        Named pre-cooked material preset (e.g. 'road_asphalt', 'sidewalk_concrete', 'building_brick', 'grass', 'wall_concrete').
+    - var_name: semantic_label
+      type: carla.CityObjectLabel
+      doc: >
+        Ground-truth Cityscapes semantic segmentation label (e.g. Roads, Sidewalks, Buildings, Vegetation).
+    - var_name: enable_collision
+      type: bool
+      doc: >
+        Whether to generate Chaos physics collision for drivable or blocking interactions.
+    - var_name: material_params
+      type: carla.CustomMaterialParameters
+      doc: >
+        Optional fine-grained material parameters.
 ...

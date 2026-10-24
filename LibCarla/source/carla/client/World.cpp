@@ -242,6 +242,15 @@ namespace client {
     _episode.Lock()->SpawnCustomMesh(vertices, triangles, material);
   }
 
+  uint64_t World::SpawnCustomMeshEx(const rpc::CustomMeshDescription &description) {
+    return _episode.Lock()->SpawnCustomMeshEx(description);
+  }
+
+  std::vector<uint64_t> World::SpawnCustomMeshes(
+      const std::vector<rpc::CustomMeshDescription> &descriptions) {
+    return _episode.Lock()->SpawnCustomMeshes(descriptions);
+  }
+
   SharedPtr<LightManager> World::GetLightManager() const {
     return _episode.Lock()->GetLightManager();
   }

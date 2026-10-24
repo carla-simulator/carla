@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<osm version="0.6" generator="CARLA-MapMaker-M4">
+  <bounds minlat="41.3850" minlon="2.1680" maxlat="41.3890" maxlon="2.1740"/>
+  <!-- Road Network Nodes -->
+  <node id="1" visible="true" lat="41.3860" lon="2.1700"/>
+  <node id="2" visible="true" lat="41.3870" lon="2.1700">
+    <tag k="highway" v="traffic_signals"/>
+  </node>
+  <node id="3" visible="true" lat="41.3880" lon="2.1700"/>
+  <node id="4" visible="true" lat="41.3870" lon="2.1685"/>
+  <node id="5" visible="true" lat="41.3870" lon="2.1715"/>
+  <node id="6" visible="true" lat="41.3880" lon="2.1715"/>
+
+  <!-- Drivable Roads -->
+  <way id="10" visible="true">
+    <nd ref="1"/>
+    <nd ref="2"/>
+    <nd ref="3"/>
+    <tag k="highway" v="primary"/>
+    <tag k="lanes" v="2"/>
+    <tag k="name" v="Main Street"/>
+  </way>
+  <way id="11" visible="true">
+    <nd ref="4"/>
+    <nd ref="2"/>
+    <nd ref="5"/>
+    <tag k="highway" v="secondary"/>
+    <tag k="lanes" v="2"/>
+    <tag k="name" v="Cross Avenue"/>
+  </way>
+  <way id="12" visible="true">
+    <nd ref="5"/>
+    <nd ref="6"/>
+    <nd ref="3"/>
+    <tag k="highway" v="residential"/>
+    <tag k="lanes" v="2"/>
+    <tag k="name" v="Loop Road"/>
+  </way>
+
+  <!-- Building 1: Commercial Office Tower (4 levels) -->
+  <node id="101" visible="true" lat="41.3873" lon="2.1703"/>
+  <node id="102" visible="true" lat="41.3877" lon="2.1703"/>
+  <node id="103" visible="true" lat="41.3877" lon="2.1709"/>
+  <node id="104" visible="true" lat="41.3873" lon="2.1709"/>
+  <way id="100" visible="true">
+    <nd ref="101"/>
+    <nd ref="102"/>
+    <nd ref="103"/>
+    <nd ref="104"/>
+    <nd ref="101"/>
+    <tag k="building" v="commercial"/>
+    <tag k="building:levels" v="4"/>
+    <tag k="name" v="Tech Office Tower"/>
+  </way>
+
+  <!-- Building 2: Residential Complex (height 12.0m) -->
+  <node id="201" visible="true" lat="41.3873" lon="2.1691"/>
+  <node id="202" visible="true" lat="41.3877" lon="2.1691"/>
+  <node id="203" visible="true" lat="41.3877" lon="2.1697"/>
+  <node id="204" visible="true" lat="41.3873" lon="2.1697"/>
+  <way id="200" visible="true">
+    <nd ref="201"/>
+    <nd ref="202"/>
+    <nd ref="203"/>
+    <nd ref="204"/>
+    <nd ref="201"/>
+    <tag k="building" v="residential"/>
+    <tag k="height" v="12.0"/>
+    <tag k="name" v="Oak Apartments"/>
+  </way>
+</osm>
+

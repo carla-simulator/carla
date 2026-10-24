@@ -39,6 +39,33 @@ set (
   RecastNavigation::DetourCrowd
 )
 
+set (CARLA_PYTHON_API_OSM2ODR_INCLUDES "")
+set (CARLA_PYTHON_API_OSM2ODR_DEFINITIONS "")
+set (CARLA_PYTHON_API_OSM2ODR_LIBRARIES "")
+
+if (ENABLE_OSM2ODR)
+  list (
+    APPEND
+    PYTHON_API_DEPENDENCIES
+    osm2odr
+    proj
+    xerces-c
+    libsqlite3
+  )
+  set (
+    CARLA_PYTHON_API_OSM2ODR_INCLUDES
+    "$<TARGET_PROPERTY:osm2odr,INTERFACE_INCLUDE_DIRECTORIES>"
+  )
+  set (
+    CARLA_PYTHON_API_OSM2ODR_DEFINITIONS
+    "CARLA_PYTHON_API_HAS_OSM2ODR"
+  )
+  set (
+    CARLA_PYTHON_API_OSM2ODR_LIBRARIES
+    "$<TARGET_FILE:osm2odr>\n  $<TARGET_FILE:proj>\n  $<TARGET_FILE:xerces-c>\n  $<TARGET_FILE:libsqlite3>"
+  )
+endif ()
+
 get_target_property (
   Boost_asio_TARGET_NAME
   Boost::asio

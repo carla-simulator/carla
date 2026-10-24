@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<osm version="0.6" generator="CARLA-MapMaker-E2E">
+  <bounds minlat="41.3850" minlon="2.1680" maxlat="41.3890" maxlon="2.1740"/>
+  <node id="1" visible="true" lat="41.3860" lon="2.1700"/>
+  <node id="2" visible="true" lat="41.3870" lon="2.1700">
+    <tag k="highway" v="traffic_signals"/>
+  </node>
+  <node id="3" visible="true" lat="41.3880" lon="2.1700"/>
+  <node id="4" visible="true" lat="41.3870" lon="2.1685"/>
+  <node id="5" visible="true" lat="41.3870" lon="2.1715"/>
+  <node id="6" visible="true" lat="41.3880" lon="2.1715"/>
+  <way id="10" visible="true">
+    <nd ref="1"/>
+    <nd ref="2"/>
+    <nd ref="3"/>
+    <tag k="highway" v="primary"/>
+    <tag k="lanes" v="2"/>
+    <tag k="name" v="Main Street"/>
+  </way>
+  <way id="11" visible="true">
+    <nd ref="4"/>
+    <nd ref="2"/>
+    <nd ref="5"/>
+    <tag k="highway" v="secondary"/>
+    <tag k="lanes" v="2"/>
+    <tag k="name" v="Cross Avenue"/>
+  </way>
+  <way id="12" visible="true">
+    <nd ref="5"/>
+    <nd ref="6"/>
+    <nd ref="3"/>
+    <tag k="highway" v="residential"/>
+    <tag k="lanes" v="2"/>
+    <tag k="name" v="Loop Road"/>
+  </way>
+</osm>
+

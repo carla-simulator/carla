@@ -148,6 +148,13 @@ void ACarlaGameModeBase::InitGame(
       TEXT("GameInstance is not a UCarlaGameInstance, did you forget to set "
            "it in the project settings?"));
 
+  if (GameInstance->HasActiveMapBundle())
+  {
+    Episode->MapName = GameInstance->GetActiveMapBundle().MapName;
+    UE_LOG(LogCarla, Log, TEXT("InitGame: Active map bundle '%s' overrides Episode->MapName"),
+        *Episode->MapName);
+  }
+
   if (TaggerDelegate != nullptr) {
     TaggerDelegate->RegisterSpawnHandler(World);
   } else {
@@ -338,7 +345,11 @@ void ACarlaGameModeBase::BeginPlay()
       FVector(0,0,-1000000), FRotator(0,0,0), FActorSpawnParameters());
 
   ATrafficLightManager* Manager = GetTrafficLightManager();
-  Manager->InitializeTrafficLights();
+  if (!Episode->GetMapName().EndsWith(TEXT("OpenDriveMap")) ||
+      GameInstance->GetOpendriveGenerationParameters().generate_traffic_signals)
+  {
+    Manager->InitializeTrafficLights();
+  }
 
   Episode->InitializeAtBeginPlay();
   GameInstance->NotifyBeginEpisode(*Episode);

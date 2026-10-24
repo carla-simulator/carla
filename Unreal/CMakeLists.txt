@@ -95,6 +95,10 @@ if (BUILD_PYTHON_API)
   list (APPEND UE_DEPENDENCIES Boost::python${Python3_VERSION_MAJOR}${Python3_VERSION_MINOR})
 endif ()
 
+if (ENABLE_OSM2ODR)
+  list (APPEND UE_DEPENDENCIES osm2odr proj xerces-c)
+endif ()
+
 set (UE_DEPENDENCIES_ORDER_ONLY ${UE_DEPENDENCIES})
 
 if (BUILD_CARLA_CLIENT)

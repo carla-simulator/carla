@@ -19,6 +19,8 @@
 #include "Engine/GameInstance.h"
 #include <util/ue-header-guard-end.h>
 
+#include "Carla/MapGen/CarlaMapBundle.h"
+
 #include "CarlaGameInstance.generated.h"
 
 class UCarlaSettings;
@@ -98,6 +100,33 @@ public:
     return GenerationParameters;
   }
 
+  void SetActiveMapBundle(const FCarlaMapBundle &InBundle)
+  {
+    ActiveMapBundle = InBundle;
+    bHasActiveMapBundle = true;
+  }
+
+  void ClearActiveMapBundle()
+  {
+    bHasActiveMapBundle = false;
+    ActiveMapBundle = FCarlaMapBundle{};
+  }
+
+  bool HasActiveMapBundle() const
+  {
+    return bHasActiveMapBundle;
+  }
+
+  const FCarlaMapBundle &GetActiveMapBundle() const
+  {
+    return ActiveMapBundle;
+  }
+
+  FCarlaMapBundle &GetActiveMapBundle()
+  {
+    return ActiveMapBundle;
+  }
+
   UFUNCTION(Category = "Carla Game Instance", BlueprintCallable)
   void SetMapLayer(int32 MapLayer)
   {
@@ -126,6 +155,9 @@ private:
   ACarlaRecorder *Recorder = nullptr;
 
   carla::rpc::OpendriveGenerationParameters GenerationParameters;
+
+  FCarlaMapBundle ActiveMapBundle;
+  bool bHasActiveMapBundle = false;
 
   UPROPERTY(Category = "CARLA Game Instance", EditAnywhere)
   int32 CurrentMapLayer = static_cast<int32>(carla::rpc::MapLayer::All);

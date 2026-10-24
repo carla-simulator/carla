@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<osm version="0.6" generator="CARLA-MapMaker-M6">
+  <bounds minlat="48.1350" minlon="11.5600" maxlat="48.1450" maxlon="11.5750"/>
+  <!-- Road Network Nodes -->
+  <node id="1" visible="true" lat="48.1380" lon="11.5650"/>
+  <node id="2" visible="true" lat="48.1390" lon="11.5650"/>
+  <node id="3" visible="true" lat="48.1400" lon="11.5650"/>
+  <node id="4" visible="true" lat="48.1390" lon="11.5620"/>
+  <node id="5" visible="true" lat="48.1390" lon="11.5680"/>
+
+  <!-- Drivable Roads -->
+  <way id="10" visible="true">
+    <nd ref="1"/>
+    <nd ref="2"/>
+    <nd ref="3"/>
+    <tag k="highway" v="primary"/>
+    <tag k="lanes" v="2"/>
+    <tag k="name" v="Avenue North-South"/>
+  </way>
+  <way id="11" visible="true">
+    <nd ref="4"/>
+    <nd ref="2"/>
+    <nd ref="5"/>
+    <tag k="highway" v="secondary"/>
+    <tag k="lanes" v="2"/>
+    <tag k="name" v="Boulevard East-West"/>
+  </way>
+
+  <!-- Building Footprint -->
+  <node id="101" visible="true" lat="48.1393" lon="11.5655"/>
+  <node id="102" visible="true" lat="48.1398" lon="11.5655"/>
+  <node id="103" visible="true" lat="48.1398" lon="11.5665"/>
+  <node id="104" visible="true" lat="48.1393" lon="11.5665"/>
+  <way id="100" visible="true">
+    <nd ref="101"/>
+    <nd ref="102"/>
+    <nd ref="103"/>
+    <nd ref="104"/>
+    <nd ref="101"/>
+    <tag k="building" v="commercial"/>
+    <tag k="building:levels" v="4"/>
+    <tag k="name" v="City Plaza Tower"/>
+  </way>
+
+  <!-- Terrain Feature 1: Urban Park / Lawn (landuse=grass, leisure=park) -->
+  <node id="201" visible="true" lat="48.1382" lon="11.5655"/>
+  <node id="202" visible="true" lat="48.1388" lon="11.5655"/>
+  <node id="203" visible="true" lat="48.1388" lon="11.5670"/>
+  <node id="204" visible="true" lat="48.1382" lon="11.5670"/>
+  <way id="200" visible="true">
+    <nd ref="201"/>
+    <nd ref="202"/>
+    <nd ref="203"/>
+    <nd ref="204"/>
+    <nd ref="201"/>
+    <tag k="landuse" v="grass"/>
+    <tag k="leisure" v="park"/>
+    <tag k="name" v="Central Garden"/>
+  </way>
+
+  <!-- Terrain Feature 2: Water Basin / Pond (natural=water) -->
+  <node id="301" visible="true" lat="48.1384" lon="11.5658"/>
+  <node id="302" visible="true" lat="48.1386" lon="11.5658"/>
+  <node id="303" visible="true" lat="48.1386" lon="11.5664"/>
+  <node id="304" visible="true" lat="48.1384" lon="11.5664"/>
+  <way id="300" visible="true">
+    <nd ref="301"/>
+    <nd ref="302"/>
+    <nd ref="303"/>
+    <nd ref="304"/>
+    <nd ref="301"/>
+    <tag k="natural" v="water"/>
+    <tag k="water" v="basin"/>
+    <tag k="name" v="Reflecting Pool"/>
+  </way>
+
+  <!-- Terrain Feature 3: Pedestrian Plaza / Square (place=square) -->
+  <node id="401" visible="true" lat="48.1392" lon="11.5625"/>
+  <node id="402" visible="true" lat="48.1397" lon="11.5625"/>
+  <node id="403" visible="true" lat="48.1397" lon="11.5640"/>
+  <node id="404" visible="true" lat="48.1392" lon="11.5640"/>
+  <way id="400" visible="true">
+    <nd ref="401"/>
+    <nd ref="402"/>
+    <nd ref="403"/>
+    <nd ref="404"/>
+    <nd ref="401"/>
+    <tag k="place" v="square"/>
+    <tag k="highway" v="pedestrian"/>
+    <tag k="area" v="yes"/>
+    <tag k="name" v="Town Market Square"/>
+  </way>
+</osm>
+

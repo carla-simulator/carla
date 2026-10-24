@@ -170,13 +170,6 @@ public class Carla :
       
     PublicIncludePaths.Add(ModuleDirectory);
 
-    if (EnableOSM2ODR)
-    {
-      // @TODO
-      PublicAdditionalLibraries.Add("");
-      throw new NotImplementedException();
-    }
-
     if (EnableChrono)
     {
       // @TODO

@@ -19,6 +19,7 @@
 #include "carla/geom/Transform.h"
 #include "carla/rpc/Actor.h"
 #include "carla/rpc/AttachmentType.h"
+#include "carla/rpc/CustomMeshDescription.h"
 #include "carla/rpc/EpisodeSettings.h"
 #include "carla/rpc/EnvironmentObject.h"
 #include "carla/rpc/LabelledPoint.h"
@@ -174,6 +175,11 @@ namespace client {
         const std::vector<float> &vertices,
         const std::vector<uint32_t> &triangles,
         const std::string &material);
+
+    uint64_t SpawnCustomMeshEx(const rpc::CustomMeshDescription &description);
+
+    std::vector<uint64_t> SpawnCustomMeshes(
+        const std::vector<rpc::CustomMeshDescription> &descriptions);
 
     SharedPtr<LightManager> GetLightManager() const;
 

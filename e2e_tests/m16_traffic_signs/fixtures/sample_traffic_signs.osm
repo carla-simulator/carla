@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<osm version="0.6" generator="CARLA Map Maker M16 Test Generator">
+  <bounds minlat="48.138" minlon="11.563" maxlat="48.143" maxlon="11.568"/>
+
+  <!-- Road nodes -->
+  <node id="1001" lat="48.1390" lon="11.5640" version="1"/>
+  <node id="1002" lat="48.1400" lon="11.5640" version="1"/>
+  <node id="1003" lat="48.1410" lon="11.5640" version="1"/>
+  <node id="1004" lat="48.1420" lon="11.5640" version="1"/>
+
+  <node id="1011" lat="48.1400" lon="11.5630" version="1"/>
+  <node id="1012" lat="48.1400" lon="11.5640" version="1"/>
+  <node id="1013" lat="48.1400" lon="11.5650" version="1"/>
+
+  <!-- StVO Traffic Signs Nodes -->
+  <!-- 1. Speed Limit 30 (StVO 274-30) -->
+  <node id="2001" lat="48.1392" lon="11.5641" version="1">
+    <tag k="traffic_sign" v="DE:274[30]"/>
+    <tag k="maxspeed" v="30"/>
+  </node>
+
+  <!-- 2. Speed Limit 50 (StVO 274-50) -->
+  <node id="2002" lat="48.1405" lon="11.5641" version="1">
+    <tag k="traffic_sign" v="DE:274[50]"/>
+    <tag k="maxspeed" v="50"/>
+  </node>
+
+  <!-- 3. Stop Sign (StVO 206) -->
+  <node id="2003" lat="48.1399" lon="11.5638" version="1">
+    <tag k="traffic_sign" v="DE:206"/>
+    <tag k="highway" v="stop"/>
+  </node>
+
+  <!-- 4. Yield / Give Way (StVO 205) -->
+  <node id="2004" lat="48.1401" lon="11.5648" version="1">
+    <tag k="traffic_sign" v="DE:205"/>
+    <tag k="highway" v="give_way"/>
+  </node>
+
+  <!-- 5. Priority Road (StVO 306) -->
+  <node id="2005" lat="48.1412" lon="11.5641" version="1">
+    <tag k="traffic_sign" v="DE:306"/>
+  </node>
+
+  <!-- 6. Danger Warning (StVO 101) -->
+  <node id="2006" lat="48.1418" lon="11.5641" version="1">
+    <tag k="traffic_sign" v="DE:101"/>
+  </node>
+
+  <!-- 7. Pedestrian Warning (StVO 133) -->
+  <node id="2007" lat="48.1395" lon="11.5641" version="1">
+    <tag k="traffic_sign" v="DE:133"/>
+  </node>
+
+  <!-- 8. Cyclist Warning (StVO 138) -->
+  <node id="2008" lat="48.1403" lon="11.5635" version="1">
+    <tag k="traffic_sign" v="DE:138"/>
+  </node>
+
+  <!-- Road Ways -->
+  <way id="3001" version="1">
+    <nd ref="1001"/>
+    <nd ref="1002"/>
+    <nd ref="1003"/>
+    <nd ref="1004"/>
+    <tag k="highway" v="primary"/>
+    <tag k="name" v="Sonnenstraße"/>
+    <tag k="maxspeed" v="50"/>
+  </way>
+
+  <way id="3002" version="1">
+    <nd ref="1011"/>
+    <nd ref="1012"/>
+    <nd ref="1013"/>
+    <tag k="highway" v="residential"/>
+    <tag k="name" v="Schwanthalerstraße"/>
+    <tag k="maxspeed" v="30"/>
+  </way>
+</osm>
+

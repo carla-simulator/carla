@@ -101,6 +101,157 @@ static void SpawnCustomMesh(
   self.SpawnCustomMesh(verts, tris, material);
 }
 
+static uint64_t SpawnCustomMeshEx(
+    carla::client::World &self,
+    const carla::rpc::CustomMeshDescription &description) {
+  carla::PythonUtil::ReleaseGIL unlock;
+  return self.SpawnCustomMeshEx(description);
+}
+
+static boost::python::list SpawnCustomMeshes(
+    carla::client::World &self,
+    const boost::python::object &descriptions) {
+  std::vector<carla::rpc::CustomMeshDescription> descs{
+      boost::python::stl_input_iterator<carla::rpc::CustomMeshDescription>(descriptions),
+      boost::python::stl_input_iterator<carla::rpc::CustomMeshDescription>()};
+  std::vector<uint64_t> ids;
+  {
+    carla::PythonUtil::ReleaseGIL unlock;
+    ids = self.SpawnCustomMeshes(descs);
+  }
+  boost::python::list result;
+  for (const uint64_t id : ids) {
+    result.append(id);
+  }
+  return result;
+}
+
+static std::vector<carla::rpc::Vector3D> ParseVector3DList(const boost::python::object &seq) {
+  using namespace boost::python;
+  std::vector<carla::rpc::Vector3D> out;
+  const ssize_t n = len(seq);
+  if (n == 0) {
+    return out;
+  }
+  object first = seq[0];
+  extract<float> first_float(first);
+  if (first_float.check() && !extract<carla::geom::Vector3D>(first).check()) {
+    if (n % 3 != 0) {
+      PyErr_SetString(PyExc_ValueError, "Flat float list for 3D vectors must have length divisible by 3");
+      throw_error_already_set();
+    }
+    out.reserve(static_cast<size_t>(n / 3));
+    for (ssize_t i = 0; i < n; i += 3) {
+      out.emplace_back(
+          extract<float>(seq[i]),
+          extract<float>(seq[i + 1]),
+          extract<float>(seq[i + 2]));
+    }
+    return out;
+  }
+  out.reserve(static_cast<size_t>(n));
+  for (ssize_t i = 0; i < n; ++i) {
+    object item = seq[i];
+    extract<carla::geom::Vector3D> vec_ext(item);
+    if (vec_ext.check()) {
+      out.push_back(vec_ext());
+    } else if (extract<carla::geom::Location>(item).check()) {
+      carla::geom::Location loc = extract<carla::geom::Location>(item);
+      out.emplace_back(loc.x, loc.y, loc.z);
+    } else {
+      out.emplace_back(
+          extract<float>(item[0]),
+          extract<float>(item[1]),
+          extract<float>(item[2]));
+    }
+  }
+  return out;
+}
+
+static std::vector<carla::rpc::Vector2D> ParseVector2DList(const boost::python::object &seq) {
+  using namespace boost::python;
+  std::vector<carla::rpc::Vector2D> out;
+  const ssize_t n = len(seq);
+  if (n == 0) {
+    return out;
+  }
+  object first = seq[0];
+  extract<float> first_float(first);
+  if (first_float.check() && !extract<carla::geom::Vector2D>(first).check()) {
+    if (n % 2 != 0) {
+      PyErr_SetString(PyExc_ValueError, "Flat float list for 2D vectors must have length divisible by 2");
+      throw_error_already_set();
+    }
+    out.reserve(static_cast<size_t>(n / 2));
+    for (ssize_t i = 0; i < n; i += 2) {
+      out.emplace_back(
+          extract<float>(seq[i]),
+          extract<float>(seq[i + 1]));
+    }
+    return out;
+  }
+  out.reserve(static_cast<size_t>(n));
+  for (ssize_t i = 0; i < n; ++i) {
+    object item = seq[i];
+    extract<carla::geom::Vector2D> vec_ext(item);
+    if (vec_ext.check()) {
+      out.push_back(vec_ext());
+    } else {
+      out.emplace_back(
+          extract<float>(item[0]),
+          extract<float>(item[1]));
+    }
+  }
+  return out;
+}
+
+static std::vector<int32_t> ParseTriangleList(const boost::python::object &seq) {
+  using namespace boost::python;
+  std::vector<int32_t> out;
+  const ssize_t n = len(seq);
+  if (n == 0) {
+    return out;
+  }
+  object first = seq[0];
+  extract<int32_t> first_int(first);
+  if (first_int.check()) {
+    out.reserve(static_cast<size_t>(n));
+    for (ssize_t i = 0; i < n; ++i) {
+      out.push_back(extract<int32_t>(seq[i]));
+    }
+    return out;
+  }
+  out.reserve(static_cast<size_t>(n * 3));
+  for (ssize_t i = 0; i < n; ++i) {
+    object tri = seq[i];
+    out.push_back(extract<int32_t>(tri[0]));
+    out.push_back(extract<int32_t>(tri[1]));
+    out.push_back(extract<int32_t>(tri[2]));
+  }
+  return out;
+}
+
+static std::vector<carla::rpc::Color> ParseColorList(const boost::python::object &seq) {
+  using namespace boost::python;
+  std::vector<carla::rpc::Color> out;
+  const ssize_t n = len(seq);
+  out.reserve(static_cast<size_t>(n));
+  for (ssize_t i = 0; i < n; ++i) {
+    object item = seq[i];
+    extract<carla::sensor::data::Color> col_ext(item);
+    if (col_ext.check()) {
+      auto c = col_ext();
+      out.emplace_back(c.r, c.g, c.b);
+    } else {
+      out.emplace_back(
+          extract<uint8_t>(item[0]),
+          extract<uint8_t>(item[1]),
+          extract<uint8_t>(item[2]));
+    }
+  }
+  return out;
+}
+
 // set_sky_light_map(width, height, pixels, intensity, face_size): `pixels` is
 // any contiguous buffer (bytes, bytearray, numpy array) of float32 linear RGB
 // or RGBA, row-major, top row first, width*height*(3|4) values. See
@@ -357,6 +508,108 @@ void export_world() {
     })
   ;
 
+  class_<cr::CustomMaterialParameters>("CustomMaterialParameters")
+    .def(init<>())
+    .add_property("base_color",
+        +[](const cr::CustomMaterialParameters &self) -> csd::Color {
+          return csd::Color(self.base_color.r, self.base_color.g, self.base_color.b, 255);
+        },
+        +[](cr::CustomMaterialParameters &self, const csd::Color &c) {
+          self.base_color = cr::Color(c.r, c.g, c.b);
+        })
+    .def_readwrite("roughness", &cr::CustomMaterialParameters::roughness)
+    .def_readwrite("metallic", &cr::CustomMaterialParameters::metallic)
+    .def_readwrite("specular", &cr::CustomMaterialParameters::specular)
+    .add_property("uv_scale",
+        +[](const cr::CustomMaterialParameters &self) -> cg::Vector2D {
+          return cg::Vector2D(self.uv_scale.x, self.uv_scale.y);
+        },
+        +[](cr::CustomMaterialParameters &self, const cg::Vector2D &v) {
+          self.uv_scale = cr::Vector2D(v.x, v.y);
+        })
+    .def_readwrite("albedo_texture_path", &cr::CustomMaterialParameters::albedo_texture_path)
+    .def_readwrite("normal_texture_path", &cr::CustomMaterialParameters::normal_texture_path)
+    .def_readwrite("roughness_texture_path", &cr::CustomMaterialParameters::roughness_texture_path)
+  ;
+
+  class_<cr::CustomMeshDescription>("CustomMeshDescription")
+    .def(init<>())
+    .def_readwrite("name", &cr::CustomMeshDescription::name)
+    .add_property("transform",
+        +[](const cr::CustomMeshDescription &self) -> cg::Transform {
+          return cg::Transform(self.transform);
+        },
+        +[](cr::CustomMeshDescription &self, const cg::Transform &t) {
+          self.transform = cr::Transform(t);
+        })
+    .add_property("scale",
+        +[](const cr::CustomMeshDescription &self) -> cg::Vector3D {
+          return cg::Vector3D(self.scale.x, self.scale.y, self.scale.z);
+        },
+        +[](cr::CustomMeshDescription &self, const cg::Vector3D &s) {
+          self.scale = cr::Vector3D(s.x, s.y, s.z);
+        })
+    .add_property("vertices",
+        +[](const cr::CustomMeshDescription &self) {
+          list out;
+          for (const auto &v : self.vertices) {
+            out.append(cg::Vector3D(v.x, v.y, v.z));
+          }
+          return out;
+        },
+        +[](cr::CustomMeshDescription &self, const object &seq) {
+          self.vertices = ParseVector3DList(seq);
+        })
+    .add_property("triangles",
+        +[](const cr::CustomMeshDescription &self) {
+          list out;
+          for (const int32_t idx : self.triangles) {
+            out.append(idx);
+          }
+          return out;
+        },
+        +[](cr::CustomMeshDescription &self, const object &seq) {
+          self.triangles = ParseTriangleList(seq);
+        })
+    .add_property("normals",
+        +[](const cr::CustomMeshDescription &self) {
+          list out;
+          for (const auto &n : self.normals) {
+            out.append(cg::Vector3D(n.x, n.y, n.z));
+          }
+          return out;
+        },
+        +[](cr::CustomMeshDescription &self, const object &seq) {
+          self.normals = ParseVector3DList(seq);
+        })
+    .add_property("uvs",
+        +[](const cr::CustomMeshDescription &self) {
+          list out;
+          for (const auto &uv : self.uvs) {
+            out.append(cg::Vector2D(uv.x, uv.y));
+          }
+          return out;
+        },
+        +[](cr::CustomMeshDescription &self, const object &seq) {
+          self.uvs = ParseVector2DList(seq);
+        })
+    .add_property("vertex_colors",
+        +[](const cr::CustomMeshDescription &self) {
+          list out;
+          for (const auto &c : self.vertex_colors) {
+            out.append(csd::Color(c.r, c.g, c.b, 255));
+          }
+          return out;
+        },
+        +[](cr::CustomMeshDescription &self, const object &seq) {
+          self.vertex_colors = ParseColorList(seq);
+        })
+    .def_readwrite("semantic_label", &cr::CustomMeshDescription::semantic_label)
+    .def_readwrite("enable_collision", &cr::CustomMeshDescription::enable_collision)
+    .def_readwrite("material_preset", &cr::CustomMeshDescription::material_preset)
+    .def_readwrite("material_params", &cr::CustomMeshDescription::material_params)
+  ;
+
 #define SPAWN_ACTOR_WITHOUT_GIL(fn) +[]( \
         cc::World &self, \
         const cc::ActorBlueprint &blueprint, \
@@ -415,6 +668,8 @@ void export_world() {
     .def("reset_all_traffic_lights", &cc::World::ResetAllTrafficLights)
     .def("spawn_custom_mesh", &SpawnCustomMesh,
         (arg("vertices"), arg("triangles"), arg("material")="grass"))
+    .def("spawn_custom_mesh_ex", &SpawnCustomMeshEx, (arg("description")))
+    .def("spawn_custom_meshes", &SpawnCustomMeshes, (arg("descriptions")))
     .def("freeze_all_traffic_lights", &cc::World::FreezeAllTrafficLights, (arg("frozen")))
     .def("get_level_bbs", &GetLevelBBs, (arg("bb_type")=cr::CityObjectLabel::Any))
     .def("get_environment_objects", &GetEnvironmentObjects, (arg("object_type")=cr::CityObjectLabel::Any))

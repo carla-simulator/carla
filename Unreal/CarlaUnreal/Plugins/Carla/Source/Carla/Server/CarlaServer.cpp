@@ -24,6 +24,7 @@
 #include "Carla/Game/Tagger.h"
 #include "Carla/Game/CarlaStatics.h"
 #include "Carla/ContentPacks/ContentPackManager.h"
+#include "Carla/MapGen/CarlaMapBundle.h"
 #include "Carla/Vehicle/MovementComponents/CarSimManagerComponent.h"
 #include "Carla/Vehicle/MovementComponents/ChronoMovementComponent.h"
 #include "Carla/Lights/CarlaLightSubsystem.h"
@@ -48,6 +49,7 @@
 #include <carla/rpc/Command.h>
 #include <carla/rpc/CommandResponse.h>
 #include <carla/rpc/ContentPackInfo.h>
+#include <carla/rpc/CustomMeshDescription.h>
 #include <carla/rpc/CustomV2XBytes.h>
 #include <carla/rpc/DebugShape.h>
 #include <carla/rpc/EnvironmentObject.h>
@@ -82,7 +84,10 @@
 
 #include <util/ue-header-guard-begin.h>
 #include "EngineUtils.h"
+#include "Engine/CollisionProfile.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "ImageUtils.h"
+#include "Materials/MaterialInstanceDynamic.h"
 #include "Misc/FileHelper.h"
 #include "Animation/PoseSnapshot.h"
 #include <util/ue-header-guard-end.h>
@@ -435,6 +440,50 @@ void FCarlaServer::FPimpl::BindActions()
     return R<void>::Success();
   };
 
+  BIND_SYNC(load_map_bundle_files) << [this](
+      const std::string &map_name,
+      const std::unordered_map<std::string, std::vector<uint8_t>> &files,
+      const bool reset_settings) -> R<void>
+  {
+    CARLA_ENSURE_GAME_THREAD();
+    REQUIRE_CARLA_EPISODE();
+
+    if (map_name.empty() || files.empty())
+    {
+      RESPOND_ERROR("load_map_bundle_files: map_name and files must not be empty");
+    }
+
+    const FString MapNameF = cr::ToFString(map_name);
+    const FString TargetDir = FPaths::ConvertRelativePathToFull(
+        FPaths::ProjectSavedDir() / TEXT("Maps") / MapNameF);
+
+    IFileManager &FileManager = IFileManager::Get();
+    for (const auto &Pair : files)
+    {
+      const FString RelPath = cr::ToFString(Pair.first);
+      const FString FullPath = TargetDir / RelPath;
+      const FString DirPath = FPaths::GetPath(FullPath);
+      FileManager.MakeDirectory(*DirPath, true);
+
+      if (!FFileHelper::SaveArrayToFile(
+          TArrayView<const uint8>(Pair.second.data(), Pair.second.size()), *FullPath))
+      {
+        FString Err = FString::Printf(TEXT("load_map_bundle_files: failed to write file '%s'"), *FullPath);
+        RESPOND_ERROR_FSTRING(Err);
+      }
+    }
+
+    UCarlaStatics::InvalidateMapCache();
+
+    if (!Episode->LoadNewEpisode(MapNameF, reset_settings))
+    {
+      FString Err = FString::Printf(TEXT("load_map_bundle_files: failed to load map '%s'"), *MapNameF);
+      RESPOND_ERROR_FSTRING(Err);
+    }
+
+    return R<void>::Success();
+  };
+
   // ~~ Content packs ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
   BIND_SYNC(get_content_packs) << [this]() -> R<std::vector<cr::ContentPackInfo>>
@@ -653,10 +702,19 @@ void FCarlaServer::FPimpl::BindActions()
   {
     REQUIRE_CARLA_EPISODE();
     ACarlaGameModeBase* GameMode = UCarlaStatics::GetGameMode(Episode->GetWorld());
+    UCarlaGameInstance* GameInstance = UCarlaStatics::GetGameInstance(Episode->GetWorld());
     const auto &SpawnPoints = Episode->GetRecommendedSpawnPoints();
-    FString FullMapPath = GameMode->GetFullMapPath();
-    FString MapDir = FullMapPath.RightChop(FullMapPath.Find("Content/", ESearchCase::CaseSensitive) + 8);
-    MapDir += "/" + Episode->GetMapName();
+    FString MapDir;
+    if (GameInstance && GameInstance->HasActiveMapBundle())
+    {
+      MapDir = TEXT("/Game/Carla/Maps/") + Episode->GetMapName();
+    }
+    else
+    {
+      FString FullMapPath = GameMode->GetFullMapPath();
+      MapDir = FullMapPath.RightChop(FullMapPath.Find("Content/", ESearchCase::CaseSensitive) + 8);
+      MapDir += "/" + Episode->GetMapName();
+    }
     return cr::MapInfo{
       cr::FromFString(MapDir),
       MakeVectorFromTArray<cg::Transform>(SpawnPoints)};
@@ -671,8 +729,13 @@ void FCarlaServer::FPimpl::BindActions()
   BIND_SYNC(get_navigation_mesh) << [this]() -> R<std::vector<uint8_t>>
   {
     REQUIRE_CARLA_EPISODE();
-    // A generated OpenDRIVE world builds its navmesh in the background.
-    UCarlaEpisode::WaitForPendingNavigationBuild(60.0);
+    UCarlaGameInstance* GameInstance = UCarlaStatics::GetGameInstance(Episode->GetWorld());
+    const bool bHasMapBundle = (GameInstance != nullptr) && GameInstance->HasActiveMapBundle();
+    if (!bHasMapBundle)
+    {
+      // A generated OpenDRIVE world builds its navmesh in the background.
+      UCarlaEpisode::WaitForPendingNavigationBuild(60.0);
+    }
     auto FileContents = FNavigationMesh::Load(Episode->GetMapName());
     // make a mem copy (from TArray to std::vector)
     std::vector<uint8_t> Result(FileContents.Num());
@@ -691,6 +754,8 @@ void FCarlaServer::FPimpl::BindActions()
 
     // Get the map's folder absolute path and check if it's in its own folder
     ACarlaGameModeBase* GameMode = UCarlaStatics::GetGameMode(Episode->GetWorld());
+    UCarlaGameInstance* GameInstance = UCarlaStatics::GetGameInstance(Episode->GetWorld());
+    const bool bHasMapBundle = (GameInstance != nullptr) && GameInstance->HasActiveMapBundle();
     const auto mapDir = GameMode->GetFullMapPath();
     const auto folderDir = mapDir + "/" + folder.c_str();
     const auto fileName = mapDir.EndsWith(Episode->GetMapName()) ? "*" : Episode->GetMapName();
@@ -700,7 +765,7 @@ void FCarlaServer::FPimpl::BindActions()
     // UCarlaEpisode::LoadNewOpendriveEpisode); copies of OpenDriveMap.* in
     // the content dir (cooked into the base pak) are stale by construction
     // and must never be served.
-    const bool bGeneratedWorld = Episode->GetMapName().Equals(TEXT("OpenDriveMap"), ESearchCase::IgnoreCase);
+    const bool bGeneratedWorld = Episode->GetMapName().Equals(TEXT("OpenDriveMap"), ESearchCase::IgnoreCase) || bHasMapBundle;
     TArray<FString> Files;
     if (!bGeneratedWorld)
     {
@@ -717,7 +782,7 @@ void FCarlaServer::FPimpl::BindActions()
       const FString Folder = UTF8_TO_TCHAR(folder.c_str());
       const bool bWantXODR = Folder.IsEmpty() || Folder.StartsWith(TEXT("OpenDrive"), ESearchCase::IgnoreCase);
       const bool bWantNav = Folder.IsEmpty() || Folder.StartsWith(TEXT("Nav"), ESearchCase::IgnoreCase);
-      if (bWantNav)
+      if (bWantNav && !bHasMapBundle)
       {
         // The client asks for the navmesh right after load_world; RecastBuilder
         // may still be running (bounded wait, logs on failure).
@@ -3490,7 +3555,346 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
 
   // ~~ Spawn custom mesh ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-  BIND_SYNC(spawn_custom_mesh) << [this](
+  static const TMap<FString, FString> CustomMeshMaterialCatalog = {
+      // Roads & sidewalks
+      {TEXT("road"), TEXT("/Game/Carla/Static/GenericMaterials/Roads/MI_Road_Asphalt_A.MI_Road_Asphalt_A")},
+      {TEXT("road_asphalt"), TEXT("/Game/Carla/Static/GenericMaterials/Roads/MI_Road_Asphalt_A.MI_Road_Asphalt_A")},
+      {TEXT("road_worn"), TEXT("/Game/Carla/Static/GenericMaterials/Roads/MI_Road_Asphalt_B.MI_Road_Asphalt_B")},
+      {TEXT("road_wet"), TEXT("/Game/Carla/Static/GenericMaterials/Roads/MI_Road_Asphalt_B.MI_Road_Asphalt_B")},
+      {TEXT("road_rural"), TEXT("/Game/Carla/Static/GenericMaterials/Roads/MI_Road_Rural_A.MI_Road_Rural_A")},
+      {TEXT("sidewalk"), TEXT("/Game/Carla/Static/GenericMaterials/Sidewalk/MI_Sidewalk_Apartment.MI_Sidewalk_Apartment")},
+      {TEXT("sidewalk_concrete"), TEXT("/Game/Carla/Static/GenericMaterials/Sidewalk/MI_Sidewalk_Apartment.MI_Sidewalk_Apartment")},
+      {TEXT("sidewalk_stone"), TEXT("/Game/Carla/Static/GenericMaterials/Sidewalk/MI_sidewalk_02.MI_sidewalk_02")},
+      {TEXT("sidewalk_tiles"), TEXT("/Game/Carla/Static/GenericMaterials/Sidewalk/MI_sidewalk_01.MI_sidewalk_01")},
+      {TEXT("sidewalk_residential"), TEXT("/Game/Carla/Static/GenericMaterials/Sidewalk/MI_Sidewalk_Apartment.MI_Sidewalk_Apartment")},
+      {TEXT("crosswalk"), TEXT("/Game/Carla/Static/GenericMaterials/Roads/MI_Road_Asphalt_B_LaneMarkingWhite.MI_Road_Asphalt_B_LaneMarkingWhite")},
+      {TEXT("curb"), TEXT("/Game/Carla/Static/GenericMaterials/Gutters_Curbs/Curb/MI_CurbDirty01.MI_CurbDirty01")},
+      {TEXT("gutter"), TEXT("/Game/Carla/Static/GenericMaterials/Gutters_Curbs/Curb/MI_CurbDirty01.MI_CurbDirty01")},
+      {TEXT("road_line_white"), TEXT("/Game/Carla/Static/GenericMaterials/Roads/MI_Road_Asphalt_B_LaneMarkingWhite.MI_Road_Asphalt_B_LaneMarkingWhite")},
+      {TEXT("road_line_yellow"), TEXT("/Game/Carla/Static/GenericMaterials/Roads/MI_Road_Asphalt_B_LaneMarkingYellow.MI_Road_Asphalt_B_LaneMarkingYellow")},
+      // Terrain & ground
+      {TEXT("terrain"), TEXT("/Game/Carla/Static/GenericMaterials/Ground/MI_LargeLandscape_Grass.MI_LargeLandscape_Grass")},
+      {TEXT("grass"), TEXT("/Game/Carla/Static/GenericMaterials/Ground/MI_LargeLandscape_Grass.MI_LargeLandscape_Grass")},
+      {TEXT("grass_yard"), TEXT("/Game/Carla/Static/GenericMaterials/Ground/MI_LargeLandscape_Grass.MI_LargeLandscape_Grass")},
+      {TEXT("dirt"), TEXT("/Game/Carla/Static/GenericMaterials/Ground/MI_Dirt.MI_Dirt")},
+      {TEXT("sand"), TEXT("/Game/Carla/Static/GenericMaterials/Ground/MI_Dirt.MI_Dirt")},
+      {TEXT("gravel"), TEXT("/Game/Carla/Static/GenericMaterials/Ground/MI_LargeLandscape_Interurban.MI_LargeLandscape_Interurban")},
+      {TEXT("rock"), TEXT("/Game/Carla/Static/GenericMaterials/Ground/MI_LargeLandscape_Interurban.MI_LargeLandscape_Interurban")},
+      {TEXT("water"), TEXT("/Game/Carla/Static/GenericMaterials/Water/MI_WaterLake01.MI_WaterLake01")},
+      // Buildings & structures
+      {TEXT("building"), TEXT("/Game/Carla/Static/GenericMaterials/Facade/MI_Facade01.MI_Facade01")},
+      {TEXT("building_concrete"), TEXT("/Game/Carla/Static/GenericMaterials/Facade/MI_Facade01.MI_Facade01")},
+      {TEXT("building_brick"), TEXT("/Game/Carla/Static/GenericMaterials/Facade/MI_Facade01.MI_Facade01")},
+      {TEXT("building_plaster"), TEXT("/Game/Carla/Static/GenericMaterials/Facade/MI_Facade01.MI_Facade01")},
+      {TEXT("building_stone"), TEXT("/Game/Carla/Static/Building/Buildings/BuildingComplete/00_IndividualComponents/Apt34/MI_Apt34.MI_Apt34")},
+      {TEXT("building_glass"), TEXT("/Game/Carla/Static/GenericMaterials/Facade/MI_Facade01.MI_Facade01")},
+      {TEXT("building_modern"), TEXT("/Game/Carla/Static/GenericMaterials/Facade/MI_Facade01.MI_Facade01")},
+      {TEXT("roof"), TEXT("/Game/Carla/Static/Building/Buildings/BuildingComplete/00_GenericComponents/Apt32_to_35/MI_Apt_Roof.MI_Apt_Roof")},
+      {TEXT("roof_tiles"), TEXT("/Game/Carla/Static/Building/Buildings/BuildingComplete/00_GenericComponents/Apt32_to_35/MI_Apt_Roof.MI_Apt_Roof")},
+      {TEXT("roof_metal"), TEXT("/Game/Carla/Static/GenericMaterials/00_LegacyMaterials/Building/RoofBitumen/MI_RoofBitumen_02.MI_RoofBitumen_02")},
+      {TEXT("roof_bitumen"), TEXT("/Game/Carla/Static/GenericMaterials/00_LegacyMaterials/Building/RoofBitumen/MI_RoofBitumen_02.MI_RoofBitumen_02")},
+      {TEXT("wall_concrete"), TEXT("/Game/Carla/Static/Wall/00_LegacyAssets/Materials/Wall04/MI_Wall04.MI_Wall04")},
+      {TEXT("wall_brick"), TEXT("/Game/Carla/Static/Building/Buildings/BuildingComplete/00_GenericComponents/Apt32_to_35/MI_Apt_Bricks.MI_Apt_Bricks")},
+      {TEXT("wall_stone"), TEXT("/Game/Carla/Static/GenericMaterials/Wall/MI_CityWall01.MI_CityWall01")},
+      {TEXT("fence"), TEXT("/Game/Carla/Static/GenericMaterials/Metal/MI_Metal_Base.MI_Metal_Base")},
+      {TEXT("fence_metal"), TEXT("/Game/Carla/Static/GenericMaterials/Metal/MI_Metal_Base.MI_Metal_Base")},
+      {TEXT("fence_wood"), TEXT("/Game/Carla/Static/GenericMaterials/00_LegacyMaterials/Wood/MI_Wood01.MI_Wood01")},
+      {TEXT("hedge"), TEXT("/Game/Carla/Static/Vegetation/00_LegacyAssets/Materials/Bush01/M_Bush01.M_Bush01")},
+      // Fences, barriers & bridges
+      {TEXT("guardrail"), TEXT("/Game/Carla/Static/Static/00_LegacyAssets/Materials/ParkingBarrier/MI_ParkingBarrier_Opt.MI_ParkingBarrier_Opt")},
+      {TEXT("custom_pbr"), TEXT("/Game/Carla/Static/GenericMaterials/00_LegacyMaterials/Concrete/MI_Concrete_01.MI_Concrete_01")}};
+
+  auto ResolveCustomMeshMaterial = [](UObject *Outer, const cr::CustomMeshDescription &Desc) -> UMaterialInterface *
+  {
+    const FString PresetName = cr::ToFString(Desc.material_preset).TrimStartAndEnd();
+    const FString LowerPreset = PresetName.ToLower();
+    const FString *FoundPath = CustomMeshMaterialCatalog.Find(LowerPreset);
+    const FString ResolvedPath = (FoundPath != nullptr)
+        ? *FoundPath
+        : (PresetName.IsEmpty()
+            ? CustomMeshMaterialCatalog[TEXT("building_concrete")]
+            : PresetName);
+
+    UMaterialInterface *BaseMat = LoadObject<UMaterialInterface>(nullptr, *ResolvedPath);
+    if (BaseMat == nullptr)
+    {
+      BaseMat = LoadObject<UMaterialInterface>(
+          nullptr, *CustomMeshMaterialCatalog[TEXT("building_concrete")]);
+    }
+    if (BaseMat == nullptr)
+    {
+      return nullptr;
+    }
+
+    const auto &MP = Desc.material_params;
+    const bool bHasCustomTextures =
+        !MP.albedo_texture_path.empty() ||
+        !MP.normal_texture_path.empty() ||
+        !MP.roughness_texture_path.empty();
+    const bool bHasCustomScalars =
+        LowerPreset == TEXT("custom_pbr") ||
+        MP.base_color.r != 200 || MP.base_color.g != 200 || MP.base_color.b != 200 ||
+        FMath::Abs(MP.roughness - 0.8f) > 1e-4f ||
+        FMath::Abs(MP.metallic - 0.0f) > 1e-4f ||
+        FMath::Abs(MP.specular - 0.5f) > 1e-4f;
+
+    if (!bHasCustomTextures && !bHasCustomScalars)
+    {
+      return BaseMat;
+    }
+
+    UMaterialInstanceDynamic *DynMat = UMaterialInstanceDynamic::Create(BaseMat, Outer);
+    if (DynMat == nullptr)
+    {
+      return BaseMat;
+    }
+
+    const FLinearColor LinearColor = FLinearColor(FColor(
+        MP.base_color.r, MP.base_color.g, MP.base_color.b, 255));
+    for (const TCHAR *Param : {TEXT("BaseColor"), TEXT("Color"), TEXT("Tint"), TEXT("AlbedoTint"), TEXT("Base Color")})
+    {
+      DynMat->SetVectorParameterValue(FName(Param), LinearColor);
+    }
+    for (const TCHAR *Param : {TEXT("Roughness"), TEXT("RoughnessScale"), TEXT("RoughnessMult")})
+    {
+      DynMat->SetScalarParameterValue(FName(Param), MP.roughness);
+    }
+    for (const TCHAR *Param : {TEXT("Metallic"), TEXT("Metalness")})
+    {
+      DynMat->SetScalarParameterValue(FName(Param), MP.metallic);
+    }
+    for (const TCHAR *Param : {TEXT("Specular")})
+    {
+      DynMat->SetScalarParameterValue(FName(Param), MP.specular);
+    }
+
+    auto ApplyTextureIfValid = [&](const std::string &PathStr, std::initializer_list<const TCHAR *> ParamNames)
+    {
+      if (PathStr.empty())
+      {
+        return;
+      }
+      const FString FilePath = cr::ToFString(PathStr);
+      if (!FPaths::FileExists(FilePath))
+      {
+        return;
+      }
+      if (UTexture2D *Tex = FImageUtils::ImportFileAsTexture2D(FilePath))
+      {
+        for (const TCHAR *Param : ParamNames)
+        {
+          DynMat->SetTextureParameterValue(FName(Param), Tex);
+        }
+      }
+    };
+
+    ApplyTextureIfValid(MP.albedo_texture_path, {TEXT("BaseColor"), TEXT("Albedo"), TEXT("Diffuse"), TEXT("BaseColorMap")});
+    ApplyTextureIfValid(MP.normal_texture_path, {TEXT("Normal"), TEXT("NormalMap"), TEXT("Normals")});
+    ApplyTextureIfValid(MP.roughness_texture_path, {TEXT("Roughness"), TEXT("RoughnessMap"), TEXT("ORM")});
+
+    return DynMat;
+  };
+
+  auto SpawnOneCustomMesh = [ResolveCustomMeshMaterial](
+      UWorld *World,
+      ACarlaGameModeBase *GameMode,
+      const cr::CustomMeshDescription &Desc,
+      FString &OutError) -> uint64
+  {
+    if (Desc.vertices.empty())
+    {
+      OutError = TEXT("spawn_custom_mesh_ex: vertices must be non-empty");
+      return 0;
+    }
+    if (Desc.triangles.empty() || (Desc.triangles.size() % 3u) != 0u)
+    {
+      OutError = TEXT("spawn_custom_mesh_ex: triangles must be a non-empty index-triple list");
+      return 0;
+    }
+    const int32 NumVertices = static_cast<int32>(Desc.vertices.size());
+    for (const int32_t Index : Desc.triangles)
+    {
+      if (Index < 0 || Index >= NumVertices)
+      {
+        OutError = TEXT("spawn_custom_mesh_ex: triangle index out of range");
+        return 0;
+      }
+    }
+
+    const FVector Scale(
+        FMath::Abs(Desc.scale.x) > 1e-6f ? Desc.scale.x : 1.0f,
+        FMath::Abs(Desc.scale.y) > 1e-6f ? Desc.scale.y : 1.0f,
+        FMath::Abs(Desc.scale.z) > 1e-6f ? Desc.scale.z : 1.0f);
+
+    // Client sends metres in the client (UE-handed) frame; UE wants cm.
+    TArray<FVector> Verts;
+    Verts.Reserve(NumVertices);
+    for (const auto &V : Desc.vertices)
+    {
+      Verts.Add(FVector(
+          V.x * Scale.X * 100.0f,
+          V.y * Scale.Y * 100.0f,
+          V.z * Scale.Z * 100.0f));
+    }
+
+    TArray<int32> Tris;
+    Tris.Reserve(Desc.triangles.size());
+    for (const int32_t Index : Desc.triangles)
+    {
+      Tris.Add(static_cast<int32>(Index));
+    }
+
+    TArray<FVector> Normals;
+    if (Desc.normals.size() == Desc.vertices.size())
+    {
+      Normals.Reserve(NumVertices);
+      for (const auto &N : Desc.normals)
+      {
+        Normals.Add(FVector(N.x, N.y, N.z).GetSafeNormal(1e-8, FVector::UpVector));
+      }
+    }
+    else
+    {
+      Normals.Init(FVector::ZeroVector, Verts.Num());
+      for (int32 i = 0; i + 2 < Tris.Num(); i += 3)
+      {
+        const FVector &V0 = Verts[Tris[i]];
+        const FVector &V1 = Verts[Tris[i + 1]];
+        const FVector &V2 = Verts[Tris[i + 2]];
+        const FVector FaceNormal = FVector::CrossProduct(V2 - V0, V1 - V0);
+        Normals[Tris[i]] += FaceNormal;
+        Normals[Tris[i + 1]] += FaceNormal;
+        Normals[Tris[i + 2]] += FaceNormal;
+      }
+      for (FVector &Normal : Normals)
+      {
+        Normal = Normal.GetSafeNormal(1e-8, FVector::UpVector);
+      }
+    }
+
+    const float UVScaleX = FMath::Abs(Desc.material_params.uv_scale.x) > 1e-4f
+        ? Desc.material_params.uv_scale.x
+        : 1.0f;
+    const float UVScaleY = FMath::Abs(Desc.material_params.uv_scale.y) > 1e-4f
+        ? Desc.material_params.uv_scale.y
+        : 1.0f;
+
+    TArray<FVector2D> UV0;
+    UV0.Reserve(Verts.Num());
+    if (Desc.uvs.size() == Desc.vertices.size())
+    {
+      for (const auto &UV : Desc.uvs)
+      {
+        UV0.Add(FVector2D(UV.x * UVScaleX, UV.y * UVScaleY));
+      }
+    }
+    else
+    {
+      for (int32 i = 0; i < Verts.Num(); ++i)
+      {
+        const FVector &V = Verts[i];
+        const FVector &N = Normals[i];
+        if (FMath::Abs(N.Z) >= 0.5f)
+        {
+          UV0.Add(FVector2D((V.X / 500.0f) * UVScaleX, (V.Y / 500.0f) * UVScaleY));
+        }
+        else if (FMath::Abs(N.X) >= FMath::Abs(N.Y))
+        {
+          UV0.Add(FVector2D((V.Y / 500.0f) * UVScaleX, (V.Z / 500.0f) * UVScaleY));
+        }
+        else
+        {
+          UV0.Add(FVector2D((V.X / 500.0f) * UVScaleX, (V.Z / 500.0f) * UVScaleY));
+        }
+      }
+    }
+
+    TArray<FLinearColor> VertexColors;
+    if (Desc.vertex_colors.size() == Desc.vertices.size())
+    {
+      VertexColors.Reserve(Verts.Num());
+      for (const auto &C : Desc.vertex_colors)
+      {
+        VertexColors.Add(FLinearColor(FColor(C.r, C.g, C.b, 255)));
+      }
+    }
+
+    const FTransform ActorTransform(Desc.transform);
+    FActorSpawnParameters SpawnParams;
+    SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+    ACarlaProceduralMeshActor *MeshActor = World->SpawnActor<ACarlaProceduralMeshActor>(
+        ACarlaProceduralMeshActor::StaticClass(),
+        ActorTransform,
+        SpawnParams);
+    if (MeshActor == nullptr)
+    {
+      OutError = TEXT("spawn_custom_mesh_ex: failed to spawn mesh actor");
+      return 0;
+    }
+
+    MeshActor->CustomMeshName = cr::ToFString(Desc.name);
+    if (MeshActor->CustomMeshName.IsEmpty())
+    {
+      MeshActor->CustomMeshName = MeshActor->GetName();
+    }
+
+    UProceduralMeshComponent *PMC = MeshActor->MeshComponent;
+    // Synchronous cooking ensures immediate raycasts, ground projections,
+    // and vehicle spawns on the same tick hit this mesh without delay.
+    PMC->bUseAsyncCooking = false;
+    PMC->bUseComplexAsSimpleCollision = true;
+    PMC->CreateMeshSection_LinearColor(
+        0,
+        Verts,
+        Tris,
+        Normals,
+        UV0,
+        VertexColors,
+        TArray<FProcMeshTangent>(),
+        Desc.enable_collision);
+
+    if (Desc.enable_collision)
+    {
+      PMC->SetCollisionProfileName(UCollisionProfile::BlockAll_ProfileName);
+      PMC->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+      PMC->SetCollisionObjectType(ECollisionChannel::ECC_WorldStatic);
+      PMC->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Block);
+      PMC->SetCollisionResponseToChannel(ECollisionChannel::ECC_GameTraceChannel2, ECollisionResponse::ECR_Block);
+      PMC->SetCollisionResponseToChannel(ECollisionChannel::ECC_GameTraceChannel3, ECollisionResponse::ECR_Overlap);
+    }
+    else
+    {
+      PMC->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+    }
+
+    if (UMaterialInterface *Material = ResolveCustomMeshMaterial(MeshActor, Desc))
+    {
+      PMC->SetMaterial(0, Material);
+    }
+
+    PMC->ComponentTags.Empty();
+    ATagger::SetStencilValue(*PMC, MeshActor->GetUniqueID(), Desc.semantic_label, true);
+    PMC->CustomDepthStencilValue = static_cast<int32>(Desc.semantic_label);
+    PMC->ComponentTags.Add(FName(*ATagger::GetTagAsString(Desc.semantic_label)));
+    PMC->UpdateBounds();
+    PMC->MarkRenderStateDirty();
+
+    uint64 EnvObjectId = 0;
+    if (GameMode != nullptr && GameMode->GetObjectRegister() != nullptr)
+    {
+      EnvObjectId = GameMode->GetObjectRegister()->RegisterPMCComponents(MeshActor);
+    }
+    if (EnvObjectId == 0)
+    {
+      const FString FallbackKey = MeshActor->GetName();
+      EnvObjectId = CityHash64(TCHAR_TO_ANSI(*FallbackKey), FallbackKey.Len());
+      MeshActor->EnvironmentObjectId = EnvObjectId;
+    }
+
+    return EnvObjectId;
+  };
+
+  BIND_SYNC(spawn_custom_mesh) << [this, SpawnOneCustomMesh](
       std::vector<float> vertices,
       std::vector<uint32_t> triangles,
       std::string material) -> R<void>
@@ -3506,98 +3910,72 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
     {
       RESPOND_ERROR("spawn_custom_mesh: triangles must be a non-empty index-triple list");
     }
-    const uint32_t NumVertices = vertices.size() / 3u;
+
+    cr::CustomMeshDescription Desc;
+    Desc.name = "CustomMesh";
+    Desc.semantic_label = cr::CityObjectLabel::Terrain;
+    Desc.enable_collision = true;
+    Desc.material_preset = material.empty() ? "grass" : material;
+    const size_t NumVertices = vertices.size() / 3u;
+    Desc.vertices.reserve(NumVertices);
+    for (size_t i = 0u; i < NumVertices; ++i)
+    {
+      Desc.vertices.emplace_back(
+          vertices[3u * i + 0u],
+          vertices[3u * i + 1u],
+          vertices[3u * i + 2u]);
+    }
+    Desc.triangles.reserve(triangles.size());
     for (const uint32_t Index : triangles)
     {
-      if (Index >= NumVertices)
-      {
-        RESPOND_ERROR("spawn_custom_mesh: triangle index out of range");
-      }
+      Desc.triangles.push_back(static_cast<int32_t>(Index));
     }
 
-    // Client sends metres in the client (UE-handed) frame; UE wants cm.
-    TArray<FVector> Verts;
-    Verts.Reserve(NumVertices);
-    for (uint32_t i = 0u; i < NumVertices; ++i)
+    ACarlaGameModeBase *GameMode = UCarlaStatics::GetGameMode(World);
+    FString Error;
+    if (SpawnOneCustomMesh(World, GameMode, Desc, Error) == 0)
     {
-      Verts.Add(FVector(
-          vertices[3u * i + 0u] * 100.0f,
-          vertices[3u * i + 1u] * 100.0f,
-          vertices[3u * i + 2u] * 100.0f));
+      RESPOND_ERROR_FSTRING(Error);
     }
-    TArray<int32> Tris;
-    Tris.Reserve(triangles.size());
-    for (const uint32_t Index : triangles)
-    {
-      Tris.Add(static_cast<int32>(Index));
-    }
-
-    // Area-weighted vertex normals. UE's left-handed winding means the
-    // front face is the one from which the vertices wind clockwise, so the
-    // outward normal of triangle (V0, V1, V2) is (V2-V0) x (V1-V0).
-    TArray<FVector> Normals;
-    Normals.Init(FVector::ZeroVector, Verts.Num());
-    for (int32 i = 0; i + 2 < Tris.Num(); i += 3)
-    {
-      const FVector &V0 = Verts[Tris[i]];
-      const FVector &V1 = Verts[Tris[i + 1]];
-      const FVector &V2 = Verts[Tris[i + 2]];
-      const FVector FaceNormal = FVector::CrossProduct(V2 - V0, V1 - V0);
-      Normals[Tris[i]] += FaceNormal;
-      Normals[Tris[i + 1]] += FaceNormal;
-      Normals[Tris[i + 2]] += FaceNormal;
-    }
-    for (FVector &Normal : Normals)
-    {
-      Normal = Normal.GetSafeNormal(1e-8, FVector::UpVector);
-    }
-
-    // Planar world-space UVs so tiled materials repeat sensibly (5 m tile).
-    TArray<FVector2D> UV0;
-    UV0.Reserve(Verts.Num());
-    for (const FVector &V : Verts)
-    {
-      UV0.Add(FVector2D(V.X / 500.0f, V.Y / 500.0f));
-    }
-
-    ACarlaProceduralMeshActor *MeshActor = World->SpawnActor<ACarlaProceduralMeshActor>();
-    if (MeshActor == nullptr)
-    {
-      RESPOND_ERROR("spawn_custom_mesh: failed to spawn mesh actor");
-    }
-    UProceduralMeshComponent *PMC = MeshActor->MeshComponent;
-    PMC->bUseAsyncCooking = true;
-    PMC->bUseComplexAsSimpleCollision = true;
-    PMC->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-    PMC->CreateMeshSection_LinearColor(
-        0,
-        Verts,
-        Tris,
-        Normals,
-        UV0,
-        TArray<FLinearColor>(),
-        TArray<FProcMeshTangent>(),
-        true);
-
-    static const TMap<FString, FString> MaterialHints = {
-        {TEXT("grass"), TEXT("/Game/Carla/Static/GenericMaterials/Ground/MI_LargeLandscape_Grass.MI_LargeLandscape_Grass")},
-        {TEXT("dirt"), TEXT("/Game/Carla/Static/GenericMaterials/Ground/MI_Dirt.MI_Dirt")},
-        {TEXT("road"), TEXT("/Game/Carla/Static/GenericMaterials/Roads/MI_RoadAsphalt_Town15.MI_RoadAsphalt_Town15")},
-        {TEXT("sidewalk"), TEXT("/Game/Carla/Static/GenericMaterials/Sidewalk/MI_Sidewalk_Apartment.MI_Sidewalk_Apartment")}};
-    const FString MaterialName = cr::ToFString(material);
-    const FString *MaterialPath = MaterialHints.Find(MaterialName.ToLower());
-    const FString ResolvedPath = (MaterialPath != nullptr) ? *MaterialPath : MaterialName;
-    if (UMaterialInterface *Material = LoadObject<UMaterialInterface>(nullptr, *ResolvedPath))
-    {
-      PMC->SetMaterial(0, Material);
-    }
-
-    // Tag as terrain for semantic segmentation, mirroring the generated
-    // ground plane (OpenDriveGenerator's TagGeneratedComponent).
-    ATagger::SetStencilValue(*PMC, MeshActor->GetUniqueID(), cr::CityObjectLabel::Terrain, true);
-    PMC->ComponentTags.Add(FName(*ATagger::GetTagAsString(cr::CityObjectLabel::Terrain)));
-
     return R<void>::Success();
+  };
+
+  BIND_SYNC(spawn_custom_mesh_ex) << [this, SpawnOneCustomMesh](
+      cr::CustomMeshDescription description) -> R<uint64_t>
+  {
+    REQUIRE_CARLA_EPISODE();
+    auto *World = Episode->GetWorld();
+    check(World != nullptr);
+    ACarlaGameModeBase *GameMode = UCarlaStatics::GetGameMode(World);
+    FString Error;
+    const uint64 EnvObjectId = SpawnOneCustomMesh(World, GameMode, description, Error);
+    if (EnvObjectId == 0)
+    {
+      RESPOND_ERROR_FSTRING(Error);
+    }
+    return static_cast<uint64_t>(EnvObjectId);
+  };
+
+  BIND_SYNC(spawn_custom_meshes) << [this, SpawnOneCustomMesh](
+      std::vector<cr::CustomMeshDescription> descriptions) -> R<std::vector<uint64_t>>
+  {
+    REQUIRE_CARLA_EPISODE();
+    auto *World = Episode->GetWorld();
+    check(World != nullptr);
+    ACarlaGameModeBase *GameMode = UCarlaStatics::GetGameMode(World);
+    std::vector<uint64_t> Ids;
+    Ids.reserve(descriptions.size());
+    for (const auto &Desc : descriptions)
+    {
+      FString Error;
+      const uint64 EnvObjectId = SpawnOneCustomMesh(World, GameMode, Desc, Error);
+      if (EnvObjectId == 0)
+      {
+        RESPOND_ERROR_FSTRING(Error);
+      }
+      Ids.push_back(static_cast<uint64_t>(EnvObjectId));
+    }
+    return Ids;
   };
 
   // ~~ Clear debug strings ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -17,6 +17,7 @@
 #include "carla/rpc/Command.h"
 #include "carla/rpc/ContentPackInfo.h"
 #include "carla/rpc/CommandResponse.h"
+#include "carla/rpc/CustomMeshDescription.h"
 #include "carla/rpc/CustomV2XBytes.h"
 #include "carla/rpc/EnvironmentObject.h"
 #include "carla/rpc/EpisodeInfo.h"
@@ -102,6 +103,11 @@ namespace detail {
     std::string GetServerVersion();
 
     void LoadEpisode(std::string map_name, bool reset_settings = true, rpc::MapLayer map_layer = rpc::MapLayer::All);
+
+    void LoadMapBundleFiles(
+        const std::string &map_name,
+        const std::unordered_map<std::string, std::vector<uint8_t>> &files,
+        bool reset_settings = true);
 
     void LoadLevelLayer(rpc::MapLayer map_layer) const;
 
@@ -530,6 +536,11 @@ namespace detail {
         const std::vector<float> &vertices,
         const std::vector<uint32_t> &triangles,
         const std::string &material);
+
+    uint64_t SpawnCustomMeshEx(const rpc::CustomMeshDescription &description);
+
+    std::vector<uint64_t> SpawnCustomMeshes(
+        const std::vector<rpc::CustomMeshDescription> &descriptions);
 
     void ApplyBatch(
         std::vector<rpc::Command> commands,

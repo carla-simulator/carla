@@ -78,6 +78,13 @@ public:
     uint8 InTagQueried = 0xFF);
 
   UFUNCTION(Category = "Carla Util", BlueprintCallable)
+  static void GetBBsOfProceduralMeshComponents(
+    const TArray<class UProceduralMeshComponent*>& ProceduralMeshComps,
+    TArray<FBoundingBox>& OutBB,
+    TArray<uint8>& OutTag,
+    uint8 InTagQueried = 0xFF);
+
+  UFUNCTION(Category = "Carla Util", BlueprintCallable)
   static TArray<FBoundingBox> GetBoundingBoxOfActors(
     const TArray<AActor*>& Actors,
     uint8 InTagQueried = 0xFF);

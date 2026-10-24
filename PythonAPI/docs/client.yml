@@ -146,6 +146,23 @@
       doc: >
         Creates a new world with default settings using `map_name` map. All actors in the current world will be destroyed.
     # --------------------------------------
+    - def_name: load_map_bundle
+      params:
+      - param_name: bundle_path
+        type: str
+        doc: >
+          Path to a `.carlamap.tar.gz` bundle archive or unpacked map directory.
+      - param_name: reset_settings
+        type: bool
+        default: true
+        doc: >
+          Option to reset the episode setting to default values, set to false to keep the current settings.
+      return: carla.World
+      doc: >
+        Loads an editor-free `.carlamap` bundle directly on the server. Unpacks OpenDRIVE road networks,
+        pre-compiled Recast pedestrian navigation mesh (`Nav/<MapName>.bin`), Traffic Manager cache (`TM/<MapName>.bin`),
+        and binary `.cmesh` procedural geometry layers with Chaos physics collision and ground-truth semantic segmentation tags.
+    # --------------------------------------
     - def_name: reload_world
       params:
       - param_name: reset_settings
@@ -890,3 +907,19 @@
       type: bool
       doc: >
         If __True__, Pedestrian navigation will be enabled using Recast tool. For very large maps it is recomended to disable this option. __Default is `True`__.
+    - var_name: generate_road_mesh
+      type: bool
+      doc: >
+        If __True__, procedural 3D road meshes will be generated from OpenDRIVE geometry. Set to __False__ when importing custom 3D road meshes to eliminate Z-fighting. __Default is `True`__.
+    - var_name: generate_ground_mesh
+      type: bool
+      doc: >
+        If __True__, procedural ground meshes will be generated underneath the road network. __Default is `True`__.
+    - var_name: generate_street_furniture
+      type: bool
+      doc: >
+        If __True__, procedural street furniture (guard rails, poles) will be placed along roads. __Default is `True`__.
+    - var_name: generate_traffic_signals
+      type: bool
+      doc: >
+        If __True__, traffic lights and traffic signs defined in the OpenDRIVE network will be spawned. __Default is `True`__.

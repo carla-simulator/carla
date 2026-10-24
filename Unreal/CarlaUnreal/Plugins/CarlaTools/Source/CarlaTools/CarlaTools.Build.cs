@@ -69,7 +69,7 @@ public class CarlaTools :
     Action<bool, string, string> TestOptionalFeature = (enable, name, definition) =>
     {
       if (enable)
-        PrivateDefinitions.Add(name);
+        PrivateDefinitions.Add(definition);
       Console.WriteLine(string.Format("{0} is {1}.", name, enable ? "enabled" : "disabled"));
     };
     
@@ -148,12 +148,6 @@ public class CarlaTools :
         "OmniverseRuntime"
       });
 
-      throw new NotImplementedException();
-    }
-
-    if (EnableOSM2ODR)
-    {
-      // @TODO
       throw new NotImplementedException();
     }
   }

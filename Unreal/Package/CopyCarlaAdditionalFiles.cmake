@@ -42,6 +42,17 @@ foreach (CARLA_PACKAGE_PROJECT_DIR ${CARLA_PACKAGE_PLATFORM_DIRS})
 endforeach ()
 
 if (APPLE)
+  # Update staged app bundle with freshly compiled Shipping binary if present
+  set (FRESH_SHIPPING_BIN "${CARLA_WORKSPACE_PATH}/Unreal/CarlaUnreal/Binaries/Mac/CarlaUnreal-Mac-Shipping.app/Contents/MacOS/CarlaUnreal-Mac-Shipping")
+  if (EXISTS "${FRESH_SHIPPING_BIN}")
+    file (GLOB CARLA_MAC_APP_BUNDLES LIST_DIRECTORIES true ${CARLA_PACKAGE_ARCHIVE_PATH}/*/*.app)
+    foreach (CARLA_MAC_APP ${CARLA_MAC_APP_BUNDLES})
+      if (EXISTS "${CARLA_MAC_APP}/Contents/MacOS/CarlaUnreal-Mac-Shipping")
+        file (COPY_FILE "${FRESH_SHIPPING_BIN}" "${CARLA_MAC_APP}/Contents/MacOS/CarlaUnreal-Mac-Shipping")
+      endif ()
+    endforeach ()
+  endif ()
+
   # Re-sign the staged macOS app bundles without sandbox entitlements.
   # Unreal Engine's default shipping config applies Sandbox.NoNet.entitlements,
   # which enables com.apple.security.app-sandbox without network permissions,
@@ -143,6 +154,44 @@ file (GLOB PYTHON_UTIL_FILES ${CARLA_WORKSPACE_PATH}/PythonAPI/util/*.py)
 file (COPY ${PYTHON_UTIL_FILES} DESTINATION ${CARLA_PACKAGE_ARCHIVE_PATH}/PythonAPI/util/)
 file (COPY_FILE ${CARLA_WORKSPACE_PATH}/PythonAPI/util/requirements.txt ${CARLA_PACKAGE_ARCHIVE_PATH}/PythonAPI/util/requirements.txt)
 file (COPY ${CARLA_WORKSPACE_PATH}/PythonAPI/util/opendrive/ DESTINATION ${CARLA_PACKAGE_ARCHIVE_PATH}/PythonAPI/util/opendrive/)
+
+make_directory (${CARLA_PACKAGE_ARCHIVE_PATH}/Util/MapBuilder/)
+file (GLOB MAPBUILDER_FILES ${CARLA_WORKSPACE_PATH}/Util/MapBuilder/*)
+file (COPY ${MAPBUILDER_FILES} DESTINATION ${CARLA_PACKAGE_ARCHIVE_PATH}/Util/MapBuilder/)
+file (COPY_FILE ${CARLA_WORKSPACE_PATH}/Util/MapBuilder/carla_map.py ${CARLA_PACKAGE_ARCHIVE_PATH}/PythonAPI/util/carla_map.py)
+
+# Top-level carla-map executable wrapper
+file (WRITE ${CARLA_PACKAGE_ARCHIVE_PATH}/carla-map
+"#!/usr/bin/env bash
+SCRIPT_DIR=\"\$(cd \"\$(dirname \"\${BASH_SOURCE[0]}\")\" && pwd)\"
+
+if command -v python3.10 &>/dev/null; then
+    PY_BIN=\"python3.10\"
+elif command -v python3 &>/dev/null; then
+    PY_BIN=\"python3\"
+else
+    echo \"ERROR: python3 not found\" >&2
+    exit 1
+fi
+
+WHL=\$(find \"\$SCRIPT_DIR/PythonAPI/carla/dist\" -name \"carla-*.whl\" 2>/dev/null | head -n 1)
+if [[ -n \"\$WHL\" ]]; then
+    export PYTHONPATH=\"\$WHL:\$SCRIPT_DIR:\$SCRIPT_DIR/Util/MapBuilder:\$PYTHONPATH\"
+else
+    export PYTHONPATH=\"\$SCRIPT_DIR:\$SCRIPT_DIR/Util/MapBuilder:\$PYTHONPATH\"
+fi
+
+if [[ -d \"\$SCRIPT_DIR/Tools\" ]]; then
+    export PATH=\"\$SCRIPT_DIR/Tools:\$PATH\"
+fi
+if [[ -d \"\$SCRIPT_DIR/Mac/Tools\" ]]; then
+    export PATH=\"\$SCRIPT_DIR/Mac/Tools:\$PATH\"
+fi
+
+exec \"\$PY_BIN\" \"\$SCRIPT_DIR/Util/MapBuilder/carla_map.py\" \"\$@\"
+")
+execute_process (COMMAND chmod +x ${CARLA_PACKAGE_ARCHIVE_PATH}/carla-map)
+execute_process (COMMAND chmod +x ${CARLA_PACKAGE_ARCHIVE_PATH}/Util/MapBuilder/carla-map)
 
 # file (COPY ${CARLA_WORKSPACE_PATH}/Co-Simulation/ DESTINATION ${CARLA_PACKAGE_ARCHIVE_PATH}/Co-Simulation/)
 

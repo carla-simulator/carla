@@ -80,6 +80,11 @@ public:
     return ObjectRegister->GetEnvironmentObjects(QueriedTag);
   }
 
+  UObjectRegister* GetObjectRegister() const
+  {
+    return ObjectRegister;
+  }
+
   void EnableEnvironmentObjects(const TSet<uint64>& EnvObjectIds, bool Enable);
 
   void EnableOverlapEvents();

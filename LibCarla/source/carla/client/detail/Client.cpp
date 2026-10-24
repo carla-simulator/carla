@@ -149,6 +149,13 @@ namespace detail {
     _pimpl->CallAndWait<void>("load_new_episode", std::move(map_name), reset_settings, map_layer);
   }
 
+  void Client::LoadMapBundleFiles(
+      const std::string &map_name,
+      const std::unordered_map<std::string, std::vector<uint8_t>> &files,
+      bool reset_settings) {
+    _pimpl->CallAndWait<void>("load_map_bundle_files", map_name, files, reset_settings);
+  }
+
   void Client::LoadLevelLayer(rpc::MapLayer map_layer) const {
     // Await response, we need to be sure in this one.
     _pimpl->CallAndWait<void>("load_map_layer", map_layer);
@@ -857,6 +864,15 @@ namespace detail {
       const std::vector<uint32_t> &triangles,
       const std::string &material) {
     _pimpl->CallAndWait<void>("spawn_custom_mesh", vertices, triangles, material);
+  }
+
+  uint64_t Client::SpawnCustomMeshEx(const rpc::CustomMeshDescription &description) {
+    return _pimpl->CallAndWait<uint64_t>("spawn_custom_mesh_ex", description);
+  }
+
+  std::vector<uint64_t> Client::SpawnCustomMeshes(
+      const std::vector<rpc::CustomMeshDescription> &descriptions) {
+    return _pimpl->CallAndWait<std::vector<uint64_t>>("spawn_custom_meshes", descriptions);
   }
 
   void Client::ApplyBatch(std::vector<rpc::Command> commands, bool do_tick_cue) {

@@ -36,6 +36,8 @@ public:
   UFUNCTION(Category = "Carla Object Register")
   void EnableEnvironmentObjects(const TSet<uint64>& EnvObjectIds, bool Enable);
 
+  uint64 RegisterPMCComponents(AActor* Actor);
+
 private:
 
   void RegisterEnvironmentObject(

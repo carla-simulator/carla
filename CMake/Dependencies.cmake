@@ -78,6 +78,28 @@ add_library (
   ${sqlite3_SOURCE_DIR}/sqlite3.h
   ${sqlite3_SOURCE_DIR}/sqlite3.c
 )
+target_include_directories (
+  libsqlite3 PUBLIC
+  ${sqlite3_SOURCE_DIR}
+)
+if (NOT TARGET SQLite::SQLite3)
+  add_library (SQLite::SQLite3 INTERFACE IMPORTED GLOBAL)
+  set_target_properties (
+    SQLite::SQLite3 PROPERTIES
+    INTERFACE_INCLUDE_DIRECTORIES "${sqlite3_SOURCE_DIR}"
+    INTERFACE_LINK_LIBRARIES "$<TARGET_FILE:libsqlite3>"
+  )
+endif ()
+file (
+  WRITE
+  "${CMAKE_FIND_PACKAGE_REDIRECTS_DIR}/sqlite3-extra.cmake"
+  "set(SQLite3_FOUND TRUE)\n"
+  "set(SQLite3_VERSION \"${CARLA_SQLITE_VERSION}\")\n"
+  "set(SQLite3_INCLUDE_DIR \"${sqlite3_SOURCE_DIR}\")\n"
+  "set(SQLite3_INCLUDE_DIRS \"${sqlite3_SOURCE_DIR}\")\n"
+  "set(SQLite3_LIBRARY SQLite::SQLite3)\n"
+  "set(SQLite3_LIBRARIES SQLite::SQLite3)\n"
+)
 
 add_executable (
   sqlite3
@@ -256,27 +278,107 @@ carla_dependency_add (
 
 
 if (ENABLE_OSM2ODR)
+  # PROJ unconditionally calls `include(CPack)` (which reserves the `package`
+  # target name, colliding with CARLA's `package` target) and defines an
+  # unguarded `add_custom_target(uninstall ...)` (which collides with Eigen's
+  # `uninstall` target). Patch both out in a cross-platform CMake script.
+  set (CARLA_PROJ_PATCH_SCRIPT "${CMAKE_FIND_PACKAGE_REDIRECTS_DIR}/patch_proj.cmake")
+  file (
+    WRITE "${CARLA_PROJ_PATCH_SCRIPT}"
+    "if (EXISTS \"\${PROJ_CMAKE_FILE}\")\n"
+    "  file (READ \"\${PROJ_CMAKE_FILE}\" _proj_cmake_content)\n"
+    "  string (REPLACE \"include(CPack)\" \"# include(CPack)\" _proj_cmake_content \"\${_proj_cmake_content}\")\n"
+    "  string (REPLACE \"add_custom_target(uninstall\" \"# add_custom_target(uninstall\" _proj_cmake_content \"\${_proj_cmake_content}\")\n"
+    "  file (WRITE \"\${PROJ_CMAKE_FILE}\" \"\${_proj_cmake_content}\")\n"
+    "endif ()\n"
+  )
+  if (EXISTS "${CMAKE_BINARY_DIR}/_deps/proj-src/CMakeLists.txt")
+    execute_process (
+      COMMAND ${CMAKE_COMMAND}
+        "-DPROJ_CMAKE_FILE=${CMAKE_BINARY_DIR}/_deps/proj-src/CMakeLists.txt"
+        -P "${CARLA_PROJ_PATCH_SCRIPT}"
+    )
+  endif ()
+  file (REMOVE "${CMAKE_BINARY_DIR}/CPackConfig.cmake" "${CMAKE_BINARY_DIR}/CPackSourceConfig.cmake")
+  unset (CPACK_OUTPUT_CONFIG_FILE CACHE)
+  unset (CPACK_SOURCE_OUTPUT_CONFIG_FILE CACHE)
+
   # ==== PROJ ====
+  carla_dependency_option (BUILD_SHARED_LIBS OFF)
   carla_dependency_option (BUILD_TESTING OFF)
+  carla_dependency_option (BUILD_APPS OFF)
+  carla_dependency_option (BUILD_CCT OFF)
+  carla_dependency_option (BUILD_CS2CS OFF)
+  carla_dependency_option (BUILD_GEOD OFF)
+  carla_dependency_option (BUILD_GIE OFF)
+  carla_dependency_option (BUILD_PROJ OFF)
+  carla_dependency_option (BUILD_PROJINFO OFF)
+  carla_dependency_option (BUILD_PROJSYNC OFF)
   carla_dependency_option (ENABLE_TIFF OFF)
   carla_dependency_option (ENABLE_CURL OFF)
+  carla_dependency_option (EMBED_RESOURCE_FILES ON)
+  carla_dependency_option (USE_ONLY_EMBEDDED_RESOURCE_FILES ON)
   carla_dependency_add (
     proj
     ${CARLA_PROJ_TAG}
     https://github.com/OSGeo/PROJ/archive/refs/tags/${CARLA_PROJ_TAG}.zip
     https://github.com/OSGeo/PROJ.git
+    PATCH_COMMAND ${CMAKE_COMMAND} "-DPROJ_CMAKE_FILE=<SOURCE_DIR>/CMakeLists.txt" -P "${CARLA_PROJ_PATCH_SCRIPT}"
   )
-endif ()
 
-
-
-if (ENABLE_OSM2ODR)
   # ==== XERCESC ====
+  carla_dependency_option (network OFF)
+  carla_dependency_option (transcoder "iconv")
+  carla_dependency_option (message-loader "inmemory")
   carla_dependency_add (
     xercesc
     ${CARLA_XERCESC_TAG}
     https://github.com/apache/xerces-c/archive/refs/tags/${CARLA_XERCESC_TAG}.zip
     https://github.com/apache/xerces-c.git
+  )
+
+  carla_dependencies_make_available ()
+
+  add_dependencies (proj libsqlite3)
+
+  file (
+    WRITE
+    "${CMAKE_FIND_PACKAGE_REDIRECTS_DIR}/proj-extra.cmake"
+    "set(Proj_FOUND TRUE)\n"
+    "set(PROJ_FOUND TRUE)\n"
+    "set(PROJ_INCLUDE_DIR \"${proj_SOURCE_DIR}/src\" \"${proj_BINARY_DIR}/src\")\n"
+    "set(PROJ_LIBRARY proj)\n"
+    "set(PROJ_API_FILE \"proj.h\")\n"
+  )
+  file (
+    WRITE
+    "${CMAKE_FIND_PACKAGE_REDIRECTS_DIR}/xercesc-extra.cmake"
+    "set(XercesC_FOUND TRUE)\n"
+    "set(XercesC_INCLUDE_DIR \"${xercesc_SOURCE_DIR}/src\" \"${xercesc_BINARY_DIR}/src\")\n"
+    "set(XercesC_INCLUDE_DIRS \"${xercesc_SOURCE_DIR}/src\" \"${xercesc_BINARY_DIR}/src\")\n"
+    "set(XercesC_LIBRARY xerces-c)\n"
+    "set(XercesC_LIBRARIES xerces-c)\n"
+    "set(XercesC_VERSION \"${CARLA_XERCESC_VERSION}\")\n"
+  )
+
+  # ==== OSM2ODR ====
+  carla_dependency_add (
+    osm2odr
+    ${CARLA_OSM2ODR_TAG}
+    https://github.com/carla-simulator/sumo/archive/${CARLA_OSM2ODR_TAG}.zip
+    https://github.com/carla-simulator/sumo.git
+  )
+  carla_dependencies_make_available ()
+
+  set_target_properties (
+    osm2odr PROPERTIES
+    CXX_STANDARD 14
+    CXX_STANDARD_REQUIRED ON
+    POSITION_INDEPENDENT_CODE ON
+  )
+  target_include_directories (
+    osm2odr PUBLIC
+    ${osm2odr_SOURCE_DIR}/src
   )
 endif ()
 

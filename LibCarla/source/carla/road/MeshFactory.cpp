@@ -682,8 +682,8 @@ std::map<road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>> MeshFactory:
         std::make_move_iterator(roads.begin()),
         std::make_move_iterator(roads.end()));
 
-    // Get wall meshes only if is not a junction
-    if (!road.IsJunction()) {
+    // Get wall meshes only if is not a junction and wall_height is positive
+    if (!road.IsJunction() && road_param.wall_height > 0.01f) {
       auto walls = GenerateWallsWithMaxLen(road);
 
       if (roads.size() == walls.size()) {
