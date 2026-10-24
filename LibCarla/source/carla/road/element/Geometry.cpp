@@ -70,6 +70,17 @@ namespace element {
 
     const double curve_end = (_curve_end);
     const double curve_start = (_curve_start);
+    if (curve_start == curve_end) {
+      // Constant curvature is the line/arc limit of a spiral. Use its chord
+      // directly to avoid division by a zero curvature rate or tiny curvature.
+      const double half_angle = 0.5 * curve_start * dist;
+      const double sinc = half_angle == 0.0 ? 1.0 : std::sin(half_angle) / half_angle;
+      const double chord = dist * sinc;
+      p.location.x += static_cast<float>(chord * std::cos(_heading + half_angle));
+      p.location.y += static_cast<float>(chord * std::sin(_heading + half_angle));
+      p.tangent = _heading + curve_start * dist;
+      return p;
+    }
     const double curve_dot = (curve_end - curve_start) / (_length);
     const double s_o = curve_start / curve_dot;
     double s = s_o + dist;
