@@ -30,18 +30,20 @@ struct PendingCall {
 };
 
 // The wrapper finishes copying its binding before this observer is armed. Its
-// next copy is made inside WrapSyncCall when it constructs the packaged task,
+// next move is made inside WrapSyncCall when it constructs the packaged task,
 // proving that the real RPC worker reached the synchronous dispatch path.
 struct ObserveSyncDispatch {
   explicit ObserveSyncDispatch(std::shared_ptr<PendingCall> value) : state(std::move(value)) {}
 
-  ObserveSyncDispatch(const ObserveSyncDispatch &other) : state(other.state) {
-    if (state->armed && !state->observed.exchange(true)) {
+  // rpclib copies the bound adaptor while dispatching. Those copies precede
+  // WrapSyncCall's packaged task and must not count as entry into that path.
+  ObserveSyncDispatch(const ObserveSyncDispatch &other) : state(other.state) {}
+
+  ObserveSyncDispatch(ObserveSyncDispatch &&other) : state(std::move(other.state)) {
+    if (state && state->armed && !state->observed.exchange(true)) {
       state->entered.set_value();
     }
   }
-
-  ObserveSyncDispatch(ObserveSyncDispatch &&) = default;
 
   int operator()() const {
     state->invoked = true;
@@ -79,8 +81,9 @@ TEST(rpc, sync_wrapper_reports_shutdown_without_running_handler) {
       state->shutting_down, state->io, ObserveSyncDispatch(pending));
   auto completed = std::make_shared<std::promise<CallResult>>();
   auto completion = completed->get_future();
-  pending->armed = true;
-  std::thread worker([state, wrapped=std::move(wrapped), completed]() {
+  std::thread worker([state, pending, wrapped=std::move(wrapped), completed]() {
+    // Arm after the thread has finished moving its callable into place.
+    pending->armed = true;
     CallResult result;
     try {
       result.value = wrapped(carla::rpc::Metadata::MakeSync());
