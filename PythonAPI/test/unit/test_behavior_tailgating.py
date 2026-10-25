@@ -4,7 +4,7 @@
 # This work is licensed under the terms of the MIT license.
 # For a copy, see <https://opensource.org/licenses/MIT>.
 
-"""Offline actual-module tests for the destination used by tailgating reroutes."""
+"""Offline actual-module tests for tailgating lane selection and reroutes."""
 
 from collections import deque
 from enum import IntEnum
@@ -23,8 +23,8 @@ class Location:
 
 class LaneChange(IntEnum):
     NONE = 0
-    Left = 1
-    Right = 2
+    Right = 1
+    Left = 2
     Both = 3
 
 
@@ -34,7 +34,7 @@ def load_navigation_modules():
     carla.TrafficLight = type("TrafficLight", (carla.Actor,), {})
     carla.Location = Location
     carla.LaneChange = LaneChange
-    carla.LaneType = types.SimpleNamespace(Driving=1)
+    carla.LaneType = types.SimpleNamespace(Driving=2)
     api_path = str(Path(__file__).resolve().parents[2] / "carla")
 
     def is_replaced(name):
@@ -62,7 +62,7 @@ BehaviorAgent, LocalPlanner, RoadOption = load_navigation_modules()
 class Waypoint:
     def __init__(self, x, lane_id=-1):
         self.lane_id = lane_id
-        self.lane_type = 1
+        self.lane_type = 2
         self.transform = types.SimpleNamespace(location=Location(x, lane_id))
 
 
@@ -161,6 +161,76 @@ class TestBehaviorTailgatingDestination(unittest.TestCase):
         self.behind.get_velocity = lambda: Location(x=5.0 / 3.6)
         self.agent._tailgating(self.current, [self.behind])
         self.assert_unchanged()
+
+    def test_missing_right_lane_leaves_route_and_counter_unchanged(self):
+        self.choose_lane("right")
+        self.right = None
+        self.agent._tailgating(self.current, [self.behind])
+        self.assert_unchanged()
+        self.assertEqual(self.agent._vehicle_obstacle_detected.call_count, 1)
+
+    def test_missing_left_lane_leaves_route_and_counter_unchanged(self):
+        self.choose_lane("left")
+        self.left = None
+        self.agent._tailgating(self.current, [self.behind])
+        self.assert_unchanged()
+        self.assertEqual(self.agent._vehicle_obstacle_detected.call_count, 1)
+
+    def test_missing_right_lane_can_use_permitted_left_lane(self):
+        self.choose_lane("right")
+        self.right = None
+        self.current.left_lane_marking.lane_change = LaneChange.Left
+        self.agent._tailgating(self.current, [self.behind])
+        self.agent.trace_route.assert_called_once_with(self.left, self.destination)
+        self.assertEqual(self.agent._vehicle_obstacle_detected.call_args.kwargs["lane_offset"], -1)
+
+    def test_left_both_permission_retains_far_destination(self):
+        self.choose_lane("left")
+        self.current.left_lane_marking.lane_change = LaneChange.Both
+        self.agent._tailgating(self.current, [self.behind])
+        self.agent.trace_route.assert_called_once_with(self.left, self.destination)
+        self.assertEqual(self.agent._behavior.tailgate_counter, 200)
+
+    def test_missing_right_lane_with_both_permission_does_not_reroute(self):
+        self.choose_lane("right")
+        self.current.right_lane_marking.lane_change = LaneChange.Both
+        self.right = None
+        self.agent._tailgating(self.current, [self.behind])
+        self.assert_unchanged()
+
+    def test_opposing_right_lane_does_not_reroute(self):
+        self.choose_lane("right")
+        self.right.lane_id = 2
+        self.agent._tailgating(self.current, [self.behind])
+        self.assert_unchanged()
+
+    def test_non_driving_left_lane_does_not_reroute(self):
+        self.choose_lane("left")
+        self.left.lane_type = 8  # carla.LaneType.Shoulder
+        self.agent._tailgating(self.current, [self.behind])
+        self.assert_unchanged()
+
+    def test_forbidden_left_lane_does_not_reroute(self):
+        self.choose_lane("left")
+        self.current.left_lane_marking.lane_change = LaneChange.NONE
+        self.agent._tailgating(self.current, [self.behind])
+        self.assert_unchanged()
+
+    def test_both_permitted_lanes_keep_right_first_priority(self):
+        self.choose_lane("right")
+        self.current.left_lane_marking.lane_change = LaneChange.Both
+        self.current.right_lane_marking.lane_change = LaneChange.Both
+        self.agent._tailgating(self.current, [self.behind])
+        self.agent.trace_route.assert_called_once_with(self.right, self.destination)
+        self.assertEqual(self.agent._vehicle_obstacle_detected.call_args.kwargs["lane_offset"], 1)
+
+    def test_blocked_right_lane_does_not_start_left_lane_fallback(self):
+        self.choose_lane("right", blocked=True)
+        self.current.left_lane_marking.lane_change = LaneChange.Both
+        self.current.right_lane_marking.lane_change = LaneChange.Both
+        self.agent._tailgating(self.current, [self.behind])
+        self.assert_unchanged()
+        self.assertEqual(self.agent._vehicle_obstacle_detected.call_count, 2)
 
 
 if __name__ == "__main__":
