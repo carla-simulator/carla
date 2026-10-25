@@ -966,5 +966,17 @@
       type: bytes
       doc: >
         Flattened array of pixels, four bytes per pixel in BGRA order.
+    # - METHODS ----------------------------
+    methods:
+    - def_name: save_to_disk
+      params:
+      - param_name: path
+        type: str
+      - param_name: color_converter
+        type: carla.ColorConverter
+        default: carla.ColorConverter.Raw
+      return: str
+      doc: >
+        Saves the image to disk and returns the output path.
 
 ...

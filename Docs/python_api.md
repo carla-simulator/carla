@@ -1104,6 +1104,14 @@ Horizontal field of view of the image.
 - <a name="carla.FakeImage.raw_data"></a>**<font color="#f8805a">raw_data</font>** (_bytes_)  
 Flattened array of pixels, four bytes per pixel in BGRA order.  
 
+### Methods
+- <a name="carla.FakeImage.save_to_disk"></a>**<font color="#7fb800">save_to_disk</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**path**</font>, <font color="#00a6ed">**color_converter**=[carla.ColorConverter.Raw](#carla.ColorConverter.Raw)</font>)  
+Saves the image to disk and returns the output path.  
+    - **Parameters:**
+        - `path` (_str_)  
+        - `color_converter` (_[carla.ColorConverter](#carla.ColorConverter)_)  
+    - **Return:** _str_  
+
 ---
 
 ## carla.FloatColor<a name="carla.FloatColor"></a>
