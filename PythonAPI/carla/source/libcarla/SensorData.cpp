@@ -4,6 +4,7 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
+#include <carla/Exception.h>
 #include <carla/PythonUtil.h>
 #include <carla/image/ImageConverter.h>
 #include <carla/image/ImageIO.h>
@@ -326,11 +327,43 @@ static FakeImage ColorCodedFlow (
   return result;
 }
 
+struct ColorCodedFlowRGBConverter {
+  void operator()(
+      const boost::gil::bgra8_pixel_t &src,
+      boost::gil::rgb8_pixel_t &dst) const {
+    using namespace boost::gil;
+    dst = rgb8_pixel_t(
+        get_color(src, red_t()),
+        get_color(src, green_t()),
+        get_color(src, blue_t()));
+  }
+};
+
+template <typename T>
+static auto MakeImageView(T &image) {
+  return carla::image::ImageView::MakeView(image);
+}
+
+static auto MakeImageView(FakeImage &image) {
+  const auto row_size = static_cast<size_t>(image.Width) * 4u;
+  if (image.size() != row_size * image.Height) {
+    carla::throw_exception(std::invalid_argument("invalid image size"));
+  }
+  const auto view = boost::gil::interleaved_view(
+      image.Width,
+      image.Height,
+      reinterpret_cast<boost::gil::bgra8_pixel_t *>(image.data()),
+      row_size);
+  // The color-coded flow's fourth byte is unused and zero, not transparency.
+  return boost::gil::color_converted_view<boost::gil::rgb8_pixel_t>(
+      view, ColorCodedFlowRGBConverter());
+}
+
 template <typename T>
 static std::string SaveImageToDisk(T &self, std::string path, EColorConverter cc) {
   carla::PythonUtil::ReleaseGIL unlock;
   using namespace carla::image;
-  auto view = ImageView::MakeView(self);
+  auto view = MakeImageView(self);
   switch (cc) {
     case EColorConverter::Raw:
       return ImageIO::WriteView(
@@ -368,6 +401,13 @@ void export_sensor_data() {
   namespace csd = carla::sensor::data;
   namespace css = carla::sensor::s11n;
 
+  enum_<EColorConverter>("ColorConverter")
+    .value("Raw", EColorConverter::Raw)
+    .value("Depth", EColorConverter::Depth)
+    .value("LogarithmicDepth", EColorConverter::LogarithmicDepth)
+    .value("CityScapesPalette", EColorConverter::CityScapesPalette)
+  ;
+
   // Fake image returned from optical flow to color conversion
   // fakes the regular image object. Only used for visual purposes
   class_<FakeImage>("FakeImage", no_init)
@@ -375,20 +415,14 @@ void export_sensor_data() {
       .add_property("width", &FakeImage::Width)
       .add_property("height", &FakeImage::Height)
       .add_property("fov", &FakeImage::FOV)
-      .add_property("raw_data", &GetRawDataAsBuffer<FakeImage>);
+      .add_property("raw_data", &GetRawDataAsBuffer<FakeImage>)
+      .def("save_to_disk", &SaveImageToDisk<FakeImage>, (arg("path"), arg("color_converter")=EColorConverter::Raw));
 
   class_<cs::SensorData, boost::noncopyable, boost::shared_ptr<cs::SensorData>>("SensorData", no_init)
     .add_property("frame", &cs::SensorData::GetFrame)
     .add_property("frame_number", &cs::SensorData::GetFrame) // deprecated.
     .add_property("timestamp", &cs::SensorData::GetTimestamp)
     .add_property("transform", CALL_RETURNING_COPY(cs::SensorData, GetSensorTransform))
-  ;
-
-  enum_<EColorConverter>("ColorConverter")
-    .value("Raw", EColorConverter::Raw)
-    .value("Depth", EColorConverter::Depth)
-    .value("LogarithmicDepth", EColorConverter::LogarithmicDepth)
-    .value("CityScapesPalette", EColorConverter::CityScapesPalette)
   ;
 
   // The values here should match the ones in the enum EGBufferTextureID,
