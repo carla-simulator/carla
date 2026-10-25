@@ -4,6 +4,7 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
+#include <carla/Exception.h>
 #include <carla/nav/Navigation.h>
 #include <gtest/gtest.h>
 
@@ -97,7 +98,7 @@ float RandomFloat() { return static_cast<float>(std::rand()) / RAND_MAX; }
 
 unsigned int SeedForTenthSuccess(const dtNavMesh &mesh) {
   dtNavMeshQuery query;
-  if (dtStatusFailed(query.init(&mesh, 32))) throw std::runtime_error("query init");
+  if (dtStatusFailed(query.init(&mesh, 32))) carla::throw_exception(std::runtime_error("query init"));
   dtQueryFilter filter;
   filter.setIncludeFlags(CARLA_TYPE_SIDEWALK);
   filter.setExcludeFlags(CARLA_TYPE_NONE);
@@ -112,7 +113,7 @@ unsigned int SeedForTenthSuccess(const dtNavMesh &mesh) {
       if (attempt == 9 && ninth_failure && success) return seed;
     }
   }
-  throw std::runtime_error("No bounded tenth-success seed found");
+  carla::throw_exception(std::runtime_error("No bounded tenth-success seed found"));
 }
 
 TEST(NavigationRandomLocation, SidewalkMesh) {
