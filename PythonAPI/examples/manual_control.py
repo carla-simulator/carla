@@ -1288,7 +1288,10 @@ class CameraManager(object):
             lidar_data = np.array(points[:, :2])
             lidar_data *= min(self.hud.dim) / (2.0 * self.lidar_range)
             lidar_data += (0.5 * self.hud.dim[0], 0.5 * self.hud.dim[1])
-            lidar_data = np.fabs(lidar_data)  # pylint: disable=E1111
+            # Filter before integer conversion so outside points cannot wrap or
+            # round into the image, and the positive range boundary stays safe.
+            in_bounds = ((lidar_data >= 0) & (lidar_data < self.hud.dim)).all(axis=1)
+            lidar_data = lidar_data[in_bounds]
             lidar_data = lidar_data.astype(np.int32)
             lidar_data = np.reshape(lidar_data, (-1, 2))
             lidar_img_size = (self.hud.dim[0], self.hud.dim[1], 3)
@@ -1301,13 +1304,13 @@ class CameraManager(object):
             lidar_data = np.array(points[:, :2])
             lidar_data *= min(self.hud.dim) / (2.0 * self.lidar_range)
             lidar_data += (0.5 * self.hud.dim[0], 0.5 * self.hud.dim[1])
-            lidar_data = lidar_data.astype(np.int32)
-            lidar_data = np.reshape(lidar_data, (-1, 2))
+            in_bounds = ((lidar_data >= 0) & (lidar_data < self.hud.dim)).all(axis=1)
+            valid_indices = np.flatnonzero(in_bounds)
+            lidar_data = lidar_data[in_bounds].astype(np.int32)
             lidar_img_size = (self.hud.dim[0], self.hud.dim[1], 3)
             lidar_img = np.zeros((lidar_img_size), dtype=np.uint8)
-            for i in range(len(image)):
-                point = lidar_data[i]
-                lidar_tag = image[i].object_tag
+            for i, point in zip(valid_indices, lidar_data):
+                lidar_tag = image[int(i)].object_tag
                 lidar_img[tuple(point.T)] = OBJECT_TO_COLOR[int(lidar_tag)]
             self.surface = pygame.surfarray.make_surface(lidar_img)
         elif self.sensors[self.index][0].startswith('sensor.camera.dvs'):
