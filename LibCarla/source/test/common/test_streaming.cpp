@@ -6,6 +6,7 @@
 
 #include "test.h"
 
+#include <carla/NonCopyable.h>
 #include <carla/ThreadGroup.h>
 #include <carla/streaming/Client.h>
 #include <carla/streaming/Server.h>
@@ -17,6 +18,7 @@
 
 #include <boost/asio/executor_work_guard.hpp>
 
+#include <array>
 #include <atomic>
 
 using namespace std::chrono_literals;
@@ -34,7 +36,12 @@ public:
   }
 
   ~io_context_running() {
+    StopAndJoin();
+  }
+
+  void StopAndJoin() {
     service.stop();
+    _threads.JoinAll();
   }
 
 private:
@@ -42,6 +49,23 @@ private:
   boost::asio::executor_work_guard<boost::asio::io_context::executor_type> _work_to_do;
 
   carla::ThreadGroup _threads;
+};
+
+// Declare after the objects whose callbacks borrow this io_context, so all
+// running callbacks finish before those objects are destroyed, including on
+// early returns from assertions.
+class io_context_stop_guard : private carla::NonCopyable {
+public:
+
+  explicit io_context_stop_guard(io_context_running &io) : _io(io) {}
+
+  ~io_context_stop_guard() {
+    _io.StopAndJoin();
+  }
+
+private:
+
+  io_context_running &_io;
 };
 
 TEST(streaming, low_level_sending_strings) {
@@ -63,6 +87,7 @@ TEST(streaming, low_level_sending_strings) {
   auto stream = srv.MakeStream();
 
   carla::streaming::low_level::Client<tcp::Client> c;
+  io_context_stop_guard stop_io_before_dependencies(io);
   c.Subscribe(io.service, stream.token(), [&](auto message) {
     ++message_count;
     ASSERT_EQ(message.size(), message_text.size());
@@ -91,19 +116,24 @@ TEST(streaming, low_level_unsubscribing) {
   using namespace carla::streaming::low_level;
 
   constexpr auto number_of_messages = 50u;
+  constexpr auto number_of_iterations = 10u;
   const std::string message_text = "Hello client!";
 
+  // UnSubscribe does not wait for a callback that is already running.
+  // Keep every callback's counter alive until the IO threads have joined.
+  std::array<std::atomic_size_t, number_of_iterations> message_counts{};
   io_context_running io;
 
   carla::streaming::low_level::Server<tcp::Server> srv(io.service, TESTING_PORT);
   srv.SetTimeout(1s);
 
   carla::streaming::low_level::Client<tcp::Client> c;
-  for (auto n = 0u; n < 10u; ++n) {
+  io_context_stop_guard stop_io_before_dependencies(io);
+  for (auto n = 0u; n < number_of_iterations; ++n) {
     auto stream = srv.MakeStream();
-    std::atomic_size_t message_count{0u};
+    auto &message_count = message_counts[n];
 
-    c.Subscribe(io.service, stream.token(), [&](auto message) {
+    c.Subscribe(io.service, stream.token(), [&message_count, &message_text](auto message) {
       ++message_count;
       ASSERT_EQ(message.size(), message_text.size());
       const std::string msg = as_string(message);
