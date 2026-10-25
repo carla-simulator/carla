@@ -5,6 +5,7 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include <PythonAPI.h>
+#include "carla/Exception.h"
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 
 namespace carla {
@@ -314,7 +315,7 @@ static auto MakeImageView(T &image) {
 static auto MakeImageView(FakeImage &image) {
   const auto row_size = static_cast<size_t>(image.Width) * 4u;
   if (image.size() != row_size * image.Height) {
-    throw std::invalid_argument("invalid image size");
+    carla::throw_exception(std::invalid_argument("invalid image size"));
   }
   const auto view = boost::gil::interleaved_view(
       image.Width,
