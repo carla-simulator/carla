@@ -155,6 +155,7 @@
 
 #### Examples and tests
 
+* Fixed `config.py` continuing with an undefined world after a missing map-file path; unreadable or invalid UTF-8 inputs now report an argument error and exit with a nonzero status (#5006).
 * Fixed `PythonAPI/examples/manual_control.py` raising `NameError: name 'sys' is not defined` instead of their error message when the server cannot send the OpenDRIVE file or the map has no spawn points.
 * Fixed `PythonAPI/examples/no_rendering_mode.py` ignoring `--show-triggers`, `--show-connections` and `--show-spawn-points` when a cached map image existed; the flags are part of the cache name now.
 * Fixed the spawn check in `test_collision_determinism.py`, which raised `AttributeError` instead of reporting the failure, and `Sensor.get_current_detection_points` in the LiDAR smoke tests.

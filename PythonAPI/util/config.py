@@ -36,6 +36,15 @@ def get_ip(host):
     return host
 
 
+def _read_map_file(argparser, option, path):
+    """Read selected map data or stop with an argument error."""
+    try:
+        with open(path, encoding='utf-8') as map_file:
+            return map_file.read()
+    except (OSError, UnicodeError) as error:
+        return argparser.error(f'{option}: cannot read {path!r}: {error}')
+
+
 def list_options(client):
     maps = [m.replace('/Game/Carla/Maps/', '') for m in client.get_available_maps()]
     indent = 4 * ' '
@@ -159,48 +168,30 @@ def main():
         world = client.reload_world()
 
     elif args.xodr_path is not None:
-        if os.path.exists(args.xodr_path):
-            with open(args.xodr_path, encoding='utf-8') as od_file:
-                try:
-                    data = od_file.read()
-                except OSError:
-                    print('File could not be readed')
-                    sys.exit()
-            print('Loading opendrive map %r' % os.path.basename(args.xodr_path))
-            world = client.generate_opendrive_world(
-                data, carla.OpendriveGenerationParameters(
-                    vertex_distance=2.0,
-                    max_road_length=500.0,
-                    wall_height=1.0,
-                    additional_width=0.6,
-                    smooth_junctions=True,
-                    enable_mesh_visibility=True))
-
-        else:
-            print('File not found')
+        data = _read_map_file(argparser, '--xodr-path', args.xodr_path)
+        print('Loading opendrive map %r' % os.path.basename(args.xodr_path))
+        world = client.generate_opendrive_world(
+            data, carla.OpendriveGenerationParameters(
+                vertex_distance=2.0,
+                max_road_length=500.0,
+                wall_height=1.0,
+                additional_width=0.6,
+                smooth_junctions=True,
+                enable_mesh_visibility=True))
 
     elif args.osm_path is not None:
-        if os.path.exists(args.osm_path):
-            with open(args.osm_path, encoding='utf-8') as od_file:
-                try:
-                    data = od_file.read()
-                except OSError:
-                    print('File could not be readed')
-                    sys.exit()
-            print('Converting OSM data to opendrive')
-            xodr_data = carla.Osm2Odr.convert(data)
-            print('Loading opendrive map')
-            world = client.generate_opendrive_world(
-                xodr_data, carla.OpendriveGenerationParameters(
-                    vertex_distance=2.0,
-                    max_road_length=500.0,
-                    wall_height=1.0,
-                    additional_width=0.6,
-                    smooth_junctions=True,
-                    enable_mesh_visibility=True))
-
-        else:
-            print('File not found.')
+        data = _read_map_file(argparser, '--osm-path', args.osm_path)
+        print('Converting OSM data to opendrive')
+        xodr_data = carla.Osm2Odr.convert(data)
+        print('Loading opendrive map')
+        world = client.generate_opendrive_world(
+            xodr_data, carla.OpendriveGenerationParameters(
+                vertex_distance=2.0,
+                max_road_length=500.0,
+                wall_height=1.0,
+                additional_width=0.6,
+                smooth_junctions=True,
+                enable_mesh_visibility=True))
 
     else:
         world = client.get_world()
