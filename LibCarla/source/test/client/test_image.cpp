@@ -6,6 +6,7 @@
 
 #include "test.h"
 
+#include <carla/Exception.h>
 #include <carla/image/ImageConverter.h>
 #include <carla/image/ImageIO.h>
 #include <carla/image/ImageView.h>
@@ -52,7 +53,7 @@ namespace {
       _path = std::filesystem::temp_directory_path() /
           ("carla-image-test-" + std::to_string(timestamp));
       if (!std::filesystem::create_directory(_path)) {
-        throw std::runtime_error("Could not create image test directory");
+        carla::throw_exception(std::runtime_error("Could not create image test directory"));
       }
     }
 
