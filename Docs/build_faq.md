@@ -56,7 +56,7 @@ GitHub Discussions</a>
 ## Other
 
 * [Create a binary version of CARLA.](#create-a-binary-version-of-carla)
-* [Packaging hangs or fails at the cook.](#packaging-hangs-or-fails-at-the-cook)
+* [Packaging stops at "Reading oplog from Zen".](#packaging-stops-at-reading-oplog-from-zen)
 * [Can I package CARLA for Windows on a Linux machine and vice versa?](#can-i-package-carla-for-windows-on-a-linux-machine-and-vice-versa)
 * [How do I uninstall the CARLA client library?](#how-do-i-uninstall-the-carla-client-library)
 
@@ -268,13 +268,13 @@ GitHub Discussions</a>
 
 ###### Create a binary version of CARLA.
 
-> Run `cmake --build Build --target package` from the root of the repository. The package lands in `Build/Package/`, with the server and the matching Python wheel. Start a Zen server first, see [Packaging hangs or fails at the cook](#packaging-hangs-or-fails-at-the-cook). See [Build a package](build_linux_ue5.md#build-a-package-with-carla-ue5) for the options, such as the maps to cook.
+> Run `cmake --build Build --target package` from the root of the repository. The package lands in `Build/Package/`, with the server and the matching Python wheel. See [Build a package](build_linux_ue5.md#build-a-package-with-carla-ue5) for the options, such as the maps to cook.
 
 <!-- ======================================================================= -->
 
-###### Packaging hangs or fails at the cook.
+###### Packaging stops at "Reading oplog from Zen".
 
-> The `package` target passes `-NoZenAutoLaunch` to the cook, so a Zen server has to be running already. Start `zenserver --port 8558` on Linux or `zenserver.exe --port 8558` on Windows before packaging, from `Engine/Binaries/<platform>` in the engine directory, and leave it running until the package is done. See Build a package for [Linux](build_linux_ue5.md#build-a-package-with-carla-ue5) or [Windows](build_windows_ue5.md#build-a-package-with-carla-ue5).
+> The `package` target and `carla-pack` let the engine start and stop the Zen server, so there is nothing to start by hand. If staging stops after `Reading oplog from Zen` and fails after 20 minutes with `HttpClient.Timeout of 1200 seconds`, the engine is older than the fix: pull `ue58-dev-carla` in the engine directory and package again. UAT recompiles its scripts on the next run, so the engine does not need a rebuild.
 
 <!-- ======================================================================= -->
 
