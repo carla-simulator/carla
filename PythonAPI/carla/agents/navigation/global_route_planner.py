@@ -118,6 +118,34 @@ class GlobalRoutePlanner:
 
         return route_trace
 
+    def _sample_lane(self, waypoint, include_endpoint=False):
+        """Sample only the current lane interval, including short remainders."""
+        lane = waypoint.get_lane()
+        end_s = lane.s_start + lane.length if lane.is_positive_direction else lane.s_start
+        remaining = abs(end_s - waypoint.s)
+        epsilon = min(1e-6, remaining / 2.0)
+        identity = (waypoint.road_id, waypoint.section_id, waypoint.lane_id)
+
+        def next_in_lane(distance):
+            return next((candidate for candidate in waypoint.next(distance)
+                         if (candidate.road_id, candidate.section_id, candidate.lane_id) == identity), None)
+
+        path = []
+        distance = self._sampling_resolution
+        while distance < remaining - epsilon:
+            sample = next_in_lane(distance)
+            if sample is None:
+                break
+            path.append(sample)
+            distance += self._sampling_resolution
+        if include_endpoint:
+            endpoint = next_in_lane(remaining - epsilon) if remaining > 0.0 else waypoint
+            if endpoint is not None and (not path or path[-1].s != endpoint.s):
+                path.append(endpoint)
+            if not path:
+                path.append(waypoint)
+        return path
+
     def _build_topology(self):
         """
         This function retrieves topology from the server as a list of
@@ -142,20 +170,7 @@ class GlobalRoutePlanner:
             seg_dict['entry'], seg_dict['exit'] = wp1, wp2
             seg_dict['entryxyz'], seg_dict['exitxyz'] = (x1, y1, z1), (x2, y2, z2)
             seg_dict['path'] = []
-            endloc = wp2.transform.location
-            if wp1.transform.location.distance(endloc) > self._sampling_resolution:
-                w = wp1.next(self._sampling_resolution)[0]
-                while w.transform.location.distance(endloc) > self._sampling_resolution:
-                    seg_dict['path'].append(w)
-                    next_ws = w.next(self._sampling_resolution)
-                    if len(next_ws) == 0:
-                        break
-                    w = next_ws[0]
-            else:
-                next_wps = wp1.next(self._sampling_resolution)
-                if len(next_wps) == 0:
-                    continue
-                seg_dict['path'].append(next_wps[0])
+            seg_dict['path'] = self._sample_lane(wp1)
             self._topology.append(seg_dict)
 
     def _build_graph(self):
@@ -220,7 +235,6 @@ class GlobalRoutePlanner:
         adds them to the internal graph representation
         """
         count_loose_ends = 0
-        hop_resolution = self._sampling_resolution
         for segment in self._topology:
             end_wp = segment['exit']
             exit_xyz = segment['exitxyz']
@@ -238,14 +252,7 @@ class GlobalRoutePlanner:
                 n1 = self._id_map[exit_xyz]
                 n2 = -1 * count_loose_ends
                 self._road_id_to_edge[road_id][section_id][lane_id] = (n1, n2)
-                next_wp = end_wp.next(hop_resolution)
-                path = []  # type: list[carla.Waypoint]
-                while next_wp is not None and next_wp \
-                        and next_wp[0].road_id == road_id \
-                        and next_wp[0].section_id == section_id \
-                        and next_wp[0].lane_id == lane_id:
-                    path.append(next_wp[0])
-                    next_wp = next_wp[0].next(hop_resolution)
+                path = self._sample_lane(end_wp, include_endpoint=True)
                 if path:
                     n2_xyz = (path[-1].transform.location.x,
                               path[-1].transform.location.y,
