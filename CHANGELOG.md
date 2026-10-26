@@ -1,5 +1,7 @@
 ## LATEST Changes
 
+* Fixed AgenticTools interpreter-command configuration, UTF-8 file interoperability on Windows, and malformed stdio request handling.
+
 ### New features
 
 #### Simulator

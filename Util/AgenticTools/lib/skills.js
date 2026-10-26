@@ -278,7 +278,9 @@ function setConfig(paths) {
       notes.push(`${key} cleared`);
       continue;
     }
-    const p = path.resolve(raw.replace(/^~(?=$|\/)/, require("os").homedir()));
+    // PYTHON also accepts a command on PATH, not just a filesystem path.
+    const expanded = raw.replace(/^~(?=$|\/)/, require("os").homedir());
+    const p = key === "PYTHON" ? expanded : path.resolve(expanded);
     // Reject here rather than storing it: a path that fails validation would
     // otherwise leave the group unavailable with no sign the answer was wrong.
     const { ok, why } = cfg.validate(key, p);

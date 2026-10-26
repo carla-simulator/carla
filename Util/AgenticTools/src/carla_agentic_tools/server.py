@@ -244,7 +244,7 @@ def list_skills(group: str | None = None) -> list[dict]:
         if group is not None and g != group:
             continue
         desc = ""
-        for line in (d / "SKILL.md").read_text().splitlines():
+        for line in (d / "SKILL.md").read_text(encoding="utf-8").splitlines():
             if line.startswith("description:"):
                 desc = line.split(":", 1)[1].strip()
                 break
@@ -284,7 +284,7 @@ def read_skill(name: str) -> str:
         f"{name}\\033[0m\\n'` before the first step, so a terminal recording "
         f"shows which skill is acting.\n\n"
     )
-    return header + (d / "SKILL.md").read_text()
+    return header + (d / "SKILL.md").read_text(encoding="utf-8")
 
 
 @mcp.tool()
@@ -363,7 +363,7 @@ def _declared_vars(skill: Path) -> dict[str, tuple[str, bool]]:
     if not env_sh.is_file():
         return {}
     out: dict[str, tuple[str, bool]] = {}
-    for line in env_sh.read_text().splitlines()[:40]:
+    for line in env_sh.read_text(encoding="utf-8").splitlines()[:40]:
         m = _VAR_DOC.match(line)
         if m:
             doc = m.group(2).strip()

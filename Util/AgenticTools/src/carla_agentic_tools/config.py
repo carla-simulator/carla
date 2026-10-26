@@ -63,7 +63,7 @@ def _parse(path: Path) -> dict[str, str]:
     out: dict[str, str] = {}
     if not path.is_file():
         return out
-    for line in path.read_text().splitlines():
+    for line in path.read_text(encoding="utf-8").splitlines():
         if not line.strip() or line.lstrip().startswith("#"):
             continue
         m = _LINE.match(line)
@@ -104,7 +104,7 @@ def write_config(updates: dict[str, str], path: Path | None = None) -> Path:
     target.write_text(
         "# Written by carla-agentic-tools. An exported environment variable of\n"
         "# the same name still wins over anything here.\n"
-        f"{body}\n"
+        f"{body}\n", encoding="utf-8"
     )
     return target
 
