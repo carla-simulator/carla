@@ -1,85 +1,45 @@
+"""Append OBJ geometry, remapping its vertex indices into the destination."""
+
 import sys
-import re
 
-# check parameters
-if (len(sys.argv) < 3):
-	print("Usage: result.obj to_add.obj [material_id]")
-	sys.exit(1)
 
-#----------------------------------
-# read total of vertex already used
-#----------------------------------
-totalVertex = 0
-try:
-	f = open(sys.argv[1], "rt")
-	lines = f.readlines()
-	for line in lines:
-		if (line[:2] == "v "):
-			totalVertex += 1
-except:
-	f = open(sys.argv[1], "wt")
-f.close()
+def append_obj(destination, source, material=None):
+    try:
+        with open(destination, "rt") as stream:
+            offset = sum(line.startswith("v ") for line in stream)
+    except FileNotFoundError:
+        offset = 0
 
-#--------------------------------------
-# read the min face index of the source
-#--------------------------------------
-minIndex = 10000000
-try:
-	f = open(sys.argv[2], "rt")
-	lines = f.readlines()
-	for line in lines:
-		if (line[:2] == "f "):
-			# get the indexes (index[/uv/normal] index[/uv/normal] index[/uv/normal])
-			res = re.match(r"f (\d+).*? (\d+).*? (\d+)", line)
-			if (not res):
-				print("Problem parsing face indexes '%s'" % line)
-				sys.exit(1)
-			else:
-				# get the min index
-				if (minIndex > int(res.groups(0)[0])):
-					minIndex = int(res.groups(0)[0])
-				if (minIndex > int(res.groups(0)[1])):
-					minIndex = int(res.groups(0)[1])
-				if (minIndex > int(res.groups(0)[2])):
-					minIndex = int(res.groups(0)[2])
-except:
-	minIndex = 0
-f.close()
+    # Prepare the entire addition before opening the destination for writing.
+    output = []
+    vertices = 0
+    with open(source, "rt") as stream:
+        for line in stream:
+            if line.startswith("v "):
+                vertices += 1
+                output.append(line)
+            elif line.startswith(("o ", "g ")):
+                output.append(line)
+            elif line.startswith("usemtl "):
+                output.append("usemtl %s\n" % material if material is not None else line)
+            elif line.startswith("f "):
+                tokens = line.partition("#")[0].split()[1:]
+                indices = [int(token.split("/")[0]) for token in tokens]
+                if len(indices) < 3 or any(index == 0 for index in indices):
+                    raise ValueError("invalid OBJ face: %s" % line.rstrip())
+                indices = [index if index > 0 else vertices + index + 1 for index in indices]
+                output.append("f %s\n" % " ".join(str(offset + index) for index in indices))
+    with open(destination, "at") as stream:
+        stream.writelines(output)
 
-#----------------
-# read obj to add
-#----------------
-f = open(sys.argv[2], "rt")
-if (not f):
-	print("Could not open %s file" % sys.argv2[2])
-	sys.exit(1)
-lines = f.readlines()
-f.close()
-d = open(sys.argv[1], "at")
-for line in lines:
-	# object
-	if (line[:2] == "o "):
-		d.write(line)
-	# group
-	elif (line[:2] == "g "):
-		d.write(line)
-	# vertex
-	elif (line[:2] == "v "):
-		d.write(line)
-	# material
-	elif (line[:2] == "us"):
-		if (len(sys.argv) > 3):
-			d.write("usemtl %s\n" % sys.argv[3])
-		else:
-			d.write(line)
-	# face
-	elif (line[:2] == "f "):
-		# get the indexes (index[/uv/normal] index[/uv/normal] index[/uv/normal])
-		res = re.match(r"f (\d+).*? (\d+).*? (\d+)", line)
-		if (not res):
-			print("Problem parsing face indexes '%s'" % line)
-			sys.exit(1)
-		d.write("f %d %d %d\n" % (totalVertex + int(res.groups(0)[0]) - minIndex + 1,
-			 	   				  totalVertex + int(res.groups(0)[1]) - minIndex + 1,
-			 	   				  totalVertex + int(res.groups(0)[2]) - minIndex + 1))
-d.close()
+
+def main():
+    if len(sys.argv) not in (3, 4):
+        print("Usage: addOBJ.py result.obj to_add.obj [material_id]")
+        return 1
+    append_obj(sys.argv[1], sys.argv[2], sys.argv[3] if len(sys.argv) == 4 else None)
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

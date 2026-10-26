@@ -149,6 +149,21 @@
 
 #### Build and packaging
 
+* Fixed import commandlet failures being ignored on POSIX and preserved arguments containing spaces without a shell.
+* Fixed mixed tiled and standalone import maps inheriting the first map's mode and tile size; package metadata now retains every map.
+* Fixed an omitted optional OpenDRIVE key crashing FBX navigation generation; geometry-only navigation remains supported.
+* Fixed navigation worker failures being hidden from the import caller.
+* Fixed zero and non-finite import batch sizes causing arithmetic errors instead of usage errors.
+* Fixed generated navigation sidecars using the source FBX name instead of the declared map name.
+* Fixed alternate OpenDRIVE filenames being passed to navigation build scripts with a duplicate extension.
+* Fixed the Google Drive downloader saving HTTP error responses as assets.
+* Fixed interrupted downloads truncating an existing destination; completed downloads now replace it atomically.
+* Fixed OBJ merging changing face references when source vertices preceding the first face are unused.
+* Fixed OBJ merging discarding the fourth and later vertices of polygon faces.
+* Fixed content-pack asset destinations escaping the pack's Content directory through absolute paths.
+* Fixed content-pack directory copies deleting their source when source and destination overlap.
+* Fixed content-pack archive member normalization hiding manifests on Windows.
+* Fixed invalid catalog contents leaving previously copied catalogs unregistered after a failed content-pack add.
 * Fixed `carla-pack add` dropping existing OpenDRIVE, traffic-light phase, navigation and Traffic Manager sidecars when re-adding an in-pack map without sidecar flags (#9987).
 * Fixed the Windows build: the setup installs the MSVC 14.38 toolset the engine fork needs, MSVC builds use `/W4`, and two compile and link errors in LibCarla.
 * Fixed the CMake toolchain picking the oldest clang sysroot when an upgraded engine keeps several side by side.

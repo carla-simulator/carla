@@ -19,8 +19,9 @@ import shutil
 import subprocess
 import sys
 import argparse
-import threading
 import copy
+import math
+from concurrent.futures import ThreadPoolExecutor
 
 # Global variables
 IMPORT_SETTING_FILENAME = "importsetting.json"
@@ -200,13 +201,13 @@ def invoke_commandlet(name, arguments):
         command = [editor_path, uproject_path, run]
         command.extend(arguments)
         print("Commandlet:", command)
-        subprocess.check_call(command, shell=True)
+        subprocess.check_call(command)
     elif os.name == "posix":
         sys_name = "Linux"
         editor_path = "%s/Engine/Binaries/%s/UnrealEditor" % (ue5_path, sys_name)
-        full_command = "%s %s %s %s" % (editor_path, uproject_path, run, " ".join(arguments))
-        print("Commandlet:", full_command)
-        subprocess.call([full_command], shell=True)
+        command = [editor_path, uproject_path, run] + arguments
+        print("Commandlet:", command)
+        subprocess.check_call(command)
 
 
 def generate_import_setting_file(package_name, json_dirname, props, maps, do_tiles, tile_size):
@@ -333,9 +334,12 @@ def copy_roadpainter_config_files(package_name):
         shutil.copy(final_path, package_config_path)
 
 
-def import_assets(package_name, json_dirname, props, maps, do_tiles, tile_size, batch_size):
+def import_assets(package_name, json_dirname, props, maps, do_tiles, tile_size, batch_size,
+                  write_package=True):
     """Same commandlet is used for importing assets and also maps."""
     commandlet_name = "ImportAssets"
+    if do_tiles:
+        batch_size = positive_batch_size(batch_size)
 
     if do_tiles:
         for umap in maps:
@@ -363,7 +367,7 @@ def import_assets(package_name, json_dirname, props, maps, do_tiles, tile_size, 
                 # import when the size of the group of tiles surpasses the specified size in MB
                 if current_batch_size >= batch_size:
                     import_setting_file = generate_import_setting_file(package_name, json_dirname, props, [current_batch_map], do_tiles, tile_size)
-                    commandlet_arguments = ["-importSettings=\"%s\"" % import_setting_file, "-nosourcecontrol", "-replaceexisting"]
+                    commandlet_arguments = ["-importSettings=%s" % import_setting_file, "-nosourcecontrol", "-replaceexisting"]
                     invoke_commandlet(commandlet_name, commandlet_arguments)
                     os.remove(import_setting_file)
                     current_batch_map = copy.deepcopy(map_template)
@@ -372,13 +376,13 @@ def import_assets(package_name, json_dirname, props, maps, do_tiles, tile_size, 
             # import remaining tiles
             if current_batch > 0:
                 import_setting_file = generate_import_setting_file(package_name, json_dirname, props, [current_batch_map], do_tiles, tile_size)
-                commandlet_arguments = ["-importSettings=\"%s\"" % import_setting_file, "-nosourcecontrol", "-replaceexisting"]
+                commandlet_arguments = ["-importSettings=%s" % import_setting_file, "-nosourcecontrol", "-replaceexisting"]
                 invoke_commandlet(commandlet_name, commandlet_arguments)
                 os.remove(import_setting_file)
     else:
         # Import Props
         import_setting_file = generate_import_setting_file(package_name, json_dirname, props, maps, do_tiles, tile_size)
-        commandlet_arguments = ["-importSettings=\"%s\"" % import_setting_file, "-nosourcecontrol", "-replaceexisting"]
+        commandlet_arguments = ["-importSettings=%s" % import_setting_file, "-nosourcecontrol", "-replaceexisting"]
         invoke_commandlet(commandlet_name, commandlet_arguments)
         os.remove(import_setting_file)
 
@@ -412,7 +416,8 @@ def import_assets(package_name, json_dirname, props, maps, do_tiles, tile_size, 
             shutil.copy2(xodr_path, xodr_path_destin)
 
     # Create package file
-    generate_package_file(package_name, props, maps)
+    if write_package:
+        generate_package_file(package_name, props, maps)
 
 
 def import_assets_from_json_list(json_list, batch_size):
@@ -426,24 +431,26 @@ def import_assets_from_json_list(json_list, batch_size):
             # and place it inside unreal in the provided path (by the json file)
             maps = []
             props = []
-            tile_size = 2000
             if "maps" in data:
                 maps = data["maps"]
-                if len(maps) > 0 and "tile_size" in maps[0]:
-                    tile_size = maps[0]["tile_size"]
             if "props" in data:
                 props = data["props"]
 
             package_name = filename.replace(".json", "")
 
             # we need to build the binary file for navigation of pedestrians
-            thr = threading.Thread(target=build_binary_for_navigation, args=(package_name, dirname, maps,))
-            thr.start()
-
-            if (len(maps) > 0 and "tiles" in maps[0]):
-                import_assets(package_name, dirname, props, maps, 1, tile_size, batch_size)
-            else:
-                import_assets(package_name, dirname, props, maps, 0, 0, 0)
+            with ThreadPoolExecutor(max_workers=1) as executor:
+                navigation = executor.submit(build_binary_for_navigation, package_name, dirname, maps)
+                if not maps:
+                    import_assets(package_name, dirname, props, [], 0, 0, 0, write_package=False)
+                for index, umap in enumerate(maps):
+                    tiled = "tiles" in umap
+                    import_assets(package_name, dirname, props if index == 0 else [], [umap],
+                                  int(tiled), umap.get("tile_size", 2000) if tiled else 0,
+                                  batch_size if tiled else 0, write_package=False)
+                # A background builder failure must fail the import, too.
+                navigation.result()
+            generate_package_file(package_name, props, maps)
 
             if not package_name:
                 print("No Packages JSONs found, nothing to import. Skipping package.")
@@ -457,7 +464,6 @@ def import_assets_from_json_list(json_list, batch_size):
                 prepare_maps_commandlet_for_cooking(package_name, only_prepare_maps=True)
                 load_asset_materials_commandlet(package_name)
                 build_binary_for_tm(package_name, dirname, maps)
-            thr.join()
 
 
 def load_asset_materials_commandlet(package_name):
@@ -501,7 +507,9 @@ def build_binary_for_navigation(package_name, dirname, maps):
 
         # get the target name
         target_name = umap["name"]
-        xodr_filename = os.path.basename(umap["xodr"])
+        # FBX/Recast can build geometry-only navigation without OpenDRIVE.
+        xodr = umap.get("xodr") or ""
+        xodr_filename = os.path.basename(xodr)
         xodr_path_target = ""
 
         # copy the XODR file into docker utils folder
@@ -533,10 +541,10 @@ def build_binary_for_navigation(package_name, dirname, maps):
 
             # make the conversion
             if os.name == "nt":
-                subprocess.call(["build.bat", fbx_name_no_ext, xodr_filename], cwd=folder, shell=True)
+                subprocess.check_call(["build.bat", fbx_name_no_ext, os.path.splitext(xodr_filename)[0]], cwd=folder, shell=True)
             else:
                 subprocess.call(["chmod +x build.sh"], cwd=folder, shell=True)
-                subprocess.call("./build.sh %s %s" % (fbx_name_no_ext, xodr_filename), cwd=folder, shell=True)
+                subprocess.check_call(["bash", "build.sh", fbx_name_no_ext, os.path.splitext(xodr_filename)[0]], cwd=folder)
 
             # rename the xodr with the original name
             # os.rename(os.path.join(folder, "%s.xodr" % fbx_name_no_ext), os.path.join(folder, xodr_filename))
@@ -547,7 +555,7 @@ def build_binary_for_navigation(package_name, dirname, maps):
             if os.path.exists(nav_path_source):
                 if not os.path.exists(nav_folder_target):
                     os.makedirs(nav_folder_target)
-                nav_path_target = os.path.join(nav_folder_target, "%s.bin" % fbx_name_no_ext)
+                nav_path_target = os.path.join(nav_folder_target, "%s.bin" % target_name)
                 print('Copying "' + nav_path_source + '" to "' + nav_path_target + '"')
                 shutil.copy2(nav_path_source, nav_path_target)
 
@@ -589,6 +597,13 @@ def build_binary_for_tm(package_name, dirname, maps):
         m.cook_in_memory_map(str(os.path.join(tm_folder_target, "%s.bin" % target_name)))
 
 
+def positive_batch_size(value):
+    size = float(value)
+    if not math.isfinite(size) or size <= 0:
+        raise argparse.ArgumentTypeError("batch size must be a finite positive number of MB")
+    return size
+
+
 def main():
     argparser = argparse.ArgumentParser(description=__doc__)
     argparser.add_argument(
@@ -606,7 +621,7 @@ def main():
         help='Create JSON files only')
     argparser.add_argument(
         '--batch-size',
-        type=float,
+        type=positive_batch_size,
         default=300,
         help='Max batch size in MB')
     args = argparser.parse_known_args()[0]

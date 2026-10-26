@@ -37,6 +37,7 @@ import argparse
 import hashlib
 import json
 import os
+import posixpath
 import re
 import shutil
 import signal
@@ -190,6 +191,16 @@ def copy_any(src, dst):
     src, dst = Path(src), Path(dst)
     if not src.exists():
         raise PackError("no such file or directory: {}".format(src))
+    source, destination = src.resolve(), dst.resolve()
+    if source == destination:
+        return
+    if src.is_dir():
+        for child, parent in ((source, destination), (destination, source)):
+            try:
+                child.relative_to(parent)
+            except ValueError:
+                continue
+            raise PackError("source and destination directories overlap: {} -> {}".format(src, dst))
     dst.parent.mkdir(parents=True, exist_ok=True)
     if src.is_dir():
         if dst.exists():
@@ -1165,17 +1176,25 @@ def add_asset(pack_dir, manifest, src, dest):
     src = Path(src).expanduser()
     if not src.exists():
         raise PackError("--asset not found: {}".format(src))
-    dest = dest.strip("/").replace("\\", "/")
-    if not dest or dest.startswith("..") or "/../" in dest:
+    destination_is_directory = dest.endswith(("/", "\\"))
+    dest = dest.replace("\\", "/")
+    if not dest or dest.startswith("/") or ":" in dest.split("/")[0]:
+        raise PackError("--dest must be a path relative to the pack's Content folder")
+    dest = posixpath.normpath(dest)
+    if dest != "." and not is_clean_relpath(dest):
         raise PackError("--dest must be a path relative to the pack's Content folder")
     target = pack_dir / "Content" / dest
-    if src.is_file() and (target.is_dir() or dest.endswith("/") or not target.suffix):
+    try:
+        target.resolve().relative_to((pack_dir / "Content").resolve())
+    except ValueError:
+        raise PackError("--dest must stay inside the pack's Content folder")
+    if src.is_file() and (target.is_dir() or destination_is_directory or not target.suffix):
         target = target / src.name
     copy_any(src, target)
     info("asset {} -> Content/{}".format(src, posix(target.relative_to(pack_dir / "Content"))))
 
 
-def validate_add_inputs(args):
+def validate_add_inputs(args, pack_name=None):
     """Check every input before anything is copied or registered.
 
     cmd_add copies files and edits the manifest as it goes and saves once at the
@@ -1198,6 +1217,12 @@ def validate_add_inputs(args):
                 "--asset {1} --dest <path under Content>)".format(flag, value))
         if not path.is_file():
             raise PackError("{} not found: {}".format(flag, value))
+        if pack_name is not None:
+            data = load_json(path)
+            kind = flag[2:]
+            if kind == "props":
+                kind = detect_props_kind(data)
+            validate_catalog(data, kind, pack_name, args.allow_untagged)
     for a in (args.asset or []):
         if not Path(a).expanduser().exists():
             raise PackError("--asset not found: {}".format(a))
@@ -1205,10 +1230,10 @@ def validate_add_inputs(args):
 
 def cmd_add(args):
     pack_dir = resolve_pack_dir(args.pack, args)
-    validate_add_inputs(args)
+    manifest = load_manifest(pack_dir)
+    validate_add_inputs(args, manifest["name"])
     for spec in args.map or []:
         resolve_map_source(spec, args, pack_dir)  # fail before anything is copied
-    manifest = load_manifest(pack_dir)
     did = False
     if args.map:
         if len(args.map) > 1 and (args.xodr or args.nav or args.tm):
@@ -1248,7 +1273,8 @@ def member_relpath(name):
     raw = name.replace("\\", "/")
     if ".." in raw.split("/"):
         return None                       # any '..' component, even one that would normalise away
-    norm = os.path.normpath(raw)
+    # Archive member names use '/', independently of the host filesystem.
+    norm = posixpath.normpath(raw)
     if norm in (".", ""):
         return ""
     if os.path.isabs(norm) or norm.startswith("/") or norm.startswith("\\"):

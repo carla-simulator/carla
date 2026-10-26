@@ -11,6 +11,8 @@
 import argparse
 import shutil
 import sys
+import os
+import tempfile
 
 import requests
 
@@ -38,12 +40,21 @@ def download_file_from_google_drive(id, destination):
         chunk_size = 32768
         written_size = 0
 
-        with open(destination, "wb") as f:
-            for chunk in response.iter_content(chunk_size):
-                if chunk:  # filter out keep-alive new chunks
-                    f.write(chunk)
-                    written_size += chunk_size
-                    print_status(destination, written_size)
+        destination = os.fspath(destination)
+        temporary = None
+        try:
+            with tempfile.NamedTemporaryFile(mode="wb", delete=False,
+                                             dir=os.path.dirname(os.path.abspath(destination))) as f:
+                temporary = f.name
+                for chunk in response.iter_content(chunk_size):
+                    if chunk:  # filter out keep-alive new chunks
+                        f.write(chunk)
+                        written_size += len(chunk)
+                        print_status(destination, written_size)
+            os.replace(temporary, destination)
+        finally:
+            if temporary and os.path.exists(temporary):
+                os.remove(temporary)
         print('Done.')
 
     def get_confirm_token(response):
@@ -55,16 +66,19 @@ def download_file_from_google_drive(id, destination):
 
     url = "https://docs.google.com/uc?export=download"
 
-    session = requests.Session()
-
-    response = session.get(url, params={'id': id}, stream=True)
-    token = get_confirm_token(response)
-
-    if token:
-        params = {'id': id, 'confirm': token}
-        response = session.get(url, params=params, stream=True)
-
-    save_response_content(response, destination)
+    with requests.Session() as session:
+        response = session.get(url, params={'id': id}, stream=True)
+        try:
+            response.raise_for_status()
+            token = get_confirm_token(response)
+            if token:
+                response.close()
+                params = {'id': id, 'confirm': token}
+                response = session.get(url, params=params, stream=True)
+                response.raise_for_status()
+            save_response_content(response, destination)
+        finally:
+            response.close()
 
 
 if __name__ == "__main__":

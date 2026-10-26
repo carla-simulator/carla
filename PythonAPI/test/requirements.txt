@@ -1,2 +1,3 @@
 nose2
 opencv-python
+requests
