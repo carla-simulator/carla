@@ -20,7 +20,7 @@ namespace geom {
       Simplification.vertices.push_back(v);
     }
 
-    for (size_t i = 0; i < pmesh->GetIndexes().size() - 2; i += 3) {
+    for (size_t i = 0; i + 2 < pmesh->GetIndexes().size(); i += 3) {
       Simplify::Triangle t;
       t.material = 0;
       auto indices = pmesh->GetIndexes();

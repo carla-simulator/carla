@@ -107,6 +107,8 @@
 
 ### Bug fixes
 
+* Fixed mesh simplification reading outside the index buffer when given an empty mesh.
+
 #### Sensors
 
 * Fixed every native sensor (LiDAR, radar, IMU, cameras) simulating only the last physics substep instead of the true elapsed time when `sensor_tick` spanned more than one substep, which halved LiDAR's swept angle and skewed IMU and radar readings.
