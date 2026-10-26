@@ -4,10 +4,12 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-#include "test.h"
 #include <carla/opendrive/OpenDriveParser.h>
 #include <carla/road/Map.h>
+
 #include <string>
+
+#include "test.h"
 
 namespace {
 auto ShiftedProfileMap(bool elevation) {
@@ -33,7 +35,7 @@ double LocalValue(double s) {
   const double local = s - 900000.;
   return 3.5 + local * (.01 + local * (.0001 + local * .001));
 }
-}
+}  // namespace
 
 TEST(polynomial_road_profiles, shifted_lane_width_is_preserved_by_real_parser) {
   const auto map = ShiftedProfileMap(false);
