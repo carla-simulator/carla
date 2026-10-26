@@ -18,7 +18,7 @@ import carla
 
 def get_8bit_texture(image):
     if image is None:
-        return carla.TextureFloatColor(0,0)
+        return carla.TextureColor(0,0)
     height = len(image)
     width = len(image[0])
     texture = carla.TextureColor(width,height)
@@ -28,7 +28,7 @@ def get_8bit_texture(image):
             r = int(color[0])
             g = int(color[1])
             b = int(color[2])
-            a = int(color[3])
+            a = int(color[3]) if len(color) > 3 else 255
             texture.set(x, height - y - 1, carla.Color(r,g,b,a))
     return texture
 
@@ -79,7 +79,7 @@ def main():
     world = client.get_world()
 
     if args.list:
-        names = list(filter(lambda k: 'Apartment' in k, world.get_names_of_all_objects()))
+        names = world.get_names_of_all_objects()
         for name in names:
             print(name)
         return

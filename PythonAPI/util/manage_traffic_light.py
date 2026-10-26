@@ -20,22 +20,7 @@ TRAFFIC_LIGHT_STATES = {
 }
 
 def get_traffic_light(world, tl_id):
-    tmap = world.get_map()
-    topology = tmap.get_topology()
-    junction_ids = []
-    junctions = []
-    for (entry_wp, _) in topology:
-        if entry_wp.is_junction and entry_wp.junction_id not in junction_ids:
-            junctions.append(entry_wp.get_junction())
-            junction_ids.append(entry_wp.junction_id)
-
-    tls = []
-    for junction in junctions:
-        tls.extend(world.get_traffic_lights_in_junction(junction.id))
-
-    for tl in tls:
-        if tl.get_opendrive_id() == tl_id:
-            return tl
+    return world.get_traffic_light_from_opendrive_id(tl_id)
 
 
 def main():
@@ -104,7 +89,7 @@ def main():
 
     if args.freeze:
         print("Freezing all traffic lights")
-        traffic_light.freeze(False)
+        traffic_light.freeze(True)
 
 if __name__ == '__main__':
     main()

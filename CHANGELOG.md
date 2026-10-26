@@ -74,6 +74,9 @@
 
 #### Traffic Manager and agents
 
+* Fixed `ConstantVelocityAgent` treating its initial speed in km/h as m/s.
+* Fixed `LocalPlanner` ignoring its `dt` option when configuring the default PID controllers.
+* Fixed an unsuccessful `BasicAgent.lane_change` discarding the existing route despite reporting that the maneuver was ignored.
 * **Improved the Traffic Manager**: lateral control was rebuilt for Chaos's linear steering, with the gains scaled by each vehicle's steering authority so buses and trucks hold their lane through a junction like cars do, and large vehicles take wider turns on top of that (`traffic_manager.vehicle_large_vehicle_wide_turn` and the global toggle). Stuck vehicles recover with a K-turn, parked vehicles are gated, a vehicle that reaches the end of its route holds position, and synchronous mode runs inline without the internal mutex.
 * **Modernized the Python navigation agents** with type hints, typed obstacle and traffic-light detection tuples in `agents/tools/hints.py`, and a `BasicAgent.set_destination` that takes an optional start location and queue-clean flag.
 
@@ -155,6 +158,14 @@
 
 #### Examples and tests
 
+* Fixed `manage_traffic_light.py --freeze` unfreezing traffic lights, and allowed its OpenDRIVE-id lookup to find lights outside junctions.
+* Fixed `apply_texture.py` returning the wrong native texture type when diffuse input is omitted, and accepting RGB diffuse images without an alpha channel.
+* Fixed `apply_texture.py --list` listing only object names containing `Apartment`.
+* Fixed `generate_traffic.py` raising `KeyError` after a walker controller fails to spawn; the orphan walker is removed and the remaining controller/speed pairs stay aligned.
+* Fixed `generate_traffic.py` ignoring an explicitly supplied pedestrian seed of zero.
+* Fixed `generate_traffic.py` passing a missing navigation destination to a walker controller.
+* Fixed `generate_traffic.py` requesting walker batch ticks when another client owns the synchronous clock.
+* Fixed `generate_traffic.py` discarding the original timestep/rendering settings or leaving asynchronous no-rendering mode enabled when it exits.
 * Fixed `PythonAPI/examples/manual_control.py` raising `NameError: name 'sys' is not defined` instead of their error message when the server cannot send the OpenDRIVE file or the map has no spawn points.
 * Fixed `PythonAPI/examples/no_rendering_mode.py` ignoring `--show-triggers`, `--show-connections` and `--show-spawn-points` when a cached map image existed; the flags are part of the cache name now.
 * Fixed the spawn check in `test_collision_determinism.py`, which raised `AttributeError` instead of reporting the failure, and `Sensor.get_current_detection_points` in the LiDAR smoke tests.

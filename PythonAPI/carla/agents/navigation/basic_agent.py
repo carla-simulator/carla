@@ -261,6 +261,7 @@ class BasicAgent(object):
         )
         if not path:
             print("WARNING: Ignoring the lane change as no path was found")
+            return
 
         self.set_global_plan(path)
 

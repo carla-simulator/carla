@@ -92,14 +92,18 @@ class LocalPlanner:
         if opt_dict:
             if 'dt' in opt_dict:
                 self._dt = opt_dict['dt']
+                self._args_lateral_dict['dt'] = self._dt
+                self._args_longitudinal_dict['dt'] = self._dt
             if 'target_speed' in opt_dict:
                 self._target_speed = opt_dict['target_speed']
             if 'sampling_radius' in opt_dict:
                 self._sampling_radius = opt_dict['sampling_radius']
             if 'lateral_control_dict' in opt_dict:
-                self._args_lateral_dict = opt_dict['lateral_control_dict']
+                self._args_lateral_dict = dict(opt_dict['lateral_control_dict'])
+                self._args_lateral_dict.setdefault('dt', self._dt)
             if 'longitudinal_control_dict' in opt_dict:
-                self._args_longitudinal_dict = opt_dict['longitudinal_control_dict']
+                self._args_longitudinal_dict = dict(opt_dict['longitudinal_control_dict'])
+                self._args_longitudinal_dict.setdefault('dt', self._dt)
             if 'max_throttle' in opt_dict:
                 self._max_throt = opt_dict['max_throttle']
             if 'max_brake' in opt_dict:

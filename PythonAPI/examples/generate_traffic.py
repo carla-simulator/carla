@@ -82,7 +82,7 @@ def main():
         '-s', '--seed', metavar='S', type=int,
         help='Set random device seed and deterministic mode for Traffic Manager')
     argparser.add_argument(
-        '--seedw', metavar='S', default=0, type=int,
+        '--seedw', metavar='S', default=None, type=int,
         help='Set the seed for pedestrians module')
     argparser.add_argument(
         '--car-lights-on', action='store_true', default=False,
@@ -107,6 +107,7 @@ def main():
     client = carla.Client(args.host, args.port)
     client.set_timeout(10.0)
     synchronous_master = False
+    original_settings = None
     random.seed(args.seed if args.seed is not None else int(time.time()))
 
     try:
@@ -123,6 +124,8 @@ def main():
             traffic_manager.set_random_device_seed(args.seed)
 
         settings = world.get_settings()
+        original_settings = (settings.synchronous_mode, settings.fixed_delta_seconds,
+                             settings.no_rendering_mode)
         if not args.asynch:
             traffic_manager.set_synchronous_mode(True)
             if not settings.synchronous_mode:
@@ -208,7 +211,7 @@ def main():
         # some settings
         percentagePedestriansRunning = 0.0      # how many pedestrians will run
         percentagePedestriansCrossing = 0.0     # how many pedestrians will walk through the road
-        if args.seedw:
+        if args.seedw is not None:
             world.set_pedestrians_seed(args.seedw)
             random.seed(args.seedw)
         # 1. take all the random locations to spawn
@@ -241,7 +244,7 @@ def main():
                 print("Walker has no speed")
                 walker_speed.append(0.0)
             batch.append(SpawnActor(walker_bp, spawn_point))
-        results = client.apply_batch_sync(batch, True)
+        results = client.apply_batch_sync(batch, synchronous_master)
         walker_speed2 = []
         for i in range(len(results)):
             if results[i].error:
@@ -250,17 +253,29 @@ def main():
                 walkers_list.append({"id": results[i].actor_id})
                 walker_speed2.append(walker_speed[i])
         walker_speed = walker_speed2
+        if not synchronous_master:
+            world.wait_for_tick()
         # 3. we spawn the walker controller
         batch = []
         walker_controller_bp = world.get_blueprint_library().find('controller.ai.walker')
         for i in range(len(walkers_list)):
             batch.append(SpawnActor(walker_controller_bp, carla.Transform(), walkers_list[i]["id"]))
-        results = client.apply_batch_sync(batch, True)
+        results = client.apply_batch_sync(batch, synchronous_master)
+        controlled_walkers = []
+        controlled_speeds = []
+        orphan_walkers = []
         for i in range(len(results)):
             if results[i].error:
                 logging.error(results[i].error)
+                orphan_walkers.append(walkers_list[i]["id"])
             else:
                 walkers_list[i]["con"] = results[i].actor_id
+                controlled_walkers.append(walkers_list[i])
+                controlled_speeds.append(walker_speed[i])
+        if orphan_walkers:
+            client.apply_batch([carla.command.DestroyActor(x) for x in orphan_walkers])
+        walkers_list = controlled_walkers
+        walker_speed = controlled_speeds
         # 4. we put together the walkers and controllers id to get the objects from their id
         for i in range(len(walkers_list)):
             all_id.append(walkers_list[i]["con"])
@@ -280,7 +295,9 @@ def main():
             # start walker
             all_actors[i].start()
             # set walk to random point
-            all_actors[i].go_to_location(world.get_random_location_from_navigation())
+            destination = world.get_random_location_from_navigation()
+            if destination is not None:
+                all_actors[i].go_to_location(destination)
             # max speed
             all_actors[i].set_max_speed(float(walker_speed[int(i/2)]))
 
@@ -297,11 +314,14 @@ def main():
 
     finally:
 
-        if not args.asynch and synchronous_master:
+        if original_settings is not None and (synchronous_master or args.no_rendering):
             settings = world.get_settings()
-            settings.synchronous_mode = False
-            settings.no_rendering_mode = False
-            settings.fixed_delta_seconds = None
+            # Restore only the fields this client changed.
+            if synchronous_master:
+                settings.synchronous_mode = original_settings[0]
+                settings.fixed_delta_seconds = original_settings[1]
+            if args.no_rendering:
+                settings.no_rendering_mode = original_settings[2]
             world.apply_settings(settings)
 
         print('\ndestroying %d vehicles' % len(vehicles_list))
