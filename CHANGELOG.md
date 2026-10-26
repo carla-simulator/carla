@@ -107,6 +107,9 @@
 
 ### Bug fixes
 
+* Fixed `command.ShowDebugTelemetry` rejecting actor objects because its constructor expected an extra argument.
+* Fixed `command.SetVehicleLightState` converting a light mask to a boolean when given an actor object, losing all flags except the position light.
+
 #### Sensors
 
 * Fixed every native sensor (LiDAR, radar, IMU, cameras) simulating only the last physics substep instead of the true elapsed time when `sensor_tick` spanned more than one substep, which halved LiDAR's swept angle and skewed IMU and radar readings.
