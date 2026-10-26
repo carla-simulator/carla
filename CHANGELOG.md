@@ -107,6 +107,9 @@
 
 ### Bug fixes
 
+* Fixed Linux navigation generation invoking an unavailable `python` alias instead of the importing interpreter; standalone builds use `PYTHON` or Python 3.
+* Fixed Linux navigation build scripts continuing after failed FBX conversion or crosswalk processing and hiding their failure status.
+
 #### Sensors
 
 * Fixed every native sensor (LiDAR, radar, IMU, cameras) simulating only the last physics substep instead of the true elapsed time when `sensor_tick` spanned more than one substep, which halved LiDAR's swept angle and skewed IMU and radar readings.
