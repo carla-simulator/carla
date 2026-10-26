@@ -32,11 +32,11 @@ namespace element {
       const Waypoint *w0,
       const Waypoint *w1,
       const bool w0_is_offroad,
-      const bool dest_is_at_right) {
+      const bool dest_is_at_outer_side) {
     auto w0_marks = map.GetMarkRecord(*w0);
     auto w1_marks = map.GetMarkRecord(*w1);
 
-    if (dest_is_at_right) {
+    if (dest_is_at_outer_side) {
       if (w0_is_offroad) {
         if (w1_marks.second != nullptr) {
           return { LaneMarking(*w1_marks.second) };
@@ -106,12 +106,16 @@ namespace element {
     const auto dest_is_at_right =
         (-orig_vec.x * dest_vec.y + orig_vec.y * dest_vec.x) < 0;
 
+    // Mark records are stored outer-first. Driver-right is the outer side
+    // only on RHT roads; LHT roads have the opposite boundary ordering.
+    const bool dest_is_at_outer_side =
+        dest_is_at_right == map.GetLane(*w0).GetRoad()->IsRHT();
     return CrossingAtSameSection(
         map,
         &*w0,
         &*w1,
         w0_is_offroad,
-        dest_is_at_right);
+        dest_is_at_outer_side);
   }
 
 } // namespace element

@@ -1,6 +1,7 @@
 ## LATEST Changes
 
 - Correct waypoint lane-change permission directions for OpenDRIVE increase/decrease markings in both traffic rules.
+- Report the crossed physical lane marking on left-hand-traffic roads.
 
 ### New features
 
