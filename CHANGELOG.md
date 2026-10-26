@@ -1,6 +1,6 @@
 ## LATEST Changes
 
-- Preserve mesh data when appending or concatenating a mesh to itself.
+- Preserve mesh data when adding its own vertices/UVs or appending or concatenating a mesh to itself.
 - Connect complete per-vertex texture coordinates and normals to exported OBJ faces.
 - Restore the documented PLY mesh export, including vertex attributes and triangle indices.
 

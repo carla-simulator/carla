@@ -93,6 +93,10 @@ namespace geom {
   }
 
   void Mesh::AddVertices(const std::vector<Mesh::vertex_type> &vertices) {
+    if (&vertices == &_vertices) {
+      const auto snapshot = vertices;
+      return AddVertices(snapshot);
+    }
     std::copy(vertices.begin(), vertices.end(), std::back_inserter(_vertices));
   }
 
@@ -109,6 +113,10 @@ namespace geom {
   }
 
   void Mesh::AddUVs(const std::vector<uv_type> & uv) {
+    if (&uv == &_uvs) {
+      const auto snapshot = uv;
+      return AddUVs(snapshot);
+    }
     std::copy(uv.begin(), uv.end(), std::back_inserter(_uvs));
   }
 
