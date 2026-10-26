@@ -33,7 +33,7 @@ Ideas for new features are also a great way to contribute. Any suggestion that c
 ---
 ## Code contributions
 
-Before starting hands-on on coding, please check out the [issue board][issueslink] to see what the team is already working on, to avoid overlapping. In case of doubt, or to discuss how to proceed, contact the team on the [Discord server](https://discord.com/invite/8kqACuC).
+Before starting hands-on on coding, please check out the [issue board][issueslink] to see what the team is already working on, to avoid overlapping. In case of doubt, or to discuss how to proceed, ask on [GitHub Discussions](https://github.com/carla-simulator/carla/discussions) or contact the team on the [Discord server](https://discord.com/invite/8kqACuC).
 
 To start working, [fork the CARLA repository](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/fork-a-repo) and clone your fork. Remember to [keep your fork in sync](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/syncing-a-fork) with the original repository.
 

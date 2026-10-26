@@ -1,16 +1,16 @@
 # Towns available as content packs
 
-The CARLA package ships Town10HD_Opt, Town15 and Mine_01. The towns below are kept in the CARLA content repository but are not cooked into the package: to use one, build a [content pack](content_authoring_packs.md) with it from a CARLA source checkout and install the pack into your package.
+The CARLA package ships Town10HD_Opt, Town12 and Town15. The towns below are kept in the CARLA content repository but are not cooked into the package: to use one, build a [content pack](content_authoring_packs.md) with it from a CARLA source checkout and install the pack into your package.
 
 ```sh
 # on the source checkout that built the package
-carla-pack create MyTowns Town03_Opt Town12
+carla-pack create MyTowns Town03_Opt Town13
 
 # on the machine running the CARLA package
 carla-pack install MyTowns-1.0.0-<release>.tar.gz --server /opt/carla/Linux
 ```
 
-Once installed, the towns load like any other map: `client.load_world('Town12')`. See [Existing CARLA towns](content_authoring_packs.md#a-existing-carla-towns) for the build options and [Installing a pack](content_authoring_packs.md#installing-a-pack) for mounting a pack from the Python API.
+Once installed, the towns load like any other map: `client.load_world('Town13')`. See [Existing CARLA towns](content_authoring_packs.md#a-existing-carla-towns) for the build options and [Installing a pack](content_authoring_packs.md#installing-a-pack) for mounting a pack from the Python API.
 
 | Map name | Summary | |
 | --- | --- | --- |
@@ -22,9 +22,9 @@ Once installed, the towns load like any other map: `client.load_world('Town12')`
 | [`Town06_Opt`](map_town06.md) | A low-density town in a coniferous landscape, with long 4 to 6 lane roads and special junctions such as the Michigan left. | ![town06_opt](img/map_content_packs/town06_opt.webp) |
 | [`Town07_Opt`](map_town07.md) | A quiet rural community with cornfields, barns, grain silos and windmills, unmarked roads and a simple set of junctions. | ![town07_opt](img/map_content_packs/town07_opt.webp) |
 | [`Town11`](map_town11.md) | A [World Partition](core_large_maps.md) map without decoration (no buildings, sidewalks or vegetation): sprawling single-lane roads with small clusters of gridded junctions over hilly, grass-textured terrain. | ![town11](img/map_content_packs/town11.webp) |
-| [`Town12`](map_town12.md) | A 10x10 km<sup>2</sup> [World Partition](core_large_maps.md) map partially inspired by Amarillo, Texas, with urban, residential and rural regions and a highway system with a ring road around the city. | ![town12](img/map_content_packs/town12.webp) |
 | [`Town13`](map_town13.md) | A [World Partition](core_large_maps.md) map of about 13x10 km of roads, with urban, residential and rural regions and a ring road, designed as a train-test pair with Town12: same kind of layout, different building styles, textures and vegetation. | ![town13](img/map_content_packs/town13.webp) |
 | [`Town_C`](map_town_c.md) | A city contributed by Synkrotron, modelled on the Shanghai International Automobile City in Jiading, with recreations of its landmark buildings. | ![town_c](img/map_content_packs/town_c.webp) |
+| [`Mine_01`](map_mine.md) | An industrial, off-road environment: an open-cast mine of unpaved access roads, haul roads spiralling into the pit and a parking area, set in bare hills. | ![mine_01](img/map_content_packs/mine_01.webp) |
 | [`Eixample`](map_eixample.md) | A [digital twin](content_authoring_maps_digital_twin.md) of the Eixample district of Barcelona, a World Partition map with the street grid of the district; the buildings are simple untextured volumes. | ![eixample](img/map_content_packs/eixample.webp) |
 
 <div class="img-caption">One view per map from above its spawn points.</div>

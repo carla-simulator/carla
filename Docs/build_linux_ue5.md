@@ -119,7 +119,7 @@ To build a development package, use the `package-development` target. This will 
 
 ### Select which maps to cook
 
-By default a package cooks every map listed in `DefaultGame.ini` (`Town10HD_Opt`, `OpenDriveMap`, `TestMaps/EmptyMap`, `Mine_01`, `Town15/Town15`), which produces a package of around 28 GB. If you only need a subset of the maps, set the `CARLA_MAPS_TO_COOK` option when you configure the build to a `+`-separated list of map package paths. The package then cooks only those maps and is correspondingly smaller (a Town10-only package is around 16 GB).
+By default a package cooks every map listed in `DefaultGame.ini` (`Town10HD_Opt`, `OpenDriveMap`, `TestMaps/EmptyMap`, `Town12/Town12`, `Town15/Town15`). If you only need a subset of the maps, set the `CARLA_MAPS_TO_COOK` option when you configure the build to a `+`-separated list of map package paths. The package then cooks only those maps and is correspondingly smaller (a Town10-only package is around 16 GB).
 
 ```sh
 # Cook a single map
