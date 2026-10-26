@@ -108,6 +108,9 @@ namespace adaptor {
         ::carla::throw_exception(clmdep_msgpack::type_error());
       }
       const auto index = o.via.array.ptr[0].as<uint64_t>();
+      if (index >= sizeof...(Ts)) {
+        ::carla::throw_exception(clmdep_msgpack::type_error());
+      }
       copy_to_variant(index, o, v, std::make_index_sequence<sizeof...(Ts)>());
       return o;
     }

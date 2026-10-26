@@ -1,5 +1,8 @@
 ## LATEST Changes
 
+- Fixed MsgPack variant conversion to report unsupported alternative tags instead of silently retaining a default or previous value.
+
+
 ### New features
 
 #### Simulator

@@ -10,6 +10,7 @@
 #include <carla/rpc/Actor.h>
 #include <carla/rpc/Response.h>
 
+#include <limits>
 #include <thread>
 
 using namespace carla::rpc;
@@ -105,3 +106,33 @@ TEST(msgpack, optional) {
   ASSERT_TRUE(result.has_value());
   ASSERT_EQ(*result, 42.0f);
 }
+
+#ifndef LIBCARLA_NO_EXCEPTIONS
+TEST(msgpack, variant_rejects_first_unsupported_tag) {
+  using Value = std::variant<bool, float, std::string>;
+  const auto buffer = carla::MsgPack::Pack(
+      std::make_tuple(uint64_t{3u}, std::string("value")));
+
+  EXPECT_THROW(carla::MsgPack::UnPack<Value>(buffer), clmdep_msgpack::type_error);
+}
+
+TEST(msgpack, variant_rejects_large_unsupported_tag) {
+  using Value = std::variant<bool, float, std::string>;
+  const auto buffer = carla::MsgPack::Pack(std::make_tuple(
+      (std::numeric_limits<uint64_t>::max)(), std::string("value")));
+
+  EXPECT_THROW(carla::MsgPack::UnPack<Value>(buffer), clmdep_msgpack::type_error);
+}
+
+TEST(msgpack, variant_rejection_preserves_existing_value) {
+  const auto buffer = carla::MsgPack::Pack(
+      std::make_tuple(uint64_t{3u}, std::string("replacement")));
+  const auto object = clmdep_msgpack::unpack(
+      reinterpret_cast<const char *>(buffer.data()), buffer.size());
+  std::variant<bool, float, std::string> value{std::string("original")};
+
+  EXPECT_THROW(object.get().convert(value), clmdep_msgpack::type_error);
+  ASSERT_EQ(value.index(), 2u);
+  EXPECT_EQ(std::get<std::string>(value), "original");
+}
+#endif // LIBCARLA_NO_EXCEPTIONS
