@@ -26,17 +26,16 @@ carla_config_file() {
 # able to run commands, and values are taken literally with no expansion.
 carla_config_load() {
   local file key value
-  for file in "$(carla_config_file)" "${PWD}/.carla-tools.env"; do
+  for file in "${PWD}/.carla-tools.env" "$(carla_config_file)"; do
     [ -f "${file}" ] || continue
-    while IFS='=' read -r key value; do
+    while IFS='=' read -r key value || [ -n "${key}" ]; do
+      key="${key%$'\r'}"
+      value="${value%$'\r'}"
       case "${key}" in ''|'#'*) continue ;; esac
       key="${key%%[[:space:]]*}"
-      case "${key}" in
-        [A-Z]*) ;;
-        *) continue ;;
-      esac
+      [[ "${key}" =~ ^[A-Z][A-Z0-9_]*$ ]] || continue
       # An existing value — exported, or from the higher-precedence file — stays.
-      if [ -z "$(eval "printf '%s' \"\${${key}:-}\"")" ]; then
+      if [ -z "${!key:-}" ]; then
         export "${key}=${value}"
       fi
     done < "${file}"

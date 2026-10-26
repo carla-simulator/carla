@@ -149,12 +149,15 @@
 
 #### Build and packaging
 
+* Fixed skill configuration precedence, literal key handling and Windows/unterminated lines; repository settings now override user defaults while explicit environment values still win.
+* Fixed the documentation audit preflight reporting a broken Python executable as available.
 * Fixed `carla-pack add` dropping existing OpenDRIVE, traffic-light phase, navigation and Traffic Manager sidecars when re-adding an in-pack map without sidecar flags (#9987).
 * Fixed the Windows build: the setup installs the MSVC 14.38 toolset the engine fork needs, MSVC builds use `/W4`, and two compile and link errors in LibCarla.
 * Fixed the CMake toolchain picking the oldest clang sysroot when an upgraded engine keeps several side by side.
 
 #### Examples and tests
 
+* Fixed skill map aliases for layered and nested towns, Traffic Manager `all` actor lookup before its first snapshot, world-settings changes blocked on a stalled synchronous clock, and replay startup on platforms without `/proc`.
 * Fixed `PythonAPI/examples/manual_control.py` raising `NameError: name 'sys' is not defined` instead of their error message when the server cannot send the OpenDRIVE file or the map has no spawn points.
 * Fixed `PythonAPI/examples/no_rendering_mode.py` ignoring `--show-triggers`, `--show-connections` and `--show-spawn-points` when a cached map image existed; the flags are part of the cache name now.
 * Fixed the spawn check in `test_collision_determinism.py`, which raised `AttributeError` instead of reporting the failure, and `Sensor.get_current_detection_points` in the LiDAR smoke tests.

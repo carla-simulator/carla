@@ -60,7 +60,13 @@ def _stop_holders():
     import signal
     scripts = ("vehicles.py", "walkers.py", "sensors.py")
     stopped = []
-    for entry in os.listdir("/proc"):
+    try:
+        entries = os.listdir("/proc")
+    except (FileNotFoundError, NotADirectoryError):
+        print("Local spawn-holder discovery is unavailable on this platform; "
+              "stop any active spawn holders before replaying.")
+        return stopped
+    for entry in entries:
         if not entry.isdigit():
             continue
         try:

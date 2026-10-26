@@ -60,8 +60,9 @@ Names are returned stripped of the `/Game/Carla/Maps/` prefix, so `Town03`,
 `Town10HD_Opt`, etc. — pass those straight to `load`.
 
 **Friendly names resolve, but not uniformly** — `load` maps a bare town name to
-the map actually used: `Town2` → `Town02` (non-opt, like every numbered town
-except one), but **`Town10` → `Town10HD_Opt`** (Town10's canonical map is the
+the map actually available: `Town2` prefers `Town02`, then `Town02_Opt` when
+only the layered map is listed. Nested maps retain their complete package path.
+**`Town10` prefers `Town10HD_Opt`** (Town10's canonical map is the
 layered HD one; plain `Town10HD` exists but is effectively unused). An explicit
 exact name (`Town02_Opt`, `Town10HD`) is always honoured as typed; `load` prints
 what it resolved to.

@@ -51,7 +51,7 @@ def resolve_map(name: str, available: "list[str]") -> str:
     differently (confirmed against the running server):
       - Town10 has no plain map that is used — its canonical map is the layered
         HD one, Town10HD_Opt (plain Town10HD exists but is effectively unused).
-      - Every other numbered town defaults to the NON-opt map: Town2 -> Town02.
+      - Other numbered towns prefer the plain map, then its available _Opt map.
     An exact (or case-insensitive) match always wins, so an explicit "Town02_Opt"
     or "Town10HD" is honoured as typed. `available` is the stripped name list
     from get_available_maps.
@@ -61,13 +61,25 @@ def resolve_map(name: str, available: "list[str]") -> str:
     ci = {m.lower(): m for m in available}
     if name.lower() in ci:
         return ci[name.lower()]
+
+    def by_leaf(candidate):
+        matches = [m for m in available if m.replace("\\", "/").rsplit("/", 1)[-1].lower() == candidate.lower()]
+        if len(matches) > 1:
+            sys.exit(f"map {candidate!r} is ambiguous; use a full name: {', '.join(sorted(matches))}")
+        return matches[0] if matches else None
+
+    leaf = by_leaf(name)
+    if leaf:
+        return leaf
     # bare number or Town<N>, optionally with HD/_Opt suffixes already stripped
     m = re.fullmatch(r"(?:town)?0*(\d+)", name.lower())
     if m:
         num = int(m.group(1))
-        cand = "Town10HD_Opt" if num == 10 else f"Town{num:02d}"
-        if cand in available:
-            return cand
+        candidates = ("Town10HD_Opt", "Town10HD") if num == 10 else (f"Town{num:02d}", f"Town{num:02d}_Opt")
+        for candidate in candidates:
+            match = ci.get(candidate.lower()) or by_leaf(candidate)
+            if match:
+                return match
     sys.exit(f"map {name!r} not found; available: {', '.join(sorted(available))}")
 
 

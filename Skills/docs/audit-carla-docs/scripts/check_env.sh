@@ -17,9 +17,12 @@ else
   pass "carla checkout at ${CARLA_ROOT}"
 fi
 
-command -v "${PYTHON}" >/dev/null 2>&1 \
-  && pass "${PYTHON} available ($(${PYTHON} --version 2>&1))" \
-  || fail "${PYTHON} not found"
+if command -v "${PYTHON}" >/dev/null 2>&1 \
+  && python_version="$("${PYTHON}" --version 2>&1)"; then
+  pass "${PYTHON} available (${python_version})"
+else
+  fail "${PYTHON} could not run (install Python or set PYTHON to its executable)"
+fi
 
 # Inputs the audit reads. Missing ones degrade the report rather than block it,
 # so they are WARNs: a partial audit still finds real gaps.

@@ -76,7 +76,7 @@ def _report(world: carla.World, tm_mode: "bool | None", note: str) -> None:
 
 
 def cmd_show(_: argparse.Namespace) -> None:
-    world = _fresh(_client().get_world())
+    world = _client().get_world()
     _report(world, None, "(current settings)")
 
 
@@ -88,7 +88,7 @@ def cmd_sync(args: argparse.Namespace) -> None:
         sys.exit("fixed step must be > 0")
 
     client = _client()
-    world = _fresh(client.get_world())
+    world = client.get_world()
     s = world.get_settings()
     s.synchronous_mode = True
     s.fixed_delta_seconds = delta
@@ -116,7 +116,7 @@ def cmd_sync(args: argparse.Namespace) -> None:
 
 def cmd_async(args: argparse.Namespace) -> None:
     client = _client()
-    world = _fresh(client.get_world())
+    world = client.get_world()
     s = world.get_settings()
     s.synchronous_mode = False
     s.fixed_delta_seconds = None   # None = variable, server-driven time step
@@ -129,7 +129,7 @@ def cmd_async(args: argparse.Namespace) -> None:
 
 
 def cmd_set(args: argparse.Namespace) -> None:
-    world = _fresh(_client().get_world())
+    world = _client().get_world()
     s = world.get_settings()
     changed = []
     if args.no_rendering is not None:

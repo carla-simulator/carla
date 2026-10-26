@@ -129,7 +129,7 @@ def cmd_vehicle(args):
 
 def cmd_all(args):
     client = _client()
-    vehicles = list(client.get_world().get_actors().filter(args.filter))
+    vehicles = list(_fresh(client.get_world()).get_actors().filter(args.filter))
     if not vehicles:
         raise SystemExit(f"no vehicles match {args.filter!r}")
     ids = _apply_per_vehicle(_tm(client, args), vehicles, args)

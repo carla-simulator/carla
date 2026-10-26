@@ -49,6 +49,9 @@ substring — a shell whose own command line merely quotes
 `vehicles.py spawn --hold` matches a substring search and gets signalled, which
 kills the caller by accident.
 
+On platforms without `/proc`, local holders must be stopped manually before
+replaying; the command reports that automatic holder discovery is unavailable.
+
 ## Instructions
 
 ```
