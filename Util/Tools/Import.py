@@ -53,6 +53,16 @@ def get_decals_json_file(folder):
 
     return ""
 
+def _get_map_tiles(filenames, map_name):
+    """Select a map's <Name>_Tile_<X>_<Y>.fbx files from a directory listing."""
+    normalized_name = os.path.normcase(map_name)
+    tile_marker = os.path.normcase("_Tile_")
+    return [
+        filename for filename in fnmatch.filter(filenames, "*_Tile_*.fbx")
+        if os.path.normcase(filename).rsplit(tile_marker, 1)[0] == normalized_name
+    ]
+
+
 def generate_json_package(folder, package_name, use_carla_materials):
     """Generate a .json file with all the maps it founds on the folder
     and subfolders. A map is a .fbx and a .xodr with the same name.
@@ -70,7 +80,7 @@ def generate_json_package(folder, package_name, use_carla_materials):
                 maps.append([os.path.relpath(root, folder), xodr, ["%s.fbx" % xodr]])
             else:
                 # check if exist the map by tiles
-                tiles = fnmatch.filter(filenames, "*_Tile_*.fbx")
+                tiles = _get_map_tiles(filenames, xodr)
                 if (len(tiles) > 0):
                     maps.append([os.path.relpath(root, folder), xodr, tiles])
 
@@ -121,7 +131,7 @@ def generate_decals_file(folder):
                 maps.append([os.path.relpath(root, folder), xodr, ["%s.fbx" % xodr]])
             else:
                 # check if exist the map by tiles
-                tiles = fnmatch.filter(filenames, "*_Tile_*.fbx")
+                tiles = _get_map_tiles(filenames, xodr)
                 if (len(tiles) > 0):
                     maps.append([os.path.relpath(root, folder), xodr, tiles])
 
