@@ -224,7 +224,7 @@ def _ensure_walking(world, controllers, walker_ids, args):
         print(f"  only {moving}/{len(walker_ids)} walking — re-issuing "
               f"start()+destination from fresh handles "
               f"(attempt {attempt + 1}/{args.retries})", flush=True)
-        for c in world.get_actors().filter("controller.ai.walker"):
+        for c in world.get_actors([controller.id for controller in controllers]):
             try:
                 c.start()
             except RuntimeError:
@@ -244,6 +244,24 @@ def cmd_spawn(args):
     client = _client()
     world = _fresh(client.get_world())
     previous = _claim_clock(world, args.delta, allow_sync=not args.no_sync)
+    walker_ids = []
+    controller_ids = []
+    try:
+        _spawn_crowd(client, world, args, previous, walker_ids, controller_ids)
+    finally:
+        try:
+            if args.hold:
+                try:
+                    _cleanup(client, controller_ids, walker_ids, args.keep)
+                except RuntimeError as error:
+                    print(f"  cleanup failed ({error}); actors may remain — "
+                          "run `destroy` when the server is responsive again",
+                          flush=True)
+        finally:
+            _release_clock(world, previous)
+
+
+def _spawn_crowd(client, world, args, previous, walker_ids, controller_ids):
     if args.seed is not None:
         world.set_pedestrians_seed(args.seed)
         random.seed(args.seed)
@@ -272,7 +290,6 @@ def cmd_spawn(args):
     if not spawn_batch:
         raise SystemExit("no navmesh spawn points — is the navmesh present? (debug-navmesh)")
 
-    walker_ids = []
     for r in client.apply_batch_sync(spawn_batch, True):
         if not r.error:
             walker_ids.append(r.actor_id)
@@ -280,7 +297,6 @@ def cmd_spawn(args):
 
     # Phase 2: batch-spawn one AI controller parented to each walker.
     ctrl_batch = [SpawnActor(controller_bp, carla.Transform(), wid) for wid in walker_ids]
-    controller_ids = []
     for r in client.apply_batch_sync(ctrl_batch, True):
         if not r.error:
             controller_ids.append(r.actor_id)
@@ -316,28 +332,12 @@ def cmd_spawn(args):
     if len(controller_ids) < args.count:
         print(f"  note: {args.count - len(controller_ids)} fewer than requested "
               f"(nav-point collisions / spawn failures — normal at high counts)")
-    try:
-        if args.hold and not args.no_wander:
-            _hold(world)
-        elif not args.no_wander and previous is not None:
-            print("  note: this client owns the clock and is about to exit, so "
-                  "nothing will tick — use --hold, or let another client (a "
-                  "traffic hold, your own loop) drive the world.")
-    finally:
-        # Put the world back: controllers first, then walkers (the reverse
-        # order leaves ghost actors), then the clock. Stopping a held crowd
-        # otherwise leaves twenty frozen pedestrians standing in the road.
-        if args.hold:
-            try:
-                _cleanup(client, controller_ids, walker_ids, args.keep)
-            except RuntimeError as error:
-                # Never let a failed cleanup escape: the clock restore below is
-                # what keeps the server usable, and a cleanup that timed out
-                # must not cost everyone else a frozen world.
-                print(f"  cleanup failed ({error}); actors may remain — "
-                      "run `destroy` when the server is responsive again",
-                      flush=True)
-        _release_clock(world, previous)
+    if args.hold and not args.no_wander:
+        _hold(world)
+    elif not args.no_wander and previous is not None:
+        print("  note: this client owns the clock and is about to exit, so "
+              "nothing will tick — use --hold, or let another client (a "
+              "traffic hold, your own loop) drive the world.")
 
 
 def _stalled(world):

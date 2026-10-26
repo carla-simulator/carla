@@ -121,9 +121,11 @@ def _camera_rgb(image) -> np.ndarray:
     return a[:, :, :3][:, :, ::-1]  # BGRA -> RGB
 
 
-def _lidar_topdown(measure, size=600, rng=50.0) -> np.ndarray:
+def _lidar_topdown(measure, size=600, rng=50.0, semantic=False) -> np.ndarray:
     """Top-down scatter of a lidar sweep into an RGB image (rng metres half-extent)."""
-    pts = np.frombuffer(measure.raw_data, dtype=np.float32).reshape(-1, 4)[:, :2]
+    # Semantic detections contain XYZ, cosine, object id and semantic tag.
+    stride = 6 if semantic else 4
+    pts = np.frombuffer(measure.raw_data, dtype=np.float32).reshape(-1, stride)[:, :2]
     img = np.zeros((size, size, 3), np.uint8)
     px = ((pts / rng) * (size / 2) + (size / 2)).astype(np.int32)
     ok = (px[:, 0] >= 0) & (px[:, 0] < size) & (px[:, 1] >= 0) & (px[:, 1] < size)
@@ -137,7 +139,7 @@ def _render_frame(data, type_id, cc):
         data.convert(cc)
         return _camera_rgb(data)
     if "lidar" in type_id:
-        return _lidar_topdown(data)
+        return _lidar_topdown(data, semantic=type_id == "sensor.lidar.ray_cast_semantic")
     return None
 
 
@@ -253,7 +255,8 @@ def _write_png(data, path, cc):
     frame = frame.reshape((data.height, data.width, 4))[:, :, :3]   # BGRA -> BGR
     try:
         import cv2
-        cv2.imwrite(path, frame)
+        if not cv2.imwrite(path, frame):
+            raise OSError(f"could not write camera frame to {path}")
         return
     except ImportError:
         pass
@@ -285,9 +288,9 @@ def cmd_save(args):
     is_lidar = "lidar" in sensor.type_id
     jsonl = None if (is_img or is_lidar) else open(os.path.join(args.out, "data.jsonl"), "w")
 
-    previous = _claim_clock(world, args.delta, allow_sync=not args.no_sync)
+    previous = None
+    listening = False
     frames = queue.Queue()
-    sensor.listen(frames.put)          # cheap: hand off and return
 
     def write(data):
         if is_img:
@@ -312,20 +315,22 @@ def cmd_save(args):
     # 34 -> 100 -> 114 -> 131 over the first five frames and settled near 145,
     # reaching within 5% of settled by frame 9. Keeping them puts a black
     # flash at the start of every video.
-    for _ in range(args.warmup):
-        if _OWNS_CLOCK:
-            world.tick()
-        try:
-            frames.get(timeout=args.frame_timeout)
-        except queue.Empty:
-            break
-    if args.warmup:
-        print(f"  discarded {args.warmup} warm-up frame(s) for auto exposure")
-
     saved = 0
     dropped = 0
     first = last = None
     try:
+        previous = _claim_clock(world, args.delta, allow_sync=not args.no_sync)
+        listening = True
+        sensor.listen(frames.put)          # cheap: hand off and return
+        for _ in range(args.warmup):
+            if _OWNS_CLOCK:
+                world.tick()
+            try:
+                frames.get(timeout=args.frame_timeout)
+            except queue.Empty:
+                break
+        if args.warmup:
+            print(f"  discarded {args.warmup} warm-up frame(s) for auto exposure")
         while True:
             if args.frames and saved >= args.frames:
                 break
@@ -352,10 +357,15 @@ def cmd_save(args):
                 frames.get_nowait()
                 dropped += 1
     finally:
-        sensor.stop()
-        if jsonl:
-            jsonl.close()
-        _release_clock(world, previous)
+        try:
+            if listening:
+                sensor.stop()
+        finally:
+            try:
+                if jsonl:
+                    jsonl.close()
+            finally:
+                _release_clock(world, previous)
     span = (last - first) if (first is not None and last is not None) else 0.0
     print(f"saved {saved} frames from id={sensor.id} ({sensor.type_id}) to {args.out}")
     print(f"  {span:.2f}s of simulated time, {saved / span if span else 0:.1f} frames/s"
@@ -393,11 +403,7 @@ def cmd_show(args):
     lock = threading.Lock()
 
     def cb(data):
-        if is_img:
-            data.convert(cc)
-            frame = _camera_rgb(data)
-        else:
-            frame = _lidar_topdown(data)
+        frame = _render_frame(data, sensor.type_id, cc)
         with lock:
             latest["frame"] = frame
             latest.setdefault("t0", data.timestamp)

@@ -1,5 +1,8 @@
 ## LATEST Changes
 
+* Fixed sensor `--hold` lifetime, walker retry ownership and early setup cleanup in the Python API skills.
+* Fixed semantic lidar previews, silent PNG encoder failures and capture resource cleanup in the sensor reading skill.
+
 ### New features
 
 #### Simulator

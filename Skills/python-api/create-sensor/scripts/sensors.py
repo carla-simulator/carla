@@ -147,12 +147,20 @@ def cmd_spawn(args):
     print(f"spawned {sensor.type_id} id={sensor.id} {where}")
     print(f"  view/save it with: read-sensor --id {sensor.id}")
 
-    if args.ros:
-        # Without this the stream has no listener, ASensor::Tick returns early
-        # and NOTHING is produced — not even for ROS. It is also what makes a
-        # sensor publish with no Python client attached.
-        sensor.enable_for_ros()
-    _report_ros(sensor, parent, args)
+    try:
+        if args.ros:
+            sensor.enable_for_ros()
+        _report_ros(sensor, parent, args)
+        if args.hold:
+            print("holding the sensor; Ctrl+C to destroy it", flush=True)
+            try:
+                while True:
+                    world.wait_for_tick()
+            except KeyboardInterrupt:
+                pass
+    finally:
+        if args.hold:
+            sensor.destroy()
 
 
 def _report_ros(sensor, parent, args):
