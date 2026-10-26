@@ -214,6 +214,12 @@ class TestInitAdd(PackTestBase):
         self.assertEqual(rc, 1)
         self.assertIn("already exists", err)
 
+    def test_init_reports_the_pack_version_flag(self):
+        rc, _, err = run("init", PACK, "--project", self.project, "--pack-version", "x")
+        self.assertEqual(rc, 1)
+        self.assertIn("invalid --pack-version 'x'", err)
+        self.assertFalse(self.pack_dir.exists())
+
     def test_add_map_and_catalogs_updates_layout_and_manifest(self):
         err = self.init_and_add()
         c = self.pack_dir / "Content"
@@ -244,6 +250,80 @@ class TestInitAdd(PackTestBase):
         self.assertEqual(rc, 0, err)
         m = json.loads((self.pack_dir / "carla-pack.json").read_text())
         self.assertEqual(len(m["maps"]), 1)
+        self.assertEqual(m["maps"][0]["nav"], "Maps/Nav/TestTown.bin")
+
+    def in_pack_map_with_sidecars(self):
+        write(self.xodr.with_name("map_logic.json"), '{"phases": [1]}')
+        tm = write(self.tmp / "authored" / "TM" / "TestTown.bin", b"tm")
+        self.init_and_add()
+        umap = self.pack_dir / "Content" / "Maps" / "TestTown.umap"
+        rc, _, err = run("add", PACK, "--project", self.project, "--map", umap,
+                         "--xodr", self.xodr, "--nav", self.nav, "--tm", tm)
+        self.assertEqual(rc, 0, err)
+        manifest = json.loads((self.pack_dir / "carla-pack.json").read_text())
+        return umap, manifest["maps"][0], tm
+
+    def test_readd_in_pack_map_preserves_omitted_sidecars(self):
+        umap, original, tm = self.in_pack_map_with_sidecars()
+        content = self.pack_dir / "Content"
+        files = {p.relative_to(content): p.read_bytes() for p in content.rglob("*") if p.is_file()}
+        # The authored sources need not remain available after their first add.
+        for source in (self.xodr, self.xodr.with_name("map_logic.json"), self.nav, tm):
+            source.unlink()
+        for _ in range(2):
+            rc, _, err = run("add", PACK, "--project", self.project, "--map", umap)
+            self.assertEqual(rc, 0, err)
+            self.assertNotIn("has no OpenDRIVE", err)
+            manifest = json.loads((self.pack_dir / "carla-pack.json").read_text())
+            self.assertEqual(manifest["maps"], [original])
+            self.assertEqual({p.relative_to(content): p.read_bytes()
+                              for p in content.rglob("*") if p.is_file()}, files)
+
+    def test_readd_in_pack_map_replaces_only_selected_sidecars(self):
+        umap, original, _ = self.in_pack_map_with_sidecars()
+        content = self.pack_dir / "Content"
+        for flag, source, destination in (
+                ("--nav", self.tmp / "replacement-nav.bin", content / original["nav"]),
+                ("--tm", self.tmp / "replacement-tm" / "TestTown.bin",
+                 content / original["tm"] / "TestTown.bin")):
+            with self.subTest(flag=flag):
+                write(source, b"replacement")
+                rc, _, err = run("add", PACK, "--project", self.project, "--map", umap, flag, source)
+                self.assertEqual(rc, 0, err)
+                self.assertNotIn("has no OpenDRIVE", err)
+                manifest = json.loads((self.pack_dir / "carla-pack.json").read_text())
+                self.assertEqual(manifest["maps"], [original])
+                self.assertEqual(destination.read_bytes(), b"replacement")
+                self.assertEqual((content / original["xodr"]).read_bytes(), b"<OpenDRIVE/>")
+                self.assertEqual((content / original["map_logic"]).read_text(), '{"phases": [1]}')
+
+    def test_readd_in_pack_map_replaces_xodr_and_removes_obsolete_logic(self):
+        umap, original, _ = self.in_pack_map_with_sidecars()
+        content = self.pack_dir / "Content"
+        replacement = write(self.tmp / "replacement" / "TestTown.xodr", "<updated/>")
+        logic = write(replacement.with_name("map_logic.json"), '{"phases": [2]}')
+        rc, _, err = run("add", PACK, "--project", self.project, "--map", umap,
+                         "--xodr", replacement)
+        self.assertEqual(rc, 0, err)
+        self.assertEqual((content / original["xodr"]).read_text(), "<updated/>")
+        self.assertEqual((content / original["map_logic"]).read_bytes(), logic.read_bytes())
+        # An explicitly supplied XODR without a phase file replaces both the old
+        # road network and its phases, even though the other flags are omitted.
+        bare = write(self.tmp / "without-logic" / "TestTown.xodr", "<bare/>")
+        rc, _, err = run("add", PACK, "--project", self.project, "--map", umap, "--xodr", bare)
+        self.assertEqual(rc, 0, err)
+        manifest = json.loads((self.pack_dir / "carla-pack.json").read_text())
+        expected = dict(original, xodr="Maps/OpenDrive/TestTown.xodr")
+        del expected["map_logic"]
+        self.assertEqual(manifest["maps"], [expected])
+        self.assertFalse((content / original["xodr"]).exists())
+        self.assertFalse((content / original["map_logic"]).exists())
+        self.assertEqual((content / expected["xodr"]).read_text(), "<bare/>")
+        self.assertEqual((content / expected["nav"]).read_bytes(), b"nav")
+        self.assertEqual((content / expected["tm"] / "TestTown.bin").read_bytes(), b"tm")
+        rc, _, err = run("add", PACK, "--project", self.project, "--map", umap)
+        self.assertEqual(rc, 0, err)
+        self.assertEqual(json.loads((self.pack_dir / "carla-pack.json").read_text())["maps"], [expected])
 
     FAKE_EDITOR = """#!/bin/sh
 # stand-in for UnrealEditor-Cmd: 'Save As' the map into the pack (external actors too),

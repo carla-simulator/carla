@@ -675,7 +675,7 @@ def cmd_init(args):
         raise PackError("{!r} is a reserved name (an engine/project mount point or an existing plugin); "
                         "pick another pack name".format(name))
     if not VERSION_RE.match(args.version):
-        raise PackError("invalid --version {!r}: expected MAJOR.MINOR.PATCH".format(args.version))
+        raise PackError("invalid --pack-version {!r}: expected MAJOR.MINOR.PATCH".format(args.version))
     pack_dir = packs_root(args) / name
     if (pack_dir / MANIFEST_NAME).exists():
         raise PackError("pack already exists: {}".format(pack_dir))
@@ -1050,12 +1050,23 @@ def add_map(pack_dir, manifest, args):
     if args.world_partition and not external:
         warn("--world-partition given but no __ExternalActors__ folder found for {}".format(dst))
 
+    old = next((m for m in manifest["maps"] if m.get("name") == map_name), {})
     entry = {
         "name": map_name,
         "package": package,
         "xodr": "",
         "world_partition": world_partition,
     }
+    if content in src.parents:
+        # In-pack maps have no independent sidecar discovery source. Omitted flags
+        # keep their registered files; an explicit XODR replaces its phase file too.
+        if not args.xodr:
+            entry["xodr"] = old.get("xodr", "")
+            if "map_logic" in old:
+                entry["map_logic"] = old["map_logic"]
+        for key in ("nav", "tm"):
+            if not getattr(args, key) and key in old:
+                entry[key] = old[key]
     found = find_sidecars(src) if content not in src.parents else {}
     xodr = args.xodr or found.get("xodr")
     if xodr:
@@ -1078,7 +1089,7 @@ def add_map(pack_dir, manifest, args):
             entry["map_logic"] = (od_dir / "map_logic.json").as_posix()
         if not args.xodr:
             info("OpenDRIVE {} -> {}".format(xodr, entry["xodr"]))
-    else:
+    elif not entry["xodr"]:
         warn("map {} has no OpenDRIVE file (--xodr): the CARLA map API (waypoints, traffic manager) "
              "will not work for it".format(map_name))
     nav = args.nav or found.get("nav")
@@ -1109,7 +1120,6 @@ def add_map(pack_dir, manifest, args):
 
     # Re-registering a map after removing its phase file must not leave the
     # old loose configuration in the staged pack.
-    old = next((m for m in manifest["maps"] if m.get("name") == map_name), {})
     others = [m for m in manifest["maps"] if m.get("name") != map_name]
     for key in ("xodr", "map_logic"):
         previous = old.get(key)
