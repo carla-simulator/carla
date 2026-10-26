@@ -194,25 +194,34 @@ namespace geom {
 
     /// Inverse of this quaternion (assumes non-zero norm).
     Quaternion Inverse() const {
-      const float n2 = x * x + y * y + z * z + w * w;
-      if (n2 <= 0.0f) {
+      const double n2 = static_cast<double>(x) * x +
+          static_cast<double>(y) * y + static_cast<double>(z) * z +
+          static_cast<double>(w) * w;
+      if (n2 <= 0.0) {
         return Quaternion(0.0f, 0.0f, 0.0f, 1.0f);
       }
-      const float k = 1.0f / n2;
-      return Quaternion(-x * k, -y * k, -z * k, w * k);
+      return Quaternion(
+          static_cast<float>(-x / n2), static_cast<float>(-y / n2),
+          static_cast<float>(-z / n2), static_cast<float>(w / n2));
     }
 
     float Length() const {
-      return std::sqrt(x * x + y * y + z * z + w * w);
+      return static_cast<float>(std::sqrt(
+          static_cast<double>(x) * x + static_cast<double>(y) * y +
+          static_cast<double>(z) * z + static_cast<double>(w) * w));
     }
 
     Quaternion UnitQuaternion() const {
-      const float length = Length();
-      if (length <= 0.0f) {
+      // The norm can exceed float's range even when every unit component fits.
+      const double length = std::sqrt(
+          static_cast<double>(x) * x + static_cast<double>(y) * y +
+          static_cast<double>(z) * z + static_cast<double>(w) * w);
+      if (length <= 0.0) {
         return Quaternion(0.0f, 0.0f, 0.0f, 1.0f);
       }
-      const float k = 1.0f / length;
-      return Quaternion(x * k, y * k, z * k, w * k);
+      return Quaternion(
+          static_cast<float>(x / length), static_cast<float>(y / length),
+          static_cast<float>(z / length), static_cast<float>(w / length));
     }
 
     /// Hamilton product `(*this) * rhs`.
