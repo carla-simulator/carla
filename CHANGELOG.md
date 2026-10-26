@@ -1,5 +1,7 @@
 ## LATEST Changes
 
+* Fixed `next_until_lane_end` crashing when a driving lane terminates at an interior lane-section boundary, while preserving traversal through connected sections of the same road.
+
 ### New features
 
 #### Simulator

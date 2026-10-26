@@ -12,6 +12,7 @@
 #include "carla/client/Lane.h"
 #include "carla/client/Road.h"
 
+#include <cmath>
 #include <unordered_set>
 
 namespace carla {
@@ -85,22 +86,32 @@ namespace client {
       result.emplace_back(next.front());
       next = result.back()->GetNext(distance);
     }
-    double current_s = GetDistance();
-    if(result.size()) {
-      current_s = result.back()->GetDistance();
+    const auto *last = result.empty() ? this : result.back().get();
+    const auto *lane = &_parent->GetMap().GetLane(last->_waypoint);
+    std::unordered_set<const road::Lane *> visited{lane};
+    // A lane can end at an interior lane-section boundary. Follow its unique
+    // continuation within this road rather than assuming it reaches the road end.
+    while (lane->GetNextLanes().size() == 1u) {
+      const auto *successor = lane->GetNextLanes().front();
+      if (successor->GetRoad()->GetId() != GetRoadId() || !visited.insert(successor).second) {
+        break;
+      }
+      lane = successor;
     }
-    double remaining_length;
-    double road_length = _parent->GetMap().GetLane(_waypoint).GetRoad()->GetLength();
-    if(IsPositiveDirection()) {
-      remaining_length = road_length - current_s;
-    } else {
-      remaining_length = current_s;
-    }
-    remaining_length -= std::numeric_limits<double>::epsilon();
-    if(result.size()) {
-      result.emplace_back(result.back()->GetNext(remaining_length).front());
-    } else {
-      result.emplace_back(GetNext(remaining_length).front());
+    const bool positive = lane->IsPositiveDirection();
+    const double lane_start = lane->GetDistance();
+    const double lane_end = lane_start + lane->GetLength();
+    const double boundary = positive ? lane_end : lane_start;
+    if ((positive && boundary > last->GetDistance()) ||
+        (!positive && boundary < last->GetDistance())) {
+      auto endpoint = last->_waypoint;
+      endpoint.section_id = lane->GetLaneSection()->GetId();
+      endpoint.lane_id = lane->GetId();
+      // Stay inside the terminal section, including when its boundary is s=0.
+      endpoint.s = std::nextafter(boundary, positive ? lane_start : lane_end);
+      if (endpoint.s != last->GetDistance()) {
+        result.emplace_back(SharedPtr<Waypoint>(new Waypoint(_parent, endpoint)));
+      }
     }
 
     return result;
