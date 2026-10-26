@@ -10,6 +10,8 @@
 #include "carla/geom/Location.h"
 #include "carla/road/Map.h"
 
+#include <cstdlib>
+
 namespace carla {
 namespace road {
 namespace element {
@@ -110,6 +112,48 @@ namespace element {
     // only on RHT roads; LHT roads have the opposite boundary ordering.
     const bool dest_is_at_outer_side =
         dest_is_at_right == map.GetLane(*w0).GetRoad()->IsRHT();
+
+    // A lateral move may cross several boundaries within one simulation step.
+    // Include the entry/exit boundary when exactly one endpoint is off-road.
+    const auto lane_distance = std::abs(w1->lane_id - w0->lane_id);
+    const auto boundaries = lane_distance - ((w0->lane_id < 0) != (w1->lane_id < 0)) +
+        (w0_is_offroad || w1_is_offroad);
+    if (boundaries > 1) {
+      std::vector<LaneMarking> result;
+      const auto append_edge = [&](const Waypoint &edge, bool entering) {
+        // The far edge can belong to the opposite carriageway, whose driver
+        // direction is reversed. Classify this boundary using its own lane.
+        const auto forward = map.ComputeTransform(edge).GetForwardVector();
+        const bool towards_right =
+            (-forward.x * dest_vec.y + forward.y * dest_vec.x) < 0;
+        const bool towards_outer = towards_right == map.GetLane(edge).GetRoad()->IsRHT();
+        const auto marks = CrossingAtSameSection(
+            map, &edge, &edge, entering, towards_outer);
+        result.insert(result.end(), marks.begin(), marks.end());
+      };
+      if (w0_is_offroad) {
+        append_edge(*w0, true);
+      }
+      auto waypoint = *w0;
+      const auto step = w1->lane_id > w0->lane_id ? 1 : -1;
+      while (waypoint.lane_id != w1->lane_id) {
+        const auto marks = map.GetMarkRecord(waypoint);
+        const bool moving_outwards = (waypoint.lane_id < 0) == (step < 0);
+        const auto *mark = moving_outwards ? marks.first : marks.second;
+        if (mark != nullptr) {
+          result.emplace_back(*mark);
+        }
+        waypoint.lane_id += step;
+        if (waypoint.lane_id == 0) {
+          waypoint.lane_id += step;
+        }
+      }
+      if (w1_is_offroad) {
+        append_edge(*w1, false);
+      }
+      return result;
+    }
+
     return CrossingAtSameSection(
         map,
         &*w0,
