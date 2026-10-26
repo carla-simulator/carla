@@ -269,13 +269,19 @@ namespace carla {
     /// Resize the buffer, a new block of size @a size is
     /// allocated if the capacity is not enough and the data is copied.
     void resize(uint64_t size) {
-      if(_capacity < size) {
-        std::unique_ptr<value_type[]> data = std::move(_data);
-        uint64_t old_size = size;
-        reset(size);
-        copy_from(data.get(), static_cast<size_type>(old_size));
+      if (size > max_size()) {
+        throw_exception(std::invalid_argument("message size too big"));
       }
-      _size = static_cast<size_type>(size);
+      const auto new_size = static_cast<size_type>(size);
+      if (_capacity < new_size) {
+        auto data = std::make_unique<value_type[]>(new_size);
+        if (_size != 0u) {
+          boost::asio::buffer_copy(boost::asio::buffer(data.get(), new_size), cbuffer());
+        }
+        _data = std::move(data);
+        _capacity = new_size;
+      }
+      _size = new_size;
     }
 
     /// Release the contents of this buffer and set its size and capacity to

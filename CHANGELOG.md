@@ -107,6 +107,8 @@
 
 ### Bug fixes
 
+* Fixed growing a `Buffer` reading beyond its old allocation or from null storage. Resizing now preserves the initialized prefix and leaves the buffer intact if the requested size is invalid or allocation fails.
+
 #### Sensors
 
 * Fixed every native sensor (LiDAR, radar, IMU, cameras) simulating only the last physics substep instead of the true elapsed time when `sensor_tick` spanned more than one substep, which halved LiDAR's swept angle and skewed IMU and radar readings.
