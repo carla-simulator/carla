@@ -69,27 +69,51 @@ void export_weather() {
     .def(self_ns::str(self_ns::self))
   ;
 
-  cls.attr("Default") = cr::WeatherParameters::Default;
-  cls.attr("ClearNoon") = cr::WeatherParameters::ClearNoon;
-  cls.attr("CloudyNoon") = cr::WeatherParameters::CloudyNoon;
-  cls.attr("WetNoon") = cr::WeatherParameters::WetNoon;
-  cls.attr("WetCloudyNoon") = cr::WeatherParameters::WetCloudyNoon;
-  cls.attr("MidRainyNoon") = cr::WeatherParameters::MidRainyNoon;
-  cls.attr("HardRainNoon") = cr::WeatherParameters::HardRainNoon;
-  cls.attr("SoftRainNoon") = cr::WeatherParameters::SoftRainNoon;
-  cls.attr("ClearSunset") = cr::WeatherParameters::ClearSunset;
-  cls.attr("CloudySunset") = cr::WeatherParameters::CloudySunset;
-  cls.attr("WetSunset") = cr::WeatherParameters::WetSunset;
-  cls.attr("WetCloudySunset") = cr::WeatherParameters::WetCloudySunset;
-  cls.attr("MidRainSunset") = cr::WeatherParameters::MidRainSunset;
-  cls.attr("HardRainSunset") = cr::WeatherParameters::HardRainSunset;
-  cls.attr("SoftRainSunset") = cr::WeatherParameters::SoftRainSunset;
-  cls.attr("ClearNight") = cr::WeatherParameters::ClearNight;
-  cls.attr("CloudyNight") = cr::WeatherParameters::CloudyNight;
-  cls.attr("WetNight") = cr::WeatherParameters::WetNight;
-  cls.attr("WetCloudyNight") = cr::WeatherParameters::WetCloudyNight;
-  cls.attr("SoftRainNight") = cr::WeatherParameters::SoftRainNight;
-  cls.attr("MidRainyNight") = cr::WeatherParameters::MidRainyNight;
-  cls.attr("HardRainNight") = cr::WeatherParameters::HardRainNight;
-  cls.attr("DustStorm") = cr::WeatherParameters::DustStorm;
+  // Return a fresh editable value without changing the predefined preset.
+  cls.add_static_property("Default",
+      +[]() { return cr::WeatherParameters::Default; });
+  cls.add_static_property("ClearNoon",
+      +[]() { return cr::WeatherParameters::ClearNoon; });
+  cls.add_static_property("CloudyNoon",
+      +[]() { return cr::WeatherParameters::CloudyNoon; });
+  cls.add_static_property("WetNoon",
+      +[]() { return cr::WeatherParameters::WetNoon; });
+  cls.add_static_property("WetCloudyNoon",
+      +[]() { return cr::WeatherParameters::WetCloudyNoon; });
+  cls.add_static_property("MidRainyNoon",
+      +[]() { return cr::WeatherParameters::MidRainyNoon; });
+  cls.add_static_property("HardRainNoon",
+      +[]() { return cr::WeatherParameters::HardRainNoon; });
+  cls.add_static_property("SoftRainNoon",
+      +[]() { return cr::WeatherParameters::SoftRainNoon; });
+  cls.add_static_property("ClearSunset",
+      +[]() { return cr::WeatherParameters::ClearSunset; });
+  cls.add_static_property("CloudySunset",
+      +[]() { return cr::WeatherParameters::CloudySunset; });
+  cls.add_static_property("WetSunset",
+      +[]() { return cr::WeatherParameters::WetSunset; });
+  cls.add_static_property("WetCloudySunset",
+      +[]() { return cr::WeatherParameters::WetCloudySunset; });
+  cls.add_static_property("MidRainSunset",
+      +[]() { return cr::WeatherParameters::MidRainSunset; });
+  cls.add_static_property("HardRainSunset",
+      +[]() { return cr::WeatherParameters::HardRainSunset; });
+  cls.add_static_property("SoftRainSunset",
+      +[]() { return cr::WeatherParameters::SoftRainSunset; });
+  cls.add_static_property("ClearNight",
+      +[]() { return cr::WeatherParameters::ClearNight; });
+  cls.add_static_property("CloudyNight",
+      +[]() { return cr::WeatherParameters::CloudyNight; });
+  cls.add_static_property("WetNight",
+      +[]() { return cr::WeatherParameters::WetNight; });
+  cls.add_static_property("WetCloudyNight",
+      +[]() { return cr::WeatherParameters::WetCloudyNight; });
+  cls.add_static_property("SoftRainNight",
+      +[]() { return cr::WeatherParameters::SoftRainNight; });
+  cls.add_static_property("MidRainyNight",
+      +[]() { return cr::WeatherParameters::MidRainyNight; });
+  cls.add_static_property("HardRainNight",
+      +[]() { return cr::WeatherParameters::HardRainNight; });
+  cls.add_static_property("DustStorm",
+      +[]() { return cr::WeatherParameters::DustStorm; });
 }

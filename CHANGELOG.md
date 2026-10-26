@@ -107,6 +107,8 @@
 
 ### Bug fixes
 
+* Fixed Python weather presets sharing mutable objects between accesses; customizing a preset no longer changes its predefined values (#6649).
+
 #### Sensors
 
 * Fixed every native sensor (LiDAR, radar, IMU, cameras) simulating only the last physics substep instead of the true elapsed time when `sensor_tick` spanned more than one substep, which halved LiDAR's swept angle and skewed IMU and radar readings.

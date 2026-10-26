@@ -65,7 +65,7 @@ Every parameter, with the range the server accepts and its default:
 | `rayleigh_scattering_scale` | 0-2 | 0.0331 | Light scattering off air molecules, which is what makes the sky blue by day and red at dusk. |
 | `dust_storm` | 0-100 | 0 | Strength of a dust storm. |
 
-There are some weather presets that can be directly applied to the world. These are listed in [carla.WeatherParameters](python_api.md#carla.WeatherParameters) and accessible as an enum.
+Weather presets can be directly applied to the world and are listed in [carla.WeatherParameters](python_api.md#carla.WeatherParameters). Each preset access returns a separate object, so customizing its attributes does not change the predefined preset or other weather objects.
 
 ```py
 world.set_weather(carla.WeatherParameters.WetCloudySunset)
