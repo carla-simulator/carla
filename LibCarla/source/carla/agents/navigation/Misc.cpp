@@ -103,7 +103,7 @@ bool IsWithinDistance(
   const float clamped = std::clamp(dot, -1.0f, 1.0f);
   const float angle_deg = geom::Math::ToDegrees(std::acos(clamped));
 
-  return min_angle < angle_deg && angle_deg < max_angle;
+  return min_angle <= angle_deg && angle_deg <= max_angle;
 }
 
 std::pair<float, float> ComputeMagnitudeAngle(

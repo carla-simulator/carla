@@ -83,6 +83,7 @@ class ConstantVelocityAgent(BasicAgent):
                 return carla.VehicleControl()
 
         hazard_detected = False
+        hazard_speed = 0.0
 
         # Retrieve all relevant actors
         actor_list = self._world.get_actors()
@@ -112,7 +113,7 @@ class ConstantVelocityAgent(BasicAgent):
         # still useful to apply it so that the vehicle isn't moving with static wheels
         control = self._local_planner.run_step()
         if hazard_detected:
-            self._set_constant_velocity(hazard_speed)
+            self._set_constant_velocity(max(0.0, min(hazard_speed, self._target_speed)))
         else:
             self._set_constant_velocity(self._target_speed)
 

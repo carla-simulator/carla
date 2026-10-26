@@ -1,5 +1,8 @@
 ## LATEST Changes
 
+* Fixed Python and C++ navigation agents excluding exact angle-interval boundaries, including obstacles straight ahead.
+* Fixed constant-velocity obstacle responses commanding reverse motion or exceeding the configured forward target speed.
+
 ### New features
 
 #### Simulator

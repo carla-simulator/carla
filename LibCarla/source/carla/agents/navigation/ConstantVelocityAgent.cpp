@@ -21,6 +21,7 @@
 #include "carla/geom/Vector3D.h"
 #include "carla/rpc/VehicleControl.h"
 
+#include <algorithm>
 #include <utility>
 
 namespace carla {
@@ -128,7 +129,7 @@ rpc::VehicleControl ConstantVelocityAgent::RunStep() {
   // forward motion comes from EnableConstantVelocity.
   rpc::VehicleControl control = _local_planner->RunStep();
   if (hazard_detected) {
-    SetConstantVelocity(hazard_speed);
+    SetConstantVelocity(std::max(0.0f, std::min(hazard_speed, _target_speed_ms)));
   } else {
     SetConstantVelocity(_target_speed_ms);
   }

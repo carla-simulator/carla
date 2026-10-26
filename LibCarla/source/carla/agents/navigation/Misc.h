@@ -40,7 +40,7 @@ namespace navigation {
   /// Returns true when @a target is within @a max_distance of @a reference.
   /// When @a angle_interval is provided, the angle (in degrees) between the
   /// reference's forward vector and the vector reference -> target must lie
-  /// in the open interval (min, max).
+  /// in the closed interval [min, max].
   bool IsWithinDistance(
       const geom::Transform &target,
       const geom::Transform &reference,
