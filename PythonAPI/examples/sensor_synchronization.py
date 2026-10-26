@@ -23,6 +23,7 @@ sensors are going to tick at each frame.
 
 from queue import Queue
 from queue import Empty
+import time
 
 import carla
 
@@ -37,11 +38,27 @@ def sensor_callback(sensor_data, sensor_queue, sensor_name):
     sensor_queue.put((sensor_data.frame, sensor_name))
 
 
+def collect_sensor_frame(sensor_queue, frame, sensor_names, timeout=1.0):
+    """Yield one packet per expected sensor belonging to the current world frame."""
+    pending = set(sensor_names)
+    deadline = time.monotonic() + timeout
+    while pending:
+        remaining = deadline - time.monotonic()
+        if remaining <= 0.0:
+            raise Empty
+        packet = sensor_queue.get(True, remaining)
+        if packet[0] == frame and packet[1] in pending:
+            pending.remove(packet[1])
+            yield packet
+
+
 def main():
     # We start creating the client
     client = carla.Client('localhost', 2000)
     client.set_timeout(2.0)
     world = client.get_world()
+    original_settings = None
+    sensor_list = []
 
     try:
         # We need to save the settings to be able to recover them at the end
@@ -66,29 +83,28 @@ def main():
         radar_bp = blueprint_library.find('sensor.other.radar')
 
         # We create all the sensors and keep them in a list for convenience.
-        sensor_list = []
 
         cam01 = world.spawn_actor(cam_bp, carla.Transform())
+        sensor_list.append((cam01, "camera01"))
         cam01.listen(lambda data: sensor_callback(data, sensor_queue, "camera01"))
-        sensor_list.append(cam01)
 
         lidar_bp.set_attribute('points_per_second', '100000')
         lidar01 = world.spawn_actor(lidar_bp, carla.Transform())
+        sensor_list.append((lidar01, "lidar01"))
         lidar01.listen(lambda data: sensor_callback(data, sensor_queue, "lidar01"))
-        sensor_list.append(lidar01)
 
         lidar_bp.set_attribute('points_per_second', '1000000')
         lidar02 = world.spawn_actor(lidar_bp, carla.Transform())
+        sensor_list.append((lidar02, "lidar02"))
         lidar02.listen(lambda data: sensor_callback(data, sensor_queue, "lidar02"))
-        sensor_list.append(lidar02)
 
         radar01 = world.spawn_actor(radar_bp, carla.Transform())
+        sensor_list.append((radar01, "radar01"))
         radar01.listen(lambda data: sensor_callback(data, sensor_queue, "radar01"))
-        sensor_list.append(radar01)
 
         radar02 = world.spawn_actor(radar_bp, carla.Transform())
+        sensor_list.append((radar02, "radar02"))
         radar02.listen(lambda data: sensor_callback(data, sensor_queue, "radar02"))
-        sensor_list.append(radar02)
 
         # Main loop
         while True:
@@ -100,20 +116,22 @@ def main():
             # Now, we wait to the sensors data to be received.
             # As the queue is blocking, we will wait in the queue.get() methods
             # until all the information is processed and we continue with the next frame.
-            # We include a timeout of 1.0 s (in the get method) and if some information is
-            # not received in this time we continue.
+            # Share a one-second deadline across this frame. Ignore stale packets and
+            # duplicates instead of treating them as a missing sensor's current data.
             try:
-                for _ in range(len(sensor_list)):
-                    s_frame = sensor_queue.get(True, 1.0)
+                for s_frame in collect_sensor_frame(sensor_queue, w_frame, (name for _, name in sensor_list)):
                     print("    Frame: %d   Sensor: %s" % (s_frame[0], s_frame[1]))
 
             except Empty:
                 print("    Some of the sensor information is missed")
 
     finally:
-        world.apply_settings(original_settings)
-        for sensor in sensor_list:
-            sensor.destroy()
+        try:
+            if original_settings is not None:
+                world.apply_settings(original_settings)
+        finally:
+            for sensor, _ in sensor_list:
+                sensor.destroy()
 
 
 if __name__ == "__main__":

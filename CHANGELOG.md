@@ -1,5 +1,9 @@
 ## LATEST Changes
 
+- Camera interpolation now honors the requested server endpoint and keeps one FPS timeline across keypoints, including a single static pose.
+- Initialize sensor visualization callback state before starting asynchronous packet delivery.
+- Match synchronized example packets by world frame and sensor identity, and clean up allocated sensors after setup or settings restoration failures.
+
 ### New features
 
 #### Simulator

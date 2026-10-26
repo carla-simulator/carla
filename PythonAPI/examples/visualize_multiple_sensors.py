@@ -87,12 +87,13 @@ class SensorManager:
         self.world = world
         self.display_man = display_man
         self.display_pos = display_pos
-        self.sensor = self.init_sensor(sensor_type, transform, attached, sensor_options)
         self.sensor_options = sensor_options
         self.timer = CustomTimer()
 
         self.time_processing = 0.0
         self.tics_processing = 0
+
+        self.sensor = self.init_sensor(sensor_type, transform, attached, sensor_options)
 
         self.display_man.add_sensor(self)
 

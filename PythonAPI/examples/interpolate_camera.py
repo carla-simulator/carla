@@ -9,6 +9,7 @@
 """Smooth movement of a camera interpolating collection of keypoints provided in a xml file"""
 
 import argparse
+import math
 
 import numpy as np
 from scipy.interpolate import interp1d
@@ -48,6 +49,9 @@ def parse_key_points(file, id):
     return interpolation_key_points, max_order
 
 def interpolate_data(points, max_order):
+    if len(points) == 1:
+        return [carla.Transform(points[0][1], points[0][2])]
+
     def interpolate_element(time_points, elem_points, time_disc):
         if len(time_points) > 3 and max_order >= 3:
             inter_kind = 'cubic'
@@ -88,12 +92,12 @@ def interpolate_data(points, max_order):
     pitch_list = normalize_angles([item[2].pitch for item in points])
     yaw_list = normalize_angles([item[2].yaw for item in points])
 
-    # Discretize the time
-    time_disc = []
-    for i in range(len(time_list) - 1):
-        current_time = time_list[i]
-        next_time = time_list[i+1]
-        time_disc.extend(list(np.arange(current_time, next_time, step=1/FPS)))
+    # Keep one FPS clock across keypoints, including intervals shorter than a frame.
+    frame_count = (time_list[-1] - time_list[0]) * FPS
+    nearest_frame_count = round(frame_count)
+    if math.isclose(frame_count, nearest_frame_count, rel_tol=0.0, abs_tol=1e-9):
+        frame_count = nearest_frame_count
+    time_disc = time_list[0] + np.arange(math.ceil(frame_count)) / FPS
 
     # Interpolate the data
     x_disc = interpolate_element(time_list, x_list, time_disc)
@@ -140,7 +144,7 @@ def main():
         help='Activates synchronous mode.')
     args = argparser.parse_args()
 
-    client = carla.Client('localhost', 2000)
+    client = carla.Client(args.host, args.port)
     world = client.get_world()
 
     try:
