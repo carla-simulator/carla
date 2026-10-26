@@ -99,7 +99,9 @@ bool IsWithinDistance(
   const float max_angle = angle_interval->second;
 
   const auto fwd = reference.GetForwardVector();
-  const float dot = (fwd.x * dx + fwd.y * dy) / norm_target;
+  // Dropping Z shortens the unit forward vector on graded roads.
+  const float norm_forward = std::hypot(fwd.x, fwd.y);
+  const float dot = (fwd.x * dx + fwd.y * dy) / (norm_target * norm_forward);
   const float clamped = std::clamp(dot, -1.0f, 1.0f);
   const float angle_deg = geom::Math::ToDegrees(std::acos(clamped));
 

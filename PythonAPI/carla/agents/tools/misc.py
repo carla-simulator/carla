@@ -100,6 +100,8 @@ def is_within_distance(target_transform, reference_transform, max_distance, angl
 
     fwd = reference_transform.get_forward_vector()
     forward_vector = np.array([fwd.x, fwd.y])
+    # Dropping Z shortens the unit forward vector on graded roads.
+    forward_vector /= np.linalg.norm(forward_vector)
     angle = math.degrees(math.acos(np.clip(np.dot(forward_vector, target_vector) / norm_target, -1., 1.)))
 
     return min_angle <= angle <= max_angle
