@@ -1,5 +1,7 @@
 ## LATEST Changes
 
+* Fixed DVS and optical-flow previews/capture in the sensor reading skill, and clipped projected actor boxes at the camera plane and image bounds.
+
 ### New features
 
 #### Simulator

@@ -121,6 +121,21 @@ def _camera_rgb(image) -> np.ndarray:
     return a[:, :, :3][:, :, ::-1]  # BGRA -> RGB
 
 
+def _camera_frame(data, type_id, cc):
+    """Render specialized camera payloads through their actual data formats."""
+    if type_id == "sensor.camera.dvs":
+        dtype = np.dtype([("x", "<u2"), ("y", "<u2"), ("t", "<i8"), ("pol", "?")])
+        events = np.frombuffer(data.raw_data, dtype=dtype)
+        image = np.zeros((data.height, data.width, 3), dtype=np.uint8)
+        # Match native DVSEventArray.ToImage: positive blue, negative red.
+        image[events["y"], events["x"], np.where(events["pol"], 2, 0)] = 255
+        return image
+    if type_id == "sensor.camera.optical_flow":
+        return _camera_rgb(data.get_color_coded_flow())
+    data.convert(cc)
+    return _camera_rgb(data)
+
+
 def _lidar_topdown(measure, size=600, rng=50.0) -> np.ndarray:
     """Top-down scatter of a lidar sweep into an RGB image (rng metres half-extent)."""
     pts = np.frombuffer(measure.raw_data, dtype=np.float32).reshape(-1, 4)[:, :2]
@@ -134,8 +149,7 @@ def _lidar_topdown(measure, size=600, rng=50.0) -> np.ndarray:
 def _render_frame(data, type_id, cc):
     """Measurement -> RGB array for cameras (converted) and lidar; None otherwise."""
     if type_id.startswith("sensor.camera"):
-        data.convert(cc)
-        return _camera_rgb(data)
+        return _camera_frame(data, type_id, cc)
     if "lidar" in type_id:
         return _lidar_topdown(data)
     return None
@@ -246,11 +260,9 @@ def _release_clock(world, previous):
     print("world settings restored (asynchronous)")
 
 
-def _write_png(data, path, cc):
+def _write_png(data, path, cc, type_id="sensor.camera.rgb"):
     """Encode a camera image to PNG from its raw buffer."""
-    data.convert(cc)
-    frame = np.frombuffer(data.raw_data, dtype=np.uint8)
-    frame = frame.reshape((data.height, data.width, 4))[:, :, :3]   # BGRA -> BGR
+    frame = _camera_frame(data, type_id, cc)[:, :, ::-1]  # RGB -> BGR
     try:
         import cv2
         cv2.imwrite(path, frame)
@@ -301,7 +313,7 @@ def cmd_save(args):
             # Converting the raw buffer here and writing it ourselves is what
             # the video-capture scripts on this build do, across thousands of
             # frames, without stalling.
-            _write_png(data, os.path.join(args.out, f"{data.frame:08d}.png"), cc)
+            _write_png(data, os.path.join(args.out, f"{data.frame:08d}.png"), cc, sensor.type_id)
         elif is_lidar:
             data.save_to_disk(os.path.join(args.out, f"{data.frame:08d}.ply"))
         else:
@@ -394,8 +406,7 @@ def cmd_show(args):
 
     def cb(data):
         if is_img:
-            data.convert(cc)
-            frame = _camera_rgb(data)
+            frame = _camera_frame(data, sensor.type_id, cc)
         else:
             frame = _lidar_topdown(data)
         with lock:

@@ -58,8 +58,9 @@ python3 scripts/bounding_boxes.py project --camera <camera_id> --filter vehicle.
 
 Capture one frame → build the camera intrinsics `K` from its `fov` + resolution →
 for each actor, take its 3D box's 8 world vertices (`get_world_vertices`),
-transform to camera space with the camera's inverse matrix, keep those in front,
-apply `K` → 2D points → the min/max is the 2D box. Off-frame and too-far
+transform to camera space with the camera's inverse matrix, clip box edges at
+the camera plane, and apply `K` → 2D points → min/max, clipped to image pixels.
+Off-frame and too-far
 (`--max-dist`) actors are skipped. Full math in the reference.
 
 ## Examples

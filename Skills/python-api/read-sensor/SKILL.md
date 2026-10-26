@@ -12,6 +12,10 @@ metadata:
 
 # Read a sensor
 
+DVS cameras display/save polarity images (positive blue, negative red).
+Optical-flow cameras use the native colour-coded visualization for PNG output
+and display; those PNGs contain visualized flow rather than raw vector values.
+
 > **Paths.** `scripts/…` and `references/…` below are relative to the
 > directory holding this SKILL.md. Your working directory is the user's
 > project, not that directory, so prefix them with its absolute path or the

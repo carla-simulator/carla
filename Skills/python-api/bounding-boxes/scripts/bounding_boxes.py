@@ -144,6 +144,35 @@ def _build_K(w, h, fov):
     return np.array([[f, 0, w / 2.0], [0, f, h / 2.0], [0, 0, 1.0]])
 
 
+def _project_box(vertices, world_2_cam, intrinsic, width, height):
+    """Clip box edges in front of the camera before perspective division."""
+    camera = []
+    for vertex in vertices:
+        point = world_2_cam @ np.array([vertex.x, vertex.y, vertex.z, 1.0])
+        camera.append(np.array([point[1], -point[2], point[0]]))
+    near = 1e-4
+    points = [point for point in camera if point[2] >= near]
+    # GetWorldVertices uses the binary XYZ corner ordering. Each bit flip
+    # connects one of the twelve edges, including those crossing the near plane.
+    for first in range(8):
+        for bit in (1, 2, 4):
+            second = first ^ bit
+            if second <= first:
+                continue
+            start, end = camera[first], camera[second]
+            if (start[2] < near) != (end[2] < near):
+                points.append(start + (end - start) * ((near - start[2]) / (end[2] - start[2])))
+    if not points:
+        return None
+    pixels = np.array([(intrinsic @ point)[:2] / point[2] for point in points])
+    minimum, maximum = pixels.min(axis=0), pixels.max(axis=0)
+    if maximum[0] < 0 or maximum[1] < 0 or minimum[0] > width - 1 or minimum[1] > height - 1:
+        return None
+    minimum = np.maximum(minimum, 0)
+    maximum = np.minimum(maximum, [width - 1, height - 1])
+    return [int(minimum[0]), int(minimum[1]), int(maximum[0]), int(maximum[1])]
+
+
 def cmd_project(args):
     world = _world()
     sensors = world.get_actors().filter("sensor.camera.rgb")
@@ -185,24 +214,11 @@ def cmd_project(args):
         if a.id == cam.id or a.id == parent_id or a.get_transform().location.distance(cam_loc) > args.max_dist:
             continue
         verts = a.bounding_box.get_world_vertices(a.get_transform())
-        pts = []
-        for v in verts:
-            p = world_2_cam @ np.array([v.x, v.y, v.z, 1.0])
-            # UE (x fwd, y right, z up) -> camera (x right, y down, z fwd)
-            cam_pt = np.array([p[1], -p[2], p[0]])
-            if cam_pt[2] <= 0:      # behind the camera
-                continue
-            img_pt = K @ cam_pt
-            pts.append(img_pt[:2] / img_pt[2])
-        if len(pts) < 4:
-            continue
-        pts = np.array(pts)
-        x0, y0 = pts[:, 0].min(), pts[:, 1].min()
-        x1, y1 = pts[:, 0].max(), pts[:, 1].max()
-        if x1 < 0 or y1 < 0 or x0 > w or y0 > h:   # fully off-frame
+        bounds = _project_box(verts, world_2_cam, K, w, h)
+        if bounds is None:
             continue
         boxes.append({"id": a.id, "type": a.type_id,
-                      "bbox": [int(x0), int(y0), int(x1), int(y1)]})
+                      "bbox": bounds})
 
     out_png = args.out or "boxes.png"
     try:
