@@ -11,13 +11,13 @@ if (len(sys.argv) < 3):
 #----------------------------------
 totalVertex = 0
 try:
-	f = open(sys.argv[1], "rt")
+	f = open(sys.argv[1], "rt", encoding="utf-8", errors="surrogateescape")
 	lines = f.readlines()
 	for line in lines:
 		if (line[:2] == "v "):
 			totalVertex += 1
 except:
-	f = open(sys.argv[1], "wt")
+	f = open(sys.argv[1], "wt", encoding="utf-8", errors="surrogateescape")
 f.close()
 
 #--------------------------------------
@@ -25,7 +25,7 @@ f.close()
 #--------------------------------------
 minIndex = 10000000
 try:
-	f = open(sys.argv[2], "rt")
+	f = open(sys.argv[2], "rt", encoding="utf-8", errors="surrogateescape")
 	lines = f.readlines()
 	for line in lines:
 		if (line[:2] == "f "):
@@ -49,13 +49,13 @@ f.close()
 #----------------
 # read obj to add
 #----------------
-f = open(sys.argv[2], "rt")
+f = open(sys.argv[2], "rt", encoding="utf-8", errors="surrogateescape")
 if (not f):
 	print("Could not open %s file" % sys.argv2[2])
 	sys.exit(1)
 lines = f.readlines()
 f.close()
-d = open(sys.argv[1], "at")
+d = open(sys.argv[1], "at", encoding="utf-8", errors="surrogateescape")
 for line in lines:
 	# object
 	if (line[:2] == "o "):

@@ -1,5 +1,8 @@
 ## LATEST Changes
 
+- Fixed OBJ append text I/O to preserve UTF-8 object names and material names independently of the host locale, while retaining legacy name bytes.
+
+
 ### New features
 
 #### Simulator
