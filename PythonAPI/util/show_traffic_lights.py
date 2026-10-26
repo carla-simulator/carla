@@ -11,46 +11,20 @@
 
 import argparse
 import sys
-import math
 
 import carla
 
 def get_traffic_light_bbs(traffic_light):
-    def rotate_point(point, angle):
-        """
-        rotate a given point by a given angle
-        """
-        x_ = math.cos(math.radians(angle)) * point.x - math.sin(math.radians(angle)) * point.y
-        y_ = math.sin(math.radians(angle)) * point.x - math.cos(math.radians(angle)) * point.y
-
-        return carla.Vector3D(x_, y_, point.z)
-
     base_transform = traffic_light.get_transform()
-    base_rot = base_transform.rotation.yaw
 
-    area_loc = base_transform.transform(traffic_light.trigger_volume.location)
-    area_ext = traffic_light.trigger_volume.extent
-    point = rotate_point(carla.Vector3D(0, 0, area_ext.z), base_rot)
-    point_location = area_loc + carla.Location(x=point.x, y=point.y)
+    def to_world(local_box):
+        world_box = carla.BoundingBox(
+            base_transform.transform(local_box.location), local_box.extent)
+        world_box.rotation = (carla.Quaternion(base_transform.rotation) *
+                              carla.Quaternion(local_box.rotation)).rotator()
+        return world_box
 
-    trigger_volume = carla.BoundingBox(
-        carla.Location(point_location.x, point_location.y, point_location.z),
-        area_ext
-    )
-    trigger_volume.rotation = traffic_light.get_transform().rotation
-
-    area_loc = base_transform.transform(traffic_light.bounding_box.location)
-    area_ext = traffic_light.bounding_box.extent
-    point = rotate_point(carla.Vector3D(0, 0, area_ext.z), base_rot)
-    point_location = area_loc + carla.Location(x=point.x, y=point.y)
-
-    bounding_box = carla.BoundingBox(
-        carla.Location(point_location.x, point_location.y, point_location.z),
-        area_ext
-    )
-    bounding_box.rotation = traffic_light.get_transform().rotation
-
-    return bounding_box, trigger_volume
+    return to_world(traffic_light.bounding_box), to_world(traffic_light.trigger_volume)
 
 
 def main():

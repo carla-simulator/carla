@@ -9,6 +9,7 @@
 """Compare two recorder files (gotten from 'show_recorder_file_info') line by line"""
 
 import argparse
+from itertools import zip_longest
 
 def main():
 
@@ -38,27 +39,29 @@ def main():
     with open(args.file2, 'r') as fd:
         recorder_2_str = fd.read()
 
-    list_of_rows_1 = recorder_1_str.split("\n")[3:]
-    list_of_rows_2 = recorder_2_str.split("\n")[3:]
-    len_1 = len(list_of_rows_1)
-    len_2 = len(list_of_rows_2)
-
-    if len_1 < 10 or len_2 < 10:
-        raise ValueError('Recorder have less than 10 lines. This might be due to an error')
+    rows_1 = recorder_1_str.split("\n")
+    rows_2 = recorder_2_str.split("\n")
+    headers = ('Version:', 'Map:', 'Date:')
+    for rows in (rows_1, rows_2):
+        if len(rows) < len(headers) or not all(
+                row.startswith(header) for row, header in zip(rows, headers)):
+            raise ValueError('Expected a CARLA recorder info report')
+    list_of_rows_1 = rows_1[3:]
+    list_of_rows_2 = rows_2[3:]
 
     ignored_ids_1 = []
     ignored_ids_2 = []
 
-    frame_1 = 0
-    frame_2 = 0
-    time_1 = 0
-    time_2 = 0
+    frame_1 = "0"
+    frame_2 = "0"
+    time_1 = "0"
+    time_2 = "0"
 
     print("")
     try:
-        for i in range(len_1):
-            row1 = list_of_rows_1[i].strip()
-            row2 = list_of_rows_2[i].strip()
+        for i, (row1, row2) in enumerate(zip_longest(list_of_rows_1, list_of_rows_2, fillvalue="")):
+            row1 = row1.strip()
+            row2 = row2.strip()
 
             row1_id = None
             row2_id = None
@@ -76,18 +79,18 @@ def main():
                 continue
             elif row1.startswith("Collision") and row2.startswith("Collision"):  # Based on ids, which vary
                 continue
-            elif row1.startswith("Destroy"):  # No more info apart from the id, which vary
+            elif row1.startswith("Destroy") and row2.startswith("Destroy"):  # No more info apart from the id, which vary
                 continue
-            elif row1.startswith("Current platform time:"):  # Real time, so it can vary without affecting determinism
+            elif row1.startswith("Current platform time:") and row2.startswith("Current platform time:"):  # Real time, so it can vary without affecting determinism
                 continue
 
             # Ignoring the Id part, as it can differ between simulations
-            elif row1.startswith("Id:"):
+            elif row1.startswith("Id:") and row2.startswith("Id:"):
                 _, row1_id, *row1_info = row1.split(" ")
                 _, row2_id, *row2_info = row2.split(" ")
 
             # Same with Create and Destroy, but 
-            elif row1.startswith("Create"):
+            elif row1.startswith("Create") and row2.startswith("Create"):
                 _, row1_id, *row1_info = row1.split(" ")
                 _, row2_id, *row2_info = row2.split(" ")
 

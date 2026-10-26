@@ -1,5 +1,9 @@
 ## LATEST Changes
 
+* Fixed recorder comparison rejecting short valid reports, stopping early on unequal report lengths, and hiding mismatched event categories.
+* Fixed traffic-light debug boxes losing their local orientation when converted to world space.
+* Fixed the crosswalk visualization utility assuming every polygon has exactly four corners.
+
 ### New features
 
 #### Simulator

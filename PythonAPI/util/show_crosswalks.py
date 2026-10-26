@@ -73,17 +73,18 @@ def main():
     for i in range(len(crosswalks)):
         world.debug.draw_string(crosswalks[i] + carla.Location(z=1), str(i), life_time=args.show, color=carla.Color(0, 0, 0))
 
-    for i in range(0, len(crosswalks), 5):
-        a = crosswalks[i] + carla.Location(z=0.5)
-        b = crosswalks[i+1] + carla.Location(z=0.5)
-        c = crosswalks[i+2] + carla.Location(z=0.5)
-        d = crosswalks[i+3] + carla.Location(z=0.5)
-        e = crosswalks[i+4] + carla.Location(z=0.5)
-
-        world.debug.draw_line(a, b, life_time=args.show, thickness=0.1, color=carla.Color(0, 0, 128))
-        world.debug.draw_line(b, c, life_time=args.show, thickness=0.1, color=carla.Color(0, 0, 128))
-        world.debug.draw_line(c, d, life_time=args.show, thickness=0.1, color=carla.Color(0, 0, 128))
-        world.debug.draw_line(d, e, life_time=args.show, thickness=0.1, color=carla.Color(0, 0, 128))
+    polygon_start = None
+    previous = None
+    offset = carla.Location(z=0.5)
+    for point in crosswalks:
+        if polygon_start is None:
+            polygon_start = point
+        else:
+            world.debug.draw_line(previous + offset, point + offset,
+                                  life_time=args.show, thickness=0.1, color=carla.Color(0, 0, 128))
+            if point == polygon_start:
+                polygon_start = None
+        previous = point
 
 
 if __name__ == '__main__':
