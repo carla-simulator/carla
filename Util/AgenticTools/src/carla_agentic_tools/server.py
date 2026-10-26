@@ -22,6 +22,7 @@ import subprocess
 from pathlib import Path
 
 from . import config as _cfg
+from . import __version__
 
 # The MCP SDK renamed the high-level server class in 2.0 (FastMCP -> MCPServer)
 # and dropped the old import path. Both expose the same surface used here
@@ -93,12 +94,7 @@ set_config derives the engine-specific variable that gates ue4/ue5/ue58.
 
 def _version() -> str:
     """The version clients are shown; without it FastMCP reports the SDK's."""
-    try:
-        from . import __version__
-
-        return __version__
-    except Exception:
-        return ""
+    return __version__
 
 
 # Clients display serverInfo.version, and it identifies which skill library a run
@@ -113,9 +109,9 @@ mcp = _MCPServer(**_kwargs)
 # leaving serverInfo.version reporting the *SDK* release. Set it through the
 # wrapper so every client sees the skill library's version instead.
 if "version" not in _kwargs:
-    _low = getattr(mcp, "_mcp_server", None)
-    if _low is not None and hasattr(_low, "version"):
-        _low.version = _version()
+    _LOW_LEVEL_SERVER = getattr(mcp, "_mcp_server", None)
+    if _LOW_LEVEL_SERVER is not None and hasattr(_LOW_LEVEL_SERVER, "version"):
+        _LOW_LEVEL_SERVER.version = _version()
 
 
 def _skill_dirs() -> list[Path]:
@@ -305,7 +301,7 @@ def check_prerequisites(name: str) -> str:
         raise ValueError(f"skill {name!r} has no prerequisite checks (scripts/check_env.sh)")
     proc = subprocess.run(
         ["bash", str(script)],
-        capture_output=True, text=True, timeout=120,
+        capture_output=True, text=True, timeout=120, check=False,
     )
     report = f"exit={proc.returncode}\n--- stdout ---\n{proc.stdout}\n--- stderr ---\n{proc.stderr}"
     # Only when the preflight actually failed. Several keys have a working default
@@ -435,7 +431,7 @@ def set_config(paths: dict[str, str]) -> str:
             notes.append(f"{key} = {p}")
 
     written = _cfg.write_config(updates)
-    shadowed = [k for k in updates if os.environ.get(k) and os.environ[k] != updates[k]]
+    shadowed = [key for key, value in updates.items() if os.environ.get(key) and os.environ[key] != value]
     if shadowed:
         notes.append("NOTE: an exported environment variable still overrides "
                      f"{', '.join(shadowed)} — unset it or the config is ignored")

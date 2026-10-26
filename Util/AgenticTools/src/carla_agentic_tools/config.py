@@ -153,11 +153,8 @@ def validate(key: str, value: str) -> tuple[bool, str]:
     if not value:
         return False, "unset"
     if key == "PYTHON":
-        if Path(value).is_file() and os.access(value, os.X_OK):
-            return True, ""
-        if shutil.which(value):
-            return True, ""
-        return False, f"{value} is not an executable on PATH"
+        usable = (Path(value).is_file() and os.access(value, os.X_OK)) or bool(shutil.which(value))
+        return (True, "") if usable else (False, f"{value} is not an executable on PATH")
     p = Path(value).expanduser()
     if not p.is_dir():
         return False, f"{p} is not a directory"
@@ -182,9 +179,9 @@ def resolve_valid(key: str, cwd: Path | None = None) -> tuple[str, str, str]:
 def _branch(path: Path) -> str:
     try:
         out = subprocess.run(["git", "-C", str(path), "rev-parse", "--abbrev-ref", "HEAD"],
-                             capture_output=True, text=True, timeout=10)
+                             capture_output=True, text=True, timeout=10, check=False)
         return out.stdout.strip() if out.returncode == 0 else ""
-    except Exception:
+    except (OSError, UnicodeError, subprocess.SubprocessError):
         return ""
 
 
