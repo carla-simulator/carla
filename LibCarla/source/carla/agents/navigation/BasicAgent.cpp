@@ -34,7 +34,6 @@
 #include <array>
 #include <cmath>
 #include <cstdint>
-#include <limits>
 #include <utility>
 
 namespace carla {
@@ -417,16 +416,19 @@ BasicAgent::VehicleObstacle BasicAgent::VehicleObstacleDetected(
 
   std::optional<BgPolygon> route_polygon = build_route_polygon();
 
-  std::vector<SharedPtr<client::Actor>> candidates(vehicle_list->begin(), vehicle_list->end());
-  const auto clearance = [&](const SharedPtr<client::Actor> &actor) {
-    if (!actor) return std::numeric_limits<float>::infinity();
+  std::vector<std::pair<float, SharedPtr<client::Actor>>> candidates;
+  for (auto actor : *vehicle_list) {
+    if (!actor) continue;
     const auto extent = actor->GetBoundingBox().extent;
-    return ego_location.Distance(actor->GetLocation()) - std::max(extent.x, extent.y);
-  };
-  std::stable_sort(candidates.begin(), candidates.end(), [&](const auto &left, const auto &right) {
-    return clearance(left) < clearance(right);
+    const auto clearance = ego_location.Distance(actor->GetLocation()) - std::max(extent.x, extent.y);
+    candidates.emplace_back(clearance, actor);
+  }
+  // Read each actor's clearance once: episode snapshots can advance while sorting.
+  std::stable_sort(candidates.begin(), candidates.end(), [](const auto &left, const auto &right) {
+    return left.first < right.first;
   });
-  for (auto actor : candidates) {
+  for (const auto &candidate : candidates) {
+    const auto &actor = candidate.second;
     if (!actor) continue;
     if (actor->GetId() == _vehicle->GetId()) {
       continue;
