@@ -78,11 +78,25 @@ namespace road {
         geometry->GetDistance() + geometry->GetGeometry().GetLength()) {
       return false;
     }
-    auto lane_offsets = GetInfos<element::RoadInfoLaneOffset>();
+    auto lane_offsets = road->GetInfos<element::RoadInfoLaneOffset>();
     for (auto *lane_offset : lane_offsets) {
       if (std::abs(lane_offset->GetPolynomial().GetC()) > 0 ||
           std::abs(lane_offset->GetPolynomial().GetD()) > 0) {
         return false;
+      }
+    }
+    // The center also follows widths of all lanes between this lane and the
+    // reference line, not just the reference line's own geometry.
+    for (const auto &entry : GetLaneSection()->GetLanes()) {
+      const auto id = entry.first;
+      if ((GetId() < 0 && id >= GetId() && id < 0) ||
+          (GetId() > 0 && id <= GetId() && id > 0)) {
+        for (const auto *width : entry.second.GetInfos<element::RoadInfoLaneWidth>()) {
+          if (width->GetPolynomial().GetC() != 0.0 ||
+              width->GetPolynomial().GetD() != 0.0) {
+            return false;
+          }
+        }
       }
     }
     auto elevations = road->GetInfos<element::RoadInfoElevation>();

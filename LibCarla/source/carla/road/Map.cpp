@@ -190,9 +190,16 @@ namespace road {
 
     Waypoint result_start = query_result.front().second.first;
     Waypoint result_end = query_result.front().second.second;
+    // The chord follows the lane center, whose length can differ from the
+    // OpenDRIVE reference-line interval (for example when lane width varies).
+    const double segment_length = geom::Math::Distance2D(
+        geom::Vector3D(s1.get<0>(), s1.get<1>(), s1.get<2>()),
+        geom::Vector3D(s2.get<0>(), s2.get<1>(), s2.get<2>()));
+    const double delta_s = segment_length > 0.0
+        ? distance_to_segment.first * std::abs(result_end.s - result_start.s) / segment_length
+        : 0.0;
 
     if (GetLane(result_start).IsPositiveDirection()) {
-      double delta_s = distance_to_segment.first;
       double final_s = result_start.s + delta_s;
       if (final_s >= result_end.s) {
         return result_end;
@@ -202,7 +209,6 @@ namespace road {
         return GetNext(result_start, delta_s).front();
       }
     } else {
-      double delta_s = distance_to_segment.first;
       double final_s = result_start.s - delta_s;
       if (final_s <= result_end.s) {
         return result_end;

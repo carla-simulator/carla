@@ -107,6 +107,9 @@
 
 ### Bug fixes
 
+* Fixed nearest-waypoint projection confusing lane-center distance with OpenDRIVE reference-line distance on offset and varying-width lanes.
+* Fixed polynomial lane-width and road-offset curvature being omitted from straight-lane indexing checks.
+
 #### Sensors
 
 * Fixed every native sensor (LiDAR, radar, IMU, cameras) simulating only the last physics substep instead of the true elapsed time when `sensor_tick` spanned more than one substep, which halved LiDAR's swept angle and skewed IMU and radar readings.
