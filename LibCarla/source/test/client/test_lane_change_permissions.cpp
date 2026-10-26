@@ -1,3 +1,6 @@
+// Copyright (c) 2026 Computer Vision Center (CVC) at the Universitat Autonoma
+// de Barcelona (UAB). Licensed under the MIT license.
+
 #include "test.h"
 #include <carla/client/Map.h>
 #include <carla/client/Waypoint.h>
