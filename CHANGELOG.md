@@ -1,5 +1,8 @@
 ## LATEST Changes
 
+- Fixed light-manager destruction to unregister its own tick callback without removing an unrelated callback when registration counters differ.
+
+
 ### New features
 
 #### Simulator

@@ -16,7 +16,7 @@ namespace client {
 
 LightManager::~LightManager(){
   if(_episode.IsValid()) {
-    _episode.Lock()->RemoveOnTickEvent(_on_light_update_register_id);
+    _episode.Lock()->RemoveOnTickEvent(_on_tick_register_id);
     _episode.Lock()->RemoveLightUpdateChangeEvent(_on_light_update_register_id);
   }
   UpdateServerLightsState(true);
