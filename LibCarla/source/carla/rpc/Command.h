@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "carla/Functional.h"
 #include "carla/MsgPack.h"
 #include "carla/MsgPackAdaptors.h"
 #include "carla/geom/Transform.h"
@@ -306,6 +307,20 @@ namespace rpc {
         SetTrafficLightState>;
 
     CommandType command;
+
+    /// Resolve the actor referenced by a command in SpawnActor::do_after.
+    /// For another spawn, only the explicit FutureActor (0) parent is replaced.
+    void ApplySpawnedActorId(ActorId id) {
+      auto set_id = Functional::MakeOverload(
+          [id](SpawnActor &spawn) {
+            if (spawn.parent.has_value() && *spawn.parent == 0u) {
+              spawn.parent = id;
+            }
+          },
+          [](ConsoleCommand &) {},
+          [id](auto &s) { s.actor = id; });
+      std::visit(set_id, command);
+    }
 
     MSGPACK_DEFINE_ARRAY(command);
   };

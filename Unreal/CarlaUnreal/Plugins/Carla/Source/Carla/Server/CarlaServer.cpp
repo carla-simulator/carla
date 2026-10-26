@@ -3647,13 +3647,9 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
         if (!result.HasError())
         {
           ActorId id = result.Get().id;
-          auto set_id = carla::Functional::MakeOverload(
-              [](C::SpawnActor &) {},
-              [](C::ConsoleCommand &) {},
-              [id](auto &s) { s.actor = id; });
           for (auto command : c.do_after)
           {
-            std::visit(set_id, command.command);
+            command.ApplySpawnedActorId(id);
             std::visit(self, command.command);
           }
           return id;

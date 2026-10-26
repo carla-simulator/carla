@@ -5200,7 +5200,7 @@ Identificator of the parent actor.
         - `transform` (_[carla.Transform](#carla.Transform)_)  
         - `parent` (_[carla.Actor](#carla.Actor) or int_)  
 - <a name="command.SpawnActor.then"></a>**<font color="#7fb800">then</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**command**</font>)  
-Links another command to be executed right after. It allows to ease very common flows such as spawning a set of vehicles by command and then using this method to set them to autopilot automatically.  
+Links another command to be executed right after. It allows to ease very common flows such as spawning a set of vehicles by command and then using this method to set them to autopilot automatically. When chaining another SpawnActor command, use command.FutureActor as its parent to attach it to the actor just spawned. An omitted parent leaves the child unattached, and an explicit nonzero parent id is preserved.  
     - **Parameters:**
         - `command` (_any carla Command_) - a Carla command.  
 

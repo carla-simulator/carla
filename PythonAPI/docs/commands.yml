@@ -67,7 +67,7 @@
         doc: > 
           a Carla command.
       doc: >
-        Links another command to be executed right after. It allows to ease very common flows such as spawning a set of vehicles by command and then using this method to set them to autopilot automatically.  
+        Links another command to be executed right after. It allows to ease very common flows such as spawning a set of vehicles by command and then using this method to set them to autopilot automatically. When chaining another SpawnActor command, use command.FutureActor as its parent to attach it to the actor just spawned. An omitted parent leaves the child unattached, and an explicit nonzero parent id is preserved.
     # --------------------------------------
 
   - class_name: DestroyActor
