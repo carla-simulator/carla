@@ -1069,7 +1069,14 @@ void MapBuilder::CreateController(
       if (signal_reference->_validities.size() == 0) {
         Road* road = GetRoad(signal_reference->GetRoadId());
         auto lanes = road->GetLanesByDistance(signal_reference->GetS());
-        switch (signal_reference->GetOrientation()) {
+        // The branches below enumerate signed lane IDs. On RHT roads,
+        // positive-s traffic uses negative IDs; LHT roads use positive IDs.
+        auto orientation = signal_reference->GetOrientation();
+        if (road->IsRHT() && orientation != SignalOrientation::Both) {
+          orientation = orientation == SignalOrientation::Positive ?
+              SignalOrientation::Negative : SignalOrientation::Positive;
+        }
+        switch (orientation) {
           case SignalOrientation::Positive: {
             LaneId min_lane = 1;
             LaneId max_lane = 0;

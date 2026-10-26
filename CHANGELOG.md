@@ -2,6 +2,7 @@
 
 - Correct waypoint lane-change permission directions for OpenDRIVE increase/decrease markings in both traffic rules.
 - Report the crossed physical lane marking on left-hand-traffic roads.
+- Apply default OpenDRIVE signal validity to lanes travelling in the signal orientation, accounting for each road traffic rule.
 
 ### New features
 
