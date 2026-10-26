@@ -137,6 +137,10 @@ class LocalPlanner:
         self.target_waypoint, self.target_road_option = (current_waypoint, RoadOption.LANEFOLLOW)
         self._waypoints_queue.append((self.target_waypoint, self.target_road_option))
 
+    def get_target_speed(self):
+        """Return the effective target in km/h, including enabled road speed limits."""
+        return self._vehicle.get_speed_limit() if self._follow_speed_limits else self._target_speed
+
     def set_speed(self, speed):
         """
         Changes the target speed

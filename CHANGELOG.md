@@ -3,6 +3,8 @@
 * Fixed Python and C++ navigation agents excluding exact angle-interval boundaries, including obstacles straight ahead.
 * Fixed constant-velocity obstacle responses commanding reverse motion or exceeding the configured forward target speed.
 * Fixed Python and C++ navigation agents rejecting targets inside a planar angle interval on graded roads because their projected forward direction was not normalized.
+* Fixed Python and C++ constant-velocity agents continuing forced motion after their route completes; a newly assigned route can resume normally.
+* Fixed constant-velocity agents ignoring the local planner's dynamic road speed limits when setting forced velocity.
 
 ### New features
 

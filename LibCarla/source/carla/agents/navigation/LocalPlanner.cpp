@@ -126,6 +126,10 @@ void LocalPlanner::ResetVehicle() {
   _vehicle.reset();
 }
 
+float LocalPlanner::GetTargetSpeed() const {
+  return _follow_speed_limits ? _vehicle->GetSpeedLimit() : _target_speed;
+}
+
 void LocalPlanner::SetSpeed(float speed_kmh) {
   if (_follow_speed_limits) {
     std::cout << "WARNING: The max speed is currently set to follow the speed"

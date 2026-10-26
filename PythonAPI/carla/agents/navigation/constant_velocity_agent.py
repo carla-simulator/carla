@@ -49,7 +49,7 @@ class ConstantVelocityAgent(BasicAgent):
 
         self.is_constant_velocity_active = True
         self._set_collision_sensor()
-        self._set_constant_velocity(target_speed)
+        self._set_constant_velocity(self._local_planner.get_target_speed() / 3.6)
 
     def set_target_speed(self, speed):
         """Changes the target speed of the agent [km/h]"""
@@ -65,6 +65,7 @@ class ConstantVelocityAgent(BasicAgent):
     def restart_constant_velocity(self):
         """Public method to restart the constant velocity"""
         self.is_constant_velocity_active = True
+        self._target_speed = self._local_planner.get_target_speed() / 3.6
         self._set_constant_velocity(self._target_speed)
 
     def _set_constant_velocity(self, speed):
@@ -112,7 +113,10 @@ class ConstantVelocityAgent(BasicAgent):
         # The longitudinal PID is overwritten by the constant velocity but it is
         # still useful to apply it so that the vehicle isn't moving with static wheels
         control = self._local_planner.run_step()
-        if hazard_detected:
+        self._target_speed = self._local_planner.get_target_speed() / 3.6
+        if self._local_planner.done():
+            self._set_constant_velocity(0.0)
+        elif hazard_detected:
             self._set_constant_velocity(max(0.0, min(hazard_speed, self._target_speed)))
         else:
             self._set_constant_velocity(self._target_speed)

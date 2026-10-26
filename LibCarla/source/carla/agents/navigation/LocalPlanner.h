@@ -69,6 +69,9 @@ namespace navigation {
     /// Drop the vehicle reference (mirrors `reset_vehicle`).
     void ResetVehicle();
 
+    /// Current planner target in km/h, including dynamic speed limits.
+    float GetTargetSpeed() const;
+
     /// Override the target speed in km/h.
     void SetSpeed(float speed_kmh);
 

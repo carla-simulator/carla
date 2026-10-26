@@ -44,7 +44,7 @@ ConstantVelocityAgent::ConstantVelocityAgent(SharedPtr<client::Vehicle> vehicle,
       _collision_sensor(nullptr) {
 
   SetCollisionSensor();
-  SetConstantVelocity(_target_speed_ms);
+  SetConstantVelocity(_local_planner->GetTargetSpeed() / 3.6f);
 }
 
 ConstantVelocityAgent::~ConstantVelocityAgent() {
@@ -66,6 +66,7 @@ void ConstantVelocityAgent::StopConstantVelocity() {
 
 void ConstantVelocityAgent::RestartConstantVelocity() {
   _is_constant_velocity_active = true;
+  _target_speed_ms = _local_planner->GetTargetSpeed() / 3.6f;
   SetConstantVelocity(_target_speed_ms);
 }
 
@@ -128,7 +129,10 @@ rpc::VehicleControl ConstantVelocityAgent::RunStep() {
   // Run the local planner so the wheels keep spinning even though the actual
   // forward motion comes from EnableConstantVelocity.
   rpc::VehicleControl control = _local_planner->RunStep();
-  if (hazard_detected) {
+  _target_speed_ms = _local_planner->GetTargetSpeed() / 3.6f;
+  if (_local_planner->Done()) {
+    SetConstantVelocity(0.0f);
+  } else if (hazard_detected) {
     SetConstantVelocity(std::max(0.0f, std::min(hazard_speed, _target_speed_ms)));
   } else {
     SetConstantVelocity(_target_speed_ms);
