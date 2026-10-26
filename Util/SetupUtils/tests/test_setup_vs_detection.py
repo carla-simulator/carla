@@ -149,6 +149,32 @@ class TestSetupVisualStudioDetection(unittest.TestCase):
                                      '-requires', 'Microsoft.VisualStudio.Component.VC.Tools.x86.x64',
                                      '-property', 'installationPath'])
 
+    def test_setup_keeps_helper_location_after_python_root_arguments(self):
+        python_root = self.directory / 'PythonInstallation'
+        for option in ['--python-root', '-pyroot']:
+            with self.subTest(option=option):
+                self.log.unlink(missing_ok=True)
+                self.activation_log.unlink(missing_ok=True)
+                result = self.run_batch(
+                    'CarlaSetup.bat', '--skip-prerequisites ' + option + ' ' + str(python_root))
+
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                self.assert_query_requirements()
+                self.assertTrue(self.activation_log.is_file())
+                self.assertEqual(sum(name == 'cmake' for name, _ in self.commands()), 3)
+
+    def test_prerequisites_keeps_helper_location_after_python_path_arguments(self):
+        python = self.tools / 'python.exe'
+        for option in ['--python-path', '-pypath']:
+            with self.subTest(option=option):
+                self.log.unlink(missing_ok=True)
+                result = self.run_batch(
+                    'Util\\SetupUtils\\InstallPrerequisites.bat', option + ' ' + str(python))
+
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                self.assert_query_requirements()
+                self.assertIn('Found Visual Studio 2022.', result.stdout)
+
     def test_helper_detects_custom_installation_with_spaces(self):
         result = self.run_batch('Util\\SetupUtils\\FindVisualStudio.bat')
 

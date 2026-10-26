@@ -1,4 +1,6 @@
 @echo off
+setlocal DisableDelayedExpansion
+set "carla_setup_script_dir=%~dp0"
 setlocal EnableDelayedExpansion
 
 set skip_prerequisites=false
@@ -79,7 +81,7 @@ if exist "%cd%\Unreal\CarlaUnreal\Content" (
 rem Activate VS terminal development environment:
 rem Preserve literal exclamation marks in the discovered installation path.
 setlocal DisableDelayedExpansion
-call "%~dp0Util\SetupUtils\FindVisualStudio.bat" || (
+call "%carla_setup_script_dir%Util\SetupUtils\FindVisualStudio.bat" || (
     echo Could not find a usable Visual Studio 2022 C++ installation, aborting setup...
     exit /b 1
 )
