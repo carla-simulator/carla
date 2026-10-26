@@ -1,5 +1,7 @@
 ## LATEST Changes
 
+- Preserve shifted road polynomial values and gradients near large station offsets without cancellation, while retaining global coefficient getters.
+
 ### New features
 
 #### Simulator
