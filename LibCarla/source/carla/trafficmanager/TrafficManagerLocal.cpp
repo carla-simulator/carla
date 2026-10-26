@@ -309,6 +309,7 @@ void TrafficManagerLocal::Run() {
     // An expired episode while stopping must not throw out of this thread.
     const auto reporting_error = detail::CaptureWorkerException([this, error]() {
       std::string message = "Traffic Manager worker stopped";
+#ifndef LIBCARLA_NO_EXCEPTIONS
       try {
         std::rethrow_exception(error);
       } catch (const std::exception &exception) {
@@ -316,6 +317,7 @@ void TrafficManagerLocal::Run() {
       } catch (...) {
         message += ": unknown exception";
       }
+#endif
       episode_proxy.Lock()->AddPendingException(std::move(message));
     });
     if (reporting_error) {

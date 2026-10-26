@@ -25,11 +25,15 @@ namespace detail {
   /// Keep exceptions inside an asynchronous worker's thread entry point.
   template <typename Function>
   std::exception_ptr CaptureWorkerException(Function &&function) noexcept {
+#ifndef LIBCARLA_NO_EXCEPTIONS
     try {
+#endif
       std::forward<Function>(function)();
+#ifndef LIBCARLA_NO_EXCEPTIONS
     } catch (...) {
       return std::current_exception();
     }
+#endif
     return nullptr;
   }
 
