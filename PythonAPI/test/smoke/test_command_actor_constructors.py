@@ -1,6 +1,8 @@
 # Copyright (c) 2026 Computer Vision Center (CVC) at the Universitat Autonoma
 # de Barcelona (UAB). Licensed under the MIT license.
 
+"""Compare actor-object command constructors with their integer-ID forms."""
+
 from contextlib import contextmanager
 
 import carla
@@ -9,8 +11,11 @@ from . import SyncSmokeTest
 
 
 class TestCommandActorConstructors(SyncSmokeTest):
+    """Check command argument parity using a real spawned vehicle."""
+
     @contextmanager
     def vehicle(self):
+        """Create a vehicle for the test and always destroy it afterwards."""
         blueprints = self.world.get_blueprint_library().filter('vehicle.*')
         self.assertTrue(blueprints, 'A vehicle blueprint is required')
         actor = None
@@ -25,6 +30,7 @@ class TestCommandActorConstructors(SyncSmokeTest):
             actor.destroy()
 
     def test_debug_telemetry_accepts_actor_and_id(self):
+        """Telemetry accepts positional and keyword actor-object arguments."""
         with self.vehicle() as vehicle:
             for enabled in (True, False):
                 with self.subTest(enabled=enabled):
@@ -37,6 +43,7 @@ class TestCommandActorConstructors(SyncSmokeTest):
                     self.assertEqual(keyword.enabled, control.enabled)
 
     def test_vehicle_lights_preserve_mask_for_actor_and_id(self):
+        """Actor-object light commands retain every bit in the supplied mask."""
         with self.vehicle() as vehicle:
             masks = (0, int(carla.VehicleLightState.LowBeam),
                      int(carla.VehicleLightState.Brake | carla.VehicleLightState.RightBlinker),
