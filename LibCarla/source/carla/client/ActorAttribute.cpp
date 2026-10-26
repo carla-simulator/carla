@@ -10,8 +10,27 @@
 #include "carla/Logging.h"
 #include "carla/StringUtil.h"
 
+#include <locale>
+#include <sstream>
+
 namespace carla {
 namespace client {
+
+namespace {
+
+  // Blueprint numeric values use a locale-independent decimal representation.
+  template <typename T>
+  bool ParseNumber(const std::string &value, T &result) {
+    std::istringstream stream(value);
+    stream.imbue(std::locale::classic());
+    if (!(stream >> result)) {
+      return false;
+    }
+    stream >> std::ws;
+    return stream.eof();
+  }
+
+} // namespace
 
 #define LIBCARLA_THROW_INVALID_VALUE(message) throw_exception(InvalidAttributeValue(GetId() + ": " + message));
 #define LIBCARLA_THROW_BAD_VALUE_CAST(type) \
@@ -26,8 +45,11 @@ namespace client {
     if (GetType() == rpc::ActorAttributeType::Bool) {
       StringUtil::ToLower(value);
     }
+    // Validate a separate value before replacing the currently usable one.
+    rpc::ActorAttributeValue candidate(_attribute);
+    candidate.value = value;
+    const ActorAttributeValue validated(std::move(candidate));
     _attribute.value = std::move(value);
-    Validate();
   }
 
 
@@ -46,13 +68,20 @@ namespace client {
   template<>
   int ActorAttributeValueAccess::As<int>() const {
     LIBCARLA_THROW_BAD_VALUE_CAST(Int);
-    return std::atoi(GetValue().c_str());
+    int value;
+    if (!ParseNumber(GetValue(), value)) {
+      LIBCARLA_THROW_INVALID_VALUE("invalid integer: " + GetValue());
+    }
+    return value;
   }
 
   template<>
   float ActorAttributeValueAccess::As<float>() const {
     LIBCARLA_THROW_BAD_VALUE_CAST(Float);
-    double x = std::atof(GetValue().c_str());
+    double x;
+    if (!ParseNumber(GetValue(), x)) {
+      LIBCARLA_THROW_INVALID_VALUE("invalid float: " + GetValue());
+    }
     if ((x > std::numeric_limits<float>::max()) ||
         (x < std::numeric_limits<float>::lowest())) {
       LIBCARLA_THROW_INVALID_VALUE("float overflow");
@@ -78,9 +107,9 @@ namespace client {
     }
 
     auto to_int = [this](const std::string &str) {
-      int i = std::atoi(str.c_str());
-      if (i > std::numeric_limits<uint8_t>::max()) {
-        LIBCARLA_THROW_INVALID_VALUE("integer overflow in color channel");
+      int i;
+      if (!ParseNumber(str, i) || i < 0 || i > std::numeric_limits<uint8_t>::max()) {
+        LIBCARLA_THROW_INVALID_VALUE("invalid color channel: " + str);
       }
       return static_cast<uint8_t>(i);
     };

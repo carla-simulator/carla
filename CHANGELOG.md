@@ -1,5 +1,9 @@
 ## LATEST Changes
 
+- Fixed actor attribute numeric validation to reject invalid text, overflow and out-of-range RGB channels, using locale-independent decimal parsing.
+- Fixed rejected actor attribute updates to retain the previous valid value.
+
+
 ### New features
 
 #### Simulator
