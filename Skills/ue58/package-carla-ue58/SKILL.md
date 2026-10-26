@@ -147,13 +147,16 @@ does not is not explained by the ini.)
 cd ../run-carla-ue58-server && bash scripts/run_server.sh package
 ```
 
-A packaged server works for clients — measured: `get_world()`, spawning and
-navigation are all fine. What is broken is **map handling**:
-`get_available_maps()` returns `[]`, and `load_world()` resolves only
-`/Game/Carla/Maps/<Name>`, so a cooked map loads by exact name while nested large
-maps (`Town12/Town12`) and imported maps under `/Game/<Pkg>/Maps/` do not. Use
-`-game` mode when you need discovery or map switching. Detail and numbers in
-[[run-carla-ue58-server]].
+A packaged server works for clients: `get_world()`, spawning, pedestrian
+navigation and map handling. Map discovery reads the AssetRegistry since
+`da94ed2b7` (content packs), so it sees inside the `.pak`. Measured 2026-10-26 on a
+Shipping package (ue58-dev `6bb051b2e`, scope `Town10HD_Opt+OpenDriveMap+EmptyMap+Town12`):
+`get_available_maps()` returns the cooked maps (`['Town10HD_Opt', 'EmptyMap', 'Town12']`;
+`OpenDriveMap` is not listed), and `load_world('Town12')` loads the nested large
+map (`Carla/Maps/Town12/Town12`). A map passed on the command line
+(`/Game/Carla/Maps/Town12/Town12`) was ignored and the server booted
+`Town10HD_Opt`: switch with `load_world()` after connecting. Only cooked maps load.
+More in [[run-carla-ue58-server]].
 
 ## Examples
 
@@ -219,12 +222,12 @@ cook starts Zen, and staging restarts it on the same store when the cook's exits
 Solution: pull `ue58-dev-carla` in the engine and rerun. Start no Zen by hand.
 
 **Problem: packaged map switching does not work / `get_available_maps()` is empty**
-Cause: two raw-filesystem checks that cannot work inside a `.pak`
-(`GetAllMapNames()` uses `FindFilesRecursive(..., "*.umap")`, `LoadNewEpisode()`
-gates on `FPaths::FileExists()`). Fixed on `ue58-dev-windows` via AssetRegistry
-discovery; **not merged into `ue58-dev`**.
-Solution: no fix on this branch. Use the editor for multi-map work, or cherry-pick
-that change.
+Cause: a tree older than `da94ed2b7`, where `GetAllMapNames()` used
+`FindFilesRecursive(..., "*.umap")` and `LoadNewEpisode()` gated on
+`FPaths::FileExists()`, neither of which sees inside a `.pak`. Or the map is not in
+the cook scope.
+Solution: update to current `ue58-dev` (map discovery through the AssetRegistry)
+and check the map is in `CARLA_MAPS_TO_COOK`.
 
 ## Outputs
 

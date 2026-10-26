@@ -198,17 +198,12 @@ package)
   CMD=("${P}")
   [ -n "${MAP}" ] && CMD+=("${MAP}")
   CMD+=("${ARGS[@]}")
-  # Measured on this branch, not assumed: a client DOES connect to a packaged
-  # server and get_world(), spawning and navigation all work. What is broken is
-  # map DISCOVERY and switching — get_available_maps() returns [] because
-  # GetAllMapNames() uses a raw FindFilesRecursive("*.umap") that cannot see
-  # inside a .pak. Small maps still load by name; large ones do not.
-  echo "[run] NOTE packaged server limitations (measured on ue58-dev):"
-  echo "[run]   get_available_maps() returns []            (0 vs 29 in game mode)"
-  echo "[run]   load_world('Town12'/'Town13') FAILS        (large/World Partition maps)"
-  echo "[run]   load_world('Town_C'/'Town10HD_Opt') works  (small maps, by exact name)"
-  echo "[run]   get_world/spawn/navigation all work        (contrary to the older report)"
-  echo "[run]   use 'game' mode when you need map switching or discovery."
+  # Measured 2026-10-26 on ue58-dev: map discovery reads the AssetRegistry
+  # (da94ed2b7), so get_available_maps() lists the cooked maps and load_world()
+  # loads them, Town12 included. The map argument was ignored (booted
+  # Town10HD_Opt); switch with load_world() after connecting.
+  echo "[run] NOTE packaged server: only the cooked maps exist (CARLA_MAPS_TO_COOK)."
+  echo "[run]   the map argument may be ignored; call load_world() after connecting."
   launch "packaged shipping server" "${CMD[@]}"
   ;;
 

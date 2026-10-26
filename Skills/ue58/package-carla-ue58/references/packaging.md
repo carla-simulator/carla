@@ -201,13 +201,16 @@ a `.ucas` from 16:14. POSIX unlink semantics make it unlikely on Linux, but
 `package.sh build` refuses to start with a server running and
 `package.sh inspect` compares timestamps (18 s spread on a good build).
 
-### Packaged map discovery does not work
+### Packaged map discovery
 
-`get_available_maps()` returns `[]` and `load_world()` fails for large maps —
-`GetAllMapNames()` uses `FindFilesRecursive(..., "*.umap")` and `LoadNewEpisode()`
-gates on `FPaths::FileExists()`, neither of which sees inside a `.pak`.
-AssetRegistry discovery exists on `ue58-dev-windows`, not merged. Small maps still
-load by exact name. Detail and measurements in [[run-carla-ue58-server]].
+Fixed in `ue58-dev` by `da94ed2b7` (content packs): `GetAllMapNames()` queries the
+AssetRegistry instead of `FindFilesRecursive(..., "*.umap")`, which could not see
+inside a `.pak`. Before it, `get_available_maps()` returned `[]` and
+`load_world()` failed for nested large maps. Measured 2026-10-26 (Shipping,
+ue58-dev `6bb051b2e`, scope `Town10HD_Opt+OpenDriveMap+EmptyMap+Town12`):
+`get_available_maps()` = `['Town10HD_Opt', 'EmptyMap', 'Town12']`,
+`load_world('Town12')` OK (`Carla/Maps/Town12/Town12`). The map passed on the
+command line was ignored (booted `Town10HD_Opt`); use `load_world()`.
 
 ### OFPA duplicate-name warnings
 
@@ -248,7 +251,7 @@ be redistributed inside a built application is a licensing question first.
 | Fix | Windows | On `ue58-dev` |
 |---|---|---|
 | `-pak -iostore` | needed | **yes**, upstream |
-| AssetRegistry map discovery (Issue 1) | needed | **no** |
+| AssetRegistry map discovery (Issue 1) | needed | **yes**, `da94ed2b7` (measured 2026-10-26) |
 | `-culturesToStage=en` ICU (Issue 2) | needed | **no** — never bit on Linux |
 | Zen survives cook→stage (Issue 7) | engine-managed, untested | **yes**, no flag; needs the engine reader fix |
 | Town12 `DirectoriesToAlwaysStageAsUFS` (Issue 13) | needed | **no** — and it needs to cover Town13 + `Config/PostProcess` too |
