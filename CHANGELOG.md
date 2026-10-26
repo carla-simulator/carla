@@ -1,5 +1,9 @@
 ## LATEST Changes
 
+- Preserve metre-scale displacement when evaluating arcs with very small curvature.
+- Keep normalized OpenDRIVE parametric polynomials within their parameter interval at the geometry endpoint.
+- Compute nearest-point distances for spiral and polynomial road geometries instead of returning placeholder coordinates.
+
 ### New features
 
 #### Simulator

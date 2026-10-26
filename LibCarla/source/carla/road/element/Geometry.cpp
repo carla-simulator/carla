@@ -17,10 +17,54 @@
 #include <algorithm>
 #include <cmath>
 #include <stdexcept>
+#include <limits>
+#include <vector>
 
 namespace carla {
 namespace road {
 namespace element {
+
+  namespace {
+
+    // Project each finite piece, preserving its longitudinal parameter rather
+    // than interpreting chord length as distance along the road.
+    void ProjectPiece(const Geometry &geometry, const geom::Location &query,
+        double first_s, double last_s, double &best_s, double &best_distance) {
+      const auto first = geometry.PosFromDist(first_s).location;
+      const auto last = geometry.PosFromDist(last_s).location;
+      const double dx = static_cast<double>(last.x) - first.x;
+      const double dy = static_cast<double>(last.y) - first.y;
+      const double squared_length = dx * dx + dy * dy;
+      const double rate = squared_length == 0.0 ? 0.0 : geom::Math::Clamp(
+          ((static_cast<double>(query.x) - first.x) * dx +
+           (static_cast<double>(query.y) - first.y) * dy) / squared_length, 0.0, 1.0);
+      const double s = first_s + rate * (last_s - first_s);
+      const auto projected = geometry.PosFromDist(s).location;
+      const double distance = std::hypot(
+          static_cast<double>(query.x) - projected.x,
+          static_cast<double>(query.y) - projected.y);
+      if (distance < best_distance) {
+        best_distance = distance;
+        best_s = s;
+      }
+    }
+
+    template <typename Elements>
+    std::pair<float, float> DistanceToSpline(const Geometry &geometry,
+        const geom::Location &query, const Elements &elements) {
+      double best_s = 0.0;
+      double best_distance = std::numeric_limits<double>::infinity();
+      for (const auto &element : elements) {
+        const double first_s = std::max(0.0, element.second.first.s);
+        const double last_s = std::min(geometry.GetLength(), element.second.second.s);
+        if (first_s <= last_s) {
+          ProjectPiece(geometry, query, first_s, last_s, best_s, best_distance);
+        }
+      }
+      return {static_cast<float>(best_s), static_cast<float>(best_distance)};
+    }
+
+  } // namespace
 
   void DirectedPoint::ApplyLateralOffset(float lateral_offset) {
     /// @todo Z axis??
@@ -43,14 +87,15 @@ namespace element {
     dist = geom::Math::Clamp(dist, 0.0, _length);
     DEBUG_ASSERT(_length > 0.0);
     DEBUG_ASSERT(std::fabs(_curvature) > 1e-15);
-    const double radius = 1.0 / _curvature;
-    constexpr double pi_half = geom::Math::Pi<double>() / 2.0;
+    // Form the chord before converting to float. Adding and subtracting the
+    // circle centre loses small displacements when the radius is large.
+    const double half_angle = 0.5 * dist * _curvature;
+    const double sinc = half_angle == 0.0 ? 1.0 : std::sin(half_angle) / half_angle;
+    const double chord = dist * sinc;
     DirectedPoint p(_start_position, _heading);
-    p.location.x += static_cast<float>(radius * std::cos(p.tangent + pi_half));
-    p.location.y += static_cast<float>(radius * std::sin(p.tangent + pi_half));
+    p.location.x += static_cast<float>(chord * std::cos(_heading + half_angle));
+    p.location.y += static_cast<float>(chord * std::sin(_heading + half_angle));
     p.tangent += dist * _curvature;
-    p.location.x -= static_cast<float>(radius * std::cos(p.tangent + pi_half));
-    p.location.y -= static_cast<float>(radius * std::sin(p.tangent + pi_half));
     return p;
   }
 
@@ -96,11 +141,27 @@ namespace element {
     return p;
   }
 
-  /// @todo
   std::pair<float, float> GeometrySpiral::DistanceTo(const geom::Location &location) const {
-    // Not analytic, discretize and find nearest point
-    // throw_exception(std::runtime_error("not implemented"));
-    return {location.x - _start_position.x, location.y - _start_position.y};
+    if (_curve_start == _curve_end) {
+      if (_curve_start == 0.0) {
+        return GeometryLine(0.0, _length, _heading, _start_position).DistanceTo(location);
+      }
+      return GeometryArc(0.0, _length, _heading, _start_position, _curve_start).DistanceTo(location);
+    }
+    // A unit-speed curve with |curvature| <= k differs from each chord by at
+    // most k*h*h/8. Bound that error to 0.1 mm, then return the actual curve
+    // point at the chord projection's s. Ignoring float roundoff, its distance
+    // is within 0.2 mm of the global minimum over all pieces.
+    const double max_curvature = std::max(std::abs(_curve_start), std::abs(_curve_end));
+    const double step = std::min(0.5, std::sqrt(8e-4 / max_curvature));
+    double best_s = 0.0;
+    double best_distance = std::numeric_limits<double>::infinity();
+    for (double first_s = 0.0; first_s < _length;) {
+      const double last_s = std::min(_length, first_s + step);
+      ProjectPiece(*this, location, first_s, last_s, best_s, best_distance);
+      first_s = last_s;
+    }
+    return {static_cast<float>(best_s), static_cast<float>(best_distance)};
   }
 
   DirectedPoint GeometryPoly3::PosFromDist(double dist) const {
@@ -122,10 +183,9 @@ namespace element {
     return p;
   }
 
-  std::pair<float, float> GeometryPoly3::DistanceTo(const geom::Location & /*p*/) const {
-    // No analytical expression (Newton-Raphson?/point search)
-    // throw_exception(std::runtime_error("not implemented"));
-    return {_start_position.x, _start_position.y};
+  std::pair<float, float> GeometryPoly3::DistanceTo(const geom::Location &location) const {
+    return DistanceToSpline(*this, location,
+        _rtree.GetNearestNeighbours(Rtree::BPoint(0.0f), _rtree.GetTreeSize()));
   }
 
   void GeometryPoly3::PreComputeSpline() {
@@ -179,10 +239,9 @@ namespace element {
     p.location.y += pos.y;
     return p;
   }
-  std::pair<float, float> GeometryParamPoly3::DistanceTo(const geom::Location &) const {
-    // No analytical expression (Newton-Raphson?/point search)
-    // throw_exception(std::runtime_error("not implemented"));
-    return {_start_position.x, _start_position.y};
+  std::pair<float, float> GeometryParamPoly3::DistanceTo(const geom::Location &location) const {
+    return DistanceToSpline(*this, location,
+        _rtree.GetNearestNeighbours(Rtree::BPoint(0.0f), _rtree.GetTreeSize()));
   }
 
   void GeometryParamPoly3::PreComputeSpline() {
@@ -198,13 +257,14 @@ namespace element {
     double current_s = 0;
     double last_u = _polyU.Evaluate(param_p);
     double last_v = _polyV.Evaluate(param_p);
-    double last_s = 0;
     RtreeValue last_val{
         last_u,
         last_v,
-        last_s,
+        0.0,
         _polyU.Tangent(param_p),
         _polyV.Tangent(param_p) };
+    std::vector<RtreeValue> values{last_val};
+    values.reserve(number_intervals + 1u);
     for(size_t i = 0; i < number_intervals; ++i) {
       param_p += delta_p;
       double current_u = _polyU.Evaluate(param_p);
@@ -222,18 +282,28 @@ namespace element {
           current_t_u,
           current_t_v };
 
-      Rtree::BPoint p1(static_cast<float>(last_s));
-      Rtree::BPoint p2(static_cast<float>(current_s));
-      _rtree.InsertElement(Rtree::BSegment(p1, p2), last_val, current_val);
+      values.push_back(current_val);
 
       last_u = current_u;
       last_v = current_v;
-      last_s = current_s;
-      last_val = current_val;
 
-      if(current_s > _length){
+      if(_arcLength && current_s > _length){
         break;
       }
+    }
+    // Normalized p covers the full interval [0, 1]. Chord sums underestimate
+    // the curve's length; map them onto its declared s interval so the final
+    // segment never extrapolates beyond p=1 at the geometry endpoint.
+    const double scale = !_arcLength && current_s > 0.0 ? _length / current_s : 1.0;
+    for (auto &value : values) {
+      value.s *= scale;
+    }
+    for (size_t i = 1u; i < values.size(); ++i) {
+      const auto &first = values[i - 1u];
+      const auto &second = values[i];
+      _rtree.InsertElement(Rtree::BSegment(
+          Rtree::BPoint(static_cast<float>(first.s)),
+          Rtree::BPoint(static_cast<float>(second.s))), first, second);
     }
   }
 } // namespace element
