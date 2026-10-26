@@ -70,6 +70,10 @@ def main():
         print("FAIL: no DVS callbacks received in 30 s")
         return 1
 
+    if len(frames) < args.frames:
+        print(f"FAIL: received only {len(frames)} of {args.frames} requested DVS packets in 30 s")
+        return 1
+
     total_events = sum(len(f[2]) for f in frames)
     print(f"received {len(frames)} event packets, {total_events} events total")
     for f in frames[:5]:
@@ -78,7 +82,8 @@ def main():
     # sanity checks on the densest packet
     frame, ts, ev, w, h = max(frames, key=lambda f: len(f[2]))
     print(f"densest packet: frame={frame} events={len(ev)} size={w}x{h}")
-    assert ev["x"].max() < w and ev["y"].max() < h, "event coords out of bounds"
+    if len(ev):
+        assert ev["x"].max() < w and ev["y"].max() < h, "event coords out of bounds"
     assert (np.diff(ev["t"]) >= 0).all(), "timestamps not sorted"
     pos = int(ev["pol"].sum())
     print(f"polarity split: +{pos} / -{len(ev) - pos}")

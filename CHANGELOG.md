@@ -1,5 +1,9 @@
 ## LATEST Changes
 
+- Finish lane exploration cleanly when a valid terminal lane has no successor.
+- Accept valid empty DVS event packets and report a failed smoke test when fewer than the requested packets arrive.
+- Measure the weather cycle's documented warmup in real seconds, independently of simulated time and cycle speed.
+
 ### New features
 
 #### Simulator

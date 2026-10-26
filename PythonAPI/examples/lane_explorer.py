@@ -137,6 +137,11 @@ def main():
                 if left_w and left_w.lane_type == carla.LaneType.Driving:
                     potential_w += list(left_w.next(waypoint_separation))
 
+            # A disconnected lane end is a normal completion, not an invalid choice.
+            if not potential_w:
+                print("Reached the end of the lane; no successor is available.")
+                break
+
             # choose a random waypoint to be the next
             next_w = random.choice(potential_w)
             potential_w.remove(next_w)

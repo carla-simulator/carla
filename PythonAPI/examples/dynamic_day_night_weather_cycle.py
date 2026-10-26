@@ -176,6 +176,7 @@ class DayNightWeatherCycle:
         self._last_sim_time = None
         self._warmup_start_weather = None
         self._warmup_elapsed = 0.0
+        self._warmup_start_wall_time = None
         self._callback_id = None
         self._last_print_wall_time = 0.0
         self._last_set_weather_wall_time = 0.0
@@ -205,6 +206,7 @@ class DayNightWeatherCycle:
         if self._last_sim_time is None:
             self._last_sim_time = snapshot.timestamp.elapsed_seconds
             self._warmup_start_weather = self.world.get_weather()
+            self._warmup_start_wall_time = time.monotonic()
             if not self.animate_time:
                 self._fixed_sun = (self._warmup_start_weather.sun_altitude_angle,
                                     self._warmup_start_weather.sun_azimuth_angle)
@@ -217,8 +219,10 @@ class DayNightWeatherCycle:
         self.elapsed += dt
 
         target = self._compute_weather()
+        # Warmup is documented in real seconds; cycle speed and simulation FPS
+        # must not change the time allowed for the sky to settle.
+        self._warmup_elapsed = time.monotonic() - self._warmup_start_wall_time
         if self._warmup_elapsed < self.warmup_seconds:
-            self._warmup_elapsed += dt
             alpha = min(1.0, self._warmup_elapsed / self.warmup_seconds)
             wp = _lerp_weather(self._warmup_start_weather, target, alpha)
         else:
