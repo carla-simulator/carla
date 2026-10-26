@@ -107,6 +107,8 @@
 
 ### Bug fixes
 
+* Fixed requested-file downloads silently succeeding when the client cache could not be written. Failed writes and flushes now discard partial cache files and stop the request with an error.
+
 #### Sensors
 
 * Fixed every native sensor (LiDAR, radar, IMU, cameras) simulating only the last physics substep instead of the true elapsed time when `sensor_tick` spanned more than one substep, which halved LiDAR's swept angle and skewed IMU and radar readings.

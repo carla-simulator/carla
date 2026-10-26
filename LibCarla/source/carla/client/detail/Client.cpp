@@ -291,7 +291,9 @@ namespace detail {
   void Client::RequestFile(const std::string &name) const {
     // Download the binary content of the file from the server and write it on the client
     auto content = _pimpl->CallAndWait<std::vector<uint8_t>>("request_file", name);
-    FileTransfer::WriteFile(name, content);
+    if (!FileTransfer::WriteFile(name, content)) {
+      throw_exception(std::runtime_error("Failed to write requested file to client cache: " + name));
+    }
   }
 
   std::vector<uint8_t> Client::GetCacheFile(const std::string &name, const bool request_otherwise) const {

@@ -99,6 +99,12 @@ namespace carla::client {
     }
     out.close();
 
+    if (!out.good()) {
+      // Discard an incomplete download instead of leaving it in the cache.
+      std::error_code error;
+      fs::remove(writePath, error);
+      return false;
+    }
     return true;
   }
 
