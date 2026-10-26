@@ -108,7 +108,7 @@
 ### Bug fixes
 
 * Fixed nearest-waypoint projection confusing lane-center distance with OpenDRIVE reference-line distance on offset and varying-width lanes.
-* Fixed polynomial lane-width and road-offset curvature being omitted from straight-lane indexing checks.
+* Fixed changing lane widths, road offsets and elevations being incorrectly indexed as one straight lane segment.
 
 #### Sensors
 

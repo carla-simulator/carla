@@ -78,12 +78,38 @@ namespace road {
         geometry->GetDistance() + geometry->GetGeometry().GetLength()) {
       return false;
     }
-    auto lane_offsets = road->GetInfos<element::RoadInfoLaneOffset>();
-    for (auto *lane_offset : lane_offsets) {
-      if (std::abs(lane_offset->GetPolynomial().GetC()) > 0 ||
-          std::abs(lane_offset->GetPolynomial().GetD()) > 0) {
+    const double start = GetDistance();
+    const double end = start + GetLength();
+    // Piecewise linear records can still change slope. Their coefficients
+    // use global s coordinates and must describe the same line in this lane.
+    const auto is_straight_profile = [start, end](const auto &records) {
+      const geom::CubicPolynomial *initial = nullptr;
+      double initial_s = 0.0;
+      for (const auto *record : records) {
+        if (record->GetDistance() <= start &&
+            (initial == nullptr || record->GetDistance() > initial_s)) {
+          initial = &record->GetPolynomial();
+          initial_s = record->GetDistance();
+        }
+      }
+      if (initial != nullptr && (initial->GetC() != 0.0 || initial->GetD() != 0.0)) {
         return false;
       }
+      const double a = initial != nullptr ? initial->GetA() : 0.0;
+      const double b = initial != nullptr ? initial->GetB() : 0.0;
+      for (const auto *record : records) {
+        if (record->GetDistance() > start && record->GetDistance() < end) {
+          const auto &polynomial = record->GetPolynomial();
+          if (polynomial.GetC() != 0.0 || polynomial.GetD() != 0.0 ||
+              polynomial.GetA() != a || polynomial.GetB() != b) {
+            return false;
+          }
+        }
+      }
+      return true;
+    };
+    if (!is_straight_profile(road->GetInfos<element::RoadInfoLaneOffset>())) {
+      return false;
     }
     // The center also follows widths of all lanes between this lane and the
     // reference line, not just the reference line's own geometry.
@@ -91,22 +117,12 @@ namespace road {
       const auto id = entry.first;
       if ((GetId() < 0 && id >= GetId() && id < 0) ||
           (GetId() > 0 && id <= GetId() && id > 0)) {
-        for (const auto *width : entry.second.GetInfos<element::RoadInfoLaneWidth>()) {
-          if (width->GetPolynomial().GetC() != 0.0 ||
-              width->GetPolynomial().GetD() != 0.0) {
-            return false;
-          }
+        if (!is_straight_profile(entry.second.GetInfos<element::RoadInfoLaneWidth>())) {
+          return false;
         }
       }
     }
-    auto elevations = road->GetInfos<element::RoadInfoElevation>();
-    for (auto *elevation : elevations) {
-      if (std::abs(elevation->GetPolynomial().GetC()) > 0 ||
-          std::abs(elevation->GetPolynomial().GetD()) > 0) {
-        return false;
-      }
-    }
-    return true;
+    return is_straight_profile(road->GetInfos<element::RoadInfoElevation>());
   }
 
   /// Returns a pair containing first = width, second = tangent,

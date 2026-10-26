@@ -129,6 +129,67 @@ TEST(lane_projection, curved_width_query_chooses_lane_at_the_query) {
   EXPECT_EQ(projected->road_id, 1u);
 }
 
+TEST(lane_projection, piecewise_linear_width_query_chooses_lane_at_the_query) {
+  auto map = Parse(Road(1, Width(3.5) +
+      "<width sOffset=\"50\" a=\"3.5\" b=\"0.4\" c=\"0\" d=\"0\"/>") +
+      Road(2, Width(3.5), "", -1.25));
+  ASSERT_TRUE(map.has_value());
+  const auto waypoint = map->GetWaypoint(1, -1, 25.0f);
+  ASSERT_TRUE(waypoint.has_value());
+  EXPECT_FALSE(map->GetLane(*waypoint).IsStraight());
+  const auto projected = map->GetClosestWaypointOnRoad(map->ComputeTransform(*waypoint).location);
+  ASSERT_TRUE(projected.has_value());
+  EXPECT_EQ(projected->road_id, 1u);
+}
+
+TEST(lane_projection, piecewise_linear_road_offset_is_not_straight) {
+  auto map = Parse(Road(1, Width(3.5),
+      "<laneOffset s=\"0\" a=\"0\" b=\"0\" c=\"0\" d=\"0\"/>"
+      "<laneOffset s=\"50\" a=\"0\" b=\"0.4\" c=\"0\" d=\"0\"/>"));
+  ASSERT_TRUE(map.has_value());
+  const auto waypoint = map->GetWaypoint(1, -1, 25.0f);
+  ASSERT_TRUE(waypoint.has_value());
+  EXPECT_FALSE(map->GetLane(*waypoint).IsStraight());
+}
+
+TEST(lane_projection, piecewise_linear_elevation_is_not_straight) {
+  auto road = Road(1, Width(3.5));
+  road.insert(road.find("</elevationProfile>"),
+      "<elevation s=\"50\" a=\"0\" b=\"0.4\" c=\"0\" d=\"0\"/>");
+  auto map = Parse(road);
+  ASSERT_TRUE(map.has_value());
+  const auto waypoint = map->GetWaypoint(1, -1, 25.0f);
+  ASSERT_TRUE(waypoint.has_value());
+  EXPECT_FALSE(map->GetLane(*waypoint).IsStraight());
+}
+
+TEST(lane_projection, redundant_linear_width_records_stay_straight_control) {
+  auto map = Parse(Road(1, Width(3.5, 0.4) +
+      "<width sOffset=\"50\" a=\"23.5\" b=\"0.4\" c=\"0\" d=\"0\"/>"));
+  ASSERT_TRUE(map.has_value());
+  const auto waypoint = map->GetWaypoint(1, -1, 25.0f);
+  ASSERT_TRUE(waypoint.has_value());
+  EXPECT_TRUE(map->GetLane(*waypoint).IsStraight());
+}
+
+TEST(lane_projection, offset_changes_outside_lane_interval_control) {
+  auto road = Road(1, Width(3.5),
+      "<laneOffset s=\"0\" a=\"0\" b=\"0\" c=\"0\" d=\"0\"/>"
+      "<laneOffset s=\"50\" a=\"0\" b=\"0.4\" c=\"0\" d=\"0\"/>");
+  const auto section_start = road.find("<laneSection");
+  const auto section_end = road.find("</laneSection>") + std::string("</laneSection>").size();
+  auto second_section = road.substr(section_start, section_end - section_start);
+  second_section.replace(second_section.find("s=\"0\""), 5, "s=\"50\"");
+  road.insert(section_end, second_section);
+  auto map = Parse(road);
+  ASSERT_TRUE(map.has_value());
+  for (float s : {25.0f, 75.0f}) {
+    const auto waypoint = map->GetWaypoint(1, -1, s);
+    ASSERT_TRUE(waypoint.has_value());
+    EXPECT_TRUE(map->GetLane(*waypoint).IsStraight());
+  }
+}
+
 TEST(lane_projection, constant_width_line_control) {
   auto map = Parse(Road(1, Width(3.5)));
   ASSERT_TRUE(map.has_value());
