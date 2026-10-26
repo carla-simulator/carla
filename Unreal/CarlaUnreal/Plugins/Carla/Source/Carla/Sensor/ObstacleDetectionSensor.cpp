@@ -144,7 +144,7 @@ void AObstacleDetectionSensor::OnObstacleDetectionEvent(
     // ROS2
     #if defined(WITH_ROS2)
     auto ROS2 = carla::ros2::ROS2::GetInstance();
-    if (ROS2->IsEnabled())
+    if (ROS2->IsEnabled() && IsEnabledForROS())
     {
       TRACE_CPUPROFILER_EVENT_SCOPE_STR("ROS2 Send");
       auto StreamId = carla::streaming::detail::token_type(GetToken()).get_stream_id();

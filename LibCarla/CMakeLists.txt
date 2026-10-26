@@ -477,6 +477,8 @@ if (BUILD_LIBCARLA_TESTS)
     ${LIBCARLA_SOURCE_PATH}/test/common/*.cpp
   )
 
+  include(${LIBCARLA_SOURCE_PATH}/test/ExtractSensorMethods.cmake)
+
   if (BUILD_CARLA_SERVER)
 
     file (

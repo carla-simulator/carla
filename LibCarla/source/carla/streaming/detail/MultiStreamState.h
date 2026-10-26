@@ -63,19 +63,19 @@ namespace detail {
     }
 
     void EnableForROS() {
-      _enabled_for_ros = true;
+      _enabled_for_ros.store(true, std::memory_order_relaxed);
     }
 
     void DisableForROS() {
-      _enabled_for_ros = false;
+      _enabled_for_ros.store(false, std::memory_order_relaxed);
     }
 
-    bool IsEnabledForROS() {
-      return _enabled_for_ros;
+    bool IsEnabledForROS() const {
+      return _enabled_for_ros.load(std::memory_order_relaxed);
     }
 
     bool AreClientsListening() {
-      return (_sessions.size() > 0 || _force_active || _enabled_for_ros);
+      return (_sessions.size() > 0 || _force_active || IsEnabledForROS());
     }
 
     void ConnectSession(std::shared_ptr<Session> session) final {
@@ -138,7 +138,7 @@ namespace detail {
     // if there are more than one session, we use vector of sessions with mutex
     std::vector<std::shared_ptr<Session>> _sessions;
     bool _force_active {false};
-    bool _enabled_for_ros {false};
+    std::atomic_bool _enabled_for_ros {false};
   };
 
 } // namespace detail

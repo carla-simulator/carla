@@ -145,6 +145,8 @@
 
 #### ROS 2
 
+* Fixed sensor ROS 2 publishing ignoring the per-sensor enable flag, including LiDAR and radar (#9968).
+
 * Fixed camera fx in the ROS 2 `CameraInfo`, large map actor tagging, and camera frame and timestamp consistency.
 
 #### Build and packaging

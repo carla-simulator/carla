@@ -125,6 +125,11 @@ public:
     return Stream.AreClientsListening();
   }
 
+  bool IsEnabledForROS() const
+  {
+    return Stream.IsEnabledForROS();
+  }
+
   void Tick(const float DeltaTime) final;
 
   virtual void PrePhysTick(float DeltaSeconds) {}
@@ -246,7 +251,7 @@ protected:
 
 #if defined(WITH_ROS2)
     auto ROS2 = carla::ros2::ROS2::GetInstance();
-    if (ROS2->IsEnabled())
+    if (ROS2->IsEnabled() && Sensor.IsEnabledForROS())
     {
       TRACE_CPUPROFILER_EVENT_SCOPE_STR("ROS2 SendDataToClient");
       auto StreamId = carla::streaming::detail::token_type(Sensor.GetToken()).get_stream_id();

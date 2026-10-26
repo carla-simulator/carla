@@ -67,6 +67,10 @@ namespace detail {
       return _shared_state ? _shared_state->AreClientsListening() : false;
     }
 
+    bool IsEnabledForROS() const {
+      return _shared_state ? _shared_state->IsEnabledForROS() : false;
+    }
+
   private:
 
     friend class detail::Dispatcher;

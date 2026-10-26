@@ -68,6 +68,11 @@ public:
     return Stream->AreClientsListening();
   }
 
+  bool IsEnabledForROS() const
+  {
+    return Stream.has_value() && Stream->IsEnabledForROS();
+  }
+
 private:
 
   std::optional<StreamType> Stream;

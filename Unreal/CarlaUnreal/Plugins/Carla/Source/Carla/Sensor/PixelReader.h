@@ -197,7 +197,7 @@ void FPixelReader::SendPixelsInRenderThread(TSensor &Sensor, bool use16BitFormat
                 // ROS2
                 #if defined(WITH_ROS2)
                 auto ROS2 = carla::ros2::ROS2::GetInstance();
-                if (ROS2->IsEnabled())
+                if (ROS2->IsEnabled() && Sensor.IsEnabledForROS())
                 {
                   TRACE_CPUPROFILER_EVENT_SCOPE_STR("ROS2 Send PixelReader");
                   auto StreamId = carla::streaming::detail::token_type(Sensor.GetToken()).get_stream_id();
