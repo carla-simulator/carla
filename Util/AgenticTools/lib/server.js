@@ -193,10 +193,12 @@ function main() {
       if (msg && typeof msg === "object" && !Array.isArray(msg)
           && msg.jsonrpc === "2.0" && !("method" in msg)
           && ("result" in msg || "error" in msg)) continue;
+      const validId = msg && (typeof msg.id === "string" || Number.isInteger(msg.id));
       if (!msg || typeof msg !== "object" || Array.isArray(msg)
           || msg.jsonrpc !== "2.0" || typeof msg.method !== "string"
-          || ("id" in msg && typeof msg.id !== "string" && typeof msg.id !== "number")) {
-        const id = msg && (typeof msg.id === "string" || typeof msg.id === "number") ? msg.id : null;
+          || ("id" in msg && !validId)
+          || ("params" in msg && (!msg.params || typeof msg.params !== "object" || Array.isArray(msg.params)))) {
+        const id = validId ? msg.id : null;
         send({ jsonrpc: "2.0", id, error: { code: -32600, message: "invalid request" } });
         continue;
       }
