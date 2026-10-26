@@ -117,3 +117,47 @@ TEST(traffic_manager_worker, nonstandard_exception_is_preserved) {
     EXPECT_EQ(value, 42);
   }
 }
+
+TEST(traffic_manager_worker, failed_worker_allows_caller_step_and_async_restart) {
+  std::atomic_bool run{true};
+  std::exception_ptr failure;
+  auto first = carla::traffic_manager::detail::CreateWorkerThread(run, [&]() {
+    failure = carla::traffic_manager::detail::CaptureWorkerException([]() {
+      throw carla::client::TimeoutException("127.0.0.1:2000", carla::time_duration::milliseconds(20));
+    });
+    if (failure) {
+      run.store(false);
+    }
+  });
+  first->join();
+  ASSERT_TRUE(failure);
+  ASSERT_FALSE(run.load());
+
+  // A caller-owned synchronous step can run after the failed worker joins.
+  int completed_steps = 0;
+  const auto step = [&]() { ++completed_steps; };
+  step();
+  EXPECT_FALSE(run.load());
+
+  auto restarted = carla::traffic_manager::detail::CreateWorkerThread(run, [&]() {
+    if (run.load()) {
+      step();
+    }
+  });
+  restarted->join();
+  EXPECT_TRUE(run.load());
+  EXPECT_EQ(completed_steps, 2);
+}
+
+TEST(traffic_manager_worker, normal_worker_caller_worker_transition_control) {
+  std::atomic_bool run{true};
+  int completed_steps = 0;
+  const auto step = [&]() { if (run.load()) { ++completed_steps; } };
+  auto first = carla::traffic_manager::detail::CreateWorkerThread(run, step);
+  first->join();
+  step();
+  auto second = carla::traffic_manager::detail::CreateWorkerThread(run, step);
+  second->join();
+  EXPECT_TRUE(run.load());
+  EXPECT_EQ(completed_steps, 3);
+}

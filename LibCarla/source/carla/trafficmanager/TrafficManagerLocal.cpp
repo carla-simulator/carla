@@ -160,7 +160,7 @@ void TrafficManagerLocal::Start() {
   
   bool synchronous_mode = parameters.GetSynchronousMode();
   if (!synchronous_mode) {
-    worker_thread = std::make_unique<std::thread>(&TrafficManagerLocal::Run, this);
+    worker_thread = detail::CreateWorkerThread(run_traffic_manger, &TrafficManagerLocal::Run, this);
   }
 }
 
@@ -576,7 +576,7 @@ void TrafficManagerLocal::SetSynchronousMode(bool mode) {
       }
       worker_thread.reset();
     }
-    worker_thread = std::make_unique<std::thread>(&TrafficManagerLocal::Run, this);
+    worker_thread = detail::CreateWorkerThread(run_traffic_manger, &TrafficManagerLocal::Run, this);
   }
 }
 
