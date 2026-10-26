@@ -20,7 +20,7 @@ The CARLA simulator provides a vast library of 3D assets to populate your autono
 The default package ships three drivable maps, plus the empty ones used for OpenDRIVE standalone mode. A source build has every town; the rest reach a package through a [content pack](content_authoring_packs.md).
 
 ![maps_overview](img/catalogue/maps/maps_montage_thumb.webp)
-<div class="img-caption">Town10HD_Opt, Mine_01, Town15 and the classic towns Town01_Opt to Town07_Opt, one view each.</div>
+<div class="img-caption">The three maps of the default package (Town10HD_Opt, Town12, Town15), then Mine_01 and the classic towns Town01_Opt to Town07_Opt, one view each.</div>
 
 | Map | In the default package | Summary |
 | --- | --- | --- |
