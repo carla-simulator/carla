@@ -21,53 +21,60 @@ GitHub Discussions</a>
 
 ## Getting started
 
-- [__Introduction__](start_introduction.md) — What to expect from CARLA.
-- [__Quick start package installation__](start_quickstart.md) — Install the CARLA package and get started.
-- [__Download__](download.md) — Releases, nightly builds and Docker images.
-- [__First steps__](start_first_steps.md) — Taking the first steps in CARLA with the Python API.
-- [__Building CARLA__](build_carla.md) — How to build CARLA from source on Linux and Windows.
+- [__Introduction__](start_introduction.md): What to expect from CARLA.
+- [__Quick start package installation__](start_quickstart.md): Install the CARLA package and get started.
+- [__Download__](download.md): Releases, nightly builds and Docker images.
+- [__First steps__](start_first_steps.md): Taking the first steps in CARLA with the Python API.
+- [__Building CARLA__](build_carla.md): How to build CARLA from source on Linux and Windows.
 
 ---
-## CARLA components
+## CARLA topics
 
-- [__Foundations__](core_foundations.md) — Overview of the fundamental building blocks of CARLA.
-- [__Actors__](core_actors.md) — Learn about actors and how to handle them.
-- [__Maps__](core_map.md) — The maps, and how vehicles move around them.
-- [__Sensors and data__](core_sensors.md) — Retrieve simulation data using sensors.
-- [__Coordinate conventions__](core_coordinate_conventions.md) — CARLA's frame, and how to convert to a right-handed one.
-- [__Traffic__](core_traffic.md) — The options available to populate a scene with traffic.
+- [__Foundations__](core_foundations.md): Overview of the fundamental building blocks of CARLA.
+- [__Coordinate conventions__](core_coordinate_conventions.md): CARLA's frame, and how to convert to a right-handed one.
+- [__Rendering options__](core_rendering.md): Quality levels, no-rendering mode and off-screen mode.
+- [__Actors and blueprints__](core_actors.md): Learn about actors and how to handle them.
+- [__Maps and navigation__](core_map.md): The maps, and how vehicles move around them.
+- [__OpenDRIVE standalone mode__](core_opendrive.md): Drive on a road network with no map around it.
+- [__Sensors and data__](core_sensors.md): Retrieve simulation data using sensors.
+- [__Traffic__](core_traffic.md): The options available to populate a scene with traffic.
+
+---
+## Tutorials
+
+- [__Tutorials__](tutorials.md): Tutorials covering CARLA's functionality.
+- [__C++ tutorial__](tuto_cpp.md): The C++ client workflow, batch commands, snapshots and replay.
 
 ---
 ## Content authoring
 
-- [__Custom assets__](content_authoring_overview.md) — Bring your own props, vehicles and materials into CARLA.
-- [__Vehicles__](content_authoring_vehicles.md) — Prepare a vehicle, from the model to the blueprint.
-- [__Content packs__](content_authoring_packs.md) — Ship maps, props and vehicles as a package of their own.
-- [__OpenDRIVE standalone mode__](core_opendrive.md) — Drive on a road network with no map around it.
+- [__Custom assets__](content_authoring_overview.md): Bring your own props, vehicles and materials into CARLA.
+- [__Vehicles__](content_authoring_vehicles.md): Prepare a vehicle, from the model to the blueprint.
+- [__Content packs__](content_authoring_packs.md): Ship maps, props and vehicles as a package of their own.
 
 ---
 ## Resources
 
-- [__Python API__](python_api.md) — Classes and methods in the Python API.
-- [__Sensors reference__](ref_sensors.md) — Every sensor, its attributes and its output.
-- [__Catalogue__](catalogue.md) — CARLA's maps, vehicles, pedestrians and props.
-- [__Blueprint library__](bp_library.md) — Every blueprint that can be spawned.
-- [__Tutorials__](tutorials.md) — Tutorials covering CARLA's functionality.
-- [__C++ tutorial__](tuto_cpp.md) — The C++ client workflow, batch commands, snapshots and replay.
-- [__C++ reference__](ref_cpp.md) — Classes and methods in CARLA C++.
-- [__Agent skills__](agent_skills.md) — Step-by-step procedures for AI coding agents working in this repository.
+- [__Python API__](python_api.md): Classes and methods in the Python API.
+- [__C++ reference__](ref_cpp.md): Classes and methods in CARLA C++.
+- [__Sensors reference__](ref_sensors.md): Every sensor, its attributes and its output.
+- [__Blueprint library__](bp_library.md): Every blueprint that can be spawned.
+- [__Catalogue__](catalogue.md): CARLA's maps, vehicles, pedestrians and props.
+- [__Agent skills__](agent_skills.md): Step-by-step procedures for AI coding agents working in this repository.
 
 ---
 ## CARLA ecosystem
 
-- [__RoadRunner__](roadrunner.md) — MathWorks' editor for the road network of a map.
-- [__NVIDIA__](nvidia.md) — Alpamayo 2 Super, neural reconstruction (NuRec), Cosmos and DLSS.
-- [__ROS 2__](ros2_native.md) — The native ROS 2 interface.
-- [__Scenic__](scenic.md) — Generate scenarios with Scenic.
-- [__Inverted AI__](inverted_ai.md) — Inverted AI's generative traffic simulation.
+- [__RoadRunner__](roadrunner.md): MathWorks' editor for the road network of a map.
+- [__NVIDIA__](nvidia.md): Alpamayo 2 Super, neural reconstruction (NuRec), Cosmos and DLSS.
+- [__ROS 2__](ros2_native.md): The native ROS 2 interface.
+- [__Scenic__](scenic.md): Generate scenarios with Scenic.
+- [__Inverted AI__](inverted_ai.md): Inverted AI's generative traffic simulation.
 
 ---
 ## Contributing to CARLA
-- [__Guidelines__](cont_contribution_guidelines.md) — How to contribute to CARLA and its ecosystem.
-- [__Coding standards__](cont_coding_standard.md) — The coding conventions CARLA follows.
-- [__Documentation standard__](cont_doc_standard.md) — How these pages are written.
+- [__Guidelines__](cont_contribution_guidelines.md): How to contribute to CARLA and its ecosystem.
+- [__Code of conduct__](cont_code_of_conduct.md): The standards of behaviour in the CARLA community.
+- [__Coding standard__](cont_coding_standard.md): The coding conventions CARLA follows.
+- [__Documentation standard__](cont_doc_standard.md): How these pages are written.
+- [__Development__](dev_overview.md): Add sensors and semantic tags, update the content, run the tests and make a release.
