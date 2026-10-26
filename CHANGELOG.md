@@ -1,5 +1,9 @@
 ## LATEST Changes
 
+- Preserve mesh data when appending or concatenating a mesh to itself.
+- Connect complete per-vertex texture coordinates and normals to exported OBJ faces.
+- Restore the documented PLY mesh export, including vertex attributes and triangle indices.
+
 ### New features
 
 #### Simulator

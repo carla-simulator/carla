@@ -11,6 +11,8 @@
 #include <ios>
 #include <iostream>
 #include <fstream>
+#include <iomanip>
+#include <limits>
 
 #include <carla/geom/Math.h>
 
@@ -169,6 +171,17 @@ namespace geom {
       }
     }
 
+    const bool has_uvs = _uvs.size() == _vertices.size();
+    const bool has_normals = _normals.size() == _vertices.size();
+    const auto write_index = [&](index_type index) {
+      out << index;
+      if (has_uvs || has_normals) {
+        out << "/";
+        if (has_uvs) out << index;
+        if (has_normals) out << "/" << index;
+      }
+    };
+
     if (!_indexes.empty()) {
       out << std::endl << "# Polygonal face element." << std::endl;
       auto it_m = _materials.begin();
@@ -188,9 +201,10 @@ namespace geom {
         }
 
         // Add the actual face using the 3 consecutive indices
-        out << "f " << *it; ++it;
-        out << " " << *it; ++it;
-        out << " " << *it << std::endl; ++it;
+        out << "f "; write_index(*it++);
+        out << " "; write_index(*it++);
+        out << " "; write_index(*it++);
+        out << std::endl;
 
         index_counter += 3;
       }
@@ -299,8 +313,38 @@ namespace geom {
     if (!IsValid()) {
       return "Invalid Mesh";
     }
-    // Generate header
+    const bool has_normals = _normals.size() == _vertices.size();
+    const bool has_uvs = _uvs.size() == _vertices.size();
     std::stringstream out;
+    out << std::setprecision(std::numeric_limits<float>::max_digits10);
+    out << "ply\nformat ascii 1.0\n";
+    out << "element vertex " << _vertices.size() << "\n";
+    out << "property float x\nproperty float y\nproperty float z\n";
+    if (has_normals) {
+      out << "property float nx\nproperty float ny\nproperty float nz\n";
+    }
+    if (has_uvs) {
+      out << "property float texture_u\nproperty float texture_v\n";
+    }
+    out << "element face " << _indexes.size() / 3u << "\n";
+    out << "property list uchar int vertex_indices\nend_header\n";
+    for (size_t i = 0u; i < _vertices.size(); ++i) {
+      const auto &vertex = _vertices[i];
+      out << vertex.x << " " << vertex.y << " " << vertex.z;
+      if (has_normals) {
+        const auto &normal = _normals[i];
+        out << " " << normal.x << " " << normal.y << " " << normal.z;
+      }
+      if (has_uvs) {
+        out << " " << _uvs[i].x << " " << _uvs[i].y;
+      }
+      out << "\n";
+    }
+    // Mesh indices are 1-based; PLY face indices are 0-based.
+    for (size_t i = 0u; i < _indexes.size(); i += 3u) {
+      out << "3 " << _indexes[i] - 1u << " " << _indexes[i + 1u] - 1u
+          << " " << _indexes[i + 2u] - 1u << "\n";
+    }
     return out.str();
   }
 
@@ -344,6 +388,11 @@ namespace geom {
   }
 
   Mesh& Mesh::ConcatMesh(const Mesh& rhs, int num_vertices_to_link) {
+    if (this == &rhs) {
+      const Mesh snapshot(rhs);
+      return ConcatMesh(snapshot, num_vertices_to_link);
+    }
+
 
     if (!rhs.IsValid()){
       return *this += rhs;
@@ -398,6 +447,11 @@ namespace geom {
   }
 
   Mesh &Mesh::operator+=(const Mesh &rhs) {
+    if (this == &rhs) {
+      const Mesh snapshot(rhs);
+      return operator+=(snapshot);
+    }
+
     const size_t v_num = GetVerticesNum();
     const size_t i_num = GetIndexesNum();
 
