@@ -10,7 +10,7 @@ It can also make use of the global route planner to follow a specifed route
 """
 
 import carla
-from shapely.geometry import Polygon
+from shapely.geometry import Polygon, MultiPoint
 
 from agents.navigation.local_planner import LocalPlanner, RoadOption
 from agents.navigation.global_route_planner import GlobalRoutePlanner
@@ -240,6 +240,7 @@ class BasicAgent(object):
 
     def set_offset(self, offset):
         """Sets an offset for the vehicle"""
+        self._offset = offset
         self._local_planner.set_offset(offset)
 
     def lane_change(self, direction, same_lane_time=0, other_lane_time=0, lane_change_time=2):
@@ -353,7 +354,7 @@ class BasicAgent(object):
             if len(route_bb) < 3:
                 return None
 
-            return Polygon(route_bb)
+            return Polygon(route_bb[::2] + route_bb[1::2][::-1])
       
         if self._ignore_vehicles:
             return ObstacleDetectionResult(False, None, -1)
@@ -385,7 +386,12 @@ class BasicAgent(object):
         # Get the route bounding box
         route_polygon = get_route_polygon()
 
-        for target_vehicle in vehicle_list:
+        def clearance(vehicle):
+            extent = vehicle.bounding_box.extent
+            return ego_location.distance(vehicle.get_location()) - max(extent.x, extent.y)
+
+        # BehaviorAgent subtracts these half-extents from the reported centre distance.
+        for target_vehicle in sorted(vehicle_list, key=clearance):
             if target_vehicle.id == self._vehicle.id:
                 continue
 
@@ -401,7 +407,7 @@ class BasicAgent(object):
                 target_bb = target_vehicle.bounding_box
                 target_vertices = target_bb.get_world_vertices(target_vehicle.get_transform())
                 target_list = [[v.x, v.y, v.z] for v in target_vertices]
-                target_polygon = Polygon(target_list)
+                target_polygon = MultiPoint(target_list).convex_hull
 
                 if route_polygon.intersects(target_polygon):
                     return ObstacleDetectionResult(True, target_vehicle, compute_distance(target_vehicle.get_location(), ego_location))

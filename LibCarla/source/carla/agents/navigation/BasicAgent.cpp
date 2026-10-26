@@ -27,12 +27,14 @@
 
 #include <boost/geometry.hpp>
 #include <boost/geometry/geometries/point_xy.hpp>
+#include <boost/geometry/geometries/multi_point.hpp>
 #include <boost/geometry/geometries/polygon.hpp>
 
 #include <algorithm>
 #include <array>
 #include <cmath>
 #include <cstdint>
+#include <limits>
 #include <utility>
 
 namespace carla {
@@ -212,6 +214,7 @@ void BasicAgent::IgnoreStopSigns(bool active)     { _ignore_stop_signs = active;
 void BasicAgent::IgnoreVehicles(bool active)      { _ignore_vehicles = active; }
 
 void BasicAgent::SetOffset(float offset) {
+  _offset = offset;
   _local_planner->SetOffset(offset);
 }
 
@@ -402,8 +405,11 @@ BasicAgent::VehicleObstacle BasicAgent::VehicleObstacleDetected(
     }
 
     BgPolygon poly;
-    for (const auto &v : route_bb) {
-      bg::append(poly.outer(), BgPoint(v[0], v[1]));
+    for (size_t i = 0u; i < route_bb.size(); i += 2u) {
+      bg::append(poly.outer(), BgPoint(route_bb[i][0], route_bb[i][1]));
+    }
+    for (size_t i = route_bb.size(); i > 0u; i -= 2u) {
+      bg::append(poly.outer(), BgPoint(route_bb[i - 1u][0], route_bb[i - 1u][1]));
     }
     bg::correct(poly);
     return poly;
@@ -411,7 +417,16 @@ BasicAgent::VehicleObstacle BasicAgent::VehicleObstacleDetected(
 
   std::optional<BgPolygon> route_polygon = build_route_polygon();
 
-  for (auto actor : *vehicle_list) {
+  std::vector<SharedPtr<client::Actor>> candidates(vehicle_list->begin(), vehicle_list->end());
+  const auto clearance = [&](const SharedPtr<client::Actor> &actor) {
+    if (!actor) return std::numeric_limits<float>::infinity();
+    const auto extent = actor->GetBoundingBox().extent;
+    return ego_location.Distance(actor->GetLocation()) - std::max(extent.x, extent.y);
+  };
+  std::stable_sort(candidates.begin(), candidates.end(), [&](const auto &left, const auto &right) {
+    return clearance(left) < clearance(right);
+  });
+  for (auto actor : candidates) {
     if (!actor) continue;
     if (actor->GetId() == _vehicle->GetId()) {
       continue;
@@ -431,10 +446,12 @@ BasicAgent::VehicleObstacle BasicAgent::VehicleObstacleDetected(
       const auto &target_bb = actor->GetBoundingBox();
       const auto vertices = target_bb.GetWorldVertices(actor->GetTransform());
 
-      BgPolygon target_poly;
+      bg::model::multi_point<BgPoint> target_points;
       for (const auto &v : vertices) {
-        bg::append(target_poly.outer(), BgPoint(v.x, v.y));
+        bg::append(target_points, BgPoint(v.x, v.y));
       }
+      BgPolygon target_poly;
+      bg::convex_hull(target_points, target_poly);
       bg::correct(target_poly);
 
       if (bg::intersects(*route_polygon, target_poly)) {

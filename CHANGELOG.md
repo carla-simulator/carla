@@ -1,5 +1,9 @@
 ## LATEST Changes
 
+- Correct agent route-corridor perimeter ordering and project complete actor bounding-box footprints for obstacle checks.
+- Select blocking actors by the clearance used for behavior decisions, preserving returned center distances.
+- Keep obstacle detection in sync with runtime lane-offset changes and retain steering during behavior-agent emergency braking.
+
 ### New features
 
 #### Simulator

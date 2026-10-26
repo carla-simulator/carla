@@ -372,6 +372,7 @@ rpc::VehicleControl BehaviorAgent::EmergencyStop() const {
   rpc::VehicleControl control{};
   control.throttle = 0.0f;
   control.brake = _max_brake;
+  control.steer = _vehicle->GetControl().steer;
   control.hand_brake = false;
   return control;
 }

@@ -315,5 +315,6 @@ class BehaviorAgent(BasicAgent):
         control = carla.VehicleControl()
         control.throttle = 0.0
         control.brake = self._max_brake
+        control.steer = self._vehicle.get_control().steer
         control.hand_brake = False
         return control
