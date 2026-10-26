@@ -374,8 +374,9 @@ class BasicAgent(object):
         if ego_wpt.lane_id < 0 and lane_offset != 0:
             lane_offset *= -1
 
-        # Get the transform of the front of the ego
-        ego_front_transform = ego_transform
+        # Keep the center transform intact for distances and the route polygon.
+        ego_front_transform = carla.Transform(
+            ego_transform.location, ego_transform.rotation)
         ego_front_transform.location += carla.Location(
             self._vehicle.bounding_box.extent.x * ego_transform.get_forward_vector())
 
@@ -418,7 +419,8 @@ class BasicAgent(object):
 
                 target_forward_vector = target_transform.get_forward_vector()
                 target_extent = target_vehicle.bounding_box.extent.x
-                target_rear_transform = target_transform
+                target_rear_transform = carla.Transform(
+                    target_transform.location, target_transform.rotation)
                 target_rear_transform.location -= carla.Location(
                     x=target_extent * target_forward_vector.x,
                     y=target_extent * target_forward_vector.y,

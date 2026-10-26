@@ -1,2 +1,4 @@
 nose2
+networkx
 opencv-python
+shapely
