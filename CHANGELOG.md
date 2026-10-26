@@ -1,5 +1,8 @@
 ## LATEST Changes
 
+* Fixed frame-to-video conversion dropping the final valid image; the incomplete-final-render workaround is now selected explicitly with `--skip-last-frame`.
+* Fixed the frame-to-video utility treating dataset metadata and subdirectories as image frames.
+
 ### New features
 
 #### Simulator
