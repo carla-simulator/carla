@@ -1,5 +1,7 @@
 ## LATEST Changes
 
+- Correct waypoint lane-change permission directions for OpenDRIVE increase/decrease markings in both traffic rules.
+
 ### New features
 
 #### Simulator

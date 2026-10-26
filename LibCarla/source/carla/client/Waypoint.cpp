@@ -210,8 +210,8 @@ namespace client {
       c_left = lane_change_type::Both;
     }
 
-    if (!IsPositiveDirection()) {
-      // if road goes backward
+    if (IsPositiveDirection()) {
+      // Increasing OpenDRIVE lane IDs are to the left when travelling along s.
       if (c_right == lane_change_type::Right) {
         c_right = lane_change_type::Left;
       } else if (c_right == lane_change_type::Left) {
@@ -219,8 +219,8 @@ namespace client {
       }
     }
 
-    if (((!IsPositiveDirection()) ? _waypoint.lane_id - 1 : _waypoint.lane_id + 1) < 0) {
-      // if road goes backward
+    if (IsPositiveDirection()) {
+      // The same signed-ID direction applies at the inner boundary.
       if (c_left == lane_change_type::Right) {
         c_left = lane_change_type::Left;
       } else if (c_left == lane_change_type::Left) {
