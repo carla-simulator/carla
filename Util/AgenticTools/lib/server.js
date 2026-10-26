@@ -194,7 +194,8 @@ function main() {
           && msg.jsonrpc === "2.0" && !("method" in msg)
           && ("result" in msg || "error" in msg)) continue;
       if (!msg || typeof msg !== "object" || Array.isArray(msg)
-          || msg.jsonrpc !== "2.0" || typeof msg.method !== "string") {
+          || msg.jsonrpc !== "2.0" || typeof msg.method !== "string"
+          || ("id" in msg && typeof msg.id !== "string" && typeof msg.id !== "number")) {
         const id = msg && (typeof msg.id === "string" || typeof msg.id === "number") ? msg.id : null;
         send({ jsonrpc: "2.0", id, error: { code: -32600, message: "invalid request" } });
         continue;

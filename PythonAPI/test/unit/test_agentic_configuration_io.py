@@ -66,7 +66,9 @@ class TestAgenticConfigurationIO(unittest.TestCase):
 
     def test_invalid_jsonrpc_envelope_does_not_end_stdio_session(self):
         valid = {"jsonrpc": "2.0", "id": 41, "method": "ping"}
-        for invalid in (None, 3, [], {"jsonrpc": "2.0", "method": 17, "id": 4}):
+        for invalid in (None, 3, [], {"jsonrpc": "2.0", "method": 17, "id": 4},
+                        *({"jsonrpc": "2.0", "method": "ping", "id": value}
+                          for value in (True, {}, [], None))):
             with self.subTest(invalid=invalid):
                 result = subprocess.run([NODE, str(TOOLS / "bin/carla-agentic-tools.js")],
                                         input=json.dumps(invalid)+"\n"+json.dumps(valid)+"\n",
