@@ -124,6 +124,10 @@
 
 #### Python API and client
 
+* Reset global planner intersection decisions between route queries to keep repeated planning independent.
+
+* Fixed global routes continuing past an elevated destination when fine waypoint sampling makes the distance threshold smaller than the height difference (#5579).
+
 * Fixed clients failing `get_world()` against a packaged server: `get_required_files` leaked pak-relative paths that escaped the client cache. The server now sends content-relative names and refuses paths that resolve outside the content folder — previously an arbitrary-file-read vector.
 * Fixed `from carla.command import ...` by registering the `command` submodule in `sys.modules`.
 * Fixed `actor.destroy()` returning False right after `spawn_actor()`, because the client consulted an uninitialised snapshot state and refused to contact the server.

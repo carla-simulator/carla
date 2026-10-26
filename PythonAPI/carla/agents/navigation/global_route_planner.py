@@ -78,6 +78,8 @@ class GlobalRoutePlanner:
         This method returns list of (carla.Waypoint, RoadOption)
         from origin to destination
         """
+        self._intersection_end_node = -1
+        self._previous_decision = RoadOption.VOID
         route_trace = []  # type: list[tuple[carla.Waypoint, RoadOption]]
         route = self._path_search(origin, destination)
         current_waypoint = self._wmap.get_waypoint(origin)
@@ -104,7 +106,7 @@ class GlobalRoutePlanner:
             else:
                 path = path + [edge['entry_waypoint']] + edge['path'] + [edge['exit_waypoint']]
                 closest_index = self._find_closest_in_list(current_waypoint, path)
-                for waypoint in path[closest_index:]:
+                for waypoint_index, waypoint in enumerate(path[closest_index:], closest_index):
                     current_waypoint = waypoint
                     route_trace.append((current_waypoint, road_option))
                     if len(route) - i <= 2 and waypoint.transform.location.distance(
@@ -113,7 +115,7 @@ class GlobalRoutePlanner:
                     elif len(
                             route) - i <= 2 and current_waypoint.road_id == destination_waypoint.road_id and current_waypoint.section_id == destination_waypoint.section_id and current_waypoint.lane_id == destination_waypoint.lane_id:
                         destination_index = self._find_closest_in_list(destination_waypoint, path)
-                        if closest_index > destination_index:
+                        if waypoint_index >= destination_index:
                             break
 
         return route_trace
