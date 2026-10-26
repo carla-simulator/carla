@@ -144,13 +144,8 @@ def _build_K(w, h, fov):
     return np.array([[f, 0, w / 2.0], [0, f, h / 2.0], [0, 0, 1.0]])
 
 
-def _project_box(vertices, world_2_cam, intrinsic, width, height):
-    """Clip box edges in front of the camera before perspective division."""
-    camera = []
-    for vertex in vertices:
-        point = world_2_cam @ np.array([vertex.x, vertex.y, vertex.z, 1.0])
-        camera.append(np.array([point[1], -point[2], point[0]]))
-    near = 1e-4
+def _clip_box_edges(camera, near=1e-4):
+    """Retain front vertices and insert near-plane intersections on box edges."""
     points = [point for point in camera if point[2] >= near]
     # GetWorldVertices uses the binary XYZ corner ordering. Each bit flip
     # connects one of the twelve edges, including those crossing the near plane.
@@ -162,6 +157,16 @@ def _project_box(vertices, world_2_cam, intrinsic, width, height):
             start, end = camera[first], camera[second]
             if (start[2] < near) != (end[2] < near):
                 points.append(start + (end - start) * ((near - start[2]) / (end[2] - start[2])))
+    return points
+
+
+def _project_box(vertices, world_2_cam, intrinsic, width, height):
+    """Clip box edges in front of the camera before perspective division."""
+    camera = []
+    for vertex in vertices:
+        point = world_2_cam @ np.array([vertex.x, vertex.y, vertex.z, 1.0])
+        camera.append(np.array([point[1], -point[2], point[0]]))
+    points = _clip_box_edges(camera)
     if not points:
         return None
     pixels = np.array([(intrinsic @ point)[:2] / point[2] for point in points])
