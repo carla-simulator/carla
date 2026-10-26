@@ -124,6 +124,7 @@
 
 #### Python API and client
 
+* Kept the manual-control HUD usable with pygame's bundled font when system font discovery fails or finds no monospaced font (#9755).
 * Fixed clients failing `get_world()` against a packaged server: `get_required_files` leaked pak-relative paths that escaped the client cache. The server now sends content-relative names and refuses paths that resolve outside the content folder — previously an arbitrary-file-read vector.
 * Fixed `from carla.command import ...` by registering the `command` submodule in `sys.modules`.
 * Fixed `actor.destroy()` returning False right after `spawn_actor()`, because the client consulted an uninitialised snapshot state and refused to contact the server.
@@ -149,6 +150,8 @@
 
 #### Build and packaging
 
+* Added `xdg-utils` to Ubuntu build prerequisites so Unreal Engine setup can register its file types with `xdg-mime` (#9457).
+* Reported the prerequisite installer exit code before Windows setup stops after a failed prerequisite step (#8697).
 * Fixed `carla-pack add` dropping existing OpenDRIVE, traffic-light phase, navigation and Traffic Manager sidecars when re-adding an in-pack map without sidecar flags (#9987).
 * Fixed the Windows build: the setup installs the MSVC 14.38 toolset the engine fork needs, MSVC builds use `/W4`, and two compile and link errors in LibCarla.
 * Fixed the CMake toolchain picking the oldest clang sysroot when an upgraded engine keeps several side by side.

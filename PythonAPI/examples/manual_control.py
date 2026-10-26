@@ -721,10 +721,15 @@ class HUD(object):
         self.dim = (width, height)
         font = pygame.font.Font(pygame.font.get_default_font(), 20)
         font_name = 'courier' if os.name == 'nt' else 'mono'
-        fonts = [x for x in pygame.font.get_fonts() if font_name in x]
-        default_font = 'ubuntumono'
-        mono = default_font if default_font in fonts else fonts[0]
-        mono = pygame.font.match_font(mono)
+        mono = None
+        try:
+            fonts = [x for x in pygame.font.get_fonts() if font_name in x]
+            if fonts:
+                default_font = 'ubuntumono'
+                mono = default_font if default_font in fonts else fonts[0]
+                mono = pygame.font.match_font(mono)
+        except (TypeError, OSError) as error:
+            logging.warning('Cannot enumerate system fonts; using the bundled font: %s', error)
         self._font_mono = pygame.font.Font(mono, 12 if os.name == 'nt' else 14)
         self._notifications = FadingText(font, (width, 40), (0, height - 40))
         self.help = HelpText(pygame.font.Font(mono, 16), width, height)

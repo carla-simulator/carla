@@ -56,6 +56,7 @@ sudo apt-get -y install \
     tzdata \
     sed \
     curl \
+    xdg-utils \
     libtool \
     rsync \
     libxml2-dev \

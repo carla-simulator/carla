@@ -56,7 +56,13 @@ rem -- PREREQUISITES INSTALL STEP --
 
 if %skip_prerequisites%==false (
     echo Installing prerequisites...
-    call Util/SetupUtils/InstallPrerequisites.bat --python-path=%python_path% || exit /b
+    call Util/SetupUtils/InstallPrerequisites.bat --python-path=%python_path%
+    set "prerequisites_exit_code=!errorlevel!"
+    if not "!prerequisites_exit_code!"=="0" (
+        echo ERROR: Prerequisites installation failed with exit code !prerequisites_exit_code!. 1>&2
+        echo Review the prerequisite installer output above before rerunning setup. 1>&2
+        exit /b !prerequisites_exit_code!
+    )
 ) else (
     echo Skipping prerequisites install step.
 )
