@@ -107,6 +107,8 @@
 
 ### Bug fixes
 
+* Fixed asynchronous local Traffic Manager failures terminating the client process; worker errors now stop the worker and are forwarded through the episode's pending-exception channel.
+
 #### Sensors
 
 * Fixed every native sensor (LiDAR, radar, IMU, cameras) simulating only the last physics substep instead of the true elapsed time when `sensor_tick` spanned more than one substep, which halved LiDAR's swept angle and skewed IMU and radar readings.
