@@ -104,6 +104,7 @@
       return: list(command.Response)
       doc: >
         Executes a list of commands on a single simulation step, blocks until the commands are linked, and returns a list of <b>command.Response</b> that can be used to determine whether a single command succeeded or not. [Here](https://github.com/carla-simulator/carla/blob/ue58-dev/PythonAPI/examples/generate_traffic.py) is an example of it being used to spawn actors.
+        For successful <b>SetAutopilot</b> responses, the client updates registration with the Traffic Manager specified by each command's <b>tm_port</b>. The last successful command for each actor and port determines its final registration state.
     # --------------------------------------
     - def_name: generate_opendrive_world
       params:

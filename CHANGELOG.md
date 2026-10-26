@@ -107,6 +107,9 @@
 
 ### Bug fixes
 
+* Fixed C++ synchronous batch autopilot commands failing to register vehicles with the Traffic Manager. C++ and Python now share registration logic that preserves each command's Traffic Manager port and the final requested state per actor and port.
+* Fixed copying mutable RPC responses corrupting successful values and converting errors into successful boolean values.
+
 #### Sensors
 
 * Fixed every native sensor (LiDAR, radar, IMU, cameras) simulating only the last physics substep instead of the true elapsed time when `sensor_tick` spanned more than one substep, which halved LiDAR's swept angle and skewed IMU and radar readings.

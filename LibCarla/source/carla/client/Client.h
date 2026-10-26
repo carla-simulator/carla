@@ -9,9 +9,13 @@
 #include "carla/client/detail/Simulator.h"
 #include "carla/client/World.h"
 #include "carla/client/Map.h"
+#include "carla/client/Actor.h"
+#include "carla/client/ActorList.h"
 // #include "carla/PythonUtil.h" // Architectural correction: this header used to include "carla/PythonUtil.h" and pass PythonUtil::ReleaseGILDeleter() to the simulator shared_ptr below. PythonUtil.h has been moved into PythonAPI (it was the sole Python touchpoint in LibCarla). The C++ client now uses the default shared_ptr deleter; PythonAPI bindings can re-introduce GIL-aware destruction at the bindings layer if a future workload requires it.
 #include "carla/geom/Transform.h"
 #include "carla/trafficmanager/TrafficManager.h"
+
+#include <map>
 
 namespace carla {
 namespace client {
@@ -191,10 +195,70 @@ namespace client {
     std::vector<rpc::CommandResponse> ApplyBatchSync(
         std::vector<rpc::Command> commands,
         bool do_tick_cue = false) const {
+      struct AutopilotAction {
+        size_t index;
+        uint16_t port;
+        bool enabled;
+      };
+      std::vector<AutopilotAction> autopilot_actions;
+      const auto remember_autopilot = [&autopilot_actions](size_t index,
+          const rpc::Command &command) {
+        if (const auto *autopilot = std::get_if<rpc::Command::SetAutopilot>(&command.command)) {
+          autopilot_actions.push_back({index, autopilot->tm_port, autopilot->enabled});
+        }
+      };
+      for (size_t index = 0u; index < commands.size(); ++index) {
+        if (const auto *spawn = std::get_if<rpc::Command::SpawnActor>(&commands[index].command)) {
+          for (const auto &followup : spawn->do_after) {
+            remember_autopilot(index, followup);
+          }
+        } else {
+          remember_autopilot(index, commands[index]);
+        }
+      }
+
       auto responses = _simulator->ApplyBatchSync(std::move(commands), false);
       if (do_tick_cue)
         _simulator->Tick(_simulator->GetNetworkingTimeout());
 
+      // SetAutopilot's TM registration is client-side, for C++ and Python alike.
+      // Keep the final requested state independently for each actor and TM port.
+      std::map<uint16_t, std::map<ActorId, bool>> autopilot_by_port;
+      std::map<ActorId, SharedPtr<Actor>> actors;
+      for (const auto &action : autopilot_actions) {
+        if (action.index < responses.size() && !responses[action.index].HasError()) {
+          const auto id = responses[action.index].Get();
+          autopilot_by_port[action.port][id] = action.enabled;
+          actors.emplace(id, nullptr);
+        }
+      }
+      if (!actors.empty()) {
+        std::vector<ActorId> ids;
+        ids.reserve(actors.size());
+        for (const auto &entry : actors) {
+          ids.push_back(entry.first);
+        }
+        // Fetch all missing actor descriptions in one RPC instead of creating
+        // worker threads that race on a shared TM port and query one at a time.
+        const auto actor_list = GetWorld().GetActors(ids);
+        for (const auto &actor : *actor_list) {
+          actors[actor->GetId()] = actor;
+        }
+        for (const auto &port : autopilot_by_port) {
+          std::vector<SharedPtr<Actor>> enable, disable;
+          for (const auto &entry : port.second) {
+            const auto &actor = actors.at(entry.first);
+            if (actor != nullptr) {
+              (entry.second ? enable : disable).push_back(actor);
+            }
+          }
+          if (!enable.empty() || !disable.empty()) {
+            auto tm = GetInstanceTM(port.first);
+            if (!enable.empty()) tm.RegisterVehicles(enable);
+            if (!disable.empty()) tm.UnregisterVehicles(disable);
+          }
+        }
+      }
       return responses;
     }
 
