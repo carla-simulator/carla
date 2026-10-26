@@ -80,7 +80,7 @@ namespace carla::client {
       }
       else
       {
-        if (!fs::create_directories(parent))
+        if (!fs::create_directories(parent) && !fs::is_directory(parent))
           return false;
       }
     }

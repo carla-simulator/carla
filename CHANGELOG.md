@@ -1,5 +1,8 @@
 ## LATEST Changes
 
+- Fixed concurrent cache downloads to different files in a shared new directory so another writer creating the directory is accepted.
+
+
 ### New features
 
 #### Simulator
