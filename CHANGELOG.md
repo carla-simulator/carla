@@ -98,6 +98,7 @@
 * **Hardened UObject ownership** in the Carla plugin: `TObjectPtr<>` throughout, mesh caches, async heightmap streaming and soft references for catalogue assets.
 * **Enabled the LibCarla GoogleTest suite** (server and client) and gated both in CI.
 * **Added a Visual C++ Redistributable prerequisite** and troubleshooting note to the Windows quickstart (#9560), and corrected Doxygen parameter names across the LibCarla headers.
+* **Added `--no-xodr`, `--no-nav` and `--no-tm` to `carla-pack add`**, which unregister a sidecar of an in-pack map and delete the staged file; omitting a flag keeps the registered file.
 
 #### Documentation
 
