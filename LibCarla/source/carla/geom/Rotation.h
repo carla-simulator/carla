@@ -164,9 +164,9 @@ namespace geom {
     Rotation Normalize() const {
       Rotation V0 = Rotation(*this);
 
-      V0.pitch = V0.pitch - (360.0f * trunc(V0.pitch/360.0f));
-      V0.yaw   = V0.yaw   - (360.0f * trunc(V0.yaw/360.0f));
-      V0.roll  = V0.roll  - (360.0f * trunc(V0.roll/360.0f));
+      V0.pitch = std::fmod(V0.pitch, 360.0f);
+      V0.yaw   = std::fmod(V0.yaw, 360.0f);
+      V0.roll  = std::fmod(V0.roll, 360.0f);
 
       if( V0.pitch < 0.0f ){
         V0.pitch += 360.0f;
@@ -218,9 +218,7 @@ namespace geom {
     // =========================================================================
 
     bool operator==(const Rotation &rhs) const {
-      return ((pitch == rhs.pitch) && (yaw == rhs.yaw) && (roll == rhs.roll)) || 
-        // When comparing two normalized rotators the sum of both comps can be 180 according to UE, we are following same structure for rotators
-        ( ( abs(pitch) + abs(rhs.pitch) == 180.0f) && ( abs(yaw) + abs(rhs.yaw) == 180.0f) && ( abs(roll) + abs(rhs.roll) == 180.0f) );
+      return (pitch == rhs.pitch) && (yaw == rhs.yaw) && (roll == rhs.roll);
     }
 
     bool operator!=(const Rotation &rhs) const {

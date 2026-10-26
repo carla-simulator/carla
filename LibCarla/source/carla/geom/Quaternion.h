@@ -102,17 +102,26 @@ namespace geom {
     /// This rotation as right-handed (FLU) Euler angles, degrees, intrinsic
     /// Z-Y-X. Inverse of `Quaternion(const RightHandedRotation &)`.
     RightHandedRotation ToRightHandedRotation() const {
-      const float sin_pitch = 2.0f * (w * y - z * x);
-      const float clamped_sin_pitch =
-          (sin_pitch > 1.0f) ? 1.0f : (sin_pitch < -1.0f) ? -1.0f : sin_pitch;
-      const float pitch_rad = std::asin(clamped_sin_pitch);
-
-      const float roll_rad = std::atan2(
-          2.0f * (w * x + y * z),
-          1.0f - 2.0f * (x * x + y * y));
-      const float yaw_rad = std::atan2(
-          2.0f * (w * z + x * y),
-          1.0f - 2.0f * (y * y + z * z));
+      const double qx = x, qy = y, qz = z, qw = w;
+      const double norm_squared = qx * qx + qy * qy + qz * qz + qw * qw;
+      if (norm_squared == 0.0) {
+        return RightHandedRotation();
+      }
+      const double sin_pitch = 2.0 * (qw * qy - qz * qx);
+      const double yaw_y = 2.0 * (qw * qz + qx * qy);
+      const double yaw_x = norm_squared - 2.0 * (qy * qy + qz * qz);
+      const double cos_pitch = std::hypot(yaw_x, yaw_y);
+      // At a pitch pole roll and yaw are coupled. Choose zero roll and
+      // recover their combined heading without evaluating atan2(0, 0).
+      if (cos_pitch <= 1e-6 * norm_squared) {
+        return RightHandedRotation(0.0f, std::copysign(90.0f, static_cast<float>(sin_pitch)),
+            static_cast<float>(Math::ToDegrees(2.0 * std::atan2(qz, qw))));
+      }
+      const double pitch_rad = std::atan2(sin_pitch, cos_pitch);
+      const double roll_rad = std::atan2(
+          2.0 * (qw * qx + qy * qz),
+          norm_squared - 2.0 * (qx * qx + qy * qy));
+      const double yaw_rad = std::atan2(yaw_y, yaw_x);
 
       return RightHandedRotation(
           static_cast<float>(Math::ToDegrees<double>(roll_rad)),
@@ -124,22 +133,7 @@ namespace geom {
     /// Inverse of the `Quaternion(Rotation)` constructor; the handedness
     /// change is undone once, by `Rotation::FromRightHanded()`.
     Rotation Rotator() const {
-      const float sin_pitch = 2.0f * (w * y - z * x);
-      const float clamped_sin_pitch =
-          (sin_pitch > 1.0f) ? 1.0f : (sin_pitch < -1.0f) ? -1.0f : sin_pitch;
-      const float pitch_rad = std::asin(clamped_sin_pitch);
-
-      const float roll_rad = std::atan2(
-          2.0f * (w * x + y * z),
-          1.0f - 2.0f * (x * x + y * y));
-      const float yaw_rad = std::atan2(
-          2.0f * (w * z + x * y),
-          1.0f - 2.0f * (y * y + z * z));
-
-      return Rotation::FromRightHanded(RightHandedRotation(
-          static_cast<float>(Math::ToDegrees<double>(roll_rad)),
-          static_cast<float>(Math::ToDegrees<double>(pitch_rad)),
-          static_cast<float>(Math::ToDegrees<double>(yaw_rad))));
+      return Rotation::FromRightHanded(ToRightHandedRotation());
     }
 
     /// Rotate a right-handed vector by this quaternion. Computes

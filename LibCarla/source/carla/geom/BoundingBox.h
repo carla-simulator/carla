@@ -64,6 +64,7 @@ namespace geom {
         auto point_in_bbox_space = in_world_point;
         in_bbox_to_world_transform.InverseTransformPoint(point_in_bbox_space);
         point_in_bbox_space -= location;
+        rotation.InverseRotateVector(point_in_bbox_space);
 
         return  point_in_bbox_space.x >= -extent.x && point_in_bbox_space.x <= extent.x &&
                 point_in_bbox_space.y >= -extent.y && point_in_bbox_space.y <= extent.y &&

@@ -9,6 +9,7 @@
 #include "carla/MsgPack.h"
 
 #include <cmath>
+#include <cstdint>
 #include <limits>
 
 namespace carla {
@@ -42,8 +43,11 @@ namespace geom {
     // -- Other methods --------------------------------------------------------
     // =========================================================================
 
-    int64_t SquaredLength() const {
-      return x * x + y * y + z * z;
+    /// Unsigned storage covers the sum of three squared int32_t components.
+    uint64_t SquaredLength() const {
+      return static_cast<uint64_t>(static_cast<int64_t>(x) * x) +
+          static_cast<uint64_t>(static_cast<int64_t>(y) * y) +
+          static_cast<uint64_t>(static_cast<int64_t>(z) * z);
     }
 
     double Length() const {
@@ -108,8 +112,7 @@ namespace geom {
     }
 
     friend Vector3DInt operator/(int32_t lhs, Vector3DInt rhs) {
-      rhs /= lhs;
-      return rhs;
+      return Vector3DInt(lhs / rhs.x, lhs / rhs.y, lhs / rhs.z);
     }
 
     // =========================================================================

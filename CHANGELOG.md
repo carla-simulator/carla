@@ -124,6 +124,11 @@
 
 #### Python API and client
 
+* Fixed scalar/vector division returning the inverse operands, rotated bounding-box containment ignoring the box's rotation, and unrelated Euler rotations comparing equal.
+* Fixed integer-vector squared lengths overflowing at ordinary coordinate sizes, default cubic polynomials exposing an uninitialized origin, and inclusive integer ranges overflowing at the integer limits.
+* Fixed non-finite vector angles and normalization at extreme finite magnitudes, large-angle normalization losing its remainder, and quaternion-to-Euler conversion losing heading at pitch poles.
+* Fixed Lambert projections with equal standard parallels and zero-curvature arc distance queries producing non-finite results.
+* Fixed mesh OBJ exporters reading past the final material and concatenated mesh materials starting before their connecting triangles.
 * Fixed clients failing `get_world()` against a packaged server: `get_required_files` leaked pak-relative paths that escaped the client cache. The server now sends content-relative names and refuses paths that resolve outside the content folder — previously an arbitrary-file-read vector.
 * Fixed `from carla.command import ...` by registering the `command` submodule in `sys.modules`.
 * Fixed `actor.destroy()` returning False right after `spawn_actor()`, because the client consulted an uninitialised snapshot state and refused to contact the server.

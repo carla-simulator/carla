@@ -209,7 +209,8 @@ namespace geom {
         double t = std::tan(Math::Pi<double>() / 4 - lat / 2)
             / std::pow((1.0 - e * std::sin(lat)) / (1.0 + e * std::sin(lat)), e / 2);
 
-        double n = (std::log(m1) - std::log(m2)) / (std::log(t1) - std::log(t2));
+        double n = std::abs(lat_1 - lat_2) < 1e-10 ? std::sin(lat_1)
+            : (std::log(m1) - std::log(m2)) / (std::log(t1) - std::log(t2));
         double F = m1 / (n * std::pow(t1, n));
         double rho = a * F * std::pow(t, n);
         double rho0 = a * F * std::pow(t0, n);
@@ -363,7 +364,8 @@ namespace geom {
         double t2 = std::tan(Math::Pi<double>() / 4 - lat_2 / 2)
             / std::pow((1.0 - e * std::sin(lat_2)) / (1.0 + e * std::sin(lat_2)), e / 2);
 
-        double n = (std::log(m1) - std::log(m2)) / (std::log(t1) - std::log(t2)); // cone constant
+        double n = std::abs(lat_1 - lat_2) < 1e-10 ? std::sin(lat_1)
+            : (std::log(m1) - std::log(m2)) / (std::log(t1) - std::log(t2)); // cone constant
         double F = m1 / (n * std::pow(t1, n));
         double rho0 = a * F * std::pow(t0, n);
 

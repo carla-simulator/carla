@@ -45,7 +45,8 @@ namespace geom {
     }
 
     float Length() const {
-       return std::sqrt(SquaredLength());
+      const float squared_length = SquaredLength();
+      return std::isnormal(squared_length) ? std::sqrt(squared_length) : std::hypot(x, y);
     }
 
     /// Return a unit-length copy of this vector. When the vector's length
@@ -53,12 +54,16 @@ namespace geom {
     /// runtime assert, no NaN).
     Vector2D MakeUnitVector(
         const float epsilon = 2.0f * std::numeric_limits<float>::epsilon()) const {
-      const float len = Length();
-      if (len <= std::max(epsilon, 0.0f)) {
+      const float length = Length();
+      if (length <= std::max(epsilon, 0.0f)) {
         return *this;
       }
-      const float k = 1.0f / len;
-      return Vector2D(x * k, y * k);
+      if (std::isnormal(length)) {
+        const float k = 1.0f / length;
+        return Vector2D(x * k, y * k);
+      }
+      const double wide_length = std::hypot(static_cast<double>(x), static_cast<double>(y));
+      return Vector2D(static_cast<float>(x / wide_length), static_cast<float>(y / wide_length));
     }
 
     // =========================================================================
@@ -115,8 +120,7 @@ namespace geom {
     }
 
     friend Vector2D operator/(float lhs, Vector2D rhs) {
-      rhs /= lhs;
-      return rhs;
+      return Vector2D(lhs / rhs.x, lhs / rhs.y);
     }
 
     // =========================================================================

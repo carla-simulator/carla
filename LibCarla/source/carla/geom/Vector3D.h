@@ -49,7 +49,8 @@ namespace geom {
     }
 
     inline float Length() const {
-       return std::sqrt(SquaredLength());
+      const float squared_length = SquaredLength();
+      return std::isnormal(squared_length) ? std::sqrt(squared_length) : std::hypot(x, y, z);
     }
 
     constexpr float SquaredLength2D() const {
@@ -57,7 +58,8 @@ namespace geom {
     }
 
     inline float Length2D() const {
-      return std::sqrt(SquaredLength2D());
+      const float squared_length = SquaredLength2D();
+      return std::isnormal(squared_length) ? std::sqrt(squared_length) : std::hypot(x, y);
     }
 
     inline Vector3D Abs() const {
@@ -74,8 +76,12 @@ namespace geom {
       if (length <= std::max(epsilon, 0.0f)) {
         return *this;
       }
-      const float k = 1.0f / length;
-      return Vector3D(x * k, y * k, z * k);
+      if (std::isnormal(length)) {
+        const float k = 1.0f / length;
+        return Vector3D(x * k, y * k, z * k);
+      }
+      const double wide_length = std::hypot(static_cast<double>(x), static_cast<double>(y), static_cast<double>(z));
+      return Vector3D(static_cast<float>(x / wide_length), static_cast<float>(y / wide_length), static_cast<float>(z / wide_length));
     }
 
     // =========================================================================
@@ -143,8 +149,7 @@ namespace geom {
     }
 
     constexpr friend Vector3D operator/(float lhs, Vector3D rhs) {
-      rhs /= lhs;
-      return rhs;
+      return Vector3D(lhs / rhs.x, lhs / rhs.y, lhs / rhs.z);
     }
 
     // =========================================================================

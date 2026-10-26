@@ -12,7 +12,11 @@ namespace carla {
 namespace geom {
 
   double Math::GetVectorAngle(const Vector3D &a, const Vector3D &b) {
-    return std::acos(Dot(a, b) / (a.Length() * b.Length()));
+    const double dot = static_cast<double>(a.x) * b.x +
+        static_cast<double>(a.y) * b.y + static_cast<double>(a.z) * b.z;
+    const double length_a = std::hypot(static_cast<double>(a.x), static_cast<double>(a.y), static_cast<double>(a.z));
+    const double length_b = std::hypot(static_cast<double>(b.x), static_cast<double>(b.y), static_cast<double>(b.z));
+    return std::acos(Clamp(dot / (length_a * length_b), -1.0, 1.0));
   }
 
   std::pair<float, float> Math::DistanceSegmentToPoint(
@@ -36,6 +40,11 @@ namespace geom {
       const float length,
       float heading,       // [radians]
       float curvature) {
+
+    if (curvature == 0.0f) {
+      const Vector3D end_pos = start_pos + length * Vector3D(std::cos(heading), std::sin(heading), 0.0f);
+      return DistanceSegmentToPoint(p, start_pos, end_pos);
+    }
 
     /// @todo: Because Unreal's coordinates, hacky way to correct
     /// the -y, this must be changed in the future
@@ -158,14 +167,10 @@ namespace geom {
 
   std::vector<int> Math::GenerateRange(int a, int b) {
     std::vector<int> result;
-    if (a < b) {
-      for(int i = a; i <= b; ++i) {
-        result.push_back(i);
-      }
-    } else {
-      for(int i = a; i >= b; --i) {
-        result.push_back(i);
-      }
+    result.push_back(a);
+    while (a != b) {
+      a += (a < b) ? 1 : -1;
+      result.push_back(a);
     }
     return result;
   }

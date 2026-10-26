@@ -182,7 +182,7 @@ namespace geom {
             ++it_m;
           }
           // If the current material start at this index
-          if (it_m->index_start == index_counter) {
+          if (it_m != _materials.end() && it_m->index_start == index_counter) {
             out << "\nusemtl " << it_m->name << std::endl;
           }
         }
@@ -259,7 +259,7 @@ namespace geom {
             ++it_m;
           }
           // If the current material start at this index
-          if (it_m->index_start == index_counter) {
+          if (it_m != _materials.end() && it_m->index_start == index_counter) {
             out << "\nusemtl " << it_m->name << std::endl;
           }
         }
@@ -349,7 +349,6 @@ namespace geom {
       return *this += rhs;
     }
     const size_t v_num = GetVerticesNum();
-    const size_t i_num = GetIndexesNum();
 
     _vertices.insert(
       _vertices.end(),
@@ -373,6 +372,7 @@ namespace geom {
       _indexes.push_back( v_num + i);
     }
 
+    const size_t i_num = GetIndexesNum();
     std::transform(
       rhs.GetIndexes().begin(),
       rhs.GetIndexes().end(),

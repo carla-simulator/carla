@@ -159,7 +159,7 @@ namespace geom {
     std::array<value_type, 4> _v = {0.0, 0.0, 0.0, 0.0};
 
     // s - distance
-    value_type _s;
+    value_type _s = 0.0;
   };
 
 } // namespace geom
