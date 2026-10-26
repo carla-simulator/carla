@@ -297,6 +297,31 @@ class TestInitAdd(PackTestBase):
                 self.assertEqual((content / original["xodr"]).read_bytes(), b"<OpenDRIVE/>")
                 self.assertEqual((content / original["map_logic"]).read_text(), '{"phases": [1]}')
 
+    def test_no_sidecar_flags_unregister_and_delete_the_files(self):
+        umap, original, _ = self.in_pack_map_with_sidecars()
+        content = self.pack_dir / "Content"
+        for key in ("xodr", "nav", "tm"):
+            self.assertTrue((content / original[key]).exists())
+
+        rc, _, err = run("add", PACK, "--project", self.project, "--map", umap,
+                         "--no-xodr", "--no-nav", "--no-tm")
+        self.assertEqual(rc, 0, err)
+        entry = json.loads((self.pack_dir / "carla-pack.json").read_text())["maps"][0]
+        self.assertEqual(entry["xodr"], "")
+        self.assertNotIn("map_logic", entry)
+        self.assertNotIn("nav", entry)
+        self.assertNotIn("tm", entry)
+        for key in ("xodr", "map_logic", "nav", "tm"):
+            self.assertFalse((content / original[key]).exists(), key)
+
+    def test_a_sidecar_flag_and_its_negation_are_mutually_exclusive(self):
+        umap, _, _ = self.in_pack_map_with_sidecars()
+
+        rc, _, err = run("add", PACK, "--project", self.project, "--map", umap,
+                         "--xodr", self.xodr, "--no-xodr")
+        self.assertNotEqual(rc, 0)
+        self.assertIn("--xodr and --no-xodr are mutually exclusive", err)
+
     def test_readd_in_pack_map_replaces_xodr_and_removes_obsolete_logic(self):
         umap, original, _ = self.in_pack_map_with_sidecars()
         content = self.pack_dir / "Content"

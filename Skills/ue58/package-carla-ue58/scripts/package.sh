@@ -39,8 +39,8 @@ scope)
   echo "no compression  : $(carla_ue58_cmake_opt CARLA_UNREAL_PACKAGE_NO_COMPRESSION)"
   if [ -z "${MAPS}" ]; then
     echo "cook scope      : <empty> — falls back to DefaultGame.ini MapsToCook:"
-    echo "                    Town10HD_Opt, OpenDriveMap, TestMaps/EmptyMap, Mine_01,"
-    echo "                    Town15/Town15   (bCookAll=False, so NOT every map)"
+    echo "                    Town10HD_Opt, OpenDriveMap, TestMaps/EmptyMap,"
+    echo "                    Town12/Town12, Town15/Town15   (bCookAll=False, so NOT every map)"
     echo "  WARNING Town15 is in that default list and CANNOT be cooked (573"
     echo "  WARNING unresolvable MaterialInstanceDynamic imports), so the"
     echo "  WARNING out-of-the-box package build FAILS. Set an explicit scope."

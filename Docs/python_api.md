@@ -4823,7 +4823,7 @@ Simulated seconds elapsed since the beginning of the episode.
 - <a name="carla.WorldSnapshot.delta_seconds"></a>**<font color="#f8805a">delta_seconds</font>** (_float<small> - seconds</small>_)  
 Simulated seconds elapsed since the previous frame.  
 - <a name="carla.WorldSnapshot.id"></a>**<font color="#f8805a">id</font>** (_int_)  
-A value unique for every snapshot to differentiate them.  
+Identifier of the episode associated with this world. It remains constant across the episode's simulation ticks. Use [carla.WorldSnapshot.frame](#carla.WorldSnapshot.frame) to identify the tick represented by a snapshot. Loading or reloading the world starts a new episode.  
 - <a name="carla.WorldSnapshot.frame"></a>**<font color="#f8805a">frame</font>** (_int_)  
 Simulation frame in which the snapshot was taken.  
 - <a name="carla.WorldSnapshot.timestamp"></a>**<font color="#f8805a">timestamp</font>** (_[carla.Timestamp](#carla.Timestamp)<small> - seconds</small>_)  
