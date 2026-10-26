@@ -871,7 +871,7 @@ When the simulation starts, every element in scene is created with a tag. So it 
 
 ![ImageInstanceSegmentation](img/instance_segmentation.png)
 
-The server provides an image with the tag information __encoded in the red channel__: A pixel with a red value of `x` belongs to an object with tag `x`. The green and blue values of the pixel define the object's unique ID. For example a pixel with an 8 bit RGB value of [10, 20, 55] is a vehicle (Semantic tag 10) with a unique instance ID `20-55`.  
+The server provides an image with the tag information __encoded in the red channel__: A pixel with a red value of `x` belongs to an object with tag `x`. See the [semantic segmentation camera](#semantic-segmentation-camera) for the tag definitions. The green and blue channels store the low and high bytes, respectively, of the 16-bit instance ID. For example, a pixel with an 8-bit RGB value of `[14, 20, 55]` is a car (semantic tag `14`) with an instance ID of `20 + 55 * 256 = 14100`.
 
 #### Basic camera attributes
 
