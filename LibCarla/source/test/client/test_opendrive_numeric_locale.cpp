@@ -99,6 +99,20 @@ namespace {
 </lane></right></laneSection></lanes></road></OpenDRIVE>)");
   }
 
+  struct LateNumericParser {
+    ~LateNumericParser() {
+      // This object is registered before the parser's first runtime use. Its
+      // destructor must still be able to parse after function-static cleanup.
+      pugi::xml_document xml;
+      if (!xml.load_string("<root value='3'/>") ||
+          xml.child("root").attribute("value").as_double() != 3.0) {
+        std::abort();
+      }
+    }
+  };
+
+  LateNumericParser late_numeric_parser;
+
   class OpenDriveNumericLocale : public testing::Test {
   protected:
     void SetUp() override {

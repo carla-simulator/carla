@@ -21,51 +21,32 @@ namespace detail {
 
   // Serialized map numbers always use the C numeric locale. An explicit locale
   // preserves strtod's format/range semantics without changing application state.
-  class NumericCLocale {
-  public:
 #ifdef _WIN32
-    using Handle = _locale_t;
-
-    NumericCLocale() : _handle(_create_locale(LC_NUMERIC, "C")) {
-      if (_handle == nullptr) {
-        throw_exception(std::bad_alloc());
-      }
-    }
-
-    ~NumericCLocale() {
-      _free_locale(_handle);
-    }
+  using NumericLocaleHandle = _locale_t;
 #else
-    using Handle = locale_t;
-
-    NumericCLocale() : _handle(newlocale(LC_NUMERIC_MASK, "C", nullptr)) {
-      if (_handle == nullptr) {
-        throw_exception(std::bad_alloc());
-      }
-    }
-
-    ~NumericCLocale() {
-      freelocale(_handle);
-    }
+  using NumericLocaleHandle = locale_t;
 #endif
 
-    NumericCLocale(const NumericCLocale &) = delete;
-    NumericCLocale &operator=(const NumericCLocale &) = delete;
-
-    Handle Get() const {
-      return _handle;
+  inline NumericLocaleHandle CreateNumericCLocale() {
+#ifdef _WIN32
+    const auto locale = _create_locale(LC_NUMERIC, "C");
+#else
+    const auto locale = newlocale(LC_NUMERIC_MASK, "C", nullptr);
+#endif
+    if (locale == nullptr) {
+      throw_exception(std::bad_alloc());
     }
+    return locale;
+  }
 
-  private:
-    Handle _handle;
-  };
-
-  inline NumericCLocale::Handle GetNumericCLocale() {
+  inline NumericLocaleHandle GetNumericCLocale() {
     const auto previous_errno = errno;
-    static const NumericCLocale locale;
+    // Retain one handle for the process lifetime: XML parsing can also run in
+    // global destructors after a function-static owning object was destroyed.
+    static const auto locale = CreateNumericCLocale();
     // Successful lazy locale creation must not change strtod's errno contract.
     errno = previous_errno;
-    return locale.Get();
+    return locale;
   }
 
   inline double StrtodC(const char *text, char **end) {
