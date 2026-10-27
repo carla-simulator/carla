@@ -107,6 +107,8 @@
 
 ### Bug fixes
 
+* Allow native client startup without `HOME` or `USERPROFILE`; the default file cache falls back to `carlaCache` in the working directory.
+
 #### Sensors
 
 * Fixed every native sensor (LiDAR, radar, IMU, cameras) simulating only the last physics substep instead of the true elapsed time when `sensor_tick` spanned more than one substep, which halved LiDAR's swept angle and skewed IMU and radar readings.

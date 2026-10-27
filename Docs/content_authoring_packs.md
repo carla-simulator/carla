@@ -411,6 +411,8 @@ __The client prints `InMemoryMap cache rejected ... rebuilding the local map fro
 
 The Traffic Manager was handed a cached map (`Maps/TM/<Map>.bin`) that does not match the town's OpenDRIVE. The client keeps every file it downloads from a server under `~/carlaCache/<version>/` and reuses it, so this is usually a copy from an older server or pack; the client fetches the server's current file once and, if that one does not match either, rebuilds the map from the OpenDRIVE (a few seconds on the first `set_autopilot` in that town). Nothing else changes. A cache file is generated from a town's OpenDRIVE with `carla.Map(name, xodr_text).cook_in_memory_map(path)`, no server needed.
 
+Set `CARLA_CACHE_DIR` before loading the native client, or call `client.set_files_base_folder(path)`, to choose another cache directory. If `HOME` on Linux or `USERPROFILE` on Windows is absent or empty, the default is `carlaCache` in the current working directory.
+
 __How big is a pack?__
 
 Roughly the size of the cooked assets it ships, plus the sidecar files. Measured: two large World Partition towns, 2.4 GB; three classic towns and two large ones, 3.9 GB; a map with a few hundred unique meshes is typically in the hundreds of MB; a pack that only lists new vehicles built from existing CARLA meshes is a few MB. Everything the pack references from the base release costs nothing. `carla-pack inspect` lists the files with their sizes; most of the size is in the `.ucas` container.

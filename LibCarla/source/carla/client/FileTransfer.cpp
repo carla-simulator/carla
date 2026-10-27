@@ -25,7 +25,10 @@ namespace carla::client {
     const char* override_path = std::getenv(OverridePathEV);
     if (override_path != NULL)
       return fs::path(override_path);
-    fs::path path = std::getenv(HomePathEV);
+    // Embedded processes may omit the home environment variable. Preserve
+    // the existing empty-home fallback to carlaCache in the working directory.
+    const char *home_path = std::getenv(HomePathEV);
+    fs::path path = home_path != nullptr ? home_path : "";
     path /= "carlaCache";
     return fs::absolute(path);
   }();
