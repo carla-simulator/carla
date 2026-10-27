@@ -144,7 +144,8 @@ class WindowsRebuild(unittest.TestCase):
             for script, arguments in commands) + 'exit /b 0\n', encoding="utf-8")
         return subprocess.run([os.environ["COMSPEC"], "/d", "/c", str(wrapper)],
                               cwd=self.workspace, env=self.environment,
-                              capture_output=True, text=True, timeout=15)
+                              capture_output=True, text=True, timeout=15,
+                              check=False)
 
     def run_batch(self, arguments):
         return self.run_commands([(self.script, arguments)])
