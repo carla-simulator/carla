@@ -330,7 +330,48 @@ p:has(> img) + .img-caption {
 }
 
 .img-lightbox img {
-	max-width: 95%;
-	max-height: 95%;
+	max-width: 92%;
+	max-height: 86%;
 	box-shadow: 0 0 24px rgba(0, 0, 0, 0.6);
 }
+
+.img-lightbox-caption {
+	position: absolute;
+	bottom: 2.4%;
+	left: 10%;
+	right: 10%;
+	color: #ddd;
+	font-size: 0.9rem;
+	text-align: center;
+	cursor: default;
+}
+
+.img-lightbox-counter {
+	position: absolute;
+	top: 1.5%;
+	right: 2%;
+	color: #bbb;
+	font-size: 0.85rem;
+}
+
+.img-lightbox-nav {
+	position: absolute;
+	top: 50%;
+	transform: translateY(-50%);
+	width: 3rem;
+	height: 5rem;
+	border: 0;
+	border-radius: 4px;
+	background: rgba(255, 255, 255, 0.08);
+	color: #fff;
+	font-size: 2.6rem;
+	line-height: 1;
+	cursor: pointer;
+}
+
+.img-lightbox-nav:hover {
+	background: rgba(255, 255, 255, 0.2);
+}
+
+.img-lightbox-nav.prev { left: 1%; }
+.img-lightbox-nav.next { right: 1%; }
