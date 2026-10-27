@@ -107,6 +107,8 @@
 
 ### Bug fixes
 
+* Include alpha in RGBA color equality while preserving three-channel RGB blueprint attribute comparisons.
+
 #### Sensors
 
 * Fixed every native sensor (LiDAR, radar, IMU, cameras) simulating only the last physics substep instead of the true elapsed time when `sensor_tick` spanned more than one substep, which halved LiDAR's swept angle and skewed IMU and radar readings.

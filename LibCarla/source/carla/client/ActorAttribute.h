@@ -132,6 +132,13 @@ namespace client {
   }
 
   template <>
+  inline bool ActorAttributeValueAccess::operator==(const sensor::data::Color &rhs) const {
+    // RGB attributes have no alpha channel, independently of RGBA value equality.
+    const auto color = As<sensor::data::Color>();
+    return color.r == rhs.r && color.g == rhs.g && color.b == rhs.b;
+  }
+
+  template <>
   inline bool ActorAttributeValueAccess::operator==(const ActorAttributeValueAccess &rhs) const {
     return
         (GetType() == rhs.GetType()) &&

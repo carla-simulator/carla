@@ -57,11 +57,15 @@
         Initializes a color, black by default.
     # --------------------------------------
     - def_name: __eq__
+      doc: >
+        Returns True when all four red, green, blue and alpha channels are equal.
       params:
       - param_name: other
         type: carla.Color
     # --------------------------------------
     - def_name: __ne__
+      doc: >
+        Returns True when any RGBA channel differs.
       params:
       - param_name: other
         type: carla.Color
@@ -219,7 +223,7 @@
       - param_name: other
         type: bool / int / float / str / carla.Color / carla.ActorAttribute
       doc: >
-        Returns true if this actor's attribute and `other` are the same.
+        Returns true if this actor's attribute and `other` are the same. For RGBColor attributes, comparisons with carla.Color use only the red, green and blue channels.
     # --------------------------------------
     - def_name: __ne__
       return: bool
