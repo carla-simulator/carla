@@ -97,7 +97,8 @@ esac
         guard = '[[ $(command -v docker) -ef "$CARLA_DOCKER_TEST_RECORDER" ]] || exit 97; exec bash "$@"'
         return subprocess.run([self.bash, '-c', guard, 'fixture',
                                str(self.docker_dir / 'build.sh'), *args],
-                              cwd=self.fixture, env=env, capture_output=True, text=True, timeout=60)
+                              cwd=self.fixture, env=env, capture_output=True, text=True, timeout=60,
+                              check=False)
 
     def assert_monolith_success(self, result):
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
