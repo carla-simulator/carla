@@ -38,12 +38,8 @@ void ConfigureCarlaSteeringInput(UChaosWheeledVehicleMovementComponent& Movement
 
   // Chaos defaults to a fixed AngleRatio, while Ackermann keeps the left/right
   // wheel angles tied to the vehicle geometry.
-  //
-  // Two-wheelers are simulated as a narrow four-wheeler whose front pair stands
-  // in for the single front wheel, so they steer with SingleAngle, set on their
-  // blueprints. Ackermann is also undefined at that width: its linkage moves the
-  // rack a fixed 10 cm against an arm of TrackWidth / 8, so on a 40 cm track it
-  // has no solution past half lock and the wheels scrub instead of steering.
+  // Two-wheelers keep their blueprint's SingleAngle: on their 40 cm virtual track
+  // the Ackermann linkage has no solution past half lock.
   if (!bTwoWheeled)
   {
     MovementComponent.SteeringSetup.SteeringType = ESteeringType::Ackermann;
@@ -915,13 +911,9 @@ void FBikeRiderTickFunction::ExecuteTick(
 
 void ACarlaWheeledVehicle::SetUpBikeRider()
 {
-  // The two-wheeler blueprints (BP_Base2wheeledNew) pose their rider entirely in
-  // world space: their Tick samples the seat, handlebar, pedal and foot-rest
-  // sockets into variables (UpdateCharacterPosition), and AB_Biker pins hips,
-  // hands and feet there. Actor Tick runs before physics, so by the time the
-  // rider is drawn the bike has moved on by speed x frame time: the rider trails
-  // the bike with the hands off the bar, jittering as the frame time varies.
-  // Sample again after physics, and have the rider's animation wait for it.
+  // BP_Base2wheeledNew samples the rider's IK targets (UpdateCharacterPosition)
+  // in its Tick, before physics, so the rider trails the moving bike. Sample
+  // them again after physics and let the rider's animation wait for that.
   UpdateRiderFunction = FindFunction(TEXT("UpdateCharacterPosition"));
   if (UpdateRiderFunction != nullptr && UpdateRiderFunction->ParmsSize != 0)
   {
@@ -943,8 +935,7 @@ void ACarlaWheeledVehicle::SetUpBikeRider()
   BikeRiderTick.RegisterTickFunction(GetLevel());
   BikeRiderTick.AddPrerequisite(this, PrimaryActorTick);
 
-  // Swapping the mesh after construction is safe: the
-  // rider's pose is pinned to the bike every frame (AB_Biker, TickBikeRider).
+  // Pick a random rider from PedestrianModels.
   TArray<USkeletalMesh *> RiderModels;
   if (FArrayProperty *Models = FindFProperty<FArrayProperty>(GetClass(), TEXT("PedestrianModels")))
   {
@@ -998,8 +989,7 @@ void ACarlaWheeledVehicle::TickBikeRider()
   {
     ProcessEvent(UpdateRiderFunction, nullptr);
 
-    // The blueprint aims the wrists at the handlebar sockets; aim them where the
-    // hands close around the bar instead. See RiderWristOffset.
+    // Move the wrist targets off the handlebar sockets by RiderWristOffset.
     const FTransform &Frame = GetActorTransform();
     const FVector Offset = RiderWristOffset;
     if (LeftHandTargetProperty != nullptr)

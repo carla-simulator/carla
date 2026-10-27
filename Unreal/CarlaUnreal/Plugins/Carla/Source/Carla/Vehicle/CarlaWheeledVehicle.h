@@ -496,29 +496,26 @@ private:
   friend struct FBikeRiderTickFunction;
   FBikeRiderTickFunction BikeRiderTick;
 
-  /// The two-wheeler blueprint's function that samples the rider's IK targets.
+  /// Blueprint function that samples the rider's IK targets.
   UFunction *UpdateRiderFunction = nullptr;
 
-  /// The blueprint variables holding the rider's hand IK targets.
+  /// Blueprint variables holding the rider's hand IK targets.
   FStructProperty *LeftHandTargetProperty = nullptr;
   FStructProperty *RightHandTargetProperty = nullptr;
 
   FTimerHandle TimerHandler;
 public:
-  /// Two-wheelers: where the rider's wrist goes relative to the handlebar
-  /// socket, in cm in the vehicle frame (X forward, Y outward, Z up).
+  /// Two-wheelers: rider's wrist offset from the handlebar socket, cm
+  /// (X forward, Y outward, Z up).
   UPROPERTY(Category = "CARLA Wheeled Vehicle|Rider", EditAnywhere, BlueprintReadWrite)
   FVector RiderWristOffset = FVector(0.0, 0.0, 0.0);
 
-  /// Two-wheelers: rotation added to the rider's left hand, in the hand bone's
-  /// own space, on top of the riding pose (AB_Biker applies it after the arm
-  /// IK).
+  /// Two-wheelers: rotation added to the rider's left hand, in bone space.
   UPROPERTY(Category = "CARLA Wheeled Vehicle|Rider", EditAnywhere, BlueprintReadWrite)
   FRotator RiderLeftHandRotation = FRotator::ZeroRotator;
 
-  /// Two-wheelers: as RiderLeftHandRotation, for the right hand. The hand bones
-  /// are mirror images with all three axes flipped, so the same value on both
-  /// hands gives a mirror-symmetric grip.
+  /// Two-wheelers: as RiderLeftHandRotation, for the right hand. The same value
+  /// on both hands gives a symmetric grip.
   UPROPERTY(Category = "CARLA Wheeled Vehicle|Rider", EditAnywhere, BlueprintReadWrite)
   FRotator RiderRightHandRotation = FRotator::ZeroRotator;
 
