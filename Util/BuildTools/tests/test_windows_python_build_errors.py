@@ -146,7 +146,8 @@ class WindowsPythonBuildErrors(unittest.TestCase):
             + 'if not exist "' + str(self.directory / '.recorder-ready') + '" exit /b 98\n'
             + 'call "' + str(script) + '" ' + arguments + '\nexit /b %errorlevel%\n', encoding='utf-8')
         return subprocess.run([os.environ['COMSPEC'], '/d', '/c', str(wrapper)],
-                              cwd=self.client, env=self.environment, capture_output=True, text=True, timeout=20)
+                              cwd=self.client, env=self.environment, capture_output=True, text=True, timeout=20,
+                              check=False)
 
     def calls(self, tool='python'):
         log = self.directory / 'calls.log'
