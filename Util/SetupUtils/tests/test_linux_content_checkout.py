@@ -143,7 +143,8 @@ source "$script" "$@"
         return subprocess.run([BASH, "--noprofile", "--norc", "-c", wrapper, "content-fixture", str(self.script),
                                *(arguments or ("--skip-prerequisites",))],
                               cwd=self.workspace, env=self.environment,
-                              capture_output=True, text=True, timeout=30)
+                              capture_output=True, text=True, timeout=30,
+                              check=False)
 
     def commands(self):
         return [json.loads(line) for line in self.log.read_text(encoding="utf-8").splitlines()] if self.log.exists() else []
