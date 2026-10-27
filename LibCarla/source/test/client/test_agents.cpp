@@ -135,21 +135,38 @@ TEST(agents_misc, is_within_distance_too_close_returns_true) {
 }
 
 TEST(agents_misc, is_within_distance_with_forward_arc_filter) {
-  // Reference looks down +x. Python uses a strict open interval
-  // (min < angle < max), so a target exactly on the forward axis (angle=0°)
-  // is excluded from the (0°, 90°) cone — matched here by placing the
-  // target diagonally forward-right at 45°.
+  // Both native detector callers need a directly forward target included.
+  // The interval is intentionally closed, matching Python's documented
+  // [min, max] contract and the updated public C++ helper documentation.
   Transform ref(Location(0, 0, 0), Rotation(0, 0, 0));
-  Transform front_diag(Location(5, 5, 0), Rotation(0, 0, 0));   // 45° from +x
-  Transform behind(Location(-5, 0, 0), Rotation(0, 0, 0));      // 180° (behind)
-
-  EXPECT_TRUE (IsWithinDistance(front_diag, ref, 10.0f, std::make_pair(0.0f, 90.0f)));
-  EXPECT_FALSE(IsWithinDistance(behind,     ref, 10.0f, std::make_pair(0.0f, 90.0f)));
-
-  // Strict-open boundary: target exactly on the forward axis (angle=0°) is
-  // NOT inside the (0°, 90°) interval. Matches Python parity.
+  Transform front_diag(Location(5, 5, 0), Rotation(0, 0, 0));
   Transform front_axial(Location(5, 0, 0), Rotation(0, 0, 0));
-  EXPECT_FALSE(IsWithinDistance(front_axial, ref, 10.0f, std::make_pair(0.0f, 90.0f)));
+  Transform side_axial(Location(0, 5, 0), Rotation(0, 0, 0));
+  Transform behind(Location(-5, 0, 0), Rotation(0, 0, 0));
+  const auto forward_arc = std::make_pair(0.0f, 90.0f);
+  const auto rear_arc = std::make_pair(90.0f, 180.0f);
+
+  EXPECT_TRUE(IsWithinDistance(front_diag, ref, 10.0f, forward_arc));
+  EXPECT_FALSE(IsWithinDistance(behind, ref, 10.0f, forward_arc));
+  EXPECT_TRUE(IsWithinDistance(front_axial, ref, 10.0f, forward_arc));
+  EXPECT_TRUE(IsWithinDistance(side_axial, ref, 10.0f, forward_arc));
+  EXPECT_TRUE(IsWithinDistance(side_axial, ref, 10.0f, rear_arc));
+  EXPECT_TRUE(IsWithinDistance(behind, ref, 10.0f, rear_arc));
+
+  // Inclusion of exact endpoints must not include points outside either arc.
+  Transform outside_forward(Location(-0.01f, 5.0f, 0.0f), Rotation(0, 0, 0));
+  Transform outside_rear(Location(0.01f, 5.0f, 0.0f), Rotation(0, 0, 0));
+  EXPECT_FALSE(IsWithinDistance(outside_forward, ref, 10.0f, forward_arc));
+  EXPECT_FALSE(IsWithinDistance(outside_rear, ref, 10.0f, rear_arc));
+  EXPECT_FALSE(IsWithinDistance(front_axial, ref, 10.0f, std::make_pair(1.0f, 90.0f)));
+  EXPECT_FALSE(IsWithinDistance(side_axial, ref, 10.0f, std::make_pair(0.0f, 89.0f)));
+  EXPECT_FALSE(IsWithinDistance(behind, ref, 10.0f, std::make_pair(0.0f, 179.0f)));
+
+  // The unchanged distance gate still applies to an accepted angle endpoint.
+  Transform at_distance_limit(Location(10.0f, 0, 0), Rotation(0, 0, 0));
+  Transform beyond_distance_limit(Location(10.1f, 0, 0), Rotation(0, 0, 0));
+  EXPECT_TRUE(IsWithinDistance(at_distance_limit, ref, 10.0f, forward_arc));
+  EXPECT_FALSE(IsWithinDistance(beyond_distance_limit, ref, 10.0f, forward_arc));
 }
 
 TEST(agents_misc, compute_magnitude_angle_zero_yaw) {
