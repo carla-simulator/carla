@@ -189,7 +189,8 @@ class TestObjMerge(ToolingTest):
         target = self.write("result.obj", destination.encode())
         incoming = self.write("source.obj", source.encode())
         result = subprocess.run([sys.executable, str(OBJ_PATH), str(target), str(incoming)],
-                                capture_output=True, text=True)
+                                capture_output=True, text=True,
+                                check=False)
         self.assertEqual(result.returncode, 0, result.stderr)
         return target.read_text()
 
