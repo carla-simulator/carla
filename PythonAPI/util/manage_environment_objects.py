@@ -52,10 +52,11 @@ def main():
     argparser.add_argument(
         '-p', '--port', metavar='P', default=2000, type=int,
         help='TCP port to listen to (default: 2000)')
-    argparser.add_argument(
+    selection = argparser.add_mutually_exclusive_group()
+    selection.add_argument(
         '-l', '--label', default='Any',
         help='Layer to manage')
-    argparser.add_argument(
+    selection.add_argument(
         '--id', default=None, type=int,
         help='ID to manage')
     argparser.add_argument(
@@ -72,10 +73,6 @@ def main():
     client = carla.Client(args.host, args.port)
     world = client.get_world()
 
-    if args.id and args.label != 'Any':
-        print("Cannot use '--id' and '--label' at the same time")
-        print("Use '--id' to manage one specific object or '--label' for all the ones part of the label")
-
     if args.summary:
         print("Showcasing a summary of the labels and amount of object in them")
         for v in list(OBJECT_LABELS.values()):
@@ -83,7 +80,7 @@ def main():
         sys.exit()
 
     # Manage one object
-    if args.id:
+    if args.id is not None:
         objects = list(filter(lambda k: k.id == args.id, world.get_environment_objects()))
         if not objects:
             print(f"Couldn't find an object with id '{args.id}'. Stopping")

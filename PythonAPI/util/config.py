@@ -24,12 +24,13 @@ import carla
 
 
 def get_ip(host):
+    """Resolve a local interface when available, retaining the host offline."""
     if host in ['localhost', '127.0.0.1']:
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         try:
             sock.connect(('10.255.255.255', 1))
             host = sock.getsockname()[0]
-        except RuntimeError:
+        except OSError:
             pass
         finally:
             sock.close()
