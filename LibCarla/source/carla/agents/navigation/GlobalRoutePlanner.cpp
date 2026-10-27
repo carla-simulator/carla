@@ -490,7 +490,7 @@ RoadOption GlobalRoutePlanner::TurnDecision(std::size_t index,
   if (index > 0) {
     const NodeId previous_node = route[index - 1];
     if (_previous_decision != RoadOption::Void
-        && _intersection_end_node > 0
+        && _intersection_end_node >= 0
         && _intersection_end_node != previous_node
         && next_edge->type == RoadOption::LaneFollow
         && next_edge->intersection) {

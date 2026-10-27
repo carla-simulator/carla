@@ -378,7 +378,7 @@ class GlobalRoutePlanner:
         next_edge = self._graph.edges[current_node, next_node]  # type: EdgeDict
         if index > 0:
             if self._previous_decision != RoadOption.VOID \
-                    and self._intersection_end_node > 0 \
+                    and self._intersection_end_node >= 0 \
                     and self._intersection_end_node != previous_node \
                     and next_edge['type'] == RoadOption.LANEFOLLOW \
                     and next_edge['intersection']:

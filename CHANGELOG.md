@@ -1,5 +1,7 @@
 ## LATEST Changes
 
+- Retain a junction turn decision through consecutive lane sections when its valid exit has graph node zero.
+
 ### New features
 
 #### Simulator
