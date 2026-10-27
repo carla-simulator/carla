@@ -252,13 +252,8 @@ BasicAgent::AffectedByTrafficLight(SharedPtr<client::ActorList> lights_list,
   const float max_distance =
       max_distance_opt.value_or(_base_tlight_threshold);
 
-  if (_last_traffic_light) {
-    if (_last_traffic_light->GetState() != rpc::TrafficLightState::Red) {
-      _last_traffic_light = nullptr;
-    } else {
-      return {true, _last_traffic_light};
-    }
-  }
+  // Cached red state cannot bypass current road, bearing and lane checks.
+  _last_traffic_light = nullptr;
 
   const auto ego_location = _vehicle->GetLocation();
   auto ego_wpt = _map->GetWaypoint(ego_location);
@@ -314,6 +309,14 @@ BasicAgent::AffectedByTrafficLight(SharedPtr<client::ActorList> lights_list,
       continue;
     }
 
+    const auto affected = traffic_light->GetAffectedLaneWaypoints();
+    if (!affected.empty() && !std::any_of(affected.begin(), affected.end(), [&](const auto &waypoint) {
+          return waypoint && waypoint->GetRoadId() == ego_wpt->GetRoadId() &&
+              waypoint->GetLaneId() == ego_wpt->GetLaneId();
+        })) {
+      continue;
+    }
+
     if (IsWithinDistance(trigger_wp->GetTransform(),
                          _vehicle->GetTransform(),
                          max_distance,
@@ -336,7 +339,7 @@ BasicAgent::VehicleObstacle BasicAgent::VehicleObstacleDetected(
     int lane_offset) {
 
   VehicleObstacle result;
-  if (_ignore_vehicles) {
+  if (_ignore_vehicles && !vehicle_list) {
     return result;
   }
 
@@ -351,10 +354,11 @@ BasicAgent::VehicleObstacle BasicAgent::VehicleObstacleDetected(
   const auto ego_location  = ego_transform.location;
   auto ego_wpt = _map->GetWaypoint(ego_location);
 
-  // Sign correction for left-driving roads.
-  if (ego_wpt->GetLaneId() < 0 && lane_offset != 0) {
-    lane_offset *= -1;
-  }
+  const auto lane_with_offset = [lane_offset](const auto &waypoint) {
+    if (lane_offset == 0) return waypoint->GetLaneId();
+    const auto delta = (waypoint->GetLaneId() > 0) == waypoint->IsRHT() ? lane_offset : -lane_offset;
+    return waypoint->GetLaneId() + delta;
+  };
 
   // Front-of-ego transform (push location forward by half the bbox).
   geom::Transform ego_front_transform = ego_transform;
@@ -413,6 +417,7 @@ BasicAgent::VehicleObstacle BasicAgent::VehicleObstacleDetected(
 
   for (auto actor : *vehicle_list) {
     if (!actor) continue;
+    if (_ignore_vehicles && actor->GetTypeId().compare(0, 8, "vehicle.") == 0) continue;
     if (actor->GetId() == _vehicle->GetId()) {
       continue;
     }
@@ -446,14 +451,14 @@ BasicAgent::VehicleObstacle BasicAgent::VehicleObstacleDetected(
     } else {
       // Simplified plan-waypoint approach.
       if (target_wpt->GetRoadId() != ego_wpt->GetRoadId() ||
-          target_wpt->GetLaneId() != ego_wpt->GetLaneId() + lane_offset) {
+          target_wpt->GetLaneId() != lane_with_offset(ego_wpt)) {
         auto next_pair = _local_planner->GetIncomingWaypointAndDirection(3);
         auto next_wp = next_pair.first;
         if (!next_wp) {
           continue;
         }
         if (target_wpt->GetRoadId() != next_wp->GetRoadId() ||
-            target_wpt->GetLaneId() != next_wp->GetLaneId() + lane_offset) {
+            target_wpt->GetLaneId() != lane_with_offset(next_wp)) {
           continue;
         }
       }

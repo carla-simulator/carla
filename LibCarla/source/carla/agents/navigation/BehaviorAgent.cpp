@@ -237,9 +237,7 @@ BasicAgent::VehicleObstacle BehaviorAgent::PedestrianAvoidManager(
       ? _world->GetActors()->Filter("*walker.pedestrian*")
       : nullptr;
 
-  // Python applies a 10 m prefilter around the waypoint here. The base
-  // `VehicleObstacleDetected` honors `max_distance` internally, so we let
-  // it do the proximity gating from the world-wide walker list.
+  // The common detector applies the configured range to the walker list.
   (void)waypoint;  // location consumed indirectly via VehicleObstacleDetected
   VehicleObstacle obs;
   if (_direction == RoadOption::ChangeLaneLeft) {

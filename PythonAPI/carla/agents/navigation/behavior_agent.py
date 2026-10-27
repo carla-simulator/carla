@@ -176,9 +176,10 @@ class BehaviorAgent(BasicAgent):
             :return distance: distance to nearby walker
         """
 
+        # The shared detector measures range from the actual ego location.
+        # Keep the public waypoint argument for caller compatibility.
+        del waypoint
         walker_list = self._world.get_actors().filter("*walker.pedestrian*")
-        def dist(w): return w.get_location().distance(waypoint.transform.location)
-        walker_list = [w for w in walker_list if dist(w) < 10]
 
         if self._direction == RoadOption.CHANGELANELEFT:
             walker_state, walker, distance = self._vehicle_obstacle_detected(walker_list, max(

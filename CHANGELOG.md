@@ -3,6 +3,9 @@
 - Correct waypoint lane-change permission directions for OpenDRIVE increase/decrease markings in both traffic rules.
 - Report the crossed physical lane marking on left-hand-traffic roads.
 - Apply default OpenDRIVE signal validity to lanes travelling in the signal orientation, accounting for each road traffic rule.
+- Respect each road's RHT/LHT rule when checking adjacent-lane agent hazards.
+- Keep pedestrian avoidance active when vehicle checks are disabled, and honor the configured pedestrian detection range for long vehicles.
+- Restrict agent traffic-light checks to native affected lanes when available, and revalidate cached red lights against the vehicle's current position.
 
 ### New features
 

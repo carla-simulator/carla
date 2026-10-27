@@ -235,7 +235,7 @@ class BasicAgent(object):
         self._ignore_stop_signs = active
 
     def ignore_vehicles(self, active=True):
-        """(De)activates the checks for stop signs"""
+        """(De)activates the checks for vehicles."""
         self._ignore_vehicles = active
 
     def set_offset(self, offset):
@@ -282,11 +282,8 @@ class BasicAgent(object):
         if not max_distance:
             max_distance = self._base_tlight_threshold
 
-        if self._last_traffic_light:
-            if self._last_traffic_light.state != carla.TrafficLightState.Red:
-                self._last_traffic_light = None
-            else:
-                return TrafficLightDetectionResult(True, self._last_traffic_light)
+        # A cached red still needs current road, bearing and lane validation.
+        self._last_traffic_light = None
 
         ego_vehicle_location = self._vehicle.get_location()
         ego_vehicle_waypoint = self._map.get_waypoint(ego_vehicle_location)
@@ -313,6 +310,13 @@ class BasicAgent(object):
                 continue
 
             if traffic_light.state != carla.TrafficLightState.Red:
+                continue
+
+            affected = traffic_light.get_affected_lane_waypoints()
+            if affected and not any(waypoint is not None
+                                    and waypoint.road_id == ego_vehicle_waypoint.road_id
+                                    and waypoint.lane_id == ego_vehicle_waypoint.lane_id
+                                    for waypoint in affected):
                 continue
 
             if is_within_distance(trigger_wp.transform, self._vehicle.get_transform(), max_distance, [0, 90]):
@@ -356,7 +360,9 @@ class BasicAgent(object):
             return Polygon(route_bb)
       
         if self._ignore_vehicles:
-            return ObstacleDetectionResult(False, None, -1)
+            if vehicle_list is None:
+                return ObstacleDetectionResult(False, None, -1)
+            vehicle_list = [actor for actor in vehicle_list if not actor.type_id.startswith("vehicle.")]
 
         if vehicle_list is None:
             vehicle_list = self._world.get_actors().filter("*vehicle*")
@@ -370,9 +376,11 @@ class BasicAgent(object):
         ego_location = ego_transform.location
         ego_wpt = self._map.get_waypoint(ego_location)
 
-        # Get the right offset
-        if ego_wpt.lane_id < 0 and lane_offset != 0:
-            lane_offset *= -1
+        def lane_with_offset(waypoint):
+            if lane_offset == 0:
+                return waypoint.lane_id
+            delta = lane_offset if (waypoint.lane_id > 0) == waypoint.is_rht else -lane_offset
+            return waypoint.lane_id + delta
 
         # Get the transform of the front of the ego
         ego_front_transform = ego_transform
@@ -409,11 +417,11 @@ class BasicAgent(object):
             # Simplified approach, using only the plan waypoints (similar to TM)
             else:
 
-                if target_wpt.road_id != ego_wpt.road_id or target_wpt.lane_id != ego_wpt.lane_id  + lane_offset:
+                if target_wpt.road_id != ego_wpt.road_id or target_wpt.lane_id != lane_with_offset(ego_wpt):
                     next_wpt = self._local_planner.get_incoming_waypoint_and_direction(steps=3)[0]
                     if not next_wpt:
                         continue
-                    if target_wpt.road_id != next_wpt.road_id or target_wpt.lane_id != next_wpt.lane_id  + lane_offset:
+                    if target_wpt.road_id != next_wpt.road_id or target_wpt.lane_id != lane_with_offset(next_wpt):
                         continue
 
                 target_forward_vector = target_transform.get_forward_vector()
