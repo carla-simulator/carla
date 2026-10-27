@@ -601,7 +601,7 @@ namespace road {
             const double s_corner = geom::Math::Clamp(s0 + ds, 0.0, road_length);
             const double z_corner = road.GetElevationOn(s_corner).Evaluate(s_corner);
             v2.z = base.location.z + static_cast<float>(z_corner - z0) +
-                   static_cast<float>(corner.z);
+                   static_cast<float>(corner.z + crosswalk->GetZOffset());
             result.push_back(v2);
           }
         }
