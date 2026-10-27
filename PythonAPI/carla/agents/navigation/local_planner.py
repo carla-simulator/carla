@@ -318,7 +318,8 @@ def _retrieve_options(list_waypoints, current_waypoint):
         # this is needed because something we are linking to
         # the beginning of an intersection, therefore the
         # variation in angle is small
-        next_next_waypoint = next_waypoint.next(3.0)[0]
+        lookahead_waypoints = next_waypoint.next(3.0)
+        next_next_waypoint = lookahead_waypoints[0] if lookahead_waypoints else next_waypoint
         link = _compute_connection(current_waypoint, next_next_waypoint)
         options.append(link)
 

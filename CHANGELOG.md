@@ -1,5 +1,7 @@
 ## LATEST Changes
 
+- Classify valid terminal local-planner fork branches even when they end before the turn lookahead.
+
 ### New features
 
 #### Simulator
