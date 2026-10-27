@@ -1,5 +1,7 @@
 ## LATEST Changes
 
+- Use an admissible route-search heuristic for sampled edge costs and free lane changes, preserving minimum graph-cost routes.
+
 ### New features
 
 #### Simulator

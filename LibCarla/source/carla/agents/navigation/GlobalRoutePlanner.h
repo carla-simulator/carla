@@ -31,7 +31,7 @@ namespace navigation {
 
   /// C++ port of agents.navigation.global_route_planner.GlobalRoutePlanner.
   /// Builds a directed graph from carla::client::Map::GetTopology() and runs
-  /// A* search (euclidean heuristic, edge weight = `length`) to produce a
+  /// Zero-heuristic A* search (edge weight = `length`) produces a
   /// (waypoint, RoadOption) plan between two world locations.
   class GlobalRoutePlanner {
   public:

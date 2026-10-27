@@ -315,19 +315,17 @@ class GlobalRoutePlanner:
         return edge
 
     def _distance_heuristic(self, n1, n2):
-        """
-        Distance heuristic calculator for path searching
-        in self._graph
-        """
-        l1 = np.array(self._graph.nodes[n1]['vertex'])
-        l2 = np.array(self._graph.nodes[n2]['vertex'])
-        return np.linalg.norm(l1 - l2)
+        """Use an admissible bound for sample costs and free lane-change edges."""
+        # Euclidean metres can exceed the remaining sampled-edge cost. A zero
+        # bound makes this search Dijkstra's algorithm for the existing weights.
+        del n1, n2
+        return 0.0
 
     def _path_search(self, origin, destination):
         # type: (carla.Location, carla.Location) -> list[int]
         """
         This function finds the shortest path connecting origin and destination
-        using A* search with distance heuristic.
+        using zero-heuristic A* search (Dijkstra) with the existing edge costs.
         origin      :   carla.Location object of start position
         destination :   carla.Location object of of end position
         return      :   path as list of node ids (as int) of the graph self._graph

@@ -366,17 +366,14 @@ GlobalRoutePlanner::Localize(const geom::Location &location) const {
 // -----------------------------------------------------------------------------
 // _distance_heuristic
 // -----------------------------------------------------------------------------
-double GlobalRoutePlanner::DistanceHeuristic(NodeId a, NodeId b) const {
-  const auto &va = _nodes.at(a).vertex;
-  const auto &vb = _nodes.at(b).vertex;
-  const double dx = va[0] - vb[0];
-  const double dy = va[1] - vb[1];
-  const double dz = va[2] - vb[2];
-  return std::sqrt(dx * dx + dy * dy + dz * dz);
+double GlobalRoutePlanner::DistanceHeuristic(NodeId, NodeId) const {
+  // Costs count samples and include free lane changes. Euclidean metres can
+  // overestimate them; the zero bound keeps A* equivalent to Dijkstra.
+  return 0.0;
 }
 
 // -----------------------------------------------------------------------------
-// _path_search — A* with euclidean heuristic on rounded XYZ vertices.
+// _path_search — zero-heuristic A* minimizes the existing sampled costs.
 // -----------------------------------------------------------------------------
 std::vector<GlobalRoutePlanner::NodeId>
 GlobalRoutePlanner::PathSearch(const geom::Location &origin,
