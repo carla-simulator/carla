@@ -198,16 +198,15 @@ package)
   CMD=("${P}")
   [ -n "${MAP}" ] && CMD+=("${MAP}")
   CMD+=("${ARGS[@]}")
-  # Measured on this branch, not assumed: a client DOES connect to a packaged
-  # server and get_world(), spawning and navigation all work. What is broken is
-  # map DISCOVERY and switching — get_available_maps() returns [] because
-  # GetAllMapNames() uses a raw FindFilesRecursive("*.umap") that cannot see
-  # inside a .pak. Small maps still load by name; large ones do not.
-  echo "[run] NOTE packaged server limitations (measured on ue58-dev):"
-  echo "[run]   get_available_maps() returns []            (0 vs 29 in game mode)"
-  echo "[run]   load_world('Town12'/'Town13') FAILS        (large/World Partition maps)"
-  echo "[run]   load_world('Town_C'/'Town10HD_Opt') works  (small maps, by exact name)"
-  echo "[run]   get_world/spawn/navigation all work        (contrary to the older report)"
+  # Measured on this branch, not assumed: a client connects to a packaged server
+  # and get_world(), spawning and navigation all work. Map discovery works too
+  # since AssetRegistry discovery landed (60fd70e44): the registry lists maps
+  # inside a .pak, which the old .umap walk could not.
+  echo "[run] NOTE packaged server behaviour (measured on ue58-dev):"
+  echo "[run]   get_available_maps() lists the cooked maps (asset registry discovery)"
+  echo "[run]   load_world() resolves them, nested included (Twins/<Name>/<Name>)"
+  echo "[run]   get_world/spawn/navigation all work"
+  echo "[run]   an off-thread get_available_maps() still returns [] (registry asserts)"
   echo "[run]   use 'game' mode when you need map switching or discovery."
   launch "packaged shipping server" "${CMD[@]}"
   ;;

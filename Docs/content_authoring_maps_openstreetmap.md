@@ -63,8 +63,6 @@ with open('path/to/osm/file', encoding='utf-8') as f:
 
 # Define the desired settings. In this case, default values.
 settings = carla.Osm2OdrSettings()
-# Set OSM road types to export to OpenDRIVE
-settings.set_osm_way_types(["motorway", "motorway_link", "trunk", "trunk_link", "primary", "primary_link", "secondary", "secondary_link", "tertiary", "tertiary_link", "unclassified", "residential"])
 # Convert to .xodr
 xodr_data = carla.Osm2Odr.convert(osm_data, settings)
 
@@ -74,30 +72,22 @@ with open('path/to/output/file', 'w', encoding='utf-8') as f:
 ```
 
 ---
-### Generate traffic lights
+### Signals
 
-OpenStreetMap data can define which junctions are controlled with traffic lights. To use this traffic light data in CARLA, you need to enable it in the OSM map settings via the Python API before converting the `.osm` file to `.xodr` format:
+The converter signs junctions from the road network, not from OSM tags. Where approaches meet at different highway classes the major road gets a priority plate (OpenDRIVE type `306`) and the rest give way (`205`); where every approach is the same class the junction is uncontrolled and all of them give way. A 740 x 550 m extract of a Spanish town produces 140 signals this way.
+
+To put a traffic light on every junction approach instead, which replaces the give-way signing:
 
 ```py
-# Define the desired settings. In this case, default values.
 settings = carla.Osm2OdrSettings()
-# enable traffic light generation from OSM data
-settings.generate_traffic_lights = True
-# Convert to .xodr
+settings.all_junctions_with_traffic_lights = True
 xodr_data = carla.Osm2Odr.convert(osm_data, settings)
 ```
 
-Traffic light data quality can vary depending on the region from which you extract data. Some traffic light information may be missing completely. To work within these limitations, you can use the Python API to configure all junctions to be controlled with traffic lights:
+The same extract then yields 146 signals, all of type `1000001`.
 
-```py
-settings.all_junctions_with_traffic_lights = True
-```
-
-You can also exclude certain roads, e.g., motorway links, from generating traffic lights:
-
-```py
-settings.set_traffic_light_excluded_way_types(["motorway_link"])
-```
+!!! Note
+    `generate_traffic_lights`, `set_osm_way_types()` and `set_traffic_light_excluded_way_types()` are accepted for compatibility but have no effect: the converter reads no traffic light tags and uses its own set of drivable highway classes. It logs a warning when you set them. See [What the converter does](#what-the-converter-does).
 
 ---
 ## Ingest into CARLA
@@ -171,6 +161,29 @@ Runtime map generation builds a complete drivable environment from the OpenDRIVE
 *   __Street furniture.__ Street lights and other roadside props are procedurally scattered along the network, grounded on the terrain, and their lamps light up at night like the ones on the built-in maps.
 
 Additional static geometry can be added at runtime with [`world.spawn_custom_mesh()`](python_api.md#carla.World.spawn_custom_mesh), which spawns a procedural mesh with collision from a vertex/triangle list and a material hint (`"grass"`, `"road"`, `"dirt"`, `"sidewalk"`, or a full Unreal material path).
+
+### What the converter does
+
+The OSM to OpenDRIVE converter is part of CARLA and is always built; there is no option to enable. It reads the OSM XML directly and writes OpenDRIVE 1.6, with no SUMO, PROJ or Xerces dependency.
+
+It builds the network from the ways tagged with a drivable `highway` class, clusters the intersection nodes into junctions, generates a connecting road for every turn through a junction, and fits the reference lines as piecewise cubic `paramPoly3`. Lane widths come from a per-class table, refined by the way's own `lanes`, `lanes:forward`, `lanes:backward`, `oneway`, `width` and `maxspeed` tags. Sidewalks and shoulders are added per class. When the file carries a `<bounds>` element the network is clipped to it.
+
+These settings take effect:
+
+| Setting | Effect |
+| --- | --- |
+| `proj_string` | projection written as the `<geoReference>`; a `+lat_0`/`+lon_0` in it also sets the local origin |
+| `center_map` | origin at the centre of the extract instead of its north west corner |
+| `default_lane_width` | overrides the width of every driving lane |
+| `default_sidewalk_width` | overrides the width of every sidewalk lane |
+| `use_offsets`, `offset_x`, `offset_y` | translates the whole network |
+| `all_junctions_with_traffic_lights` | a traffic light on every junction approach |
+
+These are accepted but have no effect, and log a warning: `generate_traffic_lights`, `set_osm_way_types()`, `set_traffic_light_excluded_way_types()`.
+
+For a complete map with buildings, terrain and street furniture rather than a road network alone, use the Digital Twins command line pipeline described in [Generate maps with Digital Twins](content_authoring_maps_digital_twin.md).
+
+---
 
 !!! Warning
     The roads generated end abruptly at the borders of the map. This will cause the Traffic Manager to crash when vehicles are not able to find the next waypoint. To avoid this, the OSM mode in the Traffic Manager is set to __True__ by default ([`set_osm_mode()`](python_api.md#carla.TrafficManager.set_osm_mode)). This will show a warning and destroy vehicles when necessary.

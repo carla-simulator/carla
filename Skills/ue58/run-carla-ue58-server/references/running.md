@@ -98,12 +98,20 @@ and waypoint work are all fine under `-nullrhi`.
 | blueprint library | 168 | 168 |
 | `try_spawn_actor(vehicle)` | works | works |
 | `get_random_location_from_navigation()` | works | works |
-| `get_available_maps()` | **29** | **0** |
+| `get_available_maps()` | **29** | **the cooked maps** |
 | `load_world('Town10HD_Opt')` | works | works |
 | `load_world('Town_C')` | works | works |
 | `load_world('Town12')` | works | **`std::exception`** |
 | `load_world('Town13')` | works | **`std::exception`** |
 | `load_world('NoSuchTown')` | fails (correctly) | fails |
+
+!!! Note
+    The package column above was measured before AssetRegistry map discovery
+    landed on `ue58-dev` (`60fd70e44`). Re-measured since on a package cooking
+    `Town10HD_Opt` and a twin at `/Game/Carla/Maps/Twins/EixampleNav/EixampleNav`:
+    `get_available_maps()` returned both, and the twin loaded by leaf name and by
+    relative path, so nested maps do resolve. The `Town12`/`Town13` rows were not
+    re-measured — that package did not cook them.
 
 The 29 maps `game` mode reports include the Town15 sublevels
 (`Town15_Buildings`, `Town15_Road`, …) and the map-generator templates, so the

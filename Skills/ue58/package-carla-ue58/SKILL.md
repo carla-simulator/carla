@@ -147,13 +147,20 @@ does not is not explained by the ini.)
 cd ../run-carla-ue58-server && bash scripts/run_server.sh package
 ```
 
-A packaged server works for clients — measured: `get_world()`, spawning and
-navigation are all fine. What is broken is **map handling**:
-`get_available_maps()` returns `[]`, and `load_world()` resolves only
-`/Game/Carla/Maps/<Name>`, so a cooked map loads by exact name while nested large
-maps (`Town12/Town12`) and imported maps under `/Game/<Pkg>/Maps/` do not. Use
-`-game` mode when you need discovery or map switching. Detail and numbers in
-[[run-carla-ue58-server]].
+A packaged server works for clients — measured: `get_world()`, spawning,
+navigation and **map handling** are all fine. `get_available_maps()` lists the
+cooked maps and `load_world()` resolves them, including maps nested under a
+subdirectory. Measured on a package cooking `Town10HD_Opt` and a Digital Twin at
+`/Game/Carla/Maps/Twins/EixampleNav/EixampleNav`: the listing returned both, and
+the twin loaded by its leaf name (`EixampleNav`) and by its relative path
+(`Twins/EixampleNav/EixampleNav`).
+
+Discovery goes through the asset registry (`UCarlaStatics_GetRegistryWorlds` in
+`CarlaStatics.cpp`), not a `.umap` walk: cooked maps live inside Pak/IoStore
+containers where a filesystem walk finds nothing, but the packaged
+`AssetRegistry.bin` still lists them. The registry asserts off the game thread,
+so off-thread callers get an empty list — which is the likely origin of the old
+"returns `[]`" reports.
 
 ## Examples
 
@@ -219,12 +226,11 @@ running.
 Solution: the Linux setting; do not copy the Windows recipe.
 
 **Problem: packaged map switching does not work / `get_available_maps()` is empty**
-Cause: two raw-filesystem checks that cannot work inside a `.pak`
-(`GetAllMapNames()` uses `FindFilesRecursive(..., "*.umap")`, `LoadNewEpisode()`
-gates on `FPaths::FileExists()`). Fixed on `ue58-dev-windows` via AssetRegistry
-discovery; **not merged into `ue58-dev`**.
-Solution: no fix on this branch. Use the editor for multi-map work, or cherry-pick
-that change.
+Cause: the old raw-filesystem discovery (`FindFilesRecursive(..., "*.umap")`)
+could not see inside a `.pak`. AssetRegistry discovery has since landed on
+`ue58-dev` (`60fd70e44`), and map listing and switching work from a package.
+Solution: none needed on this branch. If the listing is empty, check the call is
+on the game thread — the asset registry returns nothing off it.
 
 ## Outputs
 

@@ -201,13 +201,18 @@ a `.ucas` from 16:14. POSIX unlink semantics make it unlikely on Linux, but
 `package.sh build` refuses to start with a server running and
 `package.sh inspect` compares timestamps (18 s spread on a good build).
 
-### Packaged map discovery does not work
+### Packaged map discovery
 
-`get_available_maps()` returns `[]` and `load_world()` fails for large maps —
-`GetAllMapNames()` uses `FindFilesRecursive(..., "*.umap")` and `LoadNewEpisode()`
-gates on `FPaths::FileExists()`, neither of which sees inside a `.pak`.
-AssetRegistry discovery exists on `ue58-dev-windows`, not merged. Small maps still
-load by exact name. Detail and measurements in [[run-carla-ue58-server]].
+Works. `get_available_maps()` lists the cooked maps and `load_world()` resolves
+them, nested ones included. Discovery goes through the asset registry
+(`UCarlaStatics_GetRegistryWorlds`, `CarlaStatics.cpp`): a `.umap` walk finds
+nothing inside a Pak/IoStore container, but the packaged `AssetRegistry.bin`
+lists the maps. Landed on `ue58-dev` in `60fd70e44`.
+
+Measured on a package cooking `Town10HD_Opt` plus a twin at
+`/Game/Carla/Maps/Twins/EixampleNav/EixampleNav`: the listing returned both, and
+the twin loaded by leaf name and by relative path. The registry asserts off the
+game thread, so an off-thread call still returns an empty list.
 
 ### OFPA duplicate-name warnings
 
