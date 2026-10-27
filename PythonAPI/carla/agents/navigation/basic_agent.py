@@ -390,7 +390,8 @@ class BasicAgent(object):
             extent = vehicle.bounding_box.extent
             return ego_location.distance(vehicle.get_location()) - max(extent.x, extent.y)
 
-        # BehaviorAgent subtracts these half-extents from the reported centre distance.
+        # BehaviorAgent subtracts these half-extents from the reported
+        # centre distance.
         for target_vehicle in sorted(vehicle_list, key=clearance):
             if target_vehicle.id == self._vehicle.id:
                 continue

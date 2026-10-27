@@ -38,7 +38,8 @@ class Vehicle:
     type_id = 'vehicle.test'
 
     def __init__(self, actor_id, world, longitudinal, speed, offset=0.0, extent=(1, .5, .5)):
-        # The inert actor boundary exposes the independent geometry/velocity inputs.
+        # The inert actor boundary exposes independent geometry and
+        # velocity inputs.
         # pylint: disable=too-many-arguments,too-many-positional-arguments
         self.extent = extent
         self.current_control = carla.VehicleControl()

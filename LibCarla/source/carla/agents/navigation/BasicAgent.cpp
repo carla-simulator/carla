@@ -423,7 +423,8 @@ BasicAgent::VehicleObstacle BasicAgent::VehicleObstacleDetected(
     const auto clearance = ego_location.Distance(actor->GetLocation()) - std::max(extent.x, extent.y);
     candidates.emplace_back(clearance, actor);
   }
-  // Read each actor's clearance once: episode snapshots can advance while sorting.
+  // Read each actor's clearance once: episode snapshots can advance
+  // while sorting.
   std::stable_sort(candidates.begin(), candidates.end(), [](const auto &left, const auto &right) {
     return left.first < right.first;
   });
