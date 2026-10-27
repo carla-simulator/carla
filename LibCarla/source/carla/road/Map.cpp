@@ -887,16 +887,16 @@ namespace road {
       const auto &road = pair.second;
       ForEachDrivableLane(road, [&](auto &&waypoint) {
         auto successors = GetSuccessors(waypoint);
-        if (successors.size() == 0){
-          auto distance = static_cast<float>(GetDistanceAtEndOfLane(GetLane(waypoint)));
-          auto last_waypoint = GetWaypoint(waypoint.road_id, waypoint.lane_id, distance);
-          if (last_waypoint.has_value()){
-            result.push_back({waypoint, *last_waypoint});
-          }
-        }
-        else{
-          for (auto &&successor : GetSuccessors(waypoint)) {
-            result.push_back({waypoint, successor});
+        if (successors.empty()) {
+          // Keep the known lane section and a representable interior endpoint.
+          // A float lookup can round onto an excluded road/section boundary.
+          auto last_waypoint = waypoint;
+          last_waypoint.s = std::nextafter(
+              GetDistanceAtEndOfLane(GetLane(waypoint)), waypoint.s);
+          result.emplace_back(waypoint, last_waypoint);
+        } else {
+          for (auto &&successor : successors) {
+            result.emplace_back(waypoint, successor);
           }
         }
       });

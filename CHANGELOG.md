@@ -1,5 +1,6 @@
 ## LATEST Changes
 
+- Preserve terminal driving lanes in map topology when endpoint rounding would otherwise discard their lane section.
 - Retain a junction turn decision through consecutive lane sections when its valid exit has graph node zero.
 
 ### New features
