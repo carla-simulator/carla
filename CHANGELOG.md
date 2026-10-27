@@ -107,6 +107,8 @@
 
 ### Bug fixes
 
+* Keep crosswalk anchors in road reference coordinates when lane offset profiles are present.
+
 #### Sensors
 
 * Fixed every native sensor (LiDAR, radar, IMU, cameras) simulating only the last physics substep instead of the true elapsed time when `sensor_tick` spanned more than one substep, which halved LiDAR's swept angle and skewed IMU and radar readings.

@@ -552,6 +552,13 @@ namespace road {
             }
           }
 
+          // Object s/t coordinates use the road reference line, independently
+          // of the lane-0 offset profile. Retain the existing height model.
+          const auto reference = road.GetDirectedPointInNoLaneOffset(crosswalk->GetS());
+          base.location.x = reference.location.x;
+          base.location.y = -reference.location.y;
+          base.rotation.yaw = -geom::Math::ToDegrees(static_cast<float>(reference.tangent));
+
           // The outline corners are given at height 0 above the road surface.
           // Placing them with the full centre-line transform at the crosswalk's
           // s applies that one point's pitch and roll to the whole outline, which
