@@ -6,7 +6,10 @@
 
 #pragma once
 
+#include <cstddef>
 #include <cstdint>
+#include <ostream>
+#include <string>
 
 namespace carla {
 namespace client {
