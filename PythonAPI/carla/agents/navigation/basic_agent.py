@@ -314,11 +314,17 @@ class BasicAgent(object):
 
             affected = traffic_light.get_affected_lane_waypoints()
             mapped = bool(affected) or bool(self._map.get_all_landmarks_from_id(traffic_light.get_opendrive_id()))
-            if mapped and not any(waypoint is not None
-                                    and waypoint.road_id == ego_vehicle_waypoint.road_id
-                                    and waypoint.lane_id == ego_vehicle_waypoint.lane_id
-                                    for waypoint in affected):
-                continue
+            if mapped:
+                if not affected:
+                    continue
+                # Affected lanes can lie on junction connector roads. Stop
+                # waypoints identify the approach lanes controlled by the light.
+                stops = traffic_light.get_stop_waypoints()
+                if not any(waypoint is not None
+                           and waypoint.road_id == ego_vehicle_waypoint.road_id
+                           and waypoint.lane_id == ego_vehicle_waypoint.lane_id
+                           for waypoint in stops):
+                    continue
 
             if is_within_distance(trigger_wp.transform, self._vehicle.get_transform(), max_distance, [0, 90]):
                 self._last_traffic_light = traffic_light

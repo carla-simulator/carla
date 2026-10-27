@@ -10,6 +10,7 @@
 # pylint: disable=protected-access
 
 import fnmatch
+import math
 import os
 from pathlib import Path
 import sys
@@ -171,9 +172,18 @@ class Light:
         self.id = {'side': 101, 'own': 102, 'multi': 103, 'unmapped': 104}[identifier]
         self.state = carla.TrafficLightState.Red
         self.transform = world.native_map.get_waypoint_xodr(1, lane_id, 13).transform
-        self.trigger_volume = carla.BoundingBox(carla.Location(y=.1), carla.Vector3D(.5, .5, 1))
+        self.transform.rotation.yaw += 90
+        self._trigger_volume = carla.BoundingBox(carla.Location(y=.1), carla.Vector3D(.6, .5, 1))
+        if identifier == 'multi':
+            self._trigger_volume.location.x = -1.75
+            self._trigger_volume.extent.x = 1.95
         self.landmarks = world.native_map.get_all_landmarks_from_id(identifier)
         self.native_map = world.native_map
+
+    @property
+    def trigger_volume(self):
+        """The native actor property delivers a value copy, not shared state."""
+        return carla.BoundingBox(self._trigger_volume.location, self._trigger_volume.extent)
 
     def get_transform(self):
         """Return value copies, matching the actual Actor binding."""
@@ -191,6 +201,62 @@ class Light:
                 result.extend(self.native_map.get_waypoint_xodr(landmark.road_id, lane, landmark.s)
                               for lane in range(min(first, last), max(first, last) + 1) if lane)
         return result
+
+
+    def get_stop_waypoints(self):
+        """Deliver native approach lanes sampled as TrafficSign does its trigger box."""
+        position = self.transform.transform(self.trigger_volume.location)
+        direction = self.transform.get_forward_vector()
+        result = []
+        current = -.9 * self.trigger_volume.extent.x
+        while current < .9 * self.trigger_volume.extent.x:
+            waypoint = self.native_map.get_waypoint(position + direction * current)
+            if not any((other.road_id, other.lane_id) == (waypoint.road_id, waypoint.lane_id)
+                       for other in result):
+                result.append(waypoint)
+            current += 1.
+        return result
+
+
+def junction_world(incoming_lane):
+    """Connect an approach lane to a signalled native junction road and an exit."""
+    world = World()
+    lane_width = '<width sOffset="0" a="3.5" b="0" c="0" d="0"/>'
+    center = '<center><lane id="0" type="none"/></center>'
+    start_x = math.sin(.15) / .01
+    start_y = (1 - math.cos(.15)) / .01
+    if incoming_lane == -2:
+        start_x += math.sin(.15) * 3.5
+        start_y -= math.cos(.15) * 3.5
+    xml = ('<OpenDRIVE><header revMajor="1" revMinor="4"/>'
+           '<road id="1" length="15" junction="-1" rule="RHT">'
+           '<link><successor elementType="junction" elementId="9"/></link>'
+           '<planView><geometry s="0" x="0" y="0" hdg="0" length="15">'
+           '<arc curvature=".01"/></geometry></planView><lanes><laneSection s="0">' + center + '<right>')
+    for lane in (-1, -2):
+        xml += f'<lane id="{lane}" type="driving">{lane_width}</lane>'
+    xml += ('</right></laneSection></lanes></road>'
+            '<road id="2" length="8" junction="9" rule="RHT">'
+            '<link><predecessor elementType="road" elementId="1" contactPoint="end"/>'
+            '<successor elementType="road" elementId="3" contactPoint="start"/></link>'
+            f'<planView><geometry s="0" x="{start_x}" y="{start_y}" hdg=".15" length="8">'
+            '<line/></geometry></planView><lanes><laneSection s="0">' + center + '<right>'
+            f'<lane id="-1" type="driving"><link><predecessor id="{incoming_lane}"/>'
+            f'<successor id="-1"/></link>{lane_width}</lane></right></laneSection></lanes>'
+            '<signals><signal id="own" s=".1" t="0" dynamic="yes" orientation="+" '
+            'zOffset="3" country="DEU" type="1000001" subtype="-1" value="-1">'
+            '<validity fromLane="-1" toLane="-1"/></signal></signals></road>'
+            '<road id="3" length="20" junction="-1" rule="RHT">'
+            '<link><predecessor elementType="road" elementId="2" contactPoint="end"/></link>'
+            f'<planView><geometry s="0" x="{start_x + 8 * math.cos(.15)}" '
+            f'y="{start_y + 8 * math.sin(.15)}" hdg=".15" length="20"><line/>'
+            '</geometry></planView><lanes><laneSection s="0">' + center + '<right>'
+            f'<lane id="-1" type="driving"><link><predecessor id="-1"/></link>{lane_width}'
+            '</lane></right></laneSection></lanes></road>'
+            '<junction id="9"><connection id="0" incomingRoad="1" connectingRoad="2" contactPoint="start">'
+            f'<laneLink from="{incoming_lane}" to="-1"/></connection></junction></OpenDRIVE>')
+    world.native_map = carla.Map('junction-signal-approach', xml)
+    return world
 
 
 class TestAgentLaneAndSignalPolicy(unittest.TestCase):
@@ -297,6 +363,26 @@ class TestAgentLaneAndSignalPolicy(unittest.TestCase):
         agent, _, _, light = self.signals('multi', -2)
         self.assertEqual(light.landmarks[0].get_lane_validities(), [(-2, -1)])
         self.assertTrue(agent._affected_by_traffic_light([light], 20)[0])
+
+    def test_junction_signal_matches_approach_stop_lanes(self):
+        """Connector-road affected lanes must retain red on the correct approach only."""
+        for incoming in (-1, -2):
+            with self.subTest(incoming_lane=incoming):
+                world = junction_world(incoming)
+                ego = vehicle(1, world)
+                light = Light(world, 'own', incoming)
+                world.actors[:] = [ego, light]
+                approach = world.native_map.get_waypoint_xodr(1, incoming, 13)
+                connected = approach.next(4)
+                self.assertEqual(len(connected), 1)
+                self.assertEqual(connected[0].road_id, 2)
+                self.assertTrue(connected[0].is_junction)
+                self.assertEqual([(point.road_id, point.lane_id)
+                                  for point in light.get_affected_lane_waypoints()], [(2, -1)])
+                self.assertEqual([(point.road_id, point.lane_id)
+                                  for point in light.get_stop_waypoints()], [(1, incoming)])
+                agent = BasicAgent(ego, map_inst=world.native_map)
+                self.assertEqual(agent._affected_by_traffic_light([light], 20)[0], incoming == -1)
 
     def test_cached_red_is_revalidated_after_a_road_change(self):
         """A prior road's red light cannot keep controlling an actor on another road."""

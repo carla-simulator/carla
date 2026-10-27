@@ -312,11 +312,19 @@ BasicAgent::AffectedByTrafficLight(SharedPtr<client::ActorList> lights_list,
     const auto affected = traffic_light->GetAffectedLaneWaypoints();
     const bool mapped = !affected.empty() ||
         !_map->GetLandmarksFromId(traffic_light->GetOpenDRIVEID()).empty();
-    if (mapped && !std::any_of(affected.begin(), affected.end(), [&](const auto &waypoint) {
-          return waypoint && waypoint->GetRoadId() == ego_wpt->GetRoadId() &&
-              waypoint->GetLaneId() == ego_wpt->GetLaneId();
-        })) {
-      continue;
+    if (mapped) {
+      if (affected.empty()) {
+        continue;
+      }
+      // Affected lanes can lie on junction connector roads. Stop waypoints
+      // identify the approach lanes controlled by the light.
+      const auto stops = traffic_light->GetStopWaypoints();
+      if (!std::any_of(stops.begin(), stops.end(), [&](const auto &waypoint) {
+            return waypoint && waypoint->GetRoadId() == ego_wpt->GetRoadId() &&
+                waypoint->GetLaneId() == ego_wpt->GetLaneId();
+          })) {
+        continue;
+      }
     }
 
     if (IsWithinDistance(trigger_wp->GetTransform(),

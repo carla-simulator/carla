@@ -5,7 +5,7 @@
 - Apply default OpenDRIVE signal validity to lanes travelling in the signal orientation, accounting for each road traffic rule.
 - Respect each road's RHT/LHT rule when checking adjacent-lane agent hazards.
 - Keep pedestrian avoidance active when vehicle checks are disabled, and honor the configured pedestrian detection range for long vehicles.
-- Restrict agent traffic-light checks to native affected lanes when available, and revalidate cached red lights against the vehicle's current position.
+- Respect mapped signal applicability and approach stop lanes in agent traffic-light checks, and revalidate cached red lights against the vehicle's current position.
 
 ### New features
 
