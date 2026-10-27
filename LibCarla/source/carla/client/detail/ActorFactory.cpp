@@ -36,9 +36,11 @@ namespace detail {
   struct GarbageCollector {
     void operator()(::carla::client::Actor *ptr) const noexcept {
       if ((ptr != nullptr) && ptr->IsAlive()) {
+#ifndef LIBCARLA_NO_EXCEPTIONS
         try {
+#endif
           ptr->Destroy();
-          delete ptr;
+#ifndef LIBCARLA_NO_EXCEPTIONS
         } catch (const ::rpc::timeout &timeout) {
           log_error(timeout.what());
           log_error(
@@ -57,7 +59,9 @@ namespace detail {
               ptr->GetDisplayId());
           std::terminate();
         }
+#endif
       }
+      delete ptr;
     }
   };
 
