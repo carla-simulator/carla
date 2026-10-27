@@ -107,6 +107,8 @@
 
 ### Bug fixes
 
+* Keep each OpenDRIVE crosswalk outline independent so an outline-less object cannot reuse another crosswalk's polygon.
+
 #### Sensors
 
 * Fixed every native sensor (LiDAR, radar, IMU, cameras) simulating only the last physics substep instead of the true elapsed time when `sensor_tick` spanned more than one substep, which halved LiDAR's swept angle and skewed IMU and radar readings.

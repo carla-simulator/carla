@@ -20,8 +20,6 @@ namespace parser {
       const pugi::xml_document &xml,
       carla::road::MapBuilder &map_builder) {
 
-    std::vector<road::element::CrosswalkPoint> points;
-
     for (pugi::xml_node node_road : xml.child("OpenDRIVE").children("road")) {
 
       // parse all objects
@@ -34,11 +32,11 @@ namespace parser {
           std::string type = node_object.attribute("type").as_string();
           std::string name = node_object.attribute("name").as_string();
           if (type == "crosswalk") {
+            std::vector<road::element::CrosswalkPoint> points;
 
               // read all points
               pugi::xml_node node_outline = node_object.child("outline");
               if (node_outline) {
-                points.clear();
                 for (pugi::xml_node node_corner : node_outline.children("cornerLocal")) {
                   points.emplace_back(node_corner.attribute("u").as_double(),
                                       node_corner.attribute("v").as_double(),
