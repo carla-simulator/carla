@@ -68,7 +68,7 @@ protected:
     auto map = carla::MakeShared<carla::client::Map>(
         "lane-end", LaneSections(rule, lane, early_end, connected_sections));
     const double start_s = positive ? 0.1 : 99.9;
-    const auto start = map->GetWaypointXODR(1u, lane, start_s);
+    const auto start = map->GetWaypointXODR(1u, lane, static_cast<float>(start_s));
     ASSERT_NE(start, nullptr);
     ASSERT_EQ(start->IsPositiveDirection(), positive);
     const auto waypoints = start->GetNextUntilLaneEnd(spacing);
