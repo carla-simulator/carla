@@ -30,8 +30,8 @@ namespace agents {
 namespace navigation {
 
   /// C++ port of agents.navigation.global_route_planner.GlobalRoutePlanner.
-  /// Builds a directed graph from carla::client::Map::GetTopology() and runs
-  /// Zero-heuristic A* search (edge weight = `length`) produces a
+  /// Builds a directed graph from carla::client::Map::GetTopology() and uses
+  /// zero-heuristic A* (edge weight = `length`) to produce a
   /// (waypoint, RoadOption) plan between two world locations.
   class GlobalRoutePlanner {
   public:
