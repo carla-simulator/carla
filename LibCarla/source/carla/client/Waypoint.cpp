@@ -260,6 +260,7 @@ namespace client {
         if(added_signals.count(signal_data.signal) > 0) {
           continue;
         }
+        added_signals.insert(signal_data.signal);
         auto waypoint = SharedPtr<Waypoint>(new Waypoint(_parent, signal_data.waypoint));
         result.emplace_back(
             new Landmark(waypoint, _parent, signal_data.signal, signal_data.accumulated_s));
