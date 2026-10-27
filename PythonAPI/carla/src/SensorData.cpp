@@ -5,6 +5,8 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include <PythonAPI.h>
+#include "RawDataBuffer.h"
+#include <boost/mpl/vector.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 
 namespace carla {
@@ -161,15 +163,31 @@ enum class EColorConverter {
 };
 
 template <typename T>
-static auto GetRawDataAsBuffer(T &self) {
-  auto *data = reinterpret_cast<unsigned char *>(self.data());
-  auto size = static_cast<Py_ssize_t>(sizeof(typename T::value_type) * self.size());
-#if PY_MAJOR_VERSION >= 3
-  auto *ptr = PyMemoryView_FromMemory(reinterpret_cast<char *>(data), size, PyBUF_READ);
-#else
-  auto *ptr = PyBuffer_FromMemory(data, size);
-#endif
-  return boost::python::object(boost::python::handle<>(ptr));
+struct RawDataBufferGetter {
+  boost::python::object buffer_type;
+
+  boost::python::object operator()(boost::python::object python_self) const {
+    namespace bp = boost::python;
+    auto &self = bp::extract<T &>(python_self)();
+    auto *data = reinterpret_cast<char *>(self.data());
+    const auto size = static_cast<Py_ssize_t>(sizeof(typename T::value_type) * self.size());
+    auto owner = self.shared_from_this();
+    PyObject *view = carla::python::detail::MakeRawDataMemoryView(
+        buffer_type.ptr(), data, size, std::move(owner));
+    if (view == nullptr) {
+      bp::throw_error_already_set();
+    }
+    return bp::object(bp::handle<>(view));
+  }
+};
+
+template <typename T>
+static auto MakeRawDataGetter(const boost::python::object &buffer_type) {
+  namespace bp = boost::python;
+  // Each callable owns the private type, including after module removal.
+  return bp::make_function(
+      RawDataBufferGetter<T>{buffer_type}, bp::default_call_policies(),
+      boost::mpl::vector<bp::object, bp::object>());
 }
 
 template <typename T>
@@ -195,24 +213,24 @@ static void ConvertImage(T &self, EColorConverter cc) {
 }
 
 // image object resturned from optical flow to color conversion
-class FakeImage : public std::vector<uint8_t> {
+class FakeImage : public std::vector<uint8_t>, public carla::EnableSharedFromThis<FakeImage> {
   public:
   unsigned int Width = 0;
   unsigned int Height = 0;
   float FOV = 0;
 };
 // method to convert optical flow images to rgb
-static FakeImage ColorCodedFlow (
+static carla::SharedPtr<FakeImage> ColorCodedFlow (
     carla::sensor::data::OpticalFlowImage& image) {
   namespace bp = boost::python;
   namespace csd = carla::sensor::data;
   constexpr float pi = 3.1415f;
   constexpr float rad2ang = 360.f/(2.f*pi);
-  FakeImage result;
-  result.Width = image.GetWidth();
-  result.Height = image.GetHeight();
-  result.FOV = image.GetFOVAngle();
-  result.resize(image.GetHeight()*image.GetWidth()* 4);
+  auto result = carla::MakeShared<FakeImage>();
+  result->Width = image.GetWidth();
+  result->Height = image.GetHeight();
+  result->FOV = image.GetFOVAngle();
+  result->resize(image.GetHeight()*image.GetWidth()* 4);
 
   // lambda for computing batches of pixels
   auto command = [&] (size_t min_index, size_t max_index) {
@@ -282,10 +300,10 @@ static FakeImage ColorCodedFlow (
       uint8_t R = static_cast<uint8_t>((r+m)*255.f);
       uint8_t G = static_cast<uint8_t>((g+m)*255.f);
       uint8_t B = static_cast<uint8_t>((b+m)*255.f);
-      result[4*index] = B;
-      result[4*index + 1] = G;
-      result[4*index + 2] = R;
-      result[4*index + 3] = 0;
+      (*result)[4*index] = B;
+      (*result)[4*index + 1] = G;
+      (*result)[4*index + 2] = R;
+      (*result)[4*index + 3] = 0;
     }
   };
   size_t num_threads = std::max(8u, std::thread::hardware_concurrency());
@@ -347,6 +365,12 @@ static std::string SavePointCloudToDisk(T &self, std::string path) {
 
 void export_sensor_data() {
   using namespace boost::python;
+  PyObject *raw_buffer_type_object = carla::python::detail::MakeRawDataBufferType();
+  if (raw_buffer_type_object == nullptr) {
+    throw_error_already_set();
+  }
+  const object raw_buffer_type{handle<>(raw_buffer_type_object)};
+
   namespace cc = carla::client;
   namespace cr = carla::rpc;
   namespace cs = carla::sensor;
@@ -355,12 +379,12 @@ void export_sensor_data() {
 
   // Fake image returned from optical flow to color conversion
   // fakes the regular image object. Only used for visual purposes
-  class_<FakeImage>("FakeImage", no_init)
+  class_<FakeImage, std::shared_ptr<FakeImage>>("FakeImage", no_init)
       .def(vector_indexing_suite<std::vector<uint8_t>>())
       .add_property("width", &FakeImage::Width)
       .add_property("height", &FakeImage::Height)
       .add_property("fov", &FakeImage::FOV)
-      .add_property("raw_data", &GetRawDataAsBuffer<FakeImage>);
+      .add_property("raw_data", MakeRawDataGetter<FakeImage>(raw_buffer_type));
 
   class_<cs::SensorData, boost::noncopyable, std::shared_ptr<cs::SensorData>>("SensorData", no_init)
     .add_property("frame", &cs::SensorData::GetFrame)
@@ -397,7 +421,7 @@ void export_sensor_data() {
     .add_property("width", &csd::Image::GetWidth)
     .add_property("height", &csd::Image::GetHeight)
     .add_property("fov", &csd::Image::GetFOVAngle)
-    .add_property("raw_data", &GetRawDataAsBuffer<csd::Image>)
+    .add_property("raw_data", MakeRawDataGetter<csd::Image>(raw_buffer_type))
     .def("convert", &ConvertImage<csd::Image>, (arg("color_converter")))
     .def("save_to_disk", &SaveImageToDisk<csd::Image>, (arg("path"), arg("color_converter")=EColorConverter::Raw))
     .def("__len__", &csd::Image::size)
@@ -415,7 +439,7 @@ void export_sensor_data() {
     .add_property("width", &csd::OpticalFlowImage::GetWidth)
     .add_property("height", &csd::OpticalFlowImage::GetHeight)
     .add_property("fov", &csd::OpticalFlowImage::GetFOVAngle)
-    .add_property("raw_data", &GetRawDataAsBuffer<csd::OpticalFlowImage>)
+    .add_property("raw_data", MakeRawDataGetter<csd::OpticalFlowImage>(raw_buffer_type))
     .def("get_color_coded_flow", &ColorCodedFlow)
     .def("__len__", &csd::OpticalFlowImage::size)
     .def("__iter__", iterator<csd::OpticalFlowImage>())
@@ -435,7 +459,7 @@ void export_sensor_data() {
     .add_property("width", &csd::DistanceImage::GetWidth)
     .add_property("height", &csd::DistanceImage::GetHeight)
     .add_property("fov", &csd::DistanceImage::GetFOVAngle)
-    .add_property("raw_data", &GetRawDataAsBuffer<csd::DistanceImage>)
+    .add_property("raw_data", MakeRawDataGetter<csd::DistanceImage>(raw_buffer_type))
     .def("__len__", &csd::DistanceImage::size)
     // No __iter__ on purpose: DistancePixel has no Python converter, so a
     // boost::python iterator over it would raise on the first element.
@@ -453,7 +477,7 @@ void export_sensor_data() {
   class_<csd::LidarMeasurement, bases<cs::SensorData>, boost::noncopyable, std::shared_ptr<csd::LidarMeasurement>>("LidarMeasurement", no_init)
     .add_property("horizontal_angle", &csd::LidarMeasurement::GetHorizontalAngle)
     .add_property("channels", &csd::LidarMeasurement::GetChannelCount)
-    .add_property("raw_data", &GetRawDataAsBuffer<csd::LidarMeasurement>)
+    .add_property("raw_data", MakeRawDataGetter<csd::LidarMeasurement>(raw_buffer_type))
     .def("get_point_count", &csd::LidarMeasurement::GetPointCount, (arg("channel")))
     .def("save_to_disk", &SavePointCloudToDisk<csd::LidarMeasurement>, (arg("path")))
     .def("__len__", &csd::LidarMeasurement::size)
@@ -470,7 +494,7 @@ void export_sensor_data() {
   class_<csd::SemanticLidarMeasurement, bases<cs::SensorData>, boost::noncopyable, std::shared_ptr<csd::SemanticLidarMeasurement>>("SemanticLidarMeasurement", no_init)
     .add_property("horizontal_angle", &csd::SemanticLidarMeasurement::GetHorizontalAngle)
     .add_property("channels", &csd::SemanticLidarMeasurement::GetChannelCount)
-    .add_property("raw_data", &GetRawDataAsBuffer<csd::SemanticLidarMeasurement>)
+    .add_property("raw_data", MakeRawDataGetter<csd::SemanticLidarMeasurement>(raw_buffer_type))
     .def("get_point_count", &csd::SemanticLidarMeasurement::GetPointCount, (arg("channel")))
     .def("save_to_disk", &SavePointCloudToDisk<csd::SemanticLidarMeasurement>, (arg("path")))
     .def("__len__", &csd::SemanticLidarMeasurement::size)
@@ -519,7 +543,7 @@ void export_sensor_data() {
   ;
 
   class_<csd::RadarMeasurement, bases<cs::SensorData>, boost::noncopyable, std::shared_ptr<csd::RadarMeasurement>>("RadarMeasurement", no_init)
-    .add_property("raw_data", &GetRawDataAsBuffer<csd::RadarMeasurement>)
+    .add_property("raw_data", MakeRawDataGetter<csd::RadarMeasurement>(raw_buffer_type))
     .def("get_detection_count", &csd::RadarMeasurement::GetDetectionAmount)
     .def("__len__", &csd::RadarMeasurement::size)
     .def("__iter__", iterator<csd::RadarMeasurement>())
@@ -566,7 +590,7 @@ void export_sensor_data() {
     .add_property("width", &csd::DVSEventArray::GetWidth)
     .add_property("height", &csd::DVSEventArray::GetHeight)
     .add_property("fov", &csd::DVSEventArray::GetFOVAngle)
-    .add_property("raw_data", &GetRawDataAsBuffer<csd::DVSEventArray>)
+    .add_property("raw_data", MakeRawDataGetter<csd::DVSEventArray>(raw_buffer_type))
     .def("__len__", &csd::DVSEventArray::size)
     .def("__iter__", iterator<csd::DVSEventArray>())
     .def("__getitem__", +[](const csd::DVSEventArray &self, size_t pos) -> csd::DVSEvent {

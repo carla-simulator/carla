@@ -958,7 +958,7 @@ Horizontal field of view of the image.
 Image height in pixels.  
 - <a name="carla.DVSEventArray.width"></a>**<font color="#f8805a">width</font>** (_int_)  
 Image width in pixels.  
-- <a name="carla.DVSEventArray.raw_data"></a>**<font color="#f8805a">raw_data</font>** (_bytes_)  
+- <a name="carla.DVSEventArray.raw_data"></a>**<font color="#f8805a">raw_data</font>** (_memoryview_)  
 
 ### Methods
 - <a name="carla.DVSEventArray.to_array"></a>**<font color="#7fb800">to_array</font>**(<font color="#00a6ed">**self**</font>)  
@@ -1051,8 +1051,8 @@ Horizontal field of view of the image.
 Image height in pixels.  
 - <a name="carla.DistanceImage.width"></a>**<font color="#f8805a">width</font>** (_int_)  
 Image width in pixels.  
-- <a name="carla.DistanceImage.raw_data"></a>**<font color="#f8805a">raw_data</font>** (_bytes_)  
-Flattened array of `width * height` float32 distances in meters, row major. Copy it before reuse, e.g. `np.copy(np.frombuffer(image.raw_data, dtype=np.float32)).reshape(image.height, image.width)`.  
+- <a name="carla.DistanceImage.raw_data"></a>**<font color="#f8805a">raw_data</font>** (_memoryview_)  
+Flattened array of `width * height` float32 distances in meters, row major. Use `np.frombuffer(image.raw_data, dtype=np.float32).reshape(image.height, image.width)` for zero-copy access. Copy the array when independent writable data is needed.  
 
 ### Methods
 
@@ -1101,7 +1101,7 @@ Image width.
 Image height.  
 - <a name="carla.FakeImage.fov"></a>**<font color="#f8805a">fov</font>** (_float<small> - degrees</small>_)  
 Horizontal field of view of the image.  
-- <a name="carla.FakeImage.raw_data"></a>**<font color="#f8805a">raw_data</font>** (_bytes_)  
+- <a name="carla.FakeImage.raw_data"></a>**<font color="#f8805a">raw_data</font>** (_memoryview_)  
 Flattened array of pixels, four bytes per pixel in BGRA order.  
 
 ---
@@ -1422,7 +1422,7 @@ Horizontal field of view of the image.
 Image height in pixels.  
 - <a name="carla.Image.width"></a>**<font color="#f8805a">width</font>** (_int_)  
 Image width in pixels.  
-- <a name="carla.Image.raw_data"></a>**<font color="#f8805a">raw_data</font>** (_bytes_)  
+- <a name="carla.Image.raw_data"></a>**<font color="#f8805a">raw_data</font>** (_memoryview_)  
 Flattened array of pixel data, use reshape to create an image array.  
 
 ### Methods
@@ -1923,7 +1923,7 @@ Class that defines the LIDAR data retrieved by a <b>sensor.lidar.ray_cast</b>. T
 Number of lasers shot.  
 - <a name="carla.LidarMeasurement.horizontal_angle"></a>**<font color="#f8805a">horizontal_angle</font>** (_float<small> - radians</small>_)  
 Horizontal angle the LIDAR is rotated at the time of the measurement.  
-- <a name="carla.LidarMeasurement.raw_data"></a>**<font color="#f8805a">raw_data</font>** (_bytes_)  
+- <a name="carla.LidarMeasurement.raw_data"></a>**<font color="#f8805a">raw_data</font>** (_memoryview_)  
 Received list of 4D points. Each point consists of [x,y,z] coordinates plus the intensity computed for that point.  
 
 ### Methods
@@ -2413,7 +2413,7 @@ Horizontal field of view of the image.
 Image height in pixels.  
 - <a name="carla.OpticalFlowImage.width"></a>**<font color="#f8805a">width</font>** (_int_)  
 Image width in pixels.  
-- <a name="carla.OpticalFlowImage.raw_data"></a>**<font color="#f8805a">raw_data</font>** (_bytes_)  
+- <a name="carla.OpticalFlowImage.raw_data"></a>**<font color="#f8805a">raw_data</font>** (_memoryview_)  
 Flattened array of pixel data, use reshape to create an image array.  
 
 ### Methods
@@ -2590,7 +2590,7 @@ The velocity of the detected object towards the sensor.
 Class that defines and gathers the measures registered by a <b>sensor.other.radar</b>, representing a wall of points in front of the sensor with a distance, angle and velocity in relation to it. The data consists of a [carla.RadarDetection](#carla.RadarDetection) array. Learn more about this [here](ref_sensors.md#radar-sensor).  
 
 ### Instance Variables
-- <a name="carla.RadarMeasurement.raw_data"></a>**<font color="#f8805a">raw_data</font>** (_bytes_)  
+- <a name="carla.RadarMeasurement.raw_data"></a>**<font color="#f8805a">raw_data</font>** (_memoryview_)  
 The complete information of the [carla.RadarDetection](#carla.RadarDetection) the radar has registered.  
 
 ### Methods
@@ -2895,7 +2895,7 @@ Class that defines the semantic LIDAR data retrieved by a <b>sensor.lidar.ray_ca
 Number of lasers shot.  
 - <a name="carla.SemanticLidarMeasurement.horizontal_angle"></a>**<font color="#f8805a">horizontal_angle</font>** (_float<small> - radians</small>_)  
 Horizontal angle the LIDAR is rotated at the time of the measurement.  
-- <a name="carla.SemanticLidarMeasurement.raw_data"></a>**<font color="#f8805a">raw_data</font>** (_bytes_)  
+- <a name="carla.SemanticLidarMeasurement.raw_data"></a>**<font color="#f8805a">raw_data</font>** (_memoryview_)  
 Received list of raw detection points. Each point consists of [x,y,z] coordinates plus the cosine of the incident angle, the index of the hit actor, and its semantic tag.  
 
 ### Methods
@@ -2995,7 +2995,8 @@ Base class for all the objects containing data generated by a [carla.Sensor](#ca
   - Radar sensor: [carla.RadarMeasurement](#carla.RadarMeasurement).<br>
   - Semantic LIDAR sensor: [carla.SemanticLidarMeasurement](#carla.SemanticLidarMeasurement).<br>
   - Cooperative awareness messages V2X sensor: [carla.CAMEvent](#carla.CAMEvent).<br>
-  - Custom V2X messages V2X sensor: [carla.CustomV2XEvent](#carla.CustomV2XEvent).  
+  - Custom V2X messages V2X sensor: [carla.CustomV2XEvent](#carla.CustomV2XEvent).<br><br>
+Raw data buffers are read-only, zero-copy memoryviews. Their native storage stays alive until all dependent views, including sliced views and NumPy arrays created with `numpy.frombuffer`, are released.  
 
 ### Instance Variables
 - <a name="carla.SensorData.frame"></a>**<font color="#f8805a">frame</font>** (_int_)  

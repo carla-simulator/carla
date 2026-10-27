@@ -1,5 +1,7 @@
 ## LATEST Changes
 
+- Keep native sensor storage alive for retained raw-data memoryviews, slices and NumPy views without copying their data.
+
 ### New features
 
 #### Simulator
