@@ -14,10 +14,14 @@
 #include <sstream>
 #include <string>
 #include <tuple>
+#include <type_traits>
 
 #include "test.h"
 
 namespace {
+using Spiral = carla::road::element::GeometrySpiral;
+static_assert(std::is_same_v<decltype(&Spiral::GetCurveStart), double (Spiral::*)()>);
+static_assert(std::is_same_v<decltype(&Spiral::GetCurveEnd), double (Spiral::*)()>);
 using Parameters = std::tuple<int, std::string, int, bool, bool, bool, bool>;
 
 std::string TangentMap(const Parameters &parameters) {

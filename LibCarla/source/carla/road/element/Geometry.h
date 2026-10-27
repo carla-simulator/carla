@@ -186,13 +186,7 @@ namespace element {
       return _curve_end;
     }
 
-    double GetCurveStart() const {
-      return _curve_start;
-    }
-
-    double GetCurveEnd() const {
-      return _curve_end;
-    }
+    double HeadingDerivative(double dist) const;
 
     DirectedPoint PosFromDist(double dist) const override;
 

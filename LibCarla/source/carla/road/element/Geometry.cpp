@@ -28,12 +28,8 @@ namespace element {
         return 0.0;
       case GeometryType::ARC:
         return static_cast<const GeometryArc &>(*this).GetCurvature();
-      case GeometryType::SPIRAL: {
-        const auto &spiral = static_cast<const GeometrySpiral &>(*this);
-        const double fraction = geom::Math::Clamp(dist / _length, 0.0, 1.0);
-        return spiral.GetCurveStart() +
-            fraction * (spiral.GetCurveEnd() - spiral.GetCurveStart());
-      }
+      case GeometryType::SPIRAL:
+        return static_cast<const GeometrySpiral &>(*this).HeadingDerivative(dist);
       case GeometryType::POLY3:
         return static_cast<const GeometryPoly3 &>(*this).HeadingDerivative(dist);
       case GeometryType::POLY3PARAM:
@@ -81,6 +77,11 @@ namespace element {
     return geom::Vector2D(
     static_cast<float>(x * cos_a - y * sin_a),
     static_cast<float>(y * cos_a + x * sin_a));
+  }
+
+  double GeometrySpiral::HeadingDerivative(double dist) const {
+    const double fraction = geom::Math::Clamp(dist / _length, 0.0, 1.0);
+    return _curve_start + fraction * (_curve_end - _curve_start);
   }
 
   DirectedPoint GeometrySpiral::PosFromDist(double dist) const {
