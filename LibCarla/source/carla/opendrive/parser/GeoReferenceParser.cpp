@@ -7,6 +7,7 @@
 #include "carla/opendrive/parser/GeoReferenceParser.h"
 
 #include "carla/Logging.h"
+#include "carla/NumericLocale.h"
 #include "carla/StringUtil.h"
 #include "carla/geom/GeoLocation.h"
 #include "carla/geom/GeoProjection.h"
@@ -81,7 +82,7 @@ namespace parser {
     auto i = parameters.find(std::forward<S>(name));
     if (i == parameters.cend())
       return false;
-    out = static_cast<O>(std::stod(i->second));
+    out = static_cast<O>(carla::detail::StodC(i->second));
     return true;
   }
 

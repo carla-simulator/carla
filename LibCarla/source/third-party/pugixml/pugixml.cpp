@@ -16,6 +16,9 @@
 
 #include "pugixml.hpp"
 
+// CARLA patch: XML decimal numbers must not use the application numeric locale.
+#include "carla/NumericLocale.h"
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -4574,20 +4577,12 @@ PUGI__NS_BEGIN
 
 	PUGI__FN double get_value_double(const char_t* value)
 	{
-	#ifdef PUGIXML_WCHAR_MODE
-		return wcstod(value, 0);
-	#else
-		return strtod(value, 0);
-	#endif
+		return carla::detail::StrtodC(value, 0);
 	}
 
 	PUGI__FN float get_value_float(const char_t* value)
 	{
-	#ifdef PUGIXML_WCHAR_MODE
-		return static_cast<float>(wcstod(value, 0));
-	#else
-		return static_cast<float>(strtod(value, 0));
-	#endif
+		return static_cast<float>(carla::detail::StrtodC(value, 0));
 	}
 
 	PUGI__FN bool get_value_bool(const char_t* value)
@@ -8288,11 +8283,7 @@ PUGI__NS_BEGIN
 		if (!check_string_to_number_format(string)) return gen_nan();
 
 		// parse string
-	#ifdef PUGIXML_WCHAR_MODE
-		return wcstod(string, 0);
-	#else
-		return strtod(string, 0);
-	#endif
+		return carla::detail::StrtodC(string, 0);
 	}
 
 	PUGI__FN bool convert_string_to_number_scratch(char_t (&buffer)[32], const char_t* begin, const char_t* end, double* out_result)

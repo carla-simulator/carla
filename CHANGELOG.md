@@ -1,5 +1,7 @@
 ## LATEST Changes
 
+- Parse OpenDRIVE XML and projection decimal numbers independently of the application numeric locale, preserving lane widths, elevations and georeference coordinates under comma-decimal locales.
+
 ### New features
 
 #### Simulator
