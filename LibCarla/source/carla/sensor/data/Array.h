@@ -59,11 +59,11 @@ namespace data {
     }
 
     reverse_iterator rbegin() {
-      return reverse_iterator(begin());
+      return reverse_iterator(end());
     }
 
     const_reverse_iterator crbegin() const {
-      return const_reverse_iterator(cbegin());
+      return const_reverse_iterator(cend());
     }
 
     const_reverse_iterator rbegin() const {
@@ -71,11 +71,11 @@ namespace data {
     }
 
     reverse_iterator rend() {
-      return reverse_iterator(end());
+      return reverse_iterator(begin());
     }
 
     const_reverse_iterator crend() const {
-      return const_reverse_iterator(cend());
+      return const_reverse_iterator(cbegin());
     }
 
     const_reverse_iterator rend() const {
