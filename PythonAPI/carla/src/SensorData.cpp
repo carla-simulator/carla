@@ -166,9 +166,8 @@ template <typename T>
 struct RawDataBufferGetter {
   boost::python::object buffer_type;
 
-  boost::python::object operator()(boost::python::object python_self) const {
+  boost::python::object operator()(T &self) const {
     namespace bp = boost::python;
-    auto &self = bp::extract<T &>(python_self)();
     auto *data = reinterpret_cast<char *>(self.data());
     const auto size = static_cast<Py_ssize_t>(sizeof(typename T::value_type) * self.size());
     auto owner = self.shared_from_this();
@@ -187,7 +186,7 @@ static auto MakeRawDataGetter(const boost::python::object &buffer_type) {
   // Each callable owns the private type, including after module removal.
   return bp::make_function(
       RawDataBufferGetter<T>{buffer_type}, bp::default_call_policies(),
-      boost::mpl::vector<bp::object, bp::object>());
+      boost::mpl::vector<bp::object, T &>());
 }
 
 template <typename T>
