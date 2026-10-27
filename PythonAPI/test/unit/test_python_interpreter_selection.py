@@ -181,3 +181,25 @@ class TestPythonInterpreterSelection(unittest.TestCase):
         self.assert_matching_selection(*self.configure([
             "-DPython_EXECUTABLE=" + base,
             "-DPython3_EXECUTABLE=" + sys.executable]))
+
+    def test_reconfigure_replaces_explicit_python3_selection(self):
+        """Changing an explicit modern executable also replaces both libraries."""
+        other = os.environ.get("CARLA_TEST_OTHER_PYTHON")
+        if not other:
+            self.skipTest("A second installed Python is required for the switch control")
+        result, selected = self.configure(
+            ["-DPython3_EXECUTABLE=" + sys.executable],
+            reconfigure=["-DPython3_EXECUTABLE=" + other])
+        self.assert_matching_selection(result, selected)
+        self.assertEqual(Path(selected[0]).resolve(), Path(other).resolve())
+
+    def test_reconfigure_replaces_explicit_legacy_selection(self):
+        """Changing the legacy executable hint updates the API and Boost together."""
+        other = os.environ.get("CARLA_TEST_OTHER_PYTHON")
+        if not other:
+            self.skipTest("A second installed Python is required for the switch control")
+        result, selected = self.configure(
+            ["-DPython_EXECUTABLE=" + sys.executable],
+            reconfigure=["-DPython_EXECUTABLE=" + other])
+        self.assert_matching_selection(result, selected)
+        self.assertEqual(Path(selected[0]).resolve(), Path(other).resolve())

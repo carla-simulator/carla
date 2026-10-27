@@ -13,8 +13,12 @@ macro (carla_select_python)
     set (Python3_ROOT_DIR "${Python_ROOT_DIR}")
   endif ()
 
+  # Discover the interpreter first, then validate both modules' cached
+  # development artifacts against that exact ABI version on reconfigure.
+  find_package (Python3 REQUIRED COMPONENTS Interpreter)
+  set (_carla_python_version "${Python3_VERSION_MAJOR}.${Python3_VERSION_MINOR}")
   find_package (
-    Python3
+    Python3 ${_carla_python_version} EXACT
     COMPONENTS
       Interpreter
       Development.Module
@@ -58,6 +62,11 @@ macro (carla_select_python)
 
   # A normal variable also overrides an earlier cached hint in child projects.
   set (Python_EXECUTABLE "${Python3_EXECUTABLE}")
+  find_package (
+    Python ${_carla_python_version} EXACT
+    REQUIRED COMPONENTS Interpreter Development
+  )
+  unset (_carla_python_version)
   unset (_carla_python_abi_query)
   unset (_carla_legacy_python_status)
   unset (_carla_legacy_python_abi)

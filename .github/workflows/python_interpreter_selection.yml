@@ -26,6 +26,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-24.04, windows-latest]
+        cmake: [3.28.3, latest]
     runs-on: ${{ matrix.os }}
     timeout-minutes: 20
     defaults:
@@ -33,6 +34,7 @@ jobs:
         shell: pwsh
     env:
       PYTHONUTF8: '1'
+      CARLA_TEST_CMAKE_VERSION: ${{ matrix.cmake }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7
@@ -48,7 +50,12 @@ jobs:
       - name: Install configure prerequisites for both interpreters
         run: |
           $PSNativeCommandUseErrorActionPreference = $true
-          python -m pip install cmake ninja numpy
+          $cmakePackage = if ($env:CARLA_TEST_CMAKE_VERSION -eq 'latest') {
+            'cmake'
+          } else {
+            'cmake==' + $env:CARLA_TEST_CMAKE_VERSION
+          }
+          python -m pip install $cmakePackage ninja numpy
           & $env:CARLA_TEST_OTHER_PYTHON -m pip install numpy
       - name: Activate the Windows compiler
         if: runner.os == 'Windows'
