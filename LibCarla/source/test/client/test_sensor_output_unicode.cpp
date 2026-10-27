@@ -130,4 +130,15 @@ TEST_F(SensorOutputUnicode, read_image_with_unicode_path) {
 TEST_F(SensorOutputUnicode, image_ascii_control) {
   CheckImage(OutputPath("frame.png"));
 }
+
+TEST_F(SensorOutputUnicode, png_char_pointer_path_control) {
+  const auto path = OutputPath("pointer.png");
+  CheckImage(path);
+  boost::gil::rgb8_image_t loaded;
+  const auto native_path = path.string();
+  carla::image::io::png::read_image(native_path.c_str(), loaded);
+  ASSERT_EQ(loaded.width(), 2);
+  ASSERT_EQ(loaded.height(), 1);
+  EXPECT_EQ(boost::gil::const_view(loaded)(0, 0), boost::gil::rgb8_pixel_t(12u, 34u, 56u));
+}
 #endif

@@ -215,7 +215,7 @@ namespace detail {
       log_debug("reading", path, "as", IO::get_default_extension());
       std::ifstream input(std::filesystem::u8path(path), std::ios::binary);
       if (!input) {
-        throw_exception(std::runtime_error("Failed to open image input: " + path));
+        throw_exception(std::runtime_error(std::string("Failed to open image input: ") + path));
       }
       IO::read_image(input, std::forward<Args>(args)...);
     }
