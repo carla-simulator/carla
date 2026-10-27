@@ -94,7 +94,8 @@ class TestSetupPrerequisiteErrors(unittest.TestCase):
                            encoding='utf-8')
         return subprocess.run([os.environ['COMSPEC'], '/d', '/c', str(wrapper)],
                               cwd=self.workspace, env=environment,
-                              capture_output=True, text=True, timeout=15)
+                              capture_output=True, text=True, timeout=15,
+                              check=False)
 
     def test_failed_prerequisites_report_the_original_exit_code_and_stop(self):
         for exit_code in [1, 23, -1, -1073741515]:
