@@ -1,5 +1,7 @@
 ## LATEST Changes
 
+- Keep OBJ numeric records locale-independent so standard and Recast mesh exports remain readable when a caller uses comma decimal formatting.
+
 ### New features
 
 #### Simulator

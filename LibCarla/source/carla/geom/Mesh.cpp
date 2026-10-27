@@ -10,6 +10,7 @@
 #include <sstream>
 #include <ios>
 #include <iostream>
+#include <locale>
 #include <fstream>
 
 #include <carla/geom/Math.h>
@@ -148,6 +149,7 @@ namespace geom {
       return "";
     }
     std::stringstream out;
+    out.imbue(std::locale::classic());
     out << std::fixed; // Avoid using scientific notation
 
     out << "# List of geometric vertices, with (x, y, z) coordinates." << std::endl;
@@ -204,6 +206,7 @@ namespace geom {
       return "";
     }
     std::stringstream out;
+    out.imbue(std::locale::classic());
     out << std::fixed; // Avoid using scientific notation
 
     // A handful of road-generation edge cases (e.g. a near-zero-length
