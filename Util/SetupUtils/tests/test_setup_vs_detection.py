@@ -131,7 +131,8 @@ class TestSetupVisualStudioDetection(unittest.TestCase):
             'exit /b %test_exit%\n', encoding='utf-8')
         return subprocess.run([os.environ['COMSPEC'], '/d', '/c', str(wrapper)],
                               cwd=self.workspace, env=self.environment,
-                              capture_output=True, text=True, timeout=20)
+                              capture_output=True, text=True, timeout=20,
+                              check=False)
 
     def commands(self):
         if not self.log.exists():
