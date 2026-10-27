@@ -1,5 +1,7 @@
 ## LATEST Changes
 
+* Corrected georeference offset heading rotation to rotate local coordinates before adding the world translation.
+
 ### New features
 
 #### Simulator

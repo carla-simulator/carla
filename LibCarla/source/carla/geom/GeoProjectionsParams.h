@@ -85,25 +85,22 @@ namespace geom {
         double offset_sin_h = 0.0;
 
         Location ApplyTransformation(const Location& location) const{
-
-            double tx = location.x + offset_x;
-            double ty = -location.y + offset_y;
-
-            double x_rot = (tx * offset_cos_h) - (ty * offset_sin_h);
-            double y_rot = (tx * offset_sin_h) + (ty * offset_cos_h);
-
-            return Location{static_cast<float>(x_rot), static_cast<float>(y_rot), static_cast<float>(location.z + offset_z)};
+            // ASAM OpenDRIVE 8.5: rotate the local ODR position, then add the
+            // world offset. CARLA's local y is negated; offset_sin_h stores
+            // sin(-hdg), as in the public constructor.
+            const double x = location.x * offset_cos_h - location.y * offset_sin_h + offset_x;
+            const double y = -location.x * offset_sin_h - location.y * offset_cos_h + offset_y;
+            return Location{static_cast<float>(x), static_cast<float>(y), static_cast<float>(location.z + offset_z)};
         }
 
         /// Inverse of @ref ApplyTransformation: recovers the pre-offset location
         /// so that `ApplyTransformation(ApplyInverseTransformation(l)) == l`.
         Location ApplyInverseTransformation(const Location& location) const{
 
-            double tx = (location.x * offset_cos_h) + (location.y * offset_sin_h);
-            double ty = -(location.x * offset_sin_h) + (location.y * offset_cos_h);
-
-            double x = tx - offset_x;
-            double y = offset_y - ty;
+            const double tx = location.x - offset_x;
+            const double ty = location.y - offset_y;
+            const double x = tx * offset_cos_h - ty * offset_sin_h;
+            const double y = -tx * offset_sin_h - ty * offset_cos_h;
 
             return Location{static_cast<float>(x), static_cast<float>(y), static_cast<float>(location.z - offset_z)};
         }
