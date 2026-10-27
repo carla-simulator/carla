@@ -102,7 +102,8 @@ class TestBoostPythonSelection(unittest.TestCase):
                     + boost_section + "\n"
                     + 'file(WRITE "' + output + '" "${BOOST_INCLUDE_LIBRARIES}\\n${BOOST_ENABLE_PYTHON}")\n')
             result = subprocess.run(
-                ["cmake", "-P", script], capture_output=True, text=True, timeout=30)
+                ["cmake", "-P", script], capture_output=True, text=True, timeout=30,
+                check=False)
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
             with open(output) as selection:
                 projects, python_enabled = selection.read().splitlines()

@@ -107,7 +107,8 @@ class TestPythonApiPackaging(unittest.TestCase):
         return source
 
     def run_command(self, command):
-        return subprocess.run(command, capture_output=True, text=True, timeout=180)
+        return subprocess.run(command, capture_output=True, text=True, timeout=180,
+                              check=False)
 
     def configure(self, source, build, pep517=True):
         return self.run_command([
