@@ -7,9 +7,6 @@
 - [__Convert OpenStreetMap format to OpenDRIVE format__](#convert-openstreetmap-format-to-opendrive-format)
 - [__Ingest into CARLA__](#ingest-into-carla)
 
-!!! Warning
-    The OSM to OpenDRIVE conversion (`carla.Osm2Odr`, `carla.Osm2OdrSettings` and `config.py --osm-path`) is only compiled when the build is configured with `-DENABLE_OSM2ODR=ON`, which is __off by default__. Without it, those names raise `AttributeError` and the build log says "Building CARLA PythonAPI without OSM2ODR support". Reconfigure and rebuild the Python API to use this page.
-
 ---
 ## Export a map with OpenStreetMap
 

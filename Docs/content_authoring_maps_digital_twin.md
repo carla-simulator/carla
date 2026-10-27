@@ -19,8 +19,8 @@ The __Digital Twin Tool__ builds a CARLA map of a real place from [OpenStreetMap
 
 | Part | Status |
 | --- | --- |
-| OSM download and conversion to OpenDRIVE (*Generate*) | __Not available.__ `osm2odr` moved to another repository and is not fetched by the build. Configuring with `-DENABLE_OSM2ODR=ON` makes the `Carla` and `CarlaTools` modules fail to compile; without it, *Generate* logs `CARLA was built without OSM2ODR support`. |
-| Map preview and navigation (*Select OSM Database*, *Render*, arrows, zoom) | __Removed.__ The OSM renderer it talks to was taken out of the repository; the buttons are still in the widget but do nothing. |
+| OSM download and conversion to OpenDRIVE (*Generate*) | __Available.__ The converter is part of CARLA and is always compiled in; there is no longer an `ENABLE_OSM2ODR` option to turn on. |
+| Map preview and navigation (*Select OSM Database*, *Render*, arrows, zoom) | __Removed.__ The OSM renderer it talks to was taken out of the repository. The buttons are still in the widget, and pressing them aborts the editor: `UMapPreviewUserWidget::ConnectToSocket` connects to port 5000 with the throwing Boost.Asio overload, so a refused connection raises an uncaught exception. |
 | Map generation blueprint, building generator, traffic-light presets, curb detection scripts | __Not distributed.__ They are in the `CarlaDigitalTwinsTool` plugin's content (`Unreal/CarlaUnreal/Plugins/CarlaDigitalTwinsTool/Content`, about 18 GB), which is not in git. |
 | Traffic Light Tool | Opens in the editor, but adding a pole needs the `CarlaDigitalTwinsTool` content: without it, *Add Pole* crashes the editor. The phases in a map's `map_logic.json` work at run time. |
 | Traffic sign generation | Available in the editor, for a map that has OSM data and an OpenDRIVE file. |

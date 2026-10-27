@@ -111,6 +111,28 @@ endif ()
 
 
 
+# The OSM to OpenDRIVE converter, shared by the client (the Python API binding)
+# and the server (the editor's Digital Twin tool).
+file (
+  GLOB
+  LIBCARLA_SOURCES_OSM2ODR
+  ${LIBCARLA_SOURCE_PATH}/osm2odr/*.cpp
+  ${LIBCARLA_SOURCE_PATH}/third-party/osm2xodr/osm/*.cpp
+  ${LIBCARLA_SOURCE_PATH}/third-party/osm2xodr/conversion/*.cpp
+  ${LIBCARLA_SOURCE_PATH}/third-party/osm2xodr/xodr/*.cpp
+)
+file (
+  GLOB
+  LIBCARLA_HEADERS_OSM2ODR
+  ${LIBCARLA_SOURCE_PATH}/osm2odr/*.h
+  ${LIBCARLA_SOURCE_PATH}/third-party/osm2xodr/*.h
+  ${LIBCARLA_SOURCE_PATH}/third-party/osm2xodr/osm/*.h
+  ${LIBCARLA_SOURCE_PATH}/third-party/osm2xodr/conversion/*.h
+  ${LIBCARLA_SOURCE_PATH}/third-party/osm2xodr/xodr/*.h
+)
+
+
+
 if (BUILD_CARLA_SERVER)
 
   file (
@@ -152,6 +174,12 @@ if (BUILD_CARLA_SERVER)
     ${LIBCARLA_SOURCE_PATH}/third-party/odrSpiral/*.cpp
     ${LIBCARLA_SOURCE_PATH}/third-party/moodycamel/*.cpp
     ${LIBCARLA_SOURCE_PATH}/third-party/pugixml/*.cpp
+  )
+
+  list (
+    APPEND
+    LIBCARLA_SERVER_SOURCES_THIRD_PARTY
+    ${LIBCARLA_SOURCES_OSM2ODR}
   )
 
   file (
@@ -206,6 +234,12 @@ if (BUILD_CARLA_SERVER)
     ${LIBCARLA_SOURCE_PATH}/third-party/odrSpiral/*.h
     ${LIBCARLA_SOURCE_PATH}/third-party/moodycamel/*.h
     ${LIBCARLA_SOURCE_PATH}/third-party/pugixml/*.hpp
+  )
+
+  list (
+    APPEND
+    LIBCARLA_SERVER_HEADERS_THIRD_PARTY
+    ${LIBCARLA_HEADERS_OSM2ODR}
   )
 
   # glibc 2.38+ compat shim (compiled as C11 to avoid __isoc23_strtol redirect)
@@ -368,6 +402,17 @@ if (BUILD_CARLA_CLIENT)
     LIBCARLA_CLIENT_SOURCES_THIRD_PARTY
     ${LIBCARLA_SOURCE_PATH}/third-party/odrSpiral/*.cpp
     ${LIBCARLA_SOURCE_PATH}/third-party/pugixml/*.cpp
+  )
+
+  list (
+    APPEND
+    LIBCARLA_CLIENT_SOURCES_THIRD_PARTY
+    ${LIBCARLA_SOURCES_OSM2ODR}
+  )
+  list (
+    APPEND
+    LIBCARLA_CLIENT_HEADERS_THIRD_PARTY
+    ${LIBCARLA_HEADERS_OSM2ODR}
   )
 
   carla_add_library (

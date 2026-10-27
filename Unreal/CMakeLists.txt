@@ -194,14 +194,6 @@ if (ENABLE_ROS2_DEMO)
   )
 endif()
 
-if (ENABLE_OSM2ODR)
-  list (
-    APPEND
-    CARLA_UNREAL_OPTIONS
-    "OSM2ODR"
-  )
-endif()
-
 
 
 # Both prefixes run through CARLA_UE_DLSS_ENV_COMMAND so UnrealBuildTool sees
@@ -337,6 +329,37 @@ list (
 file (
   MAKE_DIRECTORY
   ${CARLA_UE_PATH}/Content/Carla/ExportedMaps
+)
+
+
+
+# The Carla plugin module links libcarla-server and librpc by SONAME and its
+# rpath is ${ORIGIN}-only, so stage both beside it or the module fails to load.
+set (
+  CARLA_PLUGIN_BINARY_PATH
+  ${CARLA_UE_PATH}/Plugins/Carla/Binaries/${UE_SYSTEM_NAME}
+)
+
+file (MAKE_DIRECTORY ${CARLA_PLUGIN_BINARY_PATH})
+
+add_custom_target (
+  carla-unreal-stage-libraries
+  COMMAND
+    ${CMAKE_COMMAND} -E copy_if_different
+    $<TARGET_FILE:carla-server> ${CARLA_PLUGIN_BINARY_PATH}
+  COMMAND
+    ${CMAKE_COMMAND} -E copy_if_different
+    $<TARGET_FILE:rpc> ${CARLA_PLUGIN_BINARY_PATH}
+  DEPENDS
+    carla-server
+    rpc
+  VERBATIM
+)
+
+list (
+  APPEND
+  UE_DEPENDENCIES_ORDER_ONLY
+  carla-unreal-stage-libraries
 )
 
 

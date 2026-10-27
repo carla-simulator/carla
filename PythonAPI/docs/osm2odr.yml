@@ -53,7 +53,12 @@
       type: float
       var_units: meters
       doc: >
-        Width of the lanes described in the resulting XODR map. Default value is __4.0__.
+        Width of the lanes described in the resulting XODR map. Default value is __0.0__, which picks a width per OSM highway type.
+    - var_name: default_sidewalk_width
+      type: float
+      var_units: meters
+      doc: >
+        Width of the sidewalk lane added to a way whose OSM tags declare one. Default value is __0.0__, which adds none.
     - var_name: elevation_layer_height
       type: float
       var_units: meters
