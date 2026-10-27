@@ -45,6 +45,24 @@
 
 
 class UBoxComponent;
+class ACarlaWheeledVehicle;
+
+/// Post-physics tick of two-wheelers; see ACarlaWheeledVehicle::SetUpBikeRider.
+struct FBikeRiderTickFunction : public FTickFunction
+{
+  ACarlaWheeledVehicle *Vehicle = nullptr;
+
+  virtual void ExecuteTick(
+      float DeltaTime,
+      ELevelTick TickType,
+      ENamedThreads::Type CurrentThread,
+      const FGraphEventRef &MyCompletionGraphEvent) override;
+
+  virtual FString DiagnosticMessage() override
+  {
+    return TEXT("FBikeRiderTickFunction");
+  }
+};
 
 UENUM()
 enum class EVehicleWheelLocation : uint8 {
@@ -472,9 +490,35 @@ private:
   void AddReferenceToManager();
   void RemoveReferenceToManager();
 
+  void SetUpBikeRider();
+  void TickBikeRider();
+
+  friend struct FBikeRiderTickFunction;
+  FBikeRiderTickFunction BikeRiderTick;
+
+  /// Blueprint function that samples the rider's IK targets.
+  UFunction *UpdateRiderFunction = nullptr;
+
+  /// Blueprint variables holding the rider's hand IK targets.
+  FStructProperty *LeftHandTargetProperty = nullptr;
+  FStructProperty *RightHandTargetProperty = nullptr;
 
   FTimerHandle TimerHandler;
 public:
+  /// Two-wheelers: rider's wrist offset from the handlebar socket, cm
+  /// (X forward, Y outward, Z up).
+  UPROPERTY(Category = "CARLA Wheeled Vehicle|Rider", EditAnywhere, BlueprintReadWrite)
+  FVector RiderWristOffset = FVector(0.0, 0.0, 0.0);
+
+  /// Two-wheelers: rotation added to the rider's left hand, in bone space.
+  UPROPERTY(Category = "CARLA Wheeled Vehicle|Rider", EditAnywhere, BlueprintReadWrite)
+  FRotator RiderLeftHandRotation = FRotator::ZeroRotator;
+
+  /// Two-wheelers: as RiderLeftHandRotation, for the right hand. The same value
+  /// on both hands gives a symmetric grip.
+  UPROPERTY(Category = "CARLA Wheeled Vehicle|Rider", EditAnywhere, BlueprintReadWrite)
+  FRotator RiderRightHandRotation = FRotator::ZeroRotator;
+
   float SpeedAnim { 0.0f };
   float RotationAnim { 0.0f };
   FPoseSnapshot WorldTransformedPose;
