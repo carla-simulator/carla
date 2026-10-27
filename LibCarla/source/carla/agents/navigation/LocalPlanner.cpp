@@ -168,11 +168,7 @@ void LocalPlanner::ComputeNextWaypoints(std::size_t k) {
           0, road_options_list.size() - 1);
       const std::size_t idx = dist(_rng);
       road_option = road_options_list[idx];
-      // Python pulls `next_waypoints[road_options_list.index(road_option)]`,
-      // i.e. the *first* candidate that shares the chosen RoadOption. With a
-      // pre-randomised idx that's just the same as picking idx directly,
-      // because there's a 1:1 alignment between the lists (the first option
-      // matching the random pick is the random pick itself).
+      // Keep the waypoint and its option paired by the sampled index.
       next_waypoint = next_waypoints[idx];
     }
 
