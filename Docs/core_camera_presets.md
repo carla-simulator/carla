@@ -1,6 +1,6 @@
 # Camera post-process presets
 
-A camera's look — exposure, tonemapper, white balance, bloom, lens flare, noise — comes from a __post-process preset__, a JSON file the server loads by name. Nine presets ship with CARLA, each reproducing the camera of a public driving dataset, and a sensor picks one with its `post_process_profile` attribute.
+A camera's look (exposure, tonemapper, white balance, bloom, lens flare, noise) comes from a __post-process preset__, a JSON file the server loads by name. Nine presets ship with CARLA, each reproducing the camera of a public driving dataset, and a sensor picks one with its `post_process_profile` attribute.
 
 - [__Using post-process presets for the RGB camera sensor__](#using-post-process-presets-for-the-rgb-camera-sensor)
 - [__Presets shipped with CARLA__](#presets-shipped-with-carla)
@@ -43,7 +43,7 @@ Each automotive preset reproduces the look of the camera of a public driving dat
 | `Dashcam` | consumer dashcam | Bright and flat, vivid colour, neutral white balance, mild sharpening, strong vignette and fringing, light sensor grain. |
 
 
-The same Town10HD_Opt frame through the nine presets, at noon and at night. At night the automotive presets raise the gain and show sensor noise, and `AutomotiveHDR` adds its star-shaped flare around the lamps:
+The same Town10HD_Opt frame through the nine presets, from a camera at the driver's eye height, at noon and at night. At night the automotive presets raise the gain and show sensor noise, and `AutomotiveHDR` adds its star-shaped flare around the lamps:
 
 ![camera_profiles_clearnoon](img/core_camera_presets/camera_profiles_clearnoon_town10.webp)
 <div class="img-caption">The nine camera profiles on the same frame, ClearNoon.</div>
@@ -114,8 +114,8 @@ The automotive presets add camera artefacts on top of the grading:
 
 - __Sensor noise and optical softness.__ A post-process material, `M_SensorNoise` (in `Content/Carla/Blueprints/CameraProfiles`), blurs the image slightly (lens, demosaicing and ISP) and adds photon and read noise in linear light. The gain follows the camera's own auto exposure: once the exposure time reaches its cap the gain rises, so noise grows in the dark as on a real camera. `AutomotiveHDRClean`, `WideHDR8MP`, `LegacyCCD`, `LogHDR` and `Smartphone` each reference a material instance, `MI_SensorNoise_<Preset>`, with its own parameters (`Strength`, `BlurSigma`, `NoiseCell`, `ChromaScale`, `FullWell`, `ReadNoise`, `MaxExposureMs`); `AutomotiveHDR` uses `M_SensorNoise` itself, with its default values. `Cinematic`, `GoPro` and `Dashcam` have no sensor-noise material; the grain of `Dashcam` is Unreal's film grain. Remove the material from *Weighted Blendables* to turn both effects off.
 - __Lens flare.__ `AutomotiveHDR` and `AutomotiveHDRClean` use the convolution (FFT) bloom with a lens kernel, `Kernels/T_LensPSF_Star`, modelled on the nuScenes night frames: a soft halo and faint star spikes around bright lights. The other presets use the standard bloom.
-- __Small lights and temporal anti-aliasing.__ With TSR (the default anti-aliasing) distant or thin lights — small vehicle lamps, far street lights — lose most of their glow, because TSR blends each frame with the previous ones and flattens bright features of a few pixels before the bloom. A real camera has no such filter. FXAA (`r.AntiAliasingMethod 1`) keeps their glow at the cost of more aliasing, shimmer and moiré on foliage, fences and distant lines.
-- __Exposure-linked motion blur.__ Applies to every preset: see [RGB camera — exposure-linked motion blur](ref_sensors.md#exposure-linked-motion-blur).
+- __Small lights and temporal anti-aliasing.__ With TSR (the default anti-aliasing) distant or thin lights (small vehicle lamps, far street lights) lose most of their glow, because TSR blends each frame with the previous ones and flattens bright features of a few pixels before the bloom. A real camera has no such filter. FXAA (`r.AntiAliasingMethod 1`) keeps their glow at the cost of more aliasing, shimmer and moiré on foliage, fences and distant lines.
+- __Exposure-linked motion blur.__ Applies to every preset: see [RGB camera: exposure-linked motion blur](ref_sensors.md#exposure-linked-motion-blur).
 
 ---
 ## Creating, loading and saving presets
