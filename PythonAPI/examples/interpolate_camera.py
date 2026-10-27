@@ -92,7 +92,8 @@ def interpolate_data(points, max_order):
     pitch_list = normalize_angles([item[2].pitch for item in points])
     yaw_list = normalize_angles([item[2].yaw for item in points])
 
-    # Keep one FPS clock across keypoints, including intervals shorter than a frame.
+    # Keep one FPS clock across keypoints, including intervals shorter
+    # than a frame.
     frame_count = (time_list[-1] - time_list[0]) * FPS
     nearest_frame_count = round(frame_count)
     if math.isclose(frame_count, nearest_frame_count, rel_tol=0.0, abs_tol=1e-9):

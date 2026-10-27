@@ -116,8 +116,9 @@ def main():
             # Now, we wait to the sensors data to be received.
             # As the queue is blocking, we will wait in the queue.get() methods
             # until all the information is processed and we continue with the next frame.
-            # Share a one-second deadline across this frame. Ignore stale packets and
-            # duplicates instead of treating them as a missing sensor's current data.
+            # Share a one-second deadline across this frame. Ignore stale
+            # packets and duplicates instead of treating them as a missing
+            # sensor's current data.
             try:
                 for s_frame in collect_sensor_frame(sensor_queue, w_frame, (name for _, name in sensor_list)):
                     print("    Frame: %d   Sensor: %s" % (s_frame[0], s_frame[1]))
