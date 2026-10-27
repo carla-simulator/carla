@@ -28,7 +28,7 @@ The profile is read when the sensor spawns: to change it, set the attribute agai
 
 Nine profiles ship in `Content/Carla/Config/PostProcess`. They change the image processing only, never the geometry of the lens.
 
-Each automotive preset reproduces the look of the camera of a public driving dataset, tuned on Town10HD_Opt against frames of that dataset (exposure and contrast percentiles, saturation, white balance, sharpness, noise per brightness). The consumer presets are graded by eye.
+Each automotive preset reproduces the look of the camera of a public driving dataset, tuned on Town10HD_Opt against frames of that dataset (exposure and contrast percentiles, saturation, white balance, sharpness, noise per brightness). `GoPro` and `Dashcam` are tuned against frames of a hood-mounted action camera and of consumer dashcams. `Cinematic` is graded by eye.
 
 | Preset | Imitates | Look |
 | --- | --- | --- |
@@ -77,6 +77,36 @@ camera_bp.set_attribute('image_size_x', '1242')
 camera_bp.set_attribute('image_size_y', '375')
 camera_bp.set_attribute('fov', '82')
 ```
+
+### Compared with the real cameras
+
+Each preset on a Town10HD_Opt street staged like a real frame of the camera it imitates (the same kind of street, traffic and pedestrians, and the weather the preset was tuned with), rendered with that camera's resolution, field of view and lens. The real frame is the inset. Click an image and use the arrow keys or the mouse wheel to go through all of them.
+
+![real_automotivehdr](img/core_camera_presets/real_automotivehdr.webp)
+<div class="img-caption">AutomotiveHDR, 1600 × 900, 70°, beside the nuScenes front camera.</div>
+
+![real_automotivehdr_night](img/core_camera_presets/real_automotivehdr_night.webp)
+<div class="img-caption">AutomotiveHDR at night, beside a nuScenes night frame.</div>
+
+![real_widehdr8mp](img/core_camera_presets/real_widehdr8mp.webp)
+<div class="img-caption">WideHDR8MP through a 120° Kannala-Brandt lens (`sensor.camera.rt_lens`), overcast, beside the Zenseact ZOD front camera.</div>
+
+![real_legacyccd](img/core_camera_presets/real_legacyccd.webp)
+<div class="img-caption">LegacyCCD, 1242 × 375, 82°, beside KITTI.</div>
+
+![real_loghdr](img/core_camera_presets/real_loghdr.webp)
+<div class="img-caption">LogHDR, 2048 × 1024, 50°, overcast, beside Cityscapes.</div>
+
+![real_smartphone](img/core_camera_presets/real_smartphone.webp)
+<div class="img-caption">Smartphone, 1164 × 874, 65°, beside the comma.ai road camera.</div>
+
+![real_gopro](img/core_camera_presets/real_gopro.webp)
+<div class="img-caption">GoPro through a 150° equidistant fisheye on the hood (`sensor.camera.rt_lens`), beside a hood-mounted action camera.</div>
+
+![real_dashcam](img/core_camera_presets/real_dashcam.webp)
+<div class="img-caption">Dashcam through a 110° Brown-Conrady barrel lens (`sensor.camera.rt_lens`), beside a consumer dashcam.</div>
+
+Reference frames: [nuScenes](https://www.nuscenes.org/) (CC BY-NC-SA 4.0), [Zenseact ZOD](https://zod.zenseact.com/) (CC BY-SA 4.0), [KITTI](https://www.cvlibs.net/datasets/kitti/) (CC BY-NC-SA 3.0), [Cityscapes](https://www.cityscapes-dataset.com/), [comma10k](https://github.com/commaai/comma10k) (MIT); action camera by live360 on Mapillary via Wikimedia Commons (CC BY-SA 4.0), dashcam by Michael Rivera via Wikimedia Commons (CC BY 4.0).
 
 ### Sensor effects
 
