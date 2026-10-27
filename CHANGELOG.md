@@ -1,5 +1,7 @@
 ## LATEST Changes
 
+- Fixed image and point-cloud save paths containing only a filename so output can be written in the current directory.
+
 ### New features
 
 #### Simulator

@@ -19,8 +19,8 @@ namespace carla {
     fs::path path(filepath);
     if (!ext.empty() && path.extension() != ext)
       path.replace_extension(ext);
-    auto parent = fs::absolute(path.parent_path());
-    if (!fs::exists(parent))
+    auto parent = path.parent_path();
+    if (!parent.empty() && !fs::exists(parent))
       fs::create_directories(parent);
     filepath = path.string();
   }
