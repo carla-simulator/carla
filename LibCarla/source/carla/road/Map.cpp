@@ -76,6 +76,11 @@ namespace road {
     }
   }
 
+  static bool IsDrivingLane(const Lane &lane) {
+    return (static_cast<uint32_t>(lane.GetType()) &
+        static_cast<uint32_t>(Lane::LaneType::Driving)) != 0u;
+  }
+
   /// Return a waypoint for each drivable lane on @a lane_section.
   template <typename FuncT>
   static void ForEachDrivableLaneImpl(
@@ -697,16 +702,18 @@ namespace road {
           successor.road_id != waypoint.road_id ||
           successor.section_id != waypoint.section_id ||
           successor.lane_id != waypoint.lane_id);
-      // Fix situations where the next waypoint is in the opposite direction and
-      // this waypoint is its successor, so this function would end up in a loop
+      // Retain the legacy curb/shoulder reciprocal-link filter without
+      // dropping valid driving cycles that consume a finite distance budget.
       bool is_broken = false;
-      for (const auto &future_successor : GetSuccessors(successor)) {
+      if (!IsDrivingLane(lane) || !IsDrivingLane(GetLane(successor))) {
+        for (const auto &future_successor : GetSuccessors(successor)) {
           if (future_successor.road_id == waypoint.road_id
                && future_successor.lane_id == waypoint.lane_id
                && future_successor.section_id == waypoint.section_id){
             is_broken = true;
             break;
           }
+        }
       }
       if (!is_broken){
         result = ConcatVectors(result, GetNext(successor, distance - remaining_lane_length));
@@ -746,16 +753,18 @@ namespace road {
           successor.road_id != waypoint.road_id ||
           successor.section_id != waypoint.section_id ||
           successor.lane_id != waypoint.lane_id);
-      // Fix situations, when next waypoint is in the opposite direction and
-      // this waypoint is his predecessor, so this function would end up in a loop
+      // Retain the legacy curb/shoulder reciprocal-link filter without
+      // dropping valid driving cycles that consume a finite distance budget.
       bool is_broken = false;
-      for (const auto &future_predecessor : GetPredecessors(successor)) {
+      if (!IsDrivingLane(lane) || !IsDrivingLane(GetLane(successor))) {
+        for (const auto &future_predecessor : GetPredecessors(successor)) {
           if (future_predecessor.road_id == waypoint.road_id
                && future_predecessor.lane_id == waypoint.lane_id
                && future_predecessor.section_id == waypoint.section_id){
             is_broken = true;
             break;
           }
+        }
       }
       if (!is_broken){
         result = ConcatVectors(result, GetPrevious(successor, distance - remaining_lane_length));
