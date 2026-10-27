@@ -183,9 +183,9 @@ class LocalPlanner:
                 # random choice between the possible options
                 road_options_list = _retrieve_options(
                     next_waypoints, last_waypoint)
-                road_option = random.choice(road_options_list)
-                next_waypoint = next_waypoints[road_options_list.index(
-                    road_option)]
+                next_waypoint_index = random.randrange(len(next_waypoints))
+                road_option = road_options_list[next_waypoint_index]
+                next_waypoint = next_waypoints[next_waypoint_index]
 
             self._waypoints_queue.append((next_waypoint, road_option))
 

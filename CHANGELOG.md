@@ -1,5 +1,7 @@
 ## LATEST Changes
 
+- Keep every local-planner fork branch selectable when multiple branches share the same turn label.
+
 ### New features
 
 #### Simulator
