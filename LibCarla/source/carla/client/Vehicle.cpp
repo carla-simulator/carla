@@ -49,14 +49,16 @@ namespace client {
   }
 
   void Vehicle::ApplyControl(const Control &control) {
-    if (!_is_control_sticky || (control != _control)) {
+    if (!_is_control_sticky || !_control_is_valid || (control != _control)) {
       GetEpisode().Lock()->ApplyControlToVehicle(*this, control);
       _control = control;
+      _control_is_valid = true;
     }
   }
 
   void Vehicle::ApplyAckermannControl(const AckermannControl &control) {
     GetEpisode().Lock()->ApplyAckermannControlToVehicle(*this, control);
+    _control_is_valid = false;
   }
 
   rpc::AckermannControllerSettings Vehicle::GetAckermannControllerSettings() const {

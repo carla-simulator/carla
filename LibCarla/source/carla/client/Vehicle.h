@@ -173,6 +173,8 @@ namespace client {
 
     const bool _is_control_sticky;
 
+    bool _control_is_valid = false;
+
     Control _control;
   };
 
