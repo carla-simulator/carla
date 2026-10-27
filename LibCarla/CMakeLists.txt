@@ -117,18 +117,11 @@ file (
   GLOB
   LIBCARLA_SOURCES_OSM2ODR
   ${LIBCARLA_SOURCE_PATH}/osm2odr/*.cpp
-  ${LIBCARLA_SOURCE_PATH}/third-party/osm2xodr/osm/*.cpp
-  ${LIBCARLA_SOURCE_PATH}/third-party/osm2xodr/conversion/*.cpp
-  ${LIBCARLA_SOURCE_PATH}/third-party/osm2xodr/xodr/*.cpp
 )
 file (
   GLOB
   LIBCARLA_HEADERS_OSM2ODR
   ${LIBCARLA_SOURCE_PATH}/osm2odr/*.h
-  ${LIBCARLA_SOURCE_PATH}/third-party/osm2xodr/*.h
-  ${LIBCARLA_SOURCE_PATH}/third-party/osm2xodr/osm/*.h
-  ${LIBCARLA_SOURCE_PATH}/third-party/osm2xodr/conversion/*.h
-  ${LIBCARLA_SOURCE_PATH}/third-party/osm2xodr/xodr/*.h
 )
 
 
