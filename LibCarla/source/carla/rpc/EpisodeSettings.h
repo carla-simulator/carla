@@ -39,7 +39,7 @@ namespace rpc {
 
     int max_substeps = 10;
 
-    float max_culling_distance = 0.0f;
+    float max_culling_distance = 0.0f;  // Metres; zero disables distance culling.
 
     bool deterministic_ragdolls = true;
 
@@ -134,6 +134,7 @@ namespace rpc {
             Settings.SpectatorAsEgo,
             Settings.bAdjustSignsHeightToGround) {
       constexpr float CMTOM = 1.f/100.f;
+      max_culling_distance = CMTOM * Settings.MaxCullingDistance;
       tile_stream_distance = CMTOM * Settings.TileStreamingDistance;
       actor_active_distance = CMTOM * Settings.ActorActiveDistance;
     }
@@ -149,7 +150,7 @@ namespace rpc {
       Settings.bSubstepping = substepping;
       Settings.MaxSubstepDeltaTime = max_substep_delta_time;
       Settings.MaxSubsteps = max_substeps;
-      Settings.MaxCullingDistance = max_culling_distance;
+      Settings.MaxCullingDistance = MTOCM * max_culling_distance;
       Settings.bDeterministicRagdolls = deterministic_ragdolls;
       Settings.TileStreamingDistance = MTOCM * tile_stream_distance;
       Settings.ActorActiveDistance = MTOCM * actor_active_distance;
