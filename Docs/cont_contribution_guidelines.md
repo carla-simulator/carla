@@ -33,7 +33,7 @@ Ideas for new features are also a great way to contribute. Any suggestion that c
 ---
 ## Code contributions
 
-Before starting hands-on on coding, please check out the [issue board][issueslink] to see what the team is already working on, to avoid overlapping. In case of doubt, or to discuss how to proceed, contact the team on the [Discord server](https://discord.com/invite/8kqACuC).
+Before starting hands-on on coding, please check out the [issue board][issueslink] to see what the team is already working on, to avoid overlapping. In case of doubt, or to discuss how to proceed, ask on [GitHub Discussions](https://github.com/carla-simulator/carla/discussions) or contact the team on the [Discord server](https://discord.com/invite/8kqACuC).
 
 To start working, [fork the CARLA repository](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/fork-a-repo) and clone your fork. Remember to [keep your fork in sync](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/syncing-a-fork) with the original repository.
 
@@ -46,6 +46,24 @@ A basic introduction to C++ programming with Unreal is in Unreal's [C++ programm
 ### Coding standard
 
 Follow the [coding standard](cont_coding_standard.md) when submitting new code.
+
+### Tests
+
+Every test runs in CI on every pull request, so each one has to earn its compute. A new or modified test must exercise real behaviour and fail when that behaviour breaks. [Running the tests](dev_testing.md) describes where each suite lives.
+
+*   Empty tests, tests without assertions, tests that only check that something imports or spawns without checking a result, and tests that duplicate existing coverage are not accepted. They cost CI time and give no signal.
+*   When modifying an existing test, do not weaken it to make it pass: removing assertions, widening tolerances or skipping it hides the regression it was there to catch. If the expected behaviour really changed, explain why in the pull request.
+*   In the pull request, say what each new or modified test checks and which regression it would catch.
+
+### CI workflows
+
+Do not open a pull request that adds or changes a workflow under `.github/workflows/` without discussing it with the core maintainers team first, on [GitHub Discussions](https://github.com/carla-simulator/carla/discussions) or the [Discord server](https://discord.com/invite/8kqACuC). The proposal explains:
+
+*   What is happening: the problem the workflow addresses.
+*   Why a workflow is needed to solve it.
+*   What the workflow would run, on which triggers, and what it costs in runners and time.
+
+Link that discussion in the pull request. Workflow changes that were not agreed beforehand are not merged.
 
 ### Submission
 
@@ -64,6 +82,8 @@ Before a pull request to `ue58-dev`:
 *   [ ] The code compiles: `cmake --build Build --target carla-client carla-python-api carla-server`.
 *   [ ] The LibCarla unit tests pass ([LibCarla unit tests](dev_testing.md#libcarla-unit-tests)).
 *   [ ] The smoke tests pass against a running server on port 3654 ([Smoke tests](dev_testing.md#smoke-tests)). On Linux: `cd PythonAPI/test && python3 -m nose2 -v $(cat smoke_test_list.txt)`.
+*   [ ] New or modified tests add real value: they assert behaviour and would fail on a regression ([Tests](#tests)).
+*   [ ] Any new or changed CI workflow was agreed with the core maintainers beforehand, and the discussion is linked in the pull request ([CI workflows](#ci-workflows)).
 *   [ ] `CHANGELOG.md` has an entry under `## LATEST Changes` for any user-visible change.
 *   [ ] The documentation was extended, if necessary.
 

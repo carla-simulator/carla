@@ -198,16 +198,12 @@ package)
   CMD=("${P}")
   [ -n "${MAP}" ] && CMD+=("${MAP}")
   CMD+=("${ARGS[@]}")
-  # Measured on this branch, not assumed: a client connects to a packaged server
-  # and get_world(), spawning and navigation all work. Map discovery works too
-  # since AssetRegistry discovery landed (60fd70e44): the registry lists maps
-  # inside a .pak, which the old .umap walk could not.
-  echo "[run] NOTE packaged server behaviour (measured on ue58-dev):"
-  echo "[run]   get_available_maps() lists the cooked maps (asset registry discovery)"
-  echo "[run]   load_world() resolves them, nested included (Twins/<Name>/<Name>)"
-  echo "[run]   get_world/spawn/navigation all work"
-  echo "[run]   an off-thread get_available_maps() still returns [] (registry asserts)"
-  echo "[run]   use 'game' mode when you need map switching or discovery."
+  # Measured 2026-10-26 on ue58-dev: map discovery reads the AssetRegistry
+  # (da94ed2b7), so get_available_maps() lists the cooked maps and load_world()
+  # loads them, Town12 included. The map argument was ignored (booted
+  # Town10HD_Opt); switch with load_world() after connecting.
+  echo "[run] NOTE packaged server: only the cooked maps exist (CARLA_MAPS_TO_COOK)."
+  echo "[run]   the map argument may be ignored; call load_world() after connecting."
   launch "packaged shipping server" "${CMD[@]}"
   ;;
 

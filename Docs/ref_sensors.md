@@ -677,6 +677,8 @@ The ray-traced lens camera renders the scene with Unreal Engine's __path tracer_
 
 The sensor requires hardware ray tracing (an NVIDIA RTX-class GPU under Vulkan); unlike the other cameras it has no rasterized fallback, so `use_ray_tracing` cannot be disabled for it.
 
+__Video memory.__ The path tracer is by far the most memory-hungry sensor in CARLA, and the cost is dominated by the camera rather than by the scene: the first `rt_lens` camera allocates gigabytes of path-tracing and denoiser buffers, which are then pooled and reused, so further cameras are nearly free. Budget for that first one. If it does not fit, the allocation fails inside the renderer and the server dies with a Vulkan `Out Of Memory` fatal error, which the client sees as a time-out. Lower the camera settings, or on a smaller card reduce the ray-tracing and Nanite pool sizes in `Unreal/CarlaUnreal/Config/DefaultEngine.ini`.
+
 __Lens models.__ The `camera_model` attribute selects the radial projection:
 
 | `camera_model` | Projection | `distortion_coeffs` |

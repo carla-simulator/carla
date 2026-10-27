@@ -25,11 +25,11 @@ On a CARLA source checkout that has built the package (or has the package's rele
 
 ```sh
 # five towns the CARLA package does not ship, as one pack
-carla-pack create Towns5 Town01_Opt Town03_Opt Town05_Opt Town12 Town13
+carla-pack create Towns5 Town01_Opt Town03_Opt Town05_Opt Town11 Town13
 # -> Unreal/CarlaUnreal/Plugins/Packs/Towns5/Saved/CarlaPack/out/Towns5-1.0.0-carla-<version>-Linux.tar.gz
 ```
 
-Registering the towns takes a second; the cook takes minutes (about 9 for these five, 3.9 GB). Ship the tarball.
+Registering the towns takes a second; the cook takes minutes (about 9, and 3.9 GB, for five towns of this kind). Ship the tarball.
 
 On any machine with the CARLA package of that release:
 
@@ -40,8 +40,8 @@ carla-pack install Towns5-1.0.0-carla-<version>-Linux.tar.gz --server /opt/carla
 
 ```py
 client = carla.Client('localhost', 2000)
-client.get_available_maps()        # ... 'Town01_Opt', 'Town03_Opt', 'Town05_Opt', 'Town12', 'Town13' ...
-world = client.load_world('Town12')
+client.get_available_maps()        # ... 'Town01_Opt', 'Town03_Opt', 'Town05_Opt', 'Town11', 'Town13' ...
+world = client.load_world('Town13')
 ```
 
 `carla-pack` is `Util/ContentPacks/carla-pack` in the source tree, a wrapper for `carla_pack.py` (Python 3.8+, standard library only). To install a pack you only need that one file: copy `carla_pack.py` next to the package and run `python3 carla_pack.py install ...`.
@@ -63,13 +63,13 @@ world = client.load_world('Town12')
 carla-pack create <Pack> <Map> [<Map> ...] [--base <release-metadata.tar.gz>] [--config Shipping] [--description "..."]
 ```
 
-`create` is `init` + `add --map` for every map + `build` in one go. Maps are given by name (`Town12`), by package path (`/Game/Carla/Maps/Town12/Town12`) or as a `.umap` file. Run it again with more maps to add them to the same pack, passing `--pack-version` again: `create` sets the version, `1.0.0` by default. `create --dry-run` still runs `init` and `add` on the pack sources; only the cook is skipped.
+`create` is `init` + `add --map` for every map + `build` in one go. Maps are given by name (`Town13`), by package path (`/Game/Carla/Maps/Town13/Town13`) or as a `.umap` file. Run it again with more maps to add them to the same pack, passing `--pack-version` again: `create` sets the version, `1.0.0` by default. `create --dry-run` still runs `init` and `add` on the pack sources; only the cook is skipped.
 
 Any map under the project's `Content` (all of CARLA's own towns) is registered __in place__: the manifest names its `/Game/...` package, the cook takes the map and whatever it references that the base release did not cook, and the server loads it from the pack's containers at that same path. Nothing is copied, nothing is opened in the editor, so a World Partition town with hundreds of thousands of actors takes a second to add. Its OpenDRIVE, walker navigation and Traffic Manager files are picked up from where CARLA keeps them (`Maps/OpenDrive/<Map>.xodr` or `Maps/<Map>/OpenDrive/`, `Maps/Nav/<Map>.bin`, `Maps/TM/<Map>.bin` or `Maps/<Map>/TM/`).
 
-Which towns qualify: any map the base package does __not__ ship. The default package ships `Town10HD_Opt`, `Town15`, `Mine_01`, `EmptyMap` and `OpenDriveMap`; `Town01_Opt` … `Town07_Opt`, `Town11`, `Town12`, `Town13` can go in a pack. `build` reads the base asset registry and refuses a map the base already contains.
+Which towns qualify: any map the base package does __not__ ship. The default package ships `Town10HD_Opt`, `Town12`, `Town15`, `EmptyMap` and `OpenDriveMap`; `Town01_Opt` … `Town07_Opt`, `Town11`, `Town13`, `Town_C`, `Mine_01` and `Eixample` can go in a pack. `build` reads the base asset registry and refuses a map the base already contains.
 
-Measured on the Shipping package: `Town12 Town13` cook in 8 minutes to 2.4 GB; the five-town example above in 9 minutes to 3.9 GB.
+Measured on the Shipping package: a pack of two large World Partition towns cooks in 8 minutes to 2.4 GB; one of three classic towns and two large ones, in 9 minutes to 3.9 GB.
 
 ### B. Your own content
 
@@ -78,7 +78,7 @@ carla-pack init NewPack
 # author NewTown, props and vehicles in the CARLA editor, saved under "NewPack Content"
 carla-pack add NewPack --map Unreal/CarlaUnreal/Plugins/Packs/NewPack/Content/Maps/NewTown.umap --xodr NewTown.xodr --nav NewTown.bin
 carla-pack add NewPack --props props.json --vehicles vehicles.json
-carla-pack add NewPack --map Town12                     # existing towns mix in freely
+carla-pack add NewPack --map Town13                     # existing towns mix in freely
 carla-pack build NewPack
 # -> Unreal/CarlaUnreal/Plugins/Packs/NewPack/Saved/CarlaPack/out/NewPack-1.0.0-carla-<version>-Linux.tar.gz
 ```
@@ -141,7 +141,7 @@ carla-pack add NewPack --asset SM_Thing.uasset --dest Static/Static/
     * a __project map__ (under the project's `Content`, i.e. a CARLA town) is registered in place at its `/Game/...` package, exactly as `create` does;
     * a map __already under the pack's `Content`__ is registered under its own path (`/NewPack/Maps/NewTown`);
     * `--import` makes a __copy under the pack root__ instead of registering a project map in place (a map of another plugin has no path in the packaged server, so it is always imported this way): `carla-pack` starts the headless editor (`UnrealEditor-Cmd`, from `CARLA_UNREAL_ENGINE_PATH` or `--engine`) with the pack enabled and performs a Save As of the map to `/NewPack/Maps/<same layout>`, which carries a World Partition map's external actors along; the copy is then yours to edit without touching CARLA's content. Save As also re-saves the source map; `carla-pack` puts the original bytes back and reports any other file the editor touched next to it. Slow for large World Partition towns (Town12, 81k actors: 5 minutes; Town13, 359k actors: over 40 minutes and 30 GB of RAM); `<pack>/Saved/CarlaPack/import-<Map>.log` has the editor output if it fails. `--copy` skips the editor and copies the file as-is, only right for a map whose package name was already rewritten.
-    * Without `--xodr`/`--nav`/`--tm` the sidecars of a map outside the pack are picked up from CARLA's locations (see A); with several `--map`, they are picked up for each outside map. For a map already under the pack's `Content`, omitted flags keep its registered sidecar files. Pass a flag only for the sidecar you want to replace. World Partition maps are detected from their `__ExternalActors__/…/<Map>` folder; `--world-partition` forces the flag.
+    * Without `--xodr`/`--nav`/`--tm` the sidecars of a map outside the pack are picked up from CARLA's locations (see A); with several `--map`, they are picked up for each outside map. For a map already under the pack's `Content`, omitted flags keep its registered sidecar files. Pass a flag only for the sidecar you want to replace, or `--no-xodr`, `--no-nav` or `--no-tm` to unregister one and delete the staged file. World Partition maps are detected from their `__ExternalActors__/…/<Map>` folder; `--world-partition` forces the flag.
 * The catalog options validate the JSON against the shapes below, copy the file to `Content/Config/` under its canonical name and list it in the manifest. Asset paths that are neither under `/NewPack/` nor `/Game/` are reported: they cannot resolve once the pack is mounted.
 * `--asset` copies any file or folder under `Content/<dest>`.
 
@@ -218,7 +218,7 @@ RunUAT.sh BuildCookRun -project=<uproject> -nocompileeditor -nop4 -skipbuild -co
     -clientconfig=Development -TargetPlatform=Linux -Platform=Linux -dlcname=<abs path>/NewPack.uplugin \
     -basedonreleaseversion=<release> -basedonreleaseversionroot=<...>/Releases \
     -stagingdirectory=<work>/Staged -AdditionalCookerOptions=-EnablePlugins=NewPack \
-    -MapsToCook=/Game/Carla/Maps/Town12/Town12+... -DLCIncludeEngineContent
+    -MapsToCook=/Game/Carla/Maps/Town13/Town13+... -DLCIncludeEngineContent
 ```
 
 * Everything under `/NewPack/` is cooked, plus the project maps the manifest ships in place, which go on `-MapsToCook` (`--maps` adds more entries).
@@ -338,7 +338,7 @@ NewPack/
   Content/Config/Vehicles.json                      # data: loose files next to the containers
   Content/Maps/OpenDrive/NewTown.xodr
   Content/Maps/Nav/NewTown.bin
-  Content/Maps/TM/Town12/Town12.bin
+  Content/Maps/TM/Town13/Town13.bin
 ```
 
 The server globs `Content/Paks/<Platform>/*.pak` and the engine finds the `.utoc`/`.ucas` by the `.pak`'s base name, so the three files only have to share it.
@@ -363,8 +363,8 @@ The manifest, `carla-pack.json`, is what CARLA reads when it mounts the pack. Th
   "engine": { "version": "5.8.0", "commit": "abcdef012345" }, "platform": "Linux",
   "maps": [ { "name": "NewTown", "package": "/NewPack/Maps/NewTown",
               "xodr": "Maps/OpenDrive/NewTown.xodr", "nav": "Maps/Nav/NewTown.bin", "world_partition": true },
-            { "name": "Town12", "package": "/Game/Carla/Maps/Town12/Town12",
-              "xodr": "Maps/OpenDrive/Town12.xodr", "tm": "Maps/TM/Town12", "world_partition": true } ],
+            { "name": "Town13", "package": "/Game/Carla/Maps/Town13/Town13",
+              "xodr": "Maps/OpenDrive/Town13.xodr", "tm": "Maps/TM/Town13", "world_partition": true } ],
   "catalogs": [ "Config/NewPack.Package.json", "Config/Vehicles.json" ],
   "files": { "Content/Paks/Linux/NewPackCarlaUnreal-Linux.utoc": "sha256:…", "…": "…" }
 }
@@ -379,7 +379,7 @@ The manifest, `carla-pack.json`, is what CARLA reads when it mounts the pack. Th
 * A pack targets __one base release__: same CARLA package, same engine binary, same cook settings. A new CARLA release means rebuilding the pack (`carla-pack build` again, minutes) — never re-packaging CARLA.
 * Building a pack needs the CARLA source build with the editor. Using a pack needs only the package.
 * Assets a pack references that are __not__ in the base release are cooked into the pack. That is correct, but a pack that references a whole asset library from another pack, or from a map the base did not cook, gets correspondingly large. Two packs never share content with each other.
-* A pack ships whole maps and new actors: CARLA towns the package left out, or maps of your own. Adding actors to a town the base package already ships (Town10, Town15, …) is out of scope for now, and a pack cannot replace a base map.
+* A pack ships whole maps and new actors: CARLA towns the package left out, or maps of your own. Adding actors to a town the base package already ships (Town10HD_Opt, Town12, Town15) is out of scope for now, and a pack cannot replace a base map.
 * Pack names are global on a server: two packs called `NewPack` cannot be mounted at the same time. Two packs shipping the same town in place are not detected (see [What a pack is](#what-a-pack-is)).
 * Updating a pack whose content has been loaded needs a server restart.
 
@@ -413,7 +413,7 @@ The Traffic Manager was handed a cached map (`Maps/TM/<Map>.bin`) that does not 
 
 __How big is a pack?__
 
-Roughly the size of the cooked assets it ships, plus the sidecar files. Measured: `Town12 Town13` 2.4 GB; `Town01_Opt Town03_Opt Town05_Opt Town12 Town13` 3.9 GB; a map with a few hundred unique meshes is typically in the hundreds of MB; a pack that only lists new vehicles built from existing CARLA meshes is a few MB. Everything the pack references from the base release costs nothing. `carla-pack inspect` lists the files with their sizes; most of the size is in the `.ucas` container.
+Roughly the size of the cooked assets it ships, plus the sidecar files. Measured: two large World Partition towns, 2.4 GB; three classic towns and two large ones, 3.9 GB; a map with a few hundred unique meshes is typically in the hundreds of MB; a pack that only lists new vehicles built from existing CARLA meshes is a few MB. Everything the pack references from the base release costs nothing. `carla-pack inspect` lists the files with their sizes; most of the size is in the `.ucas` container.
 
 __Can I mount a pack that is not under `Linux/CarlaUnreal/Packs`?__
 

@@ -23,22 +23,28 @@ else
   fail=1
 fi
 
-if [ -f "${CARLA_ROOT:-}/Docs/audit_carla_docs.md" ]; then
-  say PASS "audit report present (Docs/audit_carla_docs.md)"
+if command -v mkdocs >/dev/null 2>&1; then
+  say PASS "mkdocs: $(mkdocs --version 2>&1 | head -1)"
 else
-  say WARN "no audit report; run the audit-carla-docs skill first, or name the targets yourself"
+  say WARN "mkdocs missing: the docs cannot be built; pip install -r Docs/requirements.txt"
 fi
 
 if "${PYTHON}" -c 'import yaml' >/dev/null 2>&1; then
   say PASS "PyYAML available (doc_gen.py needs it)"
 else
-  say WARN "PyYAML missing: the python-api category cannot regenerate Docs/python_api.md"
+  say WARN "PyYAML missing: Docs/python_api.md cannot be regenerated"
 fi
 
-if [ -f "${CARLA_ROOT:-}/PythonAPI/docs/doc_gen.py" ]; then
-  say PASS "doc_gen.py present"
+if "${PYTHON}" -c 'import PIL, numpy, matplotlib' >/dev/null 2>&1; then
+  say PASS "Pillow, numpy and matplotlib available (image scripts)"
 else
-  say WARN "doc_gen.py missing: the python-api category cannot regenerate Docs/python_api.md"
+  say WARN "Pillow, numpy or matplotlib missing: the image scripts cannot run"
+fi
+
+if command -v google-chrome >/dev/null 2>&1; then
+  say PASS "google-chrome available (diagram previews)"
+else
+  say WARN "google-chrome missing: diagrams render, but without a PNG preview"
 fi
 
 exit "${fail}"

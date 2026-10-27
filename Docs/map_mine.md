@@ -8,7 +8,7 @@ A model of an open-cast mining environment of the kind used for extracting miner
 | | |
 | --- | --- |
 | __Map name__ | `Mine_01` |
-| __In the default package__ | yes |
+| __In the default package__ | no: use a source build, or install it from a [content pack](map_content_packs.md) |
 | __Surface__ | unpaved access roads and an open pit, rather than the asphalt grid of the towns |
 | __Size__ | about 1.2 x 0.7 km of roads, with 160 m of height between the pit floor and the highest point |
 | __Spawn points__ | 34, from `world.get_map().get_spawn_points()` |
