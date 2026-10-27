@@ -384,6 +384,33 @@ class TestAgentLaneAndSignalPolicy(unittest.TestCase):
                 agent = BasicAgent(ego, map_inst=world.native_map)
                 self.assertEqual(agent._affected_by_traffic_light([light], 20)[0], incoming == -1)
 
+    def test_wide_trigger_respects_narrow_same_road_validity(self):
+        """A box covering two stop lanes cannot broaden explicit one-lane validity."""
+        agent, _, _, light = self.signals('side', -2)
+        light._trigger_volume.location.x = -1.75
+        light._trigger_volume.extent.x = 1.95
+        self.assertEqual({point.lane_id for point in light.get_stop_waypoints()}, {-1, -2})
+        self.assertEqual([point.lane_id for point in light.get_affected_lane_waypoints()], [-2])
+        self.assertFalse(agent._affected_by_traffic_light([light], 20)[0])
+
+    def test_wide_junction_trigger_retains_native_lane_link_validity(self):
+        """Only the actual incoming lane linked to a signalled connector is stopped."""
+        for incoming in (-1, -2):
+            with self.subTest(incoming_lane=incoming):
+                world = junction_world(incoming)
+                ego = vehicle(1, world)
+                light = Light(world, 'own', -2)
+                light._trigger_volume.location.x = -1.75
+                light._trigger_volume.extent.x = 1.95
+                world.actors[:] = [ego, light]
+                self.assertEqual({point.lane_id for point in light.get_stop_waypoints()}, {-1, -2})
+                affected = light.get_affected_lane_waypoints()
+                self.assertEqual([(point.road_id, point.lane_id) for point in affected], [(2, -1)])
+                self.assertEqual([(lane.road_id, lane.id)
+                                  for lane in affected[0].get_lane().get_previous_lane()], [(1, incoming)])
+                agent = BasicAgent(ego, map_inst=world.native_map)
+                self.assertEqual(agent._affected_by_traffic_light([light], 20)[0], incoming == -1)
+
     def test_cached_red_is_revalidated_after_a_road_change(self):
         """A prior road's red light cannot keep controlling an actor on another road."""
         agent, world, ego, light = self.signals()

@@ -264,6 +264,36 @@ class BasicAgent(object):
 
         self.set_global_plan(path)
 
+    @staticmethod
+    def _signal_controls_stop_lane(stop_waypoint, affected):
+        """Trace native lane links from mapped signal lanes to an approach stop."""
+        stop_lane = stop_waypoint.get_lane()
+        for target in affected:
+            if target is None:
+                continue
+            pending = [(target.get_lane(), target.junction_id if target.is_junction else None)]
+            visited = set()
+            while pending:
+                lane, junction = pending.pop()
+                identity = (lane.road_id, lane.section_id, lane.id, junction)
+                if identity in visited:
+                    continue
+                visited.add(identity)
+                if lane == stop_lane:
+                    return True
+                for previous in lane.get_previous_lane():
+                    # Stay on the approach road once reached. Before it,
+                    # traverse the signal road and at most one junction.
+                    if previous.road_id == stop_lane.road_id:
+                        pending.append((previous, junction))
+                    elif lane.road_id != stop_lane.road_id:
+                        road = previous.get_road()
+                        if road.id == target.road_id:
+                            pending.append((previous, junction))
+                        elif road.is_junction and (junction is None or road.junction_id == junction):
+                            pending.append((previous, road.junction_id))
+        return False
+
     def _affected_by_traffic_light(self, lights_list=None, max_distance=None):
         """
         Method to check if there is a red light affecting the vehicle.
@@ -323,6 +353,7 @@ class BasicAgent(object):
                 if not any(waypoint is not None
                            and waypoint.road_id == ego_vehicle_waypoint.road_id
                            and waypoint.lane_id == ego_vehicle_waypoint.lane_id
+                           and self._signal_controls_stop_lane(waypoint, affected)
                            for waypoint in stops):
                     continue
 

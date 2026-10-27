@@ -12,7 +12,9 @@
 
 #include "carla/client/Actor.h"
 #include "carla/client/ActorList.h"
+#include "carla/client/Lane.h"
 #include "carla/client/Map.h"
+#include "carla/client/Road.h"
 #include "carla/client/TrafficLight.h"
 #include "carla/client/Vehicle.h"
 #include "carla/client/Waypoint.h"
@@ -33,6 +35,8 @@
 #include <array>
 #include <cmath>
 #include <cstdint>
+#include <set>
+#include <tuple>
 #include <utility>
 
 namespace carla {
@@ -54,6 +58,49 @@ inline bool LaneChangeAllows(LaneChange lc, bool want_left) {
     return lc == LaneChange::Left || lc == LaneChange::Both;
   }
   return lc == LaneChange::Right || lc == LaneChange::Both;
+}
+
+bool SignalControlsStopLane(
+    const SharedPtr<client::Waypoint> &stop,
+    const std::vector<SharedPtr<client::Waypoint>> &affected) {
+  const auto stop_lane = stop->GetLane();
+  for (const auto &target : affected) {
+    if (!target) {
+      continue;
+    }
+    using LaneState = std::pair<SharedPtr<client::Lane>, road::JuncId>;
+    std::vector<LaneState> pending{{target->GetLane(), target->IsJunction() ? target->GetJunctionId() : -1}};
+    std::set<std::tuple<road::RoadId, road::SectionId, road::LaneId, road::JuncId>> visited;
+    while (!pending.empty()) {
+      const auto state = pending.back();
+      pending.pop_back();
+      const auto &lane = state.first;
+      const auto junction = state.second;
+      const auto identity = std::make_tuple(lane->GetRoadId(), lane->GetSectionId(), lane->GetId(), junction);
+      if (!visited.insert(identity).second) {
+        continue;
+      }
+      if (*lane == *stop_lane) {
+        return true;
+      }
+      for (const auto &previous : lane->GetPreviousLanes()) {
+        // Stay on the approach road once reached. Before it, traverse the
+        // signal road and at most one junction.
+        if (previous->GetRoadId() == stop_lane->GetRoadId()) {
+          pending.emplace_back(previous, junction);
+        } else if (lane->GetRoadId() != stop_lane->GetRoadId()) {
+          const auto previous_road = previous->GetRoad();
+          if (previous_road->GetId() == target->GetRoadId()) {
+            pending.emplace_back(previous, junction);
+          } else if (previous_road->IsJunction() &&
+                     (junction == -1 || previous_road->GetJunctionId() == junction)) {
+            pending.emplace_back(previous, previous_road->GetJunctionId());
+          }
+        }
+      }
+    }
+  }
+  return false;
 }
 
 } // namespace
@@ -321,7 +368,7 @@ BasicAgent::AffectedByTrafficLight(SharedPtr<client::ActorList> lights_list,
       const auto stops = traffic_light->GetStopWaypoints();
       if (!std::any_of(stops.begin(), stops.end(), [&](const auto &waypoint) {
             return waypoint && waypoint->GetRoadId() == ego_wpt->GetRoadId() &&
-                waypoint->GetLaneId() == ego_wpt->GetLaneId();
+                waypoint->GetLaneId() == ego_wpt->GetLaneId() && SignalControlsStopLane(waypoint, affected);
           })) {
         continue;
       }
