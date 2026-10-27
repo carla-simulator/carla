@@ -146,6 +146,12 @@ include_directories (
 
 
 
+# ==== PYTHON ====
+if (BUILD_PYTHON_API)
+  include ("${CARLA_WORKSPACE_PATH}/CMake/Python.cmake")
+  carla_select_python ()
+endif ()
+
 # ==== BOOST ====
 set (
   BOOST_INCLUDED_PROJECTS

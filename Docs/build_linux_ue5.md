@@ -77,7 +77,7 @@ cmake -G Ninja -S . -B Build --toolchain=$PWD/CMake/Toolchain.cmake -DCMAKE_BUIL
 ```
 
 !!! Note
-    If you intend to target a specific Python installation, you should add both these arguments to the above cmake command: `-DPython_ROOT_DIR=PATH` and `-DPython3_ROOT_DIR=PATH`.
+    To select a specific Python installation, add `-DPython3_EXECUTABLE=PATH_TO_PYTHON` to the CMake command. `Python_EXECUTABLE` remains a compatible alias; `Python3_ROOT_DIR` and `Python_ROOT_DIR` can also select an installation directory. CMake uses the selected interpreter for both Boost.Python and the Python API. If both executable hints are supplied, they must select compatible Python ABIs.
 
 The command line options are as follows:
 

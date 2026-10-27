@@ -1,5 +1,8 @@
 ## LATEST Changes
 
+- Fixed Python build selection so Boost.Python and the Python API use the same requested interpreter, including executable and root-directory hints. Incompatible explicit interpreter hints now fail clearly.
+
+
 ### New features
 
 #### Simulator

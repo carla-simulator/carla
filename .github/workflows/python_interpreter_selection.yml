@@ -1,0 +1,75 @@
+name: Python interpreter selection
+
+on:
+  pull_request:
+    branches: [ue58-dev]
+    paths:
+      - CMake/Dependencies.cmake
+      - CMake/Python.cmake
+      - PythonAPI/CMakeLists.txt
+      - PythonAPI/test/unit/test_python_interpreter_selection.py
+      - .github/workflows/python_interpreter_selection.yml
+  push:
+    paths:
+      - CMake/Dependencies.cmake
+      - CMake/Python.cmake
+      - PythonAPI/CMakeLists.txt
+      - PythonAPI/test/unit/test_python_interpreter_selection.py
+      - .github/workflows/python_interpreter_selection.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  selection:
+    strategy:
+      matrix:
+        os: [ubuntu-24.04, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    defaults:
+      run:
+        shell: pwsh
+    env:
+      PYTHONUTF8: '1'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7
+        with:
+          python-version: '3.13'
+      - name: Record the second real interpreter
+        run: |
+          $otherPython = (& python -c "import sys; print(sys.executable)").Trim()
+          "CARLA_TEST_OTHER_PYTHON=$otherPython" >> $env:GITHUB_ENV
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7
+        with:
+          python-version: '3.12'
+      - name: Install configure prerequisites for both interpreters
+        run: |
+          $PSNativeCommandUseErrorActionPreference = $true
+          python -m pip install cmake ninja numpy
+          & $env:CARLA_TEST_OTHER_PYTHON -m pip install numpy
+      - name: Activate the Windows compiler
+        if: runner.os == 'Windows'
+        run: |
+          $PSNativeCommandUseErrorActionPreference = $true
+          $vswhere = Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio/Installer/vswhere.exe'
+          $installation = (& $vswhere -latest -products '*' -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath).Trim()
+          $command = 'call "' + $installation + '\Common7\Tools\VsDevCmd.bat" -arch=x64 -host_arch=x64 >nul && set'
+          & $env:ComSpec /d /c $command | ForEach-Object {
+            if ($_ -match '^(PATH|INCLUDE|LIB|LIBPATH)=(.*)$') {
+              "$($matches[1])=$($matches[2])" >> $env:GITHUB_ENV
+            }
+          }
+      - name: Get the actual Boost 1.90 Python CMake sources
+        run: |
+          $PSNativeCommandUseErrorActionPreference = $true
+          $boostSource = Join-Path $env:RUNNER_TEMP 'carla-boost-python'
+          git init $boostSource
+          git -C $boostSource fetch --depth 1 https://github.com/boostorg/python.git 97402f7925648ef433d0f1f979b9b422936dac31
+          git -C $boostSource checkout --detach FETCH_HEAD
+          "CARLA_TEST_BOOST_PYTHON_SOURCE=$boostSource" >> $env:GITHUB_ENV
+      - name: Configure the real Boost and CARLA discovery boundary
+        run: |
+          python -m unittest discover -s PythonAPI/test/unit -p test_python_interpreter_selection.py -v

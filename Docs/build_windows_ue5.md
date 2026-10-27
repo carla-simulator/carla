@@ -52,7 +52,7 @@ The command line options are as follows:
 * **S** - source path for CARLA repository
 * **B** - directory where the build goes
 
-If you passed `--python-root` to `CarlaSetup.bat`, add both `-DPython_ROOT_DIR=PATH` and `-DPython3_ROOT_DIR=PATH` to the above cmake command.
+To select a specific Python installation, add `-DPython3_EXECUTABLE=PATH_TO_PYTHON` to the CMake command. `Python_EXECUTABLE` remains a compatible alias; `Python3_ROOT_DIR` and `Python_ROOT_DIR` can also select an installation directory. CMake uses the selected interpreter for both Boost.Python and the Python API. If both executable hints are supplied, they must select compatible Python ABIs.
 
 Configuring needs the NVIDIA DLSS SDK. CMake takes it from `-DCARLA_DLSS_SDK_PATH=<dir>` or the `DLSS_SDK` environment variable, otherwise from `%USERPROFILE%\SDKs\DLSS`, and clones it there from NVIDIA if it is missing. To build without DLSS, add `-DCARLA_DLSS_SDK_PATH=disabled`.
 
