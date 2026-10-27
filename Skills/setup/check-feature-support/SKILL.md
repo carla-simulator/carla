@@ -60,7 +60,7 @@ and warns on the two skews that cause wasted debugging:
   is why one API was briefly reported as removed when it had only moved class.
 
 Note what `version` deliberately does **not** claim: that matching versions mean
-matching behaviour. `ENABLE_ROS2`, `ENABLE_RSS` and `ENABLE_OSM2ODR` are
+matching behaviour. `ENABLE_ROS2` and `ENABLE_RSS` are
 compile-time, and the map-layer breakage is a property of the *content* branch —
 two servers reporting `0.10.0` can differ completely. Use `matrix` for behaviour;
 use `version` to establish that your measurements are even about the right
@@ -97,7 +97,6 @@ is the only honest source:
 
 - `ENABLE_RSS` — `sensor.other.rss` appears in the blueprint library either way,
   and cannot function without it. On the tree measured here it is **OFF**.
-- `ENABLE_OSM2ODR` — the OSM→OpenDRIVE half of digital twins. **OFF** here.
 - `ENABLE_ROS2` — no native ROS 2 interface at all without it, and it cannot be
   switched on at runtime ([[run-autoware-ue58]], [[build-carla-ue58]]).
 

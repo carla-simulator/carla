@@ -105,7 +105,7 @@ if carla_ue58_configured; then
   # Every -D option must be repeated on each re-configure, so the cache is the
   # only honest answer to "was this built with ROS 2 / DLSS / which maps".
   for opt in CMAKE_BUILD_TYPE ENABLE_ROS2 CARLA_UNREAL_RHI CARLA_UNREAL_PACKAGE_BUILD_TYPE \
-             ENABLE_RSS ENABLE_OSM2ODR CARLA_DLSS_SDK_PATH; do
+             ENABLE_RSS CARLA_DLSS_SDK_PATH; do
     v="$(carla_ue58_cmake_opt "${opt}")"
     [ -n "${v}" ] && ok "  ${opt} = ${v}"
   done

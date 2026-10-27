@@ -64,12 +64,6 @@ carla_option (
 )
 
 carla_option (
-  ENABLE_OSM2ODR
-  "Enable OSM2ODR."
-  OFF
-)
-
-carla_option (
   ENABLE_RSS
   "Enable RSS components (ad-rss-lib)"
   OFF
