@@ -49,7 +49,8 @@ class TestLinuxNavBuild(unittest.TestCase):
     def run_build(self):
         return subprocess.run(["/bin/bash", str(SHELL), "Map", "Roads"],
                               cwd=self.folder, env=self.environment,
-                              capture_output=True, text=True, timeout=10)
+                              capture_output=True, text=True, timeout=10,
+                              check=False)
 
     def crosswalk_helper(self, failure=None):
         self.write("Roads.xodr", "unused XML boundary fixture")
