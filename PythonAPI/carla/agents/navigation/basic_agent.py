@@ -343,7 +343,8 @@ class BasicAgent(object):
                 continue
 
             affected = traffic_light.get_affected_lane_waypoints()
-            mapped = bool(affected) or bool(self._map.get_all_landmarks_from_id(traffic_light.get_opendrive_id()))
+            mapped = bool(affected) or bool(
+                self._map.get_all_landmarks_from_id(traffic_light.get_opendrive_id()))
             if mapped:
                 if not affected:
                     continue

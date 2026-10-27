@@ -368,7 +368,8 @@ BasicAgent::AffectedByTrafficLight(SharedPtr<client::ActorList> lights_list,
       const auto stops = traffic_light->GetStopWaypoints();
       if (!std::any_of(stops.begin(), stops.end(), [&](const auto &waypoint) {
             return waypoint && waypoint->GetRoadId() == ego_wpt->GetRoadId() &&
-                waypoint->GetLaneId() == ego_wpt->GetLaneId() && SignalControlsStopLane(waypoint, affected);
+                waypoint->GetLaneId() == ego_wpt->GetLaneId() &&
+                SignalControlsStopLane(waypoint, affected);
           })) {
         continue;
       }
@@ -412,7 +413,9 @@ BasicAgent::VehicleObstacle BasicAgent::VehicleObstacleDetected(
   auto ego_wpt = _map->GetWaypoint(ego_location);
 
   const auto lane_with_offset = [lane_offset](const auto &waypoint) {
-    if (lane_offset == 0) return waypoint->GetLaneId();
+    if (lane_offset == 0) {
+      return waypoint->GetLaneId();
+    }
     const auto delta = (waypoint->GetLaneId() > 0) == waypoint->IsRHT() ? lane_offset : -lane_offset;
     return waypoint->GetLaneId() + delta;
   };
@@ -474,7 +477,9 @@ BasicAgent::VehicleObstacle BasicAgent::VehicleObstacleDetected(
 
   for (auto actor : *vehicle_list) {
     if (!actor) continue;
-    if (_ignore_vehicles && actor->GetTypeId().compare(0, 8, "vehicle.") == 0) continue;
+    if (_ignore_vehicles && actor->GetTypeId().compare(0, 8, "vehicle.") == 0) {
+      continue;
+    }
     if (actor->GetId() == _vehicle->GetId()) {
       continue;
     }
