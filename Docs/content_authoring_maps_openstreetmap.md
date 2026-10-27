@@ -74,9 +74,9 @@ with open('path/to/output/file', 'w', encoding='utf-8') as f:
 ---
 ### Signals
 
-The converter signs junctions from the road network, not from OSM tags. Where approaches meet at different highway classes the major road gets a priority plate (OpenDRIVE type `306`) and the rest give way (`205`); where every approach is the same class the junction is uncontrolled and all of them give way. A 740 x 550 m extract of a Spanish town produces 140 signals this way.
+The converter signs from two sources. From OSM tags it takes the nodes tagged `highway=stop` (OpenDRIVE type `206`), `highway=give_way` (`205`) and `highway=crossing`, and a speed limit plate (`274`, the km/h value as its subtype) at the start of every way carrying `maxspeed`. It then signs the junctions no light controls from the road network itself: where approaches meet at different highway classes the major road gets a priority plate (`306`) and the rest give way (`205`); where every approach is the same class the junction is uncontrolled and all of them give way. A 740 x 550 m extract of a Spanish town produces 140 signals this way.
 
-To put a traffic light on every junction approach instead, which replaces the give-way signing:
+`generate_traffic_lights` turns the nodes OSM tags `highway=traffic_signals` into traffic lights (type `1000001`). To put a light on every junction approach instead, whether or not OSM says so, which replaces the give-way signing:
 
 ```py
 settings = carla.Osm2OdrSettings()
@@ -87,7 +87,7 @@ xodr_data = carla.Osm2Odr.convert(osm_data, settings)
 The same extract then yields 146 signals, all of type `1000001`.
 
 !!! Note
-    `generate_traffic_lights`, `set_osm_way_types()` and `set_traffic_light_excluded_way_types()` are accepted for compatibility but have no effect: the converter reads no traffic light tags and uses its own set of drivable highway classes. It logs a warning when you set them. See [What the converter does](#what-the-converter-does).
+    `set_osm_way_types()` and `set_traffic_light_excluded_way_types()` are accepted for compatibility but have no effect: the converter uses its own set of drivable highway classes and excludes no road from traffic light generation. It logs a warning when you set them. See [What the converter does](#what-the-converter-does).
 
 ---
 ## Ingest into CARLA
@@ -177,9 +177,10 @@ These settings take effect:
 | `default_lane_width` | overrides the width of every driving lane |
 | `default_sidewalk_width` | overrides the width of every sidewalk lane |
 | `use_offsets`, `offset_x`, `offset_y` | translates the whole network |
-| `all_junctions_with_traffic_lights` | a traffic light on every junction approach |
+| `generate_traffic_lights` | a traffic light at every node OSM tags `highway=traffic_signals` |
+| `all_junctions_with_traffic_lights` | a traffic light on every junction approach, whatever OSM says |
 
-These are accepted but have no effect, and log a warning: `generate_traffic_lights`, `set_osm_way_types()`, `set_traffic_light_excluded_way_types()`.
+These are accepted but have no effect: `set_osm_way_types()` and `set_traffic_light_excluded_way_types()`, which log a warning, and `elevation_layer_height`, which does not. The converter has no layer elevation pass, so a way tagged `layer` stays at the grade of what it crosses.
 
 For a complete map with buildings, terrain and street furniture rather than a road network alone, use the Digital Twins command line pipeline described in [Generate maps with Digital Twins](content_authoring_maps_digital_twin.md).
 
