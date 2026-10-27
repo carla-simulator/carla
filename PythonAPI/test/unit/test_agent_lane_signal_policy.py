@@ -37,7 +37,8 @@ class Vehicle:
     """Actor RPC boundary; all transforms, velocities and boxes are native values."""
     type_id = 'vehicle.test'
 
-    def __init__(self, actor_id, world, longitudinal, speed, offset=0.0, extent=(1, .5, .5)):
+    def __init__(self, actor_id, world, longitudinal, speed, offset=0.0,
+                 extent=(1, .5, .5), lane_id=-1):
         # The inert actor boundary exposes independent geometry and
         # velocity inputs.
         # pylint: disable=too-many-arguments,too-many-positional-arguments
@@ -45,7 +46,7 @@ class Vehicle:
         self.current_control = carla.VehicleControl()
         self.id = actor_id
         self.world = world
-        self.transform = world.native_map.get_waypoint_xodr(1, -1, longitudinal).transform
+        self.transform = world.native_map.get_waypoint_xodr(1, lane_id, longitudinal).transform
         self.transform.location.y += offset
         self.velocity = carla.Vector3D(speed, 0, 0)
         if speed < 0:
@@ -152,9 +153,7 @@ class PolicyWorld(World):
 
 def vehicle(identifier, world, lane_id=-1, station=10, extent=(1, .5, .5)):
     """Locate an inert RPC actor using an actual native lane transform."""
-    result = Vehicle(identifier, world, station, 0., extent=extent)
-    result.transform = world.native_map.get_waypoint_xodr(1, lane_id, station).transform
-    return result
+    return Vehicle(identifier, world, station, 0., extent=extent, lane_id=lane_id)
 
 
 def make_plan(agent, world):
@@ -168,6 +167,7 @@ class Light:
     type_id = 'traffic.traffic_light'
 
     def __init__(self, world, identifier, lane_id):
+        self.identifier = identifier
         self.id = {'side': 101, 'own': 102, 'multi': 103, 'unmapped': 104}[identifier]
         self.state = carla.TrafficLightState.Red
         self.transform = world.native_map.get_waypoint_xodr(1, lane_id, 13).transform
@@ -178,6 +178,10 @@ class Light:
     def get_transform(self):
         """Return value copies, matching the actual Actor binding."""
         return carla.Transform(self.transform.location, self.transform.rotation)
+
+    def get_opendrive_id(self):
+        """Return the same map signal identifier exposed by TrafficSign."""
+        return self.identifier
 
     def get_affected_lane_waypoints(self):
         """Remote metadata boundary following TrafficSign's documented lane ranges."""
@@ -321,6 +325,40 @@ class TestAgentLaneAndSignalPolicy(unittest.TestCase):
         agent, _, _, light = self.signals('unmapped', -1)
         self.assertEqual(light.get_affected_lane_waypoints(), [])
         self.assertTrue(agent._affected_by_traffic_light([light], 20)[0])
+
+    def test_mapped_one_way_signals_respect_default_applicability(self):
+        """Mapped opposed signals with zero affected lanes are not unmapped fallbacks."""
+        for rule in ('RHT', 'LHT'):
+            for lane_id in (-1, 1):
+                for orientation in ('+', '-'):
+                    with self.subTest(rule=rule, lane_id=lane_id, orientation=orientation):
+                        world = World()
+                        side = 'left' if lane_id > 0 else 'right'
+                        xml = ('<OpenDRIVE><header revMajor="1" revMinor="4"><geoReference>'
+                               '+proj=tmerc +lat_0=0 +lon_0=0 +k=1 +x_0=0 +y_0=0 +datum=WGS84 +units=m'
+                               '</geoReference></header>'
+                               f'<road id="1" length="100" junction="-1" rule="{rule}">'
+                               '<planView><geometry s="0" x="0" y="0" hdg="0" length="100">'
+                               '<arc curvature="0.01"/></geometry></planView><lanes><laneSection s="0">'
+                               f'<center><lane id="0" type="none"/></center><{side}>'
+                               f'<lane id="{lane_id}" type="driving">'
+                               '<width sOffset="0" a="3.5" b="0" c="0" d="0"/></lane>'
+                               f'</{side}></laneSection></lanes><signals>'
+                               '<signal s="13" t="0" id="own" name="default" dynamic="yes" '
+                               f'orientation="{orientation}" zOffset="3" country="DEU" '
+                               'type="1000001" subtype="-1" value="-1"/>'
+                               '</signals></road></OpenDRIVE>')
+                        world.native_map = carla.Map('default-policy-signal', xml)
+                        reference = world.native_map.get_waypoint_xodr(1, lane_id, 13)
+                        positive = reference.get_lane().is_positive_direction
+                        ego = vehicle(1, world, lane_id, 10 if positive else 16)
+                        light = Light(world, 'own', lane_id)
+                        world.actors[:] = [ego, light]
+                        agent = BasicAgent(ego, map_inst=world.native_map)
+                        expected = positive == (orientation == '+')
+                        self.assertEqual(len(light.landmarks), 1)
+                        self.assertEqual(bool(light.get_affected_lane_waypoints()), expected)
+                        self.assertEqual(agent._affected_by_traffic_light([light], 20)[0], expected)
 
 
 if __name__ == '__main__':

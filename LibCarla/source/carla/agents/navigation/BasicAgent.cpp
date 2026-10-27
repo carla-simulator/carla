@@ -310,7 +310,9 @@ BasicAgent::AffectedByTrafficLight(SharedPtr<client::ActorList> lights_list,
     }
 
     const auto affected = traffic_light->GetAffectedLaneWaypoints();
-    if (!affected.empty() && !std::any_of(affected.begin(), affected.end(), [&](const auto &waypoint) {
+    const bool mapped = !affected.empty() ||
+        !_map->GetLandmarksFromId(traffic_light->GetOpenDRIVEID()).empty();
+    if (mapped && !std::any_of(affected.begin(), affected.end(), [&](const auto &waypoint) {
           return waypoint && waypoint->GetRoadId() == ego_wpt->GetRoadId() &&
               waypoint->GetLaneId() == ego_wpt->GetLaneId();
         })) {
