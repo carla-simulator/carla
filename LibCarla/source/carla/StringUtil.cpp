@@ -44,7 +44,10 @@ namespace {
     if (token == '?') {
       return true;
     }
-    if (token == '\\' && *pattern != '\0') {
+    if (token == '\\') {
+      if (*pattern == '\0') {
+        return false;
+      }
       return value == static_cast<unsigned char>(*pattern++);
     }
     if (token != '[') {

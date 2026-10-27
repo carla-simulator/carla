@@ -123,3 +123,10 @@ TEST(wildcard_matching, ordinary_literals_and_star_controls) {
       {"vehicle.car", "vehicle.*", true}, {"vehicle.truck", "vehicle.c*", false},
       {"car", "*", true}, {"car", "c*r", true}}});
 }
+
+TEST(wildcard_matching, dangling_escape_does_not_match) {
+  CheckMatches(std::array<MatchCase, 5>{{
+      {R"(\)", R"(\)", false}, {R"(a\)", R"(a\)", false},
+      {R"(abc\)", R"(*\)", false}, {"", R"(\)", false},
+      {R"(\)", R"(\\)", true}}});
+}
