@@ -6,10 +6,14 @@
 
 #include <PythonAPI.h>
 
+#include <carla/Exception.h>
 #include <carla/geom/GeoProjectionsParams.h>
 #include <carla/client/Lane.h>
 #include <carla/client/LaneSection.h>
 #include <carla/client/Road.h>
+
+#include <fstream>
+#include <stdexcept>
 
 #ifdef _MSC_VER
 #pragma warning(push)
@@ -52,7 +56,14 @@ static void SaveOpenDriveToDisk(const carla::client::Map &self, std::string path
   }
   carla::FileSystem::ValidateFilePath(path, ".xodr");
   std::ofstream out(path);
+  if (!out) {
+    carla::throw_exception(std::runtime_error("unable to open OpenDRIVE output: " + path));
+  }
   out << self.GetOpenDrive() << std::endl;
+  out.close();
+  if (!out) {
+    carla::throw_exception(std::runtime_error("unable to write OpenDRIVE output: " + path));
+  }
 }
 
 static auto GetTopology(const carla::client::Map &self) {

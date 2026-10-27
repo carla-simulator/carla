@@ -2233,6 +2233,7 @@ Converts geographic coordinates into simulation coordinates.
 Saves the .xodr OpenDRIVE file of the current map to disk.  
     - **Parameters:**
         - `path` - Path where the file will be saved.  
+    - **Raises:** RuntimeError if the output file cannot be opened or written.  
 - <a name="carla.Map.to_opendrive"></a>**<font color="#7fb800">to_opendrive</font>**(<font color="#00a6ed">**self**</font>)  
 Returns the .xodr OpenDRIVe file of the current map as string.  
     - **Return:** _str_  

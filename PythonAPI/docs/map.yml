@@ -194,6 +194,7 @@
           Path where the file will be saved.
       doc: >
         Saves the .xodr OpenDRIVE file of the current map to disk.
+      raises: RuntimeError if the output file cannot be opened or written.
     # --------------------------------------
     - def_name: to_opendrive
       doc: >
