@@ -8,6 +8,8 @@ project (
     "Open-source simulator for autonomous driving research."
 )
 
+include (${CMAKE_CURRENT_SOURCE_DIR}/Package/GenerateCookedMapStaging.cmake)
+
 carla_option (
   ENABLE_DIRECTORY_CLEAN
   "Enable ADDITIONAL_CLEAN_FILES on directory level"
@@ -454,6 +456,14 @@ function (
     list (APPEND CARLA_PACKAGE_EXTRA_UAT_ARGS "-MapsToCook=${CARLA_MAPS_TO_COOK}")
     carla_message ("package(${PACKAGE_CONFIGURATION}): cooking only ${CARLA_MAPS_TO_COOK}")
   endif ()
+
+  # The cooked maps' OpenDRIVE/TM/Nav files are not assets and ship only when
+  # their directory is staged, so derive those entries from the cook scope.
+  carla_generate_cooked_map_staging (
+    "${CARLA_MAPS_TO_COOK}"
+    "${CARLA_UE_PATH}"
+    "${UE_SYSTEM_NAME}"
+  )
 
   # Zen must outlive the cook (stage reads the cooked oplog back) and must not be
   # spawned under the build. Start it first: package.sh, or zenserver --port 8558.
