@@ -9,6 +9,7 @@
 #include "carla/FileSystem.h"
 
 #include <fstream>
+#include <filesystem>
 #include <iterator>
 #include <iomanip>
 
@@ -30,7 +31,7 @@ namespace pointcloud {
     template <typename PointIt>
     static std::string SaveToDisk(std::string path, PointIt begin, PointIt end) {
       FileSystem::ValidateFilePath(path, ".ply");
-      std::ofstream out(path);
+      std::ofstream out(std::filesystem::u8path(path));
       Dump(out, begin, end);
       return path;
     }

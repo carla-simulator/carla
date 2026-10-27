@@ -17,7 +17,7 @@ namespace carla {
   class FileSystem {
   public:
 
-    /// Convenient function to validate a path before creating a file.
+    /// Convenient function to validate a UTF-8 path before creating a file.
     ///
     /// 1)  Ensures all the parent directories are created if missing.
     /// 2)  If @a filepath is missing the extension, @a default_extension is

@@ -1,5 +1,7 @@
 ## LATEST Changes
 
+- Preserve Unicode sensor output paths on Windows when creating image/point-cloud files and reading images through the UTF-8 API.
+
 ### New features
 
 #### Simulator

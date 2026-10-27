@@ -16,13 +16,14 @@ namespace carla {
   namespace fs = std::filesystem;
 
   void FileSystem::ValidateFilePath(std::string &filepath, const std::string &ext) {
-    fs::path path(filepath);
+    fs::path path = fs::u8path(filepath);
     if (!ext.empty() && path.extension() != ext)
       path.replace_extension(ext);
     auto parent = fs::absolute(path.parent_path());
     if (!fs::exists(parent))
       fs::create_directories(parent);
-    filepath = path.string();
+    const auto encoded = path.u8string();
+    filepath.assign(encoded.begin(), encoded.end());
   }
 
   std::vector<std::string> FileSystem::ListFolder(

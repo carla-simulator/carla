@@ -7,9 +7,14 @@
 #pragma once
 
 #include "carla/FileSystem.h"
+#include "carla/Exception.h"
 #include "carla/Logging.h"
 #include "carla/StringUtil.h"
 #include "carla/image/BoostGil.h"
+
+#include <filesystem>
+#include <fstream>
+#include <stdexcept>
 
 #ifndef LIBCARLA_IMAGE_SUPPORT_PNG
   #define LIBCARLA_IMAGE_SUPPORT_PNG false
@@ -208,7 +213,11 @@ namespace detail {
     template <typename IO, typename Str, typename... Args>
     static typename std::enable_if<IO::is_supported>::type read_image(const Str &path, Args &&... args) {
       log_debug("reading", path, "as", IO::get_default_extension());
-      IO::read_image(path, std::forward<Args>(args)...);
+      std::ifstream input(std::filesystem::u8path(path), std::ios::binary);
+      if (!input) {
+        throw_exception(std::runtime_error("Failed to open image input: " + path));
+      }
+      IO::read_image(input, std::forward<Args>(args)...);
     }
 
     template <typename IO, typename... Args>
@@ -220,7 +229,15 @@ namespace detail {
     static typename std::enable_if<IO::is_supported>::type write_view(std::string &path, Args &&... args) {
       FileSystem::ValidateFilePath(path, IO::get_default_extension());
       log_debug("writing", path, "as", IO::get_default_extension());
-      IO::write_view(path, std::forward<Args>(args)...);
+      std::ofstream output(std::filesystem::u8path(path), std::ios::binary);
+      if (!output) {
+        throw_exception(std::runtime_error("Failed to open image output: " + path));
+      }
+      IO::write_view(output, std::forward<Args>(args)...);
+      output.close();
+      if (!output) {
+        throw_exception(std::runtime_error("Failed to write image output: " + path));
+      }
     }
 
     template <typename IO, typename... Args>
