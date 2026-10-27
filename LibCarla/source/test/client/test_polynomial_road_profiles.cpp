@@ -41,7 +41,7 @@ TEST(polynomial_road_profiles, shifted_lane_width_is_preserved_by_real_parser) {
   const auto map = ShiftedProfileMap(false);
   ASSERT_TRUE(map.has_value());
   for (double s : {900000.1, 900002., 900005.}) {
-    const auto waypoint = map->GetWaypoint(1u, -1, s);
+    const auto waypoint = map->GetWaypoint(1u, -1, static_cast<float>(s));
     ASSERT_TRUE(waypoint.has_value());
     // GetWaypoint accepts float s; compare the returned station, including its
     // existing float conversion, rather than the original double request.
@@ -54,7 +54,7 @@ TEST(polynomial_road_profiles, shifted_elevation_is_preserved_by_real_parser) {
   const auto map = ShiftedProfileMap(true);
   ASSERT_TRUE(map.has_value());
   for (double s : {900000.1, 900002., 900005.}) {
-    const auto waypoint = map->GetWaypoint(1u, -1, s);
+    const auto waypoint = map->GetWaypoint(1u, -1, static_cast<float>(s));
     ASSERT_TRUE(waypoint.has_value());
     EXPECT_NEAR(map->ComputeTransform(*waypoint).location.z, LocalValue(waypoint->s), 1e-5);
     EXPECT_DOUBLE_EQ(map->GetLaneWidth(*waypoint), 3.5);
