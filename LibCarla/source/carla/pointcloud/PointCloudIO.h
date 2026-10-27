@@ -7,10 +7,13 @@
 #pragma once
 
 #include "carla/FileSystem.h"
+#include "carla/Exception.h"
 
 #include <fstream>
 #include <iterator>
 #include <iomanip>
+#include <stdexcept>
+#include <type_traits>
 
 namespace carla {
 namespace pointcloud {
@@ -31,7 +34,14 @@ namespace pointcloud {
     static std::string SaveToDisk(std::string path, PointIt begin, PointIt end) {
       FileSystem::ValidateFilePath(path, ".ply");
       std::ofstream out(path);
+      if (!out) {
+        throw_exception(std::runtime_error("Failed to open point cloud output: " + path));
+      }
       Dump(out, begin, end);
+      out.close();
+      if (!out) {
+        throw_exception(std::runtime_error("Failed to write point cloud output: " + path));
+      }
       return path;
     }
 
@@ -41,7 +51,18 @@ namespace pointcloud {
       out << "ply\n"
            "format ascii 1.0\n"
            "element vertex " << std::to_string(static_cast<size_t>(std::distance(begin, end))) << "\n";
-      begin->WritePlyHeaderInfo(out);
+      using Detection = typename std::iterator_traits<PointIt>::value_type;
+      if constexpr (requires { Detection::WritePlyHeaderInfo(out); }) {
+        Detection::WritePlyHeaderInfo(out);
+      } else if (begin != end) {
+        // Retain support for custom point types with instance header methods.
+        begin->WritePlyHeaderInfo(out);
+      } else if constexpr (std::is_default_constructible_v<Detection>) {
+        Detection{}.WritePlyHeaderInfo(out);
+      } else {
+        throw_exception(std::invalid_argument(
+            "An empty point cloud requires an instance-independent PLY schema"));
+      }
       out << "\nend_header\n";
       out << std::fixed << std::setprecision(4u);
     }

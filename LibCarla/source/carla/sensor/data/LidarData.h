@@ -63,7 +63,7 @@ namespace data {
       LidarDetection(geom::Location p, float intensity) :
           point(p), intensity{intensity} { }
 
-      void WritePlyHeaderInfo(std::ostream& out) const{
+      static void WritePlyHeaderInfo(std::ostream& out) {
         out << "property float32 x\n" \
           "property float32 y\n" \
           "property float32 z\n" \

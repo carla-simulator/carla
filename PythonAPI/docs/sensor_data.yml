@@ -289,8 +289,10 @@
       params:
       - param_name: path
         type: str
+      return: str
+      raises: RuntimeError if the output cannot be opened or fully written.
       doc: >
-        Saves the point cloud to disk as a <b>.ply</b> file describing data from 3D scanners. The files generated are ready to be used within [MeshLab](http://www.meshlab.net/), an open source system for processing said files. Just take into account that axis may differ from Unreal Engine and so, need to be reallocated.
+        Saves the point cloud to disk as a <b>.ply</b> file describing data from 3D scanners. The files generated are ready to be used within [MeshLab](http://www.meshlab.net/), an open source system for processing said files. Just take into account that axis may differ from Unreal Engine and so, need to be reallocated. Empty measurements produce a valid PLY header with zero vertices.
     # --------------------------------------
     - def_name: get_point_count
       params:
@@ -370,8 +372,10 @@
       params:
       - param_name: path
         type: str
+      return: str
+      raises: RuntimeError if the output cannot be opened or fully written.
       doc: >
-        Saves the point cloud to disk as a <b>.ply</b> file describing data from 3D scanners. The files generated are ready to be used within [MeshLab](http://www.meshlab.net/), an open-source system for processing said files. Just take into account that axis may differ from Unreal Engine and so, need to be reallocated.
+        Saves the point cloud to disk as a <b>.ply</b> file describing data from 3D scanners. The files generated are ready to be used within [MeshLab](http://www.meshlab.net/), an open-source system for processing said files. Just take into account that axis may differ from Unreal Engine and so, need to be reallocated. Empty measurements produce a valid PLY header with zero vertices.
     # --------------------------------------
     - def_name: get_point_count
       params:

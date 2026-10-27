@@ -67,7 +67,7 @@ namespace data {
       SemanticLidarDetection(geom::Location p, float cosTh, uint32_t idx, uint32_t tag) :
           point(p), cos_inc_angle{cosTh}, object_idx{idx}, object_tag{tag} { }
 
-      void WritePlyHeaderInfo(std::ostream& out) const{
+      static void WritePlyHeaderInfo(std::ostream& out) {
         out << "property float32 x\n" \
            "property float32 y\n" \
            "property float32 z\n" \

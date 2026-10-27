@@ -1,5 +1,8 @@
 ## LATEST Changes
 
+- Fixed LiDAR PLY export dereferencing an empty measurement when writing its schema.
+- Report point-cloud output open, write and flush failures instead of returning a successful save path.
+
 ### New features
 
 #### Simulator
