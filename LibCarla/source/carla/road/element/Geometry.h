@@ -62,6 +62,9 @@ namespace element {
       return _heading;
     }
 
+    /// Heading derivative with respect to reference-line station s.
+    double HeadingDerivative(double dist) const;
+
     const geom::Location &GetStartPosition() {
       return _start_position;
     }
@@ -183,6 +186,14 @@ namespace element {
       return _curve_end;
     }
 
+    double GetCurveStart() const {
+      return _curve_start;
+    }
+
+    double GetCurveEnd() const {
+      return _curve_end;
+    }
+
     DirectedPoint PosFromDist(double dist) const override;
 
     std::pair<float, float> DistanceTo(const geom::Location &) const override;
@@ -228,6 +239,8 @@ namespace element {
     }
 
     DirectedPoint PosFromDist(double dist) const override;
+
+    double HeadingDerivative(double dist) const;
 
     std::pair<float, float> DistanceTo(const geom::Location &) const override;
 
@@ -310,6 +323,8 @@ namespace element {
     }
 
     DirectedPoint PosFromDist(double dist) const override;
+
+    double HeadingDerivative(double dist) const;
 
     std::pair<float, float> DistanceTo(const geom::Location &) const override;
 

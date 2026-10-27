@@ -107,6 +107,8 @@
 
 ### Bug fixes
 
+* Correct waypoint forward rotations for lane widths, offsets, road curvature, elevation and lateral surface grades.
+
 #### Sensors
 
 * Fixed every native sensor (LiDAR, radar, IMU, cameras) simulating only the last physics substep instead of the true elapsed time when `sensor_tick` spanned more than one substep, which halved LiDAR's swept angle and skewed IMU and radar readings.

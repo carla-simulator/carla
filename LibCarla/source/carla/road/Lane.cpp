@@ -149,7 +149,7 @@ namespace road {
     // the lanes in between the current lane and lane 0, where the main road
     // geometry is described
     float lane_t_offset = 0.0f;
-    float lane_tangent = 0.0f;
+    double lane_tangent = 0.0;
 
     if (GetId() < 0) {
       // right lane
@@ -158,20 +158,20 @@ namespace road {
       const auto computed_width =
           ComputeTotalLaneWidth(side_lanes, s, GetId());
       lane_t_offset = static_cast<float>(computed_width.first);
-      lane_tangent = static_cast<float>(computed_width.second);
+      lane_tangent = computed_width.second;
     } else if (GetId() > 0) {
       // left lane
       const auto side_lanes = MakeListView(lanes.lower_bound(1), lanes.end());
       const auto computed_width =
           ComputeTotalLaneWidth(side_lanes, s, GetId());
       lane_t_offset = static_cast<float>(computed_width.first);
-      lane_tangent = static_cast<float>(computed_width.second);
+      lane_tangent = computed_width.second;
     }
 
     // Compute the tangent of the road's (lane 0) "laneOffset" on the current s
     const auto lane_offset_info = road->GetInfo<element::RoadInfoLaneOffset>(s);
     const auto lane_offset_tangent =
-        static_cast<float>(lane_offset_info->GetPolynomial().Tangent(s));
+        lane_offset_info->GetPolynomial().Tangent(s);
 
     // Update the road tangent with the "laneOffset" information at current s
     lane_tangent -= lane_offset_tangent;
@@ -189,11 +189,22 @@ namespace road {
     const auto shape_lane_offset = road->GetInfo<element::RoadInfoLaneOffset>(s);
     const double shape_t0 = (shape_lane_offset != nullptr)
         ? shape_lane_offset->GetPolynomial().Evaluate(s) : 0.0;
-    dp.location.z += static_cast<float>(
-        road->GetLateralShapeZ(s, shape_t0 - lane_t_offset));
+    const double t = shape_t0 - lane_t_offset;
+    const auto surface = road->EvaluateLateralShape(s, t);
+    dp.location.z += static_cast<float>(surface[0]);
 
-    // Update the lane tangent with the road "laneOffset" at current s
-    dp.tangent -= lane_tangent;
+    // The centre curve is R(s) + t(s) N(s). Its horizontal derivative is
+    // (1 - curvature*t) T + t' N; a width derivative is a slope, not an angle.
+    const auto *geometry = road->GetInfo<element::RoadInfoGeometry>(s);
+    const double curvature =
+        geometry->GetGeometry().HeadingDerivative(s - geometry->GetDistance());
+    const double lateral_derivative = -lane_tangent;
+    const double longitudinal_derivative = 1.0 - curvature * t;
+    dp.tangent += std::atan2(lateral_derivative, longitudinal_derivative);
+    const double vertical_derivative = road->GetElevationOn(s).Tangent(s) +
+        surface[1] + surface[2] * lateral_derivative;
+    dp.pitch = std::atan2(vertical_derivative,
+        std::hypot(longitudinal_derivative, lateral_derivative));
 
     // Unreal's Y axis hack
     dp.location.y *= -1;

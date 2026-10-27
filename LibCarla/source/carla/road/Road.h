@@ -19,6 +19,7 @@
 #include "carla/road/RoadElementSet.h"
 #include "carla/road/RoadTypes.h"
 
+#include <array>
 #include <unordered_map>
 #include <vector>
 
@@ -87,6 +88,9 @@ namespace road {
     /// record with the greatest t <= query t applies (clamped to the first
     /// record below its t range).
     double GetLateralShapeZ(const double s, const double t) const;
+
+    /// Height and partial derivatives [z, dz/ds, dz/dt] of the lateral surface.
+    std::array<double, 3> EvaluateLateralShape(double s, double t) const;
 
     /// Returns a directed point on the center of the road (lane 0),
     /// with the corresponding laneOffset and elevation records applied,

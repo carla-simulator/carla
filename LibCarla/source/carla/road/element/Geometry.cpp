@@ -22,6 +22,26 @@ namespace carla {
 namespace road {
 namespace element {
 
+  double Geometry::HeadingDerivative(double dist) const {
+    switch (_type) {
+      case GeometryType::LINE:
+        return 0.0;
+      case GeometryType::ARC:
+        return static_cast<const GeometryArc &>(*this).GetCurvature();
+      case GeometryType::SPIRAL: {
+        const auto &spiral = static_cast<const GeometrySpiral &>(*this);
+        const double fraction = geom::Math::Clamp(dist / _length, 0.0, 1.0);
+        return spiral.GetCurveStart() +
+            fraction * (spiral.GetCurveEnd() - spiral.GetCurveStart());
+      }
+      case GeometryType::POLY3:
+        return static_cast<const GeometryPoly3 &>(*this).HeadingDerivative(dist);
+      case GeometryType::POLY3PARAM:
+        return static_cast<const GeometryParamPoly3 &>(*this).HeadingDerivative(dist);
+    }
+    return 0.0;
+  }
+
   void DirectedPoint::ApplyLateralOffset(float lateral_offset) {
     /// @todo Z axis??
     auto normal_x =  std::sin(static_cast<float>(tangent));
@@ -103,6 +123,20 @@ namespace element {
     return {location.x - _start_position.x, location.y - _start_position.y};
   }
 
+  double GeometryPoly3::HeadingDerivative(double dist) const {
+    const auto result = _rtree.GetNearestNeighbours(
+        Rtree::BPoint(static_cast<float>(dist))).front();
+    const auto &first = result.second.first;
+    const auto &last = result.second.second;
+    const double span = last.s - first.s;
+    if (span <= 0.0) {
+      return 0.0;
+    }
+    const double fraction = (dist - first.s) / span;
+    const double slope = first.t + fraction * (last.t - first.t);
+    return ((last.t - first.t) / span) / (1.0 + slope * slope);
+  }
+
   DirectedPoint GeometryPoly3::PosFromDist(double dist) const {
     auto result = _rtree.GetNearestNeighbours(
         Rtree::BPoint(static_cast<float>(dist))).front();
@@ -158,6 +192,26 @@ namespace element {
       last_val = current_val;
 
     }
+  }
+
+  double GeometryParamPoly3::HeadingDerivative(double dist) const {
+    const auto result = _rtree.GetNearestNeighbours(
+        Rtree::BPoint(static_cast<float>(dist))).front();
+    const auto &first = result.second.first;
+    const auto &last = result.second.second;
+    const double span = last.s - first.s;
+    if (span <= 0.0) {
+      return 0.0;
+    }
+    const double fraction = (dist - first.s) / span;
+    const double u = first.t_u + fraction * (last.t_u - first.t_u);
+    const double v = first.t_v + fraction * (last.t_v - first.t_v);
+    const double squared = u * u + v * v;
+    if (squared == 0.0) {
+      return 0.0;
+    }
+    return (u * (last.t_v - first.t_v) - v * (last.t_u - first.t_u)) /
+        (span * squared);
   }
 
   DirectedPoint GeometryParamPoly3::PosFromDist(double dist) const {

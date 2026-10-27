@@ -20,6 +20,7 @@
 #include "carla/road/Road.h"
 
 #include <algorithm>
+#include <array>
 #include <stdexcept>
 
 namespace carla {
@@ -184,12 +185,14 @@ namespace road {
   }
 
 
-  double Road::GetLateralShapeZ(const double s, const double t) const {
-    const auto shapes = _info.GetInfos<element::RoadInfoLateralShape>();
+  namespace {
+  std::array<double, 3> EvaluateLateralSurface(
+      const std::vector<const element::RoadInfoLateralShape *> &shapes,
+      double length, double s, double t) {
     if (shapes.empty()) {
-      return 0.0;
+      return {0.0, 0.0, 0.0};
     }
-    const double clamped_s = geom::Math::Clamp(s, 0.0, _length);
+    const double clamped_s = geom::Math::Clamp(s, 0.0, length);
 
     // Evaluate one station (all records sharing the same s): pick the record
     // with the greatest t <= query t, clamping below the first record.
@@ -202,7 +205,7 @@ namespace road {
           break;
         }
       }
-      return chosen->Evaluate(t);
+      return std::make_pair(chosen->Evaluate(t), chosen->GetPolynomial().Tangent(t));
     };
 
     // Records come ordered by s; group them into stations and keep the two
@@ -234,13 +237,31 @@ namespace road {
     CloseStation();
 
     if (before.empty()) {
-      return after.empty() ? 0.0 : EvalStation(after);
+      if (after.empty()) {
+        return {0.0, 0.0, 0.0};
+      }
+      const auto value = EvalStation(after);
+      return {value.first, 0.0, value.second};
     }
+    const auto first = EvalStation(before);
     if (after.empty() || s_after <= s_before) {
-      return EvalStation(before);
+      return {first.first, 0.0, first.second};
     }
+    const auto last = EvalStation(after);
     const double u = (clamped_s - s_before) / (s_after - s_before);
-    return (1.0 - u) * EvalStation(before) + u * EvalStation(after);
+    return {(1.0 - u) * first.first + u * last.first,
+            (last.first - first.first) / (s_after - s_before),
+            (1.0 - u) * first.second + u * last.second};
+  }
+  } // namespace
+
+  double Road::GetLateralShapeZ(const double s, const double t) const {
+    return EvaluateLateralShape(s, t)[0];
+  }
+
+  std::array<double, 3> Road::EvaluateLateralShape(double s, double t) const {
+    return EvaluateLateralSurface(
+        _info.GetInfos<element::RoadInfoLateralShape>(), _length, s, t);
   }
 
   element::DirectedPoint Road::GetDirectedPointIn(const double s) const {
@@ -260,7 +281,7 @@ namespace road {
     // Apply road's elevation record
     const auto elevation_info = GetElevationOn(s);
     p.location.z = static_cast<float>(elevation_info.Evaluate(s));
-    p.pitch = elevation_info.Tangent(s);
+    p.pitch = std::atan(elevation_info.Tangent(s));
 
     return p;
   }
@@ -274,7 +295,7 @@ namespace road {
     // Apply road's elevation record
     const auto elevation_info = GetElevationOn(s);
     p.location.z = static_cast<float>(elevation_info.Evaluate(s));
-    p.pitch = elevation_info.Tangent(s);
+    p.pitch = std::atan(elevation_info.Tangent(s));
 
     return p;
   }
