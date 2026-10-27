@@ -1057,15 +1057,23 @@ def add_map(pack_dir, manifest, args):
         "xodr": "",
         "world_partition": world_partition,
     }
+    if args.no_xodr and args.xodr:
+        raise PackError("--xodr and --no-xodr are mutually exclusive")
+    if args.no_nav and args.nav:
+        raise PackError("--nav and --no-nav are mutually exclusive")
+    if args.no_tm and args.tm:
+        raise PackError("--tm and --no-tm are mutually exclusive")
+
     if content in src.parents:
         # In-pack maps have no independent sidecar discovery source. Omitted flags
-        # keep their registered files; an explicit XODR replaces its phase file too.
-        if not args.xodr:
+        # keep their registered files; an explicit XODR replaces its phase file too,
+        # and --no-<kind> drops one on purpose.
+        if not args.xodr and not args.no_xodr:
             entry["xodr"] = old.get("xodr", "")
             if "map_logic" in old:
                 entry["map_logic"] = old["map_logic"]
         for key in ("nav", "tm"):
-            if not getattr(args, key) and key in old:
+            if not getattr(args, key) and not getattr(args, "no_" + key) and key in old:
                 entry[key] = old[key]
     found = find_sidecars(src) if content not in src.parents else {}
     xodr = args.xodr or found.get("xodr")
@@ -1121,11 +1129,15 @@ def add_map(pack_dir, manifest, args):
     # Re-registering a map after removing its phase file must not leave the
     # old loose configuration in the staged pack.
     others = [m for m in manifest["maps"] if m.get("name") != map_name]
-    for key in ("xodr", "map_logic"):
+    for key in ("xodr", "map_logic", "nav", "tm"):
         previous = old.get(key)
         if previous and previous != entry.get(key) and is_clean_relpath(previous):
             if not any(m.get(key) == previous for m in others):
-                (content / previous).unlink(missing_ok=True)
+                stale = content / previous
+                if stale.is_dir():
+                    shutil.rmtree(stale, ignore_errors=True)
+                else:
+                    stale.unlink(missing_ok=True)
     manifest["maps"] = others + [entry]
     info("registered map {} as {}{}".format(map_name, entry["package"],
                                           " (World Partition)" if world_partition else ""))
@@ -1642,7 +1654,8 @@ def cmd_create(args):
     save_json(descriptor, plugin)
     for spec in args.maps:
         add_map(pack_dir, manifest, argparse.Namespace(
-            map=spec, xodr=None, nav=None, tm=None, world_partition=False, copy=False,
+            map=spec, xodr=None, nav=None, tm=None, no_xodr=False, no_nav=False, no_tm=False,
+            world_partition=False, copy=False,
             import_map=args.import_map, engine=args.engine, root=args.root, project=args.project))
     save_json(pack_dir / MANIFEST_NAME, manifest)
     return cmd_build(argparse.Namespace(
@@ -2146,7 +2159,13 @@ def build_parser():
                          "editor. OpenDRIVE, navigation and Traffic Manager files are picked up from "
                          "CARLA's usual locations")
     sp.add_argument("--xodr", help="OpenDRIVE file for --map (default: found next to the map)")
+    sp.add_argument("--no-xodr", action="store_true",
+                    help="unregister the OpenDRIVE file of an in-pack --map and delete it")
     sp.add_argument("--nav", help="pedestrian navigation .bin for --map (default: found next to the map)")
+    sp.add_argument("--no-nav", action="store_true",
+                    help="unregister the pedestrian navigation file of an in-pack --map and delete it")
+    sp.add_argument("--no-tm", action="store_true",
+                    help="unregister the Traffic Manager data of an in-pack --map and delete it")
     sp.add_argument("--tm", help="Traffic Manager data file or directory for --map (default: found "
                                  "next to the map)")
     sp.add_argument("--engine", default=None,

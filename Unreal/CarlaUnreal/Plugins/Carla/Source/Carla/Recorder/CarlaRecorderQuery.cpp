@@ -353,6 +353,33 @@ std::string CarlaRecorderQuery::QueryInfo(std::string Filename, bool bShowAll)
         SkipPacket();
       break;
 
+      // vehicle wheel animations
+    case static_cast<char>(CarlaRecorderPacketId::AnimVehicleWheels):
+      if (bShowAll)
+      {
+        ReadValue<uint16_t>(File, Total);
+        if (Total > 0 && !bFramePrinted)
+        {
+          PrintFrame(Info);
+          bFramePrinted = true;
+        }
+        Info << " Vehicle wheel animations: " << Total << std::endl;
+        for (i = 0; i < Total; ++i)
+        {
+          VehicleWheels.Read(File);
+          Info << "  Id: " << VehicleWheels.DatabaseId << " Wheels: " << VehicleWheels.WheelValues.size() << std::endl;
+          for (const WheelInfo &Wheel : VehicleWheels.WheelValues)
+          {
+            Info << "   Location: " << static_cast<int>(Wheel.Location) <<
+                " Steering: " << Wheel.SteeringAngle <<
+                " Tire rotation: " << Wheel.TireRotation << std::endl;
+          }
+        }
+      }
+      else
+        SkipPacket();
+      break;
+
       // walker animations
     case static_cast<char>(CarlaRecorderPacketId::AnimWalker):
       if (bShowAll)
@@ -368,6 +395,28 @@ std::string CarlaRecorderQuery::QueryInfo(std::string Filename, bool bShowAll)
         {
           Walker.Read(File);
           Info << "  Id: " << Walker.DatabaseId << " speed: " << Walker.Speed << std::endl;
+        }
+      }
+      else
+        SkipPacket();
+      break;
+
+      // biker animations
+    case static_cast<char>(CarlaRecorderPacketId::AnimBiker):
+      if (bShowAll)
+      {
+        ReadValue<uint16_t>(File, Total);
+        if (Total > 0 && !bFramePrinted)
+        {
+          PrintFrame(Info);
+          bFramePrinted = true;
+        }
+        Info << " Biker animations: " << Total << std::endl;
+        for (i = 0; i < Total; ++i)
+        {
+          Biker.Read(File);
+          Info << "  Id: " << Biker.DatabaseId << " Forward speed: " << Biker.ForwardSpeed <<
+              " Engine rotation: " << Biker.EngineRotation << std::endl;
         }
       }
       else
@@ -575,6 +624,23 @@ std::string CarlaRecorderQuery::QueryInfo(std::string Filename, bool bShowAll)
             << ActorBoundingBox.BoundingBox.Extension.Z << ")"
             << std::endl;
         }
+      }
+      else
+        SkipPacket();
+      break;
+
+      // visual time
+    case static_cast<char>(CarlaRecorderPacketId::VisualTime):
+      if (bShowAll)
+      {
+        if (!bFramePrinted)
+        {
+          PrintFrame(Info);
+          bFramePrinted = true;
+        }
+
+        VisualTime.Read(File);
+        Info << " Current visual time: " << VisualTime.Time << std::endl;
       }
       else
         SkipPacket();

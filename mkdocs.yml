@@ -10,49 +10,78 @@ nav:
 - Getting started:
   - 'Introduction': 'start_introduction.md'
   - 'Quick start package installation': 'start_quickstart.md'
+  - 'Download': 'download.md'
   - 'First steps' : 'start_first_steps.md'
   - Building CARLA:
-    - 'Overview': 'build_carla.md'
+    - 'build_carla.md'
     - 'Linux': 'build_linux_ue5.md'
     - 'Windows': 'build_windows_ue5.md'
     - 'Docker': 'build_docker.md'
     - 'Development container': 'build_devcontainer.md'
-    - 'Download': 'download.md'
     - 'Build FAQ': 'build_faq.md'
 
 - CARLA topics:
   - 'Foundations': 'core_foundations.md'
+  - 'Coordinate conventions': 'core_coordinate_conventions.md'
   - World and client:
     - 'The client': 'core_client.md'
     - 'The world': 'core_world.md'
     - 'Synchrony and time-step': 'core_synchrony.md'
+    - 'Recorder': 'core_recorder.md'
+  - Rendering:
     - 'Rendering options': 'core_rendering.md'
     - 'Camera post-process presets': 'core_camera_presets.md'
-    - 'Recorder': 'core_recorder.md'
-    - 'Recorder file format': 'ref_recorder_binary_file_format.md'
     - 'Multi-GPU': 'core_multigpu.md'
-  - Actors:
-    - 'Overview': 'core_actors.md'
-    - 'Agents': 'core_agents.md'
-  - Maps:
-    - 'Overview': 'core_map.md'
+  - 'Actors and Blueprints': 'core_actors.md'
+  - Maps and Navigation:
+    - 'core_map.md'
     - 'Large maps': 'core_large_maps.md'
     - 'OpenDRIVE standalone mode': 'core_opendrive.md'
-  - Sensors and data:
-    - 'Overview': 'core_sensors.md'
-    - 'Create semantic tags': 'core_sensors_semantic_tags.md'
-  - 'Coordinate conventions': 'core_coordinate_conventions.md'
+  - 'Sensors and data': 'core_sensors.md'
   - Traffic:
-    - 'Overview': 'core_traffic.md'
+    - 'core_traffic.md'
     - 'Traffic Manager': 'core_traffic_manager.md'
+    - 'Agents': 'core_agents.md'
+
+- Tutorials:
+  - 'tutorials.md'
+  - 'Traffic Manager': 'tuto_traffic_manager.md'
+  - 'Control vehicle physics': 'tuto_vehicle_physics.md'
+  - 'Control walker skeletons': 'tuto_walker_skeletons.md'
+  - 'Pedestrian bones': 'tuto_pedestrian_bones.md'
+  - 'Bounding boxes': 'tuto_bounding_boxes.md'
+  - 'Texture streaming': 'tuto_texture_streaming.md'
+  - 'Add friction triggers': 'tuto_friction_triggers.md'
+  - 'C++ tutorial': 'tuto_cpp.md'
+
+- Content authoring:
+  - 'content_authoring_overview.md'
+  - Maps:
+    - 'content_authoring_maps_overview.md'
+    - 'Create a map': 'content_authoring_maps.md'
+    - 'Map assets': 'content_authoring_maps_assets.md'
+    - 'Materials and road painter': 'content_authoring_maps_road_painter.md'
+    - 'Traffic lights and signs': 'content_authoring_maps_traffic_lights.md'
+    - 'Trees and vegetation': 'content_authoring_maps_vegetation.md'
+    - 'OpenStreetMap': 'content_authoring_maps_openstreetmap.md'
+    - 'Digital Twin Tool': 'content_authoring_maps_digital_twin.md'
+  - Vehicles:
+    - 'content_authoring_vehicles.md'
+    - 'Vehicle materials': 'content_authoring_vehicles_materials.md'
+    - 'Collision meshes': 'content_authoring_vehicles_colliders.md'
+    - 'Suspension': 'content_authoring_vehicles_suspension.md'
+  - 'Props': 'content_authoring_props.md'
+  - 'Material customization': 'content_authoring_materials.md'
+  - 'Content packs': 'content_authoring_packs.md'
 
 - Resources:
-  - 'Agent skills': 'agent_skills.md'
   - 'Python API': 'python_api.md'
   - 'C++ reference': 'ref_cpp.md'
   - 'Sensors reference': 'ref_sensors.md'
+  - 'Blueprint library': 'bp_library.md'
+  - 'Recorder file format': 'ref_recorder_binary_file_format.md'
   - Catalogue:
-    - 'Overview': 'catalogue.md'
+    - 'catalogue.md'
     - Maps:
       - 'Town10HD_Opt': 'map_town10.md'
       - 'Mine_01': 'map_mine.md'
@@ -74,54 +103,18 @@ nav:
     - 'Pedestrians': 'catalogue_pedestrians.md'
     - 'Props': 'catalogue_props.md'
     - 'Example scripts': 'catalogue_scripts.md'
-  - 'Blueprint library': 'bp_library.md'
-  - Tutorials:
-    - 'Overview': 'tutorials.md'
-    - 'Traffic Manager': 'tuto_traffic_manager.md'
-    - 'Control vehicle physics': 'tuto_vehicle_physics.md'
-    - 'Control walker skeletons': 'tuto_walker_skeletons.md'
-    - 'Pedestrian bones': 'tuto_pedestrian_bones.md'
-    - 'Bounding boxes': 'tuto_bounding_boxes.md'
-    - 'Texture streaming': 'tuto_texture_streaming.md'
-    - 'Add friction triggers': 'tuto_friction_triggers.md'
-    - 'C++ tutorial': 'tuto_cpp.md'
-  - Development:
-    - 'Overview': 'dev_overview.md'
-    - 'Create a sensor': 'dev_create_sensor.md'
-    - 'Updating the content': 'dev_update_content.md'
-    - 'Running the tests': 'dev_testing.md'
-    - 'Make a release': 'dev_make_release.md'
+  - 'Agent skills': 'agent_skills.md'
 
-- Content authoring:
-  - 'Overview': 'content_authoring_overview.md'
-  - Maps:
-    - 'Overview': 'content_authoring_maps_overview.md'
-    - 'Create a map': 'content_authoring_maps.md'
-    - 'Map assets': 'content_authoring_maps_assets.md'
-    - 'Materials and road painter': 'content_authoring_maps_road_painter.md'
-    - 'Traffic lights and signs': 'content_authoring_maps_traffic_lights.md'
-    - 'Trees and vegetation': 'content_authoring_maps_vegetation.md'
-    - 'OpenStreetMap': 'content_authoring_maps_openstreetmap.md'
-    - 'Digital Twin Tool': 'content_authoring_maps_digital_twin.md'
-  - Vehicles:
-    - 'Create a vehicle': 'content_authoring_vehicles.md'
-    - 'Vehicle materials': 'content_authoring_vehicles_materials.md'
-    - 'Collision meshes': 'content_authoring_vehicles_colliders.md'
-    - 'Suspension': 'content_authoring_vehicles_suspension.md'
-  - 'Props': 'content_authoring_props.md'
-  - 'Material customization': 'content_authoring_materials.md'
-  - 'Content packs': 'content_authoring_packs.md'
-
-- CARLA Ecosystem:
+- CARLA ecosystem:
   - 'RoadRunner': 'roadrunner.md'
   - NVIDIA:
-    - 'Overview': 'nvidia.md'
+    - 'nvidia.md'
     - 'Alpamayo 2 Super user guide': 'nvidia_alpamayo.md'
     - 'Alpamayo architecture and control': 'nvidia_alpamayo_architecture.md'
     - 'Alpamayo troubleshooting': 'nvidia_alpamayo_troubleshooting.md'
     - 'Neural reconstruction': 'nvidia_nurec.md'
   - ROS 2:
-    - 'Native interface': 'ros2_native.md'
+    - 'ros2_native.md'
     - 'Sensors': 'ros2_native_sensors.md'
     - 'Messages': 'ros2_native_msgs.md'
     - 'Autoware': 'autoware.md'
@@ -134,10 +127,22 @@ nav:
   - 'Code of conduct': 'cont_code_of_conduct.md'
   - 'Coding standard': 'cont_coding_standard.md'
   - 'Documentation standard': 'cont_doc_standard.md'
- 
-# Pages reached from a parent page instead of the sidebar
+  - Development:
+    - 'dev_overview.md'
+    - 'Create a sensor': 'dev_create_sensor.md'
+    - 'Create semantic tags': 'core_sensors_semantic_tags.md'
+    - 'Updating the content': 'dev_update_content.md'
+    - 'Running the tests': 'dev_testing.md'
+    - 'Make a release': 'dev_make_release.md'
+
+# Shipped as the README of the package (Unreal/Package/CopyCarlaAdditionalFiles.cmake), not a site page
 not_in_nav: |
   /release_readme.md
+
+# section-index: a section whose first page has no title opens that page from the section title
+plugins:
+  - search
+  - section-index
 
 hooks:
   - docs_hooks.py

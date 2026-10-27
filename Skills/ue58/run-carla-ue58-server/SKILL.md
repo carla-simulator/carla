@@ -20,8 +20,8 @@ Three ways to get a server, and the choice matters more than on UE4:
 
 | Mode | What it is | Use it when |
 |---|---|---|
-| `game` | the **editor binary** with `-game` | **default.** Full client support, map switching, 29 maps visible |
-| `package` | `Build/<preset>/Package/.../CarlaUnreal.sh` | shipping a build; accept the map limitations below |
+| `game` | the **editor binary** with `-game` | **default.** Full client support, every map in the tree |
+| `package` | `Build/<preset>/Package/.../CarlaUnreal.sh` | shipping a build; only the cooked maps exist, see below |
 | `editor` | the full editor GUI | authoring, visual debugging |
 
 There is a fourth thing that looks like the answer and is not:
@@ -158,26 +158,24 @@ useless as a pass/fail signal here; check the port and the results instead.
 
 ## Packaged vs game mode — measured, not assumed
 
-Both were exercised on this branch. The packaged server is more usable than the
-older report suggests, but its map handling is broken:
+Map discovery reads the AssetRegistry since `da94ed2b7` (content packs), so it
+works inside a `.pak`. Measured 2026-10-26 (Shipping package, ue58-dev `6bb051b2e`, cook scope `Town10HD_Opt+OpenDriveMap+EmptyMap+Town12`):
 
 | | `game` | `package` |
 |---|---|---|
-| `get_world()` | works | **works** |
-| spawn vehicle | works | **works** |
-| `get_random_location_from_navigation()` | works | **works** |
-| `get_available_maps()` | **29 maps** | **`[]` — empty** |
-| `load_world('Town10HD_Opt')`, `'Town_C'` | works | works |
-| `load_world('Town12')`, `'Town13')` | works | **fails** (`std::exception`) |
+| `get_world()` | works | works |
+| spawn vehicle | works | works |
+| `get_random_location_from_navigation()` | works | works (Town12: server-side navigation, no `.bin`) |
+| `get_available_maps()` | every map in the tree | the cooked maps: `['Town10HD_Opt', 'EmptyMap', 'Town12']` (`OpenDriveMap` not listed) |
+| `load_world('Town12')` | works | works (`Carla/Maps/Town12/Town12`) |
+| map on the command line | loads it | **ignored**: `/Game/Carla/Maps/Town12/Town12` booted `Town10HD_Opt` |
 
-Root cause of the map failures: two raw-filesystem checks that cannot see inside a
-`.pak` — `UCarlaStatics::GetAllMapNames()` uses
-`IFileManager::FindFilesRecursive(..., "*.umap")` and `LoadNewEpisode()` gates on
-`FPaths::FileExists()`. AssetRegistry-based discovery exists on
-`ue58-dev-windows` and is **not merged into `ue58-dev`**.
-
-So: use `package` for a fixed-map deployment, `game` whenever you need discovery
-or map switching.
+A package only has the maps in its cook scope (`CARLA_MAPS_TO_COOK`, see
+[[package-carla-ue58]]); `load_world` on any other fails. To start on a given map,
+launch the package and call `load_world()` after connecting. Before `da94ed2b7`,
+`get_available_maps()` returned `[]` in a package and nested large maps
+(`Town12/Town12`) did not load, because `GetAllMapNames()` and `LoadNewEpisode()`
+used raw-filesystem checks that cannot see inside a `.pak`.
 
 ## ROS 2
 
@@ -249,8 +247,8 @@ profile file needed.
 
 **Example 3: "the client can't find any maps"**
 
-You are on a packaged server. `get_available_maps()` cannot work inside a `.pak`
-on this branch. Switch to `game` mode.
+On a packaged server the list holds only the cooked maps. An empty list means a
+tree older than `da94ed2b7`: update `ue58-dev` and repackage, or use `game` mode.
 
 **Example 4: "run two servers"**
 
@@ -291,8 +289,9 @@ Solution: judge by results, not exit status. Known, cosmetic, and the reason no
 script here gates on `$?` from the server.
 
 **Problem: `load_world` fails for a large map**
-Cause: packaged mode; see the table above.
-Solution: `game` mode.
+Cause: on a package, the map is not in the cook scope, or the tree predates
+`da94ed2b7` (see the table above).
+Solution: add the map to `CARLA_MAPS_TO_COOK` and repackage, or use `game` mode.
 
 **Problem: the RPC port never comes up**
 Cause: usually first-launch shader compilation, which can far exceed the 120 s the

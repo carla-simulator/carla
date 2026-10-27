@@ -4,7 +4,7 @@ CARLA ships a library of 62 vetted procedures for coding agents, under [`Skills/
 
 Each skill is a directory holding a `SKILL.md` — YAML frontmatter (`name`, `description`, `compatibility` and `metadata`) followed by the step-by-step procedure — plus the `scripts/` and `references/` it needs. The procedures encode the failure modes that make the obvious approach fail, which is the point of them: they are the source of truth for these tasks, not a summary of the docs.
 
-In practice this means an agent asked to "package CARLA with only Town10" reads `package-carla-ue58` and follows it, instead of guessing at CMake targets and discovering the Zen server requirement the hard way.
+In practice this means an agent asked to "package CARLA with only Town10" reads `package-carla-ue58` and follows it, instead of guessing at CMake targets and cook options.
 
 - [__What is covered__](#what-is-covered)
 - [__Using them__](#using-them)

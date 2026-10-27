@@ -3,7 +3,7 @@
 
     python3 check_images.py [--root CARLA_ROOT] [--no-unreferenced]
 
-A caption is the line `<div style="text-align: right"><i>...</i></div>` right under the image.
+A caption is the line `<div class="img-caption">...</div>` right under the image.
 Generated pages (python_api, bp_library, catalogue_*) and logos are not checked for captions.
 Exits 1 when there are broken refs, so it can gate a push."""
 import argparse, glob, os, re, sys, urllib.parse
@@ -23,7 +23,7 @@ for md in sorted(glob.glob(D + '/**/*.md', recursive=True)):
             q = urllib.parse.unquote(p.split('#')[0].split('?')[0]); q = q[3:] if q.startswith('../') else q.lstrip('/')
             used.add(os.path.normpath(q))
             if not os.path.exists(os.path.join(D, q)): broken.append(f'{page}:{i+1}  {p}')
-            elif page not in GEN and 'img/logos/' not in q and '<i>' not in ' '.join(L[i:i+3])[len(l[:m.start()]):]:
+            elif page not in GEN and 'img/logos/' not in q and 'img-caption' not in ' '.join(L[i:i+3])[len(l[:m.start()]):]:
                 nocap.append(f'{page}:{i+1}  {q}')
 print(f'broken image refs: {len(broken)}'); [print('  ' + b) for b in broken]
 print(f'images without caption: {len(nocap)}'); [print('  ' + n) for n in nocap]

@@ -286,8 +286,8 @@ set (
   ""
   CACHE STRING
   "Override the cooked map list ('+'-separated full package paths, e.g. \
-\"/Game/Carla/Maps/Town10HD_Opt+/Game/Carla/Maps/Mine_01\"). \
-Empty means use the +MapsToCook list from DefaultGame.ini (cook all maps)."
+\"/Game/Carla/Maps/Town10HD_Opt+/Game/Carla/Maps/Town15/Town15\"). \
+Empty means use the +MapsToCook list from DefaultGame.ini (the maps of the default package)."
 )
 
 set (

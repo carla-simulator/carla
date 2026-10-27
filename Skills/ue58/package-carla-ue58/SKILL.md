@@ -147,20 +147,18 @@ does not is not explained by the ini.)
 cd ../run-carla-ue58-server && bash scripts/run_server.sh package
 ```
 
-A packaged server works for clients — measured: `get_world()`, spawning,
-navigation and **map handling** are all fine. `get_available_maps()` lists the
-cooked maps and `load_world()` resolves them, including maps nested under a
-subdirectory. Measured on a package cooking `Town10HD_Opt` and a Digital Twin at
-`/Game/Carla/Maps/Twins/EixampleNav/EixampleNav`: the listing returned both, and
-the twin loaded by its leaf name (`EixampleNav`) and by its relative path
-(`Twins/EixampleNav/EixampleNav`).
-
-Discovery goes through the asset registry (`UCarlaStatics_GetRegistryWorlds` in
-`CarlaStatics.cpp`), not a `.umap` walk: cooked maps live inside Pak/IoStore
-containers where a filesystem walk finds nothing, but the packaged
-`AssetRegistry.bin` still lists them. The registry asserts off the game thread,
-so off-thread callers get an empty list — which is the likely origin of the old
-"returns `[]`" reports.
+A packaged server works for clients: `get_world()`, spawning, pedestrian
+navigation and map handling. Map discovery reads the AssetRegistry since
+`da94ed2b7` (content packs), so it sees inside the `.pak`. Measured 2026-10-26 on a
+Shipping package (ue58-dev `6bb051b2e`, scope `Town10HD_Opt+OpenDriveMap+EmptyMap+Town12`):
+`get_available_maps()` returns the cooked maps (`['Town10HD_Opt', 'EmptyMap', 'Town12']`;
+`OpenDriveMap` is not listed), and `load_world('Town12')` loads the nested large
+map (`Carla/Maps/Town12/Town12`). A map passed on the command line
+(`/Game/Carla/Maps/Town12/Town12`) was ignored and the server booted
+`Town10HD_Opt`: switch with `load_world()` after connecting. Only cooked maps load.
+The registry asserts off the game thread, so an off-thread `get_available_maps()`
+still returns `[]` — the likely origin of the old "returns `[]`" reports.
+More in [[run-carla-ue58-server]].
 
 ## Examples
 
@@ -218,19 +216,20 @@ alphabetically. 74–78 warnings per cook.
 Solution: none needed; it keeps the name the map expects. Worth removing properly
 by scoping the mount, but it is not a failure.
 
-**Problem: Zen server does not survive cook → stage**
-Cause: known both platforms, different fixes. On Linux the route used is
-`[Zen.AutoLaunch] LimitProcessLifetime=False`, which needs no manual server;
-Windows uses `-NoZenAutoLaunch` and requires `zenserver.exe --port 8558` already
-running.
-Solution: the Linux setting; do not copy the Windows recipe.
+**Problem: staging stops at `Reading oplog from Zen` and fails after 20 min**
+Cause: an engine older than the oplog reader fix (`0e9b85970da9`): UAT downloads
+one attachment per package in an unbounded `Parallel.ForEach` and starves its
+thread pool (`HttpClient.Timeout of 1200 seconds`). Not a dead Zen server: the
+cook starts Zen, and staging restarts it on the same store when the cook's exits.
+Solution: pull `ue58-dev-carla` in the engine and rerun. Start no Zen by hand.
 
 **Problem: packaged map switching does not work / `get_available_maps()` is empty**
-Cause: the old raw-filesystem discovery (`FindFilesRecursive(..., "*.umap")`)
-could not see inside a `.pak`. AssetRegistry discovery has since landed on
-`ue58-dev` (`60fd70e44`), and map listing and switching work from a package.
-Solution: none needed on this branch. If the listing is empty, check the call is
-on the game thread — the asset registry returns nothing off it.
+Cause: a tree older than `da94ed2b7`, where `GetAllMapNames()` used
+`FindFilesRecursive(..., "*.umap")` and `LoadNewEpisode()` gated on
+`FPaths::FileExists()`, neither of which sees inside a `.pak`. Or the map is not in
+the cook scope.
+Solution: update to current `ue58-dev` (map discovery through the AssetRegistry)
+and check the map is in `CARLA_MAPS_TO_COOK`.
 
 ## Outputs
 

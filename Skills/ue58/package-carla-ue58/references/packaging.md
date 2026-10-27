@@ -203,16 +203,14 @@ a `.ucas` from 16:14. POSIX unlink semantics make it unlikely on Linux, but
 
 ### Packaged map discovery
 
-Works. `get_available_maps()` lists the cooked maps and `load_world()` resolves
-them, nested ones included. Discovery goes through the asset registry
-(`UCarlaStatics_GetRegistryWorlds`, `CarlaStatics.cpp`): a `.umap` walk finds
-nothing inside a Pak/IoStore container, but the packaged `AssetRegistry.bin`
-lists the maps. Landed on `ue58-dev` in `60fd70e44`.
-
-Measured on a package cooking `Town10HD_Opt` plus a twin at
-`/Game/Carla/Maps/Twins/EixampleNav/EixampleNav`: the listing returned both, and
-the twin loaded by leaf name and by relative path. The registry asserts off the
-game thread, so an off-thread call still returns an empty list.
+Fixed in `ue58-dev` by `da94ed2b7` (content packs): `GetAllMapNames()` queries the
+AssetRegistry instead of `FindFilesRecursive(..., "*.umap")`, which could not see
+inside a `.pak`. Before it, `get_available_maps()` returned `[]` and
+`load_world()` failed for nested large maps. Measured 2026-10-26 (Shipping,
+ue58-dev `6bb051b2e`, scope `Town10HD_Opt+OpenDriveMap+EmptyMap+Town12`):
+`get_available_maps()` = `['Town10HD_Opt', 'EmptyMap', 'Town12']`,
+`load_world('Town12')` OK (`Carla/Maps/Town12/Town12`). The map passed on the
+command line was ignored (booted `Town10HD_Opt`); use `load_world()`.
 
 ### OFPA duplicate-name warnings
 
@@ -230,11 +228,13 @@ runtime is correct. Not a failure; worth fixing by scoping the mount.
 
 ### Zen server across cook → stage
 
-Hit on both platforms with different fixes. Linux uses
-`[Zen.AutoLaunch] LimitProcessLifetime=False`, which needs no manual server.
-Windows uses `-NoZenAutoLaunch=127.0.0.1` and requires `zenserver.exe --port 8558`
-already running — `-NoZenAutoLaunch` points UAT at an external server, it does not
-start one. Do not copy the Windows recipe onto Linux.
+The engine manages Zen; nothing is started by hand. The cook auto-launches it on
+the editor store (`~/.config/Epic/UnrealEngine/Common/Zen/Data`) with the cook as
+owner, so it exits with the cook. Staging finds no server and has UnrealPak start
+one on the same store (`-StartZenServerForStage`,
+`CopyBuildToStagingDirectory.Automation.cs:968-991`), which lives until UAT exits.
+The 20-minute `HttpClient.Timeout` once blamed on this was the oplog reader
+starving its thread pool, fixed in the engine at `0e9b85970da9`.
 
 ### DLSS is not staged
 
@@ -251,9 +251,9 @@ be redistributed inside a built application is a licensing question first.
 | Fix | Windows | On `ue58-dev` |
 |---|---|---|
 | `-pak -iostore` | needed | **yes**, upstream |
-| AssetRegistry map discovery (Issue 1) | needed | **no** |
+| AssetRegistry map discovery (Issue 1) | needed | **yes**, `da94ed2b7` (measured 2026-10-26) |
 | `-culturesToStage=en` ICU (Issue 2) | needed | **no** — never bit on Linux |
-| Zen survives cook→stage (Issue 7) | `-NoZenAutoLaunch` | different route |
+| Zen survives cook→stage (Issue 7) | engine-managed, untested | **yes**, no flag; needs the engine reader fix |
 | Town12 `DirectoriesToAlwaysStageAsUFS` (Issue 13) | needed | **no** — and it needs to cover Town13 + `Config/PostProcess` too |
 | Cook-scope exclusion | — | Linux-side, not upstream |
 

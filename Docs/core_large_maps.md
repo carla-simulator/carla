@@ -6,6 +6,7 @@ Town11, Town12, Town13 and Town15 are too big to keep in memory at once. They ar
 - [__Setting the streaming distance__](#setting-the-streaming-distance)
 - [__Settings that no longer apply__](#settings-that-no-longer-apply)
 - [__Synchronous mode__](#synchronous-mode)
+- [__Pedestrian navigation__](#pedestrian-navigation)
 
 ---
 ## What loads, and around what
@@ -67,3 +68,15 @@ These belonged to the tiled maps of earlier releases. On World Partition maps th
 ## Synchronous mode
 
 Spawning loads the cells under the new actor in any mode, and a vehicle that drives keeps its cells loaded in synchronous mode too: on Town15, an ego on autopilot drove 3.8 km in synchronous mode (0.05 s steps) without losing the ground under it. Long jumps are different: a vehicle teleported 2 km away got none of its new cells in 600 synchronous ticks, while in asynchronous mode they loaded in about 10 s. To move an actor far away, spawn it again at the destination instead of teleporting it.
+
+---
+## Pedestrian navigation
+
+On the other maps, walkers navigate with a `.bin` navigation mesh that the client downloads and runs itself. World Partition maps that ship an engine navigation mesh, streamed in cells with the rest of the map, navigate __on the server__ instead: Town12, Town13 and Town15 ship one. The client asks the server when the map loads and picks the mode on its own, so the code is the same in both cases: [`get_random_location_from_navigation`](python_api.md#carla.World.get_random_location_from_navigation), the `controller.ai.walker` methods ([`start`](python_api.md#carla.WalkerAIController.start), [`go_to_location`](python_api.md#carla.WalkerAIController.go_to_location), [`set_max_speed`](python_api.md#carla.WalkerAIController.set_max_speed), [`stop`](python_api.md#carla.WalkerAIController.stop)), [`set_pedestrians_cross_factor`](python_api.md#carla.World.set_pedestrians_cross_factor) and [`set_pedestrians_seed`](python_api.md#carla.World.set_pedestrians_seed). These maps need no `.bin`, and a package that ships only the map navigates with it.
+
+What changes with the server doing the work:
+
+- __Walkers move without the client.__ They keep walking between client calls in asynchronous mode, where the client-side crowd only advances inside `world.wait_for_tick()`.
+- __Physics and collisions stay on.__ The client-side crowd turns them off for the walkers it drives; on the server the walker keeps its collision and its movement component.
+- __Only the loaded part of the map has navigation.__ `get_random_location_from_navigation` samples the loaded navigation mesh, so the locations it returns are near a streaming source, and it returns `None` when nothing is loaded yet. To spread walkers across the map, raise `tile_stream_distance` before spawning the ego, or spawn the walkers where the cells are already loaded.
+- __Manual control wins.__ [`apply_control`](python_api.md#carla.Walker.apply_control) on a walker that is navigating takes over from the navigation.
