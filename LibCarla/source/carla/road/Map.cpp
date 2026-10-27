@@ -708,14 +708,14 @@ namespace road {
       if (!IsDrivingLane(lane) || !IsDrivingLane(GetLane(successor))) {
         for (const auto &future_successor : GetSuccessors(successor)) {
           if (future_successor.road_id == waypoint.road_id
-               && future_successor.lane_id == waypoint.lane_id
-               && future_successor.section_id == waypoint.section_id){
+              && future_successor.lane_id == waypoint.lane_id
+              && future_successor.section_id == waypoint.section_id) {
             is_broken = true;
             break;
           }
         }
       }
-      if (!is_broken){
+      if (!is_broken) {
         result = ConcatVectors(result, GetNext(successor, distance - remaining_lane_length));
       }
     }
@@ -759,14 +759,14 @@ namespace road {
       if (!IsDrivingLane(lane) || !IsDrivingLane(GetLane(successor))) {
         for (const auto &future_predecessor : GetPredecessors(successor)) {
           if (future_predecessor.road_id == waypoint.road_id
-               && future_predecessor.lane_id == waypoint.lane_id
-               && future_predecessor.section_id == waypoint.section_id){
+              && future_predecessor.lane_id == waypoint.lane_id
+              && future_predecessor.section_id == waypoint.section_id) {
             is_broken = true;
             break;
           }
         }
       }
-      if (!is_broken){
+      if (!is_broken) {
         result = ConcatVectors(result, GetPrevious(successor, distance - remaining_lane_length));
       }
     }
