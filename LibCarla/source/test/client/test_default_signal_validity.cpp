@@ -39,7 +39,8 @@ std::string MapXml(const std::string &roads) {
 
 bool Seen(const carla::SharedPtr<carla::client::Map> &map, unsigned road, int lane) {
   const auto waypoint=map->GetWaypointXODR(road,lane,5.0);
-  const auto start=map->GetWaypointXODR(road,lane,waypoint->IsPositiveDirection()?1.0:19.0);
+  const auto start = map->GetWaypointXODR(
+      road, lane, static_cast<float>(waypoint->IsPositiveDirection() ? 1.0 : 19.0));
   return !start->GetAllLandmarksInDistance(15.0,false).empty();
 }
 
