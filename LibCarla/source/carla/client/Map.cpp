@@ -256,9 +256,9 @@ namespace client {
     std::vector<SharedPtr<Landmark>> result;
     // Global signal groups do not require a junction synchronization reference.
     std::set<road::ContId> controllers;
-    const auto signal_id = landmark.GetId();
+    const auto target_signal_id = landmark.GetId();
     for (const auto &entry : _map.GetControllers()) {
-      if (entry.second->GetSignals().count(signal_id) != 0u) {
+      if (entry.second->GetSignals().count(target_signal_id) != 0u) {
         controllers.insert(entry.first);
       }
     }
