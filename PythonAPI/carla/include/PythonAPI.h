@@ -112,39 +112,39 @@ static auto OptionalToPyObject(OptionalT &optional) {
 }
 
 // Convenient for requests without arguments.
-#define CALL_WITHOUT_GIL(cls, fn) +[](cls &self) { \
+#define CALL_WITHOUT_GIL(cls, fn) +[](cls &carla_receiver) { \
       carla::PythonUtil::ReleaseGIL unlock; \
-      return self.fn(); \
+      return carla_receiver.fn(); \
     }
 
 // Convenient for requests with 1 argument.
-#define CALL_WITHOUT_GIL_1(cls, fn, T1_) +[](cls &self, T1_ t1) { \
+#define CALL_WITHOUT_GIL_1(cls, fn, T1_) +[](cls &carla_receiver, T1_ t1) { \
       carla::PythonUtil::ReleaseGIL unlock; \
-      return self.fn(std::forward<T1_>(t1)); \
+      return carla_receiver.fn(std::forward<T1_>(t1)); \
     }
 
 // Convenient for requests with 2 arguments.
-#define CALL_WITHOUT_GIL_2(cls, fn, T1_, T2_) +[](cls &self, T1_ t1, T2_ t2) { \
+#define CALL_WITHOUT_GIL_2(cls, fn, T1_, T2_) +[](cls &carla_receiver, T1_ t1, T2_ t2) { \
       carla::PythonUtil::ReleaseGIL unlock; \
-      return self.fn(std::forward<T1_>(t1), std::forward<T2_>(t2)); \
+      return carla_receiver.fn(std::forward<T1_>(t1), std::forward<T2_>(t2)); \
     }
 
 // Convenient for requests with 3 arguments.
-#define CALL_WITHOUT_GIL_3(cls, fn, T1_, T2_, T3_) +[](cls &self, T1_ t1, T2_ t2, T3_ t3) { \
+#define CALL_WITHOUT_GIL_3(cls, fn, T1_, T2_, T3_) +[](cls &carla_receiver, T1_ t1, T2_ t2, T3_ t3) { \
       carla::PythonUtil::ReleaseGIL unlock; \
-      return self.fn(std::forward<T1_>(t1), std::forward<T2_>(t2), std::forward<T3_>(t3)); \
+      return carla_receiver.fn(std::forward<T1_>(t1), std::forward<T2_>(t2), std::forward<T3_>(t3)); \
     }
 
 // Convenient for requests with 4 arguments.
-#define CALL_WITHOUT_GIL_4(cls, fn, T1_, T2_, T3_, T4_) +[](cls &self, T1_ t1, T2_ t2, T3_ t3, T4_ t4) { \
+#define CALL_WITHOUT_GIL_4(cls, fn, T1_, T2_, T3_, T4_) +[](cls &carla_receiver, T1_ t1, T2_ t2, T3_ t3, T4_ t4) { \
       carla::PythonUtil::ReleaseGIL unlock; \
-      return self.fn(std::forward<T1_>(t1), std::forward<T2_>(t2), std::forward<T3_>(t3), std::forward<T4_>(t4)); \
+      return carla_receiver.fn(std::forward<T1_>(t1), std::forward<T2_>(t2), std::forward<T3_>(t3), std::forward<T4_>(t4)); \
     }
 
 // Convenient for requests with 5 arguments.
-#define CALL_WITHOUT_GIL_5(cls, fn, T1_, T2_, T3_, T4_, T5_) +[](cls &self, T1_ t1, T2_ t2, T3_ t3, T4_ t4, T5_ t5) { \
+#define CALL_WITHOUT_GIL_5(cls, fn, T1_, T2_, T3_, T4_, T5_) +[](cls &carla_receiver, T1_ t1, T2_ t2, T3_ t3, T4_ t4, T5_ t5) { \
       carla::PythonUtil::ReleaseGIL unlock; \
-      return self.fn(std::forward<T1_>(t1), std::forward<T2_>(t2), std::forward<T3_>(t3), std::forward<T4_>(t4), std::forward<T5_>(t5)); \
+      return carla_receiver.fn(std::forward<T1_>(t1), std::forward<T2_>(t2), std::forward<T3_>(t3), std::forward<T4_>(t4), std::forward<T5_>(t5)); \
     }
 
 // Convenient for const requests without arguments.
@@ -155,15 +155,15 @@ static auto OptionalToPyObject(OptionalT &optional) {
 #define CONST_CALL_WITHOUT_GIL_4(cls, fn, T1_, T2_, T3_, T4_) CALL_WITHOUT_GIL_4(const cls, fn, T1_, T2_, T3_, T4_)
 
 // Convenient for const requests that need to make a copy of the returned value.
-#define CALL_RETURNING_COPY(cls, fn) +[](const cls &self) \
+#define CALL_RETURNING_COPY(cls, fn) +[](const cls &carla_receiver) \
         -> std::decay_t<std::invoke_result_t<decltype(&cls::fn), cls*>> { \
-      return self.fn(); \
+      return carla_receiver.fn(); \
     }
 
 // Convenient for const requests that need to make a copy of the returned value.
-#define CALL_RETURNING_COPY_1(cls, fn, T1_) +[](const cls &self, T1_ t1) \
+#define CALL_RETURNING_COPY_1(cls, fn, T1_) +[](const cls &carla_receiver, T1_ t1) \
         -> std::decay_t<std::invoke_result_t<decltype(&cls::fn), cls*, T1_>> { \
-      return self.fn(std::forward<T1_>(t1)); \
+      return carla_receiver.fn(std::forward<T1_>(t1)); \
     }
 
 template<typename T>
@@ -177,9 +177,9 @@ std::vector<T> PyListToVector(boost::python::list &input) {
 
 // Convenient for const requests that needs to convert the return value to a
 // Python list.
-#define CALL_RETURNING_LIST(cls, fn) +[](const cls &self) { \
+#define CALL_RETURNING_LIST(cls, fn) +[](const cls &carla_receiver) { \
       boost::python::list result; \
-      for (auto &&item : self.fn()) { \
+      for (auto &&item : carla_receiver.fn()) { \
         result.append(item); \
       } \
       return result; \
@@ -187,53 +187,53 @@ std::vector<T> PyListToVector(boost::python::list &input) {
 
 // Convenient for const requests that needs to convert the return value to a
 // Python list.
-#define CALL_RETURNING_LIST_1(cls, fn, T1_) +[](const cls &self, T1_ t1) { \
+#define CALL_RETURNING_LIST_1(cls, fn, T1_) +[](const cls &carla_receiver, T1_ t1) { \
       boost::python::list result; \
-      for (auto &&item : self.fn(std::forward<T1_>(t1))) { \
+      for (auto &&item : carla_receiver.fn(std::forward<T1_>(t1))) { \
         result.append(item); \
       } \
       return result; \
     }
 
-#define CALL_RETURNING_LIST_2(cls, fn, T1_, T2_) +[](const cls &self, T1_ t1, T2_ t2) { \
+#define CALL_RETURNING_LIST_2(cls, fn, T1_, T2_) +[](const cls &carla_receiver, T1_ t1, T2_ t2) { \
       boost::python::list result; \
-      for (auto &&item : self.fn(std::forward<T1_>(t1), std::forward<T2_>(t2))) { \
+      for (auto &&item : carla_receiver.fn(std::forward<T1_>(t1), std::forward<T2_>(t2))) { \
         result.append(item); \
       } \
       return result; \
     }
 
-#define CALL_RETURNING_LIST_3(cls, fn, T1_, T2_, T3_) +[](const cls &self, T1_ t1, T2_ t2, T3_ t3) { \
+#define CALL_RETURNING_LIST_3(cls, fn, T1_, T2_, T3_) +[](const cls &carla_receiver, T1_ t1, T2_ t2, T3_ t3) { \
       boost::python::list result; \
-      for (auto &&item : self.fn(std::forward<T1_>(t1), std::forward<T2_>(t2), std::forward<T3_>(t3))) { \
+      for (auto &&item : carla_receiver.fn(std::forward<T1_>(t1), std::forward<T2_>(t2), std::forward<T3_>(t3))) { \
         result.append(item); \
       } \
       return result; \
     }
 
-#define CALL_RETURNING_OPTIONAL(cls, fn) +[](const cls &self) { \
-      auto optional = self.fn(); \
+#define CALL_RETURNING_OPTIONAL(cls, fn) +[](const cls &carla_receiver) { \
+      auto optional = carla_receiver.fn(); \
       return OptionalToPyObject(optional); \
     }
 
-#define CALL_RETURNING_OPTIONAL_1(cls, fn, T1_) +[](const cls &self, T1_ t1) { \
-      auto optional = self.fn(std::forward<T1_>(t1)); \
+#define CALL_RETURNING_OPTIONAL_1(cls, fn, T1_) +[](const cls &carla_receiver, T1_ t1) { \
+      auto optional = carla_receiver.fn(std::forward<T1_>(t1)); \
       return OptionalToPyObject(optional); \
     }
 
-#define CALL_RETURNING_OPTIONAL_2(cls, fn, T1_, T2_) +[](const cls &self, T1_ t1, T2_ t2) { \
-      auto optional = self.fn(std::forward<T1_>(t1), std::forward<T2_>(t2)); \
+#define CALL_RETURNING_OPTIONAL_2(cls, fn, T1_, T2_) +[](const cls &carla_receiver, T1_ t1, T2_ t2) { \
+      auto optional = carla_receiver.fn(std::forward<T1_>(t1), std::forward<T2_>(t2)); \
       return OptionalToPyObject(optional); \
     }
 
-#define CALL_RETURNING_OPTIONAL_3(cls, fn, T1_, T2_, T3_) +[](const cls &self, T1_ t1, T2_ t2, T3_ t3) { \
-      auto optional = self.fn(std::forward<T1_>(t1), std::forward<T2_>(t2), std::forward<T3_>(t3)); \
+#define CALL_RETURNING_OPTIONAL_3(cls, fn, T1_, T2_, T3_) +[](const cls &carla_receiver, T1_ t1, T2_ t2, T3_ t3) { \
+      auto optional = carla_receiver.fn(std::forward<T1_>(t1), std::forward<T2_>(t2), std::forward<T3_>(t3)); \
       return OptionalToPyObject(optional); \
     }
 
-#define CALL_RETURNING_OPTIONAL_WITHOUT_GIL(cls, fn) +[](const cls &self) { \
+#define CALL_RETURNING_OPTIONAL_WITHOUT_GIL(cls, fn) +[](const cls &optional_receiver) { \
       auto call = CONST_CALL_WITHOUT_GIL(cls, fn); \
-      auto optional = call(self); \
+      auto optional = call(optional_receiver); \
       return optional.has_value() ? boost::python::object(*optional) : boost::python::object(); \
     }
 

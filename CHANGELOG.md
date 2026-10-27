@@ -124,6 +124,7 @@
 
 #### Python API and client
 
+* Avoid shadowing Boost.Python's self object in binding helper lambdas.
 * Report failed OpenDRIVE map exports instead of silently returning success after output errors.
 * Fixed clients failing `get_world()` against a packaged server: `get_required_files` leaked pak-relative paths that escaped the client cache. The server now sends content-relative names and refuses paths that resolve outside the content folder — previously an arbitrary-file-read vector.
 * Fixed `from carla.command import ...` by registering the `command` submodule in `sys.modules`.
