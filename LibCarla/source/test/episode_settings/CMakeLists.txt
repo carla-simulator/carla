@@ -22,6 +22,9 @@ target_include_directories(episode_settings_units SYSTEM PRIVATE
   ${boost_includes} "${CARLA_RPCLIB_SOURCE_DIR}/include")
 target_compile_definitions(episode_settings_units PRIVATE
   BOOST_ALL_NO_LIB RPCLIB_MSGPACK=clmdep_msgpack)
+if(WIN32)
+  target_compile_definitions(episode_settings_units PRIVATE _WIN32_WINNT=0x0601)
+endif()
 if(MSVC)
   target_compile_options(episode_settings_units PRIVATE /W4 /permissive-)
 else()
