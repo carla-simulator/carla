@@ -7,6 +7,7 @@
 #include "carla/client/BlueprintLibrary.h"
 
 #include "carla/Exception.h"
+#include "carla/StringUtil.h"
 
 #include <algorithm>
 #include <iterator>
@@ -36,6 +37,9 @@ namespace client {
   SharedPtr<BlueprintLibrary> BlueprintLibrary::FilterByAttribute(
       const std::string &name, const std::string& value) const {
     map_type result;
+    const auto matches = [&value](const std::string &candidate) {
+      return value.empty() ? candidate.empty() : StringUtil::Match(candidate, value);
+    };
 
     for (auto &pair : _blueprints) {
       if (!pair.second.ContainsAttribute(name))
@@ -45,14 +49,14 @@ namespace client {
       if (Values.empty())
       {
         const std::string &AttributeValue = Attribute.GetValue();
-        if (value == AttributeValue)
+        if (matches(AttributeValue))
           result.emplace(pair);
       }
       else
       {
         for (const std::string &Value : Values)
         {
-          if (Value == value)
+          if (matches(Value))
           {
             result.emplace(pair);
             break;

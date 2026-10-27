@@ -1,5 +1,7 @@
 ## LATEST Changes
 
+* Fixed blueprint attribute filters ignoring wildcard patterns for current and recommended values.
+
 ### New features
 
 #### Simulator
