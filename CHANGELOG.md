@@ -1,5 +1,7 @@
 ## LATEST Changes
 
+- Correct Windows wildcard matching so `?` requires one character, bracket classes work, and DOS extension/semicolon shortcuts do not broaden blueprint or filename filters.
+
 ### New features
 
 #### Simulator
