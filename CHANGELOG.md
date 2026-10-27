@@ -107,6 +107,8 @@
 
 ### Bug fixes
 
+* Sample decreasing-s junction lanes when computing bounds, and retain global signal-controller groups without junction synchronization references.
+
 #### Sensors
 
 * Fixed every native sensor (LiDAR, radar, IMU, cameras) simulating only the last physics substep instead of the true elapsed time when `sensor_tick` spanned more than one substep, which halved LiDAR's swept angle and skewed IMU and radar readings.

@@ -19,6 +19,7 @@
 #include "carla/road/RoadTypes.h"
 #include "carla/trafficmanager/InMemoryMap.h"
 
+#include <set>
 #include <sstream>
 
 namespace carla {
@@ -253,7 +254,14 @@ namespace client {
   std::vector<SharedPtr<Landmark>>
       Map::GetLandmarkGroup(const Landmark &landmark) const {
     std::vector<SharedPtr<Landmark>> result;
-    auto &controllers = landmark._signal->GetSignal()->GetControllers();
+    // Global signal groups do not require a junction synchronization reference.
+    std::set<road::ContId> controllers;
+    const auto signal_id = landmark.GetId();
+    for (const auto &entry : _map.GetControllers()) {
+      if (entry.second->GetSignals().count(signal_id) != 0u) {
+        controllers.insert(entry.first);
+      }
+    }
     for (auto& controller_id : controllers) {
       const auto &controller = _map.GetControllers().at(controller_id);
       for(auto& signal_id : controller->GetSignals()) {

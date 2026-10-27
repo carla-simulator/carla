@@ -31,6 +31,7 @@
 #include <iterator>
 #include <memory>
 #include <algorithm>
+#include <cmath>
 
 using namespace carla::road::element;
 
@@ -999,7 +1000,8 @@ namespace road {
       for (auto &waypoint_p : waypoints) {
         auto &waypoint_start = waypoint_p.first;
         auto &waypoint_end = waypoint_p.second;
-        double interval = (waypoint_end.s - waypoint_start.s) / static_cast<double>(number_intervals);
+        const double interval = std::abs(waypoint_end.s - waypoint_start.s) /
+            static_cast<double>(number_intervals);
         auto next_wp = waypoint_end;
         auto location = map.ComputeTransform(next_wp).location;
 
