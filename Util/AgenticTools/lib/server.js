@@ -209,8 +209,8 @@ function main() {
     }
   });
 
-  // The client closing stdin is how a stdio server is told to stop.
-  process.stdin.on("end", () => process.exit(0));
+  // Closing stdin stops the server naturally once pending responses drain.
+  // An explicit process.exit() can discard asynchronous stdout pipe writes.
 }
 
 module.exports = { main, dispatch, TOOLS, PROTOCOL_VERSIONS, version };
