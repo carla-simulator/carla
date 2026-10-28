@@ -20,6 +20,11 @@ FActorDefinition ADepthCamera_WideAngleLens::GetSensorDefinition()
 ADepthCamera_WideAngleLens::ADepthCamera_WideAngleLens(const FObjectInitializer &ObjectInitializer)
   : Super(ObjectInitializer)
 {
+  // Depth is a measurement, not a colour: blending two cube faces across a
+  // silhouette averages the near and far hit and emits a surface that exists
+  // nowhere, so the cubemap has to be point sampled like the label cameras. 
+  Super::SetCubemapSampler(CameraModelUtil::GetSampler(ESamplerFilter::SF_Point));
+
   AddPostProcessingMaterial(
 #if PLATFORM_LINUX
       TEXT("Material'/Carla/PostProcessingMaterials/WideAngleLens/DepthEffectMaterial_GLSL_WAL.DepthEffectMaterial_GLSL_WAL'")
