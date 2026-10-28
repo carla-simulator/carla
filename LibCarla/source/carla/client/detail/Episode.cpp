@@ -67,16 +67,17 @@ using namespace std::chrono_literals;
         bool HasMapChanged = next->HasMapChanged();
         bool UpdateLights = next->IsLightUpdatePending();
 
+        std::optional<std::string> exception;
+        {
+          std::scoped_lock<std::mutex> lock(self->_pending_exception_mutex);
+          exception = std::move(self->_pending_exception);
+          self->_pending_exception.reset();
+        }
+
         /// Check for pending exceptions (Mainly TM server closed)
-        if(self->_pending_exceptions) {
-
-          /// Mark pending exception false
-          self->_pending_exceptions = false;
-
-          /// Create exception for the error message
-          auto exception(self->_pending_exceptions_msg);
+        if(exception.has_value()) {
           // Notify waiting threads that exception occurred
-          self->_snapshot.SetException(std::runtime_error(exception));
+          self->_snapshot.SetException(std::runtime_error(*exception));
         }
         /// Sensor case: inconsistent data
         else {
@@ -160,11 +161,7 @@ using namespace std::chrono_literals;
   }
 
   bool Episode::HasMapChangedSinceLastCall() {
-    if(_should_update_map) {
-      _should_update_map = false;
-      return true;
-    }
-    return false;
+    return _should_update_map.exchange(false);
   }
 
   std::shared_ptr<WalkerNavigation> Episode::CreateNavigationIfMissing() {
