@@ -39,8 +39,8 @@ scope)
   echo "no compression  : $(carla_ue58_cmake_opt CARLA_UNREAL_PACKAGE_NO_COMPRESSION)"
   if [ -z "${MAPS}" ]; then
     echo "cook scope      : <empty> — falls back to DefaultGame.ini MapsToCook:"
-    echo "                    Town10HD_Opt, OpenDriveMap, TestMaps/EmptyMap, Mine_01,"
-    echo "                    Town15/Town15   (bCookAll=False, so NOT every map)"
+    echo "                    Town10HD_Opt, OpenDriveMap, TestMaps/EmptyMap,"
+    echo "                    Town12/Town12, Town15/Town15   (bCookAll=False, so NOT every map)"
     echo "  WARNING Town15 is in that default list and CANNOT be cooked (573"
     echo "  WARNING unresolvable MaterialInstanceDynamic imports), so the"
     echo "  WARNING out-of-the-box package build FAILS. Set an explicit scope."
@@ -229,13 +229,14 @@ inspect)
   TGZ="$(ls -1t "${CARLA_UE58_ROOT}"/Build/*/Package/*.tar.gz 2>/dev/null | head -1)"
   [ -n "${TGZ}" ] && ok "$(basename "${TGZ}") ($(du -h "${TGZ}"|cut -f1))" || warn "no .tar.gz archive"
 
-  echo "== Packaged-server limitations (measured) =="
-  warn "get_available_maps() returns [] from a package: GetAllMapNames() is a raw"
-  warn "  FindFilesRecursive(\"*.umap\") that cannot see inside a .pak."
-  warn "load_world() resolves ONLY /Game/Carla/Maps/<Name> (FindMapPath's single pak"
-  warn "  fallback), so nested large maps like Town12/Town12 fail and imported maps"
-  warn "  under /Game/<Pkg>/Maps/ fail. Small maps load by exact name."
-  warn "get_world(), spawning and navigation DO work against a packaged server."
+  echo "== Packaged-server behaviour (measured) =="
+  ok "get_available_maps() lists the cooked maps; discovery goes through the"
+  ok "  asset registry, which sees inside a .pak (CarlaStatics.cpp, 60fd70e44)."
+  ok "load_world() resolves them, nested ones included: a twin at"
+  ok "  Carla/Maps/Twins/<Name>/<Name> loads by leaf name and by relative path."
+  ok "get_world(), spawning and navigation work against a packaged server."
+  warn "The asset registry asserts off the game thread, so an off-thread call"
+  warn "  gets an empty list."
 
   echo "== Result =="
   [ "$rc" -eq 0 ] && echo "  package looks consistent (warnings are non-blocking)" \

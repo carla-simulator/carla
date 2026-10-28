@@ -1,37 +1,68 @@
-# Town 10
+# Town10
 
-ID: **Town10**
+![town_10_slideshow](img/catalogue/maps/town10/town10montage.webp)
+<div class="img-caption">Town10HD_Opt from the default spectator position, from above, and at street level: the museum, a palm boulevard, the skyscrapers and the town houses.</div>
 
-![town_10_slideshow](../img/catalogue/maps/town10/town10montage.webp)
+Town10 mixes inner-city features: glossy skyscrapers and industrial buildings beside waterfront promenades, apartment blocks, hotels, public buildings and tree-lined boulevards. Its road network has a variety of junction arrangements, lane markings, crossings and signal types.
 
-Town 10 presents mixture of features from inner-city environments with glossy skyscrapers and industrial buildings next to waterfront promenades, apartment blocks, hotels, public buildings and tree-lined boulevards. Town 10's road network hosts a number of different junction arrangements with a variety of lane markings, crossings and signal types to challenge your autonomous agent in negotiating with other traffic. 
+| | |
+| --- | --- |
+| __Map name__ | `Town10HD_Opt` |
+| __In the default package__ | yes, and it is the map a server boots into |
+| __Size__ | about 225 x 210 m of roads |
+| __Spawn points__ | 155, from `world.get_map().get_spawn_points()` |
 
+Load it like any other map:
+
+```py
+world = client.load_world('Town10HD_Opt')
+```
+
+- [__Road network__](#road-network)
+- [__Skyscrapers with commercial units__](#skyscrapers-with-commercial-units)
+- [__Tree-lined boulevards__](#tree-lined-boulevards)
+- [__Public buildings with classical architecture__](#public-buildings-with-classical-architecture)
+- [__Residential streets with town houses__](#residential-streets-with-town-houses)
+
+---
 ## Road network
 
-The road network consists of a grid layout, including numerous different junctions including a 4-way yellow-box junction, dedicated turning lanes and central reservations.
+The road network is a grid with several kinds of junctions, among them a 4-way yellow-box junction, dedicated turning lanes and central reservations.
 
-![town_10_road_network](../img/catalogue/maps/town10/town10roadnetwork.png)
+![town_10_road_network](img/catalogue/maps/town10/town10roadnetwork.webp)
+<div class="img-caption">Town10HD_Opt from above: the central plaza and the grid of streets around it.</div>
 
+![town_10_roads](img/catalogue/maps/town10/town10roads.webp)
+<div class="img-caption">The road network of Town10HD_Opt from the Map API, with the index of each spawn point.</div>
+
+---
 ## Skyscrapers with commercial units
 
 A multitude of skyscrapers occupy the skyline and city blocks, with commercial units in the ground floors.
 
-![town_10_skyscrapers](../img/catalogue/maps/town10/town10skyscrapers.webp)
+![town_10_skyscrapers](img/catalogue/maps/town10/town10skyscrapers.webp)
+<div class="img-caption">The skyscrapers of the Town10HD_Opt centre.</div>
 
-## Tree lined boulevards
+---
+## Tree-lined boulevards
 
-Town 10 has tree lined boulevards adorned with tropical vegetation.
+Town10 has tree-lined boulevards adorned with tropical vegetation.
 
-![town_10_tree_boulevard](../img/catalogue/maps/town10/town10treeboulevard.png)
+![town_10_tree_boulevard](img/catalogue/maps/town10/town10treeboulevard.webp)
+<div class="img-caption">A tree-lined boulevard with palm trees, leading to the museum.</div>
 
+---
 ## Public buildings with classical architecture
 
 The map also includes public buildings with classical architecture styles such as the museum.
 
-![town_10_museum](../img/catalogue/maps/town10/town10museum.png)
+![town_10_museum](img/catalogue/maps/town10/town10museum.webp)
+<div class="img-caption">The museum, one of the public buildings in classical style.</div>
 
-## Town houses and alleyways
+---
+## Residential streets with town houses
 
-Town houses line some of the streets of Town 10 similar to those found in the residential areas of many North American cities.
+Town houses, similar to those of many North American cities, line some of the streets of Town10, with bus stops, street furniture and kerbside bins along the sidewalks.
 
-![town_10_town_houses](../img/catalogue/maps/town10/town10townhouses.webp)
+![town_10_town_houses](img/catalogue/maps/town10/town10townhouses.webp)
+<div class="img-caption">A residential street with town houses and a bus stop, with traffic.</div>

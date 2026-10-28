@@ -7,173 +7,142 @@
 # This work is licensed under the terms of the MIT license.
 # For a copy, see <https://opensource.org/licenses/MIT>.
 
+"""Generates Docs/bp_library.md from the blueprints of a running server."""
+
+import argparse
 import os
 import sys
 
 import carla
 
-COLOR_LIST = '#498efc'
+# Blueprints that exist only to exercise the spawning pipeline.
+DENYLIST = {'blueprint.trafficlightexample'}
 
-
-def join(elem, separator=''):
-    return separator.join(elem)
-
-
-def color(col, buf):
-    return join(['<font color="', col, '">', buf, '</font>'])
-
-
-def valid_dic_val(dic, value):
-    return value in dic and dic[value]
-
-
-def italic(buf):
-    return join(['_', buf, '_'])
-
-
-def bold(buf):
-    return join(['**', buf, '**'])
-
-
-def parentheses(buf):
-    return join(['(', buf, ')'])
-
-
-def sub(buf):
-    return join(['<sub>', buf, '</sub>'])
+SECTIONS = [
+    ('vehicle', 'Vehicles', 'Spawnable vehicles. See the [vehicle catalogue](catalogue_vehicles.md) for images and [Actors](core_actors.md) for how to drive them.'),
+    ('walker', 'Pedestrians', 'Spawnable pedestrians. See the [pedestrian catalogue](catalogue_pedestrians.md); they are driven by a `controller.ai.walker`.'),
+    ('controller', 'Controllers', 'Actors that drive another actor. `controller.ai.walker` steers a pedestrian towards a destination.'),
+    ('sensor', 'Sensors', 'Sensors attachable to an actor. Each one is documented in [Sensors reference](ref_sensors.md).'),
+    ('static', 'Props', 'Static meshes that can be spawned as actors. See the [prop catalogue](catalogue_props.md).'),
+]
 
 
 def code(buf):
-    return join(['`', buf, '`'])
+    return '`{}`'.format(buf)
 
 
-class MarkdownFile:
-    def __init__(self):
-        self._data = ""
-        self._list_depth = 0
-        self.endl = '  \n'
-
-    def data(self):
-        return self._data
-
-    def list_push(self, buf=''):
-        if buf:
-            self.text(join([
-                '    ' * self._list_depth if self._list_depth != 0 else '', '- ', buf]))
-        self._list_depth = (self._list_depth + 1)
-
-    def list_pushn(self, buf):
-        self.list_push(join([buf, self.endl]))
-
-    def list_pop(self):
-        self._list_depth = max(self._list_depth - 1, 0)
-
-    def list_popn(self):
-        self.list_pop()
-        self._data = join([self._data, '\n'])
-
-    def list_depth(self):
-        if self._data.strip()[-1:] != '\n' or self._list_depth == 0:
-            return ''
-        return join(['    ' * self._list_depth])
-
-    def text(self, buf):
-        self._data = join([self._data, buf])
-
-    def textn(self, buf):
-        self._data = join([self._data, self.list_depth(), buf, self.endl])
-
-    def not_title(self, buf):
-        self._data = join([
-            self._data, '\n', self.list_depth(), '#', buf, '\n'])
-
-    def title(self, strongness, buf):
-        self._data = join([
-            self._data, '\n', self.list_depth(), '#' * strongness, ' ', buf, '\n'])
-
-    def new_line(self):
-        self._data = join([self._data, self.endl])
-
-    def code_block(self, buf, language=''):
-        return join(['```', language, '\n', self.list_depth(), buf, '\n', self.list_depth(), '```\n'])
+def escape(buf):
+    """Pipes and newlines break a Markdown table cell."""
+    return str(buf).replace('|', '\\|').replace('\n', ' ')
 
 
-def generate_pb_docs():
-    """Generates markdown file"""
+def attribute_value(attr):
+    """The attribute's value as text; as_str() only accepts String attributes."""
+    kind = attr.type
+    if kind == carla.ActorAttributeType.Bool:
+        return 'true' if attr.as_bool() else 'false'
+    if kind == carla.ActorAttributeType.Int:
+        return str(attr.as_int())
+    if kind == carla.ActorAttributeType.Float:
+        return '{:g}'.format(attr.as_float())
+    if kind == carla.ActorAttributeType.RGBColor:
+        color = attr.as_color()
+        return '{},{},{}'.format(color.r, color.g, color.b)
+    return attr.as_str()
+
+
+def attribute_rows(blueprint):
+    rows = []
+    for attr in sorted(blueprint, key=lambda x: x.id):
+        default = escape(attribute_value(attr))
+        values = ', '.join(code(escape(v)) for v in attr.recommended_values)
+        rows.append('| {} | {} | {} | {} | {} |'.format(
+            code(attr.id),
+            str(attr.type).replace('ActorAttributeType.', ''),
+            code(default) if default else '`""`',
+            values,
+            'yes' if attr.is_modifiable else 'no'))
+    return rows
+
+
+def generate_bp_docs(host, port, timeout):
+    """Returns the markdown of the blueprint library of the server at host:port."""
 
     print('Generating API blueprint documentation...')
-    client = carla.Client('127.0.0.1', 2000)
-    client.set_timeout(2.0)
+    client = carla.Client(host, port)
+    client.set_timeout(timeout)
     world = client.get_world()
 
-    bp_dict = {}
-    blueprints = [bp for bp in world.get_blueprint_library().filter('*')] # Returns list of all blueprints
-    blueprint_ids = [bp.id for bp in world.get_blueprint_library().filter('*')] # Returns list of all blueprint ids
+    blueprints = [bp for bp in world.get_blueprint_library().filter('*') if bp.id not in DENYLIST]
+    by_type = {}
+    for bp in sorted(blueprints, key=lambda x: x.id):
+        by_type.setdefault(bp.id.split('.')[0], []).append(bp)
 
-    # Creates a dict key = walker, static, prop, vehicle, sensor, controller; value = [bp_id, blueprint]
-    for bp_id in sorted(blueprint_ids):
-        bp_type = bp_id.split('.')[0]
-        value = []
-        for bp in blueprints:
-            if bp.id == bp_id:
-                value = [bp_id, bp]
-        if bp_type in bp_dict:
-            bp_dict[bp_type].append(value)
-        else:
-            bp_dict[bp_type] = [value]
+    out = ['# Blueprint library', '']
+    out.append('The blueprint library ([`carla.BlueprintLibrary`](python_api.md#carla.BlueprintLibrary)) lists every actor '
+               '([`carla.ActorBlueprint`](python_api.md#carla.ActorBlueprint)) that can be spawned, with the attributes '
+               '([`carla.ActorAttribute`](python_api.md#carla.ActorAttribute)) each one accepts. '
+               'Start with the [introduction to blueprints](core_actors.md).')
+    out.append('')
+    out.append('```py')
+    out.append("blueprints = [bp for bp in world.get_blueprint_library().filter('*')]")
+    out.append('for blueprint in blueprints:')
+    out.append('   print(blueprint.id)')
+    out.append('   for attr in blueprint:')
+    out.append("       print('  - {}'.format(attr))")
+    out.append('```')
+    out.append('')
 
-    # Actual documentation
-    md = MarkdownFile()
-    md.not_title('Blueprint Library')
-    md.textn(
-        "The Blueprint Library ([`carla.BlueprintLibrary`](../python_api/#carlablueprintlibrary-class)) " +
-        "is a summary of all [`carla.ActorBlueprint`](../python_api/#carla.ActorBlueprint) " +
-        "and its attributes ([`carla.ActorAttribute`](../python_api/#carla.ActorAttribute)) " +
-        "available to the user in CARLA.")
+    sections = [s for s in SECTIONS if s[0] in by_type]
+    sections += [(k, k.capitalize(), '') for k in sorted(by_type) if k not in dict((s[0], s) for s in SECTIONS)]
 
-    md.textn("\nHere is an example code for printing all actor blueprints and their attributes:")
-    md.textn(md.code_block("blueprints = [bp for bp in world.get_blueprint_library().filter('*')]\n"
-                        "for blueprint in blueprints:\n"
-                        "   print(blueprint.id)\n"
-                        "   for attr in blueprint:\n"
-                        "       print('  - {}'.format(attr))", "py"))
-    md.textn("Check out the [introduction to blueprints](core_actors.md).")
+    out.append('- ' + '\n- '.join('[{}](#{}) ({} blueprints)'.format(
+        title, title.lower().replace(' ', '-'), len(by_type[key])) for key, title, _ in sections))
+    out.append('')
 
-    for key, value in bp_dict.items(): # bp types, bp's
-        md.title(3, key) # Key = walker, static, controller, sensor, vehicle
-        for bp in sorted(value): # Value = bp[0]= name bp[1]= blueprint
-            md.list_pushn(bold(color(COLOR_LIST, bp[0]))) # bp name
-            md.list_push(bold('Attributes:') + '\n')
-            for attr in sorted(bp[1], key=lambda x: x.id): # for attribute in blueprint
-                md.list_push(code(attr.id))
-                md.text(' ' + parentheses(italic(str(attr.type))))
-                if attr.is_modifiable:
-                    md.text(' ' + sub(italic('- Modifiable')))
-                md.list_popn()
-            md.list_pop()
-            md.list_pop()
-        md.list_pop()
-    return md.data()
+    for key, title, intro in sections:
+        out.append('---')
+        out.append('')
+        out.append('## {}'.format(title))
+        out.append('')
+        if intro:
+            out.append(intro)
+            out.append('')
+        for bp in by_type[key]:
+            out.append('### {}'.format(bp.id))
+            out.append('')
+            rows = attribute_rows(bp)
+            if rows:
+                out.append('| Attribute | Type | Default | Values | Modifiable |')
+                out.append('| --- | --- | --- | --- | --- |')
+                out.extend(rows)
+            else:
+                out.append('No attributes.')
+            out.append('')
+
+    return '\n'.join(out) + '\n'
 
 
 def main():
+    argparser = argparse.ArgumentParser(description=__doc__)
+    argparser.add_argument('--host', default='127.0.0.1', help='IP of the host server (default: 127.0.0.1)')
+    argparser.add_argument('-p', '--port', default=2000, type=int, help='TCP port to listen to (default: 2000)')
+    argparser.add_argument('-t', '--timeout', default=10.0, type=float, help='connection timeout in seconds (default: 10.0)')
+    args = argparser.parse_args()
 
     script_path = os.path.dirname(os.path.abspath(__file__))
 
     try:
-        docs = generate_pb_docs()
-
-    except RuntimeError:
-        print("\n  [ERROR] Can't establish connection with the simulator")
-        print("  .---------------------------------------------------.")
-        print("  |       Make sure the simulator is connected!       |")
-        print("  '---------------------------------------------------'\n")
-        # We don't provide an error to prvent Travis checks failing
-        sys.exit(0)
+        docs = generate_bp_docs(args.host, args.port, args.timeout)
+    except RuntimeError as error:
+        print("\n  [ERROR] Can't establish connection with the simulator: {}".format(error))
+        print('  Start a server on {}:{} and run this script again.\n'.format(args.host, args.port))
+        sys.exit(1)
 
     with open(os.path.join(script_path, '../../Docs/bp_library.md'), 'w') as md_file:
         md_file.write(docs)
-    print("Done!")
+    print('Done!')
+
 
 if __name__ == '__main__':
     main()

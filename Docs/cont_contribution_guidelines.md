@@ -1,139 +1,136 @@
 # Contributing to CARLA
 
-The CARLA team is glad to accept contributions from anybody willing to collaborate. There are different ways to contribute to the project, depending on the capabilities of the contributor. The team will work as much as possible so that contributions are successfully integrated in CARLA.  
+The CARLA team is glad to accept contributions from anybody willing to collaborate. There are different ways to contribute to the project, depending on the capabilities of the contributor. Everyone taking part is expected to follow the [Code of conduct](cont_code_of_conduct.md).
 
-Take a look and don't hesitate!  
-
-*   [__Report bugs__](#report-bugs)  
-*   [__Request features__](#request-features)  
-*   [__Code contributions__](#code-contributions)  
-	*   [Learn about Unreal Engine](#learn-about-unreal-engine)  
-	*   [Before getting started](#before-getting-started)  
-	*   [Coding standard](#coding-standard)  
-	*   [Submission](#submission)  
-	*   [Checklist](#checklist)  
-*   [__Art contributions__](#art-contributions)  
-*   [__Docs contributions__](#docs-contributions)  
+- [__Report bugs__](#report-bugs)
+- [__Request features__](#request-features)
+- [__Code contributions__](#code-contributions)
+- [__Art contributions__](#art-contributions)
+- [__Docs contributions__](#docs-contributions)
 
 ---
 ## Report bugs
 
-Issues can be reported in the [issue section][issueslink] on GitHub. Before reporting a new bug, make sure to do some checkups.  
+Issues can be reported in the [issue section][issueslink] on GitHub. Before reporting a new bug, make sure to do some checkups.
 
-__1. Check if the bug has been reported.__ Look it up in that same issue section on GitHub.  
+__1. Check if the bug has been reported.__ Look it up in that same issue section on GitHub.
 
-__2. Read the docs.__ Make sure that the issue is a bug, not a misunderstanding on how is CARLA supposed to work. Read the pages related to the issue in the [Documentation][docslink] and take a look at the [FAQ][faqlink] page.
+__2. Read the docs.__ Make sure that the issue is a bug, not a misunderstanding on how CARLA is supposed to work. Read the pages related to the issue in the [documentation][docslink] and take a look at the [FAQ][faqlink] page.
+
+__3. Say which version you are on.__ The branch and commit you built from, the Unreal Engine version, the platform and the Python version.
 
 [issueslink]: https://github.com/carla-simulator/carla/issues
-[docslink]: http://carla.readthedocs.io
+[docslink]: https://carla-ue5.readthedocs.io
 [faqlink]: build_faq.md
 
 ---
 ## Request features
 
-Ideas for new features are also a great way to contribute. Any suggestion that could improve the users' experience  can be submitted in the corresponding GitHub section [here][frlink].
+Ideas for new features are also a great way to contribute. Any suggestion that could improve the users' experience can be submitted in the corresponding GitHub section [here][frlink].
 
 [frlink]: https://github.com/carla-simulator/carla/issues?q=is%3Aissue+is%3Aopen+label%3A%22feature+request%22+sort%3Acomments-desc
 
 ---
 ## Code contributions
 
-Before starting hands-on on coding, please check out the [issue board][issueboard] to check what is the team already working on, to avoid overlapping. In case of doubt or to discuss how to proceed, please contact one of us (or send an email to <carla.simulator@gmail.com>).  
+Before starting hands-on on coding, please check out the [issue board][issueslink] to see what the team is already working on, to avoid overlapping. In case of doubt, or to discuss how to proceed, ask on [GitHub Discussions](https://github.com/carla-simulator/carla/discussions) or contact the team on the [Discord server](https://discord.com/invite/8kqACuC).
 
-In order to start working, [fork the CARLA repository](https://docs.github.com/en/enterprise/2.13/user/articles/fork-a-repo), and clone said fork in your computer. Remember to [keep your fork in sync](https://docs.github.com/en/enterprise/2.13/user/articles/syncing-a-fork) with the original repository.  
-
-[issueboard]: https://github.com/carla-simulator/carla/issues
-
-### Learn about Unreal Engine
-
-A basic introduction to C++ programming with UE5 can be found at Unreal's [C++ Programming Tutorials][ue5tutorials]. There are other options online, some of them not free of charge. The [Unreal C++ Course at Udemy][ue5course] it's pretty complete and there are usually offers that make it very affordable.
-
-[ue5tutorials]: https://dev.epicgames.com/documentation/en-us/unreal-engine/unreal-engine-cpp-programming-tutorials
-[ue5course]: https://www.udemy.com/unrealcourse/
+To start working, [fork the CARLA repository](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/fork-a-repo) and clone your fork. Remember to [keep your fork in sync](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/syncing-a-fork) with the original repository.
 
 ### Before getting started
 
-Check out the [CARLA Design](index.md)<!-- @todo --> document to get an idea on the different modules that compose CARLA. Choose the most appropriate one
-to hold the new feature. Feel free to contact the team in the [Discord server](https://discord.com/invite/8kqACuC) in case any doubt arises during the process.  
+A basic introduction to C++ programming with Unreal is in Unreal's [C++ programming tutorials][ue5tutorials]. Build CARLA from source first, following [Linux](build_linux_ue5.md) or [Windows](build_windows_ue5.md), and read [Foundations](core_foundations.md) to see which module a new feature belongs in.
+
+[ue5tutorials]: https://dev.epicgames.com/documentation/en-us/unreal-engine/unreal-engine-cpp-programming-tutorials
 
 ### Coding standard
 
-Follow the current [coding standard](cont_coding_standard.md) when submitting new code.  
+Follow the [coding standard](cont_coding_standard.md) when submitting new code.
+
+### Tests
+
+Every test runs in CI on every pull request, so each one has to earn its compute. A new or modified test must exercise real behaviour and fail when that behaviour breaks. [Running the tests](dev_testing.md) describes where each suite lives.
+
+*   Empty tests, tests without assertions, tests that only check that something imports or spawns without checking a result, and tests that duplicate existing coverage are not accepted. They cost CI time and give no signal.
+*   When modifying an existing test, do not weaken it to make it pass: removing assertions, widening tolerances or skipping it hides the regression it was there to catch. If the expected behaviour really changed, explain why in the pull request.
+*   In the pull request, say what each new or modified test checks and which regression it would catch.
+
+### CI workflows
+
+Do not open a pull request that adds or changes a workflow under `.github/workflows/` without discussing it with the core maintainers team first, on [GitHub Discussions](https://github.com/carla-simulator/carla/discussions) or the [Discord server](https://discord.com/invite/8kqACuC). The proposal explains:
+
+*   What is happening: the problem the workflow addresses.
+*   Why a workflow is needed to solve it.
+*   What the workflow would run, on which triggers, and what it costs in runners and time.
+
+Link that discussion in the pull request. Workflow changes that were not agreed beforehand are not merged.
 
 ### Submission
 
-Contributions and new features are not merged directly to the `master` branch, but to an intermediate branch named `dev`. This [Gitflow](https://nvie.com/posts/a-successful-git-branching-model/) branching model makes it easier to maintain a stable master branch. This model requires a specific workflow for contributions.  
+Contributions and new features are merged to the development branch, `ue58-dev`. Its content is in the `ue58-dev-carla` branch of the content repository.
 
-*   Always keep your `dev` branch updated with the lastest changes.  
-*   Develop the contribution in child branch from `dev` named as `username/name_of_the_contribution`.  
-*   Once the contribution is ready, submit a pull-request from your branch to `dev`. Try to be as descriptive as possible when filling the description. Note that there are some checks that the new code is required to pass before merging. The checks are automatically run by the continuous integration system. A green tick mark will appear if the checks are successful. If a red mark, please correct the code accordingly.  
+*   Always keep your branch updated with the latest changes in `ue58-dev`.
+*   Develop the contribution in a child branch from `ue58-dev` named `username/name_of_the_contribution`.
+*   Once the contribution is ready, submit a pull request from your branch to `ue58-dev`. Try to be as descriptive as possible when filling in the template: what changed, where it was tested, and the possible drawbacks.
+*   Continuous integration builds the client, the Python API, the server and the package on Ubuntu, and builds and runs the LibCarla tests ([What CI runs](dev_testing.md#what-ci-runs)). It does not run the Python tests, so run them locally. A green tick mark appears if the checks pass; if there is a red mark, correct the code accordingly.
 
-Once the contribution is merged in `dev`, it can be tested with the rest of new features. By the time of the next release, the `dev` branch will be merged to `master`, and the contribution will be available and announced.  
+### Checklist
 
-### Checklist  
+Before a pull request to `ue58-dev`:
 
-*   [ ] Your branch is up-to-date with the `dev` branch and tested with latest changes.  
-*   [ ] Extended the README/documentation, if necessary.  
-*   [ ] Code compiles correctly.  
-*   [ ] All tests passing with `make check`.  
+*   [ ] The branch is up-to-date with `ue58-dev` and tested with the latest changes.
+*   [ ] The code compiles: `cmake --build Build --target carla-client carla-python-api carla-server`.
+*   [ ] The LibCarla unit tests pass ([LibCarla unit tests](dev_testing.md#libcarla-unit-tests)).
+*   [ ] The smoke tests pass against a running server on port 3654 ([Smoke tests](dev_testing.md#smoke-tests)). On Linux: `cd PythonAPI/test && python3 -m nose2 -v $(cat smoke_test_list.txt)`.
+*   [ ] New or modified tests add real value: they assert behaviour and would fail on a regression ([Tests](#tests)).
+*   [ ] Any new or changed CI workflow was agreed with the core maintainers beforehand, and the discussion is linked in the pull request ([CI workflows](#ci-workflows)).
+*   [ ] `CHANGELOG.md` has an entry under `## LATEST Changes` for any user-visible change.
+*   [ ] The documentation was extended, if necessary.
 
 ---
 ## Art contributions
 
-Art contributions include vehicles, walkers, maps or any other type of assets to be used in CARLA. These are stored in a BitBucket repository, which has some account space limitations. For said reason, the contributor will have to get in touch with the CARLA team, and ask them to create a branch on the content repository for the contributions.  
+Art contributions are vehicles, walkers, maps or any other asset. They live in a separate content repository, so a contributor needs access to it before starting.
 
-__1. Create a BitBucket account.__ Visit the [Bitbucket page](https://bitbucket.org).  
+__1. Create a Bitbucket account.__ Visit the [Bitbucket page](https://bitbucket.org).
 
-__2. Contact the art team to get access to the content repository.__ Join the [Discord server](https://discord.com/invite/8kqACuC). Go to the __Contributors__ channel and request for access to the content repostory.  
+__2. Ask for access to the content repository.__ Join the [Discord server](https://discord.com/invite/8kqACuC), go to the __Contributors__ channel and request access.
 
-__3. A branch will be created for each contributor.__ The branch will be named as `contributors/contributor_name`. All the contributions made by said user should be made in that corresponding branch.  
+__3. Work in your own branch.__ A branch named `contributors/contributor_name` will be created for you; all your contributions go there.
 
-__4. Build CARLA.__ In order to contribute, a CARLA build is necessary. Follow the instructions to build either in [Linux](https://carla.readthedocs.io/en/latest/build_linux/) or [Windows](https://carla.readthedocs.io/en/latest/build_windows/).  
+__4. Build CARLA from source__, following [Linux](build_linux_ue5.md) or [Windows](build_windows_ue5.md). The content repository is cloned into `Unreal/CarlaUnreal/Content/Carla` as part of that build.
 
-__5. Download the content repository.__ Follow the instructions to update the content in [here](https://carla.readthedocs.io/en/latest/build_update/#get-development-assets).
+__5. Keep the branch in sync__ with `ue58-dev-carla`, and push it when the contribution is ready.
 
-__6. Update the branch to be in sync with master.__ The branch should always be updated with the latest changes in master.  
+__6. Wait for the art team to review it__ before it is merged.
 
-__7. Upload the contribution.__ Do the corresponding changes and push the branch to origin.  
-
-__8. Wait for the art team to check it up.__ Once the contribution is uploaded, the team will check that everything is prepared to be merged with master.  
-
+See the [asset tutorials](content_authoring_overview.md) for how to author each kind of asset.
 
 ---
 ## Docs contributions
 
-If some documentation is missing, vague or imprecise, it can be reported as with any other bug (read the previous section on [how to report bugs](#report-bugs)). However, users can contribute by writing documentation.  
+Missing, vague or imprecise documentation can be reported as any other bug. It can also be fixed directly: the docs are Markdown files under `Docs/`, built with [MkDocs](https://www.mkdocs.org/).
 
-The documentation is written with a mix of [Markdown](https://www.markdownguide.org/) and HTML tags, with a some extra CSS code for features such as tables or the [town slider](https://carla.readthedocs.io/en/latest/core_map/#carla-maps). Follow the steps below to start writing documentation. 
-
-!!! Important
-    To submit docs contributions, follow the same workflow explained right above in [code contributions](#submission). To sum up, contributions are made in a child branch from `dev` and merged to said branch.  
-
-__1. Build CARLA from source.__ Follow the steps in the docs to build on [Linux](build_linux_ue5.md) or [Windows](build_windows_ue5.md).  
-
-
-__2. Install [MkDocs](http://www.mkdocs.org/).__ MkDocs is a static site generator used to build documentation. 
+__1. Install MkDocs.__ From the CARLA root:
 
 ```sh
-sudo pip install mkdocs
+pip3 install -r Docs/requirements.txt
 ```
 
-__3. Visualize the docs.__ In the main CARLA folder, run the following command and click the link that appears in the terminal (http://127.0.0.1:8000) to open a local visualization of the documentation.  
+__2. Preview the docs.__ Run the following and open the link it prints.
 
 ```sh
-mkdocs serve
+python3 -m mkdocs serve
 ```
-__4. Create a git branch.__ Make sure to be in the `dev` branch (updated to latest changes) when creating a new one. 
+
+__3. Create a branch__ from `ue58-dev`.
 
 ```sh
 git checkout -b <contributor_name>/<branch_name>
 ```
 
-__5. Write the docs.__ Edit the files following the guidelines in the [documentation standard](cont_doc_standard.md) page.  
+__4. Write.__ Follow the [documentation standard](cont_doc_standard.md). Never edit `Docs/python_api.md` or `Docs/bp_library.md` directly; they are generated.
 
-__6. Submit the changes.__ Create a pull request in the GitHub repository, and add one of the suggested reviewers. Try to be as descriptive as possible when filling the pull-request description.  
+__5. Check the build.__ `python3 -m mkdocs build --strict` fails on a link to a missing page. A link to a missing anchor does not fail it; it only shows as an `INFO` line. Search the build output for `does not contain an anchor` to find those.
 
-__7. Wait for review.__ The team will check if everything is ready to be merged or any changes are needed.  
-
-!!! Warning
-    The local repository must be updated with the latest updates in the `dev` branch.  
+__6. Open a pull request__ against `ue58-dev` and add one of the suggested reviewers.

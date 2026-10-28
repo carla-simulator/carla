@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="730" viewBox="0 0 1200 730"><defs><marker id="ah_ink" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#2b2b2b"/></marker><marker id="ah_sub" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#5f6b73"/></marker><marker id="ah_line" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#c9d3da"/></marker><marker id="ah_card" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#f5f8fa"/></marker><marker id="ah_blue" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#2980b9"/></marker><marker id="ah_red" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#d9534f"/></marker><marker id="ah_green" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#3c9a5f"/></marker><marker id="ah_orange" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#e69138"/></marker><marker id="ah_purple" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#7e57c2"/></marker><marker id="ah_white" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#ffffff"/></marker><marker id="ah_soft_blue" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#e3f0f9"/></marker><marker id="ah_soft_red" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#fbe6e5"/></marker><marker id="ah_soft_green" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#e4f3e9"/></marker><marker id="ah_soft_orange" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#fdf0e1"/></marker><marker id="ah_soft_purple" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#efe9f8"/></marker></defs>
+<rect width="1200" height="730" fill="#ffffff"/>
+<text x="600.0" y="44" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="26" fill="#2b2b2b" font-weight="bold" text-anchor="middle" xml:space="preserve">CARLA frame vs ROS 2 / REP-103 (FLU) frame</text>
+<text x="600.0" y="74" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="15" fill="#5f6b73" font-weight="normal" text-anchor="middle" xml:space="preserve">Top view of a vehicle: the nose points up the page, +z points out of the page towards you</text>
+<rect x="40" y="100" width="540" height="450" rx="14" fill="#e3f0f9" stroke="#2980b9" stroke-width="2"/>
+<text x="310" y="136" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="21" fill="#2b2b2b" font-weight="bold" text-anchor="middle" xml:space="preserve">CARLA / Unreal</text>
+<text x="310" y="162" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="15" fill="#5f6b73" font-weight="normal" text-anchor="middle" xml:space="preserve">left-handed, z-up, metres, degrees</text>
+<rect x="265" y="255" width="90" height="190" rx="26" fill="#ffffff" stroke="#5f6b73" stroke-width="2"/>
+<rect x="277" y="295" width="66" height="40" rx="8" fill="#c9d3da" stroke="#5f6b73" stroke-width="1"/>
+<rect x="258" y="280" width="8" height="28" rx="3" fill="#2b2b2b" stroke="#2b2b2b" stroke-width="1"/>
+<rect x="258" y="395" width="8" height="28" rx="3" fill="#2b2b2b" stroke="#2b2b2b" stroke-width="1"/>
+<rect x="356" y="280" width="8" height="28" rx="3" fill="#2b2b2b" stroke="#2b2b2b" stroke-width="1"/>
+<rect x="356" y="395" width="8" height="28" rx="3" fill="#2b2b2b" stroke="#2b2b2b" stroke-width="1"/>
+<line x1="310" y1="350" x2="310" y2="185" stroke="#d9534f" stroke-width="4" marker-end="url(#ah_red)"/>
+<text x="322" y="190" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="17" fill="#d9534f" font-weight="bold" text-anchor="start" xml:space="preserve">+x  forward</text>
+<line x1="310" y1="350" x2="485" y2="350" stroke="#3c9a5f" stroke-width="4" marker-end="url(#ah_green)"/>
+<text x="495" y="338" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="17" fill="#3c9a5f" font-weight="bold" text-anchor="start" xml:space="preserve">+y  right</text>
+<circle cx="310" cy="350" r="11" fill="#ffffff" stroke="#2980b9" stroke-width="3"/>
+<circle cx="310" cy="350" r="3.5" fill="#2980b9" stroke="#2980b9" stroke-width="1"/>
+<text x="252" y="384" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="15" fill="#2980b9" font-weight="bold" text-anchor="end" xml:space="preserve">+z up</text>
+<path d="M326.7,231.2 A120,120 0 0 1 408.3,281.2" stroke="#e69138" stroke-width="3.5" fill="none" marker-end="url(#ah_orange)"/>
+<text x="399.5903117079846" y="244.2342284612289" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="17" fill="#e69138" font-weight="bold" text-anchor="middle" xml:space="preserve">+yaw</text>
+<text x="70" y="488" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="15" fill="#2b2b2b" font-weight="bold" text-anchor="start" xml:space="preserve">+yaw</text>
+<text x="150" y="488" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="15" fill="#5f6b73" font-weight="normal" text-anchor="start" xml:space="preserve">nose turns right (clockwise seen from above)</text>
+<text x="70" y="512" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="15" fill="#2b2b2b" font-weight="bold" text-anchor="start" xml:space="preserve">+pitch</text>
+<text x="150" y="512" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="15" fill="#5f6b73" font-weight="normal" text-anchor="start" xml:space="preserve">nose up</text>
+<text x="70" y="536" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="15" fill="#2b2b2b" font-weight="bold" text-anchor="start" xml:space="preserve">+roll</text>
+<text x="150" y="536" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="15" fill="#5f6b73" font-weight="normal" text-anchor="start" xml:space="preserve">right side drops</text>
+<rect x="620" y="100" width="540" height="450" rx="14" fill="#e4f3e9" stroke="#3c9a5f" stroke-width="2"/>
+<text x="890" y="136" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="21" fill="#2b2b2b" font-weight="bold" text-anchor="middle" xml:space="preserve">ROS 2 / REP-103 (FLU)</text>
+<text x="890" y="162" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="15" fill="#5f6b73" font-weight="normal" text-anchor="middle" xml:space="preserve">right-handed, z-up, metres, degrees</text>
+<rect x="845" y="255" width="90" height="190" rx="26" fill="#ffffff" stroke="#5f6b73" stroke-width="2"/>
+<rect x="857" y="295" width="66" height="40" rx="8" fill="#c9d3da" stroke="#5f6b73" stroke-width="1"/>
+<rect x="838" y="280" width="8" height="28" rx="3" fill="#2b2b2b" stroke="#2b2b2b" stroke-width="1"/>
+<rect x="838" y="395" width="8" height="28" rx="3" fill="#2b2b2b" stroke="#2b2b2b" stroke-width="1"/>
+<rect x="936" y="280" width="8" height="28" rx="3" fill="#2b2b2b" stroke="#2b2b2b" stroke-width="1"/>
+<rect x="936" y="395" width="8" height="28" rx="3" fill="#2b2b2b" stroke="#2b2b2b" stroke-width="1"/>
+<line x1="890" y1="350" x2="890" y2="185" stroke="#d9534f" stroke-width="4" marker-end="url(#ah_red)"/>
+<text x="902" y="190" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="17" fill="#d9534f" font-weight="bold" text-anchor="start" xml:space="preserve">+x  forward</text>
+<line x1="890" y1="350" x2="715" y2="350" stroke="#3c9a5f" stroke-width="4" marker-end="url(#ah_green)"/>
+<text x="705" y="338" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="17" fill="#3c9a5f" font-weight="bold" text-anchor="end" xml:space="preserve">+y  left</text>
+<circle cx="890" cy="350" r="11" fill="#ffffff" stroke="#2980b9" stroke-width="3"/>
+<circle cx="890" cy="350" r="3.5" fill="#2980b9" stroke="#2980b9" stroke-width="1"/>
+<text x="832" y="384" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="15" fill="#2980b9" font-weight="bold" text-anchor="end" xml:space="preserve">+z up</text>
+<path d="M873.3,231.2 A120,120 0 0 0 791.7,281.2" stroke="#e69138" stroke-width="3.5" fill="none" marker-end="url(#ah_orange)"/>
+<text x="800.4096882920154" y="244.23422846122887" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="17" fill="#e69138" font-weight="bold" text-anchor="middle" xml:space="preserve">+yaw</text>
+<text x="650" y="488" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="15" fill="#2b2b2b" font-weight="bold" text-anchor="start" xml:space="preserve">+yaw</text>
+<text x="730" y="488" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="15" fill="#5f6b73" font-weight="normal" text-anchor="start" xml:space="preserve">nose turns left (counter-clockwise)</text>
+<text x="650" y="512" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="15" fill="#2b2b2b" font-weight="bold" text-anchor="start" xml:space="preserve">+pitch</text>
+<text x="730" y="512" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="15" fill="#5f6b73" font-weight="normal" text-anchor="start" xml:space="preserve">nose down</text>
+<text x="650" y="536" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="15" fill="#2b2b2b" font-weight="bold" text-anchor="start" xml:space="preserve">+roll</text>
+<text x="730" y="536" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="15" fill="#5f6b73" font-weight="normal" text-anchor="start" xml:space="preserve">right side drops</text>
+<rect x="40" y="570" width="1120" height="140" rx="12" fill="#f5f8fa" stroke="#c9d3da" stroke-width="1.5"/>
+<text x="70" y="604" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="17" fill="#2b2b2b" font-weight="bold" text-anchor="start" xml:space="preserve">Conversion = mirror of the y axis, S = diag(1, -1, 1)</text>
+<text x="70" y="634" font-family="'DejaVu Sans Mono', Consolas, monospace" font-size="15" fill="#2b2b2b" font-weight="normal" text-anchor="start" xml:space="preserve">location   (x, y, z)            -&gt;  (x, -y, z)</text>
+<text x="70" y="660" font-family="'DejaVu Sans Mono', Consolas, monospace" font-size="15" fill="#2b2b2b" font-weight="normal" text-anchor="start" xml:space="preserve">rotation   (roll, pitch, yaw)   -&gt;  (roll, -pitch, -yaw)</text>
+<text x="70" y="686" font-family="'DejaVu Sans Mono', Consolas, monospace" font-size="15" fill="#2b2b2b" font-weight="normal" text-anchor="start" xml:space="preserve">matrix     M                    -&gt;  S·M·S</text>
+</svg>

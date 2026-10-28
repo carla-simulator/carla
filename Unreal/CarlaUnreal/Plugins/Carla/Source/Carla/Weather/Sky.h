@@ -134,7 +134,7 @@ public:
 	// next SaveProfile.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "PostProcessProfile",
 		meta = (GetOptions = "GetAvailablePostProcessProfileNamesForPicker"))
-	FString ProfileName = TEXT("Default");
+	FString ProfileName = TEXT("Cinematic");
 
 	// Writes PostProcessComponent's current Settings -- edited live, in the
 	// normal "Settings" category of the component, absolute values, no

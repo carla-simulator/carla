@@ -61,8 +61,8 @@ def main():
         '--filterv', metavar='PATTERN', default='vehicle.*',
         help='Filter vehicle model (default: "vehicle.*")')
     argparser.add_argument(
-        '--generationv', metavar='G', default='All',
-        help='restrict to certain vehicle generation (values: "2","3","All" - default: "All")')
+        '--generationv', metavar='G', default='3',
+        help='restrict to certain vehicle generation (values: "1","2","3","All" - default: "3")')
     argparser.add_argument(
         '--filterw', metavar='PATTERN', default='walker.pedestrian.*',
         help='Filter pedestrian type (default: "walker.pedestrian.*")')

@@ -91,13 +91,11 @@ set (
   ${CARLA_PYTHON_API_SOURCE_PATH}/World.cpp
 )
 
-if (ENABLE_OSM2ODR)
-  list (
-    APPEND
-    PYTHON_API_SOURCES
-    ${CARLA_PYTHON_API_SOURCE_PATH}/OSM2ODR.cpp
-  )
-endif ()
+list (
+  APPEND
+  PYTHON_API_SOURCES
+  ${CARLA_PYTHON_API_SOURCE_PATH}/OSM2ODR.cpp
+)
 
 if (ENABLE_RSS)
   list (

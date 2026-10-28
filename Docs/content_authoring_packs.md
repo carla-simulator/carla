@@ -1,0 +1,428 @@
+# Content packs
+
+A __content pack__ is a self-contained bundle of CARLA content — maps, props, vehicles, walkers, blueprints — built once against a CARLA release and then installed into any CARLA package of that release. The packaged server loads it without re-cooking or re-packaging CARLA; packs can also be mounted from the Python API while the server runs.
+
+This page has two parts:
+
+* __Making a pack__ needs a CARLA source build with the editor. A pack of existing CARLA towns is one command; a pack of your own content is the usual authoring flow plus two commands.
+* __Installing a pack__ needs only a CARLA package. One command, or one Python call.
+
+![content_pack_lifecycle](img/content_authoring_packs/content_pack_lifecycle.svg)
+<div class="img-caption">How a pack goes from a CARLA source build to a CARLA package of the same release.</div>
+
+- [__Quick start__](#quick-start)
+- [__Making a pack__](#making-a-pack)
+- [__Installing a pack__](#installing-a-pack)
+- [__What a pack is__](#what-a-pack-is)
+- [__Limits__](#limits)
+- [__FAQ__](#faq)
+
+---
+
+## Quick start
+
+On a CARLA source checkout that has built the package (or has the package's release metadata, see [Requirements](#requirements)):
+
+```sh
+# five towns the CARLA package does not ship, as one pack
+carla-pack create Towns5 Town01_Opt Town03_Opt Town05_Opt Town11 Town13
+# -> Unreal/CarlaUnreal/Plugins/Packs/Towns5/Saved/CarlaPack/out/Towns5-1.0.0-carla-<version>-Linux.tar.gz
+```
+
+Registering the towns takes a second; the cook takes minutes (about 9, and 3.9 GB, for five towns of this kind). Ship the tarball.
+
+On any machine with the CARLA package of that release:
+
+```sh
+carla-pack install Towns5-1.0.0-carla-<version>-Linux.tar.gz --server /opt/carla/Linux
+/opt/carla/Linux/CarlaUnreal.sh
+```
+
+```py
+client = carla.Client('localhost', 2000)
+client.get_available_maps()        # ... 'Town01_Opt', 'Town03_Opt', 'Town05_Opt', 'Town11', 'Town13' ...
+world = client.load_world('Town13')
+```
+
+`carla-pack` is `Util/ContentPacks/carla-pack` in the source tree, a wrapper for `carla_pack.py` (Python 3.8+, standard library only). To install a pack you only need that one file: copy `carla_pack.py` next to the package and run `python3 carla_pack.py install ...`.
+
+---
+
+## Making a pack
+
+### Requirements
+
+* A CARLA [source build](build_carla.md) with the Unreal Editor (the cooker is the editor binary). `CARLA_UNREAL_ENGINE_PATH` must point at the engine, as for any CARLA build (`--engine` overrides).
+* The __release metadata__ of the CARLA package the pack targets: `<release>-release-metadata.tar.gz` (about 2 MB, the base asset registry). The `package` target writes it next to the package in `Build/Package/`, and it is published alongside the official package __(TODO: confirm the metadata tarball is published with the 1.0.0 release once it is out)__ (see [Building CARLA on Linux](build_linux_ue5.md#content-packs)). `carla-pack` finds it by itself when it is the only one under this checkout's `Build/`; `--base <file>` otherwise. If you configured with a preset, replace `Build` with `Build/<preset>`.
+
+`carla-pack <command> --help` lists every option. Exit codes: `0` ok, `1` error, `2` usage error, `3` "pack not compatible with `--server`" (`inspect`). The tool finds the project from its own location; `--project` overrides.
+
+### A. Existing CARLA towns
+
+```sh
+carla-pack create <Pack> <Map> [<Map> ...] [--base <release-metadata.tar.gz>] [--config Shipping] [--description "..."]
+```
+
+`create` is `init` + `add --map` for every map + `build` in one go. Maps are given by name (`Town13`), by package path (`/Game/Carla/Maps/Town13/Town13`) or as a `.umap` file. Run it again with more maps to add them to the same pack, passing `--pack-version` again: `create` sets the version, `1.0.0` by default. `create --dry-run` still runs `init` and `add` on the pack sources; only the cook is skipped.
+
+Any map under the project's `Content` (all of CARLA's own towns) is registered __in place__: the manifest names its `/Game/...` package, the cook takes the map and whatever it references that the base release did not cook, and the server loads it from the pack's containers at that same path. Nothing is copied, nothing is opened in the editor, so a World Partition town with hundreds of thousands of actors takes a second to add. Its OpenDRIVE, walker navigation and Traffic Manager files are picked up from where CARLA keeps them (`Maps/OpenDrive/<Map>.xodr` or `Maps/<Map>/OpenDrive/`, `Maps/Nav/<Map>.bin`, `Maps/TM/<Map>.bin` or `Maps/<Map>/TM/`).
+
+Which towns qualify: any map the base package does __not__ ship. The default package ships `Town10HD_Opt`, `Town12`, `Town15`, `EmptyMap` and `OpenDriveMap`; `Town01_Opt` … `Town07_Opt`, `Town11`, `Town13`, `Town_C`, `Mine_01` and `Eixample` can go in a pack. `build` reads the base asset registry and refuses a map the base already contains.
+
+Measured on the Shipping package: a pack of two large World Partition towns cooks in 8 minutes to 2.4 GB; one of three classic towns and two large ones, in 9 minutes to 3.9 GB.
+
+### B. Your own content
+
+```sh
+carla-pack init NewPack
+# author NewTown, props and vehicles in the CARLA editor, saved under "NewPack Content"
+carla-pack add NewPack --map Unreal/CarlaUnreal/Plugins/Packs/NewPack/Content/Maps/NewTown.umap --xodr NewTown.xodr --nav NewTown.bin
+carla-pack add NewPack --props props.json --vehicles vehicles.json
+carla-pack add NewPack --map Town13                     # existing towns mix in freely
+carla-pack build NewPack
+# -> Unreal/CarlaUnreal/Plugins/Packs/NewPack/Saved/CarlaPack/out/NewPack-1.0.0-carla-<version>-Linux.tar.gz
+```
+
+#### 1. Create the pack folder
+
+```sh
+carla-pack init NewPack [--carla-version <version>] [--pack-version 1.0.0] [--description "..."]
+```
+
+`init` creates `Unreal/CarlaUnreal/Plugins/Packs/NewPack/` with the plugin descriptor, an empty manifest, `Config/PluginSettings.ini` (makes the cook stage the [sidecar folders](#sidecar-files) as loose files; `init` and `build` merge into an existing file, your sections and comments stay) and the content folders `Content/{Maps, Maps/OpenDrive, Maps/Nav, Maps/TM, Config, Static, Static/Static, Blueprints}`. `Static/Static/` is the default folder for props: it carries CARLA's `Static` semantic label, like the base's `Content/Carla/Static/Static/`. The pack name becomes the mount point `/NewPack/`, so it must start with a letter and contain only letters, digits and `_`, and names taken by the engine or the project (`Game`, `Engine`, `Carla`, `Script`, existing plugins, …) are refused. `--root` keeps packs elsewhere than `Plugins/Packs`.
+
+Do not add the pack to `CarlaUnreal.uproject`: an enabled plugin would be cooked into the CARLA package itself. The `package` target checks this after its cook (`Unreal/Package/CheckNoPackLeak.cmake`) and fails when a `/<Pack>/` package name appears in the base asset registry or a `Plugins/Packs/<Pack>/` file was staged. The same check is `carla-pack check-base <Releases/<release> | AssetRegistry.bin> [--pack NewPack]`. A pack whose name equals a base content folder can be skipped with `-DCARLA_PACK_LEAK_IGNORE=<Pack>`.
+
+#### 2. Author in the editor
+
+Open the CARLA editor (`cmake --build Build --target launch`). The Carla plugin mounts every pack under `Plugins/Packs/` when the editor starts, so the pack appears in the content browser as __NewPack Content__ (the editor logs `Content pack plugin 'NewPack' mounted for the editor/cooker ...`). In a plain Unreal Editor session without the Carla plugin, or in a commandlet — the Carla plugin deliberately skips commandlets so a base cook never sees pack content — start the editor with `-EnablePlugins=NewPack` after temporarily setting `"ExplicitlyLoaded": false` in `NewPack.uplugin`, and set it back to `true` afterwards:
+
+```sh
+$CARLA_UNREAL_ENGINE_PATH/Engine/Binaries/Linux/UnrealEditor Unreal/CarlaUnreal/CarlaUnreal.uproject -EnablePlugins=NewPack
+```
+
+Save everything the pack ships under the pack root, following CARLA's layout: maps in `Maps/`, static meshes in `Static/`, vehicle and walker blueprints in `Blueprints/`. The usual CARLA authoring guides cover importing and setting up the asset — [props](content_authoring_props.md), [vehicles](content_authoring_vehicles.md) — with two differences: the destination folder is the pack root rather than `Content/Carla/...`, and the asset is registered in the pack's own catalog instead of the base `PropParameters.json` or `VehicleParameters.json`. Referencing CARLA's own assets (`/Game/Carla/...` materials, the vehicle base classes) is fine and keeps the pack small; they are not duplicated.
+
+__New maps live under the pack root.__ To start one from an existing town, duplicate it into the pack from the editor (content browser: right click > Duplicate, or File > Save As into `NewPack Content/Maps`) or with `carla-pack add NewPack --map Town12 --import` (see [Add maps, sidecar files and catalogs](#3-add-maps-sidecar-files-and-catalogs)). Copying a `.umap` file from another content root does not work: the file keeps its original package name and, for World Partition maps, its actors reference that path. For a map you make, generate the OpenDRIVE file, the pedestrian navigation (`.bin`) and optionally Traffic Manager data; the pack ships them as sidecar files, and [Sidecar files](#sidecar-files) explains how to produce them. A map without an `.xodr` renders but has no map API (waypoints, Traffic Manager).
+
+__Semantic tags.__ A mesh is labelled for semantic segmentation by the folder that follows `Static` in its path, exactly as in `Content/Carla/Static`: `/NewPack/Static/<Label>/SM_Thing` with `<Label>` one of `Building`, `Fence`, `Pedestrian`, `Pole`, `Other`, `Road`, `RoadLine`, `SideWalk`, `TrafficSign`, `Vegetation`, `Car`, `Wall`, `Sky`, `Ground`, `Bridge`, `RailTrack`, `GuardRail`, `TrafficLight`, `Static`, `Dynamic`, `Water`, `Terrain`, `Truck`, `Motorcycle`, `Bicycle`, `Bus`, `Rider`, `Train`, `Rock`, `Stone`, `Bush`. Elsewhere the server labels a mesh by the nearest folder above it whose name is a label, and a mesh with no such folder gets no label. `carla-pack add --props` is stricter: it refuses a catalog entry whose pack mesh is not under `Static/<Label>/` (`--allow-untagged` accepts it with a warning). Generic props go under `Static/Static/`, the folder `init` creates.
+
+!!! Note
+    `NewPack.uplugin` is authored with `"ExplicitlyLoaded": true`, the setting the packaged server needs to mount the pack on demand. Unreal's plugin manager and the cooker skip explicitly loaded plugins (in the interactive editor the Carla plugin mounts them itself), so `carla-pack build` (and `add --import`) temporarily rewrite the descriptor with `"ExplicitlyLoaded": false` for the duration of the run and restore the original file afterwards, also when the run fails or is interrupted. Only a manual `-EnablePlugins` editor session needs the flag set by hand.
+
+__Authoring from a script (commandlet).__ The same work can be done headless with the editor's Python (`UnrealEditor-Cmd CarlaUnreal.uproject -run=pythonscript -script=make_assets.py -EnablePlugins=NewPack -NullRHI -unattended`, with `"ExplicitlyLoaded": false` set for the session as above). Two things differ from an interactive session:
+
+* the asset registry has not scanned the pack when the script starts, so `unreal.EditorAssetLibrary.load_asset('/NewPack/...')` reports "could not be found in the Asset Registry". Either scan the mount point first — `unreal.AssetRegistryHelpers.get_asset_registry().scan_paths_synchronous(['/NewPack'], force_rescan=True)` — or load by object path: `unreal.load_object(None, '/NewPack/Static/Static/SM_Thing.SM_Thing')`;
+* do not place meshes with `EditorActorSubsystem.spawn_actor_from_object(mesh, ...)`: for an asset the registry has not seen it crashes the process (`UPlacementSubsystem::FindAssetFactoryFromAssetData`). Spawn the actor class and assign the mesh instead:
+
+```py
+import unreal
+unreal.AssetRegistryHelpers.get_asset_registry().scan_paths_synchronous(['/NewPack'], force_rescan=True)
+mesh = unreal.load_object(None, '/NewPack/Static/Static/SM_Thing.SM_Thing')
+actors = unreal.get_editor_subsystem(unreal.EditorActorSubsystem)
+unreal.get_editor_subsystem(unreal.LevelEditorSubsystem).load_level('/NewPack/Maps/NewTown')
+actor = actors.spawn_actor_from_class(unreal.StaticMeshActor, unreal.Vector(300, 0, 20), unreal.Rotator(0, 0, 0))
+actor.static_mesh_component.set_static_mesh(mesh)
+actor.set_mobility(unreal.ComponentMobility.STATIC)
+unreal.get_editor_subsystem(unreal.LevelEditorSubsystem).save_current_level()
+```
+
+Duplicating a map (`EditorAssetLibrary.duplicate_asset`) copies the `.umap` alone — a World Partition copy opens empty — and opening the copy with `load_level` in the same commandlet process is fatal ("Old world ... not cleaned up by garbage collection"). A real copy of a World Partition map is a Save As (`EditorLoadingAndSavingUtils.save_map`), which is what `add --import` runs. `print()` output is swallowed by the commandlet; use `unreal.log_warning` or write a file.
+
+#### 3. Add maps, sidecar files and catalogs
+
+```sh
+carla-pack add NewPack --map <Map|/Game/.../Map|file.umap> [--map ...] [--xodr f.xodr] [--nav f.bin] [--tm <file|dir>] [--world-partition] [--import|--copy]
+carla-pack add NewPack --props props.json | --vehicles vehicles.json | --walkers walkers.json | --blueprints blueprints.json
+carla-pack add NewPack --asset SM_Thing.uasset --dest Static/Static/
+```
+
+* `--map` (repeatable) registers a map in the manifest and copies its sidecar files to `Maps/OpenDrive/<Map>.xodr`, `Maps/Nav/<Map>.bin` and `Maps/TM/<Map>/`. The map may be a name (looked up under the project's and the pack's content folders), a package path or a `.umap` file:
+    * a __project map__ (under the project's `Content`, i.e. a CARLA town) is registered in place at its `/Game/...` package, exactly as `create` does;
+    * a map __already under the pack's `Content`__ is registered under its own path (`/NewPack/Maps/NewTown`);
+    * `--import` makes a __copy under the pack root__ instead of registering a project map in place (a map of another plugin has no path in the packaged server, so it is always imported this way): `carla-pack` starts the headless editor (`UnrealEditor-Cmd`, from `CARLA_UNREAL_ENGINE_PATH` or `--engine`) with the pack enabled and performs a Save As of the map to `/NewPack/Maps/<same layout>`, which carries a World Partition map's external actors along; the copy is then yours to edit without touching CARLA's content. Save As also re-saves the source map; `carla-pack` puts the original bytes back and reports any other file the editor touched next to it. Slow for large World Partition towns (Town12, 81k actors: 5 minutes; Town13, 359k actors: over 40 minutes and 30 GB of RAM); `<pack>/Saved/CarlaPack/import-<Map>.log` has the editor output if it fails. `--copy` skips the editor and copies the file as-is, only right for a map whose package name was already rewritten.
+    * Without `--xodr`/`--nav`/`--tm` the sidecars of a map outside the pack are picked up from CARLA's locations (see A); with several `--map`, they are picked up for each outside map. For a map already under the pack's `Content`, omitted flags keep its registered sidecar files. Pass a flag only for the sidecar you want to replace, or `--no-xodr`, `--no-nav` or `--no-tm` to unregister one and delete the staged file. World Partition maps are detected from their `__ExternalActors__/…/<Map>` folder; `--world-partition` forces the flag.
+* The catalog options validate the JSON against the shapes below, copy the file to `Content/Config/` under its canonical name and list it in the manifest. Asset paths that are neither under `/NewPack/` nor `/Game/` are reported: they cannot resolve once the pack is mounted.
+* `--asset` copies any file or folder under `Content/<dest>`.
+
+Re-running `add` for the same map or catalog replaces the previous entry.
+
+#### 4. Build the pack against a release
+
+```sh
+carla-pack build NewPack [--base <release-metadata.tar.gz | Releases/<release>>] [--config Development|Test|Shipping|DebugGame|Debug] [--out <dir>] [--dry-run]
+```
+
+Cooks the pack as DLC against the base release and writes `out/NewPack-1.0.0-<release>.tar.gz` (default `--out`: `Plugins/Packs/NewPack/Saved/CarlaPack/out/`), plus the unpacked pack folder next to it. This takes minutes. `--base` defaults as described in [Requirements](#requirements). Details in [Build details](#build-details).
+
+### Catalog JSON shapes
+
+Catalogs are the same JSON files CARLA reads from `Content/Carla/Config`; a pack's copies are merged with CARLA's when the pack is mounted, and later entries override earlier ones by name. Paths are Unreal object paths: `/NewPack/<folder>/<Asset>.<Asset>` for a mesh, `/NewPack/<folder>/<BP>.<BP>_C` for a blueprint class.
+
+__Props__ — `--props`, written as `Config/NewPack.Package.json` (`static.prop.<name>` blueprints; `size` is one of `Tiny`, `Small`, `Medium`, `Big`, `Huge`). The optional `maps` list mirrors CARLA's own `*.Package.json` files.
+
+```json
+{
+  "maps":  [ { "name": "NewTown", "path": "/NewPack/Maps/NewTown", "use_carla_materials": true } ],
+  "props": [ { "name": "TrafficCone02", "path": "/NewPack/Static/Static/SM_Cone02.SM_Cone02", "size": "Small" } ]
+}
+```
+
+A file in the `PropParameters.json` shape (`{"Props": [{"Name", "Mesh", "Size"}]}`) is accepted too and stored as `Config/PropParameters.json`.
+
+__Vehicles__ — `--vehicles`, written as `Config/Vehicles.json` (`vehicle.<make>.<model>` blueprints):
+
+```json
+{
+  "Vehicles": [
+    {
+      "Make": "Acme", "Model": "Rover",
+      "Class": "/NewPack/Blueprints/Vehicles/Rover/BP_Rover.BP_Rover_C",
+      "NumberOfWheels": 4, "Generation": 3,
+      "ObjectType": "", "BaseType": "car", "SpecialType": "",
+      "HasDynamicDoors": true, "HasLights": true,
+      "RecommendedColors": [ { "R": 0, "G": 0, "B": 0, "A": 0 } ],
+      "SupportedDrivers": []
+    }
+  ]
+}
+```
+
+__Walkers__ — `--walkers`, written as `Config/WalkerParameters.json` (`walker.pedestrian.<id>` blueprints; speeds in m/s):
+
+```json
+{
+  "Walkers": [
+    {
+      "Id": "9001", "Class": "/NewPack/Blueprints/Walkers/BP_Worker01.BP_Worker01_C",
+      "Gender": "Female", "Age": "Adult",
+      "Speeds": [ { "Speed": 0 }, { "Speed": 1.7 }, { "Speed": 4 } ],
+      "Generation": 2, "CanUseWheelChair": false
+    }
+  ]
+}
+```
+
+__Blueprints__ — `--blueprints`, written as `Config/BlueprintParameters.json` (arbitrary spawnable actors, `static.blueprint.<name>`):
+
+```json
+{ "Blueprints": [ { "Name": "SmartTrafficLight", "Path": "/NewPack/Blueprints/BP_SmartTrafficLight.BP_SmartTrafficLight" } ] }
+```
+
+### Build details
+
+`build` extracts the release metadata and runs the Unreal cooker as a DLC cook based on it:
+
+```sh
+RunUAT.sh BuildCookRun -project=<uproject> -nocompileeditor -nop4 -skipbuild -cook -stage -pak -iostore \
+    -clientconfig=Development -TargetPlatform=Linux -Platform=Linux -dlcname=<abs path>/NewPack.uplugin \
+    -basedonreleaseversion=<release> -basedonreleaseversionroot=<...>/Releases \
+    -stagingdirectory=<work>/Staged -AdditionalCookerOptions=-EnablePlugins=NewPack \
+    -MapsToCook=/Game/Carla/Maps/Town13/Town13+... -DLCIncludeEngineContent
+```
+
+* Everything under `/NewPack/` is cooked, plus the project maps the manifest ships in place, which go on `-MapsToCook` (`--maps` adds more entries).
+* `-DLCIncludeEngineContent` is passed by default: it makes the cook include the `/Game` and `/Engine` assets the pack references that the base release did not cook (every CARLA town has some, its vegetation for one) instead of stopping with "Uncooked Engine or Game content ... is being referenced by DLC". `--no-base-content` drops the flag when you want that error, to keep a pack free of base-project assets.
+* `--dry-run` prints the exact UAT command line and exits (a tarball `--base` is still extracted into the work dir; the pack sources are not touched). `--uat-arg=-Flag` appends flags. `--platform`, `--engine`, `--project`, `--work`, `--staged`, `--asset-registry`, `--skip-cook`: see `--help`.
+* Configuration (`Development` by default): cooked data does not depend on it, `--config` only selects which client configuration the cook is staged for.
+
+The staged output is assembled into the pack layout: the containers (`--rename` names them `NewPack-Linux.*` instead of UAT's `NewPackCarlaUnreal-Linux.*`; the server mounts either), the cooked `AssetRegistry.bin`, the loose sidecar files, and the descriptor — your `.uplugin` with `ExplicitlyLoaded` and `CanContainContent` set to `true`, `EnabledByDefault` to `false` and an empty `Modules` list dropped; a pack that declares code modules is refused. The manifest is completed (`base_release`, `engine`, `platform`, one SHA-256 per file).
+
+The same build is available as CMake targets once the package target has produced the base release: `cmake --build Build --target pack-NewPack` (and `pack-NewPack-dry-run`). They differ from the command line in where they read and write: the base is the extracted `Unreal/CarlaUnreal/Releases/<release>` (`CARLA_CONTENT_PACKS_BASE` points them at a downloaded metadata tarball instead), the output goes to `Build/Packs/`, the configuration comes from `CARLA_CONTENT_PACKS_CONFIG` (`Development`), and `CARLA_CONTENT_PACKS` adds targets for packs kept outside `Plugins/Packs`. `<release>` is `CARLA_BASE_RELEASE`, or `carla-<version>-<platform>` (`carla-1.0.0-Linux`) when it is empty; the same name is on the metadata tarball, the package's `BaseRelease` stamp and the pack tarballs. `content-packs-test` runs the tool's unit tests.
+
+### Checking a pack
+
+```sh
+carla-pack inspect NewPack-1.0.0-carla-<version>-Linux.tar.gz [--json] [--server /path/to/package]
+carla-pack verify  NewPack-1.0.0-carla-<version>-Linux.tar.gz
+```
+
+`inspect` prints the manifest: maps, catalogs, file sizes; with `--server` it also says whether the pack fits that package (base release and platform), exit code `3` if not. `verify` checks every listed file against its checksum and that no unlisted file is present (`carla-pack.json` is the only implicit one). Both work on the tarball or on an extracted pack folder.
+
+### Sidecar files
+
+A map needs three files beside the `.umap`, which the pack ships and the server reads at load time:
+
+| File | Where | What it is for |
+| --- | --- | --- |
+| `<Map>.xodr` | `Maps/OpenDrive/` | The OpenDRIVE road network. Without it the map renders but has no waypoints, no Traffic Manager and no agents. |
+| `<Map>.bin` | `Maps/Nav/` | The pedestrian navigation mesh. Without it walkers cannot navigate. |
+| `<Map>/` | `Maps/TM/` | Traffic Manager data. Optional. |
+
+The `.xodr` comes from the map's own authoring (RoadRunner exports it alongside the FBX). The `.bin` is produced by `RecastBuilder`, which the build writes to `Build/_deps/recastnavigation-build/RecastBuilder/` and a package ships as `Tools/RecastBuilder`.
+
+!!! Warning
+    `Util/DockerUtils/dist/build.sh` looks for `RecastBuilder` and `FBX2OBJ` inside `Util/DockerUtils/dist/`, and nothing in the build copies them there. The import then exits successfully without writing a `.bin`, and walkers silently cannot navigate the map. Copy both binaries into that folder before importing.
+
+### Traffic-light phase files
+
+A map can carry DigitalTwin traffic-light timing in a `map_logic.json` next to its OpenDRIVE file. When the `.xodr` has a sibling `map_logic.json`, `add` and `create` copy both into `Content/Maps/OpenDrive/<Map>/` and record `map_logic` in the map's manifest entry; the server reads the file beside the registered OpenDRIVE. The per-map folder keeps the phase files of several maps apart. Replacing the OpenDRIVE with `--xodr` also replaces its phase file; if the supplied file has no sibling `map_logic.json`, the old phase file is removed. The same rule applies to the OpenDRIVE picked up automatically when re-adding a map outside the pack. Re-adding an in-pack map without `--xodr` keeps both files.
+
+---
+## Installing a pack
+
+A CARLA package finds packs in three places, all read at start: `<package>/Linux/CarlaUnreal/Packs/*/` (next to the package's own `Content/Paks`), the directories given on the server command line as `-carla-packs=<dir>[;<dir>...]` (one flag, directories separated by `;`, quoted if a path has spaces), and those in `$CARLA_PACKS` (also separated by `;`). Each of these is a parent directory: every subfolder holding a `carla-pack.json` is a pack. A pack found there is mounted before the first episode: its maps show up in `client.get_available_maps()`, its vehicles, walkers and props in `world.get_blueprint_library()`. `Packs/` is the only supported drop-in location — do not put packs under the package's `Plugins/` folder. A pack that fails to mount does not stop the server: the server log shows `Content packs: '<manifest>' not mounted: <reason>`, so check the log when a map or blueprint is missing.
+
+### Drop-in install
+
+```sh
+carla-pack install NewPack-1.0.0-carla-<version>-Linux.tar.gz --server /path/to/carla-package [--force]
+```
+
+verifies every checksum (refusing files the manifest does not list), checks the base release against the server's `BaseRelease` stamp and the platform, then extracts the pack into `<package>/Linux/CarlaUnreal/Packs/NewPack/`. `--server` accepts the package root (the directory that holds `Linux/`), the `Linux/` directory (where `CarlaUnreal.sh` is) or `Linux/CarlaUnreal` itself. `--force` replaces an installed pack of the same name and overrides the base-release check (do not, unless you know the cook settings match). Extracting the tarball into `CarlaUnreal/Packs/` by hand is equivalent, minus the verification.
+
+Start (or restart) the server. Then, from any client:
+
+```py
+client = carla.Client('localhost', 2000)
+print([p.name for p in client.get_content_packs()])   # ['NewPack']
+print(client.get_available_maps())                    # base maps + the pack's
+world = client.load_world('NewTown')                  # as for any map
+```
+
+### From the Python API
+
+A running server can mount packs from any path it can read, and unmount them between episodes, with [`get_content_packs`](python_api.md#carla.Client.get_content_packs), [`mount_content_pack`](python_api.md#carla.Client.mount_content_pack) and [`unmount_content_pack`](python_api.md#carla.Client.unmount_content_pack), which describe each pack as a [`carla.ContentPackInfo`](python_api.md#carla.ContentPackInfo):
+
+```py
+import carla
+
+client = carla.Client('localhost', 2000)
+
+# packs the server knows about (installed or mounted): carla.ContentPackInfo with
+# name, version, base_release, path, mounted and maps
+for pack in client.get_content_packs():
+    print(pack)
+
+# mount a pack folder (a path on the server's file system, or its carla-pack.json);
+# packs under the package's Packs/ folder are already mounted at start
+info = client.mount_content_pack('/data/packs/NewPack')                           # RuntimeError on failure
+print(info.maps)                                                                   # ['NewTown']
+
+# the pack's actors are in the blueprint library at once; its maps load as usual
+world = client.load_world('NewTown')
+bp_library = world.get_blueprint_library()
+rover = bp_library.find('vehicle.acme.rover')
+cone = bp_library.find('static.prop.trafficcone02')
+
+# unmount again (only when no episode is using its content)
+client.load_world('Town10HD_Opt')
+client.unmount_content_pack('NewPack')                                             # True; RuntimeError when refused
+```
+
+`mount_content_pack` returns the pack's `ContentPackInfo` and raises `RuntimeError` with the reason when the path holds no pack or its manifest is invalid, the `.uplugin` is missing, the base release or platform does not match the server, a pack or plugin of the same name is already mounted, or its containers cannot be mounted. A tarball must be extracted first. The pack's vehicles, walkers and props are available immediately: mounting adds them to the blueprint library, so `world.get_blueprint_library()` lists them without an episode change. An entry that overrides an existing blueprint (same `make.model`, or the same name) only takes effect at the next episode. Loading one of the pack's __maps__ still requires `client.load_world(...)`.
+
+`get_content_packs` also lists packs that are known but unmounted (`mounted` is `False`); `mount_content_pack` mounts them again. `unmount_content_pack` returns `True`, and raises `RuntimeError` when the pack is unknown or not mounted, one of its maps is the current world (or streamed into it), the pack was mounted by the engine from `Plugins/` (restart instead), or an object from it is still alive. In that last case the pack's blueprints have already been removed from the library: `client.reload_world()` brings them back. Load another map before unmounting.
+
+### Updating and removing
+
+* __New version of a pack__: `carla-pack install <new tarball> --server ... --force`, then restart the server. Unreal cannot reload a package that is already in memory, so a restart is the only safe option once anything from the pack has been loaded; if nothing from it was loaded since the last episode change, `unmount_content_pack` followed by `mount_content_pack` picks up the new files.
+* __New CARLA release__: the pack must be rebuilt against the new release metadata (`carla-pack build`, minutes). The server refuses a pack built for another release (see [FAQ](#faq)).
+* __Remove__: delete `<package>/Linux/CarlaUnreal/Packs/<Pack>/` while the server is stopped.
+
+---
+
+## What a pack is
+
+Internally, a pack is a content-only Unreal plugin, cooked as DLC against the asset registry of a CARLA release (the __base release__) and wrapped with a manifest. Only what the base does not already contain ends up in the pack; everything a pack references from CARLA (materials, vehicle base classes, road meshes) stays a reference. A pack is distributed as `<Pack>-<version>-<base_release>.tar.gz` with this layout:
+
+```text
+NewPack/
+  carla-pack.json                                   # manifest
+  NewPack.uplugin                                   # content-only plugin descriptor, no modules
+  AssetRegistry.bin                                 # registry state for the pack's cooked assets
+  Content/Paks/Linux/NewPackCarlaUnreal-Linux.pak   # cooked assets (IoStore container)
+  Content/Paks/Linux/NewPackCarlaUnreal-Linux.utoc
+  Content/Paks/Linux/NewPackCarlaUnreal-Linux.ucas
+  Content/Config/NewPack.Package.json               # catalogs, OpenDRIVE, navigation, Traffic Manager
+  Content/Config/Vehicles.json                      # data: loose files next to the containers
+  Content/Maps/OpenDrive/NewTown.xodr
+  Content/Maps/Nav/NewTown.bin
+  Content/Maps/TM/Town13/Town13.bin
+```
+
+The server globs `Content/Paks/<Platform>/*.pak` and the engine finds the `.utoc`/`.ucas` by the `.pak`'s base name, so the three files only have to share it.
+
+Inside the containers, content authored in the pack lives under its own mount point, `/NewPack/`, with the same layout as CARLA's own `Content/Carla`, so two packs can each ship a `Maps/Town.umap` without clashing:
+
+```text
+/NewPack/Maps/NewTown.umap  (+ World Partition cells)     /NewPack/Static/<Label>/SM_Thing.uasset
+/NewPack/Blueprints/Vehicles/BP_Foo.uasset                 /NewPack/Blueprints/Walkers/BP_Bar.uasset
+```
+
+CARLA towns shipped in place keep their `/Game/Carla/Maps/...` packages inside the pack's containers, together with the base-project assets they reference that the base did not cook. Nothing stops two packs from shipping the same town in place: both mount, the map name resolves to the pack mounted first, and which assets win is undefined. Keep each town in one pack.
+
+Everything that is not a cooked asset — the catalogs, `.xodr`, navigation and Traffic Manager files — ships as loose files under the pack's `Content/` folder, where the server reads them. (Files inside a DLC container are addressed relative to the engine root and would be unreachable once the pack folder lives elsewhere.)
+
+The manifest, `carla-pack.json`, is what CARLA reads when it mounts the pack. The maps (name, package and OpenDRIVE file) are registered from it. The catalogs are not: the server reads them by file name from the pack's `Content/Config/` (`Vehicles.json`, `PropParameters.json`, `WalkerParameters.json`, `BlueprintParameters.json`, and every `*.Package.json` below it), and the navigation from `Content/Maps/Nav/<Map>.bin`.
+
+```json
+{
+  "name": "NewPack", "version": "1.0.0",
+  "carla_version": "<version>", "base_release": "carla-<version>-Linux",
+  "engine": { "version": "5.8.0", "commit": "abcdef012345" }, "platform": "Linux",
+  "maps": [ { "name": "NewTown", "package": "/NewPack/Maps/NewTown",
+              "xodr": "Maps/OpenDrive/NewTown.xodr", "nav": "Maps/Nav/NewTown.bin", "world_partition": true },
+            { "name": "Town13", "package": "/Game/Carla/Maps/Town13/Town13",
+              "xodr": "Maps/OpenDrive/Town13.xodr", "tm": "Maps/TM/Town13", "world_partition": true } ],
+  "catalogs": [ "Config/NewPack.Package.json", "Config/Vehicles.json" ],
+  "files": { "Content/Paks/Linux/NewPackCarlaUnreal-Linux.utoc": "sha256:…", "…": "…" }
+}
+```
+
+`base_release` binds the pack to the CARLA package it was built for: the packaged server carries the same string in `CarlaUnreal/BaseRelease` and refuses packs built against another release.
+
+---
+
+## Limits
+
+* A pack targets __one base release__: same CARLA package, same engine binary, same cook settings. A new CARLA release means rebuilding the pack (`carla-pack build` again, minutes) — never re-packaging CARLA.
+* Building a pack needs the CARLA source build with the editor. Using a pack needs only the package.
+* Assets a pack references that are __not__ in the base release are cooked into the pack. That is correct, but a pack that references a whole asset library from another pack, or from a map the base did not cook, gets correspondingly large. Two packs never share content with each other.
+* A pack ships whole maps and new actors: CARLA towns the package left out, or maps of your own. Adding actors to a town the base package already ships (Town10HD_Opt, Town12, Town15) is out of scope for now, and a pack cannot replace a base map.
+* Pack names are global on a server: two packs called `NewPack` cannot be mounted at the same time. Two packs shipping the same town in place are not detected (see [What a pack is](#what-a-pack-is)).
+* Updating a pack whose content has been loaded needs a server restart.
+
+---
+
+## FAQ
+
+__`base release mismatch: pack built against 'carla-1.0.0-Linux', server is 'carla-1.0.1-Linux'`__
+
+`carla-pack install` and `inspect` print this; the server's own message, when it refuses the pack at start or from `mount_content_pack`, is `pack '<Pack>' was built against base release '<A>' but this server is '<B>'; rebuild the pack against this release`. The pack was cooked against another CARLA release and the server refuses it — cooked data is only valid against the asset registry it was cooked with. Rebuild the pack with that server's release metadata: `carla-pack build NewPack --base carla-0.10.1-Linux-release-metadata.tar.gz`. `carla-pack inspect <pack> --server <dir>` shows both strings; `<package>/BaseRelease` (and `<package>/Linux/CarlaUnreal/BaseRelease`) holds the server's.
+
+__`server has no BaseRelease stamp`__
+
+The package was built without content pack support (before the `package` target stamped the release). Rebuild the package, or pass `--force` to `install` only if you cooked the pack from that exact source tree and package.
+
+__`no base release found` / `several base releases found`__
+
+`carla-pack` looks for a single `*-release-metadata.tar.gz` under this checkout's `Build/`, or a single extracted `Unreal/CarlaUnreal/Releases/<release>`. [Build the package](build_linux_ue5.md#build-a-package-with-carla-ue5) first (`cmake --build Build --target package`), or pass `--base` with the metadata tarball published with the package you target.
+
+__`the base release already ships /Game/Carla/Maps/Town10HD_Opt`__
+
+That town is in the CARLA package already; a pack cannot replace it. Drop it from the map list.
+
+__I updated a pack but the server still shows the old content__
+
+Unreal cannot reload a package that is already in memory. If any map, mesh or blueprint of the pack has been loaded, restart the server after installing the new version. If nothing from it was loaded since the last episode change, `client.unmount_content_pack('NewPack')` followed by `client.mount_content_pack(...)` picks up the new files.
+
+__The client prints `InMemoryMap cache rejected ... rebuilding the local map from the OpenDRIVE`__
+
+The Traffic Manager was handed a cached map (`Maps/TM/<Map>.bin`) that does not match the town's OpenDRIVE. The client keeps every file it downloads from a server under `~/carlaCache/<version>/` and reuses it, so this is usually a copy from an older server or pack; the client fetches the server's current file once and, if that one does not match either, rebuilds the map from the OpenDRIVE (a few seconds on the first `set_autopilot` in that town). Nothing else changes. A cache file is generated from a town's OpenDRIVE with `carla.Map(name, xodr_text).cook_in_memory_map(path)`, no server needed.
+
+__How big is a pack?__
+
+Roughly the size of the cooked assets it ships, plus the sidecar files. Measured: two large World Partition towns, 2.4 GB; three classic towns and two large ones, 3.9 GB; a map with a few hundred unique meshes is typically in the hundreds of MB; a pack that only lists new vehicles built from existing CARLA meshes is a few MB. Everything the pack references from the base release costs nothing. `carla-pack inspect` lists the files with their sizes; most of the size is in the `.ucas` container.
+
+__Can I mount a pack that is not under `Linux/CarlaUnreal/Packs`?__
+
+Yes: `mount_content_pack` takes any folder on the server's file system that contains a `carla-pack.json`, and `-carla-packs=<dir>` / `$CARLA_PACKS` register extra directories to scan at start. A tarball must be extracted first.
+
+__Does a pack work with a Shipping server?__
+
+Yes. Cooked content is configuration independent; the same pack mounts on Development, Test and Shipping packages of the same release.
+
+__Can I edit a CARLA town for my pack?__
+
+Make your own copy first: `carla-pack add NewPack --map Town12 --import` performs the editor's Save As into `/NewPack/Maps/Town12/Town12` (minutes for a large World Partition town, see [Add maps, sidecar files and catalogs](#3-add-maps-sidecar-files-and-catalogs)), then edit that copy in the editor and `build`. The pack then ships the copy under `/NewPack/`, so it can be installed next to a pack that ships the original in place.

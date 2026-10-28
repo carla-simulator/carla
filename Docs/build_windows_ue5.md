@@ -1,16 +1,23 @@
-!!! warning
-	This is a work in progress!! This version of CARLA is not considered a stable release. Over the following months many significant changes may be made to this branch which could break any modifications you make. We advise you to treat this branch as experimental.
+# Building CARLA in Windows with Unreal Engine 5.8
 
-# Building CARLA in Windows with Unreal Engine 5.5
+- [__Set up the environment__](#set-up-the-environment)
+- [__Build and run CARLA UE5__](#build-and-run-carla-ue5)
+- [__Build a package with CARLA UE5__](#build-a-package-with-carla-ue5)
 
 ## Set up the environment
 
-This guide details how to build CARLA from source on Windows with Unreal Engine 5.5. If you are building CARLA for the first time, ensure that you **link your GitHub account to Epic Games** by following [this guide](https://www.unrealengine.com/en-US/ue-on-github).
+This guide details how to build CARLA from source on Windows with Unreal Engine 5.8. If you are building CARLA for the first time, ensure that you **link your GitHub account to Epic Games** by following [this guide](https://www.unrealengine.com/en-US/ue-on-github).
 
-Clone the `ue5-dev` branch of CARLA on your local machine:
+!!! Note
+    * For using CARLA Unreal Engine 5 previous builds, ensure CARLA_UNREAL_ENGINE_PATH environment variable is defined pointing to the CARLA Unreal Engine 5 absolute path. If it is not defined and there is no `..\UnrealEngine5_carla` folder, `CarlaSetup.bat` downloads the engine into `..\UnrealEngine5_carla`, next to the CARLA folder, builds it and sets the variable, which takes __more than one extra hour of build and about 225 GB of disk space__. `CarlaSetup.bat` sets it only when it downloads the engine itself.
+    * An existing Visual Studio 2022 (Community, Professional or Enterprise) is used as it is. It needs the MSVC v14.38 toolset, or v14.44.35211 or later; to add v14.38, import `Unreal\CarlaUnreal\.vsconfig` in the Visual Studio Installer.
+    * **Windows Developer Mode should be active**, otherwise build will fail. Please see [here](https://learn.microsoft.com/en-us/gaming/game-bar/guide/developer-mode) for instructions on how to activate Developer Mode.
+    * **CARLA cannot be built on an external disk**, Windows does not give the required read/write/execution permissions for builds.
+
+Clone the `ue58-dev` branch of CARLA on your local machine:
 
 ```sh
-git clone -b ue5-dev https://github.com/carla-simulator/carla.git CarlaUE5
+git clone -b ue58-dev https://github.com/carla-simulator/carla.git CarlaUE5
 ```
 
 Run the setup script:
@@ -20,87 +27,70 @@ cd CarlaUE5
 CarlaSetup.bat
 ```
 
-The CarlaSetup.bat script installs all the required packages, including Visual Studio 2022, Cmake, Python 3.8 packages and Unreal Engine 5.5. It also downloads the CARLA content and builds CARLA. This batch file can therefore take a long time to complete. 
+The CarlaSetup.bat script installs all the required packages, including Visual Studio 2022 with CMake (if no Visual Studio 2022 is installed), Ninja, Python packages and the CARLA fork of Unreal Engine 5.8. It also downloads the CARLA content into `Unreal\CarlaUnreal\Content\Carla` and builds CARLA. This batch file can therefore take a long time to complete.
 
-You may also use Python 3.9 and 3.10. The setup script will install by default Python 3 using apt. If you want to target an existing Python installation, you should use the `--python-root=PATH_TO_PYTHON` argument with the relevant Python installation path. You can use `where python3` in your chosen environment and strip the `/python3` suffix from the path.
+It installs Python 3.8.10 when no Python is found at the top of `PATH`; 3.9 and 3.10 work too. To target an existing installation, pass `--python-root=C:\Path\To\PythonDir`, the folder that contains `python.exe`.
 
-!!! note
-    * This version of CARLA requires the **CARLA fork of Unreal Engine 5.5**. You need to link your GitHub account to Epic Games in order to gain permission to clone the UE repository. If you have not already linked your accounts, follow [this guide](https://www.unrealengine.com/en-US/ue4-on-github)
-    * For using CARLA Unreal Engine 5 previous builds, ensure CARLA_UNREAL_ENGINE_PATH environment variable is defined pointing to the CARLA Unreal Engine 5 absolute path. If this variable is not defined, CarlaSetup.bat script will download and build CARLA Unreal Engine 5 and **this takes more than 1 extra hour of build and a 225Gb of disk space**.
-    * The CarlaSetup.bat script checks if there is any Python version installed at the top of the PATH variable, and installs Python otherwise. **To use your own version of Python, ensure that the PATH variable is properly set for Python before running the script**.
-    * **Windows Developer Mode should be active**, otherwise build will fail. Please see [here](https://learn.microsoft.com/en-us/gaming/game-bar/guide/developer-mode) for instructions on how to activate Developer Mode.
-    * **CARLA cannot be built on an external disk**, Windows does not give the required read/write/execution permissions for builds.
+Pass `--skip-prerequisites` (`-p`) to skip installing Visual Studio, Ninja, Python and its packages, and `--launch` (`-l`) to open the editor once the build finishes.
 
-
+---
 ## Build and run CARLA UE5
 
-The CarlaSetup.bat file launches the following commands itself, you will need to use the following commands once you modify the code and wish to relaunch:
+`CarlaSetup.bat` runs these commands itself the first time. Use them directly to rebuild after changing the code.
 
-!!! warning
-    Ensure CARLA_UNREAL_ENGINE_PATH environment variable is defined pointing to the CARLA Unreal Engine 5.5 absolute path. CarlaSetup.bat sets this variable, but I may not be set if another approach was followed to install the requirements. 
+Run every command below from the __x64 Native Tools Command Prompt for VS 2022__, opened at the CarlaUE5 folder.
 
-* **Configure**. Open x64 Native Tools Command Prompt for VS 2022 at the CarlaUE5 folder and runn the following command:
+Configure the build:
 
 ```sh
-cmake -G Ninja -S . -B Build -DCMAKE_BUILD_TYPE=Release
+cmake -G Ninja -S . -B Build --toolchain=CMake/Toolchain.cmake -DCMAKE_BUILD_TYPE=Release
 ```
 
 The command line options are as follows:
 
-**G** - which build system to use
-**S** - source path for CARLA repository
-**B** - directory where the build goes
+* **G** - which build system to use
+* **S** - source path for CARLA repository
+* **B** - directory where the build goes
 
-CMake preset - aggregate commands into single preset
+If you passed `--python-root` to `CarlaSetup.bat`, add both `-DPython_ROOT_DIR=PATH` and `-DPython3_ROOT_DIR=PATH` to the above cmake command.
 
-* **Build CARLA**. Open the x64 Native Tools Command Prompt for VS 2022 at the CarlaUE5 folder and run the following command:
+Configuring needs the NVIDIA DLSS SDK. CMake takes it from `-DCARLA_DLSS_SDK_PATH=<dir>` or the `DLSS_SDK` environment variable, otherwise from `%USERPROFILE%\SDKs\DLSS`, and clones it there from NVIDIA if it is missing. To build without DLSS, add `-DCARLA_DLSS_SDK_PATH=disabled`.
 
-```sh
-cmake --build Build
-```
+Then build what you need:
 
-* **Build and install the Python API**. Open the x64 Native Tools Command Prompt for VS 2022 at the CarlaUE5 folder and run the following command::
+| Target | What it does |
+| --- | --- |
+| `cmake --build Build` | build everything |
+| `cmake --build Build --target launch` | build and open the editor with a log window (to drop it, reconfigure with `-DCARLA_LAUNCH_ARGS=`; `-DCARLA_UNREAL_LOG_WINDOW=OFF` only works on a new build directory) |
+| `cmake --build Build --target launch-only` | open the editor without rebuilding |
+| `cmake --build Build --target carla-python-api-install` | build and install the Python client |
+| `cmake --build Build --target carla-help` | list every target and option |
 
-```sh
-cmake --build Build --target carla-python-api-install
-```
+!!! Note
+    The native ROS 2 interface (`-DENABLE_ROS2=ON`) is built on Linux only; `CarlaSetup.bat` does not enable it.
 
-* **Launch the editor**. Open the x64 Native Tools Command Prompt for VS 2022 at the CarlaUE5 folder and run the following command:
-
-```sh
-cmake --build Build --target launch
-```
-
+---
 ## Build a package with CARLA UE5
 
-!!! warning
-    The package build for Carla UE5 is not yet fully tested for Windows.
-
-Open the x64 Native Tools Command Prompt for VS 2022 at the CarlaUE5 folder and run the following command to create a shipping package:
+Build the package:
 
 ```sh
 cmake --build Build --target package
 ```
 
-You may also want to build a development package which produces logs for debugging: 
+Use `package-development` instead for a package that writes debugging logs. The `package-debug` and `package-test` targets build the other configurations.
 
-
-```sh
-cmake --build Build --target package-development
-``` 
-
-The package will be generated in the directory `Build/Package`.
+The package lands in `Build\Package\Carla-<version>-Win64-Shipping\`, alongside a `.zip` of the same (configure with `-DCARLA_UNREAL_PACKAGE_NO_COMPRESSION=ON` to skip it). The Python wheel that matches it is in `PythonAPI\carla\dist` inside the package.
 
 ### Select which maps to cook
 
-By default a package cooks every map listed in `DefaultGame.ini` (`Town10HD_Opt`, `Mine_01`, `Town15`, `Town_C`). If you only need a subset, set the `CARLA_MAPS_TO_COOK` option when you configure the build to a `+`-separated list of map package paths, which produces a smaller package containing only those maps:
+By default a package cooks every map listed in `DefaultGame.ini` — `Town10HD_Opt`, `OpenDriveMap`, `TestMaps/EmptyMap`, `Town12/Town12` and `Town15/Town15`. To cook a subset, set `CARLA_MAPS_TO_COOK` when configuring, as a `+`-separated list of map package paths:
 
 ```sh
-cmake -G Ninja -S . -B Build --toolchain=%CD%/CMake/Toolchain.cmake -DCMAKE_BUILD_TYPE=Release ^
-    -DCARLA_MAPS_TO_COOK="/Game/Carla/Maps/Town10HD_Opt+/Game/Carla/Maps/Mine_01"
+cmake -G Ninja -S . -B Build --toolchain=CMake/Toolchain.cmake -DCMAKE_BUILD_TYPE=Release -DCARLA_MAPS_TO_COOK="/Game/Carla/Maps/Town10HD_Opt+/Game/Carla/Maps/Town15/Town15"
 ```
 
-Use the full map package path (`/Game/Carla/Maps/<MapName>`), not a filesystem path. Leaving `CARLA_MAPS_TO_COOK` empty (the default) cooks the full map list from `DefaultGame.ini`, so the standard build is unchanged.
+Use the full map package path (`/Game/Carla/Maps/<MapName>`), not a filesystem path. Note that the large maps nest: Town15 is `/Game/Carla/Maps/Town15/Town15`. Leaving `CARLA_MAPS_TO_COOK` empty, the default, cooks the full list from `DefaultGame.ini`.
 
 !!! Note
     `Town10HD_Opt` is the default map a package boots into. If your selection excludes it, set a different default map in `DefaultEngine.ini` before packaging, otherwise the packaged server starts with a missing-map error.
@@ -113,18 +103,6 @@ Extract the package that you built, then from a command terminal open in the roo
 CarlaUnreal.exe
 ```
 
-## Presets
+### Content packs
 
-If you are building using multiple configurations, we recommend to use the preset system. To set up a preset, use the following command:
-
-```sh
-cmake --preset Linux-Development
-```
-
-This will create a folder within the build directory named `Linux-Development`. All other build artefacts for this configuration should then be directed into this folder, for example to launch the editor, run:
-
-```sh
-cmake --build Build/Linux-Development/ --target launch
-```
-
-There are 3 presets to choose from, `Linux-Debug`, `Linux-Development` and `Linux-Release`. The release preset provides minimal debug information or logs. The debug and development presets provide differing levels of terminal output and logs to help diagnose problems in CARLA installations. 
+The `package` target also writes `carla-<version>-Win64-release-metadata.tar.gz` in `Build\Package`, next to the package, which content packs are built against. See [Content packs](content_authoring_packs.md).

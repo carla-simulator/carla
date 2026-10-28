@@ -1,10 +1,8 @@
 # Use NVIDIA Neural Reconstruction with CARLA
 
-NVIDIA Neural Reconstruction (NuRec) refers to the reconstruction and rendering models and services from NVIDIA that support the seamless ingestion of real-world data converted to a simulated environment suitable for training and testing Physical AI agents, including robotics and autonomous driving systems.
+[NVIDIA Omniverse NuRec](https://docs.nvidia.com/nurec/) is NVIDIA's family of neural reconstruction models and services: it turns recorded camera and LIDAR data into a 3D scene that can be rendered from new viewpoints, so a real drive becomes an interactive environment for training and testing Physical AI agents. The scene can then be modified — scenarios changed, synthetic objects added, randomization applied — and it reacts accordingly. [How NuRec works](https://docs.nvidia.com/nurec/basics/how-nurec-works.html) describes the networks behind it.
 
-With NuRec, developers can convert recorded camera and LIDAR data into 3D scenes. NuRec uses multiple AI networks to create interactive 3D test environments where developers can modify the scene and see how the world reacts. Developers can change scenarios, add synthetic objects, and apply randomization — making the initial scenarios even more challenging.
-
-CARLA UE5 integrates NuRec through NVIDIA's __Neural Reconstruction Engine (NRE)__ container and its gRPC API. A NuRec scenario is a `.usdz` artifact containing the trained neural scene, the recorded actor tracks and the OpenDRIVE road network. When you run a replay:
+__NuRec__ is the technology; the __Neural Reconstruction Engine (NRE)__ is the piece you run: a [container published on NGC](https://catalog.ngc.nvidia.com/orgs/nvidia/teams/nre/containers/nre-ga) that loads a reconstructed scene and serves rendered frames over a [gRPC API](https://docs.nvidia.com/nurec/api/grpc_api_guide.html). CARLA UE5 integrates NuRec through that container. A NuRec scenario is a `.usdz` artifact containing the trained neural scene, the recorded actor tracks and the OpenDRIVE road network. When you run a replay:
 
 1. The scenario's `map.xodr` is extracted from the `.usdz` and loaded with `client.generate_opendrive_world()` — no named CARLA town is used.
 2. The recorded actors are spawned as CARLA actors (blueprint dimensions are probed from the live server, so the integration survives blueprint catalog changes) and CARLA hosts the actors, physics and the simulation loop.
@@ -12,18 +10,12 @@ CARLA UE5 integrates NuRec through NVIDIA's __Neural Reconstruction Engine (NRE)
 
 Because CARLA owns the simulation loop, the replay can be perturbed with the full CARLA API: the ego can be re-driven with CARLA vehicle physics or handed to the Traffic Manager, other vehicles can be handed to the Traffic Manager, and scene assets can be swapped or inserted through the asset-editing API.
 
-* __[Before you begin](#before-you-begin)__
-    * [Prerequisites](#prerequisites)
-    * [Hugging Face account](#hugging-face-account)
-* __[Setup](#setup)__
-    * [Prerequisite installation](#prerequisite-installation)
-    * [Run the installer script](#run-the-installer-script)
-    * [Example datasets](#example-datasets)
-    * [Environment variables](#set-up-your-environment-variables)
-* __[Run the CARLA NuRec replays](#run-the-carla-nurec-replays)__
-    * [Demo configuration file](#demo-configuration-file)
-* __[Command line parameters](#command-line-parameters)__
-* __[Hybrid rendering example](#hybrid-rendering-example)__
+- [__Before you begin__](#before-you-begin)
+- [__Setup__](#setup)
+- [__Run the CARLA NuRec replays__](#run-the-carla-nurec-replays)
+- [__Command line parameters__](#command-line-parameters)
+- [__Hybrid rendering example__](#hybrid-rendering-example)
+- [__See also__](#see-also)
 
 ---
 
@@ -100,28 +92,28 @@ Optional installer arguments:
 
 | Argument | Description |
 |---|---|
-| `-i`, `--python <exe>` | Use an existing Python interpreter instead of the default local `.venv`. |
-| `-s`, `--scene <uuid>` | Download a specific scene from the dataset instead of the default sample scene. |
-| `--full-dataset` | Download the entire dataset instead of a single sample scene. __The full dataset is about 1.5 terabytes__, so ensure you have adequate drive space. |
+| `--python <exe>`, `-i` | Use an existing Python interpreter instead of the local `.venv`. |
+| `--scene <uuid>`, `-s` | Download a specific scene instead of the default sample scene. |
+| `--full-dataset` | Download the whole dataset instead of one sample scene.<br>__It is about 1.5 terabytes__, so check the free space first. |
 
 ### Example datasets
 
 By default the installer downloads one sample scene from the `26.04_release` sample set into `${CARLA_ROOT}/PythonAPI/examples/nvidia/nurec/PhysicalAI-Autonomous-Vehicles-NuRec/`. Browse the [dataset on Hugging Face](https://huggingface.co/datasets/nvidia/PhysicalAI-Autonomous-Vehicles-NuRec) to pick other scenes and pass their UUID with `--scene`.
 
-!!! note
+!!! Note
     If a previous download was interrupted, delete (or move) the scene folder under *PhysicalAI-Autonomous-Vehicles-NuRec* to force a re-download — the installer skips the download if the folder exists.
 
 Scenarios from older dataset releases (for example `25.07_release`) may need upgrading to the current artifact format before the NRE container can load them:
 
 ```sh
-docker run --rm --gpus all -v $(pwd):$(pwd) $NUREC_IMAGE upgrade-artifact --help
+docker run --rm --gpus all -v $(pwd):$(pwd) nvcr.io/nvidia/nre/nre-ga:26.04.01 upgrade-artifact --help
 ```
 
 ### Set up your environment variables
 
 The replay recognizes two environment variables:
 
-*   `NUREC_IMAGE` overrides the pinned NRE container image for the current shell:
+*   `NUREC_IMAGE` overrides the pinned NRE container image (`nvcr.io/nvidia/nre/nre-ga:26.04.01`) for the current shell:
 
     ```sh
     export NUREC_IMAGE="nvcr.io/nvidia/nre/nre-ga:26.04.01"
@@ -136,17 +128,11 @@ The replay recognizes two environment variables:
 __1. Launch the CARLA server.__ From a packaged release:
 
 ```sh
-cd ${CARLA_ROOT}
+cd <package root>
 ./CarlaUnreal.sh
 ```
 
-From a source build, launch the standalone binary (add `-RenderOffScreen` for headless operation) or the editor:
-
-```sh
-./Unreal/CarlaUnreal/Binaries/Linux/CarlaUnreal -carla-rpc-port=2000 -RenderOffScreen
-# or the editor:
-cmake --build Build --target launch-only
-```
+A source build or the editor works just as well; the replay only needs a server to connect to on the RPC port. See [Running CARLA](start_quickstart.md#running-carla) for the packaged server and [Build and run CARLA UE5](build_linux_ue5.md#build-and-run-carla-ue5) for the build targets that launch it.
 
 __2. Replay a NuRec scenario.__ In a second terminal, run the replay script with the path to a `.usdz` scenario:
 
@@ -186,19 +172,25 @@ with NurecScenario(client, usdz_path) as scenario:
 
 The following table explains the command-line parameters of `nurec_runner.py`:
 
-| Parameter | Long form | Default | Description |
-|-----------|-----------|---------|-------------|
-| | `--host` | 127.0.0.1 | IP address of the CARLA host server |
-| `-p` | `--port` | 2000 | TCP port of the CARLA server |
-| `-u` | `--usdz-filename` | (required) | Path to the USDZ file containing the NuRec scenario |
-| `-np` | `--nurec-port` | auto | TCP port for the NuRec gRPC connection (default: auto-pick a free port) |
-| `-c` | `--config` | `nurec_demo_config.yaml` | Demo settings file (see [above](#demo-configuration-file)) |
-| | `--saveimages` | Inactive | Save the images generated by the NuRec and CARLA cameras |
-| `-o` | `--output-dir` | `data` | Output directory for `--saveimages` |
-| | `--move-spectator` | Inactive | Move the spectator camera to follow the ego vehicle |
+| Parameter | Default | Description |
+|---|---|---|
+| `--usdz-filename`, `-u` | required | Path to the `.usdz` holding the NuRec scenario |
+| `--host` | 127.0.0.1 | Address of the CARLA server |
+| `--port`, `-p` | 2000 | TCP port of the CARLA server |
+| `--nurec-port`, `-np` | auto | TCP port of the NuRec gRPC connection; a free port is picked when unset |
+| `--config`, `-c` | `nurec_demo_config.yaml` | Demo settings file, see [above](#demo-configuration-file) |
+| `--saveimages` | off | Save the images generated by the NuRec and CARLA cameras |
+| `--output-dir`, `-o` | `data` | Output directory for `--saveimages` |
+| `--move-spectator` | off | Move the spectator camera to follow the ego vehicle |
 
+---
 ## Hybrid rendering example
 
 `PythonAPI/examples/nvidia/nurec/hybrid/` renders a NuRec scene with CARLA-driven vehicles and pedestrians composited into it: the NuRec frame supplies the background, CARLA's [ray-traced lens camera family](ref_sensors.md#ray-traced-lens-camera) supplies the added actors (colour, per-pixel distance and instance id, in the recorded camera's exact lens), occlusion against the neural scene's own geometry is resolved with the distance AOV, and lighting is matched with [`world.set_sky_light_map`](python_api.md#carla.World.set_sky_light_map) fed from the scene's own recorded environment. See `PythonAPI/examples/nvidia/nurec/hybrid/README.md` for the end-to-end command and output layout.
 
-The same pipeline runs [Scenic](https://scenic-lang.org) scenarios inside the neural scene: `hybrid_run.py --scenic hwy_cutin.scenic` hands the scene's road network to Scenic, lets the scenario drive the ego (which carries the recorded camera) and every other agent, and composites the result frame by frame. Five scenarios ship with it (highway cut-in, overtake and brake wave, urban stop-and-go and pull-out); `PythonAPI/examples/nvidia/nurec/hybrid/scenic/README.md` describes the driver, the globals a scenario receives and how to write a new one.
+The same pipeline runs [Scenic](https://scenic-lang.org) scenarios inside the neural scene: `hybrid_run.py --scene <scene_uuid> --out <run dir> --scenic hwy_cutin.scenic` hands the scene's road network to Scenic, lets the scenario drive the ego (which carries the recorded camera) and every other agent, and composites the result frame by frame. Five scenarios ship with it — `hwy_cutin.scenic`, `hwy_overtake.scenic`, `hwy_brake_wave.scenic`, `urban_lead_brake.scenic` and `urban_pullout.scenic` — `PythonAPI/examples/nvidia/nurec/hybrid/scenic/README.md` describes the driver, the globals a scenario receives and how to write a new one.
+
+---
+## See also
+
+NuRec scenes can also be driven by the Alpamayo 2 Super stack: see [Run with NuRec cameras](nvidia_alpamayo.md#run-with-nurec-cameras), which shares this installer. Do not run `nurec_runner.py` at the same time as the Alpamayo demo; both drive the same NRE container.

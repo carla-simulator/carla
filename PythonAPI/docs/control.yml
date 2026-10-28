@@ -139,12 +139,12 @@
     - def_name: __eq__
       params:
       - param_name: other
-        type: carla.AckermannVehicleControl
+        type: carla.VehicleAckermannControl
     # --------------------------------------
     - def_name: __ne__
       params:
       - param_name: other
-        type: carla.AckermannVehicleControl
+        type: carla.VehicleAckermannControl
     # --------------------------------------
     - def_name: __str__
     # --------------------------------------
@@ -298,7 +298,7 @@
   - class_name: WalkerBoneControlIn
     # - DESCRIPTION ------------------------
     doc: >
-       This class grants bone specific manipulation for walker. The skeletons of walkers have been unified for clarity and the transform applied to each bone are always relative to its parent. Take a look [here](tuto_G_control_walker_skeletons.md) to learn more on how to create a walker and define its movement.  
+       This class grants bone specific manipulation for walker. The skeletons of walkers have been unified for clarity and the transform applied to each bone are always relative to its parent. Take a look [here](tuto_walker_skeletons.md) to learn more on how to create a walker and define its movement.  
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: bone_transforms

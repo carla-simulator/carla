@@ -1,14 +1,56 @@
 # Sensors reference
 
+Every sensor CARLA ships, what it returns and what it is configured with.
+
+| Blueprint | Output | Section |
+| --- | --- | --- |
+| `sensor.camera.rgb` | [carla.Image](python_api.md#carla.Image) | [RGB camera](#rgb-camera) |
+| `sensor.camera.depth` | [carla.Image](python_api.md#carla.Image) | [Depth camera](#depth-camera) |
+| `sensor.camera.semantic_segmentation` | [carla.Image](python_api.md#carla.Image) | [Semantic segmentation camera](#semantic-segmentation-camera) |
+| `sensor.camera.instance_segmentation` | [carla.Image](python_api.md#carla.Image) | [Instance segmentation camera](#instance-segmentation-camera) |
+| `sensor.camera.normals` | [carla.Image](python_api.md#carla.Image) | [Normals camera](#normals-camera) |
+| `sensor.camera.optical_flow` | [carla.OpticalFlowImage](python_api.md#carla.OpticalFlowImage) | [Optical flow camera](#optical-flow-camera) |
+| `sensor.camera.dvs` | [carla.DVSEventArray](python_api.md#carla.DVSEventArray) | [DVS camera](#dvs-camera) |
+| `sensor.camera.rgb_fisheye` | [carla.Image](python_api.md#carla.Image) | [Fisheye cameras](#fisheye-cameras) |
+| `sensor.camera.depth_fisheye` | [carla.Image](python_api.md#carla.Image) | [Fisheye cameras](#fisheye-cameras) |
+| `sensor.camera.semantic_segmentation_fisheye` | [carla.Image](python_api.md#carla.Image) | [Fisheye cameras](#fisheye-cameras) |
+| `sensor.camera.instance_segmentation_fisheye` | [carla.Image](python_api.md#carla.Image) | [Fisheye cameras](#fisheye-cameras) |
+| `sensor.camera.rt_lens` | [carla.Image](python_api.md#carla.Image) | [Ray-traced lens camera](#ray-traced-lens-camera) |
+| `sensor.camera.rt_lens_distance` | [carla.DistanceImage](python_api.md#carla.DistanceImage) | [Ray-traced lens distance camera](#ray-traced-lens-distance-camera) |
+| `sensor.camera.rt_lens_instance` | [carla.Image](python_api.md#carla.Image) | [Ray-traced lens instance camera](#ray-traced-lens-instance-camera) |
+| `sensor.lidar.ray_cast` | [carla.LidarMeasurement](python_api.md#carla.LidarMeasurement) | [LIDAR sensor](#lidar-sensor) |
+| `sensor.lidar.ray_cast_semantic` | [carla.SemanticLidarMeasurement](python_api.md#carla.SemanticLidarMeasurement) | [Semantic LIDAR sensor](#semantic-lidar-sensor) |
+| `sensor.lidar.hss_lidar` | [carla.LidarMeasurement](python_api.md#carla.LidarMeasurement) | [Hybrid Solid-State LiDAR sensor](#hybrid-solid-state-lidar-sensor) |
+| `sensor.other.radar` | [carla.RadarMeasurement](python_api.md#carla.RadarMeasurement) | [Radar sensor](#radar-sensor) |
+| `sensor.other.gnss` | [carla.GnssMeasurement](python_api.md#carla.GnssMeasurement) | [GNSS sensor](#gnss-sensor) |
+| `sensor.other.imu` | [carla.IMUMeasurement](python_api.md#carla.IMUMeasurement) | [IMU sensor](#imu-sensor) |
+| `sensor.other.collision` | [carla.CollisionEvent](python_api.md#carla.CollisionEvent) | [Collision detector](#collision-detector) |
+| `sensor.other.lane_invasion` | [carla.LaneInvasionEvent](python_api.md#carla.LaneInvasionEvent) | [Lane invasion detector](#lane-invasion-detector) |
+| `sensor.other.obstacle` | [carla.ObstacleDetectionEvent](python_api.md#carla.ObstacleDetectionEvent) | [Obstacle detector](#obstacle-detector) |
+| `sensor.other.v2x` | [carla.CAMEvent](python_api.md#carla.CAMEvent) | [V2X sensor](#v2x-sensor) |
+| `sensor.other.v2x_custom` | [carla.CustomV2XEvent](python_api.md#carla.CustomV2XEvent) | [Custom V2X message](#custom-v2x-message) |
+| `sensor.other.autoware_gnss` | [carla.GnssMeasurement](python_api.md#carla.GnssMeasurement) | [Autoware GNSS sensor](#autoware-gnss-sensor) |
+| `sensor.other.vehicle_status` | [carla.SensorData](python_api.md#carla.SensorData) | [Vehicle status sensor](#vehicle-status-sensor) |
+
+Every sensor takes a `sensor_tick` attribute, the simulation seconds between captures, and every reading carries `frame`, `timestamp` and `transform`: the frame it was taken on, the simulation time in seconds, and the sensor's location and rotation in world coordinates at that moment. The per-sensor tables below list what each one adds.
+
+!!! Note
+    `sensor.other.rss` is also registered when the server is built with RSS support. It is documented separately, with the rest of the RSS integration.
+
+!!! Important
+    All the sensors use the UE coordinate system (__x__-*forward*, __y__-*right*, __z__-*up*), and return coordinates in local space. When using any visualization software, pay attention to its coordinate system. Many invert the Y-axis, so visualizing the sensor data directly may result in mirrored outputs.
+
 - [__Collision detector__](#collision-detector)
 - [__Depth camera__](#depth-camera)
 - [__GNSS sensor__](#gnss-sensor)
 - [__IMU sensor__](#imu-sensor)
 - [__Lane invasion detector__](#lane-invasion-detector)
 - [__LIDAR sensor__](#lidar-sensor)
+- [__Hybrid Solid-State LiDAR sensor__](#hybrid-solid-state-lidar-sensor)
 - [__Obstacle detector__](#obstacle-detector)
 - [__Radar sensor__](#radar-sensor)
 - [__RGB camera__](#rgb-camera)
+- [__Fisheye cameras__](#fisheye-cameras)
 - [__Ray-traced lens camera__](#ray-traced-lens-camera)
 - [__Ray-traced lens distance camera__](#ray-traced-lens-distance-camera)
 - [__Ray-traced lens instance camera__](#ray-traced-lens-instance-camera)
@@ -16,16 +58,11 @@
 - [__Semantic segmentation camera__](#semantic-segmentation-camera)
 - [__Instance segmentation camera__](#instance-segmentation-camera)
 - [__DVS camera__](#dvs-camera)
-- [__Optical Flow camera__](#optical-flow-camera)
+- [__Optical flow camera__](#optical-flow-camera)
 - [__Normals camera__](#normals-camera)
 - [__V2X sensor__](#v2x-sensor)
 - [__Autoware GNSS sensor__](#autoware-gnss-sensor)
 - [__Vehicle status sensor__](#vehicle-status-sensor)
-	- [Cooperative awareness message](#cooperative-awareness-message)
-	- [Custom message](#custom-v2x-message)
-
-!!! Important
-    All the sensors use the UE coordinate system (__x__-*forward*, __y__-*right*, __z__-*up*), and return coordinates in local space. When using any visualization software, pay attention to its coordinate system. Many invert the Y-axis, so visualizing the sensor data directly may result in mirrored outputs.  
 
 ---
 ## Collision detector
@@ -43,10 +80,10 @@ Collision detectors do not have any configurable attribute.
 | ----------------------- | ----------------------- | ----------------------- |
 | `frame`            | int   | Frame number when the measurement took place.      |
 | `timestamp`        | double | Simulation time of the measurement in seconds since the beginning of the episode.        |
-| `transform`        | [carla.Transform](<../python_api#carlatransform>)  | Location and rotation in world coordinates of the sensor at the time of the measurement. |
-| `actor`            | [carla.Actor](<../python_api#carlaactor>)    | Actor that measured the collision (sensor's parent).           |
-| `other_actor`      | [carla.Actor](<../python_api#carlaactor>)    | Actor against whom the parent collided.      |
-| `normal_impulse`     | [carla.Vector3D](<../python_api#carlavector3d>)    | Normal impulse result of the collision.      |
+| `transform`        | [carla.Transform](<python_api.md#carla.Transform>)  | Location and rotation in world coordinates of the sensor at the time of the measurement. |
+| `actor`            | [carla.Actor](<python_api.md#carla.Actor>)    | Actor that measured the collision (sensor's parent).           |
+| `other_actor`      | [carla.Actor](<python_api.md#carla.Actor>)    | Actor against whom the parent collided.      |
+| `normal_impulse`     | [carla.Vector3D](<python_api.md#carla.Vector3D>)    | Normal impulse result of the collision.      |
 
 
 
@@ -61,21 +98,20 @@ The camera provides a raw data of the scene codifying the distance of each pixel
 The image codifies depth value per pixel using 3 channels of the RGB color space, from less to more significant bytes: _R -> G -> B_. The actual distance in meters can be
 decoded with:
 
-```
+```text
 normalized = (R + G * 256 + B * 256 * 256) / (256 * 256 * 256 - 1)
 in_meters = 1000 * normalized
 ```
 
-The output [carla.Image](python_api.md#carla.Image) should then be saved to disk using a [carla.colorConverter](python_api.md#carla.ColorConverter) that will turn the distance stored in RGB channels into a __[0,1]__ float containing the distance and then translate this to grayscale.
-There are two options in [carla.colorConverter](python_api.md#carla.ColorConverter) to get a depth view: __Depth__ and __Logaritmic depth__. The precision is milimetric in both, but the logarithmic approach provides better results for closer objects.
+Save the output [carla.Image](python_api.md#carla.Image) to disk with a [carla.ColorConverter](python_api.md#carla.ColorConverter), which turns the distance stored in the RGB channels into a `[0, 1]` float and then into grayscale. Two converters give a depth view, `Depth` and `LogarithmicDepth`; both are millimetric, and the logarithmic one reads better for close objects.
 
 ```py
-...
-raw_image.save_to_disk("path/to/save/converted/image",carla.Depth)
+raw_image.save_to_disk("path/to/save/converted/image", carla.ColorConverter.Depth)
 ```
 
 
-![ImageDepth](img/ref_sensors_depth.jpg)
+![ImageDepth](img/ref_sensors/sensor_depth_raw_vs_log.webp)
+<div class="img-caption">Depth camera: raw 24-bit encoding (left) and the logarithmic-depth conversion (right).</div>
 
 
 #### Basic camera attributes
@@ -85,8 +121,8 @@ raw_image.save_to_disk("path/to/save/converted/image",carla.Depth)
 | ----------------------------- | ----------------------------- | ----------------------------- | ----------------------------- |
 | `image_size_x`            | int     | 800     | Image width in pixels.      |
 | `image_size_y`            | int     | 600     | Image height in pixels.     |
-| `fov`   | float   | 90\.0   | Horizontal field of view in degrees.    |
-| `sensor_tick` | float   | 0\.0    | Simulation seconds between sensor captures (ticks). |
+| `fov`   | float   | 90.0   | Horizontal field of view in degrees.    |
+| `sensor_tick` | float   | 0.0    | Simulation seconds between sensor captures (ticks). |
 
 
 
@@ -95,12 +131,12 @@ raw_image.save_to_disk("path/to/save/converted/image",carla.Depth)
 
 | Blueprint attribute      | Type         | Default      | Description  |
 | ------------------------- | ------------------------- | ------------------------- | ------------------------- |
-| `lens_circle_falloff`    | float        | 5\.0         | Range: [0.0, 10.0]       |
-| `lens_circle_multiplier` | float        | 0\.0         | Range: [0.0, 10.0]       |
+| `lens_circle_falloff`    | float        | 5.0         | Range: [0.0, 10.0]       |
+| `lens_circle_multiplier` | float        | 0.0         | Range: [0.0, 10.0]       |
 | `lens_k`     | float        | \-1.0        | Range: [-inf, inf]       |
-| `lens_kcube` | float        | 0\.0         | Range: [-inf, inf]       |
-| `lens_x_size`            | float        | 0\.08        | Range: [0.0, 1.0]        |
-| `lens_y_size`            | float        | 0\.08        | Range: [0.0, 1.0]        |
+| `lens_kcube` | float        | 0.0         | Range: [-inf, inf]       |
+| `lens_x_size`            | float        | 0.08        | Range: [0.0, 1.0]        |
+| `lens_y_size`            | float        | 0.08        | Range: [0.0, 1.0]        |
 
 
 #### Output attributes
@@ -110,7 +146,7 @@ raw_image.save_to_disk("path/to/save/converted/image",carla.Depth)
 | ----------------------- | ----------------------- | ----------------------- |
 | `frame`            | int   | Frame number when the measurement took place.      |
 | `timestamp`        | double | Simulation time of the measurement in seconds since the beginning of the episode.        |
-| `transform`        | [carla.Transform](<../python_api#carlatransform>)  | Location and rotation in world coordinates of the sensor at the time of the measurement. |
+| `transform`        | [carla.Transform](<python_api.md#carla.Transform>)  | Location and rotation in world coordinates of the sensor at the time of the measurement. |
 | `width`            | int   | Image width in pixels.           |
 | `height`           | int   | Image height in pixels.          |
 | `fov` | float | Horizontal field of view in degrees.          |
@@ -131,14 +167,14 @@ Reports current [gnss position](https://www.gsa.europa.eu/european-gnss/what-gns
 
 | Blueprint attribute      | Type   | Default            | Description        |
 | ------------------- | ------------------- | ------------------- | ------------------- |
-| `noise_alt_bias`   | float  | 0\.0   | Mean parameter in the noise model for altitude.    |
-| `noise_alt_stddev` | float  | 0\.0   | Standard deviation parameter in the noise model for altitude.  |
-| `noise_lat_bias`   | float  | 0\.0   | Mean parameter in the noise model for latitude.    |
-| `noise_lat_stddev` | float  | 0\.0   | Standard deviation parameter in the noise model for latitude.  |
-| `noise_lon_bias`   | float  | 0\.0   | Mean parameter in the noise model for longitude.   |
-| `noise_lon_stddev` | float  | 0\.0   | Standard deviation parameter in the noise model for longitude. |
+| `noise_alt_bias`   | float  | 0.0   | Mean parameter in the noise model for altitude.    |
+| `noise_alt_stddev` | float  | 0.0   | Standard deviation parameter in the noise model for altitude.  |
+| `noise_lat_bias`   | float  | 0.0   | Mean parameter in the noise model for latitude.    |
+| `noise_lat_stddev` | float  | 0.0   | Standard deviation parameter in the noise model for latitude.  |
+| `noise_lon_bias`   | float  | 0.0   | Mean parameter in the noise model for longitude.   |
+| `noise_lon_stddev` | float  | 0.0   | Standard deviation parameter in the noise model for longitude. |
 | `noise_seed`       | int    | 0      | Initializer for a pseudorandom number generator.   |
-| `sensor_tick`      | float  | 0\.0   | Simulation seconds between sensor captures (ticks).            |
+| `sensor_tick`      | float  | 0.0   | Simulation seconds between sensor captures (ticks).            |
 
 <br>
 
@@ -149,7 +185,7 @@ Reports current [gnss position](https://www.gsa.europa.eu/european-gnss/what-gns
 | ----------------------- | ----------------------- | ----------------------- |
 | `frame`            | int   | Frame number when the measurement took place.      |
 | `timestamp`        | double | Simulation time of the measurement in seconds since the beginning of the episode.        |
-| `transform`        | [carla.Transform](<../python_api#carlatransform>)  | Location and rotation in world coordinates of the sensor at the time of the measurement. |
+| `transform`        | [carla.Transform](<python_api.md#carla.Transform>)  | Location and rotation in world coordinates of the sensor at the time of the measurement. |
 | `latitude`         | double | Latitude of the actor.           |
 | `longitude`        | double | Longitude of the actor.          |
 | `altitude`         | double | Altitude of the actor.           |
@@ -164,22 +200,29 @@ Reports current [gnss position](https://www.gsa.europa.eu/european-gnss/what-gns
 
 Provides measures that accelerometer, gyroscope and compass would retrieve for the parent object. The data is collected from the object's current state.
 
+The accelerometer reports gravity as `9.81 m/s²` by default. The value is a property of the world, shared by every IMU in it, and changing it changes what the sensors report without touching the physics of the simulation.
+
+```py
+world.set_imu_sensor_gravity(1.62)    # the Moon, for the sensors
+print(world.get_imu_sensor_gravity())
+```
+
 #### IMU attributes
 
 
 | Blueprint attribute | Type    | Default             | Description         |
 | -------------------------------- | -------------------------------- | -------------------------------- | -------------------------------- |
-| `noise_accel_stddev_x`          | float   | 0\.0    | Standard deviation parameter in the noise model for acceleration (X axis).  |
-| `noise_accel_stddev_y`          | float   | 0\.0    | Standard deviation parameter in the noise model for acceleration (Y axis).  |
-| `noise_accel_stddev_z`          | float   | 0\.0    | Standard deviation parameter in the noise model for acceleration (Z axis).  |
-| `noise_gyro_bias_x` | float   | 0\.0    | Mean parameter in the noise model for the gyroscope (X axis).   |
-| `noise_gyro_bias_y` | float   | 0\.0    | Mean parameter in the noise model for the gyroscope (Y axis).   |
-| `noise_gyro_bias_z` | float   | 0\.0    | Mean parameter in the noise model for the gyroscope (Z axis).   |
-| `noise_gyro_stddev_x`           | float   | 0\.0    | Standard deviation parameter in the noise model for the gyroscope (X axis). |
-| `noise_gyro_stddev_y`           | float   | 0\.0    | Standard deviation parameter in the noise model for the gyroscope (Y axis). |
-| `noise_gyro_stddev_z`           | float   | 0\.0    | Standard deviation parameter in the noise model for the gyroscope (Z axis). |
+| `noise_accel_stddev_x`          | float   | 0.0    | Standard deviation parameter in the noise model for acceleration (X axis).  |
+| `noise_accel_stddev_y`          | float   | 0.0    | Standard deviation parameter in the noise model for acceleration (Y axis).  |
+| `noise_accel_stddev_z`          | float   | 0.0    | Standard deviation parameter in the noise model for acceleration (Z axis).  |
+| `noise_gyro_bias_x` | float   | 0.0    | Mean parameter in the noise model for the gyroscope (X axis).   |
+| `noise_gyro_bias_y` | float   | 0.0    | Mean parameter in the noise model for the gyroscope (Y axis).   |
+| `noise_gyro_bias_z` | float   | 0.0    | Mean parameter in the noise model for the gyroscope (Z axis).   |
+| `noise_gyro_stddev_x`           | float   | 0.0    | Standard deviation parameter in the noise model for the gyroscope (X axis). |
+| `noise_gyro_stddev_y`           | float   | 0.0    | Standard deviation parameter in the noise model for the gyroscope (Y axis). |
+| `noise_gyro_stddev_z`           | float   | 0.0    | Standard deviation parameter in the noise model for the gyroscope (Z axis). |
 | `noise_seed`        | int     | 0       | Initializer for a pseudorandom number generator.    |
-| `sensor_tick`       | float   | 0\.0    | Simulation seconds between sensor captures (ticks).             |
+| `sensor_tick`       | float   | 0.0    | Simulation seconds between sensor captures (ticks).             |
 
 <br>
 
@@ -189,9 +232,9 @@ Provides measures that accelerometer, gyroscope and compass would retrieve for t
 | ----------------------- | ----------------------- | ----------------------- |
 | `frame`            | int   | Frame number when the measurement took place.      |
 | `timestamp`        | double | Simulation time of the measurement in seconds since the beginning of the episode.        |
-| `transform`        | [carla.Transform](<../python_api#carlatransform>)  | Location and rotation in world coordinates of the sensor at the time of the measurement. |
-| `accelerometer`      | [carla.Vector3D](<../python_api#carlavector3d>)    | Measures linear acceleration in `m/s^2`.     |
-| `gyroscope`        | [carla.Vector3D](<../python_api#carlavector3d>)    | Measures angular velocity in `rad/sec`.      |
+| `transform`        | [carla.Transform](<python_api.md#carla.Transform>)  | Location and rotation in world coordinates of the sensor at the time of the measurement. |
+| `accelerometer`      | [carla.Vector3D](<python_api.md#carla.Vector3D>)    | Measures linear acceleration in `m/s^2`.     |
+| `gyroscope`        | [carla.Vector3D](<python_api.md#carla.Vector3D>)    | Measures angular velocity in `rad/sec`.      |
 | `compass`          | float | Orientation in radians. North is `(0.0, -1.0, 0.0)` in UE.       |
 
 
@@ -220,9 +263,9 @@ This sensor does not have any configurable attribute.
 | ----------------------- | ----------------------- | ----------------------- |
 | `frame`            | int   | Frame number when the measurement took place.      |
 | `timestamp`        | double | Simulation time of the measurement in seconds since the beginning of the episode.        |
-| `transform`        | [carla.Transform](<../python_api#carlatransform>)  | Location and rotation in world coordinates of the sensor at the time of the measurement. |
-| `actor`            | [carla.Actor](<../python_api#carlaactor>)    | Vehicle that invaded another lane (parent actor).  |
-| `crossed_lane_markings`          | list([carla.LaneMarking](<../python_api#carlalanemarking>))      | List of lane markings that have been crossed.      |
+| `transform`        | [carla.Transform](<python_api.md#carla.Transform>)  | Location and rotation in world coordinates of the sensor at the time of the measurement. |
+| `actor`            | [carla.Actor](<python_api.md#carla.Actor>)    | Vehicle that invaded another lane (parent actor).  |
+| `crossed_lane_markings`          | list([carla.LaneMarking](<python_api.md#carla.LaneMarking>))      | List of lane markings that have been crossed.      |
 
 
 
@@ -246,41 +289,48 @@ for location in lidar_measurement:
 ```
 
 The information of the LIDAR measurement is encoded 4D points. Being the first three, the space points in xyz coordinates and the last one intensity loss during the travel. This intensity is computed by the following formula.
-<br>
-![LidarIntensityComputation](img/lidar_intensity.jpg)
 
-`a` — Attenuation coefficient. This may depend on the sensor's wavelenght, and the conditions of the atmosphere. It can be modified with the LIDAR attribute `atmosphere_attenuation_rate`.
+```
+I / I0 = exp(-a * d)
+```
+
+`a` — Attenuation coefficient. This may depend on the sensor's wavelength, and the conditions of the atmosphere. It can be modified with the LIDAR attribute `atmosphere_attenuation_rate`.
 `d` — Distance from the hit point to the sensor.
 
 For a better realism, points in the cloud can be dropped off. This is an easy way to simulate loss due to external perturbations. This can done combining two different.
 
 *   __General drop-off__ — Proportion of points that are dropped off randomly. This is done before the tracing, meaning the points being dropped are not calculated, and therefore improves the performance. If `dropoff_general_rate = 0.5`, half of the points will be dropped.
-*   __Instensity-based drop-off__ — For each point detected, and extra drop-off is performed with a probability based in the computed intensity. This probability is determined by two parameters. `dropoff_zero_intensity` is the probability of points with zero intensity to be dropped. `dropoff_intensity_limit` is a threshold intensity above which no points will be dropped. The probability of a point within the range to be dropped is a linear proportion based on these two parameters.
+*   __Intensity-based drop-off__ — For each point detected, and extra drop-off is performed with a probability based in the computed intensity. This probability is determined by two parameters. `dropoff_zero_intensity` is the probability of points with zero intensity to be dropped. `dropoff_intensity_limit` is a threshold intensity above which no points will be dropped. The probability of a point within the range to be dropped is a linear proportion based on these two parameters.
 
 Additionally, the `noise_stddev` attribute makes for a noise model to simulate unexpected deviations that appear in real-life sensors. For positive values, each point is randomly perturbed along the vector of the laser ray. The result is a LIDAR sensor with perfect angular positioning, but noisy distance measurement.
 
-The rotation of the LIDAR can be tuned to cover a specific angle on every simulation step (using a [fixed time-step](adv_synchrony_timestep.md)). For example, to rotate once per step (full circle output, as in the picture below), the rotation frequency and the simulated FPS should be equal. <br> __1.__ Set the sensor's frequency `sensors_bp['lidar'][0].set_attribute('rotation_frequency','10')`. <br> __2.__ Run the simulation using `python3 config.py --fps=10`.
+The rotation of the LIDAR can be tuned to cover a specific angle on every simulation step (using a [fixed time-step](core_synchrony.md)). For example, to rotate once per step (full circle output, as in the picture below), the rotation frequency and the simulated FPS should be equal. <br> __1.__ Set the sensor's frequency `sensors_bp['lidar'][0].set_attribute('rotation_frequency','10')`. <br> __2.__ Run the simulation using `python3 PythonAPI/util/config.py --fps 10`.
 
-![LidarPointCloud](img/lidar_point_cloud.jpg)
+![LidarPointCloud](img/ref_sensors/sensor_lidar_bev.webp)
+<div class="img-caption">One LiDAR sweep seen from above, coloured by height (64 channels, 80 m range).</div>
+
+![LidarOnCamera](img/ref_sensors/sensor_lidar_on_camera.webp)
+<div class="img-caption">The same sweep projected on the RGB image, coloured by range.</div>
 
 #### Lidar attributes
 
 
 | Blueprint attribute  | Type   | Default    | Description     |
 | ----------------------------------------------------------------- | ----------------------------------------------------------------- | ----------------------------------------------------------------- | ----------------------------------------------------------------- |
-| `channels`         | int    | 32     | Number of lasers.  |
-| `range`            | float  | 10.0  | Maximum distance to measure/raycast in meters (centimeters for CARLA 0.9.6 or previous).  |
-| `points_per_second` | int    | 56000  | Points generated by all lasers per second.    |
-| `rotation_frequency`            | float  | 10.0  | LIDAR rotation frequency.       |
+| `channels`         | int    | 64     | Number of lasers.  |
+| `range`            | float  | 50.0  | Maximum distance to measure/raycast in meters.  |
+| `points_per_second` | int    | 600000  | Points generated by all lasers per second.    |
+| `rotation_frequency`            | float  | 60.0  | LIDAR rotation frequency.       |
 | `upper_fov`        | float  | 10.0  | Angle in degrees of the highest laser.        |
 | `lower_fov`        | float  | -30.0 | Angle in degrees of the lowest laser.         |
 | `horizontal_fov`   | float | 360.0 | Horizontal field of view in degrees, 0 - 360. |
 | `atmosphere_attenuation_rate`     | float  | 0.004 | Coefficient that measures the LIDAR instensity loss per meter. Check the intensity computation above. |
-| `dropoff_general_rate`          | float  | 0.45  | General proportion of points that are randomy dropped.    |
+| `dropoff_general_rate`          | float  | 0.45  | General proportion of points that are randomly dropped.    |
 | `dropoff_intensity_limit`       | float  | 0.8   | For the intensity based drop-off, the threshold intensity value above which no points are dropped.    |
 | `dropoff_zero_intensity`        | float  | 0.4   | For the intensity based drop-off, the probability of each point with zero intensity being dropped.    |
 | `sensor_tick`      | float  | 0.0   | Simulation seconds between sensor captures (ticks). |
 | `noise_stddev`     | float  | 0.0   | Standard deviation of the noise model to disturb each point along the vector of its raycast. |
+| `noise_seed`       | int    | 0     | Seed of the random generator behind the drop-off and the noise. Set it to make a run reproducible. |
 
 
 
@@ -291,7 +341,7 @@ The rotation of the LIDAR can be tuned to cover a specific angle on every simula
 | ----------------------- | ----------------------- | ----------------------- |
 | `frame`            | int   | Frame number when the measurement took place.      |
 | `timestamp`        | double | Simulation time of the measurement in seconds since the beginning of the episode.        |
-| `transform`        | [carla.Transform](<../python_api#carlatransform>)  | Location and rotation in world coordinates of the sensor at the time of the measurement. |
+| `transform`        | [carla.Transform](<python_api.md#carla.Transform>)  | Location and rotation in world coordinates of the sensor at the time of the measurement. |
 | `horizontal_angle`   | float | Angle (radians) in the XY plane of the LIDAR in the current frame.           |
 | `channels`         | int   | Number of channels (lasers) of the LIDAR.    |
 | `get_point_count(channel)`       | int   | Number of points per channel captured this frame.  |
@@ -300,10 +350,14 @@ The rotation of the LIDAR can be tuned to cover a specific angle on every simula
 
 <br>
 
+---
 ## Hybrid Solid-State LiDAR sensor
 
 * __Blueprint:__ sensor.lidar.hss_lidar
 * __Output:__ [carla.LidarMeasurement](python_api.md#carla.LidarMeasurement) per step (unless `sensor_tick` says otherwise).
+
+!!! Warning
+    __TODO: this section needs a capture.__ The fixed scan pattern looks nothing like the rotating LiDAR's, and both of that sensor's images are on this page while this one has none.
 
 This sensor simulates a Hybrid Solid-State LiDAR implemented using
 ray-casting. The default parameters are based on the Hesai AT128
@@ -316,7 +370,9 @@ The information of the LiDAR measurement is encoded as 4D points. The first
 three components are the hit position in the sensor's local frame (xyz);
 the fourth is the intensity after atmospheric attenuation, computed as:
 
-![LidarIntensityComputation](img/lidar_intensity.jpg)
+```
+I / I0 = exp(-a * d)
+```
 
 `a` — Attenuation coefficient (`atmosphere_attenuation_rate`). Depends on
 the sensor's wavelength and atmospheric conditions.
@@ -336,12 +392,18 @@ Two independent drop-off mechanisms simulate point loss:
 The `noise_stddev` attribute applies per-ray Gaussian noise along the laser
 direction, leaving angular position unaffected.
 
+![HSSLidarOnCamera](img/ref_sensors/sensor_hss_lidar_on_camera.webp)
+<div class="img-caption">One HSS LiDAR scan projected on the RGB image, coloured by range (128 channels, 120&deg; horizontal field of view).</div>
+
+![HSSLidarBEV](img/ref_sensors/sensor_hss_lidar_bev.webp)
+<div class="img-caption">The same scan seen from above: the forward 120&deg; fan, coloured by range.</div>
+
 #### LiDAR attributes
 
 | Blueprint attribute | Type | Default | Description |
 | --- | --- | --- | --- |
 | `channels` | int | 128 | Number of vertical lasers. |
-| `range` | float | 200.0 | Maximum trace distance in metres. |
+| `range` | float | 200.0 | Maximum trace distance in meters. |
 | `rotation_frequency` | float | 20.0 | Kept for API compatibility; HSS does not rotate. |
 | `upper_fov` | float | 12.9 | Angle in degrees of the highest laser. |
 | `lower_fov` | float | -12.5 | Angle in degrees of the lowest laser. |
@@ -361,7 +423,7 @@ direction, leaving angular position unaffected.
 | --- | --- | --- |
 | `frame` | int | Frame number when the measurement was taken. |
 | `timestamp` | double | Simulation time in seconds since episode start. |
-| `transform` | [carla.Transform](<../python_api#carlatransform>) | Sensor pose at measurement time. |
+| `transform` | [carla.Transform](<python_api.md#carla.Transform>) | Sensor pose at measurement time. |
 | `horizontal_angle` | float | Always 0 for HSS (does not rotate). |
 | `channels` | int | Number of channels (lasers). |
 | `get_point_count(channel)` | int | Points captured this frame in the given channel. |
@@ -369,6 +431,7 @@ direction, leaving angular position unaffected.
 
 <br>
 
+---
 ## Obstacle detector
 
 * __Blueprint:__ sensor.other.obstacle
@@ -382,10 +445,10 @@ To ensure that collisions with any kind of object are detected, the server creat
 | Blueprint attribute          | Type       | Default    | Description      |
 | -------------------------------- | -------------------------------- | -------------------------------- | -------------------------------- |
 | `distance` | float      | 5          | Distance to trace.           |
-| `hit_radius`     | float      | 0\.5       | Radius of the trace.         |
+| `hit_radius`     | float      | 0.5       | Radius of the trace.         |
 | `only_dynamics`  | bool       | False      | If true, the trace will only consider dynamic objects. |
 | `debug_linetrace` | bool       | False      | If true, the trace will be visible.        |
-| `sensor_tick`    | float      | 0\.0       | Simulation seconds between sensor captures (ticks).    |
+| `sensor_tick`    | float      | 0.0       | Simulation seconds between sensor captures (ticks).    |
 
 <br>
 
@@ -395,15 +458,16 @@ To ensure that collisions with any kind of object are detected, the server creat
 | ----------------------- | ----------------------- | ----------------------- |
 | `frame`            | int   | Frame number when the measurement took place.      |
 | `timestamp`        | double | Simulation time of the measurement in seconds since the beginning of the episode.        |
-| `transform`        | [carla.Transform](<../python_api#carlatransform>)  | Location and rotation in world coordinates of the sensor at the time of the measurement. |
-| `actor`            | [carla.Actor](<../python_api#carlaactor>)    | Actor that detected the obstacle (parent actor).   |
-| `other_actor`      | [carla.Actor](<../python_api#carlaactor>)    | Actor detected as an obstacle.   |
+| `transform`        | [carla.Transform](<python_api.md#carla.Transform>)  | Location and rotation in world coordinates of the sensor at the time of the measurement. |
+| `actor`            | [carla.Actor](<python_api.md#carla.Actor>)    | Actor that detected the obstacle (parent actor).   |
+| `other_actor`      | [carla.Actor](<python_api.md#carla.Actor>)    | Actor detected as an obstacle.   |
 | `distance`         | float | Distance from `actor` to `other_actor`.      |
 
 
 
 <br>
 
+---
 ## Radar sensor
 
 * __Blueprint:__ sensor.other.radar
@@ -421,15 +485,17 @@ points = np.reshape(points, (len(radar_data), 4))
 
 The provided script `manual_control.py` uses this sensor to show the points being detected and paint them white when static, red when moving towards the object and blue when moving away:
 
-![ImageRadar](img/ref_sensors_radar.jpg)
+![ImageRadar](img/ref_sensors/sensor_radar_on_camera.webp)
+<div class="img-caption">Radar detections projected on the RGB image, coloured by distance.</div>
 
 | Blueprint attribute       | Type    | Default | Description   |
 | ----------------------------- | ----------------------------- | ----------------------------- | ----------------------------- |
-| `horizontal_fov`          | float   | 30\.0   | Horizontal field of view in degrees.    |
+| `horizontal_fov`          | float   | 30.0   | Horizontal field of view in degrees.    |
 | `points_per_second`       | int     | 1500    | Points generated by all lasers per second.          |
 | `range` | float   | 100     | Maximum distance to measure/raycast in meters.      |
-| `sensor_tick` | float   | 0\.0    | Simulation seconds between sensor captures (ticks). |
-| `vertical_fov`            | float   | 30\.0   | Vertical field of view in degrees.      |
+| `sensor_tick` | float   | 0.0    | Simulation seconds between sensor captures (ticks). |
+| `vertical_fov`            | float   | 30.0   | Vertical field of view in degrees.      |
+| `noise_seed`              | int     | 0       | Seed of the sensor's random generator. Set it to make a run reproducible. |
 
 <br>
 
@@ -437,7 +503,7 @@ The provided script `manual_control.py` uses this sensor to show the points bein
 
 | Sensor data attribute | Type            | Description     |
 | ---------------- | ---------------- | ---------------- |
-| `raw_data`      | [carla.RadarDetection](<../python_api#carlaradardetection>) | The list of points detected.      |
+| `raw_data`      | bytes | Four 32-bit floats per detection: velocity, azimuth, altitude and depth. Iterating the measurement yields [carla.RadarDetection](python_api.md#carla.RadarDetection) objects instead, and `get_detection_count()` returns how many there are. |
 
 <br>
 
@@ -454,10 +520,9 @@ The provided script `manual_control.py` uses this sensor to show the points bein
 ## RGB camera
 
 * __Blueprint:__ sensor.camera.rgb
-* __Output:__ [carla.Image](python_api.md#carla.Image) per step (unless `sensor_tick` says otherwise)..
+* __Output:__ [carla.Image](python_api.md#carla.Image) per step (unless `sensor_tick` says otherwise).
 
-The "RGB" camera acts as a regular camera capturing images from the scene.
-[carla.colorConverter](python_api.md#carla.ColorConverter)
+The RGB camera acts as a regular camera capturing images from the scene.
 
 If `enable_postprocess_effects` is enabled, a set of post-process effects is applied to the image for the sake of realism:
 
@@ -472,95 +537,72 @@ If `enable_postprocess_effects` is enabled, a set of post-process effects is app
 The `sensor_tick` tells how fast we want the sensor to capture the data.
 A value of 1.5 means that we want the sensor to capture data each second and a half. By default a value of 0.0 means as fast as possible.
 
-![ImageRGB](img/ref_sensors_rgb.jpg)
+![ImageRGB](img/ref_sensors/sensor_rgb.webp)
+<div class="img-caption">RGB camera output.</div>
 
-#### Basic camera attributes
+#### Camera attributes
 
+| Blueprint attribute | Type | Default | Description |
+| --- | --- | --- | --- |
+| `image_size_x` | int | 800 | Image width in pixels. |
+| `image_size_y` | int | 600 | Image height in pixels. |
+| `fov` | float | 90.0 | Horizontal field of view in degrees. |
+| `sensor_tick` | float | 0.0 | Simulation seconds between captures. `0.0` captures every step. |
+| `enable_postprocess_effects` | bool | True | Apply the post-process chain. With it off the camera returns the raw scene color. |
+| `post_process_profile` | str | (empty) | Camera preset to load, a JSON file in `Content/Carla/Config/PostProcess/` on the server: `AutomotiveHDR`, `AutomotiveHDRClean`, `WideHDR8MP`, `LegacyCCD`, `LogHDR`, `Smartphone`, `Cinematic`, `GoPro`, `Dashcam` or your own. Empty (or `Default`) uses the sensor default, console variable `carla.PostProcess.Profile` (`AutomotiveHDR` unless changed). The spectator view uses its own profile, `carla.PostProcess.ViewportProfile` (`Cinematic`). |
+| `use_ray_tracing` | bool | True | Render this camera with hardware ray tracing (Lumen HW ray tracing, ray-traced shadows). Set it to `False` to save the per-camera VRAM cost on sensors that do not need it. The console variable `carla.Camera.UseRayTracing` forces it on or off globally, overriding the attribute. |
+| `enable_dlss` | bool | False | Enable NVIDIA DLSS Super Resolution: the image renders internally at `dlss_screen_percentage` of the output resolution and is reconstructed to full size, keeping its `image_size_x`&times;`image_size_y` output. Requires `enable_postprocess_effects=True`, and falls back to a bilinear upscale on non-NVIDIA hardware. Not for ground-truth cameras: reconstructed pixels corrupt label and depth maps. |
+| `dlss_screen_percentage` | float | 50.0 | Internal rendering resolution as a percentage of the output, when `enable_dlss` is on. Clamped to [25.0, 100.0]. `50.0` renders a quarter of the pixels (DLSS "Performance"), `33.0` about one ninth ("Ultra Performance"). |
 
-<br>
+__The look of the camera comes from its preset__, not from individual attributes. Exposure, tonemapper, white balance, bloom, lens flare, depth of field, motion blur and chromatic aberration all live in the post-process profile, and are changed by picking another preset or writing one. See [Camera post-process presets](core_camera_presets.md) for what each preset contains and how to author one.
 
-| Blueprint attribute  | Type     | Default  | Description          |
-| ----------------------------------------------------- | ----------------------------------------------------- | ----------------------------------------------------- | ----------------------------------------------------- |
-| `bloom_intensity`    | float    | 0\.675   | Intensity for the bloom post-process effect, `0.0` for disabling it.         |
-| `fov`    | float    | 90\.0    | Horizontal field of view in degrees.   |
-| `fstop`  | float    | 1\.4     | Opening of the camera lens. Aperture is `1/fstop` with typical lens going down to f/1.2 (larger opening). Larger numbers will reduce the Depth of Field effect. |
-| `image_size_x`       | int      | 800      | Image width in pixels.           |
-| `image_size_y`       | int      | 600      | Image height in pixels.          |
-| `iso`    | float    | 100\.0   | The camera sensor sensitivity.   |
-| `gamma`  | float    | 2\.2     | Target gamma value of the camera.      |
-| `lens_flare_intensity`           | float    | 0\.1     | Intensity for the lens flare post-process effect, `0.0` for disabling it.    |
-| `post_process_profile` | str    | (empty)  | Camera preset to load, a JSON file in `Content/Carla/Config/PostProcess/` on the server: `Default`, `GoPro`, `AutomotiveHDR`, `Dashcam` or your own. Empty uses the active profile (console variable `carla.PostProcess.Profile`, `Default` unless changed), the same one the spectator view uses. See [Camera post-process presets](camera_postprocess_presets.md). |
-| `sensor_tick`        | float    | 0\.0     | Simulation seconds between sensor captures (ticks).  |
-| `shutter_speed`      | float    | 200\.0   | The camera shutter speed in seconds (1.0/s).       |
-
-
-
+!!! Note
+    `use_ray_tracing`, `enable_dlss` and `dlss_screen_percentage` are available on every scene-capture camera (`sensor.camera.rgb`, `depth`, `semantic_segmentation`, `instance_segmentation`, `optical_flow`, `dvs`), not only on the RGB camera.
 
 #### Camera lens distortion attributes
 
+| Blueprint attribute | Type | Default | Description |
+| --- | --- | --- | --- |
+| `lens_circle_falloff` | float | 5.0 | Range: [0.0, 10.0] |
+| `lens_circle_multiplier` | float | 0.0 | Range: [0.0, 10.0] |
+| `lens_k` | float | -1.0 | Range: [-inf, inf] |
+| `lens_kcube` | float | 0.0 | Range: [-inf, inf] |
+| `lens_x_size` | float | 0.08 | Range: [0.0, 1.0] |
+| `lens_y_size` | float | 0.08 | Range: [0.0, 1.0] |
 
-<br>
+For a wide-angle or fisheye projection, with its own intrinsics and distortion coefficients, use the [fisheye cameras](#fisheye-cameras) instead.
 
-| Blueprint attribute      | Type         | Default      | Description  |
-| ------------------------------------------------------- | ------------------------------------------------------- | ------------------------------------------------------- | ------------------------------------------------------- |
-| `lens_circle_falloff`    | float        | 5\.0         | Range: [0.0, 10.0]       |
-| `lens_circle_multiplier` | float        | 0\.0         | Range: [0.0, 10.0]       |
-| `lens_k`     | float        | \-1.0        | Range: [-inf, inf]       |
-| `lens_kcube` | float        | 0\.0         | Range: [-inf, inf]       |
-| `lens_x_size`            | float        | 0\.08        | Range: [0.0, 1.0]        |
-| `lens_y_size`            | float        | 0\.08        | Range: [0.0, 1.0]        |
+#### Exposure-linked motion blur
 
+A real camera blurs what moves during its exposure time, and its auto exposure lengthens that time in the dark. The RGB
+camera does the same by default: every capture reads the exposure its own auto exposure settled on, turns it into an
+exposure time for an f/`carla.Camera.FNumber` lens at base ISO (`t = N² / 2^EV100`), clamps it between
+`carla.Camera.MinExposureMs` and `carla.Camera.MaxExposureMs` (darker scenes raise the gain instead, as a
+machine-vision AV camera does) and sets the motion blur to `t` divided by the simulation time between two captures
+(1 = a 360° shutter). By day the exposure is a few milliseconds and the image stays sharp; at night it reaches the
+cap and moving objects and lights streak. The blur length depends on the simulation time only, not on how fast the
+simulator runs, so it is the same in synchronous and asynchronous mode. This also applies below 1920&times;1080,
+where the camera otherwise keeps motion blur off.
 
+| Console variable | Default | Description |
+| --- | --- | --- |
+| `carla.Camera.ExposureMotionBlur` | `1` | `1` derives the motion blur from the exposure time; `0` leaves the motion blur of the post-process profile as it is. |
+| `carla.Camera.FNumber` | `2.0` | Lens f-number used to turn the auto exposure into an exposure time. |
+| `carla.Camera.MinExposureMs` | `0.05` | Shortest exposure time in milliseconds. |
+| `carla.Camera.MaxExposureMs` | `20` | Longest exposure time in milliseconds. |
+| `carla.Camera.ExposureLog` | `0` | `1` logs each capture's exposure, exposure time and motion blur amount. |
 
-#### Advanced camera attributes
+#### Auto exposure of a new camera
 
-Since these effects are provided by UE, please make sure to check their documentation:
+A camera that has just been spawned has no auto exposure history. Its first captures are rendered as camera cuts, so
+its auto exposure jumps to the level it settles on: the first image is still metered from scratch, and from the second
+one on the exposure is settled, instead of adapting for a few seconds from a default exposure (a bright flash of the
+sky every time a client respawns a camera, e.g. `manual_control.py` changing the camera position with TAB).
 
-  * [Automatic Exposure][AutomaticExposure.Docs]
-  * [Cinematic Depth of Field Method][CinematicDOFMethod.Docs]
-  * [Color Grading and Filmic Tonemapper][ColorGrading.Docs]
+| Console variable | Default | Description |
+| --- | --- | --- |
+| `carla.Camera.SpawnCameraCuts` | `2` | Number of first captures of a new camera rendered as camera cuts. `0` restores the old behavior. |
 
-[AutomaticExposure.Docs]: https://docs.unrealengine.com/en-US/Engine/Rendering/PostProcessEffects/AutomaticExposure/index.html
-[CinematicDOFMethod.Docs]: https://docs.unrealengine.com/en-US/Engine/Rendering/PostProcessEffects/DepthOfField/CinematicDOFMethods/index.html
-[ColorGrading.Docs]: https://docs.unrealengine.com/en-US/Engine/Rendering/PostProcessEffects/ColorGrading/index.html
-
-| Blueprint attribute  | Type           | Default        | Description    |
-| ------------------------------------------------------------- | ------------------------------------------------------------- | ------------------------------------------------------------- | ------------------------------------------------------------- |
-| `min_fstop`    | float          | 1\.2           | Maximum aperture.    |
-| `blade_count`  | int            | 5  | Number of blades that make up the diaphragm mechanism.     |
-| `exposure_mode`      | str            | `histogram`    | Can be `manual` or `histogram`. More in [UE4 docs](<https://docs.unrealengine.com/en-US/Engine/Rendering/PostProcessEffects/AutomaticExposure/index.html>).  |
-| `exposure_compensation`          | float          | **Linux:** \+0.75<br>**Windows:** 0\.0        | Logarithmic adjustment for the exposure. 0: no adjustment, -1:2x darker, -2:4 darker, 1:2x brighter, 2:4x brighter.   |
-| `exposure_min_bright`            | float          | 10\.0           | In `exposure_mode: "histogram"`. Minimum brightness for auto exposure. The lowest the eye can adapt within. Must be greater than 0 and less than or equal to `exposure_max_bright`.  |
-| `exposure_max_bright`            | float          | 12\.0           | In \`exposure\_mode: "histogram"\`. Maximum brightness for auto exposure. The highestthe eye can adapt within. Must be greater than 0 and greater than or equal to \`exposure\_min\_bright\`.          |
-| `exposure_speed_up`  | float          | 3\.0           | In `exposure_mode: "histogram"`. Speed at which the adaptation occurs from dark to bright environment.  |
-| `exposure_speed_down`            | float          | 1\.0           | In `exposure_mode: "histogram"`. Speed at which the adaptation occurs from bright to dark environment.  |
-| `calibration_constant`           | float          | 16\.0          | Calibration constant for 18% albedo.           |
-| `focal_distance`     | float          | 1000\.0        | Distance at which the depth of field effect should be sharp. Measured in cm (UE units).           |
-| `blur_amount`  | float          | 1\.0           | Distance from camera in Km to give a blur amount of 50%. |
-| `blur_radius`  | float          | 0\.0           | Radius in pixels at 1080p resolution to emulate atmospheric scattering according to distance from camera.           |
-| `motion_blur_intensity`          | float          | 0\.45          | Strength of motion blur [0,1].     |
-| `motion_blur_max_distortion`       | float          | 0\.35          | Max distortion caused by motion blur. Percentage of screen width.       |
-| `motion_blur_min_object_screen_size`           | float          | 0\.1           | Percentage of screen width objects must have for motion blur, lower value means less draw calls.  |
-| `slope`        | float          | 0\.88          | Steepness of the S-curve for the tonemapper. Larger values make the slope steeper (darker) [0.0, 1.0].  |
-| `toe`          | float          | 0\.55          | Adjusts dark color in the tonemapper [0.0, 1.0].           |
-| `shoulder`     | float          | 0\.26          | Adjusts bright color in the tonemapper [0.0, 1.0].         |
-| `black_clip`   | float          | 0\.0           | This should NOT be adjusted. Sets where the crossover happens and black tones start to cut off their value [0.0, 1.0].            |
-| `white_clip`   | float          | 0\.04          | Set where the crossover happens and white tones start to cut off their value. Subtle change in most cases [0.0, 1.0].             |
-| `temp`         | float          | 6500\.0        | White balance in relation to the temperature of the light in the scene. **White light:** when this matches light temperature. **Warm light:** When higher than the light in the scene, it is a yellowish color. **Cool light:** When lower than the light. Blueish color.     |
-| `tint`         | float          | 0\.0           | White balance temperature tint. Adjusts cyan and magenta color ranges. This should be used along with the white balance Temp property to get accurate colors. Under some light temperatures, the colors may appear to be more yellow or blue. This can be used to balance the resulting color to look more natural. |
-| `chromatic_aberration_intensity`   | float          | 0\.0           | Scaling factor to control color shifting, more noticeable on the screen borders.      |
-| `chromatic_aberration_offset`      | float          | 0\.0           | Normalized distance to the center of the image where the effect takes place.          |
-| `enable_postprocess_effects`       | bool           | True           | Post-process effects activation.   |
-| `use_ray_tracing`   | bool           | True           | Render this camera with hardware ray tracing (Lumen HW ray tracing, ray-traced shadows). Set to `False` to save the per-camera VRAM cost of a ray-tracing view on sensors that do not need it. The console variable `carla.Camera.UseRayTracing` forces this on or off globally, overriding the attribute. |
-| `enable_dlss`       | bool           | False          | Enable NVIDIA DLSS Super Resolution for this camera: the image is rendered internally at `dlss_screen_percentage` of the output resolution and reconstructed to full size. The output image keeps its full `image_size_x`&times;`image_size_y` resolution and format. Requires `enable_postprocess_effects=True`. On non-NVIDIA hardware the sensor falls back to a bilinear upscale. Not recommended for ground-truth cameras (depth, segmentation): reconstructed pixels are fine for RGB imagery but corrupt label and depth maps. |
-| `dlss_screen_percentage` | float     | 50\.0          | Internal rendering resolution as a percentage of the output resolution when `enable_dlss` is on. Clamped to [25.0, 100.0]. `50.0` renders a quarter of the pixels (DLSS "Performance"); `33.0` about one ninth ("Ultra Performance"). |
-
-<br>
-
-!!! Note
-    `use_ray_tracing`, `enable_dlss` and `dlss_screen_percentage` are available on every scene-capture camera (`sensor.camera.rgb`, `sensor.camera.depth`, `sensor.camera.semantic_segmentation`, `sensor.camera.instance_segmentation`, `sensor.camera.optical_flow`, `sensor.camera.dvs`), not only on the RGB camera.
-
-[AutomaticExposure.gamesetting]: https://docs.unrealengine.com/en-US/Engine/Rendering/PostProcessEffects/AutomaticExposure/index.html#gamesetting
 
 #### Output attributes
 
@@ -568,11 +610,59 @@ Since these effects are provided by UE, please make sure to check their document
 | ----------------------- | ----------------------- | ----------------------- |
 | `frame`            | int   | Frame number when the measurement took place.      |
 | `timestamp`        | double | Simulation time of the measurement in seconds since the beginning of the episode.        |
-| `transform`        | [carla.Transform](<../python_api#carlatransform>)  | Location and rotation in world coordinates of the sensor at the time of the measurement. |
+| `transform`        | [carla.Transform](<python_api.md#carla.Transform>)  | Location and rotation in world coordinates of the sensor at the time of the measurement. |
 | `width`            | int   | Image width in pixels.           |
 | `height`           | int   | Image height in pixels.          |
 | `fov` | float | Horizontal field of view in degrees.         |
 | `raw_data`         | bytes | Array of BGRA 32-bit pixels.     |
+
+---
+## Fisheye cameras
+
+* __Blueprints:__ sensor.camera.rgb_fisheye, sensor.camera.depth_fisheye, sensor.camera.semantic_segmentation_fisheye, sensor.camera.instance_segmentation_fisheye
+* __Output:__ the same data as the pinhole camera each one mirrors — [carla.Image](python_api.md#carla.Image) per step (unless `sensor_tick` says otherwise).
+
+!!! Warning
+    __TODO: this section needs a capture.__ The distortion is the point of these cameras and there is no picture of it. One image per lens model, or one per variant beside its pinhole counterpart.
+
+Wide-angle versions of the four raster cameras. The scene is rendered into six cube faces and resampled through the chosen lens model, so a field of view past 180&deg; is possible without the stretching a single pinhole render suffers towards its borders. The depth and segmentation variants are distorted the same way as the RGB one, so their pixels stay aligned with it.
+
+The lens models and their coefficients are the ones [`sensor.camera.rt_lens`](#ray-traced-lens-camera) uses, with one difference that matters: these cameras rasterize, so they cost about what their pinhole counterparts cost, while `rt_lens` path-traces the scene and generates its primary rays through the lens itself. Use `rt_lens` when the projection has to be exact; use these when you need a wide-angle image at raster speed.
+
+![Fisheye](img/ref_sensors/sensor_fisheye.webp)
+<div class="img-caption">The four fisheye cameras with a 180&deg; Kannala-Brandt lens: RGB, depth (logarithmic), semantic segmentation and instance segmentation.</div>
+
+#### Fisheye attributes
+
+| Blueprint attribute | Type | Default | Description |
+| ------------------- | ---- | ------- | ----------- |
+| `camera_model` | str | `perspective` | Lens model: `perspective`, `stereographic`, `equidistant`, `equisolid`, `orthographic`, `kannala_brandt`, `ftheta` or `lut`. |
+| `k0`, `k1`, `k2`, `k3` | float | 0.0831, 0.0111, 0.0086, 0.0009 | Kannala-Brandt polynomial coefficients. |
+| `fov` | float | 90.0 | Horizontal field of view in degrees. |
+| `focal_length` | float | 0.0 | Focal length. 0 derives it from `fov`. |
+| `fx`, `fy`, `cx`, `cy` | float | 0.0, 0.0, 0.5, 0.5 | Lens intrinsics in normalized viewport units. `fx` at or below 0 keeps the `fov` / `focal_length` projection, centred. |
+| `lut` | str | (empty) | `camera_model=lut`: comma-separated R(&theta;) samples, evenly spaced over `[0, theta_max_deg]`. |
+| `theta_max_deg` | float | 0.0 | Angle the last `lut` sample corresponds to. |
+| `face_size` | int | 0 | Side of each cube-face render target in pixels. 0 uses `max(image_size_x, image_size_y)`; smaller faces cost less GPU memory. |
+| `perspective` | bool | False | Rectify the output back to a rectilinear image. Ignored with `equirectangular`, `lut` and Brown-Conrady. |
+| `equirectangular` | bool | False | Render an equirectangular (360&deg;) projection instead of the lens model. |
+| `longitude_offset` | float | 0.0 | Rotates the equirectangular projection about the vertical axis, in degrees. |
+| `fov_mask` | bool | False | Black out everything outside the lens circle. |
+| `fov_fade_size` | float | 0.0 | Width of the fade at the edge of that mask. |
+| `lens_circle_falloff` | float | 5.0 | Falloff of the lens circle. |
+| `image_size_x` | int | 800 | Image width in pixels. |
+| `image_size_y` | int | 600 | Image height in pixels. |
+| `sensor_tick` | float | 0.0 | Simulation seconds between captures (ticks). |
+
+The RGB variant also takes the exposure, color and lens attributes of the [RGB camera](#rgb-camera).
+
+```py
+camera_bp = bp_lib.find('sensor.camera.rgb_fisheye')
+camera_bp.set_attribute('camera_model', 'kannala_brandt')
+camera_bp.set_attribute('fov', '180')
+```
+
+See `PythonAPI/examples/manual_control_fisheye.py` for a working rig.
 
 ---
 ## Ray-traced lens camera
@@ -580,9 +670,14 @@ Since these effects are provided by UE, please make sure to check their document
 * __Blueprint:__ sensor.camera.rt_lens
 * __Output:__ [carla.Image](python_api.md#carla.Image) per step (unless `sensor_tick` says otherwise).
 
+!!! Warning
+    __TODO: this section needs a capture.__ Nothing on the page shows what the path-traced lens looks like, or how the lens models differ from the raster cameras.
+
 The ray-traced lens camera renders the scene with Unreal Engine's __path tracer__ and generates its primary rays directly through a configurable physical lens model. Where the RGB camera approximates lens distortion as a post-process on a pinhole render, `sensor.camera.rt_lens` distorts the rays themselves, so wide-angle and fisheye projections are geometrically exact, with no resolution loss towards the image borders and no missing field of view.
 
 The sensor requires hardware ray tracing (an NVIDIA RTX-class GPU under Vulkan); unlike the other cameras it has no rasterized fallback, so `use_ray_tracing` cannot be disabled for it.
+
+__Video memory.__ The path tracer is by far the most memory-hungry sensor in CARLA, and the cost is dominated by the camera rather than by the scene: the first `rt_lens` camera allocates gigabytes of path-tracing and denoiser buffers, which are then pooled and reused, so further cameras are nearly free. Budget for that first one. If it does not fit, the allocation fails inside the renderer and the server dies with a Vulkan `Out Of Memory` fatal error, which the client sees as a time-out. Lower the camera settings, or on a smaller card reduce the ray-tracing and Nanite pool sizes in `Unreal/CarlaUnreal/Config/DefaultEngine.ini`.
 
 __Lens models.__ The `camera_model` attribute selects the radial projection:
 
@@ -600,9 +695,9 @@ __Lens models.__ The `camera_model` attribute selects the radial projection:
 
 If `fx` is left at `0.0`, the focal length is derived automatically so that the requested `fov` spans the image width through the selected projection. An explicit calibration (`fx` > 0, in normalized units where the image half-width is 0.5) always wins over `fov`. `camera_model=ftheta` and `camera_model=lut` need an explicit `fx` (their coefficients are defined against a pixel-space radius, not the normalized one the other models use); if left at `0.0` the sensor logs a warning and falls back to `fx=1.0` (coefficients then act in units of the full image width). Measured against an NVIDIA rig calibration, `ftheta` reprojects with a median error of about 1 pixel.
 
-__Denoising and convergence.__ The path tracer accumulates one batch of `samples_per_pixel` samples per simulation tick and denoises with NVIDIA DLSS Ray Reconstruction (the engine default, `r.PathTracing.Denoiser.Name=DLSSRR`). A static camera converges over successive ticks; a moving camera relies on the denoiser every frame. Low sample counts (`samples_per_pixel` of 4&ndash;16) with the denoiser enabled are the intended real-time operating point; high sample counts approach ground-truth path tracing at a heavy cost per frame. `samples_per_pixel` is clamped to the console variable `r.PathTracing.MaxFramePassCount` (see [Ray-traced lens tuning](adv_rendering_options.md#ray-traced-lens-tuning)), with a warning logged when it clamps: a sensor asking for more samples than the engine can run in one frame can never finish (and denoise) within its tick, and would deliver a partially accumulated — and therefore noisier — image every frame instead of a smaller, fully converged one. Measured on car pixels at 1080p, noise (in 8-bit levels) falls from about 5.7 at 8 samples/pixel to 3.7 at 64, at roughly 54, 54, 74 and 116 ms per tick for 8/16/32/64 samples/pixel respectively (colour + instance sensors together); requesting a count above the pass cap measured about four times noisier than the same count kept under the cap.
+__Denoising and convergence.__ The path tracer accumulates one batch of `samples_per_pixel` samples per simulation tick and denoises with NVIDIA DLSS Ray Reconstruction (the engine default, `r.PathTracing.Denoiser.Name=DLSSRR`). A static camera converges over successive ticks; a moving camera relies on the denoiser every frame. Low sample counts (`samples_per_pixel` of 4&ndash;16) with the denoiser enabled are the intended real-time operating point; high sample counts approach ground-truth path tracing at a heavy cost per frame. `samples_per_pixel` is clamped to the console variable `r.PathTracing.MaxFramePassCount` (see [Ray-traced lens tuning](core_rendering.md#ray-traced-lens-tuning)), with a warning logged when it clamps: a sensor asking for more samples than the engine can run in one frame can never finish (and denoise) within its tick, and would deliver a partially accumulated — and therefore noisier — image every frame instead of a smaller, fully converged one. Measured on car pixels at 1080p, noise (in 8-bit levels) falls from about 5.7 at 8 samples/pixel to 3.7 at 64, at roughly 54, 54, 74 and 116 ms per tick for 8/16/32/64 samples/pixel respectively (color + instance sensors together); requesting a count above the pass cap measured about four times noisier than the same count kept under the cap.
 
-__Exposure.__ `exposure_mode` selects between `auto` (default) — the capture's auto exposure is pinned to the daylight histogram window used by the CARLA sky rig, so path-traced frames match the photometric exposure of the RGB camera instead of adapting to raw sun radiance — and `manual`, which switches to the post-process profile's physical camera exposure plus `exposure_compensation` (in EV, `0.0` = no adjustment, negative darkens, positive brightens), deterministic from frame to frame. Use `manual` when the frame is composited against an external render (e.g. a `show_only_*` layer over an otherwise black background) and the content itself must not drive the histogram.
+__Exposure.__ `exposure_mode` selects between `auto` (default) and `manual`. `auto` uses the auto exposure of the camera profile (`post_process_profile`), like `sensor.camera.rgb`, so the path-traced frames follow day and night like the RGB camera; only the upper end of its range is capped by the `carla.RTLens.MaxAutoExposureEV` console variable (EV100 `12` by default), so the path-traced view cannot meter the raw sun disk and go black. `manual` switches to the profile's physical camera exposure, deterministic from frame to frame. Use `manual` when the frame is composited against an external render (e.g. a `show_only_*` layer over an otherwise black background) and the content itself must not drive the histogram. In both modes `exposure_compensation` (in EV, `0.0` = no adjustment, negative darkens, positive brightens) is added to the profile's exposure bias.
 
 __Show-only rendering.__ `show_only_tags`, `shadow_catcher_tags` and `show_only_actor_ids` restrict the capture to a subset of the scene, for compositing:
 
@@ -610,7 +705,7 @@ __Show-only rendering.__ `show_only_tags`, `shadow_catcher_tags` and `show_only_
 * `shadow_catcher_tags` — same format (e.g. `Roads,Sidewalks`). Actors with these labels are rendered too, but only so they can receive the cast shadows of the `show_only_tags` actors; they are meant to be composited away afterwards (e.g. via their own segmentation mask), not kept in the final image.
 * `show_only_actor_ids` — comma-separated CARLA actor ids, added to the render list regardless of their labels.
 
-When any of the three is non-empty, everything else is neither rendered nor casts a shadow into the capture: colour captures show only sky/atmosphere in the empty pixels. The actor list is rescanned only when the world's actor count changes (an actor spawns or is destroyed), so a newly spawned actor appears on the next capture at negligible per-tick cost otherwise. Leaving all three empty renders the full scene as usual.
+When any of the three is non-empty, everything else is neither rendered nor casts a shadow into the capture: color captures show only sky/atmosphere in the empty pixels. The actor list is rescanned only when the world's actor count changes (an actor spawns or is destroyed), so a newly spawned actor appears on the next capture at negligible per-tick cost otherwise. Leaving all three empty renders the full scene as usual.
 
 __Readback and synchronous-mode delivery.__ The path-traced render is heavy, so by default (console variable `carla.RTLens.SyncModeBlockingReadback`, default `1`) the two modes behave differently:
 
@@ -621,6 +716,9 @@ Setting `carla.RTLens.SyncModeBlockingReadback 0` (server console) forces the as
 
 `manual_control.py` includes ready-made presets in its camera cycle (pinhole, Kannala-Brandt fisheye 150°, Brown-Conrady barrel), and `manual_control_rtlens.py` boots directly into the fisheye configuration.
 
+![RTLens](img/ref_sensors/sensor_rt_lens.webp)
+<div class="img-caption">Ray-traced lens camera with a 150&deg; Kannala-Brandt fisheye lens.</div>
+
 #### Ray-traced lens camera attributes
 
 <br>
@@ -629,27 +727,27 @@ Setting `carla.RTLens.SyncModeBlockingReadback 0` (server console) forces the as
 | ----------------------------------------------------- | ----------------------------------------------------- | ----------------------------------------------------- | ----------------------------------------------------- |
 | `image_size_x`       | int      | 800      | Image width in pixels.           |
 | `image_size_y`       | int      | 600      | Image height in pixels.          |
-| `fov`    | float    | 90\.0    | Horizontal field of view in degrees, applied through the selected `camera_model` projection when `fx` is `0.0`. Clamped to 170.0 (half-angles at or beyond 90° are a known shader limitation). |
+| `fov`    | float    | 90.0    | Horizontal field of view in degrees, applied through the selected `camera_model` projection when `fx` is `0.0`. Clamped to 170.0 (half-angles at or beyond 90° are a known shader limitation). |
 | `camera_model` | str | `perspective` | Lens projection model. One of `perspective`, `stereographic`, `equidistant`, `equisolid`, `orthographic`, `kannala_brandt`, `brown_conrady`, `lut`, `ftheta`. |
 | `distortion_coeffs` | str | (empty) | Comma-separated distortion coefficients; meaning is `camera_model`-specific (Kannala-Brandt: `k1,k2,k3,k4`; Brown-Conrady: `k1,k2,k3,p1,p2`; f-theta: `c0,c1,…` up to 8 terms of θ = Σ cᵢ·rⁱ). |
 | `lut` | str | (empty) | Comma-separated θ→r samples for `camera_model=lut`. |
-| `fx`, `fy` | float | 0\.0 | Normalized focal lengths (image half-width = 0.5). `0.0` derives them from `fov`; `fy` defaults to `fx` (square pixels). `lut` and `ftheta` need an explicit `fx` (e.g. `1/image_size_x` for pixel-unit coefficients). |
-| `cx`, `cy` | float | 0\.5 | Normalized principal point. |
-| `theta_max_deg` | float | 0\.0 | Maximum half-angle accepted by the lens, in degrees. `0.0` extends coverage automatically to the frame corners. |
-| `aperture_fstop` | float | 0\.0 | Physical depth of field. `0.0` means pinhole (no depth of field). |
-| `focus_distance_m` | float | 1000\.0 | Focus distance in meters when `aperture_fstop` > 0. |
-| `ca_shift_r`, `ca_shift_b` | float | 1\.0 | Chromatic aberration: per-channel radial scale of the red/blue channels relative to green (`1.0` = none). |
+| `fx`, `fy` | float | 0.0 | Normalized focal lengths (image half-width = 0.5). `0.0` derives them from `fov`; `fy` defaults to `fx` (square pixels). `lut` and `ftheta` need an explicit `fx` (e.g. `1/image_size_x` for pixel-unit coefficients). |
+| `cx`, `cy` | float | 0.5 | Normalized principal point. |
+| `theta_max_deg` | float | 0.0 | Maximum half-angle accepted by the lens, in degrees. `0.0` extends coverage automatically to the frame corners. |
+| `aperture_fstop` | float | 0.0 | Physical depth of field. `0.0` means pinhole (no depth of field). |
+| `focus_distance_m` | float | 1000.0 | Focus distance in meters when `aperture_fstop` > 0. |
+| `ca_shift_r`, `ca_shift_b` | float | 1.0 | Chromatic aberration: per-channel radial scale of the red/blue channels relative to green (`1.0` = none). |
 | `samples_per_pixel` | int | 16 | Path-tracer samples accumulated per tick. Lower is faster; 4&ndash;16 with the denoiser is the real-time range. Clamped to `r.PathTracing.MaxFramePassCount` (a warning is logged when clamped). |
 | `enable_denoiser` | bool | True | Denoise each frame with DLSS Ray Reconstruction. Disable only for converged ground-truth renders from a static camera. |
-| `exposure_mode` | str | `auto` | `auto`: pinned to the CARLA sky rig's daylight histogram window (matches the RGB camera's photometric exposure). `manual`: the post-process profile's physical camera exposure plus `exposure_compensation`, deterministic frame to frame. |
-| `exposure_compensation` | float | 0\.0 | Exposure adjustment in EV. `0.0` = no adjustment; negative darkens, positive brightens. Applied in both `exposure_mode` values. |
+| `exposure_mode` | str | `auto` | `auto`: the auto exposure of the camera profile, as on `sensor.camera.rgb`, capped at the top by `carla.RTLens.MaxAutoExposureEV`. `manual`: the profile's physical camera exposure, deterministic frame to frame. |
+| `exposure_compensation` | float | 0.0 | Exposure adjustment in EV. `0.0` = no adjustment; negative darkens, positive brightens. Applied in both `exposure_mode` values. |
 | `show_only_tags` | str | (empty) | Comma-separated semantic label names; when non-empty, only actors carrying one of these labels (plus `show_only_actor_ids`) are rendered — everything else is neither drawn nor casts a shadow. |
 | `shadow_catcher_tags` | str | (empty) | Comma-separated semantic label names; actors with these labels are rendered alongside the `show_only_tags` set so they receive its cast shadows, for later compositing away. |
 | `show_only_actor_ids` | str | (empty) | Comma-separated CARLA actor ids, added to the show-only render list regardless of label. |
 | `use_ray_tracing` | bool | True | Present for parity with the other cameras, but always effectively `True`: the path tracer has no rasterized fallback. |
 | `enable_postprocess_effects` | bool | True | Post-process effects activation. |
-| `post_process_profile` | str | (empty) | Named post-process profile applied to the capture. Empty uses the active profile (`carla.PostProcess.Profile`, `Default` unless changed), as for the RGB camera. |
-| `sensor_tick` | float | 0\.0 | Simulation seconds between sensor captures (ticks). |
+| `post_process_profile` | str | (empty) | Named post-process profile applied to the capture. Empty (or `Default`) uses the sensor default (`carla.PostProcess.Profile`, `AutomotiveHDR` unless changed), as for the RGB camera. |
+| `sensor_tick` | float | 0.0 | Simulation seconds between sensor captures (ticks). |
 
 #### Output attributes
 
@@ -657,7 +755,7 @@ Setting `carla.RTLens.SyncModeBlockingReadback 0` (server console) forces the as
 | ----------------------- | ----------------------- | ----------------------- |
 | `frame`            | int   | Frame number when the measurement took place.      |
 | `timestamp`        | double | Simulation time of the measurement in seconds since the beginning of the episode.        |
-| `transform`        | [carla.Transform](<../python_api#carlatransform>)  | Location and rotation in world coordinates of the sensor at the time of the measurement. |
+| `transform`        | [carla.Transform](<python_api.md#carla.Transform>)  | Location and rotation in world coordinates of the sensor at the time of the measurement. |
 | `width`            | int   | Image width in pixels.           |
 | `height`           | int   | Image height in pixels.          |
 | `fov` | float | Horizontal field of view in degrees.         |
@@ -669,11 +767,14 @@ Setting `carla.RTLens.SyncModeBlockingReadback 0` (server console) forces the as
 * __Blueprint:__ sensor.camera.rt_lens_distance
 * __Output:__ [carla.DistanceImage](python_api.md#carla.DistanceImage) per step (unless `sensor_tick` says otherwise).
 
-The geometric twin of [`sensor.camera.rt_lens`](#ray-traced-lens-camera): it shares the exact same lens attributes (`camera_model`, `distortion_coeffs`, `lut`, `fx`/`fy`/`cx`/`cy`, `theta_max_deg`, `fov`, `aperture_fstop`, `focus_distance_m`, `show_only_tags`, `shadow_catcher_tags`, `show_only_actor_ids`, `sensor_tick`, …) so a colour/distance pair can be configured from the same dictionary and stay pixel-aligned, but it renders a single geometry AOV instead of a shaded image: for every pixel, the __Euclidean distance__, in metres, from the camera origin to the primary hit, measured along that pixel's (possibly heavily distorted) lens ray. This is the only meaningful "depth" for a non-pinhole lens, where a pinhole camera's planar view-space Z collapses to zero at 90° off axis.
+!!! Warning
+    __TODO: this section needs a capture.__ The distance output is unillustrated; a frame beside the RGB one it matches would show what it returns.
+
+The geometric twin of [`sensor.camera.rt_lens`](#ray-traced-lens-camera): it shares the exact same lens attributes (`camera_model`, `distortion_coeffs`, `lut`, `fx`/`fy`/`cx`/`cy`, `theta_max_deg`, `fov`, `aperture_fstop`, `focus_distance_m`, `show_only_tags`, `shadow_catcher_tags`, `show_only_actor_ids`, `sensor_tick`, …) so a color/distance pair can be configured from the same dictionary and stay pixel-aligned, but it renders a single geometry AOV instead of a shaded image: for every pixel, the __Euclidean distance__, in meters, from the camera origin to the primary hit, measured along that pixel's (possibly heavily distorted) lens ray. This is the only meaningful "depth" for a non-pinhole lens, where a pinhole camera's planar view-space Z collapses to zero at 90° off axis.
 
 Depth of field is disabled for this sensor (`focus_distance_m`/`aperture_fstop` have no effect): a defocused primary ray would scatter its origin across the aperture and turn a distance measurement into an average over the circle of confusion. The AOV is exact by construction — one ray through the pixel centre, no anti-aliasing jitter, no temporal blending — so `samples_per_pixel` and `enable_denoiser` default to `1` and `False` and normally should not be changed: extra samples only cost time, and the denoiser must never touch metric data. Post-process attributes (`enable_postprocess_effects`, `post_process_profile`) are not present: this capture never goes through the post-process chain.
 
-Rays that hit nothing (sky) report a large miss distance, `1.0e5` metres (100 km), rather than `0.0`, so a consumer can tell "sky" from "at the camera".
+Rays that hit nothing (sky) report a large miss distance, `1.0e5` meters (100 km), rather than `0.0`, so a consumer can tell "sky" from "at the camera".
 
 Compared with [`sensor.camera.depth`](#depth-camera): the depth camera encodes a lossy, RGB-packed, millimetre-precision planar depth (distance along the camera's forward axis) into an 8-bit-per-channel `carla.Image`, valid only for a rectilinear pinhole. `sensor.camera.rt_lens_distance` returns an exact float32 Euclidean ray distance (not planar depth) with no encoding loss, and is valid for every lens model the ray-traced lens camera supports, including wide-angle and fisheye projections. Measured against a pinhole reference, the AOV agrees with a rasterized planar depth to a median of about 0.6&nbsp;mm.
 
@@ -695,17 +796,20 @@ def on_distance(image):
 distance_sensor.listen(on_distance)
 ```
 
+![RTLensDistance](img/ref_sensors/sensor_rt_lens_distance.webp)
+<div class="img-caption">Distance per pixel through the same 150&deg; lens, on a logarithmic colour scale up to 120 m; sky in black.</div>
+
 #### Output attributes
 
 | Sensor data attribute            | Type  | Description        |
 | ----------------------- | ----------------------- | ----------------------- |
 | `frame`            | int   | Frame number when the measurement took place.      |
 | `timestamp`        | double | Simulation time of the measurement in seconds since the beginning of the episode.        |
-| `transform`        | [carla.Transform](<../python_api#carlatransform>)  | Location and rotation in world coordinates of the sensor at the time of the measurement. |
+| `transform`        | [carla.Transform](<python_api.md#carla.Transform>)  | Location and rotation in world coordinates of the sensor at the time of the measurement. |
 | `width`            | int   | Image width in pixels.           |
 | `height`           | int   | Image height in pixels.          |
 | `fov` | float | Horizontal field of view in degrees.         |
-| `raw_data`         | bytes | `width * height` float32 values, row major (`np.frombuffer(image.raw_data, np.float32).reshape(height, width)`). Euclidean distance in metres along the pixel's lens ray to the primary hit; `1.0e5` (100 km) where the ray hit nothing. |
+| `raw_data`         | bytes | `width * height` float32 values, row major (`np.frombuffer(image.raw_data, np.float32).reshape(height, width)`). Euclidean distance in meters along the pixel's lens ray to the primary hit; `1.0e5` (100 km) where the ray hit nothing. |
 
 ---
 ## Ray-traced lens instance camera
@@ -713,11 +817,17 @@ distance_sensor.listen(on_distance)
 * __Blueprint:__ sensor.camera.rt_lens_instance
 * __Output:__ [carla.Image](python_api.md#carla.Image) per step (unless `sensor_tick` says otherwise).
 
+!!! Warning
+    __TODO: this section needs a capture.__ The instance output is unillustrated; a frame beside the RGB one it matches would show what it returns.
+
 The labelling twin of [`sensor.camera.rt_lens`](#ray-traced-lens-camera): same shared lens attribute surface as the distance camera above, but the geometry AOV it renders is the primary hit's CARLA tag rather than a distance. The output byte layout is identical to the [instance segmentation camera](#instance-segmentation-camera): red channel `R` carries the semantic label, and the green/blue channels carry the 16-bit instance id (`G` low byte, `B` high byte). The id is the __engine's internal actor unique id__ used to build the tag on the GPU, not the id returned by the Python `actor.id` property — treat it as an opaque per-instance key within one episode, not as a value to compare against `actor.id`.
 
 Depth of field is disabled (a defocused ray would blend two actors' ids into one pixel), and — like the distance camera — `samples_per_pixel`/`enable_denoiser` default to `1`/`False` (the AOV is an exact integer read off the primary hit, nothing for a denoiser to do) and post-process attributes are not present.
 
 Measured against the raster [instance segmentation camera](#instance-segmentation-camera) on the same view, per-pixel instance agreement is about 98%. The disagreements are concentrated on silhouette edges (anti-aliasing/coverage differences between the two renderers) and on windscreens and other translucent materials, where the path-traced AOV reports the surface *behind* the glass (the primary ray continues to its geometric hit) while the rasterizer reports the glass itself.
+
+![RTLensInstance](img/ref_sensors/sensor_rt_lens_instance.webp)
+<div class="img-caption">Instance ids through the same 150&deg; lens, one random colour per instance.</div>
 
 #### Output attributes
 
@@ -725,11 +835,11 @@ Measured against the raster [instance segmentation camera](#instance-segmentatio
 | ----------------------- | ----------------------- | ----------------------- |
 | `frame`            | int   | Frame number when the measurement took place.      |
 | `timestamp`        | double | Simulation time of the measurement in seconds since the beginning of the episode.        |
-| `transform`        | [carla.Transform](<../python_api#carlatransform>)  | Location and rotation in world coordinates of the sensor at the time of the measurement. |
+| `transform`        | [carla.Transform](<python_api.md#carla.Transform>)  | Location and rotation in world coordinates of the sensor at the time of the measurement. |
 | `width`            | int   | Image width in pixels.           |
 | `height`           | int   | Image height in pixels.          |
 | `fov` | float | Horizontal field of view in degrees.         |
-| `raw_data`         | bytes | Array of BGRA 32-bit pixels. `R` = semantic label (0&ndash;255). `G`, `B` = the 16-bit engine actor id, low/high byte (e.g. `[10, 20, 55]` is a vehicle, semantic tag 10, engine actor id `20 + 55*256`). |
+| `raw_data`         | bytes | Array of BGRA 32-bit pixels. `R` = semantic label (0&ndash;255). `G`, `B` = the 16-bit engine actor id, low/high byte (e.g. `[14, 20, 55]` is a car, semantic tag 14, engine actor id `20 + 55*256`). |
 
 ---
 ## Semantic LIDAR sensor
@@ -737,7 +847,7 @@ Measured against the raster [instance segmentation camera](#instance-segmentatio
 * __Blueprint:__ sensor.lidar.ray_cast_semantic
 * __Output:__ [carla.SemanticLidarMeasurement](python_api.md#carla.SemanticLidarMeasurement) per step (unless `sensor_tick` says otherwise).
 
-This sensor simulates a rotating LIDAR implemented using ray-casting that exposes all the information about the raycast hit. Its behaviour is quite similar to the [LIDAR sensor](#lidar-sensor), but there are two main differences between them.
+This sensor simulates a rotating LIDAR implemented using ray-casting that exposes all the information about the raycast hit. Its behavior is quite similar to the [LIDAR sensor](#lidar-sensor), but there are two main differences between them.
 
 *   The raw data retrieved by the semantic LIDAR includes more data per point.
 	*   Coordinates of the point (as the normal LIDAR does).
@@ -746,7 +856,7 @@ This sensor simulates a rotating LIDAR implemented using ray-casting that expose
 *   The semantic LIDAR does not include neither intensity, drop-off nor noise model attributes.
 
 The points are computed by adding a laser for each channel distributed in the vertical FOV. The rotation is simulated computing the horizontal angle that the LIDAR rotated in a frame. The point cloud is calculated by doing a ray-cast for each laser in every step.
-```sh
+```text
 points_per_channel_each_step = points_per_second / (FPS * channels)
 ```
 
@@ -759,11 +869,15 @@ for detection in semantic_lidar_measurement:
     print(detection)
 ```
 
-The rotation of the LIDAR can be tuned to cover a specific angle on every simulation step (using a [fixed time-step](adv_synchrony_timestep.md)). For example, to rotate once per step (full circle output, as in the picture below), the rotation frequency and the simulated FPS should be equal. <br>
+The rotation of the LIDAR can be tuned to cover a specific angle on every simulation step (using a [fixed time-step](core_synchrony.md)). For example, to rotate once per step (full circle output, as in the picture below), the rotation frequency and the simulated FPS should be equal. <br>
 __1.__ Set the sensor's frequency `sensors_bp['lidar'][0].set_attribute('rotation_frequency','10')`. <br>
-__2.__ Run the simulation using `python3 config.py --fps=10`.
+__2.__ Run the simulation using `python3 PythonAPI/util/config.py --fps 10`.
 
-![LidarPointCloud](img/semantic_lidar_point_cloud.jpg)
+![SemanticLidarBEV](img/ref_sensors/sensor_semantic_lidar_bev.webp)
+<div class="img-caption">Semantic LiDAR seen from above, points coloured by semantic tag.</div>
+
+![SemanticLidarOnCamera](img/ref_sensors/sensor_semantic_lidar_on_camera.webp)
+<div class="img-caption">The same sweep projected on the RGB image.</div>
 
 #### SemanticLidar attributes
 
@@ -772,10 +886,10 @@ __2.__ Run the simulation using `python3 config.py --fps=10`.
 
 | Blueprint attribute  | Type           | Default | Description    |
 | ------------------------------------- | ------------------ | ------------------- | ------------------------------------- |
-| `channels`         | int   | 32    | Number of lasers.  |
-| `range`            | float | 10.0 | Maximum distance to measure/raycast in meters (centimeters for CARLA 0.9.6 or previous). |
-| `points_per_second`    | int   | 56000 | Points generated by all lasers per second.   |
-| `rotation_frequency`   | float | 10.0 | LIDAR rotation frequency.       |
+| `channels`         | int   | 64    | Number of lasers.  |
+| `range`            | float | 50.0 | Maximum distance to measure/raycast in meters. |
+| `points_per_second`    | int   | 600000 | Points generated by all lasers per second.   |
+| `rotation_frequency`   | float | 60.0 | LIDAR rotation frequency.       |
 | `upper_fov`        | float | 10.0 | Angle in degrees of the highest laser.    |
 | `lower_fov`        | float | -30.0 | Angle in degrees of the lowest laser.     |
 | `horizontal_fov`   | float | 360.0 | Horizontal field of view in degrees, 0 - 360. |
@@ -793,23 +907,23 @@ __2.__ Run the simulation using `python3 config.py --fps=10`.
 | ------------------------------------- | ------------------------------------- | ------------------------------------- |
 | `frame`        | int            | Frame number when the measurement took place.  |
 | `timestamp`    | double         | Simulation time of the measurement in seconds since the beginning of the episode.   |
-| `transform`    | [carla.Transform](<../python_api#carlatransform>)     | Location and rotation in world coordinates of the sensor at the time of the measurement. |
+| `transform`    | [carla.Transform](<python_api.md#carla.Transform>)     | Location and rotation in world coordinates of the sensor at the time of the measurement. |
 | `horizontal_angle`         | float          | Angle (radians) in the XY plane of the LIDAR in the current frame.     |
 | `channels`     | int            | Number of channels (lasers) of the LIDAR.      |
 | `get_point_count(channel)` | int            | Number of points per channel captured in the current frame.            |
-| `raw_data`     | bytes          | Array containing the point cloud with instance and semantic information. For each point, four 32-bits floats are stored. <br>  XYZ coordinates. <br> cosine of the incident angle. <br> Unsigned int containing the index of the object hit. <br>  Unsigned int containing the semantic tag of the object it. |
+| `raw_data`     | bytes          | Array containing the point cloud with instance and semantic information. Six 32-bit values per point: the XYZ coordinates and the cosine of the incident angle, as floats, then the index of the object hit and its semantic tag, as unsigned ints. |
 
-
-
+---
 ## Semantic segmentation camera
 
 *   __Blueprint:__ sensor.camera.semantic_segmentation
 *   __Output:__ [carla.Image](python_api.md#carla.Image) per step (unless `sensor_tick` says otherwise).
 
 This camera classifies every object in sight by displaying it in a different color according to its tags (e.g., pedestrians in a different color than vehicles).
-When the simulation starts, every element in scene is created with a tag. So it happens when an actor is spawned. The objects are classified by their relative file path in the project. For example, meshes stored in `Unreal/CarlaUnreal/Content/Static/Pedestrians` are tagged as `Pedestrian`.
+When the simulation starts, every element in scene is created with a tag. So it happens when an actor is spawned. The objects are classified by their relative file path in the project. For example, meshes stored in `Unreal/CarlaUnreal/Content/Carla/Static/Pedestrian` are tagged as `Pedestrian`.
 
-![ImageSemanticSegmentation](img/ref_sensors_semantic.jpg)
+![ImageSemanticSegmentation](img/ref_sensors/sensor_semantic_segmentation.webp)
+<div class="img-caption">Semantic segmentation with the CityScapes palette.</div>
 
 The server provides an image with the tag information __encoded in the red channel__: A pixel with a red value of `x` belongs to an object with tag `x`.
 This raw [carla.Image](python_api.md#carla.Image) can be stored and converted it with the help of __CityScapesPalette__  in [carla.ColorConverter](python_api.md#carla.ColorConverter) to apply the tags information and show picture with the semantic segmentation.
@@ -852,33 +966,58 @@ The following tags are currently available:
 | 26 | **Bridge** | (150, 100, 100) | Only the structure of the bridge. Fences, people, vehicles, an other elements on top of it are labeled separately. |
 | 27 | **RailTrack** | (230, 150, 140) | All kind of rail tracks that are non-drivable by cars. E.g. subway and train rail tracks. |
 | 28 | **GuardRail** | (180, 165, 180) | All types of guard rails/crash barriers. |
-| 29 | **Rock** | (170, 100, 50) | Natural rock formations and large stones. |
+| 29 | **Rock** | (180, 130, 70) | Natural rock formations and large stones. |
 
 <br>
 
 !!! Note
-    Read [this](tuto_D_create_semantic_tags.md) tutorial to create new semantic tags.
+    Read [this](core_sensors_semantic_tags.md) tutorial to create new semantic tags.
 
-## Instance segmentation camera 
+---
+## Instance segmentation camera
 
 *   __Blueprint:__ sensor.camera.instance_segmentation
 *   __Output:__ [carla.Image](python_api.md#carla.Image) per step (unless `sensor_tick` says otherwise).
 
 This camera classifies every object in the field of view both by class and also by instance ID. 
-When the simulation starts, every element in scene is created with a tag. So it happens when an actor is spawned. The objects are classified by their relative file path in the project. For example, meshes stored in `Unreal/CarlaUnreal/Content/Static/Pedestrians` are tagged as `Pedestrian`.
+When the simulation starts, every element in scene is created with a tag. So it happens when an actor is spawned. The objects are classified by their relative file path in the project. For example, meshes stored in `Unreal/CarlaUnreal/Content/Carla/Static/Pedestrian` are tagged as `Pedestrian`.
 
-![ImageInstanceSegmentation](img/instance_segmentation.png)
+![ImageInstanceSegmentation](img/shared/sensor_instance_segmentation.webp)
+<div class="img-caption">Instance segmentation, each instance id shown in a random colour.</div>
 
-The server provides an image with the tag information __encoded in the red channel__: A pixel with a red value of `x` belongs to an object with tag `x`. The green and blue values of the pixel define the object's unique ID. For example a pixel with an 8 bit RGB value of [10, 20, 55] is a vehicle (Semantic tag 10) with a unique instance ID `20-55`.  
+![InstanceSegmentationRaw](img/ref_sensors/sensor_instance_segmentation_raw.webp)
+<div class="img-caption">Raw instance segmentation: semantic tag in R, instance id in G and B.</div>
+
+The server provides an image with the tag information __encoded in the red channel__: a pixel with a red value of `x` belongs to an object with tag `x`. The green and blue channels hold the object's id as a 16-bit number, with __G as the low byte and B as the high byte__. A pixel with the 8-bit RGB value `[14, 20, 55]` is therefore a car (semantic tag 14) belonging to the object with id `20 + 55 * 256 = 14100`.
+
+Unpacking a frame into one mask per object:
+
+```py
+import numpy as np
+
+array = np.frombuffer(image.raw_data, dtype=np.uint8)
+array = array.reshape((image.height, image.width, 4))       # BGRA
+
+semantic = array[:, :, 2]                                   # R: semantic tag
+instance = array[:, :, 1].astype(np.uint16) | (array[:, :, 0].astype(np.uint16) << 8)
+
+for value in np.unique(instance):
+    mask = instance == value
+```
+
+!!! Warning
+    The id is the engine's actor id truncated to 16 bits, so it wraps after 65535 actors and two objects in a long session can end up sharing one. It is also __not__ the `actor.id` the Python API returns, so the two cannot be compared; to tie a mask back to a [`carla.Actor`](python_api.md#carla.Actor), project the actor's [bounding box](tuto_bounding_boxes.md) instead.
+
+A GPU sensor takes a few frames to produce a filled image, so the first one back after `listen()` is black. Tick a few times and keep the last.
 
 #### Basic camera attributes
 
 | Blueprint attribute       | Type    | Default | Description   |
 | ----------------------------- | ----------------------------- | ----------------------------- | ----------------------------- |
-| `fov`   | float   | 90\.0   | Horizontal field of view in degrees.    |
+| `fov`   | float   | 90.0   | Horizontal field of view in degrees.    |
 | `image_size_x`            | int     | 800     | Image width in pixels.      |
 | `image_size_y`            | int     | 600     | Image height in pixels.     |
-| `sensor_tick` | float   | 0\.0    | Simulation seconds between sensor captures (ticks). |
+| `sensor_tick` | float   | 0.0    | Simulation seconds between sensor captures (ticks). |
 
 
 
@@ -888,12 +1027,12 @@ The server provides an image with the tag information __encoded in the red chann
 
 | Blueprint attribute      | Type         | Default      | Description  |
 | ---------------------------- | ---------------------------- | ---------------------------- | ---------------------------- |
-| `lens_circle_falloff`    | float        | 5\.0         | Range: [0.0, 10.0]       |
-| `lens_circle_multiplier` | float        | 0\.0         | Range: [0.0, 10.0]       |
+| `lens_circle_falloff`    | float        | 5.0         | Range: [0.0, 10.0]       |
+| `lens_circle_multiplier` | float        | 0.0         | Range: [0.0, 10.0]       |
 | `lens_k`     | float        | \-1.0        | Range: [-inf, inf]       |
-| `lens_kcube` | float        | 0\.0         | Range: [-inf, inf]       |
-| `lens_x_size`            | float        | 0\.08        | Range: [0.0, 1.0]        |
-| `lens_y_size`            | float        | 0\.08        | Range: [0.0, 1.0]        |
+| `lens_kcube` | float        | 0.0         | Range: [-inf, inf]       |
+| `lens_x_size`            | float        | 0.08        | Range: [0.0, 1.0]        |
+| `lens_y_size`            | float        | 0.08        | Range: [0.0, 1.0]        |
 
 
 
@@ -908,7 +1047,7 @@ The server provides an image with the tag information __encoded in the red chann
 | `height`           | int   | Image height in pixels.          |
 | `raw_data`         | bytes | Array of BGRA 32-bit pixels.     |
 | `timestamp`        | double | Simulation time of the measurement in seconds since the beginning of the episode.        |
-| `transform`        | [carla.Transform](<../python_api#carlatransform>)  | Location and rotation in world coordinates of the sensor at the time of the measurement. |
+| `transform`        | [carla.Transform](<python_api.md#carla.Transform>)  | Location and rotation in world coordinates of the sensor at the time of the measurement. |
 | `width`            | int   | Image width in pixels.           |
 
 
@@ -942,7 +1081,8 @@ when no motion is present in the scene. In contrast, event cameras are data-driv
 latency. At the plot, a positive (resp. negative) event (blue dot, resp. red dot) is generated whenever the (signed) brightness change exceeds the
 contrast threshold `C` for one dimension `x` over time `t`. Observe how the event rate grows when the signal changes rapidly.
 
-![DVSCameraWorkingPrinciple](img/sensor_dvs_scheme.jpg)
+![DVSCameraWorkingPrinciple](img/ref_sensors/sensor_dvs_scheme.webp)
+<div class="img-caption">A standard camera samples frames at a fixed rate; an event camera fires a positive (blue) or negative (red) event each time the brightness change crosses the contrast threshold C.</div>
 
 The current implementation of the DVS camera works in a uniform sampling manner between two consecutive synchronous frames. Therefore, in order to
 emulate the high temporal resolution (order of microseconds) of a real event camera, the sensor requires to execute at a high frequency (much higher
@@ -951,11 +1091,12 @@ should increase accordingly with the dynamics of the scene. The user should find
 
 The provided script [`manual_control.py`][manual_control] uses the DVS camera in order to show how to configure the sensor, how to get the stream of events and how to depict such events in an image format, usually called event frame.
 
-[manual_control]: https://github.com/carla-simulator/carla/blob/master/PythonAPI/examples/manual_control.py
+[manual_control]: https://github.com/carla-simulator/carla/blob/ue58-dev/PythonAPI/examples/manual_control.py
 
-Note that due to the sampling method of the DVS camera, if there is no pixel difference between two consecutive synchronous frames the camera will not return an image. This will always occur in the first frame, as there is no previous frame to compare to and also in the event that there has been no movement between frames. 
+Note that due to the sampling method of the DVS camera, if there is no pixel difference between two consecutive synchronous frames the camera will not return an image. This will always occur in the first frame, as there is no previous frame to compare to and also in the event that there has been no movement between frames.
 
-![DVSCameraWorkingPrinciple](img/sensor_dvs.gif)
+![DVSCameraWorkingPrinciple](img/ref_sensors/sensor_dvs.webp)
+<div class="img-caption">RGB camera (left) and DVS events (right): blue positive, red negative brightness changes.</div>
 
 DVS is a camera and therefore has all the attributes available in the RGB camera. Nevertheless, there are few attributes exclusive to the working principle of an Event camera.
 
@@ -963,25 +1104,31 @@ DVS is a camera and therefore has all the attributes available in the RGB camera
 
 | Blueprint attribute    | Type    | Default  | Description          |
 | ---------------------- | ---------------------- | ---------------------- | ---------------------- |
-| `positive_threshold`   | float   | 0\.3    | Positive threshold C associated to a increment in brightness change (0-1).     |
-| `negative_threshold`   | float   | 0\.3    | Negative threshold C associated to a decrement in brightness change (0-1).     |
+| `positive_threshold`   | float   | 0.3    | Positive threshold C associated to a increment in brightness change (0-1).     |
+| `negative_threshold`   | float   | 0.3    | Negative threshold C associated to a decrement in brightness change (0-1).     |
 | `sigma_positive_threshold`         | float   | 0       | White noise standard deviation for positive events (0-1).        |
 | `sigma_negative_threshold`         | float   | 0       | White noise standard deviation for negative events (0-1).        |
-| `refractory_period_ns`             | int     | 0\.0    | Refractory period (time during which a pixel cannot fire events just after it fired one), in nanoseconds. It limits the highest frequency of triggering events.   |
+| `refractory_period_ns`             | int     | 0.0    | Refractory period (time during which a pixel cannot fire events just after it fired one), in nanoseconds. It limits the highest frequency of triggering events.   |
 | `use_log`            | bool    | true    | Whether to work in the logarithmic intensity scale.  |
-| `log_eps`            | float   | 0\.001  | Epsilon value used to convert images to log: `L = log(eps + I / 255.0)`.<br>  Where `I` is the grayscale value of the RGB image: <br>`I = 0.2989*R + 0.5870*G + 0.1140*B`. |
+| `log_eps`            | float   | 0.001  | Epsilon value used to convert images to log: `L = log(eps + I / 255.0)`.<br>  Where `I` is the grayscale value of the RGB image: <br>`I = 0.2989*R + 0.5870*G + 0.1140*B`. |
 
 <br>
 
 ---
 
-## Optical Flow Camera
+## Optical flow camera
 
-The Optical Flow camera captures the motion perceived from the point of view of the camera. Every pixel recorded by this sensor encodes the velocity of that point projected to the image plane. The velocity of a pixel is encoded in the range [-2,2]. To obtain the motion in pixel units, this information can be scaled with the image size to [-2 * image_size, 2 * image_size].
+* __Blueprint:__ sensor.camera.optical_flow
+* __Output:__ [carla.OpticalFlowImage](python_api.md#carla.OpticalFlowImage) per step (unless `sensor_tick` says otherwise).
 
-![optical_flow](img/optical_flow.png)
+The optical flow camera captures the motion perceived from the point of view of the camera. Every pixel recorded by this sensor encodes the velocity of that point projected to the image plane. The velocity of a pixel is encoded in the range [-2,2]. To obtain the motion in pixel units, this information can be scaled with the image size to [-2 * image_size, 2 * image_size].
 
-#### Optical Flow camera attributes
+![optical_flow](img/ref_sensors/sensor_optical_flow.webp)
+<div class="img-caption">RGB camera (left) and colour-coded optical flow (right) from a moving vehicle.</div>
+
+`get_color_coded_flow()` turns the field into the color wheel above, where hue is the direction of motion and saturation its magnitude. It returns a [`carla.FakeImage`](python_api.md#carla.FakeImage), not a [`carla.Image`](python_api.md#carla.Image): the pixels and `save_to_disk` work the same, but it carries no `frame` or `timestamp`, because it is a visualization rather than a reading of the sensor.
+
+#### Optical flow camera attributes
 
 | Blueprint attribute | Type | Default | Description |
 | ------------------- | ---- | ------- | ----------- |
@@ -990,16 +1137,16 @@ The Optical Flow camera captures the motion perceived from the point of view of 
 | `fov` | float | 90.0 | Horizontal field of view in degrees. |
 | `sensor_tick` | float | 0.0 | Simulation seconds between sensor captures (ticks). |
 
-#### Optical Flow camera lens distortion attributes
+#### Optical flow camera lens distortion attributes
 
 | Blueprint attribute      | Type         | Default      | Description  |
 | ------------------------------------------------------- | ------------------------------------------------------- | ------------------------------------------------------- | ------------------------------------------------------- |
-| `lens_circle_falloff`    | float        | 5\.0         | Range: [0.0, 10.0]       |
-| `lens_circle_multiplier` | float        | 0\.0         | Range: [0.0, 10.0]       |
+| `lens_circle_falloff`    | float        | 5.0         | Range: [0.0, 10.0]       |
+| `lens_circle_multiplier` | float        | 0.0         | Range: [0.0, 10.0]       |
 | `lens_k`     | float        | \-1.0        | Range: [-inf, inf]       |
-| `lens_kcube` | float        | 0\.0         | Range: [-inf, inf]       |
-| `lens_x_size`            | float        | 0\.08        | Range: [0.0, 1.0]        |
-| `lens_y_size`            | float        | 0\.08        | Range: [0.0, 1.0]        |
+| `lens_kcube` | float        | 0.0         | Range: [-inf, inf]       |
+| `lens_x_size`            | float        | 0.08        | Range: [0.0, 1.0]        |
+| `lens_y_size`            | float        | 0.08        | Range: [0.0, 1.0]        |
 
 #### Output attributes
 
@@ -1007,11 +1154,11 @@ The Optical Flow camera captures the motion perceived from the point of view of 
 | --------------------- | ---- | ----------- |
 | `frame` | int | Frame number when the measurement took place. |
 | `timestamp` | double | Simulation time of the measurement in seconds since the beginning of the episode. |
-| `transform` | [carla.Transform](<../python_api#carlatransform>) | Location and rotation in world coordinates of the sensor at the time of the measurement. |
+| `transform` | [carla.Transform](<python_api.md#carla.Transform>) | Location and rotation in world coordinates of the sensor at the time of the measurement. |
 | `width` | int | Image width in pixels. |
 | `height` | int | Image height in pixels. |
 | `fov` | float | Horizontal field of view in degrees. |
-| `raw_data` | bytes | Array of BGRA 64-bit pixels containing two float values. |
+| `raw_data` | bytes | Two 32-bit floats per pixel: the x and y components of the flow vector. |
 
 <br>
 
@@ -1022,16 +1169,19 @@ The Optical Flow camera captures the motion perceived from the point of view of 
 *   __Blueprint:__ sensor.camera.normals
 *   __Output:__ [carla.Image](python_api.md#carla.Image) per step (unless `sensor_tick` says otherwise).
 
+![Normals](img/ref_sensors/sensor_normals.webp)
+<div class="img-caption">Surface normals camera output.</div>
+
 This camera renders the surface normal of whatever each pixel sees. The three components of the normal are stored in the red, green and blue channels, each remapped from [-1.0, 1.0] to [0, 255], so a channel value of `v` is a component of `v / 255 * 2 - 1`. A road seen from above gives a pixel close to `[128, 139, 254]`, a normal pointing up. The alpha channel is unused.
 
 #### Basic camera attributes
 
 | Blueprint attribute       | Type    | Default | Description   |
 | ----------------------------- | ----------------------------- | ----------------------------- | ----------------------------- |
-| `fov`   | float   | 90\.0   | Horizontal field of view in degrees.    |
+| `fov`   | float   | 90.0   | Horizontal field of view in degrees.    |
 | `image_size_x`            | int     | 800     | Image width in pixels.      |
 | `image_size_y`            | int     | 600     | Image height in pixels.     |
-| `sensor_tick` | float   | 0\.0    | Simulation seconds between sensor captures (ticks). |
+| `sensor_tick` | float   | 0.0    | Simulation seconds between sensor captures (ticks). |
 
 <br>
 
@@ -1039,12 +1189,12 @@ This camera renders the surface normal of whatever each pixel sees. The three co
 
 | Blueprint attribute      | Type         | Default      | Description  |
 | ---------------------------- | ---------------------------- | ---------------------------- | ---------------------------- |
-| `lens_circle_falloff`    | float        | 5\.0         | Range: [0.0, 10.0]       |
-| `lens_circle_multiplier` | float        | 0\.0         | Range: [0.0, 10.0]       |
+| `lens_circle_falloff`    | float        | 5.0         | Range: [0.0, 10.0]       |
+| `lens_circle_multiplier` | float        | 0.0         | Range: [0.0, 10.0]       |
 | `lens_k`     | float        | \-1.0        | Range: [-inf, inf]       |
-| `lens_kcube` | float        | 0\.0         | Range: [-inf, inf]       |
-| `lens_x_size`            | float        | 0\.08        | Range: [0.0, 1.0]        |
-| `lens_y_size`            | float        | 0\.08        | Range: [0.0, 1.0]        |
+| `lens_kcube` | float        | 0.0         | Range: [-inf, inf]       |
+| `lens_x_size`            | float        | 0.08        | Range: [0.0, 1.0]        |
+| `lens_y_size`            | float        | 0.08        | Range: [0.0, 1.0]        |
 
 <br>
 
@@ -1057,18 +1207,18 @@ This camera renders the surface normal of whatever each pixel sees. The three co
 | `height`           | int   | Image height in pixels.          |
 | `raw_data`         | bytes | Array of BGRA 32-bit pixels.     |
 | `timestamp`        | double | Simulation time of the measurement in seconds since the beginning of the episode.        |
-| `transform`        | [carla.Transform](<../python_api#carlatransform>)  | Location and rotation in world coordinates of the sensor at the time of the measurement. |
+| `transform`        | [carla.Transform](<python_api.md#carla.Transform>)  | Location and rotation in world coordinates of the sensor at the time of the measurement. |
 | `width`            | int   | Image width in pixels.           |
 
 <br>
 
 ---
 
-## V2X sensor 
+## V2X sensor
 
-Vehicle-to-everything (V2X) communication is an important aspect for future applications of cooperative intelligent transportation systems. In real vehicles, this requires a dedicated onboard unit (OBU) in each vehicle, that is able to send and receive information over wireless channels. Depending on the region (Europe, China, USA), different physical technologies, protocols and application messaging formats are used. 
+Vehicle-to-everything (V2X) communication is an important aspect for future applications of cooperative intelligent transportation systems. In real vehicles, this requires a dedicated onboard unit (OBU) in each vehicle, that is able to send and receive information over wireless channels. Depending on the region (Europe, China, USA), different physical technologies, protocols and application messaging formats are used.
 
-CARLA currently supports simulation of a simple broadcast wireless channel and two application messages. Protocols for network access and forwarding are not supported yet. The two implemented messages are the [*Cooperative Awarness Message*](#cooperative-awareness-message) according to the European standard ETSI, and a [*custom message*](#custom-v2x-message) type, that can be used to transmit arbitrary string data (e.g. JSON). There are two distinct sensors for V2X communication, that can be used separately, one for each application message type.
+CARLA currently supports simulation of a simple broadcast wireless channel and two application messages. Protocols for network access and forwarding are not supported yet. The two implemented messages are the [*Cooperative Awareness Message*](#cooperative-awareness-message) according to the European standard ETSI, and a [*custom message*](#custom-v2x-message) type, that can be used to transmit arbitrary string data (e.g. JSON). There are two distinct sensors for V2X communication, that can be used separately, one for each application message type.
 
 Basically, the wireless channel incorporates the following calculation for both sensors:
 
@@ -1080,7 +1230,7 @@ Basically, the wireless channel incorporates the following calculation for both 
 To simulate V2X communication, at least two V2X sensors of the same type need to be spawned (at least one sender-receiver pair). Because the received power is calculated on the receiver-side V2X sensor, only the antenna gain that is specified on the receiver-side sensor is incorporated in this calculation. Transmission power and receiver sensitivity can be configured (see [Blueprint attributes](#v2x-sensors-blueprint-attributes)).
 
 The *loss* calculation depends on 
-- the visbility condition between sender and receiver: line of sight (no obstacles), non-line of sight obstructed by buildings, or non-line of sight obstructed by vehicles, and
+- the visibility condition between sender and receiver: line of sight (no obstacles), non-line of sight obstructed by buildings, or non-line of sight obstructed by vehicles, and
 - the scenario: highway, rural, or urban environment
 
 While the visibility is simulated within CARLA, the scenario can be configured by the user (see [Blueprint attributes](#v2x-sensors-blueprint-attributes)), as well as several other attributes of the wireless channel.
@@ -1090,7 +1240,7 @@ While the visibility is simulated within CARLA, the scenario can be configured b
 #### Cooperative Awareness Message
 
 *   __Blueprint:__ sensor.other.v2x
-*   __Output:__ [carla.CAMMessage](python_api.md#carla.CAMMessage), triggered according to the ETSI CAM standard, unless configured otherwise
+*   __Output:__ [carla.CAMEvent](python_api.md#carla.CAMEvent), a collection of [carla.CAMMessage](python_api.md#carla.CAMMessage), triggered according to the ETSI CAM standard unless configured otherwise
 
 Triggering conditions according to ETSI standard:
 - Heading angle change > 4°
@@ -1106,33 +1256,29 @@ For the CAM V2X sensor, additional blueprint attributes apply:
 | gen\_cam\_min           | float  | 0.1         |  Minimum elapsed time between two successive CAMs in seconds (s)        |
 | gen\_cam\_max           | float  | 1.0       |   Maximum elapsed time between two successive CAMs in seconds (s)          |
 | fixed\_rate             | bool   | false [true]     |  Generate a CAM in every CARLA tick (only for debug purposes, will result in slowdown)    |
-| `noise_vel_stddev_x` | float  | 0\.0   | Standard deviation parameter in the noise model for velocity (X axis). |
-| `noise_accel_stddev_x`          | float   | 0\.0    | Standard deviation parameter in the noise model for acceleration (X axis).  |
-| `noise_accel_stddev_y`          | float   | 0\.0    | Standard deviation parameter in the noise model for acceleration (Y axis).  |
-| `noise_accel_stddev_z`          | float   | 0\.0    | Standard deviation parameter in the noise model for acceleration (Z axis).  |
-| `noise_yawrate_bias`   | float  | 0\.0   | Mean parameter in the noise model for yaw rate.    |
-| `noise_yawrate_stddev` | float  | 0\.0   | Standard deviation parameter in the noise model for yaw rate.  |
-| `noise_alt_bias`   | float  | 0\.0   | Mean parameter in the noise model for altitude.    |
-| `noise_alt_stddev` | float  | 0\.0   | Standard deviation parameter in the noise model for altitude.  |
-| `noise_lat_bias`   | float  | 0\.0   | Mean parameter in the noise model for latitude.    |
-| `noise_lat_stddev` | float  | 0\.0   | Standard deviation parameter in the noise model for latitude.  |
-| `noise_lon_bias`   | float  | 0\.0   | Mean parameter in the noise model for longitude.   |
-| `noise_lon_stddev` | float  | 0\.0   | Standard deviation parameter in the noise model for longitude. |
-| `noise_head_bias`   | float  | 0\.0   | Mean parameter in the noise model for heading.   |
-| `noise_head_stddev` | float  | 0\.0   | Standard deviation parameter in the noise model for heading. |
+| `noise_vel_stddev_x` | float  | 0.0   | Standard deviation parameter in the noise model for velocity (X axis). |
+| `noise_accel_stddev_x`          | float   | 0.0    | Standard deviation parameter in the noise model for acceleration (X axis).  |
+| `noise_accel_stddev_y`          | float   | 0.0    | Standard deviation parameter in the noise model for acceleration (Y axis).  |
+| `noise_accel_stddev_z`          | float   | 0.0    | Standard deviation parameter in the noise model for acceleration (Z axis).  |
+| `noise_yawrate_bias`   | float  | 0.0   | Mean parameter in the noise model for yaw rate.    |
+| `noise_yawrate_stddev` | float  | 0.0   | Standard deviation parameter in the noise model for yaw rate.  |
+| `noise_alt_bias`   | float  | 0.0   | Mean parameter in the noise model for altitude.    |
+| `noise_alt_stddev` | float  | 0.0   | Standard deviation parameter in the noise model for altitude.  |
+| `noise_lat_bias`   | float  | 0.0   | Mean parameter in the noise model for latitude.    |
+| `noise_lat_stddev` | float  | 0.0   | Standard deviation parameter in the noise model for latitude.  |
+| `noise_lon_bias`   | float  | 0.0   | Mean parameter in the noise model for longitude.   |
+| `noise_lon_stddev` | float  | 0.0   | Standard deviation parameter in the noise model for longitude. |
+| `noise_head_bias`   | float  | 0.0   | Mean parameter in the noise model for heading.   |
+| `noise_head_stddev` | float  | 0.0   | Standard deviation parameter in the noise model for heading. |
 
 #### Custom V2X Message
 
 *   __Blueprint:__ sensor.other.v2x_custom
-*   __Output:__ [carla.CustomV2XData](python_api.md#carla.CustomV2XData), triggered with next tick after a *send()* was called
+*   __Output:__ [carla.CustomV2XEvent](python_api.md#carla.CustomV2XEvent), a collection of [carla.CustomV2XData](python_api.md#carla.CustomV2XData), delivered on the tick after a `send()` was called
 
-##### Methods
-- <a name="carla.Sensor.send"></a>**<font color="#7fb800">send</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**callback**</font>)
-The function the user has to call every time to send a message. This function needs for an argument containing an object type [carla.SensorData](#carla.SensorData) to work with.  
-    - **Parameters:**
-        - `data` (_function_) - The called function with one argument containing the sensor data.  
+This sensor is the only one with a [`send()`](python_api.md#carla.Sensor.send) method beside `listen()`. It takes a [carla.CustomV2XBytes](python_api.md#carla.CustomV2XBytes).
 
-The custom V2X message sensor works a little bit different than other sensors, because it has the *send* function in addition to the *listen* function, that needs to be called, before another sensor of this type will receive anything. The transmission of a custom message is only triggered, when *send* is called. Each message given to the *send* function is only transmitted once to all Custom V2X Message sensors currently spawned. Independent communcation channels can be created by the sensors 'channel_id' attribute. Only sensors having the same 'channel_id' are communicating with each other. This allows to create different sender/receiver groups within the system.
+The custom V2X message sensor works a little bit different than other sensors, because it has the *send* function in addition to the *listen* function, that needs to be called, before another sensor of this type will receive anything. The transmission of a custom message is only triggered, when *send* is called. Each message given to the *send* function is only transmitted once to all Custom V2X Message sensors currently spawned. Independent communication channels can be created by the sensors 'channel_id' attribute. Only sensors having the same 'channel_id' are communicating with each other. This allows to create different sender/receiver groups within the system.
 
 Example:
 
@@ -1142,11 +1288,20 @@ Example:
     message.set_bytes(bytearray("Hello CARLA", 'utf-8'))
     sensor.send(message)
 
+### Roadside units
+
+The CAM service reads what the sensor is attached to. On a vehicle it reports the vehicle's dynamics and follows the ETSI generation rules, sending a message when heading, speed or position has changed enough, and at most one every `gen_cam_min` seconds. Attached instead to a traffic light, a traffic sign or another sensor, it registers as a __roadside unit__ and broadcasts at a fixed half-second interval, which is how infrastructure-to-vehicle (V2I) messages are produced.
+
+```py
+v2x_bp = world.get_blueprint_library().find('sensor.other.v2x')
+rsu = world.spawn_actor(v2x_bp, carla.Transform(), attach_to=traffic_light)
+```
+
 ### V2X sensors blueprint attributes
 
 | Blueprint attribute     | Type   | Default | Description                        |
 |-------------------------|--------|-------------------------|------------------------------------|
-| channel\_id             | string  | ''       | Only Sender/Receiver with the same channel_id are communicating with each other    |
+| channel\_id             | string  | `Default`       | Only senders and receivers with the same `channel_id` communicate with each other    |
 | transmit\_power         | float  | 21.5       | Sender transmission power in dBm                         |
 | receiver\_sensitivity   | float  | -99        | Receiver sensitivity in dBm                                |
 | frequency\_ghz          | float  | 5.9 | Transmission frequency in GHz. 5.9 GHz is standard for several physical channels.                 |
@@ -1156,10 +1311,14 @@ Example:
 | combined\_antenna\_gain | float  | 10.0   | Combined gain of sender and receiver antennas in dBi, parameter for radiation efficiency and directivity |
 | d\_ref                  | float  | 1.0     | reference distance for Log-distance path loss model in meter           |
 | path\_loss\_exponent    | float  | 2.7                     |    Loss parameter for non-line of sight due to building obstruction    |
-| scenario                | string | urban   | Options: [urban, rural, highway], defines the fading noise parameters |
-| path\_loss\_model       | string | geometric     |   general path loss model to be used. Options: [geometric, winner]  |
+| scenario                | string | `highway`   | Fading noise parameters: `highway`, `rural` or `urban` |
+| path\_loss\_model       | string | `winner`     |   General path loss model: `winner` or `geometric`  |
 | use\_etsi\_fading       | bool   | true         |   Use the fading params as mentioned in the ETSI publication (true), or use the custom fading standard deviation         |
 | custom\_fading\_stddev  | float  | 0.0      |   Custom value for fading standard deviation, only used if `use_etsi_fading` is set to `false`              |
+| __CAM generation (`sensor.other.v2x` only)__ | | | |
+| gen\_cam\_min          | float  | 0.1      | Shortest interval in seconds between two CAMs |
+| gen\_cam\_max          | float  | 1.0      | Longest interval in seconds between two CAMs. A station that has not moved enough to trigger a message sends one anyway after this long |
+| fixed\_rate            | bool   | false    | Send a CAM every `gen_cam_max` seconds instead of applying the ETSI triggering rules |
 
 
 ---
@@ -1175,14 +1334,14 @@ A GNSS receiver for the Autoware stack. In Python it behaves exactly like [senso
 
 | Blueprint attribute      | Type   | Default            | Description        |
 | ------------------- | ------------------- | ------------------- | ------------------- |
-| `noise_alt_bias`   | float  | 0\.0   | Mean parameter in the noise model for altitude.    |
-| `noise_alt_stddev` | float  | 0\.0   | Standard deviation parameter in the noise model for altitude.  |
-| `noise_lat_bias`   | float  | 0\.0   | Mean parameter in the noise model for latitude.    |
-| `noise_lat_stddev` | float  | 0\.0   | Standard deviation parameter in the noise model for latitude.  |
-| `noise_lon_bias`   | float  | 0\.0   | Mean parameter in the noise model for longitude.   |
-| `noise_lon_stddev` | float  | 0\.0   | Standard deviation parameter in the noise model for longitude. |
+| `noise_alt_bias`   | float  | 0.0   | Mean parameter in the noise model for altitude.    |
+| `noise_alt_stddev` | float  | 0.0   | Standard deviation parameter in the noise model for altitude.  |
+| `noise_lat_bias`   | float  | 0.0   | Mean parameter in the noise model for latitude.    |
+| `noise_lat_stddev` | float  | 0.0   | Standard deviation parameter in the noise model for latitude.  |
+| `noise_lon_bias`   | float  | 0.0   | Mean parameter in the noise model for longitude.   |
+| `noise_lon_stddev` | float  | 0.0   | Standard deviation parameter in the noise model for longitude. |
 | `noise_seed`       | int    | 0      | Initializer for a pseudorandom number generator.   |
-| `sensor_tick`      | float  | 0\.0   | Simulation seconds between sensor captures (ticks).            |
+| `sensor_tick`      | float  | 0.0   | Simulation seconds between sensor captures (ticks).            |
 
 <br>
 
@@ -1192,7 +1351,7 @@ A GNSS receiver for the Autoware stack. In Python it behaves exactly like [senso
 | ----------------------- | ----------------------- | ----------------------- |
 | `frame`            | int   | Frame number when the measurement took place.      |
 | `timestamp`        | double | Simulation time of the measurement in seconds since the beginning of the episode.        |
-| `transform`        | [carla.Transform](<../python_api#carlatransform>)  | Location and rotation in world coordinates of the sensor at the time of the measurement. |
+| `transform`        | [carla.Transform](<python_api.md#carla.Transform>)  | Location and rotation in world coordinates of the sensor at the time of the measurement. |
 | `latitude`         | double | Latitude of the actor.           |
 | `longitude`        | double | Longitude of the actor.          |
 | `altitude`         | double | Altitude of the actor.           |
@@ -1219,7 +1378,7 @@ Reports the state of the vehicle it is attached to, for the Autoware stack. It p
 | Blueprint attribute      | Type   | Default            | Description        |
 | ------------------- | ------------------- | ------------------- | ------------------- |
 | `speed_units`      | string | mps    | Units the speed is reported in.       |
-| `sensor_tick`      | float  | 0\.0   | Simulation seconds between sensor captures (ticks).            |
+| `sensor_tick`      | float  | 0.0   | Simulation seconds between sensor captures (ticks).            |
 
 <br>
 
@@ -1229,4 +1388,4 @@ Reports the state of the vehicle it is attached to, for the Autoware stack. It p
 | ----------------------- | ----------------------- | ----------------------- |
 | `frame`            | int   | Frame number when the measurement took place.      |
 | `timestamp`        | double | Simulation time of the measurement in seconds since the beginning of the episode.        |
-| `transform`        | [carla.Transform](<../python_api#carlatransform>)  | Location and rotation in world coordinates of the sensor at the time of the measurement. |
+| `transform`        | [carla.Transform](<python_api.md#carla.Transform>)  | Location and rotation in world coordinates of the sensor at the time of the measurement. |

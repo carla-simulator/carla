@@ -64,12 +64,6 @@ carla_option (
 )
 
 carla_option (
-  ENABLE_OSM2ODR
-  "Enable OSM2ODR."
-  OFF
-)
-
-carla_option (
   ENABLE_RSS
   "Enable RSS components (ad-rss-lib)"
   OFF
@@ -292,8 +286,8 @@ set (
   ""
   CACHE STRING
   "Override the cooked map list ('+'-separated full package paths, e.g. \
-\"/Game/Carla/Maps/Town10HD_Opt+/Game/Carla/Maps/Mine_01\"). \
-Empty means use the +MapsToCook list from DefaultGame.ini (cook all maps)."
+\"/Game/Carla/Maps/Town10HD_Opt+/Game/Carla/Maps/Town15/Town15\"). \
+Empty means use the +MapsToCook list from DefaultGame.ini (the maps of the default package)."
 )
 
 set (

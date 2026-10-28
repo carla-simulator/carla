@@ -3,52 +3,59 @@ CARLA Simulator
 
 Thanks for downloading CARLA!
 
-<http://carla.org/>
+<https://carla.org/>
 
 How to run CARLA
 ----------------
 
-Launch a terminal in this folder and execute the simulator by running
+Launch a terminal in this folder and start the simulator:
 
 ```sh
- ./CarlaUnreal.sh
+./CarlaUnreal.sh
 ```
 
-this will launch a window with a view over the city. This is the "spectator"
-view, you can fly around the city using the mouse and WASD keys, but you cannot
-interact with the world in this view. The simulator is now running as a server,
-waiting for a client app to connect and interact with the world.
+This opens a window with a view over the city. That is the "spectator" view: you can fly around with the mouse and the WASD keys, but you cannot interact with the world from it. The simulator is now running as a server, waiting for a client to connect.
 
-Let's start by adding some live to the city, open a new terminal window and
-execute
+Install the Python client that matches this package:
 
 ```sh
-./generate_traffic.py -n 80
+pip3 install PythonAPI/carla/dist/carla-*.whl
 ```
 
-This adds 80 vehicles to the world driving in "autopilot" mode. Back to the
-simulator window we should see these vehicles driving around the city. They will
-keep driving randomly until we stop the script. Let's leave them there for now.
-
-Now, it's nice and sunny in CARLA, but that's not a very interesting driving
-condition. One of the cool features of CARLA is that you can control the weather
-and lighting conditions of the world. We'll launch now a script that dynamically
-controls the weather and time of the day, open yet another terminal window and
-execute
+Let's add some life to the city. Open a new terminal in this folder and run:
 
 ```sh
-./dynamic_weather.py
+python3 PythonAPI/examples/generate_traffic.py -n 80
 ```
 
-The city is now ready for us to drive, we can finally run
+That spawns 80 vehicles driving in autopilot mode. They keep driving until the script is stopped, so leave it running.
+
+It is nice and sunny in CARLA, which is not a very interesting driving condition. The weather and the time of day can be changed from a client:
 
 ```sh
-./manual_control.py
+python3 PythonAPI/examples/dynamic_day_night_weather_cycle.py
 ```
 
-This should open a new window with a 3rd person view of a car, you can drive
-this car with the WASD/arrow keys. Press 'h' to see all the options available.
+The city is now ready to drive in:
 
-For more details and running options please refer to our online documentation
+```sh
+python3 PythonAPI/examples/manual_control.py
+```
 
-<http://carla.readthedocs.io>
+This opens a window with a third-person view of a car that you can drive with the WASD or arrow keys. Press `h` to see every option available.
+
+More examples are in `PythonAPI/examples/`, and `PythonAPI/python_api.md` is the API reference for this release.
+
+Running options
+---------------
+
+```sh
+./CarlaUnreal.sh -RenderOffScreen          # no display window
+./CarlaUnreal.sh -carla-rpc-port=3000      # listen on another port
+./CarlaUnreal.sh -quality-level=Low        # cheaper rendering
+./CarlaUnreal.sh -ros2                     # native ROS 2 interface
+```
+
+For more details and running options, refer to the online documentation:
+
+<https://carla-ue5.readthedocs.io>

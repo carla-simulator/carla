@@ -41,8 +41,8 @@ for (const [name, keys] of Object.entries(PROVIDES)) PROVIDERS[keys[0]] = name;
 
 const SERVER_INSTRUCTIONS = `CARLA build, packaging, cooking, map, vehicle, asset, and server/simulation
 tasks have vetted procedures in this server's skill library, each with its
-failure modes encoded. The skills are the source of truth for these tasks;
-the raw Makefile and Util/BuildTools scripts are a fallback when none matches.
+failure modes encoded. The skills are the source of truth for these tasks and
+cover most of the commands they need.
 list_skills finds a skill, read_skill(name) returns its procedure,
 check_prerequisites(name) verifies its environment.
 
