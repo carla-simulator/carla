@@ -72,6 +72,7 @@ nav:
     - 'Suspension': 'content_authoring_vehicles_suspension.md'
   - 'Props': 'content_authoring_props.md'
   - 'Material customization': 'content_authoring_materials.md'
+  - 'Lights': 'content_authoring_lights.md'
   - 'Content packs': 'content_authoring_packs.md'
 
 - Resources:
