@@ -36,7 +36,7 @@ Each automotive preset reproduces the look of the camera of a public driving dat
 | `AutomotiveHDRClean` | same camera, better sensor and optics | Same tone mapping and exposure as `AutomotiveHDR`, with the bloom cut from 1.0 to 0.35 and little noise. For ground truth that should not carry glare or sensor artefacts. |
 | `WideHDR8MP` | 8 MP 120° ADAS front camera (Zenseact ZOD; Mobileye / Tesla HW4 class, 120–140 dB sensors) | Flat multi-exposure HDR: no clipped highlights, lifted blacks, neutral to cool white balance, crisp lamps without star flare, strong noise reduction (soft, smeared detail), slight edge fringing. |
 | `LegacyCCD` | KITTI (Point Grey Flea2 CCD, 2011) | Low dynamic range: hard clipped skies, steep contrast with readable shadows, sharp, little bloom. |
-| `LogHDR` | Cityscapes (onsemi AR0331, 16-bit HDR log-compressed to 8 bit) | No clipped highlights, lifted shadows, cool grey-green cast, low saturation. |
+| `LogHDR` | automotive HDR camera (onsemi AR0331, 16-bit HDR log-compressed to 8 bit) | No clipped highlights, lifted shadows, cool grey-green cast, low saturation. |
 | `Smartphone` | comma.ai road camera (Sony IMX298, phone ISP, HEVC) | Cool 5600 K white balance, dark mid-tones, moderately saturated, no sharpening, soft codec detail. |
 | `Cinematic` (viewport default) | photo / film camera | Neutral 6500 K grading with a filmic curve, slow histogram auto exposure with a brightness-dependent bias curve (shade, dusk and night stay darker as on a real camera), moderate bloom, a noticeable vignette and motion blur. |
 | `GoPro` | action camera | Vivid, contrasty colour, strong local tone compression, no extra sharpening, light vignette and edge fringing, fast auto exposure, motion blur on. |
@@ -94,9 +94,6 @@ Each preset on a Town10HD_Opt street staged like a real frame of the camera it i
 ![real_legacyccd](img/core_camera_presets/real_legacyccd.webp)
 <div class="img-caption">LegacyCCD, 1242 × 375, 82°, beside KITTI.</div>
 
-![real_loghdr](img/core_camera_presets/real_loghdr.webp)
-<div class="img-caption">LogHDR, 2048 × 1024, 50°, overcast, beside Cityscapes.</div>
-
 ![real_smartphone](img/core_camera_presets/real_smartphone.webp)
 <div class="img-caption">Smartphone, 1164 × 874, 65°, beside the comma.ai road camera.</div>
 
@@ -106,7 +103,7 @@ Each preset on a Town10HD_Opt street staged like a real frame of the camera it i
 ![real_dashcam](img/core_camera_presets/real_dashcam.webp)
 <div class="img-caption">Dashcam through a 110° Brown-Conrady barrel lens (`sensor.camera.rt_lens`), beside a consumer dashcam.</div>
 
-Reference frames: [nuScenes](https://www.nuscenes.org/) (CC BY-NC-SA 4.0), [Zenseact ZOD](https://zod.zenseact.com/) (CC BY-SA 4.0), [KITTI](https://www.cvlibs.net/datasets/kitti/) (CC BY-NC-SA 3.0), [Cityscapes](https://www.cityscapes-dataset.com/), [comma10k](https://github.com/commaai/comma10k) (MIT); action camera by live360 on Mapillary via Wikimedia Commons (CC BY-SA 4.0), dashcam by Michael Rivera via Wikimedia Commons (CC BY 4.0).
+Reference frames: [nuScenes](https://www.nuscenes.org/) (CC BY-NC-SA 4.0), [Zenseact ZOD](https://zod.zenseact.com/) (CC BY-SA 4.0), [KITTI](https://www.cvlibs.net/datasets/kitti/) (CC BY-NC-SA 3.0), [comma10k](https://github.com/commaai/comma10k) (MIT); action camera by live360 on Mapillary via Wikimedia Commons (CC BY-SA 4.0), dashcam by Michael Rivera via Wikimedia Commons (CC BY 4.0).
 
 ### Sensor effects
 
