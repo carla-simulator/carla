@@ -1,13 +1,13 @@
 # Digital Twin Tool
 
-The __Digital Twin Tool__ builds a CARLA map of a real place from [OpenStreetMap](https://www.openstreetmap.org) (OSM) data, inside the CARLA editor: the road network becomes an OpenDRIVE file and road meshes, and the spaces between the roads are filled with procedural buildings, vegetation, street furniture, traffic lights and traffic signs.
+The __Digital Twin Tool__ builds a CARLA map of a real place from [OpenStreetMap](https://www.openstreetmap.org) (OSM) data: the road network becomes an OpenDRIVE file and road meshes, and the spaces between the roads are filled with buildings, vegetation, street furniture, traffic lights and traffic signs.
 
-!!! Warning
-    In this release the tool is __not usable end to end__. Generating a map from OSM needs the OSM-to-OpenDRIVE converter (`osm2odr`), which is no longer in the repository, and the content of the current version of the tool (the `CarlaDigitalTwinsTool` plugin) is not distributed with CARLA. The parts that work on their own — traffic signs, vegetation and furniture, the traffic-light phases of a map, and the twin maps already in the content — are described below.
+It lives in its own repository, [`carla-simulator/carla-digitaltwins`](https://github.com/carla-simulator/carla-digitaltwins), and has two entry points: a __command line pipeline__ that runs headless and is the supported way to build a twin, and an __editor plugin__ that generates a map from inside Unreal. This page covers the command line pipeline and the parts of the tool that live in CARLA itself; the repository's README documents both.
 
 - [__Status in this release__](#status-in-this-release)
 - [__How the tool is organised__](#how-the-tool-is-organised)
 - [__Generating a map from OSM__](#generating-a-map-from-osm)
+    - [Shipping the map](#shipping-the-map)
 - [__Traffic lights__](#traffic-lights)
 - [__Traffic signs__](#traffic-signs)
 - [__Vegetation and street furniture__](#vegetation-and-street-furniture)
@@ -19,9 +19,11 @@ The __Digital Twin Tool__ builds a CARLA map of a real place from [OpenStreetMap
 
 | Part | Status |
 | --- | --- |
-| OSM download and conversion to OpenDRIVE (*Generate*) | __Not available.__ `osm2odr` moved to another repository and is not fetched by the build. Configuring with `-DENABLE_OSM2ODR=ON` makes the `Carla` and `CarlaTools` modules fail to compile; without it, *Generate* logs `CARLA was built without OSM2ODR support`. |
-| Map preview and navigation (*Select OSM Database*, *Render*, arrows, zoom) | __Removed.__ The OSM renderer it talks to was taken out of the repository; the buttons are still in the widget but do nothing. |
-| Map generation blueprint, building generator, traffic-light presets, curb detection scripts | __Not distributed.__ They are in the `CarlaDigitalTwinsTool` plugin's content (`Unreal/CarlaUnreal/Plugins/CarlaDigitalTwinsTool/Content`, about 18 GB), which is not in git. |
+| Command line pipeline (`twinmodel build`, `bake-export`, `bake_level.py`) | __Available.__ The supported way to build a twin. Runs headless; produces the OpenDRIVE, the meshes, the baked level, the Traffic Manager cache and the pedestrian navigation. |
+| OSM to OpenDRIVE conversion (`carla.Osm2Odr`) | __Available.__ The converter is part of CARLA and is always compiled in; there is no longer an `ENABLE_OSM2ODR` option. See [Generate maps with OpenStreetMap](content_authoring_maps_openstreetmap.md). |
+| Packaging a twin | __Available.__ Either in the cook scope (`CARLA_MAPS_TO_COOK`) or as a [content pack](content_authoring_packs.md). |
+| Editor plugin (`UW_DigitalTwins`) | In the [`carla-digitaltwins`](https://github.com/carla-simulator/carla-digitaltwins) repository, with its own build instructions. Its content plugin (`CarlaDigitalTwinsTool`, about 18 GB) is not distributed with CARLA. |
+| Map preview and navigation (*Select OSM Database*, *Render*, arrows, zoom) | __Removed.__ The OSM renderer these controls talk to is no longer in the repository. The buttons remain in the older `UW_OnRoadMainWidget`, and pressing them aborts the editor: `UMapPreviewUserWidget::ConnectToSocket` connects to port 5000 with the throwing Boost.Asio overload, so a refused connection raises an uncaught exception. |
 | Traffic Light Tool | Opens in the editor, but adding a pole needs the `CarlaDigitalTwinsTool` content: without it, *Add Pole* crashes the editor. The phases in a map's `map_logic.json` work at run time. |
 | Traffic sign generation | Available in the editor, for a map that has OSM data and an OpenDRIVE file. |
 | Vegetation and furniture (PCG) | Available in the editor, from a placement plan in JSON. |
@@ -30,40 +32,54 @@ The __Digital Twin Tool__ builds a CARLA map of a real place from [OpenStreetMap
 ---
 ## How the tool is organised
 
-![digital_twin_tool](img/content_authoring_maps_digital_twin/digital_twin_tool.svg)
-<div class="img-caption">The stages of the Digital Twin Tool and which of them work in this release.</div>
+The command line pipeline is pure Python plus one editor commandlet, and depends on nothing in the `CarlaTools` plugin: it writes the OpenDRIVE itself and imports its own meshes.
 
-The tool lives in the `CarlaTools` editor plugin, with the OSM import of the `StreetMap` plugin (built by default) and the PCG plugin. The current version of the generator, ported from the `carla-digitaltwins` project, keeps its blueprints and assets in a separate content plugin, `CarlaDigitalTwinsTool`, under the mount point `/CarlaDigitalTwinsTool/`.
+The editor plugin is the other route. It drives `UOpenDriveToMap` in the `CarlaTools` plugin, which parses the OpenDRIVE with `carla::opendrive::OpenDriveParser`, generates the road meshes with `carla::road::MeshFactory`, and uses the `StreetMap` plugin for building footprints and terrain splines. The two routes build their geometry differently, so the same OSM extract does not produce the same map through both.
 
+---
 ---
 ## Generating a map from OSM
 
-The entry point is the editor utility widget `UW_OnRoadMainWidget`, in the Content Browser under *Plugins > CarlaTools > OnroadMapGenerator* (enable *Show Plugin Content* in the Content Browser settings if the *Plugins* folder is not listed). Right click it and launch it as an editor utility widget. The `LevelCreator` blueprint next to it does not compile in this release, so the editor reports a blueprint compilation error for it.
+The pipeline runs in three stages. The first two are pure Python and need no Unreal; the third runs inside the editor as a commandlet. Install the `twinmodel` package from the repository's `TwinModel/` directory first.
 
-![digital_twins_widget](img/content_authoring_maps_digital_twin/digital_twins_widget.webp)
-<div class="img-caption"><code>UW_OnRoadMainWidget</code> in the Content Browser, under Plugins &gt; CarlaTools &gt; OnroadMapGenerator.</div>
+```sh
+# 1. OSM -> twin model + OpenDRIVE
+python -m twinmodel build --bbox <south> <west> <north> <east> --name MyCity --out build/mycity
 
-![onroad_widget](img/content_authoring_maps_digital_twin/onroad_widget.webp)
-<div class="img-caption">The widget as it opens in this release: the map preview on the left and its controls at the top right no longer work; <b>OSM URL</b>, <b>File Name</b>, <b>Generate</b> and <b>Save Map</b> are the generation controls.</div>
+# 2. twin model -> per-tile .glb + manifest
+python -m twinmodel bake-export build/mycity MyCity
 
-| Field or button | What it does |
-| --- | --- |
-| _Select OSM Database_, _Navigation Settings_, _Render_, arrows, zoom | The map preview. It needed the removed OSM renderer and does nothing; the preview area shows uninitialised noise. |
-| _OSM URL_ | URL of the OSM data to download. On [openstreetmap.org](https://www.openstreetmap.org), select an area, press *Export*, then right click *Overpass API* and copy the link. |
-| _File Name_ | Name of the new map. Required. |
-| _Generate_ | Downloads the OSM data, converts it to OpenDRIVE and builds the map. |
-| _Save Map_ | Saves the generated map. |
+# 3. manifest -> Unreal World Partition level
+UnrealEditor-Cmd Unreal/CarlaUnreal/CarlaUnreal.uproject -run=pythonscript \
+    -script="<repo>/TwinModel/ue/bake_level.py --manifest <abs>/build/mycity/ue/manifest.json --name MyCity" \
+    -unattended -nosplash -nullrhi
+```
 
-![osm_website](img/content_authoring_maps_digital_twin/osm_export.webp)
-<div class="img-caption">Exporting a region from openstreetmap.org.</div>
+Stage 1 fetches the OSM extract, builds the lane graph and writes the OpenDRIVE, then validates it by parsing it with `carla.Map`. Stage 2 writes one `.glb` per layer, kind and tile, plus the spawn points. Stage 3 imports the meshes with Nanite, places them in a World Partition level, copies the OpenDRIVE next to the map, cooks the Traffic Manager cache and builds the pedestrian navigation.
 
-When the converter is available, *Generate* runs these steps:
+The level then opens in the editor and loads in a CARLA server like any other map.
 
-1. Downloads the OSM data to `Unreal/CarlaUnreal/Plugins/<Map>/Content/Maps/OpenDrive/<Map>.osm` and converts it to `<Map>.xodr` next to it.
-2. Builds the road meshes from the OpenDRIVE file (driving lanes only), the lane markings and a terrain, under `/Game/CustomMaps/<Map>/Static/`.
-3. Detects the curbs from an orthographic render of the roads (Python scripts of the `CarlaDigitalTwinsTool` content, run with `/usr/bin/python3` on Linux) and places the sidewalk splines.
-4. Spawns the traffic lights described in the OpenDRIVE file and writes their phases to `map_logic.json`.
-5. Fills the blocks between the roads with buildings extruded from the OSM footprints and heights, then adds vegetation, street lights and street furniture.
+### Shipping the map
+
+A baked twin reaches a packaged CARLA in one of two ways.
+
+Cook it into the package, by adding it to the cook scope:
+
+```sh
+cmake -S . -B Build/Release -DCARLA_MAPS_TO_COOK=/Game/Carla/Maps/Twins/MyCity/MyCity
+cmake --build Build/Release --target package
+```
+
+Or ship it as a [content pack](content_authoring_packs.md), which needs no repackaging of CARLA:
+
+```sh
+carla-pack init MyCityPack
+carla-pack add MyCityPack --map /Game/Carla/Maps/Twins/MyCity/MyCity
+carla-pack build MyCityPack --base <release-metadata.tar.gz>
+carla-pack install MyCityPack-1.0.0-<release>.tar.gz --server /opt/carla/Linux
+```
+
+The pack carries the map's OpenDRIVE and Traffic Manager files as sidecars, so the server picks them up when it mounts the pack.
 
 ---
 ## Traffic lights
@@ -123,10 +139,13 @@ world = client.load_world('Eixample')
 ---
 ## Headless generation
 
-The `GenerateTile` commandlet generates one tile of a map without the editor UI, with the map generation blueprint of the `CarlaDigitalTwinsTool` content (`/CarlaDigitalTwinsTool/BP_OpenDriveToMap`):
+The command line pipeline is already headless: stage 3 above runs the editor as a commandlet with `-run=pythonscript -unattended -nosplash -nullrhi`, so a twin can be built on a machine with no display.
+
+The editor plugin has its own commandlet, `GenerateTile`, which generates one tile of a map with the generation blueprint of the `CarlaDigitalTwinsTool` content (`/CarlaDigitalTwinsTool/BP_OpenDriveToMap`):
 
 ```sh
 $CARLA_UNREAL_ENGINE_PATH/Engine/Binaries/Linux/UnrealEditor-Cmd Unreal/CarlaUnreal/CarlaUnreal.uproject -run=GenerateTile -FilePath=<map.xodr> -BaseLevelName=<Map> -GeoCoordsX=<lat> -GeoCoordsY=<lon> -CTileX=<x> -CTileY=<y>
 ```
 
 Without that content it stops with `OpenDrive class is not properly set`.
+

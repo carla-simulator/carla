@@ -105,7 +105,7 @@ options worth knowing:
 | `-DCARLA_UNREAL_ENGINE_PATH=` | engine fork path (else the env var) |
 | `-DCARLA_UNREAL_RHI=vulkan` | RHI for the editor/game |
 | `-DCARLA_DLSS_SDK_PATH=` | DLSS SDK; `disabled` builds without it |
-| `-DENABLE_RSS=ON`, `-DENABLE_OSM2ODR=ON`, `-DENABLE_PYTORCH=ON` | all default **OFF** |
+| `-DENABLE_RSS=ON`, `-DENABLE_PYTORCH=ON` | both default **OFF**; the OSM to OpenDRIVE converter is always built |
 | `-DCARLA_UNREAL_PACKAGE_BUILD_TYPE=Shipping` | package configuration |
 | `-DCMAKE_DISABLE_FIND_PACKAGE_Qt5=ON -DCMAKE_DISABLE_FIND_PACKAGE_Qt6=ON` | when system Qt is installed but not linkable with the UE toolchain |
 

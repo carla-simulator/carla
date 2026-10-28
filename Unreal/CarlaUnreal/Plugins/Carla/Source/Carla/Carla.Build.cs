@@ -27,9 +27,6 @@ public class Carla :
   [CommandLine("-ros2-demo")]
   bool EnableRos2Demo = false;
 
-  [CommandLine("-osm2odr")]
-  bool EnableOSM2ODR = false;
-
 
 
   public Carla(ReadOnlyTargetRules Target) :
@@ -83,9 +80,6 @@ public class Carla :
           EnableRos2 = true;
           EnableRos2Demo = true;
           break;
-        case "OSM2ODR":
-          EnableOSM2ODR = true;
-          break;
         default:
           Console.WriteLine($"Unknown option \"{Trimmed}\".");
           break;
@@ -102,7 +96,6 @@ public class Carla :
     TestOptionalFeature(EnableCarSim, "CarSim support", "WITH_CARSIM");
     TestOptionalFeature(EnableChrono, "Chrono support", "WITH_CHRONO");
     TestOptionalFeature(EnablePytorch, "PyTorch support", "WITH_PYTORCH");
-    TestOptionalFeature(EnableOSM2ODR, "OSM2ODR support", "WITH_OSM2ODR");
 
     PrivateDependencyModuleNames.AddRange(new string[]
     {
@@ -164,12 +157,8 @@ public class Carla :
       
     PublicIncludePaths.Add(ModuleDirectory);
 
-    if (EnableOSM2ODR)
-    {
-      // @TODO
-      PublicAdditionalLibraries.Add("");
-      throw new NotImplementedException();
-    }
+    // OSM2ODR needs no extra library: the converter is compiled into
+    // libcarla-server, which this module already links.
 
     if (EnableChrono)
     {
