@@ -51,7 +51,7 @@ set (
   ${CARLA_UE_PATH}/Content/Carla
 )
 
-if (NOT EXISTS ${CARLA_UE_CONTENT_PATH}/.git)
+if (NOT IS_DIRECTORY ${CARLA_UE_CONTENT_PATH})
   carla_error ("Missing CARLA content.")
 endif ()
 
