@@ -127,7 +127,9 @@ public class CarlaTools :
       "InputCore",
       "AppFramework",
       "DesktopPlatform",
-      "LevelEditor"
+      "LevelEditor",
+      // SkyPreviewSubsystem: editor-only sky rig for maps that save none.
+      "EditorSubsystem"
     });
 
     if (EnableNVIDIAOmniverse)

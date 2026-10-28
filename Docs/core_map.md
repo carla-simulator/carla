@@ -383,14 +383,30 @@ ego_bp.set_attribute('role_name', 'hero')  # what makes this actor a streaming s
 !!! Warning
     Only the loaded part of the map exists. A sensor pointed at an unloaded region sees nothing there, and a waypoint query still answers from the OpenDRIVE definition, which is always complete. Raise `tile_stream_distance` when a sensor has to see further than the hero's ring.
 
-### Converting a tiled map
+### Converting an imported map
 
-A legacy tiled town is converted in place with the `CarlaLargeMapConvert` commandlet, which registers the old tiles as streaming levels, reads the layout from the map's `TilesInfo.txt`, and removes the legacy static lighting rig the weather-driven sky now replaces:
+An imported map is not partitioned: it is built from `Content/Carla/Maps/BaseMap`, which carries no World Partition, so it loads whole and nothing streams. Converting is optional, and worth doing once the map is large enough that streaming matters. Use the engine's own commandlet:
 
 ```sh
-UnrealEditor CarlaUnreal.uproject -run=CarlaLargeMapConvert \
+UnrealEditor-Cmd /abs/path/to/CarlaUnreal.uproject -run=WorldPartitionConvert \
+    /Game/<package>/Maps/<map>/<map> \
+    -AllowCommandletRendering -unattended -nosound
+```
+
+The `.uproject` path must be absolute; a relative one fails with `Failed to open descriptor file`. The package path is the one the importer wrote, one folder deeper than the package itself, and the commandlet answers `Unknown level` when it is wrong. Close the editor first, and delete `Content/__ExternalActors__/<package>` if an earlier conversion of the same map left one.
+
+What streams afterwards depends on how the geometry was split, not on the map's size: World Partition streams whole actors, and CARLA places one actor per mesh in the `.fbx`. See [RoadRunner — large maps](roadrunner.md#large-maps).
+
+### Converting a legacy tiled town
+
+A town built with CARLA's own tiling — the UE4-era large maps, `Town11` to `Town13` among them — is a different case: its tiles are registered in WorldComposition and carry no `FWorldTileInfo` positions, so the stock commandlet merges every tile at the origin. `CarlaLargeMapConvert` is the subclass that handles them. It reads the grid from the map's `TilesInfo.txt`, places each tile the way `ALargeMapManager` did at runtime, removes the legacy static lighting rig the weather-driven sky now replaces, and renames the map's `.xodr` and Traffic Manager files when `-ConversionSuffix` saves the result under a new name:
+
+```sh
+UnrealEditor-Cmd /abs/path/to/CarlaUnreal.uproject -run=CarlaLargeMapConvert \
     /Game/Carla/Maps/Town12/Town12 -ConversionSuffix \
     -AllowCommandletRendering -unattended -nosound
 ```
+
+It is for those towns only. An imported map takes the stock `WorldPartitionConvert` above.
 
 ---
