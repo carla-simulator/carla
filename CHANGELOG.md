@@ -16,6 +16,7 @@
 * Added **opt-in ground snapping for OpenDRIVE-generated traffic signs and lights**, through `adjust_signs_height_to_ground` on `carla.WorldSettings` or `bAdjustSignsHeightToGround` on the traffic-light manager. Off by default; hand-placed actors are never moved.
 * Added **environment-map lighting**: `World.set_sky_light_map` replaces the real-time atmosphere capture with an equirectangular HDR panorama, so actors are lit by the environment of the footage or neural scene they are composited into. `clear_sky_light_map` restores the atmosphere and `has_sky_light_map` reports the state. The override survives weather changes but not `load_world()`/`reload_world()`.
 * Added a **geometry importer for map authors** (`UGeometryImporter`, Blueprint-callable): GeoJSON polygons, CSV coordinate lists and pixel contours become world-space splines, and OBJ/FBX meshes can be imported into the level from the editor (#8946, #8949, #8950).
+* **Custom maps can be used in CARLA again**: a map authored in RoadRunner, or any `.fbx` and `.xodr` pair, can be imported and driven on, in the editor and in a package.
 
 #### Sensors and cameras
 
