@@ -150,6 +150,12 @@ protected:
   std::vector<std::vector<bool>> RayPreprocessCondition;
   std::vector<uint32_t> PointsPerChannel;
 
+  /// Sweep of the last SimulateLidar: horizontal angle of the first ray and
+  /// angle swept [deg], rays cast per channel.
+  float LastSweepStartAngle = 0.0f;
+  float LastSweepAngle = 0.0f;
+  uint32 LastRaysPerChannel = 0u;
+
 private:
   FSemanticLidarData SemanticLidarData;
 
