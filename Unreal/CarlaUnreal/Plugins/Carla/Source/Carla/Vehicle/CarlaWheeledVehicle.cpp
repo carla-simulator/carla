@@ -1004,7 +1004,7 @@ void ACarlaWheeledVehicle::ApplyVehiclePhysicsControl(
     Out.WheelWidth = In.WheelWidth;
     Out.WheelMass = In.WheelMass;
     Out.CorneringStiffness = In.CorneringStiffness;
-    VehicleMovComponent.SetWheelFrictionMultiplier(i, In.FrictionForceMultiplier);
+    Out.FrictionForceMultiplier = In.FrictionForceMultiplier;
     Out.SideSlipModifier = In.SideSlipModifier;
     Out.SlipThreshold = In.SlipThreshold;
     Out.SkidThreshold = In.SkidThreshold;
@@ -1045,6 +1045,18 @@ void ACarlaWheeledVehicle::ApplyVehiclePhysicsControl(
 
   VehicleMovComponent.RecreatePhysicsState();
   ResetConstraints();
+
+  // RecreatePhysicsState() re-instantiates the wheels from their class
+  // defaults, so the requested friction has to be written again after it.
+  for (int32 i = 0; i < WheelCount; ++i)
+  {
+    const float Friction = PhysicsControl.Wheels[i].FrictionForceMultiplier;
+    if (VehicleMovComponent.Wheels.IsValidIndex(i) && VehicleMovComponent.Wheels[i])
+    {
+      VehicleMovComponent.Wheels[i]->FrictionForceMultiplier = Friction;
+    }
+    VehicleMovComponent.SetWheelFrictionMultiplier(i, Friction);
+  }
 
   auto* Recorder = UCarlaStatics::GetRecorder(GetWorld());
   if (Recorder && Recorder->IsEnabled())
