@@ -144,7 +144,10 @@ if ${REPLACE_LATEST} ; then
   ${AWS_COPY} ${NIGHTLY_DEPLOY_URI} ${LATEST_DEPLOY_URI} --endpoint-url ${ENDPOINT} --copy-props metadata-directive
   log "Latest build uploaded to ${LATEST_DEPLOY_URI}."
 
-  ${AWS_COPY} ${NIGHTLY_METADATA_DEPLOY_URI} ${LATEST_METADATA_DEPLOY_URI} --endpoint-url ${ENDPOINT} --copy-props metadata-directive
+  # Upload the metadata again instead of copying it: it is below the multipart
+  # threshold, and a single-part copy sends x-amz-tagging-directive whatever
+  # --copy-props says, which R2 rejects with NotImplemented.
+  ${AWS_COPY} ${METADATA_PATH} ${LATEST_METADATA_DEPLOY_URI} --endpoint-url ${ENDPOINT}
   log "Latest release metadata uploaded to ${LATEST_METADATA_DEPLOY_URI}."
 
   if ${ADDITIONAL_MAPS} ; then
