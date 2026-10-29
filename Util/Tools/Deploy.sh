@@ -93,7 +93,8 @@ if ${REPLACE_LATEST} ; then
 
   log "Updating latest build with nightly build"
 
-  ${AWS_COPY} ${NIGHTLY_DEPLOY_URI} ${LATEST_DEPLOY_URI} --endpoint-url ${ENDPOINT}
+  # Cloudflare R2 does not implement object tagging, so copy only metadata.
+  ${AWS_COPY} ${NIGHTLY_DEPLOY_URI} ${LATEST_DEPLOY_URI} --endpoint-url ${ENDPOINT} --copy-props metadata-directive
   log "Latest build uploaded to ${LATEST_DEPLOY_URI}."
 
 fi
