@@ -600,6 +600,35 @@ echo '{"ok": true, "load": true, "save": true, "seconds": 1.0, "error": ""}' > "
         self.assertEqual(rc, 1)
         self.assertIn("several base releases found", err)
 
+    def test_create_reads_maps_from_a_json_file(self):
+        for t in ("Town01_Opt", "Town12", "Town13"):
+            self.existing_town(t)
+        build_dir = self.tmp / "Build" / "Release" / "Package"
+        shutil.copy(str(self.base_tar), str(write(build_dir / self.base_tar.name, b"")))
+        as_object = write(self.tmp / "maps.json", json.dumps({"maps": ["Town01_Opt", "Town12"]}))
+        rc, out, err = run("create", "Towns2", "Town13", "Town12", "--maps-file", as_object,
+                           "--project", self.project, "--engine", self.engine, "--dry-run")
+        self.assertEqual(rc, 0, err)
+        m = json.loads((self.root / "Towns2" / "carla-pack.json").read_text())
+        self.assertEqual([x["name"] for x in m["maps"]], ["Town13", "Town12", "Town01_Opt"])   # no duplicates
+        as_list = write(self.tmp / "list.json", json.dumps(["Town13"]))
+        rc, out, err = run("create", "Towns1", "--maps-file", as_list,
+                           "--project", self.project, "--engine", self.engine, "--dry-run")
+        self.assertEqual(rc, 0, err)
+        self.assertEqual([x["name"] for x in json.loads((self.root / "Towns1" / "carla-pack.json")
+                                                        .read_text())["maps"]], ["Town13"])
+        # bad files and an empty list fail before the pack is created
+        for name, content, message in (("bad.json", "{", "not valid JSON"),
+                                       ("shape.json", json.dumps({"towns": ["Town13"]}), "expected a JSON list"),
+                                       ("empty.json", "[]", "no maps given"),
+                                       ("missing.json", None, "cannot read")):
+            path = self.tmp / name if content is None else write(self.tmp / name, content)
+            rc, _, err = run("create", "Towns3", "--maps-file", path, "--project", self.project,
+                             "--engine", self.engine, "--dry-run")
+            self.assertEqual(rc, 1, name)
+            self.assertIn(message, err)
+        self.assertFalse((self.root / "Towns3").exists())
+
     def test_flat_town_takes_only_its_own_sidecars(self):
         """Town01_Opt lives flat in Maps/ next to the shared Maps/TM, Maps/Nav, Maps/OpenDrive folders:
         only its own files may come along (the whole TM folder once did, and the client's Traffic
@@ -1144,6 +1173,9 @@ class TestInspectVerifyInstall(PackTestBase):
         self.assertTrue((installed / "Content" / "Config" / "Vehicles.json").is_file())
         self.assertEqual(run("verify", installed)[0], 0)
         self.assertIn("mount_content_pack", out)
+        for step in ("reading ", "extracting ", "verifying checksums of {} files".format(len(manifest["files"])),
+                     "[1/", "installed "):
+            self.assertIn(step, out)
         self.assertEqual([p.name for p in (server / "CarlaUnreal" / "Packs").iterdir()], [PACK])
 
         rc, _, err = run("install", tar_path, "--server", server)

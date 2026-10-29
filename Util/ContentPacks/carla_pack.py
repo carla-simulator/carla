@@ -107,7 +107,7 @@ class PackError(Exception):
 # --------------------------------------------------------------------------
 
 def info(msg):
-    print("carla-pack: " + msg)
+    print("carla-pack: " + msg, flush=True)
 
 
 def warn(msg):
@@ -1629,8 +1629,23 @@ def find_default_base(args):
     raise PackError("several base releases found, pass --base to pick one:\n  " + "\n  ".join(found))
 
 
+def load_maps_file(path):
+    """The map list of a --maps-file: a JSON list of map specs, or an object with one under "maps"."""
+    data = load_json(Path(path).expanduser())
+    maps = data.get("maps") if isinstance(data, dict) else data
+    if not isinstance(maps, list) or not all(isinstance(m, str) and m.strip() for m in maps):
+        raise PackError('{}: expected a JSON list of map names or {{"maps": [...]}}'.format(path))
+    return [m.strip() for m in maps]
+
+
 def cmd_create(args):
     """init (if needed) + add every map + build, in one go."""
+    maps = list(args.maps)
+    if args.maps_file:
+        maps += load_maps_file(args.maps_file)
+    args.maps = list(dict.fromkeys(maps))
+    if not args.maps:
+        raise PackError("no maps given: pass map names and/or --maps-file")
     base = Path(args.base).expanduser() if args.base else find_default_base(args)
     if not args.base:
         info("base release: {}".format(base))
@@ -1855,15 +1870,29 @@ def compatibility(manifest, project_dir):
     return not problems, server_release, problems
 
 
-def verify_dir(pack_dir):
-    """Return (missing, mismatched, extra) relative paths for a pack folder."""
+def human_size(n):
+    return "{:.1f} GB".format(n / 1e9) if n >= 1e9 else "{:.1f} MB".format(n / 1e6)
+
+
+def report_file_progress(i, n, rel, size):
+    info("  [{}/{}] {} ({})".format(i, n, rel, human_size(size)))
+
+
+def verify_dir(pack_dir, progress=None):
+    """Return (missing, mismatched, extra) relative paths for a pack folder.
+
+    progress(i, n, rel, size), when given, is called before each listed file is hashed."""
     manifest = load_manifest(pack_dir)
     missing, mismatched, extra = [], [], []
-    for rel, digest in sorted(manifest["files"].items()):
+    files = sorted(manifest["files"].items())
+    for i, (rel, digest) in enumerate(files, 1):
         f = Path(pack_dir) / rel
         if not f.is_file():
             missing.append(rel)
-        elif sha256_file(f) != digest:
+            continue
+        if progress:
+            progress(i, len(files), rel, f.stat().st_size)
+        if sha256_file(f) != digest:
             mismatched.append(rel)
     listed = set(manifest["files"]) | {MANIFEST_NAME}
     for f in Path(pack_dir).rglob("*"):
@@ -1931,14 +1960,17 @@ def cmd_verify(args):
         if path.is_file():
             tmp = tempfile.mkdtemp(prefix="carla-pack-verify-")
             # a hostile tarball must not leave anything behind
-            manifest, top, _ = read_manifest_from_tar(path)
+            info("reading {} ...".format(path))
+            manifest, top, sizes = read_manifest_from_tar(path)
+            info("extracting {} to {} ...".format(human_size(sum(sizes.values())), tmp))
             extract_tar(path, tmp)
             pack_dir = Path(tmp) / top if top else Path(tmp)
         elif path.is_dir():
             pack_dir = path
         else:
             raise PackError("no such pack: {}".format(path))
-        missing, mismatched, extra = verify_dir(pack_dir)
+        info("verifying checksums of {} files ...".format(len(load_manifest(pack_dir)["files"])))
+        missing, mismatched, extra = verify_dir(pack_dir, report_file_progress)
         for rel in missing:
             print("MISSING    " + rel)
         for rel in mismatched:
@@ -1961,11 +1993,19 @@ def cmd_install(args):
     src = Path(args.pack).expanduser()
     if not src.is_file():
         raise PackError("install needs a pack tarball: {}".format(src))
-    manifest, top, _ = read_manifest_from_tar(src)
+    info("reading {} ...".format(src))
+    manifest, top, sizes = read_manifest_from_tar(src)
     name = manifest["name"]
+    total = sum(sizes.values())
+    info("pack {} {} ({} files, {}), platform {}, base release {}".format(
+        name, manifest["version"], len(manifest["files"]), human_size(total), manifest["platform"],
+        manifest["base_release"] or "(not built)"))
     project_dir = resolve_server(args.server)
     ok, server_release, problems = compatibility(manifest, project_dir)
-    if not ok:
+    info("server {} (base release {})".format(project_dir, server_release or "?"))
+    if ok:
+        info("pack is compatible with the server")
+    else:
         if args.force:
             for p in problems:
                 warn(p + " (ignored: --force)")
@@ -1981,11 +2021,13 @@ def cmd_install(args):
     packs_dir.mkdir(parents=True, exist_ok=True)
     tmp = Path(tempfile.mkdtemp(prefix=".{}.".format(name), dir=str(packs_dir)))
     try:
+        info("extracting {} to {} ...".format(human_size(total), packs_dir))
         extract_tar(src, tmp)
         extracted = tmp / top if top else tmp
         if not (extracted / MANIFEST_NAME).is_file():
             raise PackError("archive layout unexpected: no {}/{}".format(top, MANIFEST_NAME))
-        missing, mismatched, extra = verify_dir(extracted)
+        info("verifying checksums of {} files ...".format(len(manifest["files"])))
+        missing, mismatched, extra = verify_dir(extracted, report_file_progress)
         if missing or mismatched:
             raise PackError("checksum verification failed for {}: missing {}, mismatched {}"
                             .format(src.name, missing or "-", mismatched or "-"))
@@ -1993,6 +2035,7 @@ def cmd_install(args):
             raise PackError("{} contains files not listed in its manifest: {}"
                             .format(src.name, ", ".join(extra)))
         if target.exists():
+            info("replacing existing {}".format(target))
             rmtree_force(target)
         shutil.move(str(extracted), str(target))
     finally:
@@ -2195,8 +2238,11 @@ def build_parser():
                         description="carla-pack create Towns5 Town01_Opt Town03_Opt Town12 Town13 -> "
                                     "Plugins/Packs/Towns5/Saved/CarlaPack/out/Towns5-1.0.0-<release>.tar.gz")
     sp.add_argument("pack", metavar="<Pack>")
-    sp.add_argument("maps", metavar="<Map>", nargs="+",
+    sp.add_argument("maps", metavar="<Map>", nargs="*",
                     help="map names (Town12), package paths or .umap files, as for 'add --map'")
+    sp.add_argument("--maps-file", default=None, metavar="<file.json>",
+                    help='JSON file with more maps: a list ["Town01_Opt", ...] or {"maps": [...]} '
+                         "(e.g. Util/ContentPacks/AdditionalMaps.json)")
     project_opts(sp)
     sp.add_argument("--base", default=None, help="<release>-release-metadata.tar.gz or Releases/<release> dir "
                     "(default: the one under this checkout's Build/)")

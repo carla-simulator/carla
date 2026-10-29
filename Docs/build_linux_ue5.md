@@ -154,6 +154,8 @@ pip3 install PythonAPI/carla/dist/carla-*.whl
 
 The `package` target also writes `<release>-release-metadata.tar.gz` (about 2 MB) next to the package, which content packs are built against. See [Content packs](content_authoring_packs.md).
 
+The towns the package does not cook are built into the `AdditionalMaps` pack with `cmake --build Build --target package-additional-maps`, run after `package`; `CARLA_ADDITIONAL_MAPS_FILE` selects the map list. See [Towns available as content packs](map_content_packs.md).
+
 ## Build presets
 
 If you are building using multiple configurations, we recommend to use the preset system. To set up a preset, use the following command:

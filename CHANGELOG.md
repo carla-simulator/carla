@@ -45,6 +45,8 @@
 * Added **Ubuntu 24.04** support alongside 22.04, and **NVIDIA RTX 50 series (Blackwell)** support with driver 570+ and CDI-based Docker instructions.
 * Added a **Docker-based development environment** for CARLA UE5.
 * Added **`CARLA_MAPS_TO_COOK`**, a CMake option taking a `+`-separated list of map package paths, to cook a smaller package.
+* Added the **AdditionalMaps content pack**: the towns the default package does not cook (Town01–07_Opt, Town11, Town13, Town_C, Mine_01, Eixample) are built into one pack by the new `package-additional-maps` target, from the list in `Util/ContentPacks/AdditionalMaps.json` (`CARLA_ADDITIONAL_MAPS_FILE` selects another). The new manual `CARLA-AdditionalMaps-Packages-Latest` workflow builds it with the package and publishes both as `CARLA_UE5_AdditionalMaps_Latest*` (`Deploy.sh --additional-maps --latest-prefix`); every upload now also publishes the package's release metadata. `carla-pack create` takes the map list from a JSON file with `--maps-file`. See `Docs/map_content_packs.md`.
+* `carla-pack install` and `carla-pack verify` on a tarball now report each step and the file being checksummed, instead of staying silent for minutes on a multi-GB pack.
 
 ### Extensions
 
