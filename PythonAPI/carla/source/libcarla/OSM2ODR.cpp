@@ -3,6 +3,8 @@
 //
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
+//
+// Additional functionality added by AVL List GmbH under the terms of the MIT license.
 
 #include <OSM2ODR.h>
 
@@ -18,10 +20,10 @@ namespace osm2odr {
     return out;
   }
   void SetOsmWayTypes(OSM2ODRSettings& self, boost::python::list input) {
-    self.osm_highways_types = PythonLitstToVector<std::string>(input);
+    self.osm_highways_types = PythonListToVector<std::string>(input);
   }
   void SetTLExcludedWayTypes(OSM2ODRSettings& self, boost::python::list input) {
-    self.tl_excluded_highways_types = PythonLitstToVector<std::string>(input);
+    self.tl_excluded_highways_types = PythonListToVector<std::string>(input);
   }
 }
 

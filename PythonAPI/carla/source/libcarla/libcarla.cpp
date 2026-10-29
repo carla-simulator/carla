@@ -3,6 +3,8 @@
 //
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
+//
+// Additional functionality added by AVL List GmbH under the terms of the MIT license.
 
 #include <carla/Memory.h>
 #include <carla/PythonUtil.h>
@@ -74,7 +76,7 @@ static boost::python::object OptionalToPythonObject(OptionalT &optional) {
     }
 
 template<typename T>
-std::vector<T> PythonLitstToVector(boost::python::list &input) {
+std::vector<T> PythonListToVector(boost::python::list &input) {
   std::vector<T> result;
   boost::python::ssize_t list_size = boost::python::len(input);
   for (boost::python::ssize_t i = 0; i < list_size; ++i) {
