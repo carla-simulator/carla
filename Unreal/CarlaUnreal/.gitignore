@@ -32,3 +32,8 @@ Releases
 
 # content packs authored locally (carla-pack init writes here)
 Plugins/Packs
+
+# Generated from CARLA_MAPS_TO_COOK by Package/GenerateCookedMapStaging.cmake
+Config/Linux/
+Config/Windows/
+Config/Mac/

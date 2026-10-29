@@ -41,6 +41,7 @@ Two steps make a vehicle, in this order, and two more refine it.
 | --- | --- |
 | [__Props__](content_authoring_props.md) | Import a mesh and register it as a spawnable `static.prop.*`, or place one straight from a mesh path with `static.prop.mesh`. |
 | [__Material customization__](content_authoring_materials.md) | The master materials the static assets of a town are built on, the textures they read, and the parameters to change on an instance. |
+| [__Lights__](content_authoring_lights.md) | Set the intensity and colour of street lamps, building windows, traffic lights and vehicle lights per class with the Light Defaults panel. |
 
 ---
 ## Shipping what you made

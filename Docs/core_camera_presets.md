@@ -1,6 +1,6 @@
 # Camera post-process presets
 
-A camera's look — exposure, tonemapper, white balance, bloom, lens flare, noise — comes from a __post-process preset__, a JSON file the server loads by name. Nine presets ship with CARLA, each reproducing the camera of a public driving dataset, and a sensor picks one with its `post_process_profile` attribute.
+A camera's look (exposure, tonemapper, white balance, bloom, lens flare, noise) comes from a __post-process preset__, a JSON file the server loads by name. Nine presets ship with CARLA, each reproducing the camera of a public driving dataset, and a sensor picks one with its `post_process_profile` attribute.
 
 - [__Using post-process presets for the RGB camera sensor__](#using-post-process-presets-for-the-rgb-camera-sensor)
 - [__Presets shipped with CARLA__](#presets-shipped-with-carla)
@@ -28,22 +28,22 @@ The profile is read when the sensor spawns: to change it, set the attribute agai
 
 Nine profiles ship in `Content/Carla/Config/PostProcess`. They change the image processing only, never the geometry of the lens.
 
-Each automotive preset reproduces the look of the camera of a public driving dataset, tuned on Town10HD_Opt against frames of that dataset (exposure and contrast percentiles, saturation, white balance, sharpness, noise per brightness). The consumer presets are graded by eye.
+Each automotive preset reproduces the look of the camera of a public driving dataset, tuned on Town10HD_Opt against frames of that dataset (exposure and contrast percentiles, saturation, white balance, sharpness, noise per brightness). `GoPro` and `Dashcam` are tuned against frames of a hood-mounted action camera and of consumer dashcams. `Cinematic` is graded by eye.
 
 | Preset | Imitates | Look |
 | --- | --- | --- |
 | `AutomotiveHDR` (__sensor default__) | nuScenes front camera (Basler acA1600-60gc) | Flat machine-vision camera: neutral, low saturation, fast auto exposure capped at 20 ms (gain and noise rise in the dark), star-shaped lens flare and bloom on lights, sensor noise, slight optical softness. |
 | `AutomotiveHDRClean` | same camera, better sensor and optics | Same tone mapping and exposure as `AutomotiveHDR`, with the bloom cut from 1.0 to 0.35 and little noise. For ground truth that should not carry glare or sensor artefacts. |
-| `WideHDR8MP` | 8 MP 120° ADAS front camera (Zenseact ZOD; Mobileye / Tesla HW4 class, 120–140 dB sensors) | Flat multi-exposure HDR: no clipped highlights, lifted blacks, crisp lamps without star flare, strong noise reduction (soft, smeared detail), edge fringing. |
-| `LegacyCCD` | KITTI (Point Grey Flea2 CCD, 2011) | Low dynamic range: hard clipped skies, deep contrasty shadows, sharp, little bloom. |
-| `LogHDR` | Cityscapes (onsemi AR0331, 16-bit HDR log-compressed to 8 bit) | No clipped highlights, dark mid-tones, green-yellow cast, moderate saturation. |
-| `Smartphone` | comma.ai road camera (Sony IMX298, phone ISP, HEVC) | Cool 5600 K white balance, dark mid-tones, saturated, no sharpening, soft codec detail. |
+| `WideHDR8MP` | 8 MP 120° ADAS front camera (Zenseact ZOD; Mobileye / Tesla HW4 class, 120–140 dB sensors) | Flat multi-exposure HDR: no clipped highlights, lifted blacks, neutral to cool white balance, crisp lamps without star flare, strong noise reduction (soft, smeared detail), slight edge fringing. |
+| `LegacyCCD` | KITTI (Point Grey Flea2 CCD, 2011) | Low dynamic range: hard clipped skies, steep contrast with readable shadows, sharp, little bloom. |
+| `LogHDR` | automotive HDR camera (onsemi AR0331, 16-bit HDR log-compressed to 8 bit) | No clipped highlights, lifted shadows, cool grey-green cast, low saturation. |
+| `Smartphone` | comma.ai road camera (Sony IMX298, phone ISP, HEVC) | Cool 5600 K white balance, dark mid-tones, moderately saturated, no sharpening, soft codec detail. |
 | `Cinematic` (viewport default) | photo / film camera | Neutral 6500 K grading with a filmic curve, slow histogram auto exposure with a brightness-dependent bias curve (shade, dusk and night stay darker as on a real camera), moderate bloom, a noticeable vignette and motion blur. |
-| `GoPro` | action camera | Vivid colour, strong local tone compression, crisp detail (sharpen 0.55), light vignette and edge fringing, fast auto exposure, motion blur on. |
-| `Dashcam` | consumer dashcam | Low dynamic range (bright skies clip), contrasty, over-sharpened, strong vignette and fringing, sensor grain, slightly cool and overexposed. |
+| `GoPro` | action camera | Vivid, contrasty colour, strong local tone compression, no extra sharpening, light vignette and edge fringing, fast auto exposure, motion blur on. |
+| `Dashcam` | consumer dashcam | Bright and flat, vivid colour, neutral white balance, mild sharpening, strong vignette and fringing, light sensor grain. |
 
 
-The same Town10HD_Opt frame through the nine presets, at noon and at night. At night the automotive presets raise the gain and show sensor noise, and `AutomotiveHDR` adds its star-shaped flare around the lamps:
+The same Town10HD_Opt frame through the nine presets, from a camera at the driver's eye height, at noon and at night. At night the automotive presets raise the gain and show sensor noise, and `AutomotiveHDR` adds its star-shaped flare around the lamps:
 
 ![camera_profiles_clearnoon](img/core_camera_presets/camera_profiles_clearnoon_town10.webp)
 <div class="img-caption">The nine camera profiles on the same frame, ClearNoon.</div>
@@ -78,14 +78,41 @@ camera_bp.set_attribute('image_size_y', '375')
 camera_bp.set_attribute('fov', '82')
 ```
 
+### Compared with the real cameras
+
+Each preset on a Town10HD_Opt street staged like a real frame of the camera it imitates (the same kind of street, traffic and pedestrians, and the weather the preset was tuned with), rendered with that camera's resolution, field of view and lens. The real frame is the inset. Click an image and use the arrow keys or the mouse wheel to go through all of them.
+
+![real_automotivehdr](img/core_camera_presets/real_automotivehdr.webp)
+<div class="img-caption">AutomotiveHDR, 1600 × 900, 70°, beside the nuScenes front camera.</div>
+
+![real_automotivehdr_night](img/core_camera_presets/real_automotivehdr_night.webp)
+<div class="img-caption">AutomotiveHDR at night, beside a nuScenes night frame.</div>
+
+![real_widehdr8mp](img/core_camera_presets/real_widehdr8mp.webp)
+<div class="img-caption">WideHDR8MP through a 120° Kannala-Brandt lens (`sensor.camera.rt_lens`), overcast, beside the Zenseact ZOD front camera.</div>
+
+![real_legacyccd](img/core_camera_presets/real_legacyccd.webp)
+<div class="img-caption">LegacyCCD, 1242 × 375, 82°, beside KITTI.</div>
+
+![real_smartphone](img/core_camera_presets/real_smartphone.webp)
+<div class="img-caption">Smartphone, 1164 × 874, 65°, beside the comma.ai road camera.</div>
+
+![real_gopro](img/core_camera_presets/real_gopro.webp)
+<div class="img-caption">GoPro through a 150° equidistant fisheye on the hood (`sensor.camera.rt_lens`), beside a hood-mounted action camera.</div>
+
+![real_dashcam](img/core_camera_presets/real_dashcam.webp)
+<div class="img-caption">Dashcam through a 110° Brown-Conrady barrel lens (`sensor.camera.rt_lens`), beside a consumer dashcam.</div>
+
+Reference frames: [nuScenes](https://www.nuscenes.org/) (CC BY-NC-SA 4.0), [Zenseact ZOD](https://zod.zenseact.com/) (CC BY-SA 4.0), [KITTI](https://www.cvlibs.net/datasets/kitti/) (CC BY-NC-SA 3.0), [comma10k](https://github.com/commaai/comma10k) (MIT); action camera by live360 on Mapillary via Wikimedia Commons (CC BY-SA 4.0), dashcam by Michael Rivera via Wikimedia Commons (CC BY 4.0).
+
 ### Sensor effects
 
 The automotive presets add camera artefacts on top of the grading:
 
 - __Sensor noise and optical softness.__ A post-process material, `M_SensorNoise` (in `Content/Carla/Blueprints/CameraProfiles`), blurs the image slightly (lens, demosaicing and ISP) and adds photon and read noise in linear light. The gain follows the camera's own auto exposure: once the exposure time reaches its cap the gain rises, so noise grows in the dark as on a real camera. `AutomotiveHDRClean`, `WideHDR8MP`, `LegacyCCD`, `LogHDR` and `Smartphone` each reference a material instance, `MI_SensorNoise_<Preset>`, with its own parameters (`Strength`, `BlurSigma`, `NoiseCell`, `ChromaScale`, `FullWell`, `ReadNoise`, `MaxExposureMs`); `AutomotiveHDR` uses `M_SensorNoise` itself, with its default values. `Cinematic`, `GoPro` and `Dashcam` have no sensor-noise material; the grain of `Dashcam` is Unreal's film grain. Remove the material from *Weighted Blendables* to turn both effects off.
 - __Lens flare.__ `AutomotiveHDR` and `AutomotiveHDRClean` use the convolution (FFT) bloom with a lens kernel, `Kernels/T_LensPSF_Star`, modelled on the nuScenes night frames: a soft halo and faint star spikes around bright lights. The other presets use the standard bloom.
-- __Small lights and temporal anti-aliasing.__ With TSR (the default anti-aliasing) distant or thin lights — small vehicle lamps, far street lights — lose most of their glow, because TSR blends each frame with the previous ones and flattens bright features of a few pixels before the bloom. A real camera has no such filter. FXAA (`r.AntiAliasingMethod 1`) keeps their glow at the cost of more aliasing, shimmer and moiré on foliage, fences and distant lines.
-- __Exposure-linked motion blur.__ Applies to every preset: see [RGB camera — exposure-linked motion blur](ref_sensors.md#exposure-linked-motion-blur).
+- __Small lights and temporal anti-aliasing.__ With TSR (the default anti-aliasing) distant or thin lights (small vehicle lamps, far street lights) lose most of their glow, because TSR blends each frame with the previous ones and flattens bright features of a few pixels before the bloom. A real camera has no such filter. FXAA (`r.AntiAliasingMethod 1`) keeps their glow at the cost of more aliasing, shimmer and moiré on foliage, fences and distant lines.
+- __Exposure-linked motion blur.__ Applies to every preset: see [RGB camera: exposure-linked motion blur](ref_sensors.md#exposure-linked-motion-blur).
 
 ---
 ## Creating, loading and saving presets

@@ -1952,7 +1952,7 @@ Iterate over the [carla.LidarDetection](#carla.LidarDetection) retrieved as data
 This class exposes the lights that exist in the scene, except for vehicle lights. The properties of a light can be queried and changed at will.
 Street and building lights are automatically turned on when the sun goes down (sun altitude at or below `0.8` degrees, console variable `carla.Weather.StreetLightsOnDeg`) and off when it rises; lights of the `Other` group are left alone. The switch happens only when a weather change crosses that threshold: changing the weather while it stays night (or day) does not touch the lights, so changes made through this API persist until the next sunrise or sunset. Lights that load later (World Partition maps streaming in cells) take the current state.
 __Intensity units.__ Street lights are photometric and their intensity is in lumens; a real road luminaire is about 10000-25000 lm. Values below `1000` are read as kilolumens (the scale of the UE4-era lamp content, `carla.Light.StreetIntensityScale`), so `20` and `20000` give the same light; use values of `1000` and above for lumens. Building and other lights keep the UE4 scale: the light component gets the intensity multiplied by `carla.Light.LegacyIntensityScale` (default `10000`).
-The per-class defaults applied when a map loads come from `Content/Carla/Config/Lights/Defaults.json` on the server, edited with the Light Defaults tool in the editor. They are not readable from the client; query the lights instead.  
+The per-class defaults applied when a map loads come from `Content/Carla/Config/Lights/Defaults.json` on the server, edited with the [Light Defaults panel](content_authoring_lights.md) in the editor. They are not readable from the client; query the lights instead.  
 
 ### Instance Variables
 - <a name="carla.Light.color"></a>**<font color="#f8805a">color</font>** (_[carla.Color](#carla.Color)_)  
@@ -2480,27 +2480,29 @@ Offset in the X axis.  Default value is __0.0__.
 - <a name="carla.Osm2OdrSettings.offset_y"></a>**<font color="#f8805a">offset_y</font>** (_float<small> - meters</small>_)  
 Offset in the Y axis.  Default value is __0.0__.  
 - <a name="carla.Osm2OdrSettings.default_lane_width"></a>**<font color="#f8805a">default_lane_width</font>** (_float<small> - meters</small>_)  
-Width of the lanes described in the resulting XODR map. Default value is __4.0__.  
+Width of the lanes described in the resulting XODR map. Default value is __0.0__, which picks a width per OSM highway type.  
+- <a name="carla.Osm2OdrSettings.default_sidewalk_width"></a>**<font color="#f8805a">default_sidewalk_width</font>** (_float<small> - meters</small>_)  
+Width of the sidewalk lane added to a way whose OSM tags declare one. Default value is __0.0__, which adds none.  
 - <a name="carla.Osm2OdrSettings.elevation_layer_height"></a>**<font color="#f8805a">elevation_layer_height</font>** (_float<small> - meters</small>_)  
-Defines the height separating two different [OpenStreetMap layers](https://wiki.openstreetmap.org/wiki/Key:layer). Default value is __0.0__.  
+Height that separated two different [OpenStreetMap layers](https://wiki.openstreetmap.org/wiki/Key:layer), so that a bridge cleared what it crossed. Ignored: the current converter has no layer elevation pass, and a way tagged `layer` stays at the grade of what it crosses. Kept so existing scripts still run. Default value is __0.0__.  
 - <a name="carla.Osm2OdrSettings.center_map"></a>**<font color="#f8805a">center_map</font>** (_bool_)  
-When this option is enabled, the geometry of the map will be displaced so that the origin of coordinates matches the center of the bounding box of the entire road map.  
+When this option is enabled, the geometry of the map will be displaced so that the origin of coordinates matches the center of the bounding box of the entire road map, instead of its north west corner. It has no effect when `proj_string` pins the origin with `+lat_0`/`+lon_0`.  
 - <a name="carla.Osm2OdrSettings.proj_string"></a>**<font color="#f8805a">proj_string</font>** (_str_)  
-Defines the [proj4](https://github.com/OSGeo/proj.4) string that will be used to compute the projection from geocoordinates to cartesian coordinates. This string will be written in the resulting OpenDRIVE unless the options `use_offsets` or `center_map` are enabled as these options override some of the definitions in the string.  
+Defines the [proj4](https://github.com/OSGeo/proj.4) string used to project geocoordinates onto cartesian coordinates, and written as the `<geoReference>` of the resulting OpenDRIVE. A `+lat_0`/`+lon_0` pair in it also pins the origin of that projection, in which case `center_map` has no effect.  
 - <a name="carla.Osm2OdrSettings.generate_traffic_lights"></a>**<font color="#f8805a">generate_traffic_lights</font>** (_bool_)  
-Indicates wether to generate traffic light data in the OpenDRIVE. Road types defined by `set_traffic_light_excluded_way_types(way_types)` will not generate traffic lights.  
+Indicates whether to generate traffic light data in the OpenDRIVE. A traffic light is emitted at every node the OpenStreetMap data tags `highway=traffic_signals`.  
 - <a name="carla.Osm2OdrSettings.all_junctions_with_traffic_lights"></a>**<font color="#f8805a">all_junctions_with_traffic_lights</font>** (_bool_)  
-When disabled, the converter will generate traffic light data from the OpenStreetMaps data only. When enabled, all junctions will generate traffic lights.  
+When disabled, traffic lights come from the OpenStreetMap data alone, as described in `generate_traffic_lights`. When enabled, every junction approach gets a traffic light whatever the OpenStreetMap data says, replacing the priority and give way signs the converter would otherwise place there.  
 
 ### Methods
 
 ##### Setters
 - <a name="carla.Osm2OdrSettings.set_osm_way_types"></a>**<font color="#7fb800">set_osm_way_types</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**way_types**</font>)  
-Defines the OpenStreetMaps road types that will be imported to OpenDRIVE. By default the road types imported are `motorway, motorway_link, trunk, trunk_link, primary, primary_link, secondary, secondary_link, tertiary, tertiary_link, unclassified, residential`. For a full list of road types check [here](https://wiki.openstreetmap.org/wiki/Main_Page).  
+Defined the OpenStreetMaps road types that would be imported to OpenDRIVE. Ignored: the current converter always uses its own set of drivable highway classes, and logs a warning when this is set. Kept so existing scripts still run. For a full list of road types check [here](https://wiki.openstreetmap.org/wiki/Main_Page).  
     - **Parameters:**
         - `way_types` (_list(str)_) - The list of road types.  
 - <a name="carla.Osm2OdrSettings.set_traffic_light_excluded_way_types"></a>**<font color="#7fb800">set_traffic_light_excluded_way_types</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**way_types**</font>)  
-Defines the OpenStreetMaps road types that will not generate traffic lights even if `generate_traffic_lights` is enabled. By default the road types excluded are `motorway_link, primary_link, secondary_link, tertiary_link`.  
+Defined the OpenStreetMaps road types that would generate no traffic light even with `generate_traffic_lights` enabled. Ignored: the current converter excludes no road type, and logs a warning when this is set. Kept so existing scripts still run.  
     - **Parameters:**
         - `way_types` (_list(str)_) - The list of road types.  
 

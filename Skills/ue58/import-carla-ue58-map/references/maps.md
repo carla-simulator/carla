@@ -126,13 +126,22 @@ union of every build you ever ran.
 
 ## Staging — whether the road data ships
 
-`DirectoriesToAlwaysStageAsUFS` in `DefaultGame.ini` (pristine on this branch):
+`DefaultGame.ini` carries a fixed `DirectoriesToAlwaysStageAsUFS` list:
 
 ```
 Carla/Maps/OpenDrive        Carla/Maps/Nav          Carla/Maps/TM
 Carla/Maps/Town15/OpenDrive Carla/Maps/Town15/Nav   Carla/Maps/Town15/TM
 Carla/Config                Carla/Config/Mine_01
 ```
+
+A hardcoded list cannot reach a map outside `Carla/`, so
+`Unreal/Package/GenerateCookedMapStaging.cmake` derives the entries from
+`CARLA_MAPS_TO_COOK` instead and writes them to
+`Config/<Platform>/<Platform>Game.ini`: for a map package path `P` it stages
+`dirname(P)/{OpenDrive,TM,Nav}`. An empty cook scope deletes that file and the
+`DefaultGame.ini` list applies. Verified by listing the built `.pak`: cooking two
+imported maps staged `SingleFbx/Maps/singlefbx/OpenDrive/singlefbx.xodr`,
+`SingleFbx/Maps/singlefbx/TM/singlefbx.bin` and the pair for `SingleFbxWp`.
 
 Content layout:
 
@@ -265,22 +274,20 @@ FString UCarlaStatics::FindMapPath(const FString &MapName)
 }
 ```
 
-Measured, same tree, packaged vs `-game`:
+**This is the pre-`da94ed2b7` behaviour and no longer holds.** That commit added
+`UCarlaStatics_GetRegistryWorlds()`, an asset-registry query that sees inside a
+Pak/IoStore container, and `FindMapPath` now falls through to it after the
+filesystem walk and the single `/Game/Carla/Maps/<Name>` fallback. `60fd70e44`
+later narrowed the registry search to project roots and existing packages.
 
-| Call | `-game` | packaged |
-|---|---|---|
-| `get_available_maps()` | **29** | **`[]`** |
-| `load_world('Town10HD_Opt')` | OK | OK |
-| `load_world('Town_C')` | OK | OK *(when cooked)* |
-| `load_world('Town12')` | OK | **fails** |
+Measured on a Shipping package cooking `Town10HD_Opt` and two imported maps:
 
-Every result follows from the code. `Town10HD_Opt` and `Town_C` sit at
-`/Game/Carla/Maps/<Name>`; `Town12` is at `/Game/Carla/Maps/Town12/Town12`, which
-the single fallback never tries. `GetAllMapNames` has no fallback at all, hence the
-empty list. The 29 names in `-game` mode include Town15 sublevels and map-generator
-templates, so it is discovery output rather than a list of playable towns.
+| Call | result |
+|---|---|
+| `get_available_maps()` | `['Town10HD_Opt', 'singlefbx', 'singlefbxwp']` |
+| `load_world('singlefbx')` | OK — `SingleFbx/Maps/singlefbx/singlefbx` |
+| `load_world('singlefbxwp')` | OK — `SingleFbxWp/Maps/singlefbxwp/singlefbxwp` |
 
-**So:** an imported map at `/Game/<Package>/Maps/<Map>` is editor- and
-`-game`-loadable but **not** package-loadable by name; the same is true of nested
-large maps. To be package-loadable a map must sit exactly at
-`/Game/Carla/Maps/<Name>`.
+**So:** an imported map is package-loadable by its leaf name from wherever it sits,
+and nested large maps resolve too. The registry asserts off the game thread, so an
+off-thread `get_available_maps()` still returns `[]`.

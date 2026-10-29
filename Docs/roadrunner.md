@@ -1,6 +1,6 @@
 # RoadRunner
 
-RoadRunner is the recommended tool for authoring the road network of a CARLA map. This page covers what it is, how to build a map that imports cleanly, the export settings CARLA expects, and what changes when the map is large enough to need tiles.
+RoadRunner is the recommended tool for authoring the road network of a CARLA map. This page covers what it is, how to build a map that imports cleanly, the export settings CARLA expects, and how to export a map that streams well once it is in CARLA.
 
 - [__Introduction to RoadRunner__](#introduction-to-roadrunner)
 - [__Before you start__](#before-you-start)
@@ -87,18 +87,21 @@ Copy the `.fbx` and the `.xodr` into the `Import` folder and run the importer as
 
 ## Large maps
 
-A map too big to keep in memory at once is exported in tiles and converted to [World Partition](core_map.md#large-maps-and-world-partition) after the import, so the engine streams it around the actors that move through it. Two things change.
-
 __Size.__ Keep a map with elevation at or below 20 km by 20 km; larger maps tend to crash RoadRunner on export.
 
-__Export.__ Add two options to the Filmbox (.fbx) export above:
+__Export.__ Add these two options to the Filmbox (.fbx) export above:
 
 | Option | Why |
 | ------ | --- |
-| _Export to Tiles_ | Splits the map into tiles. __2000 x 2000 is the largest tile CARLA accepts.__ |
-| _Export Individual Tiles_ | Writes one file per tile, which is what the importer expects for a large map. |
+| _Export to Tiles_ | Splits the map into tiles, and so splits the ground into one mesh per tile. |
+| _Export Individual Tiles_ | Writes one file per tile, which is what the importer expects. |
 
-A tiled export produces `<Name>_Tile_<X>_<Y>.fbx` files beside a single `<Name>.xodr`. The importer recognises that set and treats it as one tiled map; once it is in, convert it with the `CarlaLargeMapConvert` commandlet so it streams like the towns that ship with CARLA.
+A tiled export produces `<Name>_Tile_<X>_<Y>.fbx` files beside a single `<Name>.xodr`. The importer recognises that set and builds __one__ map from it, keeping each tile's meshes as separate assets; there is no option to import the tiles as separate levels, and nothing is merged into a single mesh.
+
+Tiling is what makes a map stream. CARLA imports one static mesh per mesh node in the `.fbx` and places one actor per mesh, and [World Partition](core_map.md#large-maps-and-world-partition) streams whole actors: a map exported as a single file is a handful of actors that are always resident, however large it is. The same geometry exported in a 2 x 2 grid of tiles came in as 24 meshes rather than 2, which is 24 things the engine can load and unload independently.
+
+__Tile size.__ RoadRunner's default works, and smaller tiles stream better. World Partition loads cells that are a good deal smaller than a default tile, and an actor larger than a cell is placed in a coarser grid and stays resident over a wide area, so reduce the tile size if too much of the map stays loaded at once.
+
 
 ---
 

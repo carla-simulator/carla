@@ -180,6 +180,8 @@ Shipping package (ue58-dev `6bb051b2e`, scope `Town10HD_Opt+OpenDriveMap+EmptyMa
 map (`Carla/Maps/Town12/Town12`). A map passed on the command line
 (`/Game/Carla/Maps/Town12/Town12`) was ignored and the server booted
 `Town10HD_Opt`: switch with `load_world()` after connecting. Only cooked maps and maps of installed packs load.
+The registry asserts off the game thread, so an off-thread `get_available_maps()`
+still returns `[]` — the likely origin of the old "returns `[]`" reports.
 More in [[run-carla-ue58-server]].
 
 ## Examples

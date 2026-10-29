@@ -37,6 +37,7 @@ import argparse
 import hashlib
 import json
 import os
+import posixpath
 import re
 import shutil
 import signal
@@ -1248,7 +1249,7 @@ def member_relpath(name):
     raw = name.replace("\\", "/")
     if ".." in raw.split("/"):
         return None                       # any '..' component, even one that would normalise away
-    norm = os.path.normpath(raw)
+    norm = posixpath.normpath(raw)        # '/' on every OS: callers split and compare on '/'
     if norm in (".", ""):
         return ""
     if os.path.isabs(norm) or norm.startswith("/") or norm.startswith("\\"):
@@ -1548,7 +1549,7 @@ def assemble_pack(pack_dir, manifest, staged_pack, out_dir, platform, release, e
 
     out_manifest = json.loads(json.dumps(manifest))
     out_manifest["base_release"] = release
-    out_manifest["platform"] = platform
+    out_manifest["platform"] = cook_platform(platform)   # the server matches its own name (Windows, not Win64)
     out_manifest["engine"] = eng
     files = {}
     for f in sorted(out_pack.rglob("*")):
@@ -1854,7 +1855,7 @@ def compatibility(manifest, project_dir):
     """Return (ok, base_release_of_server, list of problems)."""
     problems = []
     platform = server_platform(project_dir)
-    if platform and manifest.get("platform") != platform:
+    if platform and cook_platform(manifest.get("platform")) != cook_platform(platform):
         problems.append("platform mismatch: pack is for {!r}, server is {!r}"
                         .format(manifest.get("platform"), platform))
     server_release = server_base_release(project_dir)

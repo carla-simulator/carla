@@ -53,9 +53,13 @@ jobs:
     runs-on: self-hosted:ubuntu-gpu
     container:
       image: carlasim/carla-builder:ue5-22.04
-      options: --runtime=nvidia --gpus all -e NVIDIA_DRIVER_CAPABILITIES=all --volume /home/jenkins/unreal-engine/ue5:/unreal-engine
+      options: >-
+        --runtime=nvidia --gpus all -e NVIDIA_DRIVER_CAPABILITIES=all
+        --volume /home/jenkins/unreal-engine/ue5:/unreal-engine
+        --volume /home/jenkins/carla-content-cache/ue5:/carla-content-cache
     env:
       CARLA_UNREAL_ENGINE_PATH: /unreal-engine
+      CARLA_CONTENT_CACHE: /carla-content-cache
 
     steps:
 
@@ -73,9 +77,20 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Download content
+      - name: Update CARLA Content cache
         run: |
-          git clone -b ue58-dev-carla --depth 1 https://bitbucket.org/carla-simulator/carla-content.git Unreal/CarlaUnreal/Content/Carla
+          # The cache comes from the host; without this Git may reject it as "dubious ownership"
+          git config --global --add safe.directory "$CARLA_CONTENT_CACHE"
+          ./Util/Tools/UpdateContentCache.sh --path "$CARLA_CONTENT_CACHE" --branch ue58-dev-carla
+
+      - name: Copy content to workspace
+        run: |
+          DEST="Unreal/CarlaUnreal/Content/Carla"
+
+          rm -rf "$DEST" && mkdir -p "$DEST"
+          # Copy everything from the cache except the .git folder.
+          find "$CARLA_CONTENT_CACHE" -mindepth 1 -maxdepth 1 ! -name .git \
+            -exec cp -a --reflink=auto {} "$DEST"/ \;
 
       - name: Activate conda environment
         run: |

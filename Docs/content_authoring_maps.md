@@ -7,6 +7,7 @@ This page is the route through making one: the road network, the import into CAR
 - [__Prerequisites__](#prerequisites)
 - [__Create the road network__](#create-the-road-network)
 - [__Import the road network into CARLA__](#import-the-road-network-into-carla)
+- [__Convert the map to World Partition__](#convert-the-map-to-world-partition)
 - [__Decorate the map__](#decorate-the-map)
 
 ---
@@ -15,7 +16,7 @@ This page is the route through making one: the road network, the import into CAR
 To follow this guide you need CARLA built from source, so that you can use the Unreal Editor: follow the [__build instructions__](build_carla.md) for your operating system and check that the editor opens. You also need RoadRunner (or another OpenDRIVE editor) for the road network, and a 3D modelling application such as Blender, Maya or 3ds Max if you want to create your own assets.
 
 !!! Note
-    A map larger than a town is a [large map](core_large_maps.md): it is exported in tiles and streamed with World Partition. The steps below are the same, with the additions described in [RoadRunner — large maps](roadrunner.md#large-maps).
+    A map larger than a town is a [large map](core_large_maps.md), streamed with World Partition. The steps below are the same, and a tiled export is imported the same way as a single file; what changes is how you export it, described in [RoadRunner — large maps](roadrunner.md#large-maps), and the conversion step below.
 
 ---
 ## Create the road network
@@ -44,7 +45,9 @@ export CARLA_UNREAL_ENGINE_PATH=/path/to/UnrealEngine5_carla
 python3 Util/Tools/Import.py --package tutorial
 ```
 
-`--package` names the package the map is imported into. The importer creates a package descriptor in `Import/` if there is none, imports the geometry, applies CARLA's road materials, prepares the map for cooking and builds the Traffic Manager cache.
+`--package` names the package the map is imported into. The importer creates a package descriptor in `Import/` if there is none, imports the geometry, applies CARLA's road materials, prepares the map for cooking and builds the Traffic Manager cache. The result is a map you can open and drive on.
+
+A tiled export — a set of `<Name>_Tile_<X>_<Y>.fbx` files beside one `<Name>.xodr` — is imported as one map, with each tile's meshes kept as separate assets. Nothing extra is needed on the command line.
 
 !!! Warning
     The importer also tries to build the pedestrian navigation mesh, and that step silently does nothing unless `FBX2OBJ` and `RecastBuilder` are in `Util/DockerUtils/dist/`. Without them walkers cannot navigate the new map. Build `FBX2OBJ` from `Util/DockerUtils/fbx`, which needs the Autodesk FBX SDK 2020.0.1 and installs into `Util/DockerUtils/dist/`, and copy `RecastBuilder` from the build tree before importing: `cp Build/_deps/recastnavigation-build/RecastBuilder/RecastBuilder Util/DockerUtils/dist/`. The step calls `python`, so `python` must run Python 3.
@@ -55,6 +58,26 @@ Open the editor with `cmake --build Build --target launch`. The map is in the ne
 <div class="img-caption">The folder of an imported map in the Content Browser, here the Sunnyvale digital twin, with its level and OpenDRIVE subfolder.</div>
 
 You have now created the road network, the basis of your map.
+
+---
+## Convert the map to World Partition
+
+An imported map is not partitioned, so it loads whole and nothing streams. Converting is optional: do it when the map is large enough that streaming matters.
+
+Close the editor, then run the engine's commandlet from the root of the CARLA source tree:
+
+```sh
+${CARLA_UNREAL_ENGINE_PATH}/Engine/Binaries/Linux/UnrealEditor-Cmd \
+    $PWD/Unreal/CarlaUnreal/CarlaUnreal.uproject \
+    -run=WorldPartitionConvert /Game/tutorial/Maps/<map name>/<map name> \
+    -AllowCommandletRendering -unattended -nosound
+```
+
+The `.uproject` path must be absolute; a relative one fails with `Failed to open descriptor file`. The package path is the one the importer wrote, one folder deeper than the package itself, and the commandlet answers `Unknown level` when it is wrong. Delete `Content/__ExternalActors__/<package>` first if an earlier conversion of the same map left one.
+
+The conversion rewrites the map in place and puts each actor in its own package. Adding `-ConversionSuffix` writes `<map name>_WP` and keeps the original, in which case the `.xodr` and Traffic Manager files have to be renamed to match, since CARLA resolves them by map name.
+
+How much actually streams afterwards is decided by the export, not by the conversion: World Partition streams whole actors, and CARLA places one actor per mesh in the `.fbx`. A map exported as a single file is a few always-resident actors whatever its size. See [RoadRunner — large maps](roadrunner.md#large-maps).
 
 ---
 ## Decorate the map
