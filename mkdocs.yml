@@ -1,4 +1,4 @@
-site_name: CARLA Simulator UE5
+site_name: CARLA Simulator
 repo_url: https://github.com/carla-simulator/carla
 docs_dir: Docs
 edit_uri: 'edit/ue58-dev/Docs/'
@@ -9,7 +9,7 @@ nav:
 - Home: 'index.md'
 - Getting started:
   - 'Introduction': 'start_introduction.md'
-  - 'Quick start package installation': 'start_quickstart.md'
+  - 'Quick start with the CARLA binary': 'start_quickstart.md'
   - 'Download': 'download.md'
   - 'First steps' : 'start_first_steps.md'
   - Building CARLA:
@@ -20,28 +20,44 @@ nav:
     - 'Development container': 'build_devcontainer.md'
     - 'Build FAQ': 'build_faq.md'
 
+- Agentic CARLA:
+  - 'Agent skills': 'agent_skills.md'
+
 - CARLA topics:
-  - 'Foundations': 'core_foundations.md'
-  - 'Coordinate conventions': 'core_coordinate_conventions.md'
-  - World and client:
-    - 'The client': 'core_client.md'
-    - 'The world': 'core_world.md'
-    - 'Synchrony and time-step': 'core_synchrony.md'
-    - 'Recorder': 'core_recorder.md'
-  - Rendering:
-    - 'Rendering options': 'core_rendering.md'
-    - 'Camera post-process presets': 'core_camera_presets.md'
-    - 'Multi-GPU': 'core_multigpu.md'
-  - 'Actors and Blueprints': 'core_actors.md'
-  - Maps and Navigation:
-    - 'core_map.md'
-    - 'Large maps': 'core_large_maps.md'
-    - 'OpenDRIVE standalone mode': 'core_opendrive.md'
-  - 'Sensors and data': 'core_sensors.md'
-  - Traffic:
+  - Foundations:
+    - 'core_foundations.md'
+    - 'Coordinate conventions': 'core_coordinate_conventions.md'
+    - World and client:
+      - 'The client': 'core_client.md'
+      - 'The world': 'core_world.md'
+      - 'Synchrony and time-step': 'core_synchrony.md'
+      - 'Recorder': 'core_recorder.md'
+    - 'Actors and Blueprints': 'core_actors.md'
+    - Maps and Navigation:
+      - 'core_map.md'
+      - 'Large maps': 'core_large_maps.md'
+      - 'OpenDRIVE standalone mode': 'core_opendrive.md'
+  - Sensor simulation:
+    - Rendering:
+      - 'core_rendering_overview.md'
+      - 'Unreal Engine rendering': 'core_rendering.md'
+      - 'Camera post-process presets': 'core_camera_presets.md'
+      - 'Multi-GPU': 'core_multigpu.md'
+    - 'Sensors and data': 'core_sensors.md'
+  - Scenarios:
     - 'core_traffic.md'
     - 'Traffic Manager': 'core_traffic_manager.md'
     - 'Agents': 'core_agents.md'
+    - 'Scenic': 'scenic.md'
+    - 'Inverted AI': 'inverted_ai.md'
+    - 'CARLA Leaderboard': 'leaderboard.md'
+  - AV stacks:
+    - 'av_stacks.md'
+    - 'Autoware': 'autoware.md'
+    - Alpamayo 2 Super:
+      - 'nvidia_alpamayo.md'
+      - 'Architecture and control': 'nvidia_alpamayo_architecture.md'
+      - 'Troubleshooting': 'nvidia_alpamayo_troubleshooting.md'
 
 - Tutorials:
   - 'tutorials.md'
@@ -99,29 +115,22 @@ nav:
       - 'Town13': 'map_town13.md'
       - 'Town_C': 'map_town_c.md'
       - 'Eixample': 'map_eixample.md'
-      - 'Towns as content packs': 'map_content_packs.md'
+      - 'Additional maps': 'map_content_packs.md'
     - 'Vehicles': 'catalogue_vehicles.md'
     - 'Pedestrians': 'catalogue_pedestrians.md'
     - 'Props': 'catalogue_props.md'
     - 'Example scripts': 'catalogue_scripts.md'
-  - 'Agent skills': 'agent_skills.md'
 
 - CARLA ecosystem:
   - 'RoadRunner': 'roadrunner.md'
   - NVIDIA:
     - 'nvidia.md'
-    - 'Alpamayo 2 Super user guide': 'nvidia_alpamayo.md'
-    - 'Alpamayo architecture and control': 'nvidia_alpamayo_architecture.md'
-    - 'Alpamayo troubleshooting': 'nvidia_alpamayo_troubleshooting.md'
     - 'Neural reconstruction': 'nvidia_nurec.md'
   - ROS 2:
     - 'ros2_native.md'
     - 'Sensors': 'ros2_native_sensors.md'
     - 'Messages': 'ros2_native_msgs.md'
-    - 'Autoware': 'autoware.md'
     - 'ROS bridge': 'ros_bridge.md'
-  - 'Scenic': 'scenic.md'
-  - 'Inverted AI': 'inverted_ai.md'
 
 - Contributing:
   - 'Guidelines': 'cont_contribution_guidelines.md'
@@ -153,7 +162,7 @@ markdown_extensions:
 
 theme:
   name: 'readthedocs'
-  logo: img/logos/carla_ue5_logo.webp
+  logo: img/logos/carla_logo_black.webp
   palette:
         # Dark mode
     - scheme: slate

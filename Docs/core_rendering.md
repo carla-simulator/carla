@@ -1,6 +1,6 @@
-# Rendering options
+# Unreal Engine rendering
 
-This guide details the different rendering options available in CARLA, including quality levels, no-rendering mode and off-screen mode. To spread rendering across several GPUs, see [Multi-GPU](core_multigpu.md).
+This guide details how CARLA uses Unreal Engine's own renderer, which draws the spectator view and every camera sensor unless told otherwise: the lighting and geometry systems, quality levels, ray tracing defaults, DLSS, ray-traced lens tuning, no-rendering mode and off-screen mode. For the other ways CARLA produces images, such as neural reconstruction or world models, see [Rendering](core_rendering_overview.md). To spread rendering across several GPUs, see [Multi-GPU](core_multigpu.md).
 
 - [__Lighting and geometry__](#lighting-and-geometry)
 - [__Graphics quality__](#graphics-quality)
@@ -10,23 +10,27 @@ This guide details the different rendering options available in CARLA, including
 ---
 ## Lighting and geometry
 
-Two Unreal Engine systems do most of the work, and neither needs configuring to use CARLA. They are worth knowing about because they explain what the quality tiers trade away.
+![Town10HD_Opt after rain](img/core_rendering_overview/unreal_lumen_wet.webp)
+<div class="img-caption">Town10HD_Opt with a few puddles at the <code>Epic</code> tier, <code>AutomotiveHDRClean</code> profile: Lumen global illumination, Lumen reflections in the puddles, Nanite geometry and virtual shadow maps.</div>
 
-__[Lumen](https://dev.epicgames.com/documentation/en-us/unreal-engine/lumen-global-illumination-and-reflections-in-unreal-engine)__ is the dynamic global illumination and reflection system. Light bounces off the surfaces it actually hits, so a red wall tints the road beside it and a vehicle under a bridge darkens, with no baked lighting and no precomputation when the weather or the time of day changes. It is what makes the weather API visible on every surface rather than only in the sky. Lumen runs at the `High` and `Epic` tiers, on [hardware ray tracing](https://dev.epicgames.com/documentation/en-us/unreal-engine/hardware-ray-tracing-in-unreal-engine) with ray-traced shadows.
+Three Unreal Engine systems do most of the work, and none needs configuring to use CARLA. They are worth knowing about because they explain what the quality tiers trade away.
 
-__[Nanite](https://dev.epicgames.com/documentation/en-us/unreal-engine/nanite-virtualized-geometry-in-unreal-engine)__ is virtualized geometry: the engine streams and renders only the triangles a view can resolve, so the towns carry film-grade meshes without a hand-authored LOD chain. It applies to opaque and masked materials only — meshes with translucent materials, such as glass, render through the normal path.
+__[Lumen](https://dev.epicgames.com/documentation/en-us/unreal-engine/lumen-global-illumination-and-reflections-in-unreal-engine)__ is the dynamic global illumination and reflection system. Light bounces off the surfaces it actually hits, so a red wall tints the road beside it and a vehicle under a bridge darkens, with no baked lighting and no precomputation when the weather or the time of day changes. It is what makes the weather API visible on every surface rather than only in the sky. Lumen runs at the `High` and `Epic` tiers. By default it traces in software against mesh distance fields rather than on [hardware ray tracing](https://dev.epicgames.com/documentation/en-us/unreal-engine/hardware-ray-tracing-in-unreal-engine) (`r.Lumen.HardwareRayTracing=False`); [Ray tracing defaults](#ray-tracing-defaults) explains why.
+
+__[Nanite](https://dev.epicgames.com/documentation/en-us/unreal-engine/nanite-virtualized-geometry-in-unreal-engine)__ is virtualized geometry: the engine streams and renders only the triangles a view can resolve, so the towns carry film-grade meshes without a hand-authored LOD chain. It applies to opaque and masked materials only; meshes with translucent materials, such as glass, render through the normal path.
+
+__[Virtual shadow maps](https://dev.epicgames.com/documentation/en-us/unreal-engine/virtual-shadow-maps-in-unreal-engine)__ cast the shadows at every tier (`r.Shadow.Virtual.Enable=1`). The tiers differ in the page budget the shadows may use. Ray-traced shadows are off by default.
 
 ---
 ## Graphics quality
 
 ### Quality levels
 
-CARLA ships four graphics-quality tiers, selected with `-quality-level=<Tier>`. The name is case-sensitive PascalCase — `Low`, `Medium`, `High`, `Epic` — and `Epic` is the default. An unrecognised value falls back to the platform default without applying a CARLA tier, and the log warns with the value it did not understand.
+CARLA ships four graphics-quality tiers, selected with `-quality-level=<Tier>`. The name is case-sensitive PascalCase (`Low`, `Medium`, `High`, `Epic`), and `Epic` is the default. An unrecognised value falls back to the platform default without applying a CARLA tier, and the log warns with the value it did not understand.
 
 ```sh
 ./CarlaUnreal.sh -quality-level=Epic
 ./CarlaUnreal.sh -quality-level=Low
-
 # With no flag, Epic is used.
 ./CarlaUnreal.sh
 ```
@@ -37,10 +41,10 @@ What each tier gives up, from the top down:
 
 | Tier | Global illumination | Reflections | Shadows | Also |
 | ---- | ------------------- | ----------- | ------- | ---- |
-| `Epic` | Lumen, probe spacing 4, 4096 surface cache | Lumen, full resolution, 2 bounces | 2048 px shadow maps, 10 cascades | Hardware ray tracing available to cameras |
-| `High` | Lumen, probe spacing 8, 2048 surface cache | Lumen, half resolution, 1 bounce | 1024 px, 4 cascades | No ray tracing on cameras |
-| `Medium` | None | Screen-space plus reflection captures (256 px) | 1024 px, 1 cascade, no distance-field shadows | Texture mip bias 0.5, anisotropy 4 |
-| `Low` | None | Screen-space plus reflection captures (128 px) | 512 px, 1 cascade, no distance-field shadows, far shadows culled | No motion blur, smaller streaming pools, quarter-rate particle emitters |
+| `Epic` | Lumen, probe spacing 4, 4096 surface cache | Lumen, full resolution, 2 bounces | Virtual shadow maps, 8192 pages | Hardware ray tracing available to cameras |
+| `High` | Lumen, probe spacing 8, 2048 surface cache | Lumen, half resolution, 1 bounce | Virtual shadow maps, 6144 pages | No ray tracing on cameras |
+| `Medium` | None | Screen-space plus reflection captures (256 px) | Virtual shadow maps, 4096 pages, far shadows culled, no distance-field shadows | Texture mip bias 0.5, anisotropy 4 |
+| `Low` | None | Screen-space plus reflection captures (128 px) | Virtual shadow maps, 3072 pages, far shadows culled, no distance-field shadows | No motion blur, smaller streaming pools, particle emitters at 1/8 rate |
 
 What that buys, measured on Town10HD_Opt with an empty world and a fixed viewpoint, so only the rendering differs:
 
@@ -67,20 +71,22 @@ Inside the editor, scalability follows the editor's own __Settings / Engine Scal
 
 ### Tier comparison
 
-Each tier selects the matching bucket — `Low` 0 through `Epic` 3 — in every [scalability group](https://dev.epicgames.com/documentation/en-us/unreal-engine/scalability-reference-for-unreal-engine) of `Config/DefaultScalability.ini`. The CARLA device profile selector then lowers the few CVars that a project setting pins above scalability priority. The values below are those two sources.
+Each tier selects the matching bucket, `Low` 0 through `Epic` 3, in every [scalability group](https://dev.epicgames.com/documentation/en-us/unreal-engine/scalability-reference-for-unreal-engine) of `Config/DefaultScalability.ini`. The CARLA device profile selector then lowers the few CVars that a project setting pins above scalability priority. The values below are those two sources; *project* is the value set in `Config/DefaultEngine.ini`, and *off* means the setting does not apply at that tier.
 
 | Setting | Low | Medium | High | Epic |
 |---|---|---|---|---|
 | `r.ViewDistanceScale` | 1.0 | 1.0 | 1.0 | 1.0 |
 | `foliage.DensityScale` / `grass.DensityScale` | 1.0 | 1.0 | 1.0 | 1.0 |
 | `r.DynamicGlobalIlluminationMethod` | 0 (off) | 0 (off) | Lumen | Lumen |
-| `r.Lumen.ScreenProbeGather.DownsampleFactor` | — | — | 32 | 16 |
-| `r.LumenScene.SurfaceCache.AtlasSize` | — | — | 2048 | 4096 |
+| `r.Lumen.ScreenProbeGather.DownsampleFactor` | *off* | *off* | 32 | 16 |
+| `r.LumenScene.SurfaceCache.AtlasSize` | *off* | *off* | 2048 | 4096 |
 | `r.ReflectionMethod` | 2 (SSR) | 2 (SSR) | Lumen | Lumen |
-| `r.Lumen.Reflections.DownsampleFactor` | — | — | 2 | 1 |
-| `r.Lumen.Reflections.MaxBounces` | — | — | 1 | 2 |
+| `r.Lumen.Reflections.DownsampleFactor` | *off* | *off* | 2 | 1 |
+| `r.Lumen.Reflections.MaxBounces` | *off* | *off* | 1 | 2 |
 | `r.SSR.Quality` | 4 | 4 | 2 | 3 |
 | `r.ReflectionCaptureResolution` | 128 | 256 | 512 | 512 |
+| `r.Shadow.Virtual.MaxPhysicalPages` | 3072 | 4096 | 6144 | 8192 |
+| `r.Shadow.Virtual.UseFarShadowCulling` | 1 | 1 | 0 | 0 |
 | `r.Shadow.MaxCSMResolution` | 512 | 1024 | 2048 | 4096 |
 | `r.Shadow.CSM.MaxCascades` | 1 | 1 | 4 | 10 |
 | `r.Shadow.DistanceScale` | 1.0 | 1.5 | 2.0 | 2.0 |
@@ -88,29 +94,27 @@ Each tier selects the matching bucket — `Low` 0 through `Epic` 3 — in every 
 | `r.MaxAnisotropy` / `r.VT.MaxAnisotropy` | 4 | 4 | 8 | 8 |
 | `r.Streaming.MipBias` | 0.5 | 0.5 | 0 | 0 |
 | `r.Streaming.PoolSize` (MB) | 2000 | 3000 | 4000 | 4000 |
-| `r.Nanite.Streaming.StreamingPoolSize` (MB) | 768 | *default* | *default* | *default* |
+| `r.Nanite.Streaming.StreamingPoolSize` (MB) | 768 | *project* (1536) | *project* (1536) | *project* (1536) |
 | `r.EmitterSpawnRateScale` | 0.125 | 0.25 | 0.5 | 1.0 |
 | `r.FXAA.Quality` | 0 | 2 | 4 | 5 |
-| `r.DefaultFeature.MotionBlur` | 0 (off) | *default* | *default* | *default* |
-| `r.CustomDepth` | 1 | *default* | *default* | *default* |
+| `r.DefaultFeature.MotionBlur` | 0 (off) | *project* | *project* | *project* |
+| `r.CustomDepth` | 1 | *project* (3) | *project* (3) | *project* (3) |
 | `carla.Camera.UseRayTracing` | 0 | 0 | 0 | per sensor |
+
+The cascaded shadow map settings (`r.Shadow.MaxCSMResolution`, `r.Shadow.CSM.MaxCascades`) only matter for lights that do not use virtual shadow maps.
 
 !!! Note
     `rt_lens`, `rt_lens_distance` and `rt_lens_instance` path-trace their own primary rays and ignore `carla.Camera.UseRayTracing`, so they work at every tier. The flag only governs hardware ray tracing on the ordinary scene-capture cameras.
 
 ### Volumetric clouds
 
-The clouds are rendered by the `VolumetricCloudComponent` of the sky rig Blueprint
-(`Content/Carla/Blueprints/LevelDesign/BP_Carla_Sky`). Its **View Sample Count Scale** is set to `2.0` in the
-Blueprint (engine default `1.0`): twice the ray-marching samples in the main view and the camera sensors, for cleaner,
-less grainy clouds at a higher cost.
+The clouds are rendered by the `VolumetricCloudComponent` of the sky rig Blueprint (`Content/Carla/Blueprints/LevelDesign/BP_Carla_Sky`). Its **View Sample Count Scale** is set to `2.0` in the Blueprint (engine default `1.0`): twice the ray-marching samples in the main view and the camera sensors, for cleaner, less grainy clouds at a higher cost.
 
-The value lives in the Blueprint asset, not in the placed actors, so every map's sky rig inherits it. Lower it to
-gain performance when cloud quality matters less.
+The value lives in the Blueprint asset, not in the placed actors, so every map's sky rig inherits it. Lower it to gain performance when cloud quality matters less.
 
 ### Ray tracing defaults
 
-The hardware ray tracing subsystem is initialized at the project level (`r.RayTracing=True`) and the path tracer is available (`r.PathTracing=True`) — this is what powers the [ray-traced lens camera](ref_sensors.md#ray-traced-lens-camera). Per-effect switches are configured as follows:
+The hardware ray tracing subsystem is initialized at the project level (`r.RayTracing=True`) and the path tracer is available (`r.PathTracing=True`). This is what powers the [ray-traced lens camera](ref_sensors.md#ray-traced-lens-camera). Per-effect switches are configured as follows:
 
 | CVar | Project default | Effect when enabled |
 |---|---|---|
@@ -131,9 +135,12 @@ Changing project defaults requires editing `Config/DefaultEngine.ini` and rebuil
 CARLA integrates two DLSS features (the DLSS SDK is fetched during setup, so both are present in standard builds; an NVIDIA RTX-class GPU is required at runtime):
 
 *   __DLSS Ray Reconstruction (DLSS-RR)__ denoises the path-traced frames of `sensor.camera.rt_lens`. It is the default denoiser (`r.PathTracing.Denoiser.Name=DLSSRR` in `DefaultEngine.ini`) and is controlled per sensor with the `enable_denoiser` attribute.
-*   __DLSS Super Resolution (DLSS-SR)__ upscales individual camera sensors: with `enable_dlss=true` a camera renders internally at `dlss_screen_percentage` of its output resolution and DLSS reconstructs the full-size image. It is opt-in per camera (see the [RGB camera attributes](ref_sensors.md#rgb-camera)); on non-NVIDIA hardware an enabled sensor degrades gracefully to a bilinear upscale.
+*   __DLSS Super Resolution (DLSS-SR)__ upscales individual camera sensors: with `enable_dlss=true` a camera renders internally at `dlss_screen_percentage` of its output resolution and DLSS reconstructs the full-size image. It is opt-in per camera and needs `enable_postprocess_effects=true` (see the [RGB camera attributes](ref_sensors.md#rgb-camera)); on non-NVIDIA hardware an enabled sensor degrades gracefully to a bilinear upscale.
 
 The example `PythonAPI/examples/manual_control_5cam.py` spawns a five-camera 1080p rig on an autopilot vehicle and toggles DLSS-SR live (press `D`) so the frame-rate and quality impact can be compared directly.
+
+![DLSS Super Resolution](img/core_rendering_overview/dlss_montage.webp)
+<div class="img-caption">A 3840 &times; 2160 RGB camera with DLSS Super Resolution at <code>dlss_screen_percentage=50</code>: it renders internally at 1920 &times; 1080 and DLSS reconstructs the 4K image. The crops of the framed area compare the internal render (scaled up), the DLSS output and a native 4K render.</div>
 
 ### Ray-traced lens tuning
 
@@ -147,12 +154,9 @@ The [ray-traced lens camera family](ref_sensors.md#ray-traced-lens-camera) (`sen
 | `carla.RTLens.SyncModeBlockingReadback` | `1` | In synchronous mode, `1` delivers each `rt_lens*` image captured on the *same* tick, through a per-tick batched blocking GPU readback shared by every camera. `0` forces the asynchronous, one-tick-late, droppable readback (see [Readback and synchronous-mode delivery](ref_sensors.md#ray-traced-lens-camera)) even in synchronous mode. | Rollback valve. Leave at the default (`1`) for frame-accurate synchronous captures; set to `0` only to debug or work around a regression in the batched readback path. |
 
 ---
-
 ## No-rendering mode
 
-No-rendering mode stops the simulator drawing anything at all. The physics, the traffic and the road network keep running, so it is the mode to use when only the simulation state matters — traffic flow experiments, route planning, or a fast replay. Cameras and other GPU sensors produce nothing while it is on.
-
-Set it from a client:
+No-rendering mode switches off the world render of the server's main view, the spectator window. Physics, traffic and the road network keep running, and so do the camera sensors: each one is its own scene capture, which is why the [multi-GPU](core_multigpu.md) secondary servers run in this mode and still render their sensors.
 
 ```py
 settings = world.get_settings()
@@ -160,21 +164,15 @@ settings.no_rendering_mode = True
 world.apply_settings(settings)
 ```
 
-Or from the terminal, which is also how a server left in this mode is brought back:
+From a terminal, `python3 PythonAPI/util/config.py --no-rendering` turns it on and `--rendering` turns it off again. `PythonAPI/examples/no_rendering_mode.py` draws the simulation as a 2D map from the road network, to watch what is happening without the spectator view.
 
-```sh
-python3 PythonAPI/util/config.py --no-rendering
-python3 PythonAPI/util/config.py --rendering
-```
-
-`PythonAPI/examples/no_rendering_mode.py` draws the simulation as a 2D map from the road network, which is the usual way to watch what is happening while rendering is off.
+!!! Note
+    The setting acts on editor builds. On a packaged build, start the server with `-RenderOffScreen`, which switches off the same render.
 
 ---
 ## Off-screen rendering mode
 
-Off-screen rendering is the opposite trade: the simulator keeps rendering, it just has no window. Sensors produce images as normal. It is the mode for a headless machine, not a cheaper one.
-
-The off-screen rendering mode enables the CARLA simulator to run without the spectator. This would be the appropriate mode to use for rendering in a headless configuration, for example on a cloud virtual machine instance. Data from any cameras and other sensors in the simulation will still be rendered to disk or transmitted to other applications, but no rendering data will be passed to the screen.
+Off-screen rendering is the mode for a headless machine, for example a cloud virtual machine instance: the simulator runs without a window. Data from cameras and other sensors is still rendered and sent to clients or written to disk, but nothing is passed to the screen, and the main view, which nobody can see, stops rendering the world.
 
 ### Setting off-screen mode
 
@@ -183,6 +181,3 @@ To start CARLA in off-screen mode, run the following command:
 ```sh
 ./CarlaUnreal.sh -RenderOffScreen
 ```
-
----
-

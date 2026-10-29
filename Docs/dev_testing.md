@@ -10,6 +10,7 @@ CARLA has C++ unit tests for LibCarla, Python unit tests for the client module, 
 - [__Other test suites__](#other-test-suites)
 - [__What CI runs__](#what-ci-runs)
 
+---
 ## Test suites
 
 | Suite | Location | Needs a server | Runner |
@@ -23,6 +24,7 @@ CARLA has C++ unit tests for LibCarla, Python unit tests for the client module, 
 
 All commands on this page run from the CARLA root directory unless they start with a `cd`, and assume the `Build` directory from [Building CARLA in Linux](build_linux_ue5.md). If you configured with a preset, replace `Build` with `Build/<preset>`.
 
+---
 ## LibCarla unit tests
 
 The tests are built by default (`BUILD_LIBCARLA_TESTS` is `ON`), so `cmake --build Build` already produces them. To build only the test binaries:
@@ -57,6 +59,7 @@ Both link `gtest_main`, so the standard GoogleTest flags work. To run a subset:
 ./Build/LibCarla/libcarla_test_client --gtest_filter='road.*'
 ```
 
+---
 ## Python API unit tests
 
 These tests import the `carla` module but do not connect to a server. Install the Python API and the test requirements, then run `nose2` from the `unit` folder:
@@ -68,6 +71,7 @@ cd PythonAPI/test/unit
 python3 -m nose2 -v
 ```
 
+---
 ## Smoke tests
 
 The smoke tests connect to `localhost:3654`, not the default port 2000, so start a dedicated server on that port. From a package:
@@ -93,11 +97,12 @@ python3 -m nose2 -v smoke.test_map.TestMap
 
 Add `-c smoke/unittest.cfg -X` to write the results as JUnit XML to `test-results.xml`.
 
-The tests load maps and change world settings, and restore the starting map after each test, so do not run them against a server you are using for something else.
+The tests load maps and change world settings, and many of them leave the server on `Town10HD_Opt` instead of the starting map, so do not run them against a server you are using for something else.
 
 !!! Note
     `smoke.test_ros2` needs a server launched with `-ros2` (`./Linux/CarlaUnreal.sh -carla-rpc-port=3654 -ros2`). Without it, those tests fail. The tests check whichever middleware the server runs, so run them once per middleware, launching with `-rmw=fastdds`, `-rmw=cyclonedds` or `-rmw=zenoh`.
 
+---
 ## Integration tests
 
 The integration tests in `PythonAPI/test/API/` use the default client address, `127.0.0.1:2000`. With a server on the default port:
@@ -109,6 +114,7 @@ python3 -m nose2 -v $(cat integration_tests_list.txt)
 
 `PythonAPI/test/API/Tests.md` and the `spawn_actor.py` and `prop_control.py` scripts in the same folder are manual checks, not part of the list.
 
+---
 ## Other test suites
 
 __Lens validation__ checks the `sensor.camera.rt_lens` lens models. The math tests run offline; the capture tests skip unless you point them at a server. The full procedure is in `PythonAPI/test/lens_validation/README.md`.
@@ -130,11 +136,12 @@ __Standalone scripts__ in `PythonAPI/test/` connect to a running server and prin
 | Script | What it checks |
 |---|---|
 | `tm_benchmark.py` | Traffic Manager lane keeping, speed adherence and collisions. `run --label <name> --out <file>.json` scores a build, `compare <baseline>.json <candidate>.json` diffs two runs |
-| `test_vehicle_physics.py` | Acceleration, braking and turning for one vehicle blueprint |
+| `test_vehicle_physics.py` | Acceleration, braking and turning for every vehicle blueprint matching `--filter` (default `vehicle.*`). Loads `Town05` |
 | `test_two_wheeler_lean.py` | Inward lean of the two-wheelers. Replaces the current map, so give it its own server; `--port` is required |
 | `test_raycast_sensor.py` | LiDAR and radar output and throughput |
-| `test_ground_truth.py` | A sensor's output on a seeded, synchronous drive against a saved capture. `--generate` writes the capture to `_ground_truth/` first |
+| `test_ground_truth.py` | A sensor's output on a seeded drive (synchronous with `--sync`) against a saved capture. `--generate` writes the capture to `_ground_truth.mkv` first |
 
+---
 ## What CI runs
 
 Pull requests to `ue58-dev` run `.github/workflows/ue5_pr.yml` on Ubuntu. It configures with the `Release` preset, `-DENABLE_ROS2=ON` and `-DBUILD_LIBCARLA_TESTS=ON`, builds the client, the Python API and the server, then builds and runs the LibCarla unit tests:
@@ -143,6 +150,8 @@ Pull requests to `ue58-dev` run `.github/workflows/ue5_pr.yml` on Ubuntu. It con
 cmake --preset Release -DENABLE_ROS2=ON -DBUILD_LIBCARLA_TESTS=ON
 cmake --build Build/Release --target libcarla_test_server
 cmake --build Build/Release --target libcarla_test_client
+rm -rf Build/test-content
+git clone --depth 1 -b 0.1.4 https://github.com/carla-simulator/opendrive-test-files.git Build/test-content
 ./Build/Release/LibCarla/libcarla_test_server
 ./Build/Release/LibCarla/libcarla_test_client
 ```

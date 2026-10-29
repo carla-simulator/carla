@@ -109,7 +109,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 * __Blueprint ID__: `vehicle.lincoln.mkz`
 * __Base type__: car
-* __Generation__: unspecified
+* __Generation__: 2
 * __Number of wheels__: 4
 * __Has lights__: yes
 * __Has opening doors__: yes
@@ -188,7 +188,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 * __Blueprint ID__: `vehicle.ue4.ford.crown`
 * __Base type__: car
-* __Generation__: unspecified
+* __Generation__: 2
 * __Number of wheels__: 4
 * __Has lights__: yes
 * __Has opening doors__: no
@@ -199,7 +199,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 * __Blueprint ID__: `vehicle.ue4.ford.mustang`
 * __Base type__: car
-* __Generation__: unspecified
+* __Generation__: 2
 * __Number of wheels__: 4
 * __Has lights__: yes
 * __Has opening doors__: no
@@ -225,7 +225,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 * __Blueprint ID__: `vehicle.harley-davidson.low_rider`
 * __Base type__: motorcycle
-* __Generation__: unspecified
+* __Generation__: 1
 * __Number of wheels__: 2
 * __Has lights__: yes
 * __Has opening doors__: no
@@ -236,7 +236,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 * __Blueprint ID__: `vehicle.kawasaki.ninja`
 * __Base type__: motorcycle
-* __Generation__: unspecified
+* __Generation__: 1
 * __Number of wheels__: 2
 * __Has lights__: yes
 * __Has opening doors__: no
@@ -247,7 +247,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 * __Blueprint ID__: `vehicle.vespa.zx125`
 * __Base type__: motorcycle
-* __Generation__: unspecified
+* __Generation__: 1
 * __Number of wheels__: 2
 * __Has lights__: yes
 * __Has opening doors__: no
@@ -258,7 +258,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 * __Blueprint ID__: `vehicle.yamaha.yzf`
 * __Base type__: motorcycle
-* __Generation__: unspecified
+* __Generation__: 1
 * __Number of wheels__: 2
 * __Has lights__: yes
 * __Has opening doors__: no
@@ -273,7 +273,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 * __Blueprint ID__: `vehicle.bh.crossbike`
 * __Base type__: bicycle
-* __Generation__: unspecified
+* __Generation__: 1
 * __Number of wheels__: 2
 * __Has lights__: yes
 * __Has opening doors__: no
@@ -284,7 +284,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 * __Blueprint ID__: `vehicle.diamondback.century`
 * __Base type__: bicycle
-* __Generation__: unspecified
+* __Generation__: 1
 * __Number of wheels__: 2
 * __Has lights__: yes
 * __Has opening doors__: no
@@ -295,7 +295,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 * __Blueprint ID__: `vehicle.gazelle.omafiets`
 * __Base type__: bicycle
-* __Generation__: unspecified
+* __Generation__: 1
 * __Number of wheels__: 2
 * __Has lights__: yes
 * __Has opening doors__: no

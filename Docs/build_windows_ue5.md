@@ -1,15 +1,25 @@
 # Building CARLA in Windows with Unreal Engine 5.8
 
-- [__Set up the environment__](#set-up-the-environment)
-- [__Build and run CARLA UE5__](#build-and-run-carla-ue5)
-- [__Build a package with CARLA UE5__](#build-a-package-with-carla-ue5)
-
-## Set up the environment
-
 This guide details how to build CARLA from source on Windows with Unreal Engine 5.8. If you are building CARLA for the first time, ensure that you **link your GitHub account to Epic Games** by following [this guide](https://www.unrealengine.com/en-US/ue-on-github).
 
+The default way to build CARLA is to let your AI coding agent do it:
+
+!!! agent "Ask your agent"
+    *"Clone CARLA from the ue58-dev branch, build it on Windows with Unreal Engine 5.8 and launch the editor."*
+
+    Skills: `build-carla-ue58`, `run-carla-ue58-server`. [Connect your agent](agent_skills.md#connect-your-agent).
+
+If you prefer to build CARLA by hand, follow the steps below.
+
+- [__Set up the environment__](#set-up-the-environment)
+- [__Build and run CARLA__](#build-and-run-carla)
+- [__Build a package with CARLA__](#build-a-package-with-carla)
+
+---
+## Set up the environment
+
 !!! Note
-    * For using CARLA Unreal Engine 5 previous builds, ensure CARLA_UNREAL_ENGINE_PATH environment variable is defined pointing to the CARLA Unreal Engine 5 absolute path. If it is not defined and there is no `..\UnrealEngine5_carla` folder, `CarlaSetup.bat` downloads the engine into `..\UnrealEngine5_carla`, next to the CARLA folder, builds it and sets the variable, which takes __more than one extra hour of build and about 225 GB of disk space__. `CarlaSetup.bat` sets it only when it downloads the engine itself.
+    * For using CARLA Unreal Engine 5 previous builds, ensure CARLA_UNREAL_ENGINE_PATH environment variable is defined pointing to the CARLA Unreal Engine 5 absolute path. If it is not defined and there is no `..\UnrealEngine5_carla` folder, `CarlaSetup.bat` downloads the engine into `..\UnrealEngine5_carla`, next to the CARLA folder, builds it, which takes __more than one extra hour of build and about 225 GB of disk space__. `CarlaSetup.bat` sets `CARLA_UNREAL_ENGINE_PATH` only when it downloads the engine itself.
     * An existing Visual Studio 2022 (Community, Professional or Enterprise) is used as it is. It needs the MSVC v14.38 toolset, or v14.44.35211 or later; to add v14.38, import `Unreal\CarlaUnreal\.vsconfig` in the Visual Studio Installer.
     * **Windows Developer Mode should be active**, otherwise build will fail. Please see [here](https://learn.microsoft.com/en-us/gaming/game-bar/guide/developer-mode) for instructions on how to activate Developer Mode.
     * **CARLA cannot be built on an external disk**, Windows does not give the required read/write/execution permissions for builds.
@@ -34,7 +44,7 @@ It installs Python 3.8.10 when no Python is found at the top of `PATH`; 3.9 and 
 Pass `--skip-prerequisites` (`-p`) to skip installing Visual Studio, Ninja, Python and its packages, and `--launch` (`-l`) to open the editor once the build finishes.
 
 ---
-## Build and run CARLA UE5
+## Build and run CARLA
 
 `CarlaSetup.bat` runs these commands itself the first time. Use them directly to rebuild after changing the code.
 
@@ -70,7 +80,7 @@ Then build what you need:
     The native ROS 2 interface (`-DENABLE_ROS2=ON`) is built on Linux only; `CarlaSetup.bat` does not enable it.
 
 ---
-## Build a package with CARLA UE5
+## Build a package with CARLA
 
 Build the package:
 
@@ -78,19 +88,19 @@ Build the package:
 cmake --build Build --target package
 ```
 
-Use `package-development` instead for a package that writes debugging logs. The `package-debug` and `package-test` targets build the other configurations.
+Use `package-development` instead for a package that writes debugging logs. The `package-debug`, `package-debuggame` and `package-test` targets build the other configurations; `package-shipping` forces Shipping whatever the build type.
 
 The package lands in `Build\Package\Carla-<version>-Win64-Shipping\`, alongside a `.zip` of the same (configure with `-DCARLA_UNREAL_PACKAGE_NO_COMPRESSION=ON` to skip it). The Python wheel that matches it is in `PythonAPI\carla\dist` inside the package.
 
 ### Select which maps to cook
 
-By default a package cooks every map listed in `DefaultGame.ini` — `Town10HD_Opt`, `OpenDriveMap`, `TestMaps/EmptyMap`, `Town12/Town12` and `Town15/Town15`. To cook a subset, set `CARLA_MAPS_TO_COOK` when configuring, as a `+`-separated list of map package paths:
+By default a package cooks every map listed in `DefaultGame.ini` (`Town10HD_Opt`, `OpenDriveMap`, `TestMaps/EmptyMap`, `Town12/Town12` and `Town15/Town15`). To cook a subset, set `CARLA_MAPS_TO_COOK` when configuring, as a `+`-separated list of map package paths:
 
 ```sh
 cmake -G Ninja -S . -B Build --toolchain=CMake/Toolchain.cmake -DCMAKE_BUILD_TYPE=Release -DCARLA_MAPS_TO_COOK="/Game/Carla/Maps/Town10HD_Opt+/Game/Carla/Maps/Town15/Town15"
 ```
 
-Use the full map package path (`/Game/Carla/Maps/<MapName>`), not a filesystem path. Note that the large maps nest: Town15 is `/Game/Carla/Maps/Town15/Town15`. Leaving `CARLA_MAPS_TO_COOK` empty, the default, cooks the full list from `DefaultGame.ini`.
+Use the full map package path (`/Game/Carla/Maps/<MapName>`), not a filesystem path. Note that the large maps nest: Town15 is `/Game/Carla/Maps/Town15/Town15`.
 
 !!! Note
     `Town10HD_Opt` is the default map a package boots into. If your selection excludes it, set a different default map in `DefaultEngine.ini` before packaging, otherwise the packaged server starts with a missing-map error.

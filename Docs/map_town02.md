@@ -8,7 +8,7 @@ Town02 is a small town with numerous T-junctions and a variety of buildings, wit
 | | |
 | --- | --- |
 | __Map name__ | `Town02_Opt` |
-| __In the default package__ | no: use a source build, or install it from a [content pack](map_content_packs.md) |
+| __Package available__ | [Additional maps package](https://github.com/carla-simulator/carla/releases/tag/1.0), or a source build |
 | __Size__ | about 200 x 200 m of roads |
 | __Spawn points__ | 101, from `world.get_map().get_spawn_points()` |
 | __Junctions__ | 8, all of them T-junctions, 24 traffic lights |

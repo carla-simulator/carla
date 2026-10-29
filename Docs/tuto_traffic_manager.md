@@ -2,6 +2,9 @@
 
 The [Traffic Manager](core_traffic_manager.md) (TM) drives the NPC vehicles that make up the traffic around the ego vehicle. This tutorial populates a map with traffic, then shapes its behavior: speeds, lane changes, routes and how it treats the ego.
 
+![routes_debug_draw](img/tuto_traffic_manager/routes_debug_draw.webp)
+<div class="img-caption">Where the tutorial ends: two streams of Traffic Manager vehicles sent along set routes, seen from above. The routes are drawn with <code>world.debug.draw_line</code>: route 1 in red from spawn point 43, route 2 in blue from spawn point 83 (beyond the top edge), purple where they share the lane. The yellow squares are route 1's waypoints 45, 149 and 151. Route 1's cars wait at the red light on the left while a taxi on route 2 turns into the shared lane.</div>
+
 - [__Setting up the simulator and the Traffic Manager__](#setting-up-the-simulator-and-the-traffic-manager)
 - [__Spawning vehicles__](#spawning-vehicles)
 - [__Controlling vehicles with Traffic Manager__](#controlling-vehicles-with-traffic-manager)
@@ -69,7 +72,7 @@ Now let's spawn some vehicles.
 ```py
 # Select some models from the blueprint library
 # Cars only: skip the bikes, motorcycles and trucks
-blueprints = [bp for bp in world.get_blueprint_library().filter('*vehicle*')
+blueprints = [bp for bp in world.get_blueprint_library().filter('vehicle.*')
               if bp.get_attribute('base_type').as_str() == 'car']
 
 # Set a max number of vehicles and prepare a list for those we spawn
@@ -91,6 +94,9 @@ while True:
 ```
 
 If you fly through the map with the spectator now, you should see stationary vehicles occupying the roads in the map.
+
+![spawned_stationary](img/tuto_traffic_manager/spawned_stationary.webp)
+<div class="img-caption">Vehicles standing where they spawned, before the Traffic Manager takes control of them.</div>
 
 ---
 ## Controlling vehicles with Traffic Manager

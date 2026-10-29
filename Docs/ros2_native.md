@@ -8,6 +8,9 @@ CARLA speaks ROS 2 from the server itself — there is no bridge process. Sensor
 ./CarlaUnreal.sh -ros2
 ```
 
+![CARLA native ROS 2 interface](img/ros2_native/ros2_native_overview.svg)
+<div class="img-caption">The server publishes sensor data, the clock and the transform tree, and the ego vehicle subscribes to control commands, through the middleware chosen at launch. Any ROS 2 node on the same domain id sees the topics, such as RViz or Autoware.</div>
+
 - [__Quick start__](#quick-start)
 - [__Middleware (RMW)__](#middleware-rmw)
 - [__ROS 2 domain id__](#ros-2-domain-id)
@@ -20,6 +23,11 @@ CARLA speaks ROS 2 from the server itself — there is no bridge process. Sensor
 
 ---
 ## Quick start
+
+!!! agent "Ask your agent"
+    *"Start CARLA with ROS 2, spawn a vehicle with a camera and a lidar, and check that their topics publish."*
+
+    Skills: `run-carla-ue58-server`, `create-sensor`, `visualize-ros-rviz`. [Connect your agent](agent_skills.md#connect-your-agent).
 
 ```sh
 # Terminal 1: the server

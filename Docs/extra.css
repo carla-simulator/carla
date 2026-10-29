@@ -375,3 +375,32 @@ p:has(> img) + .img-caption {
 
 .img-lightbox-nav.prev { left: 1%; }
 .img-lightbox-nav.next { right: 1%; }
+
+/************************* ASK YOUR AGENT **************************/
+/* `!!! agent "Ask your agent"`: the recurring box that tells the reader an
+   AI coding agent can do the manual procedure that follows, with the prompt
+   to give it and the skills it uses. */
+.rst-content .admonition.agent {
+	background: #f3efff;
+	border-left: 4px solid #6f42c1;
+	border-radius: 4px;
+}
+.rst-content .admonition.agent .admonition-title {
+	background: #6f42c1;
+	color: #fff;
+	border-radius: 0 4px 0 0;
+}
+.rst-content .admonition.agent .admonition-title::before {
+	content: "\1F916";
+	font-family: inherit;
+	margin-right: 6px;
+}
+.rst-content .admonition.agent p:first-of-type + p em,
+.rst-content .admonition.agent em {
+	color: #3b2370;
+}
+.rst-content .admonition.agent code {
+	background: #fff;
+	border-color: #d8ccf5;
+	color: #5a32a3;
+}

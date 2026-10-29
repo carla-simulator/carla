@@ -8,7 +8,7 @@ Town07 imitates a quiet rural community: a green landscape filled with cornfield
 | | |
 | --- | --- |
 | __Map name__ | `Town07_Opt` |
-| __In the default package__ | no: use a source build, or install it from a [content pack](map_content_packs.md) |
+| __Package available__ | [Additional maps package](https://github.com/carla-simulator/carla/releases/tag/1.0), or a source build |
 | __Size__ | about 290 x 375 m of roads |
 | __Spawn points__ | 116, from `world.get_map().get_spawn_points()` |
 | __Junctions__ | 31, most controlled by signs: 17 traffic lights, 19 stop signs and 20 yield signs |

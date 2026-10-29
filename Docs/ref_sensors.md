@@ -356,9 +356,6 @@ The rotation of the LIDAR can be tuned to cover a specific angle on every simula
 * __Blueprint:__ sensor.lidar.hss_lidar
 * __Output:__ [carla.LidarMeasurement](python_api.md#carla.LidarMeasurement) per step (unless `sensor_tick` says otherwise).
 
-!!! Warning
-    __TODO: this section needs a capture.__ The fixed scan pattern looks nothing like the rotating LiDAR's, and both of that sensor's images are on this page while this one has none.
-
 This sensor simulates a Hybrid Solid-State LiDAR implemented using
 ray-casting. The default parameters are based on the Hesai AT128
 specification. The point cloud is produced by sweeping a configurable
@@ -550,7 +547,7 @@ A value of 1.5 means that we want the sensor to capture data each second and a h
 | `sensor_tick` | float | 0.0 | Simulation seconds between captures. `0.0` captures every step. |
 | `enable_postprocess_effects` | bool | True | Apply the post-process chain. With it off the camera returns the raw scene color. |
 | `post_process_profile` | str | (empty) | Camera preset to load, a JSON file in `Content/Carla/Config/PostProcess/` on the server: `AutomotiveHDR`, `AutomotiveHDRClean`, `WideHDR8MP`, `LegacyCCD`, `LogHDR`, `Smartphone`, `Cinematic`, `GoPro`, `Dashcam` or your own. Empty (or `Default`) uses the sensor default, console variable `carla.PostProcess.Profile` (`AutomotiveHDR` unless changed). The spectator view uses its own profile, `carla.PostProcess.ViewportProfile` (`Cinematic`). |
-| `use_ray_tracing` | bool | True | Render this camera with hardware ray tracing (Lumen HW ray tracing, ray-traced shadows). Set it to `False` to save the per-camera VRAM cost on sensors that do not need it. The console variable `carla.Camera.UseRayTracing` forces it on or off globally, overriding the attribute. |
+| `use_ray_tracing` | bool | True | Let this camera use the hardware ray tracing effects the project enables (see [Ray tracing defaults](core_rendering.md#ray-tracing-defaults); by default Lumen traces in software and shadows come from virtual shadow maps). Set it to `False` to save the per-camera VRAM cost on sensors that do not need it. The console variable `carla.Camera.UseRayTracing` forces it on or off globally, overriding the attribute. |
 | `enable_dlss` | bool | False | Enable NVIDIA DLSS Super Resolution: the image renders internally at `dlss_screen_percentage` of the output resolution and is reconstructed to full size, keeping its `image_size_x`&times;`image_size_y` output. Requires `enable_postprocess_effects=True`, and falls back to a bilinear upscale on non-NVIDIA hardware. Not for ground-truth cameras: reconstructed pixels corrupt label and depth maps. |
 | `dlss_screen_percentage` | float | 50.0 | Internal rendering resolution as a percentage of the output, when `enable_dlss` is on. Clamped to [25.0, 100.0]. `50.0` renders a quarter of the pixels (DLSS "Performance"), `33.0` about one ninth ("Ultra Performance"). |
 
@@ -622,9 +619,6 @@ sky every time a client respawns a camera, e.g. `manual_control.py` changing the
 * __Blueprints:__ sensor.camera.rgb_fisheye, sensor.camera.depth_fisheye, sensor.camera.semantic_segmentation_fisheye, sensor.camera.instance_segmentation_fisheye
 * __Output:__ the same data as the pinhole camera each one mirrors — [carla.Image](python_api.md#carla.Image) per step (unless `sensor_tick` says otherwise).
 
-!!! Warning
-    __TODO: this section needs a capture.__ The distortion is the point of these cameras and there is no picture of it. One image per lens model, or one per variant beside its pinhole counterpart.
-
 Wide-angle versions of the four raster cameras. The scene is rendered into six cube faces and resampled through the chosen lens model, so a field of view past 180&deg; is possible without the stretching a single pinhole render suffers towards its borders. The depth and segmentation variants are distorted the same way as the RGB one, so their pixels stay aligned with it.
 
 The lens models and their coefficients are the ones [`sensor.camera.rt_lens`](#ray-traced-lens-camera) uses, with one difference that matters: these cameras rasterize, so they cost about what their pinhole counterparts cost, while `rt_lens` path-traces the scene and generates its primary rays through the lens itself. Use `rt_lens` when the projection has to be exact; use these when you need a wide-angle image at raster speed.
@@ -670,9 +664,6 @@ See `PythonAPI/examples/manual_control_fisheye.py` for a working rig.
 * __Blueprint:__ sensor.camera.rt_lens
 * __Output:__ [carla.Image](python_api.md#carla.Image) per step (unless `sensor_tick` says otherwise).
 
-!!! Warning
-    __TODO: this section needs a capture.__ Nothing on the page shows what the path-traced lens looks like, or how the lens models differ from the raster cameras.
-
 The ray-traced lens camera renders the scene with Unreal Engine's __path tracer__ and generates its primary rays directly through a configurable physical lens model. Where the RGB camera approximates lens distortion as a post-process on a pinhole render, `sensor.camera.rt_lens` distorts the rays themselves, so wide-angle and fisheye projections are geometrically exact, with no resolution loss towards the image borders and no missing field of view.
 
 The sensor requires hardware ray tracing (an NVIDIA RTX-class GPU under Vulkan); unlike the other cameras it has no rasterized fallback, so `use_ray_tracing` cannot be disabled for it.
@@ -717,7 +708,10 @@ Setting `carla.RTLens.SyncModeBlockingReadback 0` (server console) forces the as
 `manual_control.py` includes ready-made presets in its camera cycle (pinhole, Kannala-Brandt fisheye 150°, Brown-Conrady barrel), and `manual_control_rtlens.py` boots directly into the fisheye configuration.
 
 ![RTLens](img/ref_sensors/sensor_rt_lens.webp)
-<div class="img-caption">Ray-traced lens camera with a 150&deg; Kannala-Brandt fisheye lens.</div>
+<div class="img-caption">Ray-traced lens camera with a 150&deg; Kannala-Brandt fisheye lens, 32 samples per pixel, <code>Cinematic</code> profile.</div>
+
+![RTLensModels](img/ref_sensors/sensor_rt_lens_models.webp)
+<div class="img-caption">The same view through three lens models: pinhole (90&deg;), Kannala-Brandt fisheye (150&deg;, coefficients <code>0.03,-0.005,0,0</code>) and Brown-Conrady barrel (100&deg;, <code>-0.25,0.06,0,0,0</code>).</div>
 
 #### Ray-traced lens camera attributes
 
@@ -767,9 +761,6 @@ Setting `carla.RTLens.SyncModeBlockingReadback 0` (server console) forces the as
 * __Blueprint:__ sensor.camera.rt_lens_distance
 * __Output:__ [carla.DistanceImage](python_api.md#carla.DistanceImage) per step (unless `sensor_tick` says otherwise).
 
-!!! Warning
-    __TODO: this section needs a capture.__ The distance output is unillustrated; a frame beside the RGB one it matches would show what it returns.
-
 The geometric twin of [`sensor.camera.rt_lens`](#ray-traced-lens-camera): it shares the exact same lens attributes (`camera_model`, `distortion_coeffs`, `lut`, `fx`/`fy`/`cx`/`cy`, `theta_max_deg`, `fov`, `aperture_fstop`, `focus_distance_m`, `show_only_tags`, `shadow_catcher_tags`, `show_only_actor_ids`, `sensor_tick`, …) so a color/distance pair can be configured from the same dictionary and stay pixel-aligned, but it renders a single geometry AOV instead of a shaded image: for every pixel, the __Euclidean distance__, in meters, from the camera origin to the primary hit, measured along that pixel's (possibly heavily distorted) lens ray. This is the only meaningful "depth" for a non-pinhole lens, where a pinhole camera's planar view-space Z collapses to zero at 90° off axis.
 
 Depth of field is disabled for this sensor (`focus_distance_m`/`aperture_fstop` have no effect): a defocused primary ray would scatter its origin across the aperture and turn a distance measurement into an average over the circle of confusion. The AOV is exact by construction — one ray through the pixel centre, no anti-aliasing jitter, no temporal blending — so `samples_per_pixel` and `enable_denoiser` default to `1` and `False` and normally should not be changed: extra samples only cost time, and the denoiser must never touch metric data. Post-process attributes (`enable_postprocess_effects`, `post_process_profile`) are not present: this capture never goes through the post-process chain.
@@ -797,7 +788,7 @@ distance_sensor.listen(on_distance)
 ```
 
 ![RTLensDistance](img/ref_sensors/sensor_rt_lens_distance.webp)
-<div class="img-caption">Distance per pixel through the same 150&deg; lens, on a logarithmic colour scale up to 120 m; sky in black.</div>
+<div class="img-caption">Distance per pixel through the same 150&deg; lens and pose, on a logarithmic colour scale from red (near) to blue (120 m); sky in black.</div>
 
 #### Output attributes
 
@@ -817,9 +808,6 @@ distance_sensor.listen(on_distance)
 * __Blueprint:__ sensor.camera.rt_lens_instance
 * __Output:__ [carla.Image](python_api.md#carla.Image) per step (unless `sensor_tick` says otherwise).
 
-!!! Warning
-    __TODO: this section needs a capture.__ The instance output is unillustrated; a frame beside the RGB one it matches would show what it returns.
-
 The labelling twin of [`sensor.camera.rt_lens`](#ray-traced-lens-camera): same shared lens attribute surface as the distance camera above, but the geometry AOV it renders is the primary hit's CARLA tag rather than a distance. The output byte layout is identical to the [instance segmentation camera](#instance-segmentation-camera): red channel `R` carries the semantic label, and the green/blue channels carry the 16-bit instance id (`G` low byte, `B` high byte). The id is the __engine's internal actor unique id__ used to build the tag on the GPU, not the id returned by the Python `actor.id` property — treat it as an opaque per-instance key within one episode, not as a value to compare against `actor.id`.
 
 Depth of field is disabled (a defocused ray would blend two actors' ids into one pixel), and — like the distance camera — `samples_per_pixel`/`enable_denoiser` default to `1`/`False` (the AOV is an exact integer read off the primary hit, nothing for a denoiser to do) and post-process attributes are not present.
@@ -827,7 +815,7 @@ Depth of field is disabled (a defocused ray would blend two actors' ids into one
 Measured against the raster [instance segmentation camera](#instance-segmentation-camera) on the same view, per-pixel instance agreement is about 98%. The disagreements are concentrated on silhouette edges (anti-aliasing/coverage differences between the two renderers) and on windscreens and other translucent materials, where the path-traced AOV reports the surface *behind* the glass (the primary ray continues to its geometric hit) while the rasterizer reports the glass itself.
 
 ![RTLensInstance](img/ref_sensors/sensor_rt_lens_instance.webp)
-<div class="img-caption">Instance ids through the same 150&deg; lens, one random colour per instance.</div>
+<div class="img-caption">Instance ids through the same 150&deg; lens and pose, one colour per instance.</div>
 
 #### Output attributes
 

@@ -1,11 +1,14 @@
 # CARLA
 
 !!! important
-    This document refers to the latest version of CARLA built with Unreal Engine 5. For documentation relating to the Unreal Engine 4 version of CARLA please visit the [documentation for this version](https://carla.readthedocs.io/en/latest/).
+    This documentation refers to CARLA 1.0, built on Unreal Engine 5.8. The Unreal Engine 4 versions of CARLA (0.9.x) have [their own documentation](https://carla.readthedocs.io/en/latest/); they are obsolete and will be deprecated soon.
 
 CARLA is an open-source driving simulator for use in autonomous driving applications. It was built from scratch with a modular and flexible API to address a range of tasks involved in the problem of driving. One of the main goals of CARLA is to help democratize autonomous driving R&D, serving as a tool that can be easily accessed and customized by users. To do so, the simulator has to meet the requirements of different use cases within the general problem of driving, such as learning driving policies or training perception algorithms. CARLA is built on Unreal Engine 5.8 to run the simulation and uses the [ASAM OpenDRIVE](https://www.asam.net/standards/detail/opendrive/) standard to define roads and urban settings. Control over the simulation is granted through a Python and C++ API.
 
 In order to smooth the process of developing, training and validating driving systems, CARLA evolved to become an ecosystem of projects, built around the main platform by the community. In this context, it helps to understand how CARLA works in order to make full use of its capabilities.
+
+- [__The simulator__](#the-simulator)
+- [__The project__](#the-project)
 
 ---
 ## The simulator
@@ -23,8 +26,10 @@ The CARLA simulator combines a number of different features that handle differen
 * __[Recorder](core_recorder.md)__: The recorder can replay a simulation exactly to enable retrospective evaluation of the outcome of a simulation and to rerun the simulation with alternative configurations of sensors, for example.
 * __[ROS 2](ros2_native.md)__: CARLA natively supports connectivity with ROS 2, a widely used set of software libraries and tools for robotics and autonomous driving.
 * __[Open assets](catalogue.md)__: CARLA facilitates different maps for urban settings with control over weather conditions and a blueprint library with a wide set of actors to be used. However, these elements can be customized and new ones can be created following simple guidelines.
-* __[Scenario runner](core_traffic.md) & [Scenic](scenic.md)__: In order to ease the learning process for vehicles, CARLA provides a series of routes describing different situations to iterate on, and Scenic can generate many varied scenarios from a single definition. These also set the basis for the [CARLA challenge](https://leaderboard.carla.org/), open for everybody to test their solutions and make it to the leaderboard.
+* __[Scenarios](core_traffic.md): ScenarioRunner, [Scenic](scenic.md) and the Leaderboard__: In order to ease the learning process for vehicles, CARLA provides a series of routes describing different situations to iterate on, and Scenic can generate many varied scenarios from a single definition. These also set the basis for the [CARLA challenge](https://leaderboard.carla.org/), open for everybody to test their solutions and make it to the leaderboard.
 * __[Neural reconstruction](nvidia_nurec.md)__: CARLA integrates NVIDIA Neural Reconstruction (NuRec), which turns recorded camera and lidar data from real drives into photorealistic 3D scenes. CARLA runs the actors, physics and sensors inside these scenes, so a real recording can be replayed and then altered with the full CARLA API.
+* __[AV stacks](av_stacks.md)__: Complete autonomous driving stacks run against CARLA in closed loop. Autoware and NVIDIA Alpamayo 2 Super are integrated, each with an installer and a launcher.
+* __[Agent skills](agent_skills.md)__: A library of procedures tested by the CARLA team, so your AI coding agent can install, build, run and drive CARLA for you.
 
 ---
 ## The project

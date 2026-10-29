@@ -18,6 +18,11 @@ The Python API acts as a high level querying system to navigate these roads. It 
 
 ### Changing the map
 
+!!! agent "Ask your agent"
+    *"Load Town15 and give me a rundown of its road network."*
+
+    Skills: `load-map`, `map-waypoints`, `navigate-to`. [Connect your agent](agent_skills.md#connect-your-agent).
+
 __To change the map, the world has to change too__. The simulation will be recreated from scratch. You can either restart with the same map in a new world or you can change both the map and the world:
 
 - `reload_world()` creates a new instance of the world with the same map.
@@ -35,7 +40,7 @@ A map's `name` is its content path, not a bare town name: on Town10HD_Opt it rea
 print(client.get_available_maps())
 ```
 
-A source build has fifteen maps: `Town01_Opt` to `Town07_Opt` and `Town10HD_Opt`, the four large maps `Town11`, `Town12`, `Town13` and `Town15`, `Town_C`, `Mine_01` for off-road machinery, and `Eixample`, a district of Barcelona built with the [digital twin](content_authoring_maps_digital_twin.md) tool. The default package ships `Town10HD_Opt`, `Town12` and `Town15`; the other maps reach a package as [content packs](map_content_packs.md).
+A source build has fifteen maps: `Town01_Opt` to `Town07_Opt` and `Town10HD_Opt`, the four large maps `Town11`, `Town12`, `Town13` and `Town15`, `Town_C`, `Mine_01` for off-road machinery, and `Eixample`, a district of Barcelona built with the [digital twin](content_authoring_maps_digital_twin.md) tool. The base package ships `Town10HD_Opt`, `Town12` and `Town15`; the other maps are in the [additional maps package](map_content_packs.md) published with each release.
 
 ### Landmarks
 

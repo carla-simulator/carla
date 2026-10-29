@@ -8,7 +8,7 @@ Town12 is a large [World Partition](core_large_maps.md) map of about 10 x 10 km.
 | | |
 | --- | --- |
 | __Map name__ | `Town12` |
-| __In the default package__ | yes |
+| __Package available__ | Base package |
 | __Map type__ | a large [World Partition](core_large_maps.md) map: the server streams the cells around the vehicle with `role_name=hero` |
 | __Size__ | about 9.4 x 8.3 km of roads |
 | __Spawn points__ | 10422, from `world.get_map().get_spawn_points()` |

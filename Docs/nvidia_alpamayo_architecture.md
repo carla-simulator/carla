@@ -26,6 +26,9 @@ The integration separates simulation and inference because the two sides have di
 | Alpamayo model service | Isolated Python 3.12 | Model loading, request validation, inference, numerical trajectory, and reasoning response. |
 | NRE service, optional | Pinned NVIDIA container | Neural camera rendering for the selected NuRec artifact. |
 
+![Alpamayo closed loop](img/nvidia_alpamayo/alpamayo_closed_loop.svg)
+<div class="img-caption">The processes of the example and what flows between them in one control cycle. The NRE container takes part only in NuRec mode, where it renders the model cameras instead of CARLA.</div>
+
 The control client and model service communicate over a versioned local TCP protocol. Messages carry JSON metadata and contiguous NumPy arrays; Python pickles are not used. The model can remain resident while control clients disconnect and reconnect sequentially.
 
 The normal launcher starts both the control process and, unless `--external-model-server` is given, a model subprocess. NuRec uses the same control process rather than running `nurec_runner.py` beside it.
@@ -66,6 +69,9 @@ The canonical Alpamayo request contains seven PhysicalAI-AV camera slots:
 The trajectory profile consumes indices 0, 1, 2, 3, 5, and 6. Index 4 remains in the canonical request because upstream input validation requires all seven slots.
 
 The dashboard adds an eighth CARLA-only third-person camera. This view makes a balanced two-by-four sensor wall and is never sent to the model.
+
+![Alpamayo sensor wall](img/nvidia_alpamayo/alpamayo_camera_wall.webp)
+<div class="img-caption">The sensor wall in NuRec mode. The rear telephoto slot shows the duplicate of the rear-left view that fills the context slot (see <a href="#nurec-camera-backend">NuRec camera backend</a>); the last view is the CARLA third-person camera.</div>
 
 ### CARLA camera backend
 
@@ -137,6 +143,9 @@ Tracks that cannot accept CARLA pose overrides remain neural-replay-only, and th
 ## Dashboard recording
 
 The dashboard displays two rows of four sensor views, a reshaped trajectory plot, one unified inference/reasoning panel, and control telemetry.
+
+![Alpamayo dashboard](img/nvidia_alpamayo/alpamayo_dashboard.webp)
+<div class="img-caption">A recorded dashboard frame: the sensor wall above, the predicted path and the reasoning and control panel below.</div>
 
 The recorder serializes simulation state rather than display redraws. At the default settings, the simulation produces observations at 10 Hz and the video clock writes at 20 FPS, so each state contributes two identical video frames. Redraws performed while inference has simulation paused contribute no frames. The resulting video therefore plays at simulated real-time speed without long frozen inference gaps.
 

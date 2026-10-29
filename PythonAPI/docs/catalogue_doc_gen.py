@@ -105,7 +105,7 @@ def orbit(base, distance, bearing, height, pitch):
 
 
 def frame_actor(actor, framing, resolution, fov):
-    """A camera that fits @actor's bounding box in the frame.
+    """A camera that fits @actor's bounding box (or a list of actors) in the frame.
 
     @framing: bearing (degrees off the actor's heading, 0 = in front), pitch
     (degrees, negative looks down), fill (fraction of the shorter image side
@@ -116,11 +116,19 @@ def frame_actor(actor, framing, resolution, fov):
 
     Returns (transform, fov).
     """
-    box = actor.bounding_box
-    transform = actor.get_transform()
-    centre = transform.transform(box.location)
-    extent = box.extent
-    radius = math.sqrt(extent.x ** 2 + extent.y ** 2 + extent.z ** 2)
+    actors = actor if isinstance(actor, list) else [actor]
+    transform = actors[0].get_transform()
+    spheres = []
+    for each in actors:
+        box = each.bounding_box
+        extent = box.extent
+        spheres.append((each.get_transform().transform(box.location),
+                        math.sqrt(extent.x ** 2 + extent.y ** 2 + extent.z ** 2)))
+    centre = carla.Location(
+        sum(c.x for c, _ in spheres) / len(spheres),
+        sum(c.y for c, _ in spheres) / len(spheres),
+        sum(c.z for c, _ in spheres) / len(spheres))
+    radius = max(centre.distance(c) + r for c, r in spheres)
     width, height = resolution
     half_h = math.atan(math.tan(math.radians(fov) / 2.0) * min(width, height) / float(width))
     fill = framing.get('fill', 0.8)
@@ -151,14 +159,27 @@ def anchor(heading):
 class Entry(object):
     """One catalogue actor: its blueprint, heading, image and detail bullets."""
 
-    def __init__(self, blueprint, heading, image, bullets, view=None):
+    def __init__(self, blueprint, heading, image, bullets, view=None, variants=None):
         self.blueprint = blueprint
         self.heading = heading
         self.image = image
         self.bullets = bullets
         self.view = view
+        # Copies of the same actor spawned with other attributes, as
+        # {attribute: value} dicts, photographed next to it in one more shot.
+        self.variants = variants or []
         self.subgroup = None
         self.capture = None
+
+    def page_image(self):
+        """The image the page shows: the actor and its variants together, if any."""
+        if not self.variants:
+            return self.image
+        return self.image.rsplit('.', 1)[0] + '_variants.webp'
+
+    def images(self):
+        """Every file a capture of this entry writes."""
+        return [self.image] + ([self.page_image()] if self.variants else [])
 
 
 class Overview(object):
@@ -191,7 +212,12 @@ class Capture(object):
     def camera_for(self, entry, actor=None):
         """One camera for the whole catalogue, one per entry.view, or framed on the actor."""
         if self.framing is not None and actor is not None:
-            framing = dict(self.framing, **PROP_FRAMING.get(actor.type_id, {}))
+            first = actor[0] if isinstance(actor, list) else actor
+            framing = dict(self.framing, **PROP_FRAMING.get(first.type_id, {}))
+            if isinstance(actor, list):
+                # a group is wider: mirror the bearing so the foreground of
+                # the single shots does not cut into it
+                framing['bearing'] = -framing.get('bearing', 35.0)
             return frame_actor(actor, framing, self.resolution,
                                float(self.camera_attributes.get('fov', 90)))
         if isinstance(self.camera, dict):
@@ -260,9 +286,15 @@ def pedestrian_entries(library):
             bullets.append('__Special type__: ' + special)
         bullets.append('__Can use wheelchair__: ' + boolean(flag(blueprint, 'can_use_wheelchair')))
 
+        # A pedestrian that can sit in a wheelchair is also shown in it.
+        variants = []
+        if flag(blueprint, 'can_use_wheelchair'):
+            variants.append({'use_wheelchair': 'true'})
+
         groups[group].append(Entry(
             blueprint, heading,
-            '%s/pedestrians/pedestrian_%s.webp' % (IMAGE_DIR, name), bullets))
+            '%s/pedestrians/pedestrian_%s.webp' % (IMAGE_DIR, name), bullets,
+            variants=variants))
 
     return [(name, groups[name]) for name in order if groups[name]]
 
@@ -659,7 +691,7 @@ def render(title, groups, capture):
             if entry.image:
                 # The page loads the thumbnail; the lightbox in Docs/extra.js
                 # swaps _thumb.webp for the full shot when it is clicked.
-                base = entry.image.rsplit('.', 1)[0]
+                base = entry.page_image().rsplit('.', 1)[0]
                 out += ['![%s](%s_thumb.webp)' % (os.path.basename(base), base), '']
             out += ['* ' + bullet for bullet in entry.bullets]
             out.append('')
@@ -732,13 +764,13 @@ def save_image(image, path):
     save_thumbnail(frame, path)
 
 
-def save_thumbnail(frame, path):
+def save_thumbnail(frame, path, width=THUMBNAIL_WIDTH):
     """Writes the <name>_thumb.webp the catalogue pages actually load."""
     from PIL import Image
-    if frame.width <= THUMBNAIL_WIDTH:
+    if frame.width <= width:
         return
-    height = round(frame.height * THUMBNAIL_WIDTH / frame.width)
-    thumb = frame.resize((THUMBNAIL_WIDTH, height), Image.LANCZOS)
+    height = round(frame.height * width / frame.width)
+    thumb = frame.resize((width, height), Image.LANCZOS)
     thumb.save(path[:-len('.webp')] + '_thumb.webp', 'WEBP',
                quality=THUMBNAIL_QUALITY, method=6)
 
@@ -801,29 +833,46 @@ def photograph(client, capture, entries, out_dir):
     library = world.get_blueprint_library()
     try:
         for entry in entries:
-            blueprint = library.find(entry.blueprint.id)
-            if capture.on_blueprint is not None:
-                capture.on_blueprint(blueprint)
-            actor = world.try_spawn_actor(blueprint, capture.actor)
-            if actor is None:
-                print('  %s: could not spawn' % entry.blueprint.id)
-                continue
-            # the transform reads (0, 0, 0) until the world has ticked once
-            world.tick()
-            if capture.on_spawn is not None:
-                capture.on_spawn(actor)
-            for _ in range(10):  # let a dropped vehicle land before framing it
+            # The actor alone, then (if it has variants) the actor with its
+            # variants beside it, 0.9 m apart to its right, in one shot.
+            shots = [(entry.image, [{}])]
+            if entry.variants:
+                shots.append((entry.page_image(), [{}] + entry.variants))
+            for path, group in shots:
+                actors = []
+                for k, attributes in enumerate(group):
+                    blueprint = library.find(entry.blueprint.id)
+                    if capture.on_blueprint is not None:
+                        capture.on_blueprint(blueprint)
+                    for key, value in attributes.items():
+                        blueprint.set_attribute(key, value)
+                    spot = carla.Transform(capture.actor.location, capture.actor.rotation)
+                    right = spot.get_right_vector()
+                    spot.location += carla.Location(x=right.x * 0.9 * k, y=right.y * 0.9 * k)
+                    actor = world.try_spawn_actor(blueprint, spot)
+                    if actor is None:
+                        print('  %s: could not spawn' % entry.blueprint.id)
+                        break
+                    actors.append(actor)
+                if len(actors) == len(group):
+                    # the transform reads (0, 0, 0) until the world has ticked once
+                    world.tick()
+                    if capture.on_spawn is not None:
+                        for actor in actors:
+                            capture.on_spawn(actor)
+                    for _ in range(10):  # let a dropped vehicle land before framing it
+                        world.tick()
+                    view = capture.camera_for(entry, actors if len(actors) > 1 else actors[0])
+                    if isinstance(view, tuple):
+                        view, fov = view
+                        camera_bp.set_attribute('fov', '%.2f' % fov)
+                    image = shoot(world, camera_bp, view, capture.settle_ticks)
+                    if image is not None:
+                        save_image(image, os.path.join(out_dir, path.replace('../', '')))
+                        print('  %s -> %s' % (entry.blueprint.id, os.path.basename(path)))
+                for actor in actors:
+                    actor.destroy()
                 world.tick()
-            view = capture.camera_for(entry, actor)
-            if isinstance(view, tuple):
-                view, fov = view
-                camera_bp.set_attribute('fov', '%.2f' % fov)
-            image = shoot(world, camera_bp, view, capture.settle_ticks)
-            if image is not None:
-                save_image(image, os.path.join(out_dir, entry.image.replace('../', '')))
-                print('  %s -> %s' % (entry.blueprint.id, os.path.basename(entry.image)))
-            actor.destroy()
-            world.tick()
     finally:
         restore(world, original)
 
@@ -922,7 +971,8 @@ def main():
                     lambda image: not os.path.isfile(
                         os.path.join(args.out_dir, image.replace('../', ''))))
                 missing = [entry for entry in entries
-                           if entry.capture is capture and gone(entry.image)]
+                           if entry.capture is capture
+                           and any(gone(image) for image in entry.images())]
                 if not missing:
                     continue
                 if capture.actor is None:

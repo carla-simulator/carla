@@ -53,7 +53,7 @@ Running options
 ./CarlaUnreal.sh -RenderOffScreen          # no display window
 ./CarlaUnreal.sh -carla-rpc-port=3000      # listen on another port
 ./CarlaUnreal.sh -quality-level=Low        # cheaper rendering
-./CarlaUnreal.sh -ros2                     # native ROS 2 interface
+./CarlaUnreal.sh -ros2                     # native ROS 2 interface (only in a package built with ROS 2 enabled)
 ```
 
 For more details and running options, refer to the online documentation:

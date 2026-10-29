@@ -4,13 +4,83 @@ Sensors are actors that retrieve data from their surroundings. They are crucial 
 
 This page summarizes everything necessary to start handling sensors. It introduces the types available and a step-by-step guide of their life cycle. The specifics for every sensor can be found in the [sensors reference](ref_sensors.md).
 
-- [__Sensors step-by-step__](#sensors-step-by-step)
 - [__Types of sensors__](#types-of-sensors)
 - [__Semantic classes__](#semantic-classes)
+- [__Sensors step-by-step__](#sensors-step-by-step)
 * [__Sensors reference__](ref_sensors.md)
 
 ---
+## Types of sensors
+
+![sensor_gallery](img/core_sensors/sensor_gallery.webp)
+<div class="img-caption">The same frame through nine sensor outputs: RGB, depth, semantic and instance segmentation, normals, LiDAR, semantic LiDAR, radar and raw depth.</div>
+ 
+### Cameras
+
+Take a shot of the world from their point of view. For cameras that return [carla.Image](<python_api.md#carla.Image>), you can use the helper class [carla.ColorConverter](python_api.md#carla.ColorConverter) to modify the image to represent different information.
+
+* __Retrieve data__ every simulation step.
+
+
+| Sensor | Output | Overview |
+| --- | --- | --- |
+| [Depth](ref_sensors.md#depth-camera) | [carla.Image](<python_api.md#carla.Image>) | Renders the depth of the elements in the field of view in a gray-scale map. |
+| [RGB](ref_sensors.md#rgb-camera) | [carla.Image](<python_api.md#carla.Image>) | Provides clear vision of the surroundings. Looks like a normal photo of the scene. |
+| [Optical Flow](ref_sensors.md#optical-flow-camera) | [carla.Image](<python_api.md#carla.Image>) | Renders the motion of every pixel from the camera. |
+| [Semantic segmentation](ref_sensors.md#semantic-segmentation-camera) | [carla.Image](<python_api.md#carla.Image>) | Renders elements in the field of view with a specific color according to their tags. |
+| [Instance segmentation](ref_sensors.md#instance-segmentation-camera) | [carla.Image](<python_api.md#carla.Image>) | Renders elements in the field of view with a specific color according to their tags and a unique object ID. |
+| [DVS](ref_sensors.md#dvs-camera) | [carla.DVSEventArray](<python_api.md#carla.DVSEventArray>) | Measures changes of brightness intensity asynchronously as an event stream. |
+| [Normals](ref_sensors.md#normals-camera) | [carla.Image](<python_api.md#carla.Image>) | Renders the surface normal of every pixel. |
+| [Fisheye](ref_sensors.md#fisheye-cameras) | as the camera each one mirrors | Wide-angle versions of the RGB, depth and segmentation cameras, with their own intrinsics and distortion. |
+| [Ray-traced lens](ref_sensors.md#ray-traced-lens-camera) | [carla.Image](<python_api.md#carla.Image>) | Path-traced camera with a physical lens model, plus its distance and instance twins. |
+
+
+Camera images also depend on the server's quality level and on each camera's post-process profile. See [Rendering options](core_rendering.md) and [Camera post-process presets](core_camera_presets.md).
+
+### Detectors
+
+Retrieve data when the object they are attached to registers a specific event.
+
+* __Retrieve data__ when triggered.
+
+| Sensor | Output | Overview |
+| --- | --- | --- |
+| [Collision](ref_sensors.md#collision-detector) | [carla.CollisionEvent](<python_api.md#carla.CollisionEvent>) | Retrieves collisions between its parent and other actors. |
+| [Lane invasion](ref_sensors.md#lane-invasion-detector) | [carla.LaneInvasionEvent](<python_api.md#carla.LaneInvasionEvent>) | Registers when its parent crosses a lane marking. |
+| [Obstacle](ref_sensors.md#obstacle-detector) | [carla.ObstacleDetectionEvent](<python_api.md#carla.ObstacleDetectionEvent>) | Detects possible obstacles ahead of its parent. |
+
+
+### Other
+
+Different functionalities such as navigation, measurement of physical properties and 2D/3D point maps of the scene.
+
+* __Retrieve data__ every simulation step.
+
+| Sensor | Output | Overview |
+| --- | --- | --- |
+| [GNSS](ref_sensors.md#gnss-sensor) | [carla.GNSSMeasurement](<python_api.md#carla.GnssMeasurement>) | Retrieves the geolocation of the sensor. |
+| [IMU](ref_sensors.md#imu-sensor) | [carla.IMUMeasurement](<python_api.md#carla.IMUMeasurement>) | Comprises an accelerometer, a gyroscope, and a compass. |
+| [LIDAR](ref_sensors.md#lidar-sensor) | [carla.LidarMeasurement](<python_api.md#carla.LidarMeasurement>) | A rotating LIDAR. Generates a 4D point cloud with coordinates and intensity per point to model the surroundings. |
+| [Radar](ref_sensors.md#radar-sensor) | [carla.RadarMeasurement](<python_api.md#carla.RadarMeasurement>) | Point cloud of detections, each with depth, azimuth, altitude and the velocity relative to the sensor. |
+| [Semantic LIDAR](ref_sensors.md#semantic-lidar-sensor) | [carla.SemanticLidarMeasurement](<python_api.md#carla.SemanticLidarMeasurement>) | A rotating LIDAR. Generates a 3D point cloud with extra information regarding instance and semantic segmentation. |
+| [Hybrid Solid-State LiDAR](ref_sensors.md#hybrid-solid-state-lidar-sensor) | [carla.LidarMeasurement](<python_api.md#carla.LidarMeasurement>) | A forward-facing solid-state LiDAR with a fixed scan pattern. |
+| [V2X](ref_sensors.md#v2x-sensor) | [carla.CAMEvent](<python_api.md#carla.CAMEvent>) | Receives ETSI cooperative awareness messages from other V2X sensors. |
+| [Custom V2X](ref_sensors.md#custom-v2x-message) | [carla.CustomV2XEvent](<python_api.md#carla.CustomV2XEvent>) | Sends and receives arbitrary messages between V2X sensors. |
+| [Vehicle status](ref_sensors.md#vehicle-status-sensor) | [carla.SensorData](<python_api.md#carla.SensorData>) | The parent vehicle's kinematic and control state, for the Autoware bridge. |
+| [Autoware GNSS](ref_sensors.md#autoware-gnss-sensor) | [carla.GnssMeasurement](<python_api.md#carla.GnssMeasurement>) | A GNSS sensor publishing in the shape the Autoware stack expects. |
+
+---
+## Semantic classes
+
+The semantic segmentation camera, the instance segmentation camera and the semantic LiDAR label what they see with the tags in [`carla.CityObjectLabel`](python_api.md#carla.CityObjectLabel). An asset of your own is labelled by the folder it lives in, and a class of your own is added in [Create semantic tags](core_sensors_semantic_tags.md).
+
+---
 ## Sensors step-by-step
+
+!!! agent "Ask your agent"
+    *"Attach a front RGB camera and a 64-channel lidar to the ego vehicle and save their data to disk."*
+
+    Skills: `create-sensor`, `read-sensor`, `bounding-boxes`. [Connect your agent](agent_skills.md#connect-your-agent).
 
 The class [carla.Sensor](python_api.md#carla.Sensor) defines a special type of actor able to measure and stream data.
 
@@ -126,68 +196,3 @@ Sensor data differs a lot between sensor types. Take a look at the [sensors refe
 !!! Note
     `is_listening()` reports whether the sensor is currently streaming; start and stop it with `listen()` and `stop()`.
     `sensor_tick` is a __blueprint attribute__ that sets the simulation time between readings.
-
----
-## Types of sensors
-
-![sensor_gallery](img/core_sensors/sensor_gallery.webp)
-<div class="img-caption">The same frame through nine sensor outputs: RGB, depth, semantic and instance segmentation, normals, LiDAR, semantic LiDAR, radar and raw depth.</div>
- 
-### Cameras
-
-Take a shot of the world from their point of view. For cameras that return [carla.Image](<python_api.md#carla.Image>), you can use the helper class [carla.ColorConverter](python_api.md#carla.ColorConverter) to modify the image to represent different information.
-
-* __Retrieve data__ every simulation step.
-
-
-| Sensor | Output | Overview |
-| --- | --- | --- |
-| [Depth](ref_sensors.md#depth-camera) | [carla.Image](<python_api.md#carla.Image>) | Renders the depth of the elements in the field of view in a gray-scale map. |
-| [RGB](ref_sensors.md#rgb-camera) | [carla.Image](<python_api.md#carla.Image>) | Provides clear vision of the surroundings. Looks like a normal photo of the scene. |
-| [Optical Flow](ref_sensors.md#optical-flow-camera) | [carla.Image](<python_api.md#carla.Image>) | Renders the motion of every pixel from the camera. |
-| [Semantic segmentation](ref_sensors.md#semantic-segmentation-camera) | [carla.Image](<python_api.md#carla.Image>) | Renders elements in the field of view with a specific color according to their tags. |
-| [Instance segmentation](ref_sensors.md#instance-segmentation-camera) | [carla.Image](<python_api.md#carla.Image>) | Renders elements in the field of view with a specific color according to their tags and a unique object ID. |
-| [DVS](ref_sensors.md#dvs-camera) | [carla.DVSEventArray](<python_api.md#carla.DVSEventArray>) | Measures changes of brightness intensity asynchronously as an event stream. |
-| [Normals](ref_sensors.md#normals-camera) | [carla.Image](<python_api.md#carla.Image>) | Renders the surface normal of every pixel. |
-| [Fisheye](ref_sensors.md#fisheye-cameras) | as the camera each one mirrors | Wide-angle versions of the RGB, depth and segmentation cameras, with their own intrinsics and distortion. |
-| [Ray-traced lens](ref_sensors.md#ray-traced-lens-camera) | [carla.Image](<python_api.md#carla.Image>) | Path-traced camera with a physical lens model, plus its distance and instance twins. |
-
-
-Camera images also depend on the server's quality level and on each camera's post-process profile. See [Rendering options](core_rendering.md) and [Camera post-process presets](core_camera_presets.md).
-
-### Detectors
-
-Retrieve data when the object they are attached to registers a specific event.
-
-* __Retrieve data__ when triggered.
-
-| Sensor | Output | Overview |
-| --- | --- | --- |
-| [Collision](ref_sensors.md#collision-detector) | [carla.CollisionEvent](<python_api.md#carla.CollisionEvent>) | Retrieves collisions between its parent and other actors. |
-| [Lane invasion](ref_sensors.md#lane-invasion-detector) | [carla.LaneInvasionEvent](<python_api.md#carla.LaneInvasionEvent>) | Registers when its parent crosses a lane marking. |
-| [Obstacle](ref_sensors.md#obstacle-detector) | [carla.ObstacleDetectionEvent](<python_api.md#carla.ObstacleDetectionEvent>) | Detects possible obstacles ahead of its parent. |
-
-
-### Other
-
-Different functionalities such as navigation, measurement of physical properties and 2D/3D point maps of the scene.
-
-* __Retrieve data__ every simulation step.
-
-| Sensor | Output | Overview |
-| --- | --- | --- |
-| [GNSS](ref_sensors.md#gnss-sensor) | [carla.GNSSMeasurement](<python_api.md#carla.GnssMeasurement>) | Retrieves the geolocation of the sensor. |
-| [IMU](ref_sensors.md#imu-sensor) | [carla.IMUMeasurement](<python_api.md#carla.IMUMeasurement>) | Comprises an accelerometer, a gyroscope, and a compass. |
-| [LIDAR](ref_sensors.md#lidar-sensor) | [carla.LidarMeasurement](<python_api.md#carla.LidarMeasurement>) | A rotating LIDAR. Generates a 4D point cloud with coordinates and intensity per point to model the surroundings. |
-| [Radar](ref_sensors.md#radar-sensor) | [carla.RadarMeasurement](<python_api.md#carla.RadarMeasurement>) | Point cloud of detections, each with depth, azimuth, altitude and the velocity relative to the sensor. |
-| [Semantic LIDAR](ref_sensors.md#semantic-lidar-sensor) | [carla.SemanticLidarMeasurement](<python_api.md#carla.SemanticLidarMeasurement>) | A rotating LIDAR. Generates a 3D point cloud with extra information regarding instance and semantic segmentation. |
-| [Hybrid Solid-State LiDAR](ref_sensors.md#hybrid-solid-state-lidar-sensor) | [carla.LidarMeasurement](<python_api.md#carla.LidarMeasurement>) | A forward-facing solid-state LiDAR with a fixed scan pattern. |
-| [V2X](ref_sensors.md#v2x-sensor) | [carla.CAMEvent](<python_api.md#carla.CAMEvent>) | Receives ETSI cooperative awareness messages from other V2X sensors. |
-| [Custom V2X](ref_sensors.md#custom-v2x-message) | [carla.CustomV2XEvent](<python_api.md#carla.CustomV2XEvent>) | Sends and receives arbitrary messages between V2X sensors. |
-| [Vehicle status](ref_sensors.md#vehicle-status-sensor) | [carla.SensorData](<python_api.md#carla.SensorData>) | The parent vehicle's kinematic and control state, for the Autoware bridge. |
-| [Autoware GNSS](ref_sensors.md#autoware-gnss-sensor) | [carla.GnssMeasurement](<python_api.md#carla.GnssMeasurement>) | A GNSS sensor publishing in the shape the Autoware stack expects. |
-
----
-## Semantic classes
-
-The semantic segmentation camera, the instance segmentation camera and the semantic LiDAR label what they see with the tags in [`carla.CityObjectLabel`](python_api.md#carla.CityObjectLabel). An asset of your own is labelled by the folder it lives in, and a class of your own is added in [Create semantic tags](core_sensors_semantic_tags.md).

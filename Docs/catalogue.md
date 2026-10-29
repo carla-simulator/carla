@@ -17,30 +17,30 @@ The CARLA simulator provides a vast library of 3D assets to populate your autono
 
 ## Maps
 
-The default package ships three drivable maps, plus the empty ones used for OpenDRIVE standalone mode. A source build has every town; the rest reach a package through a [content pack](content_authoring_packs.md).
+The base package ships three drivable maps, plus the empty ones used for OpenDRIVE standalone mode. The other towns are in the additional maps package, published with each [release](https://github.com/carla-simulator/carla/releases/tag/1.0), and a source build has every town.
 
 ![maps_overview](img/catalogue/maps/maps_montage_thumb.webp)
 <div class="img-caption">The three maps of the default package (Town10HD_Opt, Town12, Town15), then Mine_01 and the classic towns Town01_Opt to Town07_Opt, one view each.</div>
 
-| Map | In the default package | Summary |
+| Map | Package available | Summary |
 | --- | --- | --- |
-| [__Town10HD_Opt__](map_town10.md) | yes | A downtown urban environment with skyscrapers, residential buildings and an ocean promenade. |
-| [__Town12__](map_town12.md) | yes | A 10 x 10 km World Partition city with downtown, residential and rural zones and a highway ring road. |
-| [__Town15__](map_town15.md) | yes | A large World Partition map of a university campus and its surroundings. |
-| [__Town01_Opt__](map_town01.md) | no, content pack | A small town with T-junctions, divided in two by a river with several bridges. |
-| [__Town02_Opt__](map_town02.md) | no, content pack | A small town with T-junctions, a park, a high street and residential and commercial areas. |
-| [__Town03_Opt__](map_town03.md) | no, content pack | A larger urban town with a central roundabout, an underpass and a raised metro track. |
-| [__Town04_Opt__](map_town04.md) | no, content pack | A small mountain town circled by a multi-lane "figure of 8" ring road with an overpass. |
-| [__Town05_Opt__](map_town05.md) | no, content pack | A grid town of multi-lane roads and large junctions, with a raised highway around it. |
-| [__Town06_Opt__](map_town06.md) | no, content pack | Long multi-lane parallel roads with slip roads, U-turn loops and the Michigan left. |
-| [__Town07_Opt__](map_town07.md) | no, content pack | A rural community of cornfields, barns, silos and windmills, with narrow unmarked roads. |
-| [__Town11__](map_town11.md) | no, content pack | A large World Partition map without decoration: single-lane roads over hills between clusters of gridded junctions. |
-| [__Town13__](map_town13.md) | no, content pack | A World Partition city of Town12's scale with different styles, designed as its train-test pair. |
-| [__Town_C__](map_town_c.md) | no, content pack | A Synkrotron city modelled on the Shanghai International Automobile City, with recreations of its landmark buildings. |
-| [__Mine_01__](map_mine.md) | no, content pack | An industrial, off-road, open-cast mining environment. |
-| [__Eixample__](map_eixample.md) | no, content pack | A digital twin of the street grid of the Eixample district of Barcelona, with untextured buildings. |
+| [__Town10HD_Opt__](map_town10.md) | Base package | A downtown urban environment with skyscrapers, residential buildings and an ocean promenade. |
+| [__Town12__](map_town12.md) | Base package | A 10 x 10 km World Partition city with downtown, residential and rural zones and a highway ring road. |
+| [__Town15__](map_town15.md) | Base package | A large World Partition map of a university campus and its surroundings. |
+| [__Town01_Opt__](map_town01.md) | [Additional maps package](https://github.com/carla-simulator/carla/releases/tag/1.0) | A small town with T-junctions, divided in two by a river with several bridges. |
+| [__Town02_Opt__](map_town02.md) | [Additional maps package](https://github.com/carla-simulator/carla/releases/tag/1.0) | A small town with T-junctions, a park, a high street and residential and commercial areas. |
+| [__Town03_Opt__](map_town03.md) | [Additional maps package](https://github.com/carla-simulator/carla/releases/tag/1.0) | A larger urban town with a central roundabout, an underpass and a raised metro track. |
+| [__Town04_Opt__](map_town04.md) | [Additional maps package](https://github.com/carla-simulator/carla/releases/tag/1.0) | A small mountain town circled by a multi-lane "figure of 8" ring road with an overpass. |
+| [__Town05_Opt__](map_town05.md) | [Additional maps package](https://github.com/carla-simulator/carla/releases/tag/1.0) | A grid town of multi-lane roads and large junctions, with a raised highway around it. |
+| [__Town06_Opt__](map_town06.md) | [Additional maps package](https://github.com/carla-simulator/carla/releases/tag/1.0) | Long multi-lane parallel roads with slip roads, U-turn loops and the Michigan left. |
+| [__Town07_Opt__](map_town07.md) | [Additional maps package](https://github.com/carla-simulator/carla/releases/tag/1.0) | A rural community of cornfields, barns, silos and windmills, with narrow unmarked roads. |
+| [__Town11__](map_town11.md) | [Additional maps package](https://github.com/carla-simulator/carla/releases/tag/1.0) | A large World Partition map without decoration: single-lane roads over hills between clusters of gridded junctions. |
+| [__Town13__](map_town13.md) | [Additional maps package](https://github.com/carla-simulator/carla/releases/tag/1.0) | A World Partition city of Town12's scale with different styles, designed as its train-test pair. |
+| [__Town_C__](map_town_c.md) | [Additional maps package](https://github.com/carla-simulator/carla/releases/tag/1.0) | A Synkrotron city modelled on the Shanghai International Automobile City, with recreations of its landmark buildings. |
+| [__Mine_01__](map_mine.md) | [Additional maps package](https://github.com/carla-simulator/carla/releases/tag/1.0) | An industrial, off-road, open-cast mining environment. |
+| [__Eixample__](map_eixample.md) | [Additional maps package](https://github.com/carla-simulator/carla/releases/tag/1.0) | A digital twin of the street grid of the Eixample district of Barcelona, with untextured buildings. |
 
-The classic towns and the large maps are also available as [content-pack towns](map_content_packs.md) for a packaged release.
+[Additional maps](map_content_packs.md) lists the towns of the additional maps package and how to build a content pack with your own selection.
 
 Load a map by its exact name, which is the file name: `client.load_world('Town10HD_Opt')`. See [Maps](core_map.md) for what a map contains and how to navigate it.
 

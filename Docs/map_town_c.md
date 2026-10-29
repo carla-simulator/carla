@@ -8,7 +8,7 @@ Town_C is a map contributed by CARLA consortium members and sponsors [Synkrotron
 | | |
 | --- | --- |
 | __Map name__ | `Town_C` |
-| __In the default package__ | no: use a source build, or install it from a [content pack](map_content_packs.md) |
+| __Package available__ | [Additional maps package](https://github.com/carla-simulator/carla/releases/tag/1.0), or a source build |
 | __Size__ | about 2.4 x 1.15 km of roads |
 | __Spawn points__ | 373, from `world.get_map().get_spawn_points()` |
 | __Junctions__ | 43, with 64 traffic lights |

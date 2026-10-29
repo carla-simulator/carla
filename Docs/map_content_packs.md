@@ -1,6 +1,8 @@
-# Towns available as content packs
+# Additional maps
 
-The CARLA package ships Town10HD_Opt, Town12 and Town15. The towns below are kept in the CARLA content repository but are not cooked into the package: to use one, build a [content pack](content_authoring_packs.md) with it from a CARLA source checkout and install the pack into your package.
+The CARLA base package ships Town10HD_Opt, Town12 and Town15. The towns below are in the __additional maps package__, published with each release next to the base package: download it from the [CARLA 1.0 release](https://github.com/carla-simulator/carla/releases/tag/1.0) and install it into your base package.
+
+To ship only some of these towns, or a different selection, build a [content pack](content_authoring_packs.md) with them from a CARLA source checkout and install the pack into your package:
 
 ```sh
 # on the source checkout that built the package

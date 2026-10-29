@@ -8,6 +8,11 @@ This section will cover spawning, destruction, types, and how to manage them. Ho
 - [__Actor life cycle__](#actor-life-cycle)
 - [__Types of actors__](#types-of-actors)
 
+!!! agent "Ask your agent"
+    *"Spawn a red Tesla Model 3 at a free spawn point, 20 pedestrians that walk around, and tell me the speed of the Tesla."*
+
+    Skills: `spawn-vehicles`, `spawn-walkers`, `world-data`, `telemetry`. [Connect your agent](agent_skills.md#connect-your-agent).
+
 ---
 ## Blueprints
 
@@ -360,6 +365,29 @@ When a walker reaches the target location, they will automatically walk to anoth
 
 !!! Important
     __To destroy AI pedestrians__, stop the AI controller and destroy both, the actor, and the controller.
+
+#### Pedestrians in wheelchairs
+
+Some pedestrians can be spawned in a wheelchair. Their blueprint has the read-only attribute `can_use_wheelchair` set to `true` (six of them in the [pedestrian catalogue](catalogue_pedestrians.md): `walker.pedestrian.0015`, `0016`, `0025`, `0026`, `0028` and `0029`), and setting its `use_wheelchair` attribute to `true` spawns the pedestrian seated in a wheelchair, with the sitting animation. The wheelchair is part of the walker: it moves with it, carries the walker's semantic tag and is included in its bounding box.
+
+![wheelchair](img/core_actors/wheelchair.webp)
+<div class="img-caption">Two pedestrians in wheelchairs crossing a Town10HD_Opt junction.</div>
+
+```py
+import random
+
+# Pick a pedestrian that can use a wheelchair and seat it in one
+blueprints = world.get_blueprint_library().filter('walker.pedestrian.*')
+wheelchair_bps = [bp for bp in blueprints if bp.get_attribute('can_use_wheelchair').as_bool()]
+walker_bp = random.choice(wheelchair_bps)
+walker_bp.set_attribute('use_wheelchair', 'true')
+
+# Spawn it on the navigation mesh
+spawn_point = carla.Transform(world.get_random_location_from_navigation())
+walker = world.try_spawn_actor(walker_bp, spawn_point)
+```
+
+Move it with [`carla.WalkerControl`](python_api.md#carla.WalkerControl), as any other walker.
 
 ---
 That is a wrap as regarding actors in CARLA. The next step takes a closer look into the map, roads and traffic in CARLA.

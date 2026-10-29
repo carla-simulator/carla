@@ -19,7 +19,7 @@ You will need to have installed:
 
 - __Docker:__ Follow the installation instructions [here](https://docs.docker.com/engine/install/).
 - __Post installation:__ Follow [these instructions](https://docs.docker.com/engine/install/linux-postinstall/) to avoid the need for `sudo` commands.
-- __NVIDIA Container Toolkit__ (1.14 or later for CDI support): exposes NVIDIA GPUs to Linux containers. Install it by following the [installation guide](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html), then configure CDI (Container Device Interface):
+- __NVIDIA Container Toolkit__ (1.12 or later for CDI support): exposes NVIDIA GPUs to Linux containers. Install it by following the [installation guide](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html), then configure CDI (Container Device Interface):
 
     ```sh
     sudo nvidia-ctk cdi generate --output=/etc/cdi/nvidia.yaml
@@ -36,10 +36,10 @@ You will need to have installed:
 ---
 ## Pull the CARLA Docker image
 
-Pull the image with the following command __(TODO: confirm the image tag, and the `CarlaUnreal.sh` and wheel paths inside the image, once the 1.0.0 image is published)__:
+Pull the image, tag `1.0` (see the [CARLA 1.0 release](https://github.com/carla-simulator/carla/releases/tag/1.0)), with the following command:
 
 ```sh
-docker pull carlasim/carla:1.0.0
+docker pull carlasim/carla:1.0
 ```
 
 Always pull a tagged version. The `latest` tag is an old Unreal Engine 4 image.
@@ -53,7 +53,7 @@ Always pull a tagged version. The `latest` tag is an old Unreal Engine 4 image.
 docker run \
     --device=nvidia.com/gpu=all \
     --net=host \
-    carlasim/carla:1.0.0 bash CarlaUnreal.sh -RenderOffScreen -nosound
+    carlasim/carla:1.0 bash CarlaUnreal.sh -RenderOffScreen -nosound
 ```
 
 ### Without a display (legacy runtime)
@@ -64,7 +64,7 @@ docker run \
     --net=host \
     --env=NVIDIA_VISIBLE_DEVICES=all \
     --env=NVIDIA_DRIVER_CAPABILITIES=all \
-    carlasim/carla:1.0.0 bash CarlaUnreal.sh -RenderOffScreen -nosound
+    carlasim/carla:1.0 bash CarlaUnreal.sh -RenderOffScreen -nosound
 ```
 
 ### With a display (CDI, recommended)
@@ -78,7 +78,7 @@ docker run \
     --user=$(id -u):$(id -g) \
     --env=DISPLAY=$DISPLAY \
     --volume="/tmp/.X11-unix:/tmp/.X11-unix:rw" \
-    carlasim/carla:1.0.0 bash CarlaUnreal.sh -nosound
+    carlasim/carla:1.0 bash CarlaUnreal.sh -nosound
 ```
 
 ### With a display (legacy runtime)
@@ -92,7 +92,7 @@ docker run \
     --env=NVIDIA_VISIBLE_DEVICES=all \
     --env=NVIDIA_DRIVER_CAPABILITIES=all \
     --volume="/tmp/.X11-unix:/tmp/.X11-unix:rw" \
-    carlasim/carla:1.0.0 bash CarlaUnreal.sh -nosound
+    carlasim/carla:1.0 bash CarlaUnreal.sh -nosound
 ```
 
 !!! Note
@@ -107,7 +107,7 @@ The server runs in the container, but your scripts run on the host and need the 
 docker run --rm \
     --user=$(id -u):$(id -g) \
     --volume="$PWD:/out" \
-    carlasim/carla:1.0.0 bash -c "cp PythonAPI/carla/dist/carla-*.whl /out/"
+    carlasim/carla:1.0 bash -c "cp PythonAPI/carla/dist/carla-*.whl /out/"
 pip3 install carla-*.whl
 ```
 
@@ -117,10 +117,12 @@ pip3 install carla-*.whl
 Give each container one GPU and its own RPC port. Each server also uses the two ports after it, so leave a gap between them:
 
 ```sh
+# Terminal 1
 docker run --device=nvidia.com/gpu=0 --net=host \
-    carlasim/carla:1.0.0 bash CarlaUnreal.sh -RenderOffScreen -nosound -carla-rpc-port=2000
+    carlasim/carla:1.0 bash CarlaUnreal.sh -RenderOffScreen -nosound -carla-rpc-port=2000
+# Terminal 2
 docker run --device=nvidia.com/gpu=1 --net=host \
-    carlasim/carla:1.0.0 bash CarlaUnreal.sh -RenderOffScreen -nosound -carla-rpc-port=3000
+    carlasim/carla:1.0 bash CarlaUnreal.sh -RenderOffScreen -nosound -carla-rpc-port=3000
 ```
 
 Connect each client to its server's port, for example `carla.Client('localhost', 3000)`.

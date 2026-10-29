@@ -4,6 +4,9 @@ A significant factor in the problem of enabling autonomous vehicles to understan
 
 Objects within the CARLA simulation all have a bounding box and the CARLA Python API provides functions to access the bounding box of each object. This tutorial shows how to access bounding boxes and then project them into the camera plane.
 
+![bbox_overview](img/tuto_bounding_boxes/bbox_overview.webp)
+<div class="img-caption">What this tutorial draws, seen from a camera on an autopilot vehicle: the 3D boxes of the other vehicles (blue) and of the traffic lights (orange) and traffic signs (cyan) within 50 m ahead, projected into the image.</div>
+
 - [__Set up the simulator__](#set-up-the-simulator)
 - [__Geometric transformations__](#geometric-transformations)
 - [__Bounding boxes__](#bounding-boxes_1)
@@ -15,6 +18,11 @@ Objects within the CARLA simulation all have a bounding box and the CARLA Python
 
 ---
 ## Set up the simulator
+
+!!! agent "Ask your agent"
+    *"Spawn a camera on the ego and save its images with the 2D bounding boxes of the vehicles around it."*
+
+    Skills: `bounding-boxes`, `create-sensor`. [Connect your agent](agent_skills.md#connect-your-agent).
 
 Let's lay down the standard CARLA boilerplate code, set up the client and world objects, spawn a vehicle and attach a camera to it:
 

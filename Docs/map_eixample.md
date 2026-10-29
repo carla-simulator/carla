@@ -8,7 +8,7 @@ Eixample is a [digital twin](content_authoring_maps_digital_twin.md) of part of 
 | | |
 | --- | --- |
 | __Map name__ | `Eixample` |
-| __In the default package__ | no: use a source build, or install it from a [content pack](map_content_packs.md) |
+| __Package available__ | [Additional maps package](https://github.com/carla-simulator/carla/releases/tag/1.0), or a source build |
 | __Map type__ | a [World Partition](core_large_maps.md) map: the server streams the cells around the vehicle with `role_name=hero` |
 | __Size__ | about 510 x 455 m of roads |
 | __Spawn points__ | 274, from `world.get_map().get_spawn_points()` |

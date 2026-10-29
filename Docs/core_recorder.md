@@ -14,6 +14,11 @@ The replayer plays that file back exactly as it was recorded, so the run can be 
 ---
 ## Recording
 
+!!! agent "Ask your agent"
+    *"Record the next two minutes of simulation, then replay the last 30 seconds following the ego vehicle."*
+
+    Skills: `record-simulation`, `replay-recording`, `query-recording`. [Connect your agent](agent_skills.md#connect-your-agent).
+
 All the data is written in a binary file on the server side only. However, the recorder is managed using the [carla.Client](python_api.md#carla.Client).
 
 Actors are updated on every frame according to the data contained in the recorded file. Actors in the current simulation that appear in the recording will be either moved or re-spawned to emulate it. Those that do not appear in the recording will continue their way as if nothing happened.

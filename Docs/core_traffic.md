@@ -1,6 +1,6 @@
-# Traffic Simulation in CARLA
+# Scenarios
 
-Traffic simulation is integral to the accurate and efficient training and testing of autonomous driving stacks. CARLA provides a number of different options to simulate traffic and specific traffic scenarios. This section is an overview of the options available to help decide which is the best fit for your use case.
+Scenarios are how an autonomous driving stack is trained and tested: background traffic that behaves like real drivers, and specific, repeatable situations (a cut-in, a pedestrian stepping out, a vehicle running a red light) to check how the stack reacts. CARLA provides several options to build them, from the built-in Traffic Manager to scenario languages and benchmarks. This page is an overview of the options available, to help decide which is the best fit for your use case.
 
 | Option | Needs installing | How a scenario is written | Best for |
 | --- | --- | --- | --- |
@@ -8,6 +8,7 @@ Traffic simulation is integral to the accurate and efficient training and testin
 | [ScenarioRunner](#scenariorunner-and-openscenario) | yes, separately | Python classes or OpenSCENARIO `.xosc` | Specific, repeatable maneuvers with several vehicles |
 | [Scenic](#scenic) | yes, separately | Scenic, a probabilistic language | Many variations of one situation, sampled |
 | [Inverted AI](#inverted-ai) | an API key and the `invertedai` package | a shipped example script | Learned, human-like traffic |
+| [CARLA Leaderboard](#carla-leaderboard) | yes, separately (with ScenarioRunner) | routes with scenario trigger points | Scoring a complete driving agent |
 
 !!! Note
     SUMO and PTV-Vissim co-simulation were part of the Unreal Engine 4.26 line. They are not in the Unreal Engine 5 builds.
@@ -16,6 +17,7 @@ Traffic simulation is integral to the accurate and efficient training and testin
 - [__ScenarioRunner and OpenSCENARIO__](#scenariorunner-and-openscenario)
 - [__Scenic__](#scenic)
 - [__Inverted AI__](#inverted-ai)
+- [__CARLA Leaderboard__](#carla-leaderboard)
 
 ---
 
@@ -30,6 +32,11 @@ __Useful for:__
 - Populating a simulation with realistic urban traffic conditions. 
 - [Customizing traffic behaviours](tuto_traffic_manager.md) to set specific learning circumstances.
 - Reproducible runs: a seed (`set_random_device_seed`) plus synchronous mode makes the traffic deterministic.
+
+!!! agent "Ask your agent"
+    *"Spawn 50 vehicles on autopilot, make them drive 20% under the speed limit and keep 3 m to the car ahead."*
+
+    Skills: `spawn-vehicles`, `control-traffic`. [Connect your agent](agent_skills.md#connect-your-agent).
 
 <div class="build-buttons">
 <p>
@@ -54,7 +61,12 @@ __Useful for:__
 - Scripting a specific situation — a cut-in, a pedestrian stepping out, a vehicle running a light — and replaying it against an agent as many times as needed.
 - Writing those situations in OpenSCENARIO, so they can be exchanged with other simulators.
 - Defining bespoke [metrics](https://scenario-runner.readthedocs.io/en/latest/metrics_module/) that run against a recording of the scenario, instead of simulating it again.
-- Running routes: the [CARLA Leaderboard](https://leaderboard.carla.org/) is built on ScenarioRunner, so an agent evaluated there is being driven through it.
+- Running routes: the [CARLA Leaderboard](#carla-leaderboard) is built on ScenarioRunner, so an agent evaluated there is being driven through it.
+
+!!! agent "Ask your agent"
+    *"Install the ScenarioRunner that matches my CARLA and run the FollowLeadingVehicle scenario, then summarise the results."*
+
+    Skills: `install-scenario-runner`, `run-scenario`, `run-openscenario`, `create-scenario`, `analyze-scenario-results`. [Connect your agent](agent_skills.md#connect-your-agent).
 
 <div class="build-buttons">
 <p>
@@ -77,6 +89,11 @@ __Useful for:__
 - Generating multiple, diverse scenarios with a single scenario definition.
 - Defining probabilistic policies for dynamic agents to take actions over time in response to the state of the world.
 
+!!! agent "Ask your agent"
+    *"Install Scenic and write a scenario where a car cuts in from the right lane in front of the ego, then run it."*
+
+    Skills: `install-scenic`, `create-scenic-scenario`, `run-scenic-scenario`. [Connect your agent](agent_skills.md#connect-your-agent).
+
 <div class="build-buttons">
 <p>
 <a href="../scenic" class="btn btn-neutral" title="Go to Scenic Tutorial">
@@ -95,3 +112,21 @@ __Useful for:__
 
 - Realistic, human-like background traffic, especially in dense junctions.
 - Testing an ego against behavior that was not written by the person running the test.
+
+---
+
+## CARLA Leaderboard
+
+The [CARLA Leaderboard](leaderboard.md) evaluates a complete driving agent: the agent drives a set of routes, each with scenarios triggered along the way, and is scored on route completion and infractions (collisions, red lights, stop signs, leaving the route). It runs on ScenarioRunner and is installed separately.
+
+__Useful for:__
+
+- Measuring an agent end to end with the same metrics as the public benchmark.
+- Building your own route sets, with scenario trigger points placed where you need them.
+
+<div class="build-buttons">
+<p>
+<a href="../leaderboard" class="btn btn-neutral" title="Go to the CARLA Leaderboard">
+Go to the CARLA Leaderboard</a>
+</p>
+</div>

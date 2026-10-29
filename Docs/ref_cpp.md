@@ -3,7 +3,7 @@
 CARLA's C++ code is documented with [Doxygen](https://www.doxygen.nl/), from the comments in the headers.
 
 !!! Warning
-    The copy hosted at <http://carla.org/Doxygen/html/index.html> was generated from the UE 4.26 version and still describes `CarlaUE4`. For CARLA 1.0.0, generate it locally with the steps below.
+    The copy hosted at <http://carla.org/Doxygen/html/index.html> was generated from the UE 4.26 version and still describes `CarlaUE4`. For CARLA 1.0, generate it locally with the steps below.
 
 ---
 ## Generate the documentation

@@ -8,7 +8,7 @@ Town05 is an urban environment set against a backdrop of conifer-covered hills, 
 | | |
 | --- | --- |
 | __Map name__ | `Town05_Opt` |
-| __In the default package__ | no: use a source build, or install it from a [content pack](map_content_packs.md) |
+| __Package available__ | [Additional maps package](https://github.com/carla-simulator/carla/releases/tag/1.0), or a source build |
 | __Size__ | about 490 x 415 m of roads |
 | __Spawn points__ | 302, from `world.get_map().get_spawn_points()` |
 | __Junctions__ | 21: 13 four-way junctions and 8 T-junctions, with 54 traffic lights and 33 stop signs |

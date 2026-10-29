@@ -1,8 +1,11 @@
 # Use NVIDIA Neural Reconstruction with CARLA
 
+![NuRec scene rendered for seven cameras](img/nvidia_nurec/nurec_cameras.webp)
+<div class="img-caption">A NuRec scene reconstructed from a real night drive, rendered for the recording's seven cameras (three 120° and one 30° camera at the front, 70° cameras at the rear left and right, a 30° camera at the rear). All seven are rendered in one batched round trip per tick.</div>
+
 [NVIDIA Omniverse NuRec](https://docs.nvidia.com/nurec/) is NVIDIA's family of neural reconstruction models and services: it turns recorded camera and LIDAR data into a 3D scene that can be rendered from new viewpoints, so a real drive becomes an interactive environment for training and testing Physical AI agents. The scene can then be modified — scenarios changed, synthetic objects added, randomization applied — and it reacts accordingly. [How NuRec works](https://docs.nvidia.com/nurec/basics/how-nurec-works.html) describes the networks behind it.
 
-__NuRec__ is the technology; the __Neural Reconstruction Engine (NRE)__ is the piece you run: a [container published on NGC](https://catalog.ngc.nvidia.com/orgs/nvidia/teams/nre/containers/nre-ga) that loads a reconstructed scene and serves rendered frames over a [gRPC API](https://docs.nvidia.com/nurec/api/grpc_api_guide.html). CARLA UE5 integrates NuRec through that container. A NuRec scenario is a `.usdz` artifact containing the trained neural scene, the recorded actor tracks and the OpenDRIVE road network. When you run a replay:
+__NuRec__ is the technology; the __Neural Reconstruction Engine (NRE)__ is the piece you run: a [container published on NGC](https://catalog.ngc.nvidia.com/orgs/nvidia/teams/nre/containers/nre-ga) that loads a reconstructed scene and serves rendered frames over a [gRPC API](https://docs.nvidia.com/nurec/api/grpc_api_guide.html). CARLA integrates NuRec through that container. A NuRec scenario is a `.usdz` artifact containing the trained neural scene, the recorded actor tracks and the OpenDRIVE road network. When you run a replay:
 
 1. The scenario's `map.xodr` is extracted from the `.usdz` and loaded with `client.generate_opendrive_world()` — no named CARLA town is used.
 2. The recorded actors are spawned as CARLA actors (blueprint dimensions are probed from the live server, so the integration survives blueprint catalog changes) and CARLA hosts the actors, physics and the simulation loop.
@@ -26,7 +29,7 @@ Because CARLA owns the simulation loop, the replay can be perturbed with the ful
 Before you get started, make sure you have satisfied the following prerequisites:
 
 - Ubuntu 22.04 or later
-- CARLA UE5 (0.10.x) with its Python wheel built or installed
+- CARLA 1.0 with its Python wheel built or installed
 - An NVIDIA GPU with a recent driver (the NRE container runs CUDA workloads)
 - Python 3.10 or later
 - Docker with the NVIDIA Container Toolkit (the installer script can install both)
@@ -132,7 +135,7 @@ cd <package root>
 ./CarlaUnreal.sh
 ```
 
-A source build or the editor works just as well; the replay only needs a server to connect to on the RPC port. See [Running CARLA](start_quickstart.md#running-carla) for the packaged server and [Build and run CARLA UE5](build_linux_ue5.md#build-and-run-carla-ue5) for the build targets that launch it.
+A source build or the editor works just as well; the replay only needs a server to connect to on the RPC port. See [Running CARLA](start_quickstart.md#running-carla) for the packaged server and [Build and run CARLA](build_linux_ue5.md#build-and-run-carla) for the build targets that launch it.
 
 __2. Replay a NuRec scenario.__ In a second terminal, run the replay script with the path to a `.usdz` scenario:
 
@@ -188,7 +191,16 @@ The following table explains the command-line parameters of `nurec_runner.py`:
 
 `PythonAPI/examples/nvidia/nurec/hybrid/` renders a NuRec scene with CARLA-driven vehicles and pedestrians composited into it: the NuRec frame supplies the background, CARLA's [ray-traced lens camera family](ref_sensors.md#ray-traced-lens-camera) supplies the added actors (colour, per-pixel distance and instance id, in the recorded camera's exact lens), occlusion against the neural scene's own geometry is resolved with the distance AOV, and lighting is matched with [`world.set_sky_light_map`](python_api.md#carla.World.set_sky_light_map) fed from the scene's own recorded environment. See `PythonAPI/examples/nvidia/nurec/hybrid/README.md` for the end-to-end command and output layout.
 
+![CARLA SUV composited into a NuRec highway](img/nvidia_nurec/nurec_hybrid_suv.webp)
+<div class="img-caption">A CARLA SUV path traced into a NuRec highway scene through the recorded camera's lens. It is lit by the sun found in the reconstruction and casts its shadow on the real road.</div>
+
+![Scenic cut-in inside a NuRec scene](img/nvidia_nurec/nurec_scenic_cut_in.webp)
+<div class="img-caption">Highway cut-in: a CARLA car driven by a Scenic scenario overtakes the ego and cuts into its lane inside a NuRec scene.</div>
+
 The same pipeline runs [Scenic](https://scenic-lang.org) scenarios inside the neural scene: `hybrid_run.py --scene <scene_uuid> --out <run dir> --scenic hwy_cutin.scenic` hands the scene's road network to Scenic, lets the scenario drive the ego (which carries the recorded camera) and every other agent, and composites the result frame by frame. Five scenarios ship with it — `hwy_cutin.scenic`, `hwy_overtake.scenic`, `hwy_brake_wave.scenic`, `urban_lead_brake.scenic` and `urban_pullout.scenic` — `PythonAPI/examples/nvidia/nurec/hybrid/scenic/README.md` describes the driver, the globals a scenario receives and how to write a new one.
+
+![The other four Scenic examples in NuRec scenes](img/nvidia_nurec/nurec_hybrid_scenarios.webp)
+<div class="img-caption">The other four example scenarios, each in a NuRec scene from a real highway or urban drive: overtake, brake wave, stop-and-go and pull-out. The vehicles the scenario drives are CARLA actors, path traced into the recorded camera.</div>
 
 ---
 ## See also

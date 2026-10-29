@@ -10,12 +10,12 @@
 
 4. **Commit changes and add a new tag.**<br>Once all your changes are committed, add a new tag with `git tag -a X.X.X` (replacing `X.X.X` by latest version). Add the changelog of this version as tag message.
 
-5. **Build the package.**<br>Build the package as described in Build a package for [Linux](build_linux_ue5.md#build-a-package-with-carla-ue5) or [Windows](build_windows_ue5.md#build-a-package-with-carla-ue5), after pulling the content checkout in _Unreal/CarlaUnreal/Content/Carla_ to the tip of `ue58-dev-carla`, since setup does not update an existing checkout. Leave `CARLA_BASE_RELEASE` empty when building the package so the release name follows the new version.
+5. **Build the package.**<br>Build the package as described in Build a package for [Linux](build_linux_ue5.md#build-a-package-with-carla) or [Windows](build_windows_ue5.md#build-a-package-with-carla), after pulling the content checkout in _Unreal/CarlaUnreal/Content/Carla_ to the tip of `ue58-dev-carla`, since setup does not update an existing checkout. Leave `CARLA_BASE_RELEASE` empty when building the package so the release name follows the new version.
 
 6. **Tag content repo.**<br>Add a similar tag to the content repository at the commit the package was built from, recorded as `Content git hash` in the package's _VERSION_ file. See [Releases](dev_update_content.md#releases).
 
 7. **Push changes.**<br>Push all the changes to both repositories, to push tags you may need to use `git push --tags`. Create a Pull Request if necessary.
 
-8. **Publish the packages.**<br>Publish the package of the new version together with the `carla-X.X.X-<platform>-release-metadata.tar.gz` file written next to it in the _Package_ folder of the build directory (_Build/Package_ for the default build); [content packs](content_authoring_packs.md) for this release are cooked against it. __(TODO: document who builds the release packages and where they are uploaded; CI only uploads nightly builds of `ue58-dev`.)__
+8. **Publish the packages.**<br>Publish the package of the new version together with the `carla-X.X.X-<platform>-release-metadata.tar.gz` file written next to it in the _Package_ folder of the build directory (_Build/Package_ for the default build); [content packs](content_authoring_packs.md) for this release are cooked against it. The Linux and Windows packages, each with its additional maps package, are uploaded to `downloads.carlasim.com` (for example `https://downloads.carlasim.com/Linux/Carla-1.0-Linux-Shipping.tar.gz` and `https://downloads.carlasim.com/Windows/Carla-1.0-Windows-Shipping.zip`).
 
 9. **Edit GitHub release.**<br>Go to [GitHub releases](https://github.com/carla-simulator/carla/releases) and create a new release on top of the newly created tag. Once the packages are published, add the download links to the newly created release.

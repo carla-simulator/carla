@@ -6,9 +6,43 @@ Each skill is a directory holding a `SKILL.md` — YAML frontmatter (`name`, `de
 
 In practice this means an agent asked to "package CARLA with only Town10" reads `package-carla-ue58` and follows it, instead of guessing at CMake targets and cook options.
 
+- [__Connect your agent__](#connect-your-agent)
 - [__What is covered__](#what-is-covered)
 - [__Using them__](#using-them)
 - [__Writing a skill__](#writing-a-skill)
+
+---
+## Connect your agent
+
+Most procedures in this documentation can be handed to an AI coding agent: installing CARLA, building it, running a server, spawning traffic and sensors, importing maps and vehicles, writing and running scenarios. Throughout the pages, a box like this one marks those procedures, with a prompt to give your agent and the skills it will follow:
+
+!!! agent "Ask your agent"
+    *"Download CARLA 1.0, install its Python client and start a server on Town10."*
+
+    Skills: `download-carla`, `install-python-api`, `run-carla-ue58-server`.
+
+The manual steps stay below each box, for those who prefer to run them by hand or want to know what the agent does.
+
+To give your agent the skills, use one of these:
+
+* __Inside a CARLA checkout__, nothing to do. Agents that read [`AGENTS.md`](https://github.com/carla-simulator/carla/blob/ue58-dev/AGENTS.md) find the library, and the root `.mcp.json` starts the CARLA MCP server for MCP clients.
+* __As a plugin__, with no CARLA checkout at all. In Claude Code:
+
+```
+/plugin marketplace add carla-simulator/carla-agentic-tools
+/plugin install carla@carla-agentic-tools
+```
+
+In Codex, run `codex plugin marketplace add carla-simulator/carla-agentic-tools`; in Cursor, add the same marketplace from __Customize__ in the sidebar.
+
+* __As an MCP server registered by path__, from a CARLA checkout, so that agents working in other projects can use it (needs Node 12 or later):
+
+```sh
+claude mcp add carla -s user -- node /path/to/carla/Util/AgenticTools/bin/carla-agentic-tools.js
+codex mcp add carla -- node /path/to/carla/Util/AgenticTools/bin/carla-agentic-tools.js
+```
+
+Starting from nothing, ask for the download first: the `download-carla`, `install-python-api` and `run-carla-ue58-server` skills fetch a release, install the matching client and start the server, and the agent records where CARLA is for the next tasks.
 
 ---
 ## What is covered

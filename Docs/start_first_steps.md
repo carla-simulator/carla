@@ -4,6 +4,13 @@ A walk through a standard CARLA workflow: launch the server, connect a client, l
 
 Before starting, you need a [running CARLA server](start_quickstart.md#running-carla) and the `carla` Python package [installed](start_quickstart.md#install-client-library).
 
+!!! agent "Ask your agent"
+    *"Load Town10, spawn a vehicle as the ego with a front RGB camera, add 50 vehicles on autopilot and follow the ego with the spectator."*
+
+    Skills: `load-map`, `spawn-vehicles`, `create-sensor`, `control-spectator`. [Connect your agent](agent_skills.md#connect-your-agent).
+
+This tutorial walks through the same steps by hand, with the Python API.
+
 - [__Launching CARLA and connecting the client__](#launching-carla-and-connecting-the-client)
 - [__Loading a map__](#loading-a-map)
 - [__Spectator navigation__](#spectator-navigation)
