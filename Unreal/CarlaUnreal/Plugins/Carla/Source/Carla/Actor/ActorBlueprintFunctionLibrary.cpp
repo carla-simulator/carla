@@ -2047,6 +2047,15 @@ void UActorBlueprintFunctionLibrary::MakeBlueprintDefinition(
   FillIdAndTags(Definition, TEXT("blueprint"), Parameters.Name);
   AddRecommendedValuesForActorRoleName(Definition, {TEXT("blueprint")});
 
+  // The catalog stores the blueprint's class path; an asset path is accepted
+  // too by appending the generated-class suffix (see MakeVehicleDefinition).
+  FString ClassPath = Parameters.Path;
+  if (!ClassPath.IsEmpty() && !ClassPath.EndsWith(TEXT("_C")))
+  {
+    ClassPath += TEXT("_C");
+  }
+  Definition.Class = LoadClass<AActor>(nullptr, *ClassPath);
+
   // Definition.Attributes.Emplace(FActorAttribute{
   //   EActorAttributeType::String,
   //   Parameters.ObjectType});
