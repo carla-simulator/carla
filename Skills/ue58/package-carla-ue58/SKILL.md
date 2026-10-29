@@ -38,6 +38,7 @@ Progress:
 - [ ] Step 1: Check prerequisites (bash scripts/check_env.sh)
 - [ ] Step 2: Decide the cook scope and re-configure for it
 - [ ] Step 3: Package (1-2 h)
+- [ ] Step 3b (optional): AdditionalMaps pack for the towns not cooked
 - [ ] Step 4: Inspect the artifact — do NOT trust the exit code
 - [ ] Step 5: Run it (run-carla-ue58-server)
 ```
@@ -106,6 +107,29 @@ a fresh `.pak`/`.utoc` beside a **stale `.ucas`** — internally inconsistent,
 because the `.utoc` indexes the `.ucas` by byte offset. POSIX unlink semantics
 make this less likely on Linux than on Windows, but the check costs nothing.
 
+### Step 3b: AdditionalMaps pack (optional)
+
+The towns outside the cook scope ship as one content pack, `AdditionalMaps`,
+cooked as DLC against **this** package's base release — so build it right after
+Step 3, from the same tree, and ship it with this package only (a pack from
+another build is refused at install).
+
+```bash
+cmake --build Build/Release --target package-additional-maps-dry-run   # resolve maps, print UAT line
+cmake --build Build/Release --target package-additional-maps
+# -> Build/Release/Package/AdditionalMaps-<version>-<release>.tar.gz
+```
+
+The map list is `Util/ContentPacks/AdditionalMaps.json`
+(`-DCARLA_ADDITIONAL_MAPS_FILE=<json>` for another one; a list or `{"maps": [...]}`).
+A map that is also in the cook scope is refused (`build` reads the base registry),
+so keep the two lists disjoint. The manual `CARLA-AdditionalMaps-Packages-Latest`
+workflow builds package + pack together and uploads them as
+`CARLA_UE5_AdditionalMaps_Latest*` (`Deploy.sh --additional-maps --latest-prefix`),
+names the nightly never overwrites. Install with
+`carla_pack.py install <tarball> --server <Package>/Linux`; details in
+`Docs/map_content_packs.md`.
+
 ### Step 4: Inspect — the part that matters
 
 ```bash
@@ -152,10 +176,10 @@ navigation and map handling. Map discovery reads the AssetRegistry since
 `da94ed2b7` (content packs), so it sees inside the `.pak`. Measured 2026-10-26 on a
 Shipping package (ue58-dev `6bb051b2e`, scope `Town10HD_Opt+OpenDriveMap+EmptyMap+Town12`):
 `get_available_maps()` returns the cooked maps (`['Town10HD_Opt', 'EmptyMap', 'Town12']`;
-`OpenDriveMap` is not listed), and `load_world('Town12')` loads the nested large
+`OpenDriveMap` is not listed) plus the maps of installed packs, and `load_world('Town12')` loads the nested large
 map (`Carla/Maps/Town12/Town12`). A map passed on the command line
 (`/Game/Carla/Maps/Town12/Town12`) was ignored and the server booted
-`Town10HD_Opt`: switch with `load_world()` after connecting. Only cooked maps load.
+`Town10HD_Opt`: switch with `load_world()` after connecting. Only cooked maps and maps of installed packs load.
 The registry asserts off the game thread, so an off-thread `get_available_maps()`
 still returns `[]` — the likely origin of the old "returns `[]`" reports.
 More in [[run-carla-ue58-server]].
@@ -237,7 +261,8 @@ and check the map is in `CARLA_MAPS_TO_COOK`.
 `Linux/CarlaUnreal.sh` + the shipping binary, `Linux/CarlaUnreal/Content/Paks/`
 (`pakchunk0-Linux.{pak,ucas,utoc}` + `global.{ucas,utoc}`), a bundled `PythonAPI/`
 with its wheel, and `VERSION` with the three git hashes — plus a `.tar.gz` of the
-same. `inspect` is read-only.
+same. `inspect` is read-only. Step 3b adds `AdditionalMaps-<version>-<release>.tar.gz`
+next to it; Step 3 always writes `<release>-release-metadata.tar.gz` there.
 
 Cook/stage mechanics, the staging list, and the full defect register are in
 [references/packaging.md](references/packaging.md).

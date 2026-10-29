@@ -35,7 +35,7 @@ A map's `name` is its content path, not a bare town name: on Town10HD_Opt it rea
 print(client.get_available_maps())
 ```
 
-A source build has fifteen maps: `Town01_Opt` to `Town07_Opt` and `Town10HD_Opt`, the four large maps `Town11`, `Town12`, `Town13` and `Town15`, `Town_C`, `Mine_01` for off-road machinery, and `Eixample`, a district of Barcelona built with the [digital twin](content_authoring_maps_digital_twin.md) tool. The default package ships `Town10HD_Opt`, `Town12` and `Town15`; the other maps reach a package as [content packs](map_content_packs.md).
+A source build has fifteen maps: `Town01_Opt` to `Town07_Opt` and `Town10HD_Opt`, the four large maps `Town11`, `Town12`, `Town13` and `Town15`, `Town_C`, `Mine_01` for off-road machinery, and `Eixample`, a district of Barcelona built with the [digital twin](content_authoring_maps_digital_twin.md) tool. The default package ships `Town10HD_Opt`, `Town12` and `Town15`; the other maps reach a package through the [AdditionalMaps content pack](map_content_packs.md) published with it.
 
 ### Landmarks
 

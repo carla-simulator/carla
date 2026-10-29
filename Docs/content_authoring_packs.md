@@ -53,21 +53,23 @@ world = client.load_world('Town13')
 ### Requirements
 
 * A CARLA [source build](build_carla.md) with the Unreal Editor (the cooker is the editor binary). `CARLA_UNREAL_ENGINE_PATH` must point at the engine, as for any CARLA build (`--engine` overrides).
-* The __release metadata__ of the CARLA package the pack targets: `<release>-release-metadata.tar.gz` (about 2 MB, the base asset registry). The `package` target writes it next to the package in `Build/Package/`, and it is published alongside the official package __(TODO: confirm the metadata tarball is published with the 1.0.0 release once it is out)__ (see [Building CARLA on Linux](build_linux_ue5.md#content-packs)). `carla-pack` finds it by itself when it is the only one under this checkout's `Build/`; `--base <file>` otherwise. If you configured with a preset, replace `Build` with `Build/<preset>`.
+* The __release metadata__ of the CARLA package the pack targets: `<release>-release-metadata.tar.gz` (about 2 MB, the base asset registry). The `package` target writes it next to the package in `Build/Package/`, and every uploaded package is published with its own (`CARLA_UE5_Latest_release-metadata.tar.gz` next to `CARLA_UE5_Latest.tar.gz`) (see [Building CARLA on Linux](build_linux_ue5.md#content-packs)). `carla-pack` finds it by itself when it is the only one under this checkout's `Build/`; `--base <file>` otherwise. If you configured with a preset, replace `Build` with `Build/<preset>`.
 
 `carla-pack <command> --help` lists every option. Exit codes: `0` ok, `1` error, `2` usage error, `3` "pack not compatible with `--server`" (`inspect`). The tool finds the project from its own location; `--project` overrides.
 
 ### A. Existing CARLA towns
 
 ```sh
-carla-pack create <Pack> <Map> [<Map> ...] [--base <release-metadata.tar.gz>] [--config Shipping] [--description "..."]
+carla-pack create <Pack> [<Map> ...] [--maps-file <maps.json>] [--base <release-metadata.tar.gz>] [--config Shipping] [--description "..."]
 ```
 
-`create` is `init` + `add --map` for every map + `build` in one go. Maps are given by name (`Town13`), by package path (`/Game/Carla/Maps/Town13/Town13`) or as a `.umap` file. Run it again with more maps to add them to the same pack, passing `--pack-version` again: `create` sets the version, `1.0.0` by default. `create --dry-run` still runs `init` and `add` on the pack sources; only the cook is skipped.
+`create` is `init` + `add --map` for every map + `build` in one go. Maps are given by name (`Town13`), by package path (`/Game/Carla/Maps/Town13/Town13`) or as a `.umap` file, as arguments, in a JSON file passed with `--maps-file` (a list, `["Town03_Opt", "Town13"]`, or an object with a `maps` list), or both. Run it again with more maps to add them to the same pack, passing `--pack-version` again: `create` sets the version, `1.0.0` by default. `create --dry-run` still runs `init` and `add` on the pack sources; only the cook is skipped.
 
 Any map under the project's `Content` (all of CARLA's own towns) is registered __in place__: the manifest names its `/Game/...` package, the cook takes the map and whatever it references that the base release did not cook, and the server loads it from the pack's containers at that same path. Nothing is copied, nothing is opened in the editor, so a World Partition town with hundreds of thousands of actors takes a second to add. Its OpenDRIVE, walker navigation and Traffic Manager files are picked up from where CARLA keeps them (`Maps/OpenDrive/<Map>.xodr` or `Maps/<Map>/OpenDrive/`, `Maps/Nav/<Map>.bin`, `Maps/TM/<Map>.bin` or `Maps/<Map>/TM/`).
 
 Which towns qualify: any map the base package does __not__ ship. The default package ships `Town10HD_Opt`, `Town12`, `Town15`, `EmptyMap` and `OpenDriveMap`; `Town01_Opt` … `Town07_Opt`, `Town11`, `Town13`, `Town_C`, `Mine_01` and `Eixample` can go in a pack. `build` reads the base asset registry and refuses a map the base already contains.
+
+These towns are published together as the [AdditionalMaps](map_content_packs.md) pack, which the `package-additional-maps` target builds from `Util/ContentPacks/AdditionalMaps.json`. Build a pack of your own with them only if you do not install `AdditionalMaps`: two packs that ship the same town collide.
 
 Measured on the Shipping package: a pack of two large World Partition towns cooks in 8 minutes to 2.4 GB; one of three classic towns and two large ones, in 9 minutes to 3.9 GB.
 

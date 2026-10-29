@@ -8,7 +8,7 @@ Town06 is a low-density town set in a coniferous landscape, with long roads of 4
 | | |
 | --- | --- |
 | __Map name__ | `Town06_Opt` |
-| __In the default package__ | no: use a source build, or install it from a [content pack](map_content_packs.md) |
+| __In the default package__ | no: install a [content pack](map_content_packs.md) that contains it, such as AdditionalMaps, or use a source build |
 | __Size__ | about 1040 x 565 m of roads |
 | __Spawn points__ | 436, from `world.get_map().get_spawn_points()` |
 | __Junctions__ | 23, with 19 traffic lights, 1 stop sign and 4 yield signs |

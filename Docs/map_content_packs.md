@@ -1,16 +1,38 @@
 # Towns available as content packs
 
-The CARLA package ships Town10HD_Opt, Town12 and Town15. The towns below are kept in the CARLA content repository but are not cooked into the package: to use one, build a [content pack](content_authoring_packs.md) with it from a CARLA source checkout and install the pack into your package.
+The CARLA package ships Town10HD_Opt, Town12 and Town15. The towns below are not cooked into the package; they come as a [content pack](content_authoring_packs.md), the __AdditionalMaps__ pack, which is built and published together with each release package.
+
+## Installing AdditionalMaps
+
+Download a package and the `AdditionalMaps` tarball built with it. The latest pair is under `https://downloads.carlasim.com/Linux/Dev/`: `CARLA_UE5_AdditionalMaps_Latest.tar.gz` (the package) and `CARLA_UE5_AdditionalMaps_Latest_AdditionalMaps.tar.gz` (the pack). The nightly `CARLA_UE5_Latest.tar.gz` is a different build and has no pack that installs into it. Install the pack with `carla-pack`. Installing only needs `Util/ContentPacks/carla_pack.py` from the CARLA repository (Python 3.8+, standard library only):
 
 ```sh
-# on the source checkout that built the package
-carla-pack create MyTowns Town03_Opt Town13
-
-# on the machine running the CARLA package
-carla-pack install MyTowns-1.0.0-<release>.tar.gz --server /opt/carla/Linux
+python3 carla_pack.py install CARLA_UE5_AdditionalMaps_Latest_AdditionalMaps.tar.gz --server /opt/carla/Linux
 ```
 
-Once installed, the towns load like any other map: `client.load_world('Town13')`. See [Existing CARLA towns](content_authoring_packs.md#a-existing-carla-towns) for the build options and [Installing a pack](content_authoring_packs.md#installing-a-pack) for mounting a pack from the Python API.
+Once installed, the towns load like any other map: `client.load_world('Town13')`. The pack only installs into the package it was built with: a pack from another build is refused (`was built against base release ...`). See [Installing a pack](content_authoring_packs.md#installing-a-pack) for mounting a pack from the Python API.
+
+## Building it yourself
+
+For a package you built, or a package without a published pack, build the pack on the source checkout that built the package, right after the `package` target:
+
+```sh
+cmake --build Build --target package
+cmake --build Build --target package-additional-maps
+# -> Build/Package/AdditionalMaps-<version>-<release>.tar.gz
+```
+
+The maps come from `Util/ContentPacks/AdditionalMaps.json`. For another selection, point `CARLA_ADDITIONAL_MAPS_FILE` at your own list, a JSON list of map names or an object with a `maps` list:
+
+```sh
+echo '{"maps": ["Town03_Opt", "Town13"]}' > my_maps.json
+cmake Build -DCARLA_ADDITIONAL_MAPS_FILE=$PWD/my_maps.json
+cmake --build Build --target package-additional-maps
+```
+
+`package-additional-maps-dry-run` prints the cook command without running it. The same works without CMake: `carla-pack create MyTowns --maps-file my_maps.json` (or the map names as arguments). See [Existing CARLA towns](content_authoring_packs.md#a-existing-carla-towns) for the options.
+
+## Towns in AdditionalMaps
 
 | Map name | Summary | |
 | --- | --- | --- |
@@ -30,4 +52,4 @@ Once installed, the towns load like any other map: `client.load_world('Town13')`
 <div class="img-caption">One view per map from above its spawn points.</div>
 
 !!! Note
-    Two packs that ship the same town collide on a server. Put each town in one pack only.
+    Two packs that ship the same town collide on a server. Put each town in one pack only: if you install `AdditionalMaps`, remove any pack of your own that ships one of these towns.
