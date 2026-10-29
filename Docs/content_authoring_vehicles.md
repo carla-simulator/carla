@@ -336,7 +336,8 @@ The brightness of a group is the product of two values:
 
 - `Intensity` of the vehicle class in `Content/Carla/Config/Lights/Defaults.json` (`perVehicleClass`), the same for
   every group of the vehicle. Most CARLA vehicles use `200000`. `GroupIntensity` in the same file sets the real
-  spot/point lights of each group, which light the scene but do not glow.
+  spot/point lights of each group, which light the scene but do not glow. Both are set from the Vehicles tab of the
+  [Light Defaults panel](content_authoring_lights.md#what-each-tab-controls).
 - The group color on the material instance (table above). Balance the groups of a new vehicle by eye against an
   existing one at night: CARLA uses the Audi TT as the reference for the front lamps and the Mercedes CCC for the rear
   lamps. Color values up to about 30 still make the glow grow; above that a lamp does not change.

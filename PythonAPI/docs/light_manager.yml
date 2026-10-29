@@ -85,7 +85,7 @@
 
       __Intensity units.__ Street lights are photometric and their intensity is in lumens; a real road luminaire is about 10000-25000 lm. Values below `1000` are read as kilolumens (the scale of the UE4-era lamp content, `carla.Light.StreetIntensityScale`), so `20` and `20000` give the same light; use values of `1000` and above for lumens. Building and other lights keep the UE4 scale: the light component gets the intensity multiplied by `carla.Light.LegacyIntensityScale` (default `10000`).
 
-      The per-class defaults applied when a map loads come from `Content/Carla/Config/Lights/Defaults.json` on the server, edited with the Light Defaults tool in the editor. They are not readable from the client; query the lights instead.
+      The per-class defaults applied when a map loads come from `Content/Carla/Config/Lights/Defaults.json` on the server, edited with the [Light Defaults panel](content_authoring_lights.md) in the editor. They are not readable from the client; query the lights instead.
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: color
