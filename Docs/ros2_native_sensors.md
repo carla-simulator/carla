@@ -20,6 +20,8 @@ A sensor with no parent drops the parent segment, and one whose `ros_name` is no
 `ros_topic_name` replaces the whole `/carla/<parent>/<sensor>` part, and the suffix is then appended under it: a camera with `ros_topic_name` set to `/sensing/camera/front` publishes on `/sensing/camera/front/image` and `/sensing/camera/front/camera_info`.
 The single-topic point-cloud sensors are the exception — LIDAR, semantic LIDAR, HSS LIDAR and radar publish on the overridden name verbatim, with no `/point_cloud` suffix.
 
+The messages of a sensor carry its `ros_name` as `frame_id`, and `/tf` carries its transform under the same name. `ros_frame_id` sets another `frame_id`, such as a frame of the robot's own URDF, and `ros_publish_tf` set to `false` keeps the sensor out of `/tf`, so that the frame is not given a second parent while the other actors are still published.
+
 Two topics are global rather than per sensor:
 
 | Topic | Type | Notes |
