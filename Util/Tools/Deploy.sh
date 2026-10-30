@@ -12,6 +12,7 @@ ENDPOINT="https://1b808339cbe94fecce530dfada93713b.r2.cloudflarestorage.com"
 SUMMARY_OUTPUT_PATH=
 ADDITIONAL_MAPS=false
 LATEST_PREFIX=CARLA_UE5_Latest
+RELEASE_VERSION=
 
 # ==============================================================================
 # -- Parse arguments -----------------------------------------------------------
@@ -19,9 +20,9 @@ LATEST_PREFIX=CARLA_UE5_Latest
 
 DOC_STRING="Upload latest build to S3."
 
-USAGE_STRING="Usage: $0 [-h|--help] [--replace-latest] [--additional-maps] [--latest-prefix PREFIX] [--docker-push] [--dry-run] [--summary-output SUMMARY_OUTPUT]"
+USAGE_STRING="Usage: $0 [-h|--help] [--replace-latest] [--additional-maps] [--latest-prefix PREFIX] [--release-version VERSION] [--docker-push] [--dry-run] [--summary-output SUMMARY_OUTPUT]"
 
-OPTS=`getopt -o h --long help,replace-latest,additional-maps,latest-prefix:,docker-push,dry-run,summary-output: -n 'parse-options' -- "$@"`
+OPTS=`getopt -o h --long help,replace-latest,additional-maps,latest-prefix:,release-version:,docker-push,dry-run,summary-output: -n 'parse-options' -- "$@"`
 
 eval set -- "$OPTS"
 
@@ -35,6 +36,9 @@ while [[ $# -gt 0 ]]; do
       shift ;;
     --latest-prefix )
       LATEST_PREFIX="$2";
+      shift 2 ;;
+    --release-version )
+      RELEASE_VERSION="$2";
       shift 2 ;;
     --docker-push )
       DOCKER_PUSH=true;
@@ -60,18 +64,11 @@ done
 source $(dirname "$0")/Environment.sh
 # REPOSITORY_TAG=$(get_git_repository_version)
 
-# Set the package name and path to be deployed
-# TODO: Currently hardcoded. Replace with dynamic versioning in the future
-PACKAGE_DIR=${SCRIPT_DIR}/../../Build/Release/Package
-PACKAGE_NAME=Carla-0.10.0-Linux-Shipping.tar.gz
-PACKAGE_PATH=${PACKAGE_DIR}/${PACKAGE_NAME}
-
-log "Using package ${PACKAGE_PATH}."
-
-# Check if the package exists before continuing
-if [ ! -f ${PACKAGE_PATH} ]; then
-  fatal_error "Package not found, please build a package"
+if [[ -n "${RELEASE_VERSION}" ]] && ${REPLACE_LATEST} ; then
+  fatal_error "--release-version and --replace-latest cannot be combined: a release never replaces latest."
 fi
+
+PACKAGE_DIR=${SCRIPT_DIR}/../../Build/Release/Package
 
 # Prints the single file of PACKAGE_DIR matching the glob $1, fails otherwise.
 find_one_package_file () {
@@ -81,6 +78,10 @@ find_one_package_file () {
   fi
   echo "${MATCHES[0]}"
 }
+
+PACKAGE_PATH=$(find_one_package_file "Carla-*-Linux-Shipping.tar.gz") || exit 1
+PACKAGE_NAME=$(basename "${PACKAGE_PATH}")
+log "Using package ${PACKAGE_PATH}."
 
 # The base release metadata the package target writes: needed to build content
 # packs (AdditionalMaps or your own) that install into this package.
@@ -92,8 +93,15 @@ if ${ADDITIONAL_MAPS} ; then
   log "Using additional maps pack ${ADDITIONAL_MAPS_PATH}."
 fi
 
-# Generate the nightly deploy filename based on the latest git commit date and hash
-NIGHTLY_DEPLOY_BASENAME=$(git log --pretty=format:'%cd_%h' --date=format:'%Y%m%d' -n 1)
+# A release goes to CARLA_<version>/ named after the version; a nightly goes to
+# Dev/ named after the latest git commit date and hash.
+if [[ -n "${RELEASE_VERSION}" ]]; then
+  DEPLOY_FOLDER=CARLA_${RELEASE_VERSION}
+  NIGHTLY_DEPLOY_BASENAME=CARLA_${RELEASE_VERSION}
+else
+  DEPLOY_FOLDER=Dev
+  NIGHTLY_DEPLOY_BASENAME=$(git log --pretty=format:'%cd_%h' --date=format:'%Y%m%d' -n 1)
+fi
 NIGHTLY_DEPLOY_NAME=${NIGHTLY_DEPLOY_BASENAME}.tar.gz
 NIGHTLY_METADATA_DEPLOY_NAME=${NIGHTLY_DEPLOY_BASENAME}_release-metadata.tar.gz
 NIGHTLY_ADDITIONAL_MAPS_DEPLOY_NAME=${NIGHTLY_DEPLOY_BASENAME}_AdditionalMaps.tar.gz
@@ -107,12 +115,12 @@ LATEST_ADDITIONAL_MAPS_DEPLOY_NAME="${LATEST_PREFIX}_AdditionalMaps.tar.gz"
 S3_PREFIX=s3://carla-releases/Linux
 URL_PREFIX=https://downloads.carlasim.com/Linux
 
-NIGHTLY_DEPLOY_URI=${S3_PREFIX}/Dev/${NIGHTLY_DEPLOY_NAME}
-NIGHTLY_METADATA_DEPLOY_URI=${S3_PREFIX}/Dev/${NIGHTLY_METADATA_DEPLOY_NAME}
-NIGHTLY_ADDITIONAL_MAPS_DEPLOY_URI=${S3_PREFIX}/Dev/${NIGHTLY_ADDITIONAL_MAPS_DEPLOY_NAME}
-LATEST_DEPLOY_URI=${S3_PREFIX}/Dev/${LATEST_DEPLOY_NAME}
-LATEST_METADATA_DEPLOY_URI=${S3_PREFIX}/Dev/${LATEST_METADATA_DEPLOY_NAME}
-LATEST_ADDITIONAL_MAPS_DEPLOY_URI=${S3_PREFIX}/Dev/${LATEST_ADDITIONAL_MAPS_DEPLOY_NAME}
+NIGHTLY_DEPLOY_URI=${S3_PREFIX}/${DEPLOY_FOLDER}/${NIGHTLY_DEPLOY_NAME}
+NIGHTLY_METADATA_DEPLOY_URI=${S3_PREFIX}/${DEPLOY_FOLDER}/${NIGHTLY_METADATA_DEPLOY_NAME}
+NIGHTLY_ADDITIONAL_MAPS_DEPLOY_URI=${S3_PREFIX}/${DEPLOY_FOLDER}/${NIGHTLY_ADDITIONAL_MAPS_DEPLOY_NAME}
+LATEST_DEPLOY_URI=${S3_PREFIX}/${DEPLOY_FOLDER}/${LATEST_DEPLOY_NAME}
+LATEST_METADATA_DEPLOY_URI=${S3_PREFIX}/${DEPLOY_FOLDER}/${LATEST_METADATA_DEPLOY_NAME}
+LATEST_ADDITIONAL_MAPS_DEPLOY_URI=${S3_PREFIX}/${DEPLOY_FOLDER}/${LATEST_ADDITIONAL_MAPS_DEPLOY_NAME}
 
 # ==============================================================================
 # -- Upload --------------------------------------------------------------------
@@ -121,7 +129,7 @@ LATEST_ADDITIONAL_MAPS_DEPLOY_URI=${S3_PREFIX}/Dev/${LATEST_ADDITIONAL_MAPS_DEPL
 log "Uploading ${PACKAGE_NAME} as ${NIGHTLY_DEPLOY_NAME}."
 
 ${AWS_COPY} ${PACKAGE_PATH} ${NIGHTLY_DEPLOY_URI} --endpoint-url ${ENDPOINT}
-log "Nightly build uploaded to ${NIGHTLY_DEPLOY_URI}."
+log "Package uploaded to ${NIGHTLY_DEPLOY_URI}."
 
 ${AWS_COPY} ${METADATA_PATH} ${NIGHTLY_METADATA_DEPLOY_URI} --endpoint-url ${ENDPOINT}
 log "Release metadata uploaded to ${NIGHTLY_METADATA_DEPLOY_URI}."
@@ -190,16 +198,16 @@ fi
 
 if [[ -n "$SUMMARY_OUTPUT_PATH" ]]; then
   {
-    echo "package_uri=${URL_PREFIX}/Dev/${NIGHTLY_DEPLOY_NAME}"
-    echo "release_metadata_uri=${URL_PREFIX}/Dev/${NIGHTLY_METADATA_DEPLOY_NAME}"
+    echo "package_uri=${URL_PREFIX}/${DEPLOY_FOLDER}/${NIGHTLY_DEPLOY_NAME}"
+    echo "release_metadata_uri=${URL_PREFIX}/${DEPLOY_FOLDER}/${NIGHTLY_METADATA_DEPLOY_NAME}"
     if ${ADDITIONAL_MAPS} ; then
-      echo "additional_maps_uri=${URL_PREFIX}/Dev/${NIGHTLY_ADDITIONAL_MAPS_DEPLOY_NAME}"
+      echo "additional_maps_uri=${URL_PREFIX}/${DEPLOY_FOLDER}/${NIGHTLY_ADDITIONAL_MAPS_DEPLOY_NAME}"
     fi
     if ${REPLACE_LATEST} ; then
-      echo "latest_package_uri=${URL_PREFIX}/Dev/${LATEST_DEPLOY_NAME}"
-      echo "latest_release_metadata_uri=${URL_PREFIX}/Dev/${LATEST_METADATA_DEPLOY_NAME}"
+      echo "latest_package_uri=${URL_PREFIX}/${DEPLOY_FOLDER}/${LATEST_DEPLOY_NAME}"
+      echo "latest_release_metadata_uri=${URL_PREFIX}/${DEPLOY_FOLDER}/${LATEST_METADATA_DEPLOY_NAME}"
       if ${ADDITIONAL_MAPS} ; then
-        echo "latest_additional_maps_uri=${URL_PREFIX}/Dev/${LATEST_ADDITIONAL_MAPS_DEPLOY_NAME}"
+        echo "latest_additional_maps_uri=${URL_PREFIX}/${DEPLOY_FOLDER}/${LATEST_ADDITIONAL_MAPS_DEPLOY_NAME}"
       fi
     fi
   } >> "$SUMMARY_OUTPUT_PATH"

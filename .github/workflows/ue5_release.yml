@@ -1,0 +1,69 @@
+name: UE5-Release
+
+# Builds a release and uploads it to Linux/CARLA_<VERSION>/:
+#   CARLA_<VERSION>.tar.gz                   (package)
+#   CARLA_<VERSION>_AdditionalMaps.tar.gz    (pack)
+#   CARLA_<VERSION>_release-metadata.tar.gz
+# Run it on a release branch ue5/<VERSION> created from ue58-dev, whose head
+# carries the tag <VERSION> (e.g. branch ue5/1.0, tag 1.0).
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  version:
+    name: Resolve version
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Resolve version from branch and tag
+        id: version
+        run: |
+          if [[ "${GITHUB_REF}" != refs/heads/ue5/* ]]; then
+            echo "::error::Run this workflow on a release branch ue5/<VERSION> (got ${GITHUB_REF})"
+            exit 1
+          fi
+          VERSION="${GITHUB_REF#refs/heads/ue5/}"
+          if [[ ! "${VERSION}" =~ ^[0-9]+(\.[0-9]+)*$ ]]; then
+            echo "::error::Invalid version '${VERSION}' in branch ${GITHUB_REF}"
+            exit 1
+          fi
+          # The tag <VERSION> must exist and point at the branch head being built.
+          if ! TAG_SHA=$(git rev-parse -q --verify "refs/tags/${VERSION}^{commit}"); then
+            echo "::error::Tag ${VERSION} not found"
+            exit 1
+          fi
+          if [ "${TAG_SHA}" != "${GITHUB_SHA}" ]; then
+            echo "::error::Tag ${VERSION} (${TAG_SHA}) is not the head of ${GITHUB_REF} (${GITHUB_SHA})"
+            exit 1
+          fi
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+
+  ubuntu-release:
+    name: Ubuntu Release
+    needs: version
+    uses: ./.github/workflows/_ci-ubuntu.yml
+    secrets:
+      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+      DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
+    with:
+      python-versions: "3.10"
+      smoke-test-python-versions: "3.10"
+      additional-maps: true
+      upload-package: true
+      upload-replace-latest: false
+      release-version: ${{ needs.version.outputs.version }}
+      upload-docker: false
