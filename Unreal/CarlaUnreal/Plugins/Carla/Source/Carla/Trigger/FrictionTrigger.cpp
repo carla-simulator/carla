@@ -50,15 +50,18 @@ void AFrictionTrigger::OnTriggerBeginOverlap(
     bool /*bFromSweep*/,
     const FHitResult & /*SweepResult*/)
 {
-
-  // Save original friction of the wheels
   ACarlaWheeledVehicle *Vehicle = Cast<ACarlaWheeledVehicle>(OtherActor);
   if(Vehicle == nullptr)
     return;
 
-  OldFrictionValues = Vehicle->GetWheelsFrictionScale();
+  // Save original friction of the wheels. A vehicle fires one overlap per
+  // component: save it once, but retry if its wheels did not exist yet.
+  const TArray<float> *Saved = OldFrictionValues.Find(Vehicle);
+  if (Saved == nullptr || Saved->Num() == 0)
+    OldFrictionValues.Add(Vehicle, Vehicle->GetWheelsFrictionScale());
+
   TArray<float> TriggerFriction = {Friction, Friction, Friction, Friction};
-  UpdateWheelsFriction(OtherActor, TriggerFriction);
+  UpdateWheelsFriction(Vehicle, TriggerFriction);
 }
 
 void AFrictionTrigger::OnTriggerEndOverlap(
@@ -67,14 +70,14 @@ void AFrictionTrigger::OnTriggerEndOverlap(
     UPrimitiveComponent * /*OtherComp*/,
     int32 /*OtherBodyIndex*/)
 {
-  // Set Back Default Friction Value
-  UpdateWheelsFriction(OtherActor, OldFrictionValues);
-
+  // Set back the saved friction once the vehicle's last component has left
   ACarlaWheeledVehicle *Vehicle = Cast<ACarlaWheeledVehicle>(OtherActor);
-  if(Vehicle == nullptr)
+  if(Vehicle == nullptr || TriggerVolume->IsOverlappingActor(Vehicle))
     return;
 
-  TArray<float> CurrFriction = Vehicle->GetWheelsFrictionScale();
+  TArray<float> SavedFriction;
+  if (OldFrictionValues.RemoveAndCopyValue(Vehicle, SavedFriction))
+    UpdateWheelsFriction(Vehicle, SavedFriction);
 }
 
 // Called when the game starts or when spawned
