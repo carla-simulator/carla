@@ -1,16 +1,12 @@
 # Control and monitor vehicle physics
 
-Physics properties can be tuned for vehicles and their wheels.
-These changes are applied **only** on runtime, and values are set back to default when the execution ends.
+Physics properties can be tuned for vehicles and their wheels. These changes are applied **only** at runtime, and last until the vehicle is destroyed or the map is reloaded.
 
-These properties are controlled through a
-[carla.VehiclePhysicsControl](python_api.md#carla.VehiclePhysicsControl) object,
-which also provides the control of each wheel's physics through a
-[carla.WheelPhysicsControl](python_api.md#carla.WheelPhysicsControl) object.
+These properties are controlled through a [carla.VehiclePhysicsControl](python_api.md#carla.VehiclePhysicsControl) object, which also provides the control of each wheel's physics through a [carla.WheelPhysicsControl](python_api.md#carla.WheelPhysicsControl) object.
 
 - [__The fields worth changing__](#the-fields-worth-changing)
 - [__Vehicle control code example__](#vehicle-control-code-example)
-- [__Changing the suspension at runtime__](#changing-the-suspension-at-runtime)
+- [__Changing the suspension__](#changing-the-suspension)
 - [__Viewing vehicle telemetry__](#viewing-vehicle-telemetry)
 - [__Driving the wheels by hand__](#driving-the-wheels-by-hand)
 
@@ -29,6 +25,7 @@ On [carla.VehiclePhysicsControl](python_api.md#carla.VehiclePhysicsControl):
 | `torque_curve` | list of `carla.Vector2D` (rpm, Nm) | Torque against engine speed. |
 | `rev_up_moi` | kg·m² | Rotational inertia of the engine: how fast it revs up. |
 | `use_automatic_gears`, `gear_change_time` | —, s | Automatic gearbox, and how long a shift takes. |
+| `forward_gear_ratios`, `reverse_gear_ratios` | list of float | Ratio of each gear, first gear first. |
 | `steering_curve` | list of `carla.Vector2D` (km/h, factor) | How much of `max_steer_angle` is available at a given speed. |
 | `center_of_mass` | m | Offset of the centre of mass, which changes the weight transfer. |
 | `use_sweep_wheel_collision` | — | Sweep the wheel's whole volume against the world instead of ray-casting from the axle. Costlier, but it stops wheels clipping kerbs. |
@@ -39,11 +36,18 @@ On each [carla.WheelPhysicsControl](python_api.md#carla.WheelPhysicsControl) in 
 | --- | --- | --- |
 | `friction_force_multiplier` | — | Grip of that wheel. The default is `3.5`; lower it for a slippery tyre. |
 | `max_steer_angle` | degrees | How far the wheel turns. `0` on the rear wheels of a normal car. |
-| `wheel_radius`, `wheel_width` | cm | Wheel dimensions. Changing these without checking the vehicle rests on the road is what makes a car float or sink. |
+| `wheel_radius` | cm | Wheel radius. Changing it without checking the vehicle rests on the road is what makes a car float or sink. |
 | `max_brake_torque`, `max_hand_brake_torque` | Nm | Braking force on that wheel. |
-| `suspension_*`, `spring_rate` | see [below](#changing-the-suspension-at-runtime) | The suspension of that wheel. |
+| `abs_enabled`, `traction_control_enabled` | — | Anti-lock brakes and traction control. They only act once the tyre reaches its grip limit, so on a dry road they change little. |
+| `affected_by_steering`, `affected_by_brake`, `affected_by_handbrake`, `affected_by_engine` | — | Whether the wheel responds to that input. On a front or rear axle the differential decides which wheels are driven: `affected_by_engine = False` takes only part of the drive off that wheel. |
+| `external_torque_combine_method` | — | `0` ignores an external drive torque, `1` replaces the engine torque with it, `2` adds it. CARLA sets no external torque, so `1` leaves the wheel with no drive at all. |
 
-The wheels are ordered as [`carla.VehicleWheelLocation`](python_api.md#carla.VehicleWheelLocation) numbers them: `FL_Wheel`, `FR_Wheel`, `BL_Wheel`, `BR_Wheel` — front-left, front-right, back-left, back-right. Two-wheelers have two entries instead, `Front_Wheel` and `Back_Wheel`.
+The other fields of `WheelPhysicsControl`, the suspension among them, come from the wheel blueprint: `apply_physics_control()` ignores them, and `get_physics_control()` keeps returning the blueprint values.
+
+The wheels are ordered as [`carla.VehicleWheelLocation`](python_api.md#carla.VehicleWheelLocation) numbers them: `FL_Wheel`, `FR_Wheel`, `BL_Wheel`, `BR_Wheel` — front-left, front-right, back-left, back-right. The list needs one entry per wheel: with any other number, the server logs an error and leaves the wheels as they are.
+
+!!! Warning
+    `physics_control.wheels` returns a copy. Changing a wheel inside `for wheel in physics_control.wheels:` changes nothing: keep the list in a variable, change it, and assign it back with `physics_control.wheels = wheels`, as the example below does.
 
 ---
 ## Vehicle control code example
@@ -100,29 +104,9 @@ if __name__ == '__main__':
 
 ---
 
-## Changing the suspension at runtime
+## Changing the suspension
 
-Each wheel's suspension is defined in its wheel blueprint, which [Content authoring - vehicle suspension](content_authoring_vehicles_suspension.md) covers along with what every parameter means. The same values are exposed per wheel on [carla.WheelPhysicsControl](python_api.md#carla.WheelPhysicsControl), so a client can change them without rebuilding the content. Read the current control, modify the wheels, and apply it back:
-
-```py
-vehicle = world.get_actor(vehicle_id)
-physics_control = vehicle.get_physics_control()
-
-# Keep the existing wheels and change only what is needed: a fresh
-# WheelPhysicsControl would reset every other field to its default.
-wheels = []
-for wheel in physics_control.wheels:
-    wheel.suspension_max_raise = 15.0
-    wheel.suspension_max_drop = 15.0
-    wheel.suspension_damping_ratio = 0.4
-    wheel.spring_rate = 200.0
-    wheels.append(wheel)
-
-physics_control.wheels = wheels
-vehicle.apply_physics_control(physics_control)
-```
-
-Runtime changes last until the vehicle is destroyed or the map is reloaded.
+Each wheel's suspension is defined in its wheel blueprint, which [Content authoring - vehicle suspension](content_authoring_vehicles_suspension.md) covers along with what every parameter means. [carla.WheelPhysicsControl](python_api.md#carla.WheelPhysicsControl) reports the same values per wheel, but a client cannot change them: `apply_physics_control()` ignores the suspension fields. To change the suspension, change the wheel blueprint.
 
 ---
 

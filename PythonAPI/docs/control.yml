@@ -452,7 +452,7 @@
     - var_name: forward_gear_ratios
       type: list(float)
       doc: >
-        List of objects defining the vehicle's gears.
+        Ratio of each forward gear, first gear first.
     # --------------------------------------
     - var_name: reverse_gear_ratios
       type: list(float)
@@ -542,7 +542,7 @@
     - var_name: wheels
       type: list(carla.WheelPhysicsControl)
       doc: >
-        List of wheel physics objects. This list should have 4 elements, where index 0 corresponds to the front left wheel, index 1 corresponds to the front right wheel, index 2 corresponds to the back left wheel and index 3 corresponds to the back right wheel. For 2 wheeled vehicles, set the same values for both front and back wheels.
+        List of wheel physics objects, one per wheel, where index 0 corresponds to the front left wheel, index 1 corresponds to the front right wheel, index 2 corresponds to the back left wheel and index 3 corresponds to the back right wheel. A list with a different number of wheels leaves the wheels unchanged. The getter returns a copy: modify the list and assign it back.
 
     # - METHODS ----------------------------
     methods:
@@ -657,7 +657,7 @@
   
   - class_name: WheelPhysicsControl
     doc: >
-      Class that defines specific physical parameters for wheel objects that will be part of a carla.VehiclePhysicsControl to simulate vehicle it as a material object.
+      Class that defines specific physical parameters for wheel objects that will be part of a carla.VehiclePhysicsControl to simulate vehicle it as a material object. carla.Vehicle.apply_physics_control applies `wheel_radius`, `friction_force_multiplier`, `max_steer_angle`, `max_brake_torque`, `max_hand_brake_torque`, `abs_enabled`, `traction_control_enabled`, the four `affected_by_*` flags, `external_torque_combine_method` and `sweep_type`. The other fields, the suspension among them, come from the wheel blueprint and are ignored on apply.
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: wheel_index
@@ -701,7 +701,7 @@
     - var_name: external_torque_combine_method
       type: int
       doc: >
-        How an external torque is combined with the ones the vehicle already applies, being 0 ignore it, 1 replace them and 2 add to them.
+        How an external torque is combined with the ones the vehicle already applies, being 0 ignore it, 1 replace them and 2 add to them. CARLA sets no external torque, so 1 leaves the wheel with no drive.
     # --------------------------------------
     - var_name: axle_type
       type: float

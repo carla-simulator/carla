@@ -3904,7 +3904,7 @@ Time taken to switch between gears.
 - <a name="carla.VehiclePhysicsControl.final_ratio"></a>**<font color="#f8805a">final_ratio</font>** (_float_)  
 Fixed ratio from transmission to wheels.  
 - <a name="carla.VehiclePhysicsControl.forward_gear_ratios"></a>**<font color="#f8805a">forward_gear_ratios</font>** (_list(float)_)  
-List of objects defining the vehicle's gears.  
+Ratio of each forward gear, first gear first.  
 - <a name="carla.VehiclePhysicsControl.reverse_gear_ratios"></a>**<font color="#f8805a">reverse_gear_ratios</font>** (_list(float)_)  
 List of floats defining the vehicle's reverse gears (there is normally only one).  
 - <a name="carla.VehiclePhysicsControl.change_up_rpm"></a>**<font color="#f8805a">change_up_rpm</font>** (_float_)  
@@ -3936,7 +3936,7 @@ Curve that indicates the maximum steering for a specific forward speed.
 - <a name="carla.VehiclePhysicsControl.use_sweep_wheel_collision"></a>**<font color="#f8805a">use_sweep_wheel_collision</font>** (_bool_)  
 Enable the use of sweep for wheel collision. By default, it is disabled and it uses a simple raycast from the axis to the floor for each wheel. This option provides a better collision model in which the full volume of the wheel is checked against collisions.  
 - <a name="carla.VehiclePhysicsControl.wheels"></a>**<font color="#f8805a">wheels</font>** (_list([carla.WheelPhysicsControl](#carla.WheelPhysicsControl))_)  
-List of wheel physics objects. This list should have 4 elements, where index 0 corresponds to the front left wheel, index 1 corresponds to the front right wheel, index 2 corresponds to the back left wheel and index 3 corresponds to the back right wheel. For 2 wheeled vehicles, set the same values for both front and back wheels.  
+List of wheel physics objects, one per wheel, where index 0 corresponds to the front left wheel, index 1 corresponds to the front right wheel, index 2 corresponds to the back left wheel and index 3 corresponds to the back right wheel. A list with a different number of wheels leaves the wheels unchanged. The getter returns a copy: modify the list and assign it back.  
 
 ### Methods
 - <a name="carla.VehiclePhysicsControl.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**torque_curve**=[[0.0, 500.0], [5000.0, 500.0]]</font>, <font color="#00a6ed">**max_torque**=300.0</font>, <font color="#00a6ed">**max_rpm**=5000.0</font>, <font color="#00a6ed">**idle_rpm**=1.0</font>, <font color="#00a6ed">**brake_effect**=1.0</font>, <font color="#00a6ed">**rev_up_moi**=600.0</font>, <font color="#00a6ed">**rev_down_rate**=600.0</font>, <font color="#00a6ed">**differential_type**=3</font>, <font color="#00a6ed">**front_rear_split**=0.5</font>, <font color="#00a6ed">**use_automatic_gears**=True</font>, <font color="#00a6ed">**gear_change_time**=0.5</font>, <font color="#00a6ed">**final_ratio**=4.0</font>, <font color="#00a6ed">**forward_gear_ratios**=[2.85, 2.02, 1.35, 1.0, 2.85, 2.02, 1.35, 1.0]</font>, <font color="#00a6ed">**reverse_gear_ratios**=[2.86, 2.86]</font>, <font color="#00a6ed">**change_up_rpm**=4500.0</font>, <font color="#00a6ed">**change_down_rpm**=2000.0</font>, <font color="#00a6ed">**transmission_efficiency**=0.9</font>, <font color="#00a6ed">**mass**=1000.0</font>, <font color="#00a6ed">**drag_coefficient**=0.3</font>, <font color="#00a6ed">**center_of_mass**=[carla.Vector3D](#carla.Vector3D)(0.0, 0.0, 0.0)</font>, <font color="#00a6ed">**chassis_width**=180</font>, <font color="#00a6ed">**chassis_height**=140</font>, <font color="#00a6ed">**downforce_coefficient**=0.3</font>, <font color="#00a6ed">**inertia_tensor_scale**=[carla.Vector3D](#carla.Vector3D)(1.0,1.0,1.0)</font>, <font color="#00a6ed">**sleep_threshold**=10.0</font>, <font color="#00a6ed">**sleep_slope_limit**=0.866</font>, <font color="#00a6ed">**steering_curve**=[[0.0, 1.0], [10.0, 0.5]]</font>, <font color="#00a6ed">**wheels**=list()</font>, <font color="#00a6ed">**use_sweep_wheel_collision**=False</font>)  
@@ -4336,7 +4336,7 @@ Returns <b>True</b> if both objects' variables are different.
 ---
 
 ## carla.WheelPhysicsControl<a name="carla.WheelPhysicsControl"></a>
-Class that defines specific physical parameters for wheel objects that will be part of a [carla.VehiclePhysicsControl](#carla.VehiclePhysicsControl) to simulate vehicle it as a material object.  
+Class that defines specific physical parameters for wheel objects that will be part of a [carla.VehiclePhysicsControl](#carla.VehiclePhysicsControl) to simulate vehicle it as a material object. [carla.Vehicle.apply_physics_control](#carla.Vehicle.apply_physics_control) applies `wheel_radius`, `friction_force_multiplier`, `max_steer_angle`, `max_brake_torque`, `max_hand_brake_torque`, `abs_enabled`, `traction_control_enabled`, the four `affected_by_*` flags, `external_torque_combine_method` and `sweep_type`. The other fields, the suspension among them, come from the wheel blueprint and are ignored on apply.  
 
 ### Instance Variables
 - <a name="carla.WheelPhysicsControl.wheel_index"></a>**<font color="#f8805a">wheel_index</font>** (_int_)  
@@ -4354,7 +4354,7 @@ Position of the wheel, relative to the vehicle.
 - <a name="carla.WheelPhysicsControl.lateral_slip_graph"></a>**<font color="#f8805a">lateral_slip_graph</font>** (_list([carla.Vector2D](#carla.Vector2D))_)  
 Curve of lateral friction against slip angle, as a list of points where x is the slip angle in degrees and y the friction multiplier.  
 - <a name="carla.WheelPhysicsControl.external_torque_combine_method"></a>**<font color="#f8805a">external_torque_combine_method</font>** (_int_)  
-How an external torque is combined with the ones the vehicle already applies, being 0 ignore it, 1 replace them and 2 add to them.  
+How an external torque is combined with the ones the vehicle already applies, being 0 ignore it, 1 replace them and 2 add to them. CARLA sets no external torque, so 1 leaves the wheel with no drive.  
 - <a name="carla.WheelPhysicsControl.axle_type"></a>**<font color="#f8805a">axle_type</font>** (_float<small> - unitless</small>_)  
 The axle of the wheel, used by the differntial setup to decide which wheels to give power to. Use a value of 1.0 to set the wheel at the front axle and a value of 2.0 for rear ones. The value 0.0 can also be used as an 'other' case, and in this case the `affected_by_engine` value will be used to decide whether or not it is given power. (default 0.0).  
 - <a name="carla.WheelPhysicsControl.offset"></a>**<font color="#f8805a">offset</font>** (_float<small> - meters</small>_)  

@@ -1,6 +1,6 @@
 # Content authoring - vehicle suspension
 
-Every wheel of a CARLA vehicle is a `UChaosVehicleWheel` asset with its own suspension, so a four-wheeled vehicle has four independent suspensions. This page covers what the parameters mean and how to set them in the editor, which is where a vehicle's permanent values live. To change them on a running vehicle instead, see [Changing the suspension at runtime](tuto_vehicle_physics.md#changing-the-suspension-at-runtime).
+Every wheel of a CARLA vehicle is a `UChaosVehicleWheel` asset with its own suspension, so a four-wheeled vehicle has four independent suspensions. This page covers what the parameters mean and how to set them in the editor, which is the only place they can be changed: a running vehicle reports them through its [physics control](tuto_vehicle_physics.md#changing-the-suspension) but does not take new values.
 
 - [__Wheel blueprints__](#wheel-blueprints)
 - [__Suspension parameters__](#suspension-parameters)
