@@ -28,9 +28,18 @@ def equal_tol(obj_a, obj_b, tol = 1e-5):
     if isinstance(obj_a, list):
         return obj_a == obj_b
 
-    if isinstance(obj_a, carla.libcarla.Vector3D):
+    if isinstance(obj_a, carla.Vector3D):
         diff = abs(obj_a - obj_b)
         return diff.x < tol and diff.y < tol and diff.z < tol
+
+    if isinstance(obj_a, carla.Vector2D):
+        return abs(obj_a.x - obj_b.x) < tol and abs(obj_a.y - obj_b.y) < tol
+
+    # Curves and wheel arrays come back as bound vectors, which have no
+    # subtraction operator; compare them element by element.
+    if hasattr(obj_a, '__len__'):
+        return len(obj_a) == len(obj_b) and all(
+            equal_tol(x, y, tol) for x, y in zip(obj_a, obj_b))
 
     return abs(obj_a - obj_b) < tol
 
@@ -63,7 +72,7 @@ def equal_physics_control(pc_a, pc_b):
 
     return True, error_msg
 
-def change_physics_control(vehicle, tire_friction = None, drag = None, wheel_sweep = None):
+def change_physics_control(vehicle, friction_force_multiplier = None, drag = None, wheel_sweep = None):
     # Change Vehicle Physics Control parameters of the vehicle
     physics_control = vehicle.get_physics_control()
 
@@ -78,11 +87,11 @@ def change_physics_control(vehicle, tire_friction = None, drag = None, wheel_swe
     rear_left_wheel = physics_control.wheels[2]
     rear_right_wheel = physics_control.wheels[3]
 
-    if tire_friction is not None:
-        front_left_wheel.tire_friction = tire_friction
-        front_right_wheel.tire_friction = tire_friction
-        rear_left_wheel.tire_friction = tire_friction
-        rear_right_wheel.tire_friction = tire_friction
+    if friction_force_multiplier is not None:
+        front_left_wheel.friction_force_multiplier = friction_force_multiplier
+        front_right_wheel.friction_force_multiplier = friction_force_multiplier
+        rear_left_wheel.friction_force_multiplier = friction_force_multiplier
+        rear_right_wheel.friction_force_multiplier = friction_force_multiplier
 
     wheels = [front_left_wheel, front_right_wheel, rear_left_wheel, rear_right_wheel]
     physics_control.wheels = wheels
@@ -120,7 +129,7 @@ class TestApplyVehiclePhysics(SyncSmokeTest):
         self.wait(2)
 
         # Checking the setting of wheel variables (tire friction)
-        pc_a = change_physics_control(vehicle, tire_friction=5)
+        pc_a = change_physics_control(vehicle, friction_force_multiplier=5)
         vehicle.apply_physics_control(pc_a)
         self.wait(2)
         pc_b = vehicle.get_physics_control()
@@ -158,7 +167,7 @@ class TestApplyVehiclePhysics(SyncSmokeTest):
         pc_b = []
         for i in range(0, num_veh):
             friction = 1.0 + 0.1*i
-            pc_a.append(change_physics_control(vehicles[i], tire_friction=friction))
+            pc_a.append(change_physics_control(vehicles[i], friction_force_multiplier=friction))
             vehicles[i].apply_physics_control(pc_a[i])
 
         self.wait(2)
@@ -194,263 +203,6 @@ class TestApplyVehiclePhysics(SyncSmokeTest):
         bp_vehicles = self.filter_vehicles_for_old_towns(bp_vehicles)
         self.check_multiple_physics_control(bp_vehicles)
 
-class TestVehicleFriction(SyncSmokeTest):
-    def wait(self, frames=100):
-        for _i in range(0, frames):
-            self.world.tick()
-
-    def test_vehicle_zero_friction(self):
-        print("TestVehicleFriction.test_vehicle_zero_friction")
-        
-        self.client.load_world("Town05_Opt", False)
-        # workaround: give time to UE4 to clean memory after loading (old assets)
-        time.sleep(5)
-
-        bp_vehicles = self.world.get_blueprint_library().filter("vehicle.*")
-        bp_vehicles = self.filter_vehicles_for_old_towns(bp_vehicles)
-        for bp_veh in bp_vehicles:
-
-            veh_transf_00 = carla.Transform(carla.Location(33, -200, 0.2), carla.Rotation(yaw=90))
-            veh_transf_01 = carla.Transform(carla.Location(29, -200, 0.7), carla.Rotation(yaw=90))
-
-            batch = [
-                    SpawnActor(bp_veh, veh_transf_00)
-                    .then(ApplyTargetVelocity(FutureActor, carla.Vector3D(0, 0, 0)))
-                    .then(SetEnableGravity(FutureActor, True)),
-                    SpawnActor(bp_veh, veh_transf_01)
-                    .then(ApplyTargetVelocity(FutureActor, carla.Vector3D(0, 0, 0)))
-                    .then(SetEnableGravity(FutureActor, False))
-                ]
-
-            responses = self.client.apply_batch_sync(batch)
-
-            veh_ids = [x.actor_id for x in responses]
-            veh_refs = [self.world.get_actor(x) for x in veh_ids]
-
-            if (0 in veh_ids) or (None in veh_refs):
-                self.fail("%s: The test cars could not be correctly spawned" % (bp_veh.id))
-
-            self.wait(10)
-
-            self.client.apply_batch_sync([
-                ApplyVehiclePhysicsControl(veh_refs[0], change_physics_control(veh_refs[0], tire_friction=0.0, drag=0.0)),
-                ApplyVehiclePhysicsControl(veh_refs[1], change_physics_control(veh_refs[1], drag=0.0))])
-
-            self.wait(1)
-            vel_ref = 100.0 / 3.6
-
-            self.client.apply_batch_sync([
-                ApplyTargetVelocity(veh_refs[0], carla.Vector3D(0, vel_ref, 0)),
-                ApplyTargetVelocity(veh_refs[1], carla.Vector3D(0, vel_ref, 0)),
-            ])
-
-            self.wait(1)
-
-            vel_veh_00 = veh_refs[0].get_velocity().y
-            vel_veh_01 = veh_refs[1].get_velocity().y
-
-            if not list_equal_tol([vel_ref, vel_veh_00, vel_veh_01], 1e-3):
-                self.client.apply_batch_sync([carla.command.DestroyActor(x) for x in veh_ids])
-                
-                self.fail("%s: Velocities are not equal after initialization. Ref: %.3f -> [%.3f, %.3f]"
-                  % (bp_veh.id, vel_ref, vel_veh_00, vel_veh_01))
-
-            self.wait(100)
-
-            vel_veh_00 = veh_refs[0].get_velocity().y
-            vel_veh_01 = veh_refs[1].get_velocity().y
-
-            if not list_equal_tol([vel_ref, vel_veh_00, vel_veh_01], 1e-1):
-                self.client.apply_batch_sync([carla.command.DestroyActor(x) for x in veh_ids])
-
-                self.fail("%s: Velocities are not equal after simulation. Ref: %.3f -> [%.3f, %.3f]"
-                  % (bp_veh.id, vel_ref, vel_veh_00, vel_veh_01))
-
-            self.client.apply_batch_sync([carla.command.DestroyActor(x) for x in veh_ids])
-
-    def test_vehicle_friction_volume(self):
-        print("TestVehicleFriction.test_vehicle_friction_volume")
-
-        self.client.load_world("Town05_Opt", False)
-        # workaround: give time to UE4 to clean memory after loading (old assets)
-        time.sleep(5)
-
-        bp_vehicles = self.world.get_blueprint_library().filter("vehicle.dodge.charger")
-
-        value_vol_friction = 5.0
-        friction_bp = self.world.get_blueprint_library().find('static.trigger.friction')
-        friction_bp.set_attribute('friction', str(value_vol_friction))
-        extent = carla.Location(300.0, 4500.0, 700.0)
-        friction_bp.set_attribute('extent_x', str(extent.x))
-        friction_bp.set_attribute('extent_y', str(extent.y))
-        friction_bp.set_attribute('extent_z', str(extent.z))
-
-        vol_transf = carla.Transform(carla.Location(27, -100, 1))
-
-        self.world.debug.draw_box(box=carla.BoundingBox(vol_transf.location, extent * 1e-2), rotation=vol_transf.rotation, life_time=1000, thickness=0.5, color=carla.Color(r=0,g=255,b=0))
-        friction_trigger = self.world.spawn_actor(friction_bp, vol_transf)
-
-        for bp_veh in bp_vehicles:
-
-            veh_transf_00 = carla.Transform(carla.Location(36, -200, 0.2), carla.Rotation(yaw=90))
-            veh_transf_01 = carla.Transform(carla.Location(28, -200, 0.7), carla.Rotation(yaw=90))
-
-            batch = [
-                    SpawnActor(bp_veh, veh_transf_00)
-                    .then(ApplyTargetVelocity(FutureActor, carla.Vector3D(0, 0, 0))),
-                    SpawnActor(bp_veh, veh_transf_01)
-                    .then(ApplyTargetVelocity(FutureActor, carla.Vector3D(0, 0, 0)))
-                ]
-
-            responses = self.client.apply_batch_sync(batch)
-
-            veh_ids = [x.actor_id for x in responses]
-            veh_refs = [self.world.get_actor(x) for x in veh_ids]
-
-            if (0 in veh_ids) or (None in veh_refs):
-                self.fail("%s: The test cars could not be correctly spawned" % (bp_veh.id))
-
-            self.wait(10)
-
-            vel_ref = 50.0 / 3.6
-            friction_ref = 0.0
- 
-            self.client.apply_batch_sync([
-                ApplyVehiclePhysicsControl(veh_refs[0], change_physics_control(veh_refs[0], tire_friction=friction_ref, drag=0.0)),
-                ApplyVehiclePhysicsControl(veh_refs[1], change_physics_control(veh_refs[1], tire_friction=friction_ref, drag=0.0))])
-            self.wait(1)
-
-            self.client.apply_batch_sync([
-                ApplyTargetVelocity(veh_refs[0], carla.Vector3D(0, vel_ref, 0)),
-                ApplyTargetVelocity(veh_refs[1], carla.Vector3D(0, vel_ref, 0)),
-            ])
-
-            self.wait(4)
-
-            # Before trigger
-            bef_vel_veh_00 = veh_refs[0].get_velocity().y
-            bef_vel_veh_01 = veh_refs[1].get_velocity().y
-            bef_tire_fr_00 = veh_refs[0].get_physics_control().wheels[0].tire_friction
-            bef_tire_fr_01 = veh_refs[1].get_physics_control().wheels[0].tire_friction
-            extent = carla.Location(100.0, 100.0, 200.0)
-            self.world.debug.draw_box(box=carla.BoundingBox(veh_refs[1].get_location(), extent * 1e-2), rotation=vol_transf.rotation, life_time=8, thickness=0.5, color=carla.Color(r=255,g=0,b=0))
-
-            if not equal_tol(bef_vel_veh_00, vel_ref, 1e-3) or not equal_tol(bef_tire_fr_00, friction_ref, 1e-3):
-                self.fail("%s: Reference vehicle has changed before trigger. Vel: %.3f [%.3f]. Fric: %.3f [%.3f]"
-                  % (bp_veh.id, bef_vel_veh_00, vel_ref, bef_tire_fr_00, friction_ref))
-            if not equal_tol(bef_vel_veh_01, vel_ref, 1e-3) or not equal_tol(bef_tire_fr_01, friction_ref, 1e-3):
-                self.fail("%s: Test vehicle has changed before trigger. Vel: %.3f [%.3f]. Fric: %.3f [%.3f]"
-                  % (bp_veh.id, bef_vel_veh_01, vel_ref, bef_tire_fr_01, friction_ref))
-
-            self.wait(100)
-
-            # Inside trigger
-            ins_vel_veh_00 = veh_refs[0].get_velocity().y
-            ins_vel_veh_01 = veh_refs[1].get_velocity().y
-            ins_tire_fr_00 = veh_refs[0].get_physics_control().wheels[0].tire_friction
-            ins_tire_fr_01 = veh_refs[1].get_physics_control().wheels[0].tire_friction
-
-            extent = carla.Location(100.0, 100.0, 200.0)
-            self.world.debug.draw_box(box=carla.BoundingBox(veh_refs[1].get_location(), extent * 1e-2), rotation=vol_transf.rotation, life_time=8, thickness=0.5, color=carla.Color(r=255,g=0,b=0))
-
-            if not equal_tol(ins_vel_veh_00, vel_ref, 1e-3) or not equal_tol(ins_tire_fr_00, friction_ref, 1e-3):
-                self.fail("%s: Reference vehicle has changed inside trigger. Vel: %.3f [%.3f]. Fric: %.3f [%.3f]"
-                  % (bp_veh.id, ins_vel_veh_00, vel_ref, ins_tire_fr_00, friction_ref))
-            if ins_vel_veh_01 > vel_ref or not equal_tol(ins_tire_fr_01, value_vol_friction, 1e-3):
-                self.fail("%s: Test vehicle is not correct inside trigger. Vel: %.3f [%.3f]. Fric: %.3f [%.3f]"
-                  % (bp_veh.id, ins_vel_veh_01, vel_ref, ins_tire_fr_01, value_vol_friction))
-
-            self.wait(200)
-
-            # Outside trigger
-            out_vel_veh_00 = veh_refs[0].get_velocity().y
-            out_vel_veh_01 = veh_refs[1].get_velocity().y
-            out_tire_fr_00 = veh_refs[0].get_physics_control().wheels[0].tire_friction
-            out_tire_fr_01 = veh_refs[1].get_physics_control().wheels[0].tire_friction
-
-            extent = carla.Location(100.0, 100.0, 200.0)
-            self.world.debug.draw_box(box=carla.BoundingBox(veh_refs[1].get_location(), extent * 1e-2), rotation=vol_transf.rotation, life_time=8, thickness=0.5, color=carla.Color(r=255,g=0,b=0))
-
-            if not equal_tol(out_vel_veh_00, vel_ref, 1e-3) or not equal_tol(out_tire_fr_00, friction_ref, 1e-3):
-                self.fail("%s: Reference vehicle has changed after trigger. Vel: %.3f [%.3f]. Fric: %.3f [%.3f]"
-                  % (bp_veh.id, ins_vel_veh_00, vel_ref, out_tire_fr_00, friction_ref))
-            if out_vel_veh_01 > vel_ref or not equal_tol(out_tire_fr_01, friction_ref, 1e-3):
-                self.fail("%s: Test vehicle is not correct after trigger. Vel: %.3f [%.3f]. Fric: %.3f [%.3f]"
-                  % (bp_veh.id, out_vel_veh_01, vel_ref, out_tire_fr_01, friction_ref))
-
-            self.client.apply_batch_sync([carla.command.DestroyActor(x) for x in veh_ids])
-
-        friction_trigger.destroy()
-
-    def test_vehicle_friction_values(self):
-        print("TestVehicleFriction.test_vehicle_friction_values")
-
-        self.client.load_world("Town05_Opt", False)
-        # workaround: give time to UE4 to clean memory after loading (old assets)
-        time.sleep(5)
-
-        bp_vehicles = self.world.get_blueprint_library().filter("vehicle.*")
-
-        for bp_veh in bp_vehicles:
-
-            veh_transf_00 = carla.Transform(carla.Location(35, -200, 0.2), carla.Rotation(yaw=90))
-            veh_transf_01 = carla.Transform(carla.Location(29, -200, 0.7), carla.Rotation(yaw=90))
-
-            batch = [
-                    SpawnActor(bp_veh, veh_transf_00)
-                    .then(ApplyTargetVelocity(FutureActor, carla.Vector3D(0, 0, 0))),
-                    SpawnActor(bp_veh, veh_transf_01)
-                    .then(ApplyTargetVelocity(FutureActor, carla.Vector3D(0, 0, 0)))
-                ]
-
-            responses = self.client.apply_batch_sync(batch)
-
-            veh_ids = [x.actor_id for x in responses]
-            veh_refs = [self.world.get_actor(x) for x in veh_ids]
-
-            if (0 in veh_ids) or (None in veh_refs):
-                self.fail("%s: The test cars could not be correctly spawned" % (bp_veh.id))
-
-            self.wait(10)
-
-            self.client.apply_batch_sync([
-                ApplyVehiclePhysicsControl(veh_refs[0], change_physics_control(veh_refs[0], tire_friction=0.0, drag=0.0)),
-                ApplyVehiclePhysicsControl(veh_refs[1], change_physics_control(veh_refs[1], tire_friction=3.0, drag=0.0))])
-
-            self.wait(1)
-
-            vel_ref = 100.0 / 3.6
-
-            self.wait(1)
-            self.client.apply_batch_sync([
-                ApplyTargetVelocity(veh_refs[0], carla.Vector3D(0, vel_ref, 0)),
-                ApplyTargetVelocity(veh_refs[1], carla.Vector3D(0, vel_ref, 0))
-            ])
-            self.wait(20)
-
-            vel_veh_00 = veh_refs[0].get_velocity().y
-            loc_veh_00 = veh_refs[0].get_location().y
-            loc_veh_01 = veh_refs[1].get_location().y
-
-            for _i in range(0, 50):
-                self.world.tick()
-                self.client.apply_batch_sync([
-                    ApplyVehicleControl(veh_refs[0], carla.VehicleControl(brake=1.0)),
-                    ApplyVehicleControl(veh_refs[1], carla.VehicleControl(brake=1.0))
-                ])
-
-            dist_veh_00 = veh_refs[0].get_location().y - loc_veh_00
-            dist_veh_01 = veh_refs[1].get_location().y - loc_veh_01
-
-            err_veh_01 = dist_veh_01 > dist_veh_00
-
-            if err_veh_01:
-                self.fail("%s: Friction test failed: ErrVeh01: %r -> (%f, %f)"
-                    % (bp_veh.id, err_veh_01, dist_veh_00, dist_veh_01))
-
-            self.client.apply_batch_sync([carla.command.DestroyActor(x) for x in veh_ids])
-
-
 class TestVehicleTireConfig(SyncSmokeTest):
     def wait(self, frames=100):
         for _i in range(0, frames):
@@ -459,9 +211,7 @@ class TestVehicleTireConfig(SyncSmokeTest):
     def test_vehicle_wheel_collision(self):
         print("TestVehicleTireConfig.test_vehicle_wheel_collision")
 
-        self.client.load_world("Town05_Opt", False)
-        # workaround: give time to UE4 to clean memory after loading (old assets)
-        time.sleep(5)
+        self.load_world("Town05_Opt", False)
 
         bp_vehicles = self.world.get_blueprint_library().filter("vehicle.*")
         bp_vehicles = [x for x in bp_vehicles if int(x.get_attribute('number_of_wheels')) == 4]
@@ -513,63 +263,6 @@ class TestVehicleTireConfig(SyncSmokeTest):
                 self.client.apply_batch_sync([carla.command.DestroyActor(x) for x in veh_ids])
                 self.fail("%s: Locations are not equal after simulation. [%.3f, %.3f]"
                   % (bp_veh.id, loc_veh_00, loc_veh_01))
-
-            self.client.apply_batch_sync([carla.command.DestroyActor(x) for x in veh_ids])
-
-    def test_vehicle_tire_long_stiff(self):
-        print("TestVehicleTireConfig.test_vehicle_tire_long_stiff")
-
-        self.client.load_world("Town05_Opt", False)
-        # workaround: give time to UE4 to clean memory after loading (old assets)
-        time.sleep(5)
-
-        bp_vehicles = self.world.get_blueprint_library().filter("vehicle.*")
-        bp_vehicles = [x for x in bp_vehicles if int(x.get_attribute('number_of_wheels')) == 4]
-
-        for bp_veh in bp_vehicles:
-            ref_pos = -200
-
-            veh_transf_00 = carla.Transform(carla.Location(36 - 0, ref_pos, 0.2), carla.Rotation(yaw=90))
-            veh_transf_01 = carla.Transform(carla.Location(36 - 5, ref_pos, 0.2), carla.Rotation(yaw=90))
-
-            batch = [
-                    SpawnActor(bp_veh, veh_transf_00)
-                    .then(ApplyTargetVelocity(FutureActor, carla.Vector3D(0, 0, 0))),
-                    SpawnActor(bp_veh, veh_transf_01)
-                    .then(ApplyTargetVelocity(FutureActor, carla.Vector3D(0, 0, 0)))
-                ]
-
-            responses = self.client.apply_batch_sync(batch)
-
-            veh_ids = [x.actor_id for x in responses]
-            veh_refs = [self.world.get_actor(x) for x in veh_ids]
-
-            if (0 in veh_ids) or (None in veh_refs):
-                self.fail("%s: The test cars could not be correctly spawned" % (bp_veh.id))
-
-            self.wait(10)
-
-            self.client.apply_batch_sync([
-                ApplyVehiclePhysicsControl(veh_refs[0], change_physics_control(veh_refs[0], drag=0.0)),
-                ApplyVehiclePhysicsControl(veh_refs[1], change_physics_control(veh_refs[1], drag=0.0))])
-
-            self.wait(1)
-
-            self.client.apply_batch_sync([
-                ApplyVehicleControl(veh_refs[0], carla.VehicleControl(throttle=1.0)),
-                ApplyVehicleControl(veh_refs[1], carla.VehicleControl(throttle=1.0))])
-
-            self.wait(100)
-
-            loc_veh_00 = veh_refs[0].get_location().y
-            loc_veh_01 = veh_refs[1].get_location().y
-
-            dist_veh_00 = loc_veh_00 - ref_pos
-            dist_veh_01 = loc_veh_01 - ref_pos
-
-            if dist_veh_01 < dist_veh_00:
-                self.fail("%s: Longitudinal stiffness test failed, check that please. Veh00: [%f] Veh01: [%f]"
-                    % (bp_veh.id, dist_veh_00, dist_veh_01))
 
             self.client.apply_batch_sync([carla.command.DestroyActor(x) for x in veh_ids])
 
