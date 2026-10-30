@@ -690,6 +690,12 @@ FVector ACarlaWheeledVehicle::GetVehicleBoundingBoxExtent() const
 float ACarlaWheeledVehicle::GetMaximumSteerAngle() const
 {
   UChaosWheeledVehicleMovementComponent* MovementComponent = GetChaosWheeledVehicleMovementComponent();
+  // The runtime wheel holds the applied physics control, the class the defaults.
+  if (MovementComponent != nullptr && MovementComponent->Wheels.Num() > 0 &&
+      MovementComponent->Wheels[0] != nullptr)
+  {
+    return MovementComponent->Wheels[0]->MaxSteerAngle;
+  }
   if (MovementComponent != nullptr && MovementComponent->WheelSetups.Num() > 0 &&
       MovementComponent->WheelSetups[0].WheelClass != nullptr)
   {
@@ -785,7 +791,12 @@ void ACarlaWheeledVehicle::SetWheelsFrictionScale(TArray<float>& WheelsFrictionS
     const int32 Count = FMath::Min(Movement->Wheels.Num(), WheelsFrictionScale.Num());
     for (int32 i = 0; i < Count; ++i)
     {
+      Movement->SetWheelFrictionMultiplier(i, WheelsFrictionScale[i]);
       Movement->Wheels[i]->FrictionForceMultiplier = WheelsFrictionScale[i];
+      if (LastPhysicsControl.Wheels.IsValidIndex(i))
+      {
+        LastPhysicsControl.Wheels[i].FrictionForceMultiplier = WheelsFrictionScale[i];
+      }
     }
   }
 }
@@ -967,96 +978,10 @@ void ACarlaWheeledVehicle::ApplyVehiclePhysicsControl(
   auto& SteeringSetup = VehicleMovComponent.SteeringSetup;
   SteeringSetup.SteeringCurve.EditorCurveData = PhysicsControl.SteeringCurve;
 
-  // Wheels Setup
-  auto WheelCount = PhysicsControl.Wheels.Num();
-
-  // @TODO: What about bikes or NW vehicles?
-  if (WheelCount != 4)
-  {
-    UE_LOG(LogCarla, Error, TEXT("Number of WheelPhysicsControl is not 4."));
-    return;
-  }
-
-  for (auto& WheelSetup : VehicleMovComponent.WheelSetups)
-    check(WheelSetup.WheelClass != nullptr);
-
-  // The runtime wheel instances only exist once the Chaos vehicle finishes its
-  // physics initialization (after the spawn frame): applying wheel physics
-  // before that would index an empty array and crash the server.
-  if (VehicleMovComponent.Wheels.Num() < WheelCount)
-  {
-    UE_LOG(LogCarla, Warning,
-        TEXT("ApplyVehiclePhysicsControl: wheels not initialized yet on %s, skipping wheel setup"),
-        *GetName());
-    return;
-  }
-
-  for (int32 i = 0; i < WheelCount; ++i)
-  {
-    auto& In = PhysicsControl.Wheels[i];
-    auto OutPtr = VehicleMovComponent.Wheels[i];
-    check(OutPtr != nullptr);
-    auto& Out = *OutPtr;
-
-    Out.AxleType = In.AxleType;
-    Out.Offset = In.Offset;
-    VehicleMovComponent.SetWheelRadius(i, In.WheelRadius);
-    Out.WheelWidth = In.WheelWidth;
-    Out.WheelMass = In.WheelMass;
-    Out.CorneringStiffness = In.CorneringStiffness;
-    Out.FrictionForceMultiplier = In.FrictionForceMultiplier;
-    Out.SideSlipModifier = In.SideSlipModifier;
-    Out.SlipThreshold = In.SlipThreshold;
-    Out.SkidThreshold = In.SkidThreshold;
-    VehicleMovComponent.SetWheelMaxSteerAngle(i, In.MaxSteerAngle);
-    Out.bAffectedBySteering = In.bAffectedBySteering;
-    Out.bAffectedByBrake = In.bAffectedByBrake;
-    Out.bAffectedByHandbrake = In.bAffectedByHandbrake;
-    Out.bAffectedByEngine = In.bAffectedByEngine;
-    VehicleMovComponent.SetABSEnabled(i, In.bABSEnabled);
-    VehicleMovComponent.SetTractionControlEnabled(i, In.bTractionControlEnabled);
-    Out.MaxWheelspinRotation = In.MaxWheelspinRotation;
-    Out.ExternalTorqueCombineMethod = In.ExternalTorqueCombineMethod;
-    Out.LateralSlipGraph.EditorCurveData = In.LateralSlipGraph;
-    Out.SuspensionAxis = In.SuspensionAxis;
-    Out.SuspensionForceOffset = In.SuspensionForceOffset;
-    Out.SuspensionMaxRaise = In.SuspensionMaxRaise;
-    Out.SuspensionMaxDrop = In.SuspensionMaxDrop;
-    Out.SuspensionDampingRatio = In.SuspensionDampingRatio;
-    Out.WheelLoadRatio = In.WheelLoadRatio;
-    Out.SpringRate = In.SpringRate;
-    Out.SpringPreload = In.SpringPreload;
-    Out.SuspensionSmoothing = In.SuspensionSmoothing;
-    Out.RollbarScaling = In.RollbarScaling;
-    Out.SweepShape = In.SweepShape;
-    Out.SweepType = In.SweepType;
-    VehicleMovComponent.SetWheelMaxBrakeTorque(i, In.MaxBrakeTorque);
-    VehicleMovComponent.SetWheelHandbrakeTorque(i, In.MaxHandBrakeTorque);
-    Out.WheelIndex = In.WheelIndex;
-    Out.Location = In.Location;
-    Out.OldLocation = In.OldLocation;
-    Out.Velocity = In.Velocity;
-
-    Out.SweepShape =
-      PhysicsControl.UseSweepWheelCollision ?
-      ESweepShape::Spherecast :
-      ESweepShape::Raycast;
-  }
-
+  // Recreate first: it rebuilds the wheels from the wheel class defaults.
   VehicleMovComponent.RecreatePhysicsState();
   ResetConstraints();
-
-  // RecreatePhysicsState() re-instantiates the wheels from their class
-  // defaults, so the requested friction has to be written again after it.
-  for (int32 i = 0; i < WheelCount; ++i)
-  {
-    const float Friction = PhysicsControl.Wheels[i].FrictionForceMultiplier;
-    if (VehicleMovComponent.Wheels.IsValidIndex(i) && VehicleMovComponent.Wheels[i])
-    {
-      VehicleMovComponent.Wheels[i]->FrictionForceMultiplier = Friction;
-    }
-    VehicleMovComponent.SetWheelFrictionMultiplier(i, Friction);
-  }
+  ApplyWheelPhysicsControl();
 
   auto* Recorder = UCarlaStatics::GetRecorder(GetWorld());
   if (Recorder && Recorder->IsEnabled())
@@ -1066,6 +991,84 @@ void ACarlaWheeledVehicle::ApplyVehiclePhysicsControl(
 
   // Update physics in the Ackermann Controller
   AckermannController.UpdateVehiclePhysics(this);
+}
+
+void ACarlaWheeledVehicle::ApplyWheelPhysicsControl()
+{
+  UChaosWheeledVehicleMovementComponent* Movement = GetChaosWheeledVehicleMovementComponent();
+  if (Movement == nullptr)
+  {
+    return;
+  }
+  const TArray<FWheelPhysicsControl>& WheelControls = LastPhysicsControl.Wheels;
+  const int32 WheelCount = WheelControls.Num();
+  if (WheelCount == 0)
+  {
+    return;
+  }
+  if (WheelCount != Movement->WheelSetups.Num())
+  {
+    UE_LOG(LogCarla, Error,
+        TEXT("%s: %d WheelPhysicsControl for %d wheels, skipping wheel setup"),
+        *GetName(), WheelCount, Movement->WheelSetups.Num());
+    return;
+  }
+  // The runtime wheel instances only exist once the Chaos vehicle finishes its
+  // physics initialization (after the spawn frame): applying wheel physics
+  // before that would index an empty array and crash the server.
+  if (Movement->Wheels.Num() < WheelCount)
+  {
+    UE_LOG(LogCarla, Warning,
+        TEXT("ApplyVehiclePhysicsControl: wheels not initialized yet on %s, skipping wheel setup"),
+        *GetName());
+    return;
+  }
+
+  for (int32 i = 0; i < WheelCount; ++i)
+  {
+    const FWheelPhysicsControl& In = WheelControls[i];
+    UChaosVehicleWheel* OutPtr = Movement->Wheels[i];
+    check(OutPtr != nullptr);
+    UChaosVehicleWheel& Out = *OutPtr;
+
+    Movement->SetWheelRadius(i, In.WheelRadius);
+    Movement->SetWheelFrictionMultiplier(i, In.FrictionForceMultiplier);
+    Movement->SetWheelMaxSteerAngle(i, In.MaxSteerAngle);
+    Movement->SetWheelMaxBrakeTorque(i, In.MaxBrakeTorque);
+    Movement->SetWheelHandbrakeTorque(i, In.MaxHandBrakeTorque);
+    Movement->SetABSEnabled(i, In.bABSEnabled);
+    Movement->SetTractionControlEnabled(i, In.bTractionControlEnabled);
+    Movement->SetAffectedByBrake(i, In.bAffectedByBrake);
+    Movement->SetAffectedByHandbrake(i, In.bAffectedByHandbrake);
+    Movement->SetAffectedBySteering(i, In.bAffectedBySteering);
+    // On a front or rear axle the differential decides which wheels are
+    // driven: only let the control take power away from one of them.
+    if (!In.bAffectedByEngine || Out.AxleType == EAxleType::Undefined)
+    {
+      Movement->SetAffectedByEngine(i, In.bAffectedByEngine);
+    }
+    Movement->SetTorqueCombineMethod(In.ExternalTorqueCombineMethod, i);
+
+    // get_physics_control reads these back, and the wheel trace reads the
+    // sweep settings from the wheel object every tick.
+    Out.WheelRadius = In.WheelRadius;
+    Out.FrictionForceMultiplier = In.FrictionForceMultiplier;
+    Out.MaxSteerAngle = In.MaxSteerAngle;
+    Out.MaxBrakeTorque = In.MaxBrakeTorque;
+    Out.MaxHandBrakeTorque = In.MaxHandBrakeTorque;
+    Out.bABSEnabled = In.bABSEnabled;
+    Out.bTractionControlEnabled = In.bTractionControlEnabled;
+    Out.bAffectedByBrake = In.bAffectedByBrake;
+    Out.bAffectedByHandbrake = In.bAffectedByHandbrake;
+    Out.bAffectedBySteering = In.bAffectedBySteering;
+    Out.bAffectedByEngine = In.bAffectedByEngine;
+    Out.ExternalTorqueCombineMethod = In.ExternalTorqueCombineMethod;
+    Out.SweepShape =
+      LastPhysicsControl.UseSweepWheelCollision ?
+      ESweepShape::Spherecast :
+      ESweepShape::Raycast;
+    Out.SweepType = In.SweepType;
+  }
 }
 
 void ACarlaWheeledVehicle::SetCenterOfMass(UChaosWheeledVehicleMovementComponent& VehicleMovComponent, const FVehiclePhysicsControl& PhysicsControl)
@@ -1586,6 +1589,7 @@ void ACarlaWheeledVehicle::SetSimulatePhysics(bool enabled) {
       {
         Movement->SetUpdatedComponent(GetMesh());
         Movement->RecreatePhysicsState();
+        ApplyWheelPhysicsControl();
         // The recreated body starts asleep and Chaos vehicle input does not
         // wake it, leaving the drivetrain permanently inert (full throttle,
         // zero motion) until something else wakes the body. Wake it here.

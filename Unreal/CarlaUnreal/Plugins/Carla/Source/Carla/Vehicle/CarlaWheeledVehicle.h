@@ -578,6 +578,10 @@ private:
   FVehicleAckermannControl LastAppliedAckermannControl;
   FVehiclePhysicsControl LastPhysicsControl;
 
+  /// Applies LastPhysicsControl.Wheels to the live Chaos wheels. Call it after
+  /// every RecreatePhysicsState(), which resets them to the class defaults.
+  void ApplyWheelPhysicsControl();
+
   bool bAckermannControlActive = false;
   FAckermannController AckermannController;
 
