@@ -11,6 +11,7 @@
 #include "carla/client/detail/Simulator.h"
 
 #include "carla/trafficmanager/TrafficManagerLocal.h"
+#include "carla/trafficmanager/WorkerException.h"
 
 namespace carla {
 namespace traffic_manager {
@@ -159,7 +160,7 @@ void TrafficManagerLocal::Start() {
   
   bool synchronous_mode = parameters.GetSynchronousMode();
   if (!synchronous_mode) {
-    worker_thread = std::make_unique<std::thread>(&TrafficManagerLocal::Run, this);
+    worker_thread = detail::CreateWorkerThread(run_traffic_manger, &TrafficManagerLocal::Run, this);
   }
 }
 
@@ -298,8 +299,30 @@ void TrafficManagerLocal::Step() {
 }
 
 void TrafficManagerLocal::Run() {
-  while (run_traffic_manger.load() && !parameters.GetSynchronousMode()) {
-    Step();
+  const auto error = detail::CaptureWorkerException([this]() {
+    while (run_traffic_manger.load() && !parameters.GetSynchronousMode()) {
+      Step();
+    }
+  });
+  if (error && run_traffic_manger.exchange(false)) {
+    // Forward asynchronous failures through the same channel as a remote TM.
+    // An expired episode while stopping must not throw out of this thread.
+    const auto reporting_error = detail::CaptureWorkerException([this, error]() {
+      std::string message = "Traffic Manager worker stopped";
+#ifndef LIBCARLA_NO_EXCEPTIONS
+      try {
+        std::rethrow_exception(error);
+      } catch (const std::exception &exception) {
+        message += std::string(": ") + exception.what();
+      } catch (...) {
+        message += ": unknown exception";
+      }
+#endif
+      episode_proxy.Lock()->AddPendingException(std::move(message));
+    });
+    if (reporting_error) {
+      log_error("Traffic Manager worker stopped; unable to forward its exception");
+    }
   }
 }
 
@@ -555,7 +578,7 @@ void TrafficManagerLocal::SetSynchronousMode(bool mode) {
       }
       worker_thread.reset();
     }
-    worker_thread = std::make_unique<std::thread>(&TrafficManagerLocal::Run, this);
+    worker_thread = detail::CreateWorkerThread(run_traffic_manger, &TrafficManagerLocal::Run, this);
   }
 }
 
