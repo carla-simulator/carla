@@ -748,7 +748,7 @@
       type: float
       var_unit: unitless
       doc: >
-        Multiplier of the friction force (default 1.0).
+        Multiplier of the friction force. A vehicle's own value comes from its wheel blueprint (default 3.0 when constructed).
     # --------------------------------------
     - var_name: side_slip_modifier
       type: float
@@ -898,7 +898,7 @@
         default: 1000.0
         type: float
       - param_name: friction_force_multiplier
-        default: 1.0
+        default: 3.0
         type: float
       - param_name: side_slip_modifier
         default: 0.5

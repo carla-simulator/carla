@@ -34,7 +34,7 @@ On each [carla.WheelPhysicsControl](python_api.md#carla.WheelPhysicsControl) in 
 
 | Field | Units | What it does |
 | --- | --- | --- |
-| `friction_force_multiplier` | — | Grip of that wheel. The default is `3.5`; lower it for a slippery tyre. |
+| `friction_force_multiplier` | — | Grip of that wheel, set by its wheel blueprint: `2.0` on most vehicles, `2.5` or `3.5` on the rest. Lower it for a slippery tyre. |
 | `max_steer_angle` | degrees | How far the wheel turns. `0` on the rear wheels of a normal car. |
 | `wheel_radius` | cm | Wheel radius. Changing it without checking the vehicle rests on the road is what makes a car float or sink. |
 | `max_brake_torque`, `max_hand_brake_torque` | Nm | Braking force on that wheel. |

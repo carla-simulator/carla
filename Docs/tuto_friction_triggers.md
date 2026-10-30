@@ -16,7 +16,7 @@ The blueprint is `static.trigger.friction`:
 
 | Attribute | Type | Default | Meaning |
 | --- | --- | --- | --- |
-| `friction` | float | 3.5 | Grip of every wheel while the vehicle is inside. It is written straight into the wheel's [`friction_force_multiplier`](python_api.md#carla.WheelPhysicsControl.friction_force_multiplier), so `0.0` is frictionless ice and values above 3.5 grip harder than the road. The default is the value the wheels already carry, so a trigger left at it changes nothing. |
+| `friction` | float | 3.5 | Grip of every wheel while the vehicle is inside. It is written straight into the wheel's [`friction_force_multiplier`](python_api.md#carla.WheelPhysicsControl.friction_force_multiplier), so `0.0` is frictionless ice and higher values grip harder. Most vehicles carry `2.0` and some `3.5`, so a trigger left at the default gives most of them more grip, not less. |
 | `extent_x` | float | | Half-size of the box along X, in __centimeters__. |
 | `extent_y` | float | | Half-size along Y, in centimeters. |
 | `extent_z` | float | | Half-size along Z, in centimeters. |
