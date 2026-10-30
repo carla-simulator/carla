@@ -1,6 +1,6 @@
 # Agent skills
 
-CARLA ships a library of 62 vetted procedures for coding agents, under [`Skills/`](https://github.com/carla-simulator/carla/tree/ue58-dev/Skills) in the repository. An agent working inside a CARLA checkout finds them automatically and follows them instead of improvising a procedure of its own.
+CARLA ships a library of 63 vetted procedures for coding agents, under [`Skills/`](https://github.com/carla-simulator/carla/tree/ue58-dev/Skills) in the repository. An agent working inside a CARLA checkout finds them automatically and follows them instead of improvising a procedure of its own.
 
 Each skill is a directory holding a `SKILL.md` — YAML frontmatter (`name`, `description`, `compatibility` and `metadata`) followed by the step-by-step procedure — plus the `scripts/` and `references/` it needs. The procedures encode the failure modes that make the obvious approach fail, which is the point of them: they are the source of truth for these tasks, not a summary of the docs.
 
@@ -25,6 +25,7 @@ In practice this means an agent asked to "package CARLA with only Town10" reads 
 | `scenic` | 2 | Authoring and running Scenic scenarios |
 | `ros2` | 3 | The native ROS 2 interface: publishers, message types, RViz |
 | `docs` | 2 | Auditing the documentation for gaps and writing the pages that fill them |
+| `contributing` | 1 | Reporting bugs and requesting features as issues, opening discussions to agree CI or large changes, and checking a branch against the contribution rules before opening its pull request against `ue58-dev` |
 
 ---
 ## Using them
