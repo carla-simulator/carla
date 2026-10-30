@@ -18,9 +18,14 @@ except IndexError:
     pass
 
 import carla
+import math
 import time
 
 TESTING_ADDRESS = ('localhost', 3654)
+# A map is ready when the server reports it as the current episode. Town13 is
+# 12478 spawn points and an 89 MB OpenDRIVE, so the ceiling has to be generous.
+MAP_READY_TIMEOUT = 300.0
+MAP_READY_POLL = 1.0
 VEHICLE_VEHICLES_EXCLUDE_FROM_OLD_TOWNS = ['vehicle.fuso.mitsubishi', 'vehicle.carlacola.actors', 'vehicle.firetruck.actors']
 
 class SmokeTest(unittest.TestCase):
@@ -34,14 +39,69 @@ class SmokeTest(unittest.TestCase):
 
     def tearDown(self):
         try:
-            self.client.load_world(self.initial_map_name)
+            self.load_world(self.initial_map_name)
         except RuntimeError:
-            self.client.reload_world()
-        # workaround: give time to UE4 to clean memory after loading (old assets)
-        time.sleep(5)
+            self.reload_world()
         self.world = None
         self.client = None
+
+    def wait_for_map(self, map_name, previous_id=None):
+        """Block until the server's current episode is map_name, and return it."""
+        wanted = map_name.split('/')[-1]
+        deadline = time.time() + MAP_READY_TIMEOUT
+        while time.time() < deadline:
+            world = self.client.get_world()
+            if previous_id is None or world.id != previous_id:
+                if world.get_map().name.split('/')[-1] == wanted:
+                    return world
+            time.sleep(MAP_READY_POLL)
+        self.fail("%s was not the current map after %.0f s"
+                  % (map_name, MAP_READY_TIMEOUT))
+
+    def load_world(self, map_name, *args, **kwargs):
+        """load_world that waits for the map instead of sleeping a fixed time.
+
+        carla.Client.load_world returns before the episode is current, so a
+        caller that queries straight away reads the previous map."""
+        previous_id = self.client.get_world().id
+        self.client.load_world(map_name, *args, **kwargs)
+        return self.wait_for_map(map_name, previous_id)
+
+    def reload_world(self, *args, **kwargs):
+        """reload_world that waits for the map, as load_world does."""
+        current = self.client.get_world().get_map().name
+        previous_id = self.client.get_world().id
+        self.client.reload_world(*args, **kwargs)
+        return self.wait_for_map(current, previous_id)
     
+    def vehicle_spawn_radius(self, blueprint):
+        """Half-diagonal of a vehicle's bounding box, measured in the air."""
+        probe = self.world.spawn_actor(
+            blueprint, carla.Transform(carla.Location(z=500)))
+        self.advance_frame()
+        extent = probe.bounding_box.extent
+        probe.destroy()
+        return math.hypot(extent.x, extent.y)
+
+    def advance_frame(self):
+        """One frame, whichever mode the world is in."""
+        settings = self.world.get_settings()
+        if settings.synchronous_mode:
+            return self.world.tick()
+        return self.world.wait_for_tick().frame
+
+    def spaced_spawn_points(self, spawn_points, min_distance):
+        """Spawn points at least min_distance apart, greedily from the first.
+
+        A map may place spawn points closer together than a vehicle is long,
+        so filling all of them at once collides whatever the vehicle."""
+        kept = []
+        for point in spawn_points:
+            if all(point.location.distance(k.location) >= min_distance
+                   for k in kept):
+                kept.append(point)
+        return kept
+
     def filter_vehicles_for_old_towns(self, blueprint_list):
         new_list = []
         for blueprint in blueprint_list:

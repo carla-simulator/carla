@@ -47,8 +47,6 @@ class Scenario(object):
         self.sensor_queue = Queue()
 
         self.reload_world(settings, spectator_tr)
-        # workaround: give time to UE4 to clean memory after loading (old assets)
-        time.sleep(5)
 
         # Init timestamp
         snapshot = self.world.get_snapshot()
@@ -87,8 +85,6 @@ class Scenario(object):
             self.reset_spectator(spectator_tr)
 
         self.client.reload_world(False)
-        # workaround: give time to UE4 to clean memory after loading (old assets)
-        time.sleep(5)
 
     def reset_spectator(self, spectator_tr):
         spectator = self.world.get_spectator()
@@ -326,7 +322,7 @@ class TestSensorDeterminism(SmokeTest):
         print("TestSensorDeterminism.test_all_sensors")
 
         # The scenario spawn points are Town03 transforms.
-        if not any(m.endswith("/Town03_Opt") for m in self.client.get_available_maps()):
+        if not any(m.split("/")[-1] == "Town03_Opt" for m in self.client.get_available_maps()):
             self.skipTest("Town03_Opt is not available in this package.")
         self.world = self.client.load_world("Town03_Opt")
 
