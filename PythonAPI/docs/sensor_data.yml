@@ -16,7 +16,9 @@
         - Radar sensor: carla.RadarMeasurement.<br>
         - Semantic LIDAR sensor: carla.SemanticLidarMeasurement.<br>
         - Cooperative awareness messages V2X sensor: carla.CAMEvent.<br>
-        - Custom V2X messages V2X sensor: carla.CustomV2XEvent.
+        - Custom V2X messages V2X sensor: carla.CustomV2XEvent.<br><br>
+      Raw data buffers are read-only, zero-copy memoryviews. Their native storage stays alive until all dependent views,
+      including sliced views and NumPy arrays created with `numpy.frombuffer`, are released.
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: frame
@@ -113,7 +115,7 @@
       doc: >
         Image width in pixels.
     - var_name: raw_data
-      type: bytes
+      type: memoryview
       doc: >
         Flattened array of pixel data, use reshape to create an image array.
     # - METHODS ----------------------------
@@ -181,7 +183,7 @@
       doc: >
         Image width in pixels.
     - var_name: raw_data
-      type: bytes
+      type: memoryview
       doc: >
         Flattened array of pixel data, use reshape to create an image array.
     # - METHODS ----------------------------
@@ -233,9 +235,9 @@
       doc: >
         Image width in pixels.
     - var_name: raw_data
-      type: bytes
+      type: memoryview
       doc: >
-        Flattened array of `width * height` float32 distances in meters, row major. Copy it before reuse, e.g. `np.copy(np.frombuffer(image.raw_data, dtype=np.float32)).reshape(image.height, image.width)`.
+        Flattened array of `width * height` float32 distances in meters, row major. Use `np.frombuffer(image.raw_data, dtype=np.float32).reshape(image.height, image.width)` for zero-copy access. Copy the array when independent writable data is needed.
     # - METHODS ----------------------------
     methods:
     - def_name: __getitem__
@@ -280,7 +282,7 @@
         Horizontal angle the LIDAR is rotated at the time of the measurement.
     # --------------------------------------
     - var_name: raw_data
-      type: bytes
+      type: memoryview
       doc: >
         Received list of 4D points. Each point consists of [x,y,z] coordinates plus the intensity computed for that point.
     # - METHODS ----------------------------
@@ -361,7 +363,7 @@
         Horizontal angle the LIDAR is rotated at the time of the measurement.
     # --------------------------------------
     - var_name: raw_data
-      type: bytes
+      type: memoryview
       doc: >
         Received list of raw detection points. Each point consists of [x,y,z] coordinates plus the cosine of the incident angle, the index of the hit actor, and its semantic tag.
     # - METHODS ----------------------------
@@ -560,7 +562,7 @@
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: raw_data
-      type: bytes
+      type: memoryview
       doc: >
         The complete information of the carla.RadarDetection the radar has registered.
     # - METHODS ----------------------------
@@ -677,7 +679,7 @@
         Image width in pixels.
     # --------------------------------------
     - var_name: raw_data
-      type: bytes
+      type: memoryview
     # - METHODS ----------------------------
     methods:
     - def_name: to_image
@@ -963,7 +965,7 @@
       doc: >
         Horizontal field of view of the image.
     - var_name: raw_data
-      type: bytes
+      type: memoryview
       doc: >
         Flattened array of pixels, four bytes per pixel in BGRA order.
 
