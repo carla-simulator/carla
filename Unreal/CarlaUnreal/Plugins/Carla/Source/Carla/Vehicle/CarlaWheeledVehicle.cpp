@@ -147,8 +147,6 @@ void ACarlaWheeledVehicle::BeginPlay()
   }
   ResetConstraints();
 
-  float FrictionScale = 3.5f;
-
   UChaosWheeledVehicleMovementComponent* MovementComponent = GetChaosWheeledVehicleMovementComponent();
 
   if (MovementComponent)
@@ -162,26 +160,6 @@ void ACarlaWheeledVehicle::BeginPlay()
     // squared curve a 0.1 command yields ~1% of full lock and controllers
     // tuned for a linear response cannot corner.
     MovementComponent->SteeringInputRate.InputCurveFunction = EInputFunctionType::LinearFunction;
-
-    // Setup Tire Configs with default value. This is needed to avoid getting
-    // friction values of previously created TireConfigs for the same vehicle
-    // blueprint.
-    TArray<float> OriginalFrictions;
-    OriginalFrictions.Init(FrictionScale, MovementComponent->Wheels.Num());
-    SetWheelsFrictionScale(OriginalFrictions);
-
-    // Check if it overlaps with a Friction trigger, if so, update the friction
-    // scale.
-    TArray<AActor*> OverlapActors;
-    GetOverlappingActors(OverlapActors, AFrictionTrigger::StaticClass());
-    for (const auto& Actor : OverlapActors)
-    {
-      AFrictionTrigger* FrictionTrigger = Cast<AFrictionTrigger>(Actor);
-      if (FrictionTrigger)
-      {
-        FrictionScale = FrictionTrigger->Friction;
-      }
-    }
 
     // Set the friction scale to Wheel CDO and update wheel setups
     TArray<FChaosWheelSetup> NewWheelSetups = MovementComponent->WheelSetups;

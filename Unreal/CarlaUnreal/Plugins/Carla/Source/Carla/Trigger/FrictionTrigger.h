@@ -10,6 +10,8 @@
 
 #include "FrictionTrigger.generated.h"
 
+class ACarlaWheeledVehicle;
+
 UCLASS()
 class CARLA_API AFrictionTrigger : public AActor
 {
@@ -64,8 +66,8 @@ protected:
 
   virtual void Tick(float DeltaTime) override;
 
-  // Save old frictions
-  TArray<float> OldFrictionValues;
+  // Friction each vehicle had when it entered, restored when it leaves
+  TMap<TWeakObjectPtr<ACarlaWheeledVehicle>, TArray<float>> OldFrictionValues;
 
 public:
 
