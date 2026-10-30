@@ -24,6 +24,11 @@ on:
         type: string
         required: false
         default: ""
+      release-version:
+        description: "Release version, e.g. 1.0: uploads to Linux/CARLA_<version>/ instead of Linux/Dev/ (empty: nightly)"
+        type: string
+        required: false
+        default: ""
       upload-package:
         type: boolean
         required: true
@@ -152,6 +157,7 @@ jobs:
         id: upload_step
         env:
           LATEST_PREFIX: ${{ inputs.latest-prefix }}
+          RELEASE_VERSION: ${{ inputs.release-version }}
         run: |
           ARGS=""
           if [ "${{ inputs.upload-replace-latest }}" = "true" ]; then
@@ -162,6 +168,9 @@ jobs:
           fi
           if [ -n "${LATEST_PREFIX}" ]; then
             ARGS="${ARGS} --latest-prefix ${LATEST_PREFIX}"
+          fi
+          if [ -n "${RELEASE_VERSION}" ]; then
+            ARGS="${ARGS} --release-version ${RELEASE_VERSION}"
           fi
           ./Util/Tools/Deploy.sh ${ARGS} --summary-output $GITHUB_OUTPUT
 
