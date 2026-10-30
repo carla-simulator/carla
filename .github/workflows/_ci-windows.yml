@@ -1,0 +1,117 @@
+on:
+  workflow_call:
+    inputs:
+      python-versions:
+        required: true
+        type: string
+      additional-args:
+        type: string
+        required: false
+        default: ""
+      additional-maps:
+        type: boolean
+        default: true
+      upload-package:
+        type: boolean
+        required: true
+      upload-replace-latest:
+        type: boolean
+        required: true
+
+    secrets:
+      AWS_ACCESS_KEY_ID:
+        required: false
+      AWS_ACCESS_KEY:
+        required: false
+
+jobs:
+  windows:
+    name: Windows CI/CD
+    defaults:
+      run:
+        shell: cmd
+    runs-on: self-hosted:windows
+    env:
+      CARLA_UNREAL_ENGINE_PATH: C:\Users\jenkins\unreal-engine5
+      CARLA_CONTENT_CACHE: C:\Users\jenkins\carla-content-cache\ue5
+      VCVARS: C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat
+
+    steps:
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Update CARLA Content cache
+        run: |
+          call Util\Tools\UpdateContentCache.bat --path "%CARLA_CONTENT_CACHE%" --branch ue58-dev-carla
+
+      - name: Copy content to workspace
+        run: |
+          set DEST=Unreal\CarlaUnreal\Content\Carla
+
+          if exist "%DEST%" rmdir /s /q "%DEST%"
+          rem Copy everything from the cache except the .git folder.
+          robocopy "%CARLA_CONTENT_CACHE%" "%DEST%" /E /XD "%CARLA_CONTENT_CACHE%\.git" /MT:16 /NFL /NDL /NJH /NP
+          if %ERRORLEVEL% GEQ 8 exit /b %ERRORLEVEL%
+          exit /b 0
+
+      - name: Preset
+        run: |
+          call "%VCVARS%" || exit /b 1
+          cmake --preset Release -DBUILD_LIBCARLA_TESTS=ON
+
+      - name: Build LibCarla
+        run: |
+          call "%VCVARS%" || exit /b 1
+          cmake --build Build\Release --target carla-client
+
+      - name: Build PythonAPI
+        run: |
+          call "%VCVARS%" || exit /b 1
+          cmake --build Build\Release --target carla-python-api
+
+      - name: Build CarlaServer
+        run: |
+          call "%VCVARS%" || exit /b 1
+          cmake --build Build\Release --target carla-server
+
+      - name: Build LibCarla Tests
+        run: |
+          call "%VCVARS%" || exit /b 1
+          cmake --build Build\Release --target libcarla_test_server || exit /b 1
+          cmake --build Build\Release --target libcarla_test_client
+
+      - name: Fetch LibCarla test content
+        run: |
+          if exist Build\test-content rmdir /s /q Build\test-content
+          git clone --depth 1 -b 0.1.4 https://github.com/carla-simulator/opendrive-test-files.git Build\test-content
+
+      - name: Run LibCarla Tests
+        run: |
+          Build\Release\LibCarla\libcarla_test_server.exe || exit /b 1
+          Build\Release\LibCarla\libcarla_test_client.exe
+
+      - name: Build Package
+        run: |
+          call "%VCVARS%" || exit /b 1
+          cmake --build Build\Release --target package
+
+      - name: Configure Backblaze
+        if: inputs.upload-package == true
+        run: |
+          aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }} || exit /b 1
+          aws configure set aws_secret_access_key ${{ secrets.AWS_ACCESS_KEY }}
+
+      - name: Upload package
+        if: inputs.upload-package == true
+        id: upload_step
+        run: |
+          IF "${{ inputs.upload-replace-latest }}"=="true" SET ARGS=--replace-latest
+          call Util\Tools\Deploy.bat %ARGS% --summary-output "%GITHUB_OUTPUT%"
+
+      - name: Write summary
+        if: inputs.upload-package == true
+        run: |
+          echo ## [Windows] CARLA UE5 CI/CD Summary>> %GITHUB_STEP_SUMMARY%
+          echo.>> %GITHUB_STEP_SUMMARY%
+          echo - CARLA Package: ${{ steps.upload_step.outputs.package_uri }}>> %GITHUB_STEP_SUMMARY%
