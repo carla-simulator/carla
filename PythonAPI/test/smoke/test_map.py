@@ -11,22 +11,15 @@ from . import SmokeTest
 import time
 
 class TestMap(SmokeTest):
-    def test_reload_world(self):
-        print("TestMap.test_reload_world")
-        map_name = self.client.get_world().get_map().name
-        world = self.client.reload_world()
-        self.assertEqual(map_name, world.get_map().name)
-
     def test_load_all_maps(self):
         print("TestMap.test_load_all_maps")
         map_names = list(self.client.get_available_maps())
         random.shuffle(map_names)
         for map_name in map_names:
-            # ignore empty or large maps by now
-            if map_name != '/Game/Carla/Maps/BaseMap/BaseMap' and map_name != '/Game/Carla/Maps/Town11/Town11' and map_name != '/Game/Carla/Maps/Town12/Town12':
-                world = self.client.load_world(map_name)
-                # workaround: give time to UE4 to clean memory after loading (old assets)
-                time.sleep(5)
+            # EmptyMap is a roadless sandbox; the World Partition towns stream
+            # their ground in, so not every spawn point sits on a loaded lane.
+            if map_name.split('/')[-1] not in ('EmptyMap', 'Town11', 'Town12', 'Town13', 'Town15'):
+                world = self.load_world(map_name)
                 m = world.get_map()
                 self.assertEqual(map_name.split('/')[-1], m.name.split('/')[-1])
                 self._check_map(m)

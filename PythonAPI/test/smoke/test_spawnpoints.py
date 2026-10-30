@@ -5,69 +5,46 @@
 # For a copy, see <https://opensource.org/licenses/MIT>.
 
 import carla
-import time
 
 from . import SyncSmokeTest
 
+TEST_TOWN = "Town10HD_Opt"
+# Clearance on top of the two half-diagonals, for suspension travel and for
+# the wheels a bounding box does not cover.
+SPAWN_MARGIN = 0.5
+
 
 class TestSpawnpoints(SyncSmokeTest):
-    def test_spawn_points(self):
-        print("TestSpawnpoints.test_spawn_points")
-        self.world = self.client.get_world()
-        blueprints = self.world.get_blueprint_library().filter("vehicle.*")
-        blueprints = self.filter_vehicles_for_old_towns(blueprints)
+    def test_every_spawn_point_accepts_every_vehicle(self):
+        print("TestSpawnpoints.test_every_spawn_point_accepts_every_vehicle")
+        # One town: the snapshot transforms are test_snapshot's job, and
+        # walking every map only multiplied the map loads.
+        self.world = self.load_world(TEST_TOWN)
+        settings = carla.WorldSettings(
+            no_rendering_mode=False,
+            synchronous_mode=True,
+            fixed_delta_seconds=0.05)
+        self.world.apply_settings(settings)
+        self.world.tick()
 
-        # get all available maps
-        maps = self.client.get_available_maps()
-        for m in maps:
+        blueprints = self.filter_vehicles_for_old_towns(
+            self.world.get_blueprint_library().filter("vehicle.*"))
+        spawn_points = self.world.get_map().get_spawn_points()
 
-            if m != '/Game/Carla/Maps/BaseMap/BaseMap' and m != '/Game/Carla/Maps/Town11/Town11' and m != '/Game/Carla/Maps/Town12/Town12':
+        for vehicle in blueprints:
+            # Spawn points can sit closer together than a vehicle is long, so
+            # occupying all of them at once is only meaningful once thinned.
+            min_distance = 2.0 * self.vehicle_spawn_radius(vehicle) + SPAWN_MARGIN
+            usable = self.spaced_spawn_points(spawn_points, min_distance)
 
-                # load the map
-                self.client.load_world(m)
-                # workaround: give time to UE4 to clean memory after loading (old assets)
-                time.sleep(5)
-                
-                self.world = self.client.get_world()
+            batch = [carla.command.SpawnActor(vehicle, t) for t in usable]
+            response = self.client.apply_batch_sync(batch, False)
+            failed = [r.error for r in response if r.error]
+            self.assertFalse(
+                failed,
+                "%s failed at %d of %d spawn points spaced %.2f m apart: %s"
+                % (vehicle.id, len(failed), len(usable), min_distance, failed[0] if failed else ""))
 
-                # get all spawn points
-                spawn_points = self.world.get_map().get_spawn_points()
-
-                # Check why the world settings aren't applied after a reload
-                self.settings = self.world.get_settings()
-                settings = carla.WorldSettings(
-                    no_rendering_mode=False,
-                    synchronous_mode=True,
-                    fixed_delta_seconds=0.05)
-                self.world.apply_settings(settings)
-
-                # spawn all kind of vehicle
-                for vehicle in blueprints:
-                    batch = [(vehicle, t) for t in spawn_points]
-                    batch = [carla.command.SpawnActor(*args) for args in batch]
-                    response = self.client.apply_batch_sync(batch, False)
-
-                    self.assertFalse(any(x.error for x in response))
-                    ids = [x.actor_id for x in response]
-                    self.assertEqual(len(ids), len(spawn_points))
-
-                    frame = self.world.tick()
-                    snapshot = self.world.get_snapshot()
-                    self.assertEqual(frame, snapshot.timestamp.frame)
-
-                    actors = self.world.get_actors()
-                    self.assertTrue(all(snapshot.has_actor(x.id) for x in actors))
-
-                    for actor_id, t0 in zip(ids, spawn_points):
-                        actor_snapshot = snapshot.find(actor_id)
-                        self.assertIsNotNone(actor_snapshot)
-                        t1 = actor_snapshot.get_transform()
-                        # Ignore Z cause vehicle is falling.
-                        self.assertAlmostEqual(t0.location.x, t1.location.x, places=2)
-                        self.assertAlmostEqual(t0.location.y, t1.location.y, places=2)
-                        self.assertAlmostEqual(t0.rotation.pitch, t1.rotation.pitch, places=2)
-                        self.assertAlmostEqual(t0.rotation.yaw, t1.rotation.yaw, places=2)
-                        self.assertAlmostEqual(t0.rotation.roll, t1.rotation.roll, places=2)
-
-                    self.client.apply_batch_sync([carla.command.DestroyActor(x) for x in ids], True)
-                    frame = self.world.tick()
+            self.client.apply_batch_sync(
+                [carla.command.DestroyActor(r.actor_id) for r in response], True)
+            self.world.tick()

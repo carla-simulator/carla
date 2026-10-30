@@ -22,6 +22,13 @@ class TestGeoLocationConversion(SmokeTest):
         super().setUp()
         self.map = self.client.get_world().get_map()
 
+    def tearDown(self):
+        # Read-only: nothing is spawned and the map is never changed, so the
+        # base class' map reload and 5 s sleep per test are pure cost.
+        self.map = None
+        self.world = None
+        self.client = None
+
     def _assert_location_close(self, a, b, tol=0.1):
         self.assertAlmostEqual(a.x, b.x, delta=tol)
         self.assertAlmostEqual(a.y, b.y, delta=tol)
