@@ -235,6 +235,8 @@ FCarlaActor* UActorDispatcher::RegisterActor(
       // actor ros_name
       std::string RosName;
       std::string RosTopicName;
+      std::string RosFrameId;
+      bool bRosPublishTf = true;
       for (auto &&Attr : Description.Variations)
       {
         if (Attr.Key == "ros_name")
@@ -244,6 +246,14 @@ FCarlaActor* UActorDispatcher::RegisterActor(
         if (Attr.Key == "ros_topic_name")
         {
           RosTopicName = std::string(TCHAR_TO_UTF8(*Attr.Value.Value));
+        }
+        if (Attr.Key == "ros_frame_id")
+        {
+          RosFrameId = std::string(TCHAR_TO_UTF8(*Attr.Value.Value));
+        }
+        if (Attr.Key == "ros_publish_tf")
+        {
+          bRosPublishTf = Attr.Value.Value.ToBool();
         }
       }
       const std::string id = std::string(TCHAR_TO_UTF8(*Description.Id));
@@ -265,7 +275,8 @@ FCarlaActor* UActorDispatcher::RegisterActor(
       }
       if (!ResolvedRosName.empty())
       {
-        ROS2->RegisterSensor(static_cast<void*>(&Actor), ResolvedRosName, ResolvedRosName, true);
+        ROS2->RegisterSensor(static_cast<void*>(&Actor), ResolvedRosName,
+            RosFrameId.empty() ? ResolvedRosName : RosFrameId, bRosPublishTf);
       }
       // exact-topic override (empty when the attribute is unset or equals the
       // blueprint id: signal to generate the default topic name)
