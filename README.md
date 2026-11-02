@@ -1,6 +1,11 @@
 CARLA Simulator
 ===============
 
+> [!CAUTION]
+> **This branch is obsolete and will be deprecated soon.** `ue4-dev` is the Unreal Engine 4.26 version of CARLA (0.9.16 and earlier) and is no longer updated.
+>
+> **Use CARLA 1.0, built on Unreal Engine 5.8,** from the [`ue58-dev`](https://github.com/carla-simulator/carla/tree/ue58-dev) branch: download it from the [CARLA 1.0 release](https://github.com/carla-simulator/carla/releases/tag/1.0) and read its [documentation](https://carla-ue5.readthedocs.io/en/latest/).
+
 [![Documentation](https://readthedocs.org/projects/carla/badge/?version=latest)](http://carla.readthedocs.io) 
 
 [![carla.org](Docs/img/btn/web.png)](http://carla.org)
@@ -16,9 +21,6 @@ vehicles) that were created for this purpose and can be used freely. The simulat
 environmental conditions.
 
 [![CARLA Video](Docs/img/0_9_15_thumbnail.webp)](https://www.youtube.com/watch?v=q4V9GYjA1pE )
-
->[!NOTE]
->This is the development branch `ue4-dev` for the **Unreal Engine 4.26 version of CARLA**. This branch exists in parallel with the Unreal Engine 5.3 version of CARLA, in the `ue5-dev` branch. Please be sure that this version of CARLA is suitable for your needs as there are significant differences between the UE 4.26 and UE 5.3 versions of CARLA. 
 
 ### Download CARLA
 
