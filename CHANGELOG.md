@@ -31,7 +31,7 @@
 #### Python API
 
 * Added **road network objects** to the Python API: `carla.Road`, `carla.LaneSection` and `carla.Lane`, so the map can be addressed as objects instead of only sampled as waypoints. Reached through `Map.get_roads`, `get_road`, `get_lane_section`, `get_lane`, `get_junctions`, `get_junction_by_id`; `Waypoint.get_lane`, `get_road`; and `Junction.get_connecting_roads`, `get_adjacent_roads`, `get_entry_lanes`, `get_exit_lanes`, `get_entry_waypoints`, `get_exit_waypoints`.
-* Added **geolocation that follows the map's own projection**. CARLA used to convert between world coordinates and latitude/longitude with a fixed Mercator formula, which disagreed with the map's OpenDRIVE `geoReference` on anything but Web Mercator. The `geoReference` PROJ string is now read into a typed projection — Transverse Mercator, UTM, Web Mercator or Lambert Conformal Conic — exposed through `Map.get_geoprojection` and accepted by `Map.transform_to_geolocation` and the new `Map.geolocation_to_transform`.
+* Added **geolocation that follows the map's own projection**. CARLA used to convert between world coordinates and latitude/longitude with a fixed Mercator formula, which disagreed with the map's OpenDRIVE `geoReference` on anything but Web Mercator. The `geoReference` PROJ string is now read into a typed projection — Transverse Mercator, UTM, Web Mercator or Lambert Conformal Conic — exposed through `Map.get_geoprojection` and accepted by `Map.transform_to_geolocation` and the new `Map.geolocation_to_transform`. Latitude increases towards the map's north, along CARLA's −y axis.
 * Added a **wheel animation override** (`Vehicle.set_wheel_animation_override`): the wheels then show only what `set_wheel_steer_direction`, `set_wheel_pitch_angle` and `set_wheel_suspension_offset` set, whether or not Chaos simulates the vehicle, for replays and co-simulation platforms that bring their own wheel state. `get_wheel_steer_angle`, `get_wheel_pitch_angle` and `get_wheel_suspension_offset` read the poses back. Visual only; the setters raise an error while the override is off, and every one of them raises for a wheel the vehicle does not have.
 * Added **actor introspection** to the Python API: `Actor.get_component_names`, `get_bone_names`, `get_socket_names` and the world/relative transform getters for each.
 * Added **`base_type` and `subtype` blueprint attributes to the props** and `special_type` to the pedestrians, so the blueprint library says what a blueprint actually is — a bench, a traffic cone, a police officer — and can be filtered on it.
@@ -44,11 +44,15 @@
 
 #### Build and tooling
 
-* Added an **agent skill library**: 62 vetted CARLA procedures under `Skills/`, covering setup, the Python API, UE 4.26 / 5.5 / 5.8 builds, packaging, asset imports, Scenario Runner, Leaderboard, Scenic, native ROS 2 and the documentation itself. `Util/AgenticTools/` serves the same library over MCP. See `Docs/agent_skills.md`.
+* The CARLA version is now **1.0**. The NVIDIA install scripts no longer hard-code it: they take it from `CARLA_VERSION_MAJOR/MINOR` in the top-level `CMakeLists.txt`.
+* Added an **agent skill library**: 63 vetted CARLA procedures under `Skills/`, covering setup, the Python API, UE 4.26 / 5.5 / 5.8 builds, packaging, asset imports, Scenario Runner, Leaderboard, Scenic, native ROS 2, the documentation itself, and contributing back: issues, discussions and pull requests against `ue58-dev`. `Util/AgenticTools/` serves the same library over MCP. See `Docs/agent_skills.md`.
 * Added **Ubuntu 24.04** support alongside 22.04, and **NVIDIA RTX 50 series (Blackwell)** support with driver 570+ and CDI-based Docker instructions.
 * Added a **Docker-based development environment** for CARLA UE5.
 * Added **content packs**: maps, props, vehicles and pedestrians authored in a source build are cooked into a pack with `Util/ContentPacks/carla-pack`, and installing the pack adds them to a CARLA package of the same release without rebuilding or repackaging it. The towns the default package leaves out are distributed as packs too. See `Docs/content_authoring_packs.md`.
 * Added **`CARLA_MAPS_TO_COOK`**, a CMake option taking a `+`-separated list of map package paths, to cook a smaller package.
+* Added the **AdditionalMaps content pack**: the towns the default package does not cook (Town01–07_Opt, Town11, Town13, Town_C, Mine_01, Eixample) are built into one pack by the new `package-additional-maps` target, from the list in `Util/ContentPacks/AdditionalMaps.json` (`CARLA_ADDITIONAL_MAPS_FILE` selects another). The new manual `CARLA-AdditionalMaps-Packages-Latest` workflow builds it with the package and publishes both as `CARLA_UE5_AdditionalMaps_Latest*` (`Deploy.sh --additional-maps --latest-prefix`); every upload now also publishes the package's release metadata. `carla-pack create` takes the map list from a JSON file with `--maps-file`. See `Docs/map_content_packs.md`.
+* Added the manual **`UE5-Release` workflow**: run on a release branch `ue5/<version>` whose head carries the tag `<version>` (e.g. `ue5/1.0` and `1.0`), it builds the package with the AdditionalMaps pack and uploads them to `Linux/CARLA_<version>/` as `CARLA_<version>.tar.gz`, `CARLA_<version>_AdditionalMaps.tar.gz` and `CARLA_<version>_release-metadata.tar.gz` (`Deploy.sh --release-version`).
+* `carla-pack install` and `carla-pack verify` on a tarball now report each step and the file being checksummed, instead of staying silent for minutes on a multi-GB pack.
 
 ### Extensions
 
@@ -159,6 +163,7 @@
 
 #### Examples and tests
 
+* Restored wheelchair pedestrians in `PythonAPI/examples/generate_traffic.py`: 11% of the walkers whose blueprint reports `can_use_wheelchair` are now spawned with `use_wheelchair` set, as on `ue4-dev`.
 * Fixed `PythonAPI/examples/manual_control.py` raising `NameError: name 'sys' is not defined` instead of their error message when the server cannot send the OpenDRIVE file or the map has no spawn points.
 * Fixed `PythonAPI/examples/no_rendering_mode.py` ignoring `--show-triggers`, `--show-connections` and `--show-spawn-points` when a cached map image existed; the flags are part of the cache name now.
 * Fixed the spawn check in `test_collision_determinism.py`, which raised `AttributeError` instead of reporting the failure, and `Sensor.get_current_detection_points` in the LiDAR smoke tests.

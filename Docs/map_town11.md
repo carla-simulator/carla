@@ -10,7 +10,7 @@ Town11 was the first large map integrated into CARLA, as a proof of concept for 
 | | |
 | --- | --- |
 | __Map name__ | `Town11` |
-| __Package available__ | [Additional maps package](https://github.com/carla-simulator/carla/releases/tag/1.0), or a source build |
+| __In the default package__ | no: install a [content pack](map_content_packs.md) that contains it, such as AdditionalMaps, or use a source build |
 | __Map type__ | a large [World Partition](core_large_maps.md) map: the server streams the cells around the vehicle with `role_name=hero` |
 | __Size__ | about 20 x 21.5 km of roads, between 20 and 790 m of altitude |
 | __Spawn points__ | 3166, from `world.get_map().get_spawn_points()` |

@@ -8,7 +8,7 @@ Town03 is a larger town with features of a downtown urban area. The road network
 | | |
 | --- | --- |
 | __Map name__ | `Town03_Opt` |
-| __Package available__ | [Additional maps package](https://github.com/carla-simulator/carla/releases/tag/1.0), or a source build |
+| __In the default package__ | no: install a [content pack](map_content_packs.md) that contains it, such as AdditionalMaps, or use a source build |
 | __Size__ | about 400 x 415 m of roads |
 | __Spawn points__ | 265, from `world.get_map().get_spawn_points()` |
 | __Junctions__ | 31: the central roundabout, 4-way junctions and T-junctions, with 38 traffic lights and 20 stop signs |

@@ -15,9 +15,6 @@ import sys
 
 import carla
 
-# Blueprints that exist only to exercise the spawning pipeline.
-DENYLIST = {'blueprint.trafficlightexample'}
-
 SECTIONS = [
     ('vehicle', 'Vehicles', 'Spawnable vehicles. See the [vehicle catalogue](catalogue_vehicles.md) for images and [Actors](core_actors.md) for how to drive them.'),
     ('walker', 'Pedestrians', 'Spawnable pedestrians. See the [pedestrian catalogue](catalogue_pedestrians.md); they are driven by a `controller.ai.walker`.'),
@@ -73,7 +70,7 @@ def generate_bp_docs(host, port, timeout):
     client.set_timeout(timeout)
     world = client.get_world()
 
-    blueprints = [bp for bp in world.get_blueprint_library().filter('*') if bp.id not in DENYLIST]
+    blueprints = [bp for bp in world.get_blueprint_library().filter('*')]
     by_type = {}
     for bp in sorted(blueprints, key=lambda x: x.id):
         by_type.setdefault(bp.id.split('.')[0], []).append(bp)

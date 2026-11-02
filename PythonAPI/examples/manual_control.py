@@ -8,53 +8,31 @@
 
 """Allows controlling a vehicle with a keyboard."""
 
-"""
-Welcome to CARLA manual control.
-
+HELP_TEXT = """
 Use ARROWS or WASD keys for control.
 
-    W            : throttle
-    S            : brake
-    A/D          : steer left/right
-    Q            : toggle reverse
-    Space        : hand-brake
-    P            : toggle autopilot
-    M            : toggle manual transmission
-    ,/.          : gear up/down
-    CTRL + W     : toggle constant velocity mode at 60 km/h
+    W / S        : throttle / brake
+    A / D        : steer left / right
+    Q / Space    : toggle reverse / hand-brake
+    P / CTRL + W : toggle autopilot / constant velocity at 60 km/h
+    M / , / .     : toggle manual transmission / gear up / down
 
-    L            : toggle next light type
-    SHIFT + L    : toggle high beam
-    Z/X          : toggle right/left blinker
-    I            : toggle interior light
+    L / SHIFT+L  : next light type / high beam
+    Z / X / I    : right blinker / left blinker / interior light
+    O / T        : open-close all doors / vehicle telemetry
 
-    TAB          : change sensor position
-    ` or N       : next sensor
+    TAB / ` or N : change sensor position / next sensor
     [1-9]        : change to sensor [1-9]
-    G            : toggle radar visualization
-    C            : change weather (Shift+C reverse)
-    K            : change camera profile (Shift+K reverse)
+    G / C / K    : radar / weather / camera profile (SHIFT = reverse)
     Backspace    : change vehicle
 
-    O            : open/close all doors of vehicle
-    T            : toggle vehicle's telemetry
+    U / SHIFT+U  : all street lights / street light day-night cycle
+    V / B        : select / load map layer (SHIFT = reverse / unload)
 
-    U            : toggle all street lights (LightManager)
-    SHIFT + U    : toggle street light day/night cycle
-
-    V            : Select next map layer (Shift+V reverse)
-    B            : Load current selected map layer (Shift+B to unload)
-
-    R            : toggle recording images to disk
-
-    CTRL + R     : toggle recording of simulation (replacing any previous)
+    R / CTRL + R : record images to disk / record simulation
     CTRL + P     : start replaying last recorded simulation
-    CTRL + +     : increments the start time of the replay by 1 second (+SHIFT = 10 seconds)
-    CTRL + -     : decrements the start time of the replay by 1 second (+SHIFT = 10 seconds)
 
-    F1           : toggle HUD
-    H/?          : toggle help
-    ESC          : quit
+    F1 / H / ESC : toggle HUD / toggle help / quit
 """
 
 # ==============================================================================
@@ -119,8 +97,6 @@ try:
     from pygame.locals import K_w
     from pygame.locals import K_x
     from pygame.locals import K_z
-    from pygame.locals import K_MINUS
-    from pygame.locals import K_EQUALS
 except ImportError:
     raise RuntimeError('cannot import pygame, make sure pygame package is installed')
 
@@ -244,7 +220,6 @@ class World(object):
         self.restart()
         self.world.on_tick(hud.on_world_tick)
         self.recording_enabled = False
-        self.recording_start = 0
         self.constant_velocity_enabled = False
         self.show_vehicle_telemetry = False
         self.doors_are_open = False
@@ -530,20 +505,8 @@ class KeyboardControl(object):
                     world.player.set_autopilot(self._autopilot_enabled)
                     world.hud.notification("Replaying file 'manual_recording.rec'")
                     # replayer
-                    client.replay_file("manual_recording.rec", world.recording_start, 0, 0)
+                    client.replay_file("manual_recording.rec", 0, 0, 0)
                     world.camera_manager.set_sensor(current_index)
-                elif event.key == K_MINUS and (pygame.key.get_mods() & KMOD_CTRL):
-                    if pygame.key.get_mods() & KMOD_SHIFT:
-                        world.recording_start -= 10
-                    else:
-                        world.recording_start -= 1
-                    world.hud.notification("Recording start time is %d" % (world.recording_start))
-                elif event.key == K_EQUALS and (pygame.key.get_mods() & KMOD_CTRL):
-                    if pygame.key.get_mods() & KMOD_SHIFT:
-                        world.recording_start += 10
-                    else:
-                        world.recording_start += 1
-                    world.hud.notification("Recording start time is %d" % (world.recording_start))
                 elif event.key == K_u and pygame.key.get_mods() & KMOD_SHIFT:
                     self._day_night_cycle = not getattr(self, '_day_night_cycle', True)
                     world.world.get_lightmanager().set_day_night_cycle(self._day_night_cycle)
@@ -903,7 +866,7 @@ class FadingText(object):
 class HelpText(object):
     """Helper class to handle text output using pygame"""
     def __init__(self, font, width, height):
-        lines = __doc__.split('\n')
+        lines = HELP_TEXT.split('\n')
         self.font = font
         self.line_space = 18
         self.dim = (780, len(lines) * self.line_space + 12)
@@ -1134,10 +1097,16 @@ class RadarSensor(object):
 # ==============================================================================
 
 
+# A camera meters its first frames from scratch, so a freshly spawned one shows
+# a bright flash before its auto exposure settles. Those frames are dropped.
+SENSOR_WARMUP_SECONDS = 0.2
+
+
 class CameraManager(object):
     def __init__(self, parent_actor, hud, gamma_correction, post_process_profile='Default'):
         self.sensor = None
         self.surface = None
+        self._warmup_until = None
         self._parent = parent_actor
         self.hud = hud
         self.recording = False
@@ -1238,7 +1207,8 @@ class CameraManager(object):
                 self.sensor.stop()
                 time.sleep(0.4)
                 self.sensor.destroy()
-                self.surface = None
+                # The last frame is kept on screen until the new sensor sends
+                # one: the HUD blits with alpha and would stack on a stale one.
             self.sensor = self._parent.get_world().spawn_actor(
                 self.sensors[index][-1],
                 self._camera_transforms[self.transform_index][0],
@@ -1248,6 +1218,7 @@ class CameraManager(object):
             # circular reference.
             weak_self = weakref.ref(self)
             self.sensor.listen(lambda image: CameraManager._parse_image(weak_self, image))
+            self._warmup_until = None
         if notify:
             self.hud.notification(self.sensors[index][2])
         self.index = index
@@ -1282,6 +1253,11 @@ class CameraManager(object):
         self = weak_self()
         if not self:
             return
+        if self.sensors[self.index][0].startswith('sensor.camera'):
+            if self._warmup_until is None:
+                self._warmup_until = image.timestamp + SENSOR_WARMUP_SECONDS
+            if image.timestamp < self._warmup_until:
+                return
         if self.sensors[self.index][0] == 'sensor.lidar.ray_cast':
             points = np.frombuffer(image.raw_data, dtype=np.dtype('f4'))
             points = np.reshape(points, (int(points.shape[0] / 4), 4))
@@ -1461,7 +1437,7 @@ def main():
 
     logging.info('listening to server %s:%s', args.host, args.port)
 
-    print(__doc__)
+    print(HELP_TEXT)
 
     try:
 

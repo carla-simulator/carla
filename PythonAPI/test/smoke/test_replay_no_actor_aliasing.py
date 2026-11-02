@@ -63,8 +63,7 @@ class TestReplayNoActorAliasing(SyncSmokeTest):
         self.settings = None
         # The packaged ue5 build only ships Town10HD_Opt + Mine_01; the
         # base SmokeTest.tearDown calls load_world("Town03") which fails.
-        self.client.load_world("Town10HD_Opt")
-        time.sleep(5)
+        self.load_world("Town10HD_Opt")
         self.world = None
         self.client = None
 

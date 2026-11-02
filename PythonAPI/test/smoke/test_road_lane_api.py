@@ -25,6 +25,13 @@ class TestRoadLaneAPI(SmokeTest):
         super(TestRoadLaneAPI, self).setUp()
         self.map = self.world.get_map()
 
+    def tearDown(self):
+        # Read-only: nothing is spawned and the map is never changed, so the
+        # base class' map reload and 5 s sleep per test are pure cost.
+        self.map = None
+        self.world = None
+        self.client = None
+
     def _a_normal_road(self, min_length=0.0):
         """A non-junction road with driving lanes, at least min_length long."""
         for road in self.map.get_roads():

@@ -296,7 +296,7 @@ set (
   CACHE STRING
   "Name of the release version the package target creates with UAT's \
 -createreleaseversion (the base a content pack's DLC cook is 'based on'). \
-Empty means carla-<CARLA_VERSION>-<UE_SYSTEM_NAME>, e.g. carla-0.10.0-Linux."
+Empty means carla-<CARLA_VERSION>-<UE_SYSTEM_NAME>, e.g. carla-1.0-Linux."
 )
 
 
