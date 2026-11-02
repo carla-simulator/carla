@@ -92,7 +92,7 @@ SEMANTIC_LABELS = ("Building", "Fence", "Pedestrian", "Pole", "Other", "Road", "
                    "TrafficSign", "Vegetation", "Car", "Wall", "Sky", "Ground", "Bridge", "RailTrack",
                    "GuardRail", "TrafficLight", "Static", "Dynamic", "Water", "Terrain", "Truck",
                    "Motorcycle", "Bicycle", "Bus", "Rider", "Train", "Rock", "Stone", "Bush")
-VERSION_RE = re.compile(r"^\d+\.\d+\.\d+([-+][0-9A-Za-z.-]+)?$")
+VERSION_RE = re.compile(r"^\d+\.\d+(\.\d+)?([-+][0-9A-Za-z.-]+)?$")
 
 TOOL_DIR = Path(__file__).resolve().parent
 REPO_ROOT = TOOL_DIR.parents[1]  # Util/ContentPacks -> repo root
@@ -201,7 +201,7 @@ def copy_any(src, dst):
 
 
 def carla_version_from_cmake():
-    """Read CARLA_VERSION_{MAJOR,MINOR,PATCH} from the repo's CMakeLists.txt."""
+    """Read CARLA_VERSION_{MAJOR,MINOR[,PATCH]} from the repo's CMakeLists.txt."""
     cmake = REPO_ROOT / "CMakeLists.txt"
     if not cmake.is_file():
         return None
@@ -213,9 +213,11 @@ def carla_version_from_cmake():
                 parts[m.group(1)] = m.group(2)
     except OSError:
         return None
-    if len(parts) == 3:
+    if "MAJOR" not in parts or "MINOR" not in parts:
+        return None
+    if "PATCH" in parts:
         return "{MAJOR}.{MINOR}.{PATCH}".format(**parts)
-    return None
+    return "{MAJOR}.{MINOR}".format(**parts)
 
 
 # --------------------------------------------------------------------------
@@ -676,7 +678,7 @@ def cmd_init(args):
         raise PackError("{!r} is a reserved name (an engine/project mount point or an existing plugin); "
                         "pick another pack name".format(name))
     if not VERSION_RE.match(args.version):
-        raise PackError("invalid --pack-version {!r}: expected MAJOR.MINOR.PATCH".format(args.version))
+        raise PackError("invalid --pack-version {!r}: expected MAJOR.MINOR[.PATCH]".format(args.version))
     pack_dir = packs_root(args) / name
     if (pack_dir / MANIFEST_NAME).exists():
         raise PackError("pack already exists: {}".format(pack_dir))
