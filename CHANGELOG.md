@@ -195,15 +195,30 @@
 
 ## CARLA 0.10.0
 
-* Unreal Engine migration from version 4.26 to version 5.5
-    - Nanite enabled for entire Town 10
+### New features
+
+#### Unreal Engine 5.5
+
+* **CARLA migrated from Unreal Engine 4.26 to Unreal Engine 5.5**:
     - Lumen powers new realistic illumination
-    - Improved lighting with new post-process configuration
-    - Physics migrated from PhysX to Chaos
+    - Nanite enabled for the entire Town 10
+    - Improved lighting with a new post-process configuration
+    - Physics migrated from PhysX to Chaos, with more realistic suspension behaviour for every vehicle
+* The documentation of the Unreal Engine 5 version moved to its own address, [carla-ue5.readthedocs.io](https://carla-ue5.readthedocs.io/en/latest/); the Unreal Engine 4.26 documentation stays at [carla.readthedocs.io](https://carla.readthedocs.io/en/latest/).
+
+#### Sensor simulation
+
+* Refactored the semantic segmentation and instance segmentation sensors for stability and performance:
+    - Semantic segmentation can now be visualized in the editor for debugging
+    - Only meshes with Nanite enabled are supported
+
+#### Maps and content
+
 * Remodeled Town 10:
-    - New buildings
-    - Road topology includes uneven surface, potholes, speed bumps
-* Remodeled 13 vehicles with more detail:
+    - New buildings, pavements, roads and vegetation on the same road network, and new construction assets
+    - Road topology with camber and an uneven surface, potholes and speed bumps, which affect vehicle dynamics and sensors
+* Added the **Mine_01** off-road open-cast mining map, provided by Synkrotron
+* Remodeled 12 vehicles with more detail:
     - Nissan Patrol
     - Dodge Charger
     - Dodge Charger Police
@@ -216,13 +231,20 @@
     - Mercedes Sprinter
     - Mitsubishi Fusorosa bus
     - Mining earth mover (provided by Synkrotron)
-* Rework of build system to use cmake
-* Native server support for ROS2 (without CARLA-ROS bridge)
-* Refactor of semantic segmentation and instance segmentation sensors
-    - Semantic segmentation can now be visualized in UE editor for debugging
-    - Only supports meshes with Nanite enabled
-* Included support to data-driven realistic traffic generation powered by InvertedAI
-* Updated Python API scripts with extra examples in the PythonAPI folder:
+
+#### AV stacks and ROS 2
+
+* Native server support for ROS 2, without the CARLA-ROS bridge, enabled with `--ros2`
+
+#### Scenarios
+
+* Included support for data-driven realistic traffic generation powered by Inverted AI
+* Added support for Scenic 3.0, with examples adapted to the new Town 10 in the [CARLA fork of Scenic](https://github.com/carla-simulator/Scenic)
+
+#### Python API
+
+* The Python API supports Python 3.8, 3.9, 3.10, 3.11 and 3.12
+* New example scripts in the PythonAPI folder:
     - examples/invertedai_traffic.py
     - examples/interpolate_camera.py
     - examples/vehicle_doors_demo.py
@@ -239,10 +261,21 @@
     - util/show_junctions.py
     - util/show_topology.py
     - util/spectator_transform.py
-* Motion blur disabled below 1080p resolution to avoid artefacts
-* Python API now supports Python 3.8, 3.9, 3.10, 3.11 and 3.12
-* Python API support dropped for Python versions 3.7 and lower
-* Added support for Scenic 3.0
-* RSS functionality removed from docs
-* Removed Light Manager from API and docs
-* Added Mine01 off-road mining map from Synkrotron
+
+#### Build and tooling
+
+* Reworked the build system to use CMake
+
+### Removed and not yet migrated
+
+* Python 3.7 and lower are no longer supported
+* Removed the Light Manager from the API and the documentation
+* Removed the RSS functionality from the documentation
+* Motion blur is disabled below 1080p to avoid artefacts
+* Not available in 0.10.0, as listed in the [release post](https://carla.org/2024/12/19/release-0.10.0/):
+    - Weather control: the weather is fixed to daylight
+    - Towns other than Town 10 and Mine_01, large maps and the map layers API
+    - OpenDRIVE, OpenStreetMap, digital twin and asset import
+    - Vehicles other than the 12 above
+    - SUMO, Chrono and PTV Vissim co-simulation
+    - V2X and GBuffers
