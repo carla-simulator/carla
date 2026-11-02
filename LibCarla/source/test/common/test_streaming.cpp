@@ -18,6 +18,7 @@
 #include <boost/asio/executor_work_guard.hpp>
 
 #include <atomic>
+#include <chrono>
 
 using namespace std::chrono_literals;
 
@@ -212,7 +213,11 @@ TEST(streaming, stream_outlives_server) {
     carla::Buffer Buf(boost::asio::buffer(message.c_str(), message.size()));
     carla::SharedBufferView BufView = carla::BufferView::CreateFrom(std::move(Buf));
     while (!done) {
-      std::this_thread::sleep_for(1ms);
+      // sleep_for(1ms) takes ~15 ms on Windows, too slow for the client's 20 ms window.
+      const auto next_write = std::chrono::steady_clock::now() + 1ms;
+      while (!done && std::chrono::steady_clock::now() < next_write) {
+        std::this_thread::yield();
+      }
       auto s = std::atomic_load_explicit(&stream, std::memory_order_relaxed);
       if (s != nullptr) {
         carla::SharedBufferView View = BufView;
@@ -237,9 +242,6 @@ TEST(streaming, stream_outlives_server) {
         ASSERT_EQ(result, message);
         ++messages_received;
       });
-      for (auto t = 0u; t < 200u && messages_received == 0u; ++t) {
-        std::this_thread::sleep_for(10ms);
-      }
       std::this_thread::sleep_for(20ms);
     } // client dies here.
     ASSERT_GT(messages_received, 0u);
