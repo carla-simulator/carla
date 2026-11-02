@@ -10,10 +10,10 @@ The Leaderboard runs on [ScenarioRunner](core_traffic.md#scenariorunner-and-open
 - [__Writing an agent__](#writing-an-agent)
 - [__Running the evaluation and submitting__](#running-the-evaluation-and-submitting)
 
-!!! agent "Ask your agent"
+!!! agent "Agentic CARLA"
     *"Install the Leaderboard, write an agent with a front camera and a GNSS, run it on the first three routes and explain the infractions."*
 
-    Skills: `install-leaderboard`, `write-leaderboard-agent`, `run-leaderboard-evaluation`, `read-leaderboard-results`, `create-leaderboard-route`, `package-leaderboard-agent`. [Connect your agent](agent_skills.md#connect-your-agent).
+    Skills: `install-leaderboard`, `write-leaderboard-agent`, `run-leaderboard-evaluation`, `read-leaderboard-results`, `create-leaderboard-route`, `package-leaderboard-agent`. [Set up Agentic CARLA](agent_skills.md#set-up-agentic-carla).
 
 ---
 ## Versions
@@ -25,6 +25,8 @@ The Leaderboard runs on [ScenarioRunner](core_traffic.md#scenariorunner-and-open
 | __Leaderboard 1.0__ | Still supported. |
 
 Each version has its own Leaderboard and ScenarioRunner branches (`leaderboard-2.1`, `leaderboard-2.0`, `leaderboard-1.0`) and is evaluated on the CARLA version given in its "Get started" guide on the Leaderboard site.
+
+To run the Leaderboard locally against this CARLA, use the `ue58-dev` branch of both the [Leaderboard](https://github.com/carla-simulator/leaderboard/tree/ue58-dev) and [ScenarioRunner](https://github.com/carla-simulator/scenario_runner/tree/ue58-dev) repositories. The `leaderboard-2.x` branches target the Unreal Engine 4.26 line; `ue58-dev` adds what an Unreal Engine 5 server needs, such as resolving town names to the maps the server has (the classic towns only exist as `_Opt` variants) and translating the ego blueprint. Its CHANGELOG lists the changes and the known gaps.
 
 ---
 ## Tracks and sensors

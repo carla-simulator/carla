@@ -19,10 +19,10 @@ Objects within the CARLA simulation all have a bounding box and the CARLA Python
 ---
 ## Set up the simulator
 
-!!! agent "Ask your agent"
+!!! agent "Agentic CARLA"
     *"Spawn a camera on the ego and save its images with the 2D bounding boxes of the vehicles around it."*
 
-    Skills: `bounding-boxes`, `create-sensor`. [Connect your agent](agent_skills.md#connect-your-agent).
+    Skills: `bounding-boxes`, `create-sensor`. [Set up Agentic CARLA](agent_skills.md#set-up-agentic-carla).
 
 Let's lay down the standard CARLA boilerplate code, set up the client and world objects, spawn a vehicle and attach a camera to it:
 

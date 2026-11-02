@@ -119,7 +119,10 @@ def cmd_detect(args) -> None:
         if lb:
             want = VERSIONS.get(lb_version(lb), (None, None, None, None))[1]
             cur = branch_of(sr)
-            if want and cur != want:
+            if cur != "unknown" and cur == branch_of(lb) and cur.startswith("ue58"):
+                # Both repos on ue58-dev: the pair for CARLA on UE 5.8.
+                print(f"  pairing          : OK (both on {cur}, the pair for CARLA on UE 5.8)")
+            elif want and cur != want:
                 same2x = {cur, want} == {"leaderboard-2.0", "leaderboard-2.1"}
                 print(f"  pairing          : {'OK (identical commits)' if same2x else f'MISMATCH — needs {want}'}")
             elif want:

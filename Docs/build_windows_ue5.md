@@ -2,12 +2,12 @@
 
 This guide details how to build CARLA from source on Windows with Unreal Engine 5.8. If you are building CARLA for the first time, ensure that you **link your GitHub account to Epic Games** by following [this guide](https://www.unrealengine.com/en-US/ue-on-github).
 
-The default way to build CARLA is to let your AI coding agent do it:
+The default way to build CARLA is to let your AI coding assistant do it:
 
-!!! agent "Ask your agent"
+!!! agent "Agentic CARLA"
     *"Clone CARLA from the ue58-dev branch, build it on Windows with Unreal Engine 5.8 and launch the editor."*
 
-    Skills: `build-carla-ue58`, `run-carla-ue58-server`. [Connect your agent](agent_skills.md#connect-your-agent).
+    Skills: `build-carla-ue58`, `run-carla-ue58-server`. [Set up Agentic CARLA](agent_skills.md#set-up-agentic-carla).
 
 If you prefer to build CARLA by hand, follow the steps below.
 

@@ -382,13 +382,10 @@ p:has(> img) + .img-caption {
    to give it and the skills it uses. */
 .rst-content .admonition.agent {
 	background: #f3efff;
-	border-left: 4px solid #6f42c1;
-	border-radius: 4px;
 }
 .rst-content .admonition.agent .admonition-title {
 	background: #6f42c1;
 	color: #fff;
-	border-radius: 0 4px 0 0;
 }
 .rst-content .admonition.agent .admonition-title::before {
 	content: "\1F916";

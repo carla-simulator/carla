@@ -8,10 +8,10 @@ This section will cover spawning, destruction, types, and how to manage them. Ho
 - [__Actor life cycle__](#actor-life-cycle)
 - [__Types of actors__](#types-of-actors)
 
-!!! agent "Ask your agent"
+!!! agent "Agentic CARLA"
     *"Spawn a red Tesla Model 3 at a free spawn point, 20 pedestrians that walk around, and tell me the speed of the Tesla."*
 
-    Skills: `spawn-vehicles`, `spawn-walkers`, `world-data`, `telemetry`. [Connect your agent](agent_skills.md#connect-your-agent).
+    Skills: `spawn-vehicles`, `spawn-walkers`, `world-data`, `telemetry`. [Set up Agentic CARLA](agent_skills.md#set-up-agentic-carla).
 
 ---
 ## Blueprints

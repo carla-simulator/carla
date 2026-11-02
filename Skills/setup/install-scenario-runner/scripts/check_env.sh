@@ -31,7 +31,8 @@ PV="$("${PYTHON}" -c 'import sys; print("%d.%d" % sys.version_info[:2])')"
 case "${PV}" in
   3.7|3.8|3.9|3.10) ok "Python ${PV} is inside the supported 3.7-3.10 window" ;;
   3.11|3.12) warn "Python ${PV}: the carla wheel exists but py_trees 0.8.3 is untested here" ;;
-  *) warn "Python ${PV} is outside the tested range (3.7-3.10)" ;;
+  3.13) warn "Python ${PV}: tested only with ue58-dev (py-trees 0.8.3 ran fine); master/leaderboard branches use 3.7-3.10" ;;
+  *) warn "Python ${PV} is outside the tested range (3.7-3.10; 3.13 with ue58-dev)" ;;
 esac
 
 echo "== What we are matching against =="

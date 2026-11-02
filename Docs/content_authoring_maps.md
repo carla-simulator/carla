@@ -33,10 +33,10 @@ The [__Digital Twin Tool__](content_authoring_maps_digital_twin.md) goes further
 ---
 ## Import the road network into CARLA
 
-!!! agent "Ask your agent"
+!!! agent "Agentic CARLA"
     *"Import my RoadRunner map from ~/maps/MyTown (FBX and OpenDRIVE) into CARLA and load it."*
 
-    Skill: `import-carla-ue58-map`. [Connect your agent](agent_skills.md#connect-your-agent).
+    Skill: `import-carla-ue58-map`. [Set up Agentic CARLA](agent_skills.md#set-up-agentic-carla).
 
 The export files CARLA needs are the `.xodr` and the `.fbx`, and both must have the same name. Copy or move them into the `Import` folder at the root of the CARLA source tree.
 

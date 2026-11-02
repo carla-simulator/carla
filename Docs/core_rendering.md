@@ -1,6 +1,6 @@
-# Unreal Engine rendering
+# Unreal Engine native rendering
 
-This guide details how CARLA uses Unreal Engine's own renderer, which draws the spectator view and every camera sensor unless told otherwise: the lighting and geometry systems, quality levels, ray tracing defaults, DLSS, ray-traced lens tuning, no-rendering mode and off-screen mode. For the other ways CARLA produces images, such as neural reconstruction or world models, see [Rendering](core_rendering_overview.md). To spread rendering across several GPUs, see [Multi-GPU](core_multigpu.md).
+This guide details how CARLA uses Unreal Engine's own renderer, which draws the spectator view and every camera sensor unless told otherwise: the lighting and geometry systems, quality levels, ray tracing defaults, no-rendering mode and off-screen mode. DLSS and the ray-traced lens cameras have their own pages. For the other ways CARLA produces images, such as neural reconstruction or world models, see [Rendering](core_rendering_overview.md). To spread rendering across several GPUs, see [Multi-GPU](core_multigpu.md).
 
 - [__Lighting and geometry__](#lighting-and-geometry)
 - [__Graphics quality__](#graphics-quality)
@@ -130,28 +130,9 @@ __The quality tier sets that variable.__ Only `Epic` leaves it at `-1`; `High`, 
 
 Changing project defaults requires editing `Config/DefaultEngine.ini` and rebuilding the simulator. The packaged Shipping binary strips the engine's `-execcmds=` command-line parser, so runtime overrides via that flag are not available in distributed CARLA releases; only project-side configuration takes effect.
 
-### NVIDIA DLSS
+### NVIDIA DLSS and ray-traced lens cameras
 
-CARLA integrates two DLSS features (the DLSS SDK is fetched during setup, so both are present in standard builds; an NVIDIA RTX-class GPU is required at runtime):
-
-*   __DLSS Ray Reconstruction (DLSS-RR)__ denoises the path-traced frames of `sensor.camera.rt_lens`. It is the default denoiser (`r.PathTracing.Denoiser.Name=DLSSRR` in `DefaultEngine.ini`) and is controlled per sensor with the `enable_denoiser` attribute.
-*   __DLSS Super Resolution (DLSS-SR)__ upscales individual camera sensors: with `enable_dlss=true` a camera renders internally at `dlss_screen_percentage` of its output resolution and DLSS reconstructs the full-size image. It is opt-in per camera and needs `enable_postprocess_effects=true` (see the [RGB camera attributes](ref_sensors.md#rgb-camera)); on non-NVIDIA hardware an enabled sensor degrades gracefully to a bilinear upscale.
-
-The example `PythonAPI/examples/manual_control_5cam.py` spawns a five-camera 1080p rig on an autopilot vehicle and toggles DLSS-SR live (press `D`) so the frame-rate and quality impact can be compared directly.
-
-![DLSS Super Resolution](img/core_rendering_overview/dlss_montage.webp)
-<div class="img-caption">A 3840 &times; 2160 RGB camera with DLSS Super Resolution at <code>dlss_screen_percentage=50</code>: it renders internally at 1920 &times; 1080 and DLSS reconstructs the 4K image. The crops of the framed area compare the internal render (scaled up), the DLSS output and a native 4K render.</div>
-
-### Ray-traced lens tuning
-
-The [ray-traced lens camera family](ref_sensors.md#ray-traced-lens-camera) (`sensor.camera.rt_lens`, `sensor.camera.rt_lens_distance`, `sensor.camera.rt_lens_instance`) is driven by a handful of engine console variables, set project-wide in `Unreal/CarlaUnreal/Config/DefaultEngine.ini` (`[SystemSettings]` and `[/Script/Engine.RendererSettings]` sections). An editor or development build can also be tuned live from the in-game console.
-
-| CVar | Default | What it does | When to change it |
-|---|---|---|---|
-| `r.PathTracing.FramePassCount` | Engine: `1`. CARLA project (`DefaultEngine.ini`): `0` | Sample passes the path tracer runs per rendered frame. `0` = automatic: run as many passes as needed to finish the sensor's remaining `samples_per_pixel` that frame (capped at 16 by the engine). `N` = run up to N passes per frame (also capped at 16). | Leave at the CARLA default (`0`). It is what lets a *moving* camera reach and denoise its full `samples_per_pixel` budget every frame instead of restarting accumulation at 1 sample; without it only `samples_per_pixel=1` sensors reach the denoise gate while driving. |
-| `r.PathTracing.MaxFramePassCount` | Engine: `16`. CARLA project: `64` | Upper bound on `r.PathTracing.FramePassCount`, i.e. the most sample passes one rendered frame may run. A sensor's `samples_per_pixel` above this value cannot finish (and denoise) within one tick, and with a moving camera never reaches the denoise gate at all: `sensor.camera.rt_lens`'s `Set()` clamps `samples_per_pixel` to this cvar and logs a warning when it does. | Raise it to allow higher `samples_per_pixel` sensors to converge every frame (CARLA already raises it to 64); lower it to cap the worst-case per-frame path-tracing cost. Measured: 32 samples/pixel under a 16-pass cap was about 4&times; noisier than the same count under a cap that lets it finish. |
-| `r.PathTracing.DLSSRR.FeatureIdleReleaseSeconds` | `0` (off) | Optional wall-clock fallback: seconds a DLSS Ray Reconstruction / DLSS Super Resolution feature (one per distinct view/lens configuration) may sit unused before its GPU memory is released. `0` disables it. | Not normally needed. A sensor's DLSS-RR feature (measured ~342 MB at 1080p) is released within about a second of the sensor being destroyed, because its lifetime is tied to the sensor's view state rather than to a timeout. That is what lets a live sensor go arbitrarily long between captures (a slow synchronous client, a sparse `sensor_tick`) without losing the denoiser's temporal history: the previous default of `10.0` re-created the feature and reset that history on every capture slower than 10 s. Set a value only as a safety net for a leak you have actually observed; any live sensor slower than the value then pays the reset again. |
-| `carla.RTLens.SyncModeBlockingReadback` | `1` | In synchronous mode, `1` delivers each `rt_lens*` image captured on the *same* tick, through a per-tick batched blocking GPU readback shared by every camera. `0` forces the asynchronous, one-tick-late, droppable readback (see [Readback and synchronous-mode delivery](ref_sensors.md#ray-traced-lens-camera)) even in synchronous mode. | Rollback valve. Leave at the default (`1`) for frame-accurate synchronous captures; set to `0` only to debug or work around a regression in the batched readback path. |
+DLSS Super Resolution and Ray Reconstruction have their own page, [NVIDIA DLSS](core_dlss.md). The path-traced cameras and the engine settings that tune them are in [Ray-traced lens cameras](core_rt_lens.md#tuning).
 
 ---
 ## No-rendering mode

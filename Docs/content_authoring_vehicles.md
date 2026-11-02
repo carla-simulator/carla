@@ -14,10 +14,10 @@ The key factors in preparing a custom vehicle for CARLA are rigging the vehicle 
 
 Materials are covered separately, in [Content authoring - vehicle materials](content_authoring_vehicles_materials.md).
 
-!!! agent "Ask your agent"
+!!! agent "Agentic CARLA"
     *"Import my vehicle from ~/cars/MyCar.fbx as a spawnable vehicle and drive it."*
 
-    Skill: `carla-vehicle-authoring`. [Connect your agent](agent_skills.md#connect-your-agent).
+    Skill: `carla-vehicle-authoring`. [Set up Agentic CARLA](agent_skills.md#set-up-agentic-carla).
 
 ---
 ## Modeling

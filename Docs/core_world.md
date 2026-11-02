@@ -34,10 +34,10 @@ Spawning will be explained in [2nd. Actors and blueprints](core_actors.md). It r
 
 ## Weather
 
-!!! agent "Ask your agent"
+!!! agent "Agentic CARLA"
     *"Set heavy rain at dusk."*
 
-    Skills: `set-weather`, `control-lights`. [Connect your agent](agent_skills.md#connect-your-agent).
+    Skills: `set-weather`, `control-lights`. [Set up Agentic CARLA](agent_skills.md#set-up-agentic-carla).
 
 The weather is not a class on its own, but a set of parameters accessible from the world. The parametrization includes sun orientation, cloudiness, wind, fog, and much more. The helper class [carla.WeatherParameters](python_api.md#carla.WeatherParameters) is used to define a custom weather.  
 ```py
@@ -214,10 +214,10 @@ actor_snapshot = world_snapshot.find(actual_actor.id) # Get an actor's snapshot
 
 ## World settings
 
-!!! agent "Ask your agent"
+!!! agent "Agentic CARLA"
     *"Switch the server to synchronous mode at 20 fps."*
 
-    Skill: `set-world-settings`. [Connect your agent](agent_skills.md#connect-your-agent).
+    Skill: `set-world-settings`. [Set up Agentic CARLA](agent_skills.md#set-up-agentic-carla).
 
 The world has access to some advanced configurations for the simulation. These determine rendering conditions, simulation time-steps, and synchrony between clients and server. They are accessible from the helper class [carla.WorldSettings](python_api.md#carla.WorldSettings).
 

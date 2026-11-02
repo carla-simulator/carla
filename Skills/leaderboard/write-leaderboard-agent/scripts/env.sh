@@ -41,7 +41,7 @@ fi
 export SCENARIO_RUNNER_ROOT="${SCENARIO_RUNNER_ROOT:-}"
 
 if [ -z "${CARLA_ROOT:-}" ]; then
-  for _c in "${CARLA_TARGET:-}" "${CARLA_PACKAGE_ROOT:-}" "${CARLA_UE4_ROOT:-}"; do
+  for _c in "${CARLA_TARGET:-}" "${CARLA_PACKAGE_ROOT:-}" "${CARLA_UE4_ROOT:-}" "${CARLA_UE58_ROOT:-}" "${CARLA_UE5_ROOT:-}"; do
     if [ -n "${_c}" ] && [ -d "${_c}/PythonAPI/carla" ]; then CARLA_ROOT="${_c}"; break; fi
   done
 fi
@@ -90,6 +90,9 @@ carla_lb_version() {
 
 # Which scenario_runner branch this leaderboard version requires.
 carla_lb_required_sr_branch() {
+  # The leaderboard ue58-dev branch (CARLA on UE 5.8) pairs with scenario_runner
+  # ue58-dev; its code reads as 2.x, so the branch name has to decide here.
+  case "$(carla_lb_branch)" in ue58-*) echo "ue58-dev"; return ;; esac
   case "$(carla_lb_version)" in
     1.0) echo "leaderboard-1.0" ;;
     2.0) echo "leaderboard-2.0" ;;

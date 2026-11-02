@@ -81,7 +81,7 @@ An entity with `external_control` will not move unless you drive it —
   raising, which is why a file can load and then do nothing.
 - Timeout is hard-coded to `100000` s in `scenario_runner.py`, so a stalled OSC run
   hangs rather than failing.
-- `.xosc`/`.osc` examples moved to `srunner/osc_examples/` on `ue5-master`.
+- `.xosc`/`.osc` examples moved to `srunner/osc_examples/` on `ue5-master` and `ue58-dev`.
 
 ## OpenSCENARIO 2.0 (`.osc`)
 

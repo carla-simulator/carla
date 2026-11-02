@@ -37,7 +37,7 @@ export SCENARIO_RUNNER_ROOT="${SCENARIO_RUNNER_ROOT:-}"
 # source build, the egg). CARLA_TARGET is what the rest of this skill library
 # uses, so accept it as a fallback rather than making the user set two vars.
 if [ -z "${CARLA_ROOT:-}" ]; then
-  for _c in "${CARLA_TARGET:-}" "${CARLA_PACKAGE_ROOT:-}" "${CARLA_UE4_ROOT:-}"; do
+  for _c in "${CARLA_TARGET:-}" "${CARLA_PACKAGE_ROOT:-}" "${CARLA_UE4_ROOT:-}" "${CARLA_UE58_ROOT:-}" "${CARLA_UE5_ROOT:-}"; do
     if [ -n "${_c}" ] && [ -d "${_c}/PythonAPI/carla" ]; then CARLA_ROOT="${_c}"; break; fi
   done
 fi
@@ -76,8 +76,8 @@ carla_sr_branch() {
 # Flavour, not branch name: several branches behave identically (SR
 # leaderboard-2.0 and leaderboard-2.1 are the *same commit*), and the name is
 # "HEAD" in a detached checkout, worktree, tarball or docker image — so fall back
-# to a content probe. srunner/scenic/ exists only on ue5-master, and
-# change_lane.py exists on every branch except ue5-master.
+# to a content probe. srunner/scenic/ exists on ue5-master and ue58-dev, and
+# change_lane.py is absent from both; the _Opt town names tell them apart.
 carla_sr_flavor() {
   case "$(carla_sr_branch)" in
     master|0.9.1[3-9]*)      echo "ue4"; return ;;

@@ -6,7 +6,7 @@ This guide shows how to download and run the CARLA binary, the precompiled packa
     This documentation is for CARLA 1.0. The Unreal Engine 4 versions of CARLA (0.9.x) have [their own documentation](https://carla.readthedocs.io/en/latest/).
 
 - [__Before you begin__](#before-you-begin)
-- [__Install with your agent__](#install-with-your-agent)
+- [__Install with Agentic CARLA__](#install-with-agentic-carla)
 - [__CARLA package installation__](#carla-package-installation)
 - [__Install client library__](#install-client-library)
 - [__Running CARLA__](#running-carla)
@@ -48,14 +48,14 @@ pip3 install --upgrade pip
 ```
 
 ---
-## Install with your agent
+## Install with Agentic CARLA
 
-The quickest way to install CARLA is to let your AI coding agent do it. With the [CARLA skills connected](agent_skills.md#connect-your-agent), ask it in plain words and it downloads the release, installs the matching Python client, starts the server and checks that a client can reach it, following procedures tested by the CARLA team:
+The quickest way to install CARLA is to let your AI coding assistant do it. With the [CARLA skills connected](agent_skills.md#set-up-agentic-carla), ask it in plain words and it downloads the release, installs the matching Python client, starts the server and checks that a client can reach it, following procedures tested by the CARLA team:
 
-!!! agent "Ask your agent"
+!!! agent "Agentic CARLA"
     *"Download CARLA 1.0, install its Python client in a virtual environment and start a server on Town10."*
 
-    Skills: `download-carla`, `install-python-api`, `run-carla-ue58-server`. [Connect your agent](agent_skills.md#connect-your-agent).
+    Skills: `download-carla`, `install-python-api`, `run-carla-ue58-server`. [Set up Agentic CARLA](agent_skills.md#set-up-agentic-carla).
 
 The same works for everything that comes after: *"spawn heavy traffic and make it rain at dusk"*, *"mount a front camera and a lidar and save their data"*. Throughout this documentation, a box like the one above marks the procedures your agent can run for you.
 

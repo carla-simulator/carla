@@ -14,10 +14,10 @@ The replayer plays that file back exactly as it was recorded, so the run can be 
 ---
 ## Recording
 
-!!! agent "Ask your agent"
+!!! agent "Agentic CARLA"
     *"Record the next two minutes of simulation, then replay the last 30 seconds following the ego vehicle."*
 
-    Skills: `record-simulation`, `replay-recording`, `query-recording`. [Connect your agent](agent_skills.md#connect-your-agent).
+    Skills: `record-simulation`, `replay-recording`, `query-recording`. [Set up Agentic CARLA](agent_skills.md#set-up-agentic-carla).
 
 All the data is written in a binary file on the server side only. However, the recorder is managed using the [carla.Client](python_api.md#carla.Client).
 

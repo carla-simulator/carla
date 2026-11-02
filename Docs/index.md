@@ -4,11 +4,17 @@ CARLA is an open-source simulator for autonomous driving research and developmen
 
 CARLA is used to train and validate perception models, to generate labelled datasets, to test planning and control, and to evaluate full driving stacks in scenarios that would be dangerous or impossible to stage on a real road. It is free, open source and backed by a large community. If you want to know more before installing anything, read the [Introduction](start_introduction.md).
 
-!!! Note
-    This is the documentation of __CARLA 1.0__, on Unreal Engine 5.8. The previous versions of CARLA, on Unreal Engine 4 (0.9.x), have [their own documentation](https://carla.readthedocs.io/en/latest/); they are now obsolete and will be deprecated soon.
+__Just want to run CARLA?__ Download the CARLA 1.0 package for Linux or Windows, or pull the Docker image, and start it with the quick start. Nothing to build.
 
-!!! agent "Ask your agent"
-    Most of what these pages describe can be done by an AI coding agent: installing and building CARLA, running servers, spawning traffic and sensors, importing maps and vehicles, and writing and running scenarios. Look for boxes like this one, with the prompt to give your agent and the skills it follows. [Connect your agent](agent_skills.md#connect-your-agent).
+<div class="build-buttons">
+<a href="download/" class="btn btn-neutral" title="Go to Download">
+Download CARLA</a>
+</div>
+
+<br>
+
+!!! agent "Agentic CARLA"
+    Most of what these pages describe can be done by an AI coding assistant: installing and building CARLA, running servers, spawning traffic and sensors, importing maps and vehicles, and writing and running scenarios. Look for boxes like this one, with the prompt to give your assistant and the skills it follows. [Set up Agentic CARLA](agent_skills.md#set-up-agentic-carla).
 
 Where to start:
 
@@ -36,7 +42,7 @@ GitHub Discussions</a>
 ---
 ## Agentic CARLA
 
-- [__Agent skills__](agent_skills.md): Let your AI coding agent install, build, run and drive CARLA for you, following 62 procedures tested by the CARLA team, and how to connect it.
+- [__Agentic CARLA skills__](agent_skills.md): Let your AI coding assistant install, build, run and drive CARLA for you, following 62 procedures tested by the CARLA team, and how to connect it.
 
 ---
 ## CARLA topics

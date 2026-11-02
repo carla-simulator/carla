@@ -21,7 +21,7 @@ nav:
     - 'Build FAQ': 'build_faq.md'
 
 - Agentic CARLA:
-  - 'Agent skills': 'agent_skills.md'
+  - 'Agentic CARLA skills': 'agent_skills.md'
 
 - CARLA topics:
   - Foundations:
@@ -40,14 +40,19 @@ nav:
   - Sensor simulation:
     - Rendering:
       - 'core_rendering_overview.md'
-      - 'Unreal Engine rendering': 'core_rendering.md'
+      - 'Unreal Engine native rendering': 'core_rendering.md'
       - 'Camera post-process presets': 'core_camera_presets.md'
+      - 'Ray-traced lens cameras': 'core_rt_lens.md'
+      - 'NVIDIA DLSS Super Resolution': 'core_dlss.md'
+      - 'NVIDIA NuRec neural reconstruction': 'nvidia_nurec.md'
+      - 'NVIDIA Cosmos': 'nvidia_cosmos.md'
       - 'Multi-GPU': 'core_multigpu.md'
     - 'Sensors and data': 'core_sensors.md'
   - Scenarios:
     - 'core_traffic.md'
     - 'Traffic Manager': 'core_traffic_manager.md'
-    - 'Agents': 'core_agents.md'
+    - 'Traffic Agents': 'core_agents.md'
+    - 'ScenarioRunner': 'scenario_runner.md'
     - 'Scenic': 'scenic.md'
     - 'Inverted AI': 'inverted_ai.md'
     - 'CARLA Leaderboard': 'leaderboard.md'
@@ -123,9 +128,7 @@ nav:
 
 - CARLA ecosystem:
   - 'RoadRunner': 'roadrunner.md'
-  - NVIDIA:
-    - 'nvidia.md'
-    - 'Neural reconstruction': 'nvidia_nurec.md'
+  - 'NVIDIA': 'nvidia.md'
   - ROS 2:
     - 'ros2_native.md'
     - 'Sensors': 'ros2_native_sensors.md'

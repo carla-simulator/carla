@@ -15,10 +15,10 @@ The integrations live in [`PythonAPI/examples/av_stacks/`](https://github.com/ca
 
 [Autoware](https://autoware.org/) runs over CARLA's [native ROS 2 interface](ros2_native.md), with no bridge process: the server publishes sensor data and vehicle status straight onto ROS 2 topics and applies Autoware's control commands to the ego vehicle. Two driving modes ship with the integration: `classical`, the full Autoware stack with lidar localization, perception, planning and control, and `e2e`, the camera-only VAD end-to-end model. The integration also builds the maps Autoware needs from a CARLA town.
 
-!!! agent "Ask your agent"
+!!! agent "Agentic CARLA"
     *"Run Autoware in classical mode against CARLA on Town10, with RViz."*
 
-    Skill: `run-autoware-ue58`. [Connect your agent](agent_skills.md#connect-your-agent).
+    Skill: `run-autoware-ue58`. [Set up Agentic CARLA](agent_skills.md#set-up-agentic-carla).
 
 See [Autoware](autoware.md) for the requirements, the launcher options, the topics and how to prepare a map.
 

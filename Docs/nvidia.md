@@ -21,35 +21,53 @@ The NVIDIA Alpamayo 2 Super example provides closed-loop vision-language-action 
 ---
 ## Neural reconstruction
 
-Neural reconstruction (NuRec) learns a 3D representation of a real place from recorded sensor data, so one recorded drive can be re-simulated with the trajectory perturbed, the sensor rig changed or rendered assets inserted. CARLA runs it through NVIDIA's Neural Reconstruction Engine container and its gRPC API; the [neural reconstruction page](nvidia_nurec.md) covers installing and using it.
+![CARLA vehicle inside a NuRec scene](img/core_rendering_overview/nurec_carla.webp)
+<div class="img-caption">A CARLA SUV overtakes the ego on the left inside the neural reconstruction of a recorded highway drive. The vehicle is path traced, lit by the scene's sun and casts its shadow on the reconstructed road.</div>
+
+NVIDIA NuRec turns recorded camera and LIDAR data into a 3D scene that can be rendered from new viewpoints. CARLA loads the scenario's OpenDRIVE road network, spawns the recorded actors and runs the simulation loop, while NVIDIA's Neural Reconstruction Engine (NRE) container renders photoreal camera frames at the poses CARLA reports each tick. Because CARLA owns the loop, a real drive can be perturbed with the full CARLA API: the ego re-driven, vehicles handed to the Traffic Manager, assets inserted.
+
+The [hybrid rendering example](nvidia_nurec.md#hybrid-rendering-example) composites CARLA vehicles and pedestrians into the neural scene with the ray-traced lens cameras.
+
+<div class="build-buttons">
+<p>
+<a href="../nvidia_nurec" class="btn btn-neutral" title="Go to NVIDIA NuRec">
+Go to NVIDIA NuRec</a>
+</p>
+</div>
 
 ---
 ## Cosmos
 
-Cosmos turns a CARLA drive into input for NVIDIA's Cosmos video world models, which generate photoreal variations of a recorded run — a different weather, time of day or road surface over the same trajectory. `PythonAPI/examples/nvidia/cosmos/` captures frame-exact multi-camera clips with their depth, segmentation and edge control videos, exports the ground truth as an NVIDIA ClipGT scene package, and submits generation jobs through the `carla-cosmos` CLI.
+![Cosmos input, control and result](img/core_rendering_overview/cosmos_transfer.webp)
+<div class="img-caption">A CARLA camera frame (left), the world-scenario control video rendered from its ground truth (centre) and the frame Cosmos generated from them with the prompt shown below (right).</div>
 
-![Cosmos 3 from a CARLA drive](img/nvidia/cosmos_carla.webp)
-<div class="img-caption">Cosmos 3 on a CARLA drive. Left, the CARLA camera (<code>input rgb</code>); centre, the world-scenario control (<code>control_wsm</code>) rendered from the ground truth CARLA exports, with the lane lines and a box per actor; right, the generated footage. The prompt asked for a city street in the early afternoon.</div>
+Cosmos works after the simulation, not during it. `PythonAPI/examples/nvidia/cosmos/` captures frame-exact multi-camera clips from a CARLA run with their depth, segmentation and edge control videos, exports the ground truth as an NVIDIA ClipGT scene package, and submits generation jobs through the `carla-cosmos` CLI. NVIDIA's Cosmos video world models then generate photoreal variations of the run, such as a different weather, time of day or road surface over the same trajectory.
 
-Each control video steers the generation differently. The world-scenario control keeps only the road layout and the actors, so the model is free to invent the rest; adding depth and segmentation controls captured from the same drive keeps more of the CARLA street, and an edge control keeps its outlines while the prompt changes the light:
+The capture client, the CLI and the job server run today, and a mock worker exercises the whole pipeline without a GPU; the Cosmos 3 and Transfer 2.5 workers are awaiting validation on GPU hardware.
 
-![Cosmos 3 with depth and segmentation controls](img/nvidia/cosmos_carla_depth_seg_thumb.webp)
-<div class="img-caption">The same drive generated with depth and segmentation controls added to the world-scenario one (the centre panel shows only the world-scenario control). The buildings and the street keep the layout of the CARLA scene.</div>
-
-![Cosmos Transfer 2.5 with an edge control](img/nvidia/cosmos_edge_thumb.webp)
-<div class="img-caption">Cosmos Transfer 2.5 on the same street, guided by the edge control (centre) extracted from the CARLA frames, relit as golden hour by the prompt.</div>
-
-The capture client, the CLI and the job server run today, and a mock worker lets the whole pipeline be exercised without a GPU. The workers for Cosmos 3 and Transfer 2.5 are written but still awaiting validation on GPU hardware. `PythonAPI/examples/nvidia/cosmos/README.md` covers installing and running it.
+<div class="build-buttons">
+<p>
+<a href="../nvidia_cosmos" class="btn btn-neutral" title="Go to NVIDIA Cosmos">
+Go to NVIDIA Cosmos</a>
+</p>
+</div>
 
 ---
 ## DLSS
 
-NVIDIA's Deep Learning Super Sampling (DLSS) is integrated into the CARLA simulator itself:
+![DLSS Super Resolution](img/core_rendering_overview/dlss_montage.webp)
+<div class="img-caption">A 3840 &times; 2160 RGB camera with DLSS Super Resolution at <code>dlss_screen_percentage=50</code>: it renders internally at 1920 &times; 1080 and DLSS reconstructs the 4K image. The crops of the framed area compare the internal render (scaled up), the DLSS output and a native 4K render.</div>
 
-- __DLSS Ray Reconstruction__ denoises the path-traced frames of the [ray-traced lens camera](ref_sensors.md#ray-traced-lens-camera) (`sensor.camera.rt_lens`), enabling real-time path tracing with physically exact lens distortion at low sample counts.
-- __DLSS Super Resolution__ can upscale any camera sensor: the camera renders internally at a fraction of its output resolution and DLSS reconstructs the full-size image, reducing the GPU cost of large multi-camera rigs.
+DLSS Super Resolution lowers the cost of a camera: with `enable_dlss=True` the camera renders internally at `dlss_screen_percentage` of its output resolution (`50.0` by default) and DLSS reconstructs the full-size image. It is opt-in per camera and needs `enable_postprocess_effects=True`. It is meant for RGB rigs, not for ground-truth cameras, because reconstructed pixels corrupt label and depth maps.
 
-The [rendering options page](core_rendering.md#nvidia-dlss) covers both in detail.
+`PythonAPI/examples/manual_control_5cam.py` spawns a five-camera rig and toggles DLSS with `D`, so the difference can be compared live.
+
+<div class="build-buttons">
+<p>
+<a href="../core_dlss" class="btn btn-neutral" title="Go to NVIDIA DLSS">
+Go to NVIDIA DLSS</a>
+</p>
+</div>
 
 ---
 ## Combined workflows

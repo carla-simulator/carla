@@ -24,10 +24,10 @@ CARLA speaks ROS 2 from the server itself — there is no bridge process. Sensor
 ---
 ## Quick start
 
-!!! agent "Ask your agent"
+!!! agent "Agentic CARLA"
     *"Start CARLA with ROS 2, spawn a vehicle with a camera and a lidar, and check that their topics publish."*
 
-    Skills: `run-carla-ue58-server`, `create-sensor`, `visualize-ros-rviz`. [Connect your agent](agent_skills.md#connect-your-agent).
+    Skills: `run-carla-ue58-server`, `create-sensor`, `visualize-ros-rviz`. [Set up Agentic CARLA](agent_skills.md#set-up-agentic-carla).
 
 ```sh
 # Terminal 1: the server

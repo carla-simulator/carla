@@ -109,7 +109,8 @@ def frame_actor(actor, framing, resolution, fov):
 
     @framing: bearing (degrees off the actor's heading, 0 = in front), pitch
     (degrees, negative looks down), fill (fraction of the shorter image side
-    the bounding sphere takes) and min_distance (metres). Works for any size, so
+    the bounding sphere takes), min_distance (metres) and lift (metres the
+    camera is raised, which moves the subject down in the frame). Works for any size, so
     one capture serves a can and a bus: below min_distance the camera stays
     there and narrows its field of view instead, which keeps small props inside
     the depth of field of the Cinematic profile (focused at 2.5 m).
@@ -144,7 +145,7 @@ def frame_actor(actor, framing, resolution, fov):
     location = carla.Location(
         centre.x + horizontal * math.cos(math.radians(yaw)),
         centre.y + horizontal * math.sin(math.radians(yaw)),
-        centre.z - distance * math.sin(math.radians(pitch)))
+        centre.z - distance * math.sin(math.radians(pitch)) + framing.get('lift', 0.0))
     return carla.Transform(location, carla.Rotation(pitch=pitch, yaw=yaw + 180)), fov
 
 
@@ -218,6 +219,10 @@ class Capture(object):
                 # a group is wider: mirror the bearing so the foreground of
                 # the single shots does not cut into it
                 framing['bearing'] = -framing.get('bearing', 35.0)
+                # the group's bounding sphere is wider than tall: without a
+                # tighter fill the people are small over a lot of ground
+                framing['fill'] = framing.get('group_fill', framing.get('fill', 0.8))
+                framing['lift'] = framing.get('group_lift', 0.0)
             return frame_actor(actor, framing, self.resolution,
                                float(self.camera_attributes.get('fov', 90)))
         if isinstance(self.camera, dict):
@@ -307,7 +312,7 @@ PEDESTRIAN_CAPTURE = Capture(
     town='Town10HD_Opt',
     actor=carla.Transform(carla.Location(x=-88.1, y=-73.6, z=1.0), carla.Rotation(yaw=90)),
     camera=None,
-    framing={'bearing': 10.0, 'pitch': -4.0, 'fill': 0.95, 'min_distance': 2.5},
+    framing={'bearing': 10.0, 'pitch': -4.0, 'fill': 0.95, 'group_fill': 1.45, 'group_lift': 0.15, 'min_distance': 2.5},
     resolution=(1920, 1080),
     weather=dict(TOWN10_WEATHER, sun_altitude_angle=45, sun_azimuth_angle=230,
                  cloudiness=15, scattering_intensity=0, mie_scattering_scale=0.0),
@@ -411,9 +416,25 @@ def luminance(value):
     return 0.2126 * red + 0.7152 * green + 0.0722 * blue
 
 
+# Common colours for the models that would otherwise all come out white or
+# silver: white is the hardest paint to make look real, and a catalogue of
+# white cars hides the bodywork.
+VEHICLE_COLORS = {
+    'vehicle.mini.cooper': '150,8,10',        # red
+    'vehicle.nissan.patrol': '27,54,118',     # blue
+    'vehicle.ue4.ford.mustang': '78,17,17',   # burgundy
+    'vehicle.dodge.charger': '221,50,13',     # orange
+    'vehicle.ue4.audi.tt': '108,108,108',     # grey
+    'vehicle.ue4.mercedes.ccc': '28,51,83',   # dark blue
+}
+
+
 def pick_color(blueprint):
-    """Keeps the default colour unless it is too dark to read the bodywork."""
+    """The colour in VEHICLE_COLORS, else the default unless it is too dark to read the bodywork."""
     if not blueprint.has_attribute('color'):
+        return
+    if blueprint.id in VEHICLE_COLORS:
+        blueprint.set_attribute('color', VEHICLE_COLORS[blueprint.id])
         return
     recommended = list(blueprint.get_attribute('color').recommended_values)
     if not recommended:

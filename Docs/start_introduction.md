@@ -29,7 +29,7 @@ The CARLA simulator combines a number of different features that handle differen
 * __[Scenarios](core_traffic.md): ScenarioRunner, [Scenic](scenic.md) and the Leaderboard__: In order to ease the learning process for vehicles, CARLA provides a series of routes describing different situations to iterate on, and Scenic can generate many varied scenarios from a single definition. These also set the basis for the [CARLA challenge](https://leaderboard.carla.org/), open for everybody to test their solutions and make it to the leaderboard.
 * __[Neural reconstruction](nvidia_nurec.md)__: CARLA integrates NVIDIA Neural Reconstruction (NuRec), which turns recorded camera and lidar data from real drives into photorealistic 3D scenes. CARLA runs the actors, physics and sensors inside these scenes, so a real recording can be replayed and then altered with the full CARLA API.
 * __[AV stacks](av_stacks.md)__: Complete autonomous driving stacks run against CARLA in closed loop. Autoware and NVIDIA Alpamayo 2 Super are integrated, each with an installer and a launcher.
-* __[Agent skills](agent_skills.md)__: A library of procedures tested by the CARLA team, so your AI coding agent can install, build, run and drive CARLA for you.
+* __[Agentic CARLA skills](agent_skills.md)__: A library of procedures tested by the CARLA team, so your AI coding assistant can install, build, run and drive CARLA for you.
 
 ---
 ## The project

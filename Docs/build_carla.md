@@ -9,12 +9,12 @@ Build instructions are available for both Linux and Windows. You can also run CA
 
 CARLA requires a minimum of Windows 11 or Ubuntu 22.04, and also supports Ubuntu 24.04. If you do not need to build CARLA, you can download it instead.
 
-The default way to build CARLA is to let your AI coding agent do it: it clones the code and the content, builds the Unreal Engine fork and CARLA, and checks the result, following procedures tested by the CARLA team.
+The default way to build CARLA is to let your AI coding assistant do it: it clones the code and the content, builds the Unreal Engine fork and CARLA, and checks the result, following procedures tested by the CARLA team.
 
-!!! agent "Ask your agent"
+!!! agent "Agentic CARLA"
     *"Clone CARLA from the ue58-dev branch, build it with Unreal Engine 5.8 and launch the editor."*
 
-    Skills: `build-carla-ue58`, `run-carla-ue58-server`. [Connect your agent](agent_skills.md#connect-your-agent).
+    Skills: `build-carla-ue58`, `run-carla-ue58-server`. [Set up Agentic CARLA](agent_skills.md#set-up-agentic-carla).
 
 If you prefer to build CARLA by hand, follow the guide for your platform:
 

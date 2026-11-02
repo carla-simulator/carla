@@ -3,12 +3,12 @@
 !!! Note
     CARLA supports Ubuntu 22.04 and 24.04. It has not been configured to build on older Ubuntu versions. If you are using another Ubuntu version, or experiencing compilation issues, you can use the Docker-based development environment to build CARLA inside an Ubuntu 22.04 container. See [CARLA Docker Dev Environment](build_devcontainer.md) for instructions.
 
-The default way to build CARLA is to let your AI coding agent do it, following procedures tested by the CARLA team:
+The default way to build CARLA is to let your AI coding assistant do it, following procedures tested by the CARLA team:
 
-!!! agent "Ask your agent"
+!!! agent "Agentic CARLA"
     *"Clone CARLA from the ue58-dev branch, build it with Unreal Engine 5.8 and launch the editor."*
 
-    Skills: `build-carla-ue58`, `run-carla-ue58-server`. [Connect your agent](agent_skills.md#connect-your-agent).
+    Skills: `build-carla-ue58`, `run-carla-ue58-server`. [Set up Agentic CARLA](agent_skills.md#set-up-agentic-carla).
 
 If you prefer to build CARLA by hand, follow the steps below.
 
@@ -107,10 +107,10 @@ Then build what you need:
 ---
 ## Build a package with CARLA
 
-!!! agent "Ask your agent"
+!!! agent "Agentic CARLA"
     *"Package CARLA with only Town10HD_Opt and Town15, and check that the package starts."*
 
-    Skills: `package-carla-ue58`, `run-carla-ue58-server`. [Connect your agent](agent_skills.md#connect-your-agent).
+    Skills: `package-carla-ue58`, `run-carla-ue58-server`. [Set up Agentic CARLA](agent_skills.md#set-up-agentic-carla).
 
 Build the package:
 
