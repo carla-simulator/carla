@@ -86,6 +86,9 @@ class TestTrafficManagerComfort(SyncSmokeTest):
         self.spawned = []
         try:
             self.tm.set_synchronous_mode(False)
+            # Release the port: the next test acquires the same default TM, and
+            # a live one surviving the world reload below crashes the client.
+            self.tm.shut_down()
         except Exception:
             pass
         self.tm = None
@@ -209,6 +212,12 @@ class TestTrafficManagerVehicleLights(SmokeTest):
             except Exception:
                 pass
         self.spawned = []
+        try:
+            # Release the port, as TestTrafficManagerComfort does: a live TM
+            # surviving the world reload below crashes the client.
+            self.tm.shut_down()
+        except Exception:
+            pass
         self.tm = None
         self.load_world("Town10HD_Opt")
         self.world = None
