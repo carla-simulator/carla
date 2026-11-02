@@ -42,7 +42,7 @@ GitHub Discussions</a>
 ---
 ## Agentic CARLA
 
-- [__Agentic CARLA skills__](agent_skills.md): Let your AI coding assistant install, build, run and drive CARLA for you, following 62 procedures tested by the CARLA team, and how to connect it.
+- [__Agentic CARLA skills__](agent_skills.md): Let your AI coding assistant install, build, run and drive CARLA for you, following 63 procedures tested by the CARLA team, and how to connect it.
 
 ---
 ## CARLA topics
