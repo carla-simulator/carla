@@ -44,6 +44,7 @@
 
 #### Build and tooling
 
+* The CARLA version is now **1.0.0**. The NVIDIA install scripts no longer hard-code it: they take it from `CARLA_VERSION_MAJOR/MINOR/PATCH` in the top-level `CMakeLists.txt`.
 * Added an **agent skill library**: 63 vetted CARLA procedures under `Skills/`, covering setup, the Python API, UE 4.26 / 5.5 / 5.8 builds, packaging, asset imports, Scenario Runner, Leaderboard, Scenic, native ROS 2, the documentation itself, and contributing back: issues, discussions and pull requests against `ue58-dev`. `Util/AgenticTools/` serves the same library over MCP. See `Docs/agent_skills.md`.
 * Added **Ubuntu 24.04** support alongside 22.04, and **NVIDIA RTX 50 series (Blackwell)** support with driver 570+ and CDI-based Docker instructions.
 * Added a **Docker-based development environment** for CARLA UE5.

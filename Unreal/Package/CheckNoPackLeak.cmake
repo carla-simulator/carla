@@ -32,7 +32,7 @@
 #         CARLA_CONTENT_PACKS_PYTHON.
 # Standalone check against an existing build:
 #   cmake -DCARLA_PACKS_ROOT=Unreal/CarlaUnreal/Plugins/Packs -DCARLA_RELEASES_PATH=Unreal/CarlaUnreal/Releases \
-#         -DCARLA_BASE_RELEASE_NAME=carla-0.10.0-Linux -DUE_SYSTEM_NAME=Linux -P Unreal/Package/CheckNoPackLeak.cmake
+#         -DCARLA_BASE_RELEASE_NAME=carla-1.0.0-Linux -DUE_SYSTEM_NAME=Linux -P Unreal/Package/CheckNoPackLeak.cmake
 
 cmake_minimum_required (VERSION 3.20)   # script mode: cmake_path, IN_LIST (CMP0057)
 

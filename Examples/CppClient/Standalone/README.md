@@ -47,7 +47,7 @@ Then in another terminal:
 
 ```bash
 ./build/my-carla-app
-# Connected to CARLA 0.10.0
+# Connected to CARLA 1.0.0
 # Available maps:
 #   /Game/Carla/Maps/Town01
 #   /Game/Carla/Maps/Town02
