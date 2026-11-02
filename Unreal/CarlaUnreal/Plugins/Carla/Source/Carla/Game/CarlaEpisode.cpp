@@ -171,10 +171,7 @@ bool UCarlaEpisode::LoadNewEpisode(const FString &MapString, bool ResetSettings)
       {
         FCarlaEngine *CarlaEngine = GameInstance->GetCarlaEngine();
         auto SecondaryServer = CarlaEngine->GetSecondaryServer();
-        if (SecondaryServer->HasClientsConnected()) 
-        {
-          SecondaryServer->GetCommander().SendLoadMap(std::string(TCHAR_TO_UTF8(*FinalPath)));
-        }
+        SecondaryServer->GetCommander().SendLoadMap(std::string(TCHAR_TO_UTF8(*FinalPath)));
       }
     }
   }

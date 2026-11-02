@@ -205,6 +205,12 @@ public:
     return ActorDispatcher->GetActorRegistry().GetDescriptionFromStream(StreamId);
   }
 
+  /// Find the Carla actor (sensor) that owns the stream @a StreamId, or nullptr.
+  FCarlaActor* FindCarlaActorFromStream(carla::streaming::detail::stream_id_type StreamId)
+  {
+    return ActorDispatcher->GetActorRegistry().FindCarlaActorFromStream(StreamId);
+  }
+
   // ===========================================================================
   // -- Actor handling methods -------------------------------------------------
   // ===========================================================================
