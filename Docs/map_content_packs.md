@@ -1,4 +1,4 @@
-# Towns available as content packs
+# Additional maps
 
 The CARLA package ships Town10HD_Opt, Town12 and Town15. The towns below are not cooked into the package; they come as a [content pack](content_authoring_packs.md), the __AdditionalMaps__ pack, which is built and published together with each release package.
 

@@ -230,7 +230,7 @@ RunUAT.sh BuildCookRun -project=<uproject> -nocompileeditor -nop4 -skipbuild -co
 
 The staged output is assembled into the pack layout: the containers (`--rename` names them `NewPack-Linux.*` instead of UAT's `NewPackCarlaUnreal-Linux.*`; the server mounts either), the cooked `AssetRegistry.bin`, the loose sidecar files, and the descriptor — your `.uplugin` with `ExplicitlyLoaded` and `CanContainContent` set to `true`, `EnabledByDefault` to `false` and an empty `Modules` list dropped; a pack that declares code modules is refused. The manifest is completed (`base_release`, `engine`, `platform`, one SHA-256 per file).
 
-The same build is available as CMake targets once the package target has produced the base release: `cmake --build Build --target pack-NewPack` (and `pack-NewPack-dry-run`). They differ from the command line in where they read and write: the base is the extracted `Unreal/CarlaUnreal/Releases/<release>` (`CARLA_CONTENT_PACKS_BASE` points them at a downloaded metadata tarball instead), the output goes to `Build/Packs/`, the configuration comes from `CARLA_CONTENT_PACKS_CONFIG` (`Development`), and `CARLA_CONTENT_PACKS` adds targets for packs kept outside `Plugins/Packs`. `<release>` is `CARLA_BASE_RELEASE`, or `carla-<version>-<platform>` (`carla-1.0.0-Linux`) when it is empty; the same name is on the metadata tarball, the package's `BaseRelease` stamp and the pack tarballs. `content-packs-test` runs the tool's unit tests.
+The same build is available as CMake targets once the package target has produced the base release: `cmake --build Build --target pack-NewPack` (and `pack-NewPack-dry-run`). They differ from the command line in where they read and write: the base is the extracted `Unreal/CarlaUnreal/Releases/<release>` (`CARLA_CONTENT_PACKS_BASE` points them at a downloaded metadata tarball instead), the output goes to `Build/Packs/`, the configuration comes from `CARLA_CONTENT_PACKS_CONFIG` (`Development`), and `CARLA_CONTENT_PACKS` adds targets for packs kept outside `Plugins/Packs`. `<release>` is `CARLA_BASE_RELEASE`, or `carla-<version>-<platform>` (`carla-1.0-Linux`) when it is empty; the same name is on the metadata tarball, the package's `BaseRelease` stamp and the pack tarballs. `content-packs-test` runs the tool's unit tests.
 
 ### Checking a pack
 
@@ -389,7 +389,7 @@ The manifest, `carla-pack.json`, is what CARLA reads when it mounts the pack. Th
 
 ## FAQ
 
-__`base release mismatch: pack built against 'carla-1.0.0-Linux', server is 'carla-1.0.1-Linux'`__
+__`base release mismatch: pack built against 'carla-1.0-Linux', server is 'carla-1.0.1-Linux'`__
 
 `carla-pack install` and `inspect` print this; the server's own message, when it refuses the pack at start or from `mount_content_pack`, is `pack '<Pack>' was built against base release '<A>' but this server is '<B>'; rebuild the pack against this release`. The pack was cooked against another CARLA release and the server refuses it — cooked data is only valid against the asset registry it was cooked with. Rebuild the pack with that server's release metadata: `carla-pack build NewPack --base carla-0.10.1-Linux-release-metadata.tar.gz`. `carla-pack inspect <pack> --server <dir>` shows both strings; `<package>/BaseRelease` (and `<package>/Linux/CarlaUnreal/BaseRelease`) holds the server's.
 
@@ -399,7 +399,7 @@ The package was built without content pack support (before the `package` target 
 
 __`no base release found` / `several base releases found`__
 
-`carla-pack` looks for a single `*-release-metadata.tar.gz` under this checkout's `Build/`, or a single extracted `Unreal/CarlaUnreal/Releases/<release>`. [Build the package](build_linux_ue5.md#build-a-package-with-carla-ue5) first (`cmake --build Build --target package`), or pass `--base` with the metadata tarball published with the package you target.
+`carla-pack` looks for a single `*-release-metadata.tar.gz` under this checkout's `Build/`, or a single extracted `Unreal/CarlaUnreal/Releases/<release>`. [Build the package](build_linux_ue5.md#build-a-package-with-carla) first (`cmake --build Build --target package`), or pass `--base` with the metadata tarball published with the package you target.
 
 __`the base release already ships /Game/Carla/Maps/Town10HD_Opt`__
 

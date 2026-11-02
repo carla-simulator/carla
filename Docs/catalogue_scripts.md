@@ -2,8 +2,8 @@
 
 CARLA ships a set of ready-to-run Python scripts. Use them to see a feature working, to check an install, or as the starting point for your own code. They live in two directories of the repository or the package:
 
-- `PythonAPI/examples` — demonstrations of the API, each one runnable on its own.
-- `PythonAPI/util` — small utilities for driving a running server from a shell.
+- `PythonAPI/examples`: demonstrations of the API, each one runnable on its own.
+- `PythonAPI/util`: small utilities for driving a running server from a shell.
 
 Every script connects to `localhost:2000` unless `--host` and `--port` say otherwise, and takes `-h` for its full argument list. Start a server first.
 
@@ -13,7 +13,7 @@ python3 manual_control.py
 ```
 
 !!! Note
-    Running two scripts against the same server is normal — one driving traffic, another watching it. Only one of them may put the simulation in synchronous mode, though: if two clients both tick, they fight over the clock and the simulation stutters. Let whichever one owns the traffic run synchronously and leave the rest asynchronous.
+    Running two scripts against the same server is normal: one driving traffic, another watching it. Only one of them may put the simulation in synchronous mode, though: if two clients both tick, they fight over the clock and the simulation stutters. Let whichever one owns the traffic run synchronously and leave the rest asynchronous.
 
 - [__Drive and look around__](#drive-and-look-around)
 - [__Traffic__](#traffic)
@@ -51,7 +51,7 @@ python3 manual_control.py --res 1280x720 --autopilot
 | Script | What it does |
 | ------ | ------------ |
 | `generate_traffic.py` | Fills the map with vehicles and pedestrians on the Traffic Manager. `-n` vehicles, `-w` walkers, `--hybrid` for hybrid physics, `--asynch` to leave the simulation asynchronous. |
-| `automatic_control.py` | Drives one vehicle to a destination with a [navigation agent](core_agents.md), replanning when it arrives. |
+| `automatic_control.py` | Drives one vehicle to a destination with a [traffic agent](core_agents.md), replanning when it arrives. |
 | `invertedai_traffic.py` | Replaces the Traffic Manager with InvertedAI's behaviour models. See [InvertedAI](inverted_ai.md). |
 
 ```sh
@@ -119,7 +119,7 @@ Everything in `PythonAPI/util`, run from that directory:
 
 | Script | What it does |
 | ------ | ------------ |
-| `config.py` | Map, rendering, time step and simulation settings — see above. |
+| `config.py` | Map, rendering, time step and simulation settings; see above. |
 | `extract_spawn_points.py` | Writes the map's spawn points to a CSV. |
 | `spectator_transform.py` | Prints or sets the spectator's transform, for repeatable viewpoints. |
 | `show_topology.py`, `show_junctions.py`, `show_crosswalks.py` | Draw the road graph, the junctions and the crosswalks over the map. |

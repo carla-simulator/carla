@@ -45,8 +45,8 @@ right moment — spawn far away in `_initialize_actors`, teleport in when trigge
 `TrafficLightManipulator`, `OpenVehicleDoor`, `StartRecorder`, `StopRecorder`,
 `RunScript`.
 
-`ChangeWeather` is a no-op on `ue5-master` (weather behaviours are commented out in
-`basic_scenario.py`).
+`ChangeWeather` is a no-op on `ue5-master` and `ue58-dev` (the weather calls are
+commented out in `basic_scenario.py`).
 
 **Control flow**
 

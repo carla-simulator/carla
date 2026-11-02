@@ -18,6 +18,11 @@ The Python API acts as a high level querying system to navigate these roads. It 
 
 ### Changing the map
 
+!!! agent "Agentic CARLA"
+    *"Load Town15 and give me a rundown of its road network."*
+
+    Skills: `load-map`, `map-waypoints`, `navigate-to`. [Set up Agentic CARLA](agent_skills.md#set-up-agentic-carla).
+
 __To change the map, the world has to change too__. The simulation will be recreated from scratch. You can either restart with the same map in a new world or you can change both the map and the world:
 
 - `reload_world()` creates a new instance of the world with the same map.

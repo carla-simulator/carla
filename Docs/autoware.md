@@ -5,6 +5,9 @@ CARLA can be driven by [Autoware](https://autoware.org/) with no bridge process:
 - **`classical`**: the full Autoware stack, with NDT localization against a point-cloud map, lidar perception (`perception_mode:=lidar`), planning and the trajectory-follower controller. Traffic-light states come from the simulator, see [Known limitations](#known-limitations).
 - **`e2e`**: the camera-only VAD end-to-end model, fed by six surround cameras, with ground-truth localization and the same trajectory follower.
 
+![Autoware driving CARLA, seen in RViz](img/autoware/autoware_rviz.webp)
+<div class="img-caption">Autoware driving the CARLA ego in RViz. Left, Autoware's state panel (routing set, localization initialized, moving, control mode <code>AUTONOMOUS</code>) and the front camera image CARLA publishes; centre, the ego on the point-cloud map with its planned path; top, the current speed (12 km/h) next to the speed limit.</div>
+
 Everything lives in `PythonAPI/examples/av_stacks/autoware/`: an installer for Autoware, a launcher that starts CARLA and Autoware together, and the tools that build the maps Autoware needs. Its `README.md` covers each step in more detail than this page.
 
 - [__Before you start__](#before-you-start)

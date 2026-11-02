@@ -49,11 +49,23 @@ Follow the [coding standard](cont_coding_standard.md) when submitting new code.
 
 ### Tests
 
-Every test runs in CI on every pull request, so each one has to earn its compute. A new or modified test must exercise real behaviour and fail when that behaviour breaks. [Running the tests](dev_testing.md) describes where each suite lives.
+Every change has to be tested, and the tests have to be sufficient and minimal: enough to show the change works and to catch it breaking later, and nothing more. Each test is code the maintainers keep running and fixing for as long as it exists. [Running the tests](dev_testing.md) lists the suites and how to run them:
 
-*   Empty tests, tests without assertions, tests that only check that something imports or spawns without checking a result, and tests that duplicate existing coverage are not accepted. They cost CI time and give no signal.
-*   When modifying an existing test, do not weaken it to make it pass: removing assertions, widening tolerances or skipping it hides the regression it was there to catch. If the expected behaviour really changed, explain why in the pull request.
-*   In the pull request, say what each new or modified test checks and which regression it would catch.
+| Suite | Location | Needs a server |
+| --- | --- | --- |
+| LibCarla unit tests | `LibCarla/source/test/` | No |
+| Python API unit tests | `PythonAPI/test/unit/` | No |
+| Smoke tests | `PythonAPI/test/smoke/`, listed in `PythonAPI/test/smoke_test_list.txt` | Yes, on port 3654 |
+| Integration tests | `PythonAPI/test/API/`, listed in `PythonAPI/test/integration_tests_list.txt` | Yes, on port 2000 |
+
+Before adding a test, ask two questions of it: does it do something useful, and would a maintainer merge this kind of test? A useful test exercises real behaviour and fails when that behaviour breaks.
+
+*   __Extend before you add.__ When an existing unit or smoke test already covers the feature, add the case to it rather than creating a new file. A new smoke test module also has to be added to `smoke_test_list.txt`, or the list run skips it.
+*   __Not accepted:__ empty tests, tests without assertions, tests that only check that something imports or spawns without checking a result, tests that duplicate existing coverage, tests that pass whatever the code does, flaky tests that depend on timing or on the order they run in, and slow tests where a shorter run would catch the same regression.
+*   __Do not weaken a test to make it pass.__ Removing assertions, widening tolerances or skipping a test hides the regression it was there to catch. If the expected behaviour really changed, explain why in the pull request.
+*   __Say what each test checks.__ The pull request template has a __Tests__ field: list each new or modified test and the regression it would catch.
+
+CI runs only the LibCarla unit tests ([What CI runs](dev_testing.md#what-ci-runs)). The Python unit, smoke and integration tests have to be run locally: the unit tests after a change to LibCarla or the Python API, and the smoke tests after a change to the server.
 
 ### CI workflows
 
@@ -72,6 +84,8 @@ Contributions and new features are merged to the development branch, `ue58-dev`.
 *   Always keep your branch updated with the latest changes in `ue58-dev`.
 *   Develop the contribution in a child branch from `ue58-dev` named `username/name_of_the_contribution`.
 *   Once the contribution is ready, submit a pull request from your branch to `ue58-dev`. Try to be as descriptive as possible when filling in the template: what changed, where it was tested, and the possible drawbacks.
+*   Add an entry to `CHANGELOG.md` under `## LATEST Changes` for every user-visible change.
+*   A change to the Python API is documented in `PythonAPI/docs/*.yml`. `Docs/python_api.md` is generated from those files with `python3 PythonAPI/docs/doc_gen.py`; never edit it by hand.
 *   Continuous integration builds the client, the Python API, the server and the package on Ubuntu, and builds and runs the LibCarla tests ([What CI runs](dev_testing.md#what-ci-runs)). It does not run the Python tests, so run them locally. A green tick mark appears if the checks pass; if there is a red mark, correct the code accordingly.
 
 ### Checklist
@@ -80,12 +94,12 @@ Before a pull request to `ue58-dev`:
 
 *   [ ] The branch is up-to-date with `ue58-dev` and tested with the latest changes.
 *   [ ] The code compiles: `cmake --build Build --target carla-client carla-python-api carla-server`.
-*   [ ] The LibCarla unit tests pass ([LibCarla unit tests](dev_testing.md#libcarla-unit-tests)).
+*   [ ] The LibCarla unit tests pass ([LibCarla unit tests](dev_testing.md#libcarla-unit-tests)), and so do the Python API unit tests if the Python API changed ([Python API unit tests](dev_testing.md#python-api-unit-tests)).
 *   [ ] The smoke tests pass against a running server on port 3654 ([Smoke tests](dev_testing.md#smoke-tests)). On Linux: `cd PythonAPI/test && python3 -m nose2 -v $(cat smoke_test_list.txt)`.
-*   [ ] New or modified tests add real value: they assert behaviour and would fail on a regression ([Tests](#tests)).
+*   [ ] The change is tested, with the fewest tests that show it works: each one asserts behaviour, would fail on a regression, is not redundant, flaky or slow, and extends an existing test where one fits ([Tests](#tests)).
 *   [ ] Any new or changed CI workflow was agreed with the core maintainers beforehand, and the discussion is linked in the pull request ([CI workflows](#ci-workflows)).
 *   [ ] `CHANGELOG.md` has an entry under `## LATEST Changes` for any user-visible change.
-*   [ ] The documentation was extended, if necessary.
+*   [ ] The documentation was extended, if necessary. Python API changes are in `PythonAPI/docs/*.yml` and `Docs/python_api.md` was regenerated.
 
 ---
 ## Art contributions
@@ -129,7 +143,7 @@ __3. Create a branch__ from `ue58-dev`.
 git checkout -b <contributor_name>/<branch_name>
 ```
 
-__4. Write.__ Follow the [documentation standard](cont_doc_standard.md). Never edit `Docs/python_api.md` or `Docs/bp_library.md` directly; they are generated.
+__4. Write.__ Follow the [documentation standard](cont_doc_standard.md). Never edit `Docs/python_api.md` or `Docs/bp_library.md` directly; they are generated (see [Generated pages](cont_doc_standard.md#generated-pages)).
 
 __5. Check the build.__ `python3 -m mkdocs build --strict` fails on a link to a missing page. A link to a missing anchor does not fail it; it only shows as an `INFO` line. Search the build output for `does not contain an anchor` to find those.
 

@@ -79,7 +79,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### 0015 - adult pedestrian 1
 
-![pedestrian_0015](img/catalogue/pedestrians/pedestrian_0015_thumb.webp)
+![pedestrian_0015_variants](img/catalogue/pedestrians/pedestrian_0015_variants_thumb.webp)
 
 * __Blueprint ID__: `walker.pedestrian.0015`
 * __Age__: adult
@@ -89,7 +89,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### 0016 - adult pedestrian 2
 
-![pedestrian_0016](img/catalogue/pedestrians/pedestrian_0016_thumb.webp)
+![pedestrian_0016_variants](img/catalogue/pedestrians/pedestrian_0016_variants_thumb.webp)
 
 * __Blueprint ID__: `walker.pedestrian.0016`
 * __Age__: adult
@@ -169,7 +169,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### 0025 - adult pedestrian 10
 
-![pedestrian_0025](img/catalogue/pedestrians/pedestrian_0025_thumb.webp)
+![pedestrian_0025_variants](img/catalogue/pedestrians/pedestrian_0025_variants_thumb.webp)
 
 * __Blueprint ID__: `walker.pedestrian.0025`
 * __Age__: adult
@@ -179,7 +179,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### 0026 - adult pedestrian 11
 
-![pedestrian_0026](img/catalogue/pedestrians/pedestrian_0026_thumb.webp)
+![pedestrian_0026_variants](img/catalogue/pedestrians/pedestrian_0026_variants_thumb.webp)
 
 * __Blueprint ID__: `walker.pedestrian.0026`
 * __Age__: adult
@@ -199,7 +199,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### 0028 - adult pedestrian 13
 
-![pedestrian_0028](img/catalogue/pedestrians/pedestrian_0028_thumb.webp)
+![pedestrian_0028_variants](img/catalogue/pedestrians/pedestrian_0028_variants_thumb.webp)
 
 * __Blueprint ID__: `walker.pedestrian.0028`
 * __Age__: adult
@@ -209,7 +209,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### 0029 - adult pedestrian 14
 
-![pedestrian_0029](img/catalogue/pedestrians/pedestrian_0029_thumb.webp)
+![pedestrian_0029_variants](img/catalogue/pedestrians/pedestrian_0029_variants_thumb.webp)
 
 * __Blueprint ID__: `walker.pedestrian.0029`
 * __Age__: adult

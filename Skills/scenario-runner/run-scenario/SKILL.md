@@ -114,9 +114,14 @@ with nothing happening, that is the symptom. Options:
 # keyboard control, in a second terminal
 python3 "$SCENARIO_RUNNER_ROOT/manual_control.py"
 
-# or attach to an existing ego by role name
-python3 "$SCENARIO_RUNNER_ROOT/manual_control.py" -a --rolename=ego_vehicle
+# or hand the ego to the autopilot instead of driving it
+python3 "$SCENARIO_RUNNER_ROOT/manual_control.py" -a
 ```
+
+`manual_control.py` attaches to the vehicle whose `role_name` equals `--rolename`,
+default `hero`, which is the ego role ScenarioRunner uses, so no flag is needed to
+find the ego. `-a`/`--autopilot` only switches on the autopilot. It needs
+`pygame`, which `requirements.txt` does not install: `pip install pygame`.
 
 `--agent` is **not** accepted with `--scenario` — ScenarioRunner rejects the
 combination ("Agents are currently only compatible with route scenarios"). To
@@ -168,7 +173,7 @@ Solution: drop `RELOAD=0`, or load the map first with [[load-map]].
 
 **Problem: nothing moves, run exits immediately**
 Cause: no driver for the ego (see Step 4).
-Solution: `manual_control.py`, or route mode with an agent.
+Solution: `manual_control.py` (add `-a` for autopilot), or route mode with an agent.
 
 **Problem: a config is listed but the run dies constructing the scenario**
 Cause: the XML names a `type` with no scenario class behind it. The name may still

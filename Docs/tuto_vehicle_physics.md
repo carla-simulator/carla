@@ -4,6 +4,9 @@ Physics properties can be tuned for vehicles and their wheels. These changes are
 
 These properties are controlled through a [carla.VehiclePhysicsControl](python_api.md#carla.VehiclePhysicsControl) object, which also provides the control of each wheel's physics through a [carla.WheelPhysicsControl](python_api.md#carla.WheelPhysicsControl) object.
 
+![telemetry_overview](img/tuto_vehicle_physics/telemetry_overview.webp)
+<div class="img-caption">A Lincoln MKZ rebuilt by the <a href="#vehicle-control-code-example">example</a> on this page (10 tonnes, front wheels steering up to 70 degrees) and the suspension change, turning left with <code>steer=-0.3</code> and <code>throttle=0.6</code>. On the right, what <code>get_telemetry_data()</code> returned on that frame: at 10 tonnes it is still in first gear at 4.4 m/s after three seconds at full throttle.</div>
+
 - [__The fields worth changing__](#the-fields-worth-changing)
 - [__Vehicle control code example__](#vehicle-control-code-example)
 - [__Changing the suspension__](#changing-the-suspension)

@@ -2,6 +2,9 @@
 
 The textures of map objects can be replaced while the simulation runs, which is how a building gets a different facade between two runs of the same scenario. This page covers finding the object, exporting its texture, and pushing a modified one back.
 
+![texture_streaming_runtime](img/tuto_texture_streaming/texture_streaming_runtime_thumb.webp)
+<div class="img-caption">A running simulation, not the editor: the facade texture of the corner building is replaced through the Python API while the server runs. Clip from the CARLA 0.9.13 release video (Unreal Engine 4); the API is the same in CARLA 1.0. Click to play.</div>
+
 - [__Find the object__](#find-the-object)
 - [__Export a texture to work with__](#export-a-texture-to-work-with)
 - [__Update the texture through the API__](#update-the-texture-through-the-api)

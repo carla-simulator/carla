@@ -10,7 +10,15 @@ Authoring happens in the Unreal Editor, so all of it needs a [source build](buil
 - [__Shipping what you made__](#shipping-what-you-made)
 - [__See also__](#see-also)
 
+!!! agent "Agentic CARLA"
+    *"Import my RoadRunner map from ~/maps/MyTown (FBX and OpenDRIVE) into CARLA and load it."*
+
+    Skills: `import-carla-ue58-map`, `import-carla-ue58-prop`, `import-carla-ue58-walker`, `carla-vehicle-authoring`. [Set up Agentic CARLA](agent_skills.md#set-up-agentic-carla).
+
+    Maps, props, pedestrians and vehicles each have a skill; the content skills need a CARLA source build.
+
 ---
+
 ## Maps
 
 A map is the 3D model of a town plus its road network. There are several ways to get one in, and [Custom maps](content_authoring_maps_overview.md) compares them before you commit to one.

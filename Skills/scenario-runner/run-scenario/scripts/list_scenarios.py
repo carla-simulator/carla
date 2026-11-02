@@ -30,6 +30,8 @@ UE4_MAPS = {
     "Town06_Opt", "Town07_Opt",
 }
 UE5_MAPS = {"Town10HD_Opt"}
+# ue58-dev (CARLA on UE 5.8): the towns its example configs use.
+UE58_MAPS = {"Town01_Opt", "Town02_Opt", "Town03_Opt", "Town04_Opt", "Town05_Opt", "Town10HD_Opt"}
 
 
 def sr_root(explicit: str | None) -> Path:
@@ -101,7 +103,8 @@ def main() -> None:
     br = branch(root)
     cfg = configs(root)
     cls = classes(root)
-    valid_maps = UE5_MAPS if br == "ue5-master" else UE4_MAPS
+    valid_maps = (UE5_MAPS if br == "ue5-master" else
+                  UE58_MAPS if br.startswith("ue58") else UE4_MAPS)
 
     town = args.town
     if args.here:

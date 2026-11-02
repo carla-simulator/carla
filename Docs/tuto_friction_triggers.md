@@ -2,6 +2,9 @@
 
 A __friction trigger__ is a box spawned at runtime that changes the wheel friction of any vehicle inside it, and restores it on the way out. It is how a patch of a map is made slippery without touching the road material — ice on a bridge, an oil spill at a junction.
 
+![trigger_box_top](img/tuto_friction_triggers/trigger_box_top.webp)
+<div class="img-caption">The frictionless trigger of the <a href="#example">example</a> placed on a junction approach and drawn with <code>world.debug.draw_box</code>, seen from straight above: the red square is the top of the 14 m box and the diagonal strokes are its vertical edges running down to the road. The black car is braking inside it; while it is there, its four wheels report a <code>friction_force_multiplier</code> of <code>0.0</code>.</div>
+
 !!! Note
     A vehicle's grip can also be set directly through its physics control, wheel by wheel, with no actor to spawn or destroy: see [`friction_force_multiplier`](tuto_vehicle_physics.md). A trigger is still the better fit when the slippery patch belongs to a place on the map rather than to a particular vehicle.
 

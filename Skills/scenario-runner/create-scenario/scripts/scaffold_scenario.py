@@ -220,7 +220,11 @@ XML = '''<?xml version="1.0"?>
 </scenarios>
 '''
 
+# Towns the ue58-dev example configs use (the classic towns ship as _Opt on UE5).
+UE58_TOWNS = {"Town01_Opt", "Town02_Opt", "Town03_Opt", "Town04_Opt", "Town05_Opt", "Town10HD_Opt"}
+
 # Sensible ego spawn points per town, so the scaffold runs before being edited.
+# An _Opt variant has the same layout, so it falls back to its base town's entry.
 SPAWNS = {
     "Town01": (338.7, 226.7, 0.5, 270),
     "Town02": (132.0, 215.0, 0.5, 90),
@@ -249,8 +253,8 @@ def branch(root: Path) -> str:
 
     The branch name is the fast path, but it is "HEAD" in a detached checkout, a
     worktree, a tarball or a docker image — so fall back to a content probe.
-    `srunner/scenic/` exists only on ue5-master, and change_lane.py exists on
-    every branch except ue5-master.
+    `srunner/scenic/` exists on ue5-master and ue58-dev and change_lane.py on
+    neither; ue58-dev's example configs name _Opt towns, ue5-master's do not.
     """
     import subprocess
 
@@ -259,8 +263,14 @@ def branch(root: Path) -> str:
     if name and name != "HEAD":
         return name
     if (root / "srunner" / "scenic").is_dir() and not (root / "srunner" / "scenarios" / "change_lane.py").is_file():
-        return "ue5-master"
+        opt = any(re.search(r'town="Town0[1-9]_Opt"', f.read_text(errors="replace"))
+                  for f in (root / "srunner" / "examples").glob("*.xml"))
+        return "ue58-dev" if opt else "ue5-master"
     return name or "unknown"
+
+
+def is_ue58(br: str) -> bool:
+    return br.startswith("ue58")
 
 
 def do_scaffold(args) -> None:
@@ -283,8 +293,13 @@ def do_scaffold(args) -> None:
     if br == "ue5-master" and town != "Town10HD_Opt":
         print(f"WARNING branch is ue5-master: CARLA 0.10.0 only ships Town10HD_Opt, "
               f"so town={town} will not load. Use --town Town10HD_Opt.")
-    ego = "vehicle.lincoln.mkz" if br == "ue5-master" else "vehicle.lincoln.mkz_2017"
-    x, y, z, yaw = SPAWNS.get(town, (0.0, 0.0, 0.5, 0))
+    if is_ue58(br) and town not in UE58_TOWNS:
+        hint = f"{town}_Opt" if f"{town}_Opt" in UE58_TOWNS else "Town10HD_Opt"
+        print(f"WARNING branch is {br}: its configs use {', '.join(sorted(UE58_TOWNS))}, "
+              f"so town={town} may not load. Use --town {hint}.")
+    ego = "vehicle.lincoln.mkz" if (br == "ue5-master" or is_ue58(br)) else "vehicle.lincoln.mkz_2017"
+    base = town[:-4] if town.endswith("_Opt") and town not in SPAWNS else town
+    x, y, z, yaw = SPAWNS.get(base, (0.0, 0.0, 0.5, 0))
 
     py_path.write_text(BODY.format(
         name=name,
@@ -394,7 +409,7 @@ def do_validate(args) -> None:
         if not s.findall("ego_vehicle"):
             bad(f"{n}: no <ego_vehicle> — ScenarioRunner has nothing to spawn")
         br = branch(sr)
-        valid = {"Town10HD_Opt"} if br == "ue5-master" else {
+        valid = {"Town10HD_Opt"} if br == "ue5-master" else UE58_TOWNS if is_ue58(br) else {
             "Town01", "Town02", "Town03", "Town04", "Town05", "Town06", "Town07",
             "Town10HD", "Town10HD_Opt", "Town11", "Town12", "Town13", "Town15"}
         (ok if town in valid else bad)(

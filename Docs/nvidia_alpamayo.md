@@ -1,6 +1,9 @@
 # Run NVIDIA Alpamayo 2 Super in CARLA
 
-CARLA UE5 provides a synchronous, closed-loop example for NVIDIA Alpamayo 2 Super. The integration captures the model's calibrated camera and ego-motion history, runs trajectory inference, displays the predicted trajectory and Chain of Causation reasoning, and converts the numerical trajectory into CARLA vehicle controls.
+![Alpamayo 2 Super driving a NuRec scene in closed loop](img/nvidia_alpamayo/alpamayo_nurec_loop_thumb.webp)
+<div class="img-caption">Alpamayo 2 Super drives a NuRec scene of a real road with roadworks in closed loop (click for the animation). Top, the camera views the model receives and a CARLA third-person view of the same moment; bottom, the predicted path, the model's Chain of Causation reasoning and the controls CARLA applies.</div>
+
+CARLA provides a synchronous, closed-loop example for NVIDIA Alpamayo 2 Super. The integration captures the model's calibrated camera and ego-motion history, runs trajectory inference, displays the predicted trajectory and Chain of Causation reasoning, and converts the numerical trajectory into CARLA vehicle controls.
 
 The example supports two sensor backends:
 
@@ -34,7 +37,7 @@ For implementation details, see [Architecture and control](nvidia_alpamayo_archi
 
 Before installing the integration, prepare:
 
-* Linux and a built CARLA UE5 server with its Python wheel.
+* Linux and a built CARLA server with its Python wheel.
 * Python 3.10 or later for the CARLA control process.
 * CUDA Toolkit 12.x, including `nvcc`, for the Alpamayo model environment.
 * NVIDIA drivers compatible with the selected CUDA toolkit.
@@ -198,6 +201,9 @@ export NUREC_USDZ=/absolute/path/to/scene.usdz
 
 Omit `--external-model-server` and add `--model-gpus 1,2,3` to let the launcher start and stop the model service for this run.
 
+![Alpamayo camera inputs rendered by NuRec](img/nvidia_alpamayo/alpamayo_nurec_cameras.webp)
+<div class="img-caption">In NuRec mode the camera views are neural renders of the recorded road, made from wherever the CARLA ego actually is. The last view is a CARLA camera behind the ego, in the OpenDRIVE world loaded from the scenario.</div>
+
 NuRec traffic policies are:
 
 | Policy | Option | Intended use |
@@ -228,6 +234,9 @@ Add `--record-video` to either driving launcher:
     --record-video outputs/alpamayo-nurec.mp4 \
     --record-fps 20
 ```
+
+![Alpamayo dashboard](img/nvidia_alpamayo/alpamayo_dashboard.webp)
+<div class="img-caption">One frame of a recorded dashboard, in NuRec mode. Above, the camera views and the CARLA third-person view; below left, the trajectory predicted for the next 6.4 s in the ego frame; below right, the reasoning text, the cycle, the inference time, the ego and target speeds and the throttle, brake and steering commands.</div>
 
 Recording uses simulation time. Model inference pauses do not become frozen wall-clock sections in the MP4. At the default 20 FPS, each 10 Hz simulation state is encoded twice. A sidecar with the same basename and the suffix `.telemetry.jsonl` records predictions, control commands, and collisions.
 
