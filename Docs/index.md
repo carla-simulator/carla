@@ -1,7 +1,9 @@
 # CARLA Unreal Engine 4 Documentation
 
-!!! note
-    You are currently viewing the documentation for the **Unreal Engine 4.26 version of CARLA**. If you are using the **Unreal Engine version 5.5 version of CARLA** you should refer to the [documentation for that version](https://carla-ue5.readthedocs.io/en/latest/).
+!!! danger "This documentation is obsolete and will be deprecated soon"
+    __You are reading the documentation of CARLA 0.9.16 and earlier, built on Unreal Engine 4.26. It is obsolete: it is no longer updated and will soon be deprecated.__
+
+    __Use CARLA 1.0, built on Unreal Engine 5.8,__ and its [documentation](https://carla-ue5.readthedocs.io/en/latest/). Download it from the [CARLA 1.0 release](https://github.com/carla-simulator/carla/releases/tag/1.0).
 
 Welcome to the CARLA documentation.
 
