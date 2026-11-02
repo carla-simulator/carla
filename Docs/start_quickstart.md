@@ -92,7 +92,7 @@ cd CARLA_ROOT\PythonAPI\carla\dist\
 pip3 install carla-<version>-cp310-cp310-win_amd64.whl
 ```
 
-Only one wheel ships with a package, built for one Python minor version and one platform, for example `carla-<version>-cp310-cp310-linux_x86_64.whl` for Python 3.10 on Linux. Installing it on another Python version fails, so use the interpreter the wheel was built for.
+Each wheel is built for one Python minor version and one platform, for example `carla-<version>-cp310-cp310-linux_x86_64.whl` for Python 3.10 on Linux. A package can ship several, one per Python version it was built for. Install the one whose `cpXY` tag matches your interpreter, since installing a wheel on another Python version fails.
 
 !!! Warning
     Do not install the client with `pip3 install carla`. The `carla` package on PyPI is the client for the Unreal Engine 4 version of CARLA and cannot connect to this server.

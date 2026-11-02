@@ -136,6 +136,16 @@ Order matters on a cold tree: LibCarla → Python API → `carla-unreal` → edi
 `carla-python-api-install` both builds the wheel and pip-installs it, so it is the
 one to use rather than `carla-python-api`.
 
+Wheels for more Python versions: configure with
+`-DCARLA_PYTHON_VERSIONS="3.10;3.11;3.12"` and build `carla-python-api`. Each
+extra version is looked up as `python3.XY` in PATH; for conda or venv
+interpreters set `-DCARLA_PYTHON_<XY>_EXECUTABLE=/path/to/python`. Each extra
+version adds a reduced client build in `Build/<preset>/PythonAPI-<XY>`, and all
+the wheels land in `Build/<preset>/PythonAPI/dist/`. `carla-python-api-install`
+installs into the *active* python3 (PATH / activated env): editable for the
+main version, the matching wheel for another built version, and an error
+listing the built versions if the active Python has no wheel.
+
 First `carla-unreal` build is 30–60 min; the first editor launch spends another
 30–60 min compiling shaders with no progress output that means anything.
 

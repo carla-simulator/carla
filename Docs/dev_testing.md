@@ -156,4 +156,12 @@ git clone --depth 1 -b 0.1.4 https://github.com/carla-simulator/opendrive-test-f
 ./Build/Release/LibCarla/libcarla_test_client
 ```
 
-It then builds the package. CI does not run the Python unit, smoke or integration tests, so run them locally before opening a pull request that touches the Python API or the server.
+It then builds the package. Pull requests and nightly builds do not run the Python unit, smoke or integration tests, so run them locally before opening a pull request that touches the Python API or the server.
+
+The `python-versions` input of `.github/workflows/_ci-ubuntu.yml` lists the Python versions the wheels are built for, the first being the build's main Python. Each version gets a conda environment `carla<XY>`, created on the first run. The `smoke-test-python-versions` input lists the versions to run the smoke tests with, and when it is empty no smoke tests run. Pull requests and nightly builds build 3.10 only and skip the smoke tests. Releases (`.github/workflows/ue5_release.yml`) build 3.10, 3.11 and 3.12, then run the smoke tests with each version against the package before uploading it. A failure stops the upload, and the JUnit results are kept as the `smoke-test-results` artifact.
+
+To run the smoke tests the same way locally, start a server on port 3654 and pass one interpreter per version to `Util/Tools/RunSmokeTests.sh`. It installs the matching wheel from `Build/Release/PythonAPI/dist` (`--wheel-dir` changes it) into each interpreter and writes `Build/test-results/smoke-cpXY.xml`:
+
+```sh
+./Util/Tools/RunSmokeTests.sh --wheel-dir Build/PythonAPI/dist python3.10 python3.12
+```
