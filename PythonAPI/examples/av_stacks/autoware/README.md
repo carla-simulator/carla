@@ -150,9 +150,9 @@ the convention Autoware expects here, not a bug), they carry **no
 traffic-light regulatory elements**, and there are small origin offsets
 between the pcd and osm.
 
-Do not fetch Town10HD into the default directory. The script overwrites the
-committed UE 5.8 artifacts in `map_tools/maps/Town10HD/` with the UE4-era
-ones.
+Town10HD needs no fetch, because `map_tools/maps/Town10HD/` already holds
+the UE 5.8 artifacts. If you fetch Town10HD into that default directory, the
+script overwrites them with the UE4-era ones.
 
 The upstream `.osm` files also lack the
 `<MetaInfo format_version="1.0.0" map_version="1"/>` element that Autoware's

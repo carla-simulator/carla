@@ -32,8 +32,9 @@ pcd scores low against UE5.8 lidar returns (the run script relaxes the NDT
 convergence threshold to compensate; regenerating the pcd — option 2 —
 removes the need).
 
-Do not fetch Town10HD into the default directory. The script overwrites the
-committed UE 5.8 artifacts in `maps/Town10HD/` with the UE4-era ones.
+Town10HD needs no fetch, because `maps/Town10HD/` already holds the UE 5.8
+artifacts. If you fetch Town10HD into that default directory, the script
+overwrites them with the UE4-era ones.
 
 **MetaInfo requirement**: Autoware's route_handler only accepts a lanelet2
 map whose `<osm>` root carries a
