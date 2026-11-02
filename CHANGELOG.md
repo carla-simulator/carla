@@ -179,6 +179,7 @@
 
 #### Examples and tests
 
+* Fixed **the Autoware launcher with a release package**. An explicit `--carla-root` that holds no `CarlaUnreal.sh` now fails, instead of running a package found under `Build/*/Package/`. The launcher logs which server it starts. With a packaged server, the client wheel check compares against the wheels in that package. A package user no longer gets a false provenance warning.
 * Restored wheelchair pedestrians in `PythonAPI/examples/generate_traffic.py`: 11% of the walkers whose blueprint reports `can_use_wheelchair` are now spawned with `use_wheelchair` set, as on `ue4-dev`.
 * Fixed `PythonAPI/examples/manual_control.py` raising `NameError: name 'sys' is not defined` instead of their error message when the server cannot send the OpenDRIVE file or the map has no spawn points.
 * Fixed `PythonAPI/examples/no_rendering_mode.py` ignoring `--show-triggers`, `--show-connections` and `--show-spawn-points` when a cached map image existed; the flags are part of the cache name now.

@@ -83,6 +83,7 @@ STACK="auto"                  # auto|source|docker : how to run Autoware (classi
 MAP_PATH=""
 SERVER_ARGS=""                # extra simulator flags, appended last (see --server-args)
 CARLA_ROOT_ARG="${CARLA_ROOT:-}"
+CARLA_ROOT_FLAG=false   # true when --carla-root was given explicitly
 AUTOWARE_WS="${AUTOWARE_WS:-$HOME/autoware}"
 DOMAIN_ID=42
 DRY_RUN=false
@@ -127,7 +128,8 @@ Usage: $(basename "$0") --mode classical|e2e [options]
   --map-path DIR         dir containing pointcloud_map.pcd, lanelet2_map.osm,
                          map_projector_info.yaml
                          (default: ../map_tools/maps/<town-without-_Opt>)
-  --carla-root DIR       packaged CARLA root containing CarlaUnreal.sh
+  --carla-root DIR       packaged CARLA root containing CarlaUnreal.sh or
+                         Linux/CarlaUnreal.sh (fails if it holds neither)
                          (default: \$CARLA_ROOT env; falls back to editor -game via \$UE_ROOT)
   --server auto|editor   auto (default): use a packaged build if found;
                          editor: force the editor -game path (\$UE_ROOT) — use
@@ -157,7 +159,8 @@ Usage: $(basename "$0") --mode classical|e2e [options]
                          gates exist because engaging on a diverged pose drives
                          the car into things -- only skip them knowingly.
   --no-wheel-check       skip the carla module provenance check (installed
-                         .so vs any of this tree's built wheels) -- use
+                         .so vs the package's wheels, or vs this tree's
+                         built wheels for the editor server) -- use
                          only when you knowingly run a wheel from elsewhere
   --rviz-image-topic T   image topic for RViz's image panel (default: classical
                          /sensing/camera/front/image from autoware_demo.py's front
@@ -192,7 +195,7 @@ while [[ $# -gt 0 ]]; do
         --container-name) CONTAINER_NAME="$2"; shift 2 ;;
         --rmw)          RMW="$2"; shift 2 ;;
         --map-path)     MAP_PATH="$2"; shift 2 ;;
-        --carla-root)   CARLA_ROOT_ARG="$2"; shift 2 ;;
+        --carla-root)   CARLA_ROOT_ARG="$2"; CARLA_ROOT_FLAG=true; shift 2 ;;
         --server)       SERVER_PREF="$2"; shift 2 ;;
         --autoware-ws)  AUTOWARE_WS="$2"; shift 2 ;;
         --domain-id|--ros-domain-id) DOMAIN_ID="$2"; shift 2 ;;
@@ -711,6 +714,14 @@ CANDIDATES=()
 if [[ "$SERVER_PREF" != "editor" ]]; then
     if [[ -n "$CARLA_ROOT_ARG" ]]; then
         CANDIDATES+=("$CARLA_ROOT_ARG/CarlaUnreal.sh" "$CARLA_ROOT_ARG/Linux/CarlaUnreal.sh")
+        if [[ ! -x "${CANDIDATES[0]}" && ! -x "${CANDIDATES[1]}" ]]; then
+            # A silent fallback would run a different build than the one named.
+            if $CARLA_ROOT_FLAG; then
+                preflight_fail "--carla-root '$CARLA_ROOT_ARG' holds neither CarlaUnreal.sh nor Linux/CarlaUnreal.sh -- pass the package root (the folder that holds Linux/CarlaUnreal.sh)"
+            else
+                warn "\$CARLA_ROOT '$CARLA_ROOT_ARG' holds no CarlaUnreal.sh -- looking for a package under $REPO_ROOT/Build/*/Package/ instead"
+            fi
+        fi
     fi
     for cand in "$REPO_ROOT"/Build/*/Package/Carla-*/Linux/CarlaUnreal.sh; do
         CANDIDATES+=("$cand")   # unmatched globs stay literal and fail -x below
@@ -721,6 +732,7 @@ for cand in "${CANDIDATES[@]}"; do
         SERVER_LAUNCHER="$cand"; SERVER_KIND="packaged"; break
     fi
 done
+[[ -n "$SERVER_LAUNCHER" ]] && log "CARLA server: packaged $SERVER_LAUNCHER"
 UPROJECT="$REPO_ROOT/Unreal/CarlaUnreal/CarlaUnreal.uproject"
 if [[ -z "$SERVER_LAUNCHER" ]]; then
     if [[ -n "${UE_ROOT:-}" && -x "$UE_ROOT/Engine/Binaries/Linux/UnrealEditor" && -f "$UPROJECT" ]]; then
@@ -775,16 +787,26 @@ fi
 if $NO_WHEEL_CHECK; then
     log "carla module provenance check skipped (--no-wheel-check)"
 else
-    mapfile -t WHEEL_HITS < <(find "$REPO_ROOT/Build" -maxdepth 4 \
-        -path '*/PythonAPI/dist/carla-*.whl' -printf '%T@ %p\n' 2>/dev/null \
-        | sort -rn)
+    # A packaged server ships its own wheels: the client must match those.
+    # Otherwise (editor -game) it must match a wheel built in this tree.
     WHEELS=()
-    for hit in "${WHEEL_HITS[@]}"; do
-        WHEELS+=("${hit#* }")
-    done
+    if [[ "$SERVER_KIND" == "packaged" ]]; then
+        PKG_ROOT="$(dirname "$SERVER_LAUNCHER")"
+        [[ "$(basename "$PKG_ROOT")" == "Linux" ]] && PKG_ROOT="$(dirname "$PKG_ROOT")"
+        WHEEL_SRC="$PKG_ROOT/PythonAPI/carla/dist"
+        mapfile -t WHEELS < <(find "$WHEEL_SRC" -maxdepth 1 -name 'carla-*.whl' 2>/dev/null | sort)
+    else
+        WHEEL_SRC="$REPO_ROOT/Build/*/PythonAPI/dist"
+        mapfile -t WHEEL_HITS < <(find "$REPO_ROOT/Build" -maxdepth 4 \
+            -path '*/PythonAPI/dist/carla-*.whl' -printf '%T@ %p\n' 2>/dev/null \
+            | sort -rn)
+        for hit in "${WHEEL_HITS[@]}"; do
+            WHEELS+=("${hit#* }")
+        done
+    fi
     INSTALLED_SO="$("$CARLA_PY" -c 'import carla; print(carla.__file__)' 2>/dev/null || true)"
     if [[ ${#WHEELS[@]} -eq 0 || "$INSTALLED_SO" != *.so ]]; then
-        warn "carla module provenance NOT verified (no built wheel under $REPO_ROOT/Build/*/PythonAPI/dist, or module is not a single .so) -- if this module was NOT built from this tree, load_town can abort ~15 minutes into the run with std::bad_array_new_length. Build one here: cmake --build Build/<preset> --target carla-python-api (or pass --no-wheel-check to silence this warning)"
+        warn "carla module provenance NOT verified (no wheel under $WHEEL_SRC, or module is not a single .so) -- if this module does not match the server, load_town can abort ~15 minutes into the run with std::bad_array_new_length. Install the wheel that ships with the server (or pass --no-wheel-check to silence this warning)"
     else
         # Two lines out: installed sha256 (empty if unreadable), then the
         # first wheel whose same-named entry hashes the same (empty if
@@ -820,7 +842,7 @@ print(matched)
         if [[ -z "$INSTALLED_SHA" ]]; then
             warn "carla module provenance not checked (could not hash $INSTALLED_SO)"
         elif [[ -z "$MATCHED_WHEEL" ]]; then
-            preflight_fail "installed carla module ($INSTALLED_SO, sha256 ${INSTALLED_SHA:0:12}...) matches none of this tree's ${#WHEELS[@]} built wheel(s) under $REPO_ROOT/Build/*/PythonAPI/dist -- a client built elsewhere can import fine and still abort load_town with std::bad_array_new_length. Reinstall from this tree: $CARLA_PY -m pip install --force-reinstall '${WHEELS[0]}' (or pass --no-wheel-check to proceed anyway)"
+            preflight_fail "installed carla module ($INSTALLED_SO, sha256 ${INSTALLED_SHA:0:12}...) matches none of the ${#WHEELS[@]} wheel(s) under $WHEEL_SRC -- a client built elsewhere can import fine and still abort load_town with std::bad_array_new_length. Install the one for your Python: $CARLA_PY -m pip install --force-reinstall <wheel from $WHEEL_SRC> (or pass --no-wheel-check to proceed anyway)"
         else
             log "carla module provenance OK: matches $(basename "$MATCHED_WHEEL") (sha256 ${INSTALLED_SHA:0:12}...)"
         fi
