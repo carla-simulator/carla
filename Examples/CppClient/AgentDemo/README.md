@@ -46,7 +46,7 @@ cleanly.
 ## Expected output
 
 ```
-Client 1.0.0  ↔  Server 1.0.0
+Client 1.0  ↔  Server 1.0
 Map: /Game/Carla/Maps/Town01
 Spawned vehicle.tesla.model3 at (88.5, -45.2, 0.30)
 Destination: (245.6, 12.4, 0.30)

@@ -4,7 +4,7 @@
 
 1. **Make sure content is up-to-date.**<br>See [Updating the content](dev_update_content.md). CI and a fresh setup clone the tip of the `ue58-dev-carla` branch of the content repository, so every content change for the release has to be [merged](dev_update_content.md#merging-a-change) there.
 
-2. **Increase the CARLA version.**<br>Set `CARLA_VERSION_MAJOR`, `CARLA_VERSION_MINOR` and `CARLA_VERSION_PATCH` in the top-level _CMakeLists.txt_. `get_server_version()`, the Python wheel, the package, release and content pack names, and _Util/Tools/Deploy.sh_ take the version from there. Unreal reads _DefaultGame.ini_ (`ProjectVersion`) and _Carla.uplugin_ (`VersionName`) directly, so update those two by hand.
+2. **Increase the CARLA version.**<br>Set `CARLA_VERSION_MAJOR` and `CARLA_VERSION_MINOR` in the top-level _CMakeLists.txt_ (add `CARLA_VERSION_PATCH` and append it to `CARLA_VERSION` only for a patch release). `get_server_version()`, the Python wheel, the package, release and content pack names, and _Util/Tools/Deploy.sh_ take the version from there. Unreal reads _DefaultGame.ini_ (`ProjectVersion`) and _Carla.uplugin_ (`VersionName`) directly, so update those two by hand.
 
 3. **Clean up CHANGELOG.md.**<br>Make sure the change log is up-to-date, reword and reorganize if necessary; take into account which items can be more important to the users. Rename the `## LATEST Changes` heading to `## CARLA X.X.X`.
 
