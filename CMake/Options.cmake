@@ -51,6 +51,12 @@ carla_option (
   ON
 )
 
+carla_string_option (
+  CARLA_PYTHON_VERSIONS
+  "Semicolon-separated list of Python versions (X.Y) to build the Python API wheel for, e.g. 3.10;3.11;3.12. The interpreter of each one is python<X.Y> in PATH or CARLA_PYTHON_<XY>_EXECUTABLE. Empty builds only for the Python CMake finds."
+  ""
+)
+
 carla_option (
   ENABLE_ROS2
   "Enable ROS2."

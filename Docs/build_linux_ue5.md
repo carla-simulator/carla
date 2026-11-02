@@ -85,6 +85,22 @@ cmake -G Ninja -S . -B Build --toolchain=$PWD/CMake/Toolchain.cmake -DCMAKE_BUIL
 !!! Note
     If you intend to target a specific Python installation, you should add both these arguments to the above cmake command: `-DPython_ROOT_DIR=PATH` and `-DPython3_ROOT_DIR=PATH`.
 
+#### Build the Python API for several Python versions
+
+The Python API wheel is built for one Python version, the one CMake finds or the one you point it at. To build wheels for more versions in the same build, list them in `CARLA_PYTHON_VERSIONS`:
+
+```sh
+cmake -G Ninja -S . -B Build --toolchain=$PWD/CMake/Toolchain.cmake -DCMAKE_BUILD_TYPE=Release \
+    -DCARLA_PYTHON_VERSIONS="3.10;3.11;3.12"
+cmake --build Build --target carla-python-api
+```
+
+CMake looks for each interpreter as `python3.11`, `python3.12` and so on in `PATH`. If an interpreter has another name, as in a conda or virtual environment, set its path with `CARLA_PYTHON_<XY>_EXECUTABLE`, for example `-DCARLA_PYTHON_311_EXECUTABLE=$HOME/miniconda3/envs/py311/bin/python`. Each interpreter needs `numpy` and `build` installed (`python -m pip install numpy build`).
+
+Each extra version gets a reduced build of the client and the Python API in `Build/PythonAPI-<XY>`. It reuses the dependency sources the main build downloaded. All the wheels end up in `Build/PythonAPI/dist`, and the `package` target ships every one of them.
+
+`carla-python-api-install` installs the Python API into the active Python, the `python3` in `PATH` (for example the activated conda or virtual environment). For the build's main Python version it does an editable install. For another version in `CARLA_PYTHON_VERSIONS` it installs that version's wheel. If the active Python is a version the build has no wheel for, for example 3.13 in a build for 3.10 and 3.11, it stops with an error listing the versions available instead of installing an incompatible one.
+
 The command line options are as follows:
 
 * **G** - which build system to use
@@ -155,10 +171,10 @@ If you want to run the native ROS 2 interface, add the `-ros2` argument:
 ./Linux/CarlaUnreal.sh -ros2
 ```
 
-If you want to install the Python API corresponding to the package you have built:
+If you want to install the Python API corresponding to the package you have built, pick the wheel for your Python version (`cp310` for Python 3.10, and so on):
 
 ```sh
-pip3 install PythonAPI/carla/dist/carla-*.whl
+pip3 install PythonAPI/carla/dist/carla-*-cp310-cp310-*.whl
 ```
 
 ### Content packs
