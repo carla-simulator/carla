@@ -34,7 +34,12 @@ public:
   }
 
   ~io_context_running() {
+    stop();
+  }
+
+  void stop() {
     service.stop();
+    _threads.JoinAll();
   }
 
 private:
@@ -81,7 +86,7 @@ TEST(streaming, low_level_sending_strings) {
   std::this_thread::sleep_for(2ms);
   ASSERT_GE(message_count, number_of_messages - 3u);
 
-  io.service.stop();
+  io.stop();
 }
 
 TEST(streaming, low_level_unsubscribing) {
@@ -130,7 +135,7 @@ TEST(streaming, low_level_unsubscribing) {
     ASSERT_GE(message_count, number_of_messages - 3u);
   }
 
-  io.service.stop();
+  io.stop();
 }
 
 TEST(streaming, low_level_tcp_small_message) {
@@ -232,6 +237,9 @@ TEST(streaming, stream_outlives_server) {
         ASSERT_EQ(result, message);
         ++messages_received;
       });
+      for (auto t = 0u; t < 200u && messages_received == 0u; ++t) {
+        std::this_thread::sleep_for(10ms);
+      }
       std::this_thread::sleep_for(20ms);
     } // client dies here.
     ASSERT_GT(messages_received, 0u);
