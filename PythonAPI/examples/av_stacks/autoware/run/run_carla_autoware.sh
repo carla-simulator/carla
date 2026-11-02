@@ -343,6 +343,12 @@ pause() {   # give a freshly started component time to come up
 }
 
 # ---------------------------------------------------------------- teardown --
+# A pidfile entry is a process group (start_proc runs each command under
+# setsid). The group is alive while any member is: the CARLA server's leader
+# is the CarlaUnreal.sh wrapper, which exits on SIGTERM while the engine
+# binary in the same group keeps running and holds the RPC port.
+group_alive() { kill -0 -- "-$1" 2>/dev/null || kill -0 "$1" 2>/dev/null; }
+
 teardown() {
     local status=$?
     trap - INT TERM EXIT
@@ -354,7 +360,7 @@ teardown() {
         local idx
         for ((idx=${#lines[@]}-1; idx>=0; idx--)); do
             name="${lines[$idx]%% *}"; pid="${lines[$idx]##* }"
-            if kill -0 "$pid" 2>/dev/null; then
+            if group_alive "$pid"; then
                 log "  SIGTERM -> '$name' (pgid $pid)"
                 kill -TERM -- "-$pid" 2>/dev/null || kill -TERM "$pid" 2>/dev/null || true
             fi
@@ -364,14 +370,14 @@ teardown() {
             local alive=false
             for line in "${lines[@]}"; do
                 pid="${line##* }"
-                kill -0 "$pid" 2>/dev/null && alive=true
+                group_alive "$pid" && alive=true
             done
             $alive || break
             sleep 1; ((waited++)) || true
         done
         for ((idx=${#lines[@]}-1; idx>=0; idx--)); do
             name="${lines[$idx]%% *}"; pid="${lines[$idx]##* }"
-            if kill -0 "$pid" 2>/dev/null; then
+            if group_alive "$pid"; then
                 log "  SIGKILL -> '$name' (pgid $pid) [did not exit within 15 s]"
                 kill -KILL -- "-$pid" 2>/dev/null || kill -KILL "$pid" 2>/dev/null || true
             fi
