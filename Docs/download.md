@@ -11,8 +11,8 @@ Where to get CARLA, and which build matches which engine version. The [quick sta
 
 | Release | Engine | Documentation |
 | --- | --- | --- |
-| [CARLA 1.0](https://github.com/carla-simulator/carla/releases/tag/1.0) ([Linux](https://downloads.carlasim.com/Linux/Carla-1.0-Linux-Shipping.tar.gz), [Windows](https://downloads.carlasim.com/Windows/Carla-1.0-Windows-Shipping.zip)) | Unreal Engine 5.8 | This documentation |
-| [CARLA 0.10.0](https://github.com/carla-simulator/carla/releases/tag/0.10.0) | Unreal Engine 5.5 | [carla-ue5.readthedocs.io](https://carla-ue5.readthedocs.io/en/latest/) |
+| [CARLA 1.0](https://github.com/carla-simulator/carla/releases/tag/1.0) ([Linux](https://downloads.carlasim.com/Linux/CARLA_1.0/CARLA_1.0.tar.gz)) | Unreal Engine 5.8 | This documentation |
+| [CARLA 0.10.0](https://github.com/carla-simulator/carla/releases/tag/0.10.0) | Unreal Engine 5.5 | [`Docs/` at the 0.10.0 tag](https://github.com/carla-simulator/carla/tree/0.10.0/Docs) |
 | [CARLA 0.9.16](https://github.com/carla-simulator/carla/releases/tag/0.9.16) and earlier | Unreal Engine 4.26 | [carla.readthedocs.io](https://carla.readthedocs.io/en/latest/) |
 
 ---

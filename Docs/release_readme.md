@@ -11,7 +11,7 @@ How to run CARLA
 Launch a terminal in this folder and start the simulator:
 
 ```sh
-./CarlaUnreal.sh
+./Linux/CarlaUnreal.sh
 ```
 
 This opens a window with a view over the city. That is the "spectator" view: you can fly around with the mouse and the WASD keys, but you cannot interact with the world from it. The simulator is now running as a server, waiting for a client to connect.
@@ -50,10 +50,10 @@ Running options
 ---------------
 
 ```sh
-./CarlaUnreal.sh -RenderOffScreen          # no display window
-./CarlaUnreal.sh -carla-rpc-port=3000      # listen on another port
-./CarlaUnreal.sh -quality-level=Low        # cheaper rendering
-./CarlaUnreal.sh -ros2                     # native ROS 2 interface (only in a package built with ROS 2 enabled)
+./Linux/CarlaUnreal.sh -RenderOffScreen          # no display window
+./Linux/CarlaUnreal.sh -carla-rpc-port=3000      # listen on another port
+./Linux/CarlaUnreal.sh -quality-level=Low        # cheaper rendering
+./Linux/CarlaUnreal.sh -ros2                     # native ROS 2 interface (only in a package built with ROS 2 enabled)
 ```
 
 For more details and running options, refer to the online documentation:
