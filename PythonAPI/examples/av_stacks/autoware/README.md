@@ -18,7 +18,7 @@ one **server** process (the simulator) and any number of **clients** that
 connect over RPC (default port 2000). In *synchronous mode* — required here —
 the simulation only advances when exactly **one** designated client calls
 "tick"; our spawner script owns that role. The native ROS2 layer means that,
-once the server starts with `-ros2`, ROS2 topics appear on your DDS network
+once the server starts with `--ros2`, ROS2 topics appear on your DDS network
 just as if a robot were publishing them.
 
 ---
@@ -45,7 +45,7 @@ just as if a robot were publishing them.
   Verify your package starts with ROS2 support:
 
   ```bash
-  ./Linux/CarlaUnreal.sh --ros2   # from the package folder
+  ./CarlaUnreal.sh --ros2
   ```
 
   (Canonical single-dash flags also work and are what our scripts use:

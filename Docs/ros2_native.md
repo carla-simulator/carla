@@ -19,7 +19,7 @@ CARLA speaks ROS 2 from the server itself — there is no bridge process. Sensor
 - [__Related pages__](#related-pages)
 
 !!! Note
-    The flag is single-dash, `-ros2`. CARLA 1.0 also accepts `--ros2`. In a release package, the launcher is in the `Linux/` folder, so run `./Linux/CarlaUnreal.sh -ros2` from the package folder. A source build has to be configured with `-DENABLE_ROS2=ON`, which is the default in CI but not in a plain configure.
+    The options accept a double or a single dash: `--ros2` or `-ros2`, `--rmw=` or `-rmw=`, `--ros-domain-id=` or `-ros-domain-id=`. A source build has to be configured with `-DENABLE_ROS2=ON`, which is the default in CI but not in a plain configure.
 
 ---
 ## Quick start
@@ -45,19 +45,19 @@ ros2 topic echo /clock
 ---
 ## Middleware (RMW)
 
-The native connector can publish through any of three middlewares. Select one with the `-rmw=` option, which is only valid together with `-ros2`:
+The native connector can publish through any of three middlewares. Select one with the `--rmw=` option, which is only valid together with `--ros2`:
 
 ```sh
-./CarlaUnreal.sh -ros2 -rmw=cyclonedds
+./CarlaUnreal.sh --ros2 --rmw=cyclonedds
 ```
 
 Accepted values are `fastdds` (the default), `cyclonedds`, and `zenoh`. The native interface itself is built on Linux only, so all three are Linux-only. If the value is not recognized, or names a middleware that was not compiled into the binary, ROS 2 is disabled for that session and an error is logged listing the available middlewares. The published topics and message formats are identical across all middlewares.
 
-`-rmw=zenoh` is compatible with `rmw_zenoh_cpp` peers and requires a Zenoh router (`ros2 run rmw_zenoh_cpp rmw_zenohd`) running before the simulator starts. The session connects to `tcp/localhost:7447` by default; set `ZENOH_SESSION_CONFIG_URI` to point at a different rmw_zenoh config file, or `ZENOH_CONFIG_OVERRIDE` to patch individual keys.
+`--rmw=zenoh` is compatible with `rmw_zenoh_cpp` peers and requires a Zenoh router (`ros2 run rmw_zenoh_cpp rmw_zenohd`) running before the simulator starts. The session connects to `tcp/localhost:7447` by default; set `ZENOH_SESSION_CONFIG_URI` to point at a different rmw_zenoh config file, or `ZENOH_CONFIG_OVERRIDE` to patch individual keys.
 
 ### Fast-DDS transport and shared memory
 
-With `-rmw=fastdds` the simulator restricts the Fast-DDS participant to the **UDPv4 transport only**. Fast-DDS's own builtin default (UDPv4 + shared memory, preferring shared memory for peers on the same host) silently delivers no data whenever the shared-memory path cannot actually be shared, while discovery keeps working — topics appear in `ros2 topic list` but `ros2 topic echo` never receives a sample, with no warning on either side. This happens in three independent, common situations:
+With `--rmw=fastdds` the simulator restricts the Fast-DDS participant to the **UDPv4 transport only**. Fast-DDS's own builtin default (UDPv4 + shared memory, preferring shared memory for peers on the same host) silently delivers no data whenever the shared-memory path cannot actually be shared, while discovery keeps working — topics appear in `ros2 topic list` but `ros2 topic echo` never receives a sample, with no warning on either side. This happens in three independent, common situations:
 
 - the subscriber runs in a container without `--ipc=host` (separate `/dev/shm` namespace);
 - the subscriber runs as a different user than the simulator (Fast-DDS segment files are created `0644`, so cross-user writes into the reader's port fail) — this includes containers running as root against a simulator running as a regular user;
@@ -69,7 +69,7 @@ Same-host power users who want shared-memory (or `LARGE_DATA`) performance back 
 
 An XML profile also replaces the UDPv4-only default. If `FASTRTPS_DEFAULT_PROFILES_FILE` names a file whose default participant profile sets its own transports, the simulator keeps those transports. The [Autoware](autoware.md) launcher uses this to limit the simulator to the docker bridge interface.
 
-#### Which subscriber setups receive data (`-rmw=fastdds`)
+#### Which subscriber setups receive data (`--rmw=fastdds`)
 
 Every combination below was verified against a live simulator (Fast-DDS 2.14.6). "ROS 2 Jazzy" stands for any peer on a Fast-DDS 2.14-generation stack, "ROS 2 Humble" for the 2.6 generation. A ✗ always looks the same: topics are listed, `ros2 topic echo` receives nothing, and neither side logs a warning.
 
@@ -87,18 +87,18 @@ Every combination below was verified against a live simulator (Fast-DDS 2.14.6).
 
 The shared-memory column depends on the host and on the Fast-DDS patch version. In a check of the CARLA 1.0 package, two rows differed. The Humble `--user <simulator uid>` row (Fast-DDS 2.6.12) received data in 2 of 2 runs. The root `--net=host --ipc=host` row received data in 1 of 2 runs.
 
-`-rmw=cyclonedds` behaves like the first column in every row (UDP only, no shared-memory support compiled in). `-rmw=zenoh` is independent of this table entirely; it requires the Zenoh router and `rmw_zenoh_cpp` peers as described above.
+`--rmw=cyclonedds` behaves like the first column in every row (UDP only, no shared-memory support compiled in). `--rmw=zenoh` is independent of this table entirely; it requires the Zenoh router and `rmw_zenoh_cpp` peers as described above.
 
 ---
 ## ROS 2 domain id
 
-The ROS2 domain id used by the native connector is configurable with the `-ros-domain-id=<N>` option, which is only valid together with `-ros2`:
+The ROS2 domain id used by the native connector is configurable with the `--ros-domain-id=<N>` option, which is only valid together with `--ros2`:
 
 ```sh
-./CarlaUnreal.sh -ros2 -ros-domain-id=42
+./CarlaUnreal.sh --ros2 --ros-domain-id=42
 ```
 
-`N` must be an integer in the range 0 to 232. The effective domain id is resolved in this order: the `-ros-domain-id` value, then the `ROS_DOMAIN_ID` environment variable, then the default domain 0. Out-of-range values (from either the option or the environment variable) are ignored and the next source is used. Without the option, the server uses `ROS_DOMAIN_ID` if it is set, else domain 0. The chosen domain id applies to every middleware (FastDDS, CycloneDDS, and Zenoh), so peers must run on the same domain to discover the topics.
+`N` must be an integer in the range 0 to 232. The effective domain id is resolved in this order: the `--ros-domain-id` value, then the `ROS_DOMAIN_ID` environment variable, then the default domain 0. Out-of-range values (from either the option or the environment variable) are ignored and the next source is used. Without the option, the server uses `ROS_DOMAIN_ID` if it is set, else domain 0. The chosen domain id applies to every middleware (FastDDS, CycloneDDS, and Zenoh), so peers must run on the same domain to discover the topics.
 
 ---
 ## Sensor data

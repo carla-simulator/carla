@@ -104,7 +104,7 @@ Each wheel is built for one Python minor version and one platform, for example `
 
 ```sh
 cd CARLA_ROOT
-./Linux/CarlaUnreal.sh
+./CarlaUnreal.sh
 ```
 
 ### Windows
