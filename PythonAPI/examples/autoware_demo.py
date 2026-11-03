@@ -80,7 +80,7 @@ def deploy_postprocess_profile(profile_name, settings):
 
     Deploys to both:
     - Source tree: {workspace}/Unreal/CarlaUnreal/Content/Carla/Config/PostProcess/
-    - Package builds found under: {workspace}/Build/Package/*/Linux/CarlaUnreal/Content/Carla/Config/PostProcess/
+    - Package builds found under: {workspace}/Build/Package/*/CarlaUnreal/Content/Carla/Config/PostProcess/
     """
     script_dir = os.path.dirname(os.path.abspath(__file__))
     workspace_path = os.path.abspath(os.path.join(script_dir, "..", ".."))

@@ -20,7 +20,7 @@ sees every map in the tree, cooked or not.
 ### `package` — the shipping build
 
 ```bash
-Build/<preset>/Package/Carla-<ver>-Linux-Shipping/Linux/CarlaUnreal.sh \
+Build/<preset>/Package/Carla-<ver>-Linux-Shipping/CarlaUnreal.sh \
     Town10HD_Opt -RenderOffScreen -carla-rpc-port=2000
 ```
 

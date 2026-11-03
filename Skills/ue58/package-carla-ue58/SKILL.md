@@ -258,7 +258,7 @@ and check the map is in `CARLA_MAPS_TO_COOK`.
 ## Outputs
 
 `Build/<preset>/Package/Carla-<version>-Linux-<config>/` containing
-`Linux/CarlaUnreal.sh` + the shipping binary, `Linux/CarlaUnreal/Content/Paks/`
+`CarlaUnreal.sh` + the shipping binary, `CarlaUnreal/Content/Paks/`
 (`pakchunk0-Linux.{pak,ucas,utoc}` + `global.{ucas,utoc}`), a bundled `PythonAPI/`
 with its wheel, and `VERSION` with the three git hashes — plus a `.tar.gz` of the
 same. `inspect` is read-only. Step 3b adds `AdditionalMaps-<version>-<release>.tar.gz`
