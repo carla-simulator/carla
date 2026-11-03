@@ -548,9 +548,22 @@ void ASceneCaptureSensor_WideAngleLens::CaptureSceneExtended()
                 ShowOnlyFilter.ApplyTo(*FaceCapture);
     }
 
+    // Same camera-cut warm-up as ASceneCaptureSensor::EnqueueRenderSceneImmediate, on every face,
+    // so a new fisheye does not start from a default exposure and adapt for seconds.
+    static IConsoleVariable* SpawnCameraCutsVar =
+        IConsoleManager::Get().FindConsoleVariable(TEXT("carla.Camera.SpawnCameraCuts"));
+    const bool bCameraCut = SpawnCameraCutsVar != nullptr && NumCaptures < SpawnCameraCutsVar->GetInt();
+    if (bCameraCut)
+        ++NumCaptures;
+
     for (uint8 i = 0; i < 6; ++i)
         if (CubemapRenderMask & (1U << i))
+        {
+            // Reset by the renderer after the capture.
+            if (bCameraCut)
+                FaceCaptures[i]->bCameraCutThisFrame = true;
             FaceCaptures[i]->CaptureScene();
+        }
 
     // Snapshot the data the render-thread pass needs so the lambda does not
     // dereference `this` after the actor may have been destroyed. The render
@@ -730,6 +743,11 @@ void ASceneCaptureSensor_WideAngleLens::BeginPlay()
         FaceCapture->ShowFlags = PostProcessConfig.EngineShowFlags;
         FaceCapture->PostProcessSettings = PostProcessConfig.PostProcessSettings;
 
+        // The assignment above replaces the settings the constructor put on
+        // this face, auto exposure included: each face would then adapt to its
+        // own view and the cube's faces meet at visible brightness seams.
+        SceneCaptureSensorWideAngleLens_local_ns::SetCameraDefaultOverrides(*FaceCapture);
+
         FaceCapture->CaptureSource = ESceneCaptureSource::SCS_FinalColorLDR;
         FaceCapture->UpdateContent();
         FaceCapture->Activate();
@@ -842,8 +860,16 @@ namespace SceneCaptureSensorWideAngleLens_local_ns {
         PostProcessSettings.VignetteIntensity = 0;
         PostProcessSettings.bOverride_DepthOfFieldVignetteSize = true;
         PostProcessSettings.DepthOfFieldVignetteSize = 0;
+        // Every face must expose identically, or the faces meet at a visible
+        // brightness seam in the resampled lens image.
         PostProcessSettings.bOverride_AutoExposureMethod = true;
         PostProcessSettings.AutoExposureMethod = EAutoExposureMethod::AEM_Manual;
+        PostProcessSettings.bOverride_AutoExposureBias = true;
+        PostProcessSettings.AutoExposureBias = 0.0f;
+        PostProcessSettings.bOverride_AutoExposureMinBrightness = true;
+        PostProcessSettings.AutoExposureMinBrightness = 1.0f;
+        PostProcessSettings.bOverride_AutoExposureMaxBrightness = true;
+        PostProcessSettings.AutoExposureMaxBrightness = 1.0f;
     }
 
 

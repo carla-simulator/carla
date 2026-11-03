@@ -34,7 +34,8 @@ else
   case "${FL}" in
     ue4) ok "flavor ue4 — CARLA 0.9.14+ (UE4). Scenarios in Town01..Town10HD_Opt" ;;
     ue5) ok "flavor ue5 — CARLA 0.10.0 (UE5). Town10HD_Opt only; just 11 of 101 configs were ported to it"
-         ok "  blueprints are 'vehicle.lincoln.mkz' (no _2017); weather behaviours are disabled" ;;
+         ok "  blueprints are 'vehicle.lincoln.mkz' (no _2017); weather behaviours are disabled"
+         warn "  ue5-master is for the UE 5.5 0.10.0 release; a UE 5.8 server (also reporting 0.10.0) needs ue58-dev" ;;
     ue58) ok "flavor ue58 — CARLA 1.0 on UE 5.8 (pre-release builds report 0.10.0). Towns 1-5 + Town10HD_Opt, all as _Opt"
           ok "  96 configs, every one resolving to a scenario class (ue5-master had 11 runnable:"
           ok "  the rest named non-_Opt towns that do not exist in the UE5 content)"
@@ -42,7 +43,7 @@ else
           ok "  verify after any XML change: python3 scripts/list_scenarios.py --check" ;;
     lb2) ok "flavor lb2 — pinned to Leaderboard 2.0/2.1; routes are Town12/Town13, needs the leaderboard CARLA build" ;;
     lb1) ok "flavor lb1 — pinned to Leaderboard 1.0; needs CARLA 0.9.10.1 exactly" ;;
-    *)   warn "branch '${BR}' is not one of master / ue5-master / leaderboard-{1.0,2.0,2.1} — compatibility unknown" ;;
+    *)   warn "branch '${BR}' is not one of master / ue58-dev / ue5-master / leaderboard-{1.0,2.0,2.1}: compatibility unknown" ;;
   esac
 fi
 

@@ -35,7 +35,7 @@
     - var_name: id
       type: int
       doc: >
-        A value unique for every snapshot to differentiate them. 
+        Identifier of the episode associated with this world. It remains constant across the episode's simulation ticks. Use carla.WorldSnapshot.frame to identify the tick represented by a snapshot. Loading or reloading the world starts a new episode.
     - var_name: frame
       type: int
       doc: >

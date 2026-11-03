@@ -20,7 +20,7 @@ import pytest
 REPO = Path(__file__).resolve().parents[1]
 SKILLS = REPO.parents[1] / "Skills"  # vendored: the library sits at the carla repo root
 GROUPS = {"setup", "python-api", "ue4", "ue5", "ue58", "ros2",
-          "scenario-runner", "leaderboard", "scenic"}
+          "scenario-runner", "leaderboard", "scenic", "docs", "contributing"}
 
 sys.path.insert(0, str(REPO / "src"))
 

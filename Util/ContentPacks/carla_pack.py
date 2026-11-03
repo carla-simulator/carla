@@ -37,6 +37,7 @@ import argparse
 import hashlib
 import json
 import os
+import posixpath
 import re
 import shutil
 import signal
@@ -91,7 +92,7 @@ SEMANTIC_LABELS = ("Building", "Fence", "Pedestrian", "Pole", "Other", "Road", "
                    "TrafficSign", "Vegetation", "Car", "Wall", "Sky", "Ground", "Bridge", "RailTrack",
                    "GuardRail", "TrafficLight", "Static", "Dynamic", "Water", "Terrain", "Truck",
                    "Motorcycle", "Bicycle", "Bus", "Rider", "Train", "Rock", "Stone", "Bush")
-VERSION_RE = re.compile(r"^\d+\.\d+\.\d+([-+][0-9A-Za-z.-]+)?$")
+VERSION_RE = re.compile(r"^\d+\.\d+(\.\d+)?([-+][0-9A-Za-z.-]+)?$")
 
 TOOL_DIR = Path(__file__).resolve().parent
 REPO_ROOT = TOOL_DIR.parents[1]  # Util/ContentPacks -> repo root
@@ -107,7 +108,7 @@ class PackError(Exception):
 # --------------------------------------------------------------------------
 
 def info(msg):
-    print("carla-pack: " + msg)
+    print("carla-pack: " + msg, flush=True)
 
 
 def warn(msg):
@@ -200,7 +201,7 @@ def copy_any(src, dst):
 
 
 def carla_version_from_cmake():
-    """Read CARLA_VERSION_{MAJOR,MINOR,PATCH} from the repo's CMakeLists.txt."""
+    """Read CARLA_VERSION_{MAJOR,MINOR[,PATCH]} from the repo's CMakeLists.txt."""
     cmake = REPO_ROOT / "CMakeLists.txt"
     if not cmake.is_file():
         return None
@@ -212,9 +213,11 @@ def carla_version_from_cmake():
                 parts[m.group(1)] = m.group(2)
     except OSError:
         return None
-    if len(parts) == 3:
+    if "MAJOR" not in parts or "MINOR" not in parts:
+        return None
+    if "PATCH" in parts:
         return "{MAJOR}.{MINOR}.{PATCH}".format(**parts)
-    return None
+    return "{MAJOR}.{MINOR}".format(**parts)
 
 
 # --------------------------------------------------------------------------
@@ -675,7 +678,7 @@ def cmd_init(args):
         raise PackError("{!r} is a reserved name (an engine/project mount point or an existing plugin); "
                         "pick another pack name".format(name))
     if not VERSION_RE.match(args.version):
-        raise PackError("invalid --version {!r}: expected MAJOR.MINOR.PATCH".format(args.version))
+        raise PackError("invalid --pack-version {!r}: expected MAJOR.MINOR[.PATCH]".format(args.version))
     pack_dir = packs_root(args) / name
     if (pack_dir / MANIFEST_NAME).exists():
         raise PackError("pack already exists: {}".format(pack_dir))
@@ -1050,12 +1053,31 @@ def add_map(pack_dir, manifest, args):
     if args.world_partition and not external:
         warn("--world-partition given but no __ExternalActors__ folder found for {}".format(dst))
 
+    old = next((m for m in manifest["maps"] if m.get("name") == map_name), {})
     entry = {
         "name": map_name,
         "package": package,
         "xodr": "",
         "world_partition": world_partition,
     }
+    if args.no_xodr and args.xodr:
+        raise PackError("--xodr and --no-xodr are mutually exclusive")
+    if args.no_nav and args.nav:
+        raise PackError("--nav and --no-nav are mutually exclusive")
+    if args.no_tm and args.tm:
+        raise PackError("--tm and --no-tm are mutually exclusive")
+
+    if content in src.parents:
+        # In-pack maps have no independent sidecar discovery source. Omitted flags
+        # keep their registered files; an explicit XODR replaces its phase file too,
+        # and --no-<kind> drops one on purpose.
+        if not args.xodr and not args.no_xodr:
+            entry["xodr"] = old.get("xodr", "")
+            if "map_logic" in old:
+                entry["map_logic"] = old["map_logic"]
+        for key in ("nav", "tm"):
+            if not getattr(args, key) and not getattr(args, "no_" + key) and key in old:
+                entry[key] = old[key]
     found = find_sidecars(src) if content not in src.parents else {}
     xodr = args.xodr or found.get("xodr")
     if xodr:
@@ -1078,7 +1100,7 @@ def add_map(pack_dir, manifest, args):
             entry["map_logic"] = (od_dir / "map_logic.json").as_posix()
         if not args.xodr:
             info("OpenDRIVE {} -> {}".format(xodr, entry["xodr"]))
-    else:
+    elif not entry["xodr"]:
         warn("map {} has no OpenDRIVE file (--xodr): the CARLA map API (waypoints, traffic manager) "
              "will not work for it".format(map_name))
     nav = args.nav or found.get("nav")
@@ -1109,13 +1131,16 @@ def add_map(pack_dir, manifest, args):
 
     # Re-registering a map after removing its phase file must not leave the
     # old loose configuration in the staged pack.
-    old = next((m for m in manifest["maps"] if m.get("name") == map_name), {})
     others = [m for m in manifest["maps"] if m.get("name") != map_name]
-    for key in ("xodr", "map_logic"):
+    for key in ("xodr", "map_logic", "nav", "tm"):
         previous = old.get(key)
         if previous and previous != entry.get(key) and is_clean_relpath(previous):
             if not any(m.get(key) == previous for m in others):
-                (content / previous).unlink(missing_ok=True)
+                stale = content / previous
+                if stale.is_dir():
+                    shutil.rmtree(stale, ignore_errors=True)
+                else:
+                    stale.unlink(missing_ok=True)
     manifest["maps"] = others + [entry]
     info("registered map {} as {}{}".format(map_name, entry["package"],
                                           " (World Partition)" if world_partition else ""))
@@ -1226,7 +1251,7 @@ def member_relpath(name):
     raw = name.replace("\\", "/")
     if ".." in raw.split("/"):
         return None                       # any '..' component, even one that would normalise away
-    norm = os.path.normpath(raw)
+    norm = posixpath.normpath(raw)        # '/' on every OS: callers split and compare on '/'
     if norm in (".", ""):
         return ""
     if os.path.isabs(norm) or norm.startswith("/") or norm.startswith("\\"):
@@ -1526,7 +1551,7 @@ def assemble_pack(pack_dir, manifest, staged_pack, out_dir, platform, release, e
 
     out_manifest = json.loads(json.dumps(manifest))
     out_manifest["base_release"] = release
-    out_manifest["platform"] = platform
+    out_manifest["platform"] = cook_platform(platform)   # the server matches its own name (Windows, not Win64)
     out_manifest["engine"] = eng
     files = {}
     for f in sorted(out_pack.rglob("*")):
@@ -1607,8 +1632,23 @@ def find_default_base(args):
     raise PackError("several base releases found, pass --base to pick one:\n  " + "\n  ".join(found))
 
 
+def load_maps_file(path):
+    """The map list of a --maps-file: a JSON list of map specs, or an object with one under "maps"."""
+    data = load_json(Path(path).expanduser())
+    maps = data.get("maps") if isinstance(data, dict) else data
+    if not isinstance(maps, list) or not all(isinstance(m, str) and m.strip() for m in maps):
+        raise PackError('{}: expected a JSON list of map names or {{"maps": [...]}}'.format(path))
+    return [m.strip() for m in maps]
+
+
 def cmd_create(args):
     """init (if needed) + add every map + build, in one go."""
+    maps = list(args.maps)
+    if args.maps_file:
+        maps += load_maps_file(args.maps_file)
+    args.maps = list(dict.fromkeys(maps))
+    if not args.maps:
+        raise PackError("no maps given: pass map names and/or --maps-file")
     base = Path(args.base).expanduser() if args.base else find_default_base(args)
     if not args.base:
         info("base release: {}".format(base))
@@ -1632,7 +1672,8 @@ def cmd_create(args):
     save_json(descriptor, plugin)
     for spec in args.maps:
         add_map(pack_dir, manifest, argparse.Namespace(
-            map=spec, xodr=None, nav=None, tm=None, world_partition=False, copy=False,
+            map=spec, xodr=None, nav=None, tm=None, no_xodr=False, no_nav=False, no_tm=False,
+            world_partition=False, copy=False,
             import_map=args.import_map, engine=args.engine, root=args.root, project=args.project))
     save_json(pack_dir / MANIFEST_NAME, manifest)
     return cmd_build(argparse.Namespace(
@@ -1816,7 +1857,7 @@ def compatibility(manifest, project_dir):
     """Return (ok, base_release_of_server, list of problems)."""
     problems = []
     platform = server_platform(project_dir)
-    if platform and manifest.get("platform") != platform:
+    if platform and cook_platform(manifest.get("platform")) != cook_platform(platform):
         problems.append("platform mismatch: pack is for {!r}, server is {!r}"
                         .format(manifest.get("platform"), platform))
     server_release = server_base_release(project_dir)
@@ -1832,15 +1873,29 @@ def compatibility(manifest, project_dir):
     return not problems, server_release, problems
 
 
-def verify_dir(pack_dir):
-    """Return (missing, mismatched, extra) relative paths for a pack folder."""
+def human_size(n):
+    return "{:.1f} GB".format(n / 1e9) if n >= 1e9 else "{:.1f} MB".format(n / 1e6)
+
+
+def report_file_progress(i, n, rel, size):
+    info("  [{}/{}] {} ({})".format(i, n, rel, human_size(size)))
+
+
+def verify_dir(pack_dir, progress=None):
+    """Return (missing, mismatched, extra) relative paths for a pack folder.
+
+    progress(i, n, rel, size), when given, is called before each listed file is hashed."""
     manifest = load_manifest(pack_dir)
     missing, mismatched, extra = [], [], []
-    for rel, digest in sorted(manifest["files"].items()):
+    files = sorted(manifest["files"].items())
+    for i, (rel, digest) in enumerate(files, 1):
         f = Path(pack_dir) / rel
         if not f.is_file():
             missing.append(rel)
-        elif sha256_file(f) != digest:
+            continue
+        if progress:
+            progress(i, len(files), rel, f.stat().st_size)
+        if sha256_file(f) != digest:
             mismatched.append(rel)
     listed = set(manifest["files"]) | {MANIFEST_NAME}
     for f in Path(pack_dir).rglob("*"):
@@ -1908,14 +1963,17 @@ def cmd_verify(args):
         if path.is_file():
             tmp = tempfile.mkdtemp(prefix="carla-pack-verify-")
             # a hostile tarball must not leave anything behind
-            manifest, top, _ = read_manifest_from_tar(path)
+            info("reading {} ...".format(path))
+            manifest, top, sizes = read_manifest_from_tar(path)
+            info("extracting {} to {} ...".format(human_size(sum(sizes.values())), tmp))
             extract_tar(path, tmp)
             pack_dir = Path(tmp) / top if top else Path(tmp)
         elif path.is_dir():
             pack_dir = path
         else:
             raise PackError("no such pack: {}".format(path))
-        missing, mismatched, extra = verify_dir(pack_dir)
+        info("verifying checksums of {} files ...".format(len(load_manifest(pack_dir)["files"])))
+        missing, mismatched, extra = verify_dir(pack_dir, report_file_progress)
         for rel in missing:
             print("MISSING    " + rel)
         for rel in mismatched:
@@ -1938,11 +1996,19 @@ def cmd_install(args):
     src = Path(args.pack).expanduser()
     if not src.is_file():
         raise PackError("install needs a pack tarball: {}".format(src))
-    manifest, top, _ = read_manifest_from_tar(src)
+    info("reading {} ...".format(src))
+    manifest, top, sizes = read_manifest_from_tar(src)
     name = manifest["name"]
+    total = sum(sizes.values())
+    info("pack {} {} ({} files, {}), platform {}, base release {}".format(
+        name, manifest["version"], len(manifest["files"]), human_size(total), manifest["platform"],
+        manifest["base_release"] or "(not built)"))
     project_dir = resolve_server(args.server)
     ok, server_release, problems = compatibility(manifest, project_dir)
-    if not ok:
+    info("server {} (base release {})".format(project_dir, server_release or "?"))
+    if ok:
+        info("pack is compatible with the server")
+    else:
         if args.force:
             for p in problems:
                 warn(p + " (ignored: --force)")
@@ -1958,11 +2024,13 @@ def cmd_install(args):
     packs_dir.mkdir(parents=True, exist_ok=True)
     tmp = Path(tempfile.mkdtemp(prefix=".{}.".format(name), dir=str(packs_dir)))
     try:
+        info("extracting {} to {} ...".format(human_size(total), packs_dir))
         extract_tar(src, tmp)
         extracted = tmp / top if top else tmp
         if not (extracted / MANIFEST_NAME).is_file():
             raise PackError("archive layout unexpected: no {}/{}".format(top, MANIFEST_NAME))
-        missing, mismatched, extra = verify_dir(extracted)
+        info("verifying checksums of {} files ...".format(len(manifest["files"])))
+        missing, mismatched, extra = verify_dir(extracted, report_file_progress)
         if missing or mismatched:
             raise PackError("checksum verification failed for {}: missing {}, mismatched {}"
                             .format(src.name, missing or "-", mismatched or "-"))
@@ -1970,6 +2038,7 @@ def cmd_install(args):
             raise PackError("{} contains files not listed in its manifest: {}"
                             .format(src.name, ", ".join(extra)))
         if target.exists():
+            info("replacing existing {}".format(target))
             rmtree_force(target)
         shutil.move(str(extracted), str(target))
     finally:
@@ -2136,7 +2205,13 @@ def build_parser():
                          "editor. OpenDRIVE, navigation and Traffic Manager files are picked up from "
                          "CARLA's usual locations")
     sp.add_argument("--xodr", help="OpenDRIVE file for --map (default: found next to the map)")
+    sp.add_argument("--no-xodr", action="store_true",
+                    help="unregister the OpenDRIVE file of an in-pack --map and delete it")
     sp.add_argument("--nav", help="pedestrian navigation .bin for --map (default: found next to the map)")
+    sp.add_argument("--no-nav", action="store_true",
+                    help="unregister the pedestrian navigation file of an in-pack --map and delete it")
+    sp.add_argument("--no-tm", action="store_true",
+                    help="unregister the Traffic Manager data of an in-pack --map and delete it")
     sp.add_argument("--tm", help="Traffic Manager data file or directory for --map (default: found "
                                  "next to the map)")
     sp.add_argument("--engine", default=None,
@@ -2166,8 +2241,11 @@ def build_parser():
                         description="carla-pack create Towns5 Town01_Opt Town03_Opt Town12 Town13 -> "
                                     "Plugins/Packs/Towns5/Saved/CarlaPack/out/Towns5-1.0.0-<release>.tar.gz")
     sp.add_argument("pack", metavar="<Pack>")
-    sp.add_argument("maps", metavar="<Map>", nargs="+",
+    sp.add_argument("maps", metavar="<Map>", nargs="*",
                     help="map names (Town12), package paths or .umap files, as for 'add --map'")
+    sp.add_argument("--maps-file", default=None, metavar="<file.json>",
+                    help='JSON file with more maps: a list ["Town01_Opt", ...] or {"maps": [...]} '
+                         "(e.g. Util/ContentPacks/AdditionalMaps.json)")
     project_opts(sp)
     sp.add_argument("--base", default=None, help="<release>-release-metadata.tar.gz or Releases/<release> dir "
                     "(default: the one under this checkout's Build/)")

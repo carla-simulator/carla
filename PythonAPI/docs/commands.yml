@@ -154,7 +154,7 @@
       doc: >
         Vehicle actor affected by the command.
     - var_name: control
-      type: carla.AckermannVehicleControl
+      type: carla.VehicleAckermannControl
       doc: >
         Vehicle ackermann control to be applied.
     # - METHODS ----------------------------
@@ -166,7 +166,7 @@
         doc: > 
           Actor or its ID to whom the command will be applied to. 
       - param_name: control
-        type: carla.AckermannVehicleControl
+        type: carla.VehicleAckermannControl
     # --------------------------------------
 
   - class_name: ApplyWalkerControl
@@ -481,7 +481,7 @@
           Actor or its ID to whom the command will be applied to. 
       - param_name: enabled
         type: bool
-      - param_name: port
+      - param_name: tm_port
         type: uint16
         default: 8000
         doc: >

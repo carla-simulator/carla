@@ -18,9 +18,9 @@ COLOR_INSTANCE_VAR = '#f8805a'
 COLOR_NOTE = '#8E8E8E'
 COLOR_WARNING = '#ED2F2F'
 
-# The lookbehind keeps the hostname of a link such as
-# https://carla.readthedocs.io/... from being turned into a class anchor.
-QUERY = re.compile(r'(?<![/.])([cC]arla(\.[a-zA-Z0-9_]+)+)')
+# The lookbehind keeps hostnames (https://carla.readthedocs.io/...) and
+# backticked console variables (`carla.PostProcess.Profile`) out of the anchors.
+QUERY = re.compile(r'(?<![/.`])([cC]arla(\.[a-zA-Z0-9_]+)+)')
 
 
 def create_hyperlinks(text):
@@ -77,7 +77,7 @@ class MarkdownFile:
 
     def first_title(self):
         self._data = join([
-            self._data, '#Python API reference\n'])
+            self._data, '# Python API reference\n'])
 
     def title(self, strongness, buf):
         self._data = join([
@@ -109,7 +109,9 @@ class MarkdownFile:
 
 
 def italic(buf):
-    return join(['_', buf, '_'])
+    # Folded YAML scalars keep a trailing newline, which would otherwise land
+    # between the text and the closing underscore and break the emphasis.
+    return join(['_', buf.strip(), '_'])
 
 
 def bold(buf):
@@ -656,8 +658,7 @@ class Documentation:
         md = MarkdownFile()
         md.first_title()
         md.textn(
-        "This reference contains all the details the Python API. To consult a previous reference for a specific CARLA release, change the documentation version using the panel in the bottom right corner.<br>"
-        +"This will change the whole documentation to a previous state. Remember that the <i>latest</i> version is the `dev` branch and may show features not available in any packaged versions of CARLA.<hr>")
+        "This reference contains all the details of the classes available through the Python API: their attributes, their methods, and the arguments and return values each one expects.<hr>")
         for module_name in sorted(self.master_dict):
             module = self.master_dict[module_name]
             module_key = module_name

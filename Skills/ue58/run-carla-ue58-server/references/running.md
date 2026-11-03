@@ -15,7 +15,7 @@ $CARLA_UNREAL_ENGINE_PATH/Engine/Binaries/Linux/UnrealEditor \
 ```
 
 The default choice. Runs against the uncooked tree, so it needs no package, and it
-is the only mode with working map discovery.
+sees every map in the tree, cooked or not.
 
 ### `package` — the shipping build
 
@@ -98,23 +98,25 @@ and waypoint work are all fine under `-nullrhi`.
 | blueprint library | 168 | 168 |
 | `try_spawn_actor(vehicle)` | works | works |
 | `get_random_location_from_navigation()` | works | works |
-| `get_available_maps()` | **29** | **0** |
+| `get_available_maps()` | 29 | **0** before `da94ed2b7`; the cooked maps after |
 | `load_world('Town10HD_Opt')` | works | works |
 | `load_world('Town_C')` | works | works |
-| `load_world('Town12')` | works | **`std::exception`** |
-| `load_world('Town13')` | works | **`std::exception`** |
+| `load_world('Town12')` | works | `std::exception` before `da94ed2b7`; works after |
+| `load_world('Town13')` | works | `std::exception` before `da94ed2b7` |
 | `load_world('NoSuchTown')` | fails (correctly) | fails |
 
 The 29 maps `game` mode reports include the Town15 sublevels
 (`Town15_Buildings`, `Town15_Road`, …) and the map-generator templates, so the
 list is discovery output rather than a list of playable towns.
 
-Cause of the packaged failures: `UCarlaStatics::GetAllMapNames()` uses
+Cause of the old packaged failures: `UCarlaStatics::GetAllMapNames()` used
 `IFileManager::FindFilesRecursive(..., "*.umap")` and
-`UCarlaEpisode::LoadNewEpisode()` gates on `FPaths::FileExists()` — neither can
-see inside a `.pak`. AssetRegistry-based discovery
-(`GetMapPackageNamesFromAssetRegistry()`, package-path `FindMapPath()`) exists on
-`ue58-dev-windows` and has **not** been merged to `ue58-dev`.
+`UCarlaEpisode::LoadNewEpisode()` gated on `FPaths::FileExists()`, neither of
+which sees inside a `.pak`. `da94ed2b7` (content packs) moved discovery to the
+AssetRegistry. Measured 2026-10-26 (Shipping package, ue58-dev `6bb051b2e`, cook scope `Town10HD_Opt+OpenDriveMap+EmptyMap+Town12`): `get_available_maps()` =
+`['Town10HD_Opt', 'EmptyMap', 'Town12']` (`OpenDriveMap` not listed),
+`load_world('Town12')` OK, and the map passed on the command line was ignored
+(booted `Town10HD_Opt`), so switch with `load_world()` after connecting.
 
 An earlier Linux report claimed a client cannot reach a packaged server at all —
 a `FileTransfer::WriteFile` path escape (`../../../` out of

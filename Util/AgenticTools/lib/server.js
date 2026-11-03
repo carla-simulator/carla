@@ -32,7 +32,7 @@ const TOOLS = [
 `List the available CARLA skills as {name, group, description, available} entries.
 
 The library is the source of procedure for CARLA tasks — match a skill by its
-description and call read_skill(name), rather than improvising from the Makefile.
+description and call read_skill(name), rather than improvising the procedure.
 
 Groups say what a skill binds to: \`python-api\` drives any running server,
 \`ue4\`/\`ue5\`/\`ue58\` need that engine's checkout, \`ros2\` covers the native ROS 2

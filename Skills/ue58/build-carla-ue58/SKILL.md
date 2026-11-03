@@ -105,7 +105,7 @@ options worth knowing:
 | `-DCARLA_UNREAL_ENGINE_PATH=` | engine fork path (else the env var) |
 | `-DCARLA_UNREAL_RHI=vulkan` | RHI for the editor/game |
 | `-DCARLA_DLSS_SDK_PATH=` | DLSS SDK; `disabled` builds without it |
-| `-DENABLE_RSS=ON`, `-DENABLE_OSM2ODR=ON`, `-DENABLE_PYTORCH=ON` | all default **OFF** |
+| `-DENABLE_RSS=ON`, `-DENABLE_PYTORCH=ON` | both default **OFF**; the OSM to OpenDRIVE converter is always built |
 | `-DCARLA_UNREAL_PACKAGE_BUILD_TYPE=Shipping` | package configuration |
 | `-DCMAKE_DISABLE_FIND_PACKAGE_Qt5=ON -DCMAKE_DISABLE_FIND_PACKAGE_Qt6=ON` | when system Qt is installed but not linkable with the UE toolchain |
 
@@ -135,6 +135,16 @@ cmake --build Build/Release --target launch
 Order matters on a cold tree: LibCarla → Python API → `carla-unreal` → editor.
 `carla-python-api-install` both builds the wheel and pip-installs it, so it is the
 one to use rather than `carla-python-api`.
+
+Wheels for more Python versions: configure with
+`-DCARLA_PYTHON_VERSIONS="3.10;3.11;3.12"` and build `carla-python-api`. Each
+extra version is looked up as `python3.XY` in PATH; for conda or venv
+interpreters set `-DCARLA_PYTHON_<XY>_EXECUTABLE=/path/to/python`. Each extra
+version adds a reduced client build in `Build/<preset>/PythonAPI-<XY>`, and all
+the wheels land in `Build/<preset>/PythonAPI/dist/`. `carla-python-api-install`
+installs into the *active* python3 (PATH / activated env): editable for the
+main version, the matching wheel for another built version, and an error
+listing the built versions if the active Python has no wheel.
 
 First `carla-unreal` build is 30–60 min; the first editor launch spends another
 30–60 min compiling shaders with no progress output that means anything.

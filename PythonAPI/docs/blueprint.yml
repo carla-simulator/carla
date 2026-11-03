@@ -277,7 +277,7 @@
       - param_name: wildcard_pattern
         type: str
       doc: >
-        Returns <b>True</b> if any of the tags listed for this blueprint matches `wildcard_pattern`. Matching follows [fnmatch](https://docs.python.org/2/library/fnmatch.html) standard.
+        Returns <b>True</b> if any of the tags listed for this blueprint matches `wildcard_pattern`. Matching follows [fnmatch](https://docs.python.org/3/library/fnmatch.html) standard.
     # --------------------------------------
     - def_name: get_attribute
       return: carla.ActorAttribute
@@ -325,7 +325,7 @@
       - param_name: wildcard_pattern
         type: str
       doc: >
-        Filters a list of blueprints matching the `wildcard_pattern` against the id and tags of every blueprint contained in this library and returns the result as a new one. Matching follows [fnmatch](https://docs.python.org/2/library/fnmatch.html) standard.
+        Filters a list of blueprints matching the `wildcard_pattern` against the id and tags of every blueprint contained in this library and returns the result as a new one. Matching follows [fnmatch](https://docs.python.org/3/library/fnmatch.html) standard.
       return: carla.BlueprintLibrary
     # -------------------------------------- 
     - def_name: filter_by_attribute
@@ -335,7 +335,7 @@
       - param_name: value
         type: str
       doc: >
-        Filters a list of blueprints with a given attribute matching the `value` against every blueprint contained in this library and returns the result as a new one. Matching follows [fnmatch](https://docs.python.org/2/library/fnmatch.html) standard.
+        Filters a list of blueprints with a given attribute matching the `value` against every blueprint contained in this library and returns the result as a new one. Matching follows [fnmatch](https://docs.python.org/3/library/fnmatch.html) standard.
       return: carla.BlueprintLibrary
     # --------------------------------------
     - def_name: find

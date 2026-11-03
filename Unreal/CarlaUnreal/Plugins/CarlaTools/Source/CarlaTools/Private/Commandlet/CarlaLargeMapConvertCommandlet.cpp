@@ -16,12 +16,72 @@
 #include "Engine/World.h"
 #include "Engine/WorldComposition.h"
 #include "EngineUtils.h"
+#include "HAL/FileManager.h"
 #include "Misc/FileHelper.h"
 #include "Misc/PackageName.h"
 #include "Misc/Paths.h"
 #include <util/ue-header-guard-end.h>
 
 DEFINE_LOG_CATEGORY_STATIC(LogCarlaLargeMapConvert, Log, All);
+
+int32 UCarlaLargeMapConvertCommandlet::Main(const FString& Params)
+{
+  const int32 Result = Super::Main(Params);
+
+  TArray<FString> Tokens;
+  TArray<FString> Switches;
+  ParseCommandLine(*Params, Tokens, Switches);
+  if (Result != 0 || Tokens.Num() == 0)
+  {
+    return Result;
+  }
+
+  if (!bConversionSuffix)
+  {
+    return Result;
+  }
+
+  // CARLA resolves a map's OpenDRIVE, navigation and Traffic Manager files by
+  // map name, so a copy saved under a new name has to take them along.
+  const FString MapPackage = Tokens[0];
+  const FString MapName = FPackageName::GetShortName(MapPackage);
+  const FString MapDir = FPaths::GetPath(FPackageName::LongPackageNameToFilename(MapPackage));
+  const FString MapsDir = FPaths::GetPath(MapDir);
+  const FString NewMapName = MapName + ConversionSuffix;
+
+  const TArray<TPair<FString, FString>> Sidecars =
+  {
+    { MapDir / TEXT("OpenDrive"), TEXT(".xodr") },
+    { MapDir / TEXT("Nav"),       TEXT(".bin")  },
+    { MapDir / TEXT("TM"),        TEXT(".bin")  },
+    { MapsDir / TEXT("OpenDrive"), TEXT(".xodr") },
+    { MapsDir / TEXT("Nav"),       TEXT(".bin")  },
+    { MapsDir / TEXT("TM"),        TEXT(".bin")  },
+  };
+
+  for (const TPair<FString, FString>& Sidecar : Sidecars)
+  {
+    const FString Source = Sidecar.Key / MapName + Sidecar.Value;
+    const FString Target = Sidecar.Key / NewMapName + Sidecar.Value;
+    if (!IFileManager::Get().FileExists(*Source) || IFileManager::Get().FileExists(*Target))
+    {
+      continue;
+    }
+
+    if (IFileManager::Get().Copy(*Target, *Source) == COPY_OK)
+    {
+      UE_LOG(LogCarlaLargeMapConvert, Display, TEXT("Copied %s to %s."), *Source, *Target);
+    }
+    else
+    {
+      UE_LOG(LogCarlaLargeMapConvert, Error, TEXT(
+          "Could not copy %s to %s; %s will fail to generate its map."),
+          *Source, *Target, *NewMapName);
+    }
+  }
+
+  return Result;
+}
 
 void UCarlaLargeMapConvertCommandlet::OnWorldLoaded(UWorld* World)
 {

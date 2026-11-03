@@ -9,7 +9,7 @@
     doc: >
       The Client connects CARLA to the server which runs the simulation. Both server and client contain a CARLA library (libcarla) with some differences that allow communication between them. Many clients can be created and each of these will connect to the RPC server inside the simulation to send commands. The simulation runs server-side. Once the connection is established, the client will only receive data retrieved from the simulation. Walkers are the exception. The client is in charge of managing pedestrians so, if you are running a simulation with multiple clients, some issues may arise. For example, if you spawn walkers through different clients, collisions may happen, as each client is only aware of the ones it is in charge of.
 
-        The client also has a recording feature that saves all the information of a simulation while running it. This allows the server to replay it at will to obtain information and experiment with it. [Here](adv_recorder.md) is some information about how to use this recorder.
+        The client also has a recording feature that saves all the information of a simulation while running it. This allows the server to replay it at will to obtain information and experiment with it. [Here](core_recorder.md) is some information about how to use this recorder.
     # - PROPERTIES -------------------------
     instance_variables:
     # - METHODS ----------------------------
@@ -81,9 +81,14 @@
         type: list
         doc: >
           A list of commands to execute in batch. Each command is different and has its own parameters. They appear listed at the bottom of this page.
+      - param_name: do_tick
+        type: bool
+        default: false
+        doc: >
+          If __True__, the client ticks the server right after sending the batch.
       doc: >
         Executes a list of commands on a single simulation step and retrieves no information. If you need information about the response of each command, use the __<font color="#7fb800">apply_batch_sync()</font>__ method.
-        [Here](https://github.com/carla-simulator/carla/blob/master/PythonAPI/examples/generate_traffic.py) is an example on how to delete the actors that appear in carla.ActorList all at once.
+        [Here](https://github.com/carla-simulator/carla/blob/ue58-dev/PythonAPI/examples/generate_traffic.py) is an example on how to delete the actors that appear in carla.ActorList all at once.
     # --------------------------------------
     - def_name: apply_batch_sync
       params:
@@ -98,7 +103,7 @@
           A boolean parameter to specify whether or not to perform a carla.World.tick after applying the batch in _synchronous mode_. It is __False__ by default.
       return: list(command.Response)
       doc: >
-        Executes a list of commands on a single simulation step, blocks until the commands are linked, and returns a list of <b>command.Response</b> that can be used to determine whether a single command succeeded or not. [Here](https://github.com/carla-simulator/carla/blob/master/PythonAPI/examples/generate_traffic.py) is an example of it being used to spawn actors.
+        Executes a list of commands on a single simulation step, blocks until the commands are linked, and returns a list of <b>command.Response</b> that can be used to determine whether a single command succeeded or not. [Here](https://github.com/carla-simulator/carla/blob/ue58-dev/PythonAPI/examples/generate_traffic.py) is an example of it being used to spawn actors.
     # --------------------------------------
     - def_name: generate_opendrive_world
       params:
@@ -128,7 +133,7 @@
         type: str
         doc: >
           Name of the map to be used in this world. Accepts both full paths and map names, e.g.
-          '/Game/Carla/Maps/Town01' or 'Town01'. Remember that these paths are dynamic.
+          '/Game/Carla/Maps/Town01_Opt' or 'Town01_Opt'. The name is matched against the map file name, ignoring case, so it has to be exact. Remember that these paths are dynamic.
       - param_name: reset_settings
         type: bool
         default: true
@@ -182,11 +187,26 @@
           ID of the actor to follow. If this is 0 then camera is disabled.
       - param_name: replay_sensors
         type: bool
+        default: False
         doc: >
           Flag to enable or disable the spawn of sensors during playback.
+      - param_name: replay_weather
+        type: bool
+        default: False
+        doc: >
+          Restores the weather stored in the recording, and the changes made to it while it was recorded. The current weather is kept when this is False.
+      - param_name: offset
+        type: carla.Transform
+        default: carla.Transform(carla.Location(-10, 0, 5), carla.Rotation(pitch=-25))
+        doc: >
+          Where the spectator sits relative to the actor given in `follow_id`. Defaults to 10 m behind and 5 m above it, pitched 25 degrees down. Ignored when `follow_id` is 0.
+      - param_name: map_override
+        type: str
+        default: "''"
+        doc: >
+          Name of the map to replay on, instead of the one the recording names. Empty keeps the recorded map.
       doc: >
-        Load a new world with default settings using `map_name` map. All actors
-        present in the current world will be destroyed, __but__ traffic manager instances will stay alive.
+        Replays a simulation recorded with `start_recorder()`. Actors in the current world that appear in the recording are moved or respawned to reproduce it; the rest carry on. Returns the recording's info string.
     # --------------------------------------
     - def_name: stop_replayer
       params:
@@ -269,8 +289,13 @@
         default: False
         doc: >
           Enables or disable recording non-essential data for reproducing the simulation (bounding box location, physics control parameters, etc)
+      - param_name: stop_replayer
+        type: bool
+        default: True
+        doc: >
+          Stops a playback in progress before recording. Set it to False to record while a replay keeps running, which captures a replayed situation with new actors or sensors in it.
       doc: >
-        Enables the recording feature, which will start saving every information possible needed by the server to replay the simulation.
+        Enables the recording feature, which will start saving every information possible needed by the server to replay the simulation. The weather and every change made to it are always recorded.
     # --------------------------------------
     - def_name: stop_recorder
       params:
@@ -282,13 +307,14 @@
       return: list(str)
       doc: >
         Returns a list of strings containing the paths of the maps available on server. These paths are dynamic, they will be created during the simulation and so you will not find them when looking up in your files. One of the possible returns for this method would be:
-          ['/Game/Carla/Maps/Town01',
-          '/Game/Carla/Maps/Town02',
-          '/Game/Carla/Maps/Town03',
-          '/Game/Carla/Maps/Town04',
-          '/Game/Carla/Maps/Town05',
-          '/Game/Carla/Maps/Town06',
-          '/Game/Carla/Maps/Town07']
+          ['/Game/Carla/Maps/Town01_Opt',
+          '/Game/Carla/Maps/Town02_Opt',
+          '/Game/Carla/Maps/Town03_Opt',
+          '/Game/Carla/Maps/Town04_Opt',
+          '/Game/Carla/Maps/Town05_Opt',
+          '/Game/Carla/Maps/Town06_Opt',
+          '/Game/Carla/Maps/Town07_Opt',
+          '/Game/Carla/Maps/Town10HD_Opt']
     # --------------------------------------
     - def_name: get_content_packs
       params:
@@ -304,7 +330,7 @@
           Path on the server host of the pack directory (or its `carla-pack.json`).
       return: carla.ContentPackInfo
       doc: >
-        Mounts a content pack (a content-only Unreal plugin cooked against this CARLA release, with a `carla-pack.json` manifest) into the running server without a restart. Its maps are listed by carla.Client.get_available_maps and loadable with carla.Client.load_world, and its catalogs (`Config/*.json`) are added to the blueprint library on the next episode. Raises a RuntimeError naming the reason when the path is not a pack, the pack was built for another base release or platform, or a pack of that name is already mounted.
+        Mounts a content pack (a content-only Unreal plugin cooked against this CARLA release, with a `carla-pack.json` manifest) into the running server without a restart. Its maps are listed by carla.Client.get_available_maps and loadable with carla.Client.load_world, and its vehicles, walkers, props and blueprints (`Config/*.json`) are in the blueprint library at once; an entry that overrides an existing blueprint takes effect at the next episode. Raises a RuntimeError naming the reason when the path is not a pack, the pack was built for another base release or platform, or a pack of that name is already mounted.
     # --------------------------------------
     - def_name: unmount_content_pack
       params:
@@ -449,7 +475,7 @@
     doc: >
       The traffic manager is a module built on top of the CARLA API in C++. It handles any group of vehicles set to autopilot mode to populate the simulation with realistic urban traffic conditions and give the chance to user to customize some behaviours. The architecture of the traffic manager is divided in five different goal-oriented stages and a PID controller where the information flows until eventually, a carla.VehicleControl is applied to every vehicle registered in a traffic manager.
 
-      In order to learn more, visit the [documentation](adv_traffic_manager.md) regarding this module.
+      In order to learn more, visit the [documentation](core_traffic_manager.md) regarding this module.
     # - PROPERTIES -------------------------
     instance_variables:
     # - METHODS ----------------------------
@@ -540,9 +566,9 @@
         doc: >
           Percentage difference between intended speed and the current limit.
       doc: >
-        Sets the difference the vehicle's intended speed and its current speed limit. Speed limits can be exceeded by setting the `perc` to a negative value.
+        Sets the difference between the vehicle's intended speed and its current speed limit. Speed limits can be exceeded by setting the `percentage` to a negative value.
 
-        Default is 30. Exceeding a speed limit can be done using negative percentages.
+        Default is 0, so vehicles drive at 100% of the speed limit.
     # --------------------------------------
     - def_name: global_lane_offset
       params:
@@ -618,9 +644,9 @@
         doc: >
           Percentage difference between intended speed and the current limit.
       doc: >
-        Sets the difference the vehicle's intended speed and its current speed limit. Speed limits can be exceeded by setting the `perc` to a negative value.
+        Sets the difference between the vehicle's intended speed and its current speed limit. Speed limits can be exceeded by setting the `percentage` to a negative value.
 
-        Default is 30. Exceeding a speed limit can be done using negative percentages.
+        Default is 0, so vehicles drive at 100% of the speed limit.
     # --------------------------------------
     - def_name: vehicle_lane_offset
       params:
@@ -656,7 +682,7 @@
       params:
       return: uint16
       doc: >
-        Returns the port where the Traffic Manager is connected. If the object is a TM-Client, it will return the port of its TM-Server. Read the [documentation](#adv_traffic_manager.md#multiclient-and-multitm-management) to learn the difference.
+        Returns the port where the Traffic Manager is connected. If the object is a TM-Client, it will return the port of its TM-Server. Read the [documentation](core_traffic_manager.md#running-multiple-traffic-managers) to learn the difference.
     # --------------------------------------
     - def_name: set_global_distance_to_leading_vehicle
       params:
@@ -695,7 +721,7 @@
       params:
       - param_name: r
         type: float
-        default: 50.0
+        default: 70.0
         param_units: meters
         doc: >
           New radius where physics are enabled.
@@ -710,7 +736,7 @@
         doc: >
           If __True__, the OSM mode is enabled.
       doc: >
-        Enables or disables the OSM mode. This mode allows the user to run TM in a map created with the [OSM feature](tuto_G_openstreetmap.md). These maps allow having dead-end streets. Normally, if vehicles cannot find the next waypoint, TM crashes. If OSM mode is enabled, it will show a warning, and destroy vehicles when necessary.
+        Enables or disables the OSM mode. This mode allows the user to run TM in a map created with the [OSM feature](content_authoring_maps_openstreetmap.md). These maps allow having dead-end streets. Normally, if vehicles cannot find the next waypoint, TM crashes. If OSM mode is enabled, it will show a warning, and destroy vehicles when necessary.
     # --------------------------------------
     - def_name: keep_slow_lane_rule_percentage
       params:
@@ -742,7 +768,7 @@
         doc: >
           If __True__, the TM synchronous mode is enabled.
       doc: >
-        Sets the Traffic Manager to [synchronous mode](adv_traffic_manager.md#synchronous-mode). In a [multiclient situation](adv_traffic_manager.md#multiclient), only the TM-Server can tick. Similarly, in a [multiTM situation](adv_traffic_manager.md#multitm), only one TM-Server must tick. Use this method in the client that does the world tick, and right after setting the world to synchronous mode, to set which TM will be the master while in sync.
+        Sets the Traffic Manager to [synchronous mode](core_traffic_manager.md#synchronous-mode). In a [multiclient situation](core_traffic_manager.md#multi-client-simulations), only the TM-Server can tick. Similarly, in a [multiTM situation](core_traffic_manager.md#multi-tm-simulations), only one TM-Server must tick. Use this method in the client that does the world tick, and right after setting the world to synchronous mode, to set which TM will be the master while in sync.
       warning: >
         If the server is set to synchronous mode, the TM <b>must</b> be set to synchronous mode too in the same client that does the tick.
     # --------------------------------------
@@ -780,7 +806,12 @@
       - param_name: path
         type: list
         doc: >
-          The list of carla.Locations for the actor to follow
+          The list of carla.Location for the actor to follow
+      - param_name: empty_buffer
+        type: bool
+        default: true
+        doc: >
+          If __True__, the vehicle's current waypoint buffer is cleared, so the new path is followed from the vehicle's position.
       doc: >
         Sets a list of locations for a vehicle to follow while controlled by the Traffic Manager. 
       warning: >
@@ -796,6 +827,11 @@
         type: list
         doc: >
           The list of route instructions (string) for the vehicle to follow.
+      - param_name: empty_buffer
+        type: bool
+        default: true
+        doc: >
+          If __True__, the vehicle's current waypoint buffer is cleared, so the new route is followed from the vehicle's position.
       doc: >
         Sets a list of route instructions for a vehicle to follow while controlled by the Traffic Manager. The possible route instructions are 'Left', 'Right', 'Straight'.
       warning: >

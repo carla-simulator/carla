@@ -30,7 +30,11 @@ ID_COLOR = '#00a6ed'
 TRUE_COLOR = '#99c635'
 FALSE_COLOR = '#f16c6c'
 
-IMAGE_DIR = '../img/catalogue'
+IMAGE_DIR = 'img/catalogue'
+
+# The pages show a thumbnail of every shot; the full image is one click away.
+THUMBNAIL_WIDTH = 720
+THUMBNAIL_QUALITY = 85
 WEBP_QUALITY = 90
 
 # Town10's own weather, read off a freshly loaded map; the captures start from
@@ -56,11 +60,23 @@ RUN_SERVER = os.path.join('Skills', 'ue58', 'run-carla-ue58-server', 'scripts', 
 
 
 def colored(col, text):
+    # Kept for headings; ids and flags render as plain Markdown so they copy
+    # cleanly and survive a dark theme.
     return '<span style="color:%s;">%s</span>' % (col, text)
 
 
+# Blueprints that only exist while a particular map is loaded.
+MAP_SPECIFIC = {
+    'vehicle.miningtruck.miningtruck': 'Mine_01',
+}
+
+
+def code(text):
+    return '`%s`' % text
+
+
 def boolean(value):
-    return colored(TRUE_COLOR if value else FALSE_COLOR, str(bool(value)))
+    return 'yes' if value else 'no'
 
 
 def attribute(blueprint, name, default=''):
@@ -88,6 +104,51 @@ def orbit(base, distance, bearing, height, pitch):
         carla.Rotation(pitch=pitch, yaw=yaw + 180))
 
 
+def frame_actor(actor, framing, resolution, fov):
+    """A camera that fits @actor's bounding box (or a list of actors) in the frame.
+
+    @framing: bearing (degrees off the actor's heading, 0 = in front), pitch
+    (degrees, negative looks down), fill (fraction of the shorter image side
+    the bounding sphere takes), min_distance (metres) and lift (metres the
+    camera is raised, which moves the subject down in the frame). Works for any size, so
+    one capture serves a can and a bus: below min_distance the camera stays
+    there and narrows its field of view instead, which keeps small props inside
+    the depth of field of the Cinematic profile (focused at 2.5 m).
+
+    Returns (transform, fov).
+    """
+    actors = actor if isinstance(actor, list) else [actor]
+    transform = actors[0].get_transform()
+    spheres = []
+    for each in actors:
+        box = each.bounding_box
+        extent = box.extent
+        spheres.append((each.get_transform().transform(box.location),
+                        math.sqrt(extent.x ** 2 + extent.y ** 2 + extent.z ** 2)))
+    centre = carla.Location(
+        sum(c.x for c, _ in spheres) / len(spheres),
+        sum(c.y for c, _ in spheres) / len(spheres),
+        sum(c.z for c, _ in spheres) / len(spheres))
+    radius = max(centre.distance(c) + r for c, r in spheres)
+    width, height = resolution
+    half_h = math.atan(math.tan(math.radians(fov) / 2.0) * min(width, height) / float(width))
+    fill = framing.get('fill', 0.8)
+    distance = radius / math.sin(half_h * fill)
+    minimum = framing.get('min_distance', 0.0)
+    if distance < minimum:
+        distance = minimum
+        half_h = math.asin(min(1.0, radius / distance)) / fill
+        fov = math.degrees(2.0 * math.atan(math.tan(half_h) * width / float(min(width, height))))
+    yaw = transform.rotation.yaw + framing.get('bearing', 35.0)
+    pitch = framing.get('pitch', -12.0)
+    horizontal = distance * math.cos(math.radians(pitch))
+    location = carla.Location(
+        centre.x + horizontal * math.cos(math.radians(yaw)),
+        centre.y + horizontal * math.sin(math.radians(yaw)),
+        centre.z - distance * math.sin(math.radians(pitch)) + framing.get('lift', 0.0))
+    return carla.Transform(location, carla.Rotation(pitch=pitch, yaw=yaw + 180)), fov
+
+
 def anchor(heading):
     # The same slug Python-Markdown's toc builds: punctuation goes, then every
     # run of spaces and hyphens collapses into one hyphen.
@@ -99,20 +160,33 @@ def anchor(heading):
 class Entry(object):
     """One catalogue actor: its blueprint, heading, image and detail bullets."""
 
-    def __init__(self, blueprint, heading, image, bullets, view=None):
+    def __init__(self, blueprint, heading, image, bullets, view=None, variants=None):
         self.blueprint = blueprint
         self.heading = heading
         self.image = image
         self.bullets = bullets
         self.view = view
+        # Copies of the same actor spawned with other attributes, as
+        # {attribute: value} dicts, photographed next to it in one more shot.
+        self.variants = variants or []
         self.subgroup = None
         self.capture = None
+
+    def page_image(self):
+        """The image the page shows: the actor and its variants together, if any."""
+        if not self.variants:
+            return self.image
+        return self.image.rsplit('.', 1)[0] + '_variants.webp'
+
+    def images(self):
+        """Every file a capture of this entry writes."""
+        return [self.image] + ([self.page_image()] if self.variants else [])
 
 
 class Overview(object):
     """The looping animation a catalogue opens with, one actor fading into the next."""
 
-    def __init__(self, image, hold_ms=1200, fade_steps=4, fade_ms=60, scale=1.0):
+    def __init__(self, image, hold_ms=1500, fade_steps=2, fade_ms=80, scale=1.0):
         self.image = image
         self.hold_ms = hold_ms
         self.fade_steps = fade_steps
@@ -124,8 +198,9 @@ class Capture(object):
     """Where and how a catalogue photographs its actors."""
 
     def __init__(self, town, actor, camera, resolution, weather, settle_ticks=60,
-                 camera_attributes=None, on_blueprint=None, on_spawn=None):
+                 camera_attributes=None, on_blueprint=None, on_spawn=None, framing=None):
         self.town = town
+        self.framing = framing
         self.actor = actor
         self.camera = camera
         self.resolution = resolution
@@ -135,8 +210,21 @@ class Capture(object):
         self.on_blueprint = on_blueprint
         self.on_spawn = on_spawn
 
-    def camera_for(self, entry):
-        """One camera for the whole catalogue, or one per entry.view."""
+    def camera_for(self, entry, actor=None):
+        """One camera for the whole catalogue, one per entry.view, or framed on the actor."""
+        if self.framing is not None and actor is not None:
+            first = actor[0] if isinstance(actor, list) else actor
+            framing = dict(self.framing, **PROP_FRAMING.get(first.type_id, {}))
+            if isinstance(actor, list):
+                # a group is wider: mirror the bearing so the foreground of
+                # the single shots does not cut into it
+                framing['bearing'] = -framing.get('bearing', 35.0)
+                # the group's bounding sphere is wider than tall: without a
+                # tighter fill the people are small over a lot of ground
+                framing['fill'] = framing.get('group_fill', framing.get('fill', 0.8))
+                framing['lift'] = framing.get('group_lift', 0.0)
+            return frame_actor(actor, framing, self.resolution,
+                               float(self.camera_attributes.get('fov', 90)))
         if isinstance(self.camera, dict):
             return self.camera[entry.view]
         return self.camera
@@ -151,7 +239,10 @@ class Capture(object):
                  'Town: %s' % self.town,
                  '',
                  'Actor transform: %s' % self.actor]
-        if isinstance(self.camera, dict):
+        if self.framing is not None:
+            lines += ['Camera: framed on each actor\'s bounding box, %s'
+                      % ', '.join('%s=%s' % item for item in sorted(self.framing.items()))]
+        elif isinstance(self.camera, dict):
             lines += ['Camera transform, %s: %s' % item for item in sorted(self.camera.items())]
         else:
             lines.append('Camera transform: %s' % self.camera)
@@ -186,11 +277,12 @@ def pedestrian_entries(library):
             group, kind = 'Adults', 'Adult'
 
         counters[kind] = counters.get(kind, 0) + 1
-        heading = '%s pedestrian %d' % (kind, counters[kind])
+        # The id is what a reader looks a pedestrian up by, so it leads the heading.
+        heading = '%s - %s pedestrian %d' % (blueprint.id.split('.')[-1], kind.lower(), counters[kind])
         name = blueprint.id.split('.')[-1]
 
         bullets = [
-            '__Blueprint ID__: ' + colored(ID_COLOR, blueprint.id),
+            '__Blueprint ID__: ' + code(blueprint.id),
             '__Age__: ' + age,
             '__Gender__: ' + attribute(blueprint, 'gender', 'unspecified'),
             '__Generation__: ' + attribute(blueprint, 'generation', '-1'),
@@ -199,24 +291,32 @@ def pedestrian_entries(library):
             bullets.append('__Special type__: ' + special)
         bullets.append('__Can use wheelchair__: ' + boolean(flag(blueprint, 'can_use_wheelchair')))
 
+        # A pedestrian that can sit in a wheelchair is also shown in it.
+        variants = []
+        if flag(blueprint, 'can_use_wheelchair'):
+            variants.append({'use_wheelchair': 'true'})
+
         groups[group].append(Entry(
             blueprint, heading,
-            '%s/pedestrians/pedestrian_%s.webp' % (IMAGE_DIR, name), bullets))
+            '%s/pedestrians/pedestrian_%s.webp' % (IMAGE_DIR, name), bullets,
+            variants=variants))
 
     return [(name, groups[name]) for name in order if groups[name]]
 
 
 PEDESTRIAN_OVERVIEW = Overview(
-    image='%s/pedestrians/pedestrians_overview.webp' % IMAGE_DIR)
+    image='%s/pedestrians/pedestrians_overview.webp' % IMAGE_DIR, scale=0.5)
 
 
 PEDESTRIAN_CAPTURE = Capture(
     town='Town10HD_Opt',
     actor=carla.Transform(carla.Location(x=-88.1, y=-73.6, z=1.0), carla.Rotation(yaw=90)),
-    camera=carla.Transform(carla.Location(x=-88.1, y=-70.8, z=1.55), carla.Rotation(pitch=-5, yaw=270)),
-    resolution=(1848, 1016),
-    weather=dict(TOWN10_WEATHER, sun_altitude_angle=50, sun_azimuth_angle=260,
-                 cloudiness=20, wetness=10))
+    camera=None,
+    framing={'bearing': 10.0, 'pitch': -4.0, 'fill': 0.95, 'group_fill': 1.45, 'group_lift': 0.15, 'min_distance': 2.5},
+    resolution=(1920, 1080),
+    weather=dict(TOWN10_WEATHER, sun_altitude_angle=45, sun_azimuth_angle=230,
+                 cloudiness=15, scattering_intensity=0, mie_scattering_scale=0.0),
+    camera_attributes={'post_process_profile': 'Cinematic', 'fov': 60})
 
 
 # ---------------------------------------------------------------------------
@@ -284,17 +384,20 @@ def vehicle_entries(library):
         special = attribute(blueprint, 'special_type')
 
         bullets = [
-            '__Blueprint ID__: ' + colored(ID_COLOR, blueprint.id),
+            '__Blueprint ID__: ' + code(blueprint.id),
             '__Base type__: ' + base,
         ]
         if special:
             bullets.append('__Special type__: ' + special)
+        generation = attribute(blueprint, 'generation', '-1')
         bullets += [
-            '__Generation__: ' + attribute(blueprint, 'generation', '-1'),
+            '__Generation__: ' + (generation if generation != '-1' else 'unspecified'),
             '__Number of wheels__: ' + attribute(blueprint, 'number_of_wheels', '-'),
             '__Has lights__: ' + boolean(flag(blueprint, 'has_lights')),
             '__Has opening doors__: ' + boolean(flag(blueprint, 'has_dynamic_doors')),
         ]
+        if blueprint.id in MAP_SPECIFIC:
+            bullets.append('__Available on__: %s only' % MAP_SPECIFIC[blueprint.id])
 
         groups[title].append(Entry(
             blueprint, VEHICLE_NAMES.get(blueprint.id, pretty_name(blueprint.id)),
@@ -313,9 +416,25 @@ def luminance(value):
     return 0.2126 * red + 0.7152 * green + 0.0722 * blue
 
 
+# Common colours for the models that would otherwise all come out white or
+# silver: white is the hardest paint to make look real, and a catalogue of
+# white cars hides the bodywork.
+VEHICLE_COLORS = {
+    'vehicle.mini.cooper': '150,8,10',        # red
+    'vehicle.nissan.patrol': '27,54,118',     # blue
+    'vehicle.ue4.ford.mustang': '78,17,17',   # burgundy
+    'vehicle.dodge.charger': '221,50,13',     # orange
+    'vehicle.ue4.audi.tt': '108,108,108',     # grey
+    'vehicle.ue4.mercedes.ccc': '28,51,83',   # dark blue
+}
+
+
 def pick_color(blueprint):
-    """Keeps the default colour unless it is too dark to read the bodywork."""
+    """The colour in VEHICLE_COLORS, else the default unless it is too dark to read the bodywork."""
     if not blueprint.has_attribute('color'):
+        return
+    if blueprint.id in VEHICLE_COLORS:
+        blueprint.set_attribute('color', VEHICLE_COLORS[blueprint.id])
         return
     recommended = list(blueprint.get_attribute('color').recommended_values)
     if not recommended:
@@ -333,36 +452,27 @@ def steer_wheels(actor):
     actor.apply_control(control)
 
 
-VEHICLE_OVERVIEW = Overview(image='%s/vehicles/vehicle_montage.webp' % IMAGE_DIR)
+# Half size: the montages are animations of every actor and must stay small.
+VEHICLE_OVERVIEW = Overview(image='%s/vehicles/vehicle_montage.webp' % IMAGE_DIR, scale=0.5)
 
-# The spot and the three framings the hand-made page recorded, kept as they
-# were; only the spawn height is raised so the vehicle drops onto the road.
-VEHICLE_SPOT = carla.Transform(carla.Location(x=-46.885479, y=20.083447, z=0.3),
-                               carla.Rotation(pitch=-0.000034, yaw=141.974243))
+# One spot for every vehicle, the camera framed on each one's bounding box so a
+# bike and a bus fill the frame alike: front three-quarter view, slightly above.
+VEHICLE_SPOT = carla.Transform(carla.Location(x=102.9, y=-20.0, z=0.3), carla.Rotation(yaw=90.0))
 
 VEHICLE_CAPTURE = Capture(
     town='Town10HD_Opt',
     actor=VEHICLE_SPOT,
-    camera={
-        'small': carla.Transform(
-            carla.Location(x=-47.696186, y=24.049326, z=1.471929),
-            carla.Rotation(pitch=-10.843717, yaw=-77.215683, roll=0.000139)),
-        'standard': carla.Transform(
-            carla.Location(x=-48.672256, y=24.830288, z=1.722733),
-            carla.Rotation(pitch=-13.396630, yaw=-75.692039, roll=0.000119)),
-        'large': carla.Transform(
-            carla.Location(x=-49.470921, y=27.835310, z=2.931721),
-            carla.Rotation(pitch=-13.396630, yaw=-75.691978, roll=0.000119)),
-    },
+    camera=None,
+    framing={'bearing': 40.0, 'pitch': -10.0, 'fill': 1.05, 'min_distance': 2.5},
     resolution=(1920, 1080),
-    # Town10's own weather, with the sun raised and turned so the junction is
-    # lit rather than in shadow, and the sky cleared. Every field is listed: the
-    # weather is built from scratch so a run never inherits the server's.
-    weather=dict(TOWN10_WEATHER, sun_altitude_angle=50, sun_azimuth_angle=350,
-                 cloudiness=0, scattering_intensity=0, mie_scattering_scale=0.0),
-    # The default profile auto-exposes until white paint clips and blooms into
-    # a halo; GoPro holds the highlights, and no weather setting can.
-    camera_attributes={'post_process_profile': 'GoPro'},
+    # Town10's own weather with the sun raised and the sky cleared. Every field
+    # is listed: the weather is built from scratch so a run never inherits the
+    # server's.
+    weather=dict(TOWN10_WEATHER, sun_altitude_angle=45, sun_azimuth_angle=230,
+                 cloudiness=15, scattering_intensity=0, mie_scattering_scale=0.0),
+    # Cinematic: the art look, no lens artefacts (the docs use AutomotiveHDR
+    # only for what a sensor sees).
+    camera_attributes={'post_process_profile': 'Cinematic', 'fov': 60},
     on_blueprint=pick_color,
     on_spawn=steer_wheels)
 
@@ -488,7 +598,7 @@ def prop_entries(library):
         name = blueprint.id.split('.', 2)[2]
         subtype = attribute(blueprint, 'subtype')
         bullets = [
-            '__Blueprint ID__: ' + colored(ID_COLOR, blueprint.id),
+            '__Blueprint ID__: ' + code(blueprint.id),
             '__Base type__: ' + base,
             '__Subtype__: ' + subtype,
             '__Size__: ' + attribute(blueprint, 'size', 'unknown'),
@@ -503,9 +613,63 @@ def prop_entries(library):
     return [(title, groups[title]) for _, title in PROP_GROUPS if groups[title]]
 
 
-# The props were photographed by hand, one scene each; nothing here reshoots them.
+# Props whose mesh lies down: the rotation (degrees) added at spawn to stand
+# them up. frame_actor places the camera relative to the actor's heading, so a
+# yaw here turns the camera too; PROP_FRAMING's bearing compensates for it.
+PROP_ROTATION = {
+    # the colour chart lies flat: stand it up, landscape, facing the heading
+    'static.prop.calibrator': {'yaw': -90.0, 'roll': 90.0},
+}
+
+# Per-prop framing that replaces the capture's defaults; `bearing` is measured
+# from the actor's heading, so 180 + the default shows a prop modelled back to front.
+PROP_FRAMING = {
+    'static.prop.vendingmachine': {'bearing': 215.0},
+    'static.prop.calibrator': {'bearing': 90.0, 'pitch': -5.0},
+}
+
+
+def ground_prop(actor):
+    """Sits a prop on the road: props have no physics, so they stay where spawned.
+
+    A plain ground projection can hit the prop itself, so the ray keeps only
+    road-like surfaces. The lowest point comes from the world-space vertices of
+    the bounding box, which stays right for a prop turned by PROP_ROTATION.
+    """
+    world = actor.get_world()
+    transform = actor.get_transform()
+    turn = PROP_ROTATION.get(actor.type_id)
+    if turn:
+        transform.rotation.yaw += turn.get('yaw', 0.0)
+        transform.rotation.pitch += turn.get('pitch', 0.0)
+        transform.rotation.roll += turn.get('roll', 0.0)
+        actor.set_transform(transform)
+        world.tick()
+        transform = actor.get_transform()
+    ground = (carla.CityObjectLabel.Roads, carla.CityObjectLabel.RoadLines,
+              carla.CityObjectLabel.Sidewalks, carla.CityObjectLabel.Ground,
+              carla.CityObjectLabel.Terrain)
+    hits = [h for h in world.cast_ray(transform.location + carla.Location(z=5.0),
+                                      transform.location - carla.Location(z=5.0))
+            if h.label in ground]
+    if hits:
+        lowest = min(v.z for v in actor.bounding_box.get_world_vertices(transform))
+        transform.location.z += hits[0].location.z - lowest + 0.01
+        actor.set_transform(transform)
+
+
+# Every prop on the open road the vehicles use (a plaza puts trees and walls
+# between the camera and the big props), framed on its bounding box.
 PROP_CAPTURE = Capture(
-    town='Town10HD_Opt', actor=None, camera=None, resolution=(1920, 1080), weather={})
+    town='Town10HD_Opt',
+    actor=carla.Transform(carla.Location(x=102.9, y=-20.0, z=0.5), carla.Rotation(yaw=90)),
+    camera=None,
+    framing={'bearing': 35.0, 'pitch': -15.0, 'fill': 0.85, 'min_distance': 2.5},
+    resolution=(1920, 1080),
+    weather=dict(TOWN10_WEATHER, sun_altitude_angle=45, sun_azimuth_angle=230,
+                 cloudiness=15, scattering_intensity=0, mie_scattering_scale=0.0),
+    camera_attributes={'post_process_profile': 'Cinematic', 'fov': 60},
+    on_spawn=ground_prop)
 
 
 CATALOGUES = {
@@ -513,7 +677,8 @@ CATALOGUES = {
                     [PEDESTRIAN_CAPTURE], PEDESTRIAN_OVERVIEW),
     'vehicles': ('Vehicle catalogue', vehicle_entries,
                  [VEHICLE_CAPTURE, MINE_CAPTURE], VEHICLE_OVERVIEW),
-    'props': ('Props catalogue', prop_entries, [PROP_CAPTURE], None),
+    'props': ('Props catalogue', prop_entries, [PROP_CAPTURE],
+              Overview(image='%s/props/props_overview.webp' % IMAGE_DIR, hold_ms=1000, fade_steps=0, scale=0.4)),
 }
 
 SCRIPT_NAME = 'PythonAPI/docs/catalogue_doc_gen.py'
@@ -545,8 +710,10 @@ def render(title, groups, capture):
         for entry in entries:
             out += ['### ' + entry.heading, '']
             if entry.image:
-                out += ['![%s](%s)' % (os.path.basename(entry.image).rsplit('.', 1)[0],
-                                       entry.image), '']
+                # The page loads the thumbnail; the lightbox in Docs/extra.js
+                # swaps _thumb.webp for the full shot when it is clicked.
+                base = entry.page_image().rsplit('.', 1)[0]
+                out += ['![%s](%s_thumb.webp)' % (os.path.basename(base), base), '']
             out += ['* ' + bullet for bullet in entry.bullets]
             out.append('')
 
@@ -613,12 +780,26 @@ def save_image(image, path):
     from PIL import Image
     frame = Image.frombuffer('RGBA', (image.width, image.height),
                              image.raw_data, 'raw', 'BGRA', 0, 1)
-    frame.convert('RGB').save(path, 'WEBP', quality=WEBP_QUALITY, method=6)
+    frame = frame.convert('RGB')
+    frame.save(path, 'WEBP', quality=WEBP_QUALITY, method=6)
+    save_thumbnail(frame, path)
+
+
+def save_thumbnail(frame, path, width=THUMBNAIL_WIDTH):
+    """Writes the <name>_thumb.webp the catalogue pages actually load."""
+    from PIL import Image
+    if frame.width <= width:
+        return
+    height = round(frame.height * width / frame.width)
+    thumb = frame.resize((width, height), Image.LANCZOS)
+    thumb.save(path[:-len('.webp')] + '_thumb.webp', 'WEBP',
+               quality=THUMBNAIL_QUALITY, method=6)
 
 
 def prepare(client, capture):
     """Puts the world in the state every shot is taken in."""
-    world = client.load_world_if_different(capture.town)
+    # an older carla wheel returns None when the map is already loaded
+    world = client.load_world_if_different(capture.town) or client.get_world()
 
     settings = world.get_settings()
     original = (world.get_settings(), world.get_weather())
@@ -673,21 +854,46 @@ def photograph(client, capture, entries, out_dir):
     library = world.get_blueprint_library()
     try:
         for entry in entries:
-            blueprint = library.find(entry.blueprint.id)
-            if capture.on_blueprint is not None:
-                capture.on_blueprint(blueprint)
-            actor = world.try_spawn_actor(blueprint, capture.actor)
-            if actor is None:
-                print('  %s: could not spawn' % entry.blueprint.id)
-                continue
-            if capture.on_spawn is not None:
-                capture.on_spawn(actor)
-            image = shoot(world, camera_bp, capture.camera_for(entry), capture.settle_ticks)
-            if image is not None:
-                save_image(image, os.path.join(out_dir, entry.image.replace('../', '')))
-                print('  %s -> %s' % (entry.blueprint.id, os.path.basename(entry.image)))
-            actor.destroy()
-            world.tick()
+            # The actor alone, then (if it has variants) the actor with its
+            # variants beside it, 0.9 m apart to its right, in one shot.
+            shots = [(entry.image, [{}])]
+            if entry.variants:
+                shots.append((entry.page_image(), [{}] + entry.variants))
+            for path, group in shots:
+                actors = []
+                for k, attributes in enumerate(group):
+                    blueprint = library.find(entry.blueprint.id)
+                    if capture.on_blueprint is not None:
+                        capture.on_blueprint(blueprint)
+                    for key, value in attributes.items():
+                        blueprint.set_attribute(key, value)
+                    spot = carla.Transform(capture.actor.location, capture.actor.rotation)
+                    right = spot.get_right_vector()
+                    spot.location += carla.Location(x=right.x * 0.9 * k, y=right.y * 0.9 * k)
+                    actor = world.try_spawn_actor(blueprint, spot)
+                    if actor is None:
+                        print('  %s: could not spawn' % entry.blueprint.id)
+                        break
+                    actors.append(actor)
+                if len(actors) == len(group):
+                    # the transform reads (0, 0, 0) until the world has ticked once
+                    world.tick()
+                    if capture.on_spawn is not None:
+                        for actor in actors:
+                            capture.on_spawn(actor)
+                    for _ in range(10):  # let a dropped vehicle land before framing it
+                        world.tick()
+                    view = capture.camera_for(entry, actors if len(actors) > 1 else actors[0])
+                    if isinstance(view, tuple):
+                        view, fov = view
+                        camera_bp.set_attribute('fov', '%.2f' % fov)
+                    image = shoot(world, camera_bp, view, capture.settle_ticks)
+                    if image is not None:
+                        save_image(image, os.path.join(out_dir, path.replace('../', '')))
+                        print('  %s -> %s' % (entry.blueprint.id, os.path.basename(path)))
+                for actor in actors:
+                    actor.destroy()
+                world.tick()
     finally:
         restore(world, original)
 
@@ -715,7 +921,7 @@ def build_overview(overview, entries, out_dir):
 
     path = os.path.join(out_dir, overview.image.replace('../', ''))
     frames[0].save(path, save_all=True, append_images=frames[1:],
-                   duration=durations, loop=0, quality=80, method=4)
+                   duration=durations, loop=0, quality=60, method=4)
     print('  %d actors, %d frames -> %s (%.1f MB)'
           % (len(shots), len(frames), os.path.basename(overview.image),
              os.path.getsize(path) / 1048576.0))
@@ -733,6 +939,12 @@ def main():
     parser.add_argument('--out-dir', default=os.path.normpath(docs_dir))
     parser.add_argument('--recapture', action='store_true',
                         help='photograph every actor, not only the ones without an image')
+    parser.add_argument('--towns', nargs='+',
+                        help='only use the captures on these maps (an editor PIE session cannot '
+                             'switch maps); actors registered on other maps are left out')
+    parser.add_argument('--images-only', action='store_true',
+                        help='photograph, but do not rewrite the pages or the overview '
+                             '(use with --towns, so a partial run does not drop entries)')
     args = parser.parse_args()
 
     client, started = ensure_server(args.host, args.port, root)
@@ -746,9 +958,11 @@ def main():
             # A catalogue can span several maps: an actor only registered on
             # its own map is collected, and later shot, on that map.
             groups, seen = [], set()
+            if args.towns:
+                captures = [c for c in captures if c.town in args.towns]
             for capture in captures:
-                library = client.load_world_if_different(
-                    capture.town).get_blueprint_library()
+                library = (client.load_world_if_different(capture.town)
+                           or client.get_world()).get_blueprint_library()
                 for group_title, found in collect(library):
                     fresh = []
                     for entry in found:
@@ -778,7 +992,8 @@ def main():
                     lambda image: not os.path.isfile(
                         os.path.join(args.out_dir, image.replace('../', ''))))
                 missing = [entry for entry in entries
-                           if entry.capture is capture and gone(entry.image)]
+                           if entry.capture is capture
+                           and any(gone(image) for image in entry.images())]
                 if not missing:
                     continue
                 if capture.actor is None:
@@ -792,6 +1007,8 @@ def main():
                 print('  photographing %d actor(s) on %s' % (len(missing), capture.town))
                 photograph(client, capture, missing, args.out_dir)
 
+            if args.images_only:
+                continue
             path = os.path.join(args.out_dir, 'catalogue_%s.md' % name)
             with open(path, 'w') as md_file:
                 md_file.write(render(title, groups, captures[0]) + '\n')

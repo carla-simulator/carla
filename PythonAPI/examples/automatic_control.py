@@ -811,8 +811,8 @@ def main():
         '--filter', metavar='PATTERN', default='vehicle.*',
         help='Actor filter (default: "vehicle.*")')
     argparser.add_argument(
-        '--generation', metavar='G', default='All',
-        help='restrict to certain actor generation (values: "2","3","All" - default: "All")')
+        '--generation', metavar='G', default='3',
+        help='restrict to certain actor generation (values: "1","2","3","All" - default: "3")')
     argparser.add_argument(
         '-l', '--loop', action='store_true', dest='loop',
         help='Sets a new random destination upon reaching the previous one (default: False)')

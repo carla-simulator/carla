@@ -45,7 +45,7 @@
 ```
 
 Scenario triggers live in `data/all_towns_traffic_scenarios_public.json`, passed as
-`--scenarios`. `scenario_runner.py` on `master`/`ue5-master` has no `--scenarios`
+`--scenarios`. `scenario_runner.py` on `master`/`ue5-master`/`ue58-dev` has no `--scenarios`
 flag, so 1.0 route files are only usable on the `leaderboard-1.0` branch.
 
 ## What `RouteScenario` builds

@@ -35,4 +35,8 @@ class CARLATOOLS_API UCarlaLargeMapConvertCommandlet
 public:
 
   virtual void OnWorldLoaded(UWorld* World) override;
+
+  /// Runs the stock conversion, then renames the map's sidecar files to match
+  /// when -ConversionSuffix made a copy under a new name.
+  virtual int32 Main(const FString& Params) override;
 };

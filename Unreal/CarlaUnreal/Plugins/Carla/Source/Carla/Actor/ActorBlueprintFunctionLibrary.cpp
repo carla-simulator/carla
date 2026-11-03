@@ -1254,9 +1254,10 @@ void UActorBlueprintFunctionLibrary::MakeRayTracedLensCameraDefinition(
   EnableDenoiser.RecommendedValues = {TEXT("true")};
   EnableDenoiser.bRestrictToRecommended = false;
 
-  // Exposure. "auto" = the sensor's pinned daylight histogram (EV100 10-12);
-  // "manual" = the physical camera of the loaded post_process_profile plus
-  // exposure_compensation (EV), deterministic frame to frame (compositing).
+  // Exposure. "auto" = the post_process_profile's auto exposure, its upper end
+  // capped by carla.RTLens.MaxAutoExposureEV; "manual" = the physical camera of
+  // the profile, deterministic frame to frame (compositing).
+  // exposure_compensation (EV) adds to the profile's bias.
   FActorVariation RTExposureMode;
   RTExposureMode.Id = TEXT("exposure_mode");
   RTExposureMode.Type = EActorAttributeType::String;
@@ -2046,6 +2047,15 @@ void UActorBlueprintFunctionLibrary::MakeBlueprintDefinition(
   FillIdAndTags(Definition, TEXT("blueprint"), Parameters.Name);
   AddRecommendedValuesForActorRoleName(Definition, {TEXT("blueprint")});
 
+  // The catalog stores the blueprint's class path; an asset path is accepted
+  // too by appending the generated-class suffix (see MakeVehicleDefinition).
+  FString ClassPath = Parameters.Path;
+  if (!ClassPath.IsEmpty() && !ClassPath.EndsWith(TEXT("_C")))
+  {
+    ClassPath += TEXT("_C");
+  }
+  Definition.Class = LoadClass<AActor>(nullptr, *ClassPath);
+
   // Definition.Attributes.Emplace(FActorAttribute{
   //   EActorAttributeType::String,
   //   Parameters.ObjectType});
@@ -2321,10 +2331,9 @@ void UActorBlueprintFunctionLibrary::SetCamera(
         Description.Variations,
         TEXT(""));
 
-    // Post-process profiles are camera presets (Default, GoPro,
-    // ...), not per-map looks. Empty or the legacy lowercase "default" means
-    // no preference: the active profile (carla.PostProcess.Profile), the same
-    // one the sky rig loads for the viewport.
+    // Post-process profiles are camera presets (AutomotiveHDR, GoPro, ...),
+    // not per-map looks. Empty or "Default" means no preference: the sensor
+    // default (carla.PostProcess.Profile).
     PostProcessProfileName = UPostProcessJsonUtils::ResolveProfileName(PostProcessProfileName);
 
     UPostProcessJsonUtils::LoadAllPostProcessFromJsonToSceneCapture(

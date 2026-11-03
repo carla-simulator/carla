@@ -82,7 +82,6 @@ on every re-configure or they revert to the default.**
 | `ENABLE_ROS2` | **OFF** | native ROS 2 |
 | `ENABLE_ROS2_DEMO` | OFF | |
 | `ENABLE_RSS` | **OFF** | ad-rss-lib; why `sensor.other.rss` and the `Rss*` classes are absent |
-| `ENABLE_OSM2ODR` | **OFF** | |
 | `ENABLE_PYTORCH` | **OFF** | |
 | `ENABLE_PEP517` | ON | wheel build path |
 | `ENABLE_STREETMAP` | ON | fetches the StreetMap plugin (`ue5-dev-carla` tag) |

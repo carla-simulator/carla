@@ -2,7 +2,7 @@
 name: create-scenario
 description: Writes a new ScenarioRunner scenario — a Python class deriving from BasicScenario with its behaviour tree assembled from srunner atomic behaviours and criteria, plus the XML config that gives it a town, ego spawn and parameters — and registers it so `--scenario MyScenario_1` works. Also covers adding a scenario to a route via --additionalScenario. Generates a working skeleton and validates it without a simulator. Use when the user asks to "create/write a new scenario", "add a custom scenario", "make my own traffic situation", or wants to extend the scenario library.
 license: MIT
-compatibility: Any OS with a scenario_runner checkout; a running CARLA server only to execute the result. Behaviour/criteria APIs are py_trees 0.8 based and identical across master and ue5-master; module paths differ on the leaderboard-1.0 branch.
+compatibility: Any OS with a scenario_runner checkout; a running CARLA server only to execute the result. Behaviour/criteria APIs are py_trees 0.8 based and identical across master, ue5-master and ue58-dev; module paths differ on the leaderboard-1.0 branch.
 metadata:
   group: scenario-runner
   prerequisites: scripts/check_env.sh

@@ -185,7 +185,7 @@ def get_actor_blueprints(world, filter, generation):
     try:
         int_generation = int(generation)
         # Check if generation is in available generations
-        if int_generation in [1, 2, 3, 4]:
+        if int_generation in [1, 2, 3]:
             bps = [x for x in bps if int(x.get_attribute('generation')) == int_generation]
             return bps
         else:
@@ -1097,7 +1097,7 @@ class RadarSensor(object):
 
 
 class CameraManager(object):
-    def __init__(self, parent_actor, hud, gamma_correction, post_process_profile='Default'):
+    def __init__(self, parent_actor, hud, gamma_correction, post_process_profile='default'):
         self.sensor = None
         self.surface = None
         self._parent = parent_actor
@@ -1367,8 +1367,8 @@ def main():
         '--filter', metavar='PATTERN', default='vehicle.*',
         help='actor filter (default: "vehicle.*")')
     argparser.add_argument(
-        '--generation', metavar='G', default='All',
-        help='restrict to certain actor generation (values: "2","3","All" - default: "All")')
+        '--generation', metavar='G', default='3',
+        help='restrict to certain actor generation (values: "1","2","3","All" - default: "3")')
     argparser.add_argument(
         '--rolename', metavar='NAME', default='hero',
         help='actor role name (default: "hero")')
@@ -1376,10 +1376,11 @@ def main():
         '--gamma', default=1.0, type=float,
         help='Gamma correction of the camera (default: 1.0)')
     argparser.add_argument(
-        '--post-process-profile', metavar='NAME', default='Default',
+        '--post-process-profile', metavar='NAME', default='default',
         help='camera post-process profile to load, i.e. a file name (without '
              '.json) under Unreal/CarlaUnreal/Content/Carla/Config/PostProcess/ '
-             '-- e.g. "Default" or "GoPro" (default: "Default")')
+             '-- e.g. "Cinematic" or "GoPro". "default" follows the server '
+             '(default: "default")')
     argparser.add_argument(
         '--sync', action='store_true',
         help='Activate synchronous mode execution')

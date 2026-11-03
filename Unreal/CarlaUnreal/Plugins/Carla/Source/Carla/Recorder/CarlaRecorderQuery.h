@@ -17,6 +17,9 @@
 #include "CarlaRecorderLightVehicle.h"
 #include "CarlaRecorderAnimWalker.h"
 #include "CarlaRecorderAnimVehicle.h"
+#include "CarlaRecorderAnimVehicleWheels.h"
+#include "CarlaRecorderAnimBiker.h"
+#include "CarlaRecorderVisualTime.h"
 #include "CarlaRecorderCollision.h"
 #include "CarlaRecorderEventAdd.h"
 #include "CarlaRecorderEventDel.h"
@@ -63,6 +66,9 @@ private:
   CarlaRecorderStateTrafficLight StateTraffic;
   CarlaRecorderAnimVehicle Vehicle;
   CarlaRecorderAnimWalker Walker;
+  CarlaRecorderAnimWheels VehicleWheels;
+  CarlaRecorderAnimBiker Biker;
+  CarlaRecorderVisualTime VisualTime;
   CarlaRecorderLightVehicle LightVehicle;
   CarlaRecorderLightScene LightScene;
   CarlaRecorderKinematics Kinematics;
