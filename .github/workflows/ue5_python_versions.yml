@@ -1,0 +1,27 @@
+name: UE5-Python-Versions
+
+# TEMPORARY, remove before opening the PR. Builds and tests the Python API for
+# Python 3.10 to 3.15 the way UE5-Release does, without uploading anything: no
+# secrets are passed and every upload input is off.
+
+on:
+  push:
+    branches:
+      - PabloVD/python-3.13-3.15
+  workflow_dispatch:
+
+concurrency:
+  group: python-versions-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ubuntu-python-versions:
+    name: Ubuntu Python 3.10-3.15
+    uses: ./.github/workflows/_ci-ubuntu.yml
+    with:
+      python-versions: "3.10,3.11,3.12,3.13,3.14,3.15"
+      smoke-test-python-versions: "3.10,3.11,3.12,3.13,3.14,3.15"
+      additional-maps: false
+      upload-package: false
+      upload-replace-latest: false
+      upload-docker: false
