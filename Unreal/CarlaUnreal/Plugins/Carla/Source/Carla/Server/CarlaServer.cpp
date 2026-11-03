@@ -219,6 +219,10 @@ public:
 
   std::atomic_size_t TickCuesReceived { 0u };
 
+  /// Set once, when the engine starts as a Multi-GPU secondary; read by RPC
+  /// handlers, which may already be serving then.
+  std::atomic_bool bIsSecondaryServer { false };
+
 private:
 
   void BindActions();
@@ -251,6 +255,14 @@ private:
     if (!GameMode) \
     { \
       RESPOND_ERROR("unable to find CARLA game mode"); \
+    }
+
+// A Multi-GPU secondary only mirrors the primary: a call that would change its
+// world (or that only the primary can answer) would make it diverge.
+#define REQUIRE_PRIMARY_SERVER() \
+    if (bIsSecondaryServer) \
+    { \
+      RESPOND_ERROR("this is a Multi-GPU secondary server: it mirrors the primary and answers read-only calls only; send this call to the primary server"); \
     }
 
 static std::vector<std::string> MakeStringVector(const TArray<FString> &Names)
@@ -371,6 +383,7 @@ void FCarlaServer::FPimpl::BindActions()
   /// Add a new Traffic Manager running on <IP, port>
   BIND_SYNC(add_traffic_manager_running) << [this] (std::pair<std::string, uint16_t> trafficManagerInfo) ->R<bool>
   {
+    REQUIRE_PRIMARY_SERVER();
     uint16_t port = trafficManagerInfo.second;
     auto it = TrafficManagerInfo.find(port);
     if(it == TrafficManagerInfo.end()) {
@@ -384,6 +397,7 @@ void FCarlaServer::FPimpl::BindActions()
 
   BIND_SYNC(destroy_traffic_manager) << [this] (uint16_t port) ->R<bool>
   {
+    REQUIRE_PRIMARY_SERVER();
     auto it = TrafficManagerInfo.find(port);
     if(it != TrafficManagerInfo.end()) {
       TrafficManagerInfo.erase(it);
@@ -401,6 +415,7 @@ void FCarlaServer::FPimpl::BindActions()
 
   BIND_SYNC(tick_cue) << [this]() -> R<uint64_t>
   {
+    REQUIRE_PRIMARY_SERVER();
     TRACE_CPUPROFILER_EVENT_SCOPE(TickCueReceived);
     auto Current = FCarlaEngine::GetFrameCounter();
     (void)TickCuesReceived.fetch_add(1, std::memory_order_release);
@@ -436,6 +451,7 @@ void FCarlaServer::FPimpl::BindActions()
   BIND_SYNC(load_new_episode) << [this](const std::string &map_name, const bool reset_settings, cr::MapLayer MapLayers) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
+    REQUIRE_PRIMARY_SERVER();
 
     UCarlaGameInstance* GameInstance = UCarlaStatics::GetGameInstance(Episode->GetWorld());
     if (!GameInstance)
@@ -498,6 +514,7 @@ void FCarlaServer::FPimpl::BindActions()
 
   BIND_SYNC(unmount_content_pack) << [this](const std::string &name) -> R<bool>
   {
+    REQUIRE_PRIMARY_SERVER();
     CARLA_ENSURE_GAME_THREAD();
     UCarlaContentPackManager *ContentPacks = UCarlaContentPackManager::Get();
     if (ContentPacks == nullptr)
@@ -517,6 +534,7 @@ void FCarlaServer::FPimpl::BindActions()
   BIND_SYNC(load_map_layer) << [this](cr::MapLayer MapLayers) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
+    REQUIRE_PRIMARY_SERVER();
 
     ACarlaGameModeBase* GameMode = UCarlaStatics::GetGameMode(Episode->GetWorld());
     if (!GameMode)
@@ -531,6 +549,7 @@ void FCarlaServer::FPimpl::BindActions()
   BIND_SYNC(unload_map_layer) << [this](cr::MapLayer MapLayers) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
+    REQUIRE_PRIMARY_SERVER();
 
     ACarlaGameModeBase* GameMode = UCarlaStatics::GetGameMode(Episode->GetWorld());
     if (!GameMode)
@@ -545,6 +564,7 @@ void FCarlaServer::FPimpl::BindActions()
   BIND_SYNC(copy_opendrive_to_file) << [this](const std::string &opendrive, cr::OpendriveGenerationParameters Params) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
+    REQUIRE_PRIMARY_SERVER();
     if (!Episode->LoadNewOpendriveEpisode(cr::ToLongFString(opendrive), Params))
     {
       RESPOND_ERROR("opendrive could not be correctly parsed");
@@ -558,6 +578,7 @@ void FCarlaServer::FPimpl::BindActions()
     const cr::TextureColor& Texture) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
+    REQUIRE_PRIMARY_SERVER();
     ::ApplyTextureToActor(Episode, ActorId, MaterialParameter, Texture);
     return R<void>::Success();
   };
@@ -568,6 +589,7 @@ void FCarlaServer::FPimpl::BindActions()
     const cr::TextureFloatColor& Texture) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
+    REQUIRE_PRIMARY_SERVER();
     ::ApplyTextureToActor(Episode, ActorId, MaterialParameter, Texture);
     return R<void>::Success();
   };
@@ -578,6 +600,7 @@ void FCarlaServer::FPimpl::BindActions()
       const cr::TextureColor& Texture) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
+    REQUIRE_PRIMARY_SERVER();
     ACarlaGameModeBase* GameMode = UCarlaStatics::GetGameMode(Episode->GetWorld());
     if (!GameMode)
     {
@@ -616,6 +639,7 @@ void FCarlaServer::FPimpl::BindActions()
       const cr::TextureFloatColor& Texture) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
+    REQUIRE_PRIMARY_SERVER();
     ACarlaGameModeBase* GameMode = UCarlaStatics::GetGameMode(Episode->GetWorld());
     if (!GameMode)
     {
@@ -695,6 +719,12 @@ void FCarlaServer::FPimpl::BindActions()
   BIND_SYNC(get_navigation_mesh) << [this]() -> R<std::vector<uint8_t>>
   {
     REQUIRE_CARLA_EPISODE();
+    // A Multi-GPU secondary builds no navigation mesh for a world generated
+    // from OpenDRIVE; the one in a shared Saved/ folder can be another run's.
+    if (bIsSecondaryServer && Episode->GetMapName().Equals(TEXT("OpenDriveMap"), ESearchCase::IgnoreCase))
+    {
+      return std::vector<uint8_t>{};
+    }
     // A generated OpenDRIVE world builds its navmesh in the background.
     UCarlaEpisode::WaitForPendingNavigationBuild(60.0);
     auto FileContents = FNavigationMesh::Load(Episode->GetMapName());
@@ -747,10 +777,12 @@ void FCarlaServer::FPimpl::BindActions()
         // may still be running (bounded wait, logs on failure).
         UCarlaEpisode::WaitForPendingNavigationBuild(60.0);
       }
-      const FString SavedXODR = SavedDir / TEXT("OpenDrive") / (Episode->GetMapName() + TEXT(".xodr"));
+      // Where this server keeps the xodr: a Multi-GPU secondary has its own
+      // folder, and builds no navigation mesh.
+      const FString SavedXODR = UOpenDrive::GetSavedXODRPath(Episode->GetMapName());
       const FString SavedNav = SavedDir / TEXT("Nav") / (Episode->GetMapName() + TEXT(".bin"));
       if (bWantXODR && IFileManager::Get().FileExists(*SavedXODR)) Files.Add(SavedXODR);
-      if (bWantNav && IFileManager::Get().FileExists(*SavedNav)) Files.Add(SavedNav);
+      if (bWantNav && !bIsSecondaryServer && IFileManager::Get().FileExists(*SavedNav)) Files.Add(SavedNav);
     }
 
     // Remove the start of the path until the content folder and put each file
@@ -767,7 +799,12 @@ void FCarlaServer::FPimpl::BindActions()
     std::vector<std::string> result;
     for (auto File : Files) {
       File = FPaths::ConvertRelativePathToFull(File);
-      if (File.StartsWith(SavedDir))
+      if (File.StartsWith(SavedDir) && File.EndsWith(TEXT(".xodr")))
+      {
+        // Under its conventional name, whatever folder this server keeps it in.
+        File = TEXT("Carla/Maps/OpenDrive") / FPaths::GetCleanFilename(File);
+      }
+      else if (File.StartsWith(SavedDir))
       {
         File.RemoveFromStart(SavedDir);
         File = TEXT("Carla/Maps") / File;
@@ -839,8 +876,17 @@ void FCarlaServer::FPimpl::BindActions()
                (SavedRelative.StartsWith(TEXT("OpenDrive/")) || SavedRelative.StartsWith(TEXT("Nav/"))))
       {
         const FString SavedDir = FPaths::ConvertRelativePathToFull(FPaths::ProjectSavedDir()) / TEXT("");
-        const FString SavedPath = FPaths::ConvertRelativePathToFull(SavedDir / SavedRelative);
-        if (SavedPath.StartsWith(SavedDir) && IFileManager::Get().FileExists(*SavedPath))
+        // The xodr from where this server keeps it (a Multi-GPU secondary has
+        // a folder of its own); a secondary builds no navigation mesh, and the
+        // one in a shared Saved/ folder can be another run's.
+        const bool bOwnXODR = bIsSecondaryServer &&
+            (FPaths::GetPath(SavedRelative) == TEXT("OpenDrive")) &&
+            FPaths::GetExtension(SavedRelative).Equals(TEXT("xodr"), ESearchCase::IgnoreCase);
+        const FString SavedPath = bOwnXODR ?
+            UOpenDrive::GetSavedXODRPath(FPaths::GetBaseFilename(SavedRelative)) :
+            FPaths::ConvertRelativePathToFull(SavedDir / SavedRelative);
+        if (SavedPath.StartsWith(SavedDir) && IFileManager::Get().FileExists(*SavedPath) &&
+            !(bIsSecondaryServer && SavedRelative.StartsWith(TEXT("Nav/"))))
         {
           path = SavedPath;
         }
@@ -866,6 +912,7 @@ void FCarlaServer::FPimpl::BindActions()
       const cr::EpisodeSettings &settings) -> R<uint64_t>
   {
     REQUIRE_CARLA_EPISODE();
+    REQUIRE_PRIMARY_SERVER();
     Episode->ApplySettings(settings);
     StreamingServer.SetSynchronousMode(settings.synchronous_mode);
 
@@ -950,6 +997,7 @@ void FCarlaServer::FPimpl::BindActions()
   BIND_SYNC(enable_environment_objects) << [this](std::vector<uint64_t> EnvObjectIds, bool Enable) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
+    REQUIRE_PRIMARY_SERVER();
     ACarlaGameModeBase* GameMode = UCarlaStatics::GetGameMode(Episode->GetWorld());
     if (!GameMode)
     {
@@ -984,6 +1032,7 @@ void FCarlaServer::FPimpl::BindActions()
       const cr::WeatherParameters &weather) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
+    REQUIRE_PRIMARY_SERVER();
     auto *Weather = Episode->GetWeather();
     if (Weather == nullptr)
     {
@@ -1001,6 +1050,7 @@ void FCarlaServer::FPimpl::BindActions()
       const cr::TextureFloatColor &panorama, float intensity, int32_t face_size) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
+    REQUIRE_PRIMARY_SERVER();
     if (panorama.GetWidth() < 2 || panorama.GetHeight() < 2)
     {
       RESPOND_ERROR("set_sky_light_map: panorama must be at least 2x2");
@@ -1024,6 +1074,7 @@ void FCarlaServer::FPimpl::BindActions()
   BIND_SYNC(clear_sky_light_map) << [this]() -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
+    REQUIRE_PRIMARY_SERVER();
     AWeather::ClearSkyLightMap(Episode->GetWorld());
     return R<void>::Success();
   };
@@ -1046,6 +1097,7 @@ void FCarlaServer::FPimpl::BindActions()
   BIND_SYNC(set_imu_gravity) << [this](float new_imu_gravity) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
+    REQUIRE_PRIMARY_SERVER();
     REQUIRE_CARLA_GAME_MODE()
     GameMode->IMUSensorGravity = new_imu_gravity;
     return R<void>::Success();
@@ -1068,6 +1120,7 @@ void FCarlaServer::FPimpl::BindActions()
   {
     #if defined(WITH_ROS2)
     REQUIRE_CARLA_EPISODE();
+    REQUIRE_PRIMARY_SERVER();
     auto ROS2 = carla::ros2::ROS2::GetInstance();
     if (ROS2 && ROS2->IsEnabled()) {
       ROS2->SetPublishTF(publish_tf);
@@ -1125,6 +1178,7 @@ void FCarlaServer::FPimpl::BindActions()
       const cr::Transform &Transform) -> R<cr::Actor>
   {
     REQUIRE_CARLA_EPISODE();
+    REQUIRE_PRIMARY_SERVER();
 
     auto Result = Episode->SpawnActorWithInfo(Transform, std::move(Description));
 
@@ -1150,6 +1204,7 @@ void FCarlaServer::FPimpl::BindActions()
       cr::AttachmentType InAttachmentType) -> R<cr::Actor>
   {
     REQUIRE_CARLA_EPISODE();
+    REQUIRE_PRIMARY_SERVER();
 
     auto Result = Episode->SpawnActorWithInfo(Transform, std::move(Description));
     if (Result.Key != EActorSpawnResultStatus::Success)
@@ -1174,31 +1229,7 @@ void FCarlaServer::FPimpl::BindActions()
     CarlaActor->SetAttachmentType(InAttachmentType);
     ParentCarlaActor->AddChildren(CarlaActor->GetActorId());
 
-    #if defined(WITH_ROS2)
-    auto ROS2 = carla::ros2::ROS2::GetInstance();
-    if (ROS2->IsEnabled())
-    {
-      FCarlaActor* CurrentActor = ParentCarlaActor;
-      while(CurrentActor)
-      {
-        for (const auto &Attr : CurrentActor->GetActorInfo()->Description.Variations)
-        {
-          if (Attr.Key == "ros_name")
-          {
-            ROS2->AddActorParentRosName(static_cast<void*>(CarlaActor->GetActor()), static_cast<void*>(CurrentActor->GetActor()));
-          }
-          // NOTE: tier4 also propagated each ancestor's ros_topic_name onto the
-          // child here, but their AddActorRosTopicName used map::insert, so the
-          // dispatcher's earlier per-actor registration (own override or "")
-          // always won and the call was a no-op. Our AddActorRosTopicName is
-          // insert_or_assign (re-registration idempotency), which made the
-          // propagation live and clobbered every attached sensor's own
-          // ros_topic_name with its ancestor's — so it is dropped entirely.
-        }
-        CurrentActor = Episode->FindCarlaActor(CurrentActor->GetParent());
-      }
-    }
-    #endif
+    Episode->AddRosParentNames(*CarlaActor);
 
     // Only is possible to attach if the actor has been really spawned and
     // is not in dormant state
@@ -1220,6 +1251,7 @@ void FCarlaServer::FPimpl::BindActions()
   BIND_SYNC(destroy_actor) << [this](cr::ActorId ActorId) -> R<bool>
   {
     REQUIRE_CARLA_EPISODE();
+    REQUIRE_PRIMARY_SERVER();
     FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
     if ( !CarlaActor )
     {
@@ -1249,6 +1281,7 @@ void FCarlaServer::FPimpl::BindActions()
   BIND_SYNC(console_command) << [this](std::string cmd) -> R<bool>
   {
     REQUIRE_CARLA_EPISODE();
+    REQUIRE_PRIMARY_SERVER();
     APlayerController* PController= UGameplayStatics::GetPlayerController(Episode->GetWorld(), 0);
     if( PController )
     {
@@ -1277,9 +1310,26 @@ void FCarlaServer::FPimpl::BindActions()
       ForceInPrimary = true;
     }
 
+    // A Multi-GPU secondary serves its own world snapshots, which every client
+    // of it subscribes to in get_world(); the sensor streams are the primary's
+    // to route.
+    const bool bOwnWorldObserver = (sensor_id ==
+        carla::streaming::detail::token_type(BroadcastStream.token()).get_stream_id());
+    if (!bOwnWorldObserver)
+    {
+      REQUIRE_PRIMARY_SERVER();
+    }
+
     // collision sensor always in primary server in multi-gpu
     FString Desc = Episode->GetActorDescriptionFromStream(sensor_id);
     if (Desc == "" || Desc == "sensor.other.collision")
+    {
+      ForceInPrimary = true;
+    }
+
+    // V2X sensors too: they exchange messages between the primary's own
+    // actors and keep per-process state, so a mirror could never match them.
+    if (Desc == "sensor.other.v2x" || Desc == "sensor.other.v2x_custom")
     {
       ForceInPrimary = true;
     }
@@ -1319,6 +1369,7 @@ void FCarlaServer::FPimpl::BindActions()
                                  R<void>
   {
     REQUIRE_CARLA_EPISODE();
+    REQUIRE_PRIMARY_SERVER();
     bool ForceInPrimary = false;
 
     // check for the world observer (always in primary server)
@@ -1366,6 +1417,7 @@ void FCarlaServer::FPimpl::BindActions()
                                  R<void>
   {
     REQUIRE_CARLA_EPISODE();
+    REQUIRE_PRIMARY_SERVER();
     bool ForceInPrimary = false;
 
     // check for the world observer (always in primary server)
@@ -1430,6 +1482,7 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
       cr::CustomV2XBytes Data) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
+    REQUIRE_PRIMARY_SERVER();
     FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
     if (!CarlaActor)
     {
@@ -1466,6 +1519,7 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
       cr::Location Location) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
+    REQUIRE_PRIMARY_SERVER();
     FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
     if (!CarlaActor)
     {
@@ -1485,6 +1539,7 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
       cr::Transform Transform) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
+    REQUIRE_PRIMARY_SERVER();
     FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
     if (!CarlaActor)
     {
@@ -1505,6 +1560,7 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
       float Speed) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
+    REQUIRE_PRIMARY_SERVER();
     FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
     if (!CarlaActor)
     {
@@ -1535,6 +1591,7 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
       cr::Vector3D vector) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
+    REQUIRE_PRIMARY_SERVER();
     FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
     if (!CarlaActor)
     {
@@ -1560,6 +1617,7 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
       cr::Vector3D vector) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
+    REQUIRE_PRIMARY_SERVER();
     FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
     if (!CarlaActor)
     {
@@ -1585,6 +1643,7 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
       cr::Vector3D vector) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
+    REQUIRE_PRIMARY_SERVER();
     FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
     if (!CarlaActor)
     {
@@ -1611,6 +1670,7 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
       cr::ActorId ActorId) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
+    REQUIRE_PRIMARY_SERVER();
     FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
     if (!CarlaActor)
     {
@@ -1638,6 +1698,7 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
       cr::Vector3D vector) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
+    REQUIRE_PRIMARY_SERVER();
     FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
     if (!CarlaActor)
     {
@@ -1664,6 +1725,7 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
       cr::ActorId ActorId) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
+    REQUIRE_PRIMARY_SERVER();
     FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
     if (!CarlaActor)
     {
@@ -1691,6 +1753,7 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
       cr::Vector3D vector) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
+    REQUIRE_PRIMARY_SERVER();
     FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
     if (!CarlaActor)
     {
@@ -1718,6 +1781,7 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
       cr::Vector3D location) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
+    REQUIRE_PRIMARY_SERVER();
     FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
     if (!CarlaActor)
     {
@@ -1751,6 +1815,7 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
       cr::Vector3D vector) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
+    REQUIRE_PRIMARY_SERVER();
     FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
     if (!CarlaActor)
     {
@@ -1777,6 +1842,7 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
       cr::Vector3D location) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
+    REQUIRE_PRIMARY_SERVER();
     FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
     if (!CarlaActor)
     {
@@ -1809,6 +1875,7 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
       cr::Vector3D vector) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
+    REQUIRE_PRIMARY_SERVER();
     FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
     if (!CarlaActor)
     {
@@ -1834,6 +1901,7 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
       cr::Vector3D vector) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
+    REQUIRE_PRIMARY_SERVER();
     FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
     if (!CarlaActor)
     {
@@ -2112,6 +2180,7 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
       cr::ActorId ActorId) -> R<cr::VehicleTelemetryData>
   {
     REQUIRE_CARLA_EPISODE();
+    REQUIRE_PRIMARY_SERVER();
     FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
     if (!CarlaActor)
     {
@@ -2163,6 +2232,7 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
       cr::VehiclePhysicsControl PhysicsControl) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
+    REQUIRE_PRIMARY_SERVER();
     FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
     if (!CarlaActor)
     {
@@ -2188,6 +2258,7 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
       cr::VehicleLightState LightState) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
+    REQUIRE_PRIMARY_SERVER();
     FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
     if (!CarlaActor)
     {
@@ -2214,6 +2285,7 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
       cr::VehicleDoor DoorIdx) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
+    REQUIRE_PRIMARY_SERVER();
     FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
     if (!CarlaActor)
     {
@@ -2239,6 +2311,7 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
       cr::VehicleDoor DoorIdx) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
+    REQUIRE_PRIMARY_SERVER();
     FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
     if (!CarlaActor)
     {
@@ -2265,6 +2338,7 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
     float AngleInDeg) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
+    REQUIRE_PRIMARY_SERVER();
     FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
     if(!CarlaActor){
       return RespondError(
@@ -2317,6 +2391,7 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
     float AngleInDeg) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
+    REQUIRE_PRIMARY_SERVER();
     FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
     if(!CarlaActor){
       return RespondError(
@@ -2369,6 +2444,7 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
     float Offset) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
+    REQUIRE_PRIMARY_SERVER();
     FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
     if(!CarlaActor){
       return RespondError(
@@ -2420,6 +2496,7 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
     bool bEnabled) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
+    REQUIRE_PRIMARY_SERVER();
     FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
     if(!CarlaActor){
       return RespondError(
@@ -2443,6 +2520,7 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
       bool bEnabled) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
+    REQUIRE_PRIMARY_SERVER();
     FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
     if (!CarlaActor)
     {
@@ -2468,6 +2546,7 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
       bool bEnabled) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
+    REQUIRE_PRIMARY_SERVER();
     FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
     if (!CarlaActor)
     {
@@ -2492,6 +2571,7 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
       cr::ActorId ActorId) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
+    REQUIRE_PRIMARY_SERVER();
     FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
     if (!CarlaActor)
     {
@@ -2517,6 +2597,7 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
       bool bEnabled) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
+    REQUIRE_PRIMARY_SERVER();
     FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
     if (!CarlaActor)
     {
@@ -2568,6 +2649,7 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
       cr::VehicleControl Control) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
+    REQUIRE_PRIMARY_SERVER();
     FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
     if (!CarlaActor)
     {
@@ -2593,6 +2675,7 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
       cr::VehicleAckermannControl Control) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
+    REQUIRE_PRIMARY_SERVER();
     FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
     if (!CarlaActor)
     {
@@ -2643,6 +2726,7 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
       cr::AckermannControllerSettings AckermannSettings) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
+    REQUIRE_PRIMARY_SERVER();
     FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
     if (!CarlaActor)
     {
@@ -2668,6 +2752,7 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
       cr::WalkerControl Control) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
+    REQUIRE_PRIMARY_SERVER();
     FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
     if (!CarlaActor)
     {
@@ -2730,6 +2815,7 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
       carla::rpc::WalkerBoneControlIn Bones) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
+    REQUIRE_PRIMARY_SERVER();
     FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
     if (!CarlaActor)
     {
@@ -2807,6 +2893,7 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
       cr::ActorId ActorId) -> R<bool>
   {
     REQUIRE_CARLA_EPISODE();
+    REQUIRE_PRIMARY_SERVER();
     auto *Controller = ResolveWalkerNavController(Episode->FindCarlaActor(ActorId));
     return EnsureWalkerNavigationStarted(Episode, Controller);
   };
@@ -2816,6 +2903,7 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
       cr::Location Location) -> R<bool>
   {
     REQUIRE_CARLA_EPISODE();
+    REQUIRE_PRIMARY_SERVER();
     auto *Controller = ResolveWalkerNavController(Episode->FindCarlaActor(ActorId));
     if (!EnsureWalkerNavigationStarted(Episode, Controller))
     {
@@ -2836,6 +2924,7 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
       float SpeedMPerSec) -> R<bool>
   {
     REQUIRE_CARLA_EPISODE();
+    REQUIRE_PRIMARY_SERVER();
     auto *Controller = ResolveWalkerNavController(Episode->FindCarlaActor(ActorId));
     constexpr float MeterToCentimeter = 100.0f;
     return (Controller != nullptr) &&
@@ -2845,6 +2934,7 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
   BIND_SYNC(walker_stop_navigation) << [this](cr::ActorId ActorId) -> R<bool>
   {
     REQUIRE_CARLA_EPISODE();
+    REQUIRE_PRIMARY_SERVER();
     auto *Controller = ResolveWalkerNavController(Episode->FindCarlaActor(ActorId));
     return (Controller != nullptr) && Controller->StopNavigation();
   };
@@ -2852,6 +2942,7 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
   BIND_SYNC(set_pedestrians_cross_factor) << [this](float CrossFactor) -> R<bool>
   {
     REQUIRE_CARLA_EPISODE();
+    REQUIRE_PRIMARY_SERVER();
     // Applies to walkers whose navigation starts after this call (legacy
     // semantics); a no-op success when no navmesh exists.
     Episode->SetPedestriansCrossFactor(CrossFactor);
@@ -2861,6 +2952,7 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
   BIND_SYNC(set_pedestrians_seed) << [this](uint32_t Seed) -> R<bool>
   {
     REQUIRE_CARLA_EPISODE();
+    REQUIRE_PRIMARY_SERVER();
     Episode->SetPedestriansSeed(Seed);
     return true;
   };
@@ -2870,6 +2962,7 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
       float Blend) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
+    REQUIRE_PRIMARY_SERVER();
     FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
     if (!CarlaActor)
     {
@@ -2895,6 +2988,7 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
       cr::ActorId ActorId) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
+    REQUIRE_PRIMARY_SERVER();
     FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
     if (!CarlaActor)
     {
@@ -2921,6 +3015,7 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
       bool bEnabled) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
+    REQUIRE_PRIMARY_SERVER();
     FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
     if (!CarlaActor)
     {
@@ -2946,6 +3041,7 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
       bool bEnabled) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
+    REQUIRE_PRIMARY_SERVER();
     FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
     if (!CarlaActor)
     {
@@ -2971,6 +3067,7 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
       std::string SimfilePath) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
+    REQUIRE_PRIMARY_SERVER();
     FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
     if (!CarlaActor)
     {
@@ -2996,6 +3093,7 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
       bool bEnabled) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
+    REQUIRE_PRIMARY_SERVER();
     FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
     if (!CarlaActor)
     {
@@ -3026,6 +3124,7 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
       std::string BaseJSONPath) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
+    REQUIRE_PRIMARY_SERVER();
     FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
     if (!CarlaActor)
     {
@@ -3058,6 +3157,7 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
       cr::TrafficLightState trafficLightState) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
+    REQUIRE_PRIMARY_SERVER();
     FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
     if (!CarlaActor)
     {
@@ -3084,6 +3184,7 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
       float GreenTime) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
+    REQUIRE_PRIMARY_SERVER();
     FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
     if (!CarlaActor)
     {
@@ -3109,6 +3210,7 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
       float YellowTime) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
+    REQUIRE_PRIMARY_SERVER();
     FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
     if (!CarlaActor)
     {
@@ -3134,6 +3236,7 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
       float RedTime) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
+    REQUIRE_PRIMARY_SERVER();
     FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
     if (!CarlaActor)
     {
@@ -3159,6 +3262,7 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
       bool Freeze) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
+    REQUIRE_PRIMARY_SERVER();
     FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
     if (!CarlaActor)
     {
@@ -3183,6 +3287,7 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
       cr::ActorId ActorId) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
+    REQUIRE_PRIMARY_SERVER();
     FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
     if (!CarlaActor)
     {
@@ -3206,6 +3311,7 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
   BIND_SYNC(reset_all_traffic_lights) << [this]() -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
+    REQUIRE_PRIMARY_SERVER();
     for (TActorIterator<ATrafficLightGroup> It(Episode->GetWorld()); It; ++It)
     {
       It->ResetGroup();
@@ -3217,6 +3323,7 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
       (bool frozen) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
+    REQUIRE_PRIMARY_SERVER();
     auto* GameMode = UCarlaStatics::GetGameMode(Episode->GetWorld());
     if (!GameMode)
     {
@@ -3334,6 +3441,7 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
   BIND_SYNC(get_gbuffer_token) << [this](const cr::ActorId ActorId, uint32_t GBufferId) -> R<std::vector<unsigned char>>
   {
     REQUIRE_CARLA_EPISODE();
+    REQUIRE_PRIMARY_SERVER();
     FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
     if(!CarlaActor)
     {
@@ -3443,12 +3551,14 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
   BIND_SYNC(start_recorder) << [this](std::string name, bool AdditionalData, bool StopReplayer) -> R<std::string>
   {
     REQUIRE_CARLA_EPISODE();
+    REQUIRE_PRIMARY_SERVER();
     return R<std::string>(Episode->StartRecorder(name, AdditionalData, StopReplayer));
   };
 
   BIND_SYNC(stop_recorder) << [this]() -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
+    REQUIRE_PRIMARY_SERVER();
     Episode->GetRecorder()->Stop();
     return R<void>::Success();
   };
@@ -3498,6 +3608,7 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
       std::string map_override) -> R<std::string>
   {
     REQUIRE_CARLA_EPISODE();
+    REQUIRE_PRIMARY_SERVER();
     return R<std::string>(Episode->GetRecorder()->ReplayFile(
         name,
         start,
@@ -3512,6 +3623,7 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
   BIND_SYNC(set_replayer_time_factor) << [this](double time_factor) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
+    REQUIRE_PRIMARY_SERVER();
     Episode->GetRecorder()->SetReplayerTimeFactor(time_factor);
     return R<void>::Success();
   };
@@ -3519,6 +3631,7 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
   BIND_SYNC(set_replayer_ignore_hero) << [this](bool ignore_hero) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
+    REQUIRE_PRIMARY_SERVER();
     Episode->GetRecorder()->SetReplayerIgnoreHero(ignore_hero);
     return R<void>::Success();
   };
@@ -3526,6 +3639,7 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
   BIND_SYNC(set_replayer_ignore_spectator) << [this](bool ignore_spectator) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
+    REQUIRE_PRIMARY_SERVER();
     Episode->GetRecorder()->SetReplayerIgnoreSpectator(ignore_spectator);
     return R<void>::Success();
   };
@@ -3533,6 +3647,7 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
   BIND_SYNC(stop_replayer) << [this](bool keep_actors) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
+    REQUIRE_PRIMARY_SERVER();
     Episode->GetRecorder()->StopReplayer(keep_actors);
     return R<void>::Success();
   };
@@ -3542,6 +3657,7 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
   BIND_SYNC(draw_debug_shape) << [this](const cr::DebugShape &shape) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
+    REQUIRE_PRIMARY_SERVER();
     auto *World = Episode->GetWorld();
     check(World != nullptr);
     FDebugShapeDrawer Drawer(*World);
@@ -3554,6 +3670,7 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
   BIND_SYNC(clear_debug_shape) << [this]() -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
+    REQUIRE_PRIMARY_SERVER();
     auto *World = Episode->GetWorld();
     check(World != nullptr);
     FDebugShapeDrawer Drawer(*World);
@@ -3569,6 +3686,7 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
       std::string material) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
+    REQUIRE_PRIMARY_SERVER();
     auto *World = Episode->GetWorld();
     check(World != nullptr);
     if (vertices.empty() || (vertices.size() % 3u) != 0u)
@@ -3678,6 +3796,7 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
   BIND_SYNC(clear_debug_string) << [this]() -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
+    REQUIRE_PRIMARY_SERVER();
     auto *World = Episode->GetWorld();
     check(World != nullptr);
     APlayerController *PlayerController = World->GetFirstPlayerController();
@@ -3796,6 +3915,7 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
     (std::string client, const std::vector<cr::LightState>& lights, bool discard_client) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
+    REQUIRE_PRIMARY_SERVER();
     auto *World = Episode->GetWorld();
     if(World) {
       UCarlaLightSubsystem* CarlaLightSubsystem = World->GetSubsystem<UCarlaLightSubsystem>();
@@ -3808,6 +3928,7 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
     (std::string client, const bool active) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
+    REQUIRE_PRIMARY_SERVER();
     auto *World = Episode->GetWorld();
     if(World) {
       UCarlaLightSubsystem* CarlaLightSubsystem = World->GetSubsystem<UCarlaLightSubsystem>();
@@ -3900,6 +4021,7 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
 
 #undef BIND_ASYNC
 #undef BIND_SYNC
+#undef REQUIRE_PRIMARY_SERVER
 #undef REQUIRE_CARLA_EPISODE
 #undef RESPOND_ERROR_FSTRING
 #undef RESPOND_ERROR
@@ -4001,6 +4123,12 @@ void FCarlaServer::Tick()
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(FCarlaServer::Tick);
   (void)Pimpl->TickCuesReceived.fetch_add(1, std::memory_order_release);
+}
+
+void FCarlaServer::SetIsSecondaryServer(bool bIsSecondary)
+{
+  check(Pimpl != nullptr);
+  Pimpl->bIsSecondaryServer = bIsSecondary;
 }
 
 bool FCarlaServer::TickCueReceived()

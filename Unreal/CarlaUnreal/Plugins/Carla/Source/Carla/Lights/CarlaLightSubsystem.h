@@ -70,6 +70,18 @@ public:
 
   void SetDayNightCycle(const bool active);
 
+  bool GetDayNightCycle() const
+  {
+    return bDayNightCycle;
+  }
+
+  /// The day/night state last broadcast, if any.
+  bool GetDayTimeState(bool &bOutIsDay) const
+  {
+    bOutIsDay = bLastIsDay;
+    return bHasDayTimeState;
+  }
+
   UPROPERTY(BlueprintCallable, BlueprintAssignable, Category = "DayTimeChangeEvent")
   FDayTimeChanged DayTimeChangeEvent;
 

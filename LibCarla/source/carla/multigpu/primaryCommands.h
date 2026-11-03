@@ -42,7 +42,7 @@ class PrimaryCommands {
     void SendFrameData(carla::Buffer buffer);
 
     // broadcast to all secondary servers the map to load
-    void SendLoadMap(std::string map);
+    void SendLoadMap(std::string map, const LoadMapExtras &extras = {});
 
     // send to know if a connection is alive
     void SendIsAlive();

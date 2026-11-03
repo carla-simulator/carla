@@ -16,6 +16,7 @@
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/ip/tcp.hpp>
 
+#include <atomic>
 #include <functional>
 #include <mutex>
 #include <optional>
@@ -48,7 +49,7 @@ namespace multigpu {
     void Write(MultiGPUCommand id, Buffer &&buffer);
     /// Broadcasts LOAD_MAP tagged with a new load id; each connected secondary
     /// counts as loading until it reports that load's episode ready.
-    load_map_id_type WriteLoadMap(std::string_view map);
+    load_map_id_type WriteLoadMap(std::string_view map, const LoadMapExtras &extras = {});
     std::future<SessionInfo> WriteToNext(MultiGPUCommand id, Buffer &&buffer);
     std::future<SessionInfo> WriteToOne(std::weak_ptr<Primary> server, MultiGPUCommand id, Buffer &&buffer);
     void Stop();
@@ -75,8 +76,10 @@ namespace multigpu {
 
     void StopWaitingForSecondaryLoads();
 
-    bool HasClientsConnected() {
-      return (!_sessions.empty());
+    /// Any thread: reads a count kept next to the session list, which is
+    /// itself only touched under the router's mutex.
+    bool HasClientsConnected() const {
+      return _session_count.load() > 0u;
     }
 
     PrimaryCommands &GetCommander() {
@@ -122,7 +125,8 @@ namespace multigpu {
     void SendLoadMap(
         const std::shared_ptr<Primary> &session,
         std::string_view map,
-        load_map_id_type load_id);
+        load_map_id_type load_id,
+        const LoadMapExtras &extras);
 
     /// Re-arms the new-connection resync if @a buffer is the secondary's
     /// episode-ready marker (checked first, so it can never be misdelivered
@@ -157,6 +161,7 @@ namespace multigpu {
     ThreadPool                              _pool;
     boost::asio::ip::tcp::endpoint          _endpoint;
     std::vector<std::shared_ptr<Primary>>   _sessions;
+    std::atomic_size_t                      _session_count{0u};
     std::vector<std::weak_ptr<Primary>>     _new_sessions;
     std::shared_ptr<Listener>               _listener;
     uint32_t                                _next;
@@ -164,6 +169,7 @@ namespace multigpu {
     std::unordered_map<const Primary *, load_map_id_type> _loading;
     load_map_id_type                        _last_load_id = 0u;
     std::optional<std::string>              _last_map;
+    LoadMapExtras                           _last_map_extras;
     PrimaryCommands                         _commander;
     std::function<void(void)>               _callback;
     request_observer_type                   _request_observer;

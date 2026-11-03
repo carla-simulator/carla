@@ -45,6 +45,12 @@ public:
 
   void Write(std::ostream &OutFile);
 
+  void Read(std::istream &InFile);
+
+  const std::vector<CarlaRecorderWeather>& GetWeathers() const;
+
+  bool IsEmpty() const;
+
 private:
 
   std::vector<CarlaRecorderWeather> Weathers;

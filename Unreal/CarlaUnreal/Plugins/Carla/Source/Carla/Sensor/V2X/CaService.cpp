@@ -7,6 +7,7 @@
 #include "CaService.h"
 
 #include "Carla.h"
+#include "Carla/Actor/CarlaActor.h"
 #include "Carla/Game/CarlaStatics.h"
 #include "Carla/Game/Tagger.h"
 #include "Carla/Util/BoundingBoxCalculator.h"
@@ -670,7 +671,7 @@ float CaService::ComputeYawRate()const
     if (const auto *RootComponent = Cast<UPrimitiveComponent>(mActorOwner->GetRootComponent()))
     {
         const FQuat ActorGlobalRotation = RootComponent->GetComponentTransform().GetRotation();
-        const FVector GlobalAngularVelocity = RootComponent->GetPhysicsAngularVelocityInRadians();
+        const FVector GlobalAngularVelocity = CarlaGetActorAngularVelocityInRadians(*mActorOwner);
         AngularVelocity = ActorGlobalRotation.UnrotateVector(GlobalAngularVelocity);
     }
 

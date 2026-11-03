@@ -7,6 +7,7 @@
 #include "WalkerBase.h"
 #include "Carla.h"
 #include "Carla/Game/CarlaStatics.h"
+#include "Carla/Game/CarlaEpisode.h"
 #include "Carla/Game/Tagger.h"
 #include "Carla/Vehicle/CarlaWheeledVehicle.h"
 #include "Carla/Walker/WalkerController.h"
@@ -132,6 +133,14 @@ void AWalkerBase::AttachWheelchair()
       *GetName(), ChairAnimMode);
 }
 
+/// Whether @a Walker mirrors a walker of a Multi-GPU primary: its fate (hits,
+/// death, ragdoll) is the primary's, never decided here.
+static bool AWalkerBase_IsMirror(const AActor &Walker)
+{
+  const UCarlaEpisode *Episode = UCarlaStatics::GetCurrentEpisode(Walker.GetWorld());
+  return (Episode != nullptr) && !Episode->bIsPrimaryServer;
+}
+
 void AWalkerBase::BeginPlay()
 {
   Super::BeginPlay();
@@ -168,6 +177,18 @@ void AWalkerBase::BeginPlay()
         Primitive->SetCollisionObjectType(ECC_Pawn);
       }
     }
+  }
+  if (AWalkerBase_IsMirror(*this))
+  {
+    // No local death detection, nor the Blueprint triggers that kill on
+    // overlap: the primary's frames say when this walker dies.
+    TArray<UPrimitiveComponent *> Primitives;
+    GetComponents<UPrimitiveComponent>(Primitives, false);
+    for (UPrimitiveComponent *Primitive : Primitives)
+    {
+      Primitive->SetGenerateOverlapEvents(false);
+    }
+    return;
   }
   // Primary detection: the physical hit itself. The same contact also
   // feeds the collision sensor, so clients keep receiving the collision
@@ -301,7 +322,7 @@ void AWalkerBase::CheckVehicleImpact()
 
 void AWalkerBase::Kill(FVector ImpactVelocity, AActor *Killer)
 {
-  if (!bAlive)
+  if (!bAlive || AWalkerBase_IsMirror(*this))
   {
     return;
   }

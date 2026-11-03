@@ -8,6 +8,9 @@
 #include "CarlaRecorder.h"
 #include "CarlaRecorderHelpers.h"
 
+#include <algorithm>
+#include <limits>
+
 
 void CarlaRecorderEventParent::Read(std::istream &InFile)
 {
@@ -48,7 +51,7 @@ void CarlaRecorderEventsParent::Write(std::ostream &OutFile)
     WriteValue<uint32_t>(OutFile, Total);
 
     // write total records
-    Total = Events.size();
+    Total = std::min<size_t>(Events.size(), std::numeric_limits<uint16_t>::max());
     WriteValue<uint16_t>(OutFile, Total);
 
     for (uint16_t i=0; i<Total; ++i)
@@ -66,13 +69,13 @@ void CarlaRecorderEventsParent::Write(std::ostream &OutFile)
 
 void CarlaRecorderEventsParent::Read(std::istream &InFile)
 {
-    uint16_t i, Total;
+    uint16_t i, Total = 0;
     CarlaRecorderEventParent EventParent;
     std::stringstream Info;
 
     // process parenting events
     ReadValue<uint16_t>(InFile, Total);
-    for (i = 0; i < Total; ++i)
+    for (i = 0; (i < Total) && InFile; ++i)
     {
         EventParent.Read(InFile);
         Add(EventParent);

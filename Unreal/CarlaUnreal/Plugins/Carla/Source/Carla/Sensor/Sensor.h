@@ -16,6 +16,7 @@
 #include <carla/Buffer.h>
 #include <carla/BufferView.h>
 #include <carla/sensor/SensorRegistry.h>
+#include <carla/multigpu/sensorSync.h>
 #include <util/enable-ue4-macros.h>
 
 #include <util/ue-header-guard-begin.h>
@@ -151,6 +152,23 @@ public:
   {
     return ReadyToTickDeltaSeconds;
   }
+
+  /// Multi-GPU secondary: tick in this engine frame, with the primary's
+  /// delta. A mirror ticks on the primary's frames only, never on its own
+  /// tick interval, so its sensor_tick phase is the primary's.
+  void SetPrimaryTick(float DeltaSeconds)
+  {
+    PrimaryTickFrame = GFrameCounter;
+    PrimaryTickDeltaSeconds = DeltaSeconds;
+  }
+
+  /// Multi-GPU: the runtime state this sensor starts its next tick from
+  /// (noise generator, sweep angle, history). Override only for sensors whose
+  /// PostPhysTick runs whether or not anyone listens: the primary's sensor
+  /// owns the state of a sensor computed by a secondary.
+  virtual void GetMirrorState(carla::multigpu::SensorState &State) const {}
+
+  virtual void SetMirrorState(const carla::multigpu::SensorState &State) {}
 
   UFUNCTION(BlueprintCallable)
   URandomEngine *GetRandomEngine()
@@ -309,6 +327,13 @@ private:
 
   /// Elapsed time computed by UE5's tick scheduler for the most recent Tick().
   float ReadyToTickDeltaSeconds = 0.0f;
+
+  /// Multi-GPU secondary: ticks are driven by the primary's frames.
+  bool bPrimaryDrivenTick = false;
+
+  uint64 PrimaryTickFrame = MAX_uint64;
+
+  float PrimaryTickDeltaSeconds = 0.0f;
 
   bool bClientsListening = false;
 

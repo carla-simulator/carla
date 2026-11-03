@@ -8,6 +8,9 @@
 #include "CarlaRecorder.h"
 #include "CarlaRecorderHelpers.h"
 
+#include <algorithm>
+#include <limits>
+
 void CarlaRecorderEventAdd::Write(std::ostream &OutFile) const
 {
     // database id
@@ -51,11 +54,10 @@ void CarlaRecorderEventAdd::Read(std::istream &InFile)
     ReadFString(InFile, this->Description.Id);
 
     // attributes
-    uint16_t Total;
+    uint16_t Total = 0;
     ReadValue<uint16_t>(InFile, Total);
     this->Description.Attributes.clear();
-    this->Description.Attributes.reserve(Total);
-    for (uint16_t i=0; i<Total; ++i)
+    for (uint16_t i=0; (i<Total) && InFile; ++i)
     {
         CarlaRecorderActorAttribute Att;
         ReadValue<uint8_t>(InFile, Att.Type);
@@ -89,7 +91,7 @@ void CarlaRecorderEventsAdd::Write(std::ostream &OutFile)
     WriteValue<uint32_t>(OutFile, Total);
 
     // write total records
-    Total = Events.size();
+    Total = std::min<size_t>(Events.size(), std::numeric_limits<uint16_t>::max());
     WriteValue<uint16_t>(OutFile, Total);
 
     for (uint16_t i=0; i<Total; ++i)
@@ -106,9 +108,9 @@ void CarlaRecorderEventsAdd::Write(std::ostream &OutFile)
 void CarlaRecorderEventsAdd::Read(std::istream &InFile)
 {
     CarlaRecorderEventAdd EventAdd;
-    uint16_t i, Total;
+    uint16_t i, Total = 0;
     ReadValue<uint16_t>(InFile, Total);
-    for (i = 0; i < Total; ++i)
+    for (i = 0; (i < Total) && InFile; ++i)
     {
         EventAdd.Read(InFile);
         Add(EventAdd);

@@ -91,11 +91,12 @@ void Router::ConnectSession(std::shared_ptr<Primary> session) {
   std::scoped_lock<std::mutex> lock(_mutex);
   _new_sessions.emplace_back(session);
   _sessions.emplace_back(std::move(session));
+  _session_count = _sessions.size();
   log_info("Connected secondary servers:", _sessions.size());
   if (_last_map) {
     // The resync callback runs from HandleResponse once the map is loaded.
     const load_map_id_type load_id = ++_last_load_id;
-    SendLoadMap(_sessions.back(), *_last_map, load_id);
+    SendLoadMap(_sessions.back(), *_last_map, load_id, _last_map_extras);
     _loading[_sessions.back().get()] = load_id;
     return;
   }
@@ -110,6 +111,7 @@ void Router::DisconnectSession(std::shared_ptr<Primary> session) {
     _sessions.erase(
         std::remove(_sessions.begin(), _sessions.end(), session),
         _sessions.end());
+    _session_count = _sessions.size();
     log_info("Connected secondary servers:", _sessions.size());
   }
   _loading.erase(session.get());
@@ -173,6 +175,7 @@ void Router::HandleResponse(std::shared_ptr<Primary> session, Buffer buffer) {
 void Router::ClearSessions() {
   std::scoped_lock<std::mutex> lock(_mutex);
   _sessions.clear();
+  _session_count = 0u;
   _new_sessions.clear();
   _loading.clear();
   // Symmetric with DisconnectSession: any request still waiting on a
@@ -205,8 +208,9 @@ void Router::Write(MultiGPUCommand id, Buffer &&buffer) {
 void Router::SendLoadMap(
     const std::shared_ptr<Primary> &session,
     std::string_view map,
-    load_map_id_type load_id) {
-  const std::string payload = MakeLoadMapPayload(map, load_id);
+    load_map_id_type load_id,
+    const LoadMapExtras &extras) {
+  const std::string payload = MakeLoadMapPayload(map, load_id, extras);
   Buffer buffer(reinterpret_cast<const unsigned char *>(payload.data()), payload.size());
 
   CommandHeader header;
@@ -222,13 +226,14 @@ void Router::SendLoadMap(
   session->Write(Primary::MakeMessage(view_header, view_data));
 }
 
-load_map_id_type Router::WriteLoadMap(std::string_view map) {
+load_map_id_type Router::WriteLoadMap(std::string_view map, const LoadMapExtras &extras) {
   std::scoped_lock<std::mutex> lock(_mutex);
   const load_map_id_type load_id = ++_last_load_id;
   _last_map = std::string(map);
+  _last_map_extras = extras;
   for (auto &s : _sessions) {
     if (s != nullptr) {
-      SendLoadMap(s, map, load_id);
+      SendLoadMap(s, map, load_id, extras);
       _loading[s.get()] = load_id;
     }
   }

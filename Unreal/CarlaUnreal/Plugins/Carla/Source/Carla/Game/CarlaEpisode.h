@@ -296,6 +296,14 @@ public:
     return ActorDispatcher->DestroyActor(ActorId);
   }
 
+  /// SerializeActor, with the ids the primary's clients know on a Multi-GPU
+  /// secondary (for data a sensor streams to them).
+  carla::rpc::Actor SerializeActorWithPrimaryIds(AActor *Actor) const;
+
+  /// ROS 2: registers the ros_name of each of @a Child's ancestors as one of
+  /// its parent frames.
+  void AddRosParentNames(FCarlaActor &Child);
+
   void PutActorToSleep(carla::rpc::ActorId ActorId)
   {
     ActorDispatcher->PutActorToSleep(ActorId, this);
@@ -343,6 +351,18 @@ public:
   void SetCurrentMapOrigin(const FIntVector& NewOrigin) { CurrentMapOrigin = NewOrigin; }
 
   FFrameData& GetFrameData() { return FrameData; }
+
+  /// Multi-GPU primary: the world state the frames sent so far carried.
+  FPrimaryWorldState& GetMultiGpuWorldState() { return MultiGpuWorldState; }
+
+  /// A scene light changed: Multi-GPU secondaries get its new state.
+  void MarkSceneLightChanged(int32 LightId)
+  {
+    if (bIsPrimaryServer)
+    {
+      MultiGpuWorldState.ChangedLights.Add(LightId);
+    }
+  }
 
   FSensorManager& GetSensorManager() { return SensorManager; }
 
@@ -412,6 +432,20 @@ private:
 
   }
 
+  /// Multi-GPU secondary: adopt the primary's clocks for the frame being
+  /// played. Absolute, not accumulated, so frames a secondary never played
+  /// (while it was loading) cause no drift.
+  void SetTimers(double InElapsedGameTime, double InVisualGameTime)
+  {
+    ElapsedGameTime = InElapsedGameTime;
+    SetVisualGameTime(InVisualGameTime);
+    #if defined(WITH_ROS2)
+    auto ROS2 = carla::ros2::ROS2::GetInstance();
+    if (ROS2->IsEnabled())
+      ROS2->SetTimestamp(GetElapsedGameTime());
+    #endif
+  }
+
   const uint64 Id = 0u;
 
   // simulation time
@@ -449,6 +483,8 @@ private:
   FRandomStream PedestriansNavRNG = FRandomStream(0);
 
   FFrameData FrameData;
+
+  FPrimaryWorldState MultiGpuWorldState;
 
   FSensorManager SensorManager;
 };

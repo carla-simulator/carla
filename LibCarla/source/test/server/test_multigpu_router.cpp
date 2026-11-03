@@ -12,10 +12,14 @@
 #include <carla/multigpu/primary.h>
 #include <carla/multigpu/primaryCommands.h>
 #include <carla/multigpu/router.h>
+#include <carla/multigpu/secondary.h>
 #include <carla/streaming/detail/Token.h>
 
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/executor_work_guard.hpp>
+#include <boost/asio/ip/tcp.hpp>
+#include <boost/asio/read.hpp>
+#include <boost/asio/write.hpp>
 
 #include <chrono>
 #include <cstring>
@@ -1527,4 +1531,297 @@ TEST(MultiGpuRouterProductionShutdown, stop_releases_listening_port_despite_refe
   // Break the self-reference cycle so this test's Router doesn't leak for
   // the rest of the process; production leaks it on purpose.
   router->GetCommander().set_router(nullptr);
+}
+
+// -- Transport: real sockets, every wait bounded -----------------------------
+
+namespace {
+
+  using tcp = boost::asio::ip::tcp;
+
+  /// Polls @a condition for up to @a timeout.
+  template <typename F>
+  bool WaitFor(F condition, std::chrono::milliseconds timeout = std::chrono::milliseconds(5000)) {
+    const auto deadline = std::chrono::steady_clock::now() + timeout;
+    while (!condition()) {
+      if (std::chrono::steady_clock::now() >= deadline) {
+        return false;
+      }
+      std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    }
+    return true;
+  }
+
+  uint16_t FreePort() {
+    boost::asio::io_context io_context;
+    carla::multigpu::Listener probe(io_context, tcp::endpoint(boost::asio::ip::make_address("127.0.0.1"), 0));
+    return probe.GetLocalEndpoint().port();
+  }
+
+  /// A Router as the engine starts it, torn down without leaking its thread.
+  struct RunningRouter {
+    std::shared_ptr<carla::multigpu::Router> router;
+    tcp::endpoint endpoint;
+
+    RunningRouter() {
+      const uint16_t port = FreePort();
+      router = std::make_shared<carla::multigpu::Router>(port);
+      router->SetCallbacks();
+      router->AsyncRun(1u);
+      endpoint = tcp::endpoint(boost::asio::ip::make_address("127.0.0.1"), port);
+    }
+
+    ~RunningRouter() {
+      router->Stop();
+      router->GetCommander().set_router(nullptr);
+    }
+  };
+
+  struct ReadCommand {
+    uint32_t id = 0u;
+    std::string payload;
+  };
+
+  /// Reads one [u32 size][CommandHeader][payload] message from @a socket.
+  ReadCommand ReadOneCommand(tcp::socket &socket) {
+    uint32_t total = 0u;
+    boost::asio::read(socket, boost::asio::buffer(&total, sizeof(total)));
+    std::string bytes(total, '\0');
+    boost::asio::read(socket, boost::asio::buffer(bytes.data(), bytes.size()));
+    carla::multigpu::CommandHeader header{};
+    std::memcpy(&header, bytes.data(), sizeof(header));
+    ReadCommand command;
+    command.id = static_cast<uint32_t>(header.id);
+    command.payload = bytes.substr(sizeof(header), header.size);
+    return command;
+  }
+
+} // namespace
+
+TEST(MultiGpuTransport, write_queue_preserves_order_under_backpressure) {
+  RunningRouter running;
+  boost::asio::io_context io_context;
+  tcp::socket client(io_context);
+  client.open(tcp::v4());
+  client.set_option(boost::asio::socket_base::receive_buffer_size(4096));
+  client.connect(running.endpoint);
+  ASSERT_TRUE(WaitFor([&]() { return running.router->HasClientsConnected(); }));
+
+  const std::string first(1u << 20u, 'a');
+  const std::string second(1u << 20u, 'b');
+  const std::string third("8 bytes!");
+  for (const std::string *payload : {&first, &second, &third}) {
+    running.router->Write(carla::multigpu::SEND_FRAME, carla::Buffer(
+        reinterpret_cast<const unsigned char *>(payload->data()), payload->size()));
+  }
+  // Let the server's socket fill up, so each message needs many partial writes.
+  std::this_thread::sleep_for(std::chrono::milliseconds(200));
+
+  auto received = std::async(std::launch::async, [&]() {
+    std::vector<ReadCommand> commands;
+    for (int i = 0; i < 3; ++i) {
+      commands.push_back(ReadOneCommand(client));
+    }
+    return commands;
+  });
+  if (received.wait_for(std::chrono::seconds(10)) != std::future_status::ready) {
+    boost::system::error_code ignored;
+    client.close(ignored);
+    FAIL() << "the three messages did not arrive";
+  }
+  const std::vector<ReadCommand> commands = received.get();
+  ASSERT_EQ(commands.size(), 3u);
+  EXPECT_EQ(commands[0].payload, first);
+  EXPECT_EQ(commands[1].payload, second);
+  EXPECT_EQ(commands[2].payload, third);
+  for (const ReadCommand &command : commands) {
+    EXPECT_EQ(command.id, static_cast<uint32_t>(carla::multigpu::SEND_FRAME));
+  }
+}
+
+TEST(MultiGpuTransport, oversize_header_closes_the_session) {
+  RunningRouter running;
+  boost::asio::io_context io_context;
+  tcp::socket client(io_context);
+  client.connect(running.endpoint);
+  ASSERT_TRUE(WaitFor([&]() { return running.router->HasClientsConnected(); }));
+
+  const uint32_t announced = static_cast<uint32_t>(carla::multigpu::kMaxMultiGpuMessageBytes + 1u);
+  boost::asio::write(client, boost::asio::buffer(&announced, sizeof(announced)));
+  EXPECT_TRUE(WaitFor([&]() { return !running.router->HasClientsConnected(); }))
+      << "the primary kept a session that announced an impossible message";
+}
+
+namespace {
+
+  /// A bare primary end: accepts one secondary on an ephemeral port.
+  struct FakePrimary {
+    boost::asio::io_context io_context;
+    tcp::acceptor acceptor{io_context, tcp::endpoint(boost::asio::ip::make_address("127.0.0.1"), 0)};
+    tcp::socket peer{io_context};
+
+    uint16_t port() const {
+      return acceptor.local_endpoint().port();
+    }
+
+    /// Accepts the secondary's connection, waiting for at most 5 s.
+    bool Accept() {
+      auto accepted = std::async(std::launch::async, [this]() {
+        boost::system::error_code ec;
+        acceptor.accept(peer, ec);
+        return !ec;
+      });
+      if (accepted.wait_for(std::chrono::seconds(5)) != std::future_status::ready) {
+        boost::system::error_code ignored;
+        acceptor.close(ignored);
+        accepted.wait();
+        return false;
+      }
+      return accepted.get();
+    }
+  };
+
+  std::shared_ptr<carla::multigpu::Secondary> MakeSecondary(uint16_t port) {
+    return std::make_shared<carla::multigpu::Secondary>(
+        "127.0.0.1", port, [](carla::multigpu::MultiGPUCommand, carla::Buffer) {});
+  }
+
+} // namespace
+
+TEST(MultiGpuSecondary, reports_connected_until_the_primary_closes) {
+  FakePrimary primary;
+  auto secondary = MakeSecondary(primary.port());
+  secondary->Connect();
+  ASSERT_TRUE(primary.Accept());
+  EXPECT_TRUE(WaitFor([&]() { return secondary->IsConnected(); }));
+
+  primary.peer.close();
+  EXPECT_TRUE(WaitFor([&]() { return !secondary->IsConnected(); }))
+      << "the secondary still reports a connection the primary closed";
+  secondary->Stop();
+}
+
+TEST(MultiGpuSecondary, is_not_connected_before_connect_or_after_stop) {
+  FakePrimary primary;
+  auto secondary = MakeSecondary(primary.port());
+  EXPECT_FALSE(secondary->IsConnected());
+  secondary->Connect();
+  ASSERT_TRUE(primary.Accept());
+  ASSERT_TRUE(WaitFor([&]() { return secondary->IsConnected(); }));
+  secondary->Stop();
+  EXPECT_FALSE(secondary->IsConnected());
+}
+
+TEST(MultiGpuSecondary, oversize_message_from_the_primary_disconnects) {
+  FakePrimary primary;
+  auto secondary = MakeSecondary(primary.port());
+  secondary->Connect();
+  ASSERT_TRUE(primary.Accept());
+  ASSERT_TRUE(WaitFor([&]() { return secondary->IsConnected(); }));
+
+  const uint32_t announced = static_cast<uint32_t>(carla::multigpu::kMaxMultiGpuMessageBytes + 1u);
+  boost::asio::write(primary.peer, boost::asio::buffer(&announced, sizeof(announced)));
+  EXPECT_TRUE(WaitFor([&]() { return !secondary->IsConnected(); }));
+  secondary->Stop();
+}
+
+TEST(MultiGpuSecondary, replies_reach_the_primary_in_order) {
+  FakePrimary primary;
+  auto secondary = MakeSecondary(primary.port());
+  secondary->Connect();
+  ASSERT_TRUE(primary.Accept());
+  ASSERT_TRUE(WaitFor([&]() { return secondary->IsConnected(); }));
+
+  const std::string first(256u * 1024u, 'x');
+  secondary->Write(carla::Buffer(reinterpret_cast<const unsigned char *>(first.data()), first.size()));
+  secondary->Write(std::string("second"));
+
+  auto received = std::async(std::launch::async, [&]() {
+    std::vector<std::string> messages;
+    for (int i = 0; i < 2; ++i) {
+      uint32_t size = 0u;
+      boost::asio::read(primary.peer, boost::asio::buffer(&size, sizeof(size)));
+      std::string bytes(size, '\0');
+      boost::asio::read(primary.peer, boost::asio::buffer(bytes.data(), bytes.size()));
+      messages.push_back(std::move(bytes));
+    }
+    return messages;
+  });
+  if (received.wait_for(std::chrono::seconds(10)) != std::future_status::ready) {
+    boost::system::error_code ignored;
+    primary.peer.close(ignored);
+    FAIL() << "the replies did not arrive";
+  }
+  const std::vector<std::string> messages = received.get();
+  ASSERT_EQ(messages.size(), 2u);
+  EXPECT_EQ(messages[0], first);
+  EXPECT_EQ(messages[1], "second");
+  secondary->Stop();
+}
+
+TEST(MultiGpuLoadMap, payload_carries_the_generated_world) {
+  carla::multigpu::LoadMapExtras extras;
+  extras.opendrive = std::string("<OpenDRIVE>\0binary-safe</OpenDRIVE>", 35u);
+  extras.generation_parameters = std::string("\x97\xcb\x40\x00", 4u);
+  const std::string payload = carla::multigpu::MakeLoadMapPayload("/Game/Carla/Maps/OpenDriveMap", 7u, extras);
+  const auto request = carla::multigpu::ParseLoadMapPayload(payload);
+  EXPECT_EQ(request.map, "/Game/Carla/Maps/OpenDriveMap");
+  EXPECT_EQ(request.load_id, 7u);
+  EXPECT_EQ(request.extras, extras);
+}
+
+TEST(MultiGpuLoadMap, payload_without_extras_has_none) {
+  const auto request = carla::multigpu::ParseLoadMapPayload(carla::multigpu::MakeLoadMapPayload("Town03", 2u));
+  EXPECT_EQ(request.load_id, 2u);
+  EXPECT_FALSE(request.extras.opendrive.has_value());
+  EXPECT_FALSE(request.extras.generation_parameters.has_value());
+}
+
+TEST(MultiGpuLoadMap, unknown_extras_are_skipped_and_cut_ones_dropped) {
+  carla::multigpu::LoadMapExtras extras;
+  extras.opendrive = std::string("xodr");
+  std::string payload = carla::multigpu::MakeLoadMapPayload("map", 1u);
+  // A kind of a newer build, then the OpenDRIVE.
+  const uint32_t unknown_size = 3u;
+  payload.push_back(static_cast<char>(9));
+  payload.append(reinterpret_cast<const char *>(&unknown_size), sizeof(unknown_size));
+  payload.append("abc");
+  const std::string with_xodr = payload + carla::multigpu::MakeLoadMapPayload("map", 1u, extras).substr(payload.size() - 8u);
+  const auto request = carla::multigpu::ParseLoadMapPayload(with_xodr);
+  EXPECT_EQ(request.extras.opendrive, std::optional<std::string>("xodr"));
+
+  const std::string full = carla::multigpu::MakeLoadMapPayload("map", 1u, extras);
+  const auto cut = carla::multigpu::ParseLoadMapPayload(std::string_view(full).substr(0u, full.size() - 1u));
+  EXPECT_EQ(cut.load_id, 1u);
+  EXPECT_FALSE(cut.extras.opendrive.has_value());
+}
+
+TEST_F(MultiGpuRouterTest, session_connecting_later_gets_the_remembered_generated_world) {
+  carla::multigpu::Router router(TESTING_PORT);
+  RequestLog log(router);
+  carla::multigpu::LoadMapExtras extras;
+  extras.opendrive = std::string("<OpenDRIVE/>");
+  extras.generation_parameters = std::string("params");
+  router.WriteLoadMap("/Game/Carla/Maps/OpenDriveMap", extras);
+  auto session = MakeFakeSession();
+  router.TestConnectSession(session);
+
+  const auto sent = log.Take();
+  ASSERT_EQ(sent.size(), 1u);
+  const auto request = carla::multigpu::ParseLoadMapPayload(
+      std::string_view(reinterpret_cast<const char *>(sent[0].payload.data()), sent[0].payload.size()));
+  EXPECT_EQ(request.map, "/Game/Carla/Maps/OpenDriveMap");
+  EXPECT_EQ(request.extras, extras);
+
+  // A later plain map load forgets it.
+  router.WriteLoadMap("Town01");
+  auto late = MakeFakeSession();
+  log.Take();
+  router.TestConnectSession(late);
+  const auto again = log.Take();
+  ASSERT_EQ(again.size(), 1u);
+  const auto plain = carla::multigpu::ParseLoadMapPayload(
+      std::string_view(reinterpret_cast<const char *>(again[0].payload.data()), again[0].payload.size()));
+  EXPECT_EQ(plain.map, "Town01");
+  EXPECT_FALSE(plain.extras.opendrive.has_value());
 }

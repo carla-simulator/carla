@@ -664,3 +664,36 @@ TEST(MultiGpuSensorStreams, restarted_secondary_binds_overlapping_ids_to_their_o
         std::optional<stream_id_type>(StreamIdOf(sensors.at(secondary.mirrors.at(primary_id)))));
   }
 }
+
+TEST(MultiGpuSensorStreams, self_aliased_broadcast_stream_is_reachable_with_aliases_on) {
+  // A secondary's own world snapshots (stream 1 of its server), aliased to
+  // itself so that a direct client of the secondary can read them.
+  SecondaryStreams secondary;
+  auto broadcast = secondary.server.MakeStream();
+  const stream_id_type broadcast_id = StreamIdOf(broadcast);
+  secondary.server.SetStreamAlias(broadcast_id, broadcast_id);
+
+  std::atomic_bool received{false};
+  carla::streaming::Client client;
+  client.AsyncRun(1u);
+  const auto token = secondary.server.FindToken(broadcast_id);
+  ASSERT_TRUE(token.has_value());
+  client.Subscribe(*token, [&received](auto) { received = true; });
+  EXPECT_TRUE(WriteUntilReceived(broadcast, received));
+  client.UnSubscribe(*token);
+}
+
+TEST(MultiGpuSensorStreams, episode_change_keeps_the_broadcast_alias) {
+  SecondaryStreams secondary;
+  auto broadcast = secondary.server.MakeStream();
+  const stream_id_type broadcast_id = StreamIdOf(broadcast);
+  secondary.server.SetStreamAlias(broadcast_id, broadcast_id);
+  auto sensor = secondary.server.MakeStream();
+  EXPECT_FALSE(secondary.registry.Bind(secondary.server, 7u, StreamIdOf(sensor), true).has_value());
+  ASSERT_TRUE(secondary.registry.Resolve(secondary.server, 7u, 100u).has_value());
+
+  secondary.registry.BeginEpisodeChange(secondary.server);
+  EXPECT_FALSE(secondary.server.FindStreamAlias(100u).has_value());
+  EXPECT_EQ(secondary.server.FindStreamAlias(broadcast_id), std::optional<stream_id_type>(broadcast_id));
+}
+

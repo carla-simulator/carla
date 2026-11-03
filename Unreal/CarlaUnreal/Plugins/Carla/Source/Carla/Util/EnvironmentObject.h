@@ -32,7 +32,8 @@ struct CARLA_API FEnvironmentObject
 {
   GENERATED_BODY()
 
-  AActor* Actor = nullptr;
+  // Weak: a World Partition cell can stream the actor out while it is listed.
+  TWeakObjectPtr<AActor> Actor;
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
   FString Name;

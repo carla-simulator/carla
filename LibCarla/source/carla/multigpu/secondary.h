@@ -22,6 +22,8 @@
 #include <boost/asio/strand.hpp>
 
 #include <atomic>
+#include <cstdint>
+#include <deque>
 #include <functional>
 #include <memory>
 #include <mutex>
@@ -57,6 +59,13 @@ namespace multigpu {
     void Write(Buffer buffer);
     void Write(std::string text);
 
+    /// Whether the connection to the primary is up: false before the first
+    /// connect, after a read fails (the primary is gone; this session is not
+    /// resumed) and after Stop(). Any thread.
+    bool IsConnected() const {
+      return _connected;
+    }
+
     SecondaryCommands &GetCommander() {
       return _commander;
     }
@@ -71,9 +80,17 @@ namespace multigpu {
 
   private:
 
+    using message_type = std::shared_ptr<const carla::streaming::detail::tcp::Message>;
+
     void Reconnect();
 
     void ReadData();
+
+    /// Starts writing the front of the write queue. Strand only.
+    void WriteNext();
+
+    /// Marks the connection lost and closes the socket. Strand only.
+    void Disconnect();
 
     ThreadPool                        _pool;
     boost::asio::ip::tcp::socket      _socket;
@@ -82,6 +99,14 @@ namespace multigpu {
     boost::asio::steady_timer         _connection_timer;
     std::shared_ptr<BufferPool>       _buffer_pool;
     std::atomic_bool                  _done {false};
+    std::atomic_bool                  _connected {false};
+    /// Strand only: messages waiting to be written, oldest first, with a
+    /// single write in flight so that two replies never interleave.
+    std::deque<message_type>          _write_queue;
+    bool                              _is_writing = false;
+    /// Strand only: bumped by Disconnect(), so that the completion of a write
+    /// it dropped leaves the queue alone.
+    uint64_t                          _write_generation = 0u;
     std::once_flag                    _run_flag;
     SecondaryCommands                 _commander;
   };

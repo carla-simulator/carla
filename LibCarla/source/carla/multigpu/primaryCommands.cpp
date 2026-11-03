@@ -40,13 +40,13 @@ void PrimaryCommands::SendFrameData(carla::Buffer buffer) {
 }
 
 // broadcast to all secondary servers the map to load
-void PrimaryCommands::SendLoadMap(std::string map) {
+void PrimaryCommands::SendLoadMap(std::string map, const LoadMapExtras &extras) {
   // Held across the broadcast so no GetToken() can cache a token of the old
   // episode between the purge and the secondaries receiving LOAD_MAP.
   std::scoped_lock<std::mutex> lock(_mutex);
   _tokens.clear();
   _servers.clear();
-  _router->WriteLoadMap(map);
+  _router->WriteLoadMap(map, extras);
 }
 
 // send to who the router wants the request for a token

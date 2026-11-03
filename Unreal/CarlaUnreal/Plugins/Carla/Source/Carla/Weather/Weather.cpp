@@ -2527,6 +2527,7 @@ void AWeather::UpdateStreetLightsForDayNight()
 
 void AWeather::ApplyWeather(const FWeatherParameters& InWeather)
 {
+    ++ApplySerial;
     SetWeather(InWeather);
     CheckWeatherPostProcessEffects();
 
