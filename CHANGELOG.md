@@ -36,8 +36,6 @@
 * Added **Town_C**, a China-inspired town authored by CARLA consortium member Synkrotron, modelled on the Shanghai International Automobile City in Jiading with recreations of its landmark buildings. It is in the AdditionalMaps pack. See `Docs/map_town_c.md`.
 * **OpenStreetMap support is back, and is always built**: a new OSM to OpenDRIVE converter brings back support for OpenStreetMap, free of the SUMO dependency. `carla.Osm2Odr`, `carla.Osm2OdrSettings`, `config.py --osm-path`  all now work out of the box. The `ENABLE_OSM2ODR` CMake option is gone; as it is now built by default.
 * **Improved the OpenDRIVE map generator**: a ground plane and terrain that follow road elevation, crosswalks, lane markings through junctions, `lateralProfile <shape>`, PCG street furniture, and a `spawn_custom_mesh` RPC for client-supplied meshes.
-* Added the **road stencil subsystem** to LibCarla (`Stencil`, `RoadInfoStencil`, and support in `Map`, `MapBuilder` and `ObjectParser`).
-* Added parsing of optional **OpenDRIVE offset transforms**.
 * Added a **geometry importer for map authors** (`UGeometryImporter`, Blueprint-callable): GeoJSON polygons, CSV coordinate lists and pixel contours become world-space splines, and OBJ/FBX meshes can be imported into the level from the editor (#8946, #8949, #8950).
 * **Custom maps can be used in CARLA again**: a map authored in RoadRunner, or any `.fbx` and `.xodr` pair, can be imported and driven on, in the editor and in a package.
 * Added **content packs**: maps, props, vehicles and pedestrians authored in a source build are cooked into a pack with `Util/ContentPacks/carla-pack`, and installing the pack adds them to a CARLA package of the same release without rebuilding or repackaging it. The towns the default package leaves out are distributed as packs too. See `Docs/content_authoring_packs.md`.
@@ -84,7 +82,6 @@
 #### Performance
 
 * **Multi-camera rigs are much faster**: all raster, fisheye and ray-traced cameras now share one GPU synchronisation per tick and a pooled readback instead of one drain per camera. A 5-camera 1080p rig gains about 30% (9.4 to 12.0 fps per camera), and the marginal cost of an extra camera drops from 19 to 13.4 ms. A single camera is unchanged, and so is the image.
-* **Raster cameras now reuse GPU readback staging buffers**: the pinhole RGB, depth, segmentation and normals paths forward their readback pools through `ImageUtil::ReadSensorImageDataAsyncFColor` and `ReadSensorImageDataAsyncFLinearColor`, avoiding per-frame `FRHIGPUTextureReadback` allocation and release on the RHI thread. Image output is unchanged; a separate GPU-bound benchmark showed no meaningful frame-rate change.
 * **Ray-cast LiDARs are much faster** (`sensor.lidar.ray_cast`, `ray_cast_semantic`, `hss_lidar`): they simulate on background tasks that overlap the other sensors' work, and several LiDARs run in parallel. Three semantic LiDARs on Town10 went from 130 to 86 ms per frame. Output is unchanged for a given seed; `carla.Lidar.Batch 0` restores sequential simulation.
 * **Reworked the quality levels** (`-quality-level=<Low|Medium|High|Epic>`, case-sensitive, Epic by default) on UE 5.8 scalability groups. Every tier now keeps the full view distance, foliage density and simulation content (Low used to cut them, which changed what a sensor saw), and lowering the tier only costs image quality. Epic looks exactly as before; only Epic uses hardware ray tracing on ordinary cameras, and `rt_lens` works on all of them.
 * **Optimized the DVS camera** grayscale conversion, about 8x faster in log mode and 4x in linear, with bit-identical output.
@@ -131,8 +128,6 @@
 
 * **Improved the documentation** of many classes and functions with information that was missing or wrong, and documented the Python API that the bindings exposed but the reference never listed: the actor component, bone and socket queries, the ego spawn points and IMU gravity, the geographic projection, the physics control settings, `Client.load_world_if_different`, and the `VehicleTelemetryData`, `WheelTelemetryData`, `Quaternion`, `BoneTransformDataIn`, `BoneTransformDataOut` and `FakeImage` classes.
 * **Updated the walker skeleton tutorial** to `carla.WalkerBoneControlIn`, `Walker.set_bones` and `Walker.show_pose`, and fixed the bone names in its skeleton tree.
-* **Documented world-coordinate velocity semantics** for the velocity, angular velocity and acceleration getters of `Actor` and `ActorSnapshot`, and `Actor.set_target_velocity`/`set_target_angular_velocity`.
-* **Documented left-hand traffic** in `Docs/core_map.md`: the OpenDRIVE `rule="LHT"` road attribute, the right-hand traffic default and the impact on signs and signals.
 
 ### Bug fixes
 
@@ -142,11 +137,6 @@
 * Fixed the `noise_seed` attribute of `sensor.lidar.ray_cast` being ignored, so every ray-cast LiDAR used the default seed.
 * Fixed the IMU sensor's compass yaw orientation, and the order in which sensors are disposed when their parent actor is destroyed.
 * Fixed several legacy UE4-era bugs across LibCarla and the Carla plugin: LiDAR memory reset, DVS validation, camera profiling, image reads, sensor materials and Python sensor teardown.
-* Fixed **fisheye camera crashes on spawn under UE 5.8** (`Assertion failed: IsInRenderingThread()`), by delivering their captures through the per-tick batched GPU readback with a dedicated recycling pool rather than locking readbacks from a worker thread.
-* Fixed **DLSS Ray Reconstruction losing temporal history** on a live `sensor.camera.rt_lens` with a capture interval greater than the previous 10-second idle timeout. The NGX feature now follows the sensor view-state lifetime; the idle timeout is an opt-in fallback (`r.PathTracing.DLSSRR.FeatureIdleReleaseSeconds=0` by default).
-* Fixed `sensor.camera.rt_lens` leaving `r.RayTracing.NonBlockingPipelineCreation=0` after destruction in synchronous mode; `EndPlay` now restores the previous value.
-* Fixed `sensor.camera.rt_lens` retaining stale emissive lighting, such as the previous colour of a traffic signal, after material parameter changes; the DLSS-RR temporal history is cleared on material invalidation without clearing it for ordinary motion.
-* Fixed three bugs in the `FPixelReader` GPU readback path: an inverted validity guard discarding valid frames, a readback-wait task scheduled where it could deadlock game/render/RHI threads, and a row-pitch alias that truncated readbacks to one row.
 
 #### Simulation and content
 
@@ -154,12 +144,9 @@
 * Fixed the traffic sign bounding box to use the first valid trigger volume and keep its rotation, with a guard for null volumes.
 * Fixed `sensor.camera.rt_lens` rendering almost black at night: its auto exposure was pinned to a daylight range, and now follows its camera profile with only the upper end capped (`carla.RTLens.MaxAutoExposureEV`).
 * Fixed the bright flash of a newly spawned camera (pressing TAB in `manual_control.py`, for instance), whose auto exposure started from a default and took seconds to adapt. Its first captures are rendered as camera cuts (`carla.Camera.SpawnCameraCuts`), so the exposure is settled from the second image on.
-* Fixed **path-traced car paint appearing nearly black**: `M_CarPaintMaster` now clamps roughness to 0.2 only on the path-traced side of `PathTracingQualitySwitch`, leaving the raster appearance unchanged (`Util/ContentRepair/fix_carpaint_pathtracing.py`).
-* Raised the NuRec hybrid example's sky-light default (`skymap.DEFAULT_INTENSITY`) from 26000 to 160000 to avoid cars appearing 3-6x too dark when composited against the neural sky.
 * Fixed the `color` attribute being ignored by the Lincoln MKZ and Mini Cooper, which always spawned black: their meshes imported the car-paint slot under a name `BaseVehiclePawn` does not paint.
 * Fixed a potential segfault in `LaneCrossingCalculator` with missing lane marking records, and hardened pedestrian navigation against a null dereference while collecting traffic lights for walker routing.
 * Fixed Digital Twin Tool crashes on dense metropolitan OSM data, vegetation spawning inside driving lanes on rural maps, and one-way streets being silently excluded (#9565, #9678).
-* Fixed **World Partition maps loading without actors or streaming cells** when the CARLA content bundle is checked out in its standard `Content/Carla` subfolder: the Carla module now registers a bundle package mount point so the levels' external-actor references resolve correctly (Town12, Town13 and Town15). Contributed by Guillermo Lopez Diest.
 
 #### ROS 2
 
@@ -190,10 +177,6 @@
 * Fixed `carla-pack add` dropping existing OpenDRIVE, traffic-light phase, navigation and Traffic Manager sidecars when re-adding an in-pack map without sidecar flags (#9987).
 * Fixed the Windows build: the setup installs the MSVC 14.38 toolset the engine fork needs, MSVC builds use `/W4`, and two compile and link errors in LibCarla.
 * Fixed the CMake toolchain picking the oldest clang sysroot when an upgraded engine keeps several side by side.
-* Fixed **UE 5.8 packaging** by passing `-pak -iostore` to `BuildCookRun` and removing stale `ue.projectstore` files during archive cleanup; otherwise staged packages could lack cooked content or fail on startup.
-* Updated deprecated translucency scalability CVars to their UE 5.8 names (`r.TranslucencyLightingVolume.Dim` and `.Blur`) so they no longer fail the cook.
-* Suppressed duplicate external actor/object package warnings in World Partition towns by extending the matching engine asset-registry filter to validate the `__ExternalObjects__` folder as well as `__ExternalActors__` (requires the corresponding `AssetRegistry.cpp` change in the engine fork).
-* Fixed compiler warnings in 20 LibCarla files, including signed/unsigned conversions, pessimizing moves, range-for deep copies and C-style casts (ported from `ue4-dev`).
 
 #### Examples and tests
 
