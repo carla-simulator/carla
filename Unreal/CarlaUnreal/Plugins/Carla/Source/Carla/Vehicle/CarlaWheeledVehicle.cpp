@@ -17,6 +17,7 @@
 #include "Carla/Util/EmptyActor.h"
 #include "Carla/Util/BoundingBoxCalculator.h"
 #include "Carla/Vegetation/VegetationManager.h"
+#include "Carla/Vehicle/CarlaVehicleAnimationInstance.h"
 
 #include <util/ue-header-guard-begin.h>
 #include "Components/BoxComponent.h"
@@ -31,11 +32,28 @@
 #include "DrawDebugHelpers.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "PhysicsEngine/PhysicsObjectExternalInterface.h"
+#include "Physics/Experimental/PhysScene_Chaos.h"
 #include <util/ue-header-guard-end.h>
 
 // =============================================================================
 // -- Constructor and destructor -----------------------------------------------
 // =============================================================================
+
+// SnapshotPose fills LocalTransforms with parent-relative bone transforms, so
+// scaling those by the component transform alone never reaches world space.
+static void MakePoseWorldSpace(USkeletalMeshComponent *Mesh, FPoseSnapshot &Pose)
+{
+  if (Mesh == nullptr)
+  {
+    return;
+  }
+  const FTransform ComponentToWorld = Mesh->GetComponentTransform();
+  const int32 NumBones = FMath::Min(Pose.LocalTransforms.Num(), Mesh->GetNumBones());
+  for (int32 BoneIndex = 0; BoneIndex < NumBones; ++BoneIndex)
+  {
+    Pose.LocalTransforms[BoneIndex] = Mesh->GetBoneTransform(BoneIndex, ComponentToWorld);
+  }
+}
 
 void ACarlaWheeledVehicle::PrintROS2Message(const char* Message)
 {
@@ -129,8 +147,6 @@ void ACarlaWheeledVehicle::BeginPlay()
   }
   ResetConstraints();
 
-  float FrictionScale = 3.5f;
-
   UChaosWheeledVehicleMovementComponent* MovementComponent = GetChaosWheeledVehicleMovementComponent();
 
   if (MovementComponent)
@@ -144,26 +160,6 @@ void ACarlaWheeledVehicle::BeginPlay()
     // squared curve a 0.1 command yields ~1% of full lock and controllers
     // tuned for a linear response cannot corner.
     MovementComponent->SteeringInputRate.InputCurveFunction = EInputFunctionType::LinearFunction;
-
-    // Setup Tire Configs with default value. This is needed to avoid getting
-    // friction values of previously created TireConfigs for the same vehicle
-    // blueprint.
-    TArray<float> OriginalFrictions;
-    OriginalFrictions.Init(FrictionScale, MovementComponent->Wheels.Num());
-    SetWheelsFrictionScale(OriginalFrictions);
-
-    // Check if it overlaps with a Friction trigger, if so, update the friction
-    // scale.
-    TArray<AActor*> OverlapActors;
-    GetOverlappingActors(OverlapActors, AFrictionTrigger::StaticClass());
-    for (const auto& Actor : OverlapActors)
-    {
-      AFrictionTrigger* FrictionTrigger = Cast<AFrictionTrigger>(Actor);
-      if (FrictionTrigger)
-      {
-        FrictionScale = FrictionTrigger->Friction;
-      }
-    }
 
     // Set the friction scale to Wheel CDO and update wheel setups
     TArray<FChaosWheelSetup> NewWheelSetups = MovementComponent->WheelSetups;
@@ -561,10 +557,7 @@ void ACarlaWheeledVehicle::TickActor(float DeltaTime, enum ELevelTick TickType, 
 
   FPoseSnapshot pose;
   GetMesh()->SnapshotPose(pose);
-  for(FTransform &transform : pose.LocalTransforms)
-  {
-    transform *= GetMesh()->GetComponentTransform();
-  }
+  MakePoseWorldSpace(GetMesh(), pose);
 
   WorldTransformedPose = pose;
 
@@ -659,6 +652,13 @@ FVector ACarlaWheeledVehicle::GetVehicleOrientation() const
 
 int32 ACarlaWheeledVehicle::GetVehicleCurrentGear() const
 {
+  // Acceleration control (the Autoware command path) sets the forward speed
+  // directly and never engages the transmission, which stays in neutral (0).
+  // It only drives forward, so report the first forward gear.
+  if (AccelerationControl->IsActive())
+  {
+    return 1;
+  }
   return BaseMovementComponent->GetVehicleCurrentGear();
 }
 
@@ -675,6 +675,12 @@ FVector ACarlaWheeledVehicle::GetVehicleBoundingBoxExtent() const
 float ACarlaWheeledVehicle::GetMaximumSteerAngle() const
 {
   UChaosWheeledVehicleMovementComponent* MovementComponent = GetChaosWheeledVehicleMovementComponent();
+  // The runtime wheel holds the applied physics control, the class the defaults.
+  if (MovementComponent != nullptr && MovementComponent->Wheels.Num() > 0 &&
+      MovementComponent->Wheels[0] != nullptr)
+  {
+    return MovementComponent->Wheels[0]->MaxSteerAngle;
+  }
   if (MovementComponent != nullptr && MovementComponent->WheelSetups.Num() > 0 &&
       MovementComponent->WheelSetups[0].WheelClass != nullptr)
   {
@@ -770,7 +776,12 @@ void ACarlaWheeledVehicle::SetWheelsFrictionScale(TArray<float>& WheelsFrictionS
     const int32 Count = FMath::Min(Movement->Wheels.Num(), WheelsFrictionScale.Num());
     for (int32 i = 0; i < Count; ++i)
     {
+      Movement->SetWheelFrictionMultiplier(i, WheelsFrictionScale[i]);
       Movement->Wheels[i]->FrictionForceMultiplier = WheelsFrictionScale[i];
+      if (LastPhysicsControl.Wheels.IsValidIndex(i))
+      {
+        LastPhysicsControl.Wheels[i].FrictionForceMultiplier = WheelsFrictionScale[i];
+      }
     }
   }
 }
@@ -952,84 +963,10 @@ void ACarlaWheeledVehicle::ApplyVehiclePhysicsControl(
   auto& SteeringSetup = VehicleMovComponent.SteeringSetup;
   SteeringSetup.SteeringCurve.EditorCurveData = PhysicsControl.SteeringCurve;
 
-  // Wheels Setup
-  auto WheelCount = PhysicsControl.Wheels.Num();
-
-  // @TODO: What about bikes or NW vehicles?
-  if (WheelCount != 4)
-  {
-    UE_LOG(LogCarla, Error, TEXT("Number of WheelPhysicsControl is not 4."));
-    return;
-  }
-
-  for (auto& WheelSetup : VehicleMovComponent.WheelSetups)
-    check(WheelSetup.WheelClass != nullptr);
-
-  // The runtime wheel instances only exist once the Chaos vehicle finishes its
-  // physics initialization (after the spawn frame): applying wheel physics
-  // before that would index an empty array and crash the server.
-  if (VehicleMovComponent.Wheels.Num() < WheelCount)
-  {
-    UE_LOG(LogCarla, Warning,
-        TEXT("ApplyVehiclePhysicsControl: wheels not initialized yet on %s, skipping wheel setup"),
-        *GetName());
-    return;
-  }
-
-  for (int32 i = 0; i < WheelCount; ++i)
-  {
-    auto& In = PhysicsControl.Wheels[i];
-    auto OutPtr = VehicleMovComponent.Wheels[i];
-    check(OutPtr != nullptr);
-    auto& Out = *OutPtr;
-
-    Out.AxleType = In.AxleType;
-    Out.Offset = In.Offset;
-    VehicleMovComponent.SetWheelRadius(i, In.WheelRadius);
-    Out.WheelWidth = In.WheelWidth;
-    Out.WheelMass = In.WheelMass;
-    Out.CorneringStiffness = In.CorneringStiffness;
-    VehicleMovComponent.SetWheelFrictionMultiplier(i, In.FrictionForceMultiplier);
-    Out.SideSlipModifier = In.SideSlipModifier;
-    Out.SlipThreshold = In.SlipThreshold;
-    Out.SkidThreshold = In.SkidThreshold;
-    VehicleMovComponent.SetWheelMaxSteerAngle(i, In.MaxSteerAngle);
-    Out.bAffectedBySteering = In.bAffectedBySteering;
-    Out.bAffectedByBrake = In.bAffectedByBrake;
-    Out.bAffectedByHandbrake = In.bAffectedByHandbrake;
-    Out.bAffectedByEngine = In.bAffectedByEngine;
-    VehicleMovComponent.SetABSEnabled(i, In.bABSEnabled);
-    VehicleMovComponent.SetTractionControlEnabled(i, In.bTractionControlEnabled);
-    Out.MaxWheelspinRotation = In.MaxWheelspinRotation;
-    Out.ExternalTorqueCombineMethod = In.ExternalTorqueCombineMethod;
-    Out.LateralSlipGraph.EditorCurveData = In.LateralSlipGraph;
-    Out.SuspensionAxis = In.SuspensionAxis;
-    Out.SuspensionForceOffset = In.SuspensionForceOffset;
-    Out.SuspensionMaxRaise = In.SuspensionMaxRaise;
-    Out.SuspensionMaxDrop = In.SuspensionMaxDrop;
-    Out.SuspensionDampingRatio = In.SuspensionDampingRatio;
-    Out.WheelLoadRatio = In.WheelLoadRatio;
-    Out.SpringRate = In.SpringRate;
-    Out.SpringPreload = In.SpringPreload;
-    Out.SuspensionSmoothing = In.SuspensionSmoothing;
-    Out.RollbarScaling = In.RollbarScaling;
-    Out.SweepShape = In.SweepShape;
-    Out.SweepType = In.SweepType;
-    VehicleMovComponent.SetWheelMaxBrakeTorque(i, In.MaxBrakeTorque);
-    VehicleMovComponent.SetWheelHandbrakeTorque(i, In.MaxHandBrakeTorque);
-    Out.WheelIndex = In.WheelIndex;
-    Out.Location = In.Location;
-    Out.OldLocation = In.OldLocation;
-    Out.Velocity = In.Velocity;
-
-    Out.SweepShape =
-      PhysicsControl.UseSweepWheelCollision ?
-      ESweepShape::Spherecast :
-      ESweepShape::Raycast;
-  }
-
+  // Recreate first: it rebuilds the wheels from the wheel class defaults.
   VehicleMovComponent.RecreatePhysicsState();
   ResetConstraints();
+  ApplyWheelPhysicsControl();
 
   auto* Recorder = UCarlaStatics::GetRecorder(GetWorld());
   if (Recorder && Recorder->IsEnabled())
@@ -1039,6 +976,84 @@ void ACarlaWheeledVehicle::ApplyVehiclePhysicsControl(
 
   // Update physics in the Ackermann Controller
   AckermannController.UpdateVehiclePhysics(this);
+}
+
+void ACarlaWheeledVehicle::ApplyWheelPhysicsControl()
+{
+  UChaosWheeledVehicleMovementComponent* Movement = GetChaosWheeledVehicleMovementComponent();
+  if (Movement == nullptr)
+  {
+    return;
+  }
+  const TArray<FWheelPhysicsControl>& WheelControls = LastPhysicsControl.Wheels;
+  const int32 WheelCount = WheelControls.Num();
+  if (WheelCount == 0)
+  {
+    return;
+  }
+  if (WheelCount != Movement->WheelSetups.Num())
+  {
+    UE_LOG(LogCarla, Error,
+        TEXT("%s: %d WheelPhysicsControl for %d wheels, skipping wheel setup"),
+        *GetName(), WheelCount, Movement->WheelSetups.Num());
+    return;
+  }
+  // The runtime wheel instances only exist once the Chaos vehicle finishes its
+  // physics initialization (after the spawn frame): applying wheel physics
+  // before that would index an empty array and crash the server.
+  if (Movement->Wheels.Num() < WheelCount)
+  {
+    UE_LOG(LogCarla, Warning,
+        TEXT("ApplyVehiclePhysicsControl: wheels not initialized yet on %s, skipping wheel setup"),
+        *GetName());
+    return;
+  }
+
+  for (int32 i = 0; i < WheelCount; ++i)
+  {
+    const FWheelPhysicsControl& In = WheelControls[i];
+    UChaosVehicleWheel* OutPtr = Movement->Wheels[i];
+    check(OutPtr != nullptr);
+    UChaosVehicleWheel& Out = *OutPtr;
+
+    Movement->SetWheelRadius(i, In.WheelRadius);
+    Movement->SetWheelFrictionMultiplier(i, In.FrictionForceMultiplier);
+    Movement->SetWheelMaxSteerAngle(i, In.MaxSteerAngle);
+    Movement->SetWheelMaxBrakeTorque(i, In.MaxBrakeTorque);
+    Movement->SetWheelHandbrakeTorque(i, In.MaxHandBrakeTorque);
+    Movement->SetABSEnabled(i, In.bABSEnabled);
+    Movement->SetTractionControlEnabled(i, In.bTractionControlEnabled);
+    Movement->SetAffectedByBrake(i, In.bAffectedByBrake);
+    Movement->SetAffectedByHandbrake(i, In.bAffectedByHandbrake);
+    Movement->SetAffectedBySteering(i, In.bAffectedBySteering);
+    // On a front or rear axle the differential decides which wheels are
+    // driven: only let the control take power away from one of them.
+    if (!In.bAffectedByEngine || Out.AxleType == EAxleType::Undefined)
+    {
+      Movement->SetAffectedByEngine(i, In.bAffectedByEngine);
+    }
+    Movement->SetTorqueCombineMethod(In.ExternalTorqueCombineMethod, i);
+
+    // get_physics_control reads these back, and the wheel trace reads the
+    // sweep settings from the wheel object every tick.
+    Out.WheelRadius = In.WheelRadius;
+    Out.FrictionForceMultiplier = In.FrictionForceMultiplier;
+    Out.MaxSteerAngle = In.MaxSteerAngle;
+    Out.MaxBrakeTorque = In.MaxBrakeTorque;
+    Out.MaxHandBrakeTorque = In.MaxHandBrakeTorque;
+    Out.bABSEnabled = In.bABSEnabled;
+    Out.bTractionControlEnabled = In.bTractionControlEnabled;
+    Out.bAffectedByBrake = In.bAffectedByBrake;
+    Out.bAffectedByHandbrake = In.bAffectedByHandbrake;
+    Out.bAffectedBySteering = In.bAffectedBySteering;
+    Out.bAffectedByEngine = In.bAffectedByEngine;
+    Out.ExternalTorqueCombineMethod = In.ExternalTorqueCombineMethod;
+    Out.SweepShape =
+      LastPhysicsControl.UseSweepWheelCollision ?
+      ESweepShape::Spherecast :
+      ESweepShape::Raycast;
+    Out.SweepType = In.SweepType;
+  }
 }
 
 void ACarlaWheeledVehicle::SetCenterOfMass(UChaosWheeledVehicleMovementComponent& VehicleMovComponent, const FVehiclePhysicsControl& PhysicsControl)
@@ -1230,40 +1245,306 @@ void ACarlaWheeledVehicle::SetCarlaMovementComponent(UBaseCarlaMovementComponent
   BaseMovementComponent = NewBaseMovementComponent;
 }
 
+// The pose the animation blueprint shows for a wheel, or the rest pose if the
+// blueprint does not derive from UCarlaVehicleAnimationInstance.
+static FWheelAnimationData GetShownWheelPose(const USkeletalMeshComponent &Mesh, int32 WheelIndex)
+{
+  const auto *VehicleAnim = Cast<UCarlaVehicleAnimationInstance>(Mesh.GetAnimInstance());
+  const FWheelAnimationData *Pose = VehicleAnim != nullptr ? VehicleAnim->GetWheelPose(WheelIndex) : nullptr;
+  return Pose != nullptr ? *Pose : FWheelAnimationData{NAME_None, FRotator::ZeroRotator, FVector::ZeroVector};
+}
+
 void ACarlaWheeledVehicle::SetWheelSteerDirection(EVehicleWheelLocation WheelLocation, float AngleInDeg)
 {
-  if (bPhysicsEnabled == false)
+  if (FWheelAnimationData *Pose = GetOverriddenWheelPoseOrWarn(WheelLocation, TEXT("SetWheelSteerDirection")))
   {
-    check((uint8)WheelLocation >= 0)
-      UVehicleAnimationInstance* VehicleAnim = Cast<UVehicleAnimationInstance>(GetMesh()->GetAnimInstance());
-    check(VehicleAnim != nullptr)
-      // ToDo We need to investigate about this
-      //VehicleAnim->GetWheelAnimData()SetWheelRotYaw((uint8)WheelLocation, AngleInDeg);
-  }
-  else
-  {
-    UE_LOG(LogTemp, Warning, TEXT("Cannot set wheel steer direction. Physics are enabled."))
+    Pose->RotOffset.Yaw = AngleInDeg;
   }
 }
 
-float ACarlaWheeledVehicle::GetWheelSteerAngle(EVehicleWheelLocation WheelLocation) {
+float ACarlaWheeledVehicle::GetWheelSteerAngle(EVehicleWheelLocation WheelLocation)
+{
+  // EVehicleWheelLocation is the index into the movement component's wheel
+  // arrays: UChaosVehicleWheel::WheelIndex is documented as "our index in the
+  // vehicle's (and setup's) wheels array".
+  const int32 WheelIndex = static_cast<int32>(WheelLocation);
+  return HasWheelOrWarn(WheelIndex, TEXT("GetWheelSteerAngle")) ? GetWheelPose(WheelIndex).RotOffset.Yaw : 0.0F;
+}
 
-  UChaosWheeledVehicleMovementComponent* MovementComponent =
-      GetChaosWheeledVehicleMovementComponent();
-  const int32 WheelIndex = (int32)WheelLocation;
-  // UChaosVehicleWheel::GetSteerAngle() check()s on PhysicsVehicleOutput, so
-  // guard it here: the physics output only exists while the Chaos vehicle
-  // simulation is running for this actor.
-  if (bPhysicsEnabled && MovementComponent != nullptr &&
-      MovementComponent->PhysicsVehicleOutput() != nullptr &&
-      WheelIndex >= 0 && WheelIndex < MovementComponent->Wheels.Num())
+void ACarlaWheeledVehicle::SetWheelPitchAngle(EVehicleWheelLocation WheelLocation, float AngleInDeg)
+{
+  if (FWheelAnimationData *Pose = GetOverriddenWheelPoseOrWarn(WheelLocation, TEXT("SetWheelPitchAngle")))
   {
-    return MovementComponent->Wheels[WheelIndex]->GetSteerAngle();
+    Pose->RotOffset.Pitch = AngleInDeg;
   }
-  UE_LOG(LogTemp, Warning,
-      TEXT("GetWheelSteerAngle: no physics simulation available for wheel %d."),
-      WheelIndex);
-  return 0.0F;
+}
+
+float ACarlaWheeledVehicle::GetWheelPitchAngle(EVehicleWheelLocation WheelLocation)
+{
+  const int32 WheelIndex = static_cast<int32>(WheelLocation);
+  return HasWheelOrWarn(WheelIndex, TEXT("GetWheelPitchAngle")) ? GetWheelPose(WheelIndex).RotOffset.Pitch : 0.0F;
+}
+
+void ACarlaWheeledVehicle::SetWheelSuspensionOffset(EVehicleWheelLocation WheelLocation, float OffsetInCm)
+{
+  if (FWheelAnimationData *Pose = GetOverriddenWheelPoseOrWarn(WheelLocation, TEXT("SetWheelSuspensionOffset")))
+  {
+    // The same offset Chaos applies.
+    Pose->LocOffset = -GetWheelSuspensionAxis(static_cast<int32>(WheelLocation)) * OffsetInCm;
+  }
+}
+
+float ACarlaWheeledVehicle::GetWheelSuspensionOffset(EVehicleWheelLocation WheelLocation)
+{
+  const int32 WheelIndex = static_cast<int32>(WheelLocation);
+  if (!HasWheelOrWarn(WheelIndex, TEXT("GetWheelSuspensionOffset")))
+  {
+    return 0.0F;
+  }
+  return -FVector::DotProduct(GetWheelPose(WheelIndex).LocOffset, GetWheelSuspensionAxis(WheelIndex));
+}
+
+void ACarlaWheeledVehicle::SetWheelAnimationOverride(bool bEnabled)
+{
+  if (bEnabled && !HasCarlaVehicleAnimation())
+  {
+    UE_LOG(LogCarla, Warning,
+        TEXT("SetWheelAnimationOverride: the animation blueprint of %s does not derive from CarlaVehicleAnimationInstance."),
+        *GetName());
+    return;
+  }
+  if (bEnabled && !bWheelAnimationOverridden)
+  {
+    // Start from the latest pose, so the wheels do not jump.
+    OverriddenWheelPoses = GetWheelPoses();
+  }
+  else if (!bEnabled)
+  {
+    if (bWheelAnimationOverridden && IsSimulatedByChaos())
+    {
+      SeedChaosWheels(OverriddenWheelPoses);
+    }
+    OverriddenWheelPoses.Reset();
+  }
+  bWheelAnimationOverridden = bEnabled;
+}
+
+FWheelAnimationData *ACarlaWheeledVehicle::GetOverriddenWheelPoseOrWarn(
+    EVehicleWheelLocation WheelLocation,
+    const TCHAR *Caller)
+{
+  const int32 WheelIndex = static_cast<int32>(WheelLocation);
+  if (!HasWheelOrWarn(WheelIndex, Caller))
+  {
+    return nullptr;
+  }
+  if (!bWheelAnimationOverridden)
+  {
+    UE_LOG(LogCarla, Warning,
+        TEXT("%s: the wheel animation override is off on %s; enable it first."),
+        Caller, *GetName());
+    return nullptr;
+  }
+  return OverriddenWheelPoses.IsValidIndex(WheelIndex) ? &OverriddenWheelPoses[WheelIndex] : nullptr;
+}
+
+FWheelAnimationData ACarlaWheeledVehicle::GetWheelPose(int32 WheelIndex) const
+{
+  if (bWheelAnimationOverridden && OverriddenWheelPoses.IsValidIndex(WheelIndex))
+  {
+    return OverriddenWheelPoses[WheelIndex];
+  }
+  if (const UChaosVehicleWheel *Wheel = GetSimulatedWheel(WheelIndex))
+  {
+    // The pose Chaos draws, in degrees and cm.
+    const FRotator Rotation(Wheel->GetRotationAngle(), Wheel->GetSteerAngle(), 0.0f);
+    const FVector Offset = -GetWheelSuspensionAxis(WheelIndex) * Wheel->GetSuspensionOffset();
+    return FWheelAnimationData{NAME_None, Rotation, Offset};
+  }
+  return GetShownWheelPose(*GetMesh(), WheelIndex);
+}
+
+TArray<FWheelAnimationData> ACarlaWheeledVehicle::GetWheelPoses() const
+{
+  TArray<FWheelAnimationData> Poses;
+  for (int32 i = 0; HasWheel(i); ++i)
+  {
+    Poses.Add(GetWheelPose(i));
+  }
+  return Poses;
+}
+
+void ACarlaWheeledVehicle::SeedChaosWheels(const TArray<FWheelAnimationData> &Poses)
+{
+  UChaosWheeledVehicleMovementComponent *Movement = GetChaosWheeledVehicleMovementComponent();
+  if (Movement == nullptr)
+  {
+    return;
+  }
+  // SetSnapshot dereferences the physics vehicle, created with this output.
+  TUniquePtr<FPhysicsVehicleOutput> &Output = Movement->PhysicsVehicleOutput();
+  if (!Output.IsValid() || Output->Wheels.Num() != Poses.Num())
+  {
+    return;
+  }
+  FWheeledSnaphotData Snapshot;
+  Movement->GetBaseSnapshot(Snapshot);
+  TArray<float> Spins;
+  const float ForwardSpeed = FVector::DotProduct(Snapshot.LinearVelocity, GetActorForwardVector());
+  for (int32 i = 0; i < Poses.Num(); ++i)
+  {
+    // Chaos recomputes steering and suspension every step; only the spin carries over.
+    const FWheelAnimationData &Pose = Poses[i];
+    const float Radius = GetWheelRadius(i);
+    FWheelSnapshot &Wheel = Snapshot.WheelSnapshots.AddDefaulted_GetRef();
+    Wheel.WheelRotationAngle = Pose.RotOffset.Pitch;
+    Wheel.SteeringAngle = Pose.RotOffset.Yaw;
+    Wheel.SuspensionOffset = -FVector::DotProduct(Pose.LocOffset, GetWheelSuspensionAxis(i));
+    Wheel.WheelRadius = Radius;
+    Wheel.WheelAngularVelocity = Radius > UE_KINDA_SMALL_NUMBER ? ForwardSpeed / Radius : 0.0f;
+    // What is drawn until the next physics step, which a sleeping vehicle skips.
+    Output->Wheels[i].AngularPosition = FMath::DegreesToRadians(-Wheel.WheelRotationAngle);
+    Spins.Add(Wheel.WheelRotationAngle);
+  }
+  Movement->SetSnapshot(Snapshot);
+  ArmSeedRewrite(MoveTemp(Spins));
+}
+
+void ACarlaWheeledVehicle::ArmSeedRewrite(TArray<float> Spins)
+{
+  DisarmSeedRewrite();
+  FPhysScene *Scene = GetWorld() != nullptr ? GetWorld()->GetPhysicsScene() : nullptr;
+  if (Scene == nullptr)
+  {
+    return;
+  }
+  PendingSeedSpins = MoveTemp(Spins);
+  bSeedStepStarted = false;
+  SeedPreTickHandle = Scene->OnPhysScenePreTick.AddUObject(this, &ACarlaWheeledVehicle::OnSeedPreTick);
+  SeedPostTickHandle = Scene->OnPhysScenePostTick.AddUObject(this, &ACarlaWheeledVehicle::OnSeedPostTick);
+}
+
+void ACarlaWheeledVehicle::DisarmSeedRewrite()
+{
+  FPhysScene *Scene = GetWorld() != nullptr ? GetWorld()->GetPhysicsScene() : nullptr;
+  if (Scene != nullptr)
+  {
+    Scene->OnPhysScenePreTick.Remove(SeedPreTickHandle);
+    Scene->OnPhysScenePostTick.Remove(SeedPostTickHandle);
+  }
+  SeedPreTickHandle.Reset();
+  SeedPostTickHandle.Reset();
+  PendingSeedSpins.Reset();
+}
+
+void ACarlaWheeledVehicle::OnSeedPreTick(FPhysScene_Chaos *Scene, float DeltaSeconds)
+{
+  // This step is the first to start from the seeded wheels.
+  bSeedStepStarted = true;
+}
+
+void ACarlaWheeledVehicle::OnSeedPostTick(FChaosScene *Scene)
+{
+  if (!bSeedStepStarted)
+  {
+    return;
+  }
+  UChaosWheeledVehicleMovementComponent *Movement = GetChaosWheeledVehicleMovementComponent();
+  if (Movement != nullptr)
+  {
+    TUniquePtr<FPhysicsVehicleOutput> &Output = Movement->PhysicsVehicleOutput();
+    if (Output.IsValid() && Output->Wheels.Num() == PendingSeedSpins.Num())
+    {
+      for (int32 i = 0; i < PendingSeedSpins.Num(); ++i)
+      {
+        Output->Wheels[i].AngularPosition = FMath::DegreesToRadians(-PendingSeedSpins[i]);
+      }
+    }
+  }
+  DisarmSeedRewrite();
+}
+
+bool ACarlaWheeledVehicle::HasWheelOrWarn(int32 WheelIndex, const TCHAR *Caller) const
+{
+  if (!HasWheel(WheelIndex))
+  {
+    // Reachable from the client, a bike asked for BL_Wheel say, so it must not
+    // bring the server down.
+    UE_LOG(LogCarla, Warning,
+        TEXT("%s: wheel location %d does not exist on %s."),
+        Caller, WheelIndex, *GetName());
+    return false;
+  }
+  return true;
+}
+
+bool ACarlaWheeledVehicle::HasWheel(int32 WheelIndex) const
+{
+  const UChaosWheeledVehicleMovementComponent *Movement = GetChaosWheeledVehicleMovementComponent();
+  return Movement != nullptr && Movement->WheelSetups.IsValidIndex(WheelIndex);
+}
+
+bool ACarlaWheeledVehicle::HasCarlaVehicleAnimation() const
+{
+  return Cast<UCarlaVehicleAnimationInstance>(GetMesh()->GetAnimInstance()) != nullptr;
+}
+
+const UChaosVehicleWheel *ACarlaWheeledVehicle::GetSimulatedWheel(int32 WheelIndex) const
+{
+  // Non-const: the engine does not mark PhysicsVehicleOutput() const.
+  UChaosWheeledVehicleMovementComponent *Movement = GetChaosWheeledVehicleMovementComponent();
+  if (!IsSimulatedByChaos() || Movement == nullptr ||
+      !Movement->Wheels.IsValidIndex(WheelIndex))
+  {
+    return nullptr;
+  }
+  // The wheel getters read the async solver's output and check() that it is
+  // there; it only exists once the physics state has been created and stepped.
+  const UChaosVehicleWheel *Wheel = Movement->Wheels[WheelIndex];
+  const TUniquePtr<FPhysicsVehicleOutput> &VehicleOutput = Movement->PhysicsVehicleOutput();
+  if (Wheel == nullptr || !VehicleOutput.IsValid() ||
+      !VehicleOutput->Wheels.IsValidIndex(Wheel->WheelIndex))
+  {
+    return nullptr;
+  }
+  return Wheel;
+}
+
+bool ACarlaWheeledVehicle::IsSimulatedByChaos() const
+{
+  return bPhysicsEnabled &&
+      (BaseMovementComponent == nullptr || BaseMovementComponent->IsA<UDefaultMovementComponent>());
+}
+
+float ACarlaWheeledVehicle::GetWheelRadius(int32 WheelIndex) const
+{
+  if (LastPhysicsControl.Wheels.IsValidIndex(WheelIndex))
+  {
+    return LastPhysicsControl.Wheels[WheelIndex].WheelRadius;
+  }
+  const UChaosVehicleWheel *Wheel = GetWheelDefaults(WheelIndex);
+  return Wheel != nullptr ? Wheel->WheelRadius : 0.0f;
+}
+
+FVector ACarlaWheeledVehicle::GetWheelSuspensionAxis(int32 WheelIndex) const
+{
+  if (LastPhysicsControl.Wheels.IsValidIndex(WheelIndex))
+  {
+    return LastPhysicsControl.Wheels[WheelIndex].SuspensionAxis.GetSafeNormal();
+  }
+  const UChaosVehicleWheel *Wheel = GetWheelDefaults(WheelIndex);
+  return Wheel != nullptr ? Wheel->SuspensionAxis.GetSafeNormal() : FVector::DownVector;
+}
+
+const UChaosVehicleWheel *ACarlaWheeledVehicle::GetWheelDefaults(int32 WheelIndex) const
+{
+  // For when a rejected physics control left fewer entries than wheels.
+  const UChaosWheeledVehicleMovementComponent *Movement = GetChaosWheeledVehicleMovementComponent();
+  if (Movement == nullptr || !Movement->WheelSetups.IsValidIndex(WheelIndex))
+  {
+    return nullptr;
+  }
+  return Movement->WheelSetups[WheelIndex].WheelClass.GetDefaultObject();
 }
 
 void ACarlaWheeledVehicle::SetSimulatePhysics(bool enabled) {
@@ -1280,24 +1561,25 @@ void ACarlaWheeledVehicle::SetSimulatePhysics(bool enabled) {
     if (bPhysicsEnabled == enabled)
       return;
 
+    // Rebuilding the physics state resets the poses drawn.
+    const TArray<FWheelAnimationData> ShownPoses = GetWheelPoses();
+
     SetActorEnableCollision(true);
     UPrimitiveComponent* RootPrimitive =
       Cast<UPrimitiveComponent>(GetRootComponent());
     RootPrimitive->SetSimulatePhysics(enabled);
     RootPrimitive->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 
-    UVehicleAnimationInstance* VehicleAnim = Cast<UVehicleAnimationInstance>(GetMesh()->GetAnimInstance());
-    check(VehicleAnim != nullptr)
-
       if (enabled)
       {
         Movement->SetUpdatedComponent(GetMesh());
         Movement->RecreatePhysicsState();
+        ApplyWheelPhysicsControl();
         // The recreated body starts asleep and Chaos vehicle input does not
         // wake it, leaving the drivetrain permanently inert (full throttle,
         // zero motion) until something else wakes the body. Wake it here.
         RootPrimitive->WakeAllRigidBodies();
-        //VehicleAnim->ResetWheelCustomRotations();
+        SeedChaosWheels(ShownPoses);
       }
       else
       {
@@ -1329,6 +1611,7 @@ FVector ACarlaWheeledVehicle::GetVelocity() const
 void ACarlaWheeledVehicle::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
   //ShowDebugTelemetry(false);
+  DisarmSeedRewrite();
   Super::EndPlay(EndPlayReason);
   RemoveReferenceToManager();
 }
@@ -1525,10 +1808,7 @@ FPoseSnapshot ACarlaWheeledVehicle::GetWorldTransformedPose()
   {
     SetActorTickEnabled(true);
     GetMesh()->SnapshotPose(WorldTransformedPose);
-    for(FTransform &transform : WorldTransformedPose.LocalTransforms)
-    {
-      transform *= GetMesh()->GetComponentTransform();
-    }
+    MakePoseWorldSpace(GetMesh(), WorldTransformedPose);
   }
   return WorldTransformedPose;
 }

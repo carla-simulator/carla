@@ -66,6 +66,9 @@ public:
   /// Transform a string into a CityObjectLabel.
   static crp::CityObjectLabel GetTagFromString(FString Tag);
 
+  /// Transform a tag name into a CityObjectLabel.
+  static crp::CityObjectLabel GetTagFromName(const FName &Tag);
+
   /// Transform a CityObjectLabel into a string.
   static FString GetTagAsString(crp::CityObjectLabel Tag);
 

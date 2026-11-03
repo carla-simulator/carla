@@ -62,4 +62,9 @@ struct CARLA_API FPedestrianParameters
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
   bool bCanUseWheelChair = false;
+
+  // Empty for an ordinary pedestrian; names the exception otherwise, as the
+  // vehicle catalogue already does with "electric".
+  UPROPERTY(EditAnywhere, BlueprintReadWrite)
+  FString SpecialType;
 };

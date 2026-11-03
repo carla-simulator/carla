@@ -12,6 +12,8 @@
 #include "Misc/Paths.h"
 #include "LightDefaultsJsonUtils.generated.h"
 
+class ULevel;
+
 // Everything BP_Lights' Details panel exposes per instance: the inherited
 // UCarlaLight color/intensity plus its own EmissiveIntensity. One of these
 // lives per light-bearing Blueprint class (e.g. "BP_StreetLight01_C") or per
@@ -262,7 +264,7 @@ public:
     // building in the level -- one global emissive control until per-style
     // grouping (by material family) proves necessary.
     //
-    // Only HISM slots -- see ScanLegacyBuildingsInLevel for the same
+    // Only instanced (ISM/HISM) slots -- see ScanLegacyBuildingsInLevel for the same
     // material family on plain (non-instanced) StaticMeshComponents, which
     // can't be controlled the same way.
     //
@@ -274,11 +276,13 @@ public:
     // "PercentLitThreshold" parameter -- PercentLit (0..100) is just handed
     // down as that threshold (divided by 100), and the renderer resolves the
     // per-instance randomness deterministically per physical window.
+    // Color goes to M_FakeInterior's "Emissive Color" (the material ships
+    // white, which reads as cold fluorescent blocks at night).
     UFUNCTION(BlueprintCallable, Category = "Lights|JSON", meta = (WorldContext = "WorldContextObject"))
     static TArray<FLightAssetSummary> ScanProceduralBuildingsInLevel(const UObject* WorldContextObject);
 
     UFUNCTION(BlueprintCallable, Category = "Lights|JSON", meta = (WorldContext = "WorldContextObject"))
-    static void ApplyProceduralBuildingsEmissiveLive(const UObject* WorldContextObject, float EmissiveIntensity, float PercentLit);
+    static void ApplyProceduralBuildingsEmissiveLive(const UObject* WorldContextObject, float EmissiveIntensity, float PercentLit, const FLinearColor& Color);
 
     UFUNCTION(BlueprintCallable, Category = "Lights|JSON", meta = (WorldContext = "WorldContextObject"))
     static void ReapplyProceduralBuildingsToLevel(const UObject* WorldContextObject);
@@ -302,13 +306,23 @@ public:
     static TArray<FLightAssetSummary> ScanLegacyBuildingsInLevel(const UObject* WorldContextObject);
 
     UFUNCTION(BlueprintCallable, Category = "Lights|JSON", meta = (WorldContext = "WorldContextObject"))
-    static void ApplyLegacyBuildingsEmissiveLive(const UObject* WorldContextObject, float EmissiveIntensity, float PercentLit);
+    static void ApplyLegacyBuildingsEmissiveLive(const UObject* WorldContextObject, float EmissiveIntensity, float PercentLit, const FLinearColor& Color);
 
     UFUNCTION(BlueprintCallable, Category = "Lights|JSON", meta = (WorldContext = "WorldContextObject"))
     static void ReapplyLegacyBuildingsToLevel(const UObject* WorldContextObject);
 
     UFUNCTION(BlueprintCallable, Category = "Lights|JSON", meta = (WorldContext = "WorldContextObject"))
     static void SetLegacyBuildingsSelected(const UObject* WorldContextObject, bool bSelected);
+
+    // The saved "ProceduralBuildings" and "LegacyBuildings" defaults, applied
+    // to the actors of one level only (a streaming level or a World
+    // Partition cell) -- what the runtime hooks below call per level.
+    static void ReapplyBuildingDefaultsToLevel(ULevel* Level);
+
+    // Applies the building defaults to game worlds (PIE, -game, server) as
+    // their levels come in, see the .cpp. Registered by the Carla module.
+    static void RegisterRuntimeBuildingDefaultsHooks();
+    static void UnregisterRuntimeBuildingDefaultsHooks();
 
     // The full vehicle catalog (Config/VehicleParameters.json -- every model
     // the vehicle factory can spawn, "HasLights" ones only), not a level

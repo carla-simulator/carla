@@ -1,0 +1,19 @@
+{
+  "name": "carla",
+  "description": "Vetted CARLA procedures (skills) for build, packaging, cooking, maps, vehicles, simulation, scenarios and ROS 2. Serves the same MCP server as every other client, from the plugin's own checkout — Node >= 12, nothing else.",
+  "version": "0.6.0",
+  "author": {
+    "name": "CARLA Simulator",
+    "url": "https://github.com/carla-simulator"
+  },
+  "homepage": "https://github.com/carla-simulator/carla-agentic-tools",
+  "repository": "https://github.com/carla-simulator/carla-agentic-tools",
+  "license": "MIT",
+  "keywords": ["carla", "simulation", "autonomous-driving", "unreal", "ros2"],
+  "mcpServers": {
+    "carla": {
+      "command": "node",
+      "args": ["${CLAUDE_PLUGIN_ROOT}/bin/carla-agentic-tools.js"]
+    }
+  }
+}

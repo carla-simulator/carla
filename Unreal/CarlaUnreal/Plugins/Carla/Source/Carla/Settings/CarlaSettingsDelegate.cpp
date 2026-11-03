@@ -31,10 +31,7 @@ static constexpr float CARLA_SETTINGS_MAX_SCALE_SIZE = 50.0f;
 /// quality settings configuration between runs
 EQualityLevel UCarlaSettingsDelegate::AppliedLowPostResetQualityLevel = EQualityLevel::Epic;
 
-UCarlaSettingsDelegate::UCarlaSettingsDelegate()
-  : ActorSpawnedDelegate(FOnActorSpawned::FDelegate::CreateUObject(
-        this,
-        &UCarlaSettingsDelegate::OnActorSpawned)) {}
+UCarlaSettingsDelegate::UCarlaSettingsDelegate() {}
 
 void UCarlaSettingsDelegate::Reset()
 {
@@ -44,37 +41,6 @@ void UCarlaSettingsDelegate::Reset()
 void UCarlaSettingsDelegate::RegisterSpawnHandler(UWorld *InWorld)
 {
   CheckCarlaSettings(InWorld);
-  InWorld->AddOnActorSpawnedHandler(ActorSpawnedDelegate);
-}
-
-void UCarlaSettingsDelegate::OnActorSpawned(AActor *InActor)
-{
-  check(CarlaSettings != nullptr);
-  if (IsValid(InActor) &&
-      !InActor->IsA<AInstancedFoliageActor>() && // foliage culling is
-                                                 // controlled per instance
-      !InActor->IsA<ALandscape>() && // dont touch landscapes nor roads
-      !InActor->ActorHasTag(UCarlaSettings::CARLA_ROAD_TAG) &&
-      !InActor->ActorHasTag(UCarlaSettings::CARLA_SKY_TAG))
-  {
-    TArray<UPrimitiveComponent *> components;
-    InActor->GetComponents(components);
-    switch (CarlaSettings->GetQualityLevel())
-    {
-      case EQualityLevel::Low: {
-        // apply settings for this actor for the current quality level
-        float dist = CarlaSettings->LowStaticMeshMaxDrawDistance;
-        const float maxscale = InActor->GetActorScale().GetMax();
-        if (maxscale > CARLA_SETTINGS_MAX_SCALE_SIZE)
-        {
-          dist *= 100.0f;
-        }
-        SetActorComponentsDrawDistance(InActor, dist);
-        break;
-      }
-      default: break;
-    }
-  }
 }
 
 void UCarlaSettingsDelegate::ApplyQualityLevelPostRestart()
@@ -92,48 +58,9 @@ void UCarlaSettingsDelegate::ApplyQualityLevelPostRestart()
   // enable temporal changes of quality (prevent saving last quality settings to file)
   Scalability::ToggleTemporaryQualityLevels(true);
 
-  switch (QualityLevel)
-  {
-    case EQualityLevel::Low:
-    {
-      LaunchLowQualityCommands(InWorld);
-      SetAllRoads(InWorld, CarlaSettings->LowRoadPieceMeshMaxDrawDistance, CarlaSettings->LowRoadMaterials);
-      ApplyPerActorQualitySettings(
-          InWorld,
-          CarlaSettings->LowLightFadeDistance,
-          false,
-          true,
-          CarlaSettings->LowStaticMeshMaxDrawDistance);
-      SetPostProcessEffectsEnabled(InWorld, false);
-      break;
-    }
-    case EQualityLevel::Medium:
-    {
-      LaunchMediumQualityCommands(InWorld);
-      SetAllRoads(InWorld, 0, CarlaSettings->EpicRoadMaterials);
-      ApplyPerActorQualitySettings(InWorld, 0.0f, true, false, 0);
-      SetPostProcessEffectsEnabled(InWorld, true);
-      break;
-    }
-    case EQualityLevel::High:
-    {
-      LaunchHighQualityCommands(InWorld);
-      SetAllRoads(InWorld, 0, CarlaSettings->EpicRoadMaterials);
-      ApplyPerActorQualitySettings(InWorld, 0.0f, true, false, 0);
-      SetPostProcessEffectsEnabled(InWorld, true);
-      break;
-    }
-    default:
-      UE_LOG(LogCarla, Warning, TEXT("Unknown quality level, falling back to default."));
-    case EQualityLevel::Epic:
-    {
-      LaunchEpicQualityCommands(InWorld);
-      SetAllRoads(InWorld, 0, CarlaSettings->EpicRoadMaterials);
-      ApplyPerActorQualitySettings(InWorld, 0.0f, true, false, 0);
-      SetPostProcessEffectsEnabled(InWorld, true);
-      break;
-    }
-  }
+  SetAllRoads(InWorld, 0, CarlaSettings->EpicRoadMaterials);
+  ApplyPerActorQualitySettings(InWorld, 0.0f, true, false, 0);
+  SetPostProcessEffectsEnabled(InWorld, true);
   AppliedLowPostResetQualityLevel = QualityLevel;
 }
 
@@ -182,30 +109,6 @@ void UCarlaSettingsDelegate::CheckCarlaSettings(UWorld *world)
   check(GameInstance != nullptr);
   CarlaSettings = &GameInstance->GetCarlaSettings();
   check(CarlaSettings != nullptr);
-}
-
-// LaunchLowQualityCommands, LaunchMediumQualityCommands,
-// LaunchHighQualityCommands, and LaunchEpicQualityCommands are retained as
-// no-op stubs for the legacy UCarlaSettingsDelegate interface. The active
-// CarlaQuality_<Tier> configuration -- memory pools, scalability bucket
-// selection, per-tier r.* overrides -- is applied at engine init by
-// CarlaDeviceProfileSelectorModule::StartupModule
-// (Unreal/CarlaUnreal/Source/CarlaDeviceProfileSelector). There is no
-// runtime CVar burst from this delegate.
-
-void UCarlaSettingsDelegate::LaunchLowQualityCommands(UWorld *world) const
-{
-  (void)world;
-}
-
-void UCarlaSettingsDelegate::LaunchMediumQualityCommands(UWorld *world) const
-{
-  (void)world;
-}
-
-void UCarlaSettingsDelegate::LaunchHighQualityCommands(UWorld *world) const
-{
-  (void)world;
 }
 
 void UCarlaSettingsDelegate::SetAllRoads(
@@ -350,11 +253,6 @@ void UCarlaSettingsDelegate::SetPostProcessEffectsEnabled(UWorld *world, const b
       postprocessvolume->bEnabled = enabled;
     }
   }
-}
-
-void UCarlaSettingsDelegate::LaunchEpicQualityCommands(UWorld *world) const
-{
-  (void)world;
 }
 
 void UCarlaSettingsDelegate::SetAllLights(

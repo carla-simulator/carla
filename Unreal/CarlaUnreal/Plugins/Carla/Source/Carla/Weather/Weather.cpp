@@ -86,19 +86,36 @@ static TAutoConsoleVariable<float> CVarCarlaWeatherBloomIntensity(
     TEXT("does not set one, so the sun glows in the viewport. Negative leaves it alone."),
     ECVF_Default);
 
-// Forced, overriding whatever the rig authored.
+// Off by default: the viewport's camera profile (carla.PostProcess.
+// ViewportProfile) owns its exposure. Set it to force a bias on the viewport
+// only.
 static TAutoConsoleVariable<float> CVarCarlaWeatherExposureBias(
     TEXT("carla.Weather.ExposureBias"),
-    0.97f,
+    -1.0f,
     TEXT("Auto exposure compensation, in EV, forced on the sky rig's post process. ")
     TEXT("Negative leaves the rig's authored value."),
     ECVF_Default);
 
 static TAutoConsoleVariable<float> CVarCarlaWeatherExposureMaxEV(
     TEXT("carla.Weather.ExposureMaxEV"),
-    13.0f,
+    -1.0f,
     TEXT("Upper EV100 bound of the auto exposure range. Negative leaves the rig's value. ")
     TEXT("Above 13 nothing measurably changes."),
+    ECVF_Default);
+
+// The rigs saved non-physical GI multipliers (BP_Carla_Sky: sun 0.3 / sky
+// light 5; Town10's instance overrides the sun to 3), which flatten shadows
+// and differ per map. Physical light is 1. Negative leaves the rig's value.
+static TAutoConsoleVariable<float> CVarCarlaWeatherSunIndirectIntensity(
+    TEXT("carla.Weather.SunIndirectIntensity"),
+    1.0f,
+    TEXT("IndirectLightingIntensity forced on the sky rig's sun. Negative leaves the rig's value."),
+    ECVF_Default);
+
+static TAutoConsoleVariable<float> CVarCarlaWeatherSkyLightIndirectIntensity(
+    TEXT("carla.Weather.SkyLightIndirectIntensity"),
+    1.0f,
+    TEXT("IndirectLightingIntensity forced on the sky rig's sky light. Negative leaves the rig's value."),
     ECVF_Default);
 
 static TAutoConsoleVariable<float> CVarCarlaWeatherTransmittanceMinElevationDeg(
@@ -211,7 +228,7 @@ static TAutoConsoleVariable<float> CVarCarlaWeatherMoonDiscBrightnessEndDeg(
 
 static TAutoConsoleVariable<float> CVarCarlaWeatherMoonDiscNightBrightness(
     TEXT("carla.Weather.MoonDiscNightBrightness"),
-    500.0f,
+    40.0f,
     TEXT("Emissive brightness of the moon disc at full night. Lower also means less bloom ")
     TEXT("around it, the only per-object bloom control there is."),
     ECVF_Default);
@@ -254,9 +271,11 @@ static TAutoConsoleVariable<float> CVarCarlaWeatherMoonHaloEndDeg(
     TEXT("Sun altitude at which the night Mie settings are fully applied."),
     ECVF_Default);
 
+// A full moon gives 0.1-0.3 lux. 200 lit a moonlit street ten times brighter
+// than one under street lamps. The night clouds come from CityGlow instead.
 static TAutoConsoleVariable<float> CVarCarlaWeatherMoonIntensity(
     TEXT("carla.Weather.MoonIntensity"),
-    200.0f,
+    0.5f,
     TEXT("Minimum DirectionalLightComponentMoon intensity (lux) enforced on the sky rig, ")
     TEXT("faded in between MoonFadeStartDeg and MoonFullAltitudeDeg of sun altitude. Set 0 to ")
     TEXT("leave the rig's authored/curve-driven moon intensity untouched."),
@@ -268,6 +287,79 @@ static TAutoConsoleVariable<float> CVarCarlaWeatherNightSkylightIntensity(
     TEXT("Minimum SkyLightComponent intensity enforced on the sky rig whenever ")
     TEXT("SunAltitudeAngle < 0 (same units as the rig's SkyIntensity_Curve). Set 0 to ")
     TEXT("leave the rig's curve-driven skylight intensity untouched."),
+    ECVF_Default);
+
+// The rig's sun curve drops from 100000 lux at +1 degree to 5 at -0.5, and the
+// sky light curve from 1 to 0 with it, so dusk was a cut to night that auto
+// exposure then had to catch up with. Below SunTwilightStartDeg the sun now
+// decays log-linearly to SunTwilightEndFraction of its value there, reached at
+// SunTwilightEndDeg, and the sky light blends to its night floor over the same
+// band. The sky keeps its twilight glow; surfaces stop being lit by the sun
+// once TransmittanceReleaseDeg has released. 0 or above restores the cut.
+// -10, not the astronomical -18: on camera a city night is dark by the end of
+// nautical twilight, and -18 kept most of a night cycle looking like dusk.
+static TAutoConsoleVariable<float> CVarCarlaWeatherSunTwilightEndDeg(
+    TEXT("carla.Weather.SunTwilightEndDeg"),
+    -10.0f,
+    TEXT("Sun altitude at which the sun light has faded out below the horizon. ")
+    TEXT("0 or above leaves the rig's hard cut at the horizon."),
+    ECVF_Default);
+
+static TAutoConsoleVariable<float> CVarCarlaWeatherSunTwilightStartDeg(
+    TEXT("carla.Weather.SunTwilightStartDeg"),
+    1.0f,
+    TEXT("Sun altitude at which the twilight fade starts, from the sun's value there."),
+    ECVF_Default);
+
+static TAutoConsoleVariable<float> CVarCarlaWeatherSunTwilightEndFraction(
+    TEXT("carla.Weather.SunTwilightEndFraction"),
+    0.0001f,
+    TEXT("Fraction of the sun's intensity at SunTwilightStartDeg left at SunTwilightEndDeg; ")
+    TEXT("the fade is log-linear in between."),
+    ECVF_Default);
+
+// The night sky sphere occludes the atmosphere, so showing it at the horizon
+// also cut off the twilight glow.
+static TAutoConsoleVariable<float> CVarCarlaWeatherSkySphereShowDeg(
+    TEXT("carla.Weather.SkySphereShowDeg"),
+    -12.0f,
+    TEXT("Sun altitude below which the night sky sphere (stars) is shown in front of the ")
+    TEXT("atmosphere."),
+    ECVF_Default);
+
+// At 16 km the sphere cut off the far volumetric clouds the moment it
+// appeared, and its own painted clouds replaced them: the sky visibly jumped.
+// Scaled up it sits behind the clouds, and with its painted clouds off the
+// night keeps the same volumetric clouds, lit by the moon.
+static TAutoConsoleVariable<float> CVarCarlaWeatherSkySphereScale(
+    TEXT("carla.Weather.SkySphereScale"),
+    10.0f,
+    TEXT("Factor on the night sky sphere's size, so it draws behind the volumetric clouds. ")
+    TEXT("1 leaves it as authored."),
+    ECVF_Default);
+
+static TAutoConsoleVariable<float> CVarCarlaWeatherSkySphereCloudOpacity(
+    TEXT("carla.Weather.SkySphereCloudOpacity"),
+    0.0f,
+    TEXT("\"Cloud opacity\" of the night sky sphere's painted clouds. Negative leaves the ")
+    TEXT("asset's value."),
+    ECVF_Default);
+
+// With "Colors Determined By Sun Position" on, the sphere's own colour curves
+// gave it a dusk sky all night (orange horizon, brown painted clouds), and it
+// is switched on at SkySphereShowDeg: the sky jumped from black to dusk there.
+// Forced near-black, it matches the atmosphere it hides and only the stars show.
+static TAutoConsoleVariable<FString> CVarCarlaWeatherSkySphereNightColor(
+    TEXT("carla.Weather.SkySphereNightColor"),
+    TEXT("0.002 0.002 0.0025"),
+    TEXT("Horizon, zenith and cloud colour of the night sky sphere, \"R G B\". Anything ")
+    TEXT("else (e.g. \"off\") leaves the sphere's sun-driven colours."),
+    ECVF_Default);
+
+static TAutoConsoleVariable<float> CVarCarlaWeatherStreetLightsOnDeg(
+    TEXT("carla.Weather.StreetLightsOnDeg"),
+    0.8f,
+    TEXT("Sun altitude at or below which street lights are switched on."),
     ECVF_Default);
 
 // The night sky is pure black on every map (verified content-side, not a
@@ -310,9 +402,27 @@ static TAutoConsoleVariable<float> CVarCarlaWeatherNightSkylightIntensity(
 // below white. 5000 was calibrated visually on a generated Town03 world at
 // sun -30 -- a dense readable star field (sky-crop max ~145) with no bloom
 // halos or day-side effect (the whole block is gated to SunAltitudeAngle<0).
+// City light pollution scattered by the clouds: emission of the volumetric
+// cloud material (WeatherMaterialParameters.CityGlow, M_BasicClouds Emissive)
+// times NightFactor. Kept very low and near-grey: on camera, real overcast city
+// nights show the clouds as barely visible dark grey (sky L* ~2), not lit
+// orange. Per unit of cloud density, weighted to the cloud base in the material
+// ((1 - NormAltitudeInLayer)^4): the city lights it from below.
+static TAutoConsoleVariable<float> CVarCarlaWeatherCityGlow(
+    TEXT("carla.Weather.CityGlow"),
+    0.000002f,
+    TEXT("Night emission of the clouds from city lights (0 off)."),
+    ECVF_Default);
+
+static TAutoConsoleVariable<FString> CVarCarlaWeatherCityGlowColor(
+    TEXT("carla.Weather.CityGlowColor"),
+    TEXT("1.0 0.85 0.7"),
+    TEXT("Colour of the city glow on the clouds, \"R G B\"."),
+    ECVF_Default);
+
 static TAutoConsoleVariable<float> CVarCarlaWeatherStarsBrightness(
     TEXT("carla.Weather.StarsBrightness"),
-    70.0f,
+    4.0f,
     TEXT("Value forced into the night sky sphere's \"Stars Brightness\" variable ")
     TEXT("(BP_Sky_Sphere, engine content) whenever SunAltitudeAngle < 0. Set 0 to leave the ")
     TEXT("sphere's authored value alone; any other value replaces it on every push, which is ")
@@ -335,14 +445,13 @@ static TAutoConsoleVariable<float> CVarCarlaWeatherOvercastThreshold(
     TEXT("from the plain cloud master material to the Billowy overcast one."),
     ECVF_Default);
 
-// Under evaluation: the hard swap to the Billowy material right at the
-// threshold reads as a visible break (two completely different rendering
-// techniques). Set to 0 to always use the plain MI_Clouds master and extend
-// the BaseNoiseExp formula up through Cloudiness=100, to compare against the
-// swapped look.
+// Off: the hard swap to the Billowy material at the threshold is a visible
+// break (two different rendering techniques), and its thick decks render as
+// broken dark cumulus. The plain MI_Clouds master closes into the overcast
+// deck continuously instead (see CVarCarlaWeatherDeckStartCloudiness).
 static TAutoConsoleVariable<bool> CVarCarlaWeatherEnableOvercastClouds(
     TEXT("carla.Weather.EnableOvercastClouds"),
-    true,
+    false,
     TEXT("Whether Cloudiness at/above OvercastThreshold switches the cloud material to the ")
     TEXT("Billowy overcast one. Set false to always use the plain master instead."),
     ECVF_Default);
@@ -389,6 +498,182 @@ static TAutoConsoleVariable<float> CVarCarlaWeatherOvercastAmbientMaxGain(
     TEXT("the horizon cannot turn the ambient blue."),
     ECVF_Default);
 
+// Overcast deck. Real heavy overcast is a continuous grey-white layer, the
+// brightest thing in the frame (sky L* ~90 in rain footage, facades and wet
+// asphalt well below it). The volumetric clouds alone render it as broken,
+// dark, blue-tinted cumulus: the single-scattering + approximate multiple
+// scattering model loses most of the light a thick deck diffuses downwards.
+// From DeckStartCloudiness to 100 (smoothstep) the plain cloud material closes
+// into a continuous layer (BaseNoiseExp -> DeckNoiseExp), gets a softer base
+// (ExtinctionScale, domain warp; the authored warp draws one big swirl across
+// a closed deck), emits the missing diffuse light (DeckGlow, scaled by the
+// sun's intensity) and the sky light boost drops (DeckSkyLightIntensity),
+// since the deck itself now feeds the real-time sky light capture.
+static TAutoConsoleVariable<float> CVarCarlaWeatherDeckStartCloudiness(
+    TEXT("carla.Weather.DeckStartCloudiness"),
+    80.0f,
+    TEXT("Cloudiness at which the clouds start closing into the overcast deck (full at 100)."),
+    ECVF_Default);
+
+// The deck's light (DeckGlow, DeckSkyLightIntensity) ramps in faster than its
+// coverage: a deck that has closed but does not glow yet reads as a dark grey
+// stage that real overcast does not go through.
+static TAutoConsoleVariable<float> CVarCarlaWeatherDeckLightFullCloudiness(
+    TEXT("carla.Weather.DeckLightFullCloudiness"),
+    84.0f,
+    TEXT("Cloudiness at which the deck's emission and sky light reach their full value."),
+    ECVF_Default);
+
+// M_BasicClouds' domain warp loop blends its last iteration by the count's
+// fraction, so the warp count blends continuously with the deck factor (-1).
+// The stock loop truncated the count to an integer (1.99 rendered as 1): a
+// value in [0, 1] flips it once at that deck factor instead, for that material.
+static TAutoConsoleVariable<float> CVarCarlaWeatherDeckWarpSwitch(
+    TEXT("carla.Weather.DeckWarpSwitch"),
+    -1.0f,
+    TEXT("-1: blend the warp count with the deck factor. 0-1: flip it to DeckWarpCount at that deck factor."),
+    ECVF_Default);
+
+// BaseNoiseExp closes the coverage fast at first (a log blend, and the deck's
+// glow makes thin cloud read as cloud): the coverage ramp is the deck factor
+// to this power, so the gaps close gradually over the upper half of the range.
+static TAutoConsoleVariable<float> CVarCarlaWeatherDeckCoverageExponent(
+    TEXT("carla.Weather.DeckCoverageExponent"),
+    2.0f,
+    TEXT("Power applied to the deck factor for the cloud coverage (BaseNoiseExp) blend."),
+    ECVF_Default);
+
+static TAutoConsoleVariable<float> CVarCarlaWeatherDeckNoiseExp(
+    TEXT("carla.Weather.DeckNoiseExp"),
+    1.0f,
+    TEXT("Cloud material BaseNoiseExp at Cloudiness 100 (lower = more coverage)."),
+    ECVF_Default);
+
+static TAutoConsoleVariable<float> CVarCarlaWeatherDeckExtinctionScale(
+    TEXT("carla.Weather.DeckExtinctionScale"),
+    0.005f,
+    TEXT("Cloud material ExtinctionScale at Cloudiness 100 (softer deck base). Negative leaves the material's."),
+    ECVF_Default);
+
+static TAutoConsoleVariable<float> CVarCarlaWeatherDeckWarpCount(
+    TEXT("carla.Weather.DeckWarpCount"),
+    1.0f,
+    TEXT("Cloud material domain warp count at Cloudiness 100. Negative leaves the material's."),
+    ECVF_Default);
+
+static TAutoConsoleVariable<float> CVarCarlaWeatherDeckGlow(
+    TEXT("carla.Weather.DeckGlow"),
+    2.0f,
+    TEXT("Cloud emission at Cloudiness 100 with the sun at its peak (0 off)."),
+    ECVF_Default);
+
+static TAutoConsoleVariable<FString> CVarCarlaWeatherDeckGlowColor(
+    TEXT("carla.Weather.DeckGlowColor"),
+    TEXT("1.0 1.0 1.0"),
+    TEXT("Colour of the overcast deck emission, \"R G B\"."),
+    ECVF_Default);
+
+static TAutoConsoleVariable<float> CVarCarlaWeatherDeckSkyLightIntensity(
+    TEXT("carla.Weather.DeckSkyLightIntensity"),
+    1.0f,
+    TEXT("Replaces OvercastSkyLightIntensity at Cloudiness 100 (blended by the deck factor)."),
+    ECVF_Default);
+
+// A raining deck is thicker and darker than a dry overcast one: in rain
+// footage the sky is mid grey (L* ~70-85), not the white of a bright overcast.
+// With Precipitation (linearly up to 100) the deck's emission is scaled down
+// and its sky light up, so the sky darkens while the ground keeps its light.
+static TAutoConsoleVariable<float> CVarCarlaWeatherRainDeckGlowScale(
+    TEXT("carla.Weather.RainDeckGlowScale"),
+    0.25f,
+    TEXT("DeckGlow multiplier at Precipitation 100 (1 = rain does not change the deck)."),
+    ECVF_Default);
+
+static TAutoConsoleVariable<float> CVarCarlaWeatherRainDeckSkyLightScale(
+    TEXT("carla.Weather.RainDeckSkyLightScale"),
+    3.0f,
+    TEXT("DeckSkyLightIntensity multiplier at Precipitation 100 (1 = rain does not change it)."),
+    ECVF_Default);
+
+static float RainDeckScale(const TAutoConsoleVariable<float>& CVar, float Precipitation)
+{
+    return FMath::Lerp(1.0f, FMath::Max(CVar.GetValueOnGameThread(), 0.0f),
+        FMath::Clamp(Precipitation / 100.0f, 0.0f, 1.0f));
+}
+
+// 0 below DeckStartCloudiness, 1 at Cloudiness 100, smoothstep in between.
+static float ComputeCloudDeckFactor(float Cloudiness)
+{
+    const float Start = FMath::Clamp(CVarCarlaWeatherDeckStartCloudiness.GetValueOnGameThread(), 0.0f, 99.0f);
+    const float T = FMath::Clamp((Cloudiness - Start) / (100.0f - Start), 0.0f, 1.0f);
+    return T * T * (3.0f - 2.0f * T);
+}
+
+// The same from DeckStartCloudiness to DeckLightFullCloudiness.
+static float ComputeCloudDeckLightFactor(float Cloudiness)
+{
+    const float Start = FMath::Clamp(CVarCarlaWeatherDeckStartCloudiness.GetValueOnGameThread(), 0.0f, 99.0f);
+    const float Full = FMath::Clamp(CVarCarlaWeatherDeckLightFullCloudiness.GetValueOnGameThread(), Start + 1.0f, 100.0f);
+    const float T = FMath::Clamp((Cloudiness - Start) / (Full - Start), 0.0f, 1.0f);
+    return T * T * (3.0f - 2.0f * T);
+}
+
+// OvercastSkyLightIntensity, giving way to DeckSkyLightIntensity as the deck closes.
+static float GetOvercastSkyLightTarget(float Cloudiness, float Precipitation)
+{
+    const float Overcast = CVarCarlaWeatherOvercastSkyLightIntensity.GetValueOnGameThread();
+    const float DeckRaw = CVarCarlaWeatherDeckSkyLightIntensity.GetValueOnGameThread();
+    // Test the sentinel before the rain scale: a scale of 0 turns -1 into -0, which is not < 0.
+    if (Overcast < 0.0f || DeckRaw < 0.0f)
+        return Overcast;
+    const float Deck = DeckRaw * RainDeckScale(CVarCarlaWeatherRainDeckSkyLightScale, Precipitation);
+    return FMath::Lerp(Overcast, Deck, ComputeCloudDeckLightFactor(Cloudiness));
+}
+
+static FLinearColor ParseColorCVar(const TAutoConsoleVariable<FString>& CVar, const FLinearColor& Fallback)
+{
+    TArray<FString> Channels;
+    CVar.GetValueOnGameThread().ParseIntoArrayWS(Channels);
+    if (Channels.Num() != 3)
+        return Fallback;
+    return FLinearColor(FCString::Atof(*Channels[0]), FCString::Atof(*Channels[1]), FCString::Atof(*Channels[2]));
+}
+
+// Sun light scattered by the volumetric clouds near the horizon. Below ~2 deg
+// the atmosphere leaves the sun almost pure red, and the clouds it lights read
+// saturated salmon on camera. Scaling only the cloud scattering keeps the
+// afterglow (the ground, the sky and the sun disc are untouched) but dimmer
+// and less saturated. Full at or below TwilightCloudFullDeg, fading to white
+// (no effect) at TwilightCloudOffDeg.
+static TAutoConsoleVariable<FString> CVarCarlaWeatherTwilightCloudScale(
+    TEXT("carla.Weather.TwilightCloudScale"),
+    TEXT("0.4 0.55 0.8"),
+    TEXT("Sun CloudScatteredLuminanceScale at the horizon, \"R G B\" (\"1 1 1\" off)."),
+    ECVF_Default);
+
+static TAutoConsoleVariable<float> CVarCarlaWeatherTwilightCloudFullDeg(
+    TEXT("carla.Weather.TwilightCloudFullDeg"),
+    2.0f,
+    TEXT("Sun altitude at or below which carla.Weather.TwilightCloudScale applies in full."),
+    ECVF_Default);
+
+static TAutoConsoleVariable<float> CVarCarlaWeatherTwilightCloudOffDeg(
+    TEXT("carla.Weather.TwilightCloudOffDeg"),
+    12.0f,
+    TEXT("Sun altitude at or above which the clouds get the sun's full scattering again."),
+    ECVF_Default);
+
+static FLinearColor ComputeTwilightCloudScale(float SunAltitudeAngle)
+{
+    const float Full = CVarCarlaWeatherTwilightCloudFullDeg.GetValueOnGameThread();
+    const float Off = FMath::Max(CVarCarlaWeatherTwilightCloudOffDeg.GetValueOnGameThread(), Full + 0.1f);
+    const float T = FMath::SmoothStep(0.0f, 1.0f, FMath::Clamp((SunAltitudeAngle - Full) / (Off - Full), 0.0f, 1.0f));
+    FLinearColor Scale = FMath::Lerp(ParseColorCVar(CVarCarlaWeatherTwilightCloudScale, FLinearColor::White),
+                                     FLinearColor::White, T);
+    Scale.A = 1.0f;
+    return Scale;
+}
+
 // bOnlyDarken picks the clamp direction: a ceiling for the sun, a floor for
 // the sky light.
 static float ComputeNightBlend(float SunAltitudeAngle)
@@ -420,6 +705,172 @@ static float ComputeMoonHaloBlend(float SunAltitudeAngle)
         return SunAltitudeAngle < End ? 1.0f : 0.0f;
     const float T = FMath::Clamp((Start - SunAltitudeAngle) / (Start - End), 0.0f, 1.0f);
     return T * T * (3.0f - 2.0f * T);   // smoothstep
+}
+
+// The directional light's VSM cache is keyed on the exact light direction. A
+// sun that turns once per tick, while each tick renders several views (the
+// viewport and every camera sensor), keeps swapping the cache entry between
+// cached and uncached. With a low sun the stale pages show: direct sunlight
+// switching on and off in single frames (Town15, sun at +1..+5 degrees, 12 of
+// 120 frames; 0 with this). The engine's advice for a light that invalidates
+// often but not on every render (VirtualShadowMapCacheManager.cpp) is
+// r.Shadow.Virtual.Cache.ForceInvalidateDirectional. It is held on while the
+// sun moves and released once the sun has been still for
+// VSMSunStillSeconds. It is set by code, so a value set in the console wins.
+static TAutoConsoleVariable<bool> CVarCarlaWeatherVSMInvalidateWhileSunMoves(
+    TEXT("carla.Weather.VSMInvalidateWhileSunMoves"),
+    true,
+    TEXT("Hold r.Shadow.Virtual.Cache.ForceInvalidateDirectional on while the sun direction ")
+    TEXT("changes. 0 leaves it alone."),
+    ECVF_Default);
+
+static TAutoConsoleVariable<float> CVarCarlaWeatherVSMSunStillSeconds(
+    TEXT("carla.Weather.VSMSunStillSeconds"),
+    1.0f,
+    TEXT("World seconds without a sun direction change before the directional VSM cache is ")
+    TEXT("used again. World time, not engine frames: in synchronous mode the editor keeps ")
+    TEXT("rendering between client ticks, and a frame count released the cvar between two ")
+    TEXT("pushes of a moving sun, which brought the flicker back."),
+    ECVF_Default);
+
+static FRotator GLastSunRotation(ForceInitToZero);
+static double GLastSunMoveWorldSeconds = 0.0;
+static bool GForcingDirectionalVSMInvalidate = false;
+
+static void SetForceInvalidateDirectionalVSM(bool bOn)
+{
+    if (GForcingDirectionalVSMInvalidate == bOn)
+        return;
+    if (IConsoleVariable* CVar = IConsoleManager::Get().FindConsoleVariable(
+            TEXT("r.Shadow.Virtual.Cache.ForceInvalidateDirectional")))
+    {
+        CVar->Set(bOn ? 1 : 0, ECVF_SetByCode);
+        GForcingDirectionalVSMInvalidate = bOn;
+        UE_LOG(LogCarla, Log, TEXT("AWeather: directional VSM force-invalidate %s"), bOn ? TEXT("on") : TEXT("off"));
+    }
+}
+
+static void NoteSunRotation(const UWorld* World, const FRotator& Rotation)
+{
+    if (!CVarCarlaWeatherVSMInvalidateWhileSunMoves.GetValueOnGameThread())
+    {
+        SetForceInvalidateDirectionalVSM(false);
+        return;
+    }
+    if (!Rotation.Equals(GLastSunRotation, 1e-4f))
+    {
+        GLastSunRotation = Rotation;
+        GLastSunMoveWorldSeconds = World->GetTimeSeconds();
+        SetForceInvalidateDirectionalVSM(true);
+    }
+}
+
+static void ReleaseDirectionalVSMInvalidateIfSunStill(const UWorld* World)
+{
+    if (GForcingDirectionalVSMInvalidate && World != nullptr
+        && World->GetTimeSeconds() - GLastSunMoveWorldSeconds
+            > FMath::Max(CVarCarlaWeatherVSMSunStillSeconds.GetValueOnGameThread(), 0.0f))
+        SetForceInvalidateDirectionalVSM(false);
+}
+
+// Lumen caches its lighting (radiance cache probes, surface cache) and updates
+// it over many frames, nearest first; the sky light's real-time capture is
+// time-sliced too. After a jump from day to night the city stayed lit like day
+// for 20+ s (Town10, fixed exposure: 24 s, nearest street first, far facades
+// last). Held for LightingJumpSettleSeconds of world time after a weather push
+// that moves the sun or the clouds by more than the thresholds, the three
+// cvars below bring that to ~6 s. Gradual changes (a timeline, a client easing
+// the sun) never trigger it. Set by code, so a value set in the console wins.
+static TAutoConsoleVariable<float> CVarCarlaWeatherLightingJumpSunDeg(
+    TEXT("carla.Weather.LightingJumpSunDeg"),
+    5.0f,
+    TEXT("Sun altitude change, in degrees, between two weather pushes that counts as a lighting ")
+    TEXT("jump and forces Lumen and the sky light capture to update in full. 0 disables it."),
+    ECVF_Default);
+
+static TAutoConsoleVariable<float> CVarCarlaWeatherLightingJumpCloudiness(
+    TEXT("carla.Weather.LightingJumpCloudiness"),
+    30.0f,
+    TEXT("Cloudiness change between two weather pushes that counts as a lighting jump. 0 disables it."),
+    ECVF_Default);
+
+static TAutoConsoleVariable<float> CVarCarlaWeatherLightingJumpSettleSeconds(
+    TEXT("carla.Weather.LightingJumpSettleSeconds"),
+    8.0f,
+    TEXT("World seconds the full Lumen / sky light updates are held after a lighting jump."),
+    ECVF_Default);
+
+static const TCHAR* GLightingJumpCVars[] = {
+    TEXT("r.Lumen.RadianceCache.ForceFullUpdate"),
+    TEXT("r.LumenScene.Lighting.ForceLightingUpdate"),
+    TEXT("r.SkyLight.RealTimeReflectionCapture.TimeSlice")};
+static const int32 GLightingJumpValues[] = {1, 1, 0};
+static int32 GLightingJumpRestore[UE_ARRAY_COUNT(GLightingJumpCVars)] = {};
+static bool GForcingLightingUpdate = false;
+static double GLightingJumpWorldSeconds = 0.0;
+static float GLastPushedSunAltitude = TNumericLimits<float>::Max();
+static float GLastPushedCloudiness = TNumericLimits<float>::Max();
+
+static void SetForceLightingUpdate(bool bOn)
+{
+    if (GForcingLightingUpdate == bOn)
+        return;
+    for (int32 i = 0; i < UE_ARRAY_COUNT(GLightingJumpCVars); ++i)
+    {
+        IConsoleVariable* CVar = IConsoleManager::Get().FindConsoleVariable(GLightingJumpCVars[i]);
+        if (CVar == nullptr)
+            continue;
+        if (bOn)
+            GLightingJumpRestore[i] = CVar->GetInt();
+        CVar->Set(bOn ? GLightingJumpValues[i] : GLightingJumpRestore[i], ECVF_SetByCode);
+    }
+    GForcingLightingUpdate = bOn;
+    UE_LOG(LogCarla, Log, TEXT("AWeather: full Lumen / sky light update %s"), bOn ? TEXT("on") : TEXT("off"));
+}
+
+static void NoteLightingChange(const UWorld* World, float SunAltitude, float Cloudiness)
+{
+    const float SunDeg = CVarCarlaWeatherLightingJumpSunDeg.GetValueOnGameThread();
+    const float CloudJump = CVarCarlaWeatherLightingJumpCloudiness.GetValueOnGameThread();
+    const bool bFirst = GLastPushedSunAltitude == TNumericLimits<float>::Max();
+    const bool bJump = !bFirst && (
+        (SunDeg > 0.0f && FMath::Abs(SunAltitude - GLastPushedSunAltitude) > SunDeg) ||
+        (CloudJump > 0.0f && FMath::Abs(Cloudiness - GLastPushedCloudiness) > CloudJump));
+    GLastPushedSunAltitude = SunAltitude;
+    GLastPushedCloudiness = Cloudiness;
+    if (bJump)
+    {
+        GLightingJumpWorldSeconds = World->GetTimeSeconds();
+        SetForceLightingUpdate(true);
+    }
+}
+
+static void ReleaseLightingUpdateIfSettled(const UWorld* World)
+{
+    if (GForcingLightingUpdate && World != nullptr
+        && World->GetTimeSeconds() - GLightingJumpWorldSeconds
+            > FMath::Max(CVarCarlaWeatherLightingJumpSettleSeconds.GetValueOnGameThread(), 0.0f))
+        SetForceLightingUpdate(false);
+}
+
+// 1 at SunTwilightStartDeg and above, decaying to 0 at SunTwilightEndDeg.
+// Negative when the twilight fade is disabled.
+static float ComputeSunTwilightFactor(float SunAltitudeAngle)
+{
+    const float End = CVarCarlaWeatherSunTwilightEndDeg.GetValueOnGameThread();
+    const float Start = CVarCarlaWeatherSunTwilightStartDeg.GetValueOnGameThread();
+    if (End >= 0.0f || Start <= End)
+        return -1.0f;
+    if (SunAltitudeAngle >= Start)
+        return 1.0f;
+    if (SunAltitudeAngle <= End)
+        return 0.0f;
+    const float T = (Start - SunAltitudeAngle) / (Start - End);
+    const float EndFraction = FMath::Clamp(
+        CVarCarlaWeatherSunTwilightEndFraction.GetValueOnGameThread(), 1e-8f, 1.0f);
+    // Eased to zero over the last 3 degrees, so the end fraction does not pop off.
+    const float Tail = FMath::SmoothStep(0.0f, 1.0f, FMath::Clamp((SunAltitudeAngle - End) / 3.0f, 0.0f, 1.0f));
+    return FMath::Pow(EndFraction, T) * Tail;
 }
 
 // Applied on top of what the rig wrote. Tracks its own last write, so a value
@@ -783,12 +1234,16 @@ void AWeather::UpdateRain()
     if (RainParameters)
         UKismetMaterialLibrary::SetScalarParameterValue(GetWorld(), RainParameters, TEXT("Precipitation"), Rain);
 
-    auto UpdateEmitter = [this, Rain](UParticleSystemComponent* Emitter, const FVector& Location)
+    auto UpdateEmitter = [this, Rain](UParticleSystemComponent* Emitter, const FVector& Location, float Yaw)
     {
         if (!Emitter) return;
-        // PS_Rain's scaled spawn box is X[-1000,4000], Y[-2000,2000] cm.
-        // Center it on the view and retain world-space, vertically falling drops.
-        const FVector Origin = Location + FVector(-1500.0f, 0.0f, 400.0f);
+        // PS_Rain's scaled spawn box is X[-1000,4000], Y[-2000,2000] cm. Turned with
+        // the view so it reaches 40 m ahead of it: left axis-aligned it rained on
+        // one side of the camera only, and the drops looked parked in one place.
+        // World-space, vertically falling drops.
+        const FRotator Heading(0.0f, Yaw, 0.0f);
+        const FVector Origin = Location + FVector(0.0f, 0.0f, 400.0f);
+        Emitter->SetWorldRotation(Heading);
         if (FVector::DistSquared(Emitter->GetComponentLocation(), Origin) > FMath::Square(2000.0f))
             Emitter->DeactivateImmediate(); // Do not leave a trail after teleporting.
         Emitter->SetWorldLocation(Origin);
@@ -819,7 +1274,7 @@ void AWeather::UpdateRain()
         }
         if (!ViewportRain && Rain > 0.0f)
             ViewportRain = CreateRainEmitter(this, false);
-        UpdateEmitter(ViewportRain, Camera->GetCameraLocation());
+        UpdateEmitter(ViewportRain, Camera->GetCameraLocation(), Camera->GetCameraRotation().Yaw);
     }
     else if (ViewportRain)
         ViewportRain->DeactivateImmediate();
@@ -839,7 +1294,8 @@ void AWeather::UpdateRain()
             Emitter = CreateRainEmitter(Sensor, true);
             SensorRain.Add(Sensor, Emitter);
         }
-        UpdateEmitter(Emitter, Sensor->GetCaptureComponent2D()->GetComponentLocation());
+        UpdateEmitter(Emitter, Sensor->GetCaptureComponent2D()->GetComponentLocation(),
+            Sensor->GetCaptureComponent2D()->GetComponentRotation().Yaw);
     }
 }
 
@@ -847,10 +1303,24 @@ void AWeather::Tick(float DeltaSeconds)
 {
     Super::Tick(DeltaSeconds);
     UpdateRain();
+    ReleaseDirectionalVSMInvalidateIfSunStill(GetWorld());
+    ReleaseLightingUpdateIfSettled(GetWorld());
+}
+
+void AWeather::BeginPlay()
+{
+    Super::BeginPlay();
+    // BP_CarlaWeather is saved with "Start with Tick Enabled" off, which left
+    // UpdateRain dead: no rain volume followed the spectator or the sensors.
+    SetActorTickEnabled(true);
 }
 
 void AWeather::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
+    SetForceInvalidateDirectionalVSM(false);
+    SetForceLightingUpdate(false);
+    GLastPushedSunAltitude = TNumericLimits<float>::Max();
+    GLastPushedCloudiness = TNumericLimits<float>::Max();
     for (auto& Entry : SensorRain)
         if (Entry.Value.IsValid()) Entry.Value->DestroyComponent();
     SensorRain.Empty();
@@ -1207,9 +1677,21 @@ void AWeather::ApplyWeatherToSkyActor(AActor* SkyActor, const FWeatherParameters
                             continue;
 
                         // The sphere occludes the atmosphere, so it is only shown at night.
-                        const bool bShouldBeVisible = Weather.SunAltitudeAngle < 0.0f;
+                        const float ShowBelow = FMath::Min(
+                            CVarCarlaWeatherSkySphereShowDeg.GetValueOnGameThread(), 0.0f);
+                        const bool bShouldBeVisible = Weather.SunAltitudeAngle < ShowBelow;
                         if (SphereMesh->IsVisible() != bShouldBeVisible)
                             SphereMesh->SetVisibility(bShouldBeVisible);
+
+                        // Tagged once scaled: a push that did not respawn the sphere
+                        // must not compound the scale.
+                        static const FName ScaledTag(TEXT("CarlaSkySphereScaled"));
+                        const float SphereScale = CVarCarlaWeatherSkySphereScale.GetValueOnGameThread();
+                        if (SphereScale > 0.0f && SphereScale != 1.0f && !SphereMesh->ComponentHasTag(ScaledTag))
+                        {
+                            SphereMesh->SetRelativeScale3D(SphereMesh->GetRelativeScale3D() * SphereScale);
+                            SphereMesh->ComponentTags.Add(ScaledTag);
+                        }
 
                         // Reuses the existing dynamic instance; unknown parameters are a no-op.
                         if (UMaterialInstanceDynamic* SphereMID =
@@ -1218,6 +1700,9 @@ void AWeather::ApplyWeatherToSkyActor(AActor* SkyActor, const FWeatherParameters
                             SphereMID->SetVectorParameterValue(
                                 TEXT("Light direction"), FLinearColor(SunDirection));
                             SphereMID->SetScalarParameterValue(TEXT("Sun height"), SunDirection.Z);
+                            const float CloudOpacity = CVarCarlaWeatherSkySphereCloudOpacity.GetValueOnGameThread();
+                            if (CloudOpacity >= 0.0f)
+                                SphereMID->SetScalarParameterValue(TEXT("Cloud opacity"), CloudOpacity);
                         }
                     }
                 }
@@ -1395,6 +1880,17 @@ void AWeather::ApplyWeatherToSkyActor(AActor* SkyActor, const FWeatherParameters
                 : nullptr;
         };
 
+        {
+            const float SunIndirect = CVarCarlaWeatherSunIndirectIntensity.GetValueOnGameThread();
+            ULightComponent* Sun = FindComponent(TEXT("DirectionalLightComponentSun"));
+            if (Sun != nullptr && SunIndirect >= 0.0f && Sun->IndirectLightingIntensity != SunIndirect)
+                Sun->SetIndirectLightingIntensity(SunIndirect);
+            const float SkyIndirect = CVarCarlaWeatherSkyLightIndirectIntensity.GetValueOnGameThread();
+            USkyLightComponent* SkyLight = FindSkyLightComponent(TEXT("SkyLightComponent"));
+            if (SkyLight != nullptr && SkyIndirect >= 0.0f && SkyLight->IndirectLightingIntensity != SkyIndirect)
+                SkyLight->SetIndirectLightingIntensity(SkyIndirect);
+        }
+
         if (UCurveFloat* SunIntensityCurve = FindCurve(TEXT("SunIntensity_Curve")))
         {
             if (ULightComponent* SunLightComponent = FindComponent(TEXT("DirectionalLightComponentSun")))
@@ -1407,6 +1903,24 @@ void AWeather::ApplyWeatherToSkyActor(AActor* SkyActor, const FWeatherParameters
                     CVarCarlaWeatherOvercastSunIntensity.GetValueOnGameThread(),
                     Weather.Cloudiness, /*bOnlyDarken=*/true,
                     SampleCurvePeakAboveHorizon(SunIntensityCurve)));
+                // See the comment on CVarCarlaWeatherSunTwilightEndDeg.
+                const float Twilight = ComputeSunTwilightFactor(Weather.SunAltitudeAngle);
+                if (Twilight >= 0.0f && Twilight < 1.0f)
+                {
+                    const float StartAltitude = CVarCarlaWeatherSunTwilightStartDeg.GetValueOnGameThread();
+                    const float AtStart = ApplyOvercastBlend(
+                        ApplySunAltitudeFalloff(
+                            SunIntensityCurve->GetFloatValue(StartAltitude),
+                            SampleCurvePeakAboveHorizon(SunIntensityCurve),
+                            StartAltitude),
+                        CVarCarlaWeatherOvercastSunIntensity.GetValueOnGameThread(),
+                        Weather.Cloudiness, /*bOnlyDarken=*/true,
+                        SampleCurvePeakAboveHorizon(SunIntensityCurve));
+                    SunLightComponent->SetIntensity(FMath::Max(SunLightComponent->Intensity, AtStart * Twilight));
+                    // The rig's UpdateSun hides the sun below the horizon.
+                    if (Twilight > 0.0f && !SunLightComponent->IsVisible())
+                        SunLightComponent->SetVisibility(true);
+                }
                 // Rigs saved with a black light color render no sunlight at any
                 // intensity; the physical tint comes from the color temperature.
                 // White unless the overcast neutralisation has something to cancel.
@@ -1427,8 +1941,22 @@ void AWeather::ApplyWeatherToSkyActor(AActor* SkyActor, const FWeatherParameters
         // directional light shines along its forward vector.
         if (ULightComponent* SunLightComponent = FindComponent(TEXT("DirectionalLightComponentSun")))
         {
-            SunLightComponent->SetWorldRotation(
-                FRotator(-Weather.SunAltitudeAngle, Weather.SunAzimuthAngle, 0.0f));
+            const FRotator SunRotation(-Weather.SunAltitudeAngle, Weather.SunAzimuthAngle, 0.0f);
+            SunLightComponent->SetWorldRotation(SunRotation);
+            if (UDirectionalLightComponent* SunDirectional = Cast<UDirectionalLightComponent>(SunLightComponent))
+            {
+                const FLinearColor CloudScale = ComputeTwilightCloudScale(Weather.SunAltitudeAngle);
+                if (!SunDirectional->CloudScatteredLuminanceScale.Equals(CloudScale))
+                {
+                    SunDirectional->CloudScatteredLuminanceScale = CloudScale;
+                    SunDirectional->MarkRenderStateDirty();
+                }
+            }
+            if (SkyActor->GetWorld() != nullptr && SkyActor->GetWorld()->IsGameWorld())
+            {
+                NoteSunRotation(SkyActor->GetWorld(), SunRotation);
+                NoteLightingChange(SkyActor->GetWorld(), Weather.SunAltitudeAngle, Weather.Cloudiness);
+            }
         }
 
         // The moon likewise, anti-solar; pitch negated as for the sun. Held at
@@ -1564,7 +2092,7 @@ void AWeather::ApplyWeatherToSkyActor(AActor* SkyActor, const FWeatherParameters
             if (UCurveFloat* SkyIntensityCurve = FindCurve(TEXT("SkyIntensity_Curve")))
                 SkyLightComponent->SetIntensity(ApplyOvercastBlend(
                     SkyIntensityCurve->GetFloatValue(Weather.SunAltitudeAngle),
-                    CVarCarlaWeatherOvercastSkyLightIntensity.GetValueOnGameThread(),
+                    GetOvercastSkyLightTarget(Weather.Cloudiness, Weather.Precipitation),
                     Weather.Cloudiness, /*bOnlyDarken=*/false, /*CurvePeak=*/0.0f));
             FObjectProperty* AtmosphereProperty = CastField<FObjectProperty>(
                 SkyActor->GetClass()->FindPropertyByName(TEXT("SkyAtmosphereComponent")));
@@ -1638,8 +2166,21 @@ void AWeather::ApplyWeatherToSkyActor(AActor* SkyActor, const FWeatherParameters
             {
                 if (!SkyLightComponent->IsActive())
                     SkyLightComponent->SetActive(true);
-                if (SkylightFloor > 0.0f && SkyLightComponent->Intensity < SkylightFloor)
-                    SkyLightComponent->SetIntensity(SkylightFloor);
+                // Across twilight the capture still sees a lit sky, so the floor
+                // is blended in from the day value instead of applied at once.
+                float Floor = SkylightFloor;
+                const float TwilightEnd = CVarCarlaWeatherSunTwilightEndDeg.GetValueOnGameThread();
+                if (TwilightEnd < 0.0f && Weather.SunAltitudeAngle > TwilightEnd && SkylightFloor > 0.0f)
+                {
+                    // From what the curve and the overcast blend give at the horizon.
+                    const float DayValue = FMath::Max(ApplyOvercastBlend(1.0f,
+                        GetOvercastSkyLightTarget(Weather.Cloudiness, Weather.Precipitation),
+                        Weather.Cloudiness, /*bOnlyDarken=*/false, /*CurvePeak=*/0.0f), 1e-3f);
+                    const float U = Weather.SunAltitudeAngle / TwilightEnd;
+                    Floor = FMath::Pow(DayValue, 1.0f - U) * FMath::Pow(SkylightFloor, U);
+                }
+                if (Floor > 0.0f && SkyLightComponent->Intensity < Floor)
+                    SkyLightComponent->SetIntensity(Floor);
             }
 
             // Stars. SetSkySphere (in the UpdateFunctionNames loop above) has
@@ -1710,6 +2251,28 @@ void AWeather::ApplyWeatherToSkyActor(AActor* SkyActor, const FWeatherParameters
                 UFunction* RefreshMaterialFunction = SphereActor->FindFunction(TEXT("RefreshMaterial"));
                 if (RefreshMaterialFunction != nullptr && RefreshMaterialFunction->ParmsSize == 0)
                     SphereActor->ProcessEvent(RefreshMaterialFunction, nullptr);
+
+                // After RefreshMaterial, which rewrites the colours and the cloud
+                // opacity from the sphere's variables.
+                const FLinearColor NightColor = ParseColorCVar(CVarCarlaWeatherSkySphereNightColor, FLinearColor(-1.0f, -1.0f, -1.0f));
+                const float CloudOpacity = CVarCarlaWeatherSkySphereCloudOpacity.GetValueOnGameThread();
+                TInlineComponentArray<UMeshComponent*> SphereMeshes;
+                SphereActor->GetComponents(SphereMeshes);
+                for (UMeshComponent* SphereMesh : SphereMeshes)
+                {
+                    UMaterialInstanceDynamic* SphereMID = SphereMesh != nullptr
+                        ? Cast<UMaterialInstanceDynamic>(SphereMesh->GetMaterial(0)) : nullptr;
+                    if (SphereMID == nullptr)
+                        continue;
+                    if (NightColor.R >= 0.0f)
+                    {
+                        SphereMID->SetVectorParameterValue(TEXT("Horizon color"), NightColor);
+                        SphereMID->SetVectorParameterValue(TEXT("Zenith Color"), NightColor);
+                        SphereMID->SetVectorParameterValue(TEXT("Cloud color"), NightColor);
+                    }
+                    if (CloudOpacity >= 0.0f)
+                        SphereMID->SetScalarParameterValue(TEXT("Cloud opacity"), CloudOpacity);
+                }
             }
         }
         else
@@ -1807,10 +2370,34 @@ void AWeather::ApplyWeatherToSkyActor(AActor* SkyActor, const FWeatherParameters
                 }
                 else
                 {
-                    const float BaseNoiseExp = Weather.Cloudiness <= 0.0f
+                    float BaseNoiseExp = Weather.Cloudiness <= 0.0f
                         ? 6000.0f
                         : FMath::Clamp(100.0f - 0.8f * Weather.Cloudiness, 0.0f, 6000.0f);
+                    // See CVarCarlaWeatherDeckStartCloudiness. Every deck
+                    // parameter is written on every push, blended from the
+                    // base material's own value, so the reused MID never
+                    // keeps a deck value after the clouds open up again.
+                    const float Deck = ComputeCloudDeckFactor(Weather.Cloudiness);
+                    const float DeckNoiseExp = CVarCarlaWeatherDeckNoiseExp.GetValueOnGameThread();
+                    if (DeckNoiseExp > 0.0f && BaseNoiseExp > 0.0f)
+                        BaseNoiseExp = FMath::Exp(FMath::Lerp(FMath::Loge(BaseNoiseExp), FMath::Loge(DeckNoiseExp),
+                            FMath::Pow(Deck, FMath::Max(CVarCarlaWeatherDeckCoverageExponent.GetValueOnGameThread(), 0.01f))));
                     CloudMID->SetScalarParameterValue(TEXT("BaseNoiseExp"), BaseNoiseExp);
+                    // Negative deck value: the authored one, still written so a
+                    // runtime change of the cvar does not leave a stale value.
+                    auto BlendToDeck = [CloudMID, BaseMaterial](const TCHAR* Name, float DeckValue, float Alpha)
+                    {
+                        float Authored = 0.0f;
+                        if (BaseMaterial->GetScalarParameterValue(Name, Authored))
+                            CloudMID->SetScalarParameterValue(Name, DeckValue >= 0.0f ? FMath::Lerp(Authored, DeckValue, Alpha) : Authored);
+                    };
+                    BlendToDeck(TEXT("ExtinctionScale"), CVarCarlaWeatherDeckExtinctionScale.GetValueOnGameThread(), Deck);
+                    // M_BasicClouds blends the last warp iteration by the
+                    // count's fraction, so the warp blends like the rest. A
+                    // DeckWarpSwitch in [0, 1] restores the single flip.
+                    const float WarpSwitch = CVarCarlaWeatherDeckWarpSwitch.GetValueOnGameThread();
+                    BlendToDeck(TEXT("Perlin FBM Domain Warp Count"), CVarCarlaWeatherDeckWarpCount.GetValueOnGameThread(),
+                        WarpSwitch < 0.0f ? Deck : (Deck >= WarpSwitch && Deck > 0.0f ? 1.0f : 0.0f));
                 }
                 CloudComponent->SetMaterial(CloudMID);
             }
@@ -1826,13 +2413,14 @@ void AWeather::ApplyWeatherToSkyActor(AActor* SkyActor, const FWeatherParameters
     // actor exists, but street lamps otherwise only ever turned on when
     // actually playing: ASkyBase::RefreshWeather/LoadPreset fall back to
     // calling this function directly with no AWeather placed, and that path
-    // never reached UpdateStreetLightsForDayNight. Broadcasting again here is
-    // harmless when an AWeather is present too -- registered lights just
-    // re-receive the same state.
+    // never reached UpdateStreetLightsForDayNight. Notifying again here is
+    // harmless when an AWeather is present too: the subsystem only
+    // broadcasts when the day/night state actually changes.
     if (UWorld* World = SkyActor->GetWorld())
     {
         if (UCarlaLightSubsystem* CarlaLightSubsystem = World->GetSubsystem<UCarlaLightSubsystem>())
-            CarlaLightSubsystem->NotifyDayTimeChange(Weather.SunAltitudeAngle > 0.0f);
+            CarlaLightSubsystem->NotifyDayTimeChange(
+                Weather.SunAltitudeAngle > CVarCarlaWeatherStreetLightsOnDeg.GetValueOnGameThread());
     }
 
     // Wind + Wetness, both on the same global collection. WindIntensity: no
@@ -1865,9 +2453,30 @@ void AWeather::ApplyWeatherToSkyActor(AActor* SkyActor, const FWeatherParameters
             UKismetMaterialLibrary::SetScalarParameterValue(
                 SkyActor->GetWorld(), WeatherMPC, TEXT("Wetness"), Weather.Wetness);
             // 0 by day, 1 by night. Materials gate night-only emissives on it.
+            const float NightFactor = ComputeNightBlend(Weather.SunAltitudeAngle);
             UKismetMaterialLibrary::SetScalarParameterValue(
-                SkyActor->GetWorld(), WeatherMPC, TEXT("NightFactor"),
-                ComputeNightBlend(Weather.SunAltitudeAngle));
+                SkyActor->GetWorld(), WeatherMPC, TEXT("NightFactor"), NightFactor);
+            // Both cloud emissions share the material input: the city glow at
+            // night (see CVarCarlaWeatherCityGlow) and the overcast deck's
+            // diffuse light by day (see CVarCarlaWeatherDeckStartCloudiness),
+            // which follows the sun's own intensity so it fades with it.
+            const FLinearColor CityGlow = ParseColorCVar(CVarCarlaWeatherCityGlowColor, FLinearColor(1.0f, 0.85f, 0.7f))
+                * (CVarCarlaWeatherCityGlow.GetValueOnGameThread() * NightFactor);
+            float SunFraction = 0.0f;
+            if (UCurveFloat* SunCurve = LoadObject<UCurveFloat>(nullptr,
+                    TEXT("/Game/Carla/Blueprints/Weather/Weather2_Curves/SunIntensity_2.SunIntensity_2")))
+            {
+                const float Peak = SampleCurvePeakAboveHorizon(SunCurve);
+                if (Peak > UE_KINDA_SMALL_NUMBER)
+                    SunFraction = FMath::Clamp(ApplySunAltitudeFalloff(
+                        SunCurve->GetFloatValue(Weather.SunAltitudeAngle), Peak, Weather.SunAltitudeAngle) / Peak, 0.0f, 1.0f);
+            }
+            const FLinearColor DeckGlow = ParseColorCVar(CVarCarlaWeatherDeckGlowColor, FLinearColor::White)
+                * (FMath::Max(CVarCarlaWeatherDeckGlow.GetValueOnGameThread(), 0.0f)
+                    * RainDeckScale(CVarCarlaWeatherRainDeckGlowScale, Weather.Precipitation)
+                    * ComputeCloudDeckLightFactor(Weather.Cloudiness) * SunFraction);
+            UKismetMaterialLibrary::SetVectorParameterValue(
+                SkyActor->GetWorld(), WeatherMPC, TEXT("CityGlow"), CityGlow + DeckGlow);
         }
     }
 
@@ -1894,64 +2503,78 @@ void AWeather::ApplyWeatherToSkyActor(AActor* SkyActor, const FWeatherParameters
             : nullptr;
         if (PostProcessComponent != nullptr)
         {
-            FPostProcessSettings& Settings = PostProcessComponent->Settings;
-            if (!Settings.bOverride_AutoExposureMethod)
-            {
-                Settings.bOverride_AutoExposureMethod = true;
-                Settings.AutoExposureMethod = AEM_Histogram;
-            }
-            if (!Settings.bOverride_AutoExposureBias)
-            {
-                Settings.bOverride_AutoExposureBias = true;
-                Settings.AutoExposureBias = 0.0f;
-            }
-            if (!Settings.bOverride_AutoExposureMinBrightness)
-            {
-                Settings.bOverride_AutoExposureMinBrightness = true;
-                Settings.AutoExposureMinBrightness = 10.0f;
-            }
-            if (!Settings.bOverride_AutoExposureMaxBrightness)
-            {
-                Settings.bOverride_AutoExposureMaxBrightness = true;
-                Settings.AutoExposureMaxBrightness = 12.0f;
-            }
-            if (!Settings.bOverride_AutoExposureSpeedUp)
-            {
-                Settings.bOverride_AutoExposureSpeedUp = true;
-                Settings.AutoExposureSpeedUp = 3.0f;
-            }
-            if (!Settings.bOverride_AutoExposureSpeedDown)
-            {
-                Settings.bOverride_AutoExposureSpeedDown = true;
-                Settings.AutoExposureSpeedDown = 1.0f;
-            }
-            // Forced, overriding whatever the rig authored.
-            const float ExposureBias = CVarCarlaWeatherExposureBias.GetValueOnGameThread();
-            if (ExposureBias >= 0.0f)
-            {
-                Settings.bOverride_AutoExposureBias = true;
-                Settings.AutoExposureBias = ExposureBias;
-            }
-            // Only when the profile does not set bloom. A value equal to the last
-            // one written here counts as ours, so the cvar stays live.
-            static float LastBloomIntensityWritten = -1.0f;
-            const float BloomIntensity = CVarCarlaWeatherBloomIntensity.GetValueOnGameThread();
-            if (BloomIntensity >= 0.0f
-                && (!Settings.bOverride_BloomIntensity || Settings.BloomIntensity == LastBloomIntensityWritten))
-            {
-                Settings.bOverride_BloomIntensity = true;
-                Settings.BloomIntensity = BloomIntensity;
-                LastBloomIntensityWritten = BloomIntensity;
-            }
-            const float ExposureMaxEV = CVarCarlaWeatherExposureMaxEV.GetValueOnGameThread();
-            if (ExposureMaxEV >= 0.0f)
-            {
-                Settings.bOverride_AutoExposureMaxBrightness = true;
-                Settings.AutoExposureMaxBrightness = ExposureMaxEV;
-            }
-            PostProcessComponent->bUnbound = true;
+            FillSkyPostProcessFallback(PostProcessComponent);
         }
     }
+}
+
+void AWeather::FillSkyPostProcessFallback(UPostProcessComponent* PostProcessComponent)
+{
+    if (PostProcessComponent == nullptr)
+        return;
+    FPostProcessSettings& Settings = PostProcessComponent->Settings;
+    if (!Settings.bOverride_AutoExposureMethod)
+    {
+        Settings.bOverride_AutoExposureMethod = true;
+        Settings.AutoExposureMethod = AEM_Histogram;
+    }
+    if (!Settings.bOverride_AutoExposureBias)
+    {
+        Settings.bOverride_AutoExposureBias = true;
+        Settings.AutoExposureBias = 0.0f;
+    }
+    if (!Settings.bOverride_AutoExposureMinBrightness)
+    {
+        Settings.bOverride_AutoExposureMinBrightness = true;
+        Settings.AutoExposureMinBrightness = 10.0f;
+    }
+    if (!Settings.bOverride_AutoExposureMaxBrightness)
+    {
+        Settings.bOverride_AutoExposureMaxBrightness = true;
+        Settings.AutoExposureMaxBrightness = 12.0f;
+    }
+    if (!Settings.bOverride_AutoExposureSpeedUp)
+    {
+        Settings.bOverride_AutoExposureSpeedUp = true;
+        Settings.AutoExposureSpeedUp = 3.0f;
+    }
+    if (!Settings.bOverride_AutoExposureSpeedDown)
+    {
+        Settings.bOverride_AutoExposureSpeedDown = true;
+        Settings.AutoExposureSpeedDown = 1.0f;
+    }
+    // Only when the cvar is set (off by default): forced over the profile.
+    const float ExposureBias = CVarCarlaWeatherExposureBias.GetValueOnGameThread();
+    if (ExposureBias >= 0.0f)
+    {
+        Settings.bOverride_AutoExposureBias = true;
+        Settings.AutoExposureBias = ExposureBias;
+    }
+    // Only when the profile does not set bloom. The sky rig remembers that the
+    // bloom is ours (until a profile is loaded), so the cvar stays live.
+    ASkyBase* Sky = Cast<ASkyBase>(PostProcessComponent->GetOwner());
+    const bool bBloomIsOurs = Sky != nullptr && Sky->bBloomFromWeatherFallback;
+    const float BloomIntensity = CVarCarlaWeatherBloomIntensity.GetValueOnGameThread();
+    if (BloomIntensity >= 0.0f && (!Settings.bOverride_BloomIntensity || bBloomIsOurs))
+    {
+        Settings.bOverride_BloomIntensity = true;
+        Settings.BloomIntensity = BloomIntensity;
+        if (Sky != nullptr)
+            Sky->bBloomFromWeatherFallback = true;
+    }
+    else if (BloomIntensity < 0.0f && bBloomIsOurs)
+    {
+        // Cvar switched off: hand bloom back to the engine default.
+        Settings.bOverride_BloomIntensity = false;
+        Sky->bBloomFromWeatherFallback = false;
+    }
+    const float ExposureMaxEV = CVarCarlaWeatherExposureMaxEV.GetValueOnGameThread();
+    if (ExposureMaxEV >= 0.0f)
+    {
+        Settings.bOverride_AutoExposureMaxBrightness = true;
+        Settings.AutoExposureMaxBrightness = ExposureMaxEV;
+    }
+    PostProcessComponent->bUnbound = true;
 }
 
 void AWeather::UpdateStreetLightsForDayNight()
@@ -1963,11 +2586,10 @@ void AWeather::UpdateStreetLightsForDayNight()
     if (CarlaLightSubsystem == nullptr)
         return;
 
-    // Sun above the horizon = day, at or below = night. Broadcasting on every
-    // weather update is harmless: registered lights just re-receive the same
-    // state when nothing changed.
-    const bool bIsDay = Weather.SunAltitudeAngle > 0.0f;
-    UE_LOG(LogCarla, Log, TEXT("AWeather: broadcasting day/night change (bIsDay=%d) to %d registered CarlaLights"),
+    // Sun above StreetLightsOnDeg = day, at or below = night. Notified on every
+    // weather update; the subsystem only broadcasts an actual change.
+    const bool bIsDay = Weather.SunAltitudeAngle > CVarCarlaWeatherStreetLightsOnDeg.GetValueOnGameThread();
+    UE_LOG(LogCarla, Verbose, TEXT("AWeather: day/night state (bIsDay=%d) for %d registered CarlaLights"),
         bIsDay ? 1 : 0, CarlaLightSubsystem->NumLights());
     CarlaLightSubsystem->NotifyDayTimeChange(bIsDay);
 }

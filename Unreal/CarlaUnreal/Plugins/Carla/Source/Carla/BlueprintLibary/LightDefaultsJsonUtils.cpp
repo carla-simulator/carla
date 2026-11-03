@@ -9,11 +9,12 @@
 #include "Carla/Lights/CarlaLightSubsystem.h"
 #include "Carla/Traffic/TrafficLightBase.h"
 
-#include "Components/HierarchicalInstancedStaticMeshComponent.h"
+#include "Components/InstancedStaticMeshComponent.h"
 #include "Components/LightComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Dom/JsonObject.h"
 #include "Engine/Engine.h"
+#include "Engine/Level.h"
 #include "Engine/World.h"
 #include "EngineUtils.h"
 #include "HAL/FileManager.h"
@@ -258,50 +259,57 @@ namespace
         int32 MaterialIndex = 0;
     };
 
+    // For one actor that owns at least one FakeInterior slot on a component
+    // whose instanced-ness matches bInstancedOnly, hands the whole per-actor
+    // slot list to Callback. The modular building tool bakes into HISM
+    // components, and Town15's baked buildings (SM_university*) into plain
+    // ISM ones; every pre-modular building/placed piece we've found uses a
+    // plain (non-instanced) StaticMeshComponent instead -- so this one flag
+    // is what actually separates the two mechanisms. HISM derives from ISM,
+    // and PerInstanceRandom varies per instance on both.
+    template <typename FuncT>
+    void CollectBuildingSlotsOnActor(AActor* Actor, bool bInstancedOnly, FuncT&& Callback)
+    {
+        if (Actor == nullptr)
+            return;
+
+        TArray<UStaticMeshComponent*> MeshComponents;
+        Actor->GetComponents<UStaticMeshComponent>(MeshComponents);
+        TArray<FBuildingSlotRef> Slots;
+        for (UStaticMeshComponent* MeshComponent : MeshComponents)
+        {
+            const bool bIsInstanced = MeshComponent->IsA<UInstancedStaticMeshComponent>();
+            if (bIsInstanced != bInstancedOnly)
+                continue;
+
+            const int32 NumMaterials = MeshComponent->GetNumMaterials();
+            for (int32 MaterialIndex = 0; MaterialIndex < NumMaterials; ++MaterialIndex)
+            {
+                if (ResolveStaticProceduralBuildingAsset(MeshComponent->GetMaterial(MaterialIndex)) == nullptr)
+                    continue;
+
+                FBuildingSlotRef Slot;
+                Slot.Component = MeshComponent;
+                Slot.MaterialIndex = MaterialIndex;
+                Slots.Add(Slot);
+            }
+        }
+        if (Slots.Num() > 0)
+        {
+            Callback(Actor, Slots);
+        }
+    }
+
     // Neither baked buildings nor the older pre-modular ones have a
     // Blueprint class worth iterating by (see ScanProceduralBuildingsInLevel
-    // / ScanLegacyBuildingsInLevel), so this walks every actor in the level
-    // and, for any that own at least one FakeInterior slot on a component
-    // whose HISM-ness matches bHismOnly, hands the whole per-actor slot list
-    // to Callback. The modular building tool always bakes into HISM
-    // components; every pre-modular building/placed piece we've found uses a
-    // plain (non-instanced) StaticMeshComponent instead -- so this one flag
-    // is what actually separates the two mechanisms (see
-    // FLightAssetDefault::bLit).
+    // / ScanLegacyBuildingsInLevel), so this walks every actor in the world
+    // (see CollectBuildingSlotsOnActor).
     template <typename FuncT>
-    void CollectBuildingActorsByMechanism(UWorld* World, bool bHismOnly, FuncT&& Callback)
+    void CollectBuildingActorsByMechanism(UWorld* World, bool bInstancedOnly, FuncT&& Callback)
     {
         for (TActorIterator<AActor> It(World); It; ++It)
         {
-            AActor* Actor = *It;
-            if (Actor == nullptr)
-                continue;
-
-            TArray<UStaticMeshComponent*> MeshComponents;
-            Actor->GetComponents<UStaticMeshComponent>(MeshComponents);
-            TArray<FBuildingSlotRef> Slots;
-            for (UStaticMeshComponent* MeshComponent : MeshComponents)
-            {
-                const bool bIsHism = MeshComponent->IsA<UHierarchicalInstancedStaticMeshComponent>();
-                if (bIsHism != bHismOnly)
-                    continue;
-
-                const int32 NumMaterials = MeshComponent->GetNumMaterials();
-                for (int32 MaterialIndex = 0; MaterialIndex < NumMaterials; ++MaterialIndex)
-                {
-                    if (ResolveStaticProceduralBuildingAsset(MeshComponent->GetMaterial(MaterialIndex)) == nullptr)
-                        continue;
-
-                    FBuildingSlotRef Slot;
-                    Slot.Component = MeshComponent;
-                    Slot.MaterialIndex = MaterialIndex;
-                    Slots.Add(Slot);
-                }
-            }
-            if (Slots.Num() > 0)
-            {
-                Callback(Actor, Slots);
-            }
+            CollectBuildingSlotsOnActor(*It, bInstancedOnly, Callback);
         }
     }
 
@@ -321,7 +329,7 @@ namespace
     // resolved per physical instance by the renderer itself, so this is what
     // actually achieves individual-window variation; PercentLit here just
     // becomes the threshold we hand it (as a 0..1 fraction).
-    void ApplyToActorSlots(AActor* /*Actor*/, const TArray<FBuildingSlotRef>& Slots, float EmissiveIntensity, float PercentLit)
+    void ApplyToActorSlots(AActor* /*Actor*/, const TArray<FBuildingSlotRef>& Slots, float EmissiveIntensity, float PercentLit, const FLinearColor& Color)
     {
         const float Threshold = FMath::Clamp(PercentLit / 100.0f, 0.0f, 1.0f);
         for (const FBuildingSlotRef& Slot : Slots)
@@ -335,6 +343,7 @@ namespace
                 continue;
 
             MID->SetScalarParameterValue(TEXT("EmissiveIntensity"), EmissiveIntensity);
+            MID->SetVectorParameterValue(TEXT("Emissive Color"), Color);
             MID->SetScalarParameterValue(TEXT("On/Off"), 1.0f);
             MID->SetScalarParameterValue(TEXT("PercentLitThreshold"), Threshold);
         }
@@ -364,7 +373,7 @@ namespace
     // whole building is deterministically on or off, no PercentLitThreshold
     // gating needed (pinned to 1.0, i.e. always-pass, since it's irrelevant
     // here).
-    void ApplyToLegacyActorSlots(AActor* Actor, const TArray<FBuildingSlotRef>& Slots, float EmissiveIntensity, float PercentLit)
+    void ApplyToLegacyActorSlots(AActor* Actor, const TArray<FBuildingSlotRef>& Slots, float EmissiveIntensity, float PercentLit, const FLinearColor& Color)
     {
         const float Threshold = FMath::Clamp(PercentLit / 100.0f, 0.0f, 1.0f);
         const bool bLit = StableActorRandom01(Actor) < Threshold;
@@ -379,6 +388,7 @@ namespace
                 continue;
 
             MID->SetScalarParameterValue(TEXT("EmissiveIntensity"), bLit ? EmissiveIntensity : 0.0f);
+            MID->SetVectorParameterValue(TEXT("Emissive Color"), Color);
             MID->SetScalarParameterValue(TEXT("On/Off"), bLit ? 1.0f : 0.0f);
             MID->SetScalarParameterValue(TEXT("PercentLitThreshold"), 1.0f);
         }
@@ -871,7 +881,7 @@ TArray<FLightAssetSummary> ULightDefaultsJsonUtils::ScanProceduralBuildingsInLev
     int32 ActorCount = 0;
     float SampleEmissive = 0.0f;
     bool bFoundSample = false;
-    CollectBuildingActorsByMechanism(World, /*bHismOnly=*/true, [&](AActor*, const TArray<FBuildingSlotRef>& Slots)
+    CollectBuildingActorsByMechanism(World, /*bInstancedOnly=*/true, [&](AActor*, const TArray<FBuildingSlotRef>& Slots)
     {
         ++ActorCount;
         if (bFoundSample)
@@ -912,15 +922,15 @@ TArray<FLightAssetSummary> ULightDefaultsJsonUtils::ScanProceduralBuildingsInLev
     return Result;
 }
 
-void ULightDefaultsJsonUtils::ApplyProceduralBuildingsEmissiveLive(const UObject* WorldContextObject, float EmissiveIntensity, float PercentLit)
+void ULightDefaultsJsonUtils::ApplyProceduralBuildingsEmissiveLive(const UObject* WorldContextObject, float EmissiveIntensity, float PercentLit, const FLinearColor& Color)
 {
     UWorld* World = GEngine ? GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::ReturnNull) : nullptr;
     if (World == nullptr)
         return;
 
-    CollectBuildingActorsByMechanism(World, /*bHismOnly=*/true, [EmissiveIntensity, PercentLit](AActor* Actor, const TArray<FBuildingSlotRef>& Slots)
+    CollectBuildingActorsByMechanism(World, /*bInstancedOnly=*/true, [EmissiveIntensity, PercentLit, Color](AActor* Actor, const TArray<FBuildingSlotRef>& Slots)
     {
-        ApplyToActorSlots(Actor, Slots, EmissiveIntensity, PercentLit);
+        ApplyToActorSlots(Actor, Slots, EmissiveIntensity, PercentLit, Color);
     });
 }
 
@@ -929,7 +939,7 @@ void ULightDefaultsJsonUtils::ReapplyProceduralBuildingsToLevel(const UObject* W
     FLightAssetDefault Default;
     if (!LoadClassDefault(ProceduralBuildingsKey, Default))
         return;
-    ApplyProceduralBuildingsEmissiveLive(WorldContextObject, Default.EmissiveIntensity, Default.Intensity);
+    ApplyProceduralBuildingsEmissiveLive(WorldContextObject, Default.EmissiveIntensity, Default.Intensity, Default.Color);
 }
 
 void ULightDefaultsJsonUtils::SetProceduralBuildingsSelected(const UObject* WorldContextObject, bool bSelected)
@@ -942,7 +952,7 @@ void ULightDefaultsJsonUtils::SetProceduralBuildingsSelected(const UObject* Worl
     if (World == nullptr)
         return;
 
-    CollectBuildingActorsByMechanism(World, /*bHismOnly=*/true, [bSelected](AActor* Actor, const TArray<FBuildingSlotRef>&)
+    CollectBuildingActorsByMechanism(World, /*bInstancedOnly=*/true, [bSelected](AActor* Actor, const TArray<FBuildingSlotRef>&)
     {
         GEditor->SelectActor(Actor, bSelected, /*bNotify=*/false);
     });
@@ -961,7 +971,7 @@ TArray<FLightAssetSummary> ULightDefaultsJsonUtils::ScanLegacyBuildingsInLevel(c
     int32 ActorCount = 0;
     float SampleEmissive = 0.0f;
     bool bFoundSample = false;
-    CollectBuildingActorsByMechanism(World, /*bHismOnly=*/false, [&](AActor*, const TArray<FBuildingSlotRef>& Slots)
+    CollectBuildingActorsByMechanism(World, /*bInstancedOnly=*/false, [&](AActor*, const TArray<FBuildingSlotRef>& Slots)
     {
         ++ActorCount;
         if (bFoundSample)
@@ -1002,15 +1012,15 @@ TArray<FLightAssetSummary> ULightDefaultsJsonUtils::ScanLegacyBuildingsInLevel(c
     return Result;
 }
 
-void ULightDefaultsJsonUtils::ApplyLegacyBuildingsEmissiveLive(const UObject* WorldContextObject, float EmissiveIntensity, float PercentLit)
+void ULightDefaultsJsonUtils::ApplyLegacyBuildingsEmissiveLive(const UObject* WorldContextObject, float EmissiveIntensity, float PercentLit, const FLinearColor& Color)
 {
     UWorld* World = GEngine ? GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::ReturnNull) : nullptr;
     if (World == nullptr)
         return;
 
-    CollectBuildingActorsByMechanism(World, /*bHismOnly=*/false, [EmissiveIntensity, PercentLit](AActor* Actor, const TArray<FBuildingSlotRef>& Slots)
+    CollectBuildingActorsByMechanism(World, /*bInstancedOnly=*/false, [EmissiveIntensity, PercentLit, Color](AActor* Actor, const TArray<FBuildingSlotRef>& Slots)
     {
-        ApplyToLegacyActorSlots(Actor, Slots, EmissiveIntensity, PercentLit);
+        ApplyToLegacyActorSlots(Actor, Slots, EmissiveIntensity, PercentLit, Color);
     });
 }
 
@@ -1019,7 +1029,82 @@ void ULightDefaultsJsonUtils::ReapplyLegacyBuildingsToLevel(const UObject* World
     FLightAssetDefault Default;
     if (!LoadClassDefault(LegacyBuildingsKey, Default))
         return;
-    ApplyLegacyBuildingsEmissiveLive(WorldContextObject, Default.EmissiveIntensity, Default.Intensity);
+    ApplyLegacyBuildingsEmissiveLive(WorldContextObject, Default.EmissiveIntensity, Default.Intensity, Default.Color);
+}
+
+void ULightDefaultsJsonUtils::ReapplyBuildingDefaultsToLevel(ULevel* Level)
+{
+    if (Level == nullptr)
+        return;
+
+    FLightAssetDefault Procedural;
+    FLightAssetDefault Legacy;
+    const bool bProcedural = LoadClassDefault(ProceduralBuildingsKey, Procedural);
+    const bool bLegacy = LoadClassDefault(LegacyBuildingsKey, Legacy);
+    if (!bProcedural && !bLegacy)
+        return;
+
+    int32 NumProcedural = 0;
+    int32 NumLegacy = 0;
+    for (AActor* Actor : Level->Actors)
+    {
+        if (bProcedural)
+        {
+            CollectBuildingSlotsOnActor(Actor, /*bInstancedOnly=*/true, [&](AActor* Owner, const TArray<FBuildingSlotRef>& Slots)
+            {
+                ApplyToActorSlots(Owner, Slots, Procedural.EmissiveIntensity, Procedural.Intensity, Procedural.Color);
+                ++NumProcedural;
+            });
+        }
+        if (bLegacy)
+        {
+            CollectBuildingSlotsOnActor(Actor, /*bInstancedOnly=*/false, [&](AActor* Owner, const TArray<FBuildingSlotRef>& Slots)
+            {
+                ApplyToLegacyActorSlots(Owner, Slots, Legacy.EmissiveIntensity, Legacy.Intensity, Legacy.Color);
+                ++NumLegacy;
+            });
+        }
+    }
+    if (NumProcedural + NumLegacy > 0)
+    {
+        UE_LOG(LogCarla, Log, TEXT("Light defaults: %d instanced and %d legacy building actors in %s"),
+            NumProcedural, NumLegacy, *Level->GetOuter()->GetName());
+    }
+}
+
+namespace
+{
+    FDelegateHandle GBuildingActorsInitializedHandle;
+    FDelegateHandle GBuildingLevelAddedHandle;
+}
+
+void ULightDefaultsJsonUtils::RegisterRuntimeBuildingDefaultsHooks()
+{
+    // The editor applies these on map open (LightDefaultsEditorPanel.cpp),
+    // and PIE inherits them from the editor world, but only for what was
+    // loaded then. A World Partition cell streamed in during Play, and any
+    // -game / server run, loads its buildings from disk with the materials
+    // as authored. So apply them to every game-world level as it arrives:
+    // the levels present when the world's actors initialize, and every
+    // level (streaming level or World Partition cell) added after that.
+    GBuildingActorsInitializedHandle = FWorldDelegates::OnWorldInitializedActors.AddLambda([](const FActorsInitializedParams& Params)
+    {
+        if (Params.World == nullptr || !Params.World->IsGameWorld())
+            return;
+        for (ULevel* Level : Params.World->GetLevels())
+            ReapplyBuildingDefaultsToLevel(Level);
+    });
+    GBuildingLevelAddedHandle = FWorldDelegates::LevelAddedToWorld.AddLambda([](ULevel* Level, UWorld* World)
+    {
+        if (World != nullptr && World->IsGameWorld() && World->AreActorsInitialized())
+            ReapplyBuildingDefaultsToLevel(Level);
+    });
+}
+
+void ULightDefaultsJsonUtils::UnregisterRuntimeBuildingDefaultsHooks()
+{
+    FWorldDelegates::OnWorldInitializedActors.Remove(GBuildingActorsInitializedHandle);
+    FWorldDelegates::LevelAddedToWorld.Remove(GBuildingLevelAddedHandle);
 }
 
 void ULightDefaultsJsonUtils::SetLegacyBuildingsSelected(const UObject* WorldContextObject, bool bSelected)
@@ -1032,7 +1117,7 @@ void ULightDefaultsJsonUtils::SetLegacyBuildingsSelected(const UObject* WorldCon
     if (World == nullptr)
         return;
 
-    CollectBuildingActorsByMechanism(World, /*bHismOnly=*/false, [bSelected](AActor* Actor, const TArray<FBuildingSlotRef>&)
+    CollectBuildingActorsByMechanism(World, /*bInstancedOnly=*/false, [bSelected](AActor* Actor, const TArray<FBuildingSlotRef>&)
     {
         GEditor->SelectActor(Actor, bSelected, /*bNotify=*/false);
     });

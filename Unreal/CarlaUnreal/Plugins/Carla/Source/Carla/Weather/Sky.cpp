@@ -1,4 +1,5 @@
 #include "Sky.h"
+#include "Carla.h"
 
 #include <util/ue-header-guard-begin.h>
 #include "Components/PostProcessComponent.h"
@@ -111,12 +112,19 @@ ASkyBase::ASkyBase(
 
 void ASkyBase::SaveProfile()
 {
+  // The weather's fallback bloom is not part of the profile: saved as set,
+  // the profile would claim it and the fallback could never update it.
+  const bool bBloomOverride = PostProcessComponent->Settings.bOverride_BloomIntensity;
+  if (bBloomFromWeatherFallback)
+    PostProcessComponent->Settings.bOverride_BloomIntensity = false;
   UPostProcessJsonUtils::SaveAllPostProcessComponentToJson(PostProcessComponent, ProfileName);
+  PostProcessComponent->Settings.bOverride_BloomIntensity = bBloomOverride;
 }
 
 void ASkyBase::LoadProfile()
 {
   UPostProcessJsonUtils::LoadAllPostProcessFromJsonToPostProcessComponent(PostProcessComponent, ProfileName);
+  bBloomFromWeatherFallback = false;
 
   // Profiles that don't claim AutoExposureMinBrightness/MaxBrightness (i.e.
   // rely on Weather's fallback clamp, see ApplyWeatherToSkyActor) store those
@@ -390,6 +398,57 @@ void ASkyBase::OnConstruction(const FTransform& Transform)
   // Construction and would otherwise leave CameraParameters' last pushed
   // values sitting unapplied against a Settings struct that just got reset.
   PushCameraParameters();
+}
+
+const FName ASkyBase::FallbackSkyTag(TEXT("CarlaFallbackSky"));
+
+void ASkyBase::BeginPlay()
+{
+  Super::BeginPlay();
+
+  UWorld* World = GetWorld();
+  // The viewport / spectator renders through this unbound post process with
+  // the viewport profile (carla.PostProcess.ViewportProfile); RGB sensors load
+  // their own (carla.PostProcess.Profile or post_process_profile). What the map
+  // saved in the rig is only the editor view.
+  if (World != nullptr && World->IsGameWorld() && PostProcessComponent != nullptr)
+  {
+    const FString Profile = UPostProcessJsonUtils::GetViewportProfileName();
+    if (UPostProcessJsonUtils::LoadAllPostProcessFromJsonToPostProcessComponent(PostProcessComponent, Profile))
+    {
+      bBloomFromWeatherFallback = false;
+      UE_LOG(LogCarla, Log, TEXT("ASkyBase: %s loaded camera profile '%s'"), *GetName(), *Profile);
+    }
+    else
+    {
+      UE_LOG(LogCarla, Warning, TEXT("ASkyBase: %s could not load camera profile '%s'"), *GetName(), *Profile);
+    }
+    AWeather::FillSkyPostProcessFallback(PostProcessComponent);
+  }
+
+  if (World == nullptr || ActorHasTag(FallbackSkyTag))
+    return;
+
+  TArray<AActor*> Fallbacks;
+  UGameplayStatics::GetAllActorsWithTag(World, FallbackSkyTag, Fallbacks);
+  if (Fallbacks.IsEmpty())
+    return;
+  for (AActor* Fallback : Fallbacks)
+  {
+    // SetSunActorReference attaches a DirectionalLight actor to the rig,
+    // which Destroy would leave behind.
+    TArray<AActor*> Attached;
+    Fallback->GetAttachedActors(Attached, /*bResetArray=*/true, /*bRecursivelyIncludeAttachedActors=*/true);
+    for (AActor* Child : Attached)
+      Child->Destroy();
+    Fallback->Destroy();
+  }
+  UE_LOG(LogCarla, Log, TEXT("ASkyBase: %s streamed in, removed %d fallback sky rig(s)"),
+      *GetName(), Fallbacks.Num());
+
+  // Streamed in with the state saved in the map; catch up with the weather.
+  if (AWeather* Weather = Cast<AWeather>(UGameplayStatics::GetActorOfClass(World, AWeather::StaticClass())))
+    AWeather::ApplyWeatherToSkyActor(this, Weather->GetCurrentWeather());
 }
 
 void ASkyBase::E_SetAsMapDefault()

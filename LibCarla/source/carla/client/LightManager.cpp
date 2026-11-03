@@ -278,19 +278,23 @@ void LightManager::QueryLightsStateToServer() {
   // Update lights
   SharedPtr<LightManager> lm = _episode.Lock()->GetLightManager();
 
+  // The snapshot is the whole set of lights the server has now: lights of
+  // World Partition cells that streamed out are gone from it, and their ids
+  // can come back for other lights. Merging into the cache kept every light
+  // ever seen, with its first location.
+  std::unordered_map<LightId, LightState> lights_state;
+  std::unordered_map<LightId, Light> lights;
   for(const auto& it : lights_snapshot) {
-    _lights_state[it._id] = LightState(
+    lights_state[it._id] = LightState(
         it._intensity,
         Color(it._color.r, it._color.g, it._color.b),
         static_cast<LightState::LightGroup>(it._group),
         it._active
     );
-
-    if(_lights.find(it._id) == _lights.end())
-    {
-      _lights[it._id] = Light(lm, it._location, it._id);
-    }
+    lights[it._id] = Light(lm, it._location, it._id);
   }
+  _lights_state = std::move(lights_state);
+  _lights = std::move(lights);
 }
 
 void LightManager::UpdateServerLightsState(bool discard_client) {

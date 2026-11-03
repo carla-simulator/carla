@@ -230,6 +230,33 @@ public:
 
   virtual ECarlaServerResponse SetActorEnableGravity(bool bEnabled);
 
+  // Components, bones and sockets. Dormant actors answer from the rig recorded
+  // when they were put to sleep, so the results do not depend on streaming.
+  ECarlaServerResponse GetActorComponentNames(TArray<FString>& Names) const;
+
+  ECarlaServerResponse GetActorComponentWorldTransform(
+      const FString& ComponentName, FTransform& Transform) const;
+
+  ECarlaServerResponse GetActorComponentRelativeTransform(
+      const FString& ComponentName, FTransform& Transform) const;
+
+  ECarlaServerResponse GetActorBoneNames(TArray<FString>& Names) const;
+
+  ECarlaServerResponse GetActorBoneWorldTransforms(TArray<FTransform>& Transforms) const;
+
+  ECarlaServerResponse GetActorBoneRelativeTransforms(TArray<FTransform>& Transforms) const;
+
+  ECarlaServerResponse GetActorSocketNames(TArray<FString>& Names) const;
+
+  ECarlaServerResponse GetActorSocketWorldTransforms(TArray<FTransform>& Transforms) const;
+
+  ECarlaServerResponse GetActorSocketRelativeTransforms(TArray<FTransform>& Transforms) const;
+
+  ECarlaServerResponse GetActorRigSnapshot(FActorRigSnapshot& Rig) const;
+
+  ECarlaServerResponse ToWorld(
+      const TArray<FTransform>& Relative, TArray<FTransform>& Transforms) const;
+
   // Vehicle functions
   virtual ECarlaServerResponse EnableActorConstantVelocity(const FVector&)
   {
@@ -297,6 +324,31 @@ public:
   }
 
   virtual ECarlaServerResponse GetWheelSteerAngle(const EVehicleWheelLocation&, float&)
+  {
+    return ECarlaServerResponse::ActorTypeMismatch;
+  }
+
+  virtual ECarlaServerResponse SetWheelPitchAngle(const EVehicleWheelLocation&, float)
+  {
+    return ECarlaServerResponse::ActorTypeMismatch;
+  }
+
+  virtual ECarlaServerResponse GetWheelPitchAngle(const EVehicleWheelLocation&, float&)
+  {
+    return ECarlaServerResponse::ActorTypeMismatch;
+  }
+
+  virtual ECarlaServerResponse SetWheelSuspensionOffset(const EVehicleWheelLocation&, float)
+  {
+    return ECarlaServerResponse::ActorTypeMismatch;
+  }
+
+  virtual ECarlaServerResponse GetWheelSuspensionOffset(const EVehicleWheelLocation&, float&)
+  {
+    return ECarlaServerResponse::ActorTypeMismatch;
+  }
+
+  virtual ECarlaServerResponse SetWheelAnimationOverride(bool)
   {
     return ECarlaServerResponse::ActorTypeMismatch;
   }
@@ -529,6 +581,22 @@ public:
 
   virtual ECarlaServerResponse GetWheelSteerAngle(
       const EVehicleWheelLocation& WheelLocation, float& Angle);
+
+  virtual ECarlaServerResponse SetWheelPitchAngle(
+      const EVehicleWheelLocation& WheelLocation, float AngleInDeg) final;
+
+  virtual ECarlaServerResponse GetWheelPitchAngle(
+      const EVehicleWheelLocation& WheelLocation, float& Angle) final;
+
+  /// Offset in meters.
+  virtual ECarlaServerResponse SetWheelSuspensionOffset(
+      const EVehicleWheelLocation& WheelLocation, float Offset) final;
+
+  /// Offset in meters.
+  virtual ECarlaServerResponse GetWheelSuspensionOffset(
+      const EVehicleWheelLocation& WheelLocation, float& Offset) final;
+
+  virtual ECarlaServerResponse SetWheelAnimationOverride(bool bEnabled) final;
 
   virtual ECarlaServerResponse SetActorSimulatePhysics(bool bSimulatePhysics) final;
 

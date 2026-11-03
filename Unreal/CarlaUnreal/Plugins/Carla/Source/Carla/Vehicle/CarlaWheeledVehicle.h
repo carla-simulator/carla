@@ -34,6 +34,7 @@
 #include "Components/SkeletalMeshComponent.h"
 #include "WheeledVehiclePawn.h"
 #include "PhysicsEngine/PhysicsConstraintComponent.h"
+#include "VehicleAnimationInstance.h"
 #include "FoliageInstancedStaticMeshComponent.h"
 #include "CoreMinimal.h"
 #include "WheeledVehiclePawn.h"
@@ -46,6 +47,7 @@
 
 
 class UBoxComponent;
+class UChaosVehicleWheel;
 
 UENUM()
 enum class EVehicleWheelLocation : uint8 {
@@ -73,6 +75,9 @@ enum class EVehicleDoor : uint8 {
   Trunk = 5,
   All = 6
 };
+
+class FChaosScene;
+class FPhysScene_Chaos;
 
 /// Base class for CARLA wheeled vehicles.
 UCLASS()
@@ -573,6 +578,10 @@ private:
   FVehicleAckermannControl LastAppliedAckermannControl;
   FVehiclePhysicsControl LastPhysicsControl;
 
+  /// Applies LastPhysicsControl.Wheels to the live Chaos wheels. Call it after
+  /// every RecreatePhysicsState(), which resets them to the class defaults.
+  void ApplyWheelPhysicsControl();
+
   bool bAckermannControlActive = false;
   FAckermannController AckermannController;
 
@@ -675,6 +684,48 @@ public:
   UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
   float GetWheelSteerAngle(EVehicleWheelLocation WheelLocation);
 
+  /// Spin angle of a wheel, in degrees. Purely visual, wheel animation override only.
+  UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
+  void SetWheelPitchAngle(EVehicleWheelLocation WheelLocation, float AngleInDeg);
+
+  UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
+  float GetWheelPitchAngle(EVehicleWheelLocation WheelLocation);
+
+  /// Suspension compression of a wheel, in cm. Purely visual, wheel animation
+  /// override only.
+  UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
+  void SetWheelSuspensionOffset(EVehicleWheelLocation WheelLocation, float OffsetInCm);
+
+  UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
+  float GetWheelSuspensionOffset(EVehicleWheelLocation WheelLocation);
+
+  /// While the wheel animation is overridden the wheels show only the values
+  /// set through the wheel setters, whether or not Chaos simulates the vehicle.
+  UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
+  void SetWheelAnimationOverride(bool bEnabled);
+
+  bool IsWheelAnimationOverridden() const { return bWheelAnimationOverridden; }
+
+  /// Indexed like the movement component's WheelSetups. Empty while the wheel
+  /// animation is not overridden.
+  const TArray<FWheelAnimationData> &GetOverriddenWheelPoses() const { return OverriddenWheelPoses; }
+
+  /// Whether the Chaos vehicle simulation is moving this vehicle.
+  bool IsSimulatedByChaos() const;
+
+  bool HasWheel(int32 WheelIndex) const;
+
+  /// Whether the animation blueprint derives from UCarlaVehicleAnimationInstance,
+  /// which is what draws the overridden wheel poses.
+  bool HasCarlaVehicleAnimation() const;
+
+  /// Radius of the wheel at WheelIndex, in cm, as last applied through the
+  /// physics control. Does not need the Chaos wheel instances to exist.
+  float GetWheelRadius(int32 WheelIndex) const;
+
+  /// Unit vector, component space, along which the wheel's suspension drops.
+  FVector GetWheelSuspensionAxis(int32 WheelIndex) const;
+
   UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
   void OpenDoor(const EVehicleDoor DoorIdx);
 
@@ -724,6 +775,51 @@ private:
 
   UPROPERTY(Category="CARLA Wheeled Vehicle", VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
   TArray<UPhysicsConstraintComponent*> ConstraintsComponents;
+
+  bool bWheelAnimationOverridden = false;
+
+  TArray<FWheelAnimationData> OverriddenWheelPoses;
+
+  /// The overridden pose for a setter to write, or nullptr, with a warning, if
+  /// it cannot be set.
+  FWheelAnimationData *GetOverriddenWheelPoseOrWarn(EVehicleWheelLocation WheelLocation, const TCHAR *Caller);
+
+  bool HasWheelOrWarn(int32 WheelIndex, const TCHAR *Caller) const;
+
+  /// The Chaos wheel, while Chaos simulates the vehicle and has output for it.
+  const UChaosVehicleWheel *GetSimulatedWheel(int32 WheelIndex) const;
+
+  /// The pose shown for a wheel: the overridden one, otherwise Chaos's,
+  /// otherwise the one last drawn.
+  FWheelAnimationData GetWheelPose(int32 WheelIndex) const;
+
+  /// GetWheelPose for every wheel.
+  TArray<FWheelAnimationData> GetWheelPoses() const;
+
+  /// Sets the Chaos wheels to these poses, so that they do not jump when Chaos
+  /// takes over the wheels again.
+  void SeedChaosWheels(const TArray<FWheelAnimationData> &Poses);
+
+  /// The next physics pre-tick copies in the output of the step before the
+  /// seed, so the seeded spins are written again when that frame's physics ends.
+  void ArmSeedRewrite(TArray<float> Spins);
+
+  void DisarmSeedRewrite();
+
+  void OnSeedPreTick(FPhysScene_Chaos *Scene, float DeltaSeconds);
+
+  void OnSeedPostTick(FChaosScene *Scene);
+
+  /// Degrees, as drawn.
+  TArray<float> PendingSeedSpins;
+
+  bool bSeedStepStarted = false;
+
+  FDelegateHandle SeedPreTickHandle;
+
+  FDelegateHandle SeedPostTickHandle;
+
+  const UChaosVehicleWheel *GetWheelDefaults(int32 WheelIndex) const;
 
   UPROPERTY(Category="CARLA Wheeled Vehicle", VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
   TMap<UPhysicsConstraintComponent*, UPrimitiveComponent*> ConstraintDoor;

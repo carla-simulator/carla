@@ -49,24 +49,11 @@ private:
 
   UWorld *GetLocalWorld();
 
-  /// Function to apply to the actor that is being spawned to apply the current
-  /// settings.
-  void OnActorSpawned(AActor *Actor);
-
   /// Check that the world, instance and settings are valid and save the
   /// CarlaSettings instance.
   ///
   /// @param world used to get the instance of CarlaSettings.
   void CheckCarlaSettings(UWorld *world);
-
-  /// Execute engine commands to apply the low quality level to the world.
-  void LaunchLowQualityCommands(UWorld *world) const;
-
-  /// Execute engine commands to apply the medium quality level to the world.
-  void LaunchMediumQualityCommands(UWorld *world) const;
-
-  /// Execute engine commands to apply the high quality level to the world.
-  void LaunchHighQualityCommands(UWorld *world) const;
 
   void SetAllRoads(
       UWorld *world,
@@ -76,9 +63,6 @@ private:
   void SetActorComponentsDrawDistance(AActor *actor, float max_draw_distance) const;
 
   void SetPostProcessEffectsEnabled(UWorld *world, bool enabled) const;
-
-  /// Execute engine commands to apply the epic quality level to the world.
-  void LaunchEpicQualityCommands(UWorld *world) const;
 
   void SetAllLights(
       UWorld *world,
@@ -102,6 +86,4 @@ private:
   static EQualityLevel AppliedLowPostResetQualityLevel;
 
   UCarlaSettings *CarlaSettings = nullptr;
-
-  FOnActorSpawned::FDelegate ActorSpawnedDelegate;
 };

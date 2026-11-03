@@ -1,0 +1,139 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1260" height="900" viewBox="0 0 1260 900"><defs><marker id="ah_ink" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#2b2b2b"/></marker><marker id="ah_sub" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#5f6b73"/></marker><marker id="ah_line" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#c9d3da"/></marker><marker id="ah_card" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#f5f8fa"/></marker><marker id="ah_blue" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#2980b9"/></marker><marker id="ah_red" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#d9534f"/></marker><marker id="ah_green" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#3c9a5f"/></marker><marker id="ah_orange" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#e69138"/></marker><marker id="ah_purple" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#7e57c2"/></marker><marker id="ah_white" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#ffffff"/></marker><marker id="ah_soft_blue" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#e3f0f9"/></marker><marker id="ah_soft_red" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#fbe6e5"/></marker><marker id="ah_soft_green" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#e4f3e9"/></marker><marker id="ah_soft_orange" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#fdf0e1"/></marker><marker id="ah_soft_purple" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#efe9f8"/></marker></defs>
+<rect width="1260" height="900" fill="#ffffff"/>
+<text x="630.0" y="44" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="26" fill="#2b2b2b" font-weight="bold" text-anchor="middle" xml:space="preserve">Recorder .log file layout</text>
+<text x="630.0" y="72" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="14.5" fill="#5f6b73" font-weight="normal" text-anchor="middle" xml:space="preserve">Every frame repeats the same packet sequence; a packet with no records still has its header</text>
+<rect x="30" y="100" width="330" height="770" rx="14" fill="#f5f8fa" stroke="#c9d3da" stroke-width="1.5"/>
+<text x="195" y="132" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="19" fill="#2b2b2b" font-weight="bold" text-anchor="middle" xml:space="preserve">File</text>
+<rect x="55" y="150" width="280" height="150" rx="10" fill="#efe9f8" stroke="#7e57c2" stroke-width="2"/>
+<text x="195.0" y="195.0" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="17" fill="#2b2b2b" font-weight="bold" text-anchor="middle" xml:space="preserve">Info header</text>
+<text x="195.0" y="214.0" font-family="'DejaVu Sans Mono', Consolas, monospace" font-size="13" fill="#5f6b73" font-weight="normal" text-anchor="middle" xml:space="preserve">version   uint16  (1)</text>
+<text x="195.0" y="233.0" font-family="'DejaVu Sans Mono', Consolas, monospace" font-size="13" fill="#5f6b73" font-weight="normal" text-anchor="middle" xml:space="preserve">magic     &quot;CARLA_RECORDER&quot;</text>
+<text x="195.0" y="252.0" font-family="'DejaVu Sans Mono', Consolas, monospace" font-size="13" fill="#5f6b73" font-weight="normal" text-anchor="middle" xml:space="preserve">date      time_t</text>
+<text x="195.0" y="271.0" font-family="'DejaVu Sans Mono', Consolas, monospace" font-size="13" fill="#5f6b73" font-weight="normal" text-anchor="middle" xml:space="preserve">map       string</text>
+<rect x="55" y="320" width="280" height="48" rx="8" fill="#ffffff" stroke="#3c9a5f" stroke-width="2"/>
+<text x="195" y="350" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="16" fill="#2b2b2b" font-weight="bold" text-anchor="middle" xml:space="preserve">Frame 1</text>
+<rect x="55" y="382" width="280" height="48" rx="8" fill="#e4f3e9" stroke="#3c9a5f" stroke-width="1.5"/>
+<text x="195" y="412" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="16" fill="#2b2b2b" font-weight="bold" text-anchor="middle" xml:space="preserve">Frame 2</text>
+<rect x="55" y="444" width="280" height="48" rx="8" fill="#e4f3e9" stroke="#3c9a5f" stroke-width="1.5"/>
+<text x="195" y="474" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="16" fill="#2b2b2b" font-weight="bold" text-anchor="middle" xml:space="preserve">Frame 3</text>
+<text x="195" y="536" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="22" fill="#5f6b73" font-weight="normal" text-anchor="middle" xml:space="preserve">...</text>
+<rect x="55" y="568" width="280" height="48" rx="8" fill="#e4f3e9" stroke="#3c9a5f" stroke-width="1.5"/>
+<text x="195" y="598" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="16" fill="#2b2b2b" font-weight="bold" text-anchor="middle" xml:space="preserve">Frame N</text>
+<path d="M335,344 C 380,344 360,130 415,130" stroke="#3c9a5f" stroke-width="2" fill="none" stroke-dasharray="6,4"/>
+<path d="M335,344 C 380,344 360,840 415,840" stroke="#3c9a5f" stroke-width="2" fill="none" stroke-dasharray="6,4"/>
+<text x="55" y="690" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="16" fill="#2b2b2b" font-weight="bold" text-anchor="start" xml:space="preserve">Every packet</text>
+<rect x="55" y="705" width="50" height="40" rx="4" fill="#ffffff" stroke="#2b2b2b" stroke-width="1.5"/>
+<text x="80.0" y="730" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" fill="#2b2b2b" font-weight="normal" text-anchor="middle" xml:space="preserve">id</text>
+<rect x="109" y="705" width="70" height="40" rx="4" fill="#ffffff" stroke="#2b2b2b" stroke-width="1.5"/>
+<text x="144.0" y="730" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" fill="#2b2b2b" font-weight="normal" text-anchor="middle" xml:space="preserve">size</text>
+<rect x="183" y="705" width="140" height="40" rx="4" fill="#ffffff" stroke="#2b2b2b" stroke-width="1.5"/>
+<text x="253.0" y="730" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" fill="#2b2b2b" font-weight="normal" text-anchor="middle" xml:space="preserve">payload (size bytes)</text>
+<text x="55" y="770" font-family="'DejaVu Sans Mono', Consolas, monospace" font-size="13" fill="#5f6b73" font-weight="normal" text-anchor="start" xml:space="preserve">id  uint8,  size  uint32</text>
+<text x="55" y="794" font-family="'DejaVu Sans Mono', Consolas, monospace" font-size="13" fill="#5f6b73" font-weight="normal" text-anchor="start" xml:space="preserve">most payloads: uint16 count</text>
+<text x="55" y="814" font-family="'DejaVu Sans Mono', Consolas, monospace" font-size="13" fill="#5f6b73" font-weight="normal" text-anchor="start" xml:space="preserve">  then the records</text>
+<rect x="415" y="100" width="815" height="770" rx="14" fill="#ffffff" stroke="#3c9a5f" stroke-width="2"/>
+<text x="822" y="132" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="19" fill="#2b2b2b" font-weight="bold" text-anchor="middle" xml:space="preserve">One frame = packets in this order</text>
+<text x="440" y="166" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="14" fill="#3c9a5f" font-weight="bold" text-anchor="start" xml:space="preserve">Frame start</text>
+<rect x="440" y="174" width="385" height="28" rx="5" fill="#e4f3e9" stroke="#3c9a5f" stroke-width="1.2"/>
+<text x="450" y="193" font-family="'DejaVu Sans Mono', Consolas, monospace" font-size="13" fill="#2b2b2b" font-weight="bold" text-anchor="start" xml:space="preserve"> 0</text>
+<text x="480" y="193" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13.5" fill="#2b2b2b" font-weight="bold" text-anchor="start" xml:space="preserve">FrameStart</text>
+<text x="815" y="193" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" fill="#5f6b73" font-weight="normal" text-anchor="end" xml:space="preserve">frame id, duration, elapsed</text>
+<rect x="835" y="174" width="385" height="28" rx="5" fill="#e4f3e9" stroke="#3c9a5f" stroke-width="1.2"/>
+<text x="845" y="193" font-family="'DejaVu Sans Mono', Consolas, monospace" font-size="13" fill="#2b2b2b" font-weight="bold" text-anchor="start" xml:space="preserve">20</text>
+<text x="875" y="193" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13.5" fill="#2b2b2b" font-weight="bold" text-anchor="start" xml:space="preserve">VisualTime</text>
+<text x="1210" y="193" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" fill="#5f6b73" font-weight="normal" text-anchor="end" xml:space="preserve">visual time (double)</text>
+<text x="440" y="234" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="14" fill="#e69138" font-weight="bold" text-anchor="start" xml:space="preserve">Events</text>
+<rect x="440" y="242" width="385" height="28" rx="5" fill="#fdf0e1" stroke="#e69138" stroke-width="1.2"/>
+<text x="450" y="261" font-family="'DejaVu Sans Mono', Consolas, monospace" font-size="13" fill="#2b2b2b" font-weight="bold" text-anchor="start" xml:space="preserve"> 2</text>
+<text x="480" y="261" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13.5" fill="#2b2b2b" font-weight="bold" text-anchor="start" xml:space="preserve">EventAdd</text>
+<text x="815" y="261" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" fill="#5f6b73" font-weight="normal" text-anchor="end" xml:space="preserve">actor spawned (+ description)</text>
+<rect x="835" y="242" width="385" height="28" rx="5" fill="#fdf0e1" stroke="#e69138" stroke-width="1.2"/>
+<text x="845" y="261" font-family="'DejaVu Sans Mono', Consolas, monospace" font-size="13" fill="#2b2b2b" font-weight="bold" text-anchor="start" xml:space="preserve"> 3</text>
+<text x="875" y="261" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13.5" fill="#2b2b2b" font-weight="bold" text-anchor="start" xml:space="preserve">EventDel</text>
+<text x="1210" y="261" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" fill="#5f6b73" font-weight="normal" text-anchor="end" xml:space="preserve">actor destroyed</text>
+<rect x="440" y="276" width="385" height="28" rx="5" fill="#fdf0e1" stroke="#e69138" stroke-width="1.2"/>
+<text x="450" y="295" font-family="'DejaVu Sans Mono', Consolas, monospace" font-size="13" fill="#2b2b2b" font-weight="bold" text-anchor="start" xml:space="preserve"> 4</text>
+<text x="480" y="295" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13.5" fill="#2b2b2b" font-weight="bold" text-anchor="start" xml:space="preserve">EventParent</text>
+<text x="815" y="295" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" fill="#5f6b73" font-weight="normal" text-anchor="end" xml:space="preserve">attached to a parent</text>
+<rect x="835" y="276" width="385" height="28" rx="5" fill="#fdf0e1" stroke="#e69138" stroke-width="1.2"/>
+<text x="845" y="295" font-family="'DejaVu Sans Mono', Consolas, monospace" font-size="13" fill="#2b2b2b" font-weight="bold" text-anchor="start" xml:space="preserve"> 5</text>
+<text x="875" y="295" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13.5" fill="#2b2b2b" font-weight="bold" text-anchor="start" xml:space="preserve">Collision</text>
+<text x="1210" y="295" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" fill="#5f6b73" font-weight="normal" text-anchor="end" xml:space="preserve">pair of actors that collided</text>
+<rect x="440" y="310" width="385" height="28" rx="5" fill="#fdf0e1" stroke="#e69138" stroke-width="1.2"/>
+<text x="450" y="329" font-family="'DejaVu Sans Mono', Consolas, monospace" font-size="13" fill="#2b2b2b" font-weight="bold" text-anchor="start" xml:space="preserve">23</text>
+<text x="480" y="329" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13.5" fill="#2b2b2b" font-weight="bold" text-anchor="start" xml:space="preserve">VehicleDoor</text>
+<text x="815" y="329" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" fill="#5f6b73" font-weight="normal" text-anchor="end" xml:space="preserve">door opened / closed</text>
+<text x="440" y="370" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="14" fill="#2980b9" font-weight="bold" text-anchor="start" xml:space="preserve">Positions and states</text>
+<rect x="440" y="378" width="385" height="28" rx="5" fill="#e3f0f9" stroke="#2980b9" stroke-width="1.2"/>
+<text x="450" y="397" font-family="'DejaVu Sans Mono', Consolas, monospace" font-size="13" fill="#2b2b2b" font-weight="bold" text-anchor="start" xml:space="preserve"> 6</text>
+<text x="480" y="397" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13.5" fill="#2b2b2b" font-weight="bold" text-anchor="start" xml:space="preserve">Position</text>
+<text x="815" y="397" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" fill="#5f6b73" font-weight="normal" text-anchor="end" xml:space="preserve">location + rotation per actor</text>
+<rect x="835" y="378" width="385" height="28" rx="5" fill="#e3f0f9" stroke="#2980b9" stroke-width="1.2"/>
+<text x="845" y="397" font-family="'DejaVu Sans Mono', Consolas, monospace" font-size="13" fill="#2b2b2b" font-weight="bold" text-anchor="start" xml:space="preserve"> 7</text>
+<text x="875" y="397" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13.5" fill="#2b2b2b" font-weight="bold" text-anchor="start" xml:space="preserve">State</text>
+<text x="1210" y="397" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" fill="#5f6b73" font-weight="normal" text-anchor="end" xml:space="preserve">traffic light state</text>
+<text x="440" y="438" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="14" fill="#2980b9" font-weight="bold" text-anchor="start" xml:space="preserve">Animation</text>
+<rect x="440" y="446" width="385" height="28" rx="5" fill="#e3f0f9" stroke="#2980b9" stroke-width="1.2"/>
+<text x="450" y="465" font-family="'DejaVu Sans Mono', Consolas, monospace" font-size="13" fill="#2b2b2b" font-weight="bold" text-anchor="start" xml:space="preserve"> 8</text>
+<text x="480" y="465" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13.5" fill="#2b2b2b" font-weight="bold" text-anchor="start" xml:space="preserve">AnimVehicle</text>
+<text x="815" y="465" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" fill="#5f6b73" font-weight="normal" text-anchor="end" xml:space="preserve">steer, throttle, brake, gear</text>
+<rect x="835" y="446" width="385" height="28" rx="5" fill="#e3f0f9" stroke="#2980b9" stroke-width="1.2"/>
+<text x="845" y="465" font-family="'DejaVu Sans Mono', Consolas, monospace" font-size="13" fill="#2b2b2b" font-weight="bold" text-anchor="start" xml:space="preserve"> 9</text>
+<text x="875" y="465" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13.5" fill="#2b2b2b" font-weight="bold" text-anchor="start" xml:space="preserve">AnimWalker</text>
+<text x="1210" y="465" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" fill="#5f6b73" font-weight="normal" text-anchor="end" xml:space="preserve">walker speed</text>
+<rect x="440" y="480" width="385" height="28" rx="5" fill="#e3f0f9" stroke="#2980b9" stroke-width="1.2"/>
+<text x="450" y="499" font-family="'DejaVu Sans Mono', Consolas, monospace" font-size="13" fill="#2b2b2b" font-weight="bold" text-anchor="start" xml:space="preserve">10</text>
+<text x="480" y="499" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13.5" fill="#2b2b2b" font-weight="bold" text-anchor="start" xml:space="preserve">VehicleLight</text>
+<text x="815" y="499" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" fill="#5f6b73" font-weight="normal" text-anchor="end" xml:space="preserve">vehicle light state</text>
+<rect x="835" y="480" width="385" height="28" rx="5" fill="#e3f0f9" stroke="#2980b9" stroke-width="1.2"/>
+<text x="845" y="499" font-family="'DejaVu Sans Mono', Consolas, monospace" font-size="13" fill="#2b2b2b" font-weight="bold" text-anchor="start" xml:space="preserve">11</text>
+<text x="875" y="499" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13.5" fill="#2b2b2b" font-weight="bold" text-anchor="start" xml:space="preserve">SceneLight</text>
+<text x="1210" y="499" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" fill="#5f6b73" font-weight="normal" text-anchor="end" xml:space="preserve">street / building lights</text>
+<rect x="440" y="514" width="385" height="28" rx="5" fill="#e3f0f9" stroke="#2980b9" stroke-width="1.2"/>
+<text x="450" y="533" font-family="'DejaVu Sans Mono', Consolas, monospace" font-size="13" fill="#2b2b2b" font-weight="bold" text-anchor="start" xml:space="preserve">21</text>
+<text x="480" y="533" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13.5" fill="#2b2b2b" font-weight="bold" text-anchor="start" xml:space="preserve">AnimVehicleWheels</text>
+<text x="815" y="533" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" fill="#5f6b73" font-weight="normal" text-anchor="end" xml:space="preserve">wheel rotation and steer</text>
+<rect x="835" y="514" width="385" height="28" rx="5" fill="#e3f0f9" stroke="#2980b9" stroke-width="1.2"/>
+<text x="845" y="533" font-family="'DejaVu Sans Mono', Consolas, monospace" font-size="13" fill="#2b2b2b" font-weight="bold" text-anchor="start" xml:space="preserve">22</text>
+<text x="875" y="533" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13.5" fill="#2b2b2b" font-weight="bold" text-anchor="start" xml:space="preserve">AnimBiker</text>
+<text x="1210" y="533" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" fill="#5f6b73" font-weight="normal" text-anchor="end" xml:space="preserve">bike speed, engine rpm</text>
+<rect x="440" y="548" width="385" height="28" rx="5" fill="#e3f0f9" stroke="#2980b9" stroke-width="1.2"/>
+<text x="450" y="567" font-family="'DejaVu Sans Mono', Consolas, monospace" font-size="13" fill="#2b2b2b" font-weight="bold" text-anchor="start" xml:space="preserve">24</text>
+<text x="480" y="567" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13.5" fill="#2b2b2b" font-weight="bold" text-anchor="start" xml:space="preserve">Weather</text>
+<text x="815" y="567" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" fill="#5f6b73" font-weight="normal" text-anchor="end" xml:space="preserve">weather parameters</text>
+<text x="440" y="608" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="14" fill="#7e57c2" font-weight="bold" text-anchor="start" xml:space="preserve">Additional data  (only when recording with additional data)</text>
+<rect x="440" y="616" width="385" height="28" rx="5" fill="#efe9f8" stroke="#7e57c2" stroke-width="1.2"/>
+<text x="450" y="635" font-family="'DejaVu Sans Mono', Consolas, monospace" font-size="13" fill="#2b2b2b" font-weight="bold" text-anchor="start" xml:space="preserve">12</text>
+<text x="480" y="635" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13.5" fill="#2b2b2b" font-weight="bold" text-anchor="start" xml:space="preserve">Kinematics</text>
+<text x="815" y="635" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" fill="#5f6b73" font-weight="normal" text-anchor="end" xml:space="preserve">velocities</text>
+<rect x="835" y="616" width="385" height="28" rx="5" fill="#efe9f8" stroke="#7e57c2" stroke-width="1.2"/>
+<text x="845" y="635" font-family="'DejaVu Sans Mono', Consolas, monospace" font-size="13" fill="#2b2b2b" font-weight="bold" text-anchor="start" xml:space="preserve">13</text>
+<text x="875" y="635" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13.5" fill="#2b2b2b" font-weight="bold" text-anchor="start" xml:space="preserve">BoundingBox</text>
+<text x="1210" y="635" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" fill="#5f6b73" font-weight="normal" text-anchor="end" xml:space="preserve">actor boxes</text>
+<rect x="440" y="650" width="385" height="28" rx="5" fill="#efe9f8" stroke="#7e57c2" stroke-width="1.2"/>
+<text x="450" y="669" font-family="'DejaVu Sans Mono', Consolas, monospace" font-size="13" fill="#2b2b2b" font-weight="bold" text-anchor="start" xml:space="preserve">17</text>
+<text x="480" y="669" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13.5" fill="#2b2b2b" font-weight="bold" text-anchor="start" xml:space="preserve">TriggerVolume</text>
+<text x="815" y="669" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" fill="#5f6b73" font-weight="normal" text-anchor="end" xml:space="preserve">trigger boxes</text>
+<rect x="835" y="650" width="385" height="28" rx="5" fill="#efe9f8" stroke="#7e57c2" stroke-width="1.2"/>
+<text x="845" y="669" font-family="'DejaVu Sans Mono', Consolas, monospace" font-size="13" fill="#2b2b2b" font-weight="bold" text-anchor="start" xml:space="preserve">14</text>
+<text x="875" y="669" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13.5" fill="#2b2b2b" font-weight="bold" text-anchor="start" xml:space="preserve">PlatformTime</text>
+<text x="1210" y="669" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" fill="#5f6b73" font-weight="normal" text-anchor="end" xml:space="preserve">wall-clock time</text>
+<rect x="440" y="684" width="385" height="28" rx="5" fill="#efe9f8" stroke="#7e57c2" stroke-width="1.2"/>
+<text x="450" y="703" font-family="'DejaVu Sans Mono', Consolas, monospace" font-size="13" fill="#2b2b2b" font-weight="bold" text-anchor="start" xml:space="preserve">15</text>
+<text x="480" y="703" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13.5" fill="#2b2b2b" font-weight="bold" text-anchor="start" xml:space="preserve">PhysicsControl</text>
+<text x="815" y="703" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" fill="#5f6b73" font-weight="normal" text-anchor="end" xml:space="preserve">vehicle physics</text>
+<rect x="835" y="684" width="385" height="28" rx="5" fill="#efe9f8" stroke="#7e57c2" stroke-width="1.2"/>
+<text x="845" y="703" font-family="'DejaVu Sans Mono', Consolas, monospace" font-size="13" fill="#2b2b2b" font-weight="bold" text-anchor="start" xml:space="preserve">16</text>
+<text x="875" y="703" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13.5" fill="#2b2b2b" font-weight="bold" text-anchor="start" xml:space="preserve">TrafficLightTime</text>
+<text x="1210" y="703" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" fill="#5f6b73" font-weight="normal" text-anchor="end" xml:space="preserve">light timings</text>
+<rect x="440" y="718" width="385" height="28" rx="5" fill="#efe9f8" stroke="#7e57c2" stroke-width="1.2"/>
+<text x="450" y="737" font-family="'DejaVu Sans Mono', Consolas, monospace" font-size="13" fill="#2b2b2b" font-weight="bold" text-anchor="start" xml:space="preserve">19</text>
+<text x="480" y="737" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13.5" fill="#2b2b2b" font-weight="bold" text-anchor="start" xml:space="preserve">WalkerBones</text>
+<text x="815" y="737" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" fill="#5f6b73" font-weight="normal" text-anchor="end" xml:space="preserve">walker bone transforms</text>
+<text x="440" y="778" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="14" fill="#3c9a5f" font-weight="bold" text-anchor="start" xml:space="preserve">Frame end</text>
+<rect x="440" y="786" width="385" height="28" rx="5" fill="#e4f3e9" stroke="#3c9a5f" stroke-width="1.2"/>
+<text x="450" y="805" font-family="'DejaVu Sans Mono', Consolas, monospace" font-size="13" fill="#2b2b2b" font-weight="bold" text-anchor="start" xml:space="preserve"> 1</text>
+<text x="480" y="805" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13.5" fill="#2b2b2b" font-weight="bold" text-anchor="start" xml:space="preserve">FrameEnd</text>
+<text x="815" y="805" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" fill="#5f6b73" font-weight="normal" text-anchor="end" xml:space="preserve">closes the frame</text>
+<text x="822" y="858" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" fill="#5f6b73" font-weight="normal" text-anchor="middle" font-style="italic" xml:space="preserve">Id 18 (FrameCounter) is defined in CarlaRecorderPacketId but not written.</text>
+</svg>

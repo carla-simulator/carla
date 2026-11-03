@@ -99,11 +99,6 @@
 #include <type_traits>
 #include <vector>
 
-
-#if __has_include(<OSM2ODR.h>)
-  #define CARLA_PYTHON_API_HAS_OSM2ODR
-#endif
-
 template <typename OptionalT>
 static auto OptionalToPyObject(OptionalT &optional) {
   return optional.has_value() ?

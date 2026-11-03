@@ -8,7 +8,12 @@
 
 #include "carla/geom/GeoProjection.h"
 #include "carla/client/Junction.h"
+#include "carla/client/Lane.h"
+#include "carla/client/LaneSection.h"
+#include "carla/client/Road.h"
 #include "carla/client/Waypoint.h"
+#include "carla/road/LaneSection.h"
+#include "carla/road/Road.h"
 #include "carla/opendrive/OpenDriveParser.h"
 #include "carla/road/Map.h"
 #include "carla/road/RoadTypes.h"
@@ -138,6 +143,77 @@ namespace client {
       SharedPtr<Waypoint>(new Waypoint(shared_from_this(), waypoint_pair.second))));
     }
     return result;
+  }
+
+  SharedPtr<Junction> Map::GetJunctionById(road::JuncId id) const {
+    const road::Junction *junction = _map.GetJunction(id);
+    if (junction == nullptr) {
+      return nullptr;
+    }
+    return SharedPtr<Junction>(new Junction(shared_from_this(), junction));
+  }
+
+  std::vector<SharedPtr<Junction>> Map::GetJunctions() const {
+    std::vector<SharedPtr<Junction>> result;
+    for (const auto &pair : _map.GetData().GetJunctions()) {
+      result.emplace_back(SharedPtr<Junction>(new Junction(shared_from_this(), &pair.second)));
+    }
+    return result;
+  }
+
+  std::vector<SharedPtr<Road>> Map::GetRoads() const {
+    std::vector<SharedPtr<Road>> result;
+    const auto &roads = _map.GetData().GetRoads();
+    result.reserve(roads.size());
+    for (const auto &pair : roads) {
+      result.emplace_back(SharedPtr<Road>(new Road(shared_from_this(), pair.first)));
+    }
+    return result;
+  }
+
+  SharedPtr<Road> Map::GetRoad(road::RoadId road_id) const {
+    if (!_map.GetData().ContainsRoad(road_id)) {
+      return nullptr;
+    }
+    return SharedPtr<Road>(new Road(shared_from_this(), road_id));
+  }
+
+  SharedPtr<LaneSection> Map::GetLaneSection(
+      road::RoadId road_id,
+      road::SectionId section_id) const {
+    if (!_map.GetData().ContainsRoad(road_id)) {
+      return nullptr;
+    }
+    const road::Road &road = _map.GetData().GetRoad(road_id);
+    for (const road::LaneSection &section : road.GetLaneSections()) {
+      if (section.GetId() == section_id) {
+        return SharedPtr<LaneSection>(new LaneSection(shared_from_this(), road_id, section_id));
+      }
+    }
+    return nullptr;
+  }
+
+  SharedPtr<Lane> Map::GetLane(
+      road::RoadId road_id,
+      road::SectionId section_id,
+      road::LaneId lane_id) const {
+    if (!_map.GetData().ContainsRoad(road_id)) {
+      return nullptr;
+    }
+    const road::Road &road = _map.GetData().GetRoad(road_id);
+    for (const road::LaneSection &section : road.GetLaneSections()) {
+      if (section.GetId() == section_id) {
+        if (!section.ContainsLane(lane_id)) {
+          return nullptr;
+        }
+        return SharedPtr<Lane>(new Lane(shared_from_this(), road_id, section_id, lane_id));
+      }
+    }
+    return nullptr;
+  }
+
+  SharedPtr<Waypoint> Map::MakeWaypoint(road::element::Waypoint waypoint) const {
+    return SharedPtr<Waypoint>(new Waypoint(shared_from_this(), std::move(waypoint)));
   }
 
   std::vector<SharedPtr<Landmark>> Map::GetAllLandmarks() const {

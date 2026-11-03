@@ -54,6 +54,21 @@ public:
     UFUNCTION(BlueprintCallable, BlueprintPure, Category = "PostProcess|JSON")
     static TArray<FString> GetAvailablePostProcessProfileNames();
 
+    // The camera profile RGB sensors load when spawned without
+    // post_process_profile (or with the legacy "Default"). Set with
+    // carla.PostProcess.Profile.
+    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "PostProcess|JSON")
+    static FString GetActiveProfileName();
+
+    // The camera profile the sky rig's post process (PIE viewport, spectator,
+    // server window) loads at BeginPlay. Set with carla.PostProcess.ViewportProfile.
+    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "PostProcess|JSON")
+    static FString GetViewportProfileName();
+
+    // Profile name given to a sensor -> file to load. Empty or "Default" (any
+    // case) means the sensor default, GetActiveProfileName().
+    static FString ResolveProfileName(const FString& Requested);
+
     static FString GetPostProcessConfigPath(const FString& FileName)
     {
         return FPaths::ProjectContentDir() / TEXT("Carla/Config/PostProcess/") + FileName + TEXT(".json");

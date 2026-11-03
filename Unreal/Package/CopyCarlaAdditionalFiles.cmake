@@ -31,7 +31,11 @@ foreach (CARLA_PACKAGE_PROJECT_DIR ${CARLA_PACKAGE_PLATFORM_DIRS})
 endforeach ()
 
 make_directory (${CARLA_PACKAGE_ARCHIVE_PATH}/PythonAPI/carla/dist)
-file (GLOB PYTHON_WHL_FILES ${CARLA_BUILD_PATH}/PythonAPI/dist/carla-*.whl)
+# Every wheel the build made, one per Python version in CARLA_PYTHON_VERSIONS:
+if (NOT CARLA_PYTHON_API_DIST_PATH)
+  set (CARLA_PYTHON_API_DIST_PATH ${CARLA_BUILD_PATH}/PythonAPI/dist)
+endif ()
+file (GLOB PYTHON_WHL_FILES ${CARLA_PYTHON_API_DIST_PATH}/carla-*.whl)
 file (COPY ${PYTHON_WHL_FILES} DESTINATION ${CARLA_PACKAGE_ARCHIVE_PATH}/PythonAPI/carla/dist/)
 file (COPY_FILE ${CARLA_WORKSPACE_PATH}/Docs/python_api.md ${CARLA_PACKAGE_ARCHIVE_PATH}/PythonAPI/python_api.md)
 file (COPY ${CARLA_WORKSPACE_PATH}/PythonAPI/carla/agents/ DESTINATION ${CARLA_PACKAGE_ARCHIVE_PATH}/PythonAPI/carla/agents/)

@@ -58,15 +58,15 @@ namespace
             // data already in hand instead of extra constructor arguments.
             // Traffic lights (OnTogglePreviewOn set) hide Intensity and Color
             // entirely -- neither is meaningful for a signal lens. Buildings
-            // (fixed synthetic ClassName) hide Color only: their Intensity
-            // slot is repurposed as "Percent Lit" (see
+            // (fixed synthetic ClassName) repurpose their Intensity slot as
+            // "Percent Lit"; their Color is the windows' emissive colour (see
             // ULightDefaultsJsonUtils::ApplyProceduralBuildingsEmissiveLive).
             const bool bIsTrafficRow = static_cast<bool>(OnTogglePreviewOn);
             const bool bIsBuildingsRow = Item.IsValid() && Item->ClassName == TEXT("ProceduralBuildings");
             const bool bIsLegacyBuildingsRow = Item.IsValid() && Item->ClassName == TEXT("LegacyBuildings");
             const bool bIsAnyBuildingsRow = bIsBuildingsRow || bIsLegacyBuildingsRow;
             const bool bShowIntensity = !bIsTrafficRow;
-            const bool bShowColor = !bIsTrafficRow && !bIsAnyBuildingsRow;
+            const bool bShowColor = !bIsTrafficRow;
 
             TSharedRef<SHorizontalBox> RowBox = SNew(SHorizontalBox)
 
@@ -766,7 +766,7 @@ void SLightDefaultsPanel::ApplyBuildingRowLive(TSharedPtr<FLightAssetSummary> It
         return;
     }
     UWorld* World = GEditor ? GEditor->GetEditorWorldContext().World() : nullptr;
-    ULightDefaultsJsonUtils::ApplyProceduralBuildingsEmissiveLive(World, Item->Current.EmissiveIntensity, Item->Current.Intensity);
+    ULightDefaultsJsonUtils::ApplyProceduralBuildingsEmissiveLive(World, Item->Current.EmissiveIntensity, Item->Current.Intensity, Item->Current.Color);
 }
 
 void SLightDefaultsPanel::SetBuildingSelected(bool bSelected)
@@ -782,7 +782,7 @@ void SLightDefaultsPanel::ApplyLegacyBuildingRowLive(TSharedPtr<FLightAssetSumma
         return;
     }
     UWorld* World = GEditor ? GEditor->GetEditorWorldContext().World() : nullptr;
-    ULightDefaultsJsonUtils::ApplyLegacyBuildingsEmissiveLive(World, Item->Current.EmissiveIntensity, Item->Current.Intensity);
+    ULightDefaultsJsonUtils::ApplyLegacyBuildingsEmissiveLive(World, Item->Current.EmissiveIntensity, Item->Current.Intensity, Item->Current.Color);
 }
 
 void SLightDefaultsPanel::SetLegacyBuildingSelected(bool bSelected)

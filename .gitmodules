@@ -1,4 +1,0 @@
-[submodule "carla-agentic-tools"]
-	path = carla-agentic-tools
-	url = https://github.com/carla-simulator/carla-agentic-tools.git
-	branch = main

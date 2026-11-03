@@ -1,0 +1,15 @@
+{
+  "name": "carla-agentic-tools",
+  "description": "Vetted CARLA procedures (skills) served over MCP: build, packaging, cooking, maps, vehicles, simulation, scenarios, Leaderboard, Scenic and ROS 2.",
+  "owner": {
+    "name": "CARLA Simulator",
+    "url": "https://github.com/carla-simulator"
+  },
+  "plugins": [
+    {
+      "name": "carla",
+      "source": "./",
+      "description": "The CARLA skill library and its MCP server. Registers itself — no paths at install time, because the skills that create them run later."
+    }
+  ]
+}

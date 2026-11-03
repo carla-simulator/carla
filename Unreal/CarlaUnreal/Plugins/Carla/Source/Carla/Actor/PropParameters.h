@@ -41,4 +41,12 @@ struct CARLA_API FPropParameters
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
   EPropSize Size = EPropSize::INVALID;
+
+  // What the prop is, in the two levels the catalogue groups by: a base type
+  // such as "garbage", and a subtype within it such as "trash_cans".
+  UPROPERTY(EditAnywhere, BlueprintReadWrite)
+  FString BaseType;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite)
+  FString SubType;
 };

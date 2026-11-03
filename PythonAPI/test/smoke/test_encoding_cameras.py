@@ -16,7 +16,7 @@ packaged build; only Town10HD_Opt, Mine_01 and Town15 ship).
 Run standalone:
 
     docker exec -d carla-development-ue5-22.04 \\
-        ./Build/Package/Carla-0.10.0-Linux-Shipping/Linux/CarlaUnreal.sh \\
+        ./Build/Package/Carla-<version>-Linux-Shipping/Linux/CarlaUnreal.sh \\
         -RenderOffScreen -carla-rpc-port=3654
     # wait for the listener
     conda activate carla5

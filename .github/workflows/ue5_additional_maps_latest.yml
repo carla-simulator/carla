@@ -1,0 +1,42 @@
+name: CARLA-AdditionalMaps-Packages-Latest
+
+# Builds the package together with the AdditionalMaps content pack and always
+# replaces this workflow's own "latest" downloads:
+#   CARLA_UE5_AdditionalMaps_Latest.tar.gz                   (package)
+#   CARLA_UE5_AdditionalMaps_Latest_AdditionalMaps.tar.gz    (pack)
+#   CARLA_UE5_AdditionalMaps_Latest_release-metadata.tar.gz
+# A pack only installs into the package it was cooked against, and the nightly
+# (UE5-Dev) replaces CARLA_UE5_Latest* on every push without a pack, so this
+# workflow keeps a prefix of its own that the nightly never touches.
+
+on:
+  workflow_dispatch:
+    inputs:
+      additional-maps-file:
+        description: "JSON list of the maps for the AdditionalMaps pack, relative to the repository (empty: Util/ContentPacks/AdditionalMaps.json)"
+        type: string
+        required: false
+        default: ""
+
+concurrency:
+  group: additional-maps-latest
+  cancel-in-progress: false
+
+jobs:
+  ubuntu-additional-maps-latest:
+    name: Ubuntu AdditionalMaps Latest
+    uses: ./.github/workflows/_ci-ubuntu.yml
+    secrets:
+      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+      DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
+    with:
+      python-versions: "3.10"
+      smoke-test-python-versions: "3.10"
+      additional-maps: true
+      additional-maps-file: ${{ inputs.additional-maps-file }}
+      upload-package: true
+      upload-replace-latest: true
+      latest-prefix: CARLA_UE5_AdditionalMaps_Latest
+      upload-docker: false

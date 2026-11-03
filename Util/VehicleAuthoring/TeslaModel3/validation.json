@@ -17,7 +17,7 @@
     "status": "passed motion/braking; images require visual review"
   },
   "cameras": {
-    "camera_profile": "VehicleReview",
+    "camera_profile": "Default",
     "semantic_tags": [
       14
     ],

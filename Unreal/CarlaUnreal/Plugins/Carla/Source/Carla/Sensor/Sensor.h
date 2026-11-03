@@ -137,6 +137,21 @@ public:
 
   void PostPhysTickInternal(UWorld *World, ELevelTick TickType, float DeltaSeconds);
 
+  bool IsReadyToTick() const
+  {
+    return ReadyToTick;
+  }
+
+  void ClearReadyToTick()
+  {
+    ReadyToTick = false;
+  }
+
+  float GetReadyToTickDeltaSeconds() const
+  {
+    return ReadyToTickDeltaSeconds;
+  }
+
   UFUNCTION(BlueprintCallable)
   URandomEngine *GetRandomEngine()
   {

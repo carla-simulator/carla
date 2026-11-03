@@ -9,6 +9,7 @@
 
 #include <util/ue-header-guard-begin.h>
 #include "Kismet/GameplayStatics.h"
+#include "TimerManager.h"
 #include <util/ue-header-guard-end.h>
 
 //using cr = carla::rpc;
@@ -27,8 +28,16 @@ void UCarlaLightSubsystem::RegisterLight(UCarlaLight* CarlaLight)
 {
   if(CarlaLight)
   {
+    // OnRegister and BeginPlay both register: the same light coming back
+    // keeps its entry. Taken for a clone below, it got a second id on every
+    // call and the stale entries were never switched (World Partition maps
+    // ended up with ~3 entries per lamp).
+    if (const int* ExistingId = Lights.FindKey(CarlaLight))
+    {
+      CarlaLight->SetId(*ExistingId);
+    }
     auto LightId = CarlaLight->GetId();
-    if (Lights.Contains(LightId))
+    if (Lights.Contains(LightId) && Lights[LightId] != CarlaLight)
     {
       // Runtime-spawned lights cloned from a template (PCG Spawn Actor,
       // duplicated actors...) all arrive carrying the template's id;
@@ -43,8 +52,48 @@ void UCarlaLightSubsystem::RegisterLight(UCarlaLight* CarlaLight)
     }
     Lights.Add(LightId, CarlaLight);
     DayTimeChangeEvent.AddUniqueDynamic(CarlaLight, &UCarlaLight::HandleDayTimeChanged);
+    // The day/night state is only broadcast when the weather changes, so a
+    // light that registers later (a World Partition cell streamed in at
+    // night) stayed in its default, day, state until the next change. Applied
+    // on the next tick: from inside registration the lamp blueprint has not
+    // run its BeginPlay yet, and its SetLight looped forever (PIE stopped).
+    if (bHasDayTimeState && bDayNightCycle)
+    {
+      ScheduleDayTimeState(CarlaLight);
+    }
   }
   SetClientStatesdirty("");
+}
+
+void UCarlaLightSubsystem::ScheduleDayTimeState(UCarlaLight* CarlaLight)
+{
+  UWorld* World = GetWorld();
+  if (World == nullptr || !World->IsGameWorld())
+  {
+    return;
+  }
+  const bool bFirst = PendingDayTimeLights.Num() == 0;
+  PendingDayTimeLights.Add(CarlaLight);
+  if (!bFirst)
+  {
+    return;
+  }
+  World->GetTimerManager().SetTimerForNextTick(FTimerDelegate::CreateWeakLambda(this, [this]()
+  {
+    TSet<TWeakObjectPtr<UCarlaLight>> Pending = MoveTemp(PendingDayTimeLights);
+    PendingDayTimeLights.Reset();
+    for (const TWeakObjectPtr<UCarlaLight>& Weak : Pending)
+    {
+      UCarlaLight* Light = Weak.Get();
+      // Only lights still registered here: one streamed out meanwhile is skipped.
+      if (IsValid(Light) && Lights.FindKey(Light) != nullptr)
+      {
+        Light->HandleDayTimeChanged(bLastIsDay);
+        Light->ApplyLegacyComponentConversion();
+      }
+    }
+    SetClientStatesdirty("");
+  }));
 }
 
 void UCarlaLightSubsystem::UnregisterLight(UCarlaLight* CarlaLight)
@@ -59,6 +108,20 @@ void UCarlaLightSubsystem::UnregisterLight(UCarlaLight* CarlaLight)
 
 void UCarlaLightSubsystem::NotifyDayTimeChange(bool bIsDay)
 {
+  // Every weather push notifies (AWeather and the sky rig, twice per
+  // set_weather), but only an actual day/night change needs the broadcast:
+  // it walks every registered light (blueprint handlers, emissive material
+  // instances, intensity conversion) and cost ~270 ms per set_weather on
+  // Town12 with ~4400 lights loaded. Lights registering later get the
+  // current state through ScheduleDayTimeState.
+  // The sky rig notifies too, so the client's set_day_night_cycle(False) is
+  // enforced here rather than only on AWeather.
+  if (!bDayNightCycle || (bHasDayTimeState && bLastIsDay == bIsDay))
+  {
+    return;
+  }
+  bHasDayTimeState = true;
+  bLastIsDay = bIsDay;
   DayTimeChangeEvent.Broadcast(bIsDay);
   // Blueprints bind this event too (BlueprintAssignable) and their handlers
   // push raw authored UE4-era intensities into the light components; a
@@ -144,6 +207,13 @@ UCarlaLight* UCarlaLightSubsystem::GetLight(int Id)
 }
 
 void UCarlaLightSubsystem::SetDayNightCycle(const bool active) {
+  bDayNightCycle = active;
+  // Re-enabled: the next weather push broadcasts again, even with the same
+  // state, so lights the client changed meanwhile follow the cycle again.
+  if (active)
+  {
+    bHasDayTimeState = false;
+  }
   TArray<AActor*> WeatherActors;
   UGameplayStatics::GetAllActorsOfClass(GetWorld(), AWeather::StaticClass(), WeatherActors);
   if (WeatherActors.Num())

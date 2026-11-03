@@ -21,7 +21,7 @@ Final scripts exited successfully. Earlier failed integration attempts remain on
 
 Reference photographs and Tesla body dimensions are linked in SOURCES.md. Reviewed front, rear, side, cabin, open-door, steered-wheel, night and rain captures. The selected base is Ameer Studio's licensed model, reworked here; it is not newly modeled from scratch or verified against OEM CAD.
 
-`VehicleReview` is an opt-in neutral camera profile. Default CARLA grading uses reduced saturation, gamma adjustments and +1.2 EV exposure bias; default-profile comparison captures are retained locally. The default profile itself is unchanged.
+Captures use the default camera profile (`Default.json`), which is a neutral photoreal grading. It replaced the opt-in `VehicleReview` profile used for the original validation captures.
 
 Working artifacts: `artifacts/tesla-model3/source/tesla-model3-optics-upgrade.blend`, `renders/`, `export/`, and `audit/` in the workspace. Reproduction commands are in README.md.
 

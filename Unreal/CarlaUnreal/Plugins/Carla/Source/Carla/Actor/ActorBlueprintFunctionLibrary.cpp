@@ -504,7 +504,7 @@ void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
     FActorVariation post_process_profile;
     post_process_profile.Id = TEXT("post_process_profile");
     post_process_profile.Type = EActorAttributeType::String;
-    post_process_profile.RecommendedValues = {TEXT("Default")};
+    post_process_profile.RecommendedValues = {TEXT("")};
     post_process_profile.bRestrictToRecommended = false;
 
     Definition.Variations.Append({PostProccess, post_process_profile});
@@ -764,7 +764,7 @@ void UActorBlueprintFunctionLibrary::MakeWideAngleLensCameraDefinition(
     FActorVariation WAL_PostProcessProfile;
     WAL_PostProcessProfile.Id = TEXT("post_process_profile");
     WAL_PostProcessProfile.Type = EActorAttributeType::String;
-    WAL_PostProcessProfile.RecommendedValues = {TEXT("Default")};
+    WAL_PostProcessProfile.RecommendedValues = {TEXT("")};
     WAL_PostProcessProfile.bRestrictToRecommended = false;
 
     // Gamma
@@ -1181,8 +1181,8 @@ void UActorBlueprintFunctionLibrary::MakeRayTracedLensCameraDefinition(
   Lut.RecommendedValues = {TEXT("")};
   Lut.bRestrictToRecommended = false;
 
-  // Normalized focal lengths (image half-width = 0.5). 0 = derive from the
-  // fov attribute through the selected camera_model's projection.
+  // Focal lengths, normalized per axis: fx by the image width, fy by its height.
+  // 0 = derive from the fov attribute through the camera_model, with square pixels.
   FActorVariation Fx;
   Fx.Id = TEXT("fx");
   Fx.Type = EActorAttributeType::Float;
@@ -1254,9 +1254,10 @@ void UActorBlueprintFunctionLibrary::MakeRayTracedLensCameraDefinition(
   EnableDenoiser.RecommendedValues = {TEXT("true")};
   EnableDenoiser.bRestrictToRecommended = false;
 
-  // Exposure. "auto" = the sensor's pinned daylight histogram (EV100 10-12);
-  // "manual" = the physical camera of the loaded post_process_profile plus
-  // exposure_compensation (EV), deterministic frame to frame (compositing).
+  // Exposure. "auto" = the post_process_profile's auto exposure, its upper end
+  // capped by carla.RTLens.MaxAutoExposureEV; "manual" = the physical camera of
+  // the profile, deterministic frame to frame (compositing).
+  // exposure_compensation (EV) adds to the profile's bias.
   FActorVariation RTExposureMode;
   RTExposureMode.Id = TEXT("exposure_mode");
   RTExposureMode.Type = EActorAttributeType::String;
@@ -1300,7 +1301,7 @@ void UActorBlueprintFunctionLibrary::MakeRayTracedLensCameraDefinition(
     FActorVariation post_process_profile;
     post_process_profile.Id = TEXT("post_process_profile");
     post_process_profile.Type = EActorAttributeType::String;
-    post_process_profile.RecommendedValues = {TEXT("Default")};
+    post_process_profile.RecommendedValues = {TEXT("")};
     post_process_profile.bRestrictToRecommended = false;
 
     Definition.Variations.Append({PostProccess, post_process_profile});
@@ -1908,6 +1909,11 @@ void UActorBlueprintFunctionLibrary::MakePedestrianDefinition(
       EActorAttributeType::Bool,
       Parameters.bCanUseWheelChair ? TEXT("true") : TEXT("false")});
 
+  Definition.Attributes.Emplace(FActorAttribute{
+      TEXT("special_type"),
+      EActorAttributeType::String,
+      Parameters.SpecialType});
+
   if (Parameters.Speed.Num() > 0)
   {
     FActorVariation Speed;
@@ -2013,6 +2019,16 @@ void UActorBlueprintFunctionLibrary::MakePropDefinition(
       EActorAttributeType::String,
       GetSize(Parameters.Size)});
 
+  Definition.Attributes.Emplace(FActorAttribute{
+      TEXT("base_type"),
+      EActorAttributeType::String,
+      Parameters.BaseType});
+
+  Definition.Attributes.Emplace(FActorAttribute{
+      TEXT("subtype"),
+      EActorAttributeType::String,
+      Parameters.SubType});
+
   Success = CheckActorDefinition(Definition);
 }
 
@@ -2030,6 +2046,15 @@ void UActorBlueprintFunctionLibrary::MakeBlueprintDefinition(
 {
   FillIdAndTags(Definition, TEXT("blueprint"), Parameters.Name);
   AddRecommendedValuesForActorRoleName(Definition, {TEXT("blueprint")});
+
+  // The catalog stores the blueprint's class path; an asset path is accepted
+  // too by appending the generated-class suffix (see MakeVehicleDefinition).
+  FString ClassPath = Parameters.Path;
+  if (!ClassPath.IsEmpty() && !ClassPath.EndsWith(TEXT("_C")))
+  {
+    ClassPath += TEXT("_C");
+  }
+  Definition.Class = LoadClass<AActor>(nullptr, *ClassPath);
 
   // Definition.Attributes.Emplace(FActorAttribute{
   //   EActorAttributeType::String,
@@ -2306,16 +2331,10 @@ void UActorBlueprintFunctionLibrary::SetCamera(
         Description.Variations,
         TEXT(""));
 
-    // Post-process profiles are camera-lens presets (Default, GoPro, ...),
-    // not per-map looks: the same BP_Carla_Sky + PostProcessVolume already
-    // gives every map the same base grading. Empty or the legacy lowercase
-    // "default" sentinel means "no preference", so just load Default.json.
-    // Callers that want a specific look (e.g. GoPro.json) set
-    // post_process_profile explicitly via the API/scripts.
-    if (PostProcessProfileName.IsEmpty() || PostProcessProfileName == TEXT("default"))
-    {
-      PostProcessProfileName = TEXT("Default");
-    }
+    // Post-process profiles are camera presets (AutomotiveHDR, GoPro, ...),
+    // not per-map looks. Empty or "Default" means no preference: the sensor
+    // default (carla.PostProcess.Profile).
+    PostProcessProfileName = UPostProcessJsonUtils::ResolveProfileName(PostProcessProfileName);
 
     UPostProcessJsonUtils::LoadAllPostProcessFromJsonToSceneCapture(
         Camera->GetCaptureComponent(),
@@ -2487,8 +2506,7 @@ void UActorBlueprintFunctionLibrary::SetCamera(
     // photometric sun as soon as r.EyeAdaptation.MethodOverride forces manual.
     FString PostProcessProfileName = RetrieveActorAttributeToString(
         "post_process_profile", Variations, TEXT(""));
-    if (PostProcessProfileName.IsEmpty() || PostProcessProfileName == TEXT("default"))
-      PostProcessProfileName = TEXT("Default");
+    PostProcessProfileName = UPostProcessJsonUtils::ResolveProfileName(PostProcessProfileName);
     for (auto *Face : Camera->GetCaptureComponents2D())
       UPostProcessJsonUtils::LoadAllPostProcessFromJsonToSceneCapture(
           Face, PostProcessProfileName);

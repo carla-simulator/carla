@@ -20,10 +20,6 @@
 #include "carla/rpc/VehicleLightState.h"
 #include <util/enable-ue4-macros.h>
 
-#include <util/ue-header-guard-begin.h>
-#include "VehicleAnimationInstance.h"
-#include <util/ue-header-guard-end.h>
-
 void FFrameData::GetFrameData(UCarlaEpisode *ThisEpisode, bool bAdditionalData, bool bIncludeActorsAgain)
 {
   Episode = ThisEpisode;
@@ -429,31 +425,23 @@ void FFrameData::AddVehicleWheelsAnimation(FCarlaActor *CarlaActor)
   if (CarlaVehicle == nullptr)
     return;
 
-  USkeletalMeshComponent* SkeletalMesh = CarlaVehicle->GetMesh();
-  if (SkeletalMesh == nullptr)
-    return;
-
-  UVehicleAnimationInstance* VehicleAnim = Cast<UVehicleAnimationInstance>(SkeletalMesh->GetAnimInstance());
-  if (VehicleAnim == nullptr)
-    return;
-
-  auto* WheeledVehicleMovementComponent = VehicleAnim->GetWheeledVehicleComponent();
-  if (WheeledVehicleMovementComponent == nullptr)
+  const UChaosWheeledVehicleMovementComponent* Movement = CarlaVehicle->GetChaosWheeledVehicleMovementComponent();
+  if (Movement == nullptr)
     return;
 
   CarlaRecorderAnimWheels Record;
   Record.DatabaseId = CarlaActor->GetActorId();
-  Record.WheelValues.reserve(WheeledVehicleMovementComponent->Wheels.Num());
+  Record.WheelValues.reserve(Movement->WheelSetups.Num());
 
-  uint8 i = 0;
-  for (auto Wheel : WheeledVehicleMovementComponent->Wheels)
+  // The getters return the pose shown, whether Chaos, the animation instance
+  // or the wheel animation override set it.
+  for (uint8 i = 0; CarlaVehicle->HasWheel(i); ++i)
   {
-    WheelInfo WInfo;
-    WInfo.Location = static_cast<EVehicleWheelLocation>(i);
-    WInfo.SteeringAngle = CarlaVehicle->GetWheelSteerAngle(WInfo.Location);
-    WInfo.TireRotation = Wheel->GetRotationAngle();
-    Record.WheelValues.push_back(WInfo);
-    ++i;
+    WheelInfo Wheel;
+    Wheel.Location = static_cast<EVehicleWheelLocation>(i);
+    Wheel.SteeringAngle = CarlaVehicle->GetWheelSteerAngle(Wheel.Location);
+    Wheel.TireRotation = CarlaVehicle->GetWheelPitchAngle(Wheel.Location);
+    Record.WheelValues.push_back(Wheel);
   }
 
   AddAnimVehicleWheels(Record);
@@ -463,8 +451,8 @@ void FFrameData::AddVehicleWheelsAnimation(FCarlaActor *CarlaActor)
     AddAnimBiker(CarlaRecorderAnimBiker
     {
       CarlaActor->GetActorId(),
-      WheeledVehicleMovementComponent->GetForwardSpeed(),
-      WheeledVehicleMovementComponent->GetEngineRotationSpeed() / WheeledVehicleMovementComponent->GetEngineMaxRotationSpeed()
+      Movement->GetForwardSpeed(),
+      Movement->GetEngineRotationSpeed() / Movement->GetEngineMaxRotationSpeed()
     });
   }
 }
@@ -1029,18 +1017,18 @@ void FFrameData::ProcessReplayerAnimVehicleWheels(CarlaRecorderAnimWheels Vehicl
     return;
   auto CarlaVehicle = Cast<ACarlaWheeledVehicle>(CarlaActor->GetActor());
   check(CarlaVehicle != nullptr)
-  auto SkeletalMesh = CarlaVehicle->GetMesh();
-  check(SkeletalMesh != nullptr)
-  auto VehicleAnim = Cast<UVehicleAnimationInstance>(SkeletalMesh->GetAnimInstance());
-  check(VehicleAnim != nullptr)
+  // Without it the wheels cannot be posed, and roll on their own instead.
+  if (!CarlaVehicle->HasCarlaVehicleAnimation())
+    return;
 
-  for (uint32_t i = 0; i < VehicleAnimWheels.WheelValues.size(); ++i)
+  // Released in ProcessReplayerFinish.
+  CarlaVehicle->SetWheelAnimationOverride(true);
+  for (const WheelInfo& Element : VehicleAnimWheels.WheelValues)
   {
-    const WheelInfo& Element = VehicleAnimWheels.WheelValues[i];
-#if 0 // @CARLAUE5
-    VehicleAnim->SetWheelRotYaw(static_cast<uint8>(Element.Location), Element.SteeringAngle);
-    VehicleAnim->SetWheelPitchAngle(static_cast<uint8>(Element.Location), Element.TireRotation);
-#endif
+    if (!CarlaVehicle->HasWheel(static_cast<int32>(Element.Location)))
+      continue;
+    CarlaVehicle->SetWheelSteerDirection(Element.Location, Element.SteeringAngle);
+    CarlaVehicle->SetWheelPitchAngle(Element.Location, Element.TireRotation);
   }
 }
 
@@ -1117,6 +1105,10 @@ bool FFrameData::ProcessReplayerFinish(bool bApplyAutopilot, bool bIgnoreHero, s
         {
             // stop all vehicles
             SetActorSimulatePhysics(CarlaActor, true);
+            if (auto* CarlaVehicle = Cast<ACarlaWheeledVehicle>(CarlaActor->GetActor()))
+            {
+              CarlaVehicle->SetWheelAnimationOverride(false);
+            }
             SetActorVelocity(CarlaActor, FVector(0, 0, 0));
             FVehicleControl Control;
             Control.Throttle = 0.0f;

@@ -124,8 +124,11 @@ bool ROS2::Enable(bool enable, Middleware middleware, int domain_id) {
         "', domain id: ", resolved.id, " (", domain_source, ")");
   }
   _enabled = enable;
-  log_info("ROS2 enabled: ", _enabled);
-  _clock_publisher = std::make_shared<CarlaClockPublisher>();
+  log_info("ROS2 enabled: ", _enabled.load());
+  {
+    std::lock_guard<std::mutex> lock(_mutex);
+    _clock_publisher = std::make_shared<CarlaClockPublisher>();
+  }
 #if defined(WITH_ROS2_DEMO)
   _basic_publisher = std::make_shared<BasicPublisher>();
   _basic_publisher->Init();
@@ -135,13 +138,20 @@ bool ROS2::Enable(bool enable, Middleware middleware, int domain_id) {
 
 void ROS2::SetFrame(uint64_t frame) {
   _frame = frame;
-  for (auto &element : _subscribers) {
-    void *actor = element.first;
-    auto &subscriber = element.second;
-    auto callback_it = _actor_callbacks.find(actor);
-    if (callback_it != _actor_callbacks.end()) {
-      subscriber->ProcessMessages(callback_it->second);
+  // The control callbacks run outside the lock so applying vehicle control
+  // never stalls the camera deliveries.
+  std::vector<std::pair<std::shared_ptr<BaseSubscriber>, ActorCallback>> pending;
+  {
+    std::lock_guard<std::mutex> lock(_mutex);
+    for (auto &element : _subscribers) {
+      auto callback_it = _actor_callbacks.find(element.first);
+      if (callback_it != _actor_callbacks.end()) {
+        pending.emplace_back(element.second, callback_it->second);
+      }
     }
+  }
+  for (auto &element : pending) {
+    element.first->ProcessMessages(element.second);
   }
 #if defined(WITH_ROS2_DEMO)
   if (_basic_subscriber) {
@@ -165,11 +175,18 @@ void ROS2::SetTimestamp(double timestamp) {
   double integral;
   const double fractional = std::modf(timestamp, &integral);
   const double multiplier = 1000000000.0;
-  _seconds = static_cast<int32_t>(integral);
-  _nanoseconds = static_cast<uint32_t>(fractional * multiplier);
-  if (_clock_publisher) {
-    _clock_publisher->Write(_seconds, _nanoseconds);
-    _clock_publisher->Publish();
+  const Stamp stamp{
+      static_cast<int32_t>(integral),
+      static_cast<uint32_t>(fractional * multiplier)};
+  std::shared_ptr<CarlaClockPublisher> clock_publisher;
+  {
+    std::lock_guard<std::mutex> lock(_mutex);
+    _stamp = stamp;
+    clock_publisher = _clock_publisher;
+  }
+  if (clock_publisher) {
+    clock_publisher->Write(stamp.seconds, stamp.nanoseconds);
+    clock_publisher->Publish();
   }
 #if defined(WITH_ROS2_DEMO)
   _basic_publisher->SetData("Hello from Carla!");
@@ -177,8 +194,27 @@ void ROS2::SetTimestamp(double timestamp) {
 #endif
 }
 
+ROS2::Stamp ROS2::GetStamp() const {
+  std::lock_guard<std::mutex> lock(_mutex);
+  return _stamp;
+}
+
+void ROS2::DropPublishersLocked(void *actor) {
+  _publishers.erase(actor);
+  _camera_publishers.erase(actor);
+  _transforms.erase(actor);
+}
+
+bool ROS2::IsKnownActorLocked(void *actor) const {
+  return _registrations.count(actor) > 0 || HasTopicOverride(actor);
+}
+
 void ROS2::RegisterSensor(
     void *actor, std::string ros_name, std::string frame_id, bool publish_tf) {
+  std::lock_guard<std::mutex> lock(_mutex);
+  // A new actor can reuse a destroyed one's address; never inherit its
+  // cached publishers.
+  DropPublishersLocked(actor);
   // insert_or_assign so re-registering an actor with a new ros_name actually
   // updates the entry; unordered_map::insert would silently keep the stale
   // one.
@@ -187,9 +223,12 @@ void ROS2::RegisterSensor(
 }
 
 void ROS2::UnregisterSensor(void *actor) {
-  _publishers.erase(actor);
-  _camera_publishers.erase(actor);
-  _transforms.erase(actor);
+  std::lock_guard<std::mutex> lock(_mutex);
+  UnregisterSensorLocked(actor);
+}
+
+void ROS2::UnregisterSensorLocked(void *actor) {
+  DropPublishersLocked(actor);
   _actor_parents.erase(actor);
   _registrations.erase(actor);
 }
@@ -198,6 +237,8 @@ void ROS2::RegisterVehicle(
     void *actor, std::string ros_name, std::string frame_id, ActorCallback callback,
     bool enable_ackermann_control,
     bool enable_autoware_control) {
+  std::lock_guard<std::mutex> lock(_mutex);
+  DropPublishersLocked(actor);
   _registrations.insert_or_assign(
       actor, ActorRegistration{ros_name, frame_id, true});
 
@@ -230,27 +271,30 @@ void ROS2::RegisterVehicle(
 }
 
 void ROS2::UnregisterVehicle(void *actor) {
+  std::lock_guard<std::mutex> lock(_mutex);
   _subscribers.erase(actor);
   _actor_callbacks.erase(actor);
   _autoware_vehicles.erase(actor);
   _autoware_status_publishers.erase(actor);
-  UnregisterSensor(actor);
+  UnregisterSensorLocked(actor);
 }
 
 void ROS2::AddActorRosTopicName(void *actor, std::string ros_topic_name) {
+  std::lock_guard<std::mutex> lock(_mutex);
+  DropPublishersLocked(actor);
   _actor_ros_topic_names.insert_or_assign(actor, std::move(ros_topic_name));
 }
 
 void ROS2::RemoveActorRosTopicName(void *actor) {
+  std::lock_guard<std::mutex> lock(_mutex);
   _actor_ros_topic_names.erase(actor);
   // Drop the cached publishers bound to the overridden topic so the next data
   // tick re-creates them under the default naming (tier4 semantics).
-  _publishers.erase(actor);
-  _camera_publishers.erase(actor);
-  _transforms.erase(actor);
+  DropPublishersLocked(actor);
 }
 
 std::string ROS2::GetActorRosTopicName(void *actor) const {
+  std::lock_guard<std::mutex> lock(_mutex);
   auto it = _actor_ros_topic_names.find(actor);
   return it != _actor_ros_topic_names.end() ? it->second : std::string{};
 }
@@ -261,6 +305,7 @@ bool ROS2::HasTopicOverride(void *actor) const {
 }
 
 void ROS2::AddActorParentRosName(void *actor, void *parent) {
+  std::lock_guard<std::mutex> lock(_mutex);
   auto it = _actor_parents.find(actor);
   if (it != _actor_parents.end()) {
     it->second.push_back(parent);
@@ -370,6 +415,7 @@ std::shared_ptr<CarlaCameraPublisher> ROS2::GetOrCreateCameraSensor(
     carla::streaming::detail::stream_id_type id,
     void *actor,
     const std::string &default_prefix) {
+  std::lock_guard<std::mutex> lock(_mutex);
   auto it_camera = _camera_publishers.find(actor);
   if (it_camera != _camera_publishers.end()) {
     // Enforce the one-actor-one-camera-type invariant on the cache-hit path.
@@ -388,6 +434,9 @@ std::shared_ptr<CarlaCameraPublisher> ROS2::GetOrCreateCameraSensor(
     }
     return typed;
   }
+  if (!IsKnownActorLocked(actor)) {
+    return nullptr;
+  }
 
   ResolveAutoStreamSuffix(actor, default_prefix, id);
   const std::string base_topic_name = BuildBaseTopicName(actor);
@@ -400,9 +449,13 @@ std::shared_ptr<CarlaCameraPublisher> ROS2::GetOrCreateCameraSensor(
 
 std::shared_ptr<BasePublisher> ROS2::GetOrCreateSensor(
     int type, carla::streaming::detail::stream_id_type id, void *actor) {
+  std::lock_guard<std::mutex> lock(_mutex);
   auto it_publishers = _publishers.find(actor);
   if (it_publishers != _publishers.end()) {
     return it_publishers->second;
+  }
+  if (!IsKnownActorLocked(actor)) {
+    return nullptr;
   }
 
   // Resolve auto-naming "prefix__" -> "prefix<stream_id>" before computing the
@@ -488,7 +541,7 @@ std::shared_ptr<BasePublisher> ROS2::GetOrCreateSensor(
   return publisher;
 }
 
-std::shared_ptr<CarlaTransformPublisher> ROS2::GetOrCreateTransformPublisher(void *actor) {
+std::shared_ptr<CarlaTransformPublisher> ROS2::GetOrCreateTransformPublisherLocked(void *actor) {
   // Global TF gate (tier4's _publish_tf): checked before the cache so
   // toggling at runtime silences every sensor immediately.
   if (!_publish_tf) {
@@ -517,6 +570,27 @@ std::string ParentFrameOrMap(const std::string &parent_chain) {
 
 }  // namespace
 
+void ROS2::PublishTransform(
+    void *actor, const Stamp &stamp, const carla::geom::Transform &sensor_transform) {
+  std::shared_ptr<CarlaTransformPublisher> transform_publisher;
+  std::string parent_frame;
+  std::string frame_id;
+  {
+    std::lock_guard<std::mutex> lock(_mutex);
+    transform_publisher = GetOrCreateTransformPublisherLocked(actor);
+    if (!transform_publisher) {
+      return;
+    }
+    parent_frame = ParentFrameOrMap(BuildParentChain(actor));
+    frame_id = LookupFrameId(actor);
+  }
+  transform_publisher->Write(
+      stamp.seconds, stamp.nanoseconds, parent_frame, frame_id,
+      sensor_transform.location.x, sensor_transform.location.y, sensor_transform.location.z,
+      sensor_transform.rotation.pitch, sensor_transform.rotation.yaw, sensor_transform.rotation.roll);
+  transform_publisher->Publish();
+}
+
 void ROS2::ProcessDataFromCamera(
     uint64_t sensor_type,
     carla::streaming::detail::stream_id_type stream_id,
@@ -524,6 +598,7 @@ void ROS2::ProcessDataFromCamera(
     int W, int H, float Fov,
     const carla::SharedBufferView buffer,
     void *actor) {
+  const Stamp stamp = GetStamp();
   // Image dimensions + FOV are now read straight from ImageSerializer's
   // per-frame header inside the camera publisher's WriteCameraInfo call;
   // the W/H/Fov arguments survive for ABI compatibility with the
@@ -560,7 +635,7 @@ void ROS2::ProcessDataFromCamera(
     case ESensors::CameraGBufferFloat:
     default:
       log_info(
-          "Sensor to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id,
+          "Sensor to ROS data: frame.", _frame.load(), "sensor.", sensor_type, "stream.", stream_id,
           "buffer.", buffer->size());
       return;
   }
@@ -574,31 +649,23 @@ void ROS2::ProcessDataFromCamera(
       const auto *header = reinterpret_cast<
           const carla::sensor::s11n::OpticalFlowImageSerializer::ImageHeader *>(header_ptr);
       publisher->WriteCameraInfo(
-          _seconds, _nanoseconds, 0, 0, header->height, header->width, header->fov_angle, true);
+          stamp.seconds, stamp.nanoseconds, 0, 0, header->height, header->width, header->fov_angle, true);
       publisher->WriteImage(
-          _seconds, _nanoseconds, header->height, header->width,
+          stamp.seconds, stamp.nanoseconds, header->height, header->width,
           buffer->data() + carla::sensor::s11n::OpticalFlowImageSerializer::header_offset);
     } else {
       const auto *header = reinterpret_cast<
           const carla::sensor::s11n::ImageSerializer::ImageHeader *>(header_ptr);
       publisher->WriteCameraInfo(
-          _seconds, _nanoseconds, 0, 0, header->height, header->width, header->fov_angle, true);
+          stamp.seconds, stamp.nanoseconds, 0, 0, header->height, header->width, header->fov_angle, true);
       publisher->WriteImage(
-          _seconds, _nanoseconds, header->height, header->width,
+          stamp.seconds, stamp.nanoseconds, header->height, header->width,
           buffer->data() + carla::sensor::s11n::ImageSerializer::header_offset);
     }
     publisher->Publish();
   }
 
-  if (auto transform_publisher = GetOrCreateTransformPublisher(actor)) {
-    transform_publisher->Write(
-        _seconds, _nanoseconds,
-        ParentFrameOrMap(BuildParentChain(actor)),
-        LookupFrameId(actor),
-        sensor_transform.location.x, sensor_transform.location.y, sensor_transform.location.z,
-        sensor_transform.rotation.pitch, sensor_transform.rotation.yaw, sensor_transform.rotation.roll);
-    transform_publisher->Publish();
-  }
+  PublishTransform(actor, stamp, sensor_transform);
 }
 
 void ROS2::ProcessDataFromGNSS(
@@ -607,20 +674,13 @@ void ROS2::ProcessDataFromGNSS(
     const carla::geom::Transform sensor_transform,
     const carla::geom::GeoLocation &data,
     void *actor) {
+  const Stamp stamp = GetStamp();
   if (auto base = GetOrCreateSensor(ESensors::GnssSensor, stream_id, actor)) {
     auto publisher = std::dynamic_pointer_cast<CarlaGNSSPublisher>(base);
-    publisher->Write(_seconds, _nanoseconds, data.latitude, data.longitude, data.altitude);
+    publisher->Write(stamp.seconds, stamp.nanoseconds, data.latitude, data.longitude, data.altitude);
     publisher->Publish();
   }
-  if (auto transform_publisher = GetOrCreateTransformPublisher(actor)) {
-    transform_publisher->Write(
-        _seconds, _nanoseconds,
-        ParentFrameOrMap(BuildParentChain(actor)),
-        LookupFrameId(actor),
-        sensor_transform.location.x, sensor_transform.location.y, sensor_transform.location.z,
-        sensor_transform.rotation.pitch, sensor_transform.rotation.yaw, sensor_transform.rotation.roll);
-    transform_publisher->Publish();
-  }
+  PublishTransform(actor, stamp, sensor_transform);
 }
 
 void ROS2::ProcessDataFromIMU(
@@ -631,24 +691,17 @@ void ROS2::ProcessDataFromIMU(
     carla::geom::Vector3D gyroscope,
     float compass,
     void *actor) {
+  const Stamp stamp = GetStamp();
   if (auto base = GetOrCreateSensor(ESensors::InertialMeasurementUnit, stream_id, actor)) {
     auto publisher = std::dynamic_pointer_cast<CarlaIMUPublisher>(base);
     publisher->Write(
-        _seconds, _nanoseconds,
+        stamp.seconds, stamp.nanoseconds,
         accelerometer.x, accelerometer.y, accelerometer.z,
         gyroscope.x, gyroscope.y, gyroscope.z,
         compass);
     publisher->Publish();
   }
-  if (auto transform_publisher = GetOrCreateTransformPublisher(actor)) {
-    transform_publisher->Write(
-        _seconds, _nanoseconds,
-        ParentFrameOrMap(BuildParentChain(actor)),
-        LookupFrameId(actor),
-        sensor_transform.location.x, sensor_transform.location.y, sensor_transform.location.z,
-        sensor_transform.rotation.pitch, sensor_transform.rotation.yaw, sensor_transform.rotation.roll);
-    transform_publisher->Publish();
-  }
+  PublishTransform(actor, stamp, sensor_transform);
 }
 
 void ROS2::ProcessDataFromDVS(
@@ -658,6 +711,7 @@ void ROS2::ProcessDataFromDVS(
     const carla::SharedBufferView buffer,
     int /*W*/, int /*H*/, float /*Fov*/,
     void *actor) {
+  const Stamp stamp = GetStamp();
   if (auto base = GetOrCreateSensor(ESensors::DVSCamera, stream_id, actor)) {
     auto publisher = std::dynamic_pointer_cast<CarlaDVSCameraPublisher>(base);
     const auto *header = reinterpret_cast<
@@ -672,23 +726,15 @@ void ROS2::ProcessDataFromDVS(
     const std::uint8_t *event_bytes = buffer->data() + header_offset;
 
     publisher->WriteCameraInfo(
-        _seconds, _nanoseconds, 0, 0, header->height, header->width, header->fov_angle, true);
+        stamp.seconds, stamp.nanoseconds, 0, 0, header->height, header->width, header->fov_angle, true);
     publisher->WriteImage(
-        _seconds, _nanoseconds, header->height, header->width,
+        stamp.seconds, stamp.nanoseconds, header->height, header->width,
         event_count, event_bytes, event_size);
     publisher->WritePointCloud(
-        _seconds, _nanoseconds, 1, static_cast<std::uint32_t>(event_count), event_bytes);
+        stamp.seconds, stamp.nanoseconds, 1, static_cast<std::uint32_t>(event_count), event_bytes);
     publisher->Publish();
   }
-  if (auto transform_publisher = GetOrCreateTransformPublisher(actor)) {
-    transform_publisher->Write(
-        _seconds, _nanoseconds,
-        ParentFrameOrMap(BuildParentChain(actor)),
-        LookupFrameId(actor),
-        sensor_transform.location.x, sensor_transform.location.y, sensor_transform.location.z,
-        sensor_transform.rotation.pitch, sensor_transform.rotation.yaw, sensor_transform.rotation.roll);
-    transform_publisher->Publish();
-  }
+  PublishTransform(actor, stamp, sensor_transform);
 }
 
 void ROS2::ProcessDataFromLidar(
@@ -713,6 +759,7 @@ void ROS2::ProcessDataFromLidar(
     float lower_fov_limit,
     carla::sensor::data::LidarData &data,
     void *actor) {
+  const Stamp stamp = GetStamp();
   if (auto base = GetOrCreateSensor(ESensors::RayCastLidar, stream_id, actor)) {
     auto publisher = std::dynamic_pointer_cast<CarlaLidarPublisher>(base);
     // The lidar returns a flat list of floats rather than structured detection
@@ -734,27 +781,19 @@ void ROS2::ProcessDataFromLidar(
         vertical_angles.push_back(upper_rad - static_cast<float>(i) * vertical_step);
       }
       publisher->WriteExtendedPointCloud(
-          _seconds, _nanoseconds, 1u, width,
+          stamp.seconds, stamp.nanoseconds, 1u, width,
           reinterpret_cast<const std::uint8_t *>(data._points.data()),
           data._header.data() + carla::sensor::data::LidarData::Index::SIZE,
           data._header.size() - carla::sensor::data::LidarData::Index::SIZE,
           vertical_angles);
     } else {
       publisher->WritePointCloud(
-          _seconds, _nanoseconds, 1u, width,
+          stamp.seconds, stamp.nanoseconds, 1u, width,
           reinterpret_cast<const std::uint8_t *>(data._points.data()));
     }
     publisher->Publish();
   }
-  if (auto transform_publisher = GetOrCreateTransformPublisher(actor)) {
-    transform_publisher->Write(
-        _seconds, _nanoseconds,
-        ParentFrameOrMap(BuildParentChain(actor)),
-        LookupFrameId(actor),
-        sensor_transform.location.x, sensor_transform.location.y, sensor_transform.location.z,
-        sensor_transform.rotation.pitch, sensor_transform.rotation.yaw, sensor_transform.rotation.roll);
-    transform_publisher->Publish();
-  }
+  PublishTransform(actor, stamp, sensor_transform);
 }
 
 void ROS2::ProcessDataFromSemanticLidar(
@@ -763,23 +802,16 @@ void ROS2::ProcessDataFromSemanticLidar(
     const carla::geom::Transform sensor_transform,
     carla::sensor::data::SemanticLidarData &data,
     void *actor) {
+  const Stamp stamp = GetStamp();
   if (auto base = GetOrCreateSensor(ESensors::RayCastSemanticLidar, stream_id, actor)) {
     auto publisher = std::dynamic_pointer_cast<CarlaSemanticLidarPublisher>(base);
     const auto width = static_cast<std::uint32_t>(data._ser_points.size());
     publisher->WritePointCloud(
-        _seconds, _nanoseconds, 1u, width,
+        stamp.seconds, stamp.nanoseconds, 1u, width,
         reinterpret_cast<const std::uint8_t *>(data._ser_points.data()));
     publisher->Publish();
   }
-  if (auto transform_publisher = GetOrCreateTransformPublisher(actor)) {
-    transform_publisher->Write(
-        _seconds, _nanoseconds,
-        ParentFrameOrMap(BuildParentChain(actor)),
-        LookupFrameId(actor),
-        sensor_transform.location.x, sensor_transform.location.y, sensor_transform.location.z,
-        sensor_transform.rotation.pitch, sensor_transform.rotation.yaw, sensor_transform.rotation.roll);
-    transform_publisher->Publish();
-  }
+  PublishTransform(actor, stamp, sensor_transform);
 }
 
 void ROS2::ProcessDataFromRadar(
@@ -788,23 +820,16 @@ void ROS2::ProcessDataFromRadar(
     const carla::geom::Transform sensor_transform,
     const carla::sensor::data::RadarData &data,
     void *actor) {
+  const Stamp stamp = GetStamp();
   if (auto base = GetOrCreateSensor(ESensors::Radar, stream_id, actor)) {
     auto publisher = std::dynamic_pointer_cast<CarlaRadarPublisher>(base);
     const auto width = static_cast<std::uint32_t>(data.GetDetectionCount());
     publisher->WritePointCloud(
-        _seconds, _nanoseconds, 1u, width,
+        stamp.seconds, stamp.nanoseconds, 1u, width,
         reinterpret_cast<const std::uint8_t *>(data._detections.data()));
     publisher->Publish();
   }
-  if (auto transform_publisher = GetOrCreateTransformPublisher(actor)) {
-    transform_publisher->Write(
-        _seconds, _nanoseconds,
-        ParentFrameOrMap(BuildParentChain(actor)),
-        LookupFrameId(actor),
-        sensor_transform.location.x, sensor_transform.location.y, sensor_transform.location.z,
-        sensor_transform.rotation.pitch, sensor_transform.rotation.yaw, sensor_transform.rotation.roll);
-    transform_publisher->Publish();
-  }
+  PublishTransform(actor, stamp, sensor_transform);
 }
 
 void ROS2::ProcessDataFromObstacleDetection(
@@ -816,7 +841,7 @@ void ROS2::ProcessDataFromObstacleDetection(
     float distance,
     void * /*actor*/) {
   log_info(
-      "Sensor ObstacleDetector to ROS data: frame.", _frame, "sensor.", sensor_type,
+      "Sensor ObstacleDetector to ROS data: frame.", _frame.load(), "sensor.", sensor_type,
       "stream.", stream_id, "distance.", distance);
 }
 
@@ -827,20 +852,13 @@ void ROS2::ProcessDataFromCollisionSensor(
     uint32_t other_actor,
     carla::geom::Vector3D impulse,
     void *actor) {
+  const Stamp stamp = GetStamp();
   if (auto base = GetOrCreateSensor(ESensors::CollisionSensor, stream_id, actor)) {
     auto publisher = std::dynamic_pointer_cast<CarlaCollisionPublisher>(base);
-    publisher->Write(_seconds, _nanoseconds, other_actor, impulse.x, impulse.y, impulse.z);
+    publisher->Write(stamp.seconds, stamp.nanoseconds, other_actor, impulse.x, impulse.y, impulse.z);
     publisher->Publish();
   }
-  if (auto transform_publisher = GetOrCreateTransformPublisher(actor)) {
-    transform_publisher->Write(
-        _seconds, _nanoseconds,
-        ParentFrameOrMap(BuildParentChain(actor)),
-        LookupFrameId(actor),
-        sensor_transform.location.x, sensor_transform.location.y, sensor_transform.location.z,
-        sensor_transform.rotation.pitch, sensor_transform.rotation.yaw, sensor_transform.rotation.roll);
-    transform_publisher->Publish();
-  }
+  PublishTransform(actor, stamp, sensor_transform);
 }
 
 void ROS2::ProcessDataFromStatusSensor(
@@ -850,23 +868,26 @@ void ROS2::ProcessDataFromStatusSensor(
     const carla::sensor::s11n::VehicleStatusData &data,
     void *vehicle_actor,
     void * /*actor*/) {
+  const Stamp stamp = GetStamp();
   // Only vehicles registered with enable_autoware_control publish reports:
   // the report topics are fixed absolute names shared by the whole vehicle
   // interface (tier4 restricted this to the ego for the same reason).
-  if (_autoware_vehicles.count(vehicle_actor) == 0) {
-    log_warning(
-        "ROS2::ProcessDataFromStatusSensor: the Vehicle Status Sensor is attached to a "
-        "vehicle that is not registered for Autoware control - not publishing the data.");
-    return;
-  }
-
   std::shared_ptr<AutowareVehicleStatusPublisher> publisher;
-  auto it = _autoware_status_publishers.find(vehicle_actor);
-  if (it != _autoware_status_publishers.end()) {
-    publisher = it->second;
-  } else {
-    publisher = std::make_shared<AutowareVehicleStatusPublisher>();
-    _autoware_status_publishers.insert({vehicle_actor, publisher});
+  {
+    std::lock_guard<std::mutex> lock(_mutex);
+    if (_autoware_vehicles.count(vehicle_actor) == 0) {
+      log_warning(
+          "ROS2::ProcessDataFromStatusSensor: the Vehicle Status Sensor is attached to a "
+          "vehicle that is not registered for Autoware control - not publishing the data.");
+      return;
+    }
+    auto it = _autoware_status_publishers.find(vehicle_actor);
+    if (it != _autoware_status_publishers.end()) {
+      publisher = it->second;
+    } else {
+      publisher = std::make_shared<AutowareVehicleStatusPublisher>();
+      _autoware_status_publishers.insert({vehicle_actor, publisher});
+    }
   }
 
   constexpr uint8_t reverse_mask     = 0b00000001;
@@ -944,7 +965,7 @@ void ROS2::ProcessDataFromStatusSensor(
 
   publisher->SetHazardLights(is_hazard_lights_on);
 
-  publisher->Publish(_seconds, _nanoseconds);
+  publisher->Publish(stamp.seconds, stamp.nanoseconds);
 }
 
 void ROS2::ProcessDataFromAutowareGNSS(
@@ -955,10 +976,11 @@ void ROS2::ProcessDataFromAutowareGNSS(
     const carla::geom::Transform &sensor_world_transform,
     const double mgrs_offset_position[3],
     void *actor) {
+  const Stamp stamp = GetStamp();
   if (auto base = GetOrCreateSensor(ESensors::AutowareGnssSensor, stream_id, actor)) {
     if (auto publisher = std::dynamic_pointer_cast<AutowareGNSSPublisher>(base)) {
       publisher->Write(
-          _seconds, _nanoseconds,
+          stamp.seconds, stamp.nanoseconds,
           sensor_world_transform.location.x,
           sensor_world_transform.location.y,
           sensor_world_transform.location.z,
@@ -973,27 +995,11 @@ void ROS2::ProcessDataFromAutowareGNSS(
           "- the actor was dispatched as both regular and Autoware GNSS; ignoring this sample.");
     }
   }
-  if (auto transform_publisher = GetOrCreateTransformPublisher(actor)) {
-    transform_publisher->Write(
-        _seconds, _nanoseconds,
-        ParentFrameOrMap(BuildParentChain(actor)),
-        LookupFrameId(actor),
-        sensor_transform.location.x, sensor_transform.location.y, sensor_transform.location.z,
-        sensor_transform.rotation.pitch, sensor_transform.rotation.yaw, sensor_transform.rotation.roll);
-    transform_publisher->Publish();
-  }
+  PublishTransform(actor, stamp, sensor_transform);
 }
 
 void ROS2::Shutdown() {
-  for (auto &element : _publishers) {
-    element.second.reset();
-  }
-  for (auto &element : _transforms) {
-    element.second.reset();
-  }
-  for (auto &element : _camera_publishers) {
-    element.second.reset();
-  }
+  std::lock_guard<std::mutex> lock(_mutex);
   _publishers.clear();
   _transforms.clear();
   _camera_publishers.clear();

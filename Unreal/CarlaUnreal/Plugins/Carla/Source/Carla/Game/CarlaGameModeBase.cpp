@@ -161,15 +161,10 @@ void ACarlaGameModeBase::InitGame(
     UE_LOG(LogCarla, Error, TEXT("Missing CarlaSettingsDelegate!"));
   }
 
-  if (World->GetWorldPartition() != nullptr &&
-      UGameplayStatics::GetActorOfClass(World, ASkyBase::StaticClass()) == nullptr)
+  if (UGameplayStatics::GetActorOfClass(World, ASkyBase::StaticClass()) == nullptr)
   {
-    // Legacy tiled maps converted to World Partition have no sun/sky rig (the
-    // conversion drops the legacy DirectionalLight/SkyLight, which would
-    // otherwise stream in as static orphan lights stuck at the saved sun
-    // angle). BP_CarlaWeather drives all lighting through the components of a
-    // single ASkyBase-derived actor, so spawn the standard BP_Carla_Sky (the
-    // same rig Town10 places in-level) before the weather actor is created.
+    // Imported maps and converted tiled maps carry no sun/sky rig, and
+    // BP_CarlaWeather drives all lighting through a single ASkyBase actor.
     UClass* SkyClass = LoadClass<ASkyBase>(
         nullptr,
         TEXT("/Game/Carla/Blueprints/LevelDesign/BP_Carla_Sky.BP_Carla_Sky_C"));
@@ -178,6 +173,9 @@ void ACarlaGameModeBase::InitGame(
       ASkyBase* SkyActor = World->SpawnActor<ASkyBase>(SkyClass);
       if (SkyActor != nullptr)
       {
+        // A level-placed rig that is spatially loaded streams in after this,
+        // and replaces this one (see ASkyBase::BeginPlay).
+        SkyActor->Tags.Add(ASkyBase::FallbackSkyTag);
         // The class defaults leave the sun at the horizon (pitch 0), which
         // renders a black atmosphere and an unlit ground; level-placed rigs
         // (Town10) carry a proper rotation in their instance data. Point the
@@ -192,8 +190,7 @@ void ACarlaGameModeBase::InitGame(
           }
         }
       }
-      UE_LOG(LogCarla, Log, TEXT(
-          "World Partition map without a sky rig: spawned BP_Carla_Sky"));
+      UE_LOG(LogCarla, Log, TEXT("Map without a sky rig: spawned BP_Carla_Sky"));
     }
     // BP_GeneralSceneSettings used to be spawned alongside the sky here too,
     // but everything it did (post-process delta-baseline, cloud density) is

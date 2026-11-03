@@ -3,8 +3,14 @@ name: UE5-PR
 on:
   pull_request:
     branches:
-      - ue5-dev
+      - ue58-dev
     types: [opened, synchronize, reopened]
+    paths-ignore:
+      - 'Docs/**'
+      - '**/*.md'
+      - 'mkdocs.yml'
+      - 'docs_hooks.py'
+      - 'PythonAPI/docs/**'
 
 concurrency:
   group: pr-${{ github.event.pull_request.number }}

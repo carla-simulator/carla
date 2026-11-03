@@ -188,6 +188,11 @@ public:
     return bUseRayTracing;
   }
 
+  /// Applies the `carla.Camera.UseRayTracing` tier policy to a camera's own
+  /// ray-tracing preference. A camera that cannot render without ray tracing
+  /// passes `bRequired` and is never switched off by the policy.
+  static bool ResolveCameraRayTracing(bool bSensorEnabled, bool bRequired);
+
   /// Show-only render mode (see FCarlaShowOnlyFilter): comma separated
   /// semantic label names. Non-empty restricts the capture to the actors
   /// carrying those labels (plus the shadow catchers and explicit ids).
@@ -639,6 +644,13 @@ public:
   static bool ApplyPostProcessVolumeToSensor(APostProcessVolume *Origin, ASceneCaptureSensor *Dest, bool bOverrideCurrentCamera = false);
 
 protected:
+  /// True for sensors that cannot render without hardware ray tracing
+  /// (path-traced lens cameras); the tier policy never switches them off.
+  virtual bool RequiresRayTracing() const
+  {
+    return false;
+  }
+
   void CaptureSceneExtended();
 
 #ifdef CARLA_HAS_GBUFFER_API
@@ -649,6 +661,15 @@ protected:
 
   virtual void PrePhysTick(float DeltaSeconds) override;
   virtual void PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaTime) override;
+
+  /// Motion blur from the auto exposure time (carla.Camera.ExposureMotionBlur).
+  void UpdateExposureMotionBlur(UWorld *World, float DeltaTime);
+
+  /// Simulation time of this sensor's previous capture (-1 before the first).
+  double LastCaptureTime = -1.0;
+
+  /// Exposure time of the last capture in seconds (exposure-linked motion blur).
+  float ExposureSeconds = 0.0f;
 
   virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
@@ -731,6 +752,9 @@ protected:
 
 private:
   void ApplyRayTracingSetting();
+
+  /// Captures rendered as camera cuts since BeginPlay (carla.Camera.SpawnCameraCuts).
+  int32 NumCaptures = 0;
 
 #ifdef CARLA_HAS_GBUFFER_API
   template <

@@ -302,13 +302,17 @@ bool UCarlaContentPackManager::CheckCompatibility(
   }
 
   const FString ThisPlatform = FPlatformProperties::IniPlatformName();
+  // Win64 is the UAT name of the Windows platform
+  const FString PackPlatform = Manifest.Platform.Equals(TEXT("Win64"), ESearchCase::IgnoreCase)
+      ? FString(TEXT("Windows"))
+      : Manifest.Platform;
   if (Manifest.Platform.IsEmpty())
   {
     UE_LOG(LogCarla, Warning,
         TEXT("Content pack '%s': manifest has no platform; this server runs on '%s'"),
         *Manifest.Name, *ThisPlatform);
   }
-  else if (!Manifest.Platform.Equals(ThisPlatform, ESearchCase::IgnoreCase))
+  else if (!PackPlatform.Equals(ThisPlatform, ESearchCase::IgnoreCase))
   {
     OutError = FString::Printf(
         TEXT("pack '%s' was built for platform '%s' but this server runs on '%s'"),

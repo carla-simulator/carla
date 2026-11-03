@@ -116,34 +116,6 @@ private:
 
 public:
 
-  /// Low quality Road Materials. Uses slots name to set material for each part
-  /// of the road for low quality.
-  ///
-  /// @todo Move Low quality vars to a generic map of structs with the quality
-  /// level as key.
-  UPROPERTY(Category = "Quality Settings/Low",
-      BlueprintReadOnly,
-      EditAnywhere,
-      config,
-      DisplayName = "Road Materials List for Low Quality")
-  TArray<FStaticMaterial> LowRoadMaterials;
-
-  /// Distance at which the light function should be completely faded to
-  /// DisabledBrightness. This is useful for hiding aliasing from light
-  /// functions applied in the distance.
-  UPROPERTY(Category = "Quality Settings/Low", BlueprintReadOnly, EditAnywhere, config)
-  float LowLightFadeDistance  = 1000.0f;
-
-  /// Default low distance for all primitive components.
-  UPROPERTY(Category = "Quality Settings/Low", BlueprintReadOnly, EditAnywhere, config,
-      meta = (ClampMin = "5000.0", ClampMax = "20000.0", UIMin = "5000.0", UIMax = "20000.0"))
-  float LowStaticMeshMaxDrawDistance = 10000.0f;
-
-  /// Default low distance for roads meshes.
-  UPROPERTY(Category = "Quality Settings/Low", BlueprintReadOnly, EditAnywhere, config,
-      meta = (ClampMin = "5000.0", ClampMax = "20000.0", UIMin = "5000.0", UIMax = "20000.0"))
-  float LowRoadPieceMeshMaxDrawDistance = 15000.0f;
-
   /// EPIC quality Road Materials. Uses slots name to set material for each part
   /// of the road for Epic quality.
   UPROPERTY(Category = "Quality Settings/Epic",

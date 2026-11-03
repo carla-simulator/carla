@@ -82,33 +82,39 @@ static void SetTelemetryWheels(
 }
 
 static auto GetForwardGearRatios(const carla::rpc::VehiclePhysicsControl &self) {
-  auto &gears = self.forward_gear_ratios;
-  boost::python::object get_iter = boost::python::iterator<std::vector<float>>();
-  boost::python::object iter = get_iter(gears);
-  return boost::python::list(iter);
+  // std::vector<float> has no registered converter, unlike the vectors of
+  // bound types below, so the list is built element by element.
+  boost::python::list gears;
+  for (float gear : self.forward_gear_ratios) {
+    gears.append(gear);
+  }
+  return gears;
 }
 
 static void SetForwardGearRatios(carla::rpc::VehiclePhysicsControl &self, const boost::python::list &list) {
   std::vector<float> gears;
   auto length = boost::python::len(list);
   for (auto i = 0u; i < length; ++i) {
-    gears.push_back(boost::python::extract<float &>(list[i]));
+    gears.push_back(boost::python::extract<float>(list[i]));
   }
   self.forward_gear_ratios = gears;
 }
 
 static auto GetReverseGearRatios(const carla::rpc::VehiclePhysicsControl &self) {
-  auto &gears = self.reverse_gear_ratios;
-  boost::python::object get_iter = boost::python::iterator<std::vector<float>>();
-  boost::python::object iter = get_iter(gears);
-  return boost::python::list(iter);
+  // std::vector<float> has no registered converter, unlike the vectors of
+  // bound types below, so the list is built element by element.
+  boost::python::list gears;
+  for (float gear : self.reverse_gear_ratios) {
+    gears.append(gear);
+  }
+  return gears;
 }
 
 static void SetReverseGearRatios(carla::rpc::VehiclePhysicsControl &self, const boost::python::list &list) {
   std::vector<float> gears;
   auto length = boost::python::len(list);
   for (auto i = 0u; i < length; ++i) {
-    gears.push_back(boost::python::extract<float &>(list[i]));
+    gears.push_back(boost::python::extract<float>(list[i]));
   }
   self.reverse_gear_ratios = gears;
 }
@@ -374,20 +380,20 @@ void export_control() {
     .def(self_ns::str(self_ns::self))
   ;
 
-  class_<cr::BoneTransformDataIn>("bone_transform")
+  class_<cr::BoneTransformDataIn>("BoneTransformDataIn")
     .def(init<>())
     .def_readwrite("name", &std::pair<std::string, cg::Transform>::first)
     .def_readwrite("transform", &std::pair<std::string, cg::Transform>::second)
     .def(self_ns::str(self_ns::self))
   ;
 
-  class_<std::vector<cr::BoneTransformDataIn>>("vector_of_bones")
+  class_<std::vector<cr::BoneTransformDataIn>>("VectorOfBones")
     .def(init<>())
     .def(boost::python::vector_indexing_suite<std::vector<cr::BoneTransformDataIn>>())
     .def(self_ns::str(self_ns::self))
   ;
 
-  class_<cr::BoneTransformDataOut>("bone_transform_out")
+  class_<cr::BoneTransformDataOut>("BoneTransformDataOut")
     .def(init<>())
     .def_readwrite("name", &cr::BoneTransformDataOut::bone_name)
     .def_readwrite("world", &cr::BoneTransformDataOut::world)
@@ -398,7 +404,7 @@ void export_control() {
     .def("__ne__", &cr::BoneTransformDataOut::operator!=)
   ;
 
-  class_<std::vector<cr::BoneTransformDataOut>>("vector_of_bones_out")
+  class_<std::vector<cr::BoneTransformDataOut>>("VectorOfBonesOut")
     .def(init<>())
     .def(boost::python::vector_indexing_suite<std::vector<cr::BoneTransformDataOut>>())
     .def(self_ns::str(self_ns::self))
@@ -419,12 +425,12 @@ void export_control() {
     .def(self_ns::str(self_ns::self))
   ;
 
-  class_<std::vector<cr::WheelPhysicsControl>>("vector_of_wheels")
+  class_<std::vector<cr::WheelPhysicsControl>>("VectorOfWheels")
     .def(boost::python::vector_indexing_suite<std::vector<cr::WheelPhysicsControl>>())
     .def(self_ns::str(self_ns::self))
   ;
 
-  class_<std::vector<cr::WheelTelemetryData>>("vector_of_wheels_telemetry")
+  class_<std::vector<cr::WheelTelemetryData>>("VectorOfWheelsTelemetry")
     .def(boost::python::vector_indexing_suite<std::vector<cr::WheelTelemetryData>>())
     .def(self_ns::str(self_ns::self))
   ;

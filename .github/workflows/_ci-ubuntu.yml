@@ -2,11 +2,14 @@ on:
   workflow_call:
     inputs:
       python-versions:
+        description: "Comma-separated Python versions to build the Python API wheel for, e.g. 3.10,3.11,3.12. The first one is the build's main Python."
         required: true
         type: string
       smoke-test-python-versions:
+        description: "Comma-separated Python versions to run the smoke tests with against the package (empty: no smoke tests). Each needs its wheel, so list it in python-versions too."
         type: string
-        required: true
+        required: false
+        default: ""
       additional-args:
         type: string
         required: false
@@ -14,6 +17,21 @@ on:
       additional-maps:
         type: boolean
         default: true
+      additional-maps-file:
+        description: "JSON list of the maps for the AdditionalMaps pack (default: Util/ContentPacks/AdditionalMaps.json)"
+        type: string
+        required: false
+        default: ""
+      latest-prefix:
+        description: "Name prefix of the latest uploads (default in Deploy.sh: CARLA_UE5_Latest)"
+        type: string
+        required: false
+        default: ""
+      release-version:
+        description: "Release version, e.g. 1.0: uploads to Linux/CARLA_<version>/ instead of Linux/Dev/ (empty: nightly)"
+        type: string
+        required: false
+        default: ""
       upload-package:
         type: boolean
         required: true
@@ -43,16 +61,21 @@ jobs:
     runs-on: self-hosted:ubuntu-gpu
     container:
       image: carlasim/carla-builder:ue5-22.04
-      options: --runtime=nvidia --gpus all -e NVIDIA_DRIVER_CAPABILITIES=all --volume /home/jenkins/unreal-engine/ue5:/unreal-engine
+      options: >-
+        --runtime=nvidia --gpus all -e NVIDIA_DRIVER_CAPABILITIES=all
+        --volume /home/jenkins/unreal-engine/ue5:/unreal-engine
+        --volume /home/jenkins/carla-content-cache/ue5:/carla-content-cache
     env:
       CARLA_UNREAL_ENGINE_PATH: /unreal-engine
+      CARLA_CONTENT_CACHE: /carla-content-cache
+      PYTHON_VERSIONS: ${{ inputs.python-versions }}
+      SMOKE_TEST_PYTHON_VERSIONS: ${{ inputs.smoke-test-python-versions }}
 
     steps:
 
       - name: Init conda
         run: |
           conda init bash
-          echo "source activate carla310" >> ~/.bashrc
 
           cat <<'EOF' > ~/.bash_profile
           if [ -f ~/.bashrc ]; then
@@ -63,17 +86,54 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Download content
+      - name: Set up Python environments
         run: |
-          git clone -b ue5-dev --depth 1 https://bitbucket.org/carla-simulator/carla-content.git Unreal/CarlaUnreal/Content/Carla
+          # One conda environment carla<XY> per Python version, created on the
+          # first run. pip, not conda, installs the packages: the conda channel
+          # lacks some of them (e.g. build) for newer Pythons.
+          VERSIONS=$(echo "${PYTHON_VERSIONS},${SMOKE_TEST_PYTHON_VERSIONS}" | tr ', ' '\n\n' | sed '/^$/d' | sort -uV)
+          for VERSION in ${VERSIONS}; do
+            ENV_NAME="carla${VERSION//./}"
+            if ! conda env list | awk '{print $1}' | grep -qx "${ENV_NAME}"; then
+              conda create --yes --quiet --name "${ENV_NAME}" "python=${VERSION}"
+            fi
+            conda run --name "${ENV_NAME}" python -m pip install --quiet numpy build
+          done
 
-      - name: Activate conda environment
+          MAIN_VERSION=$(echo "${PYTHON_VERSIONS}" | cut -d, -f1 | tr -d ' ')
+          echo "source activate carla${MAIN_VERSION//./}" >> ~/.bashrc
+
+      - name: Update CARLA Content cache
         run: |
-          conda activate carla310
+          # The cache comes from the host; without this Git may reject it as "dubious ownership"
+          git config --global --add safe.directory "$CARLA_CONTENT_CACHE"
+          ./Util/Tools/UpdateContentCache.sh --path "$CARLA_CONTENT_CACHE" --branch ue58-dev-carla
+
+      - name: Copy content to workspace
+        run: |
+          DEST="Unreal/CarlaUnreal/Content/Carla"
+
+          rm -rf "$DEST" && mkdir -p "$DEST"
+          # Copy everything from the cache except the .git folder.
+          find "$CARLA_CONTENT_CACHE" -mindepth 1 -maxdepth 1 ! -name .git \
+            -exec cp -a --reflink=auto {} "$DEST"/ \;
 
       - name: Preset
         run: |
-          cmake --preset Release -DENABLE_ROS2=ON -DBUILD_LIBCARLA_TESTS=ON
+          # The first version is the main Python; CMake builds a wheel for
+          # every version in CARLA_PYTHON_VERSIONS.
+          PYTHON_ARGS=()
+          CMAKE_PYTHON_VERSIONS=""
+          for VERSION in $(echo "${PYTHON_VERSIONS}" | tr ', ' '\n\n' | sed '/^$/d'); do
+            EXECUTABLE=$(conda run --name "carla${VERSION//./}" python -c "import sys; print(sys.executable)")
+            if [ -z "${CMAKE_PYTHON_VERSIONS}" ]; then
+              PYTHON_ARGS+=("-DPython3_EXECUTABLE=${EXECUTABLE}" "-DPython_EXECUTABLE=${EXECUTABLE}")
+            fi
+            PYTHON_ARGS+=("-DCARLA_PYTHON_${VERSION//./}_EXECUTABLE=${EXECUTABLE}")
+            CMAKE_PYTHON_VERSIONS="${CMAKE_PYTHON_VERSIONS:+${CMAKE_PYTHON_VERSIONS};}${VERSION}"
+          done
+          cmake --preset Release -DENABLE_ROS2=ON -DBUILD_LIBCARLA_TESTS=ON \
+            -DCARLA_PYTHON_VERSIONS="${CMAKE_PYTHON_VERSIONS}" "${PYTHON_ARGS[@]}"
 
       - name: Build LibCarla
         run: |
@@ -106,6 +166,58 @@ jobs:
         run: |
           cmake --build Build/Release --target package
 
+      - name: Build AdditionalMaps pack
+        if: inputs.additional-maps == true
+        env:
+          ADDITIONAL_MAPS_FILE: ${{ inputs.additional-maps-file }}
+        run: |
+          if [ -n "${ADDITIONAL_MAPS_FILE}" ]; then
+            cmake Build/Release -DCARLA_ADDITIONAL_MAPS_FILE="$(realpath "${ADDITIONAL_MAPS_FILE}")"
+          fi
+          cmake --build Build/Release --target package-additional-maps
+
+      - name: Start server for smoke tests
+        if: inputs.smoke-test-python-versions != ''
+        run: |
+          PACKAGE_DIRS=(Build/Release/Package/Carla-*-Linux-Shipping)
+          if [ ${#PACKAGE_DIRS[@]} -ne 1 ] || [ ! -d "${PACKAGE_DIRS[0]}" ]; then
+            echo "::error::Expected exactly one package directory, found: ${PACKAGE_DIRS[*]}"
+            exit 1
+          fi
+          # Its own process group, so the cleanup step stops the script and the
+          # server binary it starts together.
+          setsid "${PACKAGE_DIRS[0]}/Linux/CarlaUnreal.sh" \
+            -carla-rpc-port=3654 -RenderOffScreen -nosound -ros2 \
+            > Build/smoke-test-server.log 2>&1 &
+          echo $! > Build/smoke-test-server.pid
+
+      - name: Run smoke tests
+        if: inputs.smoke-test-python-versions != ''
+        run: |
+          PYTHONS=()
+          for VERSION in $(echo "${SMOKE_TEST_PYTHON_VERSIONS}" | tr ', ' '\n\n' | sed '/^$/d'); do
+            PYTHONS+=("$(conda run --name "carla${VERSION//./}" python -c "import sys; print(sys.executable)")")
+          done
+          # The first connection waits for the server to finish starting.
+          ./Util/Tools/RunSmokeTests.sh --connect-timeout 300 --results-dir Build/test-results "${PYTHONS[@]}"
+
+      - name: Stop smoke test server
+        if: always() && inputs.smoke-test-python-versions != ''
+        run: |
+          if [ -f Build/smoke-test-server.pid ]; then
+            kill -- -"$(cat Build/smoke-test-server.pid)" 2>/dev/null || true
+          fi
+
+      - name: Upload smoke test results
+        if: always() && inputs.smoke-test-python-versions != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: smoke-test-results
+          path: |
+            Build/test-results/smoke-*.xml
+            Build/smoke-test-server.log
+          if-no-files-found: ignore
+
       - name: Configure Backblaze
         if: inputs.upload-package == true
         run: |
@@ -115,9 +227,22 @@ jobs:
       - name: Upload package
         if: inputs.upload-package == true
         id: upload_step
+        env:
+          LATEST_PREFIX: ${{ inputs.latest-prefix }}
+          RELEASE_VERSION: ${{ inputs.release-version }}
         run: |
+          ARGS=""
           if [ "${{ inputs.upload-replace-latest }}" = "true" ]; then
-            ARGS="--replace-latest"
+            ARGS="${ARGS} --replace-latest"
+          fi
+          if [ "${{ inputs.additional-maps }}" = "true" ]; then
+            ARGS="${ARGS} --additional-maps"
+          fi
+          if [ -n "${LATEST_PREFIX}" ]; then
+            ARGS="${ARGS} --latest-prefix ${LATEST_PREFIX}"
+          fi
+          if [ -n "${RELEASE_VERSION}" ]; then
+            ARGS="${ARGS} --release-version ${RELEASE_VERSION}"
           fi
           ./Util/Tools/Deploy.sh ${ARGS} --summary-output $GITHUB_OUTPUT
 
@@ -127,6 +252,17 @@ jobs:
           echo "## [Ubuntu] CARLA UE5 CI/CD Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "- CARLA Package: ${{ steps.upload_step.outputs.package_uri }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Release metadata: ${{ steps.upload_step.outputs.release_metadata_uri }}" >> $GITHUB_STEP_SUMMARY
+          if [ -n "${{ steps.upload_step.outputs.additional_maps_uri }}" ]; then
+            echo "- AdditionalMaps pack: ${{ steps.upload_step.outputs.additional_maps_uri }}" >> $GITHUB_STEP_SUMMARY
+          fi
+          if [ -n "${{ steps.upload_step.outputs.latest_package_uri }}" ]; then
+            echo "- Latest package: ${{ steps.upload_step.outputs.latest_package_uri }}" >> $GITHUB_STEP_SUMMARY
+            echo "- Latest release metadata: ${{ steps.upload_step.outputs.latest_release_metadata_uri }}" >> $GITHUB_STEP_SUMMARY
+          fi
+          if [ -n "${{ steps.upload_step.outputs.latest_additional_maps_uri }}" ]; then
+            echo "- Latest AdditionalMaps pack: ${{ steps.upload_step.outputs.latest_additional_maps_uri }}" >> $GITHUB_STEP_SUMMARY
+          fi
 
       # - name: Login to Docker Hub
       #   uses: docker/login-action@v3

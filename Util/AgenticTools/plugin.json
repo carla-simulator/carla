@@ -1,0 +1,14 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "carla",
+  "version": "0.6.0",
+  "description": "Vetted CARLA procedures (skills) for build, packaging, cooking, maps, vehicles, simulation, scenarios and ROS 2, served over MCP. Node >= 12, nothing else.",
+  "author": {
+    "name": "CARLA Simulator",
+    "url": "https://github.com/carla-simulator"
+  },
+  "homepage": "https://github.com/carla-simulator/carla-agentic-tools",
+  "repository": "https://github.com/carla-simulator/carla-agentic-tools",
+  "license": "MIT",
+  "keywords": ["carla", "simulation", "autonomous-driving", "unreal", "ros2"]
+}

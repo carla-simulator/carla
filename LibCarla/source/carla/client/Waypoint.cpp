@@ -9,6 +9,8 @@
 #include "carla/client/Map.h"
 #include "carla/client/Junction.h"
 #include "carla/client/Landmark.h"
+#include "carla/client/Lane.h"
+#include "carla/client/Road.h"
 
 #include <unordered_set>
 
@@ -36,6 +38,14 @@ namespace client {
       return _parent->GetJunction(*this);
     }
     return nullptr;
+  }
+
+  SharedPtr<Lane> Waypoint::GetLane() const {
+    return _parent->GetLane(_waypoint.road_id, _waypoint.section_id, _waypoint.lane_id);
+  }
+
+  SharedPtr<Road> Waypoint::GetRoad() const {
+    return _parent->GetRoad(_waypoint.road_id);
   }
 
   double Waypoint::GetLaneWidth() const {
