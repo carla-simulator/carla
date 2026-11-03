@@ -174,9 +174,27 @@ jobs:
             -carla-rpc-port=3654 -RenderOffScreen -nosound -ros2 \
             > Build/smoke-test-server.log 2>&1 < /dev/null &
           SERVER_PID=$!
-          trap 'pkill -P ${SERVER_PID}; kill ${SERVER_PID} 2>/dev/null' EXIT
 
-          # The first connection waits for the server to finish starting.
+          # A Shipping server logs almost nothing: on failure, say whether it
+          # was still running or how it ended.
+          server_diagnostics() {
+            if kill -0 ${SERVER_PID} 2>/dev/null; then
+              ps -o pid,stat,etime,time,%cpu,rss,args -p ${SERVER_PID} --ppid ${SERVER_PID} || true
+            else
+              SERVER_STATUS=0
+              wait ${SERVER_PID} || SERVER_STATUS=$?
+              echo "The server exited with status ${SERVER_STATUS}."
+            fi
+            grep oom_kill /sys/fs/cgroup/memory.events || true
+            free -h || true
+            tail -n 50 Build/smoke-test-server.log || true
+          }
+          trap 'STATUS=$?
+                if [ ${STATUS} -ne 0 ]; then server_diagnostics; fi
+                pkill -KILL -P ${SERVER_PID} || true
+                kill -KILL ${SERVER_PID} 2>/dev/null || true
+                exit ${STATUS}' EXIT
+
           ./Util/Tools/RunSmokeTests.sh --connect-timeout 300 --results-dir Build/test-results "${PYTHONS[@]}"
 
       - name: Upload smoke test results
