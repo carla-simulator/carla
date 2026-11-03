@@ -95,7 +95,7 @@ cmake -G Ninja -S . -B Build --toolchain=$PWD/CMake/Toolchain.cmake -DCMAKE_BUIL
 cmake --build Build --target carla-python-api
 ```
 
-CMake looks for each interpreter as `python3.11`, `python3.12` and so on in `PATH`. If an interpreter has another name, as in a conda or virtual environment, set its path with `CARLA_PYTHON_<XY>_EXECUTABLE`, for example `-DCARLA_PYTHON_311_EXECUTABLE=$HOME/miniconda3/envs/py311/bin/python`. Each interpreter needs `numpy` and `build` installed (`python -m pip install numpy build`).
+CMake looks for each interpreter as `python3.11`, `python3.12` and so on in `PATH`. If an interpreter has another name, as in a conda or virtual environment, set its path with `CARLA_PYTHON_<XY>_EXECUTABLE`, for example `-DCARLA_PYTHON_311_EXECUTABLE=$HOME/miniconda3/envs/py311/bin/python`. Each interpreter needs `numpy` and `build` installed (`python -m pip install numpy build`). A conda Python 3.15 from the defaults channel also needs `conda install libpython=3.15`: that channel ships the shared library in its own package from 3.15 on, and without it the configure step fails with `Could NOT find Python (missing: Python_INCLUDE_DIRS Python_LIBRARIES ...)`.
 
 Each extra version gets a reduced build of the client and the Python API in `Build/PythonAPI-<XY>`. It reuses the dependency sources the main build downloaded. All the wheels end up in `Build/PythonAPI/dist`, and the `package` target ships every one of them.
 

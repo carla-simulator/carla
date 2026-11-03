@@ -97,6 +97,11 @@ jobs:
             if ! conda env list | awk '{print $1}' | grep -qx "${ENV_NAME}"; then
               conda create --yes --quiet --name "${ENV_NAME}" "python=${VERSION}"
             fi
+            # From Python 3.15 the defaults channel ships libpython in its own
+            # package, which Boost.Python needs to configure.
+            if ! conda run --name "${ENV_NAME}" python -c "import os, sys, sysconfig; sys.exit(not os.path.exists(os.path.join(sys.base_prefix, 'lib', sysconfig.get_config_var('LDLIBRARY'))))"; then
+              conda install --yes --quiet --name "${ENV_NAME}" "libpython=${VERSION}"
+            fi
             conda run --name "${ENV_NAME}" python -m pip install --quiet numpy build
           done
 
