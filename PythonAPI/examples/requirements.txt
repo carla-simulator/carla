@@ -1,5 +1,9 @@
+-r ../carla/requirements.txt
 numpy>=1.24.4
 pygame
 open3d; python_version <= '3.11'
+matplotlib
+scipy
+opencv-python
 Pillow
-invertedai@git+https://github.com/inverted-ai/invertedai.git@develop
+invertedai @ git+https://github.com/inverted-ai/invertedai.git@develop ; sys_platform == "linux"

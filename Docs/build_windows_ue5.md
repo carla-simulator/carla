@@ -70,7 +70,8 @@ Then build what you need:
 
 | Target | What it does |
 | --- | --- |
-| `cmake --build Build` | build everything |
+| `cmake --build Build` | build LibCarla, its dependencies and the examples; not the editor |
+| `cmake --build Build --target carla-unreal-editor` | build the editor without opening it |
 | `cmake --build Build --target launch` | build and open the editor with a log window (to drop it, reconfigure with `-DCARLA_LAUNCH_ARGS=`; `-DCARLA_UNREAL_LOG_WINDOW=OFF` only works on a new build directory) |
 | `cmake --build Build --target launch-only` | open the editor without rebuilding |
 | `cmake --build Build --target carla-python-api-install` | build and install the Python client |

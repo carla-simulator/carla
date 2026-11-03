@@ -149,8 +149,8 @@ def main():
     argparser = argparse.ArgumentParser(
         description=__doc__)
     argparser.add_argument(
-        '--host', metavar='H', default='localhost',
-        help='IP of the host CARLA Simulator (default: localhost)')
+        '--host', metavar='H', default='127.0.0.1',
+        help='IP of the host CARLA Simulator (default: 127.0.0.1)')
     argparser.add_argument(
         '-p', '--port', metavar='P', default=2000, type=int,
         help='TCP port of CARLA Simulator (default: 2000)')
@@ -199,7 +199,7 @@ def main():
     args = argparser.parse_args()
 
     client = carla.Client(args.host, args.port)
-    client.set_timeout(2.0)
+    client.set_timeout(10.0)
     world = client.get_world()
 
     try:

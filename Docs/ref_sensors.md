@@ -158,7 +158,7 @@ raw_image.save_to_disk("path/to/save/converted/image", carla.ColorConverter.Dept
 ## GNSS sensor
 
 * __Blueprint:__ sensor.other.gnss
-* __Output:__ [carla.GNSSMeasurement](python_api.md#carla.GnssMeasurement) per step (unless `sensor_tick` says otherwise).
+* __Output:__ [carla.GnssMeasurement](python_api.md#carla.GnssMeasurement) per step (unless `sensor_tick` says otherwise).
 
 Reports current [gnss position](https://www.gsa.europa.eu/european-gnss/what-gnss) of its parent object. This is calculated by adding the metric position to an initial geo reference location defined within the OpenDRIVE map definition.
 

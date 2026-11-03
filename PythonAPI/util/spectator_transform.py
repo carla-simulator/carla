@@ -16,8 +16,8 @@ def main():
     argparser = argparse.ArgumentParser(
         description=__doc__)
     argparser.add_argument(
-        '--host', metavar='H', default='localhost',
-        help='IP of the host CARLA Simulator (default: localhost)')
+        '--host', metavar='H', default='127.0.0.1',
+        help='IP of the host CARLA Simulator (default: 127.0.0.1)')
     argparser.add_argument(
         '--port', metavar='P', default=2000, type=int,
         help='TCP port of CARLA Simulator (default: 2000)')
