@@ -987,9 +987,9 @@ CLASSICAL_SRC_CMD="${STACK_PRELUDE}exec ros2 launch autoware_launch e2e_simulato
 # in e2e mode (no perception stack) -- the panel stays black. Generate a copy
 # repointed at the raw front VAD camera. Best-effort: if the ws config or the
 # expected topic line is missing, fall back to the stock config.
-# The same applies to classical mode on CARLA: the traffic-light module is
-# switched off by the CARLA overrides, so the panel is repointed at the
-# front camera autoware_demo.py spawns for exactly this purpose
+# Classical mode on CARLA also repoints the panel: the light states come
+# from CARLA ground truth, so the traffic-light debug image is not useful.
+# It shows the front camera autoware_demo.py spawns for exactly this purpose
 # (/sensing/camera/front/image). Override with --rviz-image-topic.
 if [[ -z "$RVIZ_IMAGE_TOPIC" ]]; then
     if [[ "$MODE" == "e2e" ]]; then RVIZ_IMAGE_TOPIC="/sensing/camera/CAM_FRONT/image_raw/image"
