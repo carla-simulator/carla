@@ -10,11 +10,10 @@ cross-checked against leaderboard.carla.org.
 | `leaderboard` | `leaderboard-1.0` (`2165f5e`, 2023-06-15) | `leaderboard-2.0` (`a87a341`, 2024-04-26) | `leaderboard-2.1` (`cfecdc8`, 2025-03-06) | `aec8131`, 2025-03-27 — **the 2.0 line** |
 | `scenario_runner` | `leaderboard-1.0` (`b9c342e`) | `leaderboard-2.0` (`d7bcaf0`) | `leaderboard-2.1` (`d7bcaf0` — same commit) | not compatible |
 
-For CARLA on UE 5.8 there is a separate pair: `ue58-dev` on **leaderboard**
-(`2b3eaa7`) and `ue58-dev` on **scenario_runner** (`5fd2880`). The leaderboard
-branch's CHANGELOG says it works against CARLA UE5 servers, paired with the
-scenario_runner `ue58-dev` branch; it resolves town names via
-`CarlaDataProvider.resolve_map_name`, and its routes are Town12/Town13.
+For CARLA on UE 5.8 use `ue58-dev` on **leaderboard**. That branch vendors its
+own scenario engine, so it needs no scenario_runner checkout. It works against
+CARLA UE5 servers, resolves town names via `CarlaDataProvider.resolve_map_name`,
+and its routes are Town12/Town13.
 
 `git diff origin/leaderboard-2.0 origin/leaderboard-2.1` on **scenario_runner** is
 empty: the two branches are the same commit. On **leaderboard** it touches one

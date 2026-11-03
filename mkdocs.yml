@@ -54,8 +54,8 @@ nav:
     - 'Traffic Agents': 'core_agents.md'
     - 'ScenarioRunner': 'scenario_runner.md'
     - 'Scenic': 'scenic.md'
-    - 'Inverted AI': 'inverted_ai.md'
     - 'CARLA Leaderboard': 'leaderboard.md'
+    - 'Inverted AI': 'inverted_ai.md'
   - AV stacks:
     - 'av_stacks.md'
     - 'Autoware': 'autoware.md'
