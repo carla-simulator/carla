@@ -127,7 +127,7 @@ so keep the two lists disjoint. The manual `CARLA-AdditionalMaps-Packages-Latest
 workflow builds package + pack together and uploads them as
 `CARLA_UE5_AdditionalMaps_Latest*` (`Deploy.sh --additional-maps --latest-prefix`),
 names the nightly never overwrites. Install with
-`carla_pack.py install <tarball> --server <Package>/Linux`; details in
+`carla_pack.py install <tarball> --server <Package>`; details in
 `Docs/map_content_packs.md`.
 
 ### Step 4: Inspect — the part that matters

@@ -124,7 +124,7 @@ inspect)
   echo "== Binaries =="
   SH="${P}/CarlaUnreal.sh"
   [ -f "${SH}" ] && ok "launcher CarlaUnreal.sh" || bad "launcher ${SH} missing"
-  BIN="$(ls -1 "${P}"/Linux/CarlaUnreal/Binaries/Linux/CarlaUnreal-Linux-* 2>/dev/null | head -1)"
+  BIN="$(ls -1 "${P}"/CarlaUnreal/Binaries/Linux/CarlaUnreal-Linux-* 2>/dev/null | head -1)"
   if [ -n "${BIN}" ]; then
     ok "server binary $(basename "${BIN}") ($(du -h "${BIN}" | cut -f1))"
   else

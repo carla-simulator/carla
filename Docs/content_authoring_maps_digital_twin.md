@@ -76,7 +76,7 @@ Or ship it as a [content pack](content_authoring_packs.md), which needs no repac
 carla-pack init MyCityPack
 carla-pack add MyCityPack --map /Game/Carla/Maps/Twins/MyCity/MyCity
 carla-pack build MyCityPack --base <release-metadata.tar.gz>
-carla-pack install MyCityPack-1.0.0-<release>.tar.gz --server /opt/carla/Linux
+carla-pack install MyCityPack-1.0.0-<release>.tar.gz --server /opt/carla
 ```
 
 The pack carries the map's OpenDRIVE and Traffic Manager files as sidecars, so the server picks them up when it mounts the pack.

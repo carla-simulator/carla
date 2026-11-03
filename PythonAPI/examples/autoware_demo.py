@@ -100,7 +100,7 @@ def deploy_postprocess_profile(profile_name, settings):
     if os.path.isdir(package_base):
         import glob
         for pkg_content in glob.glob(os.path.join(
-            package_base, "*", "Linux", "CarlaUnreal", "Content",
+            package_base, "*", "CarlaUnreal", "Content",
             "Carla", "Config", "PostProcess"
         )):
             target_dirs.append(pkg_content)

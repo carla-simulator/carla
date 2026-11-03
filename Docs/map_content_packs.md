@@ -7,7 +7,7 @@ The CARLA package ships Town10HD_Opt, Town12 and Town15. The towns below are not
 Download a package and the `AdditionalMaps` tarball built with it. The latest pair is under `https://downloads.carlasim.com/Linux/Dev/`: `CARLA_UE5_AdditionalMaps_Latest.tar.gz` (the package) and `CARLA_UE5_AdditionalMaps_Latest_AdditionalMaps.tar.gz` (the pack). The nightly `CARLA_UE5_Latest.tar.gz` is a different build and has no pack that installs into it. Install the pack with `carla-pack`. Installing only needs `Util/ContentPacks/carla_pack.py` from the CARLA repository (Python 3.8+, standard library only):
 
 ```sh
-python3 carla_pack.py install CARLA_UE5_AdditionalMaps_Latest_AdditionalMaps.tar.gz --server /opt/carla/Linux
+python3 carla_pack.py install CARLA_UE5_AdditionalMaps_Latest_AdditionalMaps.tar.gz --server /opt/carla
 ```
 
 Once installed, the towns load like any other map: `client.load_world('Town13')`. The pack only installs into the package it was built with: a pack from another build is refused (`was built against base release ...`). See [Installing a pack](content_authoring_packs.md#installing-a-pack) for mounting a pack from the Python API.

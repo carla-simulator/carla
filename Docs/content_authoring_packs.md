@@ -34,7 +34,7 @@ Registering the towns takes a second; the cook takes minutes (about 9, and 3.9 G
 On any machine with the CARLA package of that release:
 
 ```sh
-carla-pack install Towns5-1.0.0-carla-<version>-Linux.tar.gz --server /opt/carla/Linux
+carla-pack install Towns5-1.0.0-carla-<version>-Linux.tar.gz --server /opt/carla
 /opt/carla/CarlaUnreal.sh
 ```
 
