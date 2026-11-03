@@ -157,19 +157,19 @@ INIT = {
 }
 
 BEHAVIOR = {
-    "minimal": '''        root = py_trees.composites.Sequence("{name}")
+    "minimal": '''        root = py_trees.composites.Sequence({seq_args})
         root.add_child(InTriggerDistanceToVehicle(
             self.other_actors[0], self.ego_vehicles[0], 20))
         root.add_child(Idle(3))
         root.add_child(ActorDestroy(self.other_actors[0]))
         return root''',
     "follow_leading_vehicle": '''        # Drive the leader, then stop it, then wait for the ego to close in.
-        root = py_trees.composites.Sequence("{name}")
+        root = py_trees.composites.Sequence({seq_args})
         root.add_child(ActorTransformSetter(self.other_actors[0], self._leader_transform))
 
         drive = py_trees.composites.Parallel(
             "leader drives until the ego is near",
-            policy=py_trees.common.ParallelPolicy.SUCCESS_ON_ONE)
+            policy={success_on_one})
         drive.add_child(WaypointFollower(self.other_actors[0], self._speed))
         drive.add_child(InTriggerDistanceToVehicle(
             self.other_actors[0], self.ego_vehicles[0], 25))
@@ -179,7 +179,7 @@ BEHAVIOR = {
         root.add_child(DriveDistance(self.ego_vehicles[0], 20))
         root.add_child(ActorDestroy(self.other_actors[0]))
         return root''',
-    "cut_in": '''        root = py_trees.composites.Sequence("{name}")
+    "cut_in": '''        root = py_trees.composites.Sequence({seq_args})
         root.add_child(InTriggerDistanceToVehicle(
             self.other_actors[0], self.ego_vehicles[0], 30))
 
@@ -190,13 +190,13 @@ BEHAVIOR = {
         root.add_child(DriveDistance(self.ego_vehicles[0], 30))
         root.add_child(ActorDestroy(self.other_actors[0]))
         return root''',
-    "pedestrian": '''        root = py_trees.composites.Sequence("{name}")
+    "pedestrian": '''        root = py_trees.composites.Sequence({seq_args})
         root.add_child(InTriggerDistanceToVehicle(
             self.other_actors[0], self.ego_vehicles[0], 25))
 
         cross = py_trees.composites.Parallel(
             "walker crosses",
-            policy=py_trees.common.ParallelPolicy.SUCCESS_ON_ONE)
+            policy={success_on_one})
         cross.add_child(KeepVelocity(self.other_actors[0], 1.5))
         cross.add_child(DriveDistance(self.other_actors[0], 8))
         root.add_child(cross)
@@ -238,6 +238,28 @@ SPAWNS = {
 
 def snake(name: str) -> str:
     return re.sub(r"(?<!^)(?=[A-Z])", "_", name).lower()
+
+
+def pytrees_syntax(root: str | None) -> dict:
+    """
+    The composite syntax the checkout's pinned py_trees accepts.
+
+    2.x requires an explicit `memory` on Sequence and a policy object, so a
+    scenario written for one major version does not load on the other.
+    """
+    pin = ""
+    for base in (root, os.environ.get("SCENARIO_RUNNER_ROOT")):
+        req = Path(base) / "requirements.txt" if base else None
+        if req and req.is_file():
+            m = re.search(r"^py-trees==([0-9.]+)", req.read_text(), re.M)
+            if m:
+                pin = m.group(1)
+                break
+    if pin.startswith("0."):
+        return {"seq_args": '"{name}"',
+                "success_on_one": "py_trees.common.ParallelPolicy.SUCCESS_ON_ONE"}
+    return {"seq_args": 'name="{name}", memory=True',
+            "success_on_one": "py_trees.common.ParallelPolicy.SuccessOnOne()"}
 
 
 def sr_root(explicit: str | None) -> Path:
@@ -301,12 +323,14 @@ def do_scaffold(args) -> None:
     base = town[:-4] if town.endswith("_Opt") and town not in SPAWNS else town
     x, y, z, yaw = SPAWNS.get(base, (0.0, 0.0, 0.5, 0))
 
+    _syntax = pytrees_syntax(args.root)
+    _syntax["seq_args"] = _syntax["seq_args"].format(name=name)
     py_path.write_text(BODY.format(
         name=name,
         blurb=TEMPLATES[args.template],
         timeout=args.timeout,
         init_body=INIT[args.template],
-        behavior_body=BEHAVIOR[args.template].format(name=name),
+        behavior_body=BEHAVIOR[args.template].format(name=name, **_syntax),
     ))
     xml_path.write_text(XML.format(name=name, town=town, x=x, y=y, z=z, yaw=yaw, ego=ego))
     print(f"wrote {py_path}")
@@ -421,7 +445,13 @@ def do_validate(args) -> None:
     if args.out:
         print("\nNOTE this scenario is outside the checkout: run it with "
               "--additionalScenario and --configFile,")
-        print("     since ScenarioRunner only globs $SCENARIO_RUNNER_ROOT/srunner/scenarios/*.py")
+        print("     since ScenarioRunner globs $SCENARIO_RUNNER_ROOT/srunner/scenarios/*.py")
+        root_dir = os.environ.get("SCENARIO_RUNNER_ROOT", "")
+        if os.path.isfile(os.path.join(root_dir, "srunner/tools/scenario_class_loader.py")):
+            print("     Both flags also take a folder, and --route sees these classes too.")
+        else:
+            print("     This checkout's --route mode does not see them: a route naming this")
+            print("     scenario needs the file inside srunner/scenarios/.")
     print("\nvalidation " + ("OK" if rc == 0 else "FAILED"))
     sys.exit(rc)
 

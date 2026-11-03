@@ -83,8 +83,9 @@ into the oncoming lane (overtakes, `*TwoWays` scenarios) without failing
 | `TimeOfDayComparison`, `TimeOfWaitComparison`, `OSCStartEndCondition` | OpenSCENARIO support |
 
 Conditions return RUNNING until satisfied, so they are used as the first child of a
-`Sequence` or as the trigger side of a `Parallel` with
-`SUCCESS_ON_ONE`.
+`Sequence` or as the trigger side of a `Parallel` whose policy succeeds on one child:
+`ParallelPolicy.SuccessOnOne()` on `ue58-dev` (py_trees 2.x), `ParallelPolicy.SUCCESS_ON_ONE`
+on the branches still pinned to py_trees 0.8.3.
 
 ## Criteria — `atomic_criteria.py`
 

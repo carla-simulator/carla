@@ -25,8 +25,11 @@ from pathlib import Path
 LB_REPO = "https://github.com/carla-simulator/leaderboard.git"
 SR_REPO = "https://github.com/carla-simulator/scenario_runner.git"
 
-# version -> (leaderboard branch, scenario_runner branch, CARLA, note)
+# version -> (leaderboard branch, scenario_runner branch or None, CARLA, note)
+# A None scenario_runner branch means the leaderboard vendors its scenario engine.
 VERSIONS = {
+    "ue58": ("ue58-dev", None, "CARLA 1.0",
+             "the default; vendors its scenario engine, so no scenario_runner is needed; Town12/13"),
     "1.0": ("leaderboard-1.0", "leaderboard-1.0", "0.9.10.1",
             "legacy; Town01-06; tracks SENSORS/MAP; 4 cam / 1 lidar / 2 radar"),
     "2.0": ("leaderboard-2.0", "leaderboard-2.0", "leaderboard build (0.9.14 + large maps)",
@@ -138,12 +141,17 @@ def cmd_plan(args) -> None:
     base = Path(args.dir or Path.home()).expanduser()
     print(f"target             : Leaderboard {v}  ({note})")
     print(f"CARLA required     : {carla}")
-    if v != "1.0":
+    if v in ("2.0", "2.1"):
         print("  get it from      : https://leaderboard.carla.org/get_started_v2_1/")
         print("  (a stock release + AdditionalMaps runs the routes but is NOT the eval environment)")
+    elif v == "ue58":
+        print("  build it from    : the carla ue58-dev tree (build-carla-ue58 skill)")
     print()
     lb, sr = find("lb", args.leaderboard_root), find("sr", args.scenario_runner_root)
-    for root, want, repo, name in ((lb, lbb, LB_REPO, "leaderboard"), (sr, srb, SR_REPO, "scenario_runner")):
+    rows = [(lb, lbb, LB_REPO, "leaderboard")]
+    if srb:
+        rows.append((sr, srb, SR_REPO, "scenario_runner"))
+    for root, want, repo, name in rows:
         if root is None:
             print(f"git clone -b {want} --single-branch {repo} {base / name}")
         elif branch_of(root) != want:
@@ -152,12 +160,15 @@ def cmd_plan(args) -> None:
             print(f"# {root} already on {want}")
     lbp = lb or base / "leaderboard"
     srp = sr or base / "scenario_runner"
-    print(f"{sys.executable} -m pip install -r {lbp}/requirements.txt -r {srp}/requirements.txt")
+    reqs = f"-r {lbp}/requirements.txt" + (f" -r {srp}/requirements.txt" if srb else "")
+    print(f"{sys.executable} -m pip install {reqs}")
     print()
     print("export CARLA_ROOT=/path/to/CARLA")
-    print(f"export SCENARIO_RUNNER_ROOT={srp}")
+    if srb:
+        print(f"export SCENARIO_RUNNER_ROOT={srp}")
     print(f"export LEADERBOARD_ROOT={lbp}")
-    print('export PYTHONPATH="${CARLA_ROOT}/PythonAPI/carla":"${SCENARIO_RUNNER_ROOT}":"${LEADERBOARD_ROOT}":${PYTHONPATH}')
+    pp = '"${CARLA_ROOT}/PythonAPI/carla":' + ('"${SCENARIO_RUNNER_ROOT}":' if srb else "")
+    print('export PYTHONPATH=' + pp + '"${LEADERBOARD_ROOT}":${PYTHONPATH}')
     print('#   plus the egg:  ls ${CARLA_ROOT}/PythonAPI/carla/dist/')
 
 
@@ -188,12 +199,14 @@ def cmd_install(args) -> None:
     base = Path(args.dir or Path.home()).expanduser()
     base.mkdir(parents=True, exist_ok=True)
     lb = _clone_or_switch(find("lb", args.leaderboard_root), lbb, LB_REPO, base / "leaderboard", args.force)
-    sr = _clone_or_switch(find("sr", args.scenario_runner_root), srb, SR_REPO, base / "scenario_runner", args.force)
+    sr = _clone_or_switch(find("sr", args.scenario_runner_root), srb, SR_REPO,
+                          base / "scenario_runner", args.force) if srb else None
 
     if args.no_deps:
         print("[install] skipping requirements")
     else:
-        for req in (sr / "requirements.txt", lb / "requirements.txt"):
+        for req in ([lb / "requirements.txt"] if sr is None
+                    else [sr / "requirements.txt", lb / "requirements.txt"]):
             print(f"[install] pip install -r {req}")
             p = subprocess.run([sys.executable, "-m", "pip", "install", "-r", str(req)])
             if p.returncode != 0:
@@ -205,9 +218,11 @@ def cmd_install(args) -> None:
     print(f"\n[install] Leaderboard {args.version} ready ({note})")
     print(f"[install] CARLA required: {carla}")
     print("\nexport CARLA_ROOT=/path/to/CARLA")
-    print(f"export SCENARIO_RUNNER_ROOT={sr}")
+    if sr is not None:
+        print(f"export SCENARIO_RUNNER_ROOT={sr}")
     print(f"export LEADERBOARD_ROOT={lb}")
-    print('export PYTHONPATH="${CARLA_ROOT}/PythonAPI/carla":"${SCENARIO_RUNNER_ROOT}":"${LEADERBOARD_ROOT}":${PYTHONPATH}')
+    pp = '"${CARLA_ROOT}/PythonAPI/carla":' + ('"${SCENARIO_RUNNER_ROOT}":' if sr is not None else "")
+    print('export PYTHONPATH=' + pp + '"${LEADERBOARD_ROOT}":${PYTHONPATH}')
 
 
 def cmd_verify(args) -> None:
@@ -284,7 +299,8 @@ def main() -> None:
     sub.add_parser("detect", parents=[common]).set_defaults(func=cmd_detect)
     for name, fn in (("plan", cmd_plan), ("install", cmd_install)):
         p = sub.add_parser(name, parents=[common])
-        p.add_argument("--version", choices=sorted(VERSIONS), required=True)
+        p.add_argument("--version", choices=sorted(VERSIONS), default="ue58",
+                       help="default: ue58 (CARLA 1.0)")
         if name == "install":
             p.add_argument("--no-deps", action="store_true")
             p.add_argument("--force", action="store_true", help="switch branch even with local changes")

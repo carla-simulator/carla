@@ -27,9 +27,11 @@ command -v docker >/dev/null || { echo "ERROR: docker not found" >&2; exit 2; }
 
 case "${MODE}" in
 build)
-  for v in CARLA_ROOT SCENARIO_RUNNER_ROOT LEADERBOARD_ROOT TEAM_CODE_ROOT; do
+  _roots="CARLA_ROOT LEADERBOARD_ROOT TEAM_CODE_ROOT"
+  carla_lb_is_decoupled || _roots="${_roots} SCENARIO_RUNNER_ROOT"
+  for v in ${_roots}; do
     eval "val=\${$v:-}"
-    [ -n "${val}" ] || { echo "ERROR: $v is not set — make_docker.sh checks all four" >&2; exit 3; }
+    [ -n "${val}" ] || { echo "ERROR: $v is not set — make_docker.sh checks it" >&2; exit 3; }
     [ -d "${val}" ] || { echo "ERROR: $v=${val} is not a directory" >&2; exit 3; }
   done
   if [ -n "${ROS_DISTRO_ARG}" ]; then
@@ -98,10 +100,12 @@ def have(mod):
     except (ImportError, AttributeError, ValueError):
         return False
 rc = 0
-for m in ("carla", "agents.navigation.global_route_planner",
-          "srunner.scenariomanager.carla_data_provider",
-          "leaderboard.utils.statistics_manager",
-          "leaderboard.autoagents.autonomous_agent"):
+mods = ["carla", "agents.navigation.global_route_planner",
+        "leaderboard.utils.statistics_manager",
+        "leaderboard.autoagents.autonomous_agent"]
+if not os.environ.get("LB_DECOUPLED"):
+    mods.insert(2, "srunner.scenariomanager.carla_data_provider")
+for m in mods:
     if not have(m):
         print(f"FAIL  {m}"); rc = 1
     else:
