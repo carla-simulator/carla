@@ -24,7 +24,7 @@ and `bash scripts/build.sh options` — those read the tree, not this file.
 | `Config/OptionalModules.ini` `Ros2 ON` | `-DENABLE_ROS2=ON` at configure |
 | `UE4_ROOT` | `CARLA_UNREAL_ENGINE_PATH` |
 | `Unreal/CarlaUE4/` | `Unreal/CarlaUnreal/` |
-| `Dist/CARLA_*/LinuxNoEditor/CarlaUE4.sh` | `Build/<preset>/Package/Carla-<ver>-Linux-<cfg>/Linux/CarlaUnreal.sh` |
+| `Dist/CARLA_*/LinuxNoEditor/CarlaUE4.sh` | `Build/<preset>/Package/Carla-<ver>-Linux-<cfg>/CarlaUnreal.sh` |
 
 ## Presets
 

@@ -186,7 +186,7 @@ jobs:
           fi
           # Its own process group, so the cleanup step stops the script and the
           # server binary it starts together.
-          setsid "${PACKAGE_DIRS[0]}/Linux/CarlaUnreal.sh" \
+          setsid "${PACKAGE_DIRS[0]}/CarlaUnreal.sh" \
             -carla-rpc-port=3654 -RenderOffScreen -nosound -ros2 \
             > Build/smoke-test-server.log 2>&1 &
           echo $! > Build/smoke-test-server.pid

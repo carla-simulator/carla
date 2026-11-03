@@ -116,5 +116,5 @@ Some targets land in files with their own rules. The researcher and the writer l
 - `Docs/python_api.md` and `Docs/bp_library.md` are **generated**. Edit the YAML or the generator and regenerate.
 - **The code is the source of truth.** Other doc pages, review plans, commit titles, memory and the changelog are leads, not evidence. Changelog entries written during development are often no longer true.
 - **Pages written for UE4 / 0.9.x** repeat the same stale facts; [review.md](references/review.md) has the list to grep for.
-- **Package layout changed.** The 0.10.0 package has `CarlaUnreal.sh` at its root; packages built from the UE 5.8 sources put it in `Linux/`. Check a local package before writing any path inside one.
+- **Package layout.** Packages have `CarlaUnreal.sh` and `CarlaUnreal/` at their root; UE 5.8 packages built before the layout was flattened put them in `Linux/`. Check a local package before writing any path inside one.
 - **Generators that need a server** (`bp_doc_gen.py`, `catalogue_doc_gen.py`) can be broken for months without anyone noticing; run them after editing them.

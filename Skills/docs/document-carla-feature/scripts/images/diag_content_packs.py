@@ -28,7 +28,7 @@ s.path(f"M{mx},240 C{mx},258 {bx},258 {bx},243", color=C["purple"], sw=2, arrow=
 s.rect(30, 290, 1200, 165, fill=C["card"], stroke=C["line"], r=14)
 s.text(1205, 320, "Installing a pack (CARLA package only)", size=18, weight="bold", anchor="end")
 use = [("Install", ["checksums, release and", "platform checked"], "green"),
-       ("Linux/CarlaUnreal/Packs", ["or -carla-packs, $CARLA_PACKS", "read when the server starts"], "orange"),
+       ("CarlaUnreal/Packs", ["or -carla-packs, $CARLA_PACKS", "read when the server starts"], "orange"),
        ("Server mounts it", ["maps listed, actors in the", "blueprint library"], "orange"),
        ("Client", ["load_world(map)", "spawn the pack's actors"], "orange"),
        ("Or at run time", ["mount_content_pack(path)", "on a running server"], "orange")]

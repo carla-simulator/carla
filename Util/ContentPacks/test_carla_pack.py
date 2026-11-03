@@ -154,14 +154,13 @@ class PackTestBase(unittest.TestCase):
         return out_dir / PACK, tar_path, cooked
 
     def fake_server(self, release: "str | None" = RELEASE):
-        """<Package>/Linux/CarlaUnreal layout with BaseRelease at both stamp locations."""
-        server = self.tmp / "Package" / "Linux"
+        """<Package>/CarlaUnreal layout with BaseRelease at both stamp locations."""
+        server = self.tmp / "Package"
         write(server / "CarlaUnreal.sh", "#!/bin/sh\n")
+        (server / "CarlaUnreal" / "Binaries" / "Linux").mkdir(parents=True, exist_ok=True)
         if release is not None:
             write(server / "CarlaUnreal" / "BaseRelease", release + "\n")
-            write(server.parent / "BaseRelease", release + "\n")
-        else:
-            (server / "CarlaUnreal").mkdir(parents=True, exist_ok=True)
+            write(server / "BaseRelease", release + "\n")
         return server
 
 
@@ -1182,13 +1181,13 @@ class TestInspectVerifyInstall(PackTestBase):
         self.assertEqual(rc, 1)
         self.assertIn("already installed", err)
         self.assertEqual(run("install", tar_path, "--server", server, "--force")[0], 0)
-        # --server accepts <Package>, <Package>/Linux and <Package>/Linux/CarlaUnreal
-        for s_dir in (server.parent, server, server / "CarlaUnreal"):
+        # --server accepts <Package> and <Package>/CarlaUnreal
+        for s_dir in (server, server / "CarlaUnreal"):
             rc, out, err = run("inspect", tar_path, "--server", s_dir, "--json")
             self.assertEqual(rc, 0, err)
             self.assertEqual(json.loads(out)["server"]["path"], str(server / "CarlaUnreal"))
         shutil.rmtree(str(installed))
-        self.assertEqual(run("install", tar_path, "--server", server.parent)[0], 0)
+        self.assertEqual(run("install", tar_path, "--server", server)[0], 0)
         self.assertTrue((installed / "carla-pack.json").is_file())
 
     def test_base_release_mismatch(self):

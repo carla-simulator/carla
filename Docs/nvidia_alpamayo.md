@@ -99,7 +99,7 @@ Start a packaged development build on GPU 0:
 ```sh
 cd ${CARLA_ROOT}
 CUDA_VISIBLE_DEVICES=0 \
-./Build/<preset>/Package/Carla-<version>-Linux-Development/Linux/CarlaUnreal.sh \
+./Build/<preset>/Package/Carla-<version>-Linux-Development/CarlaUnreal.sh \
     -carla-rpc-port=2000
 ```
 

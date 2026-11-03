@@ -77,7 +77,7 @@ python3 -m nose2 -v
 The smoke tests connect to `localhost:3654`, not the default port 2000, so start a dedicated server on that port. From a package:
 
 ```sh
-./Linux/CarlaUnreal.sh -carla-rpc-port=3654
+./CarlaUnreal.sh -carla-rpc-port=3654
 ```
 
 With the Python API and the test requirements installed (see [Python API unit tests](#python-api-unit-tests)), check that the server answers, then run the list from the `test` folder:
@@ -100,7 +100,7 @@ Add `-c smoke/unittest.cfg -X` to write the results as JUnit XML to `test-result
 The tests load maps and change world settings, and many of them leave the server on `Town10HD_Opt` instead of the starting map, so do not run them against a server you are using for something else.
 
 !!! Note
-    `smoke.test_ros2` needs a server launched with `-ros2` (`./Linux/CarlaUnreal.sh -carla-rpc-port=3654 -ros2`). Without it, those tests fail. The tests check whichever middleware the server runs, so run them once per middleware, launching with `-rmw=fastdds`, `-rmw=cyclonedds` or `-rmw=zenoh`.
+    `smoke.test_ros2` needs a server launched with `-ros2` (`./CarlaUnreal.sh -carla-rpc-port=3654 -ros2`). Without it, those tests fail. The tests check whichever middleware the server runs, so run them once per middleware, launching with `-rmw=fastdds`, `-rmw=cyclonedds` or `-rmw=zenoh`.
 
 ---
 ## Integration tests

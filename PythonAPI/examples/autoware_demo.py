@@ -80,7 +80,7 @@ def deploy_postprocess_profile(profile_name, settings):
 
     Deploys to both:
     - Source tree: {workspace}/Unreal/CarlaUnreal/Content/Carla/Config/PostProcess/
-    - Package builds found under: {workspace}/Build/Package/*/Linux/CarlaUnreal/Content/Carla/Config/PostProcess/
+    - Package builds found under: {workspace}/Build/Package/*/CarlaUnreal/Content/Carla/Config/PostProcess/
     """
     script_dir = os.path.dirname(os.path.abspath(__file__))
     workspace_path = os.path.abspath(os.path.join(script_dir, "..", ".."))
@@ -100,7 +100,7 @@ def deploy_postprocess_profile(profile_name, settings):
     if os.path.isdir(package_base):
         import glob
         for pkg_content in glob.glob(os.path.join(
-            package_base, "*", "Linux", "CarlaUnreal", "Content",
+            package_base, "*", "CarlaUnreal", "Content",
             "Carla", "Config", "PostProcess"
         )):
             target_dirs.append(pkg_content)

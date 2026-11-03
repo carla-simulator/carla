@@ -701,7 +701,7 @@ if [[ "$RMEM_MAX" -lt 67108864 || "$WMEM_MAX" -lt 67108864 ]]; then
 fi
 
 # CARLA server binary: packaged CarlaUnreal.sh preferred, editor -game fallback.
-# Packaged layout on this branch: Build/<cfg>/Package/Carla-*-Linux-*/Linux/CarlaUnreal.sh
+# Packaged layout on this branch: Build/<cfg>/Package/Carla-*-Linux-*/CarlaUnreal.sh
 # --server editor skips package discovery: a stale package silently misses
 # recent simulator-side fixes (the editor -game path always runs the current
 # plugin binaries built into the repo tree).
@@ -712,7 +712,7 @@ if [[ "$SERVER_PREF" != "editor" ]]; then
     if [[ -n "$CARLA_ROOT_ARG" ]]; then
         CANDIDATES+=("$CARLA_ROOT_ARG/CarlaUnreal.sh" "$CARLA_ROOT_ARG/Linux/CarlaUnreal.sh")
     fi
-    for cand in "$REPO_ROOT"/Build/*/Package/Carla-*/Linux/CarlaUnreal.sh; do
+    for cand in "$REPO_ROOT"/Build/*/Package/Carla-*/CarlaUnreal.sh; do
         CANDIDATES+=("$cand")   # unmatched globs stay literal and fail -x below
     done
 fi
@@ -726,7 +726,7 @@ if [[ -z "$SERVER_LAUNCHER" ]]; then
     if [[ -n "${UE_ROOT:-}" && -x "$UE_ROOT/Engine/Binaries/Linux/UnrealEditor" && -f "$UPROJECT" ]]; then
         SERVER_KIND="editor"
     else
-        preflight_fail "no packaged CarlaUnreal.sh found (searched under --carla-root '$CARLA_ROOT_ARG' and $REPO_ROOT/Build/*/Package/Carla-*/Linux/) and no usable editor fallback (need UE_ROOT set and $UPROJECT present). Package CARLA or pass --carla-root <dir-containing-CarlaUnreal.sh>"
+        preflight_fail "no packaged CarlaUnreal.sh found (searched under --carla-root '$CARLA_ROOT_ARG' and $REPO_ROOT/Build/*/Package/Carla-*/) and no usable editor fallback (need UE_ROOT set and $UPROJECT present). Package CARLA or pass --carla-root <dir-containing-CarlaUnreal.sh>"
         SERVER_KIND="editor"   # dry-run: show the editor-fallback command with \$UE_ROOT placeholder
     fi
 fi

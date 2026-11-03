@@ -1820,8 +1820,9 @@ def open_pack(path):
 def resolve_server(server):
     """Return the packaged project dir for a CARLA package.
 
-    Accepts the package root (<Package>, holding Linux/CarlaUnreal), the platform dir
-    (<Package>/Linux) or the project dir itself (<Package>/Linux/CarlaUnreal).
+    Accepts the package root (<Package>, holding CarlaUnreal/) or the project dir
+    itself (<Package>/CarlaUnreal); packages from before 1.0 nest both under
+    <Package>/<Platform>/.
     """
     server = Path(server).expanduser()
     if not server.is_dir():
@@ -1847,8 +1848,14 @@ def server_base_release(project_dir):
 
 
 def server_platform(project_dir):
-    """The packaged platform from the layout <Package>/<Platform>/CarlaUnreal (None if unknown)."""
-    name = Path(project_dir).parent.name
+    """The packaged platform from CarlaUnreal/Binaries/<Platform>, else from the
+    pre-1.0 layout <Package>/<Platform>/CarlaUnreal (None if unknown)."""
+    project_dir = Path(project_dir)
+    binaries = [p.name for p in (project_dir / "Binaries").glob("*")
+                if p.is_dir() and p.name in KNOWN_PLATFORMS]
+    if len(binaries) == 1:
+        return binaries[0]
+    name = project_dir.parent.name
     name = "Win64" if name == "Windows" else name
     return name if name in KNOWN_PLATFORMS else None
 
@@ -2298,7 +2305,7 @@ def build_parser():
     sp = sub.add_parser("inspect", help="print a pack's manifest and check it against a server")
     sp.add_argument("pack", metavar="<tar.gz|dir>")
     sp.add_argument("--server", default=None,
-                    help="CARLA package to check against: <Package>, <Package>/Linux or <Package>/Linux/CarlaUnreal")
+                    help="CARLA package to check against: <Package> or <Package>/CarlaUnreal")
     sp.add_argument("--json", action="store_true")
     sp.set_defaults(func=cmd_inspect)
 
@@ -2309,8 +2316,7 @@ def build_parser():
     sp = sub.add_parser("install", help="verify and extract a pack into <server>/CarlaUnreal/Packs/")
     sp.add_argument("pack", metavar="<tar.gz>")
     sp.add_argument("--server", required=True,
-                    help="CARLA package: <Package> (holds Linux/), <Package>/Linux (holds CarlaUnreal.sh) "
-                         "or <Package>/Linux/CarlaUnreal")
+                    help="CARLA package: <Package> (holds CarlaUnreal.sh) or <Package>/CarlaUnreal")
     sp.add_argument("--force", action="store_true", help="replace an installed pack / ignore a "
                     "base release mismatch")
     sp.set_defaults(func=cmd_install)
