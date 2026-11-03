@@ -19,7 +19,7 @@ CARLA speaks ROS 2 from the server itself — there is no bridge process. Sensor
 - [__Related pages__](#related-pages)
 
 !!! Note
-    The options accept a double or a single dash: `--ros2` or `-ros2`, `--rmw=` or `-rmw=`, `--ros-domain-id=` or `-ros-domain-id=`. A source build has to be configured with `-DENABLE_ROS2=ON`, which is the default in CI but not in a plain configure.
+    The flag is single-dash, `-ros2`; `--ros2` is also accepted on this branch. A source build has to be configured with `-DENABLE_ROS2=ON`, which is the default in CI but not in a plain configure.
 
 ---
 ## Quick start

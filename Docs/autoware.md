@@ -71,7 +71,7 @@ Stop a session from another terminal with `./run/stop_all.sh`. The most used opt
 | `--rmw fastdds\|cyclonedds\|zenoh` | `fastdds` | Middleware of the simulator. Autoware always runs on CycloneDDS, or Zenoh with `zenoh`. |
 | `--domain-id N` | `42` | ROS domain id, passed to the server as `-ros-domain-id`. |
 | `--carla-rpc-port N` | `2000` | CARLA RPC port. |
-| `--carla-root DIR` | `$CARLA_ROOT` | The folder that holds `CarlaUnreal.sh`. |
+| `--carla-root DIR` | `$CARLA_ROOT` | Directory containing `CarlaUnreal.sh`. |
 | `--map-path DIR` | `map_tools/maps/<town>` | Map artifacts to load, see [Prepare a map](#prepare-a-map). |
 | `--with-rviz` | off | Also start RViz. Without `--goal`, set the goal there and engage from its OperationMode panel. |
 | `--no-auto` | off | Skip localization init, goal and engage after launch. |
