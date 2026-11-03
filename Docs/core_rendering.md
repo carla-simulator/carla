@@ -50,7 +50,14 @@ A preset is a JSON file with the image-processing settings of a camera. Most of 
 camera_bp.set_attribute('post_process_profile', 'GoPro')
 ```
 
-See [Camera post-process presets](core_camera_presets.md) for the list, the comparison with the real cameras and how to make your own.
+Its page has the list, the comparison with the real cameras and how to make your own.
+
+<div class="build-buttons">
+<p>
+<a href="../core_camera_presets" class="btn btn-neutral" title="Go to Camera post-process presets">
+Go to Camera post-process presets</a>
+</p>
+</div>
 
 ### Ray-traced lens cameras
 
@@ -68,7 +75,14 @@ bp.set_attribute('camera_model', 'kannala_brandt')
 bp.set_attribute('fov', '150')
 ```
 
-These cameras are independent of the hardware ray tracing that ordinary cameras can use at the `Epic` tier ([Ray tracing defaults](#ray-tracing-defaults)). See [Ray-traced lens cameras](core_rt_lens.md) for the lens models, the cost and the tuning.
+These cameras are independent of the hardware ray tracing that ordinary cameras can use at the `Epic` tier ([Ray tracing defaults](#ray-tracing-defaults)). Its page has the lens models, the cost and the tuning.
+
+<div class="build-buttons">
+<p>
+<a href="../core_rt_lens" class="btn btn-neutral" title="Go to Ray-traced lens cameras">
+Go to Ray-traced lens cameras</a>
+</p>
+</div>
 
 ### DLSS Super Resolution
 
@@ -83,7 +97,14 @@ camera_bp.set_attribute('enable_dlss', 'True')
 camera_bp.set_attribute('dlss_screen_percentage', '50')
 ```
 
-See [NVIDIA DLSS](core_dlss.md) for the requirements, the fallback on other GPUs and DLSS Ray Reconstruction, which denoises the ray-traced lens cameras.
+Its page has the requirements, the fallback on other GPUs and DLSS Ray Reconstruction, which denoises the ray-traced lens cameras.
+
+<div class="build-buttons">
+<p>
+<a href="../core_dlss" class="btn btn-neutral" title="Go to NVIDIA DLSS">
+Go to NVIDIA DLSS</a>
+</p>
+</div>
 
 ---
 ## Graphics quality
