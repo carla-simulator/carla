@@ -652,6 +652,13 @@ FVector ACarlaWheeledVehicle::GetVehicleOrientation() const
 
 int32 ACarlaWheeledVehicle::GetVehicleCurrentGear() const
 {
+  // Acceleration control (the Autoware command path) sets the forward speed
+  // directly and never engages the transmission, which stays in neutral (0).
+  // It only drives forward, so report the first forward gear.
+  if (AccelerationControl->IsActive())
+  {
+    return 1;
+  }
   return BaseMovementComponent->GetVehicleCurrentGear();
 }
 
