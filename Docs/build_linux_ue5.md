@@ -87,11 +87,11 @@ cmake -G Ninja -S . -B Build --toolchain=$PWD/CMake/Toolchain.cmake -DCMAKE_BUIL
 
 #### Build the Python API for several Python versions
 
-The Python API wheel is built for one Python version, the one CMake finds or the one you point it at. To build wheels for more versions in the same build, list them in `CARLA_PYTHON_VERSIONS`:
+The Python API wheel is built for one Python version, the one CMake finds or the one you point it at. To build wheels for more versions in the same build, list them in `CARLA_PYTHON_VERSIONS`. Python 3.10 to 3.15 are supported:
 
 ```sh
 cmake -G Ninja -S . -B Build --toolchain=$PWD/CMake/Toolchain.cmake -DCMAKE_BUILD_TYPE=Release \
-    -DCARLA_PYTHON_VERSIONS="3.10;3.11;3.12"
+    -DCARLA_PYTHON_VERSIONS="3.10;3.11;3.12;3.13;3.14;3.15"
 cmake --build Build --target carla-python-api
 ```
 

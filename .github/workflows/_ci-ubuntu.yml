@@ -143,6 +143,17 @@ jobs:
         run: |
           cmake --build Build/Release --target carla-python-api
 
+      - name: Test the Python API offline
+        if: inputs.smoke-test-python-versions != ''
+        run: |
+          # Imports, example compile and unit tests for each version, before the
+          # package build so a version that cannot even import fails fast.
+          PYTHONS=()
+          for VERSION in $(echo "${SMOKE_TEST_PYTHON_VERSIONS}" | tr ', ' '\n\n' | sed '/^$/d'); do
+            PYTHONS+=("$(conda run --name "carla${VERSION//./}" python -c "import sys; print(sys.executable)")")
+          done
+          ./Util/Tools/RunPythonVersionTests.sh --stages offline --results-dir Build/test-results/python-versions "${PYTHONS[@]}"
+
       - name: Build CarlaServer
         run: |
           cmake --build Build/Release --target carla-server
@@ -215,6 +226,8 @@ jobs:
           name: smoke-test-results
           path: |
             Build/test-results/smoke-*.xml
+            Build/test-results/python-versions/summary.txt
+            Build/test-results/python-versions/cp*/*.log
             Build/smoke-test-server.log
           if-no-files-found: ignore
 

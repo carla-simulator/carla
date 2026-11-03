@@ -1,9 +1,12 @@
 -r ../carla/requirements.txt
 numpy>=1.24.4
-pygame
-open3d; python_version <= '3.11'
+# pygame has no wheels for Python 3.14 and later; pygame-ce is a drop-in fork.
+pygame; python_version < '3.14'
+pygame-ce; python_version >= '3.14'
+open3d; python_version < '3.15'
 matplotlib
 scipy
 opencv-python
 Pillow
-invertedai @ git+https://github.com/inverted-ai/invertedai.git@develop ; sys_platform == "linux"
+# Supports Python 3.12 at most.
+invertedai @ git+https://github.com/inverted-ai/invertedai.git@develop ; sys_platform == "linux" and python_version < '3.13'
