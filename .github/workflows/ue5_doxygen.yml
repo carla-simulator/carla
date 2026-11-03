@@ -1,0 +1,81 @@
+name: UE5-Doxygen
+
+# Generates the C++ reference with Doxygen and publishes it to
+# carla-simulator/carla-simulator.github.io (branch master) under Doxygen/html,
+# replacing the previous version. Run it manually on ue58-dev or ue5/<VERSION>.
+# Needs the secret DOCS_DEPLOY_KEY: the private half of an SSH deploy key with
+# write access on carla-simulator.github.io.
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: doxygen-publish
+  cancel-in-progress: false
+
+jobs:
+  doxygen:
+    name: Generate and publish Doxygen
+    runs-on: ubuntu-latest
+    env:
+      DEST: Doxygen/html
+    steps:
+      - name: Check branch
+        run: |
+          case "$GITHUB_REF_NAME" in
+            ue58-dev|ue5/*) ;;
+            *)
+              echo "::error::Docs are only published from ue58-dev or ue5/<VERSION>, not '$GITHUB_REF_NAME'."
+              exit 1
+              ;;
+          esac
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Doxygen
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y doxygen rsync
+
+      - name: Generate documentation
+        run: doxygen Doxyfile
+
+      - name: Upload Doxygen warnings
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: doxygen-warnings
+          path: Doxygen/warnings.log
+          if-no-files-found: ignore
+
+      - name: Checkout documentation repository
+        uses: actions/checkout@v4
+        with:
+          repository: carla-simulator/carla-simulator.github.io
+          ref: master
+          path: doc_repo
+          ssh-key: ${{ secrets.DOCS_DEPLOY_KEY }}
+
+      - name: Publish documentation
+        working-directory: doc_repo
+        run: |
+          mkdir -p "$DEST"
+          rsync -a --delete ../Doxygen/html/ "$DEST/"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A "$DEST"
+          if git diff --cached --quiet; then
+            echo "Documentation unchanged, nothing to publish."
+            exit 0
+          fi
+          git commit -q -m "Updated C++ docs from carla@${GITHUB_SHA::9} ($GITHUB_REF_NAME)"
+          git push origin HEAD:master || { git pull --rebase origin master && git push origin HEAD:master; }
+
+      - name: Write summary
+        run: |
+          {
+            echo "## CARLA C++ documentation"
+            echo ""
+            echo "- Published: https://carla-simulator.github.io/$DEST/index.html"
+          } >> "$GITHUB_STEP_SUMMARY"
