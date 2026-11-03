@@ -6,6 +6,7 @@
 #include <util/disable-ue4-macros.h>
 #include <carla/geom/BoundingBox.h>
 #include <carla/geom/Location.h>
+#include <carla/geom/Math.h>
 #include <carla/geom/Transform.h>
 #include <carla/road/Junction.h>
 #include <carla/road/Road.h>
@@ -2297,66 +2298,85 @@ FVector UOpenDriveToMap::DisplaceLocationOutsideNeighboringRoads(const UObject* 
 	return DisplaceLocationOutsideNeighboringRoads(current_carla_map.value(), InLocation, SteppingPercentage, RoadLimitPadding);
 }
 
-FVector UOpenDriveToMap::DisplaceLocationOutsideNeighboringRoads(const carla::road::Map& Map, FVector InLocation, float SteppingPercentage, float RoadLimitPadding)
+FVector UOpenDriveToMap::DisplaceLocationOutsideNeighboringRoads(const carla::road::Map& Map, FVector InLocation, float SteppingPercentage, float RoadLimitPadding, int32 MaxIterations, bool* bOutIsClear)
 {
-	const carla::road::Map* current_carla_map = &Map;
+	using carla::road::Lane;
+	using carla::road::element::Waypoint;
 
-	int32 check_shoulder_or_driving =
-		static_cast<int32_t>(carla::road::Lane::LaneType::Shoulder) |
-		static_cast<int32_t>(carla::road::Lane::LaneType::Driving);
+	// SteppingPercentage is kept for Blueprint compatibility: the location now jumps straight
+	// to the outer edge of the carriageway instead of creeping across it in lane-width steps.
+	(void)SteppingPercentage;
 
-	std::optional<carla::road::element::Waypoint> closest_waypoint =
-		current_carla_map->GetClosestWaypointOnRoad(InLocation, check_shoulder_or_driving);
+	// Everything a vehicle or a cyclist uses counts as carriageway: a location in a parking
+	// or bike lane is still in the roadway.
+	const int32 CarriagewayLanes =
+		static_cast<int32>(Lane::LaneType::Driving) |
+		static_cast<int32>(Lane::LaneType::Shoulder) |
+		static_cast<int32>(Lane::LaneType::Parking) |
+		static_cast<int32>(Lane::LaneType::Biking) |
+		static_cast<int32>(Lane::LaneType::Bidirectional);
+	const double Padding = FMath::Max(RoadLimitPadding, 0.0f) * 1e-2; // m
 
-	FVector out_location = InLocation;
+	carla::geom::Location Position(InLocation); // cm to m
+	bool bClear = false;
 
-	if (closest_waypoint)
+	for (int32 Iteration = 0; Iteration <= FMath::Max(MaxIterations, 0); ++Iteration)
 	{
-		carla::geom::Transform road_transform = current_carla_map->ComputeTransform(closest_waypoint.value());
-
-		float distance_to_road = FVector(road_transform.location.ToFVector() * 100.0f - out_location).Length();
-		float lane_width = current_carla_map->GetLaneWidth(closest_waypoint.value());
-
-		float displacement_direction = 1.0f;
-		int max_displacement_iterations = 10;
-
-		for (int counter = 0; counter < max_displacement_iterations; counter++)
+		std::optional<Waypoint> Closest = Map.GetClosestWaypointOnRoad(Position, CarriagewayLanes);
+		if (!Closest)
 		{
-			if (displacement_direction == 0.0f) break;
-			if (distance_to_road > (lane_width * 100.0f + RoadLimitPadding)) break;
-
-			std::optional<carla::road::element::Waypoint> right_waypoint = current_carla_map->GetRight(closest_waypoint.value());
-			carla::road::Lane::LaneType right_lane_type = (right_waypoint) ?
-				current_carla_map->GetLaneType(right_waypoint.value()) :
-				carla::road::Lane::LaneType::None;
-
-			std::optional<carla::road::element::Waypoint> left_waypoint = current_carla_map->GetLeft(closest_waypoint.value());
-			carla::road::Lane::LaneType left_lane_type = (left_waypoint) ?
-				current_carla_map->GetLaneType(left_waypoint.value()) :
-				carla::road::Lane::LaneType::None;
-
-			if (right_lane_type != carla::road::Lane::LaneType::Driving)
-			{
-				displacement_direction = 1.0f;
-			}
-			else if (left_lane_type != carla::road::Lane::LaneType::Driving)
-			{
-				displacement_direction = -1.0f;
-			}
-			else {
-				displacement_direction = 0.0f;
-			}
-
-			FVector displacement_diff = road_transform.GetRightVector().ToFVector() * static_cast<float>(abs(lane_width)) * 100.0f * SteppingPercentage;
-			out_location += displacement_diff * displacement_direction;
-
-			closest_waypoint = current_carla_map->GetClosestWaypointOnRoad(out_location, check_shoulder_or_driving);
-			road_transform = current_carla_map->ComputeTransform(closest_waypoint.value());
-			distance_to_road = FVector(road_transform.location.ToFVector() * 100.0f - out_location).Length();
-			lane_width = current_carla_map->GetLaneWidth(closest_waypoint.value());
+			bClear = true;
+			break;
+		}
+		// Callers often pass Z = 0 (the ground is found afterwards). The nearest-lane search is
+		// 3D, so take the elevation of the lane first and search again; distances below are 2D.
+		Position.z = Map.ComputeTransform(*Closest).location.z;
+		Closest = Map.GetClosestWaypointOnRoad(Position, CarriagewayLanes);
+		if (!Closest)
+		{
+			bClear = true;
+			break;
+		}
+		const carla::geom::Transform LaneTransform = Map.ComputeTransform(*Closest);
+		const double Distance = carla::geom::Math::Distance2D(LaneTransform.location, Position);
+		if (static_cast<double>(Distance) >= Map.GetLaneWidth(*Closest) * 0.5 + Padding)
+		{
+			bClear = true;
+			break;
+		}
+		if (Iteration == MaxIterations)
+		{
+			break;
 		}
 
+		// Walk out to the last carriageway lane on this side of the road. Map::GetRight and
+		// the transform's right vector point away from the centre line under right-hand
+		// traffic and towards it under left-hand traffic.
+		const bool bRightHandTraffic = Map.GetLane(*Closest).GetRoad()->IsRHT();
+		Waypoint Outer = *Closest;
+		for (int32 Step = 0; Step < 16; ++Step)
+		{
+			const std::optional<Waypoint> Next = bRightHandTraffic ? Map.GetRight(Outer) : Map.GetLeft(Outer);
+			if (!Next || (static_cast<int32>(Map.GetLaneType(*Next)) & CarriagewayLanes) == 0)
+			{
+				break;
+			}
+			Outer = *Next;
+		}
+
+		// Just past its outer edge, plus the padding.
+		const carla::geom::Transform OuterTransform = Map.ComputeTransform(Outer);
+		const carla::geom::Vector3D Outward = OuterTransform.GetRightVector() * (bRightHandTraffic ? 1.0f : -1.0f);
+		const float Offset = static_cast<float>(Map.GetLaneWidth(Outer) * 0.5 + Padding + 0.01);
+		Position = carla::geom::Location(
+			static_cast<float>(OuterTransform.location.x + Outward.x * Offset),
+			static_cast<float>(OuterTransform.location.y + Outward.y * Offset),
+			static_cast<float>(OuterTransform.location.z));
 	}
 
-	return out_location;
+	if (bOutIsClear != nullptr)
+	{
+		*bOutIsClear = bClear;
+	}
+	return FVector(Position.x * 100.0, Position.y * 100.0, InLocation.Z);
 }

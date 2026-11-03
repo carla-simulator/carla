@@ -1,8 +1,12 @@
 # Unreal Engine native rendering
 
-This guide details how CARLA uses Unreal Engine's own renderer, which draws the spectator view and every camera sensor unless told otherwise: the lighting and geometry systems, quality levels, ray tracing defaults, no-rendering mode and off-screen mode. DLSS and the ray-traced lens cameras have their own pages. For the other ways CARLA produces images, such as neural reconstruction or world models, see [Rendering](core_rendering_overview.md). To spread rendering across several GPUs, see [Multi-GPU](core_multigpu.md).
+This guide details how CARLA uses Unreal Engine's own renderer, which draws the spectator view and every camera sensor unless told otherwise: the lighting and geometry systems, the camera features built on it, quality levels, ray tracing defaults, no-rendering mode and off-screen mode. Three pages build on this renderer: [Camera post-process presets](core_camera_presets.md), [Ray-traced lens cameras](core_rt_lens.md) and [NVIDIA DLSS Super Resolution](core_dlss.md). For the other ways CARLA produces images, such as neural reconstruction or world models, see [Sensor simulation](core_rendering_overview.md). To spread rendering across several GPUs, see [Multi-GPU](core_multigpu.md).
 
 - [__Lighting and geometry__](#lighting-and-geometry)
+- [__Camera features__](#camera-features)
+    - [__Post-process presets__](#post-process-presets)
+    - [__Ray-traced lens cameras__](#ray-traced-lens-cameras)
+    - [__DLSS Super Resolution__](#dlss-super-resolution)
 - [__Graphics quality__](#graphics-quality)
 - [__No-rendering mode__](#no-rendering-mode)
 - [__Off-screen rendering mode__](#off-screen-rendering-mode)
@@ -20,6 +24,66 @@ __[Lumen](https://dev.epicgames.com/documentation/en-us/unreal-engine/lumen-glob
 __[Nanite](https://dev.epicgames.com/documentation/en-us/unreal-engine/nanite-virtualized-geometry-in-unreal-engine)__ is virtualized geometry: the engine streams and renders only the triangles a view can resolve, so the towns carry film-grade meshes without a hand-authored LOD chain. It applies to opaque and masked materials only; meshes with translucent materials, such as glass, render through the normal path.
 
 __[Virtual shadow maps](https://dev.epicgames.com/documentation/en-us/unreal-engine/virtual-shadow-maps-in-unreal-engine)__ cast the shadows at every tier (`r.Shadow.Virtual.Enable=1`). The tiers differ in the page budget the shadows may use. Ray-traced shadows are off by default.
+
+---
+## Camera features
+
+Three features change what a camera on this renderer delivers. They are independent and can be combined on the same camera: a ray-traced lens camera or a DLSS camera still goes through a post-process preset.
+
+![Native rendering pipeline](img/core_rendering/native_pipeline.webp)
+<div class="img-caption">Where each feature acts. The rasterizer renders every camera; DLSS Super Resolution optionally sits between the rasterizer and the post-process; the ray-traced lens cameras replace the rasterizer with the path tracer. The post-process preset gives the final look.</div>
+
+| Feature | Changes | Turn it on | Needs |
+| ------- | ------- | ---------- | ----- |
+| [Post-process presets](#post-process-presets) | The look: exposure, tonemapper, white balance, bloom, lens flare, noise | `post_process_profile` on the camera | Nothing extra |
+| [Ray-traced lens cameras](#ray-traced-lens-cameras) | How the image is formed: path tracing through a physical lens model | Spawn `sensor.camera.rt_lens` | NVIDIA RTX-class GPU, Vulkan |
+| [DLSS Super Resolution](#dlss-super-resolution) | The cost: lower internal resolution, reconstructed to full size | `enable_dlss=True` on an RGB camera | NVIDIA RTX-class GPU |
+
+### Post-process presets
+
+![Camera post-process presets](img/core_camera_presets/camera_profiles_clearnoon_town10.webp)
+<div class="img-caption">The same Town10HD_Opt view through each of the post-process presets shipped with CARLA.</div>
+
+A preset is a JSON file with the image-processing settings of a camera. Most of the presets shipped with CARLA reproduce the camera of a public driving dataset. It changes how the rendered light becomes pixels, never what is rendered or the geometry of the lens. `sensor.camera.rgb`, `sensor.camera.rgb_fisheye` and `sensor.camera.rt_lens` take it.
+
+```py
+camera_bp.set_attribute('post_process_profile', 'GoPro')
+```
+
+See [Camera post-process presets](core_camera_presets.md) for the list, the comparison with the real cameras and how to make your own.
+
+### Ray-traced lens cameras
+
+![Rasterized and path-traced camera](img/core_rendering/raster_vs_pathtraced.webp)
+<div class="img-caption">The same Town10HD_Opt view after a shower through an ordinary RGB camera (left, rasterized with Lumen) and <code>sensor.camera.rt_lens</code> (right, path traced and denoised), both with the <code>AutomotiveHDRClean</code> preset.</div>
+
+![The same view through three lens models](img/ref_sensors/sensor_rt_lens_models.webp)
+<div class="img-caption">The lens model is part of the camera: pinhole (90&deg;), Kannala-Brandt fisheye (150&deg;) and Brown-Conrady barrel (100&deg;).</div>
+
+`sensor.camera.rt_lens` path traces every pixel through a physical lens model instead of rasterizing a pinhole view, so a real camera's calibration (fisheye, barrel distortion, f-theta) can be reproduced exactly. Two companion blueprints, `rt_lens_distance` and `rt_lens_instance`, give per-pixel distance and instance ids aligned with the colour image.
+
+```py
+bp = world.get_blueprint_library().find('sensor.camera.rt_lens')
+bp.set_attribute('camera_model', 'kannala_brandt')
+bp.set_attribute('fov', '150')
+```
+
+These cameras are independent of the hardware ray tracing that ordinary cameras can use at the `Epic` tier ([Ray tracing defaults](#ray-tracing-defaults)). See [Ray-traced lens cameras](core_rt_lens.md) for the lens models, the cost and the tuning.
+
+### DLSS Super Resolution
+
+![DLSS Super Resolution](img/core_rendering_overview/dlss_montage.webp)
+<div class="img-caption">A 3840 &times; 2160 RGB camera at <code>dlss_screen_percentage=50</code>: it renders internally at 1920 &times; 1080 and DLSS reconstructs the 4K image. The crops compare the internal render (scaled up), the DLSS output and a native 4K render.</div>
+
+DLSS Super Resolution renders an RGB camera at a fraction of its output resolution and reconstructs the full-size image, so a large rig costs less. It is meant for RGB cameras, not for ground-truth cameras, whose labels and depth the reconstruction would corrupt.
+
+```py
+camera_bp.set_attribute('enable_postprocess_effects', 'True')
+camera_bp.set_attribute('enable_dlss', 'True')
+camera_bp.set_attribute('dlss_screen_percentage', '50')
+```
+
+See [NVIDIA DLSS](core_dlss.md) for the requirements, the fallback on other GPUs and DLSS Ray Reconstruction, which denoises the ray-traced lens cameras.
 
 ---
 ## Graphics quality
@@ -129,10 +193,6 @@ Sensor captures opt into hardware ray tracing individually through the `use_ray_
 __The quality tier sets that variable.__ Only `Epic` leaves it at `-1`; `High`, `Medium` and `Low` all force it to `0`, so a camera's `use_ray_tracing=True` has no effect below `Epic`. That is the one rendering difference a sensor sees between the tiers.
 
 Changing project defaults requires editing `Config/DefaultEngine.ini` and rebuilding the simulator. The packaged Shipping binary strips the engine's `-execcmds=` command-line parser, so runtime overrides via that flag are not available in distributed CARLA releases; only project-side configuration takes effect.
-
-### NVIDIA DLSS and ray-traced lens cameras
-
-DLSS Super Resolution and Ray Reconstruction have their own page, [NVIDIA DLSS](core_dlss.md). The path-traced cameras and the engine settings that tune them are in [Ray-traced lens cameras](core_rt_lens.md#tuning).
 
 ---
 ## No-rendering mode
