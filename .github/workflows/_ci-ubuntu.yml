@@ -118,11 +118,7 @@ jobs:
             PYTHON_ARGS+=("-DCARLA_PYTHON_${VERSION//./}_EXECUTABLE=${EXECUTABLE}")
             CMAKE_PYTHON_VERSIONS="${CMAKE_PYTHON_VERSIONS:+${CMAKE_PYTHON_VERSIONS};}${VERSION}"
           done
-
-          # TEMPORARY: Development package so the smoke test server logs. Revert
-          # before merging: Deploy.sh uploads the Shipping tarball.
           cmake --preset Release -DENABLE_ROS2=ON -DBUILD_LIBCARLA_TESTS=ON \
-            -DCARLA_UNREAL_PACKAGE_BUILD_TYPE=Development \
             -DCARLA_PYTHON_VERSIONS="${CMAKE_PYTHON_VERSIONS}" "${PYTHON_ARGS[@]}"
 
       - name: Build LibCarla
@@ -173,7 +169,7 @@ jobs:
           for VERSION in $(echo "${SMOKE_TEST_PYTHON_VERSIONS}" | tr ', ' '\n\n' | sed '/^$/d'); do
             PYTHONS+=("${PYTHON_ENVS_DIR}/carla${VERSION//./}/bin/python")
           done
-          Build/Release/Package/Carla-*-Linux-Development/CarlaUnreal.sh \
+          Build/Release/Package/Carla-*-Linux-Shipping/CarlaUnreal.sh \
             -carla-rpc-port=3654 -RenderOffScreen -nosound -ros2 \
             > Build/smoke-test-server.log 2>&1 < /dev/null &
           SERVER_PID=$!
@@ -188,8 +184,6 @@ jobs:
               wait ${SERVER_PID} || SERVER_STATUS=$?
               echo "The server exited with status ${SERVER_STATUS}."
             fi
-            grep oom_kill /sys/fs/cgroup/memory.events || true
-            free -h || true
             tail -n 50 Build/smoke-test-server.log || true
           }
           trap 'STATUS=$?
@@ -208,7 +202,6 @@ jobs:
           path: |
             Build/test-results/smoke-*.xml
             Build/smoke-test-server.log
-            Build/Release/Package/Carla-*-Linux-*/CarlaUnreal/Saved/Logs/
           if-no-files-found: ignore
           retention-days: 14
 
