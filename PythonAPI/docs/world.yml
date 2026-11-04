@@ -160,6 +160,10 @@
       type: bool
       doc: >
         When enabled, OpenDRIVE-generated traffic signs and traffic lights are moved onto the ground below them after spawning, and their trigger volumes keep their position. Only generated actors are moved, never signs placed by hand in the level. It is false by default. Enabling it also adjusts the signs that are already spawned, so it can be enabled at any time. Disabling it stops further adjustment but does not move adjusted signs back. On a World Partition map the ground streams in around the streaming source, so each sign is adjusted when the cell below it becomes resident. The flag is kept by a map load with `reset_settings=False`, and it reads true on a map whose traffic light manager enables it.
+    - var_name: deterministic_collisions
+      type: bool
+      doc: >
+        When enabled, collisions repeat exactly from one run to the next, so a synchronous simulation that contains them does too. By default the physics engine can detect a contact one frame earlier or later depending on how fast the server runs, and the same crash then ends differently. It is false by default because it costs physics time: around 15-25% more per tick with a hundred vehicles in no-rendering mode, and no measurable difference with rendering. It takes effect when a map is loaded, so apply it and then call carla.Client.reload_world or carla.Client.load_world with `reset_settings=False`; a load with `reset_settings=True` turns it off again. See the snippet of carla.WorldSettings.__init__ and [Physics determinism](core_synchrony.md#physics-determinism).
 
     # - METHODS ----------------------------
     methods:
@@ -214,6 +218,11 @@
         default: False
         doc: >
           Set this to true to move OpenDRIVE-generated traffic signs and traffic lights onto the ground below them after spawning.
+      - param_name: deterministic_collisions
+        type: bool
+        default: False
+        doc: >
+          Set this to true for collisions that repeat exactly between runs. Takes effect at the next map load that keeps the settings (`reset_settings=False`).
 
       doc: >
         Creates an object containing desired settings that could later be applied through carla.World and its method __<font color="#7fb800">apply_settings()</font>__.
