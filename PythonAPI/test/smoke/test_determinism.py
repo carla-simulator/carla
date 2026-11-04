@@ -18,6 +18,7 @@ class FrameRecord():
         self.vehicle_position_list = vehicle_position_list
 
 class TestDeterminism(SmokeTest):
+    deterministic_collisions = True
 
     def compare_records(self, record1_list, record2_list):
         record1_size = len(record1_list)
@@ -80,7 +81,9 @@ class TestDeterminism(SmokeTest):
         number_of_vehicles = 100
         tm_seed = 1
 
-        self.load_world("Town03_Opt")
+        # Town10HD_Opt ships with every package; keep the settings so that
+        # deterministic_collisions applies
+        self.load_world("Town10HD_Opt", False)
 
         # set setting for round 1
         world = self.client.get_world()

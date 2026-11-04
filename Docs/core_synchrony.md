@@ -194,7 +194,26 @@ CARLA supports physics and collision determinism under specific circumstances:
 - __Synchronous mode and fixed delta seconds must be enabled:__ Determinism requires the client to be in perfect sync with the server to ensure that commands are applied correctly and to produce accurate and reproducible results. A constant time step must be enforced by setting `fixed_delta_seconds`. If this is not set, the time step will be automatically computed at each step depending on the simulation performance.
 - __Synchronous mode must be enabled before loading or reloading the world:__ Differing timestamps can arise if the world is not in synchronous mode from the very beginning. This can generate small differences in physics simulation and in the life cycle of objects such as traffics lights.
 - __The world must be reloaded for each new repetition:__ Reload the world each time you want to reproduce a simulation.
+- __Deterministic collisions must be enabled when the simulation has crashes in it:__ By default the physics engine can detect a contact one frame earlier or later depending on how fast the server runs, so the same crash can end differently. Set [`deterministic_collisions`](python_api.md#carla.WorldSettings.deterministic_collisions) in the world settings to make collisions repeat exactly. It takes effect when the map loads, so reload it keeping the settings. It costs physics time: around 15-25% more per tick with a hundred vehicles in no-rendering mode, and no measurable difference with rendering. See [below](#deterministic-collisions).
 - __Commands should be batched instead of issued one at a time:__ Although rare, in a busy simulation or overloaded server, single issued commands can become lost. If commands are batched in a [`apply_batch_sync`](python_api.md#carla.Client.apply_batch_sync) command, the command is guaranteed to be executed or return a failure response.
+
+### Deterministic collisions
+
+Collisions are only deterministic with `deterministic_collisions` enabled. Apply it and reload the map keeping the settings:
+
+```py
+settings = world.get_settings()
+settings.synchronous_mode = True
+settings.fixed_delta_seconds = 0.05
+settings.deterministic_collisions = True
+world.apply_settings(settings)
+
+world = client.reload_world(False)  # applies it: keep the settings
+```
+
+A map load with `reset_settings=True`, the default of `load_world` and `reload_world`, turns it off again. `PythonAPI/examples/deterministic_collisions.py` repeats a car-bicycle crash with and without it (`--no-deterministic`) and reports whether the runs match.
+
+### Example
 
 Here is an example of the steps mentioned above:
 
@@ -211,6 +230,7 @@ world = client.load_world('Town10HD_Opt')
 new_settings = world.get_settings()
 new_settings.synchronous_mode = True
 new_settings.fixed_delta_seconds = 0.05
+new_settings.deterministic_collisions = True
 world.apply_settings(new_settings)
 
 world = client.reload_world(False)  # reload the map keeping the world settings
@@ -242,6 +262,7 @@ client.load_world("Town10HD_Opt")
 new_settings = world.get_settings()
 new_settings.synchronous_mode = True
 new_settings.fixed_delta_seconds = 0.05
+new_settings.deterministic_collisions = True
 world.apply_settings(new_settings) 
 
 client.reload_world(False) # reload map keeping the world settings
