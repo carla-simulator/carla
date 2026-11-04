@@ -155,7 +155,7 @@
         doc: >
           Controls interaction of light with small particles like air molecules. Dependent on light wavelength, resulting in a blue sky in the day or red sky in the evening.
       note: >
-        ClearNoon, CloudyNoon, WetNoon, WetCloudyNoon, SoftRainNoon, MidRainyNoon, HardRainNoon, ClearSunset, CloudySunset, WetSunset, WetCloudySunset, SoftRainSunset, MidRainSunset, HardRainSunset, ClearNight, CloudyNight, WetNight, WetCloudyNight, SoftRainNight, MidRainyNight, HardRainNight. 
+        ClearNoon, CloudyNoon, WetNoon, WetCloudyNoon, SoftRainNoon, MidRainyNoon, HardRainNoon, ClearSunset, CloudySunset, WetSunset, WetCloudySunset, SoftRainSunset, MidRainSunset, HardRainSunset, ClearNight, CloudyNight, WetNight, WetCloudyNight, SoftRainNight, MidRainyNight, HardRainNight, DustStorm.
       doc: >
         Method to initialize an object defining weather conditions. This class has some presets for different noon, sunset and night conditions listed in a note below. The weather a map starts with comes from `Content/Carla/Config/Weather/MapDefaults.json` on the server (a time and condition pair from `Presets.json`, or a full set of values per map); these files are not readable from the client, use carla.World.get_weather after loading the map.
     # --------------------------------------

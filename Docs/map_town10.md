@@ -8,7 +8,7 @@ Town10 mixes inner-city features: glossy skyscrapers and industrial buildings be
 | | |
 | --- | --- |
 | __Map name__ | `Town10HD_Opt` |
-| __In the default package__ | yes, and it is the map a server boots into |
+| __Package available__ | Base package; it is the map a server boots into |
 | __Size__ | about 225 x 210 m of roads |
 | __Spawn points__ | 155, from `world.get_map().get_spawn_points()` |
 

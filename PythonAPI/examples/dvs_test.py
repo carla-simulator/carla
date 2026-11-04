@@ -9,12 +9,13 @@ import carla
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--port", type=int, default=3000)
+    ap.add_argument("--host", default="127.0.0.1")
+    ap.add_argument("-p", "--port", type=int, default=2000)
     ap.add_argument("--frames", type=int, default=40)
     ap.add_argument("--out", default="dvs_test_out")
     args = ap.parse_args()
 
-    client = carla.Client("localhost", args.port)
+    client = carla.Client(args.host, args.port)
     client.set_timeout(10.0)
     world = client.get_world()
     print("server version:", client.get_server_version())

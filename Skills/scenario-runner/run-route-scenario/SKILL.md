@@ -64,7 +64,7 @@ Route mode needs something to drive. `srunner/autoagents/` has three:
 
 | Agent | Use |
 |---|---|
-| `npc_agent.py` | Traffic-Manager autopilot following the route — the reference "it works" agent |
+| `npc_agent.py` | a `BasicAgent` at 30 km/h following the route (not the Traffic Manager); the reference "it works" agent |
 | `human_agent.py` | pygame window, keyboard control |
 | `dummy_agent.py` | returns zero control; the template to copy |
 
@@ -124,7 +124,7 @@ AGENT="$SCENARIO_RUNNER_ROOT/srunner/autoagents/npc_agent.py" \
     bash scripts/run_route.sh run "$LEADERBOARD_ROOT/data/routes_devtest.xml" 0
 ```
 
-The NPC agent completes the route with the Traffic Manager; criteria print at the
+The NPC agent drives the route with a `BasicAgent` at 30 km/h; criteria print at the
 end. If this fails, the problem is the setup, not your agent.
 
 **Example 2: "test my agent on the Accident scenario"**

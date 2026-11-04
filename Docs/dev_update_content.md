@@ -68,4 +68,4 @@ git -C Unreal/CarlaUnreal/Content/Carla fetch --tags
 git -C Unreal/CarlaUnreal/Content/Carla checkout 0.10.0
 ```
 
-The `package` target cooks whatever content is checked out in `Unreal/CarlaUnreal/Content/Carla` (see [Build a package](build_linux_ue5.md#build-a-package-with-carla-ue5)). Towns and assets the package does not cook can reach the users of a release later as a [content pack](content_authoring_packs.md), without a new package.
+The `package` target cooks whatever content is checked out in `Unreal/CarlaUnreal/Content/Carla` (see [Build a package](build_linux_ue5.md#build-a-package-with-carla)). Towns and assets the package does not cook can reach the users of a release later as a [content pack](content_authoring_packs.md), without a new package.

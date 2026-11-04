@@ -8,7 +8,7 @@ Town04 is a small town with a backdrop of snow-capped mountains and conifers. A 
 | | |
 | --- | --- |
 | __Map name__ | `Town04_Opt` |
-| __In the default package__ | no: use a source build, or install it from a [content pack](map_content_packs.md) |
+| __In the default package__ | no: install a [content pack](map_content_packs.md) that contains it, such as AdditionalMaps, or use a source build |
 | __Size__ | about 930 x 830 m of roads |
 | __Spawn points__ | 372, from `world.get_map().get_spawn_points()` |
 | __Junctions__ | 27, with 43 traffic lights, 8 stop signs and 4 yield signs |

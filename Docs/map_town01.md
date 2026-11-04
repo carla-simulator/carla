@@ -8,7 +8,7 @@ Town01 is a small town with numerous T-junctions and a variety of buildings, sur
 | | |
 | --- | --- |
 | __Map name__ | `Town01_Opt` |
-| __In the default package__ | no: use a source build, or install it from a [content pack](map_content_packs.md) |
+| __In the default package__ | no: install a [content pack](map_content_packs.md) that contains it, such as AdditionalMaps, or use a source build |
 | __Size__ | about 400 x 330 m of roads |
 | __Spawn points__ | 255, from `world.get_map().get_spawn_points()` |
 | __Junctions__ | 12, all of them T-junctions, 36 traffic lights |

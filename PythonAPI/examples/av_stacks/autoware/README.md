@@ -18,8 +18,8 @@ one **server** process (the simulator) and any number of **clients** that
 connect over RPC (default port 2000). In *synchronous mode* — required here —
 the simulation only advances when exactly **one** designated client calls
 "tick"; our spawner script owns that role. The native ROS2 layer means that,
-once a client has enabled it, ROS2 topics appear on your DDS network just as
-if a robot were publishing them.
+once the server starts with `--ros2`, ROS2 topics appear on your DDS network
+just as if a robot were publishing them.
 
 ---
 
@@ -51,17 +51,8 @@ if a robot were publishing them.
   (Canonical single-dash flags also work and are what our scripts use:
   `-ros2 -rmw=fastdds|cyclonedds|zenoh -ros-domain-id=N -carla-rpc-port=N`.)
 
-- **Migration branch prerequisite (`autoware-port`).** The Autoware vehicle
-  interface inside the simulator — publication of
-  `/vehicle/status/{velocity_status,steering_status,gear_status,control_mode,turn_indicators_status,hazard_lights_status}`,
-  subscription of
-  `/control/command/{control_cmd,gear_cmd,turn_indicators_cmd,hazard_lights_cmd,emergency_cmd}`
-  and `/vehicle/engage`, and the `PythonAPI/examples/autoware_demo.py`
-  ego/sensor spawner — lands with the concurrent `autoware-port` migration
-  work. Until your build includes it, `run_carla_autoware.sh` will detect the
-  missing pieces and exit with a clear message rather than half-start. Nothing
-  in `install/` or `map_tools/` depends on it, so you can prepare Autoware and
-  maps ahead of time.
+- The Autoware vehicle interface in the simulator and
+  `PythonAPI/examples/autoware_demo.py` are part of CARLA 1.0.
 
 **Kernel UDP buffers (required — the stack is unusable without this)**
 
@@ -74,7 +65,7 @@ if a robot were publishing them.
        > /etc/sysctl.d/99-carla-dds.conf'
   ```
 
-  At the stock 4 MB cap, the 20 Hz lidar `PointCloud2` stream over reliable
+  At the stock 4 MB cap, the 10 Hz lidar `PointCloud2` stream over reliable
   DDS writers overruns the receive sockets (`netstat -su` shows
   `RcvbufErrors` climbing by the hundreds of thousands), reliable-writer
   retransmits stall every DDS participant for seconds at a time, and Autoware
@@ -147,17 +138,21 @@ any directory works via its `--map-path` option.)
 **Option A — prebuilt (fast):**
 
 ```bash
-./map_tools/fetch_prebuilt_maps.sh Town10HD
+./map_tools/fetch_prebuilt_maps.sh Town03
 ```
 
 Downloads the community-maintained artifacts from
 `bitbucket.org/carla-simulator/autoware-contents` (available for Town01–Town07
-and Town10HD) into `map_tools/maps/Town10HD/`. These are UE4-era maps, but
+and Town10HD) into `map_tools/maps/<Town>/`. These are UE4-era maps, but
 TIER IV verified the Town10 pair works against UE5 Town10. Known warts: the
 lanelet2 files are y-axis-inverted relative to raw CARLA coordinates (this is
 the convention Autoware expects here, not a bug), they carry **no
 traffic-light regulatory elements**, and there are small origin offsets
 between the pcd and osm.
+
+Town10HD needs no fetch, because `map_tools/maps/Town10HD/` already holds
+the UE 5.8 artifacts. If you fetch Town10HD into that default directory, the
+script overwrites them with the UE4-era ones.
 
 The upstream `.osm` files also lack the
 `<MetaInfo format_version="1.0.0" map_version="1"/>` element that Autoware's
@@ -177,11 +172,9 @@ python3 ./map_tools/generate_map_artifacts.py \
 Connects to a running CARLA server (it never launches one), exports the road
 network from OpenDRIVE, builds the lanelet2 map and point-cloud map, and
 injects traffic-light regulatory elements from the simulator's actual
-traffic-light actors. Caveat: the injected elements are not yet consumable by
-Autoware's traffic-light pipeline (stop-line anchoring and camera ROI
-projection are unverified), which is why the run script disables the
-traffic-light module by default — treat generated maps as
-traffic-light-free for now. `--tick`
+traffic-light actors. In classical mode the run script keeps Autoware's
+traffic-light module on. Two helper scripts feed it CARLA's ground-truth
+light states for these elements. `--tick`
 makes the tool the **single** ticking client of a synchronous world; omit it
 only if another client is already ticking. The lanelet2 converter needs the
 pinned deps from `map_tools/requirements.txt` in a venv — see
@@ -269,11 +262,10 @@ Under the hood the script sequences, in order:
      ADAPI topics publish at a low rate; at sub-realtime sim speed the stock
      3 s staleness window flaps ERROR and the MRM pulses EMERGENCY_STOP —
      the car freezes mid-drive with nothing actually wrong.
-   - `planning/preset/default_preset.yaml`:
-     `launch_traffic_light_module → false`. The generated lanelet2 maps do
-     not yet carry usable traffic-light regulatory elements; with the module
-     on, the car can wait forever at a light it cannot see.
-7. **Autoware**, per mode (below).
+7. **Autoware**, per mode (below). In classical mode the traffic-light
+   module stays on. `run/carla_traffic_light_state_source.py` and
+   `run/autoware_traffic_light_state_publisher.py` feed it CARLA's
+   ground-truth light states.
 8. *(classical, unless `--no-auto`)* **post-launch automation**: wait for the
    ADAPI, then `ros2 service call /api/localization/initialize` (an empty
    request auto-initializes from GNSS; retried — right after startup the
@@ -348,8 +340,8 @@ RViz deliberately runs **outside** the stack launch (`rviz:=false`): with
 stock `autoware.rviz` adapted for CARLA (`<log-dir>/dds/autoware_carla.rviz`
 in docker mode, `<log-dir>/autoware_carla.rviz` in source mode): the image
 panel shows the front camera `autoware_demo.py` spawns
-(`/sensing/camera/front/image`; the stock panel points at the traffic-light
-debug overlay, whose module the CARLA overrides switch off), and the initial
+(`/sensing/camera/front/image`, not the stock traffic-light debug image,
+because the light states come from CARLA), and the initial
 view is the saved `ThirdPersonFollower` on `base_link` rather than the stock
 top-down view on the `viewer` frame, which `map_tf_generator` pins to the
 point-cloud map's centroid and which therefore never follows the ego.
@@ -460,7 +452,7 @@ Two hard-won warnings:
 | Simulator RMW | Status |
 |---|---|
 | **Fast DDS** (`-rmw=fastdds`, default) | **Validated.** UDPv4-only with the generated bridge-whitelist profile; containerized Autoware (CycloneDDS) discovers the simulator out of the box. |
-| CycloneDDS (`-rmw=cyclonedds`) | **Validated** (Town10HD classical to ARRIVED in one measured Phase 1 run; control_cmd ~20 Hz, LiDAR ~10 Hz — not yet repeated). Uses the generated `dds/cyclonedds.xml`. |
+| CycloneDDS (`-rmw=cyclonedds`) | **Validated** (Town10HD classical to ARRIVED in a Phase 1 run and again on the CARLA 1.0 package in 2026-11; control_cmd ~20 Hz, LiDAR ~10 Hz). Uses the generated `dds/cyclonedds.xml`. |
 | Zenoh (`-rmw=zenoh`) | Works with `--stack source`; the script starts the required router first (`ros2 run rmw_zenoh_cpp rmw_zenohd`) and runs zenoh end-to-end. |
 
 Both Humble/22.04 and Jazzy/24.04 hosts work; Jazzy is the Autoware Docker
@@ -505,8 +497,8 @@ Read this before filing bugs — most of it is inherited and known.
   Bench2Drive / CARLA 0.9.15-era imagery. Behavior on UE5.8 visuals is
   **unvalidated** — expect degraded performance in some scenes; treat e2e mode
   as a pipeline reference, not a driving-quality benchmark.
-- **Control calibration.** Autoware's `sample_vehicle` gains and the original
-  interface calibration were tuned for a Prius-class vehicle. Other ego
+- **Control calibration.** The steering compensation was measured on the
+  Lincoln MKZ. Other ego
   blueprints will track more loosely until you re-tune the vehicle model /
   controller parameters.
 - **`fixed_delta_seconds` coupling.** Sensor rates, the sync-mode tick, and

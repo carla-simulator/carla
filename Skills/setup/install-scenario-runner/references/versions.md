@@ -10,7 +10,8 @@ rather than the docs, because the published docs are years behind the code.
                               |
   master ────────────────────────────────────────────── 0.9.16 (Sep 2025)   <- live
      |
-     ├── ue5-master  (forked 2024-06-26, 5 commits)      CARLA 0.10.0 / UE5
+     ├── ue5-master  (forked 2024-06-26, 5 commits)      CARLA 0.10.0 / UE 5.5
+     ├── ue58-dev    (5fd2880, 2026-09-02)               CARLA on UE 5.8 (1.0 line)
      |
      ├── leaderboard-2.0 ─┐ same commit d7bcaf0 (May 2024)
      ├── leaderboard-2.1 ─┘  Leaderboard 2.0 and 2.1
@@ -21,8 +22,9 @@ rather than the docs, because the published docs are years behind the code.
 
 | Branch | Tip | CARLA | Purpose |
 |---|---|---|---|
-| `master` | `94ff3b8` 2025-09-29 "0.9.16 release" | 0.9.14 – 0.9.16 | the active branch |
-| `ue5-master` | `2616d21` 2024-10-23 | 0.10.0 | UE5 port + Scenic |
+| `master` | `94ff3b8` 2025-09-29 "0.9.16 release" | 0.9.14 – 0.9.16 | the UE4 line |
+| `ue5-master` | `2616d21` 2024-10-23 | 0.10.0 (UE 5.5) | UE5 port + Scenic |
+| `ue58-dev` | `5fd2880` 2026-09-02 | **CARLA 1.0** | the default branch |
 | `leaderboard-2.0` | `d7bcaf0` 2024-05-03 | leaderboard build | LB 2.0 |
 | `leaderboard-2.1` | `d7bcaf0` 2024-05-03 | leaderboard build | LB 2.1 — **identical to 2.0** |
 | `leaderboard-1.0` | `b9c342e` 2023-06-15 | 0.9.10.1 | LB 1.0 |
@@ -65,7 +67,7 @@ clarity, but a `leaderboard-2.0` checkout is not a real mismatch.
 - `--reloadWorld`'s help text says "(default=True)"; it is `store_true`, so the
   default is **False**. It is forced to True only in `--route` mode.
 
-## ue5-master (CARLA 0.10.0 / UE5)
+## ue5-master (CARLA 0.10.0 / UE 5.5)
 
 Forked from `master` at `7758d06` (2024-06-26) and never merged back, so it is
 missing ~15 months of master fixes. Five commits on top:
@@ -103,6 +105,25 @@ What changes for a user:
   so OpenSCENARIO paths from master's docs are wrong here.
 - Cleanup is enabled (`manager.cleanup()`, `CarlaDataProvider.cleanup()` active).
 
+## ue58-dev (CARLA on UE 5.8, the 1.0 line)
+
+The branch to use against a CARLA tree built on Unreal Engine 5.8.
+
+- **Example configs** use Town01_Opt to Town05_Opt and Town10HD_Opt;
+  `scenario_runner.py --list` shows **96** configs.
+- **UE5 name translation.** It translates map names and blueprint names to their
+  UE5 forms, and carries route-mode fixes.
+- **Weather works.** `basic_scenario._initialize_environment` applies the config's
+  `<weather>` element; on `master` and `ue5-master` that call is commented out.
+- **Scenic**: `srunner/scenic/` holds the Scenic carlaChallenge ports.
+- **Python**: `requirements.txt` pins `py-trees==2.6.0`, unlike every other
+  branch; the branch ran fine on Python 3.13.
+- **This is the CARLA 1.0 branch**, and `MIN_CARLA_VERSION = '1.0'`. A `0.10.0`
+  server is the UE 5.5 release and is rejected with an `ImportError`; use
+  `ue5-master` for those.
+- **Leaderboard pair**: the leaderboard repo has a matching `ue58-dev` branch
+  (`2b3eaa7`); use the two together ([[install-leaderboard]]).
+
 ## The leaderboard branches
 
 They are frozen snapshots whose scenario library matches a leaderboard release.
@@ -121,6 +142,8 @@ but **not** as standalone configs include `Accident*`, `ParkedObstacle*`,
 
 ## Python and OS
 
+- `ue58-dev` pins `py-trees==2.6.0` and ran fine on Python 3.13; the window below
+  is for `master` and the leaderboard branches.
 - `py_trees==0.8.3` has no wheels for 3.11+ metadata in some environments and the
   API is the constraint anyway: **3.7 – 3.10** is the safe window, matching the
   CARLA client wheels (0.9.16 ships cp310/311/312; 0.9.15 cp37–cp310).

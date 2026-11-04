@@ -14,11 +14,6 @@ GitHub Discussions</a>
 - [__Windows build__](#windows-build)
 - [__Running CARLA__](#running-carla)
 - [__Other__](#other)
-- [__System requirements__](#system-requirements)
-- [__Linux build__](#linux-build)
-- [__Windows build__](#windows-build)
-- [__Running CARLA__](#running-carla)
-- [__Other__](#other)
 
 ---
 
@@ -27,11 +22,15 @@ GitHub Discussions</a>
 * [Expected disk space to build CARLA.](#expected-disk-space-to-build-carla)
 * [Recommended hardware to run CARLA.](#recommended-hardware-to-run-carla)
 
+---
+
 ## Linux build
 
 * ["CarlaUnreal.sh" script does not appear when downloading from GitHub.](#carlaunrealsh-script-does-not-appear-when-downloading-from-github)
 * [The editor does not build or does not open on Linux.](#the-editor-does-not-build-or-does-not-open-on-linux)
 * [Cloning the Unreal Engine repository shows an error.](#cloning-the-unreal-engine-repository-shows-an-error)
+
+---
 
 ## Windows build
 
@@ -40,6 +39,8 @@ GitHub Discussions</a>
 * [CMake or compiler errors on Windows.](#cmake-or-compiler-errors-on-windows)
 * [The editor does not build or does not open on Windows.](#the-editor-does-not-build-or-does-not-open-on-windows)
 * [Modules are missing or built with a different engine version.](#modules-are-missing-or-built-with-a-different-engine-version)
+
+---
 
 ## Running CARLA
 
@@ -53,6 +54,8 @@ GitHub Discussions</a>
 * [Cannot run example scripts or "RuntimeError: rpc::rpc_error during call in function version".](#cannot-run-example-scripts-or-runtimeerror-rpcrpc_error-during-call-in-function-version)
 * [CARLA server failed to start on RPC port 2000.](#carla-server-failed-to-start-on-rpc-port-2000)
 
+---
+
 ## Other
 
 * [Create a binary version of CARLA.](#create-a-binary-version-of-carla)
@@ -62,7 +65,6 @@ GitHub Discussions</a>
 
 ---
 
-<!-- ======================================================================= -->
 ## System requirements
 <!-- ======================================================================= -->
 
@@ -95,14 +97,14 @@ GitHub Discussions</a>
 > Many different issues show up as a failing `cmake --build Build --target launch`. These are the most likely reasons:
 >
 > * __Use the CARLA fork of Unreal Engine 5.8.__ CARLA does not build against a stock engine. Check that `CARLA_UNREAL_ENGINE_PATH` points at a build of the `ue58-dev-carla` branch of the fork, and that its editor starts on its own.
-> * __Set `CARLA_UNREAL_ENGINE_PATH` for every shell.__ Add `export CARLA_UNREAL_ENGINE_PATH=<path_to_the_engine>` to `~/.bashrc` or `~/.profile`, otherwise it has to be set in every new terminal.
+> * __Set `CARLA_UNREAL_ENGINE_PATH` for every shell.__ Add `export CARLA_UNREAL_ENGINE_PATH=<path_to_the_engine>` to `~/.bashrc` or `~/.profile`, otherwise it has to be set in the terminal before configuring a new build directory.
 > * __Download the content.__ The server will not run without it. The content repository has to be cloned into `Unreal/CarlaUnreal/Content/Carla`.
 > * __Set the DLSS SDK.__ The CMake configure step looks for the NVIDIA DLSS SDK in `DLSS_SDK`, then in `~/SDKs/DLSS` (where `CarlaSetup.sh` fetches it), clones it there if it is missing, and stops with "Could not resolve the NVIDIA DLSS SDK" if that fails. Configure with `-DCARLA_DLSS_SDK_PATH=disabled` to build CARLA without it. A build of the project outside CARLA's CMake fails with "DLSS_SDK is not set" unless `DLSS_SDK` points at the SDK, or is `disabled` to opt out.
 > * __Configure before building.__ Run `cmake -G Ninja -S . -B Build --toolchain=$PWD/CMake/Toolchain.cmake -DCMAKE_BUILD_TYPE=Release -DENABLE_ROS2=ON` once, and run every build command against that same `Build` directory. A preset (`cmake --preset <name>`) builds into `Build/<name>` instead.
 > * __Check the system.__ The UE5 version of CARLA supports Ubuntu 22.04 and 24.04, and cannot be built on an external disk.
 > * __Check dependencies.__ `bash Util/SetupUtils/InstallPrerequisites.sh --python-path=python3` installs the same prerequisites as `CarlaSetup.sh`.
 >
-> Other specific reasons for a system to show conflicts with CARLA may occur. Please, post these on the [GitHub Discussions](https://github.com/carla-simulator/carla/discussions) so the team can get to know more about them.
+> Other specific reasons for a system to show conflicts with CARLA may occur. Please post these on [GitHub Discussions](https://github.com/carla-simulator/carla/discussions) so the team can get to know more about them.
 
 <!-- ======================================================================= -->
 
@@ -110,7 +112,7 @@ GitHub Discussions</a>
 
 > __1. Is the Epic Games account linked to GitHub?__ The engine fork is private. To clone it, create an [Epic Games](https://www.unrealengine.com/en-US/) account and [link it to your GitHub account](https://www.unrealengine.com/en-US/ue-on-github), then accept the invitation to the Epic Games organization on GitHub.
 >
-> __2. Are the credentials right?__ `CarlaSetup.sh` reads them from `GIT_LOCAL_CREDENTIALS=github_username@github_token`, or asks for them with `--interactive`. Use a GitHub token, not your password, and use `--interactive` if your username contains an `@`.
+> __2. Are the credentials right?__ `CarlaSetup.sh` reads them from `GIT_LOCAL_CREDENTIALS=github_username@github_token`, or, with `--interactive`, git asks for them during the clone. Use a GitHub token, not your password, and use `--interactive` if your username contains an `@`.
 >
 > __3. Is git properly installed?__ Sometimes an error shows incompatibilities with the `https` protocol. It can be solved by reinstalling git:
 >
@@ -162,19 +164,19 @@ GitHub Discussions</a>
 > Many different issues show up as a failing `cmake --build Build --target launch`. These are the most likely reasons:
 >
 > * __Restart the computer.__ There is a lot going on during the Windows setup. Restart and make sure that everything is updated properly.
-> * __Use the CARLA fork of Unreal Engine 5.8.__ `CARLA_UNREAL_ENGINE_PATH` must hold the absolute path of the engine build. `CarlaSetup.bat` sets it; a setup done by other means may not have.
+> * __Use the CARLA fork of Unreal Engine 5.8.__ `CARLA_UNREAL_ENGINE_PATH` must hold the absolute path of the engine build. `CarlaSetup.bat` sets it when it downloads the engine; a setup done by other means may not have.
 > * __Download the content.__ The server will not run without it.
 > * __Set the DLSS SDK.__ The CMake configure step looks for the NVIDIA DLSS SDK in `DLSS_SDK`, then in `%USERPROFILE%\SDKs\DLSS`, clones it there if it is missing, and stops with "Could not resolve the NVIDIA DLSS SDK" if that fails. Configure with `-DCARLA_DLSS_SDK_PATH=disabled` to build CARLA without it. A build of the project outside CARLA's CMake, such as from Visual Studio, fails with "DLSS_SDK is not set" unless `DLSS_SDK` points at the SDK, or is `disabled` to opt out.
 > * __Visual Studio 2022.__ See [CMake or compiler errors on Windows](#cmake-or-compiler-errors-on-windows).
 > * __Do not build on an external disk.__ Windows does not give the required permissions there.
 >
-> Other specific reasons for a system to show conflicts with CARLA may occur. Please, post these on the [GitHub Discussions](https://github.com/carla-simulator/carla/discussions) so the team can get to know more about them.
+> Other specific reasons for a system to show conflicts with CARLA may occur. Please post these on [GitHub Discussions](https://github.com/carla-simulator/carla/discussions) so the team can get to know more about them.
 
 <!-- ======================================================================= -->
 
 ###### Modules are missing or built with a different engine version.
 
-> Click on __Accept__ to rebuild them.
+> Click __Yes__ to rebuild them.
 
 ---
 
@@ -219,7 +221,7 @@ GitHub Discussions</a>
 
 > Python cannot find the CARLA client library. It is distributed as a wheel (`.whl`), and has to be installed into the interpreter that runs the script:
 >
-> * From a source build: `cmake --build Build --target carla-python-api-install` builds the wheel and installs it with pip.
+> * From a source build: `cmake --build Build --target carla-python-api-install` builds the client and installs `PythonAPI/carla` with pip in editable mode.
 > * From a package: `pip3 install PythonAPI/carla/dist/carla-*.whl`.
 >
 > The wheel is built for one Python version. Check that the interpreter running the script is the one the wheel was built or installed for:
@@ -237,9 +239,7 @@ GitHub Discussions</a>
 >
 >      python3 -c "import carla; print(carla.__file__)"
 >
-> Run the script from another directory, and install the client into the interpreter you use:
->
->      cmake --build Build --target carla-python-api-install
+> Run the script from another directory, and install the client as in [ImportError: No module named 'carla'](#importerror-no-module-named-carla).
 
 <!-- ======================================================================= -->
 
@@ -249,9 +249,9 @@ GitHub Discussions</a>
 >
 >      RuntimeError: rpc::rpc_error during call in function version
 >
-> The client could not get the version from the server. The server is not running, is still loading a map, or listens on another port, or the client and the server are different versions of CARLA.
+> The client asked the server for its version, and the server answered with an error. The likely reasons are a server that is still loading a map, or a client and a server from different versions of CARLA. A server that is not running, or that listens on another port, gives a different error, `time-out of Nms while waiting for the simulator`; the client connects to `carla.Client('localhost', 2000)` by default, and the server listens on `-carla-rpc-port=N` otherwise.
 >
-> * Wait until the server has finished loading, and check the port: `carla.Client('localhost', 2000)` by default, `-carla-rpc-port=N` on the server otherwise.
+> * Wait until the server has finished loading.
 > * Use the client that matches the server, installed as in [ImportError: No module named 'carla'](#importerror-no-module-named-carla).
 > * Check the installed client with `pip3 show carla`, and remove any other copy that `python3 -c "import carla; print(carla.__file__)"` finds first.
 
@@ -268,7 +268,7 @@ GitHub Discussions</a>
 
 ###### Create a binary version of CARLA.
 
-> Run `cmake --build Build --target package` from the root of the repository. The package lands in `Build/Package/`, with the server and the matching Python wheel. See [Build a package](build_linux_ue5.md#build-a-package-with-carla-ue5) for the options, such as the maps to cook.
+> Run `cmake --build Build --target package` from the root of the repository. The package lands in `Build/Package/`, with the server and the matching Python wheel. See [Build a package](build_linux_ue5.md#build-a-package-with-carla) for the options, such as the maps to cook.
 
 <!-- ======================================================================= -->
 

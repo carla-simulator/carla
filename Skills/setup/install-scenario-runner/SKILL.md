@@ -1,8 +1,8 @@
 ---
 name: install-scenario-runner
-description: Installs CARLA's ScenarioRunner (the official scenario engine) and picks the branch that matches the CARLA in use — master for 0.9.14-0.9.16 (UE4), ue5-master for 0.10.0 (UE5), leaderboard-1.0/2.0/2.1 when driving the Leaderboard. Clones or checks out the branch, installs requirements, wires PYTHONPATH (including the `agents` package the carla wheel does not ship), and verifies the import. Use when the user asks to "install scenario runner", "set up SR", "run CARLA scenarios", "use OpenSCENARIO", or has a scenario_runner that fails to import.
+description: Installs CARLA's ScenarioRunner (the official scenario engine) and picks the branch that matches the CARLA in use, defaulting to ue58-dev (CARLA on Unreal Engine 5.8, the 1.0 line): master for 0.9.14-0.9.16 (UE4), ue5-master for the 0.10.0 release on UE 5.5, leaderboard-1.0/2.0/2.1 when driving the Leaderboard. Clones or checks out the branch, installs requirements, wires PYTHONPATH (including the `agents` package the carla wheel does not ship), and verifies the import. Use when the user asks to "install scenario runner", "set up SR", "run CARLA scenarios", "use OpenSCENARIO", or has a scenario_runner that fails to import.
 license: MIT
-compatibility: Linux/Windows, Python 3.7-3.10 (py_trees 0.8 pins the ceiling). Needs an extracted CARLA release or source checkout for the `agents` package; does NOT need UE4_ROOT. Verified against scenario_runner master @0.9.16 and ue5-master.
+compatibility: Linux/Windows, Python 3.7-3.10 for master and the leaderboard branches (py_trees 0.8 pins the ceiling); ue58-dev uses py-trees 2.6.0 and ran on Python 3.13. Needs an extracted CARLA release or source checkout for the `agents` package; does NOT need UE4_ROOT. Verified against scenario_runner master @0.9.16, ue5-master @2616d21 and ue58-dev @5fd2880.
 metadata:
   group: setup
   prerequisites: scripts/check_env.sh
@@ -50,26 +50,39 @@ python3 scripts/install_scenario_runner.py plan       # -> branch + exact comman
 and any `SCENARIO_RUNNER_ROOT` already present. `plan` turns that into a branch
 recommendation and prints the commands rather than running them.
 
+`ue58-dev` is **the default**: it is the branch under active development and the
+one to assume unless the CARLA in use says otherwise. The rest are still
+supported and still used, but they are not the default.
+
 | Your CARLA | ScenarioRunner branch | Notes |
 |---|---|---|
-| 0.9.14 / 0.9.15 / 0.9.16 (UE4) | `master` | the live branch; 0.9.16 released Sep 2025 |
-| 0.10.0 / 1.0 (UE5) | `ue5-master` | Town10HD_Opt **only**; 11 of 101 configs ported; forked Jun 2024. The UE5 line reports `0.10.0` before the 1.0 release and `1.x` after; the same branch is the match for both until scenario_runner publishes a 1.0 branch — check its branch list first |
+| 1.x (CARLA 1.0, UE 5.8) | **`ue58-dev`** (default) | Town01_Opt to Town05_Opt and Town10HD_Opt; `--list` shows 96 configs; UE5 map-name and blueprint-name translation; route-mode fixes; py-trees 2.6; `srunner/scenic/` included |
+| 0.9.14 / 0.9.15 / 0.9.16 (UE4) | `master` | the UE4 line; 0.9.16 released Sep 2025 |
+| 0.10.x (UE 5.5) | `ue5-master` | Town10HD_Opt **only**; 11 of 101 configs ported; forked Jun 2024 |
 | leaderboard build (0.9.14+large maps) | `leaderboard-2.1` *or* `leaderboard-2.0` | **byte-identical branches** — same commit |
 | 0.9.10.1 | `leaderboard-1.0` | Leaderboard 1.0 only |
 | 0.9.13 and older | the matching `0.9.x` tag/branch | frozen, unsupported |
 
-The minimum enforced in code is `MIN_CARLA_VERSION = '0.9.14'` on `master`, and
-it is a hard `ImportError` at startup, not a warning. `0.10.0` passes that check
-because version comparison is numeric per component (`0.10 > 0.9`), and `1.x`
-passes it on the major alone.
+**`ue58-dev` is the CARLA 1.0 branch**, and a 1.0 server resolves straight to it.
+`0.10.x` is the UE 5.5 release and resolves to `ue5-master`. An unreadable version
+gives `ue58-dev`, the default.
+An unreadable version gives `ue58-dev` too.
+
+The minimum enforced in code is a hard `ImportError` at startup, not a warning:
+`MIN_CARLA_VERSION = '1.0'` on `ue58-dev` and `'0.9.14'` on `master`. A `0.10.0`
+server is rejected by `ue58-dev` outright — that is the UE 5.5 release, and
+`ue5-master` is its branch.
 
 ### Step 3: Clone
 
 ```bash
+# CARLA on UE 5.8 (the 1.0 line) — the default
+git clone -b ue58-dev --single-branch https://github.com/carla-simulator/scenario_runner.git
+
 # UE4 / CARLA 0.9.16
 git clone -b master --single-branch https://github.com/carla-simulator/scenario_runner.git
 
-# UE5 / CARLA 0.10.0
+# CARLA 0.10.0 release on UE 5.5
 git clone -b ue5-master --single-branch https://github.com/carla-simulator/scenario_runner.git
 
 # driving the Leaderboard (pick the branch that matches your leaderboard checkout)
@@ -77,12 +90,12 @@ git clone -b leaderboard-2.1 --single-branch https://github.com/carla-simulator/
 ```
 
 `--single-branch` is worth it: the repo carries the OpenSCENARIO 2.0 test corpus
-and, on `ue5-master`, ~230k lines of Scenic OpenDRIVE assets.
+and, on `ue5-master` and `ue58-dev`, the Scenic assets under `srunner/scenic/`.
 
 Already cloned? Switch instead of re-cloning:
 
 ```bash
-python3 scripts/install_scenario_runner.py install --root ~/scenario_runner --branch ue5-master
+python3 scripts/install_scenario_runner.py install --root ~/scenario_runner --branch ue58-dev
 ```
 
 ### Step 4: Requirements
@@ -92,9 +105,12 @@ python3 scripts/install_scenario_runner.py install --root ~/scenario_runner --br
 python3 -m pip install -r ~/scenario_runner/requirements.txt
 ```
 
-`py_trees==0.8.3` is pinned and **not optional**: the behaviour-tree API changed
-in 2.x and scenarios fail with attribute errors. `numpy` must stay `<2` for the
-same reason the CARLA client does — the bindings are built against the 1.x C API.
+The `py-trees` pin is **not optional** and differs by branch: `ue58-dev` pins
+`2.6.0`, master and the leaderboard branches pin `0.8.3`. The behaviour-tree API
+changed in 2.x, so a scenario written for one major version fails with attribute
+or type errors on the other. Always install from the checkout's own
+`requirements.txt` rather than a remembered version. `numpy` must stay `<2` for
+the same reason the CARLA client does — the bindings are built against the 1.x C API.
 
 ### Step 5: Environment
 
@@ -138,14 +154,19 @@ path to record: `set_config` derives the engine-specific variable itself.
 requirements, export the three variables, `check_env.sh` passes, then run
 [[run-scenario]] `--list`.
 
-**Example 2: "I have CARLA 0.10.0 and scenarios don't work"**
+**Example 2: "I have a UE5 server and scenarios don't work"**
 
-Almost certainly `master` checked out against a UE5 server. `install --branch
-ue5-master` switches it. Note the knock-on effects: 0.10.0 ships `Town10HD_Opt`
-only and just **11 of the 101 configs** were retargeted to it, the ego blueprint
-is `vehicle.lincoln.mkz` (**not** `mkz_2017`), and weather behaviours are
-commented out in `basic_scenario.py`. `list_scenarios.py --town Town10HD_Opt`
-prints the runnable set.
+Almost certainly `master` checked out against a UE5 server. The version says
+which one: `1.x` is CARLA 1.0 on UE 5.8, `0.10.x` is the UE 5.5 release.
+
+- CARLA 1.0: `install --branch ue58-dev`. Its configs use Town01_Opt to Town05_Opt
+  and Town10HD_Opt, and it translates UE5 map and blueprint names.
+- UE 5.5 release: `install --branch ue5-master`. That release ships
+  `Town10HD_Opt` only and just **11 of the 101 configs** were retargeted to it;
+  the ego blueprint is `vehicle.lincoln.mkz` (**not** `mkz_2017`).
+
+On both branches the weather call in `basic_scenario.py` is commented out.
+`list_scenarios.py --town Town10HD_Opt` prints the runnable set.
 
 **Example 3: "set up SR to run the leaderboard"**
 
@@ -166,15 +187,22 @@ Solution: upgrade the client ([[install-python-api]]), or check out the branch f
 your version.
 
 **Problem: `Scenario 'FollowLeadingVehicle_1' not supported ... Exiting`**
-Cause: usually the wrong branch — `ue5-master` deleted `change_lane.py`,
+Cause: usually the wrong branch, e.g. `master` against a UE5 server, or
+`ue5-master` against a UE 5.8 one (use `ue58-dev` there). `ue5-master` deleted `change_lane.py`,
 `cut_in.py`, `freeride.py` and `no_signal_junction_crossing.py`. Can also be
 `SCENARIO_RUNNER_ROOT` unset, which makes the scenario glob resolve to `./`.
 Solution: export `SCENARIO_RUNNER_ROOT`; confirm the branch with
 `git -C $SCENARIO_RUNNER_ROOT rev-parse --abbrev-ref HEAD`.
 
-**Problem: scenario starts, then `AttributeError` inside py_trees**
-Cause: py_trees 2.x.
-Solution: `pip install py-trees==0.8.3`.
+**Problem: a CARLA 1.0 tree, but `plan` recommends `ue5-master`**
+Cause: the server it read reports `0.10.x`, which is the UE 5.5 release.
+Solution: point it at the 1.0 server, or force it with
+`plan --branch ue58-dev` / `install --branch ue58-dev`.
+
+**Problem: scenario starts, then `AttributeError` or `TypeError` inside py_trees**
+Cause: the installed py_trees does not match the branch's pin — 2.6.0 on
+`ue58-dev`, 0.8.3 on the others.
+Solution: `pip install -r $SCENARIO_RUNNER_ROOT/requirements.txt`.
 
 **Problem: `UnicodeEncodeError: 'ascii' codec can't encode character '✓'`**
 Cause: `--debug` prints py_trees tick marks to a non-UTF-8 stdout (docker, cron).

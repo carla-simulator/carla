@@ -42,7 +42,10 @@ else
 fi
 
 echo "== ScenarioRunner pairing =="
-if [ -z "${SCENARIO_RUNNER_ROOT}" ] || ! carla_sr_is_root "${SCENARIO_RUNNER_ROOT}"; then
+if carla_lb_is_decoupled; then
+  ok "leaderboard vendors its scenario engine — no scenario_runner checkout needed"
+  export LB_DECOUPLED=1
+elif [ -z "${SCENARIO_RUNNER_ROOT}" ] || ! carla_sr_is_root "${SCENARIO_RUNNER_ROOT}"; then
   bad "no scenario_runner checkout — the leaderboard imports srunner and cannot run without it"
   bad "  run the install-scenario-runner skill (branch $(carla_lb_required_sr_branch))"
 else
@@ -71,7 +74,7 @@ fi
 
 echo "== Python client =="
 "${PYTHON}" - <<'PY'
-import importlib.util as u, sys
+import importlib.util as u, sys, os
 def ok(m): print(f"  PASS {m}")
 def bad(m): print(f"  FAIL {m}"); sys.exit(3)
 def warn(m): print(f"  WARN {m}")
@@ -106,18 +109,20 @@ ok(f"carla importable (client {cv})")
 # evaluator special-cases it and skips its own minimum-version check.
 if cv == "leaderboard":
     ok("client is the leaderboard CARLA build ('leaderboard' version string)")
-for mod, why in [("agents.navigation.global_route_planner", "add ${CARLA_ROOT}/PythonAPI/carla to PYTHONPATH"),
-                 ("srunner.scenariomanager.carla_data_provider", "add ${SCENARIO_RUNNER_ROOT} to PYTHONPATH"),
-                 ("leaderboard.utils.statistics_manager", "add ${LEADERBOARD_ROOT} to PYTHONPATH")]:
+mods = [("agents.navigation.global_route_planner", "add ${CARLA_ROOT}/PythonAPI/carla to PYTHONPATH"),
+        ("leaderboard.utils.statistics_manager", "add ${LEADERBOARD_ROOT} to PYTHONPATH")]
+if not os.environ.get("LB_DECOUPLED"):
+    mods.insert(1, ("srunner.scenariomanager.carla_data_provider", "add ${SCENARIO_RUNNER_ROOT} to PYTHONPATH"))
+for mod, why in mods:
     if not have(mod):
         bad(f"cannot import {mod} — {why}")
-ok("agents / srunner / leaderboard all importable")
+ok("agents / leaderboard imports all resolve")
 missing = [m for m in ("py_trees", "dictor", "requests", "tabulate", "numpy", "shapely", "networkx")
            if not have(m)]
 if missing:
-    bad(f"missing requirements: {', '.join(missing)} — pip install -r $LEADERBOARD_ROOT/requirements.txt"
-        " -r $SCENARIO_RUNNER_ROOT/requirements.txt")
-ok("leaderboard + scenario_runner requirements importable")
+    extra = "" if os.environ.get("LB_DECOUPLED") else " -r $SCENARIO_RUNNER_ROOT/requirements.txt"
+    bad(f"missing requirements: {', '.join(missing)} — pip install -r $LEADERBOARD_ROOT/requirements.txt{extra}")
+ok("requirements importable")
 PY
 [ $? -ne 0 ] && rc=1
 

@@ -15,7 +15,10 @@ ROS2 interface. It has three modes and one add-on:
 | Tag | Why |
 |-----|-----|
 | `0.45.1` | TIER IV-validated baseline for CARLA native ROS2 (Humble / Ubuntu 22.04 source build). Default on Humble. |
-| `1.9.0` | Current Autoware release (`autoware_universe` 0.52.0 / `autoware_core` 1.9.0). Default on Jazzy and for `--docker`. |
+| `1.9.0` | Current Autoware release (`autoware_universe` 0.52.0 / `autoware_core` 1.9.0). Default on Jazzy. |
+
+These pins apply to the source build. `--docker` pulls the rolling
+`universe[-cuda]-<distro>` tag unless you give `--version`.
 
 Override with `--version <tag>`. Supported OS/ROS pairings are enforced:
 Humble ↔ Ubuntu 22.04, Jazzy ↔ Ubuntu 24.04 — the script refuses a source
@@ -78,7 +81,7 @@ ships a `cyclonedds.xml` that demands 10 MB socket buffers (hosts commonly cap
 `net.core.rmem_max` at 4 MB) and pins the `lo` interface, which breaks
 discovery with the simulator. `run/run_carla_autoware.sh --stack docker`
 generates a validated replacement (bridge-pinned, `MaxAutoParticipantIndex=300`,
-1–4 MB buffers) and wires it in automatically — prefer it over manual runs.
+10–64 MB buffers) and wires it in automatically — prefer it over manual runs.
 
 ## lidar_centerpoint model layout
 

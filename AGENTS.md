@@ -4,7 +4,7 @@ Guidance for any coding agent working in this repository.
 
 ## Skills
 
-This repo ships a library of **62 vetted CARLA procedures** under
+This repo ships a library of **63 vetted CARLA procedures** under
 [`Skills/`](Skills/). Each is a directory containing a `SKILL.md` with YAML
 frontmatter (`name`, `description`, `compatibility`, `metadata`), the step-by-step
 procedure, and often `scripts/` and `references/` beside it.
@@ -36,7 +36,17 @@ Project config is in [`.mcp.json`](.mcp.json); clients that read it get the
 tools automatically. Agents without MCP should read `Skills/` directly — the
 files are the source of truth either way.
 
+`.mcp.json` also registers `unreal-mcp` (`http://localhost:8000/mcp`), Epic's
+Unreal MCP server, which the CarlaUnreal editor starts on load. It acts on the
+open editor (actors, viewport camera, assets, output log), not on a running
+CARLA server, and is only up while the full editor is open — not in `-game` or
+packaged builds. See [`Docs/agent_skills.md`](Docs/agent_skills.md#unreal-mcp-in-the-editor).
+
 ## Skill catalogue
+
+### `contributing`
+
+- **`open-carla-pr`** — Takes a contribution to CARLA on UE 5.8 from first contact to a pull request against ue58-dev — bug and feature issues from the repo's templates, GitHub Discussions to agree CI or large changes first....
 
 ### `docs`
 
