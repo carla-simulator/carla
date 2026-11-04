@@ -98,8 +98,9 @@ jobs:
               conda create --yes --quiet --name "${ENV_NAME}" "python=${VERSION}"
             fi
             # From Python 3.15 the defaults channel ships libpython in its own
-            # package, which Boost.Python needs to configure.
-            if ! conda run --name "${ENV_NAME}" python -c "import os, sys, sysconfig; sys.exit(not os.path.exists(os.path.join(sys.base_prefix, 'lib', sysconfig.get_config_var('LDLIBRARY'))))"; then
+            # package, which Boost.Python needs to configure. Check the file
+            # itself: older builds report a static LDLIBRARY but ship the .so.
+            if [ ! -e "$(conda run --name "${ENV_NAME}" python -c "import sys; print(sys.base_prefix)")/lib/libpython${VERSION}.so" ]; then
               conda install --yes --quiet --name "${ENV_NAME}" "libpython=${VERSION}"
             fi
             conda run --name "${ENV_NAME}" python -m pip install --quiet numpy build
