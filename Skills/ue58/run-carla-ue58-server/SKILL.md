@@ -203,12 +203,17 @@ search string, so `TEXT("-ros2")` matches `-ros2` — the opposite of UE4, where
 explicit `Strifind` fallback in `CarlaSettings.cpp`, but `-ros2` works on every
 ue58 commit.
 
-**Sensors must be enabled individually, and the call moved.** In UE 5.8
-`enable_for_ros()` is on **`Sensor`**, not on `Actor` as in 0.9.16:
+**Sensors publish by default, and the call moved.** The project setting
+`ROS2TopicVisibility` is on by default, so every sensor that has a ROS 2
+publisher publishes as soon as it spawns. Call `enable_for_ros()` only when
+that setting is off or after `disable_for_ros()`. In UE 5.8 the call is on
+**`Sensor`**, not on `Actor` as in 0.9.16:
 
 ```python
 s = world.spawn_actor(cam_bp, transform, attach_to=vehicle)
-s.enable_for_ros()          # without this the sensor is never ticked
+s.is_enabled_for_ros()      # True right after spawn
+s.disable_for_ros()         # stops the topic
+s.enable_for_ros()          # starts it again
 ```
 
 Verified: `hasattr(sensor, 'enable_for_ros')` is `True`, `hasattr(vehicle, …)` is
@@ -242,7 +247,7 @@ which compiles shaders.
 **Example 2: "publish camera images to ROS 2"**
 
 `DETACH=1 ROS2=1 bash scripts/run_server.sh game`, spawn a `hero` vehicle and a
-camera with `ros_name`, call `enable_for_ros()`, then `ros2 topic list`. No DDS
+camera with `ros_name`, then `ros2 topic list`. No DDS
 profile file needed.
 
 **Example 3: "the client can't find any maps"**

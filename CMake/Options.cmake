@@ -161,6 +161,15 @@ carla_string_option (
   "${CARLA_UNREAL_ENGINE_PATH_INFERRED}"
 )
 
+# A value passed with -D can hold Windows backslashes, which break the generated CMake files.
+cmake_path (
+  CONVERT
+  "${CARLA_UNREAL_ENGINE_PATH}"
+  TO_CMAKE_PATH_LIST
+  CARLA_UNREAL_ENGINE_PATH
+  NORMALIZE
+)
+
 carla_message ("Using ${CARLA_UNREAL_ENGINE_PATH} as Unreal Engine root path.")
 
 if (EXISTS ${CARLA_UNREAL_ENGINE_PATH})

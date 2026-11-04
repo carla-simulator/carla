@@ -704,7 +704,7 @@ Stops the recording in progress. If you specified a path in `filename`, the reco
 - <a name="carla.Client.stop_replayer"></a>**<font color="#7fb800">stop_replayer</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**keep_actors**</font>)  
 Stop current replayer.  
     - **Parameters:**
-        - `keep_actors` (_bool_) - True if you want autoremove all actors from the replayer, or False to keep them.  
+        - `keep_actors` (_bool_) - If False, the replay runs to its end before stopping, so the actors the recording destroys are removed and the others stay. If True, every replayed actor stays as it is.  
 - <a name="carla.Client.unmount_content_pack"></a>**<font color="#7fb800">unmount_content_pack</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**name**</font>)  
 Unmounts a content pack. Refused (RuntimeError) while a map of the pack is the current world or objects loaded from it are still alive; load another map first. Returns True on success.  
     - **Parameters:**
@@ -1058,9 +1058,7 @@ Flattened array of `width * height` float32 distances in meters, row major. Copy
 
 ##### Dunder methods
 - <a name="carla.DistanceImage.__getitem__"></a>**<font color="#7fb800">\__getitem__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**pos**=int</font>)  
-Returns the distance in meters at flattened pixel index `pos`.  
-- <a name="carla.DistanceImage.__iter__"></a>**<font color="#7fb800">\__iter__</font>**(<font color="#00a6ed">**self**</font>)  
-Iterate over the per-pixel distances (float, meters) that form the image.  
+Returns the distance in meters at flattened pixel index `pos`. Iterating over the image (`for d in image`) goes through this method and yields the per-pixel distances.  
 - <a name="carla.DistanceImage.__len__"></a>**<font color="#7fb800">\__len__</font>**(<font color="#00a6ed">**self**</font>)  
 - <a name="carla.DistanceImage.__setitem__"></a>**<font color="#7fb800">\__setitem__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**pos**=int</font>, <font color="#00a6ed">**distance**=float</font>)  
 - <a name="carla.DistanceImage.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
@@ -1283,8 +1281,6 @@ Longitude of the center of the map.
 False Easting offset.  
 - <a name="carla.GeoProjectionLCC2SP.y_0"></a>**<font color="#f8805a">y_0</font>** (_float_)  
 False Northing offset.  
-- <a name="carla.GeoProjectionLCC2SP.ellps"></a>**<font color="#f8805a">ellps</font>** (_[carla.GeoEllipsoid](#carla.GeoEllipsoid)_)  
-Geoellipsoid used for the projection.  
 
 ### Methods
 - <a name="carla.GeoProjectionLCC2SP.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**lat_0**=0.0</font>, <font color="#00a6ed">**lat_1**=-5.0</font>, <font color="#00a6ed">**lat_2**=5.0</font>, <font color="#00a6ed">**lon_0**=0.0</font>, <font color="#00a6ed">**x_0**=0.0</font>, <font color="#00a6ed">**y_0**=0.0</font>, <font color="#00a6ed">**ellps**=[carla.GeoEllipsoid](#carla.GeoEllipsoid)</font>)  
@@ -1315,8 +1311,6 @@ Scale factor.
 False Easting offset.  
 - <a name="carla.GeoProjectionTM.y_0"></a>**<font color="#f8805a">y_0</font>** (_float_)  
 False Northing offset.  
-- <a name="carla.GeoProjectionTM.ellps"></a>**<font color="#f8805a">ellps</font>** (_[carla.GeoEllipsoid](#carla.GeoEllipsoid)_)  
-Geoellipsoid used for the projection.  
 
 ### Methods
 - <a name="carla.GeoProjectionTM.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**lat_0**=0.0</font>, <font color="#00a6ed">**lon_0**=0.0</font>, <font color="#00a6ed">**k**=1.0</font>, <font color="#00a6ed">**x_0**=0.0</font>, <font color="#00a6ed">**y_0**=0.0</font>, <font color="#00a6ed">**ellps**=[carla.GeoEllipsoid](#carla.GeoEllipsoid)</font>)  
@@ -4322,7 +4316,7 @@ Method to initialize an object defining weather conditions. This class has some 
         - `scattering_intensity` (_float_) - Controls how much the light will contribute to volumetric fog. When set to 0, there is no contribution.  
         - `mie_scattering_scale` (_float_) - Controls interaction of light with large particles like pollen or air pollution resulting in a hazy sky with halos around the light sources. When set to 0, there is no contribution.  
         - `rayleigh_scattering_scale` (_float_) - Controls interaction of light with small particles like air molecules. Dependent on light wavelength, resulting in a blue sky in the day or red sky in the evening.  
-    - **Note:** <font color="#8E8E8E">_ClearNoon, CloudyNoon, WetNoon, WetCloudyNoon, SoftRainNoon, MidRainyNoon, HardRainNoon, ClearSunset, CloudySunset, WetSunset, WetCloudySunset, SoftRainSunset, MidRainSunset, HardRainSunset, ClearNight, CloudyNight, WetNight, WetCloudyNight, SoftRainNight, MidRainyNight, HardRainNight._</font>  
+    - **Note:** <font color="#8E8E8E">_ClearNoon, CloudyNoon, WetNoon, WetCloudyNoon, SoftRainNoon, MidRainyNoon, HardRainNoon, ClearSunset, CloudySunset, WetSunset, WetCloudySunset, SoftRainSunset, MidRainSunset, HardRainSunset, ClearNight, CloudyNight, WetNight, WetCloudyNight, SoftRainNight, MidRainyNight, HardRainNight, DustStorm._</font>  
 
 ##### Dunder methods
 - <a name="carla.WeatherParameters.__eq__"></a>**<font color="#7fb800">\__eq__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**</font>)  

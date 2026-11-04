@@ -15,6 +15,7 @@ import carla
 - [__World__](#world)
 - [__Synchronous and asynchronous mode__](#synchronous-and-asynchronous-mode)
 - [__Recorder__](#recorder)
+* [__Multi-GPU__](core_multigpu.md)
 
 
 ---

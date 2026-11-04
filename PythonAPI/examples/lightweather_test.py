@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 """Light + weather API functional test against a running CARLA UE5 server."""
+import argparse
 import time
 
 import numpy as np
 from PIL import Image
 import carla
 
-OUT = "/home/german/Projects/CARLA_SOURCE"
+OUT = "."
 
 
 def snap(world, tag, loc, rot):
@@ -29,9 +30,11 @@ def snap(world, tag, loc, rot):
 
 
 def main():
-    import sys
-    port = int(sys.argv[1]) if len(sys.argv) > 1 else 3000
-    client = carla.Client("localhost", port)
+    ap = argparse.ArgumentParser(description=__doc__)
+    ap.add_argument("--host", default="127.0.0.1")
+    ap.add_argument("-p", "--port", type=int, default=2000)
+    args = ap.parse_args()
+    client = carla.Client(args.host, args.port)
     client.set_timeout(10.0)
     world = client.get_world()
     original = world.get_weather()

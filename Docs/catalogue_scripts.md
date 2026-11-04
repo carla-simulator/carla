@@ -71,7 +71,7 @@ python3 generate_traffic.py -n 80 -w 40
 | `visualize_radar.py` | Radar returns drawn in the world as coloured points. |
 | `dvs_test.py` | A quick check that the DVS camera produces events. |
 | `interpolate_camera.py` | Moves a camera smoothly through keypoints read from an XML file, for repeatable fly-throughs. |
-| `rain_lens_demo.py` | Rain on the camera, including the droplets on the lens. |
+| `rain_lens_demo.py` | Rain on the camera, including the droplets on the lens. Loads `--map` (`Town10HD_Opt` by default) when it starts, replacing the current map. |
 
 ---
 
@@ -107,7 +107,7 @@ python3 ../util/config.py -m Town05_Opt
 | Script | What it does |
 | ------ | ------------ |
 | `rig_perf_demo.py` | Measures the delivered frame rate of an N-camera rig, then replays the run into a labelled grid video. |
-| `lw_suite.py`, `lightweather_test.py` | Functional tests of the light and weather API. |
+| `lw_suite.py`, `lightweather_test.py` | Functional tests of the light and weather API. They save their captures as PNG files in the current directory. The last test of `lw_suite.py`, `l10`, reloads the map; leave it out with `--only`. |
 | `dvs_suite.py` | DVS camera tests: synchronous mode, attributes, resolution and lifecycle. |
 | `autoware_demo.py` | The TIER IV sensor-kit rig, for the [Autoware](autoware.md) integration. |
 

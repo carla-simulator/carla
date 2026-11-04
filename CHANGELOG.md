@@ -11,6 +11,7 @@
 #### Agentic CARLA
 
 * Added an **agent skill library**: 63 vetted CARLA procedures under `Skills/`, covering setup, the Python API, UE 4.26 / 5.5 / 5.8 builds, packaging, asset imports, Scenario Runner, Leaderboard, Scenic, native ROS 2, the documentation itself, and contributing back: issues, discussions and pull requests against `ue58-dev`. `Util/AgenticTools/` serves the same library over MCP. See `Docs/agent_skills.md`.
+* Enabled Epic's **Unreal MCP** plugin (`ModelContextProtocol` + `EditorToolset`) in the CarlaUnreal editor: opening the project starts an MCP server on `http://localhost:8000/mcp`, and the repo's `.mcp.json` registers it as `unreal-mcp` so Claude Code connects to the running editor with no setup. Editor only: `-game` and packaged builds do not load it. See `Docs/agent_skills.md`.
 
 #### Sensor simulation
 
@@ -128,6 +129,8 @@
 
 * **Improved the documentation** of many classes and functions with information that was missing or wrong, and documented the Python API that the bindings exposed but the reference never listed: the actor component, bone and socket queries, the ego spawn points and IMU gravity, the geographic projection, the physics control settings, `Client.load_world_if_different`, and the `VehicleTelemetryData`, `WheelTelemetryData`, `Quaternion`, `BoneTransformDataIn`, `BoneTransformDataOut` and `FakeImage` classes.
 * **Updated the walker skeleton tutorial** to `carla.WalkerBoneControlIn`, `Walker.set_bones` and `Walker.show_pose`, and fixed the bone names in its skeleton tree.
+* **Expanded the traffic light and traffic sign authoring pages**: the Traffic Light Tool with an animated build from scratch, its presets, pieces and light atlas; placing a regional `BP_Sign` with its pole, plates and secondary signs; and the regional sign catalog in its three styles.
+* **Reorganised the rendering documentation** under _Sensor simulation_: UE native rendering, with a new _Camera features_ section on the post-process presets, the ray-traced lens cameras and DLSS, next to NuRec, Cosmos and the sensor reference.
 
 ### Bug fixes
 
@@ -147,6 +150,8 @@
 * Fixed the `color` attribute being ignored by the Lincoln MKZ and Mini Cooper, which always spawned black: their meshes imported the car-paint slot under a name `BaseVehiclePawn` does not paint.
 * Fixed a potential segfault in `LaneCrossingCalculator` with missing lane marking records, and hardened pedestrian navigation against a null dereference while collecting traffic lights for walker routing.
 * Fixed Digital Twin Tool crashes on dense metropolitan OSM data, vegetation spawning inside driving lanes on rural maps, and one-way streets being silently excluded (#9565, #9678).
+* Fixed the **Sign Generation Controller** of the Digital Twin Tool placing plates edge-on to the traffic (they looked blank) and leaving signs in the roadway. The plate now always stands at _Plate Height Cm_ instead of the `Sign1` socket of `SM_Pole05`, and `DisplaceLocationOutsideNeighboringRoads` snaps the sign to the lane height before measuring, counts parking, biking, shoulder and bidirectional lanes as carriageway, jumps to the outer edge of multi-lane roads on the side of the traffic (right- or left-hand), and removes, with a warning, a sign it cannot move out of the carriageway.
+* Fixed the **Traffic Light Tool** preview: it now reframes whenever the traffic light changes size and looks at the heads from a three-quarter front view, instead of starting inside the pole and staying there, and the _Import JSON..._ and _Export JSON..._ buttons no longer show garbage characters.
 
 #### ROS 2
 
@@ -187,6 +192,7 @@
 
 #### Documentation
 
+* **Fixed the CARLA 1.0 download links** in the quick start and the download page, and corrected the ROS 2 native and Autoware pages against a runtime check of the 1.0 package.
 * Clarified that `WorldSnapshot.id` identifies the loaded episode and remains stable across its ticks; use `frame` to identify a snapshot's tick (#7377).
 * Fixed the Python API reference listing keyword names the bindings do not accept (`World.get_level_bbs(actor_type=...)` raised `ArgumentError`; it is `bb_type`), and the same on `Vehicle.set_autopilot`, `Walker.blend_pose`, `Client.apply_batch_sync`, `Client.get_trafficmanager`, the `Client` recorder methods, `BoundingBox.get_world_vertices` and `World.apply_settings`.
 * Fixed the semantic segmentation class table in `Docs/ref_sensors.md`, which still described the 0.8.x 22-class taxonomy instead of the actual 29 classes, breaking ground-truth mapping.

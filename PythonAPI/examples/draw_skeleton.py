@@ -276,6 +276,12 @@ def write_image(frame, id, buffer):
 def main():
     argparser = argparse.ArgumentParser(description='Show a pedestrian skeleton')
     argparser.add_argument(
+        '--host', metavar='H', default='127.0.0.1',
+        help='IP of the host server (default: 127.0.0.1)')
+    argparser.add_argument(
+        '-p', '--port', metavar='P', default=2000, type=int,
+        help='TCP port to listen to (default: 2000)')
+    argparser.add_argument(
         '--fov', default=60, type=int,
         help='FOV for camera')
     argparser.add_argument(
@@ -294,7 +300,7 @@ def main():
     font = get_font()
     clock = pygame.time.Clock()
 
-    client = carla.Client('localhost', 2000)
+    client = carla.Client(args.host, args.port)
     client.set_timeout(5.0)
 
     world = client.get_world()
