@@ -726,6 +726,9 @@ public:
   /// Unit vector, component space, along which the wheel's suspension drops.
   FVector GetWheelSuspensionAxis(int32 WheelIndex) const;
 
+  /// Wheel pose the animation instance drew this frame (else GetWheelPose); what secondaries must draw.
+  FWheelAnimationData GetDrawnWheelPose(int32 WheelIndex) const;
+
   UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
   void OpenDoor(const EVehicleDoor DoorIdx);
 

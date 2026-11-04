@@ -1228,15 +1228,14 @@ void FFrameData::AddVehicleParts(FCarlaActor *CarlaActor)
   Parts.actor_id = CarlaActor->GetActorId();
   Parts.wheels.reserve(Movement->WheelSetups.Num());
 
-  // The getters return the pose shown, whether Chaos, the animation instance
-  // or the wheel animation override set it.
-  for (uint8 i = 0; CarlaVehicle->HasWheel(i); ++i)
+  // Send the pose the server drew, not the Chaos output, which can be a frame apart.
+  for (int32 i = 0; CarlaVehicle->HasWheel(i); ++i)
   {
-    const EVehicleWheelLocation Location = static_cast<EVehicleWheelLocation>(i);
+    const FWheelAnimationData Pose = CarlaVehicle->GetDrawnWheelPose(i);
     Parts.wheels.push_back(carla::multigpu::WheelPose{
-        CarlaVehicle->GetWheelSteerAngle(Location),
-        CarlaVehicle->GetWheelPitchAngle(Location),
-        CarlaVehicle->GetWheelSuspensionOffset(Location)});
+        static_cast<float>(Pose.RotOffset.Yaw),
+        static_cast<float>(Pose.RotOffset.Pitch),
+        static_cast<float>(-FVector::DotProduct(Pose.LocOffset, CarlaVehicle->GetWheelSuspensionAxis(i)))});
   }
   Parts.current_gear = CarlaVehicle->GetVehicleCurrentGear();
   Parts.manual_gear_shift = CarlaVehicle->GetVehicleControl().bManualGearShift;

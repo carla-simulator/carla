@@ -1375,6 +1375,16 @@ FWheelAnimationData ACarlaWheeledVehicle::GetWheelPose(int32 WheelIndex) const
   return GetShownWheelPose(*GetMesh(), WheelIndex);
 }
 
+FWheelAnimationData ACarlaWheeledVehicle::GetDrawnWheelPose(int32 WheelIndex) const
+{
+  const auto *VehicleAnim = Cast<UCarlaVehicleAnimationInstance>(GetMesh()->GetAnimInstance());
+  if (const FWheelAnimationData *Pose = VehicleAnim != nullptr ? VehicleAnim->GetWheelPose(WheelIndex) : nullptr)
+  {
+    return *Pose;
+  }
+  return GetWheelPose(WheelIndex);
+}
+
 TArray<FWheelAnimationData> ACarlaWheeledVehicle::GetWheelPoses() const
 {
   TArray<FWheelAnimationData> Poses;
