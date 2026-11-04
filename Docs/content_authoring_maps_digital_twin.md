@@ -86,8 +86,23 @@ The pack carries the map's OpenDRIVE and Traffic Manager files as sidecars, so t
 
 __Window > Traffic Light Tool__ (the last entry of the *Window* menu) opens an editor tab to build and edit traffic lights: poles, heads and lamp modules, imported from or exported to JSON. The pole, head and module meshes come from the `CarlaDigitalTwinsTool` content; without it the tab opens, but *Add Pole* crashes the editor, and *Add Head* and *Add Module* only appear once a pole exists. The phases of a twin map's traffic lights live in a `map_logic.json` next to its OpenDRIVE file; the server reads it when the map loads and drives the lights from it. A content pack ships the file with the map (see [Content packs](content_authoring_packs.md#traffic-light-phase-files)).
 
-![traffic_light_tool](img/content_authoring_maps_digital_twin/traffic_light_tool.webp)
-<div class="img-caption">The Traffic Light Tool tab before a pole is added.</div>
+![traffic_light_tool_anim](img/content_authoring_maps_digital_twin/traffic_light_tool_anim.webp)
+<div class="img-caption">Building a traffic light from scratch: <i>Add Pole</i>, its base, extensible and cap meshes, <i>Add Head</i>, the head raised to 3.5 m and scaled to 1.25, and three modules with visors. Each <i>Add Module</i> stacks the new module on top, so the lights are set bottom to top: <i>Arrow Left (Green)</i>, <i>Solid Color (Amber)</i> and <i>Solid Color (Red)</i>. From the head on, the close-ups show the panel and the head side by side.</div>
+
+The `CarlaDigitalTwinsTool` content ships eleven presets to start from, `TrafficLight_01.json` to `TrafficLight_11.json` in `Content/Carla/Static/TrafficLight/TrafficLights2025/Presets`. Load one with *Import JSON...*, change it, and save the result with *Export JSON...*.
+
+![traffic_light_presets](img/content_authoring_maps_digital_twin/traffic_light_presets.webp)
+<div class="img-caption">Seven of the shipped presets in the preview of the tool: mast arms with hanging heads (01, 03), a head with a backplate and four arrow modules (02), pedestrian signals (05, 10) and poles with several heads (08, 09).</div>
+
+A traffic light is assembled from the meshes in `Content/Carla/Static/TrafficLight/TrafficLights2025` of the `CarlaDigitalTwinsTool` content, listed by style in the `Modules`, `Poles` and `Backplates` data tables of its `DataTables` folder. A pole is a base, an extensible section stretched to _Pole Height_ and a cap or an arm connector; a head is a column or row of modules, with a visor or without, and an optional backplate built from corner, edge and middle pieces.
+
+![traffic_light_pieces](img/content_authoring_maps_digital_twin/traffic_light_pieces.webp)
+<div class="img-caption">The pieces the tool builds from. The meshes with <code>Black</code> in their name are the European style of the data tables; the others are North American.</div>
+
+Each module lights one cell of the atlas `T_TrafficLights_Atlas` (`TrafficLights2025/TrafficLights`), chosen by its __light type__. The types are the rows of the `LightTypes` data table in `TrafficLights2025/DataTables`: an atlas cell, a colour and an emissive intensity. Most shapes come in a `Green`, `Amber` and `Red` row (`PedestrianWalkGreen`, `ArrowLeftRed`); the tram signals, `PedestrianStop`, `Circle` and `Triangle` have a single row.
+
+![traffic_light_atlas](img/content_authoring_maps_digital_twin/traffic_light_atlas.webp)
+<div class="img-caption">The 30 shapes of <code>T_TrafficLights_Atlas</code>, named after their light type without the colour, each drawn in one of the colours it ships in.</div>
 
 ---
 ## Traffic signs
@@ -103,7 +118,7 @@ The __Sign Generation Controller__ actor (`ASignGenerationController`) places tr
 | _Xodr Path_ | The map's OpenDRIVE file. Looked up for the current level when empty. |
 | _Sign Package Path_, _Pole Package Path_ | Folders of the sign plates and poles to use. |
 | _Sign Style_ | The sign catalog: *Vienna Convention (Europe)*, *MUTCD (America)*, *GB (China)* or *None*. |
-| _Displace Signs To Edge_, _Max Displacement Iterations_, _Road Border Padding_, _Step Percent Of Lane Width_ | Move each sign off the road to the lane edge. |
+| _Displace Signs To Edge_, _Max Displacement Iterations_, _Road Border Padding_ | Move each sign just past the outer edge of the carriageway (driving, shoulder, parking and bike lanes), _Road Border Padding_ centimetres beyond it. A sign still in a lane after _Max Displacement Iterations_ is removed. _Step Percent Of Lane Width_ is no longer used. |
 | _Plate Offset Cm_, _Plate Height Cm_, _Plate Scale By Mesh_ | Position and scale of the plate on its pole. |
 | _Last Sign Node Count_, _Last Matched Count_, _Last Spawned Count_ | Summary of the last run: OSM sign nodes, nodes matched to a road, signs placed. |
 
