@@ -87,8 +87,10 @@ fi
 # -- Update --------------------------------------------------------------------
 # ==============================================================================
 
-# Remove stale lock files left behind by a cancelled job
-rm -f .git/*.lock
+# Remove stale lock files left behind by a cancelled job. A gc killed
+# with its container leaves gc.pid naming a host that no longer exists,
+# and git then refuses to gc for 12 hours.
+rm -f .git/*.lock .git/gc.pid
 
 log "Fetching latest revision of ${BRANCH}."
 

@@ -37,16 +37,16 @@ nav:
       - 'core_map.md'
       - 'Large maps': 'core_large_maps.md'
       - 'OpenDRIVE standalone mode': 'core_opendrive.md'
+    - 'Multi-GPU': 'core_multigpu.md'
   - Sensor simulation:
-    - Rendering:
-      - 'core_rendering_overview.md'
-      - 'Unreal Engine native rendering': 'core_rendering.md'
+    - 'core_rendering_overview.md'
+    - Unreal Engine native rendering:
+      - 'core_rendering.md'
       - 'Camera post-process presets': 'core_camera_presets.md'
       - 'Ray-traced lens cameras': 'core_rt_lens.md'
       - 'NVIDIA DLSS Super Resolution': 'core_dlss.md'
-      - 'NVIDIA NuRec neural reconstruction': 'nvidia_nurec.md'
-      - 'NVIDIA Cosmos': 'nvidia_cosmos.md'
-      - 'Multi-GPU': 'core_multigpu.md'
+    - 'NVIDIA NuRec neural reconstruction': 'nvidia_nurec.md'
+    - 'NVIDIA Cosmos': 'nvidia_cosmos.md'
     - 'Sensors and data': 'core_sensors.md'
   - Scenarios:
     - 'core_traffic.md'
@@ -165,7 +165,7 @@ markdown_extensions:
 
 theme:
   name: 'readthedocs'
-  logo: img/logos/carla_logo_black.webp
+  logo: img/logos/carla_logo_white.webp
   palette:
         # Dark mode
     - scheme: slate

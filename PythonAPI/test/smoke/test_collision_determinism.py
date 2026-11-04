@@ -141,8 +141,11 @@ class CarBikeCollision(Scenario):
         car_bp = blueprint_library.filter("vehicle.lincoln.mkz")[0]
         bike_bp = blueprint_library.filter("gazelle")[0]
 
-        car_tr = carla.Transform(carla.Location(50, -255, 0.04), carla.Rotation(yaw=0))
-        bike_tr = carla.Transform(carla.Location(85, -245, 0.04), carla.Rotation(yaw=-90))
+        # Eastbound on Town10HD_Opt's central avenue; the bike comes down the
+        # cross street and meets the car in the junction 35 m ahead. It hits
+        # from 11 to 15 m to the side; at 14 m the car touches nothing else.
+        car_tr = carla.Transform(carla.Location(-80.2, 24.6, 0.04), carla.Rotation(yaw=0))
+        bike_tr = carla.Transform(carla.Location(-45.2, 38.6, 0.04), carla.Rotation(yaw=-90))
 
         batch = [
             SpawnActor(car_bp, car_tr)
@@ -177,8 +180,10 @@ class CarWalkerCollision(Scenario):
         if walker_bp.has_attribute('is_invincible'):
             walker_bp.set_attribute('is_invincible', 'false')
 
-        car_tr = carla.Transform(carla.Location(50, -255, 0.04), carla.Rotation(yaw=0))
-        walker_tr = carla.Transform(carla.Location(85, -255, 1.00), carla.Rotation(yaw=-90))
+        # Eastbound on Town10HD_Opt's central avenue; the walker stands in the
+        # car's lane in the junction 35 m ahead.
+        car_tr = carla.Transform(carla.Location(-80.2, 24.6, 0.04), carla.Rotation(yaw=0))
+        walker_tr = carla.Transform(carla.Location(-45.2, 24.6, 1.00), carla.Rotation(yaw=-90))
 
         batch = [
             SpawnActor(car_bp, car_tr)
@@ -285,7 +290,7 @@ class CollisionScenarioTester():
         config_settings.max_substep_delta_time = 1.0/fps_phys
         config_settings.max_substeps = 16
 
-        spectator_tr = carla.Transform(carla.Location(120, -256, 10), carla.Rotation(yaw=180))
+        spectator_tr = carla.Transform(carla.Location(-10.2, 23.6, 10), carla.Rotation(yaw=180))
 
         sim_prefixes = []
         for i in range(0, repetitions):
@@ -300,6 +305,8 @@ class CollisionScenarioTester():
 
 
 class TestCollisionDeterminism(SmokeTest):
+    deterministic_collisions = True
+
     def setUp(self):
         super(TestCollisionDeterminism, self).setUp()
         self.world = self.client.get_world()
@@ -307,7 +314,8 @@ class TestCollisionDeterminism(SmokeTest):
         settings = carla.WorldSettings(
             no_rendering_mode=False,
             synchronous_mode=True,
-            fixed_delta_seconds=0.05)
+            fixed_delta_seconds=0.05,
+            deterministic_collisions=True)
         self.world.apply_settings(settings)
         self.world.tick()
 
@@ -328,8 +336,9 @@ class TestCollisionDeterminism(SmokeTest):
         if not os.path.exists(output_path):
             os.mkdir(output_path)
 
-        # Loading Town03 for test
-        self.load_world("Town03_Opt")
+        # Town10HD_Opt ships with every package; keep the settings so that
+        # deterministic_collisions applies
+        self.load_world("Town10HD_Opt", False)
 
         try:
             test_collision = CollisionScenarioTester(scene=CarBikeCollision(self.client, self.world, True), output_path=output_path)
@@ -352,8 +361,9 @@ class TestCollisionDeterminism(SmokeTest):
         if not os.path.exists(output_path):
             os.mkdir(output_path)
 
-        # Loading Town03 for test
-        self.load_world("Town03_Opt")
+        # Town10HD_Opt ships with every package; keep the settings so that
+        # deterministic_collisions applies
+        self.load_world("Town10HD_Opt", False)
 
         try:
             test_collision = CollisionScenarioTester(scene=CarWalkerCollision(self.client, self.world, True), output_path=output_path)

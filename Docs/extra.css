@@ -1,5 +1,12 @@
 .wy-side-nav-search {
-	background-color: #c7e9fd !important;
+	background-color: #343131 !important;
+}
+
+.wy-side-nav-search img.logo {
+	width: 120px !important;
+	max-width: 120px !important;
+	height: auto;
+	margin: 4px auto 10px;
 }
 
 .build-buttons{
