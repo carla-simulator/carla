@@ -42,7 +42,7 @@ The road network is small, with a simple set of junctions, roads that are mostly
 The buildings include wooden barns and farm buildings.
 
 ![town_07_farm](img/catalogue/maps/town07/town07_farm.webp)
-<div class="img-caption">Farm buildings behind a hedge and a picket fence.</div>
+<div class="img-caption">Farm buildings behind a hedge and a picket fence, at a junction.</div>
 
 ---
 ## Grain silos and windmills
@@ -50,7 +50,7 @@ The buildings include wooden barns and farm buildings.
 There are structures expected only in rural farming environments, like grain silos and windmills.
 
 ![town_07_silos](img/catalogue/maps/town07/town07_silos.webp)
-<div class="img-caption">A barn and its grain silos beside a car park.</div>
+<div class="img-caption">Barns and grain silos, with hay bales in the field beside the road.</div>
 
 ![town_07_windmill](img/catalogue/maps/town07/town07_windmill.webp)
 <div class="img-caption">A windmill and a barn at the edge of the fields.</div>
@@ -72,4 +72,4 @@ There is a small body of water spanned by a short road bridge.
 Some of the roads are lined by cornfields.
 
 ![town_07_corn](img/catalogue/maps/town07/town07_corn.webp)
-<div class="img-caption">A road between two cornfields, with a barn and a silo at the end.</div>
+<div class="img-caption">A road between a cornfield and a wheat field, with barns and silos at the end.</div>

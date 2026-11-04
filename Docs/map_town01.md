@@ -44,7 +44,7 @@ A small river crosses the town between two strips of grass and rocks. Four road 
 <div class="img-caption">The river and one of the road bridges that cross it.</div>
 
 ![town_01_footbridge](img/catalogue/maps/town01/town01_footbridge.webp)
-<div class="img-caption">The footbridge in the middle of the river, with the road that runs along the bank.</div>
+<div class="img-caption">The road that runs along the river bank.</div>
 
 ---
 ## Commercial buildings
