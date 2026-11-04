@@ -13,7 +13,8 @@ import carla
 
 
 # Static reference values use pyproj 3.8.0 / PROJ 9.8.1.
-# WGS84 is used for TM, UTM and LCC. Web Mercator uses a sphere with radius 6378137 m.
+# WGS84 is used for TM, UTM and LCC.
+# Web Mercator uses a sphere with radius 6378137 m.
 # Every offset heading is zero. Both conversion directions use absolute inputs.
 CASES = [{'name': 'tm_asymmetric_false_origin',
   'family': 'GeoProjectionTM',
@@ -99,6 +100,7 @@ CASES = [{'name': 'tm_asymmetric_false_origin',
 
 
 def make_map(case):
+    """Create an offline map with its projection and optional offset."""
     offset_xml = ""
     if case["offset"] is not None:
         x, y, z = case["offset"]
@@ -122,6 +124,8 @@ def make_map(case):
 
 
 class TestMapProjectionFrame(unittest.TestCase):
+    """Check public projections against absolute reference coordinates."""
+
     def _assert_coordinates(self, actual, expected, tolerances):
         self.assertTrue(
             all(math.isclose(value, reference, rel_tol=0.0, abs_tol=tolerance)
@@ -150,25 +154,33 @@ class TestMapProjectionFrame(unittest.TestCase):
                     case["geographic"], case["geographic_tolerance"])
 
     def test_tm_asymmetric_false_origin(self):
+        """Preserve the TM frame with an asymmetric false origin."""
         self._check_case(CASES[0])
 
     def test_utm_north_absent_offset(self):
+        """Preserve the northern UTM frame without an offset."""
         self._check_case(CASES[1])
 
     def test_utm_north_zero_offset(self):
+        """Keep an explicit zero UTM offset equivalent to its absence."""
         self._check_case(CASES[2])
 
     def test_utm_north_xyz_offset(self):
+        """Apply UTM offsets once in both conversion directions."""
         self._check_case(CASES[3])
 
     def test_utm_south_absent_offset(self):
+        """Preserve the southern UTM frame and its false northing."""
         self._check_case(CASES[4])
 
     def test_webmercator_spherical(self):
+        """Use the CARLA world frame with spherical Web Mercator."""
         self._check_case(CASES[5])
 
     def test_lcc_north_false_origin(self):
+        """Preserve the northern LCC frame with its false origin."""
         self._check_case(CASES[6])
 
     def test_lcc_south_false_origin(self):
+        """Preserve the southern LCC frame with its false origin."""
         self._check_case(CASES[7])

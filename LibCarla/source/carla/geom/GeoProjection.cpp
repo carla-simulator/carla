@@ -42,7 +42,7 @@ namespace geom {
             case ProjectionType::UniversalTransverseMercator: {
                 auto& p = boost::variant2::get<UniversalTransverseMercatorParams>(params);
                 auto result = GeoLocationToTransformUniversalTransverseMercator(geolocation, p);
-                // OffsetTransform already converts between CARLA and OpenDRIVE handedness.
+                // OffsetTransform already converts coordinate handedness.
                 return p.offset.has_value() ? result : SwapHandedness(result);
             }
 
@@ -72,7 +72,7 @@ namespace geom {
 
             case ProjectionType::UniversalTransverseMercator: {
                 auto& p = boost::variant2::get<UniversalTransverseMercatorParams>(params);
-                // OffsetTransform applies the reflection before rotating and translating.
+                // OffsetTransform reflects before rotating and translating.
                 return TransformToGeoLocationUniversalTransverseMercator(
                     p.offset.has_value() ? location : SwapHandedness(location), p);
             }
