@@ -106,7 +106,20 @@ using namespace std::chrono_literals;
           } while (!self->_state.compare_exchange(&prev, next));
 
           if(UpdateLights || HasMapChanged) {
-            self->_on_light_update_callbacks.Call(next);
+            // This runs on the streaming thread, where an exception would call
+            // std::terminate, and the light callbacks make blocking RPCs that
+            // time out if the server stalls (e.g. in a long map load). The
+            // rest of this handler must still run: it publishes the new
+            // episode that load_world and wait_for_tick are waiting for.
+#ifndef LIBCARLA_NO_EXCEPTIONS
+            try {
+#endif // LIBCARLA_NO_EXCEPTIONS
+              self->_on_light_update_callbacks.Call(next);
+#ifndef LIBCARLA_NO_EXCEPTIONS
+            } catch (const std::exception &e) {
+              log_error("failed to update the lights after a map change:", e.what());
+            }
+#endif // LIBCARLA_NO_EXCEPTIONS
           }
 
           if(HasMapChanged) {
