@@ -10,6 +10,9 @@ CARLA can be driven by [Autoware](https://autoware.org/) with no bridge process:
 
 Everything lives in `PythonAPI/examples/av_stacks/autoware/`: an installer for Autoware, a launcher that starts CARLA and Autoware together, and the tools that build the maps Autoware needs. Its `README.md` covers each step in more detail than this page.
 
+!!! Note
+    The release package does not include `av_stacks/`. Get it from a checkout of the same release, for example `git clone --depth 1 -b 1.0 https://github.com/carla-simulator/carla.git`. Install the client wheel from `<package>/PythonAPI/carla/dist/`.
+
 - [__Before you start__](#before-you-start)
 - [__Run Autoware__](#run-autoware)
 - [__Drive the ego from your own script__](#drive-the-ego-from-your-own-script)
@@ -139,6 +142,8 @@ CARLA subscribes to these:
 | `/control/command/hazard_lights_cmd` | `autoware_vehicle_msgs/HazardLightsCommand` | Received, not applied. |
 | `/control/command/emergency_cmd` | `tier4_vehicle_msgs/VehicleEmergencyStamped` | Received, not applied. |
 | `/vehicle/engage` | `autoware_vehicle_msgs/Engage` | Received, not applied. |
+
+CARLA publishes the status topics as RELIABLE and VOLATILE with depth 1. It subscribes to the topics above as RELIABLE and TRANSIENT_LOCAL with depth 1. A publisher to them must offer TRANSIENT_LOCAL durability, for example `ros2 topic pub --qos-durability transient_local ...`.
 
 `autoware_demo.py` publishes the sensor kit on these topics:
 

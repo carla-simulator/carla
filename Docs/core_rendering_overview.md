@@ -1,15 +1,12 @@
-# Rendering
+# Sensor simulation
 
-CARLA can produce images in several ways. Most sensors are rendered by Unreal Engine's own renderer, but the same simulation can also be path traced through a physical lens model, upscaled with DLSS, rendered from a neural reconstruction of a real recorded drive, or turned afterwards into photoreal video by a world model. This page explains what each path renders and when to pick it, and links to the page that covers it in detail.
+CARLA can produce images in several ways. Most sensors are rendered by Unreal Engine's own renderer, but the same simulation can also be path traced through a physical lens model, upscaled with DLSS, rendered from a neural reconstruction of a real recorded drive, or turned afterwards into photoreal video by a world model. This page explains what each path renders and when to pick it, and links to the page that covers it in detail. The [sensors](#sensors-and-data) that read the simulation, cameras among them, are summarized at the end.
 
 - [__Choosing a renderer__](#choosing-a-renderer)
 - [__Unreal Engine native rendering__](#unreal-engine-native-rendering)
-- [__Camera post-process presets__](#camera-post-process-presets)
-- [__Ray-traced lens cameras__](#ray-traced-lens-cameras)
-- [__NVIDIA DLSS Super Resolution__](#nvidia-dlss-super-resolution)
 - [__NVIDIA NuRec neural reconstruction__](#nvidia-nurec-neural-reconstruction)
 - [__NVIDIA Cosmos world models__](#nvidia-cosmos-world-models)
-- [__Multi-GPU__](#multi-gpu)
+- [__Sensors and data__](#sensors-and-data)
 
 ---
 ## Choosing a renderer
@@ -17,14 +14,10 @@ CARLA can produce images in several ways. Most sensors are rendered by Unreal En
 | Path | What it renders | When | Needs |
 | ---- | --------------- | ---- | ----- |
 | [Unreal Engine native rendering](#unreal-engine-native-rendering) | The CARLA world, rasterized with Lumen global illumination, Nanite geometry and virtual shadow maps | Live, every tick | Nothing extra. Hardware ray tracing on cameras needs an RTX-class GPU and the `Epic` tier |
-| [Camera post-process presets](#camera-post-process-presets) | The look of a camera (exposure, tonemapper, white balance, bloom, noise) on top of the native or ray-traced image | Live, every tick | Nothing extra |
-| [Ray-traced lens cameras](#ray-traced-lens-cameras) | The CARLA world, path traced through a physical lens model: colour, per-pixel distance and instance ids | Live, every tick | NVIDIA RTX-class GPU with hardware ray tracing (Vulkan) |
-| [DLSS Super Resolution](#nvidia-dlss-super-resolution) | A native camera rendered at a lower internal resolution and reconstructed to full size | Live, every tick | NVIDIA RTX-class GPU. Elsewhere the camera falls back to a bilinear upscale |
 | [NuRec](#nvidia-nurec-neural-reconstruction) | A real recorded drive, reconstructed as a neural scene, with CARLA running the actors and the physics | Live, every tick | NVIDIA GPU, Docker with the NVIDIA Container Toolkit, the NRE container |
 | [Cosmos](#nvidia-cosmos-world-models) | Photoreal video variations (weather, time of day, road surface) of a captured CARLA run | Offline, after the run | A Cosmos job server on NVIDIA GPUs |
-| [Multi-GPU](#multi-gpu) | Native rendering of the sensors, spread across several GPUs | Live, every tick | One secondary server per GPU |
 
-Start with the native renderer: it is what every camera uses unless told otherwise. Move to the ray-traced lens cameras when the lens geometry has to match a real camera, such as a wide-angle or fisheye calibration. Add DLSS Super Resolution when a large camera rig is too slow. Use NuRec when the scene itself has to be a real place, and Cosmos when a recorded CARLA run needs photoreal appearance rather than real-time output.
+Start with the native renderer: it is what every camera uses unless told otherwise. Its [camera features](core_rendering.md#camera-features) cover the rest of the live cases: a post-process preset for the look of a real camera, the ray-traced lens cameras when the lens geometry has to match a real calibration, such as a wide-angle or fisheye lens, and DLSS Super Resolution when a large camera rig is too slow. Use NuRec when the scene itself has to be a real place, and Cosmos when a recorded CARLA run needs photoreal appearance rather than real-time output.
 
 ## Unreal Engine native rendering
 
@@ -33,67 +26,12 @@ Start with the native renderer: it is what every camera uses unless told otherwi
 
 Every camera sensor (`sensor.camera.rgb`, `depth`, `semantic_segmentation`, `instance_segmentation`, `optical_flow`, `dvs`) and the spectator view are rendered by Unreal Engine's own renderer. [Lumen](core_rendering.md#lighting-and-geometry) provides dynamic global illumination and reflections, so the weather and the time of day light every surface with no baked lighting; [Nanite](core_rendering.md#lighting-and-geometry) streams the towns' detailed meshes; virtual shadow maps cast the shadows. Four [quality levels](core_rendering.md#quality-levels), `Low` to `Epic`, trade lighting quality for frame rate without changing what is in the world, and a camera can opt into hardware ray tracing at the `Epic` tier.
 
+The same renderer carries three camera features, covered from its page: [post-process presets](core_camera_presets.md) for the look of a camera, [ray-traced lens cameras](core_rt_lens.md) that path trace through a physical lens model, and [DLSS Super Resolution](core_dlss.md) to lower the cost of large camera rigs.
+
 <div class="build-buttons">
 <p>
 <a href="../core_rendering" class="btn btn-neutral" title="Go to Unreal Engine native rendering">
 Go to Unreal Engine native rendering</a>
-</p>
-</div>
-
----
-## Camera post-process presets
-
-![Camera post-process presets](img/core_camera_presets/camera_profiles_clearnoon_town10.webp)
-<div class="img-caption">The same Town10HD_Opt view through each of the post-process presets shipped with CARLA.</div>
-
-A camera's look (exposure, tonemapper, white balance, bloom, lens flare, noise) comes from a post-process preset, a JSON file the server loads by name. Most of the presets shipped with CARLA reproduce the camera of a public driving dataset, and a sensor picks one with its `post_process_profile` attribute. `sensor.camera.rgb`, `sensor.camera.rgb_fisheye` and `sensor.camera.rt_lens` take the attribute. Presets change the image processing only, never what is rendered or the geometry of the lens.
-
-<div class="build-buttons">
-<p>
-<a href="../core_camera_presets" class="btn btn-neutral" title="Go to Camera post-process presets">
-Go to Camera post-process presets</a>
-</p>
-</div>
-
----
-## Ray-traced lens cameras
-
-![Ray-traced lens camera](img/core_rendering_overview/rt_lens_wet.webp)
-<div class="img-caption">The same street path traced by <code>sensor.camera.rt_lens</code>: 64 samples per pixel, denoised, <code>AutomotiveHDRClean</code> profile.</div>
-
-The ray-traced lens camera family renders with Unreal Engine's path tracer and generates its primary rays directly through a physical lens model: pinhole, the classic fisheye projections, Kannala-Brandt, Brown-Conrady, a calibrated lookup table or NVIDIA's f-theta polynomial. Where an ordinary camera approximates distortion as a post-process on a pinhole render, these cameras distort the rays themselves, so wide-angle and fisheye images are geometrically exact. NVIDIA DLSS Ray Reconstruction denoises each frame, which makes low sample counts usable in real time.
-
-Three blueprints share the same lens attributes, so a pixel-aligned set can be configured from one dictionary:
-
-| Blueprint | Output |
-| --------- | ------ |
-| [`sensor.camera.rt_lens`](ref_sensors.md#ray-traced-lens-camera) | Path-traced colour image |
-| [`sensor.camera.rt_lens_distance`](ref_sensors.md#ray-traced-lens-distance-camera) | Euclidean distance in metres along each pixel's lens ray |
-| [`sensor.camera.rt_lens_instance`](ref_sensors.md#ray-traced-lens-instance-camera) | Semantic label and instance id per pixel |
-
-They need hardware ray tracing and have no rasterized fallback. The path tracer is the most memory-hungry sensor in CARLA, and the first camera pays most of that cost.
-
-<div class="build-buttons">
-<p>
-<a href="../core_rt_lens" class="btn btn-neutral" title="Go to Ray-traced lens cameras">
-Go to Ray-traced lens cameras</a>
-</p>
-</div>
-
----
-## NVIDIA DLSS Super Resolution
-
-![DLSS Super Resolution](img/core_rendering_overview/dlss_montage.webp)
-<div class="img-caption">A 3840 &times; 2160 RGB camera with DLSS Super Resolution at <code>dlss_screen_percentage=50</code>: it renders internally at 1920 &times; 1080 and DLSS reconstructs the 4K image. The crops of the framed area compare the internal render (scaled up), the DLSS output and a native 4K render.</div>
-
-DLSS Super Resolution lowers the cost of a camera: with `enable_dlss=True` the camera renders internally at `dlss_screen_percentage` of its output resolution (`50.0` by default) and DLSS reconstructs the full-size image. It is opt-in per camera and needs `enable_postprocess_effects=True`. It is meant for RGB rigs, not for ground-truth cameras, because reconstructed pixels corrupt label and depth maps.
-
-`PythonAPI/examples/manual_control_5cam.py` spawns a five-camera rig and toggles DLSS with `D`, so the difference can be compared live.
-
-<div class="build-buttons">
-<p>
-<a href="../core_dlss" class="btn btn-neutral" title="Go to NVIDIA DLSS">
-Go to NVIDIA DLSS</a>
 </p>
 </div>
 
@@ -132,16 +70,16 @@ Go to NVIDIA Cosmos</a>
 </div>
 
 ---
-## Multi-GPU
+## Sensors and data
 
-![Multi-GPU example](img/core_multigpu/multigpu-example.webp)
-<div class="img-caption">A primary server with two secondary servers, each rendering on its own GPU, and a client with two sensors.</div>
+![Sensor gallery](img/core_sensors/sensor_gallery.webp)
+<div class="img-caption">The same frame through nine sensor outputs: RGB, depth, semantic and instance segmentation, normals, LiDAR, semantic LiDAR, radar and raw depth.</div>
 
-Multi-GPU spreads the sensor rendering of one simulation across several GPUs. A primary server owns the world, the physics and the client connection, and hands the sensors to secondary servers, each bound to its own GPU. The client connects to the primary as always and receives each sensor's data from whichever secondary rendered it.
+Sensors are the actors that read the simulation. Cameras (RGB, depth, semantic and instance segmentation, optical flow, normals, DVS, fisheye and the ray-traced lens cameras) use the renderers above; LiDAR, radar, GNSS, IMU and the collision, lane invasion and obstacle detectors read the world directly. Every sensor is spawned from a blueprint, attached to a parent actor and streams its data to a callback, every tick or on events.
 
 <div class="build-buttons">
 <p>
-<a href="../core_multigpu" class="btn btn-neutral" title="Go to Multi-GPU">
-Go to Multi-GPU</a>
+<a href="../core_sensors" class="btn btn-neutral" title="Go to Sensors and data">
+Go to Sensors and data</a>
 </p>
 </div>

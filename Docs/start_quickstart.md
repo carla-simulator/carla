@@ -67,11 +67,11 @@ If you prefer to install CARLA by hand, follow the rest of this page.
 Download the desired CARLA package from GitHub:
 
 - [CARLA 1.0 on GitHub](https://github.com/carla-simulator/carla/releases/tag/1.0), with the release notes and every download.
-- Direct downloads: [Linux](https://downloads.carlasim.com/Linux/Carla-1.0-Linux-Shipping.tar.gz) and [Windows](https://downloads.carlasim.com/Windows/Carla-1.0-Windows-Shipping.zip). The [additional maps package](map_content_packs.md) of each platform is listed on the release page.
+- Direct downloads: [Linux](https://downloads.carlasim.com/Linux/CARLA_1.0/CARLA_1.0.tar.gz) and its [additional maps package](https://downloads.carlasim.com/Linux/CARLA_1.0/CARLA_1.0_AdditionalMaps.tar.gz). [Additional maps](map_content_packs.md) tells how to install the maps.
 
 This repository contains different versions of CARLA. You will find options to download the __current release__ with all the most recent fixes and features and __previous releases__. A __nightly build__ for Linux with all the developmental fixes and features is available at [downloads.carlasim.com](https://downloads.carlasim.com/Linux/Dev/CARLA_UE5_Latest.tar.gz) (the nightly build is the most unstable version of CARLA).
 
-The package is a compressed file named `Carla-1.0-Linux-Shipping.tar.gz` on Linux and `Carla-1.0-Windows-Shipping.zip` on Windows. Download and extract the release file. It contains a precompiled version of the simulator, the Python API module and some scripts to be used as examples.
+The Linux package is a compressed file named `CARLA_1.0.tar.gz`. Download and extract it. You get one folder, `Carla-<version>-Linux-Shipping/`, which this page calls `CARLA_ROOT`. It contains a precompiled version of the simulator, the Python API module and some scripts to be used as examples.
 
 ---
 ## Install client library

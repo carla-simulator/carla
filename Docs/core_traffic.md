@@ -8,8 +8,8 @@ Scenarios are how an autonomous driving stack is trained and tested: background 
 | [Traffic Agents](#traffic-agents) | no, it is part of the Python API | a Python class that returns a control each step | Driving one vehicle along a route with your own logic |
 | [ScenarioRunner](#scenariorunner-and-openscenario) | yes, separately | Python classes or OpenSCENARIO `.xosc` | Specific, repeatable maneuvers with several vehicles |
 | [Scenic](#scenic) | yes, separately | Scenic, a probabilistic language | Many variations of one situation, sampled |
+| [CARLA Leaderboard](#carla-leaderboard) | yes, separately | routes with scenario trigger points | Scoring a complete driving agent |
 | [Inverted AI](#inverted-ai) | an API key and the `invertedai` package | a shipped example script | Learned, human-like traffic |
-| [CARLA Leaderboard](#carla-leaderboard) | yes, separately (with ScenarioRunner) | routes with scenario trigger points | Scoring a complete driving agent |
 
 !!! Note
     SUMO and PTV-Vissim co-simulation were part of the Unreal Engine 4.26 line. They are not in the Unreal Engine 5 builds.
@@ -18,8 +18,8 @@ Scenarios are how an autonomous driving stack is trained and tested: background 
 - [__Traffic Agents__](#traffic-agents)
 - [__ScenarioRunner and OpenSCENARIO__](#scenariorunner-and-openscenario)
 - [__Scenic__](#scenic)
-- [__Inverted AI__](#inverted-ai)
 - [__CARLA Leaderboard__](#carla-leaderboard)
+- [__Inverted AI__](#inverted-ai)
 
 ---
 
@@ -75,7 +75,7 @@ Go to Traffic Agents</a>
 
 ## ScenarioRunner and OpenSCENARIO
 
-ScenarioRunner provides [predefined traffic scenarios](https://scenario-runner.readthedocs.io/en/latest/list_of_scenarios/) out of the box and also allows users to [define their own](https://scenario-runner.readthedocs.io/en/latest/creating_new_scenario/) scenarios using either Python or the [OpenSCENARIO 1.0 standard](https://releases.asam.net/OpenSCENARIO/1.0.0/ASAM_OpenSCENARIO_BS-1-2_User-Guide_V1-0-0.html#_foreword).
+ScenarioRunner ships 96 ready-to-run scenario configurations and also lets you [write your own](scenario_runner.md#write-your-own-scenario), in Python, in the [ASAM OpenSCENARIO 1.x standard](https://releases.asam.net/OpenSCENARIO/1.0.0/ASAM_OpenSCENARIO_BS-1-2_User-Guide_V1-0-0.html#_foreword) or in OpenSCENARIO 2.0.
 
 The primary use of OpenSCENARIO is the description of complex maneuvers that involve multiple vehicles. Users can see which features of OpenSCENARIO are supported by ScenarioRunner [here](https://scenario-runner.readthedocs.io/en/latest/openscenario_support/). These features include Maneuvers, Actions, Conditions, Stories and the Storyboard.
 
@@ -86,7 +86,7 @@ __Useful for:__
 - Scripting a specific situation (a cut-in, a pedestrian stepping out, a vehicle running a light) and replaying it against an agent as many times as needed.
 - Writing those situations in OpenSCENARIO, so they can be exchanged with other simulators.
 - Defining bespoke [metrics](https://scenario-runner.readthedocs.io/en/latest/metrics_module/) that run against a recording of the scenario, instead of simulating it again.
-- Running routes: the [CARLA Leaderboard](#carla-leaderboard) is built on ScenarioRunner, so an agent evaluated there is being driven through it.
+- Running routes: driving an ego along a route and triggering the scenarios placed along it, the same mechanism the [CARLA Leaderboard](#carla-leaderboard) uses.
 
 !!! agent "Agentic CARLA"
     *"Install the ScenarioRunner that matches my CARLA and run the FollowLeadingVehicle scenario, then summarise the results."*
@@ -129,6 +129,24 @@ Go to Scenic</a>
 
 ---
 
+## CARLA Leaderboard
+
+The [CARLA Leaderboard](leaderboard.md) evaluates a complete driving agent: the agent drives a set of routes, each with scenarios triggered along the way, and is scored on route completion and infractions (collisions, red lights, stop signs, leaving the route). It is installed separately, and on `ue58-dev` it carries its own copy of the scenario engine, so it needs no ScenarioRunner checkout.
+
+__Useful for:__
+
+- Measuring an agent end to end with the same metrics as the public benchmark.
+- Building your own route sets, with scenario trigger points placed where you need them.
+
+<div class="build-buttons">
+<p>
+<a href="../leaderboard" class="btn btn-neutral" title="Go to the CARLA Leaderboard">
+Go to the CARLA Leaderboard</a>
+</p>
+</div>
+
+---
+
 ## Inverted AI
 
 [Inverted AI](inverted_ai.md) drives the traffic with models learned from real driving data, through a hosted service, so the surrounding vehicles behave the way human drivers do rather than following hand-written rules. It needs an API key and the `invertedai` package; `PythonAPI/examples/invertedai_traffic.py` is a working example.
@@ -142,23 +160,5 @@ __Useful for:__
 <p>
 <a href="../inverted_ai" class="btn btn-neutral" title="Go to Inverted AI">
 Go to Inverted AI</a>
-</p>
-</div>
-
----
-
-## CARLA Leaderboard
-
-The [CARLA Leaderboard](leaderboard.md) evaluates a complete driving agent: the agent drives a set of routes, each with scenarios triggered along the way, and is scored on route completion and infractions (collisions, red lights, stop signs, leaving the route). It runs on ScenarioRunner and is installed separately.
-
-__Useful for:__
-
-- Measuring an agent end to end with the same metrics as the public benchmark.
-- Building your own route sets, with scenario trigger points placed where you need them.
-
-<div class="build-buttons">
-<p>
-<a href="../leaderboard" class="btn btn-neutral" title="Go to the CARLA Leaderboard">
-Go to the CARLA Leaderboard</a>
 </p>
 </div>

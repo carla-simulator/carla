@@ -86,16 +86,16 @@ Every plate has a __style__, the convention it follows, and a __category__, its 
 
 To place one, drag `BP_Sign` into the level and set, in its *Details* panel:
 
-![bp_sign_details](img/content_authoring_maps_traffic_lights/bp_sign_details.webp)
-<div class="img-caption">The <i>Details</i> panel of a placed <code>BP_Sign</code> with <code>DA_StopSign</code> and <code>DA_Pole01</code>. <i>Traffic Sign State</i> shows <i>Stop Sign</i>: it was not set by hand.</div>
+![bp_sign_placement](img/content_authoring_maps_traffic_lights/bp_sign_placement.webp)
+<div class="img-caption">Placing a sign on a Town10HD_Opt sidewalk: <code>BP_Sign</code> dragged from the <i>Content Browser</i>, <i>Pole Asset Data</i> set to <code>DA_Pole03</code>, <i>Offset</i> Y set to 10 so the plate stands in front of the pole instead of through it, and <i>Sign Asset Data</i> changed from <code>DA_YieldSign</code> to <code>DA_SpeedLimit_30_VC</code> and <code>DA_StopSign</code>. <i>Traffic Sign State</i> follows the plate each time, without being set by hand. Last, a secondary sign, <code>DA_TurnRight</code>, at <i>Size</i> 0.6, <i>VerticalOffset</i> 115 and <i>Offset</i> Y 10, below the stop plate, and the stop plate itself scaled to <i>Size</i> 1.5 so it covers the top of the pole.</div>
 
 | Field | What it does |
 | --- | --- |
 | _Sign Asset Data_ | The plate: a sign data asset. |
 | _Pole Asset Data_ | The pole: a pole data asset from `DataAssets_Pole`. |
-| _Secondary Signs_ | More plates on the same pole, each with its own _Secondary Sign_ data asset, _Offset_, _Local Yaw_ and _Size_. |
+| _Secondary Signs_ | More plates on the same pole. Each has its own _SecondarySign_ data asset, _Size_, _VerticalOffset_ (its height on the pole), _LocalYaw_ and _Offset_. |
 | _Vertical Offset_ | Moves the plate up or down the pole. |
-| _Height_, _Size_, _Local Yaw_, _Offset_ | Scale and place the plate and the pole. |
+| _Height_, _Size_, _Local Yaw_, _Offset_ | Scale and place the plate and the pole. _Offset_ is in the actor's axes: the plate faces +Y, so a positive Y of about 10 moves it off the centre of the pole to its front. |
 
 ![bp_sign_examples](img/content_authoring_maps_traffic_lights/bp_sign_examples.webp)
 <div class="img-caption">Four <code>BP_Sign</code> actors on Town10HD_Opt, the same blueprint and pole (<code>DA_Pole01</code>) with a different <i>Sign Asset Data</i> each.</div>
@@ -168,6 +168,9 @@ __5. Place it.__ Drag `BP_Sign` into the level and set _Sign Asset Data_ to the 
 An atlas holds 16 signs, so a style's set of signs is many data assets that differ only in their cell. Create the first one, duplicate it, and change _Id X_ and _Id Y_ in each copy. To edit many at once, select them in the _Content Browser_, right-click, and open them in the _Property Matrix_ from _Asset Actions_: it shows one row per asset and one column per field.
 
 For maps built from OpenStreetMap, CARLA also has a regional sign __catalog__ that places the signs for you. Its data assets are of the C++ class `USignDataAsset` (`CarlaTools` plugin, `Public/Generation/SignDataAsset.h`), and the __Sign Generation Controller__ of the [Digital Twin Tool](content_authoring_maps_digital_twin.md#traffic-signs) stands one at each OSM sign node of the map, matched by its OSM tags, facing the traffic of the nearest lane. It reads the catalog from `<Sign Package Path>/VC`, `/MUTCD` or `/GB`, after its _Sign Style_. The `BDA_*` data assets above are not `USignDataAsset` and the controller ignores them.
+
+![sign_catalog_styles](img/content_authoring_maps_traffic_lights/sign_catalog_styles.webp)
+<div class="img-caption">Every sign of the regional catalog, grouped by category, in its three styles: MUTCD (138 signs), Vienna Convention (119) and GB (106). A sign that exists in more than one style, matched by its OpenDRIVE type and subtype, stands in the same place in every frame, so the same rule can be compared across regions; an empty place is a sign that style does not have. The catalog belongs to the <code>CarlaDigitalTwinsTool</code> content.</div>
 
 | Field | What it holds |
 | --- | --- |

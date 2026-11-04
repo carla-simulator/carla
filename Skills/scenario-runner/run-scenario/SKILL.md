@@ -195,10 +195,12 @@ stalled.
 Solution: raise `TIMEOUT`, check the ego is actually being driven, and confirm
 the server is not rendering at 2 fps (`-nullrhi`/`-quality-level=Low` help).
 
-**Problem: `AttributeError` in py_trees, or unicode errors with `DEBUG=1`**
-Cause: py_trees 2.x, or non-UTF-8 stdout.
-Solution: `pip install py-trees==0.8.3`; `env.sh` already exports
-`PYTHONIOENCODING=utf-8`.
+**Problem: `AttributeError` or `TypeError` in py_trees, or unicode errors with `DEBUG=1`**
+Cause: the installed py_trees does not match the one this checkout pins, or
+non-UTF-8 stdout. Behaviour trees do not survive the 0.8 to 2.x jump: `ue58-dev`
+is on 2.x, the older branches on 0.8.3.
+Solution: `pip install -r $SCENARIO_RUNNER_ROOT/requirements.txt`; `env.sh`
+already exports `PYTHONIOENCODING=utf-8`.
 
 ## Outputs
 

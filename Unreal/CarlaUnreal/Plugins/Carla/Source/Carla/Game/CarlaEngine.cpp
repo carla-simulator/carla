@@ -191,6 +191,7 @@ FCarlaEngine::~FCarlaEngine()
     {
       GEngine->OnTravelFailure().Remove(OnTravelFailureHandle);
     }
+    FWorldDelegates::OnPreWorldInitialization.Remove(OnPreWorldInitializationHandle);
   }
 }
 
@@ -269,6 +270,9 @@ void FCarlaEngine::NotifyInitGame(const UCarlaSettings &Settings)
     OnEpisodeSettingsChangeHandle = FCarlaStaticDelegates::OnEpisodeSettingsChange.AddRaw(
         this,
         &FCarlaEngine::OnEpisodeSettingsChanged);
+    OnPreWorldInitializationHandle = FWorldDelegates::OnPreWorldInitialization.AddRaw(
+        this,
+        &FCarlaEngine::OnPreWorldInitialization);
 
     bIsRunning = true;
 
@@ -1374,6 +1378,40 @@ void FCarlaEngine::OnPostTick(UWorld *World, ELevelTick TickType, float DeltaSec
     ResetSimulationState();
   }
   bFramePlayedThisTick = false;
+}
+
+void FCarlaEngine::OnPreWorldInitialization(UWorld *World, const UWorld::InitializationValues IVS)
+{
+  // Chaos rebuilds its dynamic BVH tree in an async task and swaps it in only
+  // when that task has finished, so the frame a contact is first detected
+  // depends on wall-clock timing. Its grid has no such history. Chaos reads
+  // this cvar when it builds a world's acceleration structures, and changing
+  // it while they exist breaks the swap (a check in
+  // CopyUnBuiltDynamicAccelerationStructures), hence here and not on
+  // apply_settings.
+  static const TCHAR *CVarName = TEXT("p.Chaos.AccelerationStructureUseDynamicTree");
+  IConsoleVariable *CVar = IConsoleManager::Get().FindConsoleVariable(CVarName);
+  if (CVar == nullptr)
+  {
+    if (CurrentSettings.bDeterministicCollisions)
+    {
+      UE_LOG(LogCarla, Warning, TEXT("%s not found: collisions are not deterministic"), CVarName);
+    }
+    return;
+  }
+  if (CurrentSettings.bDeterministicCollisions)
+  {
+    if (!DynamicTreeBeforeDeterministicCollisions.IsSet())
+    {
+      DynamicTreeBeforeDeterministicCollisions = CVar->GetInt();
+    }
+    CVar->Set(0, ECVF_SetByCode);
+  }
+  else if (DynamicTreeBeforeDeterministicCollisions.IsSet())
+  {
+    CVar->Set(DynamicTreeBeforeDeterministicCollisions.GetValue(), ECVF_SetByCode);
+    DynamicTreeBeforeDeterministicCollisions.Reset();
+  }
 }
 
 void FCarlaEngine::OnEpisodeSettingsChanged(const FEpisodeSettings &Settings)

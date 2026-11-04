@@ -122,17 +122,17 @@ inspect)
   fi
 
   echo "== Binaries =="
-  SH="${P}/Linux/CarlaUnreal.sh"
+  SH="${P}/CarlaUnreal.sh"
   [ -f "${SH}" ] && ok "launcher CarlaUnreal.sh" || bad "launcher ${SH} missing"
-  BIN="$(ls -1 "${P}"/Linux/CarlaUnreal/Binaries/Linux/CarlaUnreal-Linux-* 2>/dev/null | head -1)"
+  BIN="$(ls -1 "${P}"/CarlaUnreal/Binaries/Linux/CarlaUnreal-Linux-* 2>/dev/null | head -1)"
   if [ -n "${BIN}" ]; then
     ok "server binary $(basename "${BIN}") ($(du -h "${BIN}" | cut -f1))"
   else
-    bad "no CarlaUnreal-Linux-* binary under Linux/CarlaUnreal/Binaries/Linux"
+    bad "no CarlaUnreal-Linux-* binary under CarlaUnreal/Binaries/Linux"
   fi
 
   echo "== Pak container =="
-  PAKS="${P}/Linux/CarlaUnreal/Content/Paks"
+  PAKS="${P}/CarlaUnreal/Content/Paks"
   if [ -d "${PAKS}" ]; then
     for f in pakchunk0-Linux.pak pakchunk0-Linux.ucas pakchunk0-Linux.utoc global.ucas global.utoc; do
       if [ -f "${PAKS}/${f}" ]; then
@@ -246,7 +246,7 @@ inspect)
 
 list)
   P="$(pkg_root)"
-  PAK="${P}/Linux/CarlaUnreal/Content/Paks/pakchunk0-Linux.pak"
+  PAK="${P}/CarlaUnreal/Content/Paks/pakchunk0-Linux.pak"
   [ -f "${PAK}" ] || { echo "no pak at ${PAK}" >&2; exit 3; }
   PAT="${1:-Carla/Maps}"
   echo "# strings matching '${PAT}' in $(basename "${PAK}")"

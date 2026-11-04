@@ -30,9 +30,9 @@ LEGEND  [skill]  a vetted procedure exists in this collection — use it
   minus five gaps (no Autoware, FastDDS only, no DLSS/rt_lens, no OFPA large-map
   mount, a few missing World/Actor methods).
   Full list: Skills/ue5/check-ue5-limitations, `gaps.sh list`.
-  Read "0.10.0" below as "the UE5 line": it is what pre-1.0 ue58 builds report,
-  what every measurement here was taken on, and what 5.5 reports today. 1.0
-  renamed the line — the facts hold.
+  Read "0.10.0" below as "the UE5 line": CARLA 1.0 is that line, pre-release 1.0
+  builds still report 0.10.0, it is what every measurement here was taken on, and
+  it is what 5.5 reports today. The facts hold across the rename.
 
 == Covered by a skill ==
   [skill] build / package / run a server            build-carla-ue58, package-carla-ue58,

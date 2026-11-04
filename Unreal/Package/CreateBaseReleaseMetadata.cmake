@@ -1,5 +1,5 @@
 # Post-package step for content packs (see Docs / Util/ContentPacks):
-#  1. stamp the release name into <archive>/<Platform>/CarlaUnreal/BaseRelease
+#  1. stamp the release name into <archive>/CarlaUnreal/BaseRelease
 #     (single line, next to the packaged project's Content/Paks) so the runtime
 #     can refuse packs cooked against another base;
 #  2. archive Unreal/CarlaUnreal/Releases/<release>/ (AssetRegistry.bin and the
@@ -29,18 +29,14 @@ foreach (REQUIRED_FILE AssetRegistry.bin Metadata/DevelopmentAssetRegistry.bin)
   endif ()
 endforeach ()
 
-# The packaged project dir: <archive>/<Platform>/CarlaUnreal (that is what
-# FPaths::ProjectDir() resolves to in the packaged binary).
-file (GLOB PROJECT_DIRS LIST_DIRECTORIES true ${CARLA_PACKAGE_ARCHIVE_PATH}/*/CarlaUnreal)
-if (NOT PROJECT_DIRS)
-  message (FATAL_ERROR "No <archive>/<Platform>/CarlaUnreal directory under ${CARLA_PACKAGE_ARCHIVE_PATH}.")
+# The packaged project dir (what FPaths::ProjectDir() resolves to in the
+# packaged binary).
+set (PROJECT_DIR ${CARLA_PACKAGE_ARCHIVE_PATH}/CarlaUnreal)
+if (NOT IS_DIRECTORY ${PROJECT_DIR})
+  message (FATAL_ERROR "No ${PROJECT_DIR} directory.")
 endif ()
-foreach (PROJECT_DIR ${PROJECT_DIRS})
-  if (IS_DIRECTORY ${PROJECT_DIR})
-    file (WRITE ${PROJECT_DIR}/BaseRelease "${CARLA_BASE_RELEASE_NAME}\n")
-    message (STATUS "Wrote ${PROJECT_DIR}/BaseRelease = ${CARLA_BASE_RELEASE_NAME}")
-  endif ()
-endforeach ()
+file (WRITE ${PROJECT_DIR}/BaseRelease "${CARLA_BASE_RELEASE_NAME}\n")
+message (STATUS "Wrote ${PROJECT_DIR}/BaseRelease = ${CARLA_BASE_RELEASE_NAME}")
 # Also at the archive root for humans/tools that never open the project dir.
 file (WRITE ${CARLA_PACKAGE_ARCHIVE_PATH}/BaseRelease "${CARLA_BASE_RELEASE_NAME}\n")
 

@@ -34,8 +34,8 @@ Registering the towns takes a second; the cook takes minutes (about 9, and 3.9 G
 On any machine with the CARLA package of that release:
 
 ```sh
-carla-pack install Towns5-1.0.0-carla-<version>-Linux.tar.gz --server /opt/carla/Linux
-/opt/carla/Linux/CarlaUnreal.sh
+carla-pack install Towns5-1.0.0-carla-<version>-Linux.tar.gz --server /opt/carla
+/opt/carla/CarlaUnreal.sh
 ```
 
 ```py
@@ -263,7 +263,7 @@ A map can carry DigitalTwin traffic-light timing in a `map_logic.json` next to i
 ---
 ## Installing a pack
 
-A CARLA package finds packs in three places, all read at start: `<package>/Linux/CarlaUnreal/Packs/*/` (next to the package's own `Content/Paks`), the directories given on the server command line as `-carla-packs=<dir>[;<dir>...]` (one flag, directories separated by `;`, quoted if a path has spaces), and those in `$CARLA_PACKS` (also separated by `;`). Each of these is a parent directory: every subfolder holding a `carla-pack.json` is a pack. A pack found there is mounted before the first episode: its maps show up in `client.get_available_maps()`, its vehicles, walkers and props in `world.get_blueprint_library()`. `Packs/` is the only supported drop-in location — do not put packs under the package's `Plugins/` folder. A pack that fails to mount does not stop the server: the server log shows `Content packs: '<manifest>' not mounted: <reason>`, so check the log when a map or blueprint is missing.
+A CARLA package finds packs in three places, all read at start: `<package>/CarlaUnreal/Packs/*/` (next to the package's own `Content/Paks`), the directories given on the server command line as `-carla-packs=<dir>[;<dir>...]` (one flag, directories separated by `;`, quoted if a path has spaces), and those in `$CARLA_PACKS` (also separated by `;`). Each of these is a parent directory: every subfolder holding a `carla-pack.json` is a pack. A pack found there is mounted before the first episode: its maps show up in `client.get_available_maps()`, its vehicles, walkers and props in `world.get_blueprint_library()`. `Packs/` is the only supported drop-in location — do not put packs under the package's `Plugins/` folder. A pack that fails to mount does not stop the server: the server log shows `Content packs: '<manifest>' not mounted: <reason>`, so check the log when a map or blueprint is missing.
 
 ### Drop-in install
 
@@ -271,7 +271,7 @@ A CARLA package finds packs in three places, all read at start: `<package>/Linux
 carla-pack install NewPack-1.0.0-carla-<version>-Linux.tar.gz --server /path/to/carla-package [--force]
 ```
 
-verifies every checksum (refusing files the manifest does not list), checks the base release against the server's `BaseRelease` stamp and the platform, then extracts the pack into `<package>/Linux/CarlaUnreal/Packs/NewPack/`. `--server` accepts the package root (the directory that holds `Linux/`), the `Linux/` directory (where `CarlaUnreal.sh` is) or `Linux/CarlaUnreal` itself. `--force` replaces an installed pack of the same name and overrides the base-release check (do not, unless you know the cook settings match). Extracting the tarball into `CarlaUnreal/Packs/` by hand is equivalent, minus the verification.
+verifies every checksum (refusing files the manifest does not list), checks the base release against the server's `BaseRelease` stamp and the platform, then extracts the pack into `<package>/CarlaUnreal/Packs/NewPack/`. `--server` accepts the package root (where `CarlaUnreal.sh` is) or its `CarlaUnreal/` directory. `--force` replaces an installed pack of the same name and overrides the base-release check (do not, unless you know the cook settings match). Extracting the tarball into `CarlaUnreal/Packs/` by hand is equivalent, minus the verification.
 
 Start (or restart) the server. Then, from any client:
 
@@ -320,7 +320,7 @@ client.unmount_content_pack('NewPack')                                          
 
 * __New version of a pack__: `carla-pack install <new tarball> --server ... --force`, then restart the server. Unreal cannot reload a package that is already in memory, so a restart is the only safe option once anything from the pack has been loaded; if nothing from it was loaded since the last episode change, `unmount_content_pack` followed by `mount_content_pack` picks up the new files.
 * __New CARLA release__: the pack must be rebuilt against the new release metadata (`carla-pack build`, minutes). The server refuses a pack built for another release (see [FAQ](#faq)).
-* __Remove__: delete `<package>/Linux/CarlaUnreal/Packs/<Pack>/` while the server is stopped.
+* __Remove__: delete `<package>/CarlaUnreal/Packs/<Pack>/` while the server is stopped.
 
 ---
 
@@ -391,7 +391,7 @@ The manifest, `carla-pack.json`, is what CARLA reads when it mounts the pack. Th
 
 __`base release mismatch: pack built against 'carla-1.0-Linux', server is 'carla-1.0.1-Linux'`__
 
-`carla-pack install` and `inspect` print this; the server's own message, when it refuses the pack at start or from `mount_content_pack`, is `pack '<Pack>' was built against base release '<A>' but this server is '<B>'; rebuild the pack against this release`. The pack was cooked against another CARLA release and the server refuses it — cooked data is only valid against the asset registry it was cooked with. Rebuild the pack with that server's release metadata: `carla-pack build NewPack --base carla-0.10.1-Linux-release-metadata.tar.gz`. `carla-pack inspect <pack> --server <dir>` shows both strings; `<package>/BaseRelease` (and `<package>/Linux/CarlaUnreal/BaseRelease`) holds the server's.
+`carla-pack install` and `inspect` print this; the server's own message, when it refuses the pack at start or from `mount_content_pack`, is `pack '<Pack>' was built against base release '<A>' but this server is '<B>'; rebuild the pack against this release`. The pack was cooked against another CARLA release and the server refuses it — cooked data is only valid against the asset registry it was cooked with. Rebuild the pack with that server's release metadata: `carla-pack build NewPack --base carla-0.10.1-Linux-release-metadata.tar.gz`. `carla-pack inspect <pack> --server <dir>` shows both strings; `<package>/BaseRelease` (and `<package>/CarlaUnreal/BaseRelease`) holds the server's.
 
 __`server has no BaseRelease stamp`__
 
@@ -417,7 +417,7 @@ __How big is a pack?__
 
 Roughly the size of the cooked assets it ships, plus the sidecar files. Measured: two large World Partition towns, 2.4 GB; three classic towns and two large ones, 3.9 GB; a map with a few hundred unique meshes is typically in the hundreds of MB; a pack that only lists new vehicles built from existing CARLA meshes is a few MB. Everything the pack references from the base release costs nothing. `carla-pack inspect` lists the files with their sizes; most of the size is in the `.ucas` container.
 
-__Can I mount a pack that is not under `Linux/CarlaUnreal/Packs`?__
+__Can I mount a pack that is not under `CarlaUnreal/Packs`?__
 
 Yes: `mount_content_pack` takes any folder on the server's file system that contains a `carla-pack.json`, and `-carla-packs=<dir>` / `$CARLA_PACKS` register extra directories to scan at start. A tarball must be extracted first.
 

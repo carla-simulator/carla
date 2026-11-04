@@ -26,6 +26,7 @@
 
 #include <util/ue-header-guard-begin.h>
 #include "Misc/CoreDelegates.h"
+#include "Engine/World.h"
 #include <util/ue-header-guard-end.h>
 
 #include <atomic>
@@ -114,6 +115,10 @@ private:
   void OnPostTick(UWorld *World, ELevelTick TickType, float DeltaSeconds);
 
   void OnEpisodeSettingsChanged(const FEpisodeSettings &Settings);
+
+  /// Applies FEpisodeSettings::bDeterministicCollisions to the world about to
+  /// be created.
+  void OnPreWorldInitialization(UWorld *World, const UWorld::InitializationValues IVS);
 
   void ResetSimulationState();
 
@@ -213,6 +218,12 @@ private:
 
   // Secondary, game thread: set when loading the primary's map failed.
   bool bTravelFailed = false;
+
+  FDelegateHandle OnPreWorldInitializationHandle;
+
+  /// Value of p.Chaos.AccelerationStructureUseDynamicTree before deterministic
+  /// collisions changed it; unset while they are off.
+  TOptional<int32> DynamicTreeBeforeDeterministicCollisions;
 
   bool bIsPrimaryServer = true;
 

@@ -77,7 +77,7 @@ python3 -m nose2 -v
 The smoke tests connect to `localhost:3654`, not the default port 2000, so start a dedicated server on that port. From a package:
 
 ```sh
-./Linux/CarlaUnreal.sh -carla-rpc-port=3654
+./CarlaUnreal.sh -carla-rpc-port=3654
 ```
 
 With the Python API and the test requirements installed (see [Python API unit tests](#python-api-unit-tests)), check that the server answers, then run the list from the `test` folder:
@@ -100,7 +100,7 @@ Add `-c smoke/unittest.cfg -X` to write the results as JUnit XML to `test-result
 The tests load maps and change world settings, and many of them leave the server on `Town10HD_Opt` instead of the starting map, so do not run them against a server you are using for something else.
 
 !!! Note
-    `smoke.test_ros2` needs a server launched with `-ros2` (`./Linux/CarlaUnreal.sh -carla-rpc-port=3654 -ros2`). Without it, those tests fail. The tests check whichever middleware the server runs, so run them once per middleware, launching with `-rmw=fastdds`, `-rmw=cyclonedds` or `-rmw=zenoh`.
+    `smoke.test_ros2` needs a server launched with `-ros2` (`./CarlaUnreal.sh -carla-rpc-port=3654 -ros2`). Without it, those tests fail. The tests check whichever middleware the server runs, so run them once per middleware, launching with `-rmw=fastdds`, `-rmw=cyclonedds` or `-rmw=zenoh`.
 
 ---
 ## Integration tests
@@ -158,7 +158,7 @@ git clone --depth 1 -b 0.1.4 https://github.com/carla-simulator/opendrive-test-f
 
 It then builds the package. Pull requests and nightly builds do not run the Python unit, smoke or integration tests, so run them locally before opening a pull request that touches the Python API or the server.
 
-The `python-versions` input of `.github/workflows/_ci-ubuntu.yml` lists the Python versions the wheels are built for, the first being the build's main Python. Each version gets a conda environment `carla<XY>`, created on the first run. The `smoke-test-python-versions` input lists the versions to run the smoke tests with, and when it is empty no smoke tests run. Pull requests and nightly builds build 3.10 only and skip the smoke tests. Releases (`.github/workflows/ue5_release.yml`) build 3.10, 3.11 and 3.12, then run the smoke tests with each version against the package before uploading it. A failure stops the upload, and the JUnit results are kept as the `smoke-test-results` artifact.
+The `python-versions` input of `.github/workflows/_ci-ubuntu.yml` lists the Python versions the wheels are built for, the first being the build's main Python. Each version uses the conda environment `carla<XY>` (`carla310`, `carla311`, ...) under `PYTHON_ENVS_DIR` (`/opt/conda/envs`), which the builder image provides with `numpy` and `build` installed. The `smoke-test-python-versions` input lists the versions to run the smoke tests with, and when it is empty no smoke tests run. Pull requests and nightly builds build and smoke test 3.10 only. Releases (`.github/workflows/ue5_release.yml`) build 3.10, 3.11 and 3.12, then run the smoke tests with each version against the package before uploading it. A failure stops the upload, and the JUnit results are kept as the `smoke-test-results` artifact.
 
 To run the smoke tests the same way locally, start a server on port 3654 and pass one interpreter per version to `Util/Tools/RunSmokeTests.sh`. It installs the matching wheel from `Build/Release/PythonAPI/dist` (`--wheel-dir` changes it) into each interpreter and writes `Build/test-results/smoke-cpXY.xml`:
 

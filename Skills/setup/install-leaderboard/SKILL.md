@@ -1,8 +1,8 @@
 ---
 name: install-leaderboard
-description: Installs the CARLA Autonomous Driving Leaderboard (leaderboard.carla.org) at a chosen version — 1.0, 2.0 or 2.1 — together with the exact scenario_runner branch and CARLA build each one requires, then wires the four-root PYTHONPATH and verifies the whole stack imports. Detects which version an existing checkout is by reading its code, not its branch name. Use when the user asks to "install the leaderboard", "set up the CARLA challenge", "evaluate my driving agent", "reproduce my leaderboard score", or names a leaderboard version.
+description: Installs the CARLA Autonomous Driving Leaderboard (leaderboard.carla.org) at a chosen version, defaulting to ue58 (the ue58-dev branch on CARLA 1.0, which needs no scenario_runner); 1.0, 2.0 and 2.1 are also supported, together with the exact scenario_runner branch and CARLA build each of those requires, then wires the PYTHONPATH and verifies the whole stack imports. Detects which version an existing checkout is by reading its code, not its branch name. Use when the user asks to "install the leaderboard", "set up the CARLA challenge", "evaluate my driving agent", "reproduce my leaderboard score", or names a leaderboard version.
 license: MIT
-compatibility: Linux, Python 3.7-3.10. Needs a CARLA build matching the leaderboard version (0.9.10.1 for 1.0; the leaderboard 0.9.14+large-maps build for 2.x) plus a matching scenario_runner checkout. No UE4/UE5 build required. For CARLA on UE 5.8, the leaderboard and scenario_runner `ue58-dev` branches are the pair.
+compatibility: Linux, Python 3.7-3.10. Needs a CARLA build matching the leaderboard version (0.9.10.1 for 1.0; the leaderboard 0.9.14+large-maps build for 2.x) plus a matching scenario_runner checkout for 1.0/2.0/2.1. No UE4/UE5 build required. For CARLA on UE 5.8, use the leaderboard `ue58-dev` branch, which needs no scenario_runner.
 metadata:
   group: setup
   prerequisites: scripts/check_env.sh
@@ -16,14 +16,17 @@ metadata:
 > project, not that directory, so prefix them with its absolute path or the
 > command is not found.
 
-The Leaderboard is an evaluation harness layered on ScenarioRunner: it supplies
-routes, a fixed sensor budget, infraction criteria and a scoring formula, and it
-imports `srunner` for the scenarios themselves. So a working install is **four
-roots that agree on one version**:
+The Leaderboard is an evaluation harness: it supplies routes, a fixed sensor
+budget, infraction criteria and a scoring formula. Up to 2.1 it imports `srunner`
+for the scenarios themselves, so a working install is **four roots that agree on
+one version**:
 
 ```
 CARLA build  ──▶  scenario_runner branch  ──▶  leaderboard branch  ──▶  your agent
 ```
+
+On `ue58-dev` the leaderboard vendors its own scenario engine and no
+`scenario_runner` checkout is needed, so that install is three roots.
 
 Get any pair out of step and nothing tells you so directly — routes load and then
 scenarios never trigger, or the score comes out different from the online one.
@@ -32,40 +35,39 @@ scenarios never trigger, or the score comes out different from the online one.
 
 ```
 Progress:
-- [ ] Step 1: Decide the leaderboard version (1.0 / 2.0 / 2.1)
+- [ ] Step 1: Decide the leaderboard version (ue58 by default; else 1.0 / 2.0 / 2.1)
 - [ ] Step 2: Get the CARLA build that version needs
-- [ ] Step 3: Clone leaderboard + the matching scenario_runner branch
+- [ ] Step 3: Clone leaderboard, plus the matching scenario_runner for 1.0 / 2.0 / 2.1
 - [ ] Step 4: Install both requirement sets
 - [ ] Step 5: Record the roots with `set_config`, then verify (bash scripts/check_env.sh)
 ```
 
 ### Step 1: Which version
 
-| | LB 1.0 | LB 2.0 | LB 2.1 |
-|---|---|---|---|
-| Status | legacy | superseded | **current** (since Mar 2025) |
-| CARLA | 0.9.10.1 | leaderboard build (0.9.14 + large maps) | same as 2.0 |
-| `leaderboard` branch | `leaderboard-1.0` | `leaderboard-2.0` | `leaderboard-2.1` |
-| `scenario_runner` branch | `leaderboard-1.0` | `leaderboard-2.0` | `leaderboard-2.1` |
-| Towns | Town01–Town06 | Town12 / Town13 | Town12 / Town13 |
-| Routes | 50 train / 26 test / 4 devtest | 90 train / 20 val / 2 devtest | same as 2.0 |
-| Tracks | SENSORS, MAP | + SENSORS_QUALIFIER, MAP_QUALIFIER | same as 2.0 |
-| Sensor budget | 4 cam / 1 lidar / 2 radar | 8 cam / 2 lidar / 4 radar | same as 2.0 |
-| Infraction penalty | multiplicative | multiplicative | **additive** |
+`ue58` is **the default**: the `ue58-dev` branch, running against CARLA 1.0. The
+others are still supported and still used — to reproduce a submitted score, or
+on an older CARLA — but they are not the default.
 
-**CARLA on UE 5.8: use the `ue58-dev` pair.** The leaderboard repo has a
-`ue58-dev` branch (`2b3eaa7`). Its CHANGELOG says it works against CARLA UE5
-servers, paired with the scenario_runner `ue58-dev` branch. It resolves town names
-through `CarlaDataProvider.resolve_map_name`, and its routes are Town12/Town13.
-`install_leaderboard.py --version` does not cover it; clone the pair by hand:
+| | **ue58** (default) | LB 1.0 | LB 2.0 | LB 2.1 |
+|---|---|---|---|---|
+| Status | **current** | legacy | superseded | last online-eval version |
+| CARLA | **1.0** | 0.9.10.1 | leaderboard build (0.9.14 + large maps) | same as 2.0 |
+| `leaderboard` branch | `ue58-dev` | `leaderboard-1.0` | `leaderboard-2.0` | `leaderboard-2.1` |
+| `scenario_runner` branch | **none needed** | `leaderboard-1.0` | `leaderboard-2.0` | `leaderboard-2.1` |
+| Towns | Town12 / Town13 | Town01–Town06 | Town12 / Town13 | Town12 / Town13 |
+| Routes | same as 2.1 | 50 train / 26 test / 4 devtest | 90 train / 20 val / 2 devtest | same as 2.0 |
+| Tracks | same as 2.1 | SENSORS, MAP | + SENSORS_QUALIFIER, MAP_QUALIFIER | same as 2.0 |
+| Sensor budget | same as 2.1 | 4 cam / 1 lidar / 2 radar | 8 cam / 2 lidar / 4 radar | same as 2.0 |
+| Infraction penalty | additive | multiplicative | multiplicative | **additive** |
+
+**`ue58` needs no scenario_runner.** That branch vendors its own scenario engine
+under `leaderboard/`, so there is one repo to clone and one requirements file to
+install. It resolves town names through `CarlaDataProvider.resolve_map_name`, and
+its routes are Town12/Town13.
 
 ```bash
 git clone -b ue58-dev --single-branch https://github.com/carla-simulator/leaderboard.git
-git clone -b ue58-dev --single-branch https://github.com/carla-simulator/scenario_runner.git
 ```
-
-`detect` and the leaderboard group's `check_env.sh` (e.g. [[run-leaderboard-evaluation]])
-treat both repos on `ue58-dev` as a matched pair.
 
 **2.0 and 2.1 differ in exactly one file.** `leaderboard/utils/statistics_manager.py`
 — 38 lines. Same routes, same scenarios, same CARLA, same sensors. Only the

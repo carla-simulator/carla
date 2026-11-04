@@ -11,6 +11,7 @@
 #### Agentic CARLA
 
 * Added an **agent skill library**: 63 vetted CARLA procedures under `Skills/`, covering setup, the Python API, UE 4.26 / 5.5 / 5.8 builds, packaging, asset imports, Scenario Runner, Leaderboard, Scenic, native ROS 2, the documentation itself, and contributing back: issues, discussions and pull requests against `ue58-dev`. `Util/AgenticTools/` serves the same library over MCP. See `Docs/agent_skills.md`.
+* Enabled Epic's **Unreal MCP** plugin (`ModelContextProtocol` + `EditorToolset`) in the CarlaUnreal editor: opening the project starts an MCP server on `http://localhost:8000/mcp`, and the repo's `.mcp.json` registers it as `unreal-mcp` so Claude Code connects to the running editor with no setup. Editor only: `-game` and packaged builds do not load it. See `Docs/agent_skills.md`.
 
 #### Sensor simulation
 
@@ -59,6 +60,7 @@
 * Added **road network objects** to the Python API: `carla.Road`, `carla.LaneSection` and `carla.Lane`, so the map can be addressed as objects instead of only sampled as waypoints. Reached through `Map.get_roads`, `get_road`, `get_lane_section`, `get_lane`, `get_junctions`, `get_junction_by_id`; `Waypoint.get_lane`, `get_road`; and `Junction.get_connecting_roads`, `get_adjacent_roads`, `get_entry_lanes`, `get_exit_lanes`, `get_entry_waypoints`, `get_exit_waypoints`.
 * Added **geolocation that follows the map's own projection**. CARLA used to convert between world coordinates and latitude/longitude with a fixed Mercator formula, which disagreed with the map's OpenDRIVE `geoReference` on anything but Web Mercator. The `geoReference` PROJ string is now read into a typed projection (Transverse Mercator, UTM, Web Mercator or Lambert Conformal Conic), exposed through `Map.get_geoprojection` and accepted by `Map.transform_to_geolocation` and the new `Map.geolocation_to_transform`. Latitude increases towards the map's north, along CARLA's −y axis.
 * Added a **wheel animation override** (`Vehicle.set_wheel_animation_override`): the wheels then show only what `set_wheel_steer_direction`, `set_wheel_pitch_angle` and `set_wheel_suspension_offset` set, whether or not Chaos simulates the vehicle, for replays and co-simulation platforms that bring their own wheel state. `get_wheel_steer_angle`, `get_wheel_pitch_angle` and `get_wheel_suspension_offset` read the poses back. Visual only; the setters raise an error while the override is off, and every one of them raises for a wheel the vehicle does not have.
+* Added **deterministic collisions** (`WorldSettings.deterministic_collisions`): by default the physics engine could detect a contact one frame earlier or later depending on how fast the server ran, so the same crash in synchronous mode ended differently between runs. Enabled, collisions repeat exactly, at around 15-25% more physics time with heavy traffic. It applies at the next map load that keeps the settings (`reset_settings=False`). See `PythonAPI/examples/deterministic_collisions.py`; the determinism smoke tests turn it on.
 * Added **actor introspection** to the Python API: `Actor.get_component_names`, `get_bone_names`, `get_socket_names` and the world/relative transform getters for each.
 * Added **`base_type` and `subtype` blueprint attributes to the props** and `special_type` to the pedestrians, so the blueprint library says what a blueprint actually is (a bench, a traffic cone, a police officer) and can be filtered on it.
 
@@ -129,6 +131,8 @@
 
 * **Improved the documentation** of many classes and functions with information that was missing or wrong, and documented the Python API that the bindings exposed but the reference never listed: the actor component, bone and socket queries, the ego spawn points and IMU gravity, the geographic projection, the physics control settings, `Client.load_world_if_different`, and the `VehicleTelemetryData`, `WheelTelemetryData`, `Quaternion`, `BoneTransformDataIn`, `BoneTransformDataOut` and `FakeImage` classes.
 * **Updated the walker skeleton tutorial** to `carla.WalkerBoneControlIn`, `Walker.set_bones` and `Walker.show_pose`, and fixed the bone names in its skeleton tree.
+* **Expanded the traffic light and traffic sign authoring pages**: the Traffic Light Tool with an animated build from scratch, its presets, pieces and light atlas; placing a regional `BP_Sign` with its pole, plates and secondary signs; and the regional sign catalog in its three styles.
+* **Reorganised the rendering documentation** under _Sensor simulation_: UE native rendering, with a new _Camera features_ section on the post-process presets, the ray-traced lens cameras and DLSS, next to NuRec, Cosmos and the sensor reference.
 
 ### Bug fixes
 
@@ -152,9 +156,12 @@
 * Foliage environment objects keep their ids when the map's environment objects are registered again (after a map layer is loaded or unloaded); they used to get new ids every time.
 * Fixed the Multi-GPU secondary adding two worker threads on every reconnect attempt, which leaked threads while the primary was unreachable (#9954).
 * Fixed Multi-GPU secondary routing and map reloads: camera streams handed to clients now match the primary's stream ids, secondaries stay in sync across `load_world()`, a lost secondary fails over cleanly and the next secondary to connect takes over all of its sensors' streams (clients resume without a new `listen()` only if that secondary uses the same streaming address and port), a restarted secondary no longer replays an actor onto an unrelated local actor with the same id, a `-nullrhi` primary no longer crashes on camera requests, and a secondary that connects after `load_world()` now loads the primary's current map instead of staying on its default one.
+* Fixed the **Sign Generation Controller** of the Digital Twin Tool placing plates edge-on to the traffic (they looked blank) and leaving signs in the roadway. The plate now always stands at _Plate Height Cm_ instead of the `Sign1` socket of `SM_Pole05`, and `DisplaceLocationOutsideNeighboringRoads` snaps the sign to the lane height before measuring, counts parking, biking, shoulder and bidirectional lanes as carriageway, jumps to the outer edge of multi-lane roads on the side of the traffic (right- or left-hand), and removes, with a warning, a sign it cannot move out of the carriageway.
+* Fixed the **Traffic Light Tool** preview: it now reframes whenever the traffic light changes size and looks at the heads from a three-quarter front view, instead of starting inside the pole and staying there, and the _Import JSON..._ and _Export JSON..._ buttons no longer show garbage characters.
 
 #### ROS 2
 
+* Fixed **`/vehicle/status/gear_status` reporting NEUTRAL** while an Autoware-driven vehicle moves forward. Acceleration control never engages the transmission. While it is active, `GetVehicleCurrentGear()` now reports the first forward gear, so Autoware sees DRIVE. `get_telemetry_data()` reports the same gear.
 * Fixed camera fx in the ROS 2 `CameraInfo`, large map actor tagging, and camera frame and timestamp consistency.
 
 #### Traffic Manager and agents
@@ -191,6 +198,7 @@
 
 #### Documentation
 
+* **Fixed the CARLA 1.0 download links** in the quick start and the download page, and corrected the ROS 2 native and Autoware pages against a runtime check of the 1.0 package.
 * Clarified that `WorldSnapshot.id` identifies the loaded episode and remains stable across its ticks; use `frame` to identify a snapshot's tick (#7377).
 * Fixed the Python API reference listing keyword names the bindings do not accept (`World.get_level_bbs(actor_type=...)` raised `ArgumentError`; it is `bb_type`), and the same on `Vehicle.set_autopilot`, `Walker.blend_pose`, `Client.apply_batch_sync`, `Client.get_trafficmanager`, the `Client` recorder methods, `BoundingBox.get_world_vertices` and `World.apply_settings`.
 * Fixed the semantic segmentation class table in `Docs/ref_sensors.md`, which still described the 0.8.x 22-class taxonomy instead of the actual 29 classes, breaking ground-truth mapping.

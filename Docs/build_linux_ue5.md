@@ -162,13 +162,13 @@ Use the full map package path (`/Game/Carla/Maps/<MapName>`), not a filesystem p
 Run the package with the following command from inside the package root folder.
 
 ```sh
-./Linux/CarlaUnreal.sh
+./CarlaUnreal.sh
 ```
 
 If you want to run the native ROS 2 interface, add the `-ros2` argument:
 
 ```sh
-./Linux/CarlaUnreal.sh -ros2
+./CarlaUnreal.sh -ros2
 ```
 
 If you want to install the Python API corresponding to the package you have built, pick the wheel for your Python version (`cp310` for Python 3.10, and so on):

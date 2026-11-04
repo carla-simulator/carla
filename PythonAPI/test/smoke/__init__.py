@@ -29,6 +29,11 @@ MAP_READY_POLL = 1.0
 VEHICLE_VEHICLES_EXCLUDE_FROM_OLD_TOWNS = ['vehicle.fuso.mitsubishi', 'vehicle.carlacola.actors', 'vehicle.firetruck.actors']
 
 class SmokeTest(unittest.TestCase):
+    # Tests that compare repeated runs set this. The setting applies when a
+    # map loads, so such a test loads its map with reset_settings=False; the
+    # map load in tearDown resets the settings and turns it off again.
+    deterministic_collisions = False
+
     def setUp(self):
         self.testing_address = TESTING_ADDRESS
         self.client = carla.Client(*TESTING_ADDRESS)
@@ -36,6 +41,10 @@ class SmokeTest(unittest.TestCase):
         self.client.set_timeout(120.0)
         self.world = self.client.get_world()
         self.initial_map_name = self.world.get_map().name.split('/')[-1]
+        if self.deterministic_collisions:
+            settings = self.world.get_settings()
+            settings.deterministic_collisions = True
+            self.world.apply_settings(settings)
 
     def tearDown(self):
         try:
