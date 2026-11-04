@@ -17,6 +17,7 @@
 #include "Carla/Settings/EpisodeSettings.h"
 #include "Carla/MapGen/LargeMapManager.h"
 #include "Carla/OpenDrive/OpenDrive.h"
+#include "Carla/OpenDrive/OpenDriveGenerator.h"
 #include "Carla/Traffic/TrafficLightManager.h"
 #include "Carla/Actor/ActorData.h"
 #include "Carla/Sensor/Sensor.h"
@@ -40,6 +41,7 @@
 #include <util/ue-header-guard-begin.h>
 #include "Engine/Engine.h"
 #include "Engine/GameViewportClient.h"
+#include "EngineUtils.h"
 #include "GameFramework/WorldSettings.h"
 #include "HAL/FileManager.h"
 #include "HAL/IConsoleManager.h"
@@ -679,8 +681,30 @@ void FCarlaEngine::NotifyBeginEpisode(UCarlaEpisode &Episode)
 
     // Re-arms the primary's full-resync flag (see Router::HandleResponse),
     // since connect-time arming predates this secondary's own level load.
-    SendEpisodeReady();
+    bEpisodeReadyPending = true;
+    EpisodeReadyPendingSince = FPlatformTime::Seconds();
+    SendEpisodeReadyWhenContentReady();
   }
+}
+
+void FCarlaEngine::SendEpisodeReadyWhenContentReady()
+{
+  if (!bEpisodeReadyPending || CurrentEpisode == nullptr)
+  {
+    return;
+  }
+  // The primary mirrors frames only after EPISODE_READY, so its first frame finds the furniture spawned.
+  for (TActorIterator<AOpenDriveGenerator> It(CurrentEpisode->GetWorld()); It; ++It)
+  {
+    if (It->IsStreetFurnitureGenerating())
+    {
+      return;
+    }
+  }
+  bEpisodeReadyPending = false;
+  UE_LOG(LogCarla, Log, TEXT("Multi-GPU: episode content ready after %.2f s, sending EPISODE_READY"),
+      FPlatformTime::Seconds() - EpisodeReadyPendingSince);
+  SendEpisodeReady();
 }
 
 void FCarlaEngine::SendEpisodeReady()
@@ -986,11 +1010,14 @@ void FCarlaEngine::OnBeginFrame()
     }
   }
 
+  SendEpisodeReadyWhenContentReady();
+
   carla::multigpu::BeginFrameState State;
   State.connected = bConnected;
   State.has_episode = (CurrentEpisode != nullptr);
   State.travel_pending = State.has_episode && FCarlaEngine_IsWorldTravelPending(CurrentEpisode->GetWorld());
-  State.load_map_pending = bLoadMapPending;
+  // While EPISODE_READY is held back, frames run on this server's own clock so the content can finish.
+  State.load_map_pending = bLoadMapPending || bEpisodeReadyPending;
   State.exit_requested = IsEngineExitRequested();
   const carla::multigpu::BeginFrameAction Action = carla::multigpu::DecideBeginFrame(State);
 

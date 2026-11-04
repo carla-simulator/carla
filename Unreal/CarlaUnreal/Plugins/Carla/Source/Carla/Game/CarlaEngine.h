@@ -140,6 +140,9 @@ private:
   /// makes it send a full resync.
   void SendEpisodeReady();
 
+  /// Sends EPISODE_READY once the world's generated content has finished spawning.
+  void SendEpisodeReadyWhenContentReady();
+
   /// Secondary only: stops mirroring the primary for good (it is gone, or
   /// this server cannot load its map). Never call it holding FrameToProcessMutex.
   void DetachFromPrimary(const char *Reason);
@@ -256,6 +259,10 @@ private:
   // What came with it: a world the primary generated (guarded like it).
   carla::multigpu::LoadMapExtras PendingLoadMapExtras;
   std::atomic<bool> bLoadMapPending{false};
+
+  // Secondary, game thread: EPISODE_READY waits for generated content (OpenDRIVE street furniture).
+  bool bEpisodeReadyPending = false;
+  double EpisodeReadyPendingSince = 0.0;
 
   // Secondary, game thread: the map of the load started last.
   FString LoadingMap;
