@@ -211,14 +211,17 @@ class TestVehicleTireConfig(SyncSmokeTest):
     def test_vehicle_wheel_collision(self):
         print("TestVehicleTireConfig.test_vehicle_wheel_collision")
 
-        self.load_world("Town05_Opt", False)
+        # Town10HD_Opt ships with every package. Its central avenue is straight
+        # and flat for over 200 m along -x; one car per carriageway keeps even
+        # the widest trucks apart.
+        self.load_world("Town10HD_Opt", False)
 
         bp_vehicles = self.world.get_blueprint_library().filter("vehicle.*")
         bp_vehicles = [x for x in bp_vehicles if int(x.get_attribute('number_of_wheels')) == 4]
 
         for bp_veh in bp_vehicles:
-            veh_transf_00 = carla.Transform(carla.Location(36, -200, 0.2), carla.Rotation(yaw=91))
-            veh_transf_01 = carla.Transform(carla.Location(31, -200, 0.7), carla.Rotation(yaw=91))
+            veh_transf_00 = carla.Transform(carla.Location(105, 13.4, 0.2), carla.Rotation(yaw=180))
+            veh_transf_01 = carla.Transform(carla.Location(105, 24.6, 0.7), carla.Rotation(yaw=180))
 
             batch = [
                     SpawnActor(bp_veh, veh_transf_00)
@@ -244,15 +247,15 @@ class TestVehicleTireConfig(SyncSmokeTest):
             self.wait(1)
 
             self.client.apply_batch_sync([
-                ApplyTargetVelocity(veh_refs[0], carla.Vector3D(0, vel_ref, 0)),
-                ApplyTargetVelocity(veh_refs[1], carla.Vector3D(0, vel_ref, 0))
+                ApplyTargetVelocity(veh_refs[0], carla.Vector3D(-vel_ref, 0, 0)),
+                ApplyTargetVelocity(veh_refs[1], carla.Vector3D(-vel_ref, 0, 0))
             ])
             self.wait(150)
 
-            loc_veh_00 = veh_refs[0].get_location().y
-            loc_veh_01 = veh_refs[1].get_location().y
-            vel_veh_00 = veh_refs[0].get_velocity().y
-            vel_veh_01 = veh_refs[1].get_velocity().y
+            loc_veh_00 = veh_refs[0].get_location().x
+            loc_veh_01 = veh_refs[1].get_location().x
+            vel_veh_00 = veh_refs[0].get_velocity().x
+            vel_veh_01 = veh_refs[1].get_velocity().x
 
             if not list_equal_tol([vel_veh_00, vel_veh_01], 0.5):
                 self.client.apply_batch_sync([carla.command.DestroyActor(x) for x in veh_ids])
