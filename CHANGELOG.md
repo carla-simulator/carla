@@ -187,7 +187,7 @@
 * Fixed Windows deployment to select one `Carla-*-Win64-Shipping.zip` from `Build/Release/Package` and reject missing or ambiguous packages.
 * Fixed `carla-pack add` dropping existing OpenDRIVE, traffic-light phase, navigation and Traffic Manager sidecars when re-adding an in-pack map without sidecar flags (#9987).
 * Fixed Windows setup losing the Visual Studio discovery helper's location after parsing Python path options.
-* Fixed Windows setup ignoring Visual Studio 2022 installations outside the default edition folders; shared `vswhere` discovery preserves custom paths with spaces and exclamation marks (#9878).
+* Fixed Windows setup ignoring Visual Studio 2022 Build Tools and installations outside the default edition folders (#9863, #9878). Discovery preserves spaces and literal exclamation marks.
 * Fixed the Windows build: the setup installs the MSVC 14.38 toolset the engine fork needs, MSVC builds use `/W4`, and two compile and link errors in LibCarla.
 * Fixed the CMake toolchain picking the oldest clang sysroot when an upgraded engine keeps several side by side.
 

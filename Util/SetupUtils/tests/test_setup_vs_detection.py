@@ -51,11 +51,18 @@ class SetupCommand {
 
 @unittest.skipUnless(os.name == 'nt', 'Visual Studio setup tests require Windows cmd.exe')
 class TestSetupVisualStudioDetection(unittest.TestCase):
+    """Check discovery, activation and caller state using inert process boundaries."""
+    # The shared fixture exposes each caller condition as an independent test.
+    # pylint: disable=too-many-instance-attributes,too-many-public-methods
+
     @classmethod
     def setUpClass(cls):
+        """Compile the inert command recorder once for the suite."""
         compiler = Path(os.environ['WINDIR']) / 'Microsoft.NET/Framework64/v4.0.30319/csc.exe'
         if not compiler.is_file():
             raise unittest.SkipTest('The Windows .NET Framework C# compiler is required')
+        # unittest cleanup owns the complete class fixture lifetime.
+        # pylint: disable-next=consider-using-with
         cls.tools_directory = tempfile.TemporaryDirectory(prefix='carla-vs-tools-')
         cls.addClassCleanup(cls.tools_directory.cleanup)
         cls.tools = Path(cls.tools_directory.name)
@@ -68,6 +75,9 @@ class TestSetupVisualStudioDetection(unittest.TestCase):
             shutil.copyfile(cls.stub, cls.tools / (name + '.exe'))
 
     def setUp(self):
+        """Create an isolated source tree and controlled tool search path."""
+        # unittest cleanup runs after the fixture assertions and teardown.
+        # pylint: disable-next=consider-using-with
         temporary = tempfile.TemporaryDirectory(prefix='carla-vs-detection-')
         self.addCleanup(temporary.cleanup)
         self.directory = Path(temporary.name)
@@ -106,6 +116,7 @@ class TestSetupVisualStudioDetection(unittest.TestCase):
         self.environment.pop('CARLA_VS_TEST_ACTIVATED', None)
 
     def make_installation(self, installation):
+        """Create an activation script with a recorded invocation and exit code."""
         activation = installation / 'VC' / 'Auxiliary' / 'Build' / 'vcvars64.bat'
         activation.parent.mkdir(parents=True)
         activation.write_bytes(b'@echo off\r\nset "CARLA_VS_TEST_ACTIVATED=1"\r\n'
@@ -114,6 +125,7 @@ class TestSetupVisualStudioDetection(unittest.TestCase):
         return activation
 
     def run_batch(self, script, arguments='', delayed_expansion=False):
+        """Run an actual batch caller and observe its returned environment."""
         wrapper = self.workspace / 'run-test.cmd'
         wrapper.write_text(
             '@echo off\n'
@@ -135,6 +147,7 @@ class TestSetupVisualStudioDetection(unittest.TestCase):
                               check=False)
 
     def commands(self):
+        """Read the recorder's command names and decoded argument lists."""
         if not self.log.exists():
             return []
         result = []
@@ -144,6 +157,7 @@ class TestSetupVisualStudioDetection(unittest.TestCase):
         return result
 
     def assert_query_requirements(self):
+        """Require a VS 2022 query that includes Build Tools products."""
         queries = [args for name, args in self.commands() if name == 'vswhere']
         self.assertEqual(len(queries), 1)
         self.assertEqual(queries[0], ['-latest', '-products', '*', '-version', '[17.0,18.0)',
@@ -151,6 +165,7 @@ class TestSetupVisualStudioDetection(unittest.TestCase):
                                      '-property', 'installationPath'])
 
     def test_setup_keeps_helper_location_after_python_root_arguments(self):
+        """Keep helper discovery independent of argument zero after SHIFT."""
         python_root = self.directory / 'PythonInstallation'
         for option in ['--python-root', '-pyroot']:
             with self.subTest(option=option):
@@ -165,6 +180,7 @@ class TestSetupVisualStudioDetection(unittest.TestCase):
                 self.assertEqual(sum(name == 'cmake' for name, _ in self.commands()), 3)
 
     def test_prerequisites_keeps_helper_location_after_python_path_arguments(self):
+        """Keep prerequisite helper discovery after both Python path options."""
         python = self.tools / 'python.exe'
         for option in ['--python-path', '-pypath']:
             with self.subTest(option=option):
@@ -177,6 +193,7 @@ class TestSetupVisualStudioDetection(unittest.TestCase):
                 self.assertIn('Found Visual Studio 2022.', result.stdout)
 
     def test_helper_detects_custom_installation_with_spaces(self):
+        """Return the validated activation script from a custom installation."""
         result = self.run_batch('Util\\SetupUtils\\FindVisualStudio.bat')
 
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
@@ -184,6 +201,7 @@ class TestSetupVisualStudioDetection(unittest.TestCase):
         self.assert_query_requirements()
 
     def test_empty_query_clears_stale_result_and_returns_failure(self):
+        """Clear stale output when discovery returns no installation."""
         self.environment['CARLA_VS_TEST_RESULT'] = ''
         result = self.run_batch('Util\\SetupUtils\\FindVisualStudio.bat')
 
@@ -191,6 +209,7 @@ class TestSetupVisualStudioDetection(unittest.TestCase):
         self.assertIn('VS_ENV_BAT=[]', result.stdout)
 
     def test_nonexistent_activation_script_is_not_a_usable_result(self):
+        """Reject a discovery result whose activation script is absent."""
         self.activation.unlink()
         result = self.run_batch('Util\\SetupUtils\\FindVisualStudio.bat')
 
@@ -198,6 +217,7 @@ class TestSetupVisualStudioDetection(unittest.TestCase):
         self.assertIn('VS_ENV_BAT=[]', result.stdout)
 
     def test_missing_vswhere_returns_failure_without_guessing_edition_paths(self):
+        """Fail discovery when its required provider is unavailable."""
         self.query.unlink()
         self.make_installation(self.program_files / 'Microsoft Visual Studio' / '2022' / 'Community')
         result = self.run_batch('Util\\SetupUtils\\FindVisualStudio.bat')
@@ -207,6 +227,7 @@ class TestSetupVisualStudioDetection(unittest.TestCase):
         self.assertEqual(self.commands(), [])
 
     def test_vswhere_location_falls_back_to_program_files(self):
+        """Find the discovery executable through the second Installer location."""
         fallback = self.program_files / 'Microsoft Visual Studio' / 'Installer' / 'vswhere.exe'
         fallback.parent.mkdir(parents=True)
         shutil.move(str(self.query), str(fallback))
@@ -217,6 +238,7 @@ class TestSetupVisualStudioDetection(unittest.TestCase):
         self.assert_query_requirements()
 
     def test_helper_preserves_exclamation_when_called_with_expansion_disabled(self):
+        """Preserve shell characters and the helper caller's expansion mode."""
         installation = self.directory / 'VS !Custom & Installation'
         activation = self.make_installation(installation)
         self.environment['CARLA_VS_TEST_RESULT'] = str(installation)
@@ -227,6 +249,7 @@ class TestSetupVisualStudioDetection(unittest.TestCase):
         self.assertIn('DELAYED_MODE=[!mode_probe!]', result.stdout)
 
     def test_setup_preserves_literal_exclamation_and_callers_expansion_mode(self):
+        """Keep custom activation paths literal through the complete setup caller."""
         installation = self.directory / 'VS !Custom & Installation'
         self.make_installation(installation)
         self.environment['CARLA_VS_TEST_RESULT'] = str(installation)
@@ -238,6 +261,7 @@ class TestSetupVisualStudioDetection(unittest.TestCase):
         self.assertEqual([name for name, _ in self.commands()], ['vswhere', 'cmake', 'cmake', 'cmake'])
 
     def test_prerequisites_preserve_exclamation_and_callers_expansion_mode(self):
+        """Keep the prerequisite caller's expansion mode after discovery."""
         installation = self.directory / 'VS !Custom & Installation'
         self.make_installation(installation)
         self.environment['CARLA_VS_TEST_RESULT'] = str(installation)
@@ -249,16 +273,25 @@ class TestSetupVisualStudioDetection(unittest.TestCase):
         self.assertEqual([name for name, _ in self.commands()], ['vswhere', 'ninja', 'python', 'python', 'python'])
 
     def test_setup_activates_custom_installation_and_reaches_cmake_stubs(self):
-        result = self.run_batch('CarlaSetup.bat', '--skip-prerequisites')
+        """Activate custom and Build Tools installations before all CMake calls."""
+        build_tools = self.program_files_x86 / 'Microsoft Visual Studio/2022/BuildTools'
+        self.make_installation(build_tools)
+        for installation in [self.installation, build_tools]:
+            with self.subTest(installation=str(installation)):
+                self.log.unlink(missing_ok=True)
+                self.activation_log.unlink(missing_ok=True)
+                self.environment['CARLA_VS_TEST_RESULT'] = str(installation)
+                result = self.run_batch('CarlaSetup.bat', '--skip-prerequisites')
 
-        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-        self.assertTrue(self.activation_log.is_file())
-        self.assertIn('CALL_RETURNED=1', result.stdout)
-        self.assertIn('DELAYED_MODE=[!mode_probe!]', result.stdout)
-        self.assertEqual([name for name, _ in self.commands()], ['vswhere', 'cmake', 'cmake', 'cmake'])
-        self.assert_query_requirements()
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                self.assertTrue(self.activation_log.is_file())
+                self.assertIn('CALL_RETURNED=1', result.stdout)
+                self.assertIn('DELAYED_MODE=[!mode_probe!]', result.stdout)
+                self.assertEqual([name for name, _ in self.commands()], ['vswhere', 'cmake', 'cmake', 'cmake'])
+                self.assert_query_requirements()
 
     def test_setup_missing_vs_returns_to_caller_with_failure(self):
+        """Return to the invoking batch script when no installation is found."""
         self.environment['CARLA_VS_TEST_RESULT'] = ''
         result = self.run_batch('CarlaSetup.bat', '--skip-prerequisites')
 
@@ -268,6 +301,7 @@ class TestSetupVisualStudioDetection(unittest.TestCase):
         self.assertEqual([name for name, _ in self.commands()], ['vswhere'])
 
     def test_setup_propagates_activation_failure_without_building(self):
+        """Preserve activation failures before any CMake process is reached."""
         self.environment['CARLA_VS_TEST_ACTIVATION_EXIT'] = '7'
         result = self.run_batch('CarlaSetup.bat', '--skip-prerequisites')
 
@@ -276,15 +310,24 @@ class TestSetupVisualStudioDetection(unittest.TestCase):
         self.assertEqual([name for name, _ in self.commands()], ['vswhere'])
 
     def test_prerequisites_reuse_custom_installation_without_downloading(self):
-        result = self.run_batch('Util\\SetupUtils\\InstallPrerequisites.bat')
+        """Reuse custom and Build Tools installations before the download path."""
+        build_tools = self.program_files_x86 / 'Microsoft Visual Studio/2022/BuildTools'
+        self.make_installation(build_tools)
+        for installation in [self.installation, build_tools]:
+            with self.subTest(installation=str(installation)):
+                self.log.unlink(missing_ok=True)
+                self.environment['CARLA_VS_TEST_RESULT'] = str(installation)
+                result = self.run_batch('Util\\SetupUtils\\InstallPrerequisites.bat')
 
-        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-        self.assertIn('Found Visual Studio 2022.', result.stdout)
-        self.assertEqual([name for name, _ in self.commands()], ['vswhere', 'ninja', 'python', 'python', 'python'])
-        self.assertIn('DELAYED_MODE=[!mode_probe!]', result.stdout)
-        self.assert_query_requirements()
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                self.assertIn('Found Visual Studio 2022.', result.stdout)
+                self.assertEqual([name for name, _ in self.commands()],
+                                 ['vswhere', 'ninja', 'python', 'python', 'python'])
+                self.assertIn('DELAYED_MODE=[!mode_probe!]', result.stdout)
+                self.assert_query_requirements()
 
     def test_prerequisites_missing_vs_uses_existing_download_failure_path(self):
+        """Keep the existing download failure path when discovery finds no tools."""
         self.environment['CARLA_VS_TEST_RESULT'] = ''
         result = self.run_batch('Util\\SetupUtils\\InstallPrerequisites.bat')
 
