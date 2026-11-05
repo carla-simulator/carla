@@ -104,7 +104,7 @@ mods = ["carla", "agents.navigation.global_route_planner",
         "leaderboard.utils.statistics_manager",
         "leaderboard.autoagents.autonomous_agent"]
 if not os.environ.get("LB_DECOUPLED"):
-    mods.insert(2, "srunner.scenariomanager.carla_data_provider")
+    mods.insert(2, "srunner.scenariomanager.simulation_data")
 for m in mods:
     if not have(m):
         print(f"FAIL  {m}"); rc = 1

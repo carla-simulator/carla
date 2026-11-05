@@ -111,7 +111,7 @@ if cv == "leaderboard":
 mods = [("agents.navigation.global_route_planner", "add ${CARLA_ROOT}/PythonAPI/carla to PYTHONPATH"),
         ("leaderboard.utils.statistics_manager", "add ${LEADERBOARD_ROOT} to PYTHONPATH")]
 if not os.environ.get("LB_DECOUPLED"):
-    mods.insert(1, ("srunner.scenariomanager.carla_data_provider", "add ${SCENARIO_RUNNER_ROOT} to PYTHONPATH"))
+    mods.insert(1, ("srunner.scenariomanager.simulation_data", "add ${SCENARIO_RUNNER_ROOT} to PYTHONPATH"))
 for mod, why in mods:
     if not have(mod):
         bad(f"cannot import {mod} — {why}")
