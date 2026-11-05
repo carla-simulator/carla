@@ -2,11 +2,11 @@
 # Self-contained environment for the create-leaderboard-route skill (CARLA Leaderboard).
 # Source before the skill's other scripts:  source scripts/env.sh
 #
-# The Leaderboard is a thin evaluation harness on top of ScenarioRunner: it
-# imports `srunner` for the scenario library and criteria, and `carla` +
-# `agents` for the simulator. All four roots must agree on a version — that
-# pairing is the single most common cause of a broken setup, so env.sh derives
-# and prints it instead of trusting the user.
+# The Leaderboard is a thin evaluation harness that needs `carla` + `agents` for
+# the simulator. Up to 2.1 it also imports `srunner` for the scenario library and
+# criteria, and those roots must agree on a version — the single most common cause
+# of a broken setup, so env.sh derives and prints it instead of trusting the user.
+# On ue58-dev the scenario engine is vendored and no scenario_runner root is used.
 #
 #   LEADERBOARD_ROOT      the leaderboard checkout (holds leaderboard/leaderboard_evaluator.py)
 #   SCENARIO_RUNNER_ROOT  the *matching* scenario_runner checkout
@@ -41,7 +41,7 @@ fi
 export SCENARIO_RUNNER_ROOT="${SCENARIO_RUNNER_ROOT:-}"
 
 if [ -z "${CARLA_ROOT:-}" ]; then
-  for _c in "${CARLA_TARGET:-}" "${CARLA_PACKAGE_ROOT:-}" "${CARLA_UE4_ROOT:-}"; do
+  for _c in "${CARLA_TARGET:-}" "${CARLA_PACKAGE_ROOT:-}" "${CARLA_UE4_ROOT:-}" "${CARLA_UE58_ROOT:-}" "${CARLA_UE5_ROOT:-}"; do
     if [ -n "${_c}" ] && [ -d "${_c}/PythonAPI/carla" ]; then CARLA_ROOT="${_c}"; break; fi
   done
 fi
@@ -67,6 +67,13 @@ fi
 export PYTHONPATH="${_pp}${PYTHONPATH:+:${PYTHONPATH}}"
 export PYTHONIOENCODING="${PYTHONIOENCODING:-utf-8}"
 
+# The leaderboard vendored its scenario engine on ue58-dev, so no scenario_runner
+# checkout is needed there; 1.0/2.0/2.1 import srunner and still require one.
+carla_lb_is_decoupled() {
+  [ -d "${LEADERBOARD_ROOT:-}/leaderboard" ] || return 1
+  ! grep -rqE "^[[:space:]]*(from|import) srunner" "${LEADERBOARD_ROOT}/leaderboard" 2>/dev/null
+}
+
 carla_lb_branch() {
   [ -n "${LEADERBOARD_ROOT}" ] || { echo "unknown"; return; }
   git -C "${LEADERBOARD_ROOT}" rev-parse --abbrev-ref HEAD 2>/dev/null || echo "unknown"
@@ -90,6 +97,9 @@ carla_lb_version() {
 
 # Which scenario_runner branch this leaderboard version requires.
 carla_lb_required_sr_branch() {
+  # The leaderboard ue58-dev branch (CARLA on UE 5.8) pairs with scenario_runner
+  # ue58-dev; its code reads as 2.x, so the branch name has to decide here.
+  case "$(carla_lb_branch)" in ue58-*) echo "ue58-dev"; return ;; esac
   case "$(carla_lb_version)" in
     1.0) echo "leaderboard-1.0" ;;
     2.0) echo "leaderboard-2.0" ;;
@@ -97,6 +107,9 @@ carla_lb_required_sr_branch() {
     *)   echo "unknown" ;;
   esac
 }
+
+# Exported so the Python blocks below can skip the srunner checks.
+carla_lb_is_decoupled && export LB_DECOUPLED=1
 
 echo "[env] LEADERBOARD_ROOT     = ${LEADERBOARD_ROOT:-<unset>}  (branch $(carla_lb_branch), version $(carla_lb_version))"
 echo "[env] SCENARIO_RUNNER_ROOT = ${SCENARIO_RUNNER_ROOT:-<unset>}"

@@ -37,6 +37,7 @@ import argparse
 import hashlib
 import json
 import os
+import posixpath
 import re
 import shutil
 import signal
@@ -91,7 +92,7 @@ SEMANTIC_LABELS = ("Building", "Fence", "Pedestrian", "Pole", "Other", "Road", "
                    "TrafficSign", "Vegetation", "Car", "Wall", "Sky", "Ground", "Bridge", "RailTrack",
                    "GuardRail", "TrafficLight", "Static", "Dynamic", "Water", "Terrain", "Truck",
                    "Motorcycle", "Bicycle", "Bus", "Rider", "Train", "Rock", "Stone", "Bush")
-VERSION_RE = re.compile(r"^\d+\.\d+\.\d+([-+][0-9A-Za-z.-]+)?$")
+VERSION_RE = re.compile(r"^\d+\.\d+(\.\d+)?([-+][0-9A-Za-z.-]+)?$")
 
 TOOL_DIR = Path(__file__).resolve().parent
 REPO_ROOT = TOOL_DIR.parents[1]  # Util/ContentPacks -> repo root
@@ -107,7 +108,7 @@ class PackError(Exception):
 # --------------------------------------------------------------------------
 
 def info(msg):
-    print("carla-pack: " + msg)
+    print("carla-pack: " + msg, flush=True)
 
 
 def warn(msg):
@@ -200,7 +201,7 @@ def copy_any(src, dst):
 
 
 def carla_version_from_cmake():
-    """Read CARLA_VERSION_{MAJOR,MINOR,PATCH} from the repo's CMakeLists.txt."""
+    """Read CARLA_VERSION_{MAJOR,MINOR[,PATCH]} from the repo's CMakeLists.txt."""
     cmake = REPO_ROOT / "CMakeLists.txt"
     if not cmake.is_file():
         return None
@@ -212,9 +213,11 @@ def carla_version_from_cmake():
                 parts[m.group(1)] = m.group(2)
     except OSError:
         return None
-    if len(parts) == 3:
+    if "MAJOR" not in parts or "MINOR" not in parts:
+        return None
+    if "PATCH" in parts:
         return "{MAJOR}.{MINOR}.{PATCH}".format(**parts)
-    return None
+    return "{MAJOR}.{MINOR}".format(**parts)
 
 
 # --------------------------------------------------------------------------
@@ -675,7 +678,7 @@ def cmd_init(args):
         raise PackError("{!r} is a reserved name (an engine/project mount point or an existing plugin); "
                         "pick another pack name".format(name))
     if not VERSION_RE.match(args.version):
-        raise PackError("invalid --pack-version {!r}: expected MAJOR.MINOR.PATCH".format(args.version))
+        raise PackError("invalid --pack-version {!r}: expected MAJOR.MINOR[.PATCH]".format(args.version))
     pack_dir = packs_root(args) / name
     if (pack_dir / MANIFEST_NAME).exists():
         raise PackError("pack already exists: {}".format(pack_dir))
@@ -1248,7 +1251,7 @@ def member_relpath(name):
     raw = name.replace("\\", "/")
     if ".." in raw.split("/"):
         return None                       # any '..' component, even one that would normalise away
-    norm = os.path.normpath(raw)
+    norm = posixpath.normpath(raw)        # '/' on every OS: callers split and compare on '/'
     if norm in (".", ""):
         return ""
     if os.path.isabs(norm) or norm.startswith("/") or norm.startswith("\\"):
@@ -1548,7 +1551,7 @@ def assemble_pack(pack_dir, manifest, staged_pack, out_dir, platform, release, e
 
     out_manifest = json.loads(json.dumps(manifest))
     out_manifest["base_release"] = release
-    out_manifest["platform"] = platform
+    out_manifest["platform"] = cook_platform(platform)   # the server matches its own name (Windows, not Win64)
     out_manifest["engine"] = eng
     files = {}
     for f in sorted(out_pack.rglob("*")):
@@ -1629,8 +1632,23 @@ def find_default_base(args):
     raise PackError("several base releases found, pass --base to pick one:\n  " + "\n  ".join(found))
 
 
+def load_maps_file(path):
+    """The map list of a --maps-file: a JSON list of map specs, or an object with one under "maps"."""
+    data = load_json(Path(path).expanduser())
+    maps = data.get("maps") if isinstance(data, dict) else data
+    if not isinstance(maps, list) or not all(isinstance(m, str) and m.strip() for m in maps):
+        raise PackError('{}: expected a JSON list of map names or {{"maps": [...]}}'.format(path))
+    return [m.strip() for m in maps]
+
+
 def cmd_create(args):
     """init (if needed) + add every map + build, in one go."""
+    maps = list(args.maps)
+    if args.maps_file:
+        maps += load_maps_file(args.maps_file)
+    args.maps = list(dict.fromkeys(maps))
+    if not args.maps:
+        raise PackError("no maps given: pass map names and/or --maps-file")
     base = Path(args.base).expanduser() if args.base else find_default_base(args)
     if not args.base:
         info("base release: {}".format(base))
@@ -1802,8 +1820,9 @@ def open_pack(path):
 def resolve_server(server):
     """Return the packaged project dir for a CARLA package.
 
-    Accepts the package root (<Package>, holding Linux/CarlaUnreal), the platform dir
-    (<Package>/Linux) or the project dir itself (<Package>/Linux/CarlaUnreal).
+    Accepts the package root (<Package>, holding CarlaUnreal/) or the project dir
+    itself (<Package>/CarlaUnreal); packages from before 1.0 nest both under
+    <Package>/<Platform>/.
     """
     server = Path(server).expanduser()
     if not server.is_dir():
@@ -1829,8 +1848,14 @@ def server_base_release(project_dir):
 
 
 def server_platform(project_dir):
-    """The packaged platform from the layout <Package>/<Platform>/CarlaUnreal (None if unknown)."""
-    name = Path(project_dir).parent.name
+    """The packaged platform from CarlaUnreal/Binaries/<Platform>, else from the
+    pre-1.0 layout <Package>/<Platform>/CarlaUnreal (None if unknown)."""
+    project_dir = Path(project_dir)
+    binaries = [p.name for p in (project_dir / "Binaries").glob("*")
+                if p.is_dir() and p.name in KNOWN_PLATFORMS]
+    if len(binaries) == 1:
+        return binaries[0]
+    name = project_dir.parent.name
     name = "Win64" if name == "Windows" else name
     return name if name in KNOWN_PLATFORMS else None
 
@@ -1839,7 +1864,7 @@ def compatibility(manifest, project_dir):
     """Return (ok, base_release_of_server, list of problems)."""
     problems = []
     platform = server_platform(project_dir)
-    if platform and manifest.get("platform") != platform:
+    if platform and cook_platform(manifest.get("platform")) != cook_platform(platform):
         problems.append("platform mismatch: pack is for {!r}, server is {!r}"
                         .format(manifest.get("platform"), platform))
     server_release = server_base_release(project_dir)
@@ -1855,15 +1880,29 @@ def compatibility(manifest, project_dir):
     return not problems, server_release, problems
 
 
-def verify_dir(pack_dir):
-    """Return (missing, mismatched, extra) relative paths for a pack folder."""
+def human_size(n):
+    return "{:.1f} GB".format(n / 1e9) if n >= 1e9 else "{:.1f} MB".format(n / 1e6)
+
+
+def report_file_progress(i, n, rel, size):
+    info("  [{}/{}] {} ({})".format(i, n, rel, human_size(size)))
+
+
+def verify_dir(pack_dir, progress=None):
+    """Return (missing, mismatched, extra) relative paths for a pack folder.
+
+    progress(i, n, rel, size), when given, is called before each listed file is hashed."""
     manifest = load_manifest(pack_dir)
     missing, mismatched, extra = [], [], []
-    for rel, digest in sorted(manifest["files"].items()):
+    files = sorted(manifest["files"].items())
+    for i, (rel, digest) in enumerate(files, 1):
         f = Path(pack_dir) / rel
         if not f.is_file():
             missing.append(rel)
-        elif sha256_file(f) != digest:
+            continue
+        if progress:
+            progress(i, len(files), rel, f.stat().st_size)
+        if sha256_file(f) != digest:
             mismatched.append(rel)
     listed = set(manifest["files"]) | {MANIFEST_NAME}
     for f in Path(pack_dir).rglob("*"):
@@ -1931,14 +1970,17 @@ def cmd_verify(args):
         if path.is_file():
             tmp = tempfile.mkdtemp(prefix="carla-pack-verify-")
             # a hostile tarball must not leave anything behind
-            manifest, top, _ = read_manifest_from_tar(path)
+            info("reading {} ...".format(path))
+            manifest, top, sizes = read_manifest_from_tar(path)
+            info("extracting {} to {} ...".format(human_size(sum(sizes.values())), tmp))
             extract_tar(path, tmp)
             pack_dir = Path(tmp) / top if top else Path(tmp)
         elif path.is_dir():
             pack_dir = path
         else:
             raise PackError("no such pack: {}".format(path))
-        missing, mismatched, extra = verify_dir(pack_dir)
+        info("verifying checksums of {} files ...".format(len(load_manifest(pack_dir)["files"])))
+        missing, mismatched, extra = verify_dir(pack_dir, report_file_progress)
         for rel in missing:
             print("MISSING    " + rel)
         for rel in mismatched:
@@ -1961,11 +2003,19 @@ def cmd_install(args):
     src = Path(args.pack).expanduser()
     if not src.is_file():
         raise PackError("install needs a pack tarball: {}".format(src))
-    manifest, top, _ = read_manifest_from_tar(src)
+    info("reading {} ...".format(src))
+    manifest, top, sizes = read_manifest_from_tar(src)
     name = manifest["name"]
+    total = sum(sizes.values())
+    info("pack {} {} ({} files, {}), platform {}, base release {}".format(
+        name, manifest["version"], len(manifest["files"]), human_size(total), manifest["platform"],
+        manifest["base_release"] or "(not built)"))
     project_dir = resolve_server(args.server)
     ok, server_release, problems = compatibility(manifest, project_dir)
-    if not ok:
+    info("server {} (base release {})".format(project_dir, server_release or "?"))
+    if ok:
+        info("pack is compatible with the server")
+    else:
         if args.force:
             for p in problems:
                 warn(p + " (ignored: --force)")
@@ -1981,11 +2031,13 @@ def cmd_install(args):
     packs_dir.mkdir(parents=True, exist_ok=True)
     tmp = Path(tempfile.mkdtemp(prefix=".{}.".format(name), dir=str(packs_dir)))
     try:
+        info("extracting {} to {} ...".format(human_size(total), packs_dir))
         extract_tar(src, tmp)
         extracted = tmp / top if top else tmp
         if not (extracted / MANIFEST_NAME).is_file():
             raise PackError("archive layout unexpected: no {}/{}".format(top, MANIFEST_NAME))
-        missing, mismatched, extra = verify_dir(extracted)
+        info("verifying checksums of {} files ...".format(len(manifest["files"])))
+        missing, mismatched, extra = verify_dir(extracted, report_file_progress)
         if missing or mismatched:
             raise PackError("checksum verification failed for {}: missing {}, mismatched {}"
                             .format(src.name, missing or "-", mismatched or "-"))
@@ -1993,6 +2045,7 @@ def cmd_install(args):
             raise PackError("{} contains files not listed in its manifest: {}"
                             .format(src.name, ", ".join(extra)))
         if target.exists():
+            info("replacing existing {}".format(target))
             rmtree_force(target)
         shutil.move(str(extracted), str(target))
     finally:
@@ -2195,8 +2248,11 @@ def build_parser():
                         description="carla-pack create Towns5 Town01_Opt Town03_Opt Town12 Town13 -> "
                                     "Plugins/Packs/Towns5/Saved/CarlaPack/out/Towns5-1.0.0-<release>.tar.gz")
     sp.add_argument("pack", metavar="<Pack>")
-    sp.add_argument("maps", metavar="<Map>", nargs="+",
+    sp.add_argument("maps", metavar="<Map>", nargs="*",
                     help="map names (Town12), package paths or .umap files, as for 'add --map'")
+    sp.add_argument("--maps-file", default=None, metavar="<file.json>",
+                    help='JSON file with more maps: a list ["Town01_Opt", ...] or {"maps": [...]} '
+                         "(e.g. Util/ContentPacks/AdditionalMaps.json)")
     project_opts(sp)
     sp.add_argument("--base", default=None, help="<release>-release-metadata.tar.gz or Releases/<release> dir "
                     "(default: the one under this checkout's Build/)")
@@ -2249,7 +2305,7 @@ def build_parser():
     sp = sub.add_parser("inspect", help="print a pack's manifest and check it against a server")
     sp.add_argument("pack", metavar="<tar.gz|dir>")
     sp.add_argument("--server", default=None,
-                    help="CARLA package to check against: <Package>, <Package>/Linux or <Package>/Linux/CarlaUnreal")
+                    help="CARLA package to check against: <Package> or <Package>/CarlaUnreal")
     sp.add_argument("--json", action="store_true")
     sp.set_defaults(func=cmd_inspect)
 
@@ -2260,8 +2316,7 @@ def build_parser():
     sp = sub.add_parser("install", help="verify and extract a pack into <server>/CarlaUnreal/Packs/")
     sp.add_argument("pack", metavar="<tar.gz>")
     sp.add_argument("--server", required=True,
-                    help="CARLA package: <Package> (holds Linux/), <Package>/Linux (holds CarlaUnreal.sh) "
-                         "or <Package>/Linux/CarlaUnreal")
+                    help="CARLA package: <Package> (holds CarlaUnreal.sh) or <Package>/CarlaUnreal")
     sp.add_argument("--force", action="store_true", help="replace an installed pack / ignore a "
                     "base release mismatch")
     sp.set_defaults(func=cmd_install)

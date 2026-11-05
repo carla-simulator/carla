@@ -4,6 +4,9 @@ A pedestrian's skeleton can be read from the simulation as ground truth: a set o
 
 This tutorial spawns a pedestrian, gives it an AI controller, then reads its skeleton and projects the bones onto a camera image.
 
+![skeleton_overview](img/tuto_pedestrian_bones/skeleton_overview.webp)
+<div class="img-caption">The result: a walking pedestrian with the bones returned by <code>get_bones()</code> projected onto the camera image and joined into a skeleton.</div>
+
 - [__Setting up the simulator__](#setting-up-the-simulator)
 - [__Spawning a pedestrian in the CARLA simulator__](#spawning-a-pedestrian-in-the-carla-simulator)
 - [__AI controller to guide the pedestrian around the map__](#ai-controller-to-guide-the-pedestrian-around-the-map)
@@ -45,7 +48,7 @@ spectator = world.get_spectator()
 ---
 ## Spawning a pedestrian in the CARLA simulator
 
-A pedestrian is spawned anywhere on the navigation mesh, and `world.get_random_location_from_navigation()` returns such a point. To put one somewhere specific instead, fly the spectator there and spawn at `spectator.get_transform()`, as [Maps](core_map.md#spawning-somewhere-of-your-own) describes. We will also spawn a camera to gather images. We also need a [`Queue`](https://docs.python.org/3/library/queue.html) object to allow us easy access to the data from the camera (as the camera sensor operates on its own thread, separate from the main Python thread running your script).
+A pedestrian is spawned anywhere on the navigation mesh, and `world.get_random_location_from_navigation()` returns such a point. The point lies on the ground, so it is raised 1 m before spawning: at ground height the pedestrian's capsule collides with the pavement and the spawn fails. To put one somewhere specific instead, fly the spectator there and spawn at `spectator.get_transform()`, as [Maps](core_map.md#spawning-somewhere-of-your-own) describes. We will also spawn a camera to gather images. We also need a [`Queue`](https://docs.python.org/3/library/queue.html) object to allow us easy access to the data from the camera (as the camera sensor operates on its own thread, separate from the main Python thread running your script).
 
 In order to see our pedestrian, we need to transform the camera so it is pointing at the pedestrian we spawn. For this we will use a function that calculates the translation and rotation needed to center the camera:
 
@@ -73,8 +76,11 @@ Now we'll spawn the pedestrian, the camera, a controller and move the spectator 
 ```py
 # Get the pedestrian blueprint and spawn it
 pedestrian_bp = random.choice(world.get_blueprint_library().filter('*walker.pedestrian*'))
-# Any point on the navigation mesh is a valid spawn point for a pedestrian
-transform = carla.Transform(world.get_random_location_from_navigation())
+# Any point on the navigation mesh is a valid spawn point for a pedestrian,
+# once raised off the ground
+location = world.get_random_location_from_navigation()
+location.z += 1.0
+transform = carla.Transform(location)
 pedestrian = world.try_spawn_actor(pedestrian_bp, transform)
 if pedestrian is None:
     raise RuntimeError('could not spawn the pedestrian, try another location')
@@ -112,6 +118,9 @@ for frame in range(0,5):
 
 ```
 
+![pedestrian_spawned](img/tuto_pedestrian_bones/pedestrian_spawned.webp)
+<div class="img-caption">The spawned pedestrian seen from the camera, which <code>center_camera()</code> puts 2 m from it and 1.5 m above its centre, pitched 16 degrees down.</div>
+
 ---
 ## AI controller to guide the pedestrian around the map
 
@@ -126,6 +135,9 @@ controller.go_to_location(world.get_random_location_from_navigation())
 ```
 
 Now the pedestrian will move autonomously with each time increment (`world.tick()`) of the simulation.
+
+![pedestrian_walking](img/tuto_pedestrian_bones/pedestrian_walking.webp)
+<div class="img-caption">The pedestrian six seconds after <code>controller.start()</code>, seen from the side. Drawn with <code>world.debug</code> for this picture: the yellow points mark its position every 0.25 s since it set off, and the blue line points to the destination given to <code>go_to_location()</code>.</div>
 
 ---
 ## Camera geometry
@@ -218,6 +230,9 @@ def build_skeleton(ped, sk_links, K, world_2_camera):
     return lines
 
 ```
+
+![bone_points_skeleton](img/tuto_pedestrian_bones/bone_points_skeleton.webp)
+<div class="img-caption">The same frame twice. Left, the bone roots that <code>get_image_point()</code> projects onto the image, before anything joins them. Right, the lines <code>build_skeleton()</code> draws between the pairs listed in <code>skeleton.txt</code>.</div>
 
 Next, read the bone pairs from [__skeleton.txt__](img/tuto_pedestrian_bones/skeleton.txt). Download it next to your script, or give `open()` the path you saved it to:
 

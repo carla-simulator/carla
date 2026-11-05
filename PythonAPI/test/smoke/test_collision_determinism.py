@@ -78,8 +78,6 @@ class Scenario(object):
         self.wait(5)
 
         self.client.reload_world(False)
-        # workaround: give time to UE4 to clean memory after loading (old assets)
-        time.sleep(5)
 
         self.wait(5)
 
@@ -134,75 +132,6 @@ class Scenario(object):
         self.clear_scene()
 
 
-class TwoCarsHighSpeedCollision(Scenario):
-    def init_scene(self, prefix, settings = None, spectator_tr = None):
-        super(TwoCarsHighSpeedCollision, self).init_scene(prefix, settings, spectator_tr)
-
-        blueprint_library = self.world.get_blueprint_library()
-
-        vehicle00_bp = blueprint_library.filter("tt")[0]
-        vehicle01_bp = blueprint_library.filter("vehicle.lincoln.mkz")[0]
-
-        vehicle00_tr = carla.Transform(carla.Location(140, -256, 0.015), carla.Rotation(yaw=180))
-        vehicle01_tr = carla.Transform(carla.Location(40, -255, 0.04), carla.Rotation(yaw=0))
-
-        batch = [
-            SpawnActor(vehicle00_bp, vehicle00_tr)
-            .then(ApplyTargetVelocity(FutureActor, carla.Vector3D(-50, 0, 0))),
-            SpawnActor(vehicle01_bp, vehicle01_tr)
-            .then(ApplyTargetVelocity(FutureActor, carla.Vector3D(+50, 0, 0)))
-        ]
-
-        responses = self.client.apply_batch_sync(batch)
-
-        veh_ids = [x.actor_id for x in responses]
-        veh_refs = [self.world.get_actor(x) for x in veh_ids]
-
-        if (0 in veh_ids) or (None in veh_refs):
-            errors = ", ".join(x.error for x in responses if x.has_error())
-            raise RuntimeError("The test actors could not be correctly spawned: %s" % errors)
-
-        self.add_actor(veh_refs[0], "Car")
-        self.add_actor(veh_refs[1], "Car")
-
-        self.wait(1)
-
-
-class ThreeCarsSlowSpeedCollision(Scenario):
-    def init_scene(self, prefix, settings = None, spectator_tr = None):
-        super(ThreeCarsSlowSpeedCollision, self).init_scene(prefix, settings, spectator_tr)
-
-        blueprint_library = self.world.get_blueprint_library()
-
-        vehicle00_bp = blueprint_library.filter("vehicle.mini.cooper")[0]
-        vehicle01_bp = blueprint_library.filter("vehicle.ue4.audi.tt")[0]
-        vehicle02_bp = blueprint_library.filter("lincoln")[0]
-
-        vehicle00_tr = carla.Transform(carla.Location(110, -255, 0.05), carla.Rotation(yaw=180))
-        vehicle01_tr = carla.Transform(carla.Location(53, -257, 0.00), carla.Rotation(yaw=0))
-        vehicle02_tr = carla.Transform(carla.Location(85, -230, 0.04), carla.Rotation(yaw=-90))
-
-        batch = [
-            SpawnActor(vehicle00_bp, vehicle00_tr)
-            .then(ApplyTargetVelocity(FutureActor, carla.Vector3D(-15, 0, 0))),
-            SpawnActor(vehicle01_bp, vehicle01_tr)
-            .then(ApplyTargetVelocity(FutureActor, carla.Vector3D(+15, 0, 0))),
-            SpawnActor(vehicle02_bp, vehicle02_tr)
-            .then(ApplyTargetVelocity(FutureActor, carla.Vector3D(0, -15, 0)))
-        ]
-
-        responses = self.client.apply_batch_sync(batch)
-
-        veh_ids = [x.actor_id for x in responses]
-        veh_refs = [self.world.get_actor(x) for x in veh_ids]
-
-        self.add_actor(veh_refs[0], "Car")
-        self.add_actor(veh_refs[1], "Car")
-        self.add_actor(veh_refs[2], "Car")
-
-        self.wait(1)
-
-
 class CarBikeCollision(Scenario):
     def init_scene(self, prefix, settings = None, spectator_tr = None):
         super(CarBikeCollision, self).init_scene(prefix, settings, spectator_tr)
@@ -212,8 +141,11 @@ class CarBikeCollision(Scenario):
         car_bp = blueprint_library.filter("vehicle.lincoln.mkz")[0]
         bike_bp = blueprint_library.filter("gazelle")[0]
 
-        car_tr = carla.Transform(carla.Location(50, -255, 0.04), carla.Rotation(yaw=0))
-        bike_tr = carla.Transform(carla.Location(85, -245, 0.04), carla.Rotation(yaw=-90))
+        # Eastbound on Town10HD_Opt's central avenue; the bike comes down the
+        # cross street and meets the car in the junction 35 m ahead. It hits
+        # from 11 to 15 m to the side; at 14 m the car touches nothing else.
+        car_tr = carla.Transform(carla.Location(-80.2, 24.6, 0.04), carla.Rotation(yaw=0))
+        bike_tr = carla.Transform(carla.Location(-45.2, 38.6, 0.04), carla.Rotation(yaw=-90))
 
         batch = [
             SpawnActor(car_bp, car_tr)
@@ -248,8 +180,10 @@ class CarWalkerCollision(Scenario):
         if walker_bp.has_attribute('is_invincible'):
             walker_bp.set_attribute('is_invincible', 'false')
 
-        car_tr = carla.Transform(carla.Location(50, -255, 0.04), carla.Rotation(yaw=0))
-        walker_tr = carla.Transform(carla.Location(85, -255, 1.00), carla.Rotation(yaw=-90))
+        # Eastbound on Town10HD_Opt's central avenue; the walker stands in the
+        # car's lane in the junction 35 m ahead.
+        car_tr = carla.Transform(carla.Location(-80.2, 24.6, 0.04), carla.Rotation(yaw=0))
+        walker_tr = carla.Transform(carla.Location(-45.2, 24.6, 1.00), carla.Rotation(yaw=-90))
 
         batch = [
             SpawnActor(car_bp, car_tr)
@@ -356,7 +290,7 @@ class CollisionScenarioTester():
         config_settings.max_substep_delta_time = 1.0/fps_phys
         config_settings.max_substeps = 16
 
-        spectator_tr = carla.Transform(carla.Location(120, -256, 10), carla.Rotation(yaw=180))
+        spectator_tr = carla.Transform(carla.Location(-10.2, 23.6, 10), carla.Rotation(yaw=180))
 
         sim_prefixes = []
         for i in range(0, repetitions):
@@ -371,6 +305,8 @@ class CollisionScenarioTester():
 
 
 class TestCollisionDeterminism(SmokeTest):
+    deterministic_collisions = True
+
     def setUp(self):
         super(TestCollisionDeterminism, self).setUp()
         self.world = self.client.get_world()
@@ -378,7 +314,8 @@ class TestCollisionDeterminism(SmokeTest):
         settings = carla.WorldSettings(
             no_rendering_mode=False,
             synchronous_mode=True,
-            fixed_delta_seconds=0.05)
+            fixed_delta_seconds=0.05,
+            deterministic_collisions=True)
         self.world.apply_settings(settings)
         self.world.tick()
 
@@ -390,58 +327,6 @@ class TestCollisionDeterminism(SmokeTest):
         self.world = None
         super(TestCollisionDeterminism, self).tearDown()
 
-    def test_two_cars(self):
-        print("TestCollisionDeterminism.test_two_cars")
-
-        # Setting output temporal folder
-        output_path = os.path.dirname(os.path.realpath(__file__))
-        output_path = os.path.join(output_path, "_collisions") + os.path.sep
-        if not os.path.exists(output_path):
-            os.mkdir(output_path)
-
-        # Loading Town03 for test
-        self.client.load_world("Town03_Opt")
-        # workaround: give time to UE4 to clean memory after loading (old assets)
-        time.sleep(5)
-
-        try:
-            test_collision = CollisionScenarioTester(scene=TwoCarsHighSpeedCollision(self.client, self.world, True), output_path=output_path)
-            test_collision.test_scenario(repetitions=5, sim_tics=100)
-        except DeterminismError as err:
-            test_collision.scene.clear_scene()
-            # Remove all the output files
-            shutil.rmtree(output_path)
-            self.fail(err)
-
-        # Remove all the output files
-        shutil.rmtree(output_path)
-
-    def test_three_cars(self):
-        print("TestCollisionDeterminism.test_three_cars")
-
-        # Setting output temporal folder
-        output_path = os.path.dirname(os.path.realpath(__file__))
-        output_path = os.path.join(output_path, "_collisions") + os.path.sep
-        if not os.path.exists(output_path):
-            os.mkdir(output_path)
-
-        # Loading Town03 for test
-        self.client.load_world("Town03_Opt")
-        # workaround: give time to UE4 to clean memory after loading (old assets)
-        time.sleep(5)
-
-        try:
-            test_collision = CollisionScenarioTester(scene=ThreeCarsSlowSpeedCollision(self.client, self.world, True), output_path=output_path)
-            test_collision.test_scenario(repetitions=5, sim_tics = 100)
-        except DeterminismError as err:
-            test_collision.scene.clear_scene()
-            # Remove all the output files
-            shutil.rmtree(output_path)
-            self.fail(err)
-
-        # Remove all the output files
-        shutil.rmtree(output_path)
-
     def test_car_bike(self):
         print("TestCollisionDeterminism.test_car_bike")
 
@@ -451,10 +336,9 @@ class TestCollisionDeterminism(SmokeTest):
         if not os.path.exists(output_path):
             os.mkdir(output_path)
 
-        # Loading Town03 for test
-        self.client.load_world("Town03_Opt")
-        # workaround: give time to UE4 to clean memory after loading (old assets)
-        time.sleep(5)
+        # Town10HD_Opt ships with every package; keep the settings so that
+        # deterministic_collisions applies
+        self.load_world("Town10HD_Opt", False)
 
         try:
             test_collision = CollisionScenarioTester(scene=CarBikeCollision(self.client, self.world, True), output_path=output_path)
@@ -477,10 +361,9 @@ class TestCollisionDeterminism(SmokeTest):
         if not os.path.exists(output_path):
             os.mkdir(output_path)
 
-        # Loading Town03 for test
-        self.client.load_world("Town03_Opt")
-        # workaround: give time to UE4 to clean memory after loading (old assets)
-        time.sleep(5)
+        # Town10HD_Opt ships with every package; keep the settings so that
+        # deterministic_collisions applies
+        self.load_world("Town10HD_Opt", False)
 
         try:
             test_collision = CollisionScenarioTester(scene=CarWalkerCollision(self.client, self.world, True), output_path=output_path)

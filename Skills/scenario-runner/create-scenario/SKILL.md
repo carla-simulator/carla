@@ -2,7 +2,7 @@
 name: create-scenario
 description: Writes a new ScenarioRunner scenario — a Python class deriving from BasicScenario with its behaviour tree assembled from srunner atomic behaviours and criteria, plus the XML config that gives it a town, ego spawn and parameters — and registers it so `--scenario MyScenario_1` works. Also covers adding a scenario to a route via --additionalScenario. Generates a working skeleton and validates it without a simulator. Use when the user asks to "create/write a new scenario", "add a custom scenario", "make my own traffic situation", or wants to extend the scenario library.
 license: MIT
-compatibility: Any OS with a scenario_runner checkout; a running CARLA server only to execute the result. Behaviour/criteria APIs are py_trees 0.8 based and identical across master and ue5-master; module paths differ on the leaderboard-1.0 branch.
+compatibility: Any OS with a scenario_runner checkout; a running CARLA server only to execute the result. The behaviour/criteria APIs are the same across branches, but the py_trees version is not: ue58-dev pins 2.6.0, where Sequence takes an explicit memory argument and Parallel a policy object, while master, ue5-master and the leaderboard branches pin 0.8.3. The scaffold reads the pin and emits the right form; module paths differ on the leaderboard-1.0 branch.
 metadata:
   group: scenario-runner
   prerequisites: scripts/check_env.sh
@@ -24,10 +24,17 @@ srunner/examples/MyScenario.xml     the config: town, ego spawn, parameters
 ```
 
 ScenarioRunner finds the class by globbing `$SCENARIO_RUNNER_ROOT/srunner/scenarios/*.py`
-and matching the config's `type` attribute against class names in those modules.
-There is **no registration list** — dropping the two files in is the whole
-install. The corollary is that the `type` in the XML must match the class name
-exactly, and a typo produces `Scenario 'X' not supported`.
+plus whatever `--additionalScenario` points at, and matching the config's `type`
+attribute against the `BasicScenario` subclasses in those modules. There is **no
+registration list** — dropping the two files in, or passing their folder, is the
+whole install. The corollary is that the `type` in the XML must match the class
+name exactly, and a typo produces `Scenario 'X' not supported`.
+
+On `ue58-dev`, `--additionalScenario` and `--configFile` each take a file, a
+folder, a comma-separated list, or a repeated flag, and the classes they find are
+also available to `--route`. Older checkouts take one file each, and route mode
+sees only `srunner/scenarios/`, so a custom scenario named by a route needs the
+file inside the checkout there.
 
 ## Instructions
 
@@ -82,7 +89,7 @@ class MyCutIn(BasicScenario):
 
     def _create_behavior(self):
         """Return the py_trees tree. Composites: Sequence, Parallel; leaves: atomics."""
-        root = py_trees.composites.Sequence("MyCutIn")
+        root = py_trees.composites.Sequence("MyCutIn", memory=True)   # py_trees 2.x
         root.add_child(InTriggerDistanceToVehicle(self.other_actors[0], self.ego_vehicles[0], 30))
         root.add_child(LaneChange(self.other_actors[0], speed=10, distance_other_lane=30))
         root.add_child(ActorDestroy(self.other_actors[0]))
@@ -163,8 +170,9 @@ makes a scenario reusable across routes.
 ## Troubleshooting
 
 **Problem: `Scenario 'MyCutIn_1' not supported`**
-Cause: the XML `type` does not match a class name, the file is not in
-`srunner/scenarios/`, or `SCENARIO_RUNNER_ROOT` is unset so the glob is `./`.
+Cause: the XML `type` does not match a class name, the class does not derive
+from `BasicScenario`, the file is neither in `srunner/scenarios/` nor passed to
+`--additionalScenario`, or `SCENARIO_RUNNER_ROOT` is unset so the glob is `./`.
 Solution: `validate`; use `--additionalScenario` for files outside the checkout.
 
 **Problem: the scenario starts and hangs until the timeout**

@@ -1,14 +1,14 @@
 # Town04
 
 ![town_04_slideshow](img/catalogue/maps/town04/town04_montage.webp)
-<div class="img-caption">Town04_Opt from above the town, from directly overhead, at the overpass, at the gas station and in the shopping arcade.</div>
+<div class="img-caption">Town04_Opt from above the town, from directly overhead, at the overpass, at the gas station and along the lake.</div>
 
 Town04 is a small town with a backdrop of snow-capped mountains and conifers. A multi-lane road circles the town and a nearby mountain in a "figure of 8", an *infinite* highway with no dead ends.
 
 | | |
 | --- | --- |
 | __Map name__ | `Town04_Opt` |
-| __In the default package__ | no: use a source build, or install it from a [content pack](map_content_packs.md) |
+| __In the default package__ | no: install a [content pack](map_content_packs.md) that contains it, such as AdditionalMaps, or use a source build |
 | __Size__ | about 930 x 830 m of roads |
 | __Spawn points__ | 372, from `world.get_map().get_spawn_points()` |
 | __Junctions__ | 27, with 43 traffic lights, 8 stop signs and 4 yield signs |
@@ -78,7 +78,7 @@ There are various styles of residential and commercial buildings, and streets wi
 <div class="img-caption">The town from above: the detached houses on the left, the arcade and the apartment blocks on the right, with the lake and the mountains behind.</div>
 
 ![town_04_town](img/catalogue/maps/town04/town04_town.webp)
-<div class="img-caption">Apartment blocks, terraced houses and the gas station around the car park.</div>
+<div class="img-caption">The entrance to the town, with the Coca-Cola billboard over the junction.</div>
 
 ![town_04_streets](img/catalogue/maps/town04/town04_streets.webp)
 <div class="img-caption">A residential street with apartment blocks and conifers.</div>

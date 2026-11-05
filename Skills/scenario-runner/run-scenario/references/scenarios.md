@@ -101,7 +101,14 @@ a good guide to what matters: `HardBreakRoute` 573, `ControlLoss` 429,
 `DynamicObjectCrossing` 351, `PriorityAtJunction` 237, `ParkedObstacleTwoWays` 204,
 `HazardAtSideLaneTwoWays` 177, then a long tail.
 
-## ue5-master — the port is partial
+## ue58-dev (CARLA on UE 5.8)
+
+`--list` shows **96** configs. Their towns are Town01_Opt to Town05_Opt and
+Town10HD_Opt, and the branch translates UE5 map and blueprint names. The weather
+call in `basic_scenario.py` is still commented out, so `<weather>` in a config
+does nothing here either.
+
+## ue5-master: the port is partial (CARLA 0.10.0 on UE 5.5)
 
 101 configs, of which **11** name `Town10HD_Opt`, the only map CARLA 0.10.0 ships:
 

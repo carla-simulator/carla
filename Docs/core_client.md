@@ -16,7 +16,7 @@ Take a look at [__carla.Client__](python_api.md#carla.Client) in the Python API 
 
 ## Client creation
 
-Two things are needed: the __IP__ address of the server and the __RPC port__ it listens on, 2000 by default. The server also opens the next two ports, 2001 for sensor streaming and 2002 for a secondary server, but the client is given only the first one. An optional third parameter sets the number of working threads, all of them (`0`) by default. [carla.Client](python_api.md#carla.Client.__init__) in the Python API reference has a snippet that parses these as script arguments.
+Two things are needed: the __IP__ address of the server and the __RPC port__ it listens on, 2000 by default. The server also opens the next two ports, 2001 for sensor streaming and 2002 for a secondary server, but the client is given only the first one. An optional third parameter sets the number of working threads, all of them (`0`) by default. [Network ports](ref_ports.md) lists all three and how to move them. [carla.Client](python_api.md#carla.Client.__init__) in the Python API reference has a snippet that parses these as script arguments.
 
 ```py
 client = carla.Client('localhost', 2000)

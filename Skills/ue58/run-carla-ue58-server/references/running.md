@@ -20,7 +20,7 @@ sees every map in the tree, cooked or not.
 ### `package` — the shipping build
 
 ```bash
-Build/<preset>/Package/Carla-<ver>-Linux-Shipping/Linux/CarlaUnreal.sh \
+Build/<preset>/Package/Carla-<ver>-Linux-Shipping/CarlaUnreal.sh \
     Town10HD_Opt -RenderOffScreen -carla-rpc-port=2000
 ```
 
@@ -160,8 +160,10 @@ UE 5.8, not on `Actor` as in 0.9.16. Confirmed at runtime:
 `hasattr(sensor, 'enable_for_ros') == True`,
 `hasattr(vehicle, 'enable_for_ros') == False`.
 
-Without the call the sensor is never ticked — `ASensor::Tick` returns early unless
-something is listening, and a ROS subscriber is not a stream client.
+Sensors publish without the call. `ROS2TopicVisibility` is on by default, so
+`is_enabled_for_ros()` is `True` right after spawn. Call `enable_for_ros()` only
+when that setting is off or after `disable_for_ros()`. Lane invasion, obstacle,
+RSS and G-buffer sensors have no ROS 2 publisher at all.
 
 ### Topic naming
 
@@ -195,8 +197,7 @@ message types (`GearReport`, `VelocityReport`, `TurnIndicatorsCommand`, `Control
 `Lateral`, `Longitudinal`, …).
 
 ROS 2 is **Linux-only**: `Carla.Build.cs:186-193` hardcodes `Binaries/Linux` and
-`.so` with no platform branch, for every middleware. `Docs/ros2_native.md:19`
-claims Windows FastDDS support; it is wrong.
+`.so` with no platform branch, for every middleware.
 
 ## Shutdown
 

@@ -8,7 +8,7 @@ Town01 is a small town with numerous T-junctions and a variety of buildings, sur
 | | |
 | --- | --- |
 | __Map name__ | `Town01_Opt` |
-| __In the default package__ | no: use a source build, or install it from a [content pack](map_content_packs.md) |
+| __In the default package__ | no: install a [content pack](map_content_packs.md) that contains it, such as AdditionalMaps, or use a source build |
 | __Size__ | about 400 x 330 m of roads |
 | __Spawn points__ | 255, from `world.get_map().get_spawn_points()` |
 | __Junctions__ | 12, all of them T-junctions, 36 traffic lights |
@@ -44,7 +44,7 @@ A small river crosses the town between two strips of grass and rocks. Four road 
 <div class="img-caption">The river and one of the road bridges that cross it.</div>
 
 ![town_01_footbridge](img/catalogue/maps/town01/town01_footbridge.webp)
-<div class="img-caption">The footbridge in the middle of the river, with the road that runs along the bank.</div>
+<div class="img-caption">The road that runs along the river bank.</div>
 
 ---
 ## Commercial buildings

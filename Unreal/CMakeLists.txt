@@ -8,6 +8,8 @@ project (
     "Open-source simulator for autonomous driving research."
 )
 
+include (${CMAKE_CURRENT_SOURCE_DIR}/Package/GenerateCookedMapStaging.cmake)
+
 carla_option (
   ENABLE_DIRECTORY_CLEAN
   "Enable ADDITIONAL_CLEAN_FILES on directory level"
@@ -49,7 +51,7 @@ set (
   ${CARLA_UE_PATH}/Content/Carla
 )
 
-if (NOT EXISTS ${CARLA_UE_CONTENT_PATH}/.git)
+if (NOT IS_DIRECTORY ${CARLA_UE_CONTENT_PATH})
   carla_error ("Missing CARLA content.")
 endif ()
 
@@ -194,14 +196,6 @@ if (ENABLE_ROS2_DEMO)
   )
 endif()
 
-if (ENABLE_OSM2ODR)
-  list (
-    APPEND
-    CARLA_UNREAL_OPTIONS
-    "OSM2ODR"
-  )
-endif()
-
 
 
 # Both prefixes run through CARLA_UE_DLSS_ENV_COMMAND so UnrealBuildTool sees
@@ -341,6 +335,37 @@ file (
 
 
 
+# The Carla plugin module links libcarla-server and librpc by SONAME and its
+# rpath is ${ORIGIN}-only, so stage both beside it or the module fails to load.
+set (
+  CARLA_PLUGIN_BINARY_PATH
+  ${CARLA_UE_PATH}/Plugins/Carla/Binaries/${UE_SYSTEM_NAME}
+)
+
+file (MAKE_DIRECTORY ${CARLA_PLUGIN_BINARY_PATH})
+
+add_custom_target (
+  carla-unreal-stage-libraries
+  COMMAND
+    ${CMAKE_COMMAND} -E copy_if_different
+    $<TARGET_FILE:carla-server> ${CARLA_PLUGIN_BINARY_PATH}
+  COMMAND
+    ${CMAKE_COMMAND} -E copy_if_different
+    $<TARGET_FILE:rpc> ${CARLA_PLUGIN_BINARY_PATH}
+  DEPENDS
+    carla-server
+    rpc
+  VERBATIM
+)
+
+list (
+  APPEND
+  UE_DEPENDENCIES_ORDER_ONLY
+  carla-unreal-stage-libraries
+)
+
+
+
 carla_add_custom_target (
   carla-unreal
   "Build the CarlaUnreal subproject."
@@ -432,6 +457,14 @@ function (
     carla_message ("package(${PACKAGE_CONFIGURATION}): cooking only ${CARLA_MAPS_TO_COOK}")
   endif ()
 
+  # The cooked maps' OpenDRIVE/TM/Nav files are not assets and ship only when
+  # their directory is staged, so derive those entries from the cook scope.
+  carla_generate_cooked_map_staging (
+    "${CARLA_MAPS_TO_COOK}"
+    "${CARLA_UE_PATH}"
+    "${UE_SYSTEM_NAME}"
+  )
+
   # Content packs (Plugins/Packs/*) are cooked as DLC "based on" this release:
   # the cook writes Unreal/CarlaUnreal/Releases/<release>/<Platform>/
   # (AssetRegistry.bin + pak/container lists) which a pack cook needs as its
@@ -518,12 +551,20 @@ base content folder."
       -P${CMAKE_CURRENT_SOURCE_DIR}/Package/RemoveUnrealPackageExtraFiles.cmake
     COMMAND ${CMAKE_COMMAND} -E echo "********** PACKAGE REMOVING UNREAL PACKAGE EXTRA FILES COMPLETED **********"
 
+    COMMAND ${CMAKE_COMMAND} -E echo "********** PACKAGE FLATTENING LAYOUT STARTED **********"
+    COMMAND ${CMAKE_COMMAND}
+      -DCARLA_PACKAGE_ARCHIVE_PATH=${CARLA_PACKAGE_ARCHIVE_PATH}
+      -DUE_SYSTEM_NAME=${UE_SYSTEM_NAME}
+      -P${CMAKE_CURRENT_SOURCE_DIR}/Package/FlattenPackageLayout.cmake
+    COMMAND ${CMAKE_COMMAND} -E echo "********** PACKAGE FLATTENING LAYOUT COMPLETED **********"
+
     COMMAND ${CMAKE_COMMAND} -E echo "********** PACKAGE COPYING CARLA ADDITIONAL FILES STARTED **********"
     COMMAND ${CMAKE_COMMAND}
       -DCARLA_BUILD_PATH=${CARLA_BUILD_PATH}
       -DCARLA_WORKSPACE_PATH=${CARLA_WORKSPACE_PATH}
       -DCARLA_PACKAGE_ARCHIVE_PATH=${CARLA_PACKAGE_ARCHIVE_PATH}
       -DCARLA_UE_PROJECT_PATH=${CARLA_UE_PROJECT_PATH}
+      -DCARLA_PYTHON_API_DIST_PATH=${CARLA_PYTHON_API_DIST_PATH}
       -P${CMAKE_CURRENT_SOURCE_DIR}/Package/CopyCarlaAdditionalFiles.cmake
     COMMAND ${CMAKE_COMMAND} -E echo "********** PACKAGE COPYING CARLA ADDITIONAL FILES COMPLETED **********"
 

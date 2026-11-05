@@ -1,6 +1,6 @@
-# CARLA Agents
+# Traffic Agents
 
-An agent is a Python class that drives a vehicle. You build one around a vehicle you have already spawned, and from then on it decides how that vehicle moves: every step it returns a [`carla.VehicleControl`](python_api.md#carla.VehicleControl), which you apply to the vehicle. It plans the route, stops for traffic lights and reacts to what is in the way.
+A traffic agent (until now called simply an *agent*) is a Python class that drives a vehicle. You build one around a vehicle you have already spawned, and from then on it decides how that vehicle moves: every step it returns a [`carla.VehicleControl`](python_api.md#carla.VehicleControl), which you apply to the vehicle. It plans the route, stops for traffic lights and reacts to what is in the way.
 
 Agents run entirely on the client, in the [`agents`](https://github.com/carla-simulator/carla/tree/ue58-dev/PythonAPI/carla/agents) package under `PythonAPI/carla`. Nothing is added to the server and the vehicle is an ordinary actor, so an agent can be swapped for autopilot, or for your own control, at any point.
 

@@ -8,6 +8,9 @@ CARLA speaks ROS 2 from the server itself — there is no bridge process. Sensor
 ./CarlaUnreal.sh -ros2
 ```
 
+![CARLA native ROS 2 interface](img/ros2_native/ros2_native_overview.svg)
+<div class="img-caption">The server publishes sensor data, the clock and the transform tree, and the ego vehicle subscribes to control commands, through the middleware chosen at launch. Any ROS 2 node on the same domain id sees the topics, such as RViz or Autoware.</div>
+
 - [__Quick start__](#quick-start)
 - [__Middleware (RMW)__](#middleware-rmw)
 - [__ROS 2 domain id__](#ros-2-domain-id)
@@ -20,6 +23,11 @@ CARLA speaks ROS 2 from the server itself — there is no bridge process. Sensor
 
 ---
 ## Quick start
+
+!!! agent "Agentic CARLA"
+    *"Start CARLA with ROS 2, spawn a vehicle with a camera and a lidar, and check that their topics publish."*
+
+    Skills: `run-carla-ue58-server`, `create-sensor`, `visualize-ros-rviz`. [Set up Agentic CARLA](agent_skills.md#set-up-agentic-carla).
 
 ```sh
 # Terminal 1: the server
@@ -59,6 +67,8 @@ Fast-DDS does not fall back to UDP when the shared-memory path is unreachable, s
 
 Same-host power users who want shared-memory (or `LARGE_DATA`) performance back can set the standard [`FASTDDS_BUILTIN_TRANSPORTS`](https://fast-dds.docs.eprosima.com/en/latest/fastdds/env_vars/env_vars.html) environment variable (e.g. `FASTDDS_BUILTIN_TRANSPORTS=DEFAULT`) when launching the simulator; the simulator then leaves the transport selection entirely to Fast-DDS and logs the active choice at startup. For shared memory to actually deliver, the subscriber must share the IPC namespace, run as the same uid, and use a compatible Fast-DDS version. The other middlewares are unaffected: CycloneDDS and Zenoh never use shared memory in this build.
 
+An XML profile also replaces the UDPv4-only default. If `FASTRTPS_DEFAULT_PROFILES_FILE` names a file whose default participant profile sets its own transports, the simulator keeps those transports. The [Autoware](autoware.md) launcher uses this to limit the simulator to the docker bridge interface.
+
 #### Which subscriber setups receive data (`--rmw=fastdds`)
 
 Every combination below was verified against a live simulator (Fast-DDS 2.14.6). "ROS 2 Jazzy" stands for any peer on a Fast-DDS 2.14-generation stack, "ROS 2 Humble" for the 2.6 generation. A ✗ always looks the same: topics are listed, `ros2 topic echo` receives nothing, and neither side logs a warning.
@@ -75,6 +85,8 @@ Every combination below was verified against a live simulator (Fast-DDS 2.14.6).
 | Container, `--net=host --ipc=host --user <simulator uid>`, Humble | ✓ UDP | ✗ no data — incompatible SHM generation |
 | Any container, subscriber forced to UDP via `FASTRTPS_DEFAULT_PROFILES_FILE` (profile shipped in `PythonAPI/examples/ros2/config/fastrtps-profile.xml`) | ✓ UDP | ✓ UDP |
 
+The shared-memory column depends on the host and on the Fast-DDS patch version. In a check of the CARLA 1.0 package, two rows differed. The Humble `--user <simulator uid>` row (Fast-DDS 2.6.12) received data in 2 of 2 runs. The root `--net=host --ipc=host` row received data in 1 of 2 runs.
+
 `--rmw=cyclonedds` behaves like the first column in every row (UDP only, no shared-memory support compiled in). `--rmw=zenoh` is independent of this table entirely; it requires the Zenoh router and `rmw_zenoh_cpp` peers as described above.
 
 ---
@@ -86,12 +98,12 @@ The ROS2 domain id used by the native connector is configurable with the `--ros-
 ./CarlaUnreal.sh --ros2 --ros-domain-id=42
 ```
 
-`N` must be an integer in the range 0 to 232. The effective domain id is resolved in this order: the `--ros-domain-id` value, then the `ROS_DOMAIN_ID` environment variable, then the default domain 0. Out-of-range values (from either the option or the environment variable) are ignored and the next source is used. Omitting the option keeps the default domain, so existing setups are unchanged. The chosen domain id applies to every middleware (FastDDS, CycloneDDS, and Zenoh), so peers must run on the same domain to discover the topics.
+`N` must be an integer in the range 0 to 232. The effective domain id is resolved in this order: the `--ros-domain-id` value, then the `ROS_DOMAIN_ID` environment variable, then the default domain 0. Out-of-range values (from either the option or the environment variable) are ignored and the next source is used. Without the option, the server uses `ROS_DOMAIN_ID` if it is set, else domain 0. The chosen domain id applies to every middleware (FastDDS, CycloneDDS, and Zenoh), so peers must run on the same domain to discover the topics.
 
 ---
 ## Sensor data
 
-Every spawned sensor publishes by default; the project setting __ROS2 Topics Visible On Startup__ (`ROS2TopicVisibility`, on by default) decides that. Turn it off to publish only the sensors you ask for, and choose per sensor from the client:
+Every spawned sensor that has a ROS 2 publisher (see [Published sensors](ros2_native_sensors.md#published-sensors)) publishes by default; the project setting __ROS2 Topics Visible On Startup__ (`ROS2TopicVisibility`, on by default) decides that. Turn it off to publish only the sensors you ask for, and choose per sensor from the client:
 
 ```py
 sensor.enable_for_ros()
@@ -130,7 +142,7 @@ See the [ROS 2 sensors reference](ros2_native_sensors.md) for details about the 
 ---
 ## Control data
 
-Controls may be sent to one ego vehicle:
+Every vehicle spawned with the role name `hero` or `ego` gets its own command topic:
 
 ```py
 bp = world.get_blueprint_library().find('vehicle.lincoln.mkz')

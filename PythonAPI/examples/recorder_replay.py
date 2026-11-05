@@ -11,7 +11,6 @@
 import argparse
 import threading
 import sys
-import os
 import pygame
 
 import carla
@@ -51,8 +50,8 @@ def recorder_utilities(client):
 def main():
     argparser = argparse.ArgumentParser(description=__doc__)
     argparser.add_argument(
-        '--host', metavar='H', default='localhost',
-        help='IP of the host CARLA Simulator (default: localhost)')
+        '--host', metavar='H', default='127.0.0.1',
+        help='IP of the host CARLA Simulator (default: 127.0.0.1)')
     argparser.add_argument(
         '--port', metavar='P', default=2000, type=int,
         help='TCP port of CARLA Simulator (default: 2000)')
@@ -99,15 +98,16 @@ def main():
     client = None
     world = None
 
-    if not os.path.exists(args.file):
-        print("WARNING: The specified '.log' file does not exist. Shutting down")
-        sys.exit(-1)
-
     # Get the client
     print("\n\033[1m> Setting the simulation\033[0m")
     client = carla.Client(args.host, args.port)
     client.set_timeout(200.0)
+
+    # The recording lives on the server, so the server checks that it exists
     file_info = client.show_recorder_file_info(args.file, True)
+    if not file_info.startswith("Version:"):
+        print("WARNING: {}Shutting down".format(file_info))
+        sys.exit(-1)
 
     # Synchronous mode provides a smoother motion of the camera that follows the ego
     world = client.get_world()

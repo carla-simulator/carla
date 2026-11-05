@@ -21,8 +21,7 @@ class TestActorIntrospection(SmokeTest):
 
     def setUp(self):
         super().setUp()
-        self.client.load_world(TEST_TOWN)
-        time.sleep(5)
+        self.load_world(TEST_TOWN)
         self.world = self.client.get_world()
         self.spawned = []
 
@@ -33,8 +32,7 @@ class TestActorIntrospection(SmokeTest):
             except RuntimeError:
                 pass
         self.spawned = []
-        self.client.load_world(TEST_TOWN)
-        time.sleep(5)
+        self.load_world(TEST_TOWN)
         self.world = None
         self.client = None
 

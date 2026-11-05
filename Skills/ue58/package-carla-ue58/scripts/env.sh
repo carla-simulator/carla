@@ -78,7 +78,7 @@ carla_ue58_flavor() {
 
 # Newest packaged server launcher produced by the `package` target.
 carla_ue58_package_sh() {
-  ls -1dt "${CARLA_UE58_ROOT:-/nonexistent}"/Build/*/Package/Carla-*/Linux/CarlaUnreal.sh 2>/dev/null | head -1
+  ls -1dt "${CARLA_UE58_ROOT:-/nonexistent}"/Build/*/Package/Carla-*/CarlaUnreal.sh 2>/dev/null | head -1
 }
 
 # --- resolution --------------------------------------------------------------

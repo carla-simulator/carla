@@ -82,8 +82,8 @@ command -v git >/dev/null && git lfs version >/dev/null 2>&1 && ok "git-lfs pres
   || warn "git-lfs missing — the content repository needs it"
 PV="$("${PYTHON}" -c 'import sys; print("%d.%d" % sys.version_info[:2])' 2>/dev/null || echo '?')"
 case "${PV}" in
-  3.8|3.9|3.10|3.11|3.12) ok "Python ${PV} (3.8-3.12 supported)" ;;
-  *) warn "Python ${PV} is outside the documented 3.8-3.12 range" ;;
+  3.10|3.11|3.12|3.13|3.14|3.15) ok "Python ${PV} (3.10-3.15 supported)" ;;
+  *) warn "Python ${PV} is outside the documented 3.10-3.15 range" ;;
 esac
 
 echo "== Never run the build under sudo =="
@@ -105,7 +105,7 @@ if carla_ue58_configured; then
   # Every -D option must be repeated on each re-configure, so the cache is the
   # only honest answer to "was this built with ROS 2 / DLSS / which maps".
   for opt in CMAKE_BUILD_TYPE ENABLE_ROS2 CARLA_UNREAL_RHI CARLA_UNREAL_PACKAGE_BUILD_TYPE \
-             ENABLE_RSS ENABLE_OSM2ODR CARLA_DLSS_SDK_PATH; do
+             ENABLE_RSS CARLA_DLSS_SDK_PATH; do
     v="$(carla_ue58_cmake_opt "${opt}")"
     [ -n "${v}" ] && ok "  ${opt} = ${v}"
   done

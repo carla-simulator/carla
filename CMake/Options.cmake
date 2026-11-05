@@ -51,6 +51,12 @@ carla_option (
   ON
 )
 
+carla_string_option (
+  CARLA_PYTHON_VERSIONS
+  "Semicolon-separated list of Python versions (X.Y) to build the Python API wheel for, e.g. 3.10;3.11;3.12. The interpreter of each one is python<X.Y> in PATH or CARLA_PYTHON_<XY>_EXECUTABLE. Empty builds only for the Python CMake finds."
+  ""
+)
+
 carla_option (
   ENABLE_ROS2
   "Enable ROS2."
@@ -60,12 +66,6 @@ carla_option (
 carla_option (
   ENABLE_ROS2_DEMO
   "Enable ROS2 demo."
-  OFF
-)
-
-carla_option (
-  ENABLE_OSM2ODR
-  "Enable OSM2ODR."
   OFF
 )
 
@@ -159,6 +159,15 @@ carla_string_option (
   CARLA_UNREAL_ENGINE_PATH
   "Path to the CARLA fork of Unreal Engine."
   "${CARLA_UNREAL_ENGINE_PATH_INFERRED}"
+)
+
+# A value passed with -D can hold Windows backslashes, which break the generated CMake files.
+cmake_path (
+  CONVERT
+  "${CARLA_UNREAL_ENGINE_PATH}"
+  TO_CMAKE_PATH_LIST
+  CARLA_UNREAL_ENGINE_PATH
+  NORMALIZE
 )
 
 carla_message ("Using ${CARLA_UNREAL_ENGINE_PATH} as Unreal Engine root path.")
@@ -302,7 +311,7 @@ set (
   CACHE STRING
   "Name of the release version the package target creates with UAT's \
 -createreleaseversion (the base a content pack's DLC cook is 'based on'). \
-Empty means carla-<CARLA_VERSION>-<UE_SYSTEM_NAME>, e.g. carla-0.10.0-Linux."
+Empty means carla-<CARLA_VERSION>-<UE_SYSTEM_NAME>, e.g. carla-1.0-Linux."
 )
 
 
