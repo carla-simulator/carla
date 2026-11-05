@@ -60,7 +60,7 @@ jobs:
         shell: bash -leo pipefail {0}
     runs-on: self-hosted:ubuntu-gpu
     container:
-      image: carlasim/carla-builder:ue5-22.04
+      image: carlasim/carla-builder:ue5-22.04-2
       options: >-
         --runtime=nvidia --gpus all -e NVIDIA_DRIVER_CAPABILITIES=all
         --volume /home/jenkins/unreal-engine/ue5:/unreal-engine
