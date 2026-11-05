@@ -42,10 +42,14 @@ using namespace std::chrono_literals;
   Episode::Episode(Client &client, const rpc::EpisodeInfo &info, std::weak_ptr<Simulator> simulator)
     : _client(client),
       _state(std::make_shared<EpisodeState>(info.id)),
+      _token(info.token),
       _simulator(simulator),
-      _token(info.token) {}
+      _handled_episode_id(info.id) {}
 
   Episode::~Episode() {
+    if (_tm_reset_thread.joinable()) {
+      _tm_reset_thread.join();
+    }
     try {
       _client.UnSubscribeFromStream(_token);
     } catch (const std::exception &e) {
@@ -115,7 +119,7 @@ using namespace std::chrono_literals;
 
           /// Episode change
           if(episode_changed) {
-            self->OnEpisodeChanged();
+            self->OnEpisodeChanged(next->GetEpisodeId());
           }
 
           // Notify waiting threads and do the callbacks.
@@ -155,8 +159,19 @@ using namespace std::chrono_literals;
     traffic_manager::TrafficManager::Release();
   }
 
-  void Episode::OnEpisodeChanged() {
-    traffic_manager::TrafficManager::Reset();
+  void Episode::OnEpisodeChanged(uint64_t episode_id) {
+    // Off the stream thread: the reset takes seconds and would hold back every snapshot.
+    if (_tm_reset_thread.joinable()) {
+      _tm_reset_thread.join();
+    }
+    _tm_reset_thread = std::thread([this, episode_id]() {
+      try {
+        traffic_manager::TrafficManager::Reset(episode_id);
+      } catch (const std::exception &e) {
+        log_error("failed to reset the Traffic Manager for the new episode:", e.what());
+      }
+      _handled_episode_id.store(episode_id);
+    });
   }
 
   bool Episode::HasMapChangedSinceLastCall() {
