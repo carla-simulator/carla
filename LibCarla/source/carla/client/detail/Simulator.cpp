@@ -81,6 +81,11 @@ namespace detail {
       _gc_policy(enable_garbage_collection ?
         GarbageCollectionPolicy::Enabled : GarbageCollectionPolicy::Disabled) {}
 
+  Simulator::~Simulator() {
+    // Join first, or ~Episode can run on a stream thread while _client dies.
+    _client.StopStreaming();
+  }
+
   // ===========================================================================
   // -- Load a new episode -----------------------------------------------------
   // ===========================================================================
