@@ -47,7 +47,7 @@ Examples
     python nurec_to_cosmos.py --sample <uuid>.usdz --mode wm --fake-nurec --capture-only
 
     # The real thing, engine on the node, Cosmos on the node:
-    export COSMOS_URL=http://cosmos-dev2:8000
+    export COSMOS_URL=http://cosmos-dev2:8010
     python nurec_to_cosmos.py --sample <uuid>.usdz --mode both --nre-endpoint cosmos-dev2:46435
 """
 
