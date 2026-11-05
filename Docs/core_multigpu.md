@@ -43,7 +43,7 @@ The primary listens for secondaries on the __secondary port__, 2002 by default:
 | `-carla-rpc-port=N` | 2000 | Port the client connects to. Also moves the other two ports, see below. |
 | `-carla-secondary-port=N` | RPC port + 2 | Port the secondaries connect to. |
 
-The three server ports are derived from the RPC port: RPC `N`, streaming `N+1`, secondary `N+2`. Setting `-carla-rpc-port=3000` therefore moves the secondary port to 3002, and the secondaries have to be told about it. `-carla-streaming-port` and `-carla-secondary-port` override their own port afterwards.
+The three server ports are derived from the RPC port: RPC `N`, streaming `N+1`, secondary `N+2`. Setting `-carla-rpc-port=3000` therefore moves the secondary port to 3002, and the secondaries have to be told about it. `-carla-streaming-port` and `-carla-secondary-port` override their own port afterwards. See [Network ports](ref_ports.md).
 
 !!! Warning
     `-carla-primary-port` does __not__ set the port the primary listens on. It tells a *secondary* which port to connect to, and on a primary it has no effect at all. The primary's listening port is `-carla-secondary-port`.

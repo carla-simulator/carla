@@ -8,7 +8,7 @@ is submitted through the Python API, waited for, and stored through
 ``job.json`` and ``manifest.json`` next to the videos — so the matrix is a
 reproducible record, not a pile of downloads.
 
-    export COSMOS_URL=http://<node>:8000
+    export COSMOS_URL=http://<node>:8010
     python demos/showcase.py --token-file ~/.cosmos-token --clips ./clips
     python demos/showcase.py --list                      # the matrix, nothing else
     python demos/showcase.py --only t25-golden,av7-day   # a subset
