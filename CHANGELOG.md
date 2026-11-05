@@ -165,6 +165,7 @@
 
 #### Traffic Manager and agents
 
+* Fixed missed obstacles from invalid route corridors and projected bounding boxes in the Python and C++ navigation agents. Python obstacle detection also preserves actor centers when calculating bumper positions.
 * Fixed autopilot vehicles accelerating hard away from stops, junctions and roundabouts, and cutting tight corners too fast; both now stay within a comfortable acceleration bound. Also fixed the Traffic Manager's asynchronous loop drifting off the server frame rate, lights flickering on vehicles the server does not report, and an unbounded command queue on a slow server.
 * Fixed a Traffic Manager segfault when reaching a vehicle that is no longer available.
 * Fixed the Traffic Manager leaking its whole in-memory road graph (several hundred MB on a large map) every time it shut down or rebuilt its map for a new episode. Its waypoints link to each other with shared pointers, so the cycles kept them all alive; those links are now broken when the map is destroyed.
