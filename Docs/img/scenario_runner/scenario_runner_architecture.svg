@@ -27,8 +27,8 @@
 <text x="585.0" y="213.0" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13.5" fill="#5f6b73" font-weight="normal" text-anchor="middle" xml:space="preserve">ticks the py_trees behaviour tree</text>
 <text x="585.0" y="232.5" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13.5" fill="#5f6b73" font-weight="normal" text-anchor="middle" xml:space="preserve">once per simulation step</text>
 <rect x="405" y="267" width="360" height="70" rx="10" fill="#e3f0f9" stroke="#2980b9" stroke-width="2"/>
-<text x="585.0" y="298.75" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="17" fill="#2b2b2b" font-weight="bold" text-anchor="middle" xml:space="preserve">CarlaDataProvider</text>
-<text x="585.0" y="318.25" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13.5" fill="#5f6b73" font-weight="normal" text-anchor="middle" xml:space="preserve">spawns, caches and cleans up actors</text>
+<text x="585.0" y="298.75" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="17" fill="#2b2b2b" font-weight="bold" text-anchor="middle" xml:space="preserve">SimulationData</text>
+<text x="585.0" y="318.25" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13.5" fill="#5f6b73" font-weight="normal" text-anchor="middle" xml:space="preserve">client, world, map and route planner</text>
 <rect x="405" y="357" width="360" height="62" rx="10" fill="#efe9f8" stroke="#7e57c2" stroke-width="2"/>
 <text x="585.0" y="384.75" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="17" fill="#2b2b2b" font-weight="bold" text-anchor="middle" xml:space="preserve">Driving agent (route mode)</text>
 <text x="585.0" y="404.25" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13.5" fill="#5f6b73" font-weight="normal" text-anchor="middle" xml:space="preserve">sensors in, VehicleControl out</text>

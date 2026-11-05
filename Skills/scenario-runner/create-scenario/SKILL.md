@@ -70,21 +70,19 @@ something. Then edit.
 
 ```python
 class MyCutIn(BasicScenario):
-    def __init__(self, world, ego_vehicles, config, randomize=False,
+    def __init__(self, ego_vehicles, config, randomize=False,
                  debug_mode=False, criteria_enable=True, timeout=60):
         self.timeout = timeout
-        self._map = CarlaDataProvider.get_map()
-        self._reference_waypoint = self._map.get_waypoint(config.trigger_points[0].location)
         # scenario parameters come from the XML, via config.other_parameters
         self._distance = 50
         if "distance" in config.other_parameters:
             self._distance = float(config.other_parameters["distance"]["value"])
-        super().__init__("MyCutIn", ego_vehicles, config, world, debug_mode, criteria_enable=criteria_enable)
+        super().__init__("MyCutIn", ego_vehicles, config, debug_mode, criteria_enable=criteria_enable)
 
     def _initialize_actors(self, config):
-        """Spawn everything the scenario needs. Use CarlaDataProvider, never world.spawn_actor."""
+        """Spawn everything the scenario needs. Use request_new_actor, never world.spawn_actor."""
         wp = self._reference_waypoint.next(self._distance)[0]
-        actor = CarlaDataProvider.request_new_actor("vehicle.tesla.model3", wp.transform)
+        actor = request_new_actor("vehicle.tesla.model3", wp.transform)
         self.other_actors.append(actor)
 
     def _create_behavior(self):
@@ -102,10 +100,11 @@ class MyCutIn(BasicScenario):
 
 Rules that are not obvious and cost the most time:
 
-- **Spawn through `CarlaDataProvider.request_new_actor`**, not `world.spawn_actor`.
-  Only the provider registers the actor for velocity/transform caching and for
-  cleanup; direct spawns leak between runs and read as `not found` in atomics.
-- **Append to `self.other_actors`** or the actor is never destroyed.
+- **Spawn through `request_new_actor`** from `srunner.tools.actor_factory`, not
+  `world.spawn_actor`: it resolves the blueprint against this CARLA version and
+  waits for the actor to exist before returning it.
+- **Append to `self.other_actors`** or the actor is never destroyed. Nothing else
+  owns it, so a forgotten append leaks the actor for the rest of the session.
 - `_create_behavior` must return a tree that **terminates**. A `Sequence` whose
   last child never succeeds hangs until the timeout — which is what an apparently
   stuck scenario usually is.
@@ -181,15 +180,16 @@ be met, or a `Sequence` missing a terminating child.
 Solution: `DEBUG=1` and read the tree; add `Idle(duration)` or a
 `TimeOut` in parallel.
 
-**Problem: `KeyError` / `not found` from `CarlaDataProvider.get_velocity`**
-Cause: the actor was spawned with `world.spawn_actor`, so it is not registered.
-Solution: `CarlaDataProvider.request_new_actor(...)`.
+**Problem: `RuntimeError: trying to operate on a destroyed actor`**
+Cause: a behaviour kept a handle to an actor another behaviour already destroyed.
+Solution: destroy an actor in exactly one place, and use `destroy_actor` from
+`srunner.tools.actor_state`, which returns False instead of raising on a dead one.
 
 **Problem: actors from the last run are still there**
-Cause: on `master`, `_cleanup()` has `manager.cleanup()` and
-`CarlaDataProvider.cleanup()` commented out, and actors not in `self.other_actors`
-are never destroyed.
-Solution: append every actor to `self.other_actors`; reload the world between runs.
+Cause: the actor was never appended to `self.other_actors`, so `remove_all_actors()`
+does not know about it. There is no global pool backing it up any more.
+Solution: append every actor to `self.other_actors`, or destroy it in the
+`terminate()` of whatever created it.
 
 **Problem: `TypeError: unsupported operand` on a parameter**
 Cause: `config.other_parameters` values are strings.
