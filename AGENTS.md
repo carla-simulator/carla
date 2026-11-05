@@ -4,7 +4,7 @@ Guidance for any coding agent working in this repository.
 
 ## Skills
 
-This repo ships a library of **63 vetted CARLA procedures** under
+This repo ships a library of **64 vetted CARLA procedures** under
 [`Skills/`](Skills/). Each is a directory containing a `SKILL.md` with YAML
 frontmatter (`name`, `description`, `compatibility`, `metadata`), the step-by-step
 procedure, and often `scripts/` and `references/` beside it.
@@ -108,6 +108,7 @@ packaged builds. See [`Docs/agent_skills.md`](Docs/agent_skills.md#unreal-mcp-in
 
 ### `setup`
 
+- **`check-carla-ports`** — Reports which network ports CARLA and its tooling use on this machine and which are already taken — the simulator's RPC/streaming/secondary trio, the....
 - **`check-feature-support`** — Answers "can CARLA do X here, and is there a vetted procedure for it" before you promise anything, and detects client/server/tree version skew — a....
 - **`download-carla`** — Downloads CARLA so nothing has to be fetched by hand — an official release package for any published version (resolved live from the GitHub....
 - **`install-leaderboard`** — Installs the CARLA Autonomous Driving Leaderboard (leaderboard.carla.org) at a chosen version — 1.0, 2.0 or 2.1 — together with the exact....
