@@ -28,7 +28,7 @@ on:
         required: false
         default: ""
       release-version:
-        description: "Release version, e.g. 1.0: uploads to Linux/CARLA_<version>/ instead of Linux/Dev/ (empty: nightly)"
+        description: "Release version, e.g. 1.0: uploads to Linux/ as CARLA_<version>.tar.gz instead of to Linux/Dev/ (empty: nightly)"
         type: string
         required: false
         default: ""

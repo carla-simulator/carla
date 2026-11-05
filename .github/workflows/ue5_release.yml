@@ -1,8 +1,11 @@
 name: UE5-Release
 
-# Builds a release and uploads it to Linux/CARLA_<VERSION>/:
+# Builds a release and uploads it, named as the UE4 releases are, to Linux/:
 #   CARLA_<VERSION>.tar.gz                   (package)
-#   CARLA_<VERSION>_AdditionalMaps.tar.gz    (pack)
+#   AdditionalMaps_<VERSION>.tar.gz          (pack)
+#   CARLA_<VERSION>_release-metadata.tar.gz
+# and to Windows/ (no AdditionalMaps pack yet):
+#   CARLA_<VERSION>.zip                      (package)
 #   CARLA_<VERSION>_release-metadata.tar.gz
 # Run it on a release branch ue5/<VERSION> created from ue58-dev, whose head
 # carries the tag <VERSION> (e.g. branch ue5/1.0, tag 1.0).
@@ -67,3 +70,17 @@ jobs:
       upload-replace-latest: false
       release-version: ${{ needs.version.outputs.version }}
       upload-docker: false
+
+  windows-release:
+    name: Windows Release
+    needs: version
+    uses: ./.github/workflows/_ci-windows.yml
+    secrets:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
+    with:
+      python-versions: "3.10"
+      additional-maps: false
+      upload-package: true
+      upload-replace-latest: false
+      release-version: ${{ needs.version.outputs.version }}
