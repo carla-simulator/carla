@@ -8,6 +8,11 @@ This section will cover spawning, destruction, types, and how to manage them. Ho
 - [__Actor life cycle__](#actor-life-cycle)
 - [__Types of actors__](#types-of-actors)
 
+!!! agent "Agentic CARLA"
+    *"Spawn a red Tesla Model 3 at a free spawn point, 20 pedestrians that walk around, and tell me the speed of the Tesla."*
+
+    Skills: `spawn-vehicles`, `spawn-walkers`, `world-data`, `telemetry`. [Set up Agentic CARLA](agent_skills.md#set-up-agentic-carla).
+
 ---
 ## Blueprints
 
@@ -32,8 +37,10 @@ vehicle_bp = random.choice(blueprint_library.filter('vehicle.*.*'))
 
 Besides that, each [carla.ActorBlueprint](python_api.md#carla.ActorBlueprint) has a series of [carla.ActorAttribute](python_api.md#carla.ActorAttribute) that can be _get_ and _set_.
 ```py
-is_bike = vehicle_bp.get_attribute('number_of_wheels') == 2
-if is_bike:
+# Read an attribute through the as_* method of its type
+is_bike = vehicle_bp.get_attribute('number_of_wheels').as_int() == 2
+# Not every blueprint has every attribute: the two-wheelers have no color
+if vehicle_bp.has_attribute('color'):
     vehicle_bp.set_attribute('color', '255,0,0')
 ```
 !!! Note
@@ -325,7 +332,8 @@ The lights of a vehicle can be retrieved and updated anytime using the methods [
 # Turn on position lights
 current_lights = carla.VehicleLightState.NONE
 current_lights |= carla.VehicleLightState.Position
-vehicle.set_light_state(current_lights)
+# The | operator returns an int: convert it back before setting it
+vehicle.set_light_state(carla.VehicleLightState(current_lights))
 ```
 
 ### Walkers
@@ -354,12 +362,39 @@ ai_controller.set_max_speed(1 + random.random())  # Between 1 and 2 m/s (default
 ...
 ai_controller.stop()
 ```
+
+!!! Important
+    On maps where the client runs the navigation (every map except the World Partition maps listed in [Large maps](core_large_maps.md#pedestrian-navigation)), the walkers only move while the client that started their controllers calls `world.tick()` or `world.wait_for_tick()`. A script that starts the controllers and then sleeps leaves them standing. While a controller moves a walker, `walker.get_velocity()` reads zero; compare locations to measure its speed.
+
 When a walker reaches the target location, they will automatically walk to another random point. If the target point is not reachable, walkers will go to the closest point from their current location.
 
 `PythonAPI/examples/generate_traffic.py` uses batches to spawn a crowd of walkers and set them wandering.
 
 !!! Important
     __To destroy AI pedestrians__, stop the AI controller and destroy both, the actor, and the controller.
+
+#### Pedestrians in wheelchairs
+
+Some pedestrians can be spawned in a wheelchair. Their blueprint has the read-only attribute `can_use_wheelchair` set to `true` (six of them in the [pedestrian catalogue](catalogue_pedestrians.md): `walker.pedestrian.0015`, `0016`, `0025`, `0026`, `0028` and `0029`), and setting its `use_wheelchair` attribute to `true` spawns the pedestrian seated in a wheelchair, with the sitting animation. The wheelchair is part of the walker: it moves with it, carries the walker's semantic tag and is included in its bounding box.
+
+![wheelchair](img/core_actors/wheelchair.webp)
+<div class="img-caption">Two pedestrians in wheelchairs crossing a Town10HD_Opt junction.</div>
+
+```py
+import random
+
+# Pick a pedestrian that can use a wheelchair and seat it in one
+blueprints = world.get_blueprint_library().filter('walker.pedestrian.*')
+wheelchair_bps = [bp for bp in blueprints if bp.get_attribute('can_use_wheelchair').as_bool()]
+walker_bp = random.choice(wheelchair_bps)
+walker_bp.set_attribute('use_wheelchair', 'true')
+
+# Spawn it on the navigation mesh
+spawn_point = carla.Transform(world.get_random_location_from_navigation())
+walker = world.try_spawn_actor(walker_bp, spawn_point)
+```
+
+Move it with [`carla.WalkerControl`](python_api.md#carla.WalkerControl), as any other walker.
 
 ---
 That is a wrap as regarding actors in CARLA. The next step takes a closer look into the map, roads and traffic in CARLA.

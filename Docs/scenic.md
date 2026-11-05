@@ -19,7 +19,7 @@ Before using Scenic with CARLA, you will need to fulfill the following requireme
 
 - Install the CARLA client wheel from this build, and [Scenic](https://scenic-lang.readthedocs.io/en/latest/quickstart.html#installation), __into the same interpreter__. Scenic reads the blueprint library through the client, so a client that does not match the server fails at spawn time.
 - The Python version is the one the CARLA wheel was built for; Scenic itself supports 3.8 and later.
-- The example below uses ScenarioRunner's Scenic model, so [install ScenarioRunner](https://github.com/carla-simulator/scenario_runner) on the `ue5-master` branch and add it to `PYTHONPATH`. A scenario that only uses `scenic.simulators.carla.model` does not need it.
+- The example below uses ScenarioRunner's Scenic model, so [install ScenarioRunner](https://github.com/carla-simulator/scenario_runner) on the `ue58-dev` branch and add it to `PYTHONPATH`. A scenario that only uses `scenic.simulators.carla.model` does not need it.
 
 ---
 
@@ -242,4 +242,4 @@ require (distance to intersection) > 80
 terminate when ego.speed < 0.1 and (distance to obstacle) < 30
 ```
 
-The [full script in the Scenic repository](https://github.com/Scenic-Foundation/Scenic/blob/main/examples/carla/Carla_Challenge/carlaChallenge2.scenic) is the same scenario written against `scenic.simulators.carla.model` and another map; ScenarioRunner's `ue5-master` branch carries a port of it under `srunner/scenic/`.
+The [full script in the Scenic repository](https://github.com/Scenic-Foundation/Scenic/blob/main/examples/carla/Carla_Challenge/carlaChallenge2.scenic) is the same scenario written against `scenic.simulators.carla.model` and another map; ScenarioRunner's `ue58-dev` branch carries a port of it under `srunner/scenic/`.

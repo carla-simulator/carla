@@ -8,7 +8,7 @@ Town03 is a larger town with features of a downtown urban area. The road network
 | | |
 | --- | --- |
 | __Map name__ | `Town03_Opt` |
-| __In the default package__ | no: use a source build, or install it from a [content pack](map_content_packs.md) |
+| __In the default package__ | no: install a [content pack](map_content_packs.md) that contains it, such as AdditionalMaps, or use a source build |
 | __Size__ | about 400 x 415 m of roads |
 | __Spawn points__ | 265, from `world.get_map().get_spawn_points()` |
 | __Junctions__ | 31: the central roundabout, 4-way junctions and T-junctions, with 38 traffic lights and 20 stop signs |
@@ -43,7 +43,7 @@ The road network features a central roundabout and a residential cul-de-sac, alo
 The map features a prominent central roundabout with a modernist monument standing in water.
 
 ![town_03_roundabout](img/catalogue/maps/town03/town03_roundabout.webp)
-<div class="img-caption">The central roundabout and its monument, with the downtown towers behind it.</div>
+<div class="img-caption">The central roundabout and its monument, with a downtown tower beside it.</div>
 
 ---
 ## The raised metro track
@@ -51,7 +51,7 @@ The map features a prominent central roundabout with a modernist monument standi
 A raised metro track runs around the town on steel supports.
 
 ![town_03_metro](img/catalogue/maps/town03/town03_metro.webp)
-<div class="img-caption">The raised metro track along the edge of the town.</div>
+<div class="img-caption">The raised metro track along the edge of the town, above a row of wooden houses.</div>
 
 ---
 ## Gas station and large junction
@@ -75,7 +75,7 @@ On the edge of the town a road passes under the raised ground and the metro trac
 There are parks and a variety of commercial and residential buildings in varying styles: office towers downtown, apartment blocks, and detached houses around the cul-de-sac.
 
 ![town_03_downtown](img/catalogue/maps/town03/town03_downtown.webp)
-<div class="img-caption">Office towers and a paved plaza downtown.</div>
+<div class="img-caption">A paved plaza downtown, with the monument of the roundabout at the end of the street.</div>
 
 ![town_03_culdesac](img/catalogue/maps/town03/town03_culdesac.webp)
 <div class="img-caption">Detached houses around the residential cul-de-sac.</div>

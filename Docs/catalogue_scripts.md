@@ -2,8 +2,8 @@
 
 CARLA ships a set of ready-to-run Python scripts. Use them to see a feature working, to check an install, or as the starting point for your own code. They live in two directories of the repository or the package:
 
-- `PythonAPI/examples` — demonstrations of the API, each one runnable on its own.
-- `PythonAPI/util` — small utilities for driving a running server from a shell.
+- `PythonAPI/examples`: demonstrations of the API, each one runnable on its own.
+- `PythonAPI/util`: small utilities for driving a running server from a shell.
 
 Every script connects to `localhost:2000` unless `--host` and `--port` say otherwise, and takes `-h` for its full argument list. Start a server first.
 
@@ -13,7 +13,7 @@ python3 manual_control.py
 ```
 
 !!! Note
-    Running two scripts against the same server is normal — one driving traffic, another watching it. Only one of them may put the simulation in synchronous mode, though: if two clients both tick, they fight over the clock and the simulation stutters. Let whichever one owns the traffic run synchronously and leave the rest asynchronous.
+    Running two scripts against the same server is normal: one driving traffic, another watching it. Only one of them may put the simulation in synchronous mode, though: if two clients both tick, they fight over the clock and the simulation stutters. Let whichever one owns the traffic run synchronously and leave the rest asynchronous.
 
 - [__Drive and look around__](#drive-and-look-around)
 - [__Traffic__](#traffic)
@@ -51,7 +51,7 @@ python3 manual_control.py --res 1280x720 --autopilot
 | Script | What it does |
 | ------ | ------------ |
 | `generate_traffic.py` | Fills the map with vehicles and pedestrians on the Traffic Manager. `-n` vehicles, `-w` walkers, `--hybrid` for hybrid physics, `--asynch` to leave the simulation asynchronous. |
-| `automatic_control.py` | Drives one vehicle to a destination with a [navigation agent](core_agents.md), replanning when it arrives. |
+| `automatic_control.py` | Drives one vehicle to a destination with a [traffic agent](core_agents.md), replanning when it arrives. |
 | `invertedai_traffic.py` | Replaces the Traffic Manager with InvertedAI's behaviour models. See [InvertedAI](inverted_ai.md). |
 
 ```sh
@@ -71,7 +71,7 @@ python3 generate_traffic.py -n 80 -w 40
 | `visualize_radar.py` | Radar returns drawn in the world as coloured points. |
 | `dvs_test.py` | A quick check that the DVS camera produces events. |
 | `interpolate_camera.py` | Moves a camera smoothly through keypoints read from an XML file, for repeatable fly-throughs. |
-| `rain_lens_demo.py` | Rain on the camera, including the droplets on the lens. |
+| `rain_lens_demo.py` | Rain on the camera, including the droplets on the lens. Loads `--map` (`Town10HD_Opt` by default) when it starts, replacing the current map. |
 
 ---
 
@@ -107,8 +107,9 @@ python3 ../util/config.py -m Town05_Opt
 | Script | What it does |
 | ------ | ------------ |
 | `rig_perf_demo.py` | Measures the delivered frame rate of an N-camera rig, then replays the run into a labelled grid video. |
-| `lw_suite.py`, `lightweather_test.py` | Functional tests of the light and weather API. |
+| `lw_suite.py`, `lightweather_test.py` | Functional tests of the light and weather API. They save their captures as PNG files in the current directory. The last test of `lw_suite.py`, `l10`, reloads the map; leave it out with `--only`. |
 | `dvs_suite.py` | DVS camera tests: synchronous mode, attributes, resolution and lifecycle. |
+| `deterministic_collisions.py` | Repeats a car-bicycle crash and reports whether every run ends the same, with [deterministic collisions](core_synchrony.md#deterministic-collisions) or, with `--no-deterministic`, without them. Reloads the map. |
 | `autoware_demo.py` | The TIER IV sensor-kit rig, for the [Autoware](autoware.md) integration. |
 
 ---
@@ -119,7 +120,7 @@ Everything in `PythonAPI/util`, run from that directory:
 
 | Script | What it does |
 | ------ | ------------ |
-| `config.py` | Map, rendering, time step and simulation settings — see above. |
+| `config.py` | Map, rendering, time step and simulation settings; see above. |
 | `extract_spawn_points.py` | Writes the map's spawn points to a CSV. |
 | `spectator_transform.py` | Prints or sets the spectator's transform, for repeatable viewpoints. |
 | `show_topology.py`, `show_junctions.py`, `show_crosswalks.py` | Draw the road graph, the junctions and the crosswalks over the map. |

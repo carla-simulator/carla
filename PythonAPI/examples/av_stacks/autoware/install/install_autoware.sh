@@ -20,7 +20,8 @@
 #   0.45.1  TIER IV-validated baseline for CARLA native ROS2 (Humble / 22.04
 #           source build). Default when ROS_DISTRO=humble.
 #   1.9.0   current Autoware release (Jazzy is the upstream Docker default).
-#           Default when ROS_DISTRO=jazzy and for --docker.
+#           Default when ROS_DISTRO=jazzy. --docker pulls the rolling
+#           universe[-cuda]-<distro> tag unless --version is given.
 #
 # Why manual rosdep instead of the upstream ansible dev-env playbook:
 #   docs.autoware.org's canonical path runs `ansible-playbook

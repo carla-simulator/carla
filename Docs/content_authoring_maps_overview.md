@@ -25,7 +25,7 @@ __Ship a map as a content pack__
 - [__Add the map, OpenDRIVE and navigation files to a pack__](content_authoring_packs.md#3-add-maps-sidecar-files-and-catalogs)
 - [__Build the pack against a release__](content_authoring_packs.md#4-build-the-pack-against-a-release)
 - [__Install the pack and load the map__](content_authoring_packs.md#installing-a-pack)
-- [__Towns available as content packs__](map_content_packs.md) — the CARLA towns the package does not ship
+- [__Additional maps__](map_content_packs.md): the CARLA towns the package does not ship
 
 __Road networks with no scenery__
 

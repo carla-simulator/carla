@@ -2,6 +2,9 @@
 
 In this tutorial we describe how to manually control and animate the skeletons of walkers from the CARLA Python API. The reference of all classes and methods available can be found at [Python API reference](python_api.md).
 
+![hands_pose](img/tuto_walker_skeletons/hands_pose.webp)
+<div class="img-caption">The same walker before and after the example on this page. Left, its default animation. Right, the custom pose shown with <code>show_pose()</code>: both hands rolled 90 degrees and turned in against the hips.</div>
+
 - [__Walker skeleton structure__](#walker-skeleton-structure)
 - [__Manually control walker bones__](#manually-control-walker-bones)
 
@@ -86,13 +89,15 @@ world.apply_settings(settings)
 
 ### Spawn a walker
 
-Spawn a random walker at one of the map's spawn points
+Spawn a random walker on the navigation mesh. The point returned lies on the ground, so it is raised 1 m: at ground height the walker's capsule collides with the pavement and the spawn fails.
 
 ```py
 blueprint = random.choice(world.get_blueprint_library().filter('walker.*'))
 
 # Pedestrians belong on the navigation mesh, not on a vehicle spawn point
-spawn_point = carla.Transform(world.get_random_location_from_navigation())
+location = world.get_random_location_from_navigation()
+location.z += 1.0
+spawn_point = carla.Transform(location)
 walker = world.try_spawn_actor(blueprint, spawn_point)
 if walker is None:
     raise RuntimeError('could not spawn the walker, try another location')
@@ -130,7 +135,10 @@ walker.set_bones(control)
 walker.show_pose()
 ```
 
-To animate over time, send a new pose each tick and blend it in rather than snapping to it:
+To animate over time, send a new pose each tick and blend it in rather than snapping to it. The blend factor below climbs from 0 to 1 over the first 50 ticks (2.5 s at 0.05 s per tick), then holds:
+
+![blend_pose](img/tuto_walker_skeletons/blend_pose.webp)
+<div class="img-caption">The loop below at three moments: the default animation before it starts, <code>blend_pose(0.5)</code> halfway through the blend, and <code>blend_pose(1.0)</code> with the custom pose fully shown.</div>
 
 ```py
 for step in range(100):

@@ -114,9 +114,14 @@ with nothing happening, that is the symptom. Options:
 # keyboard control, in a second terminal
 python3 "$SCENARIO_RUNNER_ROOT/manual_control.py"
 
-# or attach to an existing ego by role name
-python3 "$SCENARIO_RUNNER_ROOT/manual_control.py" -a --rolename=ego_vehicle
+# or hand the ego to the autopilot instead of driving it
+python3 "$SCENARIO_RUNNER_ROOT/manual_control.py" -a
 ```
+
+`manual_control.py` attaches to the vehicle whose `role_name` equals `--rolename`,
+default `hero`, which is the ego role ScenarioRunner uses, so no flag is needed to
+find the ego. `-a`/`--autopilot` only switches on the autopilot. It needs
+`pygame`, which `requirements.txt` does not install: `pip install pygame`.
 
 `--agent` is **not** accepted with `--scenario` — ScenarioRunner rejects the
 combination ("Agents are currently only compatible with route scenarios"). To
@@ -168,7 +173,7 @@ Solution: drop `RELOAD=0`, or load the map first with [[load-map]].
 
 **Problem: nothing moves, run exits immediately**
 Cause: no driver for the ego (see Step 4).
-Solution: `manual_control.py`, or route mode with an agent.
+Solution: `manual_control.py` (add `-a` for autopilot), or route mode with an agent.
 
 **Problem: a config is listed but the run dies constructing the scenario**
 Cause: the XML names a `type` with no scenario class behind it. The name may still
@@ -190,10 +195,12 @@ stalled.
 Solution: raise `TIMEOUT`, check the ego is actually being driven, and confirm
 the server is not rendering at 2 fps (`-nullrhi`/`-quality-level=Low` help).
 
-**Problem: `AttributeError` in py_trees, or unicode errors with `DEBUG=1`**
-Cause: py_trees 2.x, or non-UTF-8 stdout.
-Solution: `pip install py-trees==0.8.3`; `env.sh` already exports
-`PYTHONIOENCODING=utf-8`.
+**Problem: `AttributeError` or `TypeError` in py_trees, or unicode errors with `DEBUG=1`**
+Cause: the installed py_trees does not match the one this checkout pins, or
+non-UTF-8 stdout. Behaviour trees do not survive the 0.8 to 2.x jump: `ue58-dev`
+is on 2.x, the older branches on 0.8.3.
+Solution: `pip install -r $SCENARIO_RUNNER_ROOT/requirements.txt`; `env.sh`
+already exports `PYTHONIOENCODING=utf-8`.
 
 ## Outputs
 

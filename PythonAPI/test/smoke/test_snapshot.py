@@ -14,9 +14,7 @@ from . import SyncSmokeTest
 class TestSnapshot(SyncSmokeTest):
     def test_spawn_points(self):
         print("TestSnapshot.test_spawn_points")
-        self.world = self.client.reload_world()
-        # workaround: give time to UE4 to clean memory after loading (old assets)
-        time.sleep(5)
+        self.world = self.reload_world()
 
         # Check why the world settings aren't applied after a reload
         self.settings = self.world.get_settings()
@@ -26,10 +24,19 @@ class TestSnapshot(SyncSmokeTest):
             fixed_delta_seconds=0.05)
         self.world.apply_settings(settings)
 
-        spawn_points = self.world.get_map().get_spawn_points()[:20]
-        vehicles = self.world.get_blueprint_library().filter('vehicle.*')
-        batch = [(random.choice(vehicles), t) for t in spawn_points]
-        batch = [carla.command.SpawnActor(*args) for args in batch]
+        # Spawn points can sit closer together than a vehicle is long, so
+        # space them by the largest of the vehicles actually picked.
+        vehicles = self.filter_vehicles_for_old_towns(
+            self.world.get_blueprint_library().filter('vehicle.*'))
+        chosen = [random.choice(vehicles) for _ in range(20)]
+        radius = max(self.vehicle_spawn_radius(bp)
+                     for bp in {bp.id: bp for bp in chosen}.values())
+        spawn_points = self.spaced_spawn_points(
+            self.world.get_map().get_spawn_points(), 2.0 * radius + 0.5)[:20]
+        self.assertEqual(len(spawn_points), len(chosen))
+
+        batch = [carla.command.SpawnActor(bp, t)
+                 for bp, t in zip(chosen, spawn_points)]
         response = self.client.apply_batch_sync(batch, False)
 
         self.assertFalse(any(x.error for x in response))

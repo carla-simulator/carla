@@ -157,19 +157,19 @@ INIT = {
 }
 
 BEHAVIOR = {
-    "minimal": '''        root = py_trees.composites.Sequence("{name}")
+    "minimal": '''        root = py_trees.composites.Sequence({seq_args})
         root.add_child(InTriggerDistanceToVehicle(
             self.other_actors[0], self.ego_vehicles[0], 20))
         root.add_child(Idle(3))
         root.add_child(ActorDestroy(self.other_actors[0]))
         return root''',
     "follow_leading_vehicle": '''        # Drive the leader, then stop it, then wait for the ego to close in.
-        root = py_trees.composites.Sequence("{name}")
+        root = py_trees.composites.Sequence({seq_args})
         root.add_child(ActorTransformSetter(self.other_actors[0], self._leader_transform))
 
         drive = py_trees.composites.Parallel(
             "leader drives until the ego is near",
-            policy=py_trees.common.ParallelPolicy.SUCCESS_ON_ONE)
+            policy={success_on_one})
         drive.add_child(WaypointFollower(self.other_actors[0], self._speed))
         drive.add_child(InTriggerDistanceToVehicle(
             self.other_actors[0], self.ego_vehicles[0], 25))
@@ -179,7 +179,7 @@ BEHAVIOR = {
         root.add_child(DriveDistance(self.ego_vehicles[0], 20))
         root.add_child(ActorDestroy(self.other_actors[0]))
         return root''',
-    "cut_in": '''        root = py_trees.composites.Sequence("{name}")
+    "cut_in": '''        root = py_trees.composites.Sequence({seq_args})
         root.add_child(InTriggerDistanceToVehicle(
             self.other_actors[0], self.ego_vehicles[0], 30))
 
@@ -190,13 +190,13 @@ BEHAVIOR = {
         root.add_child(DriveDistance(self.ego_vehicles[0], 30))
         root.add_child(ActorDestroy(self.other_actors[0]))
         return root''',
-    "pedestrian": '''        root = py_trees.composites.Sequence("{name}")
+    "pedestrian": '''        root = py_trees.composites.Sequence({seq_args})
         root.add_child(InTriggerDistanceToVehicle(
             self.other_actors[0], self.ego_vehicles[0], 25))
 
         cross = py_trees.composites.Parallel(
             "walker crosses",
-            policy=py_trees.common.ParallelPolicy.SUCCESS_ON_ONE)
+            policy={success_on_one})
         cross.add_child(KeepVelocity(self.other_actors[0], 1.5))
         cross.add_child(DriveDistance(self.other_actors[0], 8))
         root.add_child(cross)
@@ -220,7 +220,11 @@ XML = '''<?xml version="1.0"?>
 </scenarios>
 '''
 
+# Towns the ue58-dev example configs use (the classic towns ship as _Opt on UE5).
+UE58_TOWNS = {"Town01_Opt", "Town02_Opt", "Town03_Opt", "Town04_Opt", "Town05_Opt", "Town10HD_Opt"}
+
 # Sensible ego spawn points per town, so the scaffold runs before being edited.
+# An _Opt variant has the same layout, so it falls back to its base town's entry.
 SPAWNS = {
     "Town01": (338.7, 226.7, 0.5, 270),
     "Town02": (132.0, 215.0, 0.5, 90),
@@ -236,6 +240,28 @@ def snake(name: str) -> str:
     return re.sub(r"(?<!^)(?=[A-Z])", "_", name).lower()
 
 
+def pytrees_syntax(root: str | None) -> dict:
+    """
+    The composite syntax the checkout's pinned py_trees accepts.
+
+    2.x requires an explicit `memory` on Sequence and a policy object, so a
+    scenario written for one major version does not load on the other.
+    """
+    pin = ""
+    for base in (root, os.environ.get("SCENARIO_RUNNER_ROOT")):
+        req = Path(base) / "requirements.txt" if base else None
+        if req and req.is_file():
+            m = re.search(r"^py-trees==([0-9.]+)", req.read_text(), re.M)
+            if m:
+                pin = m.group(1)
+                break
+    if pin.startswith("0."):
+        return {"seq_args": '"{name}"',
+                "success_on_one": "py_trees.common.ParallelPolicy.SUCCESS_ON_ONE"}
+    return {"seq_args": 'name="{name}", memory=True',
+            "success_on_one": "py_trees.common.ParallelPolicy.SuccessOnOne()"}
+
+
 def sr_root(explicit: str | None) -> Path:
     for c in [explicit, os.environ.get("SCENARIO_RUNNER_ROOT"), os.getcwd(),
               str(Path.home() / "scenario_runner")]:
@@ -249,8 +275,8 @@ def branch(root: Path) -> str:
 
     The branch name is the fast path, but it is "HEAD" in a detached checkout, a
     worktree, a tarball or a docker image — so fall back to a content probe.
-    `srunner/scenic/` exists only on ue5-master, and change_lane.py exists on
-    every branch except ue5-master.
+    `srunner/scenic/` exists on ue5-master and ue58-dev and change_lane.py on
+    neither; ue58-dev's example configs name _Opt towns, ue5-master's do not.
     """
     import subprocess
 
@@ -259,8 +285,14 @@ def branch(root: Path) -> str:
     if name and name != "HEAD":
         return name
     if (root / "srunner" / "scenic").is_dir() and not (root / "srunner" / "scenarios" / "change_lane.py").is_file():
-        return "ue5-master"
+        opt = any(re.search(r'town="Town0[1-9]_Opt"', f.read_text(errors="replace"))
+                  for f in (root / "srunner" / "examples").glob("*.xml"))
+        return "ue58-dev" if opt else "ue5-master"
     return name or "unknown"
+
+
+def is_ue58(br: str) -> bool:
+    return br.startswith("ue58")
 
 
 def do_scaffold(args) -> None:
@@ -283,15 +315,22 @@ def do_scaffold(args) -> None:
     if br == "ue5-master" and town != "Town10HD_Opt":
         print(f"WARNING branch is ue5-master: CARLA 0.10.0 only ships Town10HD_Opt, "
               f"so town={town} will not load. Use --town Town10HD_Opt.")
-    ego = "vehicle.lincoln.mkz" if br == "ue5-master" else "vehicle.lincoln.mkz_2017"
-    x, y, z, yaw = SPAWNS.get(town, (0.0, 0.0, 0.5, 0))
+    if is_ue58(br) and town not in UE58_TOWNS:
+        hint = f"{town}_Opt" if f"{town}_Opt" in UE58_TOWNS else "Town10HD_Opt"
+        print(f"WARNING branch is {br}: its configs use {', '.join(sorted(UE58_TOWNS))}, "
+              f"so town={town} may not load. Use --town {hint}.")
+    ego = "vehicle.lincoln.mkz" if (br == "ue5-master" or is_ue58(br)) else "vehicle.lincoln.mkz_2017"
+    base = town[:-4] if town.endswith("_Opt") and town not in SPAWNS else town
+    x, y, z, yaw = SPAWNS.get(base, (0.0, 0.0, 0.5, 0))
 
+    _syntax = pytrees_syntax(args.root)
+    _syntax["seq_args"] = _syntax["seq_args"].format(name=name)
     py_path.write_text(BODY.format(
         name=name,
         blurb=TEMPLATES[args.template],
         timeout=args.timeout,
         init_body=INIT[args.template],
-        behavior_body=BEHAVIOR[args.template].format(name=name),
+        behavior_body=BEHAVIOR[args.template].format(name=name, **_syntax),
     ))
     xml_path.write_text(XML.format(name=name, town=town, x=x, y=y, z=z, yaw=yaw, ego=ego))
     print(f"wrote {py_path}")
@@ -394,7 +433,7 @@ def do_validate(args) -> None:
         if not s.findall("ego_vehicle"):
             bad(f"{n}: no <ego_vehicle> — ScenarioRunner has nothing to spawn")
         br = branch(sr)
-        valid = {"Town10HD_Opt"} if br == "ue5-master" else {
+        valid = {"Town10HD_Opt"} if br == "ue5-master" else UE58_TOWNS if is_ue58(br) else {
             "Town01", "Town02", "Town03", "Town04", "Town05", "Town06", "Town07",
             "Town10HD", "Town10HD_Opt", "Town11", "Town12", "Town13", "Town15"}
         (ok if town in valid else bad)(
@@ -406,7 +445,13 @@ def do_validate(args) -> None:
     if args.out:
         print("\nNOTE this scenario is outside the checkout: run it with "
               "--additionalScenario and --configFile,")
-        print("     since ScenarioRunner only globs $SCENARIO_RUNNER_ROOT/srunner/scenarios/*.py")
+        print("     since ScenarioRunner globs $SCENARIO_RUNNER_ROOT/srunner/scenarios/*.py")
+        root_dir = os.environ.get("SCENARIO_RUNNER_ROOT", "")
+        if os.path.isfile(os.path.join(root_dir, "srunner/tools/scenario_class_loader.py")):
+            print("     Both flags also take a folder, and --route sees these classes too.")
+        else:
+            print("     This checkout's --route mode does not see them: a route naming this")
+            print("     scenario needs the file inside srunner/scenarios/.")
     print("\nvalidation " + ("OK" if rc == 0 else "FAILED"))
     sys.exit(rc)
 

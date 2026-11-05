@@ -65,7 +65,7 @@ fi
 export SCENARIO_RUNNER_ROOT="${SCENARIO_RUNNER_ROOT:-}"
 
 if [ -z "${CARLA_ROOT:-}" ]; then
-  for _c in "${CARLA_TARGET:-}" "${CARLA_UE5_ROOT:-}" "${CARLA_PACKAGE_ROOT:-}" "${CARLA_UE4_ROOT:-}"; do
+  for _c in "${CARLA_TARGET:-}" "${CARLA_UE58_ROOT:-}" "${CARLA_UE5_ROOT:-}" "${CARLA_PACKAGE_ROOT:-}" "${CARLA_UE4_ROOT:-}"; do
     if [ -n "${_c}" ] && [ -d "${_c}/PythonAPI/carla" ]; then CARLA_ROOT="${_c}"; break; fi
   done
 fi

@@ -122,17 +122,17 @@ inspect)
   fi
 
   echo "== Binaries =="
-  SH="${P}/Linux/CarlaUnreal.sh"
+  SH="${P}/CarlaUnreal.sh"
   [ -f "${SH}" ] && ok "launcher CarlaUnreal.sh" || bad "launcher ${SH} missing"
-  BIN="$(ls -1 "${P}"/Linux/CarlaUnreal/Binaries/Linux/CarlaUnreal-Linux-* 2>/dev/null | head -1)"
+  BIN="$(ls -1 "${P}"/CarlaUnreal/Binaries/Linux/CarlaUnreal-Linux-* 2>/dev/null | head -1)"
   if [ -n "${BIN}" ]; then
     ok "server binary $(basename "${BIN}") ($(du -h "${BIN}" | cut -f1))"
   else
-    bad "no CarlaUnreal-Linux-* binary under Linux/CarlaUnreal/Binaries/Linux"
+    bad "no CarlaUnreal-Linux-* binary under CarlaUnreal/Binaries/Linux"
   fi
 
   echo "== Pak container =="
-  PAKS="${P}/Linux/CarlaUnreal/Content/Paks"
+  PAKS="${P}/CarlaUnreal/Content/Paks"
   if [ -d "${PAKS}" ]; then
     for f in pakchunk0-Linux.pak pakchunk0-Linux.ucas pakchunk0-Linux.utoc global.ucas global.utoc; do
       if [ -f "${PAKS}/${f}" ]; then
@@ -229,13 +229,14 @@ inspect)
   TGZ="$(ls -1t "${CARLA_UE58_ROOT}"/Build/*/Package/*.tar.gz 2>/dev/null | head -1)"
   [ -n "${TGZ}" ] && ok "$(basename "${TGZ}") ($(du -h "${TGZ}"|cut -f1))" || warn "no .tar.gz archive"
 
-  echo "== Packaged-server limitations (measured) =="
-  warn "get_available_maps() returns [] from a package: GetAllMapNames() is a raw"
-  warn "  FindFilesRecursive(\"*.umap\") that cannot see inside a .pak."
-  warn "load_world() resolves ONLY /Game/Carla/Maps/<Name> (FindMapPath's single pak"
-  warn "  fallback), so nested large maps like Town12/Town12 fail and imported maps"
-  warn "  under /Game/<Pkg>/Maps/ fail. Small maps load by exact name."
-  warn "get_world(), spawning and navigation DO work against a packaged server."
+  echo "== Packaged-server behaviour (measured) =="
+  ok "get_available_maps() lists the cooked maps; discovery goes through the"
+  ok "  asset registry, which sees inside a .pak (CarlaStatics.cpp, 60fd70e44)."
+  ok "load_world() resolves them, nested ones included: a twin at"
+  ok "  Carla/Maps/Twins/<Name>/<Name> loads by leaf name and by relative path."
+  ok "get_world(), spawning and navigation work against a packaged server."
+  warn "The asset registry asserts off the game thread, so an off-thread call"
+  warn "  gets an empty list."
 
   echo "== Result =="
   [ "$rc" -eq 0 ] && echo "  package looks consistent (warnings are non-blocking)" \
@@ -245,7 +246,7 @@ inspect)
 
 list)
   P="$(pkg_root)"
-  PAK="${P}/Linux/CarlaUnreal/Content/Paks/pakchunk0-Linux.pak"
+  PAK="${P}/CarlaUnreal/Content/Paks/pakchunk0-Linux.pak"
   [ -f "${PAK}" ] || { echo "no pak at ${PAK}" >&2; exit 3; }
   PAT="${1:-Carla/Maps}"
   echo "# strings matching '${PAT}' in $(basename "${PAK}")"

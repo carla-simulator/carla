@@ -82,33 +82,39 @@ static void SetTelemetryWheels(
 }
 
 static auto GetForwardGearRatios(const carla::rpc::VehiclePhysicsControl &self) {
-  auto &gears = self.forward_gear_ratios;
-  boost::python::object get_iter = boost::python::iterator<std::vector<float>>();
-  boost::python::object iter = get_iter(gears);
-  return boost::python::list(iter);
+  // std::vector<float> has no registered converter, unlike the vectors of
+  // bound types below, so the list is built element by element.
+  boost::python::list gears;
+  for (float gear : self.forward_gear_ratios) {
+    gears.append(gear);
+  }
+  return gears;
 }
 
 static void SetForwardGearRatios(carla::rpc::VehiclePhysicsControl &self, const boost::python::list &list) {
   std::vector<float> gears;
   auto length = boost::python::len(list);
   for (auto i = 0u; i < length; ++i) {
-    gears.push_back(boost::python::extract<float &>(list[i]));
+    gears.push_back(boost::python::extract<float>(list[i]));
   }
   self.forward_gear_ratios = gears;
 }
 
 static auto GetReverseGearRatios(const carla::rpc::VehiclePhysicsControl &self) {
-  auto &gears = self.reverse_gear_ratios;
-  boost::python::object get_iter = boost::python::iterator<std::vector<float>>();
-  boost::python::object iter = get_iter(gears);
-  return boost::python::list(iter);
+  // std::vector<float> has no registered converter, unlike the vectors of
+  // bound types below, so the list is built element by element.
+  boost::python::list gears;
+  for (float gear : self.reverse_gear_ratios) {
+    gears.append(gear);
+  }
+  return gears;
 }
 
 static void SetReverseGearRatios(carla::rpc::VehiclePhysicsControl &self, const boost::python::list &list) {
   std::vector<float> gears;
   auto length = boost::python::len(list);
   for (auto i = 0u; i < length; ++i) {
-    gears.push_back(boost::python::extract<float &>(list[i]));
+    gears.push_back(boost::python::extract<float>(list[i]));
   }
   self.reverse_gear_ratios = gears;
 }

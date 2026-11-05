@@ -213,7 +213,7 @@
       - param_name: keep_actors
         type: bool
         doc: >
-          True if you want autoremove all actors from the replayer, or False to keep them.
+          If False, the replay runs to its end before stopping, so the actors the recording destroys are removed and the others stay. If True, every replayed actor stays as it is.
       doc: >
         Stop current replayer.
     # --------------------------------------

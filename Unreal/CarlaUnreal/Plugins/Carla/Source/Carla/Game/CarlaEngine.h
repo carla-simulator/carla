@@ -25,6 +25,7 @@
 
 #include <util/ue-header-guard-begin.h>
 #include "Misc/CoreDelegates.h"
+#include "Engine/World.h"
 #include <util/ue-header-guard-end.h>
 
 #include <mutex>
@@ -105,6 +106,10 @@ private:
 
   void OnEpisodeSettingsChanged(const FEpisodeSettings &Settings);
 
+  /// Applies FEpisodeSettings::bDeterministicCollisions to the world about to
+  /// be created.
+  void OnPreWorldInitialization(UWorld *World, const UWorld::InitializationValues IVS);
+
   void ResetSimulationState();
 
   bool bIsRunning = false;
@@ -128,6 +133,12 @@ private:
   FDelegateHandle OnPostTickHandle;
 
   FDelegateHandle OnEpisodeSettingsChangeHandle;
+
+  FDelegateHandle OnPreWorldInitializationHandle;
+
+  /// Value of p.Chaos.AccelerationStructureUseDynamicTree before deterministic
+  /// collisions changed it; unset while they are off.
+  TOptional<int32> DynamicTreeBeforeDeterministicCollisions;
 
   bool bIsPrimaryServer = true;
   bool bNewConnection = false;

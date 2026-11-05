@@ -229,6 +229,10 @@ def main():
             # set as not invincible
             if walker_bp.has_attribute('is_invincible'):
                 walker_bp.set_attribute('is_invincible', 'false')
+            # 11% of the pedestrians that support it ride a wheelchair; the
+            # blueprint is reused between walkers, so set the flag both ways
+            if walker_bp.has_attribute('can_use_wheelchair') and walker_bp.get_attribute('can_use_wheelchair').as_bool():
+                walker_bp.set_attribute('use_wheelchair', 'true' if random.randint(0, 100) < 11 else 'false')
             # set the max speed
             if walker_bp.has_attribute('speed'):
                 if (random.random() > percentagePedestriansRunning):

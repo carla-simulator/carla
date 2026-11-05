@@ -32,18 +32,17 @@ Relevant configure-time options:
 Build/<preset>/Package/
 ├── Carla-0.10.0-Linux-Shipping/
 │   ├── VERSION                       carla / content / engine git hashes
-│   ├── CHANGELOG  LICENSE  README
-│   ├── Linux/
-│   │   ├── CarlaUnreal.sh            2-line shim -> the binary below
-│   │   ├── CarlaUnreal/
-│   │   │   ├── Binaries/Linux/CarlaUnreal-Linux-Shipping   (192 MB)
-│   │   │   └── Content/Paks/
-│   │   │       ├── pakchunk0-Linux.pak    237 MB   loose/UFS entries
-│   │   │       ├── pakchunk0-Linux.ucas   9.6 GB   IoStore container
-│   │   │       ├── pakchunk0-Linux.utoc   6.8 MB   index into the .ucas
-│   │   │       ├── global.ucas           3.2 MB
-│   │   │       └── global.utoc           4 KB
-│   │   └── Engine/
+│   ├── BaseRelease  CHANGELOG  LICENSE  NOTICES.txt  README
+│   ├── CarlaUnreal.sh                2-line shim -> the binary below
+│   ├── CarlaUnreal/
+│   │   ├── Binaries/Linux/CarlaUnreal-Linux-Shipping   (192 MB)
+│   │   └── Content/Paks/
+│   │       ├── pakchunk0-Linux.pak    237 MB   loose/UFS entries
+│   │       ├── pakchunk0-Linux.ucas   9.6 GB   IoStore container
+│   │       ├── pakchunk0-Linux.utoc   6.8 MB   index into the .ucas
+│   │       ├── global.ucas           3.2 MB
+│   │       └── global.utoc           4 KB
+│   ├── Engine/
 │   ├── PythonAPI/
 │   │   ├── carla/dist/carla-0.10.0-cp310-cp310-linux_x86_64.whl
 │   │   ├── examples/                 25 scripts

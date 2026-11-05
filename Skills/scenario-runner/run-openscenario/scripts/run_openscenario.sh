@@ -25,7 +25,7 @@ FILE="${2:-}"
 
 case "${CMD}" in
 list)
-  # Examples moved between directories on ue5-master, so look in both.
+  # Examples moved between directories on ue5-master/ue58-dev, so look in both.
   for d in examples osc_examples; do
     [ -d "${SCENARIO_RUNNER_ROOT}/srunner/${d}" ] || continue
     n1=$(find "${SCENARIO_RUNNER_ROOT}/srunner/${d}" -maxdepth 1 -name '*.xosc' | wc -l)

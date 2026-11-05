@@ -94,6 +94,7 @@ def generate_json_package(folder, package_name, use_carla_materials):
             else:
                 map_dict['tile_size'] = 2000
                 map_dict['tiles'] = tiles
+                map_dict['merge_tiles'] = True
 
             # write
             json_maps.append(map_dict)
@@ -302,7 +303,8 @@ def generate_package_file(package_name, props, maps):
         output_json["maps"].append({
             "name": umap["name"],
             "path": path,
-            "use_carla_materials": use_carla_materials
+            "use_carla_materials": use_carla_materials,
+            "merge_tiles": umap.get("merge_tiles", False)
         })
 
     package_config_path = os.path.join(CARLA_ROOT_PATH, "Unreal", "CarlaUnreal", "Content", package_name, "Config")
@@ -337,7 +339,7 @@ def import_assets(package_name, json_dirname, props, maps, do_tiles, tile_size, 
     """Same commandlet is used for importing assets and also maps."""
     commandlet_name = "ImportAssets"
 
-    if do_tiles:
+    if batch_size > 0 and len(maps) > 0 and "tiles" in maps[0]:
         for umap in maps:
             # import groups of tiles to prevent unreal from using too much memory
             map_template = {}
@@ -433,6 +435,9 @@ def import_assets_from_json_list(json_list, batch_size):
                     tile_size = maps[0]["tile_size"]
             if "props" in data:
                 props = data["props"]
+            for umap in maps:
+                if "tiles" in umap:
+                    umap["merge_tiles"] = True
 
             package_name = filename.replace(".json", "")
 
@@ -441,7 +446,7 @@ def import_assets_from_json_list(json_list, batch_size):
             thr.start()
 
             if (len(maps) > 0 and "tiles" in maps[0]):
-                import_assets(package_name, dirname, props, maps, 1, tile_size, batch_size)
+                import_assets(package_name, dirname, props, maps, 0, 0, batch_size)
             else:
                 import_assets(package_name, dirname, props, maps, 0, 0, 0)
 

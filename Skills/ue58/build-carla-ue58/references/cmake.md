@@ -24,7 +24,7 @@ and `bash scripts/build.sh options` — those read the tree, not this file.
 | `Config/OptionalModules.ini` `Ros2 ON` | `-DENABLE_ROS2=ON` at configure |
 | `UE4_ROOT` | `CARLA_UNREAL_ENGINE_PATH` |
 | `Unreal/CarlaUE4/` | `Unreal/CarlaUnreal/` |
-| `Dist/CARLA_*/LinuxNoEditor/CarlaUE4.sh` | `Build/<preset>/Package/Carla-<ver>-Linux-<cfg>/Linux/CarlaUnreal.sh` |
+| `Dist/CARLA_*/LinuxNoEditor/CarlaUE4.sh` | `Build/<preset>/Package/Carla-<ver>-Linux-<cfg>/CarlaUnreal.sh` |
 
 ## Presets
 
@@ -82,7 +82,6 @@ on every re-configure or they revert to the default.**
 | `ENABLE_ROS2` | **OFF** | native ROS 2 |
 | `ENABLE_ROS2_DEMO` | OFF | |
 | `ENABLE_RSS` | **OFF** | ad-rss-lib; why `sensor.other.rss` and the `Rss*` classes are absent |
-| `ENABLE_OSM2ODR` | **OFF** | |
 | `ENABLE_PYTORCH` | **OFF** | |
 | `ENABLE_PEP517` | ON | wheel build path |
 | `ENABLE_STREETMAP` | ON | fetches the StreetMap plugin (`ue5-dev-carla` tag) |

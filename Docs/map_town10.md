@@ -1,14 +1,14 @@
 # Town10
 
 ![town_10_slideshow](img/catalogue/maps/town10/town10montage.webp)
-<div class="img-caption">Town10HD_Opt from the default spectator position, from above, and at street level: the museum, a palm boulevard, the skyscrapers and the town houses.</div>
+<div class="img-caption">Town10HD_Opt from the default spectator position, from above, and at street level: the central intersection, the museum, a palm boulevard, the skyscrapers and the town houses.</div>
 
 Town10 mixes inner-city features: glossy skyscrapers and industrial buildings beside waterfront promenades, apartment blocks, hotels, public buildings and tree-lined boulevards. Its road network has a variety of junction arrangements, lane markings, crossings and signal types.
 
 | | |
 | --- | --- |
 | __Map name__ | `Town10HD_Opt` |
-| __In the default package__ | yes, and it is the map a server boots into |
+| __Package available__ | Base package; it is the map a server boots into |
 | __Size__ | about 225 x 210 m of roads |
 | __Spawn points__ | 155, from `world.get_map().get_spawn_points()` |
 
@@ -36,12 +36,20 @@ The road network is a grid with several kinds of junctions, among them a 4-way y
 <div class="img-caption">The road network of Town10HD_Opt from the Map API, with the index of each spawn point.</div>
 
 ---
+## The central intersection
+
+At the centre of the map, a wide intersection with a yellow box junction and two twisted sculptures is surrounded by skyscrapers.
+
+![town_10_crossroads](img/catalogue/maps/town10/town10crossroads.webp)
+<div class="img-caption">The central intersection, with its yellow box junction and the two twisted sculptures.</div>
+
+---
 ## Skyscrapers with commercial units
 
 A multitude of skyscrapers occupy the skyline and city blocks, with commercial units in the ground floors.
 
 ![town_10_skyscrapers](img/catalogue/maps/town10/town10skyscrapers.webp)
-<div class="img-caption">The skyscrapers of the Town10HD_Opt centre.</div>
+<div class="img-caption">The skyscrapers of the Town10HD_Opt centre, from the sidewalk.</div>
 
 ---
 ## Tree-lined boulevards
@@ -49,7 +57,7 @@ A multitude of skyscrapers occupy the skyline and city blocks, with commercial u
 Town10 has tree-lined boulevards adorned with tropical vegetation.
 
 ![town_10_tree_boulevard](img/catalogue/maps/town10/town10treeboulevard.webp)
-<div class="img-caption">A tree-lined boulevard with palm trees, leading to the museum.</div>
+<div class="img-caption">A boulevard with palm trees along its median, leading to the museum.</div>
 
 ---
 ## Public buildings with classical architecture
@@ -57,7 +65,7 @@ Town10 has tree-lined boulevards adorned with tropical vegetation.
 The map also includes public buildings with classical architecture styles such as the museum.
 
 ![town_10_museum](img/catalogue/maps/town10/town10museum.webp)
-<div class="img-caption">The museum, one of the public buildings in classical style.</div>
+<div class="img-caption">The museum, one of the public buildings in classical style, at the end of a street with palm trees.</div>
 
 ---
 ## Residential streets with town houses
@@ -65,4 +73,4 @@ The map also includes public buildings with classical architecture styles such a
 Town houses, similar to those of many North American cities, line some of the streets of Town10, with bus stops, street furniture and kerbside bins along the sidewalks.
 
 ![town_10_town_houses](img/catalogue/maps/town10/town10townhouses.webp)
-<div class="img-caption">A residential street with town houses and a bus stop, with traffic.</div>
+<div class="img-caption">A residential street with town houses, with traffic in both directions.</div>
