@@ -6,25 +6,33 @@
 
 """Constant velocity initialization with native maps and inert actor RPCs."""
 
+# The planner stores its speed internally in km/h; the actor command uses m/s.
+# pylint: disable=protected-access
+
 import os
 import sys
-from types import SimpleNamespace
 import unittest
+from types import SimpleNamespace
 
 import carla
 
 sys.path.insert(0, os.path.abspath(os.path.join(
     os.path.dirname(__file__), "..", "..", "carla")))
 
-from agents.navigation.constant_velocity_agent import ConstantVelocityAgent
+from agents.navigation.constant_velocity_agent import ConstantVelocityAgent  # pylint: disable=wrong-import-position
 
 
 class _Actors(list):
+    """Empty actor RPC result for a world without traffic lights."""
+
     def filter(self, _pattern):
+        """Return no actors for any requested type."""
         return []
 
 
 class TestConstantVelocityAgent(unittest.TestCase):
+    """Exercise initialization and restart with the real navigation planners."""
+
     @staticmethod
     def _agent(target_speed):
         xml = ('<OpenDRIVE><header revMajor="1" revMinor="4"><geoReference>'
@@ -57,6 +65,7 @@ class TestConstantVelocityAgent(unittest.TestCase):
         return agent, commands
 
     def test_initial_velocity_uses_metres_per_second(self):
+        """The first actor command converts the constructor's documented km/h."""
         for target_kmh in (0.0, 20.0, 36.0, 72.0):
             with self.subTest(target_kmh=target_kmh):
                 agent, commands = self._agent(target_kmh)
@@ -67,6 +76,7 @@ class TestConstantVelocityAgent(unittest.TestCase):
                 self.assertEqual(agent.get_local_planner()._target_speed, target_kmh)
 
     def test_restart_and_speed_changes_keep_the_initial_units(self):
+        """Initial and subsequent actor commands use the same velocity unit."""
         agent, commands = self._agent(36.0)
         agent.stop_constant_velocity()
         agent.restart_constant_velocity()
