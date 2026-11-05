@@ -110,7 +110,12 @@ using namespace std::chrono_literals;
           } while (!self->_state.compare_exchange(&prev, next));
 
           if(UpdateLights || HasMapChanged) {
-            self->_on_light_update_callbacks.Call(next);
+            // The LightManager queries the server here; a time-out or a dying Simulator must not terminate the process.
+            try {
+              self->_on_light_update_callbacks.Call(next);
+            } catch (const std::exception &e) {
+              log_error("failed to update the lights for the new snapshot:", e.what());
+            }
           }
 
           if(HasMapChanged) {
