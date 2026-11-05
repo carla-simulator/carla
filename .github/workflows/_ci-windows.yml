@@ -11,6 +11,11 @@ on:
       additional-maps:
         type: boolean
         default: true
+      release-version:
+        description: "Release version, e.g. 1.0: uploads to Windows/ as CARLA_<version>.zip instead of to Windows/Dev/ (empty: nightly)"
+        type: string
+        required: false
+        default: ""
       upload-package:
         type: boolean
         required: true
@@ -105,8 +110,12 @@ jobs:
       - name: Upload package
         if: inputs.upload-package == true
         id: upload_step
+        env:
+          RELEASE_VERSION: ${{ inputs.release-version }}
         run: |
-          IF "${{ inputs.upload-replace-latest }}"=="true" SET ARGS=--replace-latest
+          set ARGS=
+          IF "${{ inputs.upload-replace-latest }}"=="true" SET ARGS=%ARGS% --replace-latest
+          IF NOT "%RELEASE_VERSION%"=="" SET ARGS=%ARGS% --release-version %RELEASE_VERSION%
           call Util\Tools\Deploy.bat %ARGS% --summary-output "%GITHUB_OUTPUT%"
 
       - name: Write summary
@@ -115,3 +124,8 @@ jobs:
           echo ## [Windows] CARLA UE5 CI/CD Summary>> %GITHUB_STEP_SUMMARY%
           echo.>> %GITHUB_STEP_SUMMARY%
           echo - CARLA Package: ${{ steps.upload_step.outputs.package_uri }}>> %GITHUB_STEP_SUMMARY%
+          echo - Release metadata: ${{ steps.upload_step.outputs.release_metadata_uri }}>> %GITHUB_STEP_SUMMARY%
+          IF NOT "${{ steps.upload_step.outputs.latest_package_uri }}"=="" (
+            echo - Latest package: ${{ steps.upload_step.outputs.latest_package_uri }}>> %GITHUB_STEP_SUMMARY%
+            echo - Latest release metadata: ${{ steps.upload_step.outputs.latest_release_metadata_uri }}>> %GITHUB_STEP_SUMMARY%
+          )

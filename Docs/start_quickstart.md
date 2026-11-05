@@ -67,7 +67,7 @@ If you prefer to install CARLA by hand, follow the rest of this page.
 Download the desired CARLA package from GitHub:
 
 - [CARLA 1.0 on GitHub](https://github.com/carla-simulator/carla/releases/tag/1.0), with the release notes and every download.
-- Direct downloads: [Linux](https://downloads.carlasim.com/Linux/CARLA_1.0/CARLA_1.0.tar.gz) and its [additional maps package](https://downloads.carlasim.com/Linux/CARLA_1.0/CARLA_1.0_AdditionalMaps.tar.gz). [Additional maps](map_content_packs.md) tells how to install the maps.
+- Direct downloads: [Linux](https://downloads.carlasim.com/Linux/CARLA_1.0.tar.gz) and its [additional maps package](https://downloads.carlasim.com/Linux/AdditionalMaps_1.0.tar.gz). [Additional maps](map_content_packs.md) tells how to install the maps.
 
 This repository contains different versions of CARLA. You will find options to download the __current release__ with all the most recent fixes and features and __previous releases__. A __nightly build__ for Linux with all the developmental fixes and features is available at [downloads.carlasim.com](https://downloads.carlasim.com/Linux/Dev/CARLA_UE5_Latest.tar.gz) (the nightly build is the most unstable version of CARLA).
 
