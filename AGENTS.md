@@ -36,7 +36,7 @@ Project config is in [`.mcp.json`](.mcp.json); clients that read it get the
 tools automatically. Agents without MCP should read `Skills/` directly — the
 files are the source of truth either way.
 
-`.mcp.json` also registers `unreal-mcp` (`http://localhost:8000/mcp`), Epic's
+`.mcp.json` also registers `unreal-mcp` (`http://localhost:6256/mcp`), Epic's
 Unreal MCP server, which the CarlaUnreal editor starts on load. It acts on the
 open editor (actors, viewport camera, assets, output log), not on a running
 CARLA server, and is only up while the full editor is open — not in `-game` or
