@@ -49,11 +49,13 @@ private:
   virtual void ReleaseContentPack(const FString &MountPoint) override;
 
 protected:
+  // Transient: GetDefinitions() rebuilds these from the JSON catalogs every
+  // episode, and a saved copy bakes a stale catalog into the map.
 
-  UPROPERTY(EditAnywhere)
+  UPROPERTY(EditAnywhere, Transient)
   TArray<FActorDefinition> Definitions;
-  UPROPERTY(EditAnywhere, BlueprintReadWrite)
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Transient)
   TArray<FVehicleParameters> VehiclesParams;
-  UPROPERTY(EditAnywhere, BlueprintReadWrite)
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Transient)
   TArray<FVehicleParameters> MineVehiclesParams;
 };

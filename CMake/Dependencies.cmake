@@ -97,7 +97,6 @@ target_link_libraries (
 )
 
 
-
 # ==== ZLIB ====
 carla_dependency_option (ZLIB_BUILD_EXAMPLES OFF)
 carla_dependency_add (
@@ -215,33 +214,6 @@ carla_dependency_add (
   https://github.com/carla-simulator/recastnavigation/archive/refs/heads/${CARLA_RECAST_TAG}.zip
   https://github.com/carla-simulator/recastnavigation.git
 )
-
-
-
-if (ENABLE_OSM2ODR)
-  # ==== PROJ ====
-  carla_dependency_option (BUILD_TESTING OFF)
-  carla_dependency_option (ENABLE_TIFF OFF)
-  carla_dependency_option (ENABLE_CURL OFF)
-  carla_dependency_add (
-    proj
-    ${CARLA_PROJ_TAG}
-    https://github.com/OSGeo/PROJ/archive/refs/tags/${CARLA_PROJ_TAG}.zip
-    https://github.com/OSGeo/PROJ.git
-  )
-endif ()
-
-
-
-if (ENABLE_OSM2ODR)
-  # ==== XERCESC ====
-  carla_dependency_add (
-    xercesc
-    ${CARLA_XERCESC_TAG}
-    https://github.com/apache/xerces-c/archive/refs/tags/${CARLA_XERCESC_TAG}.zip
-    https://github.com/apache/xerces-c.git
-  )
-endif ()
 
 
 

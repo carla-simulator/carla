@@ -8,7 +8,7 @@ Town05 is an urban environment set against a backdrop of conifer-covered hills, 
 | | |
 | --- | --- |
 | __Map name__ | `Town05_Opt` |
-| __In the default package__ | no: use a source build, or install it from a [content pack](map_content_packs.md) |
+| __In the default package__ | no: install a [content pack](map_content_packs.md) that contains it, such as AdditionalMaps, or use a source build |
 | __Size__ | about 490 x 415 m of roads |
 | __Spawn points__ | 302, from `world.get_map().get_spawn_points()` |
 | __Junctions__ | 21: 13 four-way junctions and 8 T-junctions, with 54 traffic lights and 33 stop signs |
@@ -62,7 +62,7 @@ The town features numerous commercial buildings: office towers and large apartme
 In the middle of the town there is a building under construction, its concrete frame still open.
 
 ![town_05_construction](img/catalogue/maps/town05/town05_construction.webp)
-<div class="img-caption">The building under construction and its fenced site, with the car park and the market in the foreground.</div>
+<div class="img-caption">The building under construction, with the car park and the market stalls beside the road.</div>
 
 ---
 ## Car park and market
@@ -78,4 +78,4 @@ A car park and a market of colourful stalls occupy one city block.
 In one place the road passes beneath a commercial building.
 
 ![town_05_road_under_building](img/catalogue/maps/town05/town05_under_building.webp)
-<div class="img-caption">The road that passes under a long commercial building.</div>
+<div class="img-caption">The road beside the columns of a building raised over the street.</div>

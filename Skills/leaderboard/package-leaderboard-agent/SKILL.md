@@ -2,7 +2,7 @@
 name: package-leaderboard-agent
 description: Packages an agent for CARLA Leaderboard submission — builds the docker image with make_docker.sh (plain or ROS variant), checks the four required roots and the egg layout it assumes, sets the agent/track/routes environment inside the image, and verifies the image can import the stack and load the agent before submission. Use when the user asks to "build the leaderboard docker image", "submit to the leaderboard", "package my agent", or make_docker.sh fails.
 license: MIT
-compatibility: Linux with docker. Needs CARLA_ROOT, SCENARIO_RUNNER_ROOT, LEADERBOARD_ROOT and TEAM_CODE_ROOT set, plus CARLA_ROS_BRIDGE_ROOT for the ROS image. make_docker.sh requires eggs in $CARLA_ROOT/PythonAPI/carla/dist — a wheel-only CARLA tree fails.
+compatibility: Linux with docker. Needs CARLA_ROOT, LEADERBOARD_ROOT and TEAM_CODE_ROOT set (plus SCENARIO_RUNNER_ROOT for 1.0/2.0/2.1), plus CARLA_ROS_BRIDGE_ROOT for the ROS image. make_docker.sh requires eggs in $CARLA_ROOT/PythonAPI/carla/dist — a wheel-only CARLA tree fails.
 metadata:
   group: leaderboard
   prerequisites: scripts/check_env.sh

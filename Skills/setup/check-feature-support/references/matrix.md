@@ -87,7 +87,7 @@ how to re-check it after an upgrade, and what promoting it would take.
 | RSS | `sensor.other.rss` in the library (**measured**); `ENABLE_RSS:BOOL=OFF` in this cache (**measured**) | a build with `-DENABLE_RSS=ON`, then a run that produces an RSS response |
 | V2X | `sensor.other.v2x`, `sensor.other.v2x_custom` (**measured**); `ServerSideSensor.send()` (**measured**) | two actors exchanging a message, and the message format documented |
 | multi-GPU | `LibCarla/source/carla/multigpu/` (**read**); server accepts `-carla-primary-host`, `-carla-primary-port`, `-carla-secondary-port` (**read**) | two GPUs, or two machines; a primary/secondary pair actually rendering |
-| digital twins / OSM | `OpenDriveToMap.h`, `DigitalTwinsBaseWidget.h`, `MapGeneratorWidget.h`, `ProceduralBuildingUtilities.h`, `ProceduralWaterManager.h` (**read**); `ENABLE_OSM2ODR:BOOL=OFF` (**measured**) | these are editor **widgets**, not a CLI — a driving path has to be found first, plus `-DENABLE_OSM2ODR=ON` |
+| digital twins / OSM | `OpenDriveToMap.h`, `DigitalTwinsBaseWidget.h`, `MapGeneratorWidget.h`, `ProceduralBuildingUtilities.h`, `ProceduralWaterManager.h` (**read**) | these are editor **widgets**, not a CLI — a driving path has to be found first. The OSM to OpenDRIVE converter itself is always compiled in. | |
 | vehicle import (ue58) | pipeline understood; draft outside the library | the imported car spawns with 4 wheels and **does not move**; the physics-asset persistence fix is unverified |
 
 Note the asymmetry that makes RSS worth a special mention: the blueprint is

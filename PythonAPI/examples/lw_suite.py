@@ -12,6 +12,8 @@ from PIL import Image
 import carla
 
 OUT = "."
+# Server address, set from the command line in main().
+ADDRESS = ("127.0.0.1", 2000)
 
 
 def snap(world, tag, loc, rot):
@@ -271,7 +273,7 @@ def test_w3_all_presets(client, world):
 def test_pw1_broadcast_cost(client, world):
     """set_weather RPC latency with all lights + a second client connected."""
     print("== PW1 broadcast cost ==")
-    second = carla.Client("localhost", 3000)
+    second = carla.Client(*ADDRESS)
     second.set_timeout(10.0)
     second.get_world().get_lightmanager()  # force registration as light client
     lat = []
@@ -339,11 +341,14 @@ def test_l10_map_reload(client, world):
 
 
 def main():
+    global ADDRESS
     ap = argparse.ArgumentParser()
-    ap.add_argument("--port", type=int, default=3000)
+    ap.add_argument("--host", default="127.0.0.1")
+    ap.add_argument("-p", "--port", type=int, default=2000)
     ap.add_argument("--only", nargs="*", default=None)
     args = ap.parse_args()
-    client = carla.Client("localhost", args.port)
+    ADDRESS = (args.host, args.port)
+    client = carla.Client(*ADDRESS)
     client.set_timeout(60.0)
     world = client.get_world()
     print("server:", client.get_server_version(), "| map:", world.get_map().name)

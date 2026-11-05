@@ -8,9 +8,22 @@ A new map arrives with plain roads. The CARLA content library has the materials 
 ---
 ## Materials
 
-The CARLA content library has a multitude of useful materials ready to use to change the look of your maps. In your content browser, navigate to `Carla > Static > GenericMaterials`. In here you will find numerous materials you can use to alter the appearance of your map. 
+The surfaces of a CARLA map use instances of the master materials in `Content > Carla > Static > GenericMaterials > 000_Masters`. To dress a new map, drag the ready-made instances below onto its meshes to test them, or create an instance of the master and change its parameters.
 
-You can test the materials rapidly by dragging them onto map elements.
+| Surface | Master material | Ready-made instances |
+| --- | --- | --- |
+| Roads | `M_RoadMaster` | `GenericMaterials/Roads`: `MI_Road_Asphalt_A`, `MI_Road_Asphalt_B`, `MI_Road_Asphalt_B_Wet`, `MI_Road_Rural_A`. |
+| Lane markings | `M_RoadMaster`, with its `LaneMark` switch on | `GenericMaterials/Roads`: `MI_Road_Asphalt_B_LaneMarkingWhite`, `MI_Road_Asphalt_B_LaneMarkingYellow`, and the same pair for `MI_Road_Rural_A`. |
+| Sidewalks and curbs | `M_GeneralMaster` | `GenericMaterials/Sidewalk` (`MI_sidewalk_01`, `MI_Sidewalk_Residential` and the rest) and `GenericMaterials/Gutters_Curbs/Curb`. |
+| Grass and dirt | `M_GeneralMaster` | `GenericMaterials/Ground`: `MI_Grass_Park`, `MI_Grass_Cutted_Yard`, `MI_Dirt`. |
+| Landscape terrain | `M_AutomaterialLandscape_2MatMaster` and `M_AutomaterialLandscape_3MatMaster`, in `000_Masters/Landscape` | `GenericMaterials/Ground`: `MI_LargeLandscape_Highway`, `MI_LargeLandscape_Interurban`, `MI_LargeLandscape_Mountain`, `MI_LargeLandscape_Rural`. |
+| Decals over roads and sidewalks: cracks, potholes, oil, manholes | `M_DecalMaster` | The `DI_*` instances in `Content > Carla > Static > FX > Decals`. |
+| Water | The masters in `000_Masters/Water` | `GenericMaterials/Water`: `MI_Water_Lake`, `MI_Water_River`, `MI_Beach`. |
+
+![map_surfaces](img/content_authoring_maps_road_painter/map_surfaces.webp)
+<div class="img-caption">Map surfaces made with these materials, seen from a camera with the <code>Cinematic</code> profile: asphalt with lane markings and two curbs with sidewalk tiles and stone pavers on Town10HD_Opt, and dry grass beside a painted curb on Town15.</div>
+
+[Material customization](content_authoring_materials.md) explains each master: the textures it reads and the parameters of its instances. The road, general and decal masters are in [Road master](content_authoring_materials.md#road-master), [General master](content_authoring_materials.md#general-master) and [Decal master](content_authoring_materials.md#decal-master).
 
 ---
 ## Road painter
@@ -87,12 +100,12 @@ __3. Set the brush and stencil parameters.__
 
 There are a variety of stencils to choose from in `GenericMaterials/00_LegacyMaterials/Roads/RoadStencil/Alphas`. The stencil is used to paint the road according to your needs and can be adjusted using the following values:
 
-- _Stencil size_ — Size of the brush.
-- _Brush Strenght_ — Roughness of the outline.
-- _Spacebeween Brushes_ — Distance between strokes (the variable names keep their original spelling).
-- _Max Jitter_ — Size variation of the brush between strokes.
-- _Stencil_ — The brush to use.
-- _Rotation_ — Rotation applied to the stroke.
+- _Stencil size_: Size of the brush.
+- _Brush Strenght_: Roughness of the outline.
+- _Spacebeween Brushes_: Distance between strokes (the variable names keep their original spelling).
+- _Max Jitter_: Size variation of the brush between strokes.
+- _Stencil_: The brush to use.
+- _Rotation_: Rotation applied to the stroke.
 
 <br>
 ![materials_roadpaint_typesofbrushes](img/content_authoring_maps/road_brushes.webp)
@@ -102,16 +115,16 @@ __4. Apply each material to the desired portions of the road.__
 
 Choose where to apply the selected material via the buttons in the _Default_ section of the _Details_ panel:
 
-* _Paint all roads_ — Paint all the roads.
-* _Paint by actor_ — Paint a specific, selected actor.
-* _Paint over circle_ — Paint using a circular pattern, useful to provide variation.
-* _Paint over square_ — Paint using a square pattern, useful to provide variation.
+* _Paint all roads_: Paint all the roads.
+* _Paint by actor_: Paint a specific, selected actor.
+* _Paint over circle_: Paint using a circular pattern, useful to provide variation.
+* _Paint over square_: Paint using a square pattern, useful to provide variation.
 
 This section also contains options to erase the applied changes.
 
-* _Clear all_ — Erase all the painted material.
-* _Clear materials_ — Remove the currently active materials.
-* _Clear material by actor_ — Remove the material closest to the selected actor.
+* _Clear all_: Erase all the painted material.
+* _Clear materials_: Remove the currently active materials.
+* _Clear material by actor_: Remove the material closest to the selected actor.
 
 ![materials_roadpaint_brushes](img/content_authoring_maps/roadpainter_default.webp)
 <div class="img-caption">The <code>RoadPainter</code> buttons in the Default category of its Details panel.</div>
@@ -120,13 +133,13 @@ __5. Add decals and meshes.__
 
 You can explore the available decals and meshes in `Content > Carla > Static > FX > Decals` and `Content > Carla > Static`. Add them to road painter by extending and adding to the _Decals Spawn_ and _Meshes Spawn_ arrays. For each one you can configure the following parameters:
 
-- _Number of Decals/Meshes_ - The amount of each decal or mesh to paint.
-- _Decal/Mesh Scale_ — Scale of the decal/mesh per axis.
-- _Fixed Decal/Mesh Offset_ — Deviation from the center of the lane per axis.
-- _Random Offset_ — Max deviation from the center of the lane per axis.
-- _Decal/Mesh Random Yaw_ — Max random yaw rotation.
-- _Decal/Mesh Min Scale_ — Minimum random scale applied to the decal/mesh.
-- _Decal/Mesh Max Scale_ — Max random scale applied to the decal/mesh.
+- _Number of Decals/Meshes_: The amount of each decal or mesh to paint.
+- _Decal/Mesh Scale_: Scale of the decal/mesh per axis.
+- _Fixed Decal/Mesh Offset_: Deviation from the center of the lane per axis.
+- _Random Offset_: Max deviation from the center of the lane per axis.
+- _Decal/Mesh Random Yaw_: Max random yaw rotation.
+- _Decal/Mesh Min Scale_: Minimum random scale applied to the decal/mesh.
+- _Decal/Mesh Max Scale_: Max random scale applied to the decal/mesh.
 
 ![materials_](img/content_authoring_maps/decals_meshes.webp)
 <div class="img-caption">The Decals and Meshes categories of the <code>RoadPainter</code>.</div>
@@ -172,7 +185,6 @@ Lane markings use `M_RoadMaster` too, with its `LaneMark` switch on. `Content > 
 4. Save and close.
 5. Drag the material onto the lane marking meshes you wish to color. Repeat for each color of lane marking.
 
----
 ---
 
 If you have any questions about the process, then you can ask in the [GitHub Discussions](https://github.com/carla-simulator/carla/discussions).

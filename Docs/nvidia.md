@@ -4,10 +4,14 @@
 
 NVIDIA sponsors CARLA's development and contributes the technologies below to the Unreal Engine 5 line.
 
+![NVIDIA technologies in CARLA](img/nvidia/nvidia_overview.webp)
+<div class="img-caption">Top left: the Alpamayo 2 Super dashboard, with its camera inputs, predicted path and reasoning. Top right: a CARLA SUV path traced into a NuRec scene reconstructed from a real highway drive. Bottom left: a CARLA drive and the Cosmos 3 output generated from it. Bottom right: one camera of a multi-camera rig, native rendering (OFF) against DLSS Super Resolution (ON).</div>
+
 - [__Alpamayo 2 Super__](#alpamayo-2-super)
 - [__Neural reconstruction__](#neural-reconstruction)
 - [__Cosmos__](#cosmos)
 - [__DLSS__](#dlss)
+- [__Combined workflows__](#combined-workflows)
 
 ---
 ## Alpamayo 2 Super
@@ -17,21 +21,62 @@ The NVIDIA Alpamayo 2 Super example provides closed-loop vision-language-action 
 ---
 ## Neural reconstruction
 
-Neural reconstruction (NuRec) learns a 3D representation of a real place from recorded sensor data, so one recorded drive can be re-simulated with the trajectory perturbed, the sensor rig changed or rendered assets inserted. CARLA runs it through NVIDIA's Neural Reconstruction Engine container and its gRPC API; the [neural reconstruction page](nvidia_nurec.md) covers installing and using it.
+![CARLA vehicle inside a NuRec scene](img/core_rendering_overview/nurec_carla.webp)
+<div class="img-caption">A CARLA SUV overtakes the ego on the left inside the neural reconstruction of a recorded highway drive. The vehicle is path traced, lit by the scene's sun and casts its shadow on the reconstructed road.</div>
+
+NVIDIA NuRec turns recorded camera and LIDAR data into a 3D scene that can be rendered from new viewpoints. CARLA loads the scenario's OpenDRIVE road network, spawns the recorded actors and runs the simulation loop, while NVIDIA's Neural Reconstruction Engine (NRE) container renders photoreal camera frames at the poses CARLA reports each tick. Because CARLA owns the loop, a real drive can be perturbed with the full CARLA API: the ego re-driven, vehicles handed to the Traffic Manager, assets inserted.
+
+The [hybrid rendering example](nvidia_nurec.md#hybrid-rendering-example) composites CARLA vehicles and pedestrians into the neural scene with the ray-traced lens cameras.
+
+<div class="build-buttons">
+<p>
+<a href="../nvidia_nurec" class="btn btn-neutral" title="Go to NVIDIA NuRec">
+Go to NVIDIA NuRec</a>
+</p>
+</div>
 
 ---
 ## Cosmos
 
-Cosmos turns a CARLA drive into input for NVIDIA's Cosmos video world models, which generate photoreal variations of a recorded run — a different weather, time of day or road surface over the same trajectory. `PythonAPI/examples/nvidia/cosmos/` captures frame-exact multi-camera clips with their depth, segmentation and edge control videos, exports the ground truth as an NVIDIA ClipGT scene package, and submits generation jobs through the `carla-cosmos` CLI.
+![Cosmos input, control and result](img/core_rendering_overview/cosmos_transfer.webp)
+<div class="img-caption">A CARLA camera frame (left), the world-scenario control video rendered from its ground truth (centre) and the frame Cosmos generated from them with the prompt shown below (right).</div>
 
-The capture client, the CLI and the job server run today, and a mock worker lets the whole pipeline be exercised without a GPU. The workers for Cosmos 3 and Transfer 2.5 are written but still awaiting validation on GPU hardware. `PythonAPI/examples/nvidia/cosmos/README.md` covers installing and running it.
+Cosmos works after the simulation, not during it. `PythonAPI/examples/nvidia/cosmos/` captures frame-exact multi-camera clips from a CARLA run with their depth, segmentation and edge control videos, exports the ground truth as an NVIDIA ClipGT scene package, and submits generation jobs through the `carla-cosmos` CLI. NVIDIA's Cosmos video world models then generate photoreal variations of the run, such as a different weather, time of day or road surface over the same trajectory.
+
+The capture client, the CLI and the job server run today, and a mock worker exercises the whole pipeline without a GPU; the Cosmos 3 and Transfer 2.5 workers are awaiting validation on GPU hardware.
+
+<div class="build-buttons">
+<p>
+<a href="../nvidia_cosmos" class="btn btn-neutral" title="Go to NVIDIA Cosmos">
+Go to NVIDIA Cosmos</a>
+</p>
+</div>
 
 ---
 ## DLSS
 
-NVIDIA's Deep Learning Super Sampling (DLSS) is integrated into the CARLA simulator itself:
+![DLSS Super Resolution](img/core_rendering_overview/dlss_montage.webp)
+<div class="img-caption">A 3840 &times; 2160 RGB camera with DLSS Super Resolution at <code>dlss_screen_percentage=50</code>: it renders internally at 1920 &times; 1080 and DLSS reconstructs the 4K image. The crops of the framed area compare the internal render (scaled up), the DLSS output and a native 4K render.</div>
 
-- __DLSS Ray Reconstruction__ denoises the path-traced frames of the [ray-traced lens camera](ref_sensors.md#ray-traced-lens-camera) (`sensor.camera.rt_lens`), enabling real-time path tracing with physically exact lens distortion at low sample counts.
-- __DLSS Super Resolution__ can upscale any camera sensor: the camera renders internally at a fraction of its output resolution and DLSS reconstructs the full-size image, reducing the GPU cost of large multi-camera rigs.
+DLSS Super Resolution lowers the cost of a camera: with `enable_dlss=True` the camera renders internally at `dlss_screen_percentage` of its output resolution (`50.0` by default) and DLSS reconstructs the full-size image. It is opt-in per camera and needs `enable_postprocess_effects=True`. It is meant for RGB rigs, not for ground-truth cameras, because reconstructed pixels corrupt label and depth maps.
 
-The [rendering options page](core_rendering.md#nvidia-dlss) covers both in detail.
+`PythonAPI/examples/manual_control_5cam.py` spawns a five-camera rig and toggles DLSS with `D`, so the difference can be compared live.
+
+<div class="build-buttons">
+<p>
+<a href="../core_dlss" class="btn btn-neutral" title="Go to NVIDIA DLSS">
+Go to NVIDIA DLSS</a>
+</p>
+</div>
+
+---
+## Combined workflows
+
+The technologies above also work together, with CARLA keeping the physics, the clock, the actors and the ground truth:
+
+- __Scenic + NuRec + CARLA assets__: a [Scenic](https://scenic-lang.org) scenario drives CARLA vehicles and pedestrians inside a scene reconstructed from a real drive, and the hybrid pipeline composites them into the recorded camera. See [Hybrid rendering example](nvidia_nurec.md#hybrid-rendering-example).
+- __NuRec + Alpamayo 2 Super__: Alpamayo drives a NuRec scene in closed loop, seeing neural renders of the real place from wherever it actually drove. See [Run with NuRec cameras](nvidia_alpamayo.md#run-with-nurec-cameras).
+- __NuRec + Cosmos__: `PythonAPI/examples/nvidia/cosmos/demos/nurec_to_cosmos.py` conditions Cosmos on a NuRec scene: on its world model (the scene's own OpenDRIVE map and ego trajectory, exported as a ClipGT scene package), on the neural render of the real place, or on both with Cosmos 3.
+
+![NuRec drive turned into a clear day by Cosmos 3](img/nvidia/cosmos_nurec.webp)
+<div class="img-caption">A NuRec drive recorded at night (left) becomes a clear day (right). Cosmos 3 follows the world-scenario control (centre) built from the scene's road network and ego trajectory.</div>

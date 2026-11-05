@@ -27,10 +27,8 @@ class TestSynchronousMode(SyncSmokeTest):
             synchronous_mode=True,
             fixed_delta_seconds=0.05)
         for _ in range(0, 4):
-            self.world = self.client.reload_world()
+            self.world = self.reload_world()
             self.world.apply_settings(settings)
-            # workaround: give time to UE4 to clean memory after loading (old assets)
-            time.sleep(5)
 
     def test_camera_on_synchronous_mode(self):
         # Regression test for carla-simulator/carla#9898

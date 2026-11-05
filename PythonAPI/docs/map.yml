@@ -1432,10 +1432,6 @@
       type: float
       doc: >
         False Northing offset.
-    - var_name: ellps
-      type: carla.GeoEllipsoid
-      doc: >
-        Geoellipsoid used for the projection.
     # - METHODS ----------------------------
     methods:
     - def_name: __init__
@@ -1582,10 +1578,6 @@
       type: float
       doc: >
         False Northing offset.
-    - var_name: ellps
-      type: carla.GeoEllipsoid
-      doc: >
-        Geoellipsoid used for the projection.
     # - METHODS ----------------------------
     methods:
     - def_name: __init__

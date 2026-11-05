@@ -2,7 +2,7 @@
 name: run-leaderboard-evaluation
 description: Runs the CARLA Leaderboard evaluator over a set of routes with your agent — routes/routes-subset/repetitions/track selection, checkpoint and live-results endpoints, resume after a crash, recording, and the debug levels — for leaderboard 1.0, 2.0 or 2.1. Preflights the whole stack (version pairing, maps, ports, agent class, sensor budget) before spending hours, and hands the world back in async mode. Use when the user asks to "run the leaderboard", "evaluate my agent", "run routes_training", "resume an evaluation", or "reproduce my submission locally".
 license: MIT
-compatibility: Linux with a leaderboard + matching scenario_runner checkout and a CARLA build for that version (0.9.10.1 for LB 1.0; the leaderboard 0.9.14+large-maps build for 2.x). Town12/Town13 are required for 2.x routes. Long runs — 90 training routes take many hours.
+compatibility: Linux with a leaderboard checkout (plus a matching scenario_runner for 1.0/2.0/2.1) and a CARLA build for that version (0.9.10.1 for LB 1.0; the leaderboard 0.9.14+large-maps build for 2.x; and, by default, the leaderboard `ue58-dev` branch on CARLA 1.0, which needs no scenario_runner). Town12/Town13 are required for 2.x routes. Long runs: 90 training routes take many hours.
 metadata:
   group: leaderboard
   prerequisites: scripts/check_env.sh

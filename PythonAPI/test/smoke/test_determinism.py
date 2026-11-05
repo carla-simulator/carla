@@ -18,6 +18,7 @@ class FrameRecord():
         self.vehicle_position_list = vehicle_position_list
 
 class TestDeterminism(SmokeTest):
+    deterministic_collisions = True
 
     def compare_records(self, record1_list, record2_list):
         record1_size = len(record1_list)
@@ -80,9 +81,9 @@ class TestDeterminism(SmokeTest):
         number_of_vehicles = 100
         tm_seed = 1
 
-        self.client.load_world("Town03_Opt")
-        # workaround: give time to UE4 to clean memory after loading (old assets)
-        time.sleep(5)
+        # Town10HD_Opt ships with every package; keep the settings so that
+        # deterministic_collisions applies
+        self.load_world("Town10HD_Opt", False)
 
         # set setting for round 1
         world = self.client.get_world()
@@ -118,9 +119,7 @@ class TestDeterminism(SmokeTest):
             blueprint_transform_list.append((blueprint, transform))
 
         # reset for simulation 1
-        self.client.reload_world(False)
-        # workaround: give time to UE4 to clean memory after loading (old assets)
-        time.sleep(5)
+        self.reload_world(False)
         world = self.client.get_world()
         traffic_manager = self.client.get_trafficmanager(TM_PORT)
         traffic_manager.set_synchronous_mode(True)
@@ -133,9 +132,7 @@ class TestDeterminism(SmokeTest):
         traffic_manager.shut_down()
 
         # reset for simulation 2
-        self.client.reload_world(False)
-        # workaround: give time to UE4 to clean memory after loading (old assets)
-        time.sleep(5)
+        self.reload_world(False)
         world = self.client.get_world()
         traffic_manager = self.client.get_trafficmanager(TM_PORT)
         traffic_manager.set_synchronous_mode(True)
@@ -147,9 +144,7 @@ class TestDeterminism(SmokeTest):
         record_run2 = self.run_simulation(world, vehicle_actor_list)
         traffic_manager.shut_down()
 
-        self.client.reload_world()
+        self.reload_world()
         world.apply_settings(old_settings)
-        # workaround: give time to UE4 to clean memory after loading (old assets)
-        time.sleep(5)
 
         self.compare_records(record_run1, record_run2)

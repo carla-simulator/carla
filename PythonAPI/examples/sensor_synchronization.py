@@ -21,6 +21,7 @@ not the case, the clients needs to take in account at each frame how many
 sensors are going to tick at each frame.
 """
 
+import argparse
 from queue import Queue
 from queue import Empty
 
@@ -38,9 +39,18 @@ def sensor_callback(sensor_data, sensor_queue, sensor_name):
 
 
 def main():
+    argparser = argparse.ArgumentParser(description=__doc__)
+    argparser.add_argument(
+        '--host', metavar='H', default='127.0.0.1',
+        help='IP of the host server (default: 127.0.0.1)')
+    argparser.add_argument(
+        '-p', '--port', metavar='P', default=2000, type=int,
+        help='TCP port to listen to (default: 2000)')
+    args = argparser.parse_args()
+
     # We start creating the client
-    client = carla.Client('localhost', 2000)
-    client.set_timeout(2.0)
+    client = carla.Client(args.host, args.port)
+    client.set_timeout(10.0)
     world = client.get_world()
 
     try:

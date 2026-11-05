@@ -98,7 +98,7 @@ printed), or `compose/docker-compose.yaml` (`compose.caddy.yaml` adds TLS).
 
 ```sh
 pip install -e ../client -e workers -e .          # carla-cosmos (core), carla-cosmos-workers, carla-cosmos-server
-COSMOS_TOKEN=dev carla-cosmos-server --state /tmp/cosmos-state --profile mock --port 8000
+COSMOS_TOKEN=dev carla-cosmos-server --state /tmp/cosmos-state --profile mock --port 8010
 carla-cosmos-server --list-profiles               # detected GPUs and which profile auto matches
 ```
 
@@ -108,7 +108,7 @@ In the container the entry point is the same `carla-cosmos-server`, with
 ## Configuration
 
 All settings are `COSMOS_*` environment variables (CLI flags override):
-`STATE` (`/state`), `HOST`/`PORT` (`0.0.0.0`/`8000`), `PROFILE` (`auto`),
+`STATE` (`/state`), `HOST`/`PORT` (`0.0.0.0`/`8010`), `PROFILE` (`auto`),
 `MODE` (`auto`: `latency` | `throughput`, see Profiles), `PROFILES_DIR`, `MODELS_DIR` (`/models`), `IMAGE_VARIANT` (read from `/models/hf/ARTIFACTS_IMAGE`), `GUARDRAILS` (`1`), `TOKEN`
 (bootstrap token), `BLOB_TTL_HOURS` (`72`), `JOB_TTL_HOURS` (`168`),
 `GC_INTERVAL_S` (`600`), `LOG_LEVEL`, `RUN_DIR` (sockets), `VENV_<NAME>`

@@ -28,9 +28,7 @@ class TestDVSCamera(SyncSmokeTest):
         if self.settings.synchronous_mode:
             self.world.tick()
         self.settings = None
-        self.client.load_world("Town10HD_Opt")
-        # workaround: give time to the engine to clean memory after loading
-        time.sleep(5)
+        self.load_world("Town10HD_Opt")
         self.world = None
         self.client = None
 

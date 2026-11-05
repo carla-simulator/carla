@@ -32,8 +32,7 @@ class TestTrafficManagerSyncStep(SyncSmokeTest):
         self.world.apply_settings(self.settings)
         self.world.tick()
         self.settings = None
-        self.client.load_world("Town10HD_Opt")
-        time.sleep(5)
+        self.load_world("Town10HD_Opt")
         self.world = None
         self.client = None
 

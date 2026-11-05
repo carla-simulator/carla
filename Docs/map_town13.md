@@ -11,7 +11,7 @@ Town13 is a large [World Partition](core_large_maps.md) map of a scale similar t
 | | |
 | --- | --- |
 | __Map name__ | `Town13` |
-| __In the default package__ | no: use a source build, or install it from a [content pack](map_content_packs.md) |
+| __In the default package__ | no: install a [content pack](map_content_packs.md) that contains it, such as AdditionalMaps, or use a source build |
 | __Map type__ | a large [World Partition](core_large_maps.md) map: the server streams the cells around the vehicle with `role_name=hero` |
 | __Size__ | about 13 x 10 km of roads |
 | __Spawn points__ | 12478, from `world.get_map().get_spawn_points()` |

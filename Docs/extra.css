@@ -1,5 +1,12 @@
 .wy-side-nav-search {
-	background-color: #c7e9fd !important;
+	background-color: #343131 !important;
+}
+
+.wy-side-nav-search img.logo {
+	width: 120px !important;
+	max-width: 120px !important;
+	height: auto;
+	margin: 4px auto 10px;
 }
 
 .build-buttons{
@@ -330,7 +337,74 @@ p:has(> img) + .img-caption {
 }
 
 .img-lightbox img {
-	max-width: 95%;
-	max-height: 95%;
+	max-width: 92%;
+	max-height: 86%;
 	box-shadow: 0 0 24px rgba(0, 0, 0, 0.6);
+}
+
+.img-lightbox-caption {
+	position: absolute;
+	bottom: 2.4%;
+	left: 10%;
+	right: 10%;
+	color: #ddd;
+	font-size: 0.9rem;
+	text-align: center;
+	cursor: default;
+}
+
+.img-lightbox-counter {
+	position: absolute;
+	top: 1.5%;
+	right: 2%;
+	color: #bbb;
+	font-size: 0.85rem;
+}
+
+.img-lightbox-nav {
+	position: absolute;
+	top: 50%;
+	transform: translateY(-50%);
+	width: 3rem;
+	height: 5rem;
+	border: 0;
+	border-radius: 4px;
+	background: rgba(255, 255, 255, 0.08);
+	color: #fff;
+	font-size: 2.6rem;
+	line-height: 1;
+	cursor: pointer;
+}
+
+.img-lightbox-nav:hover {
+	background: rgba(255, 255, 255, 0.2);
+}
+
+.img-lightbox-nav.prev { left: 1%; }
+.img-lightbox-nav.next { right: 1%; }
+
+/************************* ASK YOUR AGENT **************************/
+/* `!!! agent "Ask your agent"`: the recurring box that tells the reader an
+   AI coding agent can do the manual procedure that follows, with the prompt
+   to give it and the skills it uses. */
+.rst-content .admonition.agent {
+	background: #f3efff;
+}
+.rst-content .admonition.agent .admonition-title {
+	background: #6f42c1;
+	color: #fff;
+}
+.rst-content .admonition.agent .admonition-title::before {
+	content: "\1F916";
+	font-family: inherit;
+	margin-right: 6px;
+}
+.rst-content .admonition.agent p:first-of-type + p em,
+.rst-content .admonition.agent em {
+	color: #3b2370;
+}
+.rst-content .admonition.agent code {
+	background: #fff;
+	border-color: #d8ccf5;
+	color: #5a32a3;
 }

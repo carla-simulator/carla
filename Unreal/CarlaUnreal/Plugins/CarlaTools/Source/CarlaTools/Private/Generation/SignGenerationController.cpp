@@ -209,25 +209,15 @@ AGeoTrafficSign* ASignGenerationController::SpawnSign(const FVector& Location, U
 	const FBoxSphereBounds PlateBounds = SignAsset->SignMesh->GetBounds();
 	const float PoleTop = PoleBounds.Origin.Z + PoleBounds.BoxExtent.Z;
 
-	if (PoleAsset->PoleMesh->FindSocket(FName(TEXT("Sign1"))) != nullptr)
-	{
-		// Pole with a mounting socket: the plate takes the socket transform.
-		Sign->Setup(PoleAsset->PoleMesh, SignAsset->SignMesh, Material, FVector::ZeroVector, 0.0f, Scale);
-		const FTransform Socket = Sign->Pole->GetSocketTransform(FName(TEXT("Sign1")), RTS_Actor);
-		Sign->Plate->SetRelativeLocation(Socket.GetLocation() + FVector(PlateOffsetCm.X, PlateOffsetCm.Y, 0.0f));
-		Sign->Plate->SetRelativeRotation(Socket.GetRotation());
-	}
-	else
-	{
-		// No socket (none of the shipped poles has one): plate centre at PlateHeightCm, pole
-		// shortened so its top sits just above the plate.
-		Sign->Setup(PoleAsset->PoleMesh, SignAsset->SignMesh, Material,
-			FVector(PlateOffsetCm.X, PlateOffsetCm.Y, PlateHeightCm), 0.0f, Scale);
-		const float HalfH = PlateBounds.BoxExtent.Z * Scale;
-		const float Want = PlateHeightCm + HalfH + 8.0f;
-		const float PoleScaleZ = PoleTop > 0.0f ? FMath::Min(1.0f, Want / PoleTop) : 1.0f;
-		Sign->Pole->SetRelativeScale3D(FVector(1.0f, 1.0f, PoleScaleZ));
-	}
+	// Plate centre at PlateHeightCm, print facing actor +Y, pole shortened so its top sits just
+	// above the plate. The "Sign1" socket of the shipped pole (SM_Pole05) is not used: it sits at
+	// 4.3 m and is turned -90 degrees, which put the print edge-on to the traffic.
+	Sign->Setup(PoleAsset->PoleMesh, SignAsset->SignMesh, Material,
+		FVector(PlateOffsetCm.X, PlateOffsetCm.Y, PlateHeightCm), 0.0f, Scale);
+	const float HalfH = PlateBounds.BoxExtent.Z * Scale;
+	const float Want = PlateHeightCm + HalfH + 8.0f;
+	const float PoleScaleZ = PoleTop > 0.0f ? FMath::Min(1.0f, Want / PoleTop) : 1.0f;
+	Sign->Pole->SetRelativeScale3D(FVector(1.0f, 1.0f, PoleScaleZ));
 	return Sign;
 }
 
@@ -350,12 +340,26 @@ void ASignGenerationController::SignGenerationByPath(FName sign_package_path, FN
 		static_cast<int32_t>(carla::road::Lane::LaneType::Shoulder) |
 		static_cast<int32_t>(carla::road::Lane::LaneType::Driving);
 	TArray<AActor*> Kept;
+	int32 StuckInRoad = 0;
 	for (AActor* sign : GeneratedSigns)
 	{
 		FVector sign_location = sign->GetActorLocation();
 		if (bDisplaceSignsToEdge)
 		{
-			sign_location = UOpenDriveToMap::DisplaceLocationOutsideNeighboringRoads(current_carla_map.value(), sign_location, StepPercentOfLaneWidth, RoadBorderPadding);
+			bool bClear = false;
+			sign_location = UOpenDriveToMap::DisplaceLocationOutsideNeighboringRoads(current_carla_map.value(), sign_location,
+				StepPercentOfLaneWidth, RoadBorderPadding, MaxDisplacementIterations, &bClear);
+			if (!bClear)
+			{
+				// still in a lane after MaxDisplacementIterations (overlapping junction lanes):
+				// a sign in the roadway is worse than a missing one
+				UE_LOG(LogSignGeneration, Warning, TEXT("%s stays in the carriageway at %s, removed"),
+					*sign->GetActorLabel(), *sign_location.ToString());
+				sign->Destroy();
+				LastSpawnedCount--;
+				StuckInRoad++;
+				continue;
+			}
 		}
 
 		std::optional<carla::road::element::Waypoint> closest_waypoint =
@@ -427,8 +431,8 @@ void ASignGenerationController::SignGenerationByPath(FName sign_package_path, FN
 			LastSpawnedCount--;
 		}
 	}
-	UE_LOG(LogSignGeneration, Log, TEXT("sign nodes %d, matched %d, standing %d"),
-		LastSignNodeCount, LastMatchedCount, LastSpawnedCount);
+	UE_LOG(LogSignGeneration, Log, TEXT("sign nodes %d, matched %d, standing %d (%d removed, still in the carriageway)"),
+		LastSignNodeCount, LastMatchedCount, LastSpawnedCount, StuckInRoad);
 }
 
 void ASignGenerationController::SignGenerationForCurrentMap()

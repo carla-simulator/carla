@@ -37,7 +37,7 @@ export SCENARIO_RUNNER_ROOT="${SCENARIO_RUNNER_ROOT:-}"
 # source build, the egg). CARLA_TARGET is what the rest of this skill library
 # uses, so accept it as a fallback rather than making the user set two vars.
 if [ -z "${CARLA_ROOT:-}" ]; then
-  for _c in "${CARLA_TARGET:-}" "${CARLA_PACKAGE_ROOT:-}" "${CARLA_UE4_ROOT:-}"; do
+  for _c in "${CARLA_TARGET:-}" "${CARLA_PACKAGE_ROOT:-}" "${CARLA_UE4_ROOT:-}" "${CARLA_UE58_ROOT:-}" "${CARLA_UE5_ROOT:-}"; do
     if [ -n "${_c}" ] && [ -d "${_c}/PythonAPI/carla" ]; then CARLA_ROOT="${_c}"; break; fi
   done
 fi
@@ -68,6 +68,18 @@ export PYTHONIOENCODING="${PYTHONIOENCODING:-utf-8}"
 
 # Which branch is checked out decides which scenarios, towns and blueprints are
 # valid; every SR skill keys its advice off this. "detached"/"unknown" is fine.
+# ScenarioRunner pins its own py_trees; ue58-dev moved to 2.x while older
+# branches need 0.8.3, so the wanted version is read from the checkout.
+carla_sr_pinned_pytrees() {
+  sed -n 's/^py-trees==\([0-9.]*\).*/\1/p' "${SCENARIO_RUNNER_ROOT:-}/requirements.txt" 2>/dev/null | head -1
+}
+
+# The scenario class loader is what makes --additionalScenario work in route
+# mode and accept folders; older checkouts only glob srunner/scenarios.
+carla_sr_has_class_loader() {
+  [ -f "${SCENARIO_RUNNER_ROOT:-}/srunner/tools/scenario_class_loader.py" ]
+}
+
 carla_sr_branch() {
   [ -n "${SCENARIO_RUNNER_ROOT}" ] || { echo "unknown"; return; }
   git -C "${SCENARIO_RUNNER_ROOT}" rev-parse --abbrev-ref HEAD 2>/dev/null || echo "unknown"
@@ -76,8 +88,8 @@ carla_sr_branch() {
 # Flavour, not branch name: several branches behave identically (SR
 # leaderboard-2.0 and leaderboard-2.1 are the *same commit*), and the name is
 # "HEAD" in a detached checkout, worktree, tarball or docker image — so fall back
-# to a content probe. srunner/scenic/ exists only on ue5-master, and
-# change_lane.py exists on every branch except ue5-master.
+# to a content probe. srunner/scenic/ exists on ue5-master and ue58-dev, and
+# change_lane.py is absent from both; the _Opt town names tell them apart.
 carla_sr_flavor() {
   case "$(carla_sr_branch)" in
     master|0.9.1[3-9]*)      echo "ue4"; return ;;

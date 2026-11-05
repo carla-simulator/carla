@@ -149,11 +149,14 @@ def main():
     argparser = argparse.ArgumentParser(
         description=__doc__)
     argparser.add_argument(
-        '--host', metavar='H', default='localhost',
-        help='IP of the host CARLA Simulator (default: localhost)')
+        '--host', metavar='H', default='127.0.0.1',
+        help='IP of the host CARLA Simulator (default: 127.0.0.1)')
     argparser.add_argument(
         '-p', '--port', metavar='P', default=2000, type=int,
         help='TCP port of CARLA Simulator (default: 2000)')
+    argparser.add_argument(
+        '--tm-port', metavar='P', default=8000, type=int,
+        help='Port to communicate with TM (default: 8000)')
     argparser.add_argument(
         '--no-rendering', action='store_true',
         help='use the no-rendering mode which will provide some extra performance')
@@ -199,13 +202,13 @@ def main():
     args = argparser.parse_args()
 
     client = carla.Client(args.host, args.port)
-    client.set_timeout(2.0)
+    client.set_timeout(10.0)
     world = client.get_world()
 
     try:
         original_settings = world.get_settings()
         settings = world.get_settings()
-        traffic_manager = client.get_trafficmanager(8000)
+        traffic_manager = client.get_trafficmanager(args.tm_port)
         traffic_manager.set_synchronous_mode(True)
 
         delta = 0.05
@@ -219,7 +222,7 @@ def main():
         vehicle_bp = blueprint_library.filter(args.filter)[0]
         vehicle_transform = random.choice(world.get_map().get_spawn_points())
         vehicle = world.spawn_actor(vehicle_bp, vehicle_transform)
-        vehicle.set_autopilot(args.no_autopilot)
+        vehicle.set_autopilot(args.no_autopilot, args.tm_port)
 
         lidar_bp = generate_lidar_bp(args, world, blueprint_library, delta)
 

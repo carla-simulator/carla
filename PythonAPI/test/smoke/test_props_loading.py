@@ -18,7 +18,10 @@ class TestPropsLoading(SmokeTest):
 
         SpawnActor = carla.command.SpawnActor
 
-        props = world.get_blueprint_library().filter("static.prop.*")
+        # static.prop.mesh is the generic mesh prop: AStaticMeshFactory refuses
+        # it without a mesh_path, so it cannot be spawned from its id alone.
+        props = [p for p in world.get_blueprint_library().filter("static.prop.*")
+                 if p.id != "static.prop.mesh"]
         spawned_props = []
 
         spawn_points = world.get_map().get_spawn_points()

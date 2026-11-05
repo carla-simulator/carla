@@ -34,6 +34,11 @@ Spawning will be explained in [2nd. Actors and blueprints](core_actors.md). It r
 
 ## Weather
 
+!!! agent "Agentic CARLA"
+    *"Set heavy rain at dusk."*
+
+    Skills: `set-weather`, `control-lights`. [Set up Agentic CARLA](agent_skills.md#set-up-agentic-carla).
+
 The weather is not a class on its own, but a set of parameters accessible from the world. The parametrization includes sun orientation, cloudiness, wind, fog, and much more. The helper class [carla.WeatherParameters](python_api.md#carla.WeatherParameters) is used to define a custom weather.  
 ```py
 weather = carla.WeatherParameters(
@@ -143,7 +148,7 @@ state01 = carla.LightState(200.0, carla.Color(255, 0, 0), carla.LightGroup.Build
 light01.set_light_state(state01)
 
 # Custom a group of lights
-my_lights = lmanager.get_light_group(carla.LightGroup.Building)
+my_lights = lmanager.get_all_lights(carla.LightGroup.Building)
 lmanager.turn_on(my_lights)
 lmanager.set_color(my_lights, carla.Color(255, 0, 0))
 lmanager.set_intensities(my_lights, [200.0] * len(my_lights))
@@ -159,7 +164,8 @@ The lights of a vehicle are read and set with [carla.Vehicle.get_light_state](py
 # Turn on position lights
 current_lights = carla.VehicleLightState.NONE
 current_lights |= carla.VehicleLightState.Position
-vehicle.set_light_state(current_lights)
+# The | operator returns an int: convert it back before setting it
+vehicle.set_light_state(carla.VehicleLightState(current_lights))
 ```
 
 !!! Note
@@ -208,6 +214,11 @@ actor_snapshot = world_snapshot.find(actual_actor.id) # Get an actor's snapshot
 ```
 
 ## World settings
+
+!!! agent "Agentic CARLA"
+    *"Switch the server to synchronous mode at 20 fps."*
+
+    Skill: `set-world-settings`. [Set up Agentic CARLA](agent_skills.md#set-up-agentic-carla).
 
 The world has access to some advanced configurations for the simulation. These determine rendering conditions, simulation time-steps, and synchrony between clients and server. They are accessible from the helper class [carla.WorldSettings](python_api.md#carla.WorldSettings).
 

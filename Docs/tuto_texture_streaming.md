@@ -2,6 +2,9 @@
 
 The textures of map objects can be replaced while the simulation runs, which is how a building gets a different facade between two runs of the same scenario. This page covers finding the object, exporting its texture, and pushing a modified one back.
 
+![texture_streaming_runtime](img/tuto_texture_streaming/texture_streaming_runtime_thumb.webp)
+<div class="img-caption">A running simulation, not the editor: the facade texture of the corner building is replaced through the Python API while the server runs. Clip from the CARLA 0.9.13 release video (Unreal Engine 4); the API is the same in CARLA 1.0. Click to play.</div>
+
 - [__Find the object__](#find-the-object)
 - [__Export a texture to work with__](#export-a-texture-to-work-with)
 - [__Update the texture through the API__](#update-the-texture-through-the-api)
@@ -70,7 +73,7 @@ After loading the modified image, instantiate a [carla.TextureColor](python_api.
 
 Use the `apply_color_texture_to_object(...)` method of the [carla.World](python_api.md#carla.World) object to update the texture. You should see the texture update in the spectator view.
 
-The change is applied to every static mesh component of that object, but only the materials that expose the parameter actually change, so a building often repaints in part: applying a `Diffuse` texture to an apartment block in Town10HD_Opt repaints its railings and fire escapes and leaves the brick facade as it was, because the two are different materials.
+The change is applied to every static mesh component of that object, but only the materials that expose the parameter actually change — see [Which materials can be changed](#which-materials-can-be-changed). The apartment blocks in Town10HD_Opt use materials that expose it throughout, so a `Diffuse` texture repaints the whole building, facade, roof and fire escapes included; a part whose material exposes none of the parameter names keeps its original look.
 
 A name the server does not know raises `RuntimeError: unable to find Actor to apply the texture`, so a typo fails loudly rather than silently. The new texture lasts for the rest of the session and is undone by [`client.reload_world()`](python_api.md#carla.Client.reload_world).
 
@@ -110,10 +113,10 @@ world.apply_color_texture_to_object(object_name, carla.MaterialParameter.Diffuse
 | --- | --- | --- |
 | `Diffuse` | The base color map | `BaseColor`, `Difuse`, `Difuse 2`, `Difuse 3`, `Difuse 4` |
 | `Normal` | The normal map | `Normal`, `Normal 2`, `Normal 3`, `Normal 4` |
-| `AO_Roughness_Metallic_Emissive` | The packed ORME map | `AO / Roughness / Metallic / Emissive`, `ORMH` |
+| `AO_Roughness_Metallic_Emissive` | The packed ORME map | `AO / Roughness / Metallic / Emissive`, `ORMH`, `ORMH 2`, `ORMH 3`, `ORMH 4` |
 | `Emissive` | The emissive map | `Emissive` |
 
 CARLA's generic master material, which most buildings and props use, exposes `BaseColor`, `Normal`, `Emissive` and `AO / Roughness / Metallic / Emissive`, so all four values reach it. The road master exposes only `BaseColor` and `Normal`, so `Emissive` and `AO_Roughness_Metallic_Emissive` do nothing on roads. A material that exposes none of the names above — a third-party asset, or one authored without them — silently keeps its original texture.
 
 !!! Warning
-    The per-pixel loop above is slow: a 2K texture is four million boundary calls. Downscale the image first, or build the pixel data in NumPy and set it row by row, when the texture is large. Call `image.convert('RGBA')` after opening it so palette and grayscale files give four channels.
+    The per-pixel loop above is slow: a 2K texture is four million boundary calls, and [carla.TextureColor](python_api.md#carla.TextureColor) has no bulk setter, so every pixel costs one `set()` call. Downscale large images first (512 or 1024 pixels a side is plenty for a facade), and read pixels through `image.load()` rather than `getpixel()`, which is slower. Call `image.convert('RGBA')` after opening it so palette and grayscale files give four channels.

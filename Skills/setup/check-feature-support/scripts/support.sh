@@ -30,9 +30,9 @@ LEGEND  [skill]  a vetted procedure exists in this collection — use it
   minus five gaps (no Autoware, FastDDS only, no DLSS/rt_lens, no OFPA large-map
   mount, a few missing World/Actor methods).
   Full list: Skills/ue5/check-ue5-limitations, `gaps.sh list`.
-  Read "0.10.0" below as "the UE5 line": it is what pre-1.0 ue58 builds report,
-  what every measurement here was taken on, and what 5.5 reports today. 1.0
-  renamed the line — the facts hold.
+  Read "0.10.0" below as "the UE5 line": CARLA 1.0 is that line, pre-release 1.0
+  builds still report 0.10.0, it is what every measurement here was taken on, and
+  it is what 5.5 reports today. The facts hold across the rename.
 
 == Covered by a skill ==
   [skill] build / package / run a server            build-carla-ue58, package-carla-ue58,
@@ -61,7 +61,7 @@ LEGEND  [skill]  a vetted procedure exists in this collection — use it
           -carla-secondary-port. No procedure, no measurement.
   [untested] digital twins / OSM map generation     CarlaTools has OpenDriveToMap.h,
           DigitalTwinsBaseWidget.h, MapGeneratorWidget.h, ProceduralBuildingUtilities.h,
-          ProceduralWaterManager.h — editor widgets, not a CLI. ENABLE_OSM2ODR is OFF in
+          ProceduralWaterManager.h — editor widgets, not a CLI. The converter is built in; what is missing in
           this build, so the OSM->OpenDRIVE half is not even compiled in.
   [untested] vehicle import on ue58                 TO BE DONE — no skill in this version.
           The pipeline is understood and was partly proved: import the skeletal mesh bound
@@ -165,13 +165,12 @@ cmd_probe() {
     say ""
     say "== Build flags in ${root}/Build/${CARLA_PRESET}/CMakeCache.txt =="
     local any=0 v
-    for opt in ENABLE_ROS2 ENABLE_RSS ENABLE_OSM2ODR CARLA_UNREAL_RHI CMAKE_BUILD_TYPE; do
+    for opt in ENABLE_ROS2 ENABLE_RSS CARLA_UNREAL_RHI CMAKE_BUILD_TYPE; do
       if v="$(carla_cmake_opt "${root}" "${opt}")"; then
         say "  ${opt} = ${v}"
         any=1
         case "${opt}:${v}" in
           ENABLE_RSS:OFF)     say "      -> sensor.other.rss exists but cannot work; rebuild with -DENABLE_RSS=ON" ;;
-          ENABLE_OSM2ODR:OFF) say "      -> OSM -> OpenDRIVE (digital twins) is not compiled in" ;;
           ENABLE_ROS2:OFF)    say "      -> no native ROS 2 interface at all; not switchable at runtime" ;;
         esac
       fi
@@ -317,7 +316,7 @@ PYEOF
     say ""
     say "== Build flags (preset ${CARLA_PRESET}) =="
     local any=0 v
-    for opt in CMAKE_BUILD_TYPE ENABLE_ROS2 ENABLE_RSS ENABLE_OSM2ODR CARLA_UNREAL_RHI CARLA_MAPS_TO_COOK; do
+    for opt in CMAKE_BUILD_TYPE ENABLE_ROS2 ENABLE_RSS CARLA_UNREAL_RHI CARLA_MAPS_TO_COOK; do
       if v="$(carla_cmake_opt "${root}" "${opt}")"; then say "  ${opt} = ${v}"; any=1; fi
     done
     [ "${any}" -eq 1 ] || say "  no cache for preset ${CARLA_PRESET} (tree unconfigured)"
