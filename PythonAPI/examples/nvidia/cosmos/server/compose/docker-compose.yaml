@@ -5,7 +5,7 @@ services:
     container_name: carla-cosmos
     restart: unless-stopped
     ports:
-      - "${COSMOS_PORT:-8000}:8000"
+      - "${COSMOS_PORT:-8010}:8000"
     volumes:
       - ${COSMOS_STATE:-./state}:/state
     shm_size: 16g
@@ -15,7 +15,7 @@ services:
       COSMOS_TOKEN: ${COSMOS_TOKEN:-}
     labels:
       com.carla.cosmos.role: server
-      com.carla.cosmos.port: "${COSMOS_PORT:-8000}"
+      com.carla.cosmos.port: "${COSMOS_PORT:-8010}"
     deploy:
       resources:
         reservations:

@@ -1,7 +1,7 @@
 # Town_C
 
 ![town_c_slideshow](img/catalogue/maps/town_c/town_c_montage.webp)
-<div class="img-caption">Town_C from above the centre, from directly overhead, at the Poly Grand Theatre, at the Automotive Exhibition Center, at the Sorl Hotel and in a tree-lined avenue.</div>
+<div class="img-caption">Town_C from above its west end, from directly overhead, at the Poly Grand Theatre, at the Automotive Exhibition Center, at the Sorl Hotel and in a tree-lined avenue.</div>
 
 Town_C is a map contributed by CARLA consortium members and sponsors [Synkrotron](https://www.synkrotron.ai/). It is a city on flat open land modelled on the Shanghai International Automobile City in Jiading, Shanghai, with recreations of some of its landmark buildings: the Shanghai Poly Grand Theatre, the Shanghai Automotive Exhibition Center, the Shanghai Auto Museum, the SIAC building, the Sorl Hotel and the YuTian building. Around them are a high-rise centre, an industrial area of warehouses and long rows of apartment blocks along a ring road.
 
@@ -49,22 +49,22 @@ The landmark meshes are under `Content/Carla/Static/Static/Town_C/Building/`, ea
 | YuTian building | 873, 27 |
 
 ![town_c_poly_theatre](img/catalogue/maps/town_c/town_c_poly_theatre.webp)
-<div class="img-caption">The Shanghai Poly Grand Theatre: a glass-clad cube cut through by cylinders, with gardens on its roof.</div>
+<div class="img-caption">The Shanghai Poly Grand Theatre from the street: a glass-clad cube cut through by cylinders.</div>
 
 ![town_c_exhibition_center](img/catalogue/maps/town_c/town_c_exhibition_center.webp)
-<div class="img-caption">The Shanghai Automotive Exhibition Center inside its loop road, with the Auto Museum behind it on the right.</div>
+<div class="img-caption">The Shanghai Automotive Exhibition Center behind a row of trees, from the road that leads into its loop.</div>
 
 ![town_c_auto_museum](img/catalogue/maps/town_c/town_c_auto_museum.webp)
-<div class="img-caption">The Shanghai Auto Museum, with its curved floors and yellow bands.</div>
+<div class="img-caption">The Shanghai Auto Museum at the end of its access road, with its curved floors and yellow bands.</div>
 
 ![town_c_siac](img/catalogue/maps/town_c/town_c_siac.webp)
-<div class="img-caption">The SIAC building, a glass tower with a spire, at the west end of the city.</div>
+<div class="img-caption">The SIAC building, a glass tower on a curved podium, at the west end of the city.</div>
 
 ![town_c_sorl_hotel](img/catalogue/maps/town_c/town_c_sorl_hotel.webp)
-<div class="img-caption">The Sorl Hotel, a striped cylindrical tower at the edge of the high-rise centre.</div>
+<div class="img-caption">The entrance of the Sorl Hotel, a striped cylindrical tower at the edge of the high-rise centre.</div>
 
 ![town_c_yutian](img/catalogue/maps/town_c/town_c_yutian.webp)
-<div class="img-caption">The YuTian building, a dark glass tower in a circle of trees, at the east end of the city.</div>
+<div class="img-caption">The YuTian building, a dark glass tower at the east end of the city, behind the sign of the Shanghai International Automobile City.</div>
 
 The map also places several buildings of the university campus of [Town15](map_town15.md), such as the CRAG building, the Faculty of Medicine and the Humanities Hall, among its blocks.
 
@@ -74,7 +74,7 @@ The map also places several buildings of the university campus of [Town15](map_t
 The east of the city is a dense centre of office towers and apartment blocks, with tree-lined avenues.
 
 ![town_c_panorama](img/catalogue/maps/town_c/town_c_panorama.webp)
-<div class="img-caption">The high-rise centre from above, with the Sorl Hotel and the Automotive Exhibition Center on the horizon.</div>
+<div class="img-caption">The city from above its west end, looking east: the SIAC building in front, the Auto Museum and the Automotive Exhibition Center on the right and the high-rise centre with the Sorl Hotel in the distance.</div>
 
 ![town_c_downtown](img/catalogue/maps/town_c/town_c_downtown.webp)
 <div class="img-caption">A tree-lined avenue in the centre.</div>

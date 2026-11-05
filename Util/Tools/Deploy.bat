@@ -26,7 +26,7 @@ if not "%~1"=="" (
         set AWS_COPY=echo aws s3 cp
     ) else if "%~1"=="--summary-output" (
         set "SUMMARY_OUTPUT_PATH=%~2"
-        shift
+        shift /1
     ) else if "%~1"=="--help" (
         echo !DOC_STRING!
         echo !USAGE_STRING!
@@ -37,19 +37,21 @@ if not "%~1"=="" (
         goto :bad_exit
     )
 
-    shift
+    shift /1
     goto :arg-parse
 )
 
-rem Set the package name and path to be deployed
-rem TODO: Currently hardcoded. Replace with dynamic versioning in the future
-set PACKAGE_NAME=Carla-0.10.0-Win64-Shipping.zip
-set PACKAGE_PATH=%~dp0..\..\Build\Release\Package\%PACKAGE_NAME%
+rem Find exactly one Shipping package to be deployed
+set "PACKAGE_DIR=%~dp0..\..\Build\Release\Package"
+set "PACKAGE_NAME="
+for /f "delims=" %%F in ('dir /b /a-d "%PACKAGE_DIR%\Carla-*-Win64-Shipping.zip" 2^>nul') do (
+    if defined PACKAGE_NAME goto :error_package
+    set "PACKAGE_NAME=%%F"
+    set "PACKAGE_PATH=%PACKAGE_DIR%\%%F"
+)
+if not defined PACKAGE_NAME goto :error_package
 
-echo Using package %PACKAGE_PATH%.
-
-rem Check if the package exists before continuing
-if not exist "%PACKAGE_PATH%" goto :error_package
+echo Using package "%PACKAGE_PATH%".
 
 rem Generate the nightly deploy filename based on the latest git commit date and hash
 git log --pretty=format:%%cd_%%h --date=format:%%Y%%m%%d -n 1 > "%TEMP%\carla_deploy_name" || goto :bad_exit
@@ -103,7 +105,7 @@ echo Success!
 goto :good_exit
 
 :error_package
-    echo [%~nx0]: ERROR: Package not found, please build a package
+    echo [%~nx0]: ERROR: Expected exactly one Carla-*-Win64-Shipping.zip in "%PACKAGE_DIR%".
     goto :bad_exit
 
 :good_exit
