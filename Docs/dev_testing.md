@@ -166,6 +166,12 @@ To run the smoke tests the same way locally, start a server on port 3654 and pas
 ./Util/Tools/RunSmokeTests.sh --wheel-dir Build/PythonAPI/dist python3.10 python3.12
 ```
 
+On Windows, use `Util\Tools\RunSmokeTests.bat`, which takes the same options:
+
+```bat
+Util\Tools\RunSmokeTests.bat --wheel-dir Build\PythonAPI\dist C:\Python310\python.exe C:\Python312\python.exe
+```
+
 ### Test every Python version
 
 `Util/Tools/RunPythonVersionTests.sh` tests the Python API once per interpreter given. Each version gets a fresh virtual environment in `Build/test-results/python-versions/venv-cpXY` with its wheel and the carla, test and examples requirements. Then the stages chosen with `--stages` run:

@@ -8,6 +8,15 @@ find_package (
   REQUIRED
 )
 
+set (CARLA_PYTHON_API_MIN_VERSION 3.10)
+
+if (Python3_VERSION VERSION_LESS CARLA_PYTHON_API_MIN_VERSION)
+  carla_error (
+    "The Python API needs Python ${CARLA_PYTHON_API_MIN_VERSION} or later, but CMake found "
+    "Python ${Python3_VERSION} (${Python3_EXECUTABLE}). Set Python3_EXECUTABLE to a newer interpreter."
+  )
+endif ()
+
 execute_process (
   COMMAND
     ${Python3_EXECUTABLE}
@@ -113,6 +122,36 @@ set (
   ${CMAKE_CURRENT_BINARY_DIR}/dist
   CACHE PATH
   "Directory the carla-python-api target writes the wheels to."
+)
+
+# Clear stale wheels before building; the CARLA_PYTHON_VERSIONS sub-builds share dist and skip this.
+if (NOT DEFINED CARLA_PYTHON_API_CLEAN_DIST)
+  set (CARLA_PYTHON_API_CLEAN_DIST ON)
+endif ()
+
+set (
+  CARLA_PYTHON_API_CLEAN_DIST_SCRIPT
+  ${CMAKE_CURRENT_BINARY_DIR}/carla-python-api-clean-dist.cmake
+)
+
+file (
+  WRITE
+  ${CARLA_PYTHON_API_CLEAN_DIST_SCRIPT}
+  [=[
+file (GLOB WHEELS ${CARLA_PYTHON_API_DIST_PATH}/carla-*.whl)
+if (WHEELS)
+  file (REMOVE ${WHEELS})
+endif ()
+]=]
+)
+
+add_custom_target (
+  carla-python-api-clean-dist
+  COMMAND
+    ${CMAKE_COMMAND}
+      -DCARLA_PYTHON_API_DIST_PATH=${CARLA_PYTHON_API_DIST_PATH}
+      -P ${CARLA_PYTHON_API_CLEAN_DIST_SCRIPT}
+  VERBATIM
 )
 
 file (
@@ -245,6 +284,13 @@ add_dependencies (
   ${PYTHON_API_DEPENDENCIES}
 )
 
+if (CARLA_PYTHON_API_CLEAN_DIST)
+  add_dependencies (
+    carla-python-api
+    carla-python-api-clean-dist
+  )
+endif ()
+
 add_dependencies (
   carla-python-api-install
   carla-python-api
@@ -290,6 +336,12 @@ foreach (EXTRA_PYTHON_VERSION ${CARLA_PYTHON_VERSIONS})
       "expected a Python version like 3.11."
     )
   endif ()
+  if (EXTRA_PYTHON_VERSION VERSION_LESS CARLA_PYTHON_API_MIN_VERSION)
+    carla_error (
+      "CARLA_PYTHON_VERSIONS lists Python ${EXTRA_PYTHON_VERSION}, but the Python API needs "
+      "Python ${CARLA_PYTHON_API_MIN_VERSION} or later."
+    )
+  endif ()
   if (EXTRA_PYTHON_VERSION VERSION_EQUAL CARLA_PYTHON_API_MAIN_VERSION OR
       EXTRA_PYTHON_VERSION IN_LIST CARLA_PYTHON_API_EXTRA_VERSIONS)
     continue ()
@@ -298,16 +350,52 @@ foreach (EXTRA_PYTHON_VERSION ${CARLA_PYTHON_VERSIONS})
 
   string (REPLACE "." "" EXTRA_PYTHON_VERSION_TAG ${EXTRA_PYTHON_VERSION})
   set (EXTRA_PYTHON_EXECUTABLE_VAR CARLA_PYTHON_${EXTRA_PYTHON_VERSION_TAG}_EXECUTABLE)
+  set (EXTRA_PYTHON_EXECUTABLE_DOC "Python ${EXTRA_PYTHON_VERSION} interpreter to build the Python API with (see CARLA_PYTHON_VERSIONS).")
+
+  # The python.org installers on Windows add no python3.X, so ask the py launcher first:
+  if (WIN32 AND NOT ${EXTRA_PYTHON_EXECUTABLE_VAR})
+    find_program (CARLA_PY_LAUNCHER NAMES py)
+    if (CARLA_PY_LAUNCHER)
+      execute_process (
+        COMMAND
+          ${CARLA_PY_LAUNCHER}
+            -${EXTRA_PYTHON_VERSION}
+            -c
+            "import sys; print(sys.executable)"
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+        OUTPUT_VARIABLE
+          EXTRA_PYTHON_LAUNCHER_EXECUTABLE
+        RESULT_VARIABLE
+          EXTRA_PYTHON_LAUNCHER_RESULT
+        ERROR_QUIET
+      )
+      if (NOT EXTRA_PYTHON_LAUNCHER_RESULT AND EXISTS "${EXTRA_PYTHON_LAUNCHER_EXECUTABLE}")
+        file (TO_CMAKE_PATH "${EXTRA_PYTHON_LAUNCHER_EXECUTABLE}" EXTRA_PYTHON_LAUNCHER_EXECUTABLE)
+        set (
+          ${EXTRA_PYTHON_EXECUTABLE_VAR}
+          ${EXTRA_PYTHON_LAUNCHER_EXECUTABLE}
+          CACHE FILEPATH
+          "${EXTRA_PYTHON_EXECUTABLE_DOC}"
+          FORCE
+        )
+      endif ()
+    endif ()
+  endif ()
 
   find_program (
     ${EXTRA_PYTHON_EXECUTABLE_VAR}
     NAMES python${EXTRA_PYTHON_VERSION}
-    DOC "Python ${EXTRA_PYTHON_VERSION} interpreter to build the Python API with (see CARLA_PYTHON_VERSIONS)."
+    DOC "${EXTRA_PYTHON_EXECUTABLE_DOC}"
   )
   if (NOT ${EXTRA_PYTHON_EXECUTABLE_VAR})
+    if (WIN32)
+      set (EXTRA_PYTHON_LOOKUP "neither py -${EXTRA_PYTHON_VERSION} nor python${EXTRA_PYTHON_VERSION} in PATH finds it")
+    else ()
+      set (EXTRA_PYTHON_LOOKUP "python${EXTRA_PYTHON_VERSION} is not in PATH")
+    endif ()
     carla_error (
-      "CARLA_PYTHON_VERSIONS lists Python ${EXTRA_PYTHON_VERSION} but python${EXTRA_PYTHON_VERSION} "
-      "is not in PATH. Set ${EXTRA_PYTHON_EXECUTABLE_VAR} to its interpreter."
+      "CARLA_PYTHON_VERSIONS lists Python ${EXTRA_PYTHON_VERSION} but ${EXTRA_PYTHON_LOOKUP}. "
+      "Set ${EXTRA_PYTHON_EXECUTABLE_VAR} to its interpreter."
     )
   endif ()
   set (EXTRA_PYTHON_EXECUTABLE ${${EXTRA_PYTHON_EXECUTABLE_VAR}})
@@ -379,6 +467,7 @@ foreach (EXTRA_PYTHON_VERSION ${CARLA_PYTHON_VERSIONS})
       -DPython_EXECUTABLE=${EXTRA_PYTHON_EXECUTABLE}
       -DCARLA_PYTHON_VERSIONS=
       -DCARLA_PYTHON_API_DIST_PATH=${CARLA_PYTHON_API_DIST_PATH}
+      -DCARLA_PYTHON_API_CLEAN_DIST=OFF
       ${CARLA_PYTHON_API_FETCHCONTENT_ARGS}
     BUILD_COMMAND
       ${CMAKE_COMMAND} --build ${EXTRA_PYTHON_API_BINARY_DIR} --target carla-python-api
@@ -390,6 +479,8 @@ foreach (EXTRA_PYTHON_VERSION ${CARLA_PYTHON_VERSIONS})
 
   if (CARLA_PYTHON_API_PREVIOUS_TARGET)
     add_dependencies (${EXTRA_PYTHON_API_TARGET} ${CARLA_PYTHON_API_PREVIOUS_TARGET})
+  elseif (CARLA_PYTHON_API_CLEAN_DIST)
+    add_dependencies (${EXTRA_PYTHON_API_TARGET} carla-python-api-clean-dist)
   endif ()
   set (CARLA_PYTHON_API_PREVIOUS_TARGET ${EXTRA_PYTHON_API_TARGET})
 

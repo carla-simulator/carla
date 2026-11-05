@@ -136,13 +136,16 @@ Order matters on a cold tree: LibCarla → Python API → `carla-unreal` → edi
 `carla-python-api-install` both builds the wheel and pip-installs it, so it is the
 one to use rather than `carla-python-api`.
 
+The Python API needs Python 3.10+; configure fails on anything older.
+Each build empties `PythonAPI/dist` of older wheels before writing its own.
 Wheels for more Python versions: configure with
 `-DCARLA_PYTHON_VERSIONS="3.10;3.11;3.12"` and build `carla-python-api`. Each
-extra version is looked up as `python3.XY` in PATH; for conda or venv
-interpreters set `-DCARLA_PYTHON_<XY>_EXECUTABLE=/path/to/python`. Each extra
+extra version is looked up as `python3.XY` in PATH (on Windows first with the
+`py -3.XY` launcher; `py -0p` lists them); for conda or venv interpreters set
+`-DCARLA_PYTHON_<XY>_EXECUTABLE=/path/to/python`. Each extra
 version adds a reduced client build in `Build/<preset>/PythonAPI-<XY>`, and all
 the wheels land in `Build/<preset>/PythonAPI/dist/`. `carla-python-api-install`
-installs into the *active* python3 (PATH / activated env): editable for the
+installs into the *active* python3 (`python` on Windows; PATH / activated env): editable for the
 main version, the matching wheel for another built version, and an error
 listing the built versions if the active Python has no wheel.
 

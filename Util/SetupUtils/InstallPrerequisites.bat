@@ -3,7 +3,8 @@
 set ninja_version=1.12.1
 
 set python_path=python
-set python_version_default=3.8.10
+set python_version_default=3.12.10
+set python_dir_default=Python312
 
 rem https://learn.microsoft.com/en-us/visualstudio/install/workload-component-id-vs-community?view=vs-2022&preserve-view=true
 set visual_studio_components=^
@@ -101,7 +102,7 @@ if errorlevel 1 (
     curl -L -O https://www.python.org/ftp/python/%python_version_default%/python-%python_version_default%-amd64.exe || exit /b
     python-%python_version_default%-amd64.exe /passive PrependPath=1  || exit /b
     del python-%python_version_default%-amd64.exe
-    set "PATH=%LocalAppData%\Programs\Python\Python38\Scripts\;%LocalAppData%\Programs\Python\Python38\;%PATH%"
+    set "PATH=%LocalAppData%\Programs\Python\%python_dir_default%\Scripts\;%LocalAppData%\Programs\Python\%python_dir_default%\;%PATH%"
     echo Installed Python %python_version_default%.
 ) else (
     echo Found Python.

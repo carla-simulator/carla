@@ -87,7 +87,7 @@ cmake -G Ninja -S . -B Build --toolchain=$PWD/CMake/Toolchain.cmake -DCMAKE_BUIL
 
 #### Build the Python API for several Python versions
 
-The Python API wheel is built for one Python version, the one CMake finds or the one you point it at. To build wheels for more versions in the same build, list them in `CARLA_PYTHON_VERSIONS`. Python 3.10 to 3.15 are supported:
+The Python API wheel is built for one Python version, the one CMake finds or the one you point it at. To build wheels for more versions in the same build, list them in `CARLA_PYTHON_VERSIONS`. Python 3.10 to 3.15 are supported, and configuring fails on anything older:
 
 ```sh
 cmake -G Ninja -S . -B Build --toolchain=$PWD/CMake/Toolchain.cmake -DCMAKE_BUILD_TYPE=Release \
@@ -97,7 +97,7 @@ cmake --build Build --target carla-python-api
 
 CMake looks for each interpreter as `python3.11`, `python3.12` and so on in `PATH`. If an interpreter has another name, as in a conda or virtual environment, set its path with `CARLA_PYTHON_<XY>_EXECUTABLE`, for example `-DCARLA_PYTHON_311_EXECUTABLE=$HOME/miniconda3/envs/py311/bin/python`. Each interpreter needs `numpy` and `build` installed (`python -m pip install numpy build`). A conda Python 3.15 from the defaults channel also needs `conda install libpython=3.15`: that channel ships the shared library in its own package from 3.15 on, and without it the configure step fails with `Could NOT find Python (missing: Python_INCLUDE_DIRS Python_LIBRARIES ...)`.
 
-Each extra version gets a reduced build of the client and the Python API in `Build/PythonAPI-<XY>`. It reuses the dependency sources the main build downloaded. All the wheels end up in `Build/PythonAPI/dist`, and the `package` target ships every one of them.
+Each extra version gets a reduced build of the client and the Python API in `Build/PythonAPI-<XY>`. It reuses the dependency sources the main build downloaded. All the wheels end up in `Build/PythonAPI/dist`, which each build first empties of older wheels, and the `package` target ships every one of them.
 
 `carla-python-api-install` installs the Python API into the active Python, the `python3` in `PATH` (for example the activated conda or virtual environment). For the build's main Python version it does an editable install. For another version in `CARLA_PYTHON_VERSIONS` it installs that version's wheel. If the active Python is a version the build has no wheel for, for example 3.13 in a build for 3.10 and 3.11, it stops with an error listing the versions available instead of installing an incompatible one.
 

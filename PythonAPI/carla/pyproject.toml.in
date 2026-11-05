@@ -16,7 +16,7 @@ ninja.make-fallback=true
 name = 'carla'
 version = '@CARLA_VERSION@'
 # The wheel's cpXY tag pins the interpreter it was built for.
-requires-python = '>=3.8'
+requires-python = '>=@CARLA_PYTHON_API_MIN_VERSION@'
 authors = [ { name = 'The CARLA team', email = 'carla.simulator@gmail.com' } ]
 description = 'Python API for communicating with the CARLA server.'
 readme = 'README.md'

@@ -39,7 +39,7 @@ CarlaSetup.bat
 
 The CarlaSetup.bat script installs all the required packages, including Visual Studio 2022 with CMake (if no Visual Studio 2022 is installed), Ninja, Python packages and the CARLA fork of Unreal Engine 5.8. It also downloads the CARLA content into `Unreal\CarlaUnreal\Content\Carla` and builds CARLA. This batch file can therefore take a long time to complete.
 
-It installs Python 3.8.10 when no Python is found at the top of `PATH`; 3.9 and 3.10 work too. To target an existing installation, pass `--python-root=C:\Path\To\PythonDir`, the folder that contains `python.exe`.
+It installs Python 3.12.10 when no Python is found at the top of `PATH`; any Python from 3.10 to 3.15 works too, and configuring fails on an older one. To target an existing installation, pass `--python-root=C:\Path\To\PythonDir`, the folder that contains `python.exe`.
 
 Pass `--skip-prerequisites` (`-p`) to skip installing Visual Studio, Ninja, Python and its packages, and `--launch` (`-l`) to open the editor once the build finishes.
 
@@ -63,6 +63,21 @@ The command line options are as follows:
 * **B** - directory where the build goes
 
 If you passed `--python-root` to `CarlaSetup.bat`, add both `-DPython_ROOT_DIR=PATH` and `-DPython3_ROOT_DIR=PATH` to the above cmake command.
+
+#### Build the Python API for several Python versions
+
+The Python API needs Python 3.10 or later. The wheel is built for one Python version, the one CMake finds or the one you point it at. To build wheels for more versions in the same build, list them in `CARLA_PYTHON_VERSIONS`:
+
+```sh
+cmake -G Ninja -S . -B Build --toolchain=CMake/Toolchain.cmake -DCMAKE_BUILD_TYPE=Release -DCARLA_PYTHON_VERSIONS="3.10;3.11;3.12"
+cmake --build Build --target carla-python-api
+```
+
+CMake asks the Python launcher for each interpreter (`py -3.11`, `py -3.12` and so on; `py -0p` lists the installed ones), then looks for `python3.11` in `PATH`. If an interpreter is not registered with the launcher, as in a conda or virtual environment, set its path with `CARLA_PYTHON_<XY>_EXECUTABLE`, for example `-DCARLA_PYTHON_311_EXECUTABLE=%USERPROFILE%\miniconda3\envs\py311\python.exe`. Each interpreter needs `numpy` and `build` installed (`py -3.11 -m pip install numpy build`).
+
+Each extra version gets a reduced build of the client and the Python API in `Build\PythonAPI-<XY>`. It reuses the dependency sources the main build downloaded. All the wheels end up in `Build\PythonAPI\dist`, which each build first empties of older wheels, and the `package` target ships every one of them.
+
+`carla-python-api-install` installs the Python API into the active Python, the `python` in `PATH` (for example the activated conda or virtual environment). For the build's main Python version it does an editable install. For another version in `CARLA_PYTHON_VERSIONS` it installs that version's wheel. If the active Python is a version the build has no wheel for, it stops with an error listing the versions available instead of installing an incompatible one.
 
 Configuring needs the NVIDIA DLSS SDK. CMake takes it from `-DCARLA_DLSS_SDK_PATH=<dir>` or the `DLSS_SDK` environment variable, otherwise from `%USERPROFILE%\SDKs\DLSS`, and clones it there from NVIDIA if it is missing. To build without DLSS, add `-DCARLA_DLSS_SDK_PATH=disabled`.
 
@@ -91,7 +106,7 @@ cmake --build Build --target package
 
 Use `package-development` instead for a package that writes debugging logs. The `package-debug`, `package-debuggame` and `package-test` targets build the other configurations; `package-shipping` forces Shipping whatever the build type.
 
-The package lands in `Build\Package\Carla-<version>-Win64-Shipping\`, alongside a `.zip` of the same (configure with `-DCARLA_UNREAL_PACKAGE_NO_COMPRESSION=ON` to skip it). The Python wheel that matches it is in `PythonAPI\carla\dist` inside the package.
+The package lands in `Build\Package\Carla-<version>-Win64-Shipping\`, alongside a `.zip` of the same (configure with `-DCARLA_UNREAL_PACKAGE_NO_COMPRESSION=ON` to skip it). The Python wheels that match it are in `PythonAPI\carla\dist` inside the package, one per Python version it was built for; install the one whose `cpXY` tag matches your interpreter (`cp310` for Python 3.10, and so on).
 
 ### Select which maps to cook
 
