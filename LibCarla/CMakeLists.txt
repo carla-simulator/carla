@@ -11,9 +11,29 @@ set (
   ${CARLA_WORKSPACE_PATH}/LibCarla/source
 )
 
-carla_two_step_configure_file (
-  ${LIBCARLA_SOURCE_PATH}/carla/Version.h
-  ${LIBCARLA_SOURCE_PATH}/carla/Version.h.in
+# Version.h: the release version, the tag at HEAD, or <version>-<commit>.
+# Written now so it exists before anything compiles, and again by the
+# carla-version target on every build so the commit stays current.
+set (CARLA_VERSION_SOURCE ${LIBCARLA_SOURCE_PATH}/carla/Version.h.in)
+set (CARLA_VERSION_DESTINATION ${LIBCARLA_SOURCE_PATH}/carla/Version.h)
+set (CARLA_VERSION_GIT_DIR ${CARLA_WORKSPACE_PATH})
+include (${CARLA_WORKSPACE_PATH}/CMake/CarlaVersion.cmake)
+message (STATUS "CARLA version string: ${CARLA_VERSION_STRING}")
+
+carla_add_custom_target (
+  carla-version
+  "Refresh LibCarla/source/carla/Version.h from git (release version, tag or commit)."
+  COMMAND
+    ${CMAKE_COMMAND}
+    -DCARLA_VERSION=${CARLA_VERSION}
+    -DCARLA_RELEASE_VERSION=${CARLA_RELEASE_VERSION}
+    -DCARLA_VERSION_GIT_DIR=${CARLA_VERSION_GIT_DIR}
+    -DCARLA_VERSION_SOURCE=${CARLA_VERSION_SOURCE}
+    -DCARLA_VERSION_DESTINATION=${CARLA_VERSION_DESTINATION}
+    -P ${CARLA_WORKSPACE_PATH}/CMake/CarlaVersion.cmake
+  BYPRODUCTS
+    ${CARLA_VERSION_DESTINATION}
+  VERBATIM
 )
 
 if (WIN32)
@@ -632,3 +652,11 @@ if (BUILD_LIBCARLA_TESTS)
   endif ()
 
 endif ()
+
+
+
+foreach (TARGET_NAME carla-server carla-client)
+  if (TARGET ${TARGET_NAME})
+    add_dependencies (${TARGET_NAME} carla-version)
+  endif ()
+endforeach ()
