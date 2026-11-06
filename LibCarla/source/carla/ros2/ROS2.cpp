@@ -751,12 +751,28 @@ void ROS2::ProcessDataFromLidar(
 }
 
 void ROS2::ProcessDataFromLidar(
+    uint64_t sensor_type,
+    carla::streaming::detail::stream_id_type stream_id,
+    const carla::geom::Transform sensor_transform,
+    uint32_t channel_count,
+    float upper_fov_limit,
+    float lower_fov_limit,
+    carla::sensor::data::LidarData &data,
+    void *actor) {
+  ProcessDataFromLidar(
+      sensor_type, stream_id, sensor_transform,
+      channel_count, upper_fov_limit, lower_fov_limit,
+      LidarDriverOptions{}, data, actor);
+}
+
+void ROS2::ProcessDataFromLidar(
     uint64_t /*sensor_type*/,
     carla::streaming::detail::stream_id_type stream_id,
     const carla::geom::Transform sensor_transform,
     uint32_t channel_count,
     float upper_fov_limit,
     float lower_fov_limit,
+    const LidarDriverOptions &driver,
     carla::sensor::data::LidarData &data,
     void *actor) {
   const Stamp stamp = GetStamp();
@@ -780,12 +796,25 @@ void ROS2::ProcessDataFromLidar(
       for (uint32_t i = 0u; i < channel_count; ++i) {
         vertical_angles.push_back(upper_rad - static_cast<float>(i) * vertical_step);
       }
+      const auto *channel_counts = data._header.data() + carla::sensor::data::LidarData::Index::SIZE;
+      const auto channel_counts_size = data._header.size() - carla::sensor::data::LidarData::Index::SIZE;
+      if (driver.enabled) {
+        // One message per completed rotation, stamped at its first point.
+        LidarDriverOptions options = driver;
+        options.slice.stamp = stamp.seconds + stamp.nanoseconds * 1e-9;
+        if (publisher->WriteDriverScan(
+                options, width,
+                reinterpret_cast<const std::uint8_t *>(data._points.data()),
+                channel_counts, channel_counts_size, vertical_angles)) {
+          publisher->Publish();
+        }
+        PublishTransform(actor, stamp, sensor_transform);
+        return;
+      }
       publisher->WriteExtendedPointCloud(
           stamp.seconds, stamp.nanoseconds, 1u, width,
           reinterpret_cast<const std::uint8_t *>(data._points.data()),
-          data._header.data() + carla::sensor::data::LidarData::Index::SIZE,
-          data._header.size() - carla::sensor::data::LidarData::Index::SIZE,
-          vertical_angles);
+          channel_counts, channel_counts_size, vertical_angles);
     } else {
       publisher->WritePointCloud(
           stamp.seconds, stamp.nanoseconds, 1u, width,
