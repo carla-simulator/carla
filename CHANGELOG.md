@@ -168,6 +168,7 @@
 
 * Fixed **`/vehicle/status/gear_status` reporting NEUTRAL** while an Autoware-driven vehicle moves forward. Acceleration control never engages the transmission. While it is active, `GetVehicleCurrentGear()` now reports the first forward gear, so Autoware sees DRIVE. `get_telemetry_data()` reports the same gear.
 * Fixed camera fx in the ROS 2 `CameraInfo`, large map actor tagging, and camera frame and timestamp consistency.
+* Fixed the native ROS 2 LiDAR point cloud in the Autoware `PointXYZIRCAEDT` layout, which every multi-channel `sensor.lidar.ray_cast` publishes, carrying an intensity of `0` on every point: CARLA's `[0, 1]` float intensity was cast into the layout's `uint8` without scaling. It is now scaled to `[0, 255]`; the `PointXYZI` layout and the Python API keep the float.
 
 #### Traffic Manager and agents
 
