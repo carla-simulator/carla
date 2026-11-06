@@ -67,7 +67,7 @@ If you prefer to install CARLA by hand, follow the rest of this page.
 Download the desired CARLA package from GitHub:
 
 - [CARLA 1.0 on GitHub](https://github.com/carla-simulator/carla/releases/tag/1.0), with the release notes and every download.
-- Direct downloads: [Linux](https://downloads.carlasim.com/Linux/CARLA_1.0.tar.gz), with its [additional maps package](https://downloads.carlasim.com/Linux/AdditionalMaps_1.0.tar.gz), and [Windows](https://downloads.carlasim.com/Windows/CARLA_1.0.zip). [Additional maps](map_content_packs.md) tells how to install the maps.
+- Direct downloads: [Linux](https://downloads.carlasim.com/Linux/CARLA_1.0.tar.gz), with its [additional maps package](https://downloads.carlasim.com/Linux/AdditionalMaps_1.0.tar.gz), and [Windows](https://downloads.carlasim.com/Windows/CARLA_1.0.zip), with its [additional maps package](https://downloads.carlasim.com/Windows/AdditionalMaps_1.0.tar.gz). [Additional maps](map_content_packs.md) tells how to install the maps.
 
 This repository contains different versions of CARLA. You will find options to download the __current release__ with all the most recent fixes and features and __previous releases__. A __nightly build__ with all the developmental fixes and features is available at downloads.carlasim.com for [Linux](https://downloads.carlasim.com/Linux/Dev/CARLA_UE5_Latest.tar.gz) and [Windows](https://downloads.carlasim.com/Windows/Dev/CARLA_UE5_Latest.zip) (the nightly build is the most unstable version of CARLA).
 
@@ -92,7 +92,7 @@ cd CARLA_ROOT\PythonAPI\carla\dist\
 pip3 install carla-<version>-cp310-cp310-win_amd64.whl
 ```
 
-Each wheel is built for one Python minor version and one platform, for example `carla-<version>-cp310-cp310-linux_x86_64.whl` for Python 3.10 on Linux. A package can ship several, one per Python version it was built for. Install the one whose `cpXY` tag matches your interpreter, since installing a wheel on another Python version fails.
+Each wheel is built for one Python minor version and one platform, for example `carla-<version>-cp310-cp310-linux_x86_64.whl` for Python 3.10 on Linux. A package can ship several, one per Python version it was built for. Release packages ship wheels for Python 3.10 to 3.15. Install the one whose `cpXY` tag matches your interpreter, since installing a wheel on another Python version fails.
 
 !!! Warning
     Do not install the client with `pip3 install carla`. The `carla` package on PyPI is the client for the Unreal Engine 4 version of CARLA and cannot connect to this server.

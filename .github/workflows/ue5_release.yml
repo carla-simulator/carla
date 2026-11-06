@@ -4,8 +4,9 @@ name: UE5-Release
 #   CARLA_<VERSION>.tar.gz                   (package)
 #   AdditionalMaps_<VERSION>.tar.gz          (pack)
 #   CARLA_<VERSION>_release-metadata.tar.gz
-# and to Windows/ (no AdditionalMaps pack yet):
+# and to Windows/:
 #   CARLA_<VERSION>.zip                      (package)
+#   AdditionalMaps_<VERSION>.tar.gz          (pack)
 #   CARLA_<VERSION>_release-metadata.tar.gz
 # Run it on a release branch ue5/<VERSION> created from ue58-dev, whose head
 # carries the tag <VERSION> (e.g. branch ue5/1.0, tag 1.0).
@@ -63,8 +64,8 @@ jobs:
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
     with:
-      python-versions: "3.10,3.11,3.12"
-      smoke-test-python-versions: "3.10,3.11,3.12"
+      python-versions: "3.10,3.11,3.12,3.13,3.14,3.15"
+      smoke-test-python-versions: "3.10,3.11,3.12,3.13,3.14,3.15"
       additional-maps: true
       upload-package: true
       upload-replace-latest: false
@@ -79,8 +80,8 @@ jobs:
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
     with:
-      python-versions: "3.10"
-      additional-maps: false
+      python-versions: "3.10,3.11,3.12,3.13,3.14,3.15"
+      additional-maps: true
       upload-package: true
       upload-replace-latest: false
       release-version: ${{ needs.version.outputs.version }}
