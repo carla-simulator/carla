@@ -6,6 +6,7 @@ Authoring happens in the Unreal Editor, so all of it needs a [source build](buil
 
 - [__Maps__](#maps)
 - [__Vehicles__](#vehicles)
+- [__Pedestrians__](#pedestrians)
 - [__Props and materials__](#props-and-materials)
 - [__Shipping what you made__](#shipping-what-you-made)
 - [__See also__](#see-also)
@@ -43,6 +44,13 @@ Two steps make a vehicle, in this order, and two more refine it.
 | [__Suspension__](content_authoring_vehicles_suspension.md) | Set the Chaos suspension of each wheel in its wheel blueprint. |
 
 ---
+## Pedestrians
+
+| Page | What it covers |
+| --- | --- |
+| [__Pedestrians__](content_authoring_pedestrians.md) | Bind a model to CARLA's shared pedestrian skeleton, import it, register it as a `walker.pedestrian.*` blueprint, and add an animation of your own. |
+
+---
 ## Props and materials
 
 | Page | What it covers |
@@ -61,6 +69,3 @@ Two steps make a vehicle, in this order, and two more refine it.
 
 * [__Create semantic tags__](core_sensors_semantic_tags.md) — give your assets a semantic class of their own, so the segmentation sensors label them separately.
 * [__Catalogue__](catalogue.md) — what CARLA already ships, before you make something new.
-
-!!! Note
-    Pedestrians can be imported as well, binding the model to CARLA's shared pedestrian skeleton and registering it as a `walker.pedestrian.*` blueprint. That procedure is not documented yet.

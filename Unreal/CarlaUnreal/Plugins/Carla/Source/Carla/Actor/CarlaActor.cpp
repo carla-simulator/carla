@@ -16,6 +16,7 @@
 #include "Carla/Vehicle/MovementComponents/ChronoMovementComponent.h"
 #include "Carla/Traffic/TrafficLightBase.h"
 #include "Carla/Game/CarlaStatics.h"
+#include "Carla/Game/CarlaEpisode.h"
 
 #include <util/disable-ue4-macros.h>
 #include <carla/rpc/AckermannControllerSettings.h>
@@ -372,6 +373,10 @@ void FCarlaActor::SetActorGlobalTransform(
 
 FVector FCarlaActor::GetActorVelocity() const
 {
+  if (bHasMirroredKinematics)
+  {
+    return MirroredVelocity;
+  }
   if (IsDormant())
   {
     return ActorData->Velocity;
@@ -384,6 +389,10 @@ FVector FCarlaActor::GetActorVelocity() const
 
 FVector FCarlaActor::GetActorAngularVelocity() const
 {
+  if (bHasMirroredKinematics)
+  {
+    return FMath::RadiansToDegrees(MirroredAngularVelocity);
+  }
   if (IsDormant())
   {
     return ActorData->AngularVelocity;
@@ -1602,6 +1611,10 @@ ECarlaServerResponse FWalkerActor::SetWalkerState(
 
 FVector FWalkerActor::GetActorVelocity() const
 {
+  if (bHasMirroredKinematics)
+  {
+    return MirroredVelocity;
+  }
   if (IsDormant())
   {
     return GetActorData()->Velocity;
@@ -1845,4 +1858,19 @@ ECarlaServerResponse FWalkerActor::SetActorDead()
     UE_LOG(LogCarla, Warning, TEXT("Walker starting life span by dead"));
   }
   return ECarlaServerResponse::Success;
+}
+
+FVector CarlaGetActorAngularVelocityInRadians(const AActor &Actor)
+{
+  UCarlaEpisode *Episode = UCarlaStatics::GetCurrentEpisode(Actor.GetWorld());
+  if ((Episode != nullptr) && !Episode->bIsPrimaryServer)
+  {
+    const FCarlaActor *View = Episode->FindCarlaActor(const_cast<AActor *>(&Actor));
+    if ((View != nullptr) && View->HasMirroredKinematics())
+    {
+      return View->GetMirroredAngularVelocityInRadians();
+    }
+  }
+  const auto *Root = Cast<UPrimitiveComponent>(Actor.GetRootComponent());
+  return (Root != nullptr) ? Root->GetPhysicsAngularVelocityInRadians() : FVector::ZeroVector;
 }

@@ -28,7 +28,7 @@ on:
         required: false
         default: ""
       release-version:
-        description: "Release version, e.g. 1.0: uploads to Linux/CARLA_<version>/ instead of Linux/Dev/ (empty: nightly)"
+        description: "Release version, e.g. 1.0: uploads to Linux/ as CARLA_<version>.tar.gz instead of to Linux/Dev/ (empty: nightly)"
         type: string
         required: false
         default: ""
@@ -60,7 +60,7 @@ jobs:
         shell: bash -leo pipefail {0}
     runs-on: self-hosted:ubuntu-gpu
     container:
-      image: carlasim/carla-builder:ue5-22.04
+      image: carlasim/carla-builder:ue5-22.04-2
       options: >-
         --runtime=nvidia --gpus all -e NVIDIA_DRIVER_CAPABILITIES=all
         --volume /home/jenkins/unreal-engine/ue5:/unreal-engine
@@ -70,6 +70,7 @@ jobs:
       CARLA_CONTENT_CACHE: /carla-content-cache
       PYTHON_VERSIONS: ${{ inputs.python-versions }}
       SMOKE_TEST_PYTHON_VERSIONS: ${{ inputs.smoke-test-python-versions }}
+      PYTHON_ENVS_DIR: /opt/conda/envs
 
     steps:
 
@@ -83,25 +84,12 @@ jobs:
           fi
           EOF
 
+          # The main Python (the first version) is the active one.
+          MAIN_VERSION=$(echo "${PYTHON_VERSIONS}" | cut -d, -f1 | tr -d ' ')
+          echo "source activate ${PYTHON_ENVS_DIR}/carla${MAIN_VERSION//./}" >> ~/.bashrc
+
       - name: Checkout repository
         uses: actions/checkout@v4
-
-      - name: Set up Python environments
-        run: |
-          # One conda environment carla<XY> per Python version, created on the
-          # first run. pip, not conda, installs the packages: the conda channel
-          # lacks some of them (e.g. build) for newer Pythons.
-          VERSIONS=$(echo "${PYTHON_VERSIONS},${SMOKE_TEST_PYTHON_VERSIONS}" | tr ', ' '\n\n' | sed '/^$/d' | sort -uV)
-          for VERSION in ${VERSIONS}; do
-            ENV_NAME="carla${VERSION//./}"
-            if ! conda env list | awk '{print $1}' | grep -qx "${ENV_NAME}"; then
-              conda create --yes --quiet --name "${ENV_NAME}" "python=${VERSION}"
-            fi
-            conda run --name "${ENV_NAME}" python -m pip install --quiet numpy build
-          done
-
-          MAIN_VERSION=$(echo "${PYTHON_VERSIONS}" | cut -d, -f1 | tr -d ' ')
-          echo "source activate carla${MAIN_VERSION//./}" >> ~/.bashrc
 
       - name: Update CARLA Content cache
         run: |
@@ -120,19 +108,21 @@ jobs:
 
       - name: Preset
         run: |
-          # The first version is the main Python; CMake builds a wheel for
-          # every version in CARLA_PYTHON_VERSIONS.
           PYTHON_ARGS=()
           CMAKE_PYTHON_VERSIONS=""
           for VERSION in $(echo "${PYTHON_VERSIONS}" | tr ', ' '\n\n' | sed '/^$/d'); do
-            EXECUTABLE=$(conda run --name "carla${VERSION//./}" python -c "import sys; print(sys.executable)")
+            EXECUTABLE="${PYTHON_ENVS_DIR}/carla${VERSION//./}/bin/python"
             if [ -z "${CMAKE_PYTHON_VERSIONS}" ]; then
               PYTHON_ARGS+=("-DPython3_EXECUTABLE=${EXECUTABLE}" "-DPython_EXECUTABLE=${EXECUTABLE}")
             fi
             PYTHON_ARGS+=("-DCARLA_PYTHON_${VERSION//./}_EXECUTABLE=${EXECUTABLE}")
             CMAKE_PYTHON_VERSIONS="${CMAKE_PYTHON_VERSIONS:+${CMAKE_PYTHON_VERSIONS};}${VERSION}"
           done
+          # Version.h takes the commit from git; the container user does not own the
+          # checkout, so without this git refuses it and the version loses the commit.
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
           cmake --preset Release -DENABLE_ROS2=ON -DBUILD_LIBCARLA_TESTS=ON \
+            -DCARLA_RELEASE_VERSION="${{ inputs.release-version }}" \
             -DCARLA_PYTHON_VERSIONS="${CMAKE_PYTHON_VERSIONS}" "${PYTHON_ARGS[@]}"
 
       - name: Build LibCarla
@@ -176,37 +166,37 @@ jobs:
           fi
           cmake --build Build/Release --target package-additional-maps
 
-      - name: Start server for smoke tests
-        if: inputs.smoke-test-python-versions != ''
-        run: |
-          PACKAGE_DIRS=(Build/Release/Package/Carla-*-Linux-Shipping)
-          if [ ${#PACKAGE_DIRS[@]} -ne 1 ] || [ ! -d "${PACKAGE_DIRS[0]}" ]; then
-            echo "::error::Expected exactly one package directory, found: ${PACKAGE_DIRS[*]}"
-            exit 1
-          fi
-          # Its own process group, so the cleanup step stops the script and the
-          # server binary it starts together.
-          setsid "${PACKAGE_DIRS[0]}/Linux/CarlaUnreal.sh" \
-            -carla-rpc-port=3654 -RenderOffScreen -nosound -ros2 \
-            > Build/smoke-test-server.log 2>&1 &
-          echo $! > Build/smoke-test-server.pid
-
       - name: Run smoke tests
         if: inputs.smoke-test-python-versions != ''
         run: |
           PYTHONS=()
           for VERSION in $(echo "${SMOKE_TEST_PYTHON_VERSIONS}" | tr ', ' '\n\n' | sed '/^$/d'); do
-            PYTHONS+=("$(conda run --name "carla${VERSION//./}" python -c "import sys; print(sys.executable)")")
+            PYTHONS+=("${PYTHON_ENVS_DIR}/carla${VERSION//./}/bin/python")
           done
-          # The first connection waits for the server to finish starting.
-          ./Util/Tools/RunSmokeTests.sh --connect-timeout 300 --results-dir Build/test-results "${PYTHONS[@]}"
+          Build/Release/Package/Carla-*-Linux-Shipping/CarlaUnreal.sh \
+            -carla-rpc-port=3654 -RenderOffScreen -nosound -ros2 \
+            > Build/smoke-test-server.log 2>&1 < /dev/null &
+          SERVER_PID=$!
 
-      - name: Stop smoke test server
-        if: always() && inputs.smoke-test-python-versions != ''
-        run: |
-          if [ -f Build/smoke-test-server.pid ]; then
-            kill -- -"$(cat Build/smoke-test-server.pid)" 2>/dev/null || true
-          fi
+          # A Shipping server logs almost nothing: on failure, say whether it
+          # was still running or how it ended.
+          server_diagnostics() {
+            if kill -0 ${SERVER_PID} 2>/dev/null; then
+              ps -o pid,stat,etime,time,%cpu,rss,args -p ${SERVER_PID} --ppid ${SERVER_PID} || true
+            else
+              SERVER_STATUS=0
+              wait ${SERVER_PID} || SERVER_STATUS=$?
+              echo "The server exited with status ${SERVER_STATUS}."
+            fi
+            tail -n 50 Build/smoke-test-server.log || true
+          }
+          trap 'STATUS=$?
+                if [ ${STATUS} -ne 0 ]; then server_diagnostics; fi
+                pkill -KILL -P ${SERVER_PID} || true
+                kill -KILL ${SERVER_PID} 2>/dev/null || true
+                exit ${STATUS}' EXIT
+
+          ./Util/Tools/RunSmokeTests.sh --connect-timeout 300 --results-dir Build/test-results "${PYTHONS[@]}"
 
       - name: Upload smoke test results
         if: always() && inputs.smoke-test-python-versions != ''
@@ -217,6 +207,7 @@ jobs:
             Build/test-results/smoke-*.xml
             Build/smoke-test-server.log
           if-no-files-found: ignore
+          retention-days: 14
 
       - name: Configure Backblaze
         if: inputs.upload-package == true

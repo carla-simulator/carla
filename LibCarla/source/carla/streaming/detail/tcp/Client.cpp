@@ -193,7 +193,18 @@ namespace tcp {
           // Move the buffer to the callback function and start reading the next
           // piece of data.
           // log_debug("streaming client: success reading data, calling the callback");
-          _callback(message->pop());
+          // An exception leaving this handler would escape io_context::run()
+          // on a worker thread and call std::terminate, killing the client
+          // process; log it and keep reading the stream instead.
+#ifndef LIBCARLA_NO_EXCEPTIONS
+          try {
+#endif // LIBCARLA_NO_EXCEPTIONS
+            _callback(message->pop());
+#ifndef LIBCARLA_NO_EXCEPTIONS
+          } catch (const std::exception &e) {
+            log_error("streaming client: exception in stream callback:", e.what());
+          }
+#endif // LIBCARLA_NO_EXCEPTIONS
           ReadData();
         } else {
           // As usual, if anything fails start over from the very top.

@@ -43,6 +43,9 @@ public:
   
   bool TickCueReceived();
 
+  /// A Multi-GPU secondary refuses every call that would change its world.
+  void SetIsSecondaryServer(bool bIsSecondary);
+
   void Stop();
 
   FDataStream OpenStream() const;

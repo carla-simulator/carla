@@ -301,7 +301,7 @@ The OpenDRIVE header of a map carries a `geoReference` string: the [PROJ](https:
 carla_map = world.get_map()
 
 geo = carla_map.transform_to_geolocation(vehicle.get_location())   # carla.GeoLocation
-transform = carla_map.geolocation_to_transform(geo)                # and back
+location = carla_map.geolocation_to_transform(geo)                 # and back, as a carla.Location
 projection = carla_map.get_geoprojection()                         # the map's own projection
 ```
 

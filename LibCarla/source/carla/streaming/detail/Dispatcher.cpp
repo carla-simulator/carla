@@ -74,19 +74,33 @@ namespace detail {
     }
   }
 
+  std::optional<stream_id_type> Dispatcher::ResolveSessionStreamId(stream_id_type session_stream_id) const {
+    if (!_sessions_use_stream_aliases) {
+      return session_stream_id;
+    }
+    auto alias = _stream_aliases.find(session_stream_id);
+    if (alias == _stream_aliases.end()) {
+      return std::nullopt;
+    }
+    return alias->second;
+  }
+
   bool Dispatcher::RegisterSession(std::shared_ptr<Session> session) {
     DEBUG_ASSERT(session != nullptr);
     std::scoped_lock<std::mutex> lock(_mutex);
-    auto search = _stream_map.find(session->get_stream_id());
+    const auto stream_id = ResolveSessionStreamId(session->get_stream_id());
+    auto search = stream_id ? _stream_map.find(*stream_id) : _stream_map.end();
     if (search != _stream_map.end()) {
       auto stream_state = search->second;
       if (stream_state) {
         log_debug("Connecting session (stream ", session->get_stream_id(), ")");
+        _session_streams.insert_or_assign(session.get(), stream_state);
         stream_state->ConnectSession(std::move(session));
         log_debug("Current streams: ", _stream_map.size());
         return true;
       }
     }
+    _session_streams.erase(session.get());
     log_error("Invalid session: no stream available with id", session->get_stream_id());
     return false;
   }
@@ -95,14 +109,18 @@ namespace detail {
     DEBUG_ASSERT(session != nullptr);
     std::scoped_lock<std::mutex> lock(_mutex);
     log_debug("Calling DeregisterSession for ", session->get_stream_id());
-    auto search = _stream_map.find(session->get_stream_id());
-    if (search != _stream_map.end()) {
-      auto stream_state = search->second;
-      if (stream_state) {
-        log_debug("Disconnecting session (stream ", session->get_stream_id(), ")");
-        stream_state->DisconnectSession(session);
-        log_debug("Current streams: ", _stream_map.size());
-      }
+    // The stream the session joined, not a fresh lookup: an alias may have
+    // been retargeted to another stream since.
+    auto search = _session_streams.find(session.get());
+    if (search == _session_streams.end()) {
+      return;
+    }
+    auto stream_state = search->second.lock();
+    _session_streams.erase(search);
+    if (stream_state) {
+      log_debug("Disconnecting session (stream ", session->get_stream_id(), ")");
+      stream_state->DisconnectSession(session);
+      log_debug("Current streams: ", _stream_map.size());
     }
   }
   
@@ -135,6 +153,41 @@ namespace detail {
       return temp_token;
     }
     return token_type();
+  }
+
+  std::optional<token_type> Dispatcher::FindToken(stream_id_type stream_id) {
+    std::scoped_lock<std::mutex> lock(_mutex);
+    auto search = _stream_map.find(stream_id);
+    if (search == _stream_map.end()) {
+      return std::nullopt;
+    }
+    auto stream_state = search->second;
+    stream_state->ForceActive();
+    return stream_state->token();
+  }
+
+  void Dispatcher::SetSessionsUseStreamAliases(bool enabled) {
+    std::scoped_lock<std::mutex> lock(_mutex);
+    _sessions_use_stream_aliases = enabled;
+  }
+
+  void Dispatcher::SetStreamAlias(stream_id_type alias, stream_id_type stream_id) {
+    std::scoped_lock<std::mutex> lock(_mutex);
+    _stream_aliases.insert_or_assign(alias, stream_id);
+  }
+
+  void Dispatcher::RemoveStreamAlias(stream_id_type alias) {
+    std::scoped_lock<std::mutex> lock(_mutex);
+    _stream_aliases.erase(alias);
+  }
+
+  std::optional<stream_id_type> Dispatcher::FindStreamAlias(stream_id_type alias) {
+    std::scoped_lock<std::mutex> lock(_mutex);
+    auto search = _stream_aliases.find(alias);
+    if (search == _stream_aliases.end()) {
+      return std::nullopt;
+    }
+    return search->second;
   }
 
 } // namespace detail

@@ -80,3 +80,25 @@ void CarlaRecorderWeathers::Write(std::ostream &OutFile)
     Weather.Write(OutFile);
   }
 }
+
+void CarlaRecorderWeathers::Read(std::istream &InFile)
+{
+  uint16_t Total = 0;
+  ReadValue<uint16_t>(InFile, Total);
+  for (uint16_t i = 0; (i < Total) && InFile; ++i)
+  {
+    CarlaRecorderWeather Record;
+    Record.Read(InFile);
+    Add(Record);
+  }
+}
+
+const std::vector<CarlaRecorderWeather>& CarlaRecorderWeathers::GetWeathers() const
+{
+  return Weathers;
+}
+
+bool CarlaRecorderWeathers::IsEmpty() const
+{
+  return Weathers.empty();
+}

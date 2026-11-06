@@ -240,7 +240,7 @@ def cmd_verify(args) -> None:
     for mod, hint in [
         ("carla", "install-python-api"),
         ("agents.navigation.global_route_planner", "add $CARLA_ROOT/PythonAPI/carla to PYTHONPATH"),
-        ("srunner.scenariomanager.carla_data_provider", "add SCENARIO_RUNNER_ROOT to PYTHONPATH"),
+        ("srunner.scenariomanager.simulation_data", "add SCENARIO_RUNNER_ROOT to PYTHONPATH"),
         ("leaderboard.utils.statistics_manager", "add LEADERBOARD_ROOT to PYTHONPATH"),
         ("leaderboard.autoagents.autonomous_agent", "add LEADERBOARD_ROOT to PYTHONPATH"),
     ]:

@@ -15,7 +15,7 @@
 #  2. the stage manifest UAT writes, <staging>/<Platform>/Manifest_UFSFiles_*.txt:
 #     any line under CarlaUnreal/Plugins/Packs/<Pack>/ (the files that went into
 #     the base containers), when the staging dir still exists;
-#  3. the packaged project: <archive>/<Platform>/CarlaUnreal/Plugins/Packs/<Pack>
+#  3. the packaged project: <archive>/CarlaUnreal/Plugins/Packs/<Pack>
 #     must not exist (the stager copies the .uplugin of every enabled plugin).
 # The registry check runs `carla-pack check-base` when the tool and a python3
 # are available (CARLA_CONTENT_PACKS_TOOL / CARLA_CONTENT_PACKS_PYTHON): it parses
@@ -82,7 +82,7 @@ set (REGISTRIES
   "${RELEASE_PLATFORM_DIR}/Metadata/DevelopmentAssetRegistry.bin")
 if (DEFINED CARLA_PACKAGE_ARCHIVE_PATH AND NOT "${CARLA_PACKAGE_ARCHIVE_PATH}" STREQUAL "")
   # A loose copy in the packaged project, when the stage left one (usually it is inside the pak).
-  file (GLOB ARCHIVE_REGISTRIES "${CARLA_PACKAGE_ARCHIVE_PATH}/*/CarlaUnreal/AssetRegistry.bin")
+  file (GLOB ARCHIVE_REGISTRIES "${CARLA_PACKAGE_ARCHIVE_PATH}/CarlaUnreal/AssetRegistry.bin")
   list (APPEND REGISTRIES ${ARCHIVE_REGISTRIES})
 endif ()
 set (CHECKED_REGISTRIES 0)
@@ -186,7 +186,7 @@ endif ()
 # 3. packaged project tree.
 set (CHECKED_ARCHIVES 0)
 if (DEFINED CARLA_PACKAGE_ARCHIVE_PATH AND NOT "${CARLA_PACKAGE_ARCHIVE_PATH}" STREQUAL "")
-  file (GLOB PROJECT_DIRS LIST_DIRECTORIES true "${CARLA_PACKAGE_ARCHIVE_PATH}/*/CarlaUnreal")
+  set (PROJECT_DIRS "${CARLA_PACKAGE_ARCHIVE_PATH}/CarlaUnreal")
   foreach (PROJECT_DIR ${PROJECT_DIRS})
     if (IS_DIRECTORY "${PROJECT_DIR}")
       math (EXPR CHECKED_ARCHIVES "${CHECKED_ARCHIVES} + 1")

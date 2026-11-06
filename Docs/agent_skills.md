@@ -99,7 +99,7 @@ The three servers an assistant may see do different jobs:
 Inside a CARLA checkout there is nothing to configure:
 
 1. `CarlaUnreal.uproject` enables the `ModelContextProtocol` and `EditorToolset` plugins, for the Editor target only.
-2. `Config/DefaultEditorPerProjectUserSettings.ini` turns on __Auto Start Server__, so the server starts when the editor finishes loading, on `http://localhost:8000/mcp`. The editor log confirms it with `LogModelContextProtocol: Starting MCP server on port 8000`.
+2. `Config/DefaultEditorPerProjectUserSettings.ini` turns on __Auto Start Server__, so the server starts when the editor finishes loading, on `http://localhost:6256/mcp`. The editor log confirms it with `LogModelContextProtocol: Starting MCP server on port 6256`.
 3. The root `.mcp.json` registers that URL as `unreal-mcp`, next to `carla`. Claude Code picks it up when it is opened in the checkout and asks once to approve the project server.
 
 Open the editor __before__ the assistant. Clients connect to MCP servers when the session starts: if the editor was not running then, `unreal-mcp` shows as failed (`ECONNREFUSED`). Once the editor is up, reconnect it with `/mcp` → `unreal-mcp` → __Reconnect__ in Claude Code, or restart the session.
@@ -107,8 +107,8 @@ Open the editor __before__ the assistant. Clients connect to MCP servers when th
 To check the server by hand:
 
 ```sh
-ss -ltnp | grep 8000            # UnrealEditor should be listening on 127.0.0.1:8000
-curl -s -X POST http://localhost:8000/mcp \
+ss -ltnp | grep 6256            # UnrealEditor should be listening on 127.0.0.1:6256
+curl -s -X POST http://localhost:6256/mcp \
   -H 'Content-Type: application/json' -H 'Accept: application/json, text/event-stream' \
   -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"check","version":"0"}}}'
 ```
@@ -116,7 +116,7 @@ curl -s -X POST http://localhost:8000/mcp \
 For other clients, or for a project outside this checkout, run `ModelContextProtocol.GenerateClientConfig <ClaudeCode|Cursor|VSCode|Gemini|Codex|All>` in the editor console. It writes `.mcp.json`, `.cursor/mcp.json`, `.vscode/mcp.json`, `.gemini/settings.json` or `.codex/config.toml` with the current port and path. To register it by hand in Claude Code for every project:
 
 ```sh
-claude mcp add --transport http unreal-mcp -s user http://localhost:8000/mcp
+claude mcp add --transport http unreal-mcp -s user http://localhost:6256/mcp
 ```
 
 ### How it works
@@ -142,7 +142,7 @@ Tool calls run on the editor's game thread one at a time: a long call blocks the
 ### Settings and limits
 
 * __Editor only.__ The server starts from the editor module once the editor UI is up, so it is not available in `-game` mode, in the server started by `run-carla-ue58-server`, or in packaged builds. The plugins are restricted to the Editor target, so cooking and packaging are unaffected.
-* __Settings__ are in __Editor Preferences → General → Model Context Protocol__: Auto Start Server, port (default `8000`), URL path (default `/mcp`) and tool search (the three-tool listing above). They are per-user settings; the project file only sets the defaults.
+* __Settings__ are in __Editor Preferences → General → Model Context Protocol__: Auto Start Server, port (`6256` here, over the plugin default of `8000`, which collides with the Traffic Manager), URL path (default `/mcp`) and tool search (the three-tool listing above). They are per-user settings; the project file only sets the defaults.
 * __Command line:__ `-ModelContextProtocolStartServer` starts the server even with Auto Start Server off, and `-ModelContextProtocolPort=N` moves it to another port. If you change the port, update `.mcp.json` to match.
 * __More toolsets__ (PCG, Niagara, StateTree, Gameplay Tags and others) can be enabled from __Edit → Plugins__, or all at once with the `AllToolsets` plugin. CarlaUnreal does not enable them by default because they load many extra engine plugins.
 * __Edits are real edits.__ Actors the assistant places or changes stay in the level, unsaved, like any manual change. Save or discard them yourself, and keep levels under source control.

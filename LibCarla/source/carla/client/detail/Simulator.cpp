@@ -81,6 +81,11 @@ namespace detail {
       _gc_policy(enable_garbage_collection ?
         GarbageCollectionPolicy::Enabled : GarbageCollectionPolicy::Disabled) {}
 
+  Simulator::~Simulator() {
+    // Join first, or ~Episode can run on a stream thread while _client dies.
+    _client.StopStreaming();
+  }
+
   // ===========================================================================
   // -- Load a new episode -----------------------------------------------------
   // ===========================================================================
@@ -107,6 +112,15 @@ namespace detail {
       auto episode = GetCurrentEpisode();
 
       if (episode.GetId() != id) {
+        // Wait for the stream thread to reset the Traffic Manager for it.
+        const auto deadline = std::chrono::steady_clock::now() + _client.GetTimeout().to_chrono();
+        while (!_episode->IsEpisodeChangeHandled()) {
+          if (std::chrono::steady_clock::now() > deadline) {
+            log_warning("the Traffic Manager has not finished resetting for the new episode");
+            break;
+          }
+          std::this_thread::sleep_for(10ms);
+        }
         return episode;
       }
     }

@@ -32,10 +32,14 @@ namespace multigpu {
   }
   
   void Listener::Stop() {
-    _acceptor.cancel();
-    _acceptor.close();
-    _io_context.stop();
-    _io_context.restart();
+    // Non-throwing: Stop() can run twice (explicitly, then again from
+    // ~Listener() if another reference outlives it); the throwing overloads
+    // raise on the second call, since the acceptor is already closed by then.
+    boost::system::error_code ec;
+    _acceptor.cancel(ec);
+    _acceptor.close(ec);
+    // io_context is owned by whoever constructed it (Router's ThreadPool);
+    // stopping/restarting it is not this class's responsibility.
   }
   
   void Listener::OpenSession(

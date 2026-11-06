@@ -313,16 +313,15 @@ bool TrafficManagerLocal::SynchronousTick() {
 void TrafficManagerLocal::Stop() {
   run_traffic_manger.store(false);
 
-  bool synchronous_mode = parameters.GetSynchronousMode();
-  if (!synchronous_mode) {
-    if (worker_thread) {
-      if (worker_thread->joinable()) {
-        worker_thread->join();
-      }
-      worker_thread.reset();
+  // Join regardless of mode, or Start() may overwrite a joinable thread.
+  if (worker_thread) {
+    if (worker_thread->joinable()) {
+      worker_thread->join();
     }
+    worker_thread.reset();
   }
 
+  std::unique_lock<std::mutex> registration_lock(registration_mutex);
   vehicle_id_list.clear();
   registered_vehicles.Clear();
   registered_vehicles_state = -1;
@@ -347,6 +346,7 @@ void TrafficManagerLocal::Stop() {
   collision_frame.clear();
   tl_frame.clear();
   control_frame.clear();
+  registration_lock.unlock();
 
   run_traffic_manger.store(true);
 }
@@ -358,9 +358,19 @@ void TrafficManagerLocal::Release() {
   local_map.reset();
 }
 
-void TrafficManagerLocal::Reset() {
+void TrafficManagerLocal::Reset(uint64_t episode_id) {
+  // Every client alive in the process reports the change; reset once.
+  if (episode_proxy.GetId() == episode_id) {
+    return;
+  }
+  // Our client may see the change after another one; wait, or we'd reset onto the old episode.
+  auto simulator = episode_proxy.Lock();
+  const auto deadline = std::chrono::steady_clock::now() + simulator->GetNetworkingTimeout().to_chrono();
+  while (simulator->GetCurrentEpisodeId() != episode_id && std::chrono::steady_clock::now() < deadline) {
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+  }
   Release();
-  episode_proxy = episode_proxy.Lock()->GetCurrentEpisode();
+  episode_proxy = simulator->GetCurrentEpisode();
   world = cc::World(episode_proxy);
   SetupLocalMap();
   Start();

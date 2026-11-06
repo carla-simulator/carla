@@ -125,7 +125,8 @@ public:
 
   void AddChildren(IdType ChildId)
   {
-    Children.Add(ChildId);
+    // A Multi-GPU secondary replays an attachment again on every resync.
+    Children.AddUnique(ChildId);
   }
 
   void RemoveChildren(IdType ChildId)
@@ -136,6 +137,53 @@ public:
   const TArray<IdType>& GetChildren() const
   {
     return Children;
+  }
+
+  /// Multi-GPU secondary: the id the primary gave the actor this one mirrors.
+  void SetPrimaryActorId(IdType InPrimaryActorId)
+  {
+    PrimaryActorId = InPrimaryActorId;
+  }
+
+  /// The id clients know this actor by: the primary's for a mirror on a
+  /// Multi-GPU secondary, this actor's own id everywhere else.
+  IdType GetPrimaryActorId() const
+  {
+    return (PrimaryActorId != 0u) ? PrimaryActorId : Id;
+  }
+
+  /// Multi-GPU secondary: the primary's velocities of the actor this one
+  /// mirrors, in the world frame (cm/s and rad/s), of primary frame @a Frame.
+  /// A mirror never moves on its own, so its body has none of its own, and
+  /// the velocity getters report these instead.
+  void SetMirroredKinematics(const FVector &Velocity, const FVector &AngularVelocityRadians, uint64 Frame)
+  {
+    bHasMirroredKinematics = true;
+    MirroredVelocity = Velocity;
+    MirroredAngularVelocity = AngularVelocityRadians;
+    MirroredKinematicsFrame = Frame;
+  }
+
+  void ClearMirroredKinematics()
+  {
+    bHasMirroredKinematics = false;
+    MirroredVelocity = FVector::ZeroVector;
+    MirroredAngularVelocity = FVector::ZeroVector;
+  }
+
+  bool HasMirroredKinematics() const
+  {
+    return bHasMirroredKinematics;
+  }
+
+  uint64 GetMirroredKinematicsFrame() const
+  {
+    return MirroredKinematicsFrame;
+  }
+
+  FVector GetMirroredAngularVelocityInRadians() const
+  {
+    return MirroredAngularVelocity;
   }
 
   void SetAttachmentType(carla::rpc::AttachmentType InAttachmentType)
@@ -524,6 +572,20 @@ private:
 
   IdType ParentId = 0u;
 
+  IdType PrimaryActorId = 0u;
+
+protected:
+
+  bool bHasMirroredKinematics = false;
+
+  FVector MirroredVelocity = FVector::ZeroVector;
+
+  FVector MirroredAngularVelocity = FVector::ZeroVector;
+
+  uint64 MirroredKinematicsFrame = 0u;
+
+private:
+
   carla::rpc::ActorState State = carla::rpc::ActorState::Invalid;
 
   carla::rpc::AttachmentType Attachment = carla::rpc::AttachmentType::INVALID;
@@ -733,3 +795,8 @@ public:
       UWorld* World);
 
 };
+
+/// Angular velocity of @a Actor in the world frame, in rad/s: on a Multi-GPU
+/// secondary the primary's (a mirror has no motion of its own), elsewhere its
+/// root body's.
+FVector CarlaGetActorAngularVelocityInRadians(const AActor &Actor);

@@ -12,8 +12,8 @@ cross-checked against leaderboard.carla.org.
 
 For CARLA on UE 5.8 use `ue58-dev` on **leaderboard**. That branch vendors its
 own scenario engine, so it needs no scenario_runner checkout. It works against
-CARLA UE5 servers, resolves town names via `CarlaDataProvider.resolve_map_name`,
-and its routes are Town12/Town13.
+CARLA UE5 servers, resolves town names via `resolve_map_name` in
+`leaderboard/tools/map_utils.py`, and its routes are Town12/Town13.
 
 `git diff origin/leaderboard-2.0 origin/leaderboard-2.1` on **scenario_runner** is
 empty: the two branches are the same commit. On **leaderboard** it touches one

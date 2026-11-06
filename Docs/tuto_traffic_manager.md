@@ -214,6 +214,7 @@ while True:
             vehicle = world.try_spawn_actor(vehicle_bp, spawn_point_2)
 
         if vehicle: # IF vehicle is succesfully spawned
+            vehicles.append(vehicle) # Keep it for the cleanup
             vehicle.set_autopilot(True, traffic_manager.get_port()) # Give the TM control over the vehicle
 
             # Set parameters of TM vehicle control, we don't want lane changes

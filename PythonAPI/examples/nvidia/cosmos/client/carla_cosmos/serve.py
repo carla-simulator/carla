@@ -33,6 +33,8 @@ LABEL_PORT = "com.carla.cosmos.port"
 LABEL_IMAGE = "com.carla.cosmos.image"
 LABEL_STATE = "com.carla.cosmos.state"
 CONTAINER_PORT = 8000
+# Host-side default. Kept off 8000 so it cannot collide with the Traffic Manager.
+DEFAULT_HOST_PORT = 8010
 
 
 @dataclass
@@ -63,13 +65,13 @@ def find_containers() -> list[ContainerInfo]:
         insp = _docker("inspect", row["Names"], "--format", "{{json .Config.Labels}}")
         labels = json.loads(insp.stdout or "{}") or {}
         out.append(ContainerInfo(name=row["Names"], image=labels.get(LABEL_IMAGE, row["Image"]),
-                                 port=int(labels.get(LABEL_PORT, CONTAINER_PORT)),
+                                 port=int(labels.get(LABEL_PORT, DEFAULT_HOST_PORT)),
                                  state_dir=labels.get(LABEL_STATE, ""),
                                  running=row.get("State", "").lower() == "running"))
     return out
 
 
-def start_container(image: str = DEFAULT_IMAGE, port: int = CONTAINER_PORT, state_dir: str | Path = "~/.carla-cosmos/state",
+def start_container(image: str = DEFAULT_IMAGE, port: int = DEFAULT_HOST_PORT, state_dir: str | Path = "~/.carla-cosmos/state",
                     gpus: str = "all", profile: str | None = None, env: dict[str, str] | None = None,
                     name: str | None = None, extra_args: list[str] | None = None) -> ContainerInfo:
     """``docker run -d`` the server image with our labels."""

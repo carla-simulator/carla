@@ -8,7 +8,9 @@
 
 #include "Carla.h"
 #include "Carla/Actor/ActorBlueprintFunctionLibrary.h"
+#include "Carla/Actor/CarlaActor.h"
 #include "Carla/Game/CarlaEpisode.h"
+#include "Carla/Game/CarlaStatics.h"
 #include "Carla/Vehicle/CarlaWheeledVehicle.h"
 #include "Carla/Vehicle/VehicleLightState.h"
 
@@ -77,6 +79,13 @@ TObjectPtr<ACarlaWheeledVehicle> AVehicleStatusSensor::FindAttachmentParentVehic
 
 void AVehicleStatusSensor::CollectAndStream(float /*DeltaSeconds*/)
 {
+  const UCarlaEpisode *CurrentEpisode = UCarlaStatics::GetCurrentEpisode(GetWorld());
+  if (!OwningVehicle.IsValid() && (CurrentEpisode != nullptr) && !CurrentEpisode->bIsPrimaryServer)
+  {
+    // A Multi-GPU mirror is attached in the frame it is spawned, and streams
+    // from the primary sensor's first tick, not the timer's.
+    OwningVehicle = FindAttachmentParentVehicle();
+  }
   if (!OwningVehicle.IsValid())
   {
     return;
@@ -171,9 +180,18 @@ void AVehicleStatusSensor::SetVelocityInfoToLocal(const AActor* VehicleActor)
   const FQuat InvRot = VehicleActor->GetActorTransform().GetRotation().Inverse();
   VelocityInfo.Velocity = InvRot.RotateVector(CmpsToMps(WorldVel_cmps));
 
-  // Physics angular velocity (rad/s, world space)
+  // Physics angular velocity (rad/s, world space); a Multi-GPU mirror, which
+  // never simulates, has the primary's, when the primary's body simulates.
   FVector WorldAngVel = FVector::ZeroVector;
-  if (UPrimitiveComponent* RootPrim = Cast<UPrimitiveComponent>(VehicleActor->GetRootComponent()))
+  if (const auto* MirroredVehicle = Cast<ACarlaWheeledVehicle>(VehicleActor);
+      (MirroredVehicle != nullptr) && MirroredVehicle->HasMirroredMotion())
+  {
+    if (MirroredVehicle->IsMirroredSimulatingPhysics())
+    {
+      WorldAngVel = CarlaGetActorAngularVelocityInRadians(*VehicleActor);
+    }
+  }
+  else if (UPrimitiveComponent* RootPrim = Cast<UPrimitiveComponent>(VehicleActor->GetRootComponent()))
   {
     if (RootPrim->IsSimulatingPhysics())
     {

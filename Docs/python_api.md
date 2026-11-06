@@ -704,7 +704,7 @@ Stops the recording in progress. If you specified a path in `filename`, the reco
 - <a name="carla.Client.stop_replayer"></a>**<font color="#7fb800">stop_replayer</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**keep_actors**</font>)  
 Stop current replayer.  
     - **Parameters:**
-        - `keep_actors` (_bool_) - True if you want autoremove all actors from the replayer, or False to keep them.  
+        - `keep_actors` (_bool_) - If False, the replay runs to its end before stopping, so the actors the recording destroys are removed and the others stay. If True, every replayed actor stays as it is.  
 - <a name="carla.Client.unmount_content_pack"></a>**<font color="#7fb800">unmount_content_pack</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**name**</font>)  
 Unmounts a content pack. Refused (RuntimeError) while a map of the pack is the current world or objects loaded from it are still alive; load another map first. Returns True on success.  
     - **Parameters:**
@@ -1058,9 +1058,7 @@ Flattened array of `width * height` float32 distances in meters, row major. Copy
 
 ##### Dunder methods
 - <a name="carla.DistanceImage.__getitem__"></a>**<font color="#7fb800">\__getitem__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**pos**=int</font>)  
-Returns the distance in meters at flattened pixel index `pos`.  
-- <a name="carla.DistanceImage.__iter__"></a>**<font color="#7fb800">\__iter__</font>**(<font color="#00a6ed">**self**</font>)  
-Iterate over the per-pixel distances (float, meters) that form the image.  
+Returns the distance in meters at flattened pixel index `pos`. Iterating over the image (`for d in image`) goes through this method and yields the per-pixel distances.  
 - <a name="carla.DistanceImage.__len__"></a>**<font color="#7fb800">\__len__</font>**(<font color="#00a6ed">**self**</font>)  
 - <a name="carla.DistanceImage.__setitem__"></a>**<font color="#7fb800">\__setitem__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**pos**=int</font>, <font color="#00a6ed">**distance**=float</font>)  
 - <a name="carla.DistanceImage.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
@@ -1283,8 +1281,6 @@ Longitude of the center of the map.
 False Easting offset.  
 - <a name="carla.GeoProjectionLCC2SP.y_0"></a>**<font color="#f8805a">y_0</font>** (_float_)  
 False Northing offset.  
-- <a name="carla.GeoProjectionLCC2SP.ellps"></a>**<font color="#f8805a">ellps</font>** (_[carla.GeoEllipsoid](#carla.GeoEllipsoid)_)  
-Geoellipsoid used for the projection.  
 
 ### Methods
 - <a name="carla.GeoProjectionLCC2SP.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**lat_0**=0.0</font>, <font color="#00a6ed">**lat_1**=-5.0</font>, <font color="#00a6ed">**lat_2**=5.0</font>, <font color="#00a6ed">**lon_0**=0.0</font>, <font color="#00a6ed">**x_0**=0.0</font>, <font color="#00a6ed">**y_0**=0.0</font>, <font color="#00a6ed">**ellps**=[carla.GeoEllipsoid](#carla.GeoEllipsoid)</font>)  
@@ -1315,8 +1311,6 @@ Scale factor.
 False Easting offset.  
 - <a name="carla.GeoProjectionTM.y_0"></a>**<font color="#f8805a">y_0</font>** (_float_)  
 False Northing offset.  
-- <a name="carla.GeoProjectionTM.ellps"></a>**<font color="#f8805a">ellps</font>** (_[carla.GeoEllipsoid](#carla.GeoEllipsoid)_)  
-Geoellipsoid used for the projection.  
 
 ### Methods
 - <a name="carla.GeoProjectionTM.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**lat_0**=0.0</font>, <font color="#00a6ed">**lon_0**=0.0</font>, <font color="#00a6ed">**k**=1.0</font>, <font color="#00a6ed">**x_0**=0.0</font>, <font color="#00a6ed">**y_0**=0.0</font>, <font color="#00a6ed">**ellps**=[carla.GeoEllipsoid](#carla.GeoEllipsoid)</font>)  
@@ -4322,7 +4316,7 @@ Method to initialize an object defining weather conditions. This class has some 
         - `scattering_intensity` (_float_) - Controls how much the light will contribute to volumetric fog. When set to 0, there is no contribution.  
         - `mie_scattering_scale` (_float_) - Controls interaction of light with large particles like pollen or air pollution resulting in a hazy sky with halos around the light sources. When set to 0, there is no contribution.  
         - `rayleigh_scattering_scale` (_float_) - Controls interaction of light with small particles like air molecules. Dependent on light wavelength, resulting in a blue sky in the day or red sky in the evening.  
-    - **Note:** <font color="#8E8E8E">_ClearNoon, CloudyNoon, WetNoon, WetCloudyNoon, SoftRainNoon, MidRainyNoon, HardRainNoon, ClearSunset, CloudySunset, WetSunset, WetCloudySunset, SoftRainSunset, MidRainSunset, HardRainSunset, ClearNight, CloudyNight, WetNight, WetCloudyNight, SoftRainNight, MidRainyNight, HardRainNight._</font>  
+    - **Note:** <font color="#8E8E8E">_ClearNoon, CloudyNoon, WetNoon, WetCloudyNoon, SoftRainNoon, MidRainyNoon, HardRainNoon, ClearSunset, CloudySunset, WetSunset, WetCloudySunset, SoftRainSunset, MidRainSunset, HardRainSunset, ClearNight, CloudyNight, WetNight, WetCloudyNight, SoftRainNight, MidRainyNight, HardRainNight, DustStorm._</font>  
 
 ##### Dunder methods
 - <a name="carla.WeatherParameters.__eq__"></a>**<font color="#7fb800">\__eq__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**</font>)  
@@ -4784,9 +4778,11 @@ Used for large maps only. Configures the distance from the hero vehicle to conve
 Used for large maps only. Defines the influence of the spectator on tile loading in Large Maps. By default, the spectator will provoke loading of neighboring tiles in the absence of an ego actor. This might be inconvenient for applications that immediately spawn an ego actor.  
 - <a name="carla.WorldSettings.adjust_signs_height_to_ground"></a>**<font color="#f8805a">adjust_signs_height_to_ground</font>** (_bool_)  
 When enabled, OpenDRIVE-generated traffic signs and traffic lights are moved onto the ground below them after spawning, and their trigger volumes keep their position. Only generated actors are moved, never signs placed by hand in the level. It is false by default. Enabling it also adjusts the signs that are already spawned, so it can be enabled at any time. Disabling it stops further adjustment but does not move adjusted signs back. On a World Partition map the ground streams in around the streaming source, so each sign is adjusted when the cell below it becomes resident. The flag is kept by a map load with `reset_settings=False`, and it reads true on a map whose traffic light manager enables it.  
+- <a name="carla.WorldSettings.deterministic_collisions"></a>**<font color="#f8805a">deterministic_collisions</font>** (_bool_)  
+When enabled, collisions repeat exactly from one run to the next, so a synchronous simulation that contains them does too. By default the physics engine can detect a contact one frame earlier or later depending on how fast the server runs, and the same crash then ends differently. It is false by default because it costs physics time: around 15-25% more per tick with a hundred vehicles in no-rendering mode, and no measurable difference with rendering. It takes effect when a map is loaded, so apply it and then call [carla.Client.reload_world](#carla.Client.reload_world) or [carla.Client.load_world](#carla.Client.load_world) with `reset_settings=False`; a load with `reset_settings=True` turns it off again. See the snippet of [carla.WorldSettings.__init__](#carla.WorldSettings.__init__) and [Physics determinism](core_synchrony.md#physics-determinism).  
 
 ### Methods
-- <a name="carla.WorldSettings.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**synchronous_mode**=False</font>, <font color="#00a6ed">**no_rendering_mode**=False</font>, <font color="#00a6ed">**fixed_delta_seconds**=0.0</font>, <font color="#00a6ed">**max_culling_distance**=0.0</font>, <font color="#00a6ed">**deterministic_ragdolls**=False</font>, <font color="#00a6ed">**tile_stream_distance**=3000</font>, <font color="#00a6ed">**actor_active_distance**=2000</font>, <font color="#00a6ed">**spectator_as_ego**=True</font>, <font color="#00a6ed">**adjust_signs_height_to_ground**=False</font>)  
+- <a name="carla.WorldSettings.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**synchronous_mode**=False</font>, <font color="#00a6ed">**no_rendering_mode**=False</font>, <font color="#00a6ed">**fixed_delta_seconds**=0.0</font>, <font color="#00a6ed">**max_culling_distance**=0.0</font>, <font color="#00a6ed">**deterministic_ragdolls**=False</font>, <font color="#00a6ed">**tile_stream_distance**=3000</font>, <font color="#00a6ed">**actor_active_distance**=2000</font>, <font color="#00a6ed">**spectator_as_ego**=True</font>, <font color="#00a6ed">**adjust_signs_height_to_ground**=False</font>, <font color="#00a6ed">**deterministic_collisions**=False</font>)<button class="SnipetButton" id="carla.WorldSettings.__init__-snipet_button">snippet &rarr;</button>  
 Creates an object containing desired settings that could later be applied through [carla.World](#carla.World) and its method __<font color="#7fb800">apply_settings()</font>__.  
     - **Parameters:**
         - `synchronous_mode` (_bool_) - Set this to true to enable client-server synchrony.  
@@ -4798,6 +4794,7 @@ Creates an object containing desired settings that could later be applied throug
         - `actor_active_distance` (_float<small> - meters</small>_) - Used for large maps only. Configures the distance from the hero vehicle to convert actors to dormant.  
         - `spectator_as_ego` (_bool_) - Used for large maps only. Defines the influence of the spectator on tile loading in Large Maps.  
         - `adjust_signs_height_to_ground` (_bool_) - Set this to true to move OpenDRIVE-generated traffic signs and traffic lights onto the ground below them after spawning.  
+        - `deterministic_collisions` (_bool_) - Set this to true for collisions that repeat exactly between runs. Takes effect at the next map load that keeps the settings (`reset_settings=False`).  
 
 ##### Dunder methods
 - <a name="carla.WorldSettings.__eq__"></a>**<font color="#7fb800">\__eq__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**=[carla.WorldSettings](#carla.WorldSettings)</font>)  
@@ -5751,6 +5748,40 @@ world.unload_map_layer(carla.MapLayer.ParkedVehicles)
 
 ```
 <button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.World.unload_map_layer-code')">Copy snippet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snippet</button><br><br>
+  
+</div>
+  
+<div id ="carla.WorldSettings.__init__-snipet" style="display: none;">
+<p class="SnipetFont">
+Snippet for carla.WorldSettings.__init__
+</p>
+<div id="carla.WorldSettings.__init__-code" class="SnipetContent">
+
+```py
+  
+# This recipe turns on deterministic collisions, so that a synchronous
+# simulation with crashes in it repeats exactly from one run to the next.
+# The setting applies when the map loads, so reload it keeping the settings.
+
+settings = world.get_settings()
+settings.synchronous_mode = True
+settings.fixed_delta_seconds = 0.05
+settings.deterministic_collisions = True
+world.apply_settings(settings)
+
+# reset_settings=False: the reloaded map keeps the settings just applied.
+world = client.reload_world(False)
+
+# ... spawn the actors and tick the world ...
+
+# Back to the default (faster) collision detection.
+settings.deterministic_collisions = False
+world.apply_settings(settings)
+world = client.reload_world(False)
+  
+
+```
+<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.WorldSettings.__init__-code')">Copy snippet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snippet</button><br><br>
   
 </div>
   

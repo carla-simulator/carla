@@ -18,6 +18,7 @@
 #include <boost/asio/executor_work_guard.hpp>
 
 #include <atomic>
+#include <chrono>
 
 using namespace std::chrono_literals;
 
@@ -34,7 +35,12 @@ public:
   }
 
   ~io_context_running() {
+    stop();
+  }
+
+  void stop() {
     service.stop();
+    _threads.JoinAll();
   }
 
 private:
@@ -81,7 +87,7 @@ TEST(streaming, low_level_sending_strings) {
   std::this_thread::sleep_for(2ms);
   ASSERT_GE(message_count, number_of_messages - 3u);
 
-  io.service.stop();
+  io.stop();
 }
 
 TEST(streaming, low_level_unsubscribing) {
@@ -130,7 +136,7 @@ TEST(streaming, low_level_unsubscribing) {
     ASSERT_GE(message_count, number_of_messages - 3u);
   }
 
-  io.service.stop();
+  io.stop();
 }
 
 TEST(streaming, low_level_tcp_small_message) {
@@ -160,7 +166,9 @@ TEST(streaming, low_level_tcp_small_message) {
     std::cout << "done!\n";
   }, [](std::shared_ptr<tcp::ServerSession>) { std::cout << "session closed!\n"; });
 
-  Dispatcher dispatcher{make_endpoint<tcp::Client::protocol_type>(srv.GetLocalEndpoint())};
+  // Use loopback: Windows refuses to connect to the 0.0.0.0 wildcard the server binds to.
+  Dispatcher dispatcher{make_endpoint<tcp::Client::protocol_type>(
+      {make_localhost_address(), srv.GetLocalEndpoint().port()})};
   auto stream = dispatcher.MakeStream();
   auto c = std::make_shared<tcp::Client>(io_context, stream.token(), [&](carla::Buffer message) {
     ++message_count;
@@ -168,6 +176,58 @@ TEST(streaming, low_level_tcp_small_message) {
     ASSERT_EQ(message.size(), 5u);
     const std::string received = util::buffer::as_string(message);
     ASSERT_EQ(received, msg);
+  });
+  c->Connect();
+
+  // We need at least two threads because this server loop consumes one.
+  carla::ThreadGroup threads;
+  threads.CreateThreads(
+      std::max(2u, std::thread::hardware_concurrency()),
+      [&]() { io_context.run(); });
+
+  std::this_thread::sleep_for(2s);
+  io_context.stop();
+  done = true;
+  std::cout << "client received " << message_count << " messages\n";
+  ASSERT_GT(message_count, 10u);
+  c->Stop();
+}
+
+// A callback that throws, such as an RPC timing out in the light refresh after
+// a map change (#10165), used to escape io_context::run() and call
+// std::terminate. The client now logs it and keeps reading the stream.
+TEST(streaming, low_level_tcp_callback_exception_does_not_terminate) {
+  using namespace carla::streaming;
+  using namespace carla::streaming::detail;
+
+  boost::asio::io_context io_context;
+  tcp::Server::endpoint ep(boost::asio::ip::tcp::v4(), TESTING_PORT);
+
+  tcp::Server srv(io_context, ep);
+  srv.SetTimeout(1s);
+  std::atomic_bool done{false};
+  std::atomic_size_t message_count{0u};
+
+  const std::string msg = "Hola!";
+
+  srv.Listen([&](std::shared_ptr<tcp::ServerSession> session) {
+    carla::Buffer Buf(boost::asio::buffer(msg.c_str(), msg.size()));
+    carla::SharedBufferView BufView = carla::BufferView::CreateFrom(std::move(Buf));
+    while (!done) {
+      std::this_thread::sleep_for(1ns);
+      carla::SharedBufferView View = BufView;
+      session->Write(View);
+    }
+  }, [](std::shared_ptr<tcp::ServerSession>) {});
+
+  // Use loopback: Windows refuses to connect to the 0.0.0.0 wildcard the server binds to.
+  Dispatcher dispatcher{make_endpoint<tcp::Client::protocol_type>(
+      {make_localhost_address(), srv.GetLocalEndpoint().port()})};
+  auto stream = dispatcher.MakeStream();
+  auto c = std::make_shared<tcp::Client>(io_context, stream.token(), [&](carla::Buffer) {
+    if (++message_count == 1u) {
+      throw std::runtime_error("callback failure on the first message");
+    }
   });
   c->Connect();
 
@@ -205,7 +265,11 @@ TEST(streaming, stream_outlives_server) {
     carla::Buffer Buf(boost::asio::buffer(message.c_str(), message.size()));
     carla::SharedBufferView BufView = carla::BufferView::CreateFrom(std::move(Buf));
     while (!done) {
-      std::this_thread::sleep_for(1ms);
+      // sleep_for(1ms) takes ~15 ms on Windows, too slow for the client's 20 ms window.
+      const auto next_write = std::chrono::steady_clock::now() + 1ms;
+      while (!done && std::chrono::steady_clock::now() < next_write) {
+        std::this_thread::yield();
+      }
       auto s = std::atomic_load_explicit(&stream, std::memory_order_relaxed);
       if (s != nullptr) {
         carla::SharedBufferView View = BufView;

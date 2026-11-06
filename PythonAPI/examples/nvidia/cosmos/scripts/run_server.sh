@@ -1,7 +1,7 @@
 #! /usr/bin/env bash
 # Start the carla-cosmos server container with sensible defaults and print the API token.
 #
-#   ./run_server.sh [--image IMG] [--port 8000] [--state ~/.carla-cosmos/state] [--gpus all] [--profile auto]
+#   ./run_server.sh [--image IMG] [--port 8010] [--state ~/.carla-cosmos/state] [--gpus all] [--profile auto]
 #                   [--token TOKEN] [--no-guardrails]
 #
 # Everything the service needs (weights, venvs) is inside the image; the only
@@ -9,7 +9,7 @@
 set -euo pipefail
 
 IMAGE=${COSMOS_IMAGE:-carla-cosmos:nano}
-PORT=8000
+PORT=8010
 STATE=${COSMOS_STATE:-$HOME/.carla-cosmos/state}
 GPUS=all
 PROFILE=auto

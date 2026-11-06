@@ -35,7 +35,7 @@
 <text x="157.0" y="392.0" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" fill="#5f6b73" font-weight="normal" text-anchor="middle" xml:space="preserve">checksums, release and</text>
 <text x="157.0" y="410.0" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" fill="#5f6b73" font-weight="normal" text-anchor="middle" xml:space="preserve">platform checked</text>
 <rect x="282" y="335" width="214" height="100" rx="10" fill="#fdf0e1" stroke="#e69138" stroke-width="2"/>
-<text x="389.0" y="374.0" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="16" fill="#2b2b2b" font-weight="bold" text-anchor="middle" xml:space="preserve">Linux/CarlaUnreal/Packs</text>
+<text x="389.0" y="374.0" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="16" fill="#2b2b2b" font-weight="bold" text-anchor="middle" xml:space="preserve">CarlaUnreal/Packs</text>
 <text x="389.0" y="392.0" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" fill="#5f6b73" font-weight="normal" text-anchor="middle" xml:space="preserve">or -carla-packs, $CARLA_PACKS</text>
 <text x="389.0" y="410.0" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" fill="#5f6b73" font-weight="normal" text-anchor="middle" xml:space="preserve">read when the server starts</text>
 <line x1="266" y1="385" x2="279" y2="385" stroke="#5f6b73" stroke-width="2.5" marker-end="url(#ah_sub)"/>
