@@ -40,6 +40,12 @@ carla_option (
 )
 
 carla_option (
+  BUILD_LIBCARLA_MULTIGPU_TESTS
+  "Build the Multi-GPU LibCarla tests (test_multigpu_*). Off for now while the Multi-GPU work stabilises."
+  OFF
+)
+
+carla_option (
   ENABLE_PYTORCH
   "Enable PyTorch for CARLA."
   OFF
