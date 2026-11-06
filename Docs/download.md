@@ -31,6 +31,16 @@ An automated build of the development branch. It carries the latest fixes and fe
     For the Unreal Engine 4.26 nightly, see the [downloads page](https://carla.readthedocs.io/en/latest/download/) of the UE4 documentation.
 
 ---
+## Weekly build
+
+The development branch built every Sunday, with the [AdditionalMaps](map_content_packs.md) pack built against it and Python API wheels for Python 3.10 to 3.15. The nightly build has no pack, so use the weekly build to get the additional maps of the development branch.
+
+| Build | Additional maps | Branch | Engine |
+| --- | --- | --- | --- |
+| [CARLA Weekly Build (Linux)](https://downloads.carlasim.com/Linux/Dev/CARLA_UE5_Weekly.tar.gz) | [AdditionalMaps (Linux)](https://downloads.carlasim.com/Linux/Dev/CARLA_UE5_Weekly_AdditionalMaps.tar.gz) | `ue58-dev` | Unreal Engine 5.8 |
+| [CARLA Weekly Build (Windows)](https://downloads.carlasim.com/Windows/Dev/CARLA_UE5_Weekly.zip) | [AdditionalMaps (Windows)](https://downloads.carlasim.com/Windows/Dev/CARLA_UE5_Weekly_AdditionalMaps.tar.gz) | `ue58-dev` | Unreal Engine 5.8 |
+
+---
 ## Docker
 
 Every release is on DockerHub. Always pull an explicit tag; `latest` is an old 0.9.x image. The CARLA 1.0 image has the tag `1.0` (see the [CARLA 1.0 release](https://github.com/carla-simulator/carla/releases/tag/1.0)).
