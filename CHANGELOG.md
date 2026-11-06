@@ -7,6 +7,7 @@
 * **CARLA now runs on Unreal Engine 5.8**, on CARLA's own fork of the engine. It brings World Partition streaming and Large World Coordinates for the large maps, Lumen global illumination and virtual shadow maps, hardware ray tracing, and the path tracer the ray-traced lens cameras render through.
 * Added **Ubuntu 24.04** support alongside 22.04, and **NVIDIA RTX 50 series (Blackwell)** support with driver 570+ and CDI-based Docker instructions.
 * The CARLA version is now **1.0**. The NVIDIA install scripts no longer hard-code it: they take it from `CARLA_VERSION_MAJOR/MINOR` in the top-level `CMakeLists.txt`.
+* `carla::version()` (`Client.get_client_version()` / `get_server_version()`) now tells builds apart: a release reports its version (`1.0`, from `CARLA_RELEASE_VERSION` or the git tag at HEAD), and a nightly or source build reports the commit it was built from (`1.0-82c52a7c2`, `-dirty` with local changes). The `carla-version` target refreshes it on every build, so the client's version-mismatch warning now catches a client and server built from different commits.
 
 #### Agentic CARLA
 

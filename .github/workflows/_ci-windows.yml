@@ -96,6 +96,7 @@ jobs:
           )
           call "%VCVARS%" || exit /b 1
           cmake --preset Release -DBUILD_LIBCARLA_TESTS=ON ^
+            "-DCARLA_RELEASE_VERSION=${{ inputs.release-version }}" ^
             "-DCARLA_PYTHON_VERSIONS=%CMAKE_PYTHON_VERSIONS%" %PYTHON_ARGS%
 
       - name: Build LibCarla

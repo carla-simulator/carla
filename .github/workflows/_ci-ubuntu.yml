@@ -118,7 +118,11 @@ jobs:
             PYTHON_ARGS+=("-DCARLA_PYTHON_${VERSION//./}_EXECUTABLE=${EXECUTABLE}")
             CMAKE_PYTHON_VERSIONS="${CMAKE_PYTHON_VERSIONS:+${CMAKE_PYTHON_VERSIONS};}${VERSION}"
           done
+          # Version.h takes the commit from git; the container user does not own the
+          # checkout, so without this git refuses it and the version loses the commit.
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
           cmake --preset Release -DENABLE_ROS2=ON -DBUILD_LIBCARLA_TESTS=ON \
+            -DCARLA_RELEASE_VERSION="${{ inputs.release-version }}" \
             -DCARLA_PYTHON_VERSIONS="${CMAKE_PYTHON_VERSIONS}" "${PYTHON_ARGS[@]}"
 
       - name: Build LibCarla

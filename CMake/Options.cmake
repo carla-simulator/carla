@@ -314,6 +314,15 @@ set (
 Empty means carla-<CARLA_VERSION>-<UE_SYSTEM_NAME>, e.g. carla-1.0-Linux."
 )
 
+set (
+  CARLA_RELEASE_VERSION
+  ""
+  CACHE STRING
+  "Version string carla::version() reports (client and server), e.g. 1.0. \
+Set by the release CI. Empty means the git tag at HEAD if there is one, \
+otherwise <CARLA_VERSION>-<short commit hash>, with -dirty for local changes."
+)
+
 
 
 # ================================
