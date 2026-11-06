@@ -103,31 +103,31 @@ static carla::geom::Location ToTransform(
 }
 
 static carla::geom::Location ToTransformTM(
-  const carla::client::Map &self,
+  const carla::client::Map &,
   const carla::geom::GeoLocation& geo_location,
   const carla::geom::TransverseMercatorParams& params) {
-return self.GetGeoProjection().GeoLocationToTransformTransverseMercator(geo_location, params);
+return carla::geom::GeoProjection::Make(params).GeoLocationToTransform(geo_location);
 }
 
 static carla::geom::Location ToTransformUTM(
-  const carla::client::Map &self,
+  const carla::client::Map &,
   const carla::geom::GeoLocation& geo_location,
   const carla::geom::UniversalTransverseMercatorParams& params) {
-return self.GetGeoProjection().GeoLocationToTransformUniversalTransverseMercator(geo_location, params);
+return carla::geom::GeoProjection::Make(params).GeoLocationToTransform(geo_location);
 }
 
 static carla::geom::Location ToTransformWebMerc(
-  const carla::client::Map &self,
+  const carla::client::Map &,
   const carla::geom::GeoLocation& geo_location,
   const carla::geom::WebMercatorParams& params) {
-return self.GetGeoProjection().GeoLocationToTransformWebMercator(geo_location, params);
+return carla::geom::GeoProjection::Make(params).GeoLocationToTransform(geo_location);
 }
 
 static carla::geom::Location ToTransformLCC2SP(
-  const carla::client::Map &self,
+  const carla::client::Map &,
   const carla::geom::GeoLocation& geo_location,
   const carla::geom::LambertConformalConicParams& params) {
-return self.GetGeoProjection().GeoLocationToTransformLambertConformalConic(geo_location, params);
+return carla::geom::GeoProjection::Make(params).GeoLocationToTransform(geo_location);
 }
 
 static carla::geom::GeoLocation ToGeolocation(
@@ -137,31 +137,31 @@ return self.GetGeoProjection().TransformToGeoLocation(location);
 }
 
 static carla::geom::GeoLocation ToGeolocationTM(
-    const carla::client::Map &self,
+    const carla::client::Map &,
     const carla::geom::Location &location,
     const carla::geom::TransverseMercatorParams& params) {
-  return self.GetGeoProjection().TransformToGeoLocationTransverseMercator(location, params);
+  return carla::geom::GeoProjection::Make(params).TransformToGeoLocation(location);
 }
 
 static carla::geom::GeoLocation ToGeolocationUTM(
-  const carla::client::Map &self,
+  const carla::client::Map &,
   const carla::geom::Location &location,
   const carla::geom::UniversalTransverseMercatorParams& params) {
-  return self.GetGeoProjection().TransformToGeoLocationUniversalTransverseMercator(location, params);
+  return carla::geom::GeoProjection::Make(params).TransformToGeoLocation(location);
 }
 
 static carla::geom::GeoLocation ToGeolocationWebMerc(
-  const carla::client::Map &self,
+  const carla::client::Map &,
   const carla::geom::Location &location,
   const carla::geom::WebMercatorParams& params) {
-  return self.GetGeoProjection().TransformToGeoLocationWebMercator(location, params);
+  return carla::geom::GeoProjection::Make(params).TransformToGeoLocation(location);
 }
 
 static carla::geom::GeoLocation ToGeolocationLCC2SP(
-  const carla::client::Map &self,
+  const carla::client::Map &,
   const carla::geom::Location &location,
   const carla::geom::LambertConformalConicParams& params) {
-  return self.GetGeoProjection().TransformToGeoLocationLambertConformalConic(location, params);
+  return carla::geom::GeoProjection::Make(params).TransformToGeoLocation(location);
 }
 
 void export_map() {

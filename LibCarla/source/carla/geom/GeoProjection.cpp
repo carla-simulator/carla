@@ -41,7 +41,9 @@ namespace geom {
 
             case ProjectionType::UniversalTransverseMercator: {
                 auto& p = boost::variant2::get<UniversalTransverseMercatorParams>(params);
-                return SwapHandedness(GeoLocationToTransformUniversalTransverseMercator(geolocation, p));
+                auto result = GeoLocationToTransformUniversalTransverseMercator(geolocation, p);
+                // OffsetTransform already converts coordinate handedness.
+                return p.offset.has_value() ? result : SwapHandedness(result);
             }
 
             case ProjectionType::WebMercator: {
@@ -70,7 +72,9 @@ namespace geom {
 
             case ProjectionType::UniversalTransverseMercator: {
                 auto& p = boost::variant2::get<UniversalTransverseMercatorParams>(params);
-                return TransformToGeoLocationUniversalTransverseMercator(SwapHandedness(location), p);
+                // OffsetTransform reflects before rotating and translating.
+                return TransformToGeoLocationUniversalTransverseMercator(
+                    p.offset.has_value() ? location : SwapHandedness(location), p);
             }
 
             case ProjectionType::WebMercator: {
