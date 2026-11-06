@@ -535,6 +535,10 @@ if (BUILD_LIBCARLA_TESTS)
     ${LIBCARLA_SOURCE_PATH}/test/common/*.cpp
   )
 
+  if (NOT BUILD_LIBCARLA_MULTIGPU_TESTS)
+    list (FILTER LIBCARLA_TEST_COMMON_SOURCES EXCLUDE REGEX "/test_multigpu_[^/]*\\.cpp$")
+  endif ()
+
   if (BUILD_CARLA_SERVER)
 
     file (
@@ -542,6 +546,10 @@ if (BUILD_LIBCARLA_TESTS)
       LIBCARLA_TEST_SERVER_SOURCES
       ${LIBCARLA_SOURCE_PATH}/test/server/*.cpp
     )
+
+    if (NOT BUILD_LIBCARLA_MULTIGPU_TESTS)
+      list (FILTER LIBCARLA_TEST_SERVER_SOURCES EXCLUDE REGEX "/test_multigpu_[^/]*\\.cpp$")
+    endif ()
 
     if (NOT ENABLE_ROS2)
       list (
