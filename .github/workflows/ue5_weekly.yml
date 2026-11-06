@@ -1,0 +1,63 @@
+name: UE5-Weekly
+
+# Builds the package together with the AdditionalMaps content pack and the
+# Python API wheels for 3.10 to 3.15, every Sunday and on demand, and replaces
+# this workflow's own "latest" downloads, in Linux/Dev/:
+#   CARLA_UE5_Weekly.tar.gz                    (package)
+#   CARLA_UE5_Weekly_AdditionalMaps.tar.gz     (pack)
+#   CARLA_UE5_Weekly_release-metadata.tar.gz
+# and in Windows/Dev/:
+#   CARLA_UE5_Weekly.zip                       (package)
+#   CARLA_UE5_Weekly_AdditionalMaps.tar.gz     (pack)
+#   CARLA_UE5_Weekly_release-metadata.tar.gz
+# A pack only installs into the package it was cooked against, and the nightly
+# (UE5-Dev) replaces CARLA_UE5_Latest* on every push without a pack, so this
+# workflow keeps a prefix of its own that the nightly never touches.
+
+on:
+  schedule:
+    - cron: '0 5 * * 0'
+  workflow_dispatch:
+    inputs:
+      additional-maps-file:
+        description: "JSON list of the maps for the AdditionalMaps pack, relative to the repository (empty: Util/ContentPacks/AdditionalMaps.json)"
+        type: string
+        required: false
+        default: ""
+
+concurrency:
+  group: weekly
+  cancel-in-progress: false
+
+jobs:
+  ubuntu-weekly:
+    name: Ubuntu Weekly
+    uses: ./.github/workflows/_ci-ubuntu.yml
+    secrets:
+      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+      DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
+    with:
+      python-versions: "3.10,3.11,3.12,3.13,3.14,3.15"
+      smoke-test-python-versions: "3.10,3.11,3.12,3.13,3.14,3.15"
+      additional-maps: true
+      additional-maps-file: ${{ inputs.additional-maps-file }}
+      upload-package: true
+      upload-replace-latest: true
+      latest-prefix: CARLA_UE5_Weekly
+      upload-docker: false
+
+  windows-weekly:
+    name: Windows Weekly
+    uses: ./.github/workflows/_ci-windows.yml
+    secrets:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
+    with:
+      python-versions: "3.10,3.11,3.12,3.13,3.14,3.15"
+      additional-maps: true
+      additional-maps-file: ${{ inputs.additional-maps-file }}
+      upload-package: true
+      upload-replace-latest: true
+      latest-prefix: CARLA_UE5_Weekly

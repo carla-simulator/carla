@@ -42,10 +42,14 @@ using namespace std::chrono_literals;
   Episode::Episode(Client &client, const rpc::EpisodeInfo &info, std::weak_ptr<Simulator> simulator)
     : _client(client),
       _state(std::make_shared<EpisodeState>(info.id)),
+      _token(info.token),
       _simulator(simulator),
-      _token(info.token) {}
+      _handled_episode_id(info.id) {}
 
   Episode::~Episode() {
+    if (_tm_reset_thread.joinable()) {
+      _tm_reset_thread.join();
+    }
     try {
       _client.UnSubscribeFromStream(_token);
     } catch (const std::exception &e) {
@@ -106,20 +110,12 @@ using namespace std::chrono_literals;
           } while (!self->_state.compare_exchange(&prev, next));
 
           if(UpdateLights || HasMapChanged) {
-            // This runs on the streaming thread, where an exception would call
-            // std::terminate, and the light callbacks make blocking RPCs that
-            // time out if the server stalls (e.g. in a long map load). The
-            // rest of this handler must still run: it publishes the new
-            // episode that load_world and wait_for_tick are waiting for.
-#ifndef LIBCARLA_NO_EXCEPTIONS
+            // The LightManager queries the server here; a time-out or a dying Simulator must not terminate the process.
             try {
-#endif // LIBCARLA_NO_EXCEPTIONS
               self->_on_light_update_callbacks.Call(next);
-#ifndef LIBCARLA_NO_EXCEPTIONS
             } catch (const std::exception &e) {
-              log_error("failed to update the lights after a map change:", e.what());
+              log_error("failed to update the lights for the new snapshot:", e.what());
             }
-#endif // LIBCARLA_NO_EXCEPTIONS
           }
 
           if(HasMapChanged) {
@@ -128,7 +124,7 @@ using namespace std::chrono_literals;
 
           /// Episode change
           if(episode_changed) {
-            self->OnEpisodeChanged();
+            self->OnEpisodeChanged(next->GetEpisodeId());
           }
 
           // Notify waiting threads and do the callbacks.
@@ -168,8 +164,19 @@ using namespace std::chrono_literals;
     traffic_manager::TrafficManager::Release();
   }
 
-  void Episode::OnEpisodeChanged() {
-    traffic_manager::TrafficManager::Reset();
+  void Episode::OnEpisodeChanged(uint64_t episode_id) {
+    // Off the stream thread: the reset takes seconds and would hold back every snapshot.
+    if (_tm_reset_thread.joinable()) {
+      _tm_reset_thread.join();
+    }
+    _tm_reset_thread = std::thread([this, episode_id]() {
+      try {
+        traffic_manager::TrafficManager::Reset(episode_id);
+      } catch (const std::exception &e) {
+        log_error("failed to reset the Traffic Manager for the new episode:", e.what());
+      }
+      _handled_episode_id.store(episode_id);
+    });
   }
 
   bool Episode::HasMapChangedSinceLastCall() {

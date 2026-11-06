@@ -28,7 +28,7 @@ on:
         required: false
         default: ""
       release-version:
-        description: "Release version, e.g. 1.0: uploads to Linux/CARLA_<version>/ instead of Linux/Dev/ (empty: nightly)"
+        description: "Release version, e.g. 1.0: uploads to Linux/ as CARLA_<version>.tar.gz instead of to Linux/Dev/ (empty: nightly)"
         type: string
         required: false
         default: ""
@@ -60,7 +60,7 @@ jobs:
         shell: bash -leo pipefail {0}
     runs-on: self-hosted:ubuntu-gpu
     container:
-      image: carlasim/carla-builder:ue5-22.04
+      image: carlasim/carla-builder:ue5-22.04-2
       options: >-
         --runtime=nvidia --gpus all -e NVIDIA_DRIVER_CAPABILITIES=all
         --volume /home/jenkins/unreal-engine/ue5:/unreal-engine

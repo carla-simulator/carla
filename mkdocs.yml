@@ -100,6 +100,7 @@ nav:
   - 'Python API': 'python_api.md'
   - 'C++ reference': 'ref_cpp.md'
   - 'Sensors reference': 'ref_sensors.md'
+  - 'Network ports': 'ref_ports.md'
   - 'Blueprint library': 'bp_library.md'
   - 'Recorder file format': 'ref_recorder_binary_file_format.md'
   - Catalogue:

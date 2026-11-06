@@ -2,6 +2,7 @@ on:
   workflow_call:
     inputs:
       python-versions:
+        description: "Comma-separated Python versions to build the Python API wheel for, e.g. 3.10,3.11,3.12. The first one is the build's main Python. Each one is the interpreter py -<version> runs."
         required: true
         type: string
       additional-args:
@@ -11,6 +12,21 @@ on:
       additional-maps:
         type: boolean
         default: true
+      additional-maps-file:
+        description: "JSON list of the maps for the AdditionalMaps pack (default: Util/ContentPacks/AdditionalMaps.json)"
+        type: string
+        required: false
+        default: ""
+      latest-prefix:
+        description: "Name prefix of the latest uploads (default in Deploy.bat: CARLA_UE5_Latest)"
+        type: string
+        required: false
+        default: ""
+      release-version:
+        description: "Release version, e.g. 1.0: uploads to Windows/ as CARLA_<version>.zip instead of to Windows/Dev/ (empty: nightly)"
+        type: string
+        required: false
+        default: ""
       upload-package:
         type: boolean
         required: true
@@ -35,6 +51,7 @@ jobs:
       CARLA_UNREAL_ENGINE_PATH: C:\Users\jenkins\unreal-engine5
       CARLA_CONTENT_CACHE: C:\Users\jenkins\carla-content-cache\ue5
       VCVARS: C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat
+      PYTHON_VERSIONS: ${{ inputs.python-versions }}
 
     steps:
 
@@ -57,8 +74,29 @@ jobs:
 
       - name: Preset
         run: |
+          setlocal EnableDelayedExpansion
+          set PYTHON_ARGS=
+          set CMAKE_PYTHON_VERSIONS=
+          for %%V in (%PYTHON_VERSIONS:,= %) do (
+            set VERSION=%%V
+            set EXECUTABLE=
+            for /f "usebackq delims=" %%P in (`py -%%V -c "import sys; print(sys.executable)"`) do set "EXECUTABLE=%%P"
+            if "!EXECUTABLE!"=="" (
+              echo ::error::Python %%V not found: py -%%V failed
+              exit /b 1
+            )
+            rem The main Python, the first version, is the one the build is configured with.
+            if "!CMAKE_PYTHON_VERSIONS!"=="" (
+              set PYTHON_ARGS=!PYTHON_ARGS! "-DPython3_EXECUTABLE=!EXECUTABLE!" "-DPython_EXECUTABLE=!EXECUTABLE!"
+              set CMAKE_PYTHON_VERSIONS=%%V
+            ) else (
+              set CMAKE_PYTHON_VERSIONS=!CMAKE_PYTHON_VERSIONS!;%%V
+            )
+            set PYTHON_ARGS=!PYTHON_ARGS! "-DCARLA_PYTHON_!VERSION:.=!_EXECUTABLE=!EXECUTABLE!"
+          )
           call "%VCVARS%" || exit /b 1
-          cmake --preset Release -DBUILD_LIBCARLA_TESTS=ON
+          cmake --preset Release -DBUILD_LIBCARLA_TESTS=ON ^
+            "-DCARLA_PYTHON_VERSIONS=%CMAKE_PYTHON_VERSIONS%" %PYTHON_ARGS%
 
       - name: Build LibCarla
         run: |
@@ -96,6 +134,17 @@ jobs:
           call "%VCVARS%" || exit /b 1
           cmake --build Build\Release --target package
 
+      - name: Build AdditionalMaps pack
+        if: inputs.additional-maps == true
+        env:
+          ADDITIONAL_MAPS_FILE: ${{ inputs.additional-maps-file }}
+        run: |
+          set MAPS_FILE=
+          if not "%ADDITIONAL_MAPS_FILE%"=="" for %%F in ("%ADDITIONAL_MAPS_FILE%") do set "MAPS_FILE=%%~fF"
+          call "%VCVARS%" || exit /b 1
+          if defined MAPS_FILE cmake Build\Release "-DCARLA_ADDITIONAL_MAPS_FILE=%MAPS_FILE:\=/%" || exit /b 1
+          cmake --build Build\Release --target package-additional-maps
+
       - name: Configure Backblaze
         if: inputs.upload-package == true
         run: |
@@ -105,8 +154,15 @@ jobs:
       - name: Upload package
         if: inputs.upload-package == true
         id: upload_step
+        env:
+          LATEST_PREFIX: ${{ inputs.latest-prefix }}
+          RELEASE_VERSION: ${{ inputs.release-version }}
         run: |
-          IF "${{ inputs.upload-replace-latest }}"=="true" SET ARGS=--replace-latest
+          set ARGS=
+          IF "${{ inputs.upload-replace-latest }}"=="true" SET ARGS=%ARGS% --replace-latest
+          IF "${{ inputs.additional-maps }}"=="true" SET ARGS=%ARGS% --additional-maps
+          IF NOT "%LATEST_PREFIX%"=="" SET ARGS=%ARGS% --latest-prefix %LATEST_PREFIX%
+          IF NOT "%RELEASE_VERSION%"=="" SET ARGS=%ARGS% --release-version %RELEASE_VERSION%
           call Util\Tools\Deploy.bat %ARGS% --summary-output "%GITHUB_OUTPUT%"
 
       - name: Write summary
@@ -115,3 +171,14 @@ jobs:
           echo ## [Windows] CARLA UE5 CI/CD Summary>> %GITHUB_STEP_SUMMARY%
           echo.>> %GITHUB_STEP_SUMMARY%
           echo - CARLA Package: ${{ steps.upload_step.outputs.package_uri }}>> %GITHUB_STEP_SUMMARY%
+          echo - Release metadata: ${{ steps.upload_step.outputs.release_metadata_uri }}>> %GITHUB_STEP_SUMMARY%
+          IF NOT "${{ steps.upload_step.outputs.additional_maps_uri }}"=="" (
+            echo - AdditionalMaps pack: ${{ steps.upload_step.outputs.additional_maps_uri }}>> %GITHUB_STEP_SUMMARY%
+          )
+          IF NOT "${{ steps.upload_step.outputs.latest_package_uri }}"=="" (
+            echo - Latest package: ${{ steps.upload_step.outputs.latest_package_uri }}>> %GITHUB_STEP_SUMMARY%
+            echo - Latest release metadata: ${{ steps.upload_step.outputs.latest_release_metadata_uri }}>> %GITHUB_STEP_SUMMARY%
+          )
+          IF NOT "${{ steps.upload_step.outputs.latest_additional_maps_uri }}"=="" (
+            echo - Latest AdditionalMaps pack: ${{ steps.upload_step.outputs.latest_additional_maps_uri }}>> %GITHUB_STEP_SUMMARY%
+          )

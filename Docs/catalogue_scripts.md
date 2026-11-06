@@ -109,6 +109,7 @@ python3 ../util/config.py -m Town05_Opt
 | `rig_perf_demo.py` | Measures the delivered frame rate of an N-camera rig, then replays the run into a labelled grid video. |
 | `lw_suite.py`, `lightweather_test.py` | Functional tests of the light and weather API. They save their captures as PNG files in the current directory. The last test of `lw_suite.py`, `l10`, reloads the map; leave it out with `--only`. |
 | `dvs_suite.py` | DVS camera tests: synchronous mode, attributes, resolution and lifecycle. |
+| `deterministic_collisions.py` | Repeats a car-bicycle crash and reports whether every run ends the same, with [deterministic collisions](core_synchrony.md#deterministic-collisions) or, with `--no-deterministic`, without them. Reloads the map. |
 | `autoware_demo.py` | The TIER IV sensor-kit rig, for the [Autoware](autoware.md) integration. |
 
 ---

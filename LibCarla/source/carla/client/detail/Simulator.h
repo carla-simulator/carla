@@ -66,6 +66,8 @@ namespace detail {
         size_t worker_threads = 0u,
         bool enable_garbage_collection = false);
 
+    ~Simulator();
+
     /// @}
     // =========================================================================
     /// @name Load a new episode

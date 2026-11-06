@@ -5,6 +5,7 @@
 
 #include "boost/pointer_cast.hpp"
 
+#include "carla/Logging.h"
 #include "carla/client/Actor.h"
 #include "carla/client/Vehicle.h"
 #include "carla/client/Walker.h"
@@ -182,20 +183,40 @@ void ALSM::UpdateRegisteredActorsData(const bool hybrid_physics_mode, ALSM::Idle
   if (is_respawn_vehicles && !hero_actor_present) {
     track_traffic.SetHeroLocation(cg::Location(0,0,0));
   }
+  // A vehicle can die after the snapshot (destroyed through its handle, or by a map load): drop it, don't throw.
+  std::vector<ActorId> vanished_heroes;
+  std::vector<ActorId> vanished_vehicles;
   // Update first the information regarding any hero vehicle.
   for (auto &hero_actor_info: hero_actors){
-    if (is_respawn_vehicles) {
-      track_traffic.SetHeroLocation(hero_actor_info.second->GetTransform().location);
+    try {
+      if (is_respawn_vehicles) {
+        track_traffic.SetHeroLocation(hero_actor_info.second->GetTransform().location);
+      }
+      UpdateData(hybrid_physics_mode, hero_actor_info.second, hero_actor_present, physics_radius_square);
+    } catch (const std::exception &e) {
+      log_debug("Traffic Manager: dropping hero vehicle", hero_actor_info.first, ":", e.what());
+      vanished_heroes.push_back(hero_actor_info.first);
     }
-    UpdateData(hybrid_physics_mode, hero_actor_info.second, hero_actor_present, physics_radius_square);
   }
   // Update information for all other registered vehicles.
   for (const Actor &vehicle : vehicle_list) {
     ActorId actor_id = vehicle->GetId();
     if (hero_actors.find(actor_id) == hero_actors.end()) {
-      UpdateData(hybrid_physics_mode, vehicle, hero_actor_present, physics_radius_square);
+      try {
+        UpdateData(hybrid_physics_mode, vehicle, hero_actor_present, physics_radius_square);
+      } catch (const std::exception &e) {
+        log_debug("Traffic Manager: dropping vehicle", actor_id, ":", e.what());
+        vanished_vehicles.push_back(actor_id);
+        continue;
+      }
       UpdateIdleTime(max_idle_time, actor_id);
     }
+  }
+  for (const ActorId actor_id : vanished_heroes) {
+    RemoveActor(actor_id, false);
+  }
+  for (const ActorId actor_id : vanished_vehicles) {
+    RemoveActor(actor_id, true);
   }
 }
 

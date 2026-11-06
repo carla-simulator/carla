@@ -62,7 +62,7 @@ The town features numerous commercial buildings: office towers and large apartme
 In the middle of the town there is a building under construction, its concrete frame still open.
 
 ![town_05_construction](img/catalogue/maps/town05/town05_construction.webp)
-<div class="img-caption">The building under construction and its fenced site, with the car park and the market in the foreground.</div>
+<div class="img-caption">The building under construction, with the car park and the market stalls beside the road.</div>
 
 ---
 ## Car park and market
@@ -78,4 +78,4 @@ A car park and a market of colourful stalls occupy one city block.
 In one place the road passes beneath a commercial building.
 
 ![town_05_road_under_building](img/catalogue/maps/town05/town05_under_building.webp)
-<div class="img-caption">The road that passes under a long commercial building.</div>
+<div class="img-caption">The road beside the columns of a building raised over the street.</div>
