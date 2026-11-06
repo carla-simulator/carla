@@ -52,10 +52,10 @@ void TrafficManager::Release() {
   _tm_map.clear();
 }
 
-void TrafficManager::Reset() {
+void TrafficManager::Reset(uint64_t episode_id) {
   std::scoped_lock<std::mutex> lock(_mutex);
   for(auto& tm : _tm_map) {
-    tm.second->Reset();
+    tm.second->Reset(episode_id);
   }
 }
 

@@ -80,7 +80,11 @@ void TrafficManagerRemote::Release() {
   Stop();
 }
 
-void TrafficManagerRemote::Reset() {
+void TrafficManagerRemote::Reset(uint64_t episode_id) {
+  // Every client alive in the process reports the change; reset once.
+  if (episodeProxyTM.GetId() == episode_id) {
+    return;
+  }
   Stop();
 
   carla::client::detail::EpisodeProxy episode_proxy = episodeProxyTM.Lock()->GetCurrentEpisode();
