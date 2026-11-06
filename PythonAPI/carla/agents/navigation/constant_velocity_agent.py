@@ -49,7 +49,7 @@ class ConstantVelocityAgent(BasicAgent):
 
         self.is_constant_velocity_active = True
         self._set_collision_sensor()
-        self._set_constant_velocity(target_speed)
+        self._set_constant_velocity(self._target_speed)
 
     def set_target_speed(self, speed):
         """Changes the target speed of the agent [km/h]"""
