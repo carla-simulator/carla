@@ -2,12 +2,16 @@ name: UE5-Doxygen
 
 # Generates the C++ reference with Doxygen and publishes it to
 # carla-simulator/carla-simulator.github.io (branch master) under Doxygen/html,
-# replacing the previous version. Run it manually on ue58-dev or ue5/<VERSION>.
-# Needs the secret DOCS_DEPLOY_KEY: the private half of an SSH deploy key with
+# replacing the previous version. Run it manually on ue58-dev.
+# Needs the environment "docs" (deployment branches: ue58-dev only) holding the
+# secret DOCS_DEPLOY_KEY: the private half of an SSH deploy key with
 # write access on carla-simulator.github.io.
 
 on:
   workflow_dispatch:
+
+permissions:
+  contents: read
 
 concurrency:
   group: doxygen-publish
@@ -17,18 +21,16 @@ jobs:
   doxygen:
     name: Generate and publish Doxygen
     runs-on: ubuntu-latest
+    environment: docs
     env:
       DEST: Doxygen/html
     steps:
       - name: Check branch
         run: |
-          case "$GITHUB_REF_NAME" in
-            ue58-dev|ue5/*) ;;
-            *)
-              echo "::error::Docs are only published from ue58-dev or ue5/<VERSION>, not '$GITHUB_REF_NAME'."
-              exit 1
-              ;;
-          esac
+          if [ "$GITHUB_REF" != "refs/heads/ue58-dev" ]; then
+            echo "::error::Docs are only published from ue58-dev, not '$GITHUB_REF'."
+            exit 1
+          fi
 
       - name: Checkout repository
         uses: actions/checkout@v4
