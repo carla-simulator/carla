@@ -182,7 +182,7 @@
 * Fixed client snapshot data for OpenDRIVE traffic lights outside junctions, by giving their groups fallback controllers (#9853).
 * Fixed actor aliasing on replay caused by reusing actors with the same id, recorder crashes during actor cleanup, and the replayer spawning the wrong blueprints.
 * Fixed a `ServerSession::CloseNow` double invocation that let a dropped client evict a still-alive subscriber.
-* Fixed the client aborting with `std::terminate` when an RPC made from the streaming thread, such as the light refresh after a map change, timed out; the error is now logged and the client keeps running (#10165). The light manager also unregisters its tick callback on destruction, which it previously left registered.
+* Fixed the client aborting with `std::terminate` when a light manager with unsent light changes outlived its client: its destructor now logs the error. It also unregisters its tick callback by the right id. An exception thrown by a stream callback is now logged instead of terminating the client.
 * Fixed an RPC server deadlock on shutdown, an overly strict `Vector3D` assert, OpenDRIVE lane width for centre lanes, busy-wait `yield()` calls and strict `RELEASE_ASSERT`s in road `Map`.
 
 #### Build and packaging
