@@ -5,6 +5,7 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "carla/client/TrafficSign.h"
+#include "carla/StringUtil.h"
 #include "carla/client/detail/Simulator.h"
 #include "carla/client/ActorList.h"
 #include "carla/client/Map.h"
@@ -16,7 +17,8 @@ namespace carla {
 namespace client {
 
   carla::road::SignId TrafficSign::GetSignId() const {
-    return std::string(GetEpisode().Lock()->GetActorSnapshot(*this).state.traffic_light_data.sign_id);
+    const auto snapshot = GetEpisode().Lock()->GetActorSnapshot(*this);
+    return StringUtil::FromFixedBuffer(snapshot.state.traffic_light_data.sign_id);
   }
 
   std::vector<SharedPtr<Waypoint>> TrafficSign::GetAffectedLaneWaypoints() const {
