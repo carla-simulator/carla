@@ -162,8 +162,8 @@ void AObstacleDetectionSensor::OnObstacleDetectionEvent(
     #endif
 
     DataStream.SerializeAndSend(*this,
-        CurrentEpisode.SerializeActor(Actor),
-        CurrentEpisode.SerializeActor(OtherActor),
+        CurrentEpisode.SerializeActorWithPrimaryIds(Actor),
+        CurrentEpisode.SerializeActorWithPrimaryIds(OtherActor),
         HitDistance/100.0f);
   }
 }

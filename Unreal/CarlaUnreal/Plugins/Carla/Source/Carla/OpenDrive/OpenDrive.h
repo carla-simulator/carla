@@ -35,8 +35,14 @@ public:
   static FString FindPathToXODRFile(const FString &InMapName);
 
   /// Where a generated OpenDRIVE world stores its xodr:
-  /// <ProjectSavedDir>/OpenDrive/<MapName>.xodr (read before any content dir).
+  /// <ProjectSavedDir>/OpenDrive/<MapName>.xodr (read before any content dir),
+  /// or the folder SetSavedXODRDirectory set.
   static FString GetSavedXODRPath(const FString &MapName);
+
+  /// Multi-GPU secondary: a folder of this process for the generated worlds
+  /// the primary sends, so that servers sharing an installation never read
+  /// each other's. Set once, before any map loads.
+  static void SetSavedXODRDirectory(const FString &Directory);
 
   UFUNCTION(BlueprintCallable, Category="CARLA|OpenDrive")
   static FString LoadXODR(const FString &MapName);

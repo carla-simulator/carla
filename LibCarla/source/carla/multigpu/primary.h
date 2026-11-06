@@ -19,6 +19,7 @@
 #include <boost/asio/steady_timer.hpp>
 #include <boost/asio/strand.hpp>
 
+#include <deque>
 #include <functional>
 #include <memory>
 
@@ -78,6 +79,11 @@ namespace multigpu {
 
   private:
 
+    using message_type = std::shared_ptr<const carla::streaming::detail::tcp::Message>;
+
+    /// Starts writing the front of the write queue. Strand only.
+    void WriteNext();
+
     void StartTimer();
 
     void CloseNow(boost::system::error_code ec = boost::system::error_code());
@@ -101,6 +107,11 @@ namespace multigpu {
     Listener::callback_function_type_response _on_response;
 
     std::shared_ptr<BufferPool> _buffer_pool;
+
+    /// Messages waiting to be written, oldest first, and whether one is being
+    /// written. Strand only: a single write is ever in flight, so two large
+    /// frames can never interleave on the socket.
+    std::deque<message_type> _write_queue;
 
     bool _is_writing = false;
 

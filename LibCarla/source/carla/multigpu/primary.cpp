@@ -8,7 +8,9 @@
 
 #include "carla/Debug.h"
 #include "carla/Logging.h"
+#include "carla/multigpu/commands.h"
 #include "carla/multigpu/incomingMessage.h"
+#include "carla/multigpu/keepAlive.h"
 #include "carla/multigpu/listener.h"
 
 #include <boost/asio/read.hpp>
@@ -57,6 +59,7 @@ namespace multigpu {
     // Improves the sync mode velocity on Linux by a factor of ~3.
     const boost::asio::ip::tcp::no_delay option(true);
     _socket.set_option(option);
+    EnableKeepAlive(_socket);
 
     // callbacks
     _on_closed = std::move(on_closed);
@@ -70,52 +73,58 @@ namespace multigpu {
     DEBUG_ASSERT(message != nullptr);
     DEBUG_ASSERT(!message->empty());
     std::weak_ptr<Primary> weak = shared_from_this();
-    boost::asio::post(_strand, [=]() {
+    boost::asio::post(_strand, [weak, message]() {
       auto self = weak.lock();
       if (!self) return;
       if (!self->_socket.is_open()) {
         return;
       }
-
-      auto handle_sent = [weak, message](const boost::system::error_code &ec, size_t) {
-        auto self = weak.lock();
-        if (!self) return;
-        if (ec) {
-          log_error("session ", self->_session_id, ": error sending data: ", ec.message());
-          self->CloseNow(ec);
-        }
-      };
-
-      self->_deadline.expires_after(self->_timeout.to_chrono());
-      boost::asio::async_write(
-          self->_socket,
-          message->GetBufferSequence(),
-          boost::asio::bind_executor(self->_strand, handle_sent));
+      self->_write_queue.push_back(message);
+      if (!self->_is_writing) {
+        self->WriteNext();
+      }
     });
   }
 
-  void Primary::Write(std::string text) {
+  void Primary::WriteNext() {
+    if (_write_queue.empty() || !_socket.is_open()) {
+      _write_queue.clear();
+      _is_writing = false;
+      return;
+    }
+    _is_writing = true;
+    const message_type message = _write_queue.front();
     std::weak_ptr<Primary> weak = shared_from_this();
-    boost::asio::post(_strand, [=]() {
+    auto handle_sent = [weak, message](const boost::system::error_code &ec, size_t) {
       auto self = weak.lock();
       if (!self) return;
-      if (!self->_socket.is_open()) {
+      if (ec) {
+        self->_write_queue.clear();
+        self->_is_writing = false;
+        // A write aborted by our own close needs no second close. Otherwise
+        // close the socket too, so that later writes are dropped instead of
+        // failing (and closing the session) again.
+        if (self->_socket.is_open()) {
+          log_error("session ", self->_session_id, ": error sending data: ", ec.message());
+          self->CloseNow();
+        }
         return;
       }
+      self->_write_queue.pop_front();
+      self->WriteNext();
+    };
 
-      // sent first size buffer
-      self->_deadline.expires_after(self->_timeout.to_chrono());
-      int this_size = static_cast<int>(text.size());
-      boost::asio::async_write(
-          self->_socket,
-          boost::asio::buffer(&this_size, sizeof(this_size)),
-          boost::asio::bind_executor(self->_strand, [](const boost::system::error_code &, size_t){ }));
-      // send characters
-      boost::asio::async_write(
-          self->_socket,
-          boost::asio::buffer(text.c_str(), text.size()),
-          boost::asio::bind_executor(self->_strand, [](const boost::system::error_code &, size_t){ }));
-    });
+    _deadline.expires_after(_timeout.to_chrono());
+    boost::asio::async_write(
+        _socket,
+        message->GetBufferSequence(),
+        boost::asio::bind_executor(_strand, handle_sent));
+  }
+
+  void Primary::Write(std::string text) {
+    // One message, size prefix included, through the same ordered queue.
+    Buffer buffer(reinterpret_cast<const unsigned char *>(text.data()), text.size());
+    Write(MakeMessage(BufferView::CreateFrom(std::move(buffer))));
   }
 
   void Primary::ReadData() {
@@ -148,7 +157,11 @@ namespace multigpu {
           size_t) {
         auto self = weak.lock();
         if (!self) return;
-        if (!ec && (message->size() > 0u)) {
+        if (!ec && (message->size() > kMaxMultiGpuMessageBytes)) {
+          log_error("primary server: secondary announced a", message->size(),
+              "byte message, larger than any valid one; closing the session");
+          self->Close();
+        } else if (!ec && (message->size() > 0u)) {
           // Now that we know the size of the coming buffer, we can allocate our
           // buffer and start putting data into it.
           boost::asio::async_read(

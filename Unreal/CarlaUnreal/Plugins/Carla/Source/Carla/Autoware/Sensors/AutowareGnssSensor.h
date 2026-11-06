@@ -36,6 +36,10 @@ public:
 
   void Set(const FActorDescription &ActorDescription);
 
+  void GetMirrorState(carla::multigpu::SensorState &State) const override;
+
+  void SetMirrorState(const carla::multigpu::SensorState &State) override;
+
   void SetLatitudeDeviation(float Value);
   void SetLongitudeDeviation(float Value);
   void SetAltitudeDeviation(float Value);

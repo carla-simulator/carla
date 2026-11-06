@@ -57,3 +57,25 @@ void CarlaRecorderTrafficLightTimes::Write(std::ostream &OutFile)
     TrafficLightTime.Write(OutFile);
   }
 }
+
+void CarlaRecorderTrafficLightTimes::Read(std::istream &InFile)
+{
+  uint16_t Total = 0;
+  ReadValue<uint16_t>(InFile, Total);
+  for (uint16_t i = 0; (i < Total) && InFile; ++i)
+  {
+    CarlaRecorderTrafficLightTime Record;
+    Record.Read(InFile);
+    Add(Record);
+  }
+}
+
+const std::vector<CarlaRecorderTrafficLightTime>& CarlaRecorderTrafficLightTimes::GetTrafficLightTimes() const
+{
+  return TrafficLightTimes;
+}
+
+bool CarlaRecorderTrafficLightTimes::IsEmpty() const
+{
+  return TrafficLightTimes.empty();
+}

@@ -8,6 +8,7 @@
 #include "Carla/Vehicle/CarlaWheeledVehicle.h"
 
 #include "Carla.h"
+#include "Carla/Actor/CarlaActor.h"
 #include "Carla/Game/CarlaHUD.h"
 #include "Carla/Game/CarlaStatics.h"
 #include "Carla/Lights/CarlaLight.h"
@@ -429,7 +430,9 @@ void ACarlaWheeledVehicle::OnRiderBoneTransformsFinalized()
   CachedVehicleSocketTransforms.Add(TEXT("RightPedalGeo"), VehicleMeshForRiderSeat->GetSocketTransform(TEXT("RightPedalGeo")));
   CachedVehicleMeshTransform = VehicleMeshForRiderSeat->GetComponentTransform();
   CachedVehicleWorldVelocity = VehicleMeshForRiderSeat->GetComponentVelocity();
-  CachedVehicleWorldAngularVelocityDegrees = VehicleMeshForRiderSeat->GetPhysicsAngularVelocityInDegrees();
+  CachedVehicleWorldAngularVelocityDegrees = bHasMirroredMotion ?
+      FMath::RadiansToDegrees(CarlaGetActorAngularVelocityInRadians(*this)) :
+      VehicleMeshForRiderSeat->GetPhysicsAngularVelocityInDegrees();
   if (const UWorld* World = GetWorld())
   {
     CachedVehicleTransformsTimeSeconds = World->GetTimeSeconds();
@@ -642,6 +645,10 @@ void ACarlaWheeledVehicle::AdjustVehicleBounds()
 
 float ACarlaWheeledVehicle::GetVehicleForwardSpeed() const
 {
+  if (bHasMirroredMotion)
+  {
+    return MirroredForwardSpeed;
+  }
   return BaseMovementComponent->GetVehicleForwardSpeed();
 }
 
@@ -652,6 +659,10 @@ FVector ACarlaWheeledVehicle::GetVehicleOrientation() const
 
 int32 ACarlaWheeledVehicle::GetVehicleCurrentGear() const
 {
+  if (bHasMirroredGear)
+  {
+    return MirroredGear;
+  }
   // Acceleration control (the Autoware command path) sets the forward speed
   // directly and never engages the transmission, which stays in neutral (0).
   // It only drives forward, so report the first forward gear.
@@ -708,7 +719,14 @@ void ACarlaWheeledVehicle::FlushVehicleControl()
     AckermannController.UpdateVehicleState(this);
     AckermannController.RunLoop(InputControl.Control);
   }
+  // A Multi-GPU mirror's idle drivetrain reports gear 0: it keeps the
+  // primary's, replayed with the control.
+  const int32 ReplayedGear = InputControl.Control.Gear;
   BaseMovementComponent->ProcessControl(InputControl.Control);
+  if (bHasMirroredGear)
+  {
+    InputControl.Control.Gear = ReplayedGear;
+  }
   InputControl.Control.bReverse = InputControl.Control.Gear < 0;
   LastAppliedControl = InputControl.Control;
   InputControl.Priority = EVehicleInputPriority::INVALID;
@@ -1364,6 +1382,16 @@ FWheelAnimationData ACarlaWheeledVehicle::GetWheelPose(int32 WheelIndex) const
   return GetShownWheelPose(*GetMesh(), WheelIndex);
 }
 
+FWheelAnimationData ACarlaWheeledVehicle::GetDrawnWheelPose(int32 WheelIndex) const
+{
+  const auto *VehicleAnim = Cast<UCarlaVehicleAnimationInstance>(GetMesh()->GetAnimInstance());
+  if (const FWheelAnimationData *Pose = VehicleAnim != nullptr ? VehicleAnim->GetWheelPose(WheelIndex) : nullptr)
+  {
+    return *Pose;
+  }
+  return GetWheelPose(WheelIndex);
+}
+
 TArray<FWheelAnimationData> ACarlaWheeledVehicle::GetWheelPoses() const
 {
   TArray<FWheelAnimationData> Poses;
@@ -1605,7 +1633,25 @@ void ACarlaWheeledVehicle::ResetConstraints()
 
 FVector ACarlaWheeledVehicle::GetVelocity() const
 {
+  if (bHasMirroredMotion)
+  {
+    return MirroredVelocity;
+  }
   return BaseMovementComponent->GetVelocity();
+}
+
+void ACarlaWheeledVehicle::SetMirroredMotion(const FVector &Velocity, float ForwardSpeed)
+{
+  bHasMirroredMotion = true;
+  MirroredVelocity = Velocity;
+  MirroredForwardSpeed = ForwardSpeed;
+}
+
+void ACarlaWheeledVehicle::ClearMirroredMotion()
+{
+  bHasMirroredMotion = false;
+  MirroredVelocity = FVector::ZeroVector;
+  MirroredForwardSpeed = 0.0f;
 }
 
 void ACarlaWheeledVehicle::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -1702,6 +1748,56 @@ void ACarlaWheeledVehicle::CloseDoorPhys(const EVehicleDoor DoorIdx)
   DoorComponent->AttachToComponent(
     GetMesh(), FAttachmentTransformRules(EAttachmentRule::KeepWorld, true));
   RecordDoorChange(DoorIdx, false);
+}
+
+TArray<TPair<int32, FTransform>> ACarlaWheeledVehicle::GetOpenDoorPoses() const
+{
+  TArray<TPair<int32, FTransform>> Poses;
+  const FTransform ActorInverseTransform = GetActorTransform().Inverse();
+  for (int32 i = 0; i < ConstraintsComponents.Num(); ++i)
+  {
+    UPrimitiveComponent* const* Door = ConstraintDoor.Find(ConstraintsComponents[i]);
+    // OpenDoorPhys detaches a door, CloseDoorPhys attaches it back.
+    if ((Door != nullptr) && (*Door != nullptr) && ((*Door)->GetAttachParent() == nullptr))
+    {
+      Poses.Emplace(i, (*Door)->GetComponentTransform() * ActorInverseTransform);
+    }
+  }
+  return Poses;
+}
+
+void ACarlaWheeledVehicle::SetMirroredDoorPoses(const TArray<TPair<int32, FTransform>> &OpenDoors)
+{
+  const FTransform ActorTransform = GetActorTransform();
+  for (int32 i = 0; i < ConstraintsComponents.Num(); ++i)
+  {
+    UPrimitiveComponent* const* DoorPtr = ConstraintDoor.Find(ConstraintsComponents[i]);
+    UPrimitiveComponent* Door = (DoorPtr != nullptr) ? *DoorPtr : nullptr;
+    if (Door == nullptr)
+    {
+      continue;
+    }
+    const TPair<int32, FTransform>* Open =
+        OpenDoors.FindByPredicate([i](const TPair<int32, FTransform>& Pose) { return Pose.Key == i; });
+    const bool bShownOpen = (Door->GetAttachParent() == nullptr);
+    if (Open != nullptr)
+    {
+      if (!bShownOpen)
+      {
+        Door->DetachFromComponent(FDetachmentTransformRules(EDetachmentRule::KeepWorld, false));
+        // What ray casts hit on the primary, where it is a physics body.
+        Door->SetCollisionProfileName(TEXT("BlockAll"));
+      }
+      Door->SetWorldTransform(Open->Value * ActorTransform);
+    }
+    else if (bShownOpen)
+    {
+      // As CloseDoorPhys leaves it.
+      Door->SetCollisionProfileName(TEXT("NoCollision"));
+      Door->SetWorldTransform(DoorComponentsTransform.FindRef(Door) * ActorTransform);
+      Door->AttachToComponent(GetMesh(), FAttachmentTransformRules(EAttachmentRule::KeepWorld, true));
+    }
+  }
 }
 
 void ACarlaWheeledVehicle::RecordDoorChange(const EVehicleDoor DoorIdx, bool bIsOpen)

@@ -32,6 +32,10 @@ public:
 
   void Set(const FActorDescription &ActorDescription);
 
+  void GetMirrorState(carla::multigpu::SensorState &State) const override;
+
+  void SetMirrorState(const carla::multigpu::SensorState &State) override;
+
   // virtual void PrePhysTick(float DeltaSeconds) override;
   virtual void PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaSeconds) override;
 

@@ -219,3 +219,19 @@ void AAutowareGnssSensor::SetNoiseErrorActive(const bool bEnabled)
 {
   bApplyNoiseError = bEnabled;
 }
+
+void AAutowareGnssSensor::GetMirrorState(carla::multigpu::SensorState &State) const
+{
+  if (RandomEngine != nullptr)
+  {
+    State.random_engine = RandomEngine->GetState();
+  }
+}
+
+void AAutowareGnssSensor::SetMirrorState(const carla::multigpu::SensorState &State)
+{
+  if (State.random_engine && (RandomEngine != nullptr))
+  {
+    RandomEngine->SetState(*State.random_engine);
+  }
+}

@@ -266,10 +266,13 @@ static auto FWorldObserver_GetDormantActorState(const FCarlaActor &View, const F
   return state;
 }
 
-static carla::geom::Vector3D FWorldObserver_GetAngularVelocity(const AActor &Actor)
+static carla::geom::Vector3D FWorldObserver_GetAngularVelocity(const FCarlaActor &View, const AActor &Actor)
 {
   const auto RootComponent = Cast<UPrimitiveComponent>(Actor.GetRootComponent());
+  // A Multi-GPU secondary's mirror has the primary's, not motion of its own.
   const FVector AngularVelocity =
+      View.HasMirroredKinematics() ?
+          View.GetActorAngularVelocity() :
       RootComponent != nullptr ?
           RootComponent->GetPhysicsAngularVelocityInDegrees() :
           FVector{0.0f, 0.0f, 0.0f};
@@ -390,7 +393,7 @@ static carla::Buffer FWorldObserver_Serialize(
       // unaffected: the base FCarlaActor::GetActorVelocity() still just
       // returns GetActor()->GetVelocity(), identical to before.
       Velocity = TO_METERS * View->GetActorVelocity();
-      AngularVelocity = FWorldObserver_GetAngularVelocity(*Actor);
+      AngularVelocity = FWorldObserver_GetAngularVelocity(*View, *Actor);
       Acceleration = FWorldObserver_GetAcceleration(*View, Velocity, DeltaSeconds);
       State = FWorldObserver_GetActorState(*View, Registry);
     }

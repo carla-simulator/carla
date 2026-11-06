@@ -7,6 +7,10 @@
 #include "Carla/Util/RandomEngine.h"
 #include "Carla.h"
 
+#include <util/disable-ue4-macros.h>
+#include <carla/multigpu/sensorSync.h>
+#include <util/enable-ue4-macros.h>
+
 #include <limits>
 
 uint64 URandomEngine::GenerateRandomId()
@@ -33,4 +37,14 @@ int32 URandomEngine::GenerateSeed()
   return GetUniformIntInRange(
       std::numeric_limits<int32>::lowest(),
       std::numeric_limits<int32>::max());
+}
+
+uint32 URandomEngine::GetState() const
+{
+  return carla::multigpu::GetEngineState(Engine);
+}
+
+void URandomEngine::SetState(uint32 State)
+{
+  carla::multigpu::SetEngineState(Engine, State);
 }
