@@ -10,8 +10,8 @@
 
 #### Agentic CARLA
 
-* Added an **agent skill library**: 63 vetted CARLA procedures under `Skills/`, covering setup, the Python API, UE 4.26 / 5.5 / 5.8 builds, packaging, asset imports, Scenario Runner, Leaderboard, Scenic, native ROS 2, the documentation itself, and contributing back: issues, discussions and pull requests against `ue58-dev`. `Util/AgenticTools/` serves the same library over MCP. See `Docs/agent_skills.md`.
-* Enabled Epic's **Unreal MCP** plugin (`ModelContextProtocol` + `EditorToolset`) in the CarlaUnreal editor: opening the project starts an MCP server on `http://localhost:8000/mcp`, and the repo's `.mcp.json` registers it as `unreal-mcp` so Claude Code connects to the running editor with no setup. Editor only: `-game` and packaged builds do not load it. See `Docs/agent_skills.md`.
+* Added an **agent skill library**: 64 vetted CARLA procedures under `Skills/`, covering setup, the Python API, UE 4.26 / 5.5 / 5.8 builds, packaging, asset imports, Scenario Runner, Leaderboard, Scenic, native ROS 2, the documentation itself, and contributing back: issues, discussions and pull requests against `ue58-dev`. `Util/AgenticTools/` serves the same library over MCP. See `Docs/agent_skills.md`.
+* Enabled Epic's **Unreal MCP** plugin (`ModelContextProtocol` + `EditorToolset`) in the CarlaUnreal editor: opening the project starts an MCP server on `http://localhost:6256/mcp`, and the repo's `.mcp.json` registers it as `unreal-mcp` so Claude Code connects to the running editor with no setup. Editor only: `-game` and packaged builds do not load it. See `Docs/agent_skills.md`.
 
 #### Sensor simulation
 
@@ -57,6 +57,8 @@
 
 #### Python API
 
+* The Python API builds and runs on **Python 3.10 to 3.15**: list the versions in `CARLA_PYTHON_VERSIONS` to build a wheel for each. In `PythonAPI/examples/requirements.txt`, Python 3.14 and later get `pygame-ce`, a drop-in fork of `pygame`, which has no wheels for them. `open3d` is installed up to 3.14 and `invertedai` up to 3.12, the newest versions they support.
+* Added **`--tm-port`** to `automatic_control.py`, `manual_control.py`, `visualize_multiple_sensors.py` and `open3d_lidar.py`, as `generate_traffic.py` already had, for when port 8000 is taken.
 * Added **road network objects** to the Python API: `carla.Road`, `carla.LaneSection` and `carla.Lane`, so the map can be addressed as objects instead of only sampled as waypoints. Reached through `Map.get_roads`, `get_road`, `get_lane_section`, `get_lane`, `get_junctions`, `get_junction_by_id`; `Waypoint.get_lane`, `get_road`; and `Junction.get_connecting_roads`, `get_adjacent_roads`, `get_entry_lanes`, `get_exit_lanes`, `get_entry_waypoints`, `get_exit_waypoints`.
 * Added **geolocation that follows the map's own projection**. CARLA used to convert between world coordinates and latitude/longitude with a fixed Mercator formula, which disagreed with the map's OpenDRIVE `geoReference` on anything but Web Mercator. The `geoReference` PROJ string is now read into a typed projection (Transverse Mercator, UTM, Web Mercator or Lambert Conformal Conic), exposed through `Map.get_geoprojection` and accepted by `Map.transform_to_geolocation` and the new `Map.geolocation_to_transform`. Latitude increases towards the map's north, along CARLA's −y axis.
 * Added a **wheel animation override** (`Vehicle.set_wheel_animation_override`): the wheels then show only what `set_wheel_steer_direction`, `set_wheel_pitch_angle` and `set_wheel_suspension_offset` set, whether or not Chaos simulates the vehicle, for replays and co-simulation platforms that bring their own wheel state. `get_wheel_steer_angle`, `get_wheel_pitch_angle` and `get_wheel_suspension_offset` read the poses back. Visual only; the setters raise an error while the override is off, and every one of them raises for a wheel the vehicle does not have.
@@ -67,9 +69,10 @@
 #### Build and tooling
 
 * Added a **Docker-based development environment** for CARLA UE5.
-* Added the manual **`UE5-Release` workflow**: run on a release branch `ue5/<version>` whose head carries the tag `<version>` (e.g. `ue5/1.0` and `1.0`), it builds the package with the AdditionalMaps pack and uploads them to `Linux/CARLA_<version>/` as `CARLA_<version>.tar.gz`, `CARLA_<version>_AdditionalMaps.tar.gz` and `CARLA_<version>_release-metadata.tar.gz` (`Deploy.sh --release-version`).
+* Added the manual **`UE5-Release` workflow**: run on a release branch `ue5/<version>` whose head carries the tag `<version>` (e.g. `ue5/1.0` and `1.0`), it builds the package with the AdditionalMaps pack and uploads them to `Linux/`, named as the UE4 releases are, as `CARLA_<version>.tar.gz`, `AdditionalMaps_<version>.tar.gz` and `CARLA_<version>_release-metadata.tar.gz` (`Deploy.sh --release-version`). It also builds the Windows package, for Python 3.10 and without the AdditionalMaps pack, and uploads it to `Windows/` as `CARLA_<version>.zip` and `CARLA_<version>_release-metadata.tar.gz` (`Deploy.bat --release-version`). `Deploy.bat` now publishes the package's release metadata on every upload, as `Deploy.sh` does.
 * Added **`CARLA_PYTHON_VERSIONS`**, a CMake option taking a `;`-separated list of Python versions (`3.10;3.11;3.12`) to build the Python API wheel for in a single build. Each interpreter is `python<X.Y>` in `PATH` or `CARLA_PYTHON_<XY>_EXECUTABLE`, and the package ships every wheel. `carla-python-api-install` now installs into the active Python, the `python3` in `PATH`, rather than the one CMake was configured with. It installs the wheel for that Python's version, and fails with the versions available when the build has none for it. The wheel build no longer writes the build's paths into `PythonAPI/carla`, so builds for different Python versions can share a checkout. See `Docs/build_linux_ue5.md`.
 * CI now builds the wheels for the Python versions in its `python-versions` input instead of always using Python 3.10. It runs the smoke tests against the package with each version in `smoke-test-python-versions`, through the new `Util/Tools/RunSmokeTests.sh`. `UE5-Release` builds and tests 3.10, 3.11 and 3.12. See `Docs/dev_testing.md`.
+* Added **`Util/Tools/RunPythonVersionTests.sh`**, which tests the Python API once per Python version, each in a fresh virtual environment with its wheel. Its stages are offline checks (imports and example compilation with warnings as errors, plus the unit tests), the smoke tests, and a set of examples run headless.
 * `carla-pack install` and `carla-pack verify` on a tarball now report each step and the file being checksummed, instead of staying silent for minutes on a multi-GB pack.
 
 ### Extensions
@@ -132,6 +135,7 @@
 * **Improved the documentation** of many classes and functions with information that was missing or wrong, and documented the Python API that the bindings exposed but the reference never listed: the actor component, bone and socket queries, the ego spawn points and IMU gravity, the geographic projection, the physics control settings, `Client.load_world_if_different`, and the `VehicleTelemetryData`, `WheelTelemetryData`, `Quaternion`, `BoneTransformDataIn`, `BoneTransformDataOut` and `FakeImage` classes.
 * **Updated the walker skeleton tutorial** to `carla.WalkerBoneControlIn`, `Walker.set_bones` and `Walker.show_pose`, and fixed the bone names in its skeleton tree.
 * **Expanded the traffic light and traffic sign authoring pages**: the Traffic Light Tool with an animated build from scratch, its presets, pieces and light atlas; placing a regional `BP_Sign` with its pole, plates and secondary signs; and the regional sign catalog in its three styles.
+* **Added a network ports reference** at `Docs/ref_ports.md`, under _Resources_: every port the simulator, the Traffic Manager, ROS 2 and the tooling open, what sets each one, and the two bind errors they produce.
 * **Reorganised the rendering documentation** under _Sensor simulation_: UE native rendering, with a new _Camera features_ section on the post-process presets, the ray-traced lens cameras and DLSS, next to NuRec, Cosmos and the sensor reference.
 
 ### Bug fixes
@@ -168,6 +172,8 @@
 
 * Fixed autopilot vehicles accelerating hard away from stops, junctions and roundabouts, and cutting tight corners too fast; both now stay within a comfortable acceleration bound. Also fixed the Traffic Manager's asynchronous loop drifting off the server frame rate, lights flickering on vehicles the server does not report, and an unbounded command queue on a slow server.
 * Fixed a Traffic Manager segfault when reaching a vehicle that is no longer available.
+* Fixed the Python client crashing or reading stale snapshots around a map load while a Traffic Manager was alive. Destroying a client during the Traffic Manager's reset segfaulted, the reset ran on the streaming thread (holding back every snapshot for seconds, so `wait_for_tick()` returned frames from before a `set_state()`), and every client alive in the process reset it again, sometimes onto the old episode. The reset now runs once per episode on its own thread, `load_world()` returns after it, and switching the Traffic Manager's synchronous mode no longer races it.
+* Fixed the Python client aborting when a vehicle driven by the Traffic Manager in asynchronous mode died under it: destroying it through its own handle (`actor.destroy()` without turning the autopilot off first) or loading a map left the Traffic Manager's worker thread calling the dead actor, and the exception terminated the process. The Traffic Manager now drops such a vehicle as it does any destroyed one, and a failed light query on the streaming thread is logged instead of terminating.
 * Fixed the Traffic Manager leaking its whole in-memory road graph (several hundred MB on a large map) every time it shut down or rebuilt its map for a new episode. Its waypoints link to each other with shared pointers, so the cycles kept them all alive; those links are now broken when the map is destroyed.
 * Fixed `BehaviorAgent.run_step` raising `AttributeError` once the local planner's waypoint queue empties, for instance at the end of a route.
 * Fixed the Traffic Manager's localization stage never forgetting the junction a vehicle is entering (`vehicles_at_junction_entrance`) when the vehicle is removed or the Traffic Manager is reset.
@@ -185,12 +191,14 @@
 
 #### Build and packaging
 
+* Fixed Windows deployment to select one `Carla-*-Win64-Shipping.zip` from `Build/Release/Package` and reject missing or ambiguous packages.
 * Fixed `carla-pack add` dropping existing OpenDRIVE, traffic-light phase, navigation and Traffic Manager sidecars when re-adding an in-pack map without sidecar flags (#9987).
 * Fixed the Windows build: the setup installs the MSVC 14.38 toolset the engine fork needs, MSVC builds use `/W4`, and two compile and link errors in LibCarla.
 * Fixed the CMake toolchain picking the oldest clang sysroot when an upgraded engine keeps several side by side.
 
 #### Examples and tests
 
+* Added `typing_extensions` to `PythonAPI/carla/requirements.txt`. The navigation agents import it, but it was not listed, so `import agents.navigation.basic_agent` failed in a fresh environment.
 * Restored wheelchair pedestrians in `PythonAPI/examples/generate_traffic.py`: 11% of the walkers whose blueprint reports `can_use_wheelchair` are now spawned with `use_wheelchair` set, as on `ue4-dev`.
 * Fixed `PythonAPI/examples/manual_control.py` raising `NameError: name 'sys' is not defined` instead of their error message when the server cannot send the OpenDRIVE file or the map has no spawn points.
 * Fixed `PythonAPI/examples/no_rendering_mode.py` ignoring `--show-triggers`, `--show-connections` and `--show-spawn-points` when a cached map image existed; the flags are part of the cache name now.

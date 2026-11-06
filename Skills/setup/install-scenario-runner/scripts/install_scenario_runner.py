@@ -253,7 +253,7 @@ def cmd_verify(args) -> None:
         ("carla", "run the install-python-api skill"),
         ("agents.navigation.global_route_planner", "add $CARLA_ROOT/PythonAPI/carla to PYTHONPATH"),
         ("py_trees", "pip install -r requirements.txt"),
-        ("srunner.scenariomanager.carla_data_provider", "add SCENARIO_RUNNER_ROOT to PYTHONPATH"),
+        ("srunner.scenariomanager.simulation_data", "add SCENARIO_RUNNER_ROOT to PYTHONPATH"),
     ]:
         try:
             __import__(mod)

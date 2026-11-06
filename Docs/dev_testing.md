@@ -165,3 +165,18 @@ To run the smoke tests the same way locally, start a server on port 3654 and pas
 ```sh
 ./Util/Tools/RunSmokeTests.sh --wheel-dir Build/PythonAPI/dist python3.10 python3.12
 ```
+
+### Test every Python version
+
+`Util/Tools/RunPythonVersionTests.sh` tests the Python API once per interpreter given. Each version gets a fresh virtual environment in `Build/test-results/python-versions/venv-cpXY` with its wheel and the carla, test and examples requirements. Then the stages chosen with `--stages` run:
+
+* `offline` (the default): imports `carla` and the agents, compiles every example, agent and `PythonAPI/util` script with warnings turned into errors, and runs the unit tests.
+* `smoke`: runs `Util/Tools/RunSmokeTests.sh`, which needs a server on port 3654.
+* `examples`: runs a set of `PythonAPI/examples` scripts headless for `--example-timeout` seconds each, against a server on `--port` (default 2000). An example fails if it raises an exception or exits early. `--tm-port` is passed to the examples that take it.
+
+The logs of each version go to `Build/test-results/python-versions/cpXY/`, and `summary.txt` has one line per version and stage:
+
+```sh
+./Util/Tools/RunPythonVersionTests.sh python3.10 python3.11 python3.12 python3.13 python3.14 python3.15
+./Util/Tools/RunPythonVersionTests.sh --stages examples --tm-port 8010 python3.13
+```

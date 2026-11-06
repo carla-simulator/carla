@@ -800,6 +800,10 @@ namespace detail {
     _pimpl->streaming_client.UnSubscribe(token);
   }
 
+  void Client::StopStreaming() {
+    _pimpl->streaming_client.Stop();
+  }
+
   void Client::EnableForROS(const streaming::Token &token) {
     carla::streaming::detail::token_type thisToken(token);
     _pimpl->AsyncCall("enable_sensor_for_ros", thisToken.get_stream_id());

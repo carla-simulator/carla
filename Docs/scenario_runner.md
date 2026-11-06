@@ -222,7 +222,7 @@ Every scenario derives from `BasicScenario` (`srunner/scenarios/basic_scenario.p
 
 | Method | Returns |
 | --- | --- |
-| `_initialize_actors(config)` | Nothing. Spawns the scenario actors through `CarlaDataProvider.request_new_actor()` and appends them to `self.other_actors`. |
+| `_initialize_actors(config)` | Nothing. Spawns the scenario actors through `request_new_actor()` and appends them to `self.other_actors`. |
 | `_create_behavior()` | The root of a [py_trees](https://py-trees.readthedocs.io/) behaviour tree: what the other actors do and when the scenario ends. |
 | `_create_test_criteria()` | A list of criteria, which decide pass or fail. |
 
@@ -268,7 +268,6 @@ __1.__ The class. In `LeadBrakes`, a car drives 40 m ahead of the ego, brakes to
 ```py
 import py_trees
 
-from srunner.scenariomanager.carla_data_provider import CarlaDataProvider
 from srunner.scenariomanager.scenarioatomics.atomic_behaviors import (ActorDestroy,
                                                                       StopVehicle,
                                                                       WaypointFollower)
@@ -276,29 +275,28 @@ from srunner.scenariomanager.scenarioatomics.atomic_criteria import CollisionTes
 from srunner.scenariomanager.scenarioatomics.atomic_trigger_conditions import (DriveDistance,
                                                                                StandStill)
 from srunner.scenarios.basic_scenario import BasicScenario
+from srunner.tools.actor_factory import request_new_actor
 from srunner.tools.scenario_helper import get_waypoint_in_distance
 
 
 class LeadBrakes(BasicScenario):
     """A vehicle drives ahead of the ego, brakes to a stop, and the ego must stop behind it."""
 
-    def __init__(self, world, ego_vehicles, config, randomize=False, debug_mode=False,
+    def __init__(self, ego_vehicles, config, randomize=False, debug_mode=False,
                  criteria_enable=True, timeout=60):
         self.timeout = timeout  # set before super().__init__(), which builds the tree
-        self._map = CarlaDataProvider.get_map()
         # XML parameters arrive as strings in config.other_parameters
         params = config.other_parameters
         self._lead_distance = float(params.get('lead_distance', {'value': 25})['value'])
         self._lead_speed = float(params.get('lead_speed', {'value': 8})['value'])
-        super().__init__("LeadBrakes", ego_vehicles, config, world, debug_mode,
+        super().__init__("LeadBrakes", ego_vehicles, config, debug_mode,
                          criteria_enable=criteria_enable)
 
     def _initialize_actors(self, config):
-        ego_wp = self._map.get_waypoint(config.trigger_points[0].location)
-        lead_wp, _ = get_waypoint_in_distance(ego_wp, self._lead_distance)
+        lead_wp, _ = get_waypoint_in_distance(self._reference_waypoint, self._lead_distance)
         transform = lead_wp.transform
         transform.location.z += 0.5
-        lead = CarlaDataProvider.request_new_actor('vehicle.tesla.model3', transform)
+        lead = request_new_actor('vehicle.tesla.model3', transform)
         self.other_actors.append(lead)
 
     def _create_behavior(self):
@@ -345,7 +343,7 @@ python3 $SCENARIO_RUNNER_ROOT/scenario_runner.py --scenario LeadBrakes_1 \
     --additionalScenario lead_brakes.py --configFile LeadBrakes.xml --reloadWorld --output
 ```
 
-Three rules prevent most problems. Spawn actors with `CarlaDataProvider.request_new_actor()`, never `world.spawn_actor()`, so that the atomics can find them and they are cleaned up. Append every actor to `self.other_actors`, or it outlives the scenario. And make sure the tree can end: every child of your root `Sequence` has to succeed at some point, or every run ends at the timeout.
+Three rules prevent most problems. Spawn actors with `request_new_actor()` from `srunner.tools.actor_factory`, never `world.spawn_actor()`, so the blueprint is resolved against this CARLA version and the actor exists before you use it. Append every actor to `self.other_actors`, or it outlives the scenario: nothing else owns it. And make sure the tree can end: every child of your root `Sequence` has to succeed at some point, or every run ends at the timeout.
 
 To use the scenario inside a route, reference its `type` in the route file's `scenarios` block with a `trigger_point`, and position the actors relative to `config.trigger_points[0]`, as `_initialize_actors()` above does.
 

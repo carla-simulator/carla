@@ -104,9 +104,12 @@ a good guide to what matters: `HardBreakRoute` 573, `ControlLoss` 429,
 ## ue58-dev (CARLA on UE 5.8)
 
 `--list` shows **96** configs. Their towns are Town01_Opt to Town05_Opt and
-Town10HD_Opt, and the branch translates UE5 map and blueprint names. The weather
-call in `basic_scenario.py` is still commented out, so `<weather>` in a config
-does nothing here either.
+Town10HD_Opt, and the branch translates UE5 map and blueprint names. `<weather>`
+in a config is applied, for a scenario run outside a route.
+
+Scenarios take no `world` argument here, and read the world, map and global route
+planner from `BasicScenario`; `CarlaDataProvider` is gone, replaced by
+`SimulationData`. See the repo's `Docs/CHANGELOG.md`.
 
 ## ue5-master: the port is partial (CARLA 0.10.0 on UE 5.5)
 

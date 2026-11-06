@@ -82,8 +82,8 @@ command -v git >/dev/null && git lfs version >/dev/null 2>&1 && ok "git-lfs pres
   || warn "git-lfs missing — the content repository needs it"
 PV="$("${PYTHON}" -c 'import sys; print("%d.%d" % sys.version_info[:2])' 2>/dev/null || echo '?')"
 case "${PV}" in
-  3.8|3.9|3.10|3.11|3.12) ok "Python ${PV} (3.8-3.12 supported)" ;;
-  *) warn "Python ${PV} is outside the documented 3.8-3.12 range" ;;
+  3.10|3.11|3.12|3.13|3.14|3.15) ok "Python ${PV} (3.10-3.15 supported)" ;;
+  *) warn "Python ${PV} is outside the documented 3.10-3.15 range" ;;
 esac
 
 echo "== Never run the build under sudo =="

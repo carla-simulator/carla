@@ -705,7 +705,7 @@ def game_loop(args):
         client = carla.Client(args.host, args.port)
         client.set_timeout(60.0)
 
-        traffic_manager = client.get_trafficmanager()
+        traffic_manager = client.get_trafficmanager(args.tm_port)
         sim_world = client.get_world()
 
         if args.sync:
@@ -801,6 +801,9 @@ def main():
     argparser.add_argument(
         '-p', '--port', metavar='P', default=2000, type=int,
         help='TCP port to listen to (default: 2000)')
+    argparser.add_argument(
+        '--tm-port', metavar='P', default=8000, type=int,
+        help='Port to communicate with TM (default: 8000)')
     argparser.add_argument(
         '--res', metavar='WIDTHxHEIGHT', default='1280x720',
         help='Window resolution (default: 1280x720)')
