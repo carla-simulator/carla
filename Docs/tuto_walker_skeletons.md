@@ -95,12 +95,16 @@ Spawn a random walker on the navigation mesh. The point returned lies on the gro
 blueprint = random.choice(world.get_blueprint_library().filter('walker.*'))
 
 # Pedestrians belong on the navigation mesh, not on a vehicle spawn point
-location = world.get_random_location_from_navigation()
-location.z += 1.0
-spawn_point = carla.Transform(location)
-walker = world.try_spawn_actor(blueprint, spawn_point)
-if walker is None:
-    raise RuntimeError('could not spawn the walker, try another location')
+for _ in range(10):
+    location = world.get_random_location_from_navigation()
+    if location is None:
+        continue
+    location.z += 1.0
+    walker = world.try_spawn_actor(blueprint, carla.Transform(location))
+    if walker is not None:
+        break
+else:
+    raise RuntimeError('No free pedestrian spawn found; check the navigation mesh and spawn area')
 ```
 
 ### Control walker skeletons
