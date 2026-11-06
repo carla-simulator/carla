@@ -127,8 +127,11 @@ vehicle_blueprints = world.get_blueprint_library().filter('vehicle.*')
 
 # Spawn 50 vehicles on random spawn points. try_spawn_actor returns None
 # instead of raising when the point is already taken.
+vehicles = [ego_vehicle]
 for spawn_point in random.sample(spawn_points, 50):
-    world.try_spawn_actor(random.choice(vehicle_blueprints), spawn_point)
+    npc = world.try_spawn_actor(random.choice(vehicle_blueprints), spawn_point)
+    if npc is not None:
+        vehicles.append(npc)
 ```
 
 CARLA also provides pedestrians. Vehicles, pedestrians and sensors are all __actors__; see [Actors](core_actors.md).
@@ -166,7 +169,7 @@ camera.listen(lambda image: image.save_to_disk('out/%06d.png' % image.frame))
 Hand the vehicles over to the [__Traffic Manager__](core_traffic_manager.md), which drives them around the map following the road rules:
 
 ```py
-for vehicle in world.get_actors().filter('vehicle.*'):
+for vehicle in vehicles:
     vehicle.set_autopilot(True)
 ```
 
@@ -227,7 +230,7 @@ try:
     camera = world.spawn_actor(camera_bp, carla.Transform(carla.Location(z=1.5)), attach_to=ego_vehicle)
     camera.listen(lambda image: image.save_to_disk('out/%06d.png' % image.frame))
 
-    for vehicle in world.get_actors().filter('vehicle.*'):
+    for vehicle in actors:
         vehicle.set_autopilot(True)
 
     input('Recording. Press enter to stop.\n')
