@@ -150,6 +150,7 @@
 
 #### Simulation and content
 
+* Fixed clients overlooking pedestrian navigation meshes in `Saved/Nav` on pre-existing maps (#9870).
 * Fixed the walker bounding box being centred on the actor pivot rather than the skeletal mesh, so `actor.bounding_box` now lines up with the visible pedestrian.
 * Fixed the traffic sign bounding box to use the first valid trigger volume and keep its rotation, with a guard for null volumes.
 * Fixed `sensor.camera.rt_lens` rendering almost black at night: its auto exposure was pinned to a daylight range, and now follows its camera profile with only the upper end capped (`carla.RTLens.MaxAutoExposureEV`).
