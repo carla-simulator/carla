@@ -762,6 +762,36 @@ void FCarlaServer::FPimpl::BindActions()
       IFileManager::Get().FindFilesRecursive(Files, *folderDir, *(fileName + ".bin"), true, false, false);
     }
 
+    // A content pack ships a map's xodr, navigation mesh and Traffic Manager
+    // data under its own Content/Maps/{OpenDrive,Nav,TM}/ (as FNavigationMesh
+    // reads them), wherever the level itself lives: registered in place under
+    // /Game/ or in a folder of the pack. The walk above under the level's
+    // folder sees none of them.
+    const UCarlaContentPackManager *ContentPacks = UCarlaContentPackManager::Get();
+    if (!bGeneratedWorld && ContentPacks != nullptr)
+    {
+      const FString MapName = Episode->GetMapName();
+      for (const FCarlaContentPack &Pack : ContentPacks->GetPacks())
+      {
+        const bool bPackMap = Pack.Manifest.Maps.ContainsByPredicate([&](const FCarlaContentPackMap &Map)
+        {
+          return Map.Name.Equals(MapName, ESearchCase::IgnoreCase);
+        });
+        if (!Pack.bMounted || !bPackMap)
+        {
+          continue;
+        }
+        const FString PackMapsDir = Pack.ContentDir / TEXT("Maps") / UTF8_TO_TCHAR(folder.c_str());
+        TArray<FString> PackFiles;
+        IFileManager::Get().FindFilesRecursive(PackFiles, *PackMapsDir, *(MapName + ".xodr"), true, false, false);
+        IFileManager::Get().FindFilesRecursive(PackFiles, *PackMapsDir, *(MapName + ".bin"), true, false, false);
+        for (const FString &File : PackFiles)
+        {
+          Files.AddUnique(File);
+        }
+      }
+    }
+
     // Generated OpenDRIVE worlds keep their xodr/nav in Saved/; they are
     // served under the conventional Carla/Maps/{OpenDrive,Nav}/ names and
     // filtered by the requested sub-folder like the content walk above.
@@ -795,7 +825,6 @@ void FCarlaServer::FPimpl::BindActions()
     // Every prefix carries a trailing '/', so a sibling dir such as
     // "ContentBackup" can never match.
     const FString ContentDir = FPaths::ConvertRelativePathToFull(FPaths::ProjectContentDir()) / TEXT("");
-    const UCarlaContentPackManager *ContentPacks = UCarlaContentPackManager::Get();
     std::vector<std::string> result;
     for (auto File : Files) {
       File = FPaths::ConvertRelativePathToFull(File);

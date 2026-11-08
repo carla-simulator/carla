@@ -150,6 +150,7 @@
 
 #### Simulation and content
 
+* Fixed the maps of a content pack handing the client no pedestrian navigation and no Traffic Manager data: `get_required_files` only looked under the level's own folder, while a pack keeps a map's `.bin` files in its `Content/Maps/Nav/` and `Content/Maps/TM/`. Walkers could not spawn on a pack map (`get_random_location_from_navigation` returned `None`) and the Traffic Manager rebuilt its map cache on every load.
 * Fixed the walker bounding box being centred on the actor pivot rather than the skeletal mesh, so `actor.bounding_box` now lines up with the visible pedestrian.
 * Fixed the traffic sign bounding box to use the first valid trigger volume and keep its rotation, with a guard for null volumes.
 * Fixed `sensor.camera.rt_lens` rendering almost black at night: its auto exposure was pinned to a daylight range, and now follows its camera profile with only the upper end capped (`carla.RTLens.MaxAutoExposureEV`).
