@@ -82,6 +82,31 @@ public:
 
   void EnableEnvironmentObjects(const TSet<uint64>& EnvObjectIds, bool Enable);
 
+  /// The registered environment objects disabled now, and a count of the
+  /// changes to that set: Multi-GPU secondaries mirror it.
+  const TSet<uint64> &GetDisabledEnvironmentObjects() const
+  {
+    return DisabledEnvironmentObjects;
+  }
+
+  uint64 GetEnvironmentObjectsSerial() const
+  {
+    return EnvironmentObjectsSerial;
+  }
+
+  /// How many times the environment objects were registered (on every map
+  /// layer streamed in or out).
+  uint64 GetEnvironmentObjectsRegistrations() const
+  {
+    return EnvironmentObjectsRegistrations;
+  }
+
+  /// rpc::MapLayer bits of the layers loaded now.
+  int32 GetLoadedMapLayers() const
+  {
+    return LoadedMapLayers;
+  }
+
   void EnableOverlapEvents();
 
   void CheckForEmptyMeshes();
@@ -213,6 +238,14 @@ private:
   std::optional<carla::road::Map> Map;
 
   int PendingLevelsToLoad = 0;
+
+  TSet<uint64> DisabledEnvironmentObjects;
+
+  uint64 EnvironmentObjectsSerial = 0u;
+
+  uint64 EnvironmentObjectsRegistrations = 0u;
+
+  int32 LoadedMapLayers = 0;
   int PendingLevelsToUnLoad = 0;
 
   bool ReadyToRegisterObjects = false;

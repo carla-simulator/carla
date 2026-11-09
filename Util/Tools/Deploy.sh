@@ -93,18 +93,20 @@ if ${ADDITIONAL_MAPS} ; then
   log "Using additional maps pack ${ADDITIONAL_MAPS_PATH}."
 fi
 
-# A release goes to CARLA_<version>/ named after the version; a nightly goes to
-# Dev/ named after the latest git commit date and hash.
+# A release goes to the platform folder itself, named after the version as the
+# UE4 releases are (CARLA_<version>.tar.gz, AdditionalMaps_<version>.tar.gz); a
+# nightly goes to Dev/ named after the latest git commit date and hash.
 if [[ -n "${RELEASE_VERSION}" ]]; then
-  DEPLOY_FOLDER=CARLA_${RELEASE_VERSION}
+  DEPLOY_DIR=
   NIGHTLY_DEPLOY_BASENAME=CARLA_${RELEASE_VERSION}
+  NIGHTLY_ADDITIONAL_MAPS_DEPLOY_NAME=AdditionalMaps_${RELEASE_VERSION}.tar.gz
 else
-  DEPLOY_FOLDER=Dev
+  DEPLOY_DIR=Dev/
   NIGHTLY_DEPLOY_BASENAME=$(git log --pretty=format:'%cd_%h' --date=format:'%Y%m%d' -n 1)
+  NIGHTLY_ADDITIONAL_MAPS_DEPLOY_NAME=${NIGHTLY_DEPLOY_BASENAME}_AdditionalMaps.tar.gz
 fi
 NIGHTLY_DEPLOY_NAME=${NIGHTLY_DEPLOY_BASENAME}.tar.gz
 NIGHTLY_METADATA_DEPLOY_NAME=${NIGHTLY_DEPLOY_BASENAME}_release-metadata.tar.gz
-NIGHTLY_ADDITIONAL_MAPS_DEPLOY_NAME=${NIGHTLY_DEPLOY_BASENAME}_AdditionalMaps.tar.gz
 # --latest-prefix gives a workflow its own set of "latest" names, so that a
 # package and the pack cooked against it are never replaced one without the other.
 LATEST_DEPLOY_NAME="${LATEST_PREFIX}.tar.gz"
@@ -115,12 +117,12 @@ LATEST_ADDITIONAL_MAPS_DEPLOY_NAME="${LATEST_PREFIX}_AdditionalMaps.tar.gz"
 S3_PREFIX=s3://carla-releases/Linux
 URL_PREFIX=https://downloads.carlasim.com/Linux
 
-NIGHTLY_DEPLOY_URI=${S3_PREFIX}/${DEPLOY_FOLDER}/${NIGHTLY_DEPLOY_NAME}
-NIGHTLY_METADATA_DEPLOY_URI=${S3_PREFIX}/${DEPLOY_FOLDER}/${NIGHTLY_METADATA_DEPLOY_NAME}
-NIGHTLY_ADDITIONAL_MAPS_DEPLOY_URI=${S3_PREFIX}/${DEPLOY_FOLDER}/${NIGHTLY_ADDITIONAL_MAPS_DEPLOY_NAME}
-LATEST_DEPLOY_URI=${S3_PREFIX}/${DEPLOY_FOLDER}/${LATEST_DEPLOY_NAME}
-LATEST_METADATA_DEPLOY_URI=${S3_PREFIX}/${DEPLOY_FOLDER}/${LATEST_METADATA_DEPLOY_NAME}
-LATEST_ADDITIONAL_MAPS_DEPLOY_URI=${S3_PREFIX}/${DEPLOY_FOLDER}/${LATEST_ADDITIONAL_MAPS_DEPLOY_NAME}
+NIGHTLY_DEPLOY_URI=${S3_PREFIX}/${DEPLOY_DIR}${NIGHTLY_DEPLOY_NAME}
+NIGHTLY_METADATA_DEPLOY_URI=${S3_PREFIX}/${DEPLOY_DIR}${NIGHTLY_METADATA_DEPLOY_NAME}
+NIGHTLY_ADDITIONAL_MAPS_DEPLOY_URI=${S3_PREFIX}/${DEPLOY_DIR}${NIGHTLY_ADDITIONAL_MAPS_DEPLOY_NAME}
+LATEST_DEPLOY_URI=${S3_PREFIX}/${DEPLOY_DIR}${LATEST_DEPLOY_NAME}
+LATEST_METADATA_DEPLOY_URI=${S3_PREFIX}/${DEPLOY_DIR}${LATEST_METADATA_DEPLOY_NAME}
+LATEST_ADDITIONAL_MAPS_DEPLOY_URI=${S3_PREFIX}/${DEPLOY_DIR}${LATEST_ADDITIONAL_MAPS_DEPLOY_NAME}
 
 # ==============================================================================
 # -- Upload --------------------------------------------------------------------
@@ -198,16 +200,16 @@ fi
 
 if [[ -n "$SUMMARY_OUTPUT_PATH" ]]; then
   {
-    echo "package_uri=${URL_PREFIX}/${DEPLOY_FOLDER}/${NIGHTLY_DEPLOY_NAME}"
-    echo "release_metadata_uri=${URL_PREFIX}/${DEPLOY_FOLDER}/${NIGHTLY_METADATA_DEPLOY_NAME}"
+    echo "package_uri=${URL_PREFIX}/${DEPLOY_DIR}${NIGHTLY_DEPLOY_NAME}"
+    echo "release_metadata_uri=${URL_PREFIX}/${DEPLOY_DIR}${NIGHTLY_METADATA_DEPLOY_NAME}"
     if ${ADDITIONAL_MAPS} ; then
-      echo "additional_maps_uri=${URL_PREFIX}/${DEPLOY_FOLDER}/${NIGHTLY_ADDITIONAL_MAPS_DEPLOY_NAME}"
+      echo "additional_maps_uri=${URL_PREFIX}/${DEPLOY_DIR}${NIGHTLY_ADDITIONAL_MAPS_DEPLOY_NAME}"
     fi
     if ${REPLACE_LATEST} ; then
-      echo "latest_package_uri=${URL_PREFIX}/${DEPLOY_FOLDER}/${LATEST_DEPLOY_NAME}"
-      echo "latest_release_metadata_uri=${URL_PREFIX}/${DEPLOY_FOLDER}/${LATEST_METADATA_DEPLOY_NAME}"
+      echo "latest_package_uri=${URL_PREFIX}/${DEPLOY_DIR}${LATEST_DEPLOY_NAME}"
+      echo "latest_release_metadata_uri=${URL_PREFIX}/${DEPLOY_DIR}${LATEST_METADATA_DEPLOY_NAME}"
       if ${ADDITIONAL_MAPS} ; then
-        echo "latest_additional_maps_uri=${URL_PREFIX}/${DEPLOY_FOLDER}/${LATEST_ADDITIONAL_MAPS_DEPLOY_NAME}"
+        echo "latest_additional_maps_uri=${URL_PREFIX}/${DEPLOY_DIR}${LATEST_ADDITIONAL_MAPS_DEPLOY_NAME}"
       fi
     fi
   } >> "$SUMMARY_OUTPUT_PATH"

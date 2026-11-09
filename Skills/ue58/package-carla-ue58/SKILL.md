@@ -123,10 +123,11 @@ cmake --build Build/Release --target package-additional-maps
 The map list is `Util/ContentPacks/AdditionalMaps.json`
 (`-DCARLA_ADDITIONAL_MAPS_FILE=<json>` for another one; a list or `{"maps": [...]}`).
 A map that is also in the cook scope is refused (`build` reads the base registry),
-so keep the two lists disjoint. The manual `CARLA-AdditionalMaps-Packages-Latest`
-workflow builds package + pack together and uploads them as
-`CARLA_UE5_AdditionalMaps_Latest*` (`Deploy.sh --additional-maps --latest-prefix`),
-names the nightly never overwrites. Install with
+so keep the two lists disjoint. The `UE5-Weekly` workflow (Sundays 05:00 UTC,
+or manual) builds package + pack together and uploads them as
+`CARLA_UE5_Weekly*` on Linux and Windows
+(`Deploy.sh`/`Deploy.bat --additional-maps --latest-prefix`),
+names the nightly (`CARLA_UE5_Latest*`) never overwrites. Install with
 `carla_pack.py install <tarball> --server <Package>`; details in
 `Docs/map_content_packs.md`.
 

@@ -91,6 +91,7 @@ nav:
     - 'Vehicle materials': 'content_authoring_vehicles_materials.md'
     - 'Collision meshes': 'content_authoring_vehicles_colliders.md'
     - 'Suspension': 'content_authoring_vehicles_suspension.md'
+  - 'Pedestrians': 'content_authoring_pedestrians.md'
   - 'Props': 'content_authoring_props.md'
   - 'Material customization': 'content_authoring_materials.md'
   - 'Lights': 'content_authoring_lights.md'

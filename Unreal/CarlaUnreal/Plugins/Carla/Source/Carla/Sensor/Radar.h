@@ -31,6 +31,10 @@ public:
 
   void Set(const FActorDescription &Description) override;
 
+  void GetMirrorState(carla::multigpu::SensorState &State) const override;
+
+  void SetMirrorState(const carla::multigpu::SensorState &State) override;
+
   UFUNCTION(BlueprintCallable, Category = "Radar")
   void SetHorizontalFOV(float NewHorizontalFOV);
 

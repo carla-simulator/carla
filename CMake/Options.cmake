@@ -40,6 +40,12 @@ carla_option (
 )
 
 carla_option (
+  BUILD_LIBCARLA_MULTIGPU_TESTS
+  "Build the Multi-GPU LibCarla tests (test_multigpu_*). Off for now while the Multi-GPU work stabilises."
+  OFF
+)
+
+carla_option (
   ENABLE_PYTORCH
   "Enable PyTorch for CARLA."
   OFF
@@ -312,6 +318,15 @@ set (
   "Name of the release version the package target creates with UAT's \
 -createreleaseversion (the base a content pack's DLC cook is 'based on'). \
 Empty means carla-<CARLA_VERSION>-<UE_SYSTEM_NAME>, e.g. carla-1.0-Linux."
+)
+
+set (
+  CARLA_RELEASE_VERSION
+  ""
+  CACHE STRING
+  "Version string carla::version() reports (client and server), e.g. 1.0. \
+Set by the release CI. Empty means the git tag at HEAD if there is one, \
+otherwise <CARLA_VERSION>-<short commit hash>, with -dirty for local changes."
 )
 
 

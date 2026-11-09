@@ -7,7 +7,9 @@
 #include "Carla/Sensor/InertialMeasurementUnit.h"
 #include "Carla.h"
 #include "Carla/Actor/ActorBlueprintFunctionLibrary.h"
+#include "Carla/Actor/CarlaActor.h"
 #include "Carla/Game/CarlaStatics.h"
+#include "Carla/MapGen/LargeMapManager.h"
 #include "Carla/Sensor/WorldObserver.h"
 #include "Carla/Vehicle/CarlaWheeledVehicle.h"
 
@@ -61,7 +63,8 @@ static FVector FIMU_GetActorAngularVelocityInRadians(
 
   if (RootComponent != nullptr) {
       const FQuat ActorGlobalRotation = RootComponent->GetComponentTransform().GetRotation();
-      const FVector GlobalAngularVelocity = RootComponent->GetPhysicsAngularVelocityInRadians();
+      // The primary's on a Multi-GPU secondary, whose mirror has no motion of its own.
+      const FVector GlobalAngularVelocity = CarlaGetActorAngularVelocityInRadians(Actor);
       AngularVelocity = ActorGlobalRotation.UnrotateVector(GlobalAngularVelocity);
   } else {
       AngularVelocity = FVector::ZeroVector;
@@ -154,7 +157,10 @@ carla::geom::Vector3D AInertialMeasurementUnit::ComputeGyroscope()
   const FVector AngularVelocity =
       FIMU_GetActorAngularVelocityInRadians(*GetOwner());
 
-  const FQuat SensorLocalRotation =
+  // A Multi-GPU mirror is attached rigidly: the primary's rotation relative
+  // to the parent, which a spring arm keeps on its own.
+  const FQuat SensorLocalRotation = MirroredLocalRotation.IsSet() ?
+      MirroredLocalRotation.GetValue() :
       RootComponent->GetRelativeTransform().GetRotation();
 
   const FVector FVectorGyroscope =
@@ -277,4 +283,54 @@ float AInertialMeasurementUnit::GetCompassValue() const
 void AInertialMeasurementUnit::BeginPlay()
 {
   Super::BeginPlay();
+}
+
+/// World-frame location, the same on every server (a large map rebases each
+/// server's local origin on its own).
+static std::array<double, 3> FIMU_ToWorld(const AActor &Sensor, const FVector &Local)
+{
+  const ALargeMapManager *LargeMap = UCarlaStatics::GetLargeMapManager(Sensor.GetWorld());
+  const FVector World = (LargeMap != nullptr) ? LargeMap->LocalToGlobalLocation(Local) : Local;
+  return {World.X, World.Y, World.Z};
+}
+
+static FVector FIMU_ToLocal(const AActor &Sensor, const std::array<double, 3> &World)
+{
+  const FVector Location(World[0], World[1], World[2]);
+  const ALargeMapManager *LargeMap = UCarlaStatics::GetLargeMapManager(Sensor.GetWorld());
+  return (LargeMap != nullptr) ? LargeMap->GlobalToLocalLocation(Location) : Location;
+}
+
+void AInertialMeasurementUnit::GetMirrorState(carla::multigpu::SensorState &State) const
+{
+  if (RandomEngine != nullptr)
+  {
+    State.random_engine = RandomEngine->GetState();
+  }
+  carla::multigpu::ImuHistory History;
+  History.older_location = FIMU_ToWorld(*this, PrevLocation[0]);
+  History.last_location = FIMU_ToWorld(*this, PrevLocation[1]);
+  History.last_delta_seconds = PrevDeltaTime;
+  State.imu_history = History;
+  const FQuat LocalRotation = RootComponent->GetRelativeTransform().GetRotation();
+  State.imu_local_rotation = std::array<double, 4>{LocalRotation.X, LocalRotation.Y, LocalRotation.Z, LocalRotation.W};
+}
+
+void AInertialMeasurementUnit::SetMirrorState(const carla::multigpu::SensorState &State)
+{
+  if (State.random_engine && (RandomEngine != nullptr))
+  {
+    RandomEngine->SetState(*State.random_engine);
+  }
+  if (State.imu_history)
+  {
+    PrevLocation[0] = FIMU_ToLocal(*this, State.imu_history->older_location);
+    PrevLocation[1] = FIMU_ToLocal(*this, State.imu_history->last_location);
+    PrevDeltaTime = State.imu_history->last_delta_seconds;
+  }
+  if (State.imu_local_rotation)
+  {
+    const auto &Rotation = *State.imu_local_rotation;
+    MirroredLocalRotation = FQuat(Rotation[0], Rotation[1], Rotation[2], Rotation[3]);
+  }
 }

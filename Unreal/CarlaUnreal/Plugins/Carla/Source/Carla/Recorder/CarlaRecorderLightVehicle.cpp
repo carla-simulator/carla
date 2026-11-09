@@ -55,12 +55,12 @@ void CarlaRecorderLightVehicles::Write(std::ostream &OutFile)
 
 void CarlaRecorderLightVehicles::Read(std::istream &InFile)
 {
-  uint16_t Total;
+  uint16_t Total = 0;
   CarlaRecorderLightVehicle LightVehicle;
 
   // read Total walkers
   ReadValue<uint16_t>(InFile, Total);
-  for (uint16_t i = 0; i < Total; ++i)
+  for (uint16_t i = 0; (i < Total) && InFile; ++i)
   {
     LightVehicle.Read(InFile);
     Add(LightVehicle);
