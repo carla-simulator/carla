@@ -36,6 +36,13 @@ public:
 
   virtual void OnWorldLoaded(UWorld* World) override;
 
+  /// Discards the tiles' empty level-script blueprints that the stock
+  /// commandlet moves into the main package as "orphans" (Town11's tiles carry
+  /// one each); they still reference their tile's level, so the main map
+  /// would fail to save with "Illegal reference to private object". Also
+  /// discards orphaned redirectors that point outside the main package.
+  virtual void PerformAdditionalWorldCleanup(UWorld* World) const override;
+
   /// Runs the stock conversion, then renames the map's sidecar files to match
   /// when -ConversionSuffix made a copy under a new name.
   virtual int32 Main(const FString& Params) override;
