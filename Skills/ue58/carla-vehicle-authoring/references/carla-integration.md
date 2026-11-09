@@ -20,6 +20,8 @@ Verify exported axes, units, transforms, wheel bones/pivots, wheel radius, and c
 
 The reference architecture uses a hidden skeletal physics scaffold with modular visible meshes. Hidden bones must still refresh. Explicitly assign and save the vehicle's intended physics asset on the skeletal mesh; an inherited template physics asset previously survived authoring and produced unstable collisions. Validate the assignment after fresh load.
 
+The physics collision comes from the vehicle's `SMC_<name>` mesh, copied into the physics asset, and raycast sensors hit the `SM_sc_<name>` mesh set on the Blueprint's `CustomCollision` component. Build and connect both as described in [collision-sensor-meshes.md](collision-sensor-meshes.md); a vehicle duplicated from a donor otherwise keeps the donor's sensor mesh.
+
 After programmatically changing collision geometry, invalidate/rebuild cooked Chaos collision and save the owning packages. The reference native helper in `USDImporterWidget.cpp` was corrected for this and package filenames. Visual wheel components use `NoCollision` and `auto_weld=False`; Chaos wheel contact supplies tire interaction. These settings belong to this architecture, not every possible vehicle rig.
 
 Check door pivots, simple collision, API ordering, and constraint lifecycle. CARLA's reference code tears down door constraints before welding to avoid Chaos self-joints. Collision response depends on shapes, masses, transforms, contacts, constraints, and timesteps; do not mask launch-on-impact bugs with arbitrary damping.
