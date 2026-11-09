@@ -237,7 +237,11 @@ TEST(streaming, low_level_tcp_callback_exception_does_not_terminate) {
       std::max(2u, std::thread::hardware_concurrency()),
       [&]() { io_context.run(); });
 
-  std::this_thread::sleep_for(2s);
+  // Wait for the messages instead of a fixed 2 s: a retried connect takes ~2 s to fail on Windows.
+  const auto deadline = std::chrono::steady_clock::now() + 15s;
+  while (message_count <= 10u && std::chrono::steady_clock::now() < deadline) {
+    std::this_thread::sleep_for(10ms);
+  }
   io_context.stop();
   done = true;
   std::cout << "client received " << message_count << " messages\n";
