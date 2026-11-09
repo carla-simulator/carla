@@ -8,10 +8,6 @@
 
 #include <boost/algorithm/string.hpp>
 
-#include <algorithm>
-#include <cstddef>
-#include <string>
-
 namespace carla {
 
   class StringUtil {
@@ -24,12 +20,6 @@ namespace carla {
     template <typename StringT>
     static const char *ToConstCharPtr(const StringT &str) {
       return str.c_str();
-    }
-
-    /// Decode a fixed buffer with an optional null terminator.
-    template <size_t Size>
-    static std::string FromFixedBuffer(const char (&buffer)[Size]) {
-      return std::string(buffer, std::find(buffer, buffer + Size, '\0'));
     }
 
     template <typename Range1T, typename Range2T>
