@@ -143,6 +143,7 @@
 
 #### Sensors
 
+* UTM geolocation conversion preserves the CARLA world axis direction when an OpenDRIVE offset is present.
 * Fixed every native sensor (LiDAR, radar, IMU, cameras) simulating only the last physics substep instead of the true elapsed time when `sensor_tick` spanned more than one substep, which halved LiDAR's swept angle and skewed IMU and radar readings.
 * Fixed the `noise_seed` attribute of `sensor.lidar.ray_cast` being ignored, so every ray-cast LiDAR used the default seed.
 * Fixed the IMU sensor's compass yaw orientation, and the order in which sensors are disposed when their parent actor is destroyed.
@@ -182,6 +183,7 @@
 
 #### Python API and client
 
+* Explicit Map projection overloads return and accept CARLA simulation coordinates consistently with default projection calls.
 * Fixed clients failing `get_world()` against a packaged server: `get_required_files` leaked pak-relative paths that escaped the client cache. The server now sends content-relative names and refuses paths that resolve outside the content folder, previously an arbitrary-file-read vector.
 * Fixed `from carla.command import ...` by registering the `command` submodule in `sys.modules`.
 * Fixed `actor.destroy()` returning False right after `spawn_actor()`, because the client consulted an uninitialised snapshot state and refused to contact the server.
