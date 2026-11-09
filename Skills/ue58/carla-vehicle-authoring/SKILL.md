@@ -23,6 +23,7 @@ Determine the vehicle's year, trim, wheel option, interior, intended camera dist
 
 - Geometry, wheels, surfaces, or visual critique: read [visual-authoring.md](references/visual-authoring.md).
 - Unreal import, rigging, collision, paint, or lighting: read [carla-integration.md](references/carla-integration.md).
+- Collision mesh (`SMC_<name>`) and raycast sensor mesh (`SM_sc_<name>`): every vehicle needs both. Read [collision-sensor-meshes.md](references/collision-sensor-meshes.md) for what each does, where it goes in Unreal, and how to build both automatically in Blender from the body.
 - Runtime demonstration, acceptance, or delivery: read [validation-delivery.md](references/validation-delivery.md).
 
 For the proven reference implementation, locate `Util/VehicleAuthoring/TeslaModel3/` in the CARLA code repo. Read its README and the relevant scripts before adapting them. It is a vehicle-specific reference implementation, not a generic importer: model names, geometry selections, physical values, paths, and test assumptions need adaptation. If unavailable, use the guidance here and the target branch's actual APIs.
