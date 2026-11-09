@@ -201,6 +201,8 @@
 
 #### Examples and tests
 
+
+* Fixed **the Autoware `stop_all.sh` and the launcher teardown leaving the CARLA server running**. They checked only the leader of each process group. The `CarlaUnreal.sh` wrapper exits on SIGTERM, but the engine binary kept running and held the RPC port, so the next launch failed. They now check the whole group and SIGKILL it after the grace period.
 * Added `typing_extensions` to `PythonAPI/carla/requirements.txt`. The navigation agents import it, but it was not listed, so `import agents.navigation.basic_agent` failed in a fresh environment.
 * Restored wheelchair pedestrians in `PythonAPI/examples/generate_traffic.py`: 11% of the walkers whose blueprint reports `can_use_wheelchair` are now spawned with `use_wheelchair` set, as on `ue4-dev`.
 * Fixed `PythonAPI/examples/manual_control.py` raising `NameError: name 'sys' is not defined` instead of their error message when the server cannot send the OpenDRIVE file or the map has no spawn points.
