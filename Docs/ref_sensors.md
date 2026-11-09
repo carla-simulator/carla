@@ -103,7 +103,9 @@ normalized = (R + G * 256 + B * 256 * 256) / (256 * 256 * 256 - 1)
 in_meters = 1000 * normalized
 ```
 
-Save the output [carla.Image](python_api.md#carla.Image) to disk with a [carla.ColorConverter](python_api.md#carla.ColorConverter), which turns the distance stored in the RGB channels into a `[0, 1]` float and then into grayscale. Two converters give a depth view, `Depth` and `LogarithmicDepth`; both are millimetric, and the logarithmic one reads better for close objects.
+For metric measurements, decode the original RGB channels as above or save the packed image losslessly with `carla.ColorConverter.Raw`. The 24-bit encoding has a step of about 0.06 mm over 1000 m. This is the encoding resolution, not a guarantee of camera accuracy.
+
+For visualization, `carla.ColorConverter.Depth` produces 8-bit linear grayscale (about 3.92 m per gray level over 1000 m). `LogarithmicDepth` devotes more gray levels to nearby surfaces. Both conversions discard the original packed depth values.
 
 ```py
 raw_image.save_to_disk("path/to/save/converted/image", carla.ColorConverter.Depth)
@@ -158,7 +160,7 @@ raw_image.save_to_disk("path/to/save/converted/image", carla.ColorConverter.Dept
 ## GNSS sensor
 
 * __Blueprint:__ sensor.other.gnss
-* __Output:__ [carla.GNSSMeasurement](python_api.md#carla.GnssMeasurement) per step (unless `sensor_tick` says otherwise).
+* __Output:__ [carla.GnssMeasurement](python_api.md#carla.GnssMeasurement) per step (unless `sensor_tick` says otherwise).
 
 Reports current [gnss position](https://www.gsa.europa.eu/european-gnss/what-gnss) of its parent object. This is calculated by adding the metric position to an initial geo reference location defined within the OpenDRIVE map definition.
 

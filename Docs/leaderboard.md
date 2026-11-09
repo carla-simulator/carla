@@ -2,7 +2,7 @@
 
 The [CARLA Autonomous Driving Leaderboard](https://leaderboard.carla.org/) is an open platform to evaluate how well an autonomous driving agent drives in realistic traffic, in a way that is fair and reproducible, so that different approaches can be compared. The agent starts at a point and has to reach a destination, guided by a route given as GPS coordinates, map coordinates or route instructions. The routes cross freeways, urban areas, residential districts and rural roads, by day, at sunset, in rain, fog and at night, and on the way the agent meets traffic scenarios taken from the NHTSA pre-crash typology: merging and changing lanes, junctions and roundabouts, traffic lights and signs, yielding to emergency vehicles, and pedestrians and cyclists.
 
-The Leaderboard runs on [ScenarioRunner](core_traffic.md#scenariorunner-and-openscenario): the evaluator drives your agent through each route and triggers the scenarios along it. This page summarises how it works; the [Leaderboard site](https://leaderboard.carla.org/) has the full rules, the guides and the results.
+The evaluator drives your agent through each route and triggers the scenarios along it. Up to Leaderboard 2.1 it did that through [ScenarioRunner](core_traffic.md#scenariorunner-and-openscenario); on `ue58-dev` the Leaderboard carries its own copy of that engine and needs no ScenarioRunner checkout. This page summarises how it works; the [Leaderboard site](https://leaderboard.carla.org/) has the full rules, the guides and the results.
 
 - [__Versions__](#versions)
 - [__Tracks and sensors__](#tracks-and-sensors)
@@ -20,13 +20,20 @@ The Leaderboard runs on [ScenarioRunner](core_traffic.md#scenariorunner-and-open
 
 | Version | Notes |
 | --- | --- |
-| __Leaderboard 2.1__ (current) | Since March 2025. The infraction penalty is linear instead of exponential, so stopping early in a route no longer pays off. Same training, validation and test routes and scenarios as 2.0; scores are not comparable with 2.0. |
+| __`ue58-dev`__ (default) | The branch for CARLA 1.0. Same routes, scenarios and scoring as 2.1, with its own copy of the scenario engine, so no ScenarioRunner is needed. |
+| __Leaderboard 2.1__ | Since March 2025, and the last version evaluated online. The infraction penalty is linear instead of exponential, so stopping early in a route no longer pays off. Same training, validation and test routes and scenarios as 2.0; scores are not comparable with 2.0. |
 | __Leaderboard 2.0__ | Still supported. |
 | __Leaderboard 1.0__ | Still supported. |
 
-Each version has its own Leaderboard and ScenarioRunner branches (`leaderboard-2.1`, `leaderboard-2.0`, `leaderboard-1.0`) and is evaluated on the CARLA version given in its "Get started" guide on the Leaderboard site.
+The `1.0`, `2.0` and `2.1` versions each pair a Leaderboard branch (`leaderboard-1.0`, `leaderboard-2.0`, `leaderboard-2.1`) with the ScenarioRunner branch of the same name, and are evaluated on the CARLA version given in their "Get started" guide on the Leaderboard site.
 
-To run the Leaderboard locally against this CARLA, use the `ue58-dev` branch of both the [Leaderboard](https://github.com/carla-simulator/leaderboard/tree/ue58-dev) and [ScenarioRunner](https://github.com/carla-simulator/scenario_runner/tree/ue58-dev) repositories. The `leaderboard-2.x` branches target the Unreal Engine 4.26 line; `ue58-dev` adds what an Unreal Engine 5 server needs, such as resolving town names to the maps the server has (the classic towns only exist as `_Opt` variants) and translating the ego blueprint. Its CHANGELOG lists the changes and the known gaps.
+To run the Leaderboard against this CARLA, clone the [`ue58-dev` branch](https://github.com/carla-simulator/leaderboard/tree/ue58-dev) on its own:
+
+```sh
+git clone -b ue58-dev --single-branch https://github.com/carla-simulator/leaderboard.git
+```
+
+The `leaderboard-2.x` branches target the Unreal Engine 4.26 line. `ue58-dev` adds what a CARLA 1.0 server needs, such as resolving town names to the maps the server has (the classic towns only exist as `_Opt` variants) and translating the ego blueprint, and it vendors the scenario engine under `leaderboard/` so `SCENARIO_RUNNER_ROOT` is no longer used. Its CHANGELOG lists the changes and the known gaps.
 
 ---
 ## Tracks and sensors

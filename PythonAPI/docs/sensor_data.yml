@@ -243,11 +243,7 @@
       - param_name: pos
         type: int
       doc: >
-        Returns the distance in meters at flattened pixel index `pos`.
-    # --------------------------------------
-    - def_name: __iter__
-      doc: >
-        Iterate over the per-pixel distances (float, meters) that form the image.
+        Returns the distance in meters at flattened pixel index `pos`. Iterating over the image (`for d in image`) goes through this method and yields the per-pixel distances.
     # --------------------------------------
     - def_name: __len__
     # --------------------------------------

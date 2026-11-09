@@ -1,2 +1,4 @@
 networkx
 numpy>=1.24.4
+shapely
+typing_extensions

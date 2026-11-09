@@ -35,8 +35,8 @@ public:
   /// To release the traffic manager.
   virtual void Release() = 0;
 
-  /// To reset the traffic manager.
-  virtual void Reset() = 0;
+  /// To reset the traffic manager for the episode @a episode_id.
+  virtual void Reset(uint64_t episode_id) = 0;
 
   /// Protected constructor for singleton lifecycle management.
   TrafficManagerBase() {};

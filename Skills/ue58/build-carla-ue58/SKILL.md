@@ -2,7 +2,7 @@
 name: build-carla-ue58
 description: Builds CARLA on Unreal Engine 5.8 from the ue58-dev branch using its CMake build system — configure a preset, then build the carla-unreal / carla-unreal-editor / carla-python-api-install / launch targets — with ROS 2, DLSS, RSS and cook-scope options, and the engine-side build of the CarlaUnreal UE 5.8 fork. There is no Makefile and no Util/BuildTools in this tree, so every UE4 `make` recipe is invalid here. Use when the user asks to "build CARLA UE5", "build ue58-dev", "compile CARLA with cmake", "rebuild the Python API", or hits a CMake configure or target failure.
 license: MIT
-compatibility: Linux (Ubuntu 22.04/24.04). Needs CMake >= 3.28, ninja, git-lfs, Python 3.8-3.12, the CarlaUnreal/UnrealEngine fork on branch ue58-dev-carla, and ~400 GB free on a LOCAL disk. Verified against ue58-dev HEAD 718efd7cc, engine 5.8, CARLA 0.10.0.
+compatibility: Linux (Ubuntu 22.04/24.04). Needs CMake >= 3.28, ninja, git-lfs, Python 3.10-3.15, the CarlaUnreal/UnrealEngine fork on branch ue58-dev-carla, and ~400 GB free on a LOCAL disk. Verified against ue58-dev HEAD 718efd7cc, engine 5.8, CARLA 0.10.0.
 metadata:
   group: ue58
   prerequisites: scripts/check_env.sh

@@ -41,23 +41,26 @@ Progress:
 
 ### Step 1: Which version
 
-| | LB 1.0 | LB 2.0 | LB 2.1 |
-|---|---|---|---|
-| Status | legacy | superseded | **current** (since Mar 2025) |
-| CARLA | 0.9.10.1 | leaderboard build (0.9.14 + large maps) | same as 2.0 |
-| `leaderboard` branch | `leaderboard-1.0` | `leaderboard-2.0` | `leaderboard-2.1` |
-| `scenario_runner` branch | `leaderboard-1.0` | `leaderboard-2.0` | `leaderboard-2.1` |
-| Towns | Town01–Town06 | Town12 / Town13 | Town12 / Town13 |
-| Routes | 50 train / 26 test / 4 devtest | 90 train / 20 val / 2 devtest | same as 2.0 |
-| Tracks | SENSORS, MAP | + SENSORS_QUALIFIER, MAP_QUALIFIER | same as 2.0 |
-| Sensor budget | 4 cam / 1 lidar / 2 radar | 8 cam / 2 lidar / 4 radar | same as 2.0 |
-| Infraction penalty | multiplicative | multiplicative | **additive** |
+`ue58` is **the default**: the `ue58-dev` branch, running against CARLA 1.0. The
+others are still supported and still used — to reproduce a submitted score, or
+on an older CARLA — but they are not the default.
 
-**CARLA on UE 5.8: use the `ue58-dev` pair.** The leaderboard repo has a
-`ue58-dev` branch (`2b3eaa7`). Its CHANGELOG says it works against CARLA UE5
-servers, paired with the scenario_runner `ue58-dev` branch. It resolves town names
-through `CarlaDataProvider.resolve_map_name`, and its routes are Town12/Town13.
-`install_leaderboard.py --version` does not cover it; clone the pair by hand:
+| | **ue58** (default) | LB 1.0 | LB 2.0 | LB 2.1 |
+|---|---|---|---|---|
+| Status | **current** | legacy | superseded | last online-eval version |
+| CARLA | **1.0** | 0.9.10.1 | leaderboard build (0.9.14 + large maps) | same as 2.0 |
+| `leaderboard` branch | `ue58-dev` | `leaderboard-1.0` | `leaderboard-2.0` | `leaderboard-2.1` |
+| `scenario_runner` branch | **none needed** | `leaderboard-1.0` | `leaderboard-2.0` | `leaderboard-2.1` |
+| Towns | Town12 / Town13 | Town01–Town06 | Town12 / Town13 | Town12 / Town13 |
+| Routes | same as 2.1 | 50 train / 26 test / 4 devtest | 90 train / 20 val / 2 devtest | same as 2.0 |
+| Tracks | same as 2.1 | SENSORS, MAP | + SENSORS_QUALIFIER, MAP_QUALIFIER | same as 2.0 |
+| Sensor budget | same as 2.1 | 4 cam / 1 lidar / 2 radar | 8 cam / 2 lidar / 4 radar | same as 2.0 |
+| Infraction penalty | additive | multiplicative | multiplicative | **additive** |
+
+**`ue58` needs no scenario_runner.** That branch vendors its own scenario engine
+under `leaderboard/`, so there is one repo to clone and one requirements file to
+install. It resolves town names through `resolve_map_name` in
+`leaderboard/tools/map_utils.py`, and its routes are Town12/Town13.
 
 ```bash
 git clone -b ue58-dev --single-branch https://github.com/carla-simulator/leaderboard.git

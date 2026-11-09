@@ -87,15 +87,15 @@ cmake -G Ninja -S . -B Build --toolchain=$PWD/CMake/Toolchain.cmake -DCMAKE_BUIL
 
 #### Build the Python API for several Python versions
 
-The Python API wheel is built for one Python version, the one CMake finds or the one you point it at. To build wheels for more versions in the same build, list them in `CARLA_PYTHON_VERSIONS`:
+The Python API wheel is built for one Python version, the one CMake finds or the one you point it at. To build wheels for more versions in the same build, list them in `CARLA_PYTHON_VERSIONS`. Python 3.10 to 3.15 are supported:
 
 ```sh
 cmake -G Ninja -S . -B Build --toolchain=$PWD/CMake/Toolchain.cmake -DCMAKE_BUILD_TYPE=Release \
-    -DCARLA_PYTHON_VERSIONS="3.10;3.11;3.12"
+    -DCARLA_PYTHON_VERSIONS="3.10;3.11;3.12;3.13;3.14;3.15"
 cmake --build Build --target carla-python-api
 ```
 
-CMake looks for each interpreter as `python3.11`, `python3.12` and so on in `PATH`. If an interpreter has another name, as in a conda or virtual environment, set its path with `CARLA_PYTHON_<XY>_EXECUTABLE`, for example `-DCARLA_PYTHON_311_EXECUTABLE=$HOME/miniconda3/envs/py311/bin/python`. Each interpreter needs `numpy` and `build` installed (`python -m pip install numpy build`).
+CMake looks for each interpreter as `python3.11`, `python3.12` and so on in `PATH`. If an interpreter has another name, as in a conda or virtual environment, set its path with `CARLA_PYTHON_<XY>_EXECUTABLE`, for example `-DCARLA_PYTHON_311_EXECUTABLE=$HOME/miniconda3/envs/py311/bin/python`. Each interpreter needs `numpy` and `build` installed (`python -m pip install numpy build`). A conda Python 3.15 from the defaults channel also needs `conda install libpython=3.15`: that channel ships the shared library in its own package from 3.15 on, and without it the configure step fails with `Could NOT find Python (missing: Python_INCLUDE_DIRS Python_LIBRARIES ...)`.
 
 Each extra version gets a reduced build of the client and the Python API in `Build/PythonAPI-<XY>`. It reuses the dependency sources the main build downloaded. All the wheels end up in `Build/PythonAPI/dist`, and the `package` target ships every one of them.
 
@@ -162,13 +162,13 @@ Use the full map package path (`/Game/Carla/Maps/<MapName>`), not a filesystem p
 Run the package with the following command from inside the package root folder.
 
 ```sh
-./Linux/CarlaUnreal.sh
+./CarlaUnreal.sh
 ```
 
 If you want to run the native ROS 2 interface, add the `-ros2` argument:
 
 ```sh
-./Linux/CarlaUnreal.sh -ros2
+./CarlaUnreal.sh -ros2
 ```
 
 If you want to install the Python API corresponding to the package you have built, pick the wheel for your Python version (`cp310` for Python 3.10, and so on):

@@ -13,6 +13,8 @@
 
 #include <boost/asio/io_context.hpp>
 
+#include <optional>
+
 namespace carla {
 namespace streaming {
 
@@ -73,6 +75,29 @@ namespace streaming {
 
     token_type GetToken(stream_id sensor_id) {
       return _server.GetToken(sensor_id);
+    }
+
+    /// Token of an existing stream, or std::nullopt if @a id is unknown.
+    [[nodiscard]]
+    std::optional<token_type> FindToken(stream_id id) {
+      return _server.FindToken(id);
+    }
+
+    void SetSessionsUseStreamAliases(bool enabled) {
+      _server.SetSessionsUseStreamAliases(enabled);
+    }
+
+    void SetStreamAlias(stream_id alias, stream_id target) {
+      _server.SetStreamAlias(alias, target);
+    }
+
+    void RemoveStreamAlias(stream_id alias) {
+      _server.RemoveStreamAlias(alias);
+    }
+
+    [[nodiscard]]
+    std::optional<stream_id> FindStreamAlias(stream_id alias) {
+      return _server.FindStreamAlias(alias);
     }
 
     void SetROS2TopicVisibilityDefaultEnabled(bool enabled) {

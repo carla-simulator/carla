@@ -51,7 +51,7 @@ The map features a commercial area and a high street lined with shops and terrac
 There are residential apartment buildings, terraced houses and large detached houses with gardens.
 
 ![town_02_apartments](img/catalogue/maps/town02/town02_apartments.webp)
-<div class="img-caption">Apartment buildings on one side of the street and the park railings on the other.</div>
+<div class="img-caption">Apartment buildings along a street of the town centre.</div>
 
 ![town_02_houses](img/catalogue/maps/town02/town02_houses.webp)
 <div class="img-caption">One of the detached brick houses at the edge of the wood.</div>

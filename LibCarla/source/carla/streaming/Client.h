@@ -52,6 +52,11 @@ namespace streaming {
       _service.AsyncRun(worker_threads);
     }
 
+    /// Stop the worker threads and join them; no callback runs afterwards.
+    void Stop() {
+      _service.Stop();
+    }
+
   private:
 
     // The order of these two arguments is very important.

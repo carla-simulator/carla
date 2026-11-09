@@ -28,7 +28,7 @@ ScenarioRunner is a separate repository and a pure Python __client__ of the CARL
 
 ScenarioRunner does not drive the ego vehicle (the vehicle with `role_name` `hero`) unless you give it a driving agent. In the Python and OpenSCENARIO modes the ego is spawned and then waits for a driver: `manual_control.py`, the autopilot, or your own stack connected as another client. In route mode a driving agent runs inside ScenarioRunner and sends the ego its controls every tick.
 
-The [CARLA Leaderboard](leaderboard.md) is built on ScenarioRunner. Its evaluator imports ScenarioRunner's route scenarios, atomic behaviours and criteria, so a Leaderboard run needs a ScenarioRunner checkout on `PYTHONPATH`, and a Leaderboard driving agent implements the same `AutonomousAgent` methods (`setup()`, `sensors()`, `run_step()`, `destroy()`) as a ScenarioRunner one.
+The [CARLA Leaderboard](leaderboard.md) grew out of ScenarioRunner and still works the same way, but on `ue58-dev` it carries its own copy of the engine, so a Leaderboard run needs no ScenarioRunner checkout. A Leaderboard driving agent implements the same `AutonomousAgent` methods (`setup()`, `sensors()`, `run_step()`, `destroy()`) as a ScenarioRunner one.
 
 ---
 ## Install
@@ -37,7 +37,7 @@ ScenarioRunner has one branch per CARLA line, and scenarios, town names and blue
 
 __1.__ Install the CARLA client wheel into the interpreter you will use, as described in the [quick start](start_quickstart.md) for a package or in the [Linux build guide](build_linux_ue5.md) for a source build. A virtual environment works as long as the wheel matches its Python version.
 
-__2.__ Clone the branch and install its requirements into the same interpreter. They pin `py-trees==0.8.3`, whose API the scenarios are written against; `antlr4-python3-runtime` is needed only for OpenSCENARIO 2.0.
+__2.__ Clone the branch and install its requirements into the same interpreter. They pin `py-trees==2.6.0`, whose API the scenarios are written against, and `xmlschema` for OpenSCENARIO 1.x; `antlr4-python3-runtime` is needed only for OpenSCENARIO 2.0. ScenarioRunner requires a CARLA 1.0 server and refuses to start against anything older.
 
 ```sh
 git clone -b ue58-dev --single-branch https://github.com/carla-simulator/scenario_runner.git
@@ -198,8 +198,8 @@ A route run reports the route criteria, which are always active, on top of those
 | `--agent FILE` | | Driving agent for route mode; forces `--sync`. |
 | `--agentConfig FILE` | | Configuration file passed to the agent's `setup()`. |
 | `--list` | | Print the configuration names this checkout can run, and exit. |
-| `--configFile FILE` | | Additional scenario configuration XML. |
-| `--additionalScenario FILE` | | Additional scenario implementation `.py`. |
+| `--configFile PATH` | | Additional scenario configurations: an `.xml` file, a folder of them, or several separated by commas. Repeat the flag to add more. |
+| `--additionalScenario PATH` | | Additional scenario implementations: a `.py` file, a folder of them, or several separated by commas. Repeat the flag to add more. The classes it finds are available to `--route` as well as `--scenario`. |
 | `--reloadWorld` | off | Reload the world (and load the scenario's town) before starting. |
 | `--sync` | off | Run in synchronous mode. |
 | `--frameRate HZ` | `20` | Tick rate in synchronous mode. |
@@ -222,11 +222,11 @@ Every scenario derives from `BasicScenario` (`srunner/scenarios/basic_scenario.p
 
 | Method | Returns |
 | --- | --- |
-| `_initialize_actors(config)` | Nothing. Spawns the scenario actors through `CarlaDataProvider.request_new_actor()` and appends them to `self.other_actors`. |
+| `_initialize_actors(config)` | Nothing. Spawns the scenario actors through `request_new_actor()` and appends them to `self.other_actors`. |
 | `_create_behavior()` | The root of a [py_trees](https://py-trees.readthedocs.io/) behaviour tree: what the other actors do and when the scenario ends. |
 | `_create_test_criteria()` | A list of criteria, which decide pass or fail. |
 
-A behaviour tree is built from __composites__ and __leaves__. A `Sequence` runs its children one after the other; a `Parallel` runs them together and succeeds when one child succeeds (`SUCCESS_ON_ONE`) or when all do (`SUCCESS_ON_ALL`). The leaves are ScenarioRunner's atomics, in `srunner/scenariomanager/scenarioatomics/`:
+A behaviour tree is built from __composites__ and __leaves__. A `Sequence` runs its children one after the other and takes an explicit `memory` argument; a `Parallel` runs them together and takes a policy object, succeeding when one child succeeds (`ParallelPolicy.SuccessOnOne()`) or when all do (`ParallelPolicy.SuccessOnAll()`). The leaves are ScenarioRunner's atomics, in `srunner/scenariomanager/scenarioatomics/`:
 
 | Module | Contains | Examples |
 | --- | --- | --- |
@@ -238,37 +238,36 @@ A behaviour tree is built from __composites__ and __leaves__. A `Sequence` runs 
 
 ![Behaviour tree of a scenario](img/scenario_runner/scenario_behavior_tree.svg)
 
-`ScenarioManager` ticks this tree once per simulation step. Each node returns `RUNNING`, `SUCCESS` or `FAILURE`, so a `Sequence` whose current child never succeeds keeps the scenario running until the timeout. `--debug` prints the tree on every tick. A leading `[-]` marks a `Sequence`, `(o)` a `Parallel` and `-->` a leaf; the status after the name is `[*]` for running, `[✓]` for succeeded and `[-]` for not running. This is the tree above while the lead vehicle brakes (the behaviour `Sequence` takes the name of your tree):
+`ScenarioManager` ticks this tree once per simulation step. Each node returns `RUNNING`, `SUCCESS` or `FAILURE`, so a `Sequence` whose current child never succeeds keeps the scenario running until the timeout. `--debug` prints the tree on every tick. A leading `{-}` marks a `Sequence` that remembers its current child, `[-]` one that does not, `/_/` a `Parallel` and `-->` a leaf; the status after the name is `[*]` for running, `[o]` for succeeded and `[-]` for not ticked, followed by the node's own feedback. This is the tree above while the lead vehicle brakes (the behaviour `Sequence` takes the name of your tree):
 
 ```text
-LeadBrakes [*]
-[-] LeadBrakes [*]
-    --> TimeToArrival [✓]
-    [-] LeadBrakes [*]
-        --> EgoStarts [✓]
-        (o) LeadDrives [✓]
-            --> FollowWaypoints [-]
-            --> DriveDistance [✓]
-        --> Stopping [*]
-        --> EgoStopped [-]
-        --> ActorDestroy [-]
-(o) Test Criteria [*]
-    --> CollisionTest [*]
---> TimeOut [*]
---> UpdateAllActorControls [*]
+/_/ LeadBrakes [*]
+    {-} LeadBrakes [*]
+        --> TimeToArrival [o] -- success
+        {-} LeadBrakes [*]
+            --> EgoStarts [o] -- success
+            /_/ LeadDrives [o]
+                --> FollowWaypoints [-]
+                --> DriveDistance [o] -- success
+            --> Stopping [*] -- running
+            --> EgoStopped [-]
+            --> ActorDestroy [-]
+    /_/ Test Criteria [*]
+        --> CollisionTest [*] -- running
+    --> TimeOut [*] -- running
+    --> UpdateAllActorControls [*] -- running
 ```
 
 ---
 ## Write your own scenario
 
-A scenario is two files: the class and its configuration. ScenarioRunner finds the class by matching the configuration's `type` against the classes in `srunner/scenarios/*.py`, so there is no registration step. Files kept outside the checkout are passed with `--additionalScenario` and `--configFile`.
+A scenario is two files: the class and its configuration. ScenarioRunner finds the class by matching the configuration's `type` against the `BasicScenario` subclasses in `srunner/scenarios/*.py`, so there is no registration step; the class has to derive from `BasicScenario` to be found. Files kept outside the checkout are passed with `--additionalScenario` and `--configFile`, which also accept a folder.
 
 __1.__ The class. In `LeadBrakes`, a car drives 40 m ahead of the ego, brakes to a stop, and the scenario ends when the ego has stopped too:
 
 ```py
 import py_trees
 
-from srunner.scenariomanager.carla_data_provider import CarlaDataProvider
 from srunner.scenariomanager.scenarioatomics.atomic_behaviors import (ActorDestroy,
                                                                       StopVehicle,
                                                                       WaypointFollower)
@@ -276,29 +275,28 @@ from srunner.scenariomanager.scenarioatomics.atomic_criteria import CollisionTes
 from srunner.scenariomanager.scenarioatomics.atomic_trigger_conditions import (DriveDistance,
                                                                                StandStill)
 from srunner.scenarios.basic_scenario import BasicScenario
+from srunner.tools.actor_factory import request_new_actor
 from srunner.tools.scenario_helper import get_waypoint_in_distance
 
 
 class LeadBrakes(BasicScenario):
     """A vehicle drives ahead of the ego, brakes to a stop, and the ego must stop behind it."""
 
-    def __init__(self, world, ego_vehicles, config, randomize=False, debug_mode=False,
+    def __init__(self, ego_vehicles, config, randomize=False, debug_mode=False,
                  criteria_enable=True, timeout=60):
         self.timeout = timeout  # set before super().__init__(), which builds the tree
-        self._map = CarlaDataProvider.get_map()
         # XML parameters arrive as strings in config.other_parameters
         params = config.other_parameters
         self._lead_distance = float(params.get('lead_distance', {'value': 25})['value'])
         self._lead_speed = float(params.get('lead_speed', {'value': 8})['value'])
-        super().__init__("LeadBrakes", ego_vehicles, config, world, debug_mode,
+        super().__init__("LeadBrakes", ego_vehicles, config, debug_mode,
                          criteria_enable=criteria_enable)
 
     def _initialize_actors(self, config):
-        ego_wp = self._map.get_waypoint(config.trigger_points[0].location)
-        lead_wp, _ = get_waypoint_in_distance(ego_wp, self._lead_distance)
+        lead_wp, _ = get_waypoint_in_distance(self._reference_waypoint, self._lead_distance)
         transform = lead_wp.transform
         transform.location.z += 0.5
-        lead = CarlaDataProvider.request_new_actor('vehicle.tesla.model3', transform)
+        lead = request_new_actor('vehicle.tesla.model3', transform)
         self.other_actors.append(lead)
 
     def _create_behavior(self):
@@ -306,11 +304,11 @@ class LeadBrakes(BasicScenario):
 
         # The lead drives along its lane until it has covered 40 m
         drive = py_trees.composites.Parallel(
-            "LeadDrives", policy=py_trees.common.ParallelPolicy.SUCCESS_ON_ONE)
+            "LeadDrives", policy=py_trees.common.ParallelPolicy.SuccessOnOne())
         drive.add_child(WaypointFollower(lead, self._lead_speed))
         drive.add_child(DriveDistance(lead, 40))
 
-        root = py_trees.composites.Sequence("LeadBrakes")
+        root = py_trees.composites.Sequence("LeadBrakes", memory=True)
         root.add_child(DriveDistance(ego, 2, name="EgoStarts"))   # the ego has driven 2 m
         root.add_child(drive)
         root.add_child(StopVehicle(lead, 1.0))                     # full brake
@@ -345,7 +343,7 @@ python3 $SCENARIO_RUNNER_ROOT/scenario_runner.py --scenario LeadBrakes_1 \
     --additionalScenario lead_brakes.py --configFile LeadBrakes.xml --reloadWorld --output
 ```
 
-Three rules prevent most problems. Spawn actors with `CarlaDataProvider.request_new_actor()`, never `world.spawn_actor()`, so that the atomics can find them and they are cleaned up. Append every actor to `self.other_actors`, or it outlives the scenario. And make sure the tree can end: every child of your root `Sequence` has to succeed at some point, or every run ends at the timeout.
+Three rules prevent most problems. Spawn actors with `request_new_actor()` from `srunner.tools.actor_factory`, never `world.spawn_actor()`, so the blueprint is resolved against this CARLA version and the actor exists before you use it. Append every actor to `self.other_actors`, or it outlives the scenario: nothing else owns it. And make sure the tree can end: every child of your root `Sequence` has to succeed at some point, or every run ends at the timeout.
 
 To use the scenario inside a route, reference its `type` in the route file's `scenarios` block with a `trigger_point`, and position the actors relative to `config.trigger_points[0]`, as `_initialize_actors()` above does.
 
@@ -396,7 +394,6 @@ The JUnit file holds one test case per criterion plus `Duration`, with a `failur
 ---
 ## Limitations on this version
 
-- __Weather is not applied in Python scenarios.__ `BasicScenario` does not set the weather of the configuration, so the `weather` element of an `srunner/examples/*.xml` configuration has no effect. Set the weather yourself with [`world.set_weather()`](core_world.md#weather) if a run depends on it.
 - __Town names are resolved.__ The classic towns exist only as `_Opt` variants, so a configuration that asks for `Town01` loads `Town01_Opt`, with a warning. Old blueprint names are translated the same way; two-wheelers have no counterpart and fail.
 - __An interrupted synchronous run__ can leave the server in synchronous mode, which makes the world look frozen to every other client. Set `synchronous_mode` back to `False` with `world.apply_settings()`.
 

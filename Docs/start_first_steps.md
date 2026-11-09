@@ -63,7 +63,7 @@ world = client.load_world('Town10HD_Opt')
 
 `load_world()` takes the map's own name — `Town10HD_Opt`, not `Town10`. Case does not matter, the rest of the name does.
 
-Which maps a server has depends on how it was built or packaged, so `get_available_maps()` is the list that counts. A source build has all fifteen maps; a package has whatever was cooked into it, and anything else arrives as a [content pack](content_authoring_packs.md) — the other CARLA towns as the [AdditionalMaps](map_content_packs.md) pack. See [Maps](core_map.md) for what ships.
+Which maps a server has depends on how it was built or packaged, so `get_available_maps()` is the list that counts. A source build has the fifteen maps of the catalogue plus `EmptyMap`; a package has whatever was cooked into it, and anything else arrives as a [content pack](content_authoring_packs.md) — the other CARLA towns as the [AdditionalMaps](map_content_packs.md) pack. See [Maps](core_map.md) for what ships.
 
 `client.reload_world()` resets the current map to its initial state without changing it. More about maps in [Maps](core_map.md).
 
@@ -123,7 +123,7 @@ With the ego in place, populate the map with traffic. Pick the vehicles from the
 
 ```py
 # Get the blueprint library and filter for the vehicle blueprints
-vehicle_blueprints = world.get_blueprint_library().filter('*vehicle*')
+vehicle_blueprints = world.get_blueprint_library().filter('vehicle.*')
 
 # Spawn 50 vehicles on random spawn points. try_spawn_actor returns None
 # instead of raising when the point is already taken.
@@ -166,7 +166,7 @@ camera.listen(lambda image: image.save_to_disk('out/%06d.png' % image.frame))
 Hand the vehicles over to the [__Traffic Manager__](core_traffic_manager.md), which drives them around the map following the road rules:
 
 ```py
-for vehicle in world.get_actors().filter('*vehicle*'):
+for vehicle in world.get_actors().filter('vehicle.*'):
     vehicle.set_autopilot(True)
 ```
 
@@ -217,7 +217,7 @@ try:
     ego_vehicle = world.spawn_actor(ego_bp, ego_spawn)
     actors.append(ego_vehicle)
 
-    vehicle_blueprints = world.get_blueprint_library().filter('*vehicle*')
+    vehicle_blueprints = world.get_blueprint_library().filter('vehicle.*')
     for spawn_point in random.sample(spawn_points, 50):
         npc = world.try_spawn_actor(random.choice(vehicle_blueprints), spawn_point)
         if npc is not None:
@@ -227,7 +227,7 @@ try:
     camera = world.spawn_actor(camera_bp, carla.Transform(carla.Location(z=1.5)), attach_to=ego_vehicle)
     camera.listen(lambda image: image.save_to_disk('out/%06d.png' % image.frame))
 
-    for vehicle in world.get_actors().filter('*vehicle*'):
+    for vehicle in world.get_actors().filter('vehicle.*'):
         vehicle.set_autopilot(True)
 
     input('Recording. Press enter to stop.\n')

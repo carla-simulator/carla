@@ -508,6 +508,9 @@ namespace detail {
 
     void UnSubscribeFromStream(const streaming::Token &token);
 
+    /// Join the streaming threads; no stream callback runs afterwards.
+    void StopStreaming();
+
     void EnableForROS(const streaming::Token &token);
 
     void DisableForROS(const streaming::Token &token);

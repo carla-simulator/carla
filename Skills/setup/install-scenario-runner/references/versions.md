@@ -22,9 +22,9 @@ rather than the docs, because the published docs are years behind the code.
 
 | Branch | Tip | CARLA | Purpose |
 |---|---|---|---|
-| `master` | `94ff3b8` 2025-09-29 "0.9.16 release" | 0.9.14 – 0.9.16 | the active branch |
+| `master` | `94ff3b8` 2025-09-29 "0.9.16 release" | 0.9.14 – 0.9.16 | the UE4 line |
 | `ue5-master` | `2616d21` 2024-10-23 | 0.10.0 (UE 5.5) | UE5 port + Scenic |
-| `ue58-dev` | `5fd2880` 2026-09-02 | UE 5.8 tree (reports 0.10.0 before 1.0) | UE 5.8 port, the 1.0 line |
+| `ue58-dev` | `5fd2880` 2026-09-02 | **CARLA 1.0** | the default branch |
 | `leaderboard-2.0` | `d7bcaf0` 2024-05-03 | leaderboard build | LB 2.0 |
 | `leaderboard-2.1` | `d7bcaf0` 2024-05-03 | leaderboard build | LB 2.1 — **identical to 2.0** |
 | `leaderboard-1.0` | `b9c342e` 2023-06-15 | 0.9.10.1 | LB 1.0 |
@@ -113,16 +113,20 @@ The branch to use against a CARLA tree built on Unreal Engine 5.8.
   `scenario_runner.py --list` shows **96** configs.
 - **UE5 name translation.** It translates map names and blueprint names to their
   UE5 forms, and carries route-mode fixes.
-- **Weather is still inert.** The weather call in `basic_scenario.py` is still
-  commented out, as on `ue5-master`. Set weather yourself ([[set-weather]]).
+- **Weather works.** `basic_scenario._initialize_environment` applies the config's
+  `<weather>` element.
 - **Scenic**: `srunner/scenic/` holds the Scenic carlaChallenge ports.
-- **Python**: `requirements.txt` pins `py-trees==0.8.3`; the branch ran fine on
-  Python 3.13 with it.
-- **Telling it from ue5-master by version is not possible yet.** A UE 5.8 server
-  currently reports `0.10.0`, the same string as the UE 5.5 0.10.0 release. 1.x
-  will clearly mean `ue58-dev`. Until then, decide from the tree:
-  `CARLA_UE58_ROOT` is the UE 5.8 checkout, `CARLA_UE5_ROOT` the UE 5.5 one
-  (see `Skills/_common/env_common.sh`).
+- **Python**: `requirements.txt` pins `py-trees==2.6.0`, unlike every other
+  branch; the branch ran fine on Python 3.13.
+- **This is the CARLA 1.0 branch**, and `MIN_CARLA_VERSION = '1.0'`. A `0.10.0`
+  server is the UE 5.5 release and is rejected with an `ImportError`; use
+  `ue5-master` for those.
+- **No `CarlaDataProvider`.** It was replaced by `SimulationData` in
+  `srunner/scenariomanager/simulation_data.py`, which holds only the client, world,
+  map, route planner, spawn points, random state, ego route and traffic manager port.
+  Actor state is read from the Python API, spawning lives in `srunner/tools/actor_factory.py`,
+  and each actor is destroyed by whoever created it. Code written against `master`
+  needs porting; see the repo's `Docs/CHANGELOG.md`.
 - **Leaderboard pair**: the leaderboard repo has a matching `ue58-dev` branch
   (`2b3eaa7`); use the two together ([[install-leaderboard]]).
 
@@ -144,8 +148,8 @@ but **not** as standalone configs include `Accident*`, `ParkedObstacle*`,
 
 ## Python and OS
 
-- `ue58-dev` ran fine on Python 3.13 with `py-trees==0.8.3`; the window below is
-  for `master` and the leaderboard branches.
+- `ue58-dev` pins `py-trees==2.6.0` and ran fine on Python 3.13; the window below
+  is for `master` and the leaderboard branches.
 - `py_trees==0.8.3` has no wheels for 3.11+ metadata in some environments and the
   API is the constraint anyway: **3.7 – 3.10** is the safe window, matching the
   CARLA client wheels (0.9.16 ships cp310/311/312; 0.9.15 cp37–cp310).

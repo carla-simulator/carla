@@ -15,11 +15,21 @@ namespace client {
   using LightGroup = rpc::LightState::LightGroup;
 
 LightManager::~LightManager(){
-  if(_episode.IsValid()) {
-    _episode.Lock()->RemoveOnTickEvent(_on_light_update_register_id);
-    _episode.Lock()->RemoveLightUpdateChangeEvent(_on_light_update_register_id);
+  // A destructor must not throw (that calls std::terminate), and the RPC below
+  // times out if the server is unreachable or stalled.
+#ifndef LIBCARLA_NO_EXCEPTIONS
+  try {
+#endif // LIBCARLA_NO_EXCEPTIONS
+    if(_episode.IsValid()) {
+      _episode.Lock()->RemoveOnTickEvent(_on_tick_register_id);
+      _episode.Lock()->RemoveLightUpdateChangeEvent(_on_light_update_register_id);
+    }
+    UpdateServerLightsState(true);
+#ifndef LIBCARLA_NO_EXCEPTIONS
+  } catch (const std::exception &e) {
+    log_error("exception in the light manager destructor:", e.what());
   }
-  UpdateServerLightsState(true);
+#endif // LIBCARLA_NO_EXCEPTIONS
 }
 
 void LightManager::SetEpisode(detail::WeakEpisodeProxy episode) {

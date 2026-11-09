@@ -8,6 +8,9 @@
 #include "CarlaRecorder.h"
 #include "CarlaRecorderHelpers.h"
 
+#include <algorithm>
+#include <limits>
+
 void CarlaRecorderAnimVehicle::Write(std::ostream &OutFile)
 {
   // database id
@@ -53,7 +56,7 @@ void CarlaRecorderAnimVehicles::Write(std::ostream &OutFile)
   WriteValue<uint32_t>(OutFile, Total);
 
   // write total records
-  Total = Vehicles.size();
+  Total = std::min<size_t>(Vehicles.size(), std::numeric_limits<uint16_t>::max());
   WriteValue<uint16_t>(OutFile, Total);
 
   for (uint16_t i=0; i<Total; ++i)
@@ -69,12 +72,12 @@ void CarlaRecorderAnimVehicles::Write(std::ostream &OutFile)
 
 void CarlaRecorderAnimVehicles::Read(std::istream &InFile)
 {
-  uint16_t i, Total;
+  uint16_t i, Total = 0;
   CarlaRecorderAnimVehicle Vehicle;
 
   // read Total Vehicles
   ReadValue<uint16_t>(InFile, Total);
-  for (i = 0; i < Total; ++i)
+  for (i = 0; (i < Total) && InFile; ++i)
   {
     Vehicle.Read(InFile);
     Add(Vehicle);

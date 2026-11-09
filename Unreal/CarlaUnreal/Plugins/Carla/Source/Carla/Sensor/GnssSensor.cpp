@@ -162,3 +162,19 @@ void AGnssSensor::BeginPlay()
   const UCarlaEpisode* episode = UCarlaStatics::GetCurrentEpisode(GetWorld());
   CurrentGeoProjection = episode->GetGeoProjection();
 }
+
+void AGnssSensor::GetMirrorState(carla::multigpu::SensorState &State) const
+{
+  if (RandomEngine != nullptr)
+  {
+    State.random_engine = RandomEngine->GetState();
+  }
+}
+
+void AGnssSensor::SetMirrorState(const carla::multigpu::SensorState &State)
+{
+  if (State.random_engine && (RandomEngine != nullptr))
+  {
+    RandomEngine->SetState(*State.random_engine);
+  }
+}

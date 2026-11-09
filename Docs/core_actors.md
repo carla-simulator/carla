@@ -37,8 +37,10 @@ vehicle_bp = random.choice(blueprint_library.filter('vehicle.*.*'))
 
 Besides that, each [carla.ActorBlueprint](python_api.md#carla.ActorBlueprint) has a series of [carla.ActorAttribute](python_api.md#carla.ActorAttribute) that can be _get_ and _set_.
 ```py
-is_bike = vehicle_bp.get_attribute('number_of_wheels') == 2
-if is_bike:
+# Read an attribute through the as_* method of its type
+is_bike = vehicle_bp.get_attribute('number_of_wheels').as_int() == 2
+# Not every blueprint has every attribute: the two-wheelers have no color
+if vehicle_bp.has_attribute('color'):
     vehicle_bp.set_attribute('color', '255,0,0')
 ```
 !!! Note
@@ -330,7 +332,8 @@ The lights of a vehicle can be retrieved and updated anytime using the methods [
 # Turn on position lights
 current_lights = carla.VehicleLightState.NONE
 current_lights |= carla.VehicleLightState.Position
-vehicle.set_light_state(current_lights)
+# The | operator returns an int: convert it back before setting it
+vehicle.set_light_state(carla.VehicleLightState(current_lights))
 ```
 
 ### Walkers
@@ -359,6 +362,10 @@ ai_controller.set_max_speed(1 + random.random())  # Between 1 and 2 m/s (default
 ...
 ai_controller.stop()
 ```
+
+!!! Important
+    On maps where the client runs the navigation (every map except the World Partition maps listed in [Large maps](core_large_maps.md#pedestrian-navigation)), the walkers only move while the client that started their controllers calls `world.tick()` or `world.wait_for_tick()`. A script that starts the controllers and then sleeps leaves them standing. While a controller moves a walker, `walker.get_velocity()` reads zero; compare locations to measure its speed.
+
 When a walker reaches the target location, they will automatically walk to another random point. If the target point is not reachable, walkers will go to the closest point from their current location.
 
 `PythonAPI/examples/generate_traffic.py` uses batches to spawn a crowd of walkers and set them wandering.

@@ -26,23 +26,18 @@ REPO = "https://github.com/carla-simulator/scenario_runner.git"
 # (predicate on the parsed client version) -> branch, why
 #
 # Ordered; first match wins. Numeric per-component comparison matters here:
-# 0.10.0 > 0.9.16, which is also why scenario_runner's own MIN_CARLA_VERSION
-# check ('0.9.14') passes on UE5 clients.
-#
-# 0.10.x is ambiguous: a UE 5.8 (ue58-dev) server currently reports 0.10.0, the
-# same string as the UE 5.5 0.10.0 release. recommend() settles that case from
-# the configured trees before this table is consulted.
+# 1.0 > 0.10.0 > 0.9.16.
 BRANCHES = [
-    ("ue58-dev", lambda v: v >= (1,), "CARLA 1.x is the UE 5.8 line"),
-    ("ue5-master", lambda v: v >= (0, 10), "CARLA 0.10.x with no UE 5.8 tree configured: the UE 5.5 0.10.0 release"),
+    ("ue58-dev", lambda v: v >= (1,), "CARLA 1.x: ue58-dev is the CARLA 1.0 branch"),
+    ("ue5-master", lambda v: v >= (0, 10), "CARLA 0.10.x is the UE 5.5 release"),
     ("master", lambda v: v >= (0, 9, 14), "master supports CARLA 0.9.14 through 0.9.16"),
     ("leaderboard-1.0", lambda v: v >= (0, 9, 10) and v < (0, 9, 11), "CARLA 0.9.10.1 is the Leaderboard 1.0 build"),
 ]
 
 FLAVORS = {
     "master": "UE4, CARLA 0.9.14-0.9.16. All towns; ~21 standalone scenario types.",
-    "ue58-dev": "UE 5.8, the CARLA 1.0 line (pre-1.0 servers report 0.10.0). Town01_Opt-Town05_Opt + Town10HD_Opt, "
-                "96 configs; UE5 map/blueprint name translation; route-mode fixes; weather call still disabled; + Scenic.",
+    "ue58-dev": "CARLA 1.0 on UE 5.8. Town01_Opt-Town05_Opt + Town10HD_Opt, "
+                "96 configs; UE5 map/blueprint name translation; route-mode fixes; py-trees 2.6; + Scenic. The default branch.",
     "ue5-master": "UE 5.5, CARLA 0.10.0 release. Town10HD_Opt only; 'vehicle.lincoln.mkz'; weather control disabled; + Scenic.",
     "leaderboard-2.1": "Leaderboard 2.1 (identical commit to leaderboard-2.0).",
     "leaderboard-2.0": "Leaderboard 2.0 (identical commit to leaderboard-2.1).",
@@ -138,39 +133,12 @@ def config_value(key: str) -> str:
     return ""
 
 
-def is_ue58_tree(path: str) -> bool:
-    """A ue58-dev checkout: the Autoware plugin and CMake/DLSS.cmake arrived with
-    UE 5.8 and are absent on ue5-dev (same probe as Util/AgenticTools config.py)."""
-    if not path:
-        return False
-    p = Path(path).expanduser()
-    return ((p / "Unreal/CarlaUnreal/Plugins/Carla/Source/Carla/Autoware").is_dir()
-            and (p / "CMake/DLSS.cmake").is_file())
-
-
-def ue58_tree_configured() -> str:
-    """Why a UE 5.8 tree is in play, or "" when none is."""
-    ue58 = config_value("CARLA_UE58_ROOT")
-    if ue58:
-        return f"CARLA_UE58_ROOT is set ({ue58})"
-    root = config_value("CARLA_ROOT")
-    if is_ue58_tree(root):
-        return f"CARLA_ROOT ({root}) is a UE 5.8 tree"
-    return ""
-
-
 def recommend(ver: str | None) -> tuple[str, str]:
     if not ver or ver == "unknown":
-        return "master", "no client version could be read; master is the default for UE4 CARLA"
+        return "ue58-dev", "no client version could be read; ue58-dev (CARLA 1.0) is the default branch"
     if ver == "leaderboard":
         return "leaderboard-2.1", "the client reports version 'leaderboard': this is a Leaderboard CARLA build"
     v = parse_version(ver)
-    if (0, 10) <= v < (1,):
-        why58 = ue58_tree_configured()
-        if why58:
-            return "ue58-dev", f"CARLA {ver}, and {why58}: UE 5.8 builds report 0.10.0 until 1.0 is tagged"
-        return "ue5-master", (f"CARLA {ver} with no UE 5.8 tree configured: the UE 5.5 0.10.0 release. "
-                              "A UE 5.8 server also reports 0.10.0; if this is one, pass --branch ue58-dev")
     for name, pred, why in BRANCHES:
         if pred(v):
             return name, why
@@ -285,7 +253,7 @@ def cmd_verify(args) -> None:
         ("carla", "run the install-python-api skill"),
         ("agents.navigation.global_route_planner", "add $CARLA_ROOT/PythonAPI/carla to PYTHONPATH"),
         ("py_trees", "pip install -r requirements.txt"),
-        ("srunner.scenariomanager.carla_data_provider", "add SCENARIO_RUNNER_ROOT to PYTHONPATH"),
+        ("srunner.scenariomanager.simulation_data", "add SCENARIO_RUNNER_ROOT to PYTHONPATH"),
     ]:
         try:
             __import__(mod)
@@ -298,7 +266,8 @@ def cmd_verify(args) -> None:
         import py_trees
 
         v = py_trees.__version__
-        print(f"py_trees : {v}{'' if v.startswith('0.8') else '  <-- only 0.8.x works'}")
+        print(f"py_trees : {v} (install from the checkout's requirements.txt: "
+              f"ue58-dev pins 2.6.0, the other branches 0.8.3)")
     except Exception:
         pass
 

@@ -21,6 +21,7 @@
 #include "Carla/Walker/WalkerBase.h"
 
 #include <util/disable-ue4-macros.h>
+#include <carla/MsgPack.h>
 #include <carla/opendrive/OpenDriveParser.h>
 #include <carla/rpc/String.h>
 #include <util/enable-ue4-macros.h>
@@ -171,10 +172,18 @@ bool UCarlaEpisode::LoadNewEpisode(const FString &MapString, bool ResetSettings)
       {
         FCarlaEngine *CarlaEngine = GameInstance->GetCarlaEngine();
         auto SecondaryServer = CarlaEngine->GetSecondaryServer();
-        if (SecondaryServer->HasClientsConnected()) 
+        // A world generated from OpenDRIVE: the secondaries generate the same.
+        carla::multigpu::LoadMapExtras Extras;
+        TArray<uint8> OpenDrive;
+        if (FPaths::GetBaseFilename(FinalPath).Equals(TEXT("OpenDriveMap"), ESearchCase::IgnoreCase) &&
+            FFileHelper::LoadFileToArray(OpenDrive, *UOpenDrive::GetSavedXODRPath(TEXT("OpenDriveMap")), FILEREAD_Silent))
         {
-          SecondaryServer->GetCommander().SendLoadMap(std::string(TCHAR_TO_UTF8(*FinalPath)));
+          Extras.opendrive = std::string(reinterpret_cast<const char *>(OpenDrive.GetData()), OpenDrive.Num());
+          const carla::Buffer Parameters = carla::MsgPack::Pack(GameInstance->GetOpendriveGenerationParameters());
+          Extras.generation_parameters =
+              std::string(reinterpret_cast<const char *>(Parameters.data()), Parameters.size());
         }
+        SecondaryServer->GetCommander().SendLoadMap(std::string(TCHAR_TO_UTF8(*FinalPath)), Extras);
       }
     }
   }
@@ -366,6 +375,57 @@ carla::rpc::Actor UCarlaEpisode::SerializeActor(FCarlaActor *CarlaActor) const
     UE_LOG(LogCarla, Warning, TEXT("Trying to serialize invalid actor"));
   }
   return Actor;
+}
+
+carla::rpc::Actor UCarlaEpisode::SerializeActorWithPrimaryIds(AActor *Actor) const
+{
+  carla::rpc::Actor Serialized = SerializeActor(Actor);
+  if (!bIsPrimaryServer)
+  {
+    const FActorRegistry &Registry = ActorDispatcher->GetActorRegistry();
+    if (const FCarlaActor *Mirror = Registry.FindCarlaActor(Serialized.id))
+    {
+      Serialized.id = Mirror->GetPrimaryActorId();
+    }
+    if (Serialized.parent_id != 0u)
+    {
+      if (const FCarlaActor *Parent = Registry.FindCarlaActor(Serialized.parent_id))
+      {
+        Serialized.parent_id = Parent->GetPrimaryActorId();
+      }
+    }
+  }
+  return Serialized;
+}
+
+void UCarlaEpisode::AddRosParentNames(FCarlaActor &Child)
+{
+#if defined(WITH_ROS2)
+  auto ROS2 = carla::ros2::ROS2::GetInstance();
+  if (!ROS2->IsEnabled())
+  {
+    return;
+  }
+  FCarlaActor *CurrentActor = FindCarlaActor(Child.GetParent());
+  while (CurrentActor)
+  {
+    for (const auto &Attr : CurrentActor->GetActorInfo()->Description.Variations)
+    {
+      if (Attr.Key == "ros_name")
+      {
+        ROS2->AddActorParentRosName(static_cast<void*>(Child.GetActor()), static_cast<void*>(CurrentActor->GetActor()));
+      }
+      // NOTE: tier4 also propagated each ancestor's ros_topic_name onto the
+      // child here, but their AddActorRosTopicName used map::insert, so the
+      // dispatcher's earlier per-actor registration (own override or "")
+      // always won and the call was a no-op. Our AddActorRosTopicName is
+      // insert_or_assign (re-registration idempotency), which made the
+      // propagation live and clobbered every attached sensor's own
+      // ros_topic_name with its ancestor's — so it is dropped entirely.
+    }
+    CurrentActor = FindCarlaActor(CurrentActor->GetParent());
+  }
+#endif
 }
 
 carla::rpc::Actor UCarlaEpisode::SerializeActor(AActor* Actor) const

@@ -23,7 +23,8 @@ RUN apt-get update \
 # - vulkan-tools: for testing Vulkan rendering
 # - fontconfig: required for loading system fonts (e.g., in manual_control.py)
 # - xdg-user-dirs: so the Unreal Engine can use it to locate the user's Documents directory
-RUN packages="vulkan-tools fontconfig xdg-user-dirs" && \
+# - libusb-1.0-0: required to import open3d (e.g., in open3d_lidar.py)
+RUN packages="vulkan-tools fontconfig xdg-user-dirs libusb-1.0-0" && \
     apt-get update && \
     apt-get install -y $packages && \
     rm -rf /var/lib/apt/lists/*
@@ -31,12 +32,11 @@ RUN packages="vulkan-tools fontconfig xdg-user-dirs" && \
 ENV XDG_RUNTIME_DIR=/run/user/${UID}
 
 # Install runtime python libraries (to run examples and utils)
-COPY .tmp/examples_requirements.txt /tmp/examples_requirements.txt
-COPY .tmp/util_requirements.txt /tmp/util_requirements.txt
+COPY .tmp/PythonAPI /tmp/PythonAPI
 
-RUN python3 -m pip install -r /tmp/examples_requirements.txt \
-    && python3 -m pip install -r /tmp/util_requirements.txt \
-    && rm /tmp/examples_requirements.txt /tmp/util_requirements.txt
+RUN python3 -m pip install -r /tmp/PythonAPI/examples/requirements.txt \
+    && python3 -m pip install -r /tmp/PythonAPI/util/requirements.txt \
+    && rm -rf /tmp/PythonAPI
 
 # Starting with Ubuntu 23.04, official Docker images include a default `ubuntu` user with UID 1000.
 # This can cause conflicts when remapping the container's UID/GID to match the host user.

@@ -19,7 +19,8 @@ class AGeoTrafficSign;
 /**
  * Editor tool: stands regional traffic signs (USignDataAsset catalog under SignPackagePath /
  * <style>) at the OSM sign nodes of a UStreetMap (highway=stop / give_way / crossing,
- * traffic_sign=*, maxspeed=*), pushed out of the carriageway with the level's OpenDRIVE and
+ * traffic_sign=*, maxspeed=*), pushed out of the carriageway with the level's OpenDRIVE (signs
+ * that stay in a lane after MaxDisplacementIterations are removed) and
  * turned to face the oncoming traffic of the nearest lane.
  *
  * Every sign is an AGeoTrafficSign (Carla runtime module, an ATrafficSignBase) carrying the
@@ -79,6 +80,8 @@ public:
 	UPROPERTY(Category = "SignGeneration", EditAnywhere, BlueprintReadWrite)
 	float RoadBorderPadding;
 
+	/// Unused since signs jump straight to the outer edge of the carriageway; kept so saved
+	/// controllers still load.
 	UPROPERTY(Category = "SignGeneration", EditAnywhere, BlueprintReadWrite, meta = (ClampMin = "0.0", ClampMax = "2.0"))
 	float StepPercentOfLaneWidth;
 
@@ -88,7 +91,7 @@ public:
 	UPROPERTY(Category = "SignGeneration", EditAnywhere, BlueprintReadWrite)
 	FVector2D PlateOffsetCm;
 
-	/// Height of the plate centre above the ground (cm) for poles without a "Sign1" socket.
+	/// Height of the plate centre above the ground (cm); the pole is shortened to match.
 	UPROPERTY(Category = "SignGeneration", EditAnywhere, BlueprintReadWrite)
 	float PlateHeightCm;
 

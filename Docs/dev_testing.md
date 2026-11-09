@@ -77,7 +77,7 @@ python3 -m nose2 -v
 The smoke tests connect to `localhost:3654`, not the default port 2000, so start a dedicated server on that port. From a package:
 
 ```sh
-./Linux/CarlaUnreal.sh -carla-rpc-port=3654
+./CarlaUnreal.sh -carla-rpc-port=3654
 ```
 
 With the Python API and the test requirements installed (see [Python API unit tests](#python-api-unit-tests)), check that the server answers, then run the list from the `test` folder:
@@ -100,7 +100,7 @@ Add `-c smoke/unittest.cfg -X` to write the results as JUnit XML to `test-result
 The tests load maps and change world settings, and many of them leave the server on `Town10HD_Opt` instead of the starting map, so do not run them against a server you are using for something else.
 
 !!! Note
-    `smoke.test_ros2` needs a server launched with `-ros2` (`./Linux/CarlaUnreal.sh -carla-rpc-port=3654 -ros2`). Without it, those tests fail. The tests check whichever middleware the server runs, so run them once per middleware, launching with `-rmw=fastdds`, `-rmw=cyclonedds` or `-rmw=zenoh`.
+    `smoke.test_ros2` needs a server launched with `-ros2` (`./CarlaUnreal.sh -carla-rpc-port=3654 -ros2`). Without it, those tests fail. The tests check whichever middleware the server runs, so run them once per middleware, launching with `-rmw=fastdds`, `-rmw=cyclonedds` or `-rmw=zenoh`.
 
 ---
 ## Integration tests
@@ -158,10 +158,27 @@ git clone --depth 1 -b 0.1.4 https://github.com/carla-simulator/opendrive-test-f
 
 It then builds the package. Pull requests and nightly builds do not run the Python unit, smoke or integration tests, so run them locally before opening a pull request that touches the Python API or the server.
 
-The `python-versions` input of `.github/workflows/_ci-ubuntu.yml` lists the Python versions the wheels are built for, the first being the build's main Python. Each version gets a conda environment `carla<XY>`, created on the first run. The `smoke-test-python-versions` input lists the versions to run the smoke tests with, and when it is empty no smoke tests run. Pull requests and nightly builds build 3.10 only and skip the smoke tests. Releases (`.github/workflows/ue5_release.yml`) build 3.10, 3.11 and 3.12, then run the smoke tests with each version against the package before uploading it. A failure stops the upload, and the JUnit results are kept as the `smoke-test-results` artifact.
+The `python-versions` input of `.github/workflows/_ci-ubuntu.yml` lists the Python versions the wheels are built for, the first being the build's main Python. Each version uses the conda environment `carla<XY>` (`carla310`, `carla311`, ...) under `PYTHON_ENVS_DIR` (`/opt/conda/envs`), which the builder image provides with `build` installed. The `smoke-test-python-versions` input lists the versions to run the smoke tests with, and when it is empty no smoke tests run. Pull requests and nightly builds build and smoke test 3.10 only. Releases (`.github/workflows/ue5_release.yml`) and the weekly build (`.github/workflows/ue5_weekly.yml`) build 3.10 to 3.15, then run the smoke tests with each version against the package before uploading it. A failure stops the upload, and the JUnit results are kept as the `smoke-test-results` artifact.
+
+The `python-versions` input of `.github/workflows/_ci-windows.yml` works the same way, the interpreter of each version being the one `py -<X.Y>` runs, so the Windows runner needs each version installed with `build`. Releases and the weekly build build 3.10 to 3.15 on Windows too. Windows runs no smoke tests.
 
 To run the smoke tests the same way locally, start a server on port 3654 and pass one interpreter per version to `Util/Tools/RunSmokeTests.sh`. It installs the matching wheel from `Build/Release/PythonAPI/dist` (`--wheel-dir` changes it) into each interpreter and writes `Build/test-results/smoke-cpXY.xml`:
 
 ```sh
 ./Util/Tools/RunSmokeTests.sh --wheel-dir Build/PythonAPI/dist python3.10 python3.12
+```
+
+### Test every Python version
+
+`Util/Tools/RunPythonVersionTests.sh` tests the Python API once per interpreter given. Each version gets a fresh virtual environment in `Build/test-results/python-versions/venv-cpXY` with its wheel and the carla, test and examples requirements. Then the stages chosen with `--stages` run:
+
+* `offline` (the default): imports `carla` and the agents, compiles every example, agent and `PythonAPI/util` script with warnings turned into errors, and runs the unit tests.
+* `smoke`: runs `Util/Tools/RunSmokeTests.sh`, which needs a server on port 3654.
+* `examples`: runs a set of `PythonAPI/examples` scripts headless for `--example-timeout` seconds each, against a server on `--port` (default 2000). An example fails if it raises an exception or exits early. `--tm-port` is passed to the examples that take it.
+
+The logs of each version go to `Build/test-results/python-versions/cpXY/`, and `summary.txt` has one line per version and stage:
+
+```sh
+./Util/Tools/RunPythonVersionTests.sh python3.10 python3.11 python3.12 python3.13 python3.14 python3.15
+./Util/Tools/RunPythonVersionTests.sh --stages examples --tm-port 8010 python3.13
 ```

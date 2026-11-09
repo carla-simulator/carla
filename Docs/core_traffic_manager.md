@@ -73,7 +73,7 @@ __Defaults__, for a TM that has not been configured:
 !!! Note
 	TM is designed to work in synchronous mode. Using TM in asynchronous mode can lead to unexpected and undesirable results. Read more in the section [__Synchronous mode__](#synchronous-mode).
 
-A TM instance is created by a [`carla.Client`](python_api.md#carla.Client), passing the port to be used. The default port is `8000`.
+A TM instance is created by a [`carla.Client`](python_api.md#carla.Client), passing the port to be used. The default port is `8000`. See [Network ports](ref_ports.md) for what else may already hold it.
 
 To create a TM instance:
 

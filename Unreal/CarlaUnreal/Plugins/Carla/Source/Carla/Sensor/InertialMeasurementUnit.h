@@ -34,6 +34,10 @@ public:
 
   void SetOwner(AActor *Owner) override;
 
+  void GetMirrorState(carla::multigpu::SensorState &State) const override;
+
+  void SetMirrorState(const carla::multigpu::SensorState &State) override;
+
   virtual void PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaTime) override;
 
   const carla::geom::Vector3D ComputeAccelerometerNoise(
@@ -90,6 +94,9 @@ private:
 
   /// Used to compute the acceleration
   float PrevDeltaTime;
+
+  /// Multi-GPU secondary: the primary IMU's rotation relative to its parent.
+  TOptional<FQuat> MirroredLocalRotation;
 
   /// Accelerometer value calculated after each PostPhysTick
   carla::geom::Vector3D AccelerometerValue;

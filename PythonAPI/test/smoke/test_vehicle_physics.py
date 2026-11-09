@@ -208,63 +208,77 @@ class TestVehicleTireConfig(SyncSmokeTest):
         for _i in range(0, frames):
             self.world.tick()
 
+    # Town10HD_Opt's inner westbound lane (road 20, lane 4): no junction from x=26 to x=-29.
+    LANE_Y = 16.68
+    START_X = 24.0
+    LAUNCH_SPEED = 30.0 / 3.6
+
+    def drive_straight(self, bp_veh, wheel_sweep):
+        """Launch one vehicle west along the lane and return its run."""
+        transform = carla.Transform(carla.Location(self.START_X, self.LANE_Y, 0.2), carla.Rotation(yaw=180))
+        response = self.client.apply_batch_sync([
+            SpawnActor(bp_veh, transform)
+            .then(ApplyTargetVelocity(FutureActor, carla.Vector3D(0, 0, 0)))])[0]
+        if response.error:
+            self.fail("%s: The test car could not be spawned: %s" % (bp_veh.id, response.error))
+        vehicle = self.world.get_actor(response.actor_id)
+
+        try:
+            self.wait(10)
+            self.client.apply_batch_sync([
+                ApplyVehiclePhysicsControl(vehicle, change_physics_control(vehicle, wheel_sweep=wheel_sweep))])
+            self.wait(1)
+            self.assertEqual(wheel_sweep, vehicle.get_physics_control().use_sweep_wheel_collision,
+                "%s: use_sweep_wheel_collision was not applied" % bp_veh.id)
+
+            self.client.apply_batch_sync([
+                ApplyTargetVelocity(vehicle, carla.Vector3D(-self.LAUNCH_SPEED, 0, 0))])
+            max_z = -math.inf
+            max_lateral = 0.0
+            for _i in range(100):
+                self.world.tick()
+                location = vehicle.get_location()
+                max_z = max(max_z, location.z)
+                max_lateral = max(max_lateral, abs(location.y - self.LANE_Y))
+
+            return vehicle.get_location(), vehicle.get_velocity(), max_z, max_lateral
+        finally:
+            self.client.apply_batch_sync([carla.command.DestroyActor(vehicle.id)])
+            self.wait(1)
+
+    def check_run(self, bp_veh, mode, run):
+        location, velocity, max_z, max_lateral = run
+        name = "%s (%s)" % (bp_veh.id, mode)
+        for value in (location.x, location.y, location.z, velocity.x, velocity.y, velocity.z):
+            self.assertFalse(math.isnan(value), "%s: nan in %s %s" % (name, location, velocity))
+        self.assertLess(max_lateral, 0.5, "%s: left its lane by %.2f m" % (name, max_lateral))
+        self.assertLess(max_z, 0.3, "%s: bounced to z=%.2f" % (name, max_z))
+        # 100 ticks at 30 km/h coast about 36 m; wheels that sink or lock lose most of it.
+        self.assertGreater(self.START_X - location.x, 25.0, "%s: covered only %.1f m" % (name, self.START_X - location.x))
+        self.assertLess(velocity.x, -0.5 * self.LAUNCH_SPEED, "%s: slowed down to %.2f m/s" % (name, -velocity.x))
+
     def test_vehicle_wheel_collision(self):
         print("TestVehicleTireConfig.test_vehicle_wheel_collision")
 
-        self.load_world("Town05_Opt", False)
+        # Repeated runs need the same contacts; the setting applies at a map load that keeps settings.
+        settings = self.world.get_settings()
+        settings.deterministic_collisions = True
+        self.world.apply_settings(settings)
+        self.world = self.load_world("Town10HD_Opt", False)
 
         bp_vehicles = self.world.get_blueprint_library().filter("vehicle.*")
         bp_vehicles = [x for x in bp_vehicles if int(x.get_attribute('number_of_wheels')) == 4]
 
+        # Ray-cast and sweep drive differently on a real road mesh, so each mode is checked against itself.
         for bp_veh in bp_vehicles:
-            veh_transf_00 = carla.Transform(carla.Location(36, -200, 0.2), carla.Rotation(yaw=91))
-            veh_transf_01 = carla.Transform(carla.Location(31, -200, 0.7), carla.Rotation(yaw=91))
+            for wheel_sweep, mode in ((False, "ray-cast"), (True, "sweep")):
+                first = self.drive_straight(bp_veh, wheel_sweep)
+                second = self.drive_straight(bp_veh, wheel_sweep)
+                self.check_run(bp_veh, mode, first)
 
-            batch = [
-                    SpawnActor(bp_veh, veh_transf_00)
-                    .then(ApplyTargetVelocity(FutureActor, carla.Vector3D(0, 0, 0))),
-                    SpawnActor(bp_veh, veh_transf_01)
-                    .then(ApplyTargetVelocity(FutureActor, carla.Vector3D(0, 0, 0)))
-                ]
-
-            responses = self.client.apply_batch_sync(batch)
-
-            veh_ids = [x.actor_id for x in responses]
-            veh_refs = [self.world.get_actor(x) for x in veh_ids]
-
-            if (0 in veh_ids) or (None in veh_refs):
-                self.fail("%s: The test cars could not be correctly spawned" % (bp_veh.id))
-
-            self.wait(10)
-
-            vel_ref = 100.0 / 3.6
-            self.client.apply_batch_sync([
-                ApplyVehiclePhysicsControl(veh_refs[0], change_physics_control(veh_refs[0], wheel_sweep = False)),
-                ApplyVehiclePhysicsControl(veh_refs[1], change_physics_control(veh_refs[1], wheel_sweep = True))])
-            self.wait(1)
-
-            self.client.apply_batch_sync([
-                ApplyTargetVelocity(veh_refs[0], carla.Vector3D(0, vel_ref, 0)),
-                ApplyTargetVelocity(veh_refs[1], carla.Vector3D(0, vel_ref, 0))
-            ])
-            self.wait(150)
-
-            loc_veh_00 = veh_refs[0].get_location().y
-            loc_veh_01 = veh_refs[1].get_location().y
-            vel_veh_00 = veh_refs[0].get_velocity().y
-            vel_veh_01 = veh_refs[1].get_velocity().y
-
-            if not list_equal_tol([vel_veh_00, vel_veh_01], 0.5):
-                self.client.apply_batch_sync([carla.command.DestroyActor(x) for x in veh_ids])
-                self.fail("%s: Velocities are not equal after simulation. [%.3f, %.3f]"
-                  % (bp_veh.id, vel_veh_00, vel_veh_01))
-
-            if not list_equal_tol([loc_veh_00, loc_veh_01], 0.5):
-                self.client.apply_batch_sync([carla.command.DestroyActor(x) for x in veh_ids])
-                self.fail("%s: Locations are not equal after simulation. [%.3f, %.3f]"
-                  % (bp_veh.id, loc_veh_00, loc_veh_01))
-
-            self.client.apply_batch_sync([carla.command.DestroyActor(x) for x in veh_ids])
+                if not equal_tol(first[0], second[0], 1e-3) or not equal_tol(first[1], second[1], 1e-3):
+                    self.fail("%s (%s): repeated runs differ: %s %s, then %s %s"
+                      % (bp_veh.id, mode, first[0], first[1], second[0], second[1]))
 
 class TestStickyControl(SyncSmokeTest):
     def wait(self, frames=100):

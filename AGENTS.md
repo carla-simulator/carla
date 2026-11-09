@@ -4,7 +4,7 @@ Guidance for any coding agent working in this repository.
 
 ## Skills
 
-This repo ships a library of **63 vetted CARLA procedures** under
+This repo ships a library of **64 vetted CARLA procedures** under
 [`Skills/`](Skills/). Each is a directory containing a `SKILL.md` with YAML
 frontmatter (`name`, `description`, `compatibility`, `metadata`), the step-by-step
 procedure, and often `scripts/` and `references/` beside it.
@@ -35,6 +35,12 @@ wrong one fails slowly. Ask the user, then record the answer.
 Project config is in [`.mcp.json`](.mcp.json); clients that read it get the
 tools automatically. Agents without MCP should read `Skills/` directly — the
 files are the source of truth either way.
+
+`.mcp.json` also registers `unreal-mcp` (`http://localhost:6256/mcp`), Epic's
+Unreal MCP server, which the CarlaUnreal editor starts on load. It acts on the
+open editor (actors, viewport camera, assets, output log), not on a running
+CARLA server, and is only up while the full editor is open — not in `-game` or
+packaged builds. See [`Docs/agent_skills.md`](Docs/agent_skills.md#unreal-mcp-in-the-editor).
 
 ## Skill catalogue
 
@@ -102,6 +108,7 @@ files are the source of truth either way.
 
 ### `setup`
 
+- **`check-carla-ports`** — Reports which network ports CARLA and its tooling use on this machine and which are already taken — the simulator's RPC/streaming/secondary trio, the....
 - **`check-feature-support`** — Answers "can CARLA do X here, and is there a vetted procedure for it" before you promise anything, and detects client/server/tree version skew — a....
 - **`download-carla`** — Downloads CARLA so nothing has to be fetched by hand — an official release package for any published version (resolved live from the GitHub....
 - **`install-leaderboard`** — Installs the CARLA Autonomous Driving Leaderboard (leaderboard.carla.org) at a chosen version — 1.0, 2.0 or 2.1 — together with the exact....

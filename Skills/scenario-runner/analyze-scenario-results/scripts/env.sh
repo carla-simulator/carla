@@ -68,6 +68,18 @@ export PYTHONIOENCODING="${PYTHONIOENCODING:-utf-8}"
 
 # Which branch is checked out decides which scenarios, towns and blueprints are
 # valid; every SR skill keys its advice off this. "detached"/"unknown" is fine.
+# ScenarioRunner pins its own py_trees; ue58-dev moved to 2.x while older
+# branches need 0.8.3, so the wanted version is read from the checkout.
+carla_sr_pinned_pytrees() {
+  sed -n 's/^py-trees==\([0-9.]*\).*/\1/p' "${SCENARIO_RUNNER_ROOT:-}/requirements.txt" 2>/dev/null | head -1
+}
+
+# The scenario class loader is what makes --additionalScenario work in route
+# mode and accept folders; older checkouts only glob srunner/scenarios.
+carla_sr_has_class_loader() {
+  [ -f "${SCENARIO_RUNNER_ROOT:-}/srunner/tools/scenario_class_loader.py" ]
+}
+
 carla_sr_branch() {
   [ -n "${SCENARIO_RUNNER_ROOT}" ] || { echo "unknown"; return; }
   git -C "${SCENARIO_RUNNER_ROOT}" rev-parse --abbrev-ref HEAD 2>/dev/null || echo "unknown"
