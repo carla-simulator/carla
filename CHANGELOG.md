@@ -209,11 +209,12 @@
 
 #### Documentation
 
-* Updated the bounding-box tutorial to skip empty projections before drawing or exporting a box.
+* Clarified the depth camera's 24-bit distance encoding and the precision of its grayscale visualization.
 * **Fixed the CARLA 1.0 download links** in the quick start and the download page, and corrected the ROS 2 native and Autoware pages against a runtime check of the 1.0 package.
 * Clarified that `WorldSnapshot.id` identifies the loaded episode and remains stable across its ticks; use `frame` to identify a snapshot's tick (#7377).
 * Fixed the Python API reference listing keyword names the bindings do not accept (`World.get_level_bbs(actor_type=...)` raised `ArgumentError`; it is `bb_type`), and the same on `Vehicle.set_autopilot`, `Walker.blend_pose`, `Client.apply_batch_sync`, `Client.get_trafficmanager`, the `Client` recorder methods, `BoundingBox.get_world_vertices` and `World.apply_settings`.
 * Fixed the semantic segmentation class table in `Docs/ref_sensors.md`, which still described the 0.8.x 22-class taxonomy instead of the actual 29 classes, breaking ground-truth mapping.
+* Updated the bounding-box tutorial to skip empty projections before drawing or exporting a box.
 * Fixed code examples that failed when run, in the Python API reference snippets and in `core_actors.md`, `adv_traffic_manager.md`, `ref_sensors.md` and `tuto_G_bounding_boxes.md`.
 * Fixed broken links in the documentation: the SYNKROTRON page on the home page, the build guides in the contribution guidelines and the colliders tutorial, and Python API links in three tutorials.
 * Fixed typos in `README.md`.
