@@ -16,7 +16,7 @@ from agents.navigation.basic_agent import BasicAgent
 class ConstantVelocityAgent(BasicAgent):
     """
     ConstantVelocityAgent implements an agent that navigates the scene at a fixed velocity.
-    This agent will fail if asked to perform turns that are impossible are the desired speed.
+    This agent will fail if asked to perform turns that are impossible at the desired speed.
     This includes lane changes. When a collision is detected, the constant velocity will stop,
     wait for a bit, and then start again.
     """
@@ -49,7 +49,7 @@ class ConstantVelocityAgent(BasicAgent):
 
         self.is_constant_velocity_active = True
         self._set_collision_sensor()
-        self._set_constant_velocity(target_speed)
+        self._set_constant_velocity(self._target_speed)
 
     def set_target_speed(self, speed):
         """Changes the target speed of the agent [km/h]"""
@@ -124,6 +124,8 @@ class ConstantVelocityAgent(BasicAgent):
         self._collision_sensor.listen(lambda event: self.stop_constant_velocity())
 
     def destroy_sensor(self):
+        """Destroys the collision sensor the agent spawned. Call it before destroying the vehicle"""
         if self._collision_sensor:
+            self._collision_sensor.stop()
             self._collision_sensor.destroy()
             self._collision_sensor = None

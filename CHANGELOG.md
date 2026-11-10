@@ -182,6 +182,7 @@
 * Fixed the Traffic Manager leaking its whole in-memory road graph (several hundred MB on a large map) every time it shut down or rebuilt its map for a new episode. Its waypoints link to each other with shared pointers, so the cycles kept them all alive; those links are now broken when the map is destroyed.
 * Fixed `BehaviorAgent.run_step` raising `AttributeError` once the local planner's waypoint queue empties, for instance at the end of a route.
 * Fixed the Traffic Manager's localization stage never forgetting the junction a vehicle is entering (`vehicles_at_junction_entrance`) when the vehicle is removed or the Traffic Manager is reset.
+* Fixed `ConstantVelocityAgent` launching the vehicle at 3.6 times its target speed (`ConstantVelocityAgent(v, 30)` started at 108 km/h): the constructor passed the speed in km/h where m/s is expected. `destroy_sensor()` now stops the agent's collision sensor before destroying it.
 
 #### Python API and client
 
@@ -210,6 +211,7 @@
 
 #### Examples and tests
 
+* Fixed `PythonAPI/examples/automatic_control.py` cleanup: it switched the world to asynchronous mode and the Traffic Manager to synchronous mode on every exit. It now restores the world settings it found and the Traffic Manager mode only when `--sync` changed them, and destroys the collision sensor `ConstantVelocityAgent` leaves on the player.
 
 * Fixed **the agent skills on Windows (Git Bash with a native Python)** and a batch of script bugs found by the weekly package test. `PYTHONPATH` is built with the interpreter's separator and `D:\` paths, `check-carla-ports` falls back to `netstat`/`tasklist` and never reports a busy port as free, `run-carla-ue58-server` runs and stops a standalone package (`CarlaUnreal.exe`) with no checkout, and `install-python-api` searches every configured CARLA root and no longer reports `1.0` against `1.0-<commit>` as a mismatch. Also fixed: `set-world-settings async` hanging on a synchronous world nobody ticks, `read-sensor` and `control-spectator follow` hanging or failing at exit, `replay-recording` reading `/proc` on Windows (and a `stop --clear-scene` for servers that leave replayed actors behind), `create-sensor` and `spawn-vehicles ego` failing on `--ros-frame-id`/`--no-ros-tf` where the attribute does not exist (and the new `--ros-topic-name`), `load-map` not resolving `Town03` to `Town03_Opt`, and evenly spaced `telemetry watch` samples. Plus `spawn-walkers --seconds`, grouped spawn errors in `spawn-vehicles`, and stale paths and examples in the docs.
 * Fixed **the Autoware `stop_all.sh` and the launcher teardown leaving the CARLA server running**. They checked only the leader of each process group. The `CarlaUnreal.sh` wrapper exits on SIGTERM, but the engine binary kept running and held the RPC port, so the next launch failed. They now check the whole group and SIGKILL it after the grace period.

@@ -697,6 +697,8 @@ def game_loop(args):
     pygame.init()
     pygame.font.init()
     world = None
+    agent = None
+    original_settings = None
 
     try:
         if args.seed:
@@ -709,6 +711,7 @@ def game_loop(args):
         sim_world = client.get_world()
 
         if args.sync:
+            original_settings = sim_world.get_settings()
             settings = sim_world.get_settings()
             settings.synchronous_mode = True
             settings.fixed_delta_seconds = 0.05
@@ -771,12 +774,14 @@ def game_loop(args):
     finally:
 
         if world is not None:
-            settings = world.world.get_settings()
-            settings.synchronous_mode = False
-            settings.fixed_delta_seconds = None
-            world.world.apply_settings(settings)
-            traffic_manager.set_synchronous_mode(True)
+            # Only undo what this script changed
+            if original_settings is not None:
+                world.world.apply_settings(original_settings)
+                traffic_manager.set_synchronous_mode(False)
 
+            # ConstantVelocityAgent owns a collision sensor on the player
+            if hasattr(agent, 'destroy_sensor'):
+                agent.destroy_sensor()
             world.destroy()
 
         pygame.quit()
