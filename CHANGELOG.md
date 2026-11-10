@@ -209,6 +209,9 @@
 * Fixed `PythonAPI/examples/manual_control.py` raising `NameError: name 'sys' is not defined` instead of their error message when the server cannot send the OpenDRIVE file or the map has no spawn points.
 * Fixed `PythonAPI/examples/no_rendering_mode.py` ignoring `--show-triggers`, `--show-connections` and `--show-spawn-points` when a cached map image existed; the flags are part of the cache name now.
 * Fixed the spawn check in `test_collision_determinism.py`, which raised `AttributeError` instead of reporting the failure, and `Sensor.get_current_detection_points` in the LiDAR smoke tests.
+* Fixed `pip install -r PythonAPI/util/requirements.txt` failing on Python 3.14 and later, where `pygame` has no wheels. The file listed `pygame`, `psutil`, `py-cpuinfo` and `python-tr`, left over from the removed `performance_benchmark.py`, which no `PythonAPI/util` script imports any more. It now lists `numpy` and `imageio`.
+* Added `imageio` to `PythonAPI/util/requirements.txt` and `PythonAPI/examples/requirements.txt`. `util/apply_texture.py` and `examples/invertedai_traffic.py` import it, but it was not listed, so both failed with `ModuleNotFoundError` in a fresh environment.
+* Fixed `Util/Tools/RunPythonVersionTests.sh` running `sensor_synchronization.py` without `--port`, so its `examples` stage failed whenever the server was not on port 2000.
 
 #### Documentation
 
