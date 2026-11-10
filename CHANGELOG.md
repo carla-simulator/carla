@@ -151,6 +151,7 @@
 #### Simulation and content
 
 * Fixed **Town11 still loading as a legacy tiled map** through `ALargeMapManager`: it is now a World Partition map like Town12, Town13 and Town15, and has a pedestrian navmesh, so walkers can spawn and navigate on it. `CarlaLargeMapConvert` no longer fails to save a town whose tiles carry level-script blueprints or redirectors (`Illegal reference to private object`).
+* Fixed **walkers falling through the terrain on Town12** when spawned at a point from `get_random_location_from_navigation()` (#10212). The navmesh covers the terrain under some building footprints, and the building's cell could stream in after the walker. `get_random_location_from_navigation()` now only returns points whose surrounding cells are loaded and where a walker fits without overlapping static geometry, and a walker spawned inside a building or wall is refused with `Failed because collision at spawn position`. It also no longer returns the map origin, where a walker falls out of the map, when the navmesh sample finds no polygon.
 * Fixed the walker bounding box being centred on the actor pivot rather than the skeletal mesh, so `actor.bounding_box` now lines up with the visible pedestrian.
 * Fixed the traffic sign bounding box to use the first valid trigger volume and keep its rotation, with a guard for null volumes.
 * Fixed `sensor.camera.rt_lens` rendering almost black at night: its auto exposure was pinned to a daylight range, and now follows its camera profile with only the upper end capped (`carla.RTLens.MaxAutoExposureEV`).

@@ -35,6 +35,8 @@
 
 #include "CarlaEpisode.generated.h"
 
+class AWalkerBase;
+
 /// A simulation episode.
 ///
 /// Each time the level is restarted a new episode is created.
@@ -402,6 +404,11 @@ private:
   void InitializeAtBeginPlay();
 
   void EndPlay();
+
+  /// True if the centre of @a Walker's capsule is inside the collision of a
+  /// building or wall, where physics would push the walker out through the
+  /// terrain (#10212).
+  bool IsWalkerInsideBuilding(const AWalkerBase &Walker) const;
 
   void RegisterActorFactory(ACarlaActorFactory &ActorFactory)
   {
