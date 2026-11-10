@@ -213,7 +213,7 @@
       - param_name: keep_actors
         type: bool
         doc: >
-          If False, the replay runs to its end before stopping, so the actors the recording destroys are removed and the others stay. If True, every replayed actor stays as it is.
+          If False, the actors the replayer spawned are destroyed, also when the replay already reached its end (which keeps them). Actors it reused from the scene, such as traffic lights, stay. If True, every replayed actor stays as it is.
       doc: >
         Stop current replayer.
     # --------------------------------------

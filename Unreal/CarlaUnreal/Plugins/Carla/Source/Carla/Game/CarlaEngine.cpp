@@ -1419,7 +1419,17 @@ void FCarlaEngine::OnEpisodeSettingsChanged(const FEpisodeSettings &Settings)
   CurrentSettings = FEpisodeSettings(Settings);
 
   // A secondary plays the primary's frames: it is synchronous whatever it is told.
+  const bool bWasSynchronous = bSynchronousMode;
   bSynchronousMode = bIsPrimaryServer ? Settings.bSynchronousMode : true;
+
+  // Tick cues sent while asynchronous were never consumed: entering synchronous
+  // mode with them banked would run that many frames without any client
+  // ticking, which breaks determinism. Start synchronous mode from zero, as a
+  // fresh server does.
+  if (bIsPrimaryServer && !bWasSynchronous && bSynchronousMode)
+  {
+    Server.ResetTickCues();
+  }
 
 #if WITH_EDITOR
   if (GEngine && GEngine->GameViewport)

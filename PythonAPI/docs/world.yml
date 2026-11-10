@@ -322,7 +322,9 @@
   - class_name: MapLayer
     # - DESCRIPTION ------------------------
     doc: >
-      Class that represents each manageable layer of the map. Can be used as flags.
+      Class that represents each manageable layer of the map. Can be used as flags:
+      combining layers with `|`, `&`, `^` or `~` gives another layer, which
+      `load_world()` and `load_map_layer()` accept.
       __WARNING: Only "Opt" maps are able to work with map layers.__
     # - PROPERTIES -------------------------
     instance_variables:
