@@ -219,6 +219,7 @@
 * Fixed `PythonAPI/examples/no_rendering_mode.py` ignoring `--show-triggers`, `--show-connections` and `--show-spawn-points` when a cached map image existed; the flags are part of the cache name now.
 * Fixed the spawn check in `test_collision_determinism.py`, which raised `AttributeError` instead of reporting the failure, and `Sensor.get_current_detection_points` in the LiDAR smoke tests.
 * Fixed `PythonAPI/util/config.py --delta-seconds 0` and `--fps 0` (variable frame rate) always failing with a `TypeError`.
+* Fixed `PythonAPI/examples/lightweather_test.py` crashing with `IndexError` on maps that register no street lights (Town11): it now tests the weather only and skips the light checks. It also moves the spectator to the snapshot camera first, so World Partition maps stream in the scene instead of rendering empty ground.
 * `PythonAPI/util/requirements.txt` installs `pygame-ce` on Python 3.14 and later, where `pygame` has no wheels and failed the whole install, and lists `imageio`, which `util/apply_texture.py` needs.
 * `PythonAPI/examples/deterministic_collisions.py` sets physics substepping instead of inheriting it, warns when the server runs frames this client did not tick, and exits with 1 when deterministic repetitions differ. `recorder_replay.py` stops cleanly when stdin closes, and `open3d_lidar.py` and `invertedai_traffic.py` exit with a message when their optional package is not installed.
 
