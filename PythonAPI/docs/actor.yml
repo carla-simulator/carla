@@ -873,7 +873,7 @@
       - param_name: state
         type: carla.TrafficLightState
       doc: >
-        Sets a given state to a traffic light actor.
+        Sets a given state to a traffic light actor. The call returns once the server has applied it, so the snapshot of the next tick already carries the new state.
     # --------------------------------------
     - def_name: set_green_time
       params:
