@@ -147,6 +147,7 @@
 * Fixed the `noise_seed` attribute of `sensor.lidar.ray_cast` being ignored, so every ray-cast LiDAR used the default seed.
 * Fixed the IMU sensor's compass yaw orientation, and the order in which sensors are disposed when their parent actor is destroyed.
 * Fixed several legacy UE4-era bugs across LibCarla and the Carla plugin: LiDAR memory reset, DVS validation, camera profiling, image reads, sensor materials and Python sensor teardown.
+* Fixed `sensor.other.radar` returning detections beyond its `range` (up to `range / cos(fov/2)`): off-axis rays were longer than the range. Every ray is now exactly `range` long.
 
 #### Simulation and content
 
