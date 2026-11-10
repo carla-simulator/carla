@@ -4141,6 +4141,14 @@ bool FCarlaServer::TickCueReceived()
   return flag;
 }
 
+void FCarlaServer::ResetTickCues()
+{
+  if (Pimpl != nullptr)
+  {
+    Pimpl->TickCuesReceived.store(0u, std::memory_order_release);
+  }
+}
+
 void FCarlaServer::Stop()
 {
   if (Pimpl)

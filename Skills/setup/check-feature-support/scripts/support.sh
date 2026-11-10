@@ -38,6 +38,7 @@ LEGEND  [skill]  a vetted procedure exists in this collection — use it
   [skill] build / package / run a server            build-carla-ue58, package-carla-ue58,
                                                     run-carla-ue58-server (ue4 equivalents too)
   [skill] import props, walkers, maps               import-carla-ue58-{prop,walker,map}
+  [skill] create / import a vehicle (Blender+UE)    carla-vehicle-authoring
   [skill] Autoware over native ROS 2                run-autoware-ue58
   [skill] native ROS 2 topics, publishers, types    ros2 group (3 skills)
   [skill] sensors, traffic, weather, recording, …   python-api group (23 skills)
@@ -63,16 +64,6 @@ LEGEND  [skill]  a vetted procedure exists in this collection — use it
           DigitalTwinsBaseWidget.h, MapGeneratorWidget.h, ProceduralBuildingUtilities.h,
           ProceduralWaterManager.h — editor widgets, not a CLI. The converter is built in; what is missing in
           this build, so the OSM->OpenDRIVE half is not even compiled in.
-  [untested] vehicle import on ue58                 TO BE DONE — no skill in this version.
-          The pipeline is understood and was partly proved: import the skeletal mesh bound
-          to a donor's skeleton, duplicate the donor's 4 UChaosVehicleWheel blueprints, set
-          wheel_setups + the mesh on the duplicated vehicle BP's CDO, register in
-          VehicleParameters.json. That much works: the vehicle registers, appears in the
-          blueprint library, spawns, and get_physics_control() reports 4 wheels. It then
-          does NOT move, because the physics asset does not persist on the skeletal mesh
-          across an editor restart. Deferred to a later version rather than shipped
-          half-working. Report it as to-be-done, and do not hand-roll the procedure from
-          the walker skill's shape -- the two differ in exactly the step that is unsolved.
 
 == Broken or removed on the UE5 line (measured on 0.10.0 / ue58-dev) ==
   [broken] GBuffer capture                          CRASHES THE SERVER. See `support.sh broken`.
@@ -110,7 +101,7 @@ GBuffer capture — CRASHES THE SERVER
 Map layers do nothing
   unload_map_layer(MapLayer.Buildings) then a 40-ray sweep: Buildings hit 9 times
   before, 9 after, 9 after reload; no streaming activity in the server log. Cause:
-  Town10HD_Opt.umap is 32.9 MB with ZERO LevelStreaming references on 0.10.0
+  Town10HD_Opt.umap is 38.7 MB with ZERO LevelStreaming references on 0.10.0
   (158 KB with two on 0.9.x) — the layers were baked into the persistent level, so
   the mask matches nothing. Use enable_environment_objects instead.
 

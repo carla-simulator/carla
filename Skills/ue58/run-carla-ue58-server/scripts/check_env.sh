@@ -2,6 +2,8 @@
 # Prerequisite checks for run-carla-ue58-server (CARLA on UE 5.8). Read-only, no sudo, fast —
 # the MCP check_prerequisites(name) tool must never hang.
 # Hard blockers: no checkout, wrong engine major.minor, no engine binary, no cmake.
+# With a standalone package (CARLA_TARGET / CARLA_PACKAGE_ROOT) and no checkout,
+# those are INFO instead: running a package needs none of them.
 # On-camera banner: every skill run announces itself, so a terminal recording
 # shows which skill is doing the work rather than just its output. The name is
 # taken from the directory so it cannot drift from the skill it belongs to.
@@ -20,10 +22,23 @@ rc=0
 ok(){   echo "  PASS $*"; }
 warn(){ echo "  WARN $*"; }
 bad(){  echo "  FAIL $*"; rc=1; }
+info(){ echo "  INFO $*"; }
+
+# A standalone package with no checkout beside it: the checkout, engine and
+# toolchain checks describe how to BUILD a server, so they inform, not block.
+PKG="$(carla_ue58_package_launcher)"
+STANDALONE=0
+if { [ -z "${CARLA_UE58_ROOT}" ] || ! carla_ue58_is_root "${CARLA_UE58_ROOT}"; } && [ -n "${PKG}" ]; then
+  STANDALONE=1
+fi
+need(){ if [ "${STANDALONE}" -eq 1 ]; then info "$* (not needed to run the package)"; else bad "$*"; fi; }
 
 echo "== CARLA checkout =="
+if [ "${STANDALONE}" -eq 1 ]; then
+  ok "standalone package: ${PKG} — run it with: bash run_server.sh package"
+fi
 if [ -z "${CARLA_UE58_ROOT}" ] || ! carla_ue58_is_root "${CARLA_UE58_ROOT}"; then
-  bad "no UE5 CARLA checkout — export CARLA_UE58_ROOT=/path/to/carla (branch ue58-dev)"
+  need "no UE5 CARLA checkout — export CARLA_UE58_ROOT=/path/to/carla (branch ue58-dev)"
 else
   ok "checkout at ${CARLA_UE58_ROOT} (branch $(carla_ue58_branch))"
   case "$(carla_ue58_flavor)" in
@@ -47,20 +62,20 @@ fi
 
 echo "== Unreal Engine =="
 if [ -z "${CARLA_UNREAL_ENGINE_PATH}" ]; then
-  bad "CARLA_UNREAL_ENGINE_PATH unset and no engine found — needs the CarlaUnreal fork, branch ue58-dev-carla"
+  need "CARLA_UNREAL_ENGINE_PATH unset and no engine found — needs the CarlaUnreal fork, branch ue58-dev-carla"
 else
   EV="$(carla_engine_version)"
   case "${EV}" in
     5.8) ok "engine ${EV} at ${CARLA_UNREAL_ENGINE_PATH}" ;;
-    5.5) bad "engine is ${EV} (ue5-dev-carla) — ue58-dev needs 5.8; use the ue5 group for this engine" ;;
-    unknown) bad "cannot read ${CARLA_UNREAL_ENGINE_PATH}/Engine/Build/Build.version" ;;
+    5.5) need "engine is ${EV} (ue5-dev-carla) — ue58-dev needs 5.8; use the ue5 group for this engine" ;;
+    unknown) need "cannot read ${CARLA_UNREAL_ENGINE_PATH}/Engine/Build/Build.version" ;;
     *)   warn "engine reports ${EV}; ue58-dev is validated against 5.8 only" ;;
   esac
-  EB="${CARLA_UNREAL_ENGINE_PATH}/Engine/Binaries/Linux/UnrealEditor"
+  EB="${CARLA_UNREAL_ENGINE_PATH}/Engine/Binaries/$(carla_ue58_platform)/UnrealEditor$(carla_ue58_exe)"
   # `make` in the engine can exit 0 with targets dead, so check the binary, not
   # the exit code of whatever built it.
   [ -x "${EB}" ] && ok "UnrealEditor built ($(du -h "${EB}" 2>/dev/null | cut -f1))" \
-    || bad "UnrealEditor missing — build the engine (Setup.sh, GenerateProjectFiles.sh, make WITHOUT -j)"
+    || need "UnrealEditor missing — build the engine (Setup.sh, GenerateProjectFiles.sh, make WITHOUT -j)"
   BR="$(git -C "${CARLA_UNREAL_ENGINE_PATH}" rev-parse --abbrev-ref HEAD 2>/dev/null || echo unknown)"
   [ "${BR}" = "ue58-dev-carla" ] && ok "engine branch ${BR}" \
     || warn "engine branch is '${BR}', expected ue58-dev-carla"
@@ -72,10 +87,10 @@ if command -v cmake >/dev/null; then
   if [ "$(printf '%s\n3.28.0\n' "${CV}" | sort -V | head -1)" = "3.28.0" ]; then
     ok "cmake ${CV} (>= 3.28 required)"
   else
-    bad "cmake ${CV} is too old — 3.28 or newer is required by CMakePresets.json"
+    need "cmake ${CV} is too old — 3.28 or newer is required by CMakePresets.json"
   fi
 else
-  bad "cmake missing — this build is CMake-only"
+  need "cmake missing — this build is CMake-only"
 fi
 command -v ninja >/dev/null && ok "ninja $(ninja --version)" || warn "ninja not on PATH (the presets default to it)"
 command -v git >/dev/null && git lfs version >/dev/null 2>&1 && ok "git-lfs present" \
@@ -92,12 +107,12 @@ echo "== Never run the build under sudo =="
 POISON=0
 for d in "${HOME}/.nuget" "${HOME}/.epic" "${HOME}/.lldbinit"; do
   if [ -e "${d}" ] && [ "$(stat -c %U "${d}" 2>/dev/null)" != "$(id -un)" ]; then
-    bad "${d} is owned by $(stat -c %U "${d}") — a sudo'd build poisoned it"
+    need "${d} is owned by $(stat -c %U "${d}") — a sudo'd build poisoned it"
     POISON=1
   fi
 done
 [ "${POISON}" -eq 0 ] && ok "~/.nuget, ~/.epic, ~/.lldbinit are user-owned" \
-  || bad "  recover: sudo chown -R \$USER:\$USER ~/.nuget ~/.epic ~/.lldbinit"
+  || need "  recover: sudo chown -R \$USER:\$USER ~/.nuget ~/.epic ~/.lldbinit"
 
 echo "== Configure state (preset ${CARLA_PRESET}) =="
 if carla_ue58_configured; then
@@ -137,7 +152,7 @@ if [ -f "${CARLA_CPP}" ]; then
 fi
 
 echo "== Artifacts =="
-PKG="$(carla_ue58_package_sh)"
+PKG="$(carla_ue58_package_launcher)"
 [ -n "${PKG}" ] && ok "packaged server: ${PKG}" || warn "no package built yet (target: package)"
 if [ -n "${CARLA_UE58_ROOT}" ]; then
   W="$(ls -1t "${CARLA_UE58_ROOT}"/Build/*/PythonAPI/dist/carla-*.whl 2>/dev/null | head -1)"

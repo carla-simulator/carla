@@ -2,7 +2,7 @@
 name: run-carla-ue58-server
 description: Starts a CARLA UE 5.8 server from a ue58-dev tree — the editor binary in -game mode (the working headless server), the packaged shipping build, or the full editor — with offscreen/nullrhi rendering, custom RPC and streaming ports, and native ROS 2 via the single-dash -ros2 flag. Probes a running server, and stops one cleanly despite the 15-character process-name truncation. Use when the user asks to "run/start CARLA UE5", "launch a ue58 server", "run headless", "publish ROS 2 topics from UE5", or a client cannot reach the simulator.
 license: MIT
-compatibility: Linux with a built ue58-dev tree (engine + carla-unreal) or a package. Rendering modes need Vulkan; -nullrhi does not. ROS 2 needs -DENABLE_ROS2=ON at build time. Verified live against ue58-dev HEAD 718efd7cc, engine 5.8, CARLA 0.10.0 — editor -game and packaged shipping, with and without ROS 2.
+compatibility: Linux with a built ue58-dev tree (engine + carla-unreal) or a package. On Windows, Git Bash with a standalone package (CarlaUnreal.exe) for package/probe/stop. Rendering modes need Vulkan; -nullrhi does not. ROS 2 needs -DENABLE_ROS2=ON at build time. Verified live against ue58-dev HEAD 718efd7cc, engine 5.8, CARLA 0.10.0 — editor -game and packaged shipping, with and without ROS 2.
 metadata:
   group: ue58
   prerequisites: scripts/check_env.sh
@@ -21,7 +21,7 @@ Three ways to get a server, and the choice matters more than on UE4:
 | Mode | What it is | Use it when |
 |---|---|---|
 | `game` | the **editor binary** with `-game` | **default.** Full client support, every map in the tree |
-| `package` | `Build/<preset>/Package/.../CarlaUnreal.sh` | shipping a build; only the cooked maps exist, see below |
+| `package` | a standalone package named by `CARLA_TARGET` / `CARLA_PACKAGE_ROOT`, else `Build/<preset>/Package/.../CarlaUnreal.sh` | shipping a build; only the cooked maps exist, see below |
 | `editor` | the full editor GUI | authoring, visual debugging |
 
 There is a fourth thing that looks like the answer and is not:
@@ -56,6 +56,10 @@ DETACH=1 ROS2=1 bash scripts/run_server.sh game Town10HD_Opt
 # the packaged server
 DETACH=1 bash scripts/run_server.sh package Town10HD_Opt
 
+# a standalone package with no checkout (a downloaded or copied build); the
+# launcher may sit at its top level or one directory down
+CARLA_PACKAGE_ROOT=/path/to/package DETACH=1 bash scripts/run_server.sh package
+
 # a second server alongside the first
 PORT=3000 DETACH=1 bash scripts/run_server.sh game
 ```
@@ -78,7 +82,13 @@ PORT=3000 DETACH=1 bash scripts/run_server.sh game
 **`DETACH=1` is not a convenience.** A plain trailing `&` leaves the server
 holding the shell's stdio; when that goes away it dies with
 `close: Bad file descriptor` and then Signal 11. The script uses
-`setsid nohup … </dev/null &`.
+`setsid nohup … </dev/null &`, or `nohup … & disown` where there is no `setsid`
+(Git Bash).
+
+**On Windows (Git Bash)** only a standalone package runs: `CarlaUnreal.exe`
+under `CARLA_TARGET` or `CARLA_PACKAGE_ROOT`. With no checkout beside it,
+`check_env.sh` reports the checkout, engine and toolchain as INFO rather than
+blockers. `package`, `probe` and `stop` work; `stop` uses `taskkill /F /T`.
 
 ### Filling the screen (and why not `-fullscreen` by default)
 
@@ -150,7 +160,9 @@ binary appears as `CarlaUnreal-Lin`, never `CarlaUnreal-Linux-Shipping`. A
 `pkill -x CarlaUnreal-Linux-Shipping` matches nothing, exits as if it worked, and
 leaves the port held — the next launch then dies with
 `bind: Address already in use` followed by Signal 11. `stop` uses the truncated
-name and then waits on the **port**, not the process.
+name and then waits on the **port**, not the process. On Windows it matches the
+full image names instead (`CarlaUnreal-Win64-Shipping.exe`, `CarlaUnreal.exe`,
+`UnrealEditor.exe`), which `tasklist` does not truncate.
 
 Also: **the server takes SIGSEGV on SIGTERM on this branch**, and the Python
 client segfaults at interpreter teardown after completing its work. Exit codes are

@@ -52,6 +52,8 @@ def resolve_map(name: str, available: "list[str]") -> str:
       - Town10 has no plain map that is used — its canonical map is the layered
         HD one, Town10HD_Opt (plain Town10HD exists but is effectively unused).
       - Every other numbered town defaults to the NON-opt map: Town2 -> Town02.
+      - When that map is not hosted, its layered "_Opt" variant is used: the UE5
+        line ships only those, so Town03 -> Town03_Opt there.
     An exact (or case-insensitive) match always wins, so an explicit "Town02_Opt"
     or "Town10HD" is honoured as typed. `available` is the stripped name list
     from get_available_maps.
@@ -63,11 +65,14 @@ def resolve_map(name: str, available: "list[str]") -> str:
         return ci[name.lower()]
     # bare number or Town<N>, optionally with HD/_Opt suffixes already stripped
     m = re.fullmatch(r"(?:town)?0*(\d+)", name.lower())
+    cand = name
     if m:
         num = int(m.group(1))
         cand = "Town10HD_Opt" if num == 10 else f"Town{num:02d}"
         if cand in available:
             return cand
+    if f"{cand}_Opt".lower() in ci:
+        return ci[f"{cand}_Opt".lower()]
     sys.exit(f"map {name!r} not found; available: {', '.join(sorted(available))}")
 
 

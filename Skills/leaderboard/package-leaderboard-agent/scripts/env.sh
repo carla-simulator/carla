@@ -55,16 +55,17 @@ export CHALLENGE_TRACK_CODENAME="${CHALLENGE_TRACK_CODENAME:-SENSORS}"
 
 # Order matters and is the same as the official Dockerfile: leaderboard and
 # scenario_runner before site-packages, `agents` from the CARLA tree.
-_pp=""
-[ -n "${LEADERBOARD_ROOT}" ]     && _pp="${LEADERBOARD_ROOT}"
-[ -n "${SCENARIO_RUNNER_ROOT}" ] && _pp="${_pp:+${_pp}:}${SCENARIO_RUNNER_ROOT}"
+_pp=("${LEADERBOARD_ROOT}" "${SCENARIO_RUNNER_ROOT}")
 if [ -n "${CARLA_ROOT}" ] && [ -d "${CARLA_ROOT}/PythonAPI/carla" ]; then
-  _pp="${_pp:+${_pp}:}${CARLA_ROOT}/PythonAPI/carla"
+  _pp+=("${CARLA_ROOT}/PythonAPI/carla")
   for _egg in "${CARLA_ROOT}"/PythonAPI/carla/dist/carla-*.egg; do
-    [ -e "${_egg}" ] && _pp="${_pp}:${_egg}"
+    [ -e "${_egg}" ] && _pp+=("${_egg}")
   done
 fi
-export PYTHONPATH="${_pp}${PYTHONPATH:+:${PYTHONPATH}}"
+# Joined one element at a time with the separator the interpreter splits on:
+# a native Windows Python under Git Bash needs ';' and D:\ paths. See
+# carla_pythonpath_prepend in Skills/_common/env_common.sh.
+carla_pythonpath_prepend "${_pp[@]}"
 export PYTHONIOENCODING="${PYTHONIOENCODING:-utf-8}"
 
 # The leaderboard vendored its scenario engine on ue58-dev, so no scenario_runner

@@ -102,6 +102,9 @@ source scripts/env.sh
 # the controllers stop the moment it exits
 python3 scripts/walkers.py spawn --count 30 --hold
 
+# the same, but for 60 s of simulated time, then clean up and exit (scripts, CI)
+python3 scripts/walkers.py spawn --count 30 --seconds 60
+
 # reproducible placement (still wanders forever)
 python3 scripts/walkers.py spawn --count 50 --seed 42
 

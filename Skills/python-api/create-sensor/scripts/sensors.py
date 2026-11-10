@@ -27,8 +27,12 @@ ROS 2 (only meaningful on a server started with --ros2, see run-carla-server):
                          sensor with no listening client is not ticked at all,
                          so without this it produces neither RPC data nor topics.
     --ros-name NAME      topic segment for this sensor (default: actor<id>)
-    --ros-frame-id ID    TF frame id (default: the ros name)
-    --no-ros-tf          do not publish this sensor's transform on rt/tf
+    --ros-topic-name T   exact topic, replacing the generated name (UE5 line)
+    --ros-frame-id ID    TF frame id (default: the ros name; UE4 line only)
+    --no-ros-tf          do not publish this sensor's transform on rt/tf (UE4
+                         line only; on UE5 rt/tf is per world, set_publish_tf)
+Each is applied only if the blueprint has the attribute; otherwise it is
+reported and ignored rather than failing the spawn.
 `spawn` prints the topics the sensor is expected to publish.
 """
 from __future__ import annotations
@@ -111,16 +115,30 @@ def cmd_spawn(args):
             raise SystemExit(f"{bp.id} has no attribute {k!r}")
         bp.set_attribute(k, v)
 
-    # ROS 2 naming. These three attributes exist on EVERY blueprint (declared in
-    # ActorBlueprintFunctionLibrary::FillIdAndTags) and are read once, at
-    # registration time, so they must be set BEFORE spawning — there is no way
-    # to rename a sensor's topic afterwards.
-    if args.ros_name:
-        bp.set_attribute("ros_name", args.ros_name)
-    if args.ros_frame_id:
-        bp.set_attribute("ros_frame_id", args.ros_frame_id)
-    if args.no_ros_tf:
-        bp.set_attribute("ros_publish_tf", "false")
+    # ROS 2 naming. These attributes are read once, at registration time, so
+    # they must be set BEFORE spawning — there is no way to rename a sensor's
+    # topic afterwards. Which ones exist depends on the server line
+    # (ActorBlueprintFunctionLibrary's FillIdAndTags): ros_name everywhere;
+    # ros_frame_id and ros_publish_tf only on UE4; ros_topic_name only on UE5.
+    # Ask the blueprint rather than assume, and say which flag had no effect.
+    args.applied = set()
+    for flag, attr, value in (("--ros-name", "ros_name", args.ros_name),
+                              ("--ros-topic-name", "ros_topic_name", args.ros_topic_name),
+                              ("--ros-frame-id", "ros_frame_id", args.ros_frame_id),
+                              ("--no-ros-tf", "ros_publish_tf",
+                               "false" if args.no_ros_tf else None)):
+        if not value:
+            continue
+        if bp.has_attribute(attr):
+            bp.set_attribute(attr, value)
+            args.applied.add(attr)
+        else:
+            hint = (" — on this server the frame id is the ros name"
+                    if attr == "ros_frame_id" else
+                    " — rt/tf is switched per world here: world.set_publish_tf(False)"
+                    if attr == "ros_publish_tf" else "")
+            print(f"warn: {bp.id} has no {attr!r} attribute on this server; "
+                  f"{flag} ignored{hint}")
 
     parent = None
     if args.parent_id is not None:
@@ -157,7 +175,8 @@ def cmd_spawn(args):
 
 def _report_ros(sensor, parent, args):
     """Print the topics this sensor is expected to publish, and the caveats."""
-    ros_name = args.ros_name or f"actor{sensor.id}"
+    applied = getattr(args, "applied", set())
+    ros_name = (args.ros_name if "ros_name" in applied else None) or f"actor{sensor.id}"
     base = f"rt/carla/{ros_name}"
     if parent is not None:
         # On attach, the server registers the parent chain, so the sensor's base
@@ -165,8 +184,18 @@ def _report_ros(sensor, parent, args):
         parent_ros = parent.attributes.get("ros_name", "") or f"actor{parent.id}"
         base = f"rt/carla/{parent_ros}/{ros_name}"
     topics = ros_topics_for(sensor.type_id, base)
-    print(f"  ros: name={ros_name} frame_id={args.ros_frame_id or ros_name} "
-          f"tf={'off' if args.no_ros_tf else 'on (rt/tf, parented to ' + ('map' if parent is None else 'the parent frame') + ')'} "
+    if "ros_topic_name" in applied:
+        # The override replaces the whole generated base; lidar and radar then
+        # publish on it with no /point_cloud suffix, cameras keep theirs.
+        t = args.ros_topic_name
+        base = "rt" + ("" if t.startswith("/") else "/") + t
+        topics = ros_topics_for(sensor.type_id, base)
+        if sensor.type_id.startswith("sensor.lidar.") or sensor.type_id == "sensor.other.radar":
+            topics = [(base, m) for _, m in topics]
+    frame_id = args.ros_frame_id if "ros_frame_id" in applied else ros_name
+    tf_off = "ros_publish_tf" in applied
+    print(f"  ros: name={ros_name} frame_id={frame_id} "
+          f"tf={'off' if tf_off else 'on (rt/tf, parented to ' + ('map' if parent is None else 'the parent frame') + ')'} "
           f"enabled_for_ros={'yes' if args.ros else 'NO'}")
     if not topics:
         print(f"  ros: {sensor.type_id} has NO native publisher — no topic is created")
@@ -277,7 +306,10 @@ def cmd_destroy(args):
     sensors = list(world.get_actors().filter(args.filter))
     for sensor in sensors:
         try:
-            if sensor.is_listening:
+            # is_listening is a property on some client builds and a method on
+            # others; a bound method is always truthy, so call it if it is one.
+            v = sensor.is_listening
+            if (v() if callable(v) else v):
                 sensor.stop()
         except RuntimeError:
             pass
@@ -306,9 +338,15 @@ def main() -> None:
     ps.add_argument("--ros", action="store_true",
                     help="enable_for_ros() after spawn — required for the sensor to publish")
     ps.add_argument("--ros-name", help="ROS topic segment (default actor<id>)")
-    ps.add_argument("--ros-frame-id", help="TF frame id (default: the ros name)")
+    ps.add_argument("--ros-topic-name",
+                    help="exact topic, replacing the generated rt/carla/... name "
+                         "(ros_topic_name attribute; UE5 line)")
+    ps.add_argument("--ros-frame-id",
+                    help="TF frame id (default: the ros name). UE4 servers only; "
+                         "warned and ignored where the attribute does not exist")
     ps.add_argument("--no-ros-tf", action="store_true",
-                    help="do not publish this sensor's transform on rt/tf")
+                    help="do not publish this sensor's transform on rt/tf. UE4 "
+                         "servers only; on UE5 use world.set_publish_tf(False)")
     ps.set_defaults(func=cmd_spawn)
 
     pr = sub.add_parser("ros", help="enable/disable ROS publishing on existing sensors")

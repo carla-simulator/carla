@@ -51,17 +51,19 @@ export PYTHON="${PYTHON:-python3}"
 # The checkout must precede site-packages: a `pip install scenario_runner` copy
 # (or an older checkout) otherwise shadows the branch that is checked out here,
 # which surfaces as scenarios that exist on disk but "are not supported".
-_pp=""
-[ -n "${SCENARIO_RUNNER_ROOT}" ] && _pp="${SCENARIO_RUNNER_ROOT}"
+_pp=("${SCENARIO_RUNNER_ROOT}")
 if [ -n "${CARLA_ROOT}" ] && [ -d "${CARLA_ROOT}/PythonAPI/carla" ]; then
-  _pp="${_pp:+${_pp}:}${CARLA_ROOT}/PythonAPI/carla"
+  _pp+=("${CARLA_ROOT}/PythonAPI/carla")
   # A source build keeps the client egg here; a release also ships one. Harmless
   # when `carla` is already a wheel — the wheel wins by import order.
   for _egg in "${CARLA_ROOT}"/PythonAPI/carla/dist/carla-*.egg; do
-    [ -e "${_egg}" ] && _pp="${_pp}:${_egg}"
+    [ -e "${_egg}" ] && _pp+=("${_egg}")
   done
 fi
-export PYTHONPATH="${_pp}${PYTHONPATH:+:${PYTHONPATH}}"
+# Joined one element at a time with the separator the interpreter splits on:
+# a native Windows Python under Git Bash needs ';' and D:\ paths. See
+# carla_pythonpath_prepend in Skills/_common/env_common.sh.
+carla_pythonpath_prepend "${_pp[@]}"
 # --debug prints py_trees' unicode tick marks; ascii stdout (docker, cron, pipes)
 # raises UnicodeEncodeError mid-run and kills the scenario.
 export PYTHONIOENCODING="${PYTHONIOENCODING:-utf-8}"

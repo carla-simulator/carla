@@ -3,6 +3,10 @@
 # Pure read: it never binds, kills or changes anything.
 set -uo pipefail
 
+# Recorded config (CARLA_PORT and friends) plus the shared port helpers.
+# shellcheck disable=SC1091
+. "$(dirname "${BASH_SOURCE[0]}")/../../../_common/env_common.sh"
+
 RPC_PORT="${PORT:-${CARLA_PORT:-2000}}"
 TM_PORT="${TM_PORT:-${CARLA_TM_PORT:-8000}}"
 MCP_PORT="${MCP_PORT:-6256}"
@@ -38,19 +42,10 @@ role_of() {
   esac
 }
 
-# Who listens on a port: "pid name" or empty. Needs ss; falls back to lsof.
+# Who listens on a port: "name pid" or empty. ss, then lsof, then netstat on
+# Windows, then a bare connect; see carla_port_listener in env_common.sh.
 listener_of() {
-  local p="$1" line
-  if command -v ss >/dev/null 2>&1; then
-    line="$(ss -ltnpH "sport = :$p" 2>/dev/null | head -1)"
-    [ -z "$line" ] && return 0
-    echo "$line" | grep -oP 'users:\(\("\K[^"]+' | head -1 | tr -d '\n'
-    echo -n " "
-    echo "$line" | grep -oP 'pid=\K[0-9]+' | head -1
-  elif command -v lsof >/dev/null 2>&1; then
-    lsof -nP -iTCP:"$p" -sTCP:LISTEN -Fcp 2>/dev/null \
-      | awk '/^c/{c=substr($0,2)} /^p/{p=substr($0,2)} END{if (c) print c, p}'
-  fi
+  carla_port_listener "$1"
 }
 
 cmd_check() {
@@ -79,8 +74,31 @@ cmd_check() {
   echo "Reference: Docs/ref_ports.md"
 }
 
+# Every listening TCP port number, one per line, for machines without ss:
+# lsof, or netstat on Windows (wildcard foreign address = listener; the state
+# word is localized, so it is never matched).
+listening_ports() {
+  if command -v lsof >/dev/null 2>&1; then
+    lsof -nP -iTCP -sTCP:LISTEN -Fn 2>/dev/null | sed -n 's/^n.*:\([0-9][0-9]*\)$/\1/p' | sort -un
+  elif carla_is_windows && command -v netstat >/dev/null 2>&1; then
+    { netstat -ano -p TCP; netstat -ano -p TCPv6; } 2>/dev/null | tr -d '\r' \
+      | awk '($3 == "0.0.0.0:0" || $3 == "[::]:0") { n = split($2, a, ":"); print a[n] }' \
+      | sort -un
+  fi
+}
+
 cmd_list() {
-  command -v ss >/dev/null 2>&1 || { echo "ss not found; install iproute2" >&2; return 1; }
+  if ! command -v ss >/dev/null 2>&1; then
+    local ports p r
+    ports="$(listening_ports)"
+    [ -n "$ports" ] || { echo "cannot enumerate listening ports: need ss (iproute2), lsof, or netstat on Windows" >&2; return 1; }
+    printf '%-22s %-45s %s\n' PORT ROLE LISTENER
+    for p in $ports; do
+      r="$(role_of "$p")"
+      printf '%-22s %-45s %s\n' "$p" "${r:--}" "$(listener_of "$p")"
+    done
+    return 0
+  fi
   printf '%-22s %-45s %s\n' ADDRESS ROLE LISTENER
   local addr p r who
   while read -r addr who; do

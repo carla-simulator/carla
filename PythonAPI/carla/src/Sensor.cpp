@@ -25,7 +25,9 @@ void export_sensor() {
     .add_property("is_listening", &cc::Sensor::IsListening)
     .def("listen", &SubscribeToStream, (arg("callback")))
     .def("is_listening", &cc::Sensor::IsListening)
-    .def("stop", &cc::Sensor::Stop)
+    // Without the GIL: a frame callback still in flight needs it to return,
+    // and holding it here can deadlock the stream teardown.
+    .def("stop", CALL_WITHOUT_GIL(cc::Sensor, Stop))
     .def(self_ns::str(self_ns::self))
   ;
 

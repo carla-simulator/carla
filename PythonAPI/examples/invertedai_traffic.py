@@ -17,7 +17,13 @@ import argparse
 import logging
 import math
 import random
-import invertedai as iai
+import sys
+
+try:
+    import invertedai as iai
+except ImportError:
+    sys.exit('invertedai is not installed. examples/requirements.txt only installs it '
+             'on Linux with Python < 3.13.')
 import numpy as np
 import imageio
 

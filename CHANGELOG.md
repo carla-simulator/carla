@@ -151,6 +151,7 @@
 #### Simulation and content
 
 * Fixed **Town11 still loading as a legacy tiled map** through `ALargeMapManager`: it is now a World Partition map like Town12, Town13 and Town15, and has a pedestrian navmesh, so walkers can spawn and navigate on it. `CarlaLargeMapConvert` no longer fails to save a town whose tiles carry level-script blueprints or redirectors (`Illegal reference to private object`).
+* Fixed **walkers falling through the terrain on Town12** when spawned at a point from `get_random_location_from_navigation()` (#10212). The navmesh covers the terrain under some building footprints, and the building's cell could stream in after the walker. `get_random_location_from_navigation()` now only returns points whose surrounding cells are loaded and where a walker fits without overlapping static geometry, and a walker spawned inside a building or wall is refused with `Failed because collision at spawn position`. It also no longer returns the map origin, where a walker falls out of the map, when the navmesh sample finds no polygon.
 * Fixed the walker bounding box being centred on the actor pivot rather than the skeletal mesh, so `actor.bounding_box` now lines up with the visible pedestrian.
 * Fixed the traffic sign bounding box to use the first valid trigger volume and keep its rotation, with a guard for null volumes.
 * Fixed `sensor.camera.rt_lens` rendering almost black at night: its auto exposure was pinned to a daylight range, and now follows its camera profile with only the upper end capped (`carla.RTLens.MaxAutoExposureEV`).
@@ -164,6 +165,9 @@
 * Fixed Multi-GPU secondary routing and map reloads: camera streams handed to clients now match the primary's stream ids, secondaries stay in sync across `load_world()`, a lost secondary fails over cleanly and the next secondary to connect takes over all of its sensors' streams (clients resume without a new `listen()` only if that secondary uses the same streaming address and port), a restarted secondary no longer replays an actor onto an unrelated local actor with the same id, a `-nullrhi` primary no longer crashes on camera requests, and a secondary that connects after `load_world()` now loads the primary's current map instead of staying on its default one.
 * Fixed the **Sign Generation Controller** of the Digital Twin Tool placing plates edge-on to the traffic (they looked blank) and leaving signs in the roadway. The plate now always stands at _Plate Height Cm_ instead of the `Sign1` socket of `SM_Pole05`, and `DisplaceLocationOutsideNeighboringRoads` snaps the sign to the lane height before measuring, counts parking, biking, shoulder and bidirectional lanes as carriageway, jumps to the outer edge of multi-lane roads on the side of the traffic (right- or left-hand), and removes, with a warning, a sign it cannot move out of the carriageway.
 * Fixed the **Traffic Light Tool** preview: it now reframes whenever the traffic light changes size and looks at the heads from a three-quarter front view, instead of starting inside the pole and staying there, and the _Import JSON..._ and _Export JSON..._ buttons no longer show garbage characters.
+* Fixed **synchronous mode running frames on its own on a server that had been used before**, which made `deterministic_collisions` runs differ after other scripts. Every `world.tick()` (or `apply_batch_sync(..., True)`) sent while the server was asynchronous was banked and never consumed, and once synchronous mode was turned on the server ran one frame per banked tick without any client ticking. Turning synchronous mode on now starts from no pending ticks, as on a fresh server.
+* Fixed `stop_replayer(keep_actors=False)` leaving the replayed actors in the scene, so every play/stop cycle added another copy of them. It destroys the actors the replayer spawned, also when the replay already reached its end; actors it reused from the scene, such as traffic lights, stay.
+* The server now names the missing file when a map has no pedestrian navigation mesh (`Failed to find the navigation mesh file 'Map.bin'`) instead of reporting a missing OpenDrive file.
 
 #### ROS 2
 
@@ -182,15 +186,20 @@
 
 #### Python API and client
 
+* Fixed client signal identifier reads exceeding the 32 byte snapshot buffer.
 * Fixed clients failing `get_world()` against a packaged server: `get_required_files` leaked pak-relative paths that escaped the client cache. The server now sends content-relative names and refuses paths that resolve outside the content folder, previously an arbitrary-file-read vector.
 * Fixed `from carla.command import ...` by registering the `command` submodule in `sys.modules`.
 * Fixed `actor.destroy()` returning False right after `spawn_actor()`, because the client consulted an uninitialised snapshot state and refused to contact the server.
 * Fixed `str(carla.WorldSettings(...))` raising `bad_optional_access` when `fixed_delta_seconds` was unset, the default for any settings object that has not pinned the time step. It now prints `fixed_delta_seconds=None`.
 * Fixed client snapshot data for OpenDRIVE traffic lights outside junctions, by giving their groups fallback controllers (#9853).
+* Fixed `TrafficLight.set_state()` sometimes not showing in the frame of the `world.tick()` right after it (`test_outside_junction_snapshot` read Green for Yellow in the weekly build). The setters were fire-and-forget, and the server's RPC threads can hand a connection's calls to the game thread out of order, so the tick cue could overtake them. `set_state()`, `set_green_time()`, `set_yellow_time()`, `set_red_time()`, `freeze()`, `reset_group()` and `World.freeze_all_traffic_lights()` now wait for the server, without holding the GIL, and raise an error when the server rejects the call instead of dropping it.
 * Fixed actor aliasing on replay caused by reusing actors with the same id, recorder crashes during actor cleanup, and the replayer spawning the wrong blueprints.
 * Fixed a `ServerSession::CloseNow` double invocation that let a dropped client evict a still-alive subscriber.
 * Fixed the client aborting with `std::terminate` when a light manager with unsent light changes outlived its client: its destructor now logs the error. It also unregisters its tick callback by the right id. An exception thrown by a stream callback is now logged instead of terminating the client.
 * Fixed an RPC server deadlock on shutdown, an overly strict `Vector3D` assert, OpenDRIVE lane width for centre lanes, busy-wait `yield()` calls and strict `RELEASE_ASSERT`s in road `Map`.
+* Fixed `generate_traffic.py` timing out on Town12 and Town13: the vehicle batch took longer than the hard-coded 10 s client timeout and left the spawned vehicles without a Traffic Manager. The timeout now defaults to 60 s and is set with `--timeout`.
+* Fixed combining `carla.MapLayer` values: `carla.MapLayer.Buildings | carla.MapLayer.ParkedVehicles` gave a plain `int`, which `load_world()` and `load_map_layer()` rejected, so the documented multi-layer example failed. `|`, `&`, `^` and `~` between layers now give a `carla.MapLayer`.
+* `Sensor.stop()` releases the GIL, so stopping a camera whose frame callback is still running no longer deadlocks the client at exit.
 
 #### Build and packaging
 
@@ -198,19 +207,24 @@
 * Fixed `carla-pack add` dropping existing OpenDRIVE, traffic-light phase, navigation and Traffic Manager sidecars when re-adding an in-pack map without sidecar flags (#9987).
 * Fixed the Windows build: the setup installs the MSVC 14.38 toolset the engine fork needs, MSVC builds use `/W4`, and two compile and link errors in LibCarla.
 * Fixed the CMake toolchain picking the oldest clang sysroot when an upgraded engine keeps several side by side.
+* Fixed reconfiguring an already-built tree (e.g. `-DENABLE_ROS2=ON`) silently keeping the old options: UnrealBuildTool reused its cached makefile because the `Carla` and `CarlaTools` modules read CMake's generated `Options.def`, `Definitions.def`, `Includes.def` and `Libraries.def` without declaring them, so the rebuild reported success with a plugin that had no ROS 2 in it. Both modules now list those files as `ExternalDependencies`, and a change to any of them re-creates the makefile.
 * Fixed `Util/Docker/build.sh` failing to build the development image: the PythonAPI requirements are copied into the build context with their relative layout, so `-r ../carla/requirements.txt` resolves (#10177). The image also installs `libusb-1.0-0`, without which `open3d` cannot be imported.
 
 #### Examples and tests
 
 
+* Fixed **the agent skills on Windows (Git Bash with a native Python)** and a batch of script bugs found by the weekly package test. `PYTHONPATH` is built with the interpreter's separator and `D:\` paths, `check-carla-ports` falls back to `netstat`/`tasklist` and never reports a busy port as free, `run-carla-ue58-server` runs and stops a standalone package (`CarlaUnreal.exe`) with no checkout, and `install-python-api` searches every configured CARLA root and no longer reports `1.0` against `1.0-<commit>` as a mismatch. Also fixed: `set-world-settings async` hanging on a synchronous world nobody ticks, `read-sensor` and `control-spectator follow` hanging or failing at exit, `replay-recording` reading `/proc` on Windows (and a `stop --clear-scene` for servers that leave replayed actors behind), `create-sensor` and `spawn-vehicles ego` failing on `--ros-frame-id`/`--no-ros-tf` where the attribute does not exist (and the new `--ros-topic-name`), `load-map` not resolving `Town03` to `Town03_Opt`, and evenly spaced `telemetry watch` samples. Plus `spawn-walkers --seconds`, grouped spawn errors in `spawn-vehicles`, and stale paths and examples in the docs.
 * Fixed **the Autoware `stop_all.sh` and the launcher teardown leaving the CARLA server running**. They checked only the leader of each process group. The `CarlaUnreal.sh` wrapper exits on SIGTERM, but the engine binary kept running and held the RPC port, so the next launch failed. They now check the whole group and SIGKILL it after the grace period.
 * Added `typing_extensions` to `PythonAPI/carla/requirements.txt`. The navigation agents import it, but it was not listed, so `import agents.navigation.basic_agent` failed in a fresh environment.
 * Restored wheelchair pedestrians in `PythonAPI/examples/generate_traffic.py`: 11% of the walkers whose blueprint reports `can_use_wheelchair` are now spawned with `use_wheelchair` set, as on `ue4-dev`.
 * Fixed `PythonAPI/examples/manual_control.py` raising `NameError: name 'sys' is not defined` instead of their error message when the server cannot send the OpenDRIVE file or the map has no spawn points.
 * Fixed `PythonAPI/examples/no_rendering_mode.py` ignoring `--show-triggers`, `--show-connections` and `--show-spawn-points` when a cached map image existed; the flags are part of the cache name now.
 * Fixed the spawn check in `test_collision_determinism.py`, which raised `AttributeError` instead of reporting the failure, and `Sensor.get_current_detection_points` in the LiDAR smoke tests.
-* Fixed `pip install -r PythonAPI/util/requirements.txt` failing on Python 3.14 and later, where `pygame` has no wheels. The file listed `pygame`, `psutil`, `py-cpuinfo` and `python-tr`, left over from the removed `performance_benchmark.py`, which no `PythonAPI/util` script imports any more. It now lists `numpy` and `imageio`.
-* Added `imageio` to `PythonAPI/util/requirements.txt` and `PythonAPI/examples/requirements.txt`. `util/apply_texture.py` and `examples/invertedai_traffic.py` import it, but it was not listed, so both failed with `ModuleNotFoundError` in a fresh environment.
+* Fixed `PythonAPI/util/config.py --delta-seconds 0` and `--fps 0` (variable frame rate) always failing with a `TypeError`.
+* Fixed `PythonAPI/examples/lightweather_test.py` crashing with `IndexError` on maps that register no street lights (Town11): it now tests the weather only and skips the light checks. It also moves the spectator to the snapshot camera first, so World Partition maps stream in the scene instead of rendering empty ground.
+* `PythonAPI/util/requirements.txt` installs `pygame-ce` on Python 3.14 and later, where `pygame` has no wheels and failed the whole install, and lists `imageio`, which `util/apply_texture.py` needs.
+* `PythonAPI/examples/deterministic_collisions.py` sets physics substepping instead of inheriting it, warns when the server runs frames this client did not tick, and exits with 1 when deterministic repetitions differ. `recorder_replay.py` stops cleanly when stdin closes, and `open3d_lidar.py` and `invertedai_traffic.py` exit with a message when their optional package is not installed.
+* Added `imageio` to `PythonAPI/examples/requirements.txt`: `examples/invertedai_traffic.py` imports it, but it was not listed, so the example failed with `ModuleNotFoundError` in a fresh environment.
 * Fixed `Util/Tools/RunPythonVersionTests.sh` running `sensor_synchronization.py` without `--port`, so its `examples` stage failed whenever the server was not on port 2000.
 
 #### Documentation

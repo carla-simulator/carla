@@ -704,7 +704,7 @@ Stops the recording in progress. If you specified a path in `filename`, the reco
 - <a name="carla.Client.stop_replayer"></a>**<font color="#7fb800">stop_replayer</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**keep_actors**</font>)  
 Stop current replayer.  
     - **Parameters:**
-        - `keep_actors` (_bool_) - If False, the replay runs to its end before stopping, so the actors the recording destroys are removed and the others stay. If True, every replayed actor stays as it is.  
+        - `keep_actors` (_bool_) - If False, the actors the replayer spawned are destroyed, also when the replay already reached its end (which keeps them). Actors it reused from the scene, such as traffic lights, stay. If True, every replayed actor stays as it is.  
 - <a name="carla.Client.unmount_content_pack"></a>**<font color="#7fb800">unmount_content_pack</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**name**</font>)  
 Unmounts a content pack. Refused (RuntimeError) while a map of the pack is the current world or objects loaded from it are still alive; load another map first. Returns True on success.  
     - **Parameters:**
@@ -2322,7 +2322,7 @@ Returns a waypoint if all the parameters passed are correct. Otherwise, returns 
 ---
 
 ## carla.MapLayer<a name="carla.MapLayer"></a>
-Class that represents each manageable layer of the map. Can be used as flags. __WARNING: Only "Opt" maps are able to work with map layers.__.  
+Class that represents each manageable layer of the map. Can be used as flags: combining layers with `|`, `&`, `^` or `~` gives another layer, which `load_world()` and `load_map_layer()` accept. __WARNING: Only "Opt" maps are able to work with map layers.__.  
 
 ### Instance Variables
 - <a name="carla.MapLayer.NONE"></a>**<font color="#f8805a">NONE</font>**  
@@ -3172,7 +3172,7 @@ Sets a given time for the red state to be active.
         - `red_time` (_float<small> - seconds</small>_)  
     - **Getter:** _[carla.TrafficLight.get_red_time](#carla.TrafficLight.get_red_time)_  
 - <a name="carla.TrafficLight.set_state"></a>**<font color="#7fb800">set_state</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**state**</font>)<button class="SnipetButton" id="carla.TrafficLight.set_state-snipet_button">snippet &rarr;</button>  
-Sets a given state to a traffic light actor.  
+Sets a given state to a traffic light actor. The call returns once the server has applied it, so the snapshot of the next tick already carries the new state.  
     - **Parameters:**
         - `state` (_[carla.TrafficLightState](#carla.TrafficLightState)_)  
     - **Getter:** _[carla.TrafficLight.get_state](#carla.TrafficLight.get_state)_  
