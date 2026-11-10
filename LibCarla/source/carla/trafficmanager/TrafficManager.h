@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <functional>
 #include <map>
 #include <mutex>
 #include <vector>
@@ -45,6 +46,9 @@ public:
   static void Release();
 
   static void Reset(uint64_t episode_id);
+
+  /// Non-blocking: reset all TMs once per episode on the reset thread, then call @a on_done.
+  static void RequestReset(uint64_t episode_id, std::function<void()> on_done);
 
   static void Tick();
 

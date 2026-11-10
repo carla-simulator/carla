@@ -38,6 +38,9 @@ public:
   /// To reset the traffic manager for the episode @a episode_id.
   virtual void Reset(uint64_t episode_id) = 0;
 
+  /// Vehicles released since the last call; the caller drops them with no TM lock held.
+  virtual std::vector<ActorPtr> TakeReleasedActors() { return {}; }
+
   /// Protected constructor for singleton lifecycle management.
   TrafficManagerBase() {};
 
