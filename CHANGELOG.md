@@ -192,6 +192,7 @@
 * Fixed a `ServerSession::CloseNow` double invocation that let a dropped client evict a still-alive subscriber.
 * Fixed the client aborting with `std::terminate` when a light manager with unsent light changes outlived its client: its destructor now logs the error. It also unregisters its tick callback by the right id. An exception thrown by a stream callback is now logged instead of terminating the client.
 * Fixed an RPC server deadlock on shutdown, an overly strict `Vector3D` assert, OpenDRIVE lane width for centre lanes, busy-wait `yield()` calls and strict `RELEASE_ASSERT`s in road `Map`.
+* Fixed `generate_traffic.py` timing out on Town12 and Town13: the vehicle batch took longer than the hard-coded 10 s client timeout and left the spawned vehicles without a Traffic Manager. The timeout now defaults to 60 s and is set with `--timeout`.
 
 #### Build and packaging
 
