@@ -224,6 +224,8 @@
 * Fixed `PythonAPI/examples/lightweather_test.py` crashing with `IndexError` on maps that register no street lights (Town11): it now tests the weather only and skips the light checks. It also moves the spectator to the snapshot camera first, so World Partition maps stream in the scene instead of rendering empty ground.
 * `PythonAPI/util/requirements.txt` installs `pygame-ce` on Python 3.14 and later, where `pygame` has no wheels and failed the whole install, and lists `imageio`, which `util/apply_texture.py` needs.
 * `PythonAPI/examples/deterministic_collisions.py` sets physics substepping instead of inheriting it, warns when the server runs frames this client did not tick, and exits with 1 when deterministic repetitions differ. `recorder_replay.py` stops cleanly when stdin closes, and `open3d_lidar.py` and `invertedai_traffic.py` exit with a message when their optional package is not installed.
+* Added `imageio` to `PythonAPI/examples/requirements.txt`: `examples/invertedai_traffic.py` imports it, but it was not listed, so the example failed with `ModuleNotFoundError` in a fresh environment.
+* Fixed `Util/Tools/RunPythonVersionTests.sh` running `sensor_synchronization.py` without `--port`, so its `examples` stage failed whenever the server was not on port 2000.
 
 #### Documentation
 
