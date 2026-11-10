@@ -93,13 +93,14 @@ python3 scripts/replay.py speed --factor 0.25
 ```bash
 python3 scripts/replay.py stop                 # remove replayed actors
 python3 scripts/replay.py stop --keep-actors   # leave them in the world
+python3 scripts/replay.py stop --clear-scene   # also sweep the world
 ```
 
-Without `--keep-actors`, `stop` then removes every vehicle, walker, controller
-and sensor still in the world, the same sweep `play` does before replaying.
-That is the backstop for servers whose `stop_replayer(False)` leaves the
-replayed actors behind, which also happens whenever the replay had already
-reached its end. Anything you spawned yourself on top of the replay goes too.
+On CARLA 1.0 and earlier, `stop_replayer(False)` leaves the replayed actors
+behind (always once the replay has reached its end), so they pile up over
+play/stop cycles. There, add `--clear-scene`: it removes every vehicle, walker,
+controller and sensor still in the world, the same sweep `play` does before
+replaying, including anything you spawned yourself.
 
 ## Examples
 
@@ -142,6 +143,10 @@ Solution: attach sensors, then replay with `--replay-sensors`.
 **Problem: actors vanish when replay ends**
 Cause: `stop` removes replayed actors by default.
 Solution: `stop --keep-actors` to keep them.
+
+**Problem: replayed vehicles pile up after each play/stop**
+Cause: the server's `stop_replayer(False)` does not remove them (CARLA 1.0 and earlier).
+Solution: `stop --clear-scene`.
 
 ## Outputs
 

@@ -357,13 +357,17 @@ def cmd_ego(args):
                     role="hero")
 
     # ROS 2 naming: read once, at registration, so it must be set before spawn.
-    # These attributes exist on every blueprint (ActorBlueprintFunctionLibrary).
-    if args.ros_name:
-        bp.set_attribute("ros_name", args.ros_name)
-    if args.ros_frame_id:
-        bp.set_attribute("ros_frame_id", args.ros_frame_id)
-    if args.no_ros_tf:
-        bp.set_attribute("ros_publish_tf", "false")
+    # Which attributes exist depends on the server line: ros_frame_id and
+    # ros_publish_tf are UE4-only (on UE 5.8 the frame id is the ros name).
+    for attr, value in (("ros_name", args.ros_name),
+                        ("ros_frame_id", args.ros_frame_id),
+                        ("ros_publish_tf", "false" if args.no_ros_tf else "")):
+        if not value:
+            continue
+        if bp.has_attribute(attr):
+            bp.set_attribute(attr, value)
+        else:
+            print(f"warning: {bp.id} has no {attr!r} attribute on this server; ignored")
 
     if args.at:
         x, y, z = (float(v) for v in args.at.split(","))

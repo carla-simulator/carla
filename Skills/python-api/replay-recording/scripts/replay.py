@@ -8,7 +8,7 @@ Commands:
     play  --file run.log --time-factor 2.0   replay at 2x
     play  --file run.log --replay-sensors --replay-weather
     speed --factor 0.5                       change speed of the running replay
-    stop  [--keep-actors]                    stop replaying
+    stop  [--keep-actors] [--clear-scene]    stop replaying
 
 `play` re-creates the recorded scene on the server and prints the server's replay
 summary. `--follow` moves the spectator with that actor id (0 = no follow).
@@ -210,12 +210,12 @@ def cmd_stop(args: argparse.Namespace) -> None:
     client = _client()
     client.stop_replayer(args.keep_actors)
     print(f"replay stopped (keep_actors={args.keep_actors})")
-    if not args.keep_actors:
-        # Backstop for servers whose stop_replayer(False) leaves the replayed
-        # actors behind -- every replay that already reached its end did, and
-        # so did an explicit stop on builds before the replayer fix. Removing
-        # them here is what `play` would do to a fresh scene anyway.
-        _clear_scene(client, note="left behind by the replay")
+    if args.clear_scene:
+        # For servers whose stop_replayer(False) leaves the replayed actors
+        # behind (CARLA 1.0 and earlier, and any replay that had already
+        # reached its end there). It removes every actor, not only replayed
+        # ones, so it is opt-in.
+        _clear_scene(client, note="left in the world")
 
 
 def main() -> None:
@@ -244,8 +244,11 @@ def main() -> None:
     psp.add_argument("--factor", type=float, required=True, help="time factor (2.0 = 2x, 0.5 = half)")
     psp.set_defaults(func=cmd_speed)
 
-    pst = sub.add_parser("stop", help="stop replaying and clear the replayed scene")
+    pst = sub.add_parser("stop", help="stop replaying and remove the replayed actors")
     pst.add_argument("--keep-actors", action="store_true", help="leave replayed actors in the world")
+    pst.add_argument("--clear-scene", action="store_true",
+                     help="then remove every vehicle, walker, controller and sensor, "
+                          "for servers that leave replayed actors behind")
     pst.set_defaults(func=cmd_stop)
 
     args = p.parse_args()
