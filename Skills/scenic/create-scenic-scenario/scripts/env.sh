@@ -76,9 +76,10 @@ export CARLA_PORT="${CARLA_PORT:-2000}"
 
 # srunner must be importable for the ScenarioRunner-flavoured scenarios, and the
 # checkout has to precede site-packages so a stale pip copy cannot shadow it.
-_pp=""
-[ -n "${SCENARIO_RUNNER_ROOT}" ] && _pp="${SCENARIO_RUNNER_ROOT}"
-export PYTHONPATH="${_pp}${PYTHONPATH:+:${PYTHONPATH}}"
+# Joined one element at a time with the separator the interpreter splits on:
+# a native Windows Python under Git Bash needs ';' and D:\ paths. See
+# carla_pythonpath_prepend in Skills/_common/env_common.sh.
+carla_pythonpath_prepend "${SCENARIO_RUNNER_ROOT}"
 export PYTHONIOENCODING="${PYTHONIOENCODING:-utf-8}"
 
 # Scenic keys its blueprint tables off the *client* version, so this is what

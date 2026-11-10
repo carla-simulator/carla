@@ -62,14 +62,17 @@ Names are returned stripped of the `/Game/Carla/Maps/` prefix, so `Town03`,
 **Friendly names resolve, but not uniformly** — `load` maps a bare town name to
 the map actually used: `Town2` → `Town02` (non-opt, like every numbered town
 except one), but **`Town10` → `Town10HD_Opt`** (Town10's canonical map is the
-layered HD one; plain `Town10HD` exists but is effectively unused). An explicit
-exact name (`Town02_Opt`, `Town10HD`) is always honoured as typed; `load` prints
-what it resolved to.
+layered HD one; plain `Town10HD` exists but is effectively unused). When the
+non-opt map is not hosted, the `_Opt` one is used instead: the UE5 line ships
+only those, so `Town03` loads `Town03_Opt` there. An explicit exact name
+(`Town02_Opt`, `Town10HD`) is always honoured as typed; `load` prints what it
+resolved to.
 
 ### Step 3: Do the operation
 
 ```bash
-# load a map, resetting settings to default (the plain case)
+# load a map, resetting settings to default (the plain case);
+# on the UE5 line this resolves to Town03_Opt
 python3 scripts/load_map.py load --map Town03
 
 # load a map but KEEP current settings — use inside a sync-mode pipeline

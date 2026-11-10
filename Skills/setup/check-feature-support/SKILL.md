@@ -2,7 +2,7 @@
 name: check-feature-support
 description: Answers "can CARLA do X here, and is there a vetted procedure for it" before you promise anything, and detects client/server/tree version skew — a support matrix over the whole collection (covered by a skill / works but undocumented / present but untested / broken or removed), an index of the features that are verified BROKEN on 0.10.0 (gbuffers crash the server, map layers do nothing, Landmark.waypoint is None, standalone asset packages are gone), and a probe that reports what this machine's build flags and running server actually offer. Use when the user asks whether CARLA supports something, when a feature has no skill, when a UE4 tutorial's steps do not exist, or before improvising a procedure.
 license: MIT
-compatibility: Any Linux with bash. NO CARLA required — `matrix` and `broken` answer offline; `probe` reports more when CARLA_UE58_ROOT/CARLA_UE5_ROOT/CARLA_UE4_ROOT/CARLA_TARGET is set, and more still against a running server with an importable `carla`. Every claim was measured or read from source on ue58-dev HEAD 718efd7cc (engine 5.8.0, CARLA 0.10.0) and the 0.9.16 UE4 tree; re-verify after upgrading either.
+compatibility: Any Linux with bash, or Git Bash on Windows. NO CARLA required — `matrix` and `broken` answer offline; `probe` reports more when CARLA_UE58_ROOT/CARLA_UE5_ROOT/CARLA_UE4_ROOT/CARLA_TARGET is set, and more still against a running server with an importable `carla`. Every claim was measured or read from source on ue58-dev HEAD 718efd7cc (engine 5.8.0, CARLA 0.10.0) and the 0.9.16 UE4 tree; re-verify after upgrading either.
 metadata:
   group: setup
   prerequisites: scripts/check_env.sh
@@ -134,16 +134,12 @@ exercised it afterwards".
 
 **Example 5: "add a vehicle to ue58"**
 
-`[untested]` — **to be done; there is no skill for it in this version.** The
-pipeline is known and gets as far as a vehicle that registers, spawns and reports
-four wheels in `get_physics_control()`; it does not move, because the physics asset
-does not survive an editor restart on the skeletal mesh. Deferred to a later
-version rather than shipped half-working.
+`[skill]` — use [[carla-vehicle-authoring]]. It covers the Blender and Unreal
+pipeline, including wheels, physics and runtime validation through the API.
 
-So: say it is not supported yet, offer to investigate, and do **not** adapt
-[[import-carla-ue58-walker]]'s procedure. Walkers bind to a *shared* skeleton;
-vehicles need a per-vehicle skeleton plus a persisted physics asset, which is the
-one step still unsolved.
+Do **not** adapt [[import-carla-ue58-walker]]'s procedure instead. Walkers bind
+to a *shared* skeleton; vehicles need a per-vehicle skeleton plus a persisted
+physics asset.
 
 ## Troubleshooting
 

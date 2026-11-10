@@ -1,6 +1,6 @@
 ---
 name: create-sensor
-description: Spawns and attaches sensors on a running CARLA server — cameras (rgb/depth/semantic/instance/optical-flow/normals), lidar, radar, IMU, GNSS, collision/lane-invasion/obstacle — to the ego or any actor, with a mount transform and blueprint attributes (resolution, fov, sensor_tick, lidar range/points, …). Also sets up native ROS 2 publishing (--ros to enable_for_ros, --ros-name/--ros-frame-id topic and TF naming) and prints the topics the sensor will publish. Use when the user asks to "add a camera/lidar/sensor", "put a dashcam on the ego", "attach a depth camera", "mount a sensor", or "publish a sensor to ROS". Prints the sensor id; read its data with the read-sensor skill.
+description: Spawns and attaches sensors on a running CARLA server — cameras (rgb/depth/semantic/instance/optical-flow/normals), lidar, radar, IMU, GNSS, collision/lane-invasion/obstacle — to the ego or any actor, with a mount transform and blueprint attributes (resolution, fov, sensor_tick, lidar range/points, …). Also sets up native ROS 2 publishing (--ros to enable_for_ros, --ros-name/--ros-topic-name topic naming, --ros-frame-id/--no-ros-tf on UE4 servers) and prints the topics the sensor will publish. Use when the user asks to "add a camera/lidar/sensor", "put a dashcam on the ego", "attach a depth camera", "mount a sensor", or "publish a sensor to ROS". Prints the sensor id; read its data with the read-sensor skill.
 license: MIT
 compatibility: Any OS with the CARLA PythonAPI installed for the active interpreter and a reachable, already-running CARLA server (and an actor to attach to, for attached sensors). Does NOT need UE4_ROOT. Tested against CARLA 0.9.16.
 metadata:
@@ -78,7 +78,10 @@ Only meaningful on a server started with `--ros2` ([[run-carla-server]] `ROS2=1`
 # a lidar that publishes on rt/carla/hero/lidar/point_cloud
 python3 scripts/sensors.py spawn --type lidar.ray_cast --attach-to hero --z 2.4 \
     --ros --ros-name lidar
-# a camera with its own TF frame and no transform broadcast
+# a camera on an exact topic of your choosing (UE5 line)
+python3 scripts/sensors.py spawn --type camera.rgb --attach-to hero \
+    --ros --ros-topic-name sensing/camera/front
+# UE4 line only: its own TF frame and no transform broadcast
 python3 scripts/sensors.py spawn --type camera.rgb --attach-to hero \
     --ros --ros-name front --ros-frame-id front_cam --no-ros-tf
 ```
@@ -86,10 +89,15 @@ python3 scripts/sensors.py spawn --type camera.rgb --attach-to hero \
 **`--ros` is not optional decoration — without it the sensor publishes nothing.**
 A CARLA sensor is only ticked while something listens to its stream
 (`ASensor::Tick` returns early otherwise), and `enable_for_ros()` is what marks
-the stream as listened-to without a Python client. `--ros-name`/`--ros-frame-id`/
-`--no-ros-tf` set the `ros_name` / `ros_frame_id` / `ros_publish_tf` blueprint
-attributes, which the server reads **once at registration**: they cannot be
-changed after spawn.
+the stream as listened-to without a Python client. `--ros-name`,
+`--ros-topic-name`, `--ros-frame-id` and `--no-ros-tf` set the `ros_name`,
+`ros_topic_name`, `ros_frame_id` and `ros_publish_tf` blueprint attributes,
+which the server reads **once at registration**: they cannot be changed after
+spawn. Which of them exist depends on the server line. `ros_name` is everywhere.
+`ros_topic_name` is UE5 only. `ros_frame_id` and `ros_publish_tf` are UE4 only.
+On UE5 the frame id is the ros name, and `rt/tf` is switched for the whole
+world with `World.set_publish_tf()`. A flag whose attribute is missing is
+reported and ignored; the spawn goes ahead.
 
 Topic layout (`spawn` prints the exact list):
 
