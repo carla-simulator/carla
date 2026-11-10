@@ -167,6 +167,7 @@
 
 #### ROS 2
 
+* Fixed the **`azimuth` of the extended (Autoware `PointXYZIRCAEDT`) LiDAR point cloud** running against the scan. It was `atan2(y, x)`, in [-π, π] and decreasing along each ring, while Autoware, like its LiDAR drivers, reads it as the rotation angle: in [0, 2π) and increasing in scan order. Autoware's ring outlier filter dropped every point, so NDT localization never initialized. It is now measured clockwise from +x, the direction CARLA's LiDAR sweeps.
 * Fixed **`/vehicle/status/gear_status` reporting NEUTRAL** while an Autoware-driven vehicle moves forward. Acceleration control never engages the transmission. While it is active, `GetVehicleCurrentGear()` now reports the first forward gear, so Autoware sees DRIVE. `get_telemetry_data()` reports the same gear.
 * Fixed camera fx in the ROS 2 `CameraInfo`, large map actor tagging, and camera frame and timestamp consistency.
 
