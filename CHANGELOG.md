@@ -148,6 +148,7 @@
 * Fixed the IMU sensor's compass yaw orientation, and the order in which sensors are disposed when their parent actor is destroyed.
 * Fixed several legacy UE4-era bugs across LibCarla and the Carla plugin: LiDAR memory reset, DVS validation, camera profiling, image reads, sensor materials and Python sensor teardown.
 * Fixed `sensor.other.radar` returning detections beyond its `range` (up to `range / cos(fov/2)`): off-axis rays were longer than the range. Every ray is now exactly `range` long.
+* Fixed the V2X CAM message sending vehicle length and width in millimetres. They are now in the ETSI unit of 0.1 m and clamped to the standard's range.
 
 #### Simulation and content
 
