@@ -40,12 +40,14 @@ python -m venv carla-env
 carla-env\Scripts\activate
 ```
 
-* __Pip__: The CARLA Python client requires __pip3__ version 20.3 or higher for installation. To check your __pip__ version, and upgrade it if needed:
+* __Pip__: The CARLA Python client requires __pip__ version 20.3 or higher for installation. To check your __pip__ version, and upgrade it if needed, from the activated environment:
 
 ```sh
-pip3 -V
-pip3 install --upgrade pip
+python -m pip -V
+python -m pip install --upgrade pip
 ```
+
+Inside an activated environment, `python` is the environment's interpreter on Linux and on Windows. On Windows, pip cannot upgrade itself through `pip3.exe`, so use `python -m pip` there.
 
 ---
 ## Install with Agentic CARLA
@@ -89,7 +91,7 @@ pip3 install carla-*.whl
 
 ```sh
 cd CARLA_ROOT\PythonAPI\carla\dist\
-pip3 install carla-<version>-cp310-cp310-win_amd64.whl
+python -m pip install carla-<version>-cp310-cp310-win_amd64.whl
 ```
 
 Each wheel is built for one Python minor version and one platform, for example `carla-<version>-cp310-cp310-linux_x86_64.whl` for Python 3.10 on Linux. A package can ship several, one per Python version it was built for. Release packages ship wheels for Python 3.10 to 3.15. Install the one whose `cpXY` tag matches your interpreter, since installing a wheel on another Python version fails.
@@ -138,12 +140,12 @@ __Windows__:
 ```sh
 # Terminal A: populate the city with traffic, and leave it running
 cd CARLA_ROOT\PythonAPI\examples
-pip3 install -r requirements.txt
-python3 generate_traffic.py
+python -m pip install -r requirements.txt
+python generate_traffic.py
 
 # Terminal B: drive a vehicle around
 cd CARLA_ROOT\PythonAPI\examples
-python3 manual_control.py
+python manual_control.py
 ```
 
 ---

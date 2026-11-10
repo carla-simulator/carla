@@ -40,10 +40,13 @@ import random
 
 # Connect to the client and retrieve the world object
 client = carla.Client('localhost', 2000)
+client.set_timeout(30.0)
 world = client.get_world()
 ```
 
 The [__client__](python_api.md#carla.Client) maintains the connection to the server and carries the methods that apply commands and load or export data.
+
+`set_timeout()` is how long a call waits for the server before it raises. The default is 5 seconds, and loading a map takes longer than that, so raise it before calling `load_world()`.
 
 The port defaults to 2000 and can be any free port; the host can be an IP address instead of *localhost*, so the server can run on one machine and the client on another. That is useful to keep the GPU running the simulator separate from the one training a network.
 
@@ -141,8 +144,8 @@ Autonomous vehicles perceive their environment through sensors: cameras, optical
 Attach an RGB camera to the ego vehicle:
 
 ```py
-# Create a transform to place the camera on top of the vehicle
-camera_init_trans = carla.Transform(carla.Location(z=1.5))
+# Create a transform to place the camera behind and above the vehicle
+camera_init_trans = carla.Transform(carla.Location(x=-4, z=2.5))
 
 # We create the camera through a blueprint that defines its properties
 camera_bp = world.get_blueprint_library().find('sensor.camera.rgb')
@@ -203,7 +206,7 @@ import carla
 import random
 
 client = carla.Client('localhost', 2000)
-client.set_timeout(10.0)
+client.set_timeout(30.0)
 world = client.load_world('Town10HD_Opt')
 
 actors = []
@@ -224,7 +227,7 @@ try:
             actors.append(npc)
 
     camera_bp = world.get_blueprint_library().find('sensor.camera.rgb')
-    camera = world.spawn_actor(camera_bp, carla.Transform(carla.Location(z=1.5)), attach_to=ego_vehicle)
+    camera = world.spawn_actor(camera_bp, carla.Transform(carla.Location(x=-4, z=2.5)), attach_to=ego_vehicle)
     camera.listen(lambda image: image.save_to_disk('out/%06d.png' % image.frame))
 
     for vehicle in world.get_actors().filter('vehicle.*'):

@@ -511,7 +511,7 @@ The provided script `manual_control.py` uses this sensor to show the points bein
 | `altitude`       | float            | Altitude angle in radians.   |
 | `azimuth`        | float            | Azimuth angle in radians.    |
 | `depth`          | float            | Distance in meters.          |
-| `velocity`       | float            | Velocity towards the sensor. |
+| `velocity`       | float            | Radial velocity relative to the sensor, in m/s. Negative when the object and the sensor are getting closer, positive when they move apart. |
 
 
 
@@ -626,7 +626,9 @@ sky every time a client respawns a camera, e.g. `manual_control.py` changing the
 
 Wide-angle versions of the four raster cameras. The scene is rendered into six cube faces and resampled through the chosen lens model, so a field of view past 180&deg; is possible without the stretching a single pinhole render suffers towards its borders. The depth and segmentation variants are distorted the same way as the RGB one, so their pixels stay aligned with it.
 
-The lens models and their coefficients are the ones [`sensor.camera.rt_lens`](#ray-traced-lens-camera) uses, with one difference that matters: these cameras rasterize, so they cost about what their pinhole counterparts cost, while `rt_lens` path-traces the scene and generates its primary rays through the lens itself. Use `rt_lens` when the projection has to be exact; use these when you need a wide-angle image at raster speed.
+The lens model names match those of [`sensor.camera.rt_lens`](#ray-traced-lens-camera), but the two families do not share their coefficients. These cameras take the Kannala-Brandt polynomial as `k0`..`k3`, with the non-zero defaults below, while `rt_lens` takes `distortion_coeffs`, empty by default (pure equidistant). So `kannala_brandt` at the same `fov` gives a different lens on each family unless you set the coefficients explicitly. These cameras rasterize, so they cost about what their pinhole counterparts cost, while `rt_lens` path-traces the scene and generates its primary rays through the lens itself. Use `rt_lens` when the projection has to be exact; use these when you need a wide-angle image at raster speed.
+
+With the default `camera_model`, `perspective`, the output is an ordinary rectilinear image with no fisheye distortion. Set `camera_model` to get a fisheye lens.
 
 ![Fisheye](img/ref_sensors/sensor_fisheye.webp)
 <div class="img-caption">The four fisheye cameras with a 180&deg; Kannala-Brandt lens: RGB, depth (logarithmic), semantic segmentation and instance segmentation.</div>
@@ -635,8 +637,8 @@ The lens models and their coefficients are the ones [`sensor.camera.rt_lens`](#r
 
 | Blueprint attribute | Type | Default | Description |
 | ------------------- | ---- | ------- | ----------- |
-| `camera_model` | str | `perspective` | Lens model: `perspective`, `stereographic`, `equidistant`, `equisolid`, `orthographic`, `kannala_brandt`, `ftheta` or `lut`. |
-| `k0`, `k1`, `k2`, `k3` | float | 0.0831, 0.0111, 0.0086, 0.0009 | Kannala-Brandt polynomial coefficients. |
+| `camera_model` | str | `perspective` | Lens model: `perspective` (rectilinear, no distortion), `stereographic`, `equidistant`, `equisolid`, `orthographic`, `kannala_brandt`, `ftheta` or `lut`. |
+| `k0`, `k1`, `k2`, `k3` | float | 0.0831, 0.0111, 0.0086, 0.0009 | Kannala-Brandt polynomial coefficients. Not the same parameters or defaults as `rt_lens`'s `distortion_coeffs`. |
 | `fov` | float | 90.0 | Horizontal field of view in degrees. |
 | `focal_length` | float | 0.0 | Focal length. 0 derives it from `fov`. |
 | `fx`, `fy`, `cx`, `cy` | float | 0.0, 0.0, 0.5, 0.5 | Lens intrinsics in normalized viewport units. `fx` at or below 0 keeps the `fov` / `focal_length` projection, centred. |

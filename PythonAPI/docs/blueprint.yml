@@ -203,7 +203,7 @@
     # --------------------------------------
     - def_name: as_str
       doc: >
-        Reads the attribute as string.
+        Reads a String attribute. It raises for Int, Float, Bool and RGBColor attributes; use `str(attribute)` to get any attribute as text, or the typed readers (as_int, as_float, as_bool, as_color).
     # --------------------------------------
     - def_name: __bool__
     # --------------------------------------

@@ -230,7 +230,7 @@ Reads the attribute as float.
 - <a name="carla.ActorAttribute.as_int"></a>**<font color="#7fb800">as_int</font>**(<font color="#00a6ed">**self**</font>)  
 Reads the attribute as int.  
 - <a name="carla.ActorAttribute.as_str"></a>**<font color="#7fb800">as_str</font>**(<font color="#00a6ed">**self**</font>)  
-Reads the attribute as string.  
+Reads a String attribute. It raises for Int, Float, Bool and RGBColor attributes; use `str(attribute)` to get any attribute as text, or the typed readers (as_int, as_float, as_bool, as_color).  
 
 ##### Dunder methods
 - <a name="carla.ActorAttribute.__bool__"></a>**<font color="#7fb800">\__bool__</font>**(<font color="#00a6ed">**self**</font>)  
@@ -2572,7 +2572,7 @@ Azimuth angle of the detection.
 - <a name="carla.RadarDetection.depth"></a>**<font color="#f8805a">depth</font>** (_float<small> - meters</small>_)  
 Distance from the sensor to the detection position.  
 - <a name="carla.RadarDetection.velocity"></a>**<font color="#f8805a">velocity</font>** (_float<small> - m/s</small>_)  
-The velocity of the detected object towards the sensor.  
+Radial velocity of the detected object relative to the sensor. Negative when the object and the sensor are getting closer, positive when they move apart.  
 
 ### Methods
 

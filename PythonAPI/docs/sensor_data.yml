@@ -614,7 +614,7 @@
       type: float
       var_units: m/s
       doc: >
-        The velocity of the detected object towards the sensor.
+        Radial velocity of the detected object relative to the sensor. Negative when the object and the sensor are getting closer, positive when they move apart.
     # - METHODS ----------------------------
     methods:
     - def_name: __str__

@@ -2316,7 +2316,7 @@ def build_parser():
     sp = sub.add_parser("install", help="verify and extract a pack into <server>/CarlaUnreal/Packs/")
     sp.add_argument("pack", metavar="<tar.gz>")
     sp.add_argument("--server", required=True,
-                    help="CARLA package: <Package> (holds CarlaUnreal.sh) or <Package>/CarlaUnreal")
+                    help="CARLA package: <Package> (holds CarlaUnreal.sh or CarlaUnreal.exe) or <Package>/CarlaUnreal")
     sp.add_argument("--force", action="store_true", help="replace an installed pack / ignore a "
                     "base release mismatch")
     sp.set_defaults(func=cmd_install)

@@ -228,6 +228,7 @@
 
 #### Documentation
 
+* Fixed documentation problems found by the weekly package test on Windows: the first steps snippets set a client timeout long enough for `load_world()` and place the camera outside the car; the quick start uses `python` and `python -m pip` on Windows; `set_sky_light_map` takes a float32 buffer, not a list; the raster fisheye cameras default to an undistorted image and do not share `rt_lens`'s distortion coefficients; the radar `velocity` sign is documented; `ActorAttribute.as_str()` is for String attributes; and `core_agents.md` covers `ConstantVelocityAgent`'s collision sensor and `destroy_sensor()`.
 * Clarified the depth camera's 24-bit distance encoding and the precision of its grayscale visualization.
 * **Fixed the CARLA 1.0 download links** in the quick start and the download page, and corrected the ROS 2 native and Autoware pages against a runtime check of the 1.0 package.
 * Corrected the coordinate-conventions guide to use a homogeneous change of basis for 4×4 poses.

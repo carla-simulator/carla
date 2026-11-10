@@ -121,7 +121,9 @@ __Night mode starts when sun_altitude_angle < 0__, which is considered sunset. T
 The sky light normally captures CARLA's own procedural atmosphere, and that capture is what lights the scene indirectly: ambient fill and reflections. It can be replaced with a real environment map, so that CARLA's actors are lit by the same surroundings as footage they are being composited into. This is what the [NuRec hybrid example](nvidia_nurec.md) uses to make a path-traced vehicle sit convincingly in a neural reconstruction.
 
 ```py
-world.set_sky_light_map(width, height, pixels, intensity)   # equirectangular float32 linear RGB(A)
+# pixels: a buffer of float32 linear RGB(A) values, equirectangular, row major (not a list of floats)
+pixels = np.asarray(panorama, dtype=np.float32)              # shape (height, width, 3) or (height, width, 4)
+world.set_sky_light_map(width, height, pixels, intensity)
 world.has_sky_light_map()
 world.clear_sky_light_map()                                 # back to the procedural atmosphere
 ```

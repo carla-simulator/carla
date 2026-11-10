@@ -8,7 +8,7 @@ Three agents ship with CARLA.
 
 `BasicAgent` is the base class and is usable on its own: it plans a route, follows it, and stops for traffic lights and for whatever is in its way.
 
-`BehaviorAgent` and `ConstantVelocityAgent` both subclass it for a particular purpose. `BehaviorAgent` drives to a chosen profile — how close it follows, when it overtakes, when it tailgates. `ConstantVelocityAgent` holds a fixed speed whatever the traffic does, so a run can be repeated exactly.
+`BehaviorAgent` and `ConstantVelocityAgent` both subclass it for a particular purpose. `BehaviorAgent` drives to a chosen profile — how close it follows, when it overtakes, when it tailgates. `ConstantVelocityAgent` forces the vehicle to a fixed speed instead of using throttle and brake, slowing only to match a vehicle ahead or to stop at a red light, so a run can be repeated exactly.
 
 Any of the three can be configured through its constructor and methods, or subclassed into one of your own.
 
@@ -101,6 +101,8 @@ The __Basic Agent__ provides a few methods to manipulate agent behavior or progr
 - __`ignore_traffic_lights(active=True)`:__ Set the agent to ignore or obey traffic lights.
 - __`ignore_stop_signs(active=True)`:__ Set the agent to ignore or obey stop signs.
 - __`ignore_vehicles(active=True)`:__ Set the agent to ignore or react to other vehicles.
+
+The __Constant Velocity Agent__ attaches its own collision sensor to the vehicle. After a collision it stops forcing the speed and stands still, unless `opt_dict` sets `restart_time` (seconds before it resumes) or `use_basic_behavior` (drive as a Basic Agent meanwhile). Call `agent.destroy_sensor()` before destroying the vehicle, or the sensor stays in the simulation.
 
 The [`automatic_control.py`](https://github.com/carla-simulator/carla/blob/ue58-dev/PythonAPI/examples/automatic_control.py) script, found in `PythonAPI/examples`, is an example of the Basic and Behavior Agents in action. To try the script, navigate to the example directory and run the following command:
 
