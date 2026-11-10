@@ -167,6 +167,7 @@
 
 #### ROS 2
 
+* Fixed **Autoware's control commands not reaching a `ros2_autoware_control` vehicle when Autoware runs `control_command_gate`**, which replaces `vehicle_cmd_gate` in autoware_launch. The command subscribers were TRANSIENT_LOCAL, and DDS does not match a TRANSIENT_LOCAL reader with `control_command_gate`'s VOLATILE writers, so the vehicle never moved. They are now VOLATILE, which matches both gates.
 * Fixed **`/vehicle/status/gear_status` reporting NEUTRAL** while an Autoware-driven vehicle moves forward. Acceleration control never engages the transmission. While it is active, `GetVehicleCurrentGear()` now reports the first forward gear, so Autoware sees DRIVE. `get_telemetry_data()` reports the same gear.
 * Fixed camera fx in the ROS 2 `CameraInfo`, large map actor tagging, and camera frame and timestamp consistency.
 
