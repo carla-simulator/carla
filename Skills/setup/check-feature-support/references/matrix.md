@@ -29,7 +29,7 @@ how to re-check it after an upgrade, and what promoting it would take.
   activity in the server log.
 - **Read.** `ACarlaGameModeBase::UnLoadMapLayer` and
   `ConvertMapLayerMaskToMapNames` match layer names against
-  `World->GetStreamingLevels()`; `Town10HD_Opt.umap` is 32.9 MB with **zero**
+  `World->GetStreamingLevels()`; `Town10HD_Opt.umap` is 38.7 MB with **zero**
   `LevelStreaming` references on 0.10.0, against 158 KB with two on 0.9.x. The
   per-layer sublevels still exist as orphans under
   `Content/Carla/Maps/Sublevels/Town10HD_Opt/`.
@@ -88,7 +88,10 @@ how to re-check it after an upgrade, and what promoting it would take.
 | V2X | `sensor.other.v2x`, `sensor.other.v2x_custom` (**measured**); `ServerSideSensor.send()` (**measured**) | two actors exchanging a message, and the message format documented |
 | multi-GPU | `LibCarla/source/carla/multigpu/` (**read**); server accepts `-carla-primary-host`, `-carla-primary-port`, `-carla-secondary-port` (**read**) | two GPUs, or two machines; a primary/secondary pair actually rendering |
 | digital twins / OSM | `OpenDriveToMap.h`, `DigitalTwinsBaseWidget.h`, `MapGeneratorWidget.h`, `ProceduralBuildingUtilities.h`, `ProceduralWaterManager.h` (**read**) | these are editor **widgets**, not a CLI — a driving path has to be found first. The OSM to OpenDRIVE converter itself is always compiled in. | |
-| vehicle import (ue58) | pipeline understood; draft outside the library | the imported car spawns with 4 wheels and **does not move**; the physics-asset persistence fix is unverified |
+
+Vehicle import on ue58 used to be listed here. It now has a skill:
+[[carla-vehicle-authoring]] covers the Blender and Unreal pipeline, physics
+included, and its runtime validation.
 
 Note the asymmetry that makes RSS worth a special mention: the blueprint is
 present whether or not the feature is compiled in, so "it's in the blueprint

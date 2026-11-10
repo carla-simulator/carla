@@ -95,6 +95,12 @@ python3 scripts/replay.py stop                 # remove replayed actors
 python3 scripts/replay.py stop --keep-actors   # leave them in the world
 ```
 
+Without `--keep-actors`, `stop` then removes every vehicle, walker, controller
+and sensor still in the world, the same sweep `play` does before replaying.
+That is the backstop for servers whose `stop_replayer(False)` leaves the
+replayed actors behind, which also happens whenever the replay had already
+reached its end. Anything you spawned yourself on top of the replay goes too.
+
 ## Examples
 
 **Example 1: watch it back**

@@ -64,8 +64,13 @@ python3 scripts/toggle_env.py list --label Buildings      # count + sample of bu
 
 python3 scripts/toggle_env.py disable --label Buildings   # hide all buildings
 python3 scripts/toggle_env.py disable --label Vegetation --dry-run   # preview first
-python3 scripts/toggle_env.py disable --label Poles --name lamp      # subset by name
 python3 scripts/toggle_env.py enable  --label Buildings   # bring them back
+
+# a subset by name: list the label first, then pass a substring of a name it
+# printed. Object names differ per map, so never guess one.
+python3 scripts/toggle_env.py list    --label Poles
+python3 scripts/toggle_env.py disable --label Poles --name <substring> --dry-run
+python3 scripts/toggle_env.py disable --label Poles --name <substring>
 ```
 
 ### Step 4: Confirm

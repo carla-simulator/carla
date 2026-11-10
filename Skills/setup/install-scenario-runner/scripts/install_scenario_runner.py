@@ -53,6 +53,16 @@ def sh(cmd: list[str], cwd: str | None = None, check: bool = True) -> str:
     return (p.stdout or "").strip()
 
 
+def pythonpath_export(*parts: str) -> str:
+    """An `export PYTHONPATH=...` line this interpreter can read.
+
+    Joined with os.pathsep, not a hard-coded ':': a native Windows Python (run
+    from Git Bash) splits on ';', and the whole value stays inside one pair of
+    quotes so the ';' is not taken as a shell command separator.
+    """
+    return 'export PYTHONPATH="' + os.pathsep.join(parts + ("${PYTHONPATH}",)) + '"'
+
+
 def have(mod: str) -> bool:
     """Is `mod` importable?
 
@@ -189,7 +199,7 @@ def cmd_plan(args) -> None:
     print(f"{sys.executable} -m pip install -r {target}/requirements.txt")
     print(f"export SCENARIO_RUNNER_ROOT={target}")
     print("export CARLA_ROOT=/path/to/CARLA            # needed for the `agents` package")
-    print('export PYTHONPATH="${SCENARIO_RUNNER_ROOT}:${CARLA_ROOT}/PythonAPI/carla:${PYTHONPATH}"')
+    print(pythonpath_export("${SCENARIO_RUNNER_ROOT}", "${CARLA_ROOT}/PythonAPI/carla"))
 
 
 def cmd_install(args) -> None:
@@ -238,7 +248,7 @@ def cmd_install(args) -> None:
     print("\n[install] done. Export these, then run `verify`:")
     print(f"  export SCENARIO_RUNNER_ROOT={root}")
     print("  export CARLA_ROOT=/path/to/CARLA")
-    print('  export PYTHONPATH="${SCENARIO_RUNNER_ROOT}:${CARLA_ROOT}/PythonAPI/carla:${PYTHONPATH}"')
+    print("  " + pythonpath_export("${SCENARIO_RUNNER_ROOT}", "${CARLA_ROOT}/PythonAPI/carla"))
 
 
 def cmd_verify(args) -> None:

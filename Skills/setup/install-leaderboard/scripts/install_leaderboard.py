@@ -46,6 +46,22 @@ def sh(cmd: list[str], check: bool = True) -> str:
     return (p.stdout or "").strip()
 
 
+def pythonpath_export(*parts: str) -> str:
+    """An `export PYTHONPATH=...` line this interpreter can read.
+
+    Joined with os.pathsep, not a hard-coded ':': a native Windows Python (run
+    from Git Bash) splits on ';', and the whole value stays inside one pair of
+    quotes so the ';' is not taken as a shell command separator.
+    """
+    return 'export PYTHONPATH="' + os.pathsep.join(parts + ("${PYTHONPATH}",)) + '"'
+
+
+def _lb_pythonpath(with_sr: bool) -> str:
+    """The export line for CARLA's agents, scenario_runner (when used) and the leaderboard."""
+    parts = ("${CARLA_ROOT}/PythonAPI/carla",) + (("${SCENARIO_RUNNER_ROOT}",) if with_sr else ())
+    return pythonpath_export(*parts, "${LEADERBOARD_ROOT}")
+
+
 def have(mod: str) -> bool:
     """Is `mod` importable?
 
@@ -167,8 +183,7 @@ def cmd_plan(args) -> None:
     if srb:
         print(f"export SCENARIO_RUNNER_ROOT={srp}")
     print(f"export LEADERBOARD_ROOT={lbp}")
-    pp = '"${CARLA_ROOT}/PythonAPI/carla":' + ('"${SCENARIO_RUNNER_ROOT}":' if srb else "")
-    print('export PYTHONPATH=' + pp + '"${LEADERBOARD_ROOT}":${PYTHONPATH}')
+    print(_lb_pythonpath(bool(srb)))
     print('#   plus the egg:  ls ${CARLA_ROOT}/PythonAPI/carla/dist/')
 
 
@@ -221,8 +236,7 @@ def cmd_install(args) -> None:
     if sr is not None:
         print(f"export SCENARIO_RUNNER_ROOT={sr}")
     print(f"export LEADERBOARD_ROOT={lb}")
-    pp = '"${CARLA_ROOT}/PythonAPI/carla":' + ('"${SCENARIO_RUNNER_ROOT}":' if sr is not None else "")
-    print('export PYTHONPATH=' + pp + '"${LEADERBOARD_ROOT}":${PYTHONPATH}')
+    print(_lb_pythonpath(sr is not None))
 
 
 def cmd_verify(args) -> None:

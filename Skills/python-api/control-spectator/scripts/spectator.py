@@ -18,8 +18,8 @@ eye; front = ahead looking back. Offsets are tunable (--distance/--height/--pitc
 
 IMPORTANT: the spectator cannot be *attached* to an actor (the API has no reparent
 for it). `follow` emulates attachment by re-setting the spectator's transform on
-every world tick via world.on_tick, for --seconds. In synchronous mode it updates
-only while something ticks the world.
+every world frame, for --seconds of simulated time. In synchronous mode it
+updates only while something ticks the world.
 
 Connection comes from the environment (see env.sh): CARLA_HOST/PORT/TIMEOUT.
 """
@@ -28,6 +28,7 @@ from __future__ import annotations
 import argparse
 import math
 import os
+import sys
 
 import carla  # provided by the active interpreter; check_env.sh verifies this
 
@@ -193,21 +194,22 @@ def cmd_follow(args):
     print(f"following id={target.id} ({target.type_id}) in {args.view} view for {args.seconds}s "
           f"(Ctrl-C to stop early)")
 
-    def _update(_snapshot):
-        try:
-            spectator.set_transform(_view_transform(target.get_transform(), args.view, **o))
-        except RuntimeError:
-            pass  # target gone this frame; next tick or timeout will end it
-
-    cid = world.on_tick(_update)   # re-aim every world tick -> smooth follow
+    # Re-aim once per world frame from this loop. An on_tick callback did the
+    # same from the client's streaming thread, and that thread still being
+    # alive at interpreter exit is what made `follow` end with rc=127 after it
+    # had finished its work.
     try:
         for _ in _for_seconds(world, args.seconds):
-            pass                     # on_tick does the aiming; this paces it
+            try:
+                spectator.set_transform(_view_transform(target.get_transform(), args.view, **o))
+            except RuntimeError:
+                pass  # target gone this frame; next tick or timeout will end it
     except KeyboardInterrupt:
         pass
-    finally:
-        world.remove_on_tick(cid)
     print("stopped following")
+    # Skip interpreter teardown for the same reason: nothing is left to release.
+    sys.stdout.flush()
+    os._exit(0)
 
 
 def _add_selector(sp):

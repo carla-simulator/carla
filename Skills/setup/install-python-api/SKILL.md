@@ -83,7 +83,7 @@ in the MCP client's `env` block once:
 
 | # | Source | When it applies | Why this rank |
 |---|---|---|---|
-| 1 | **local wheel** — `<root>/PythonAPI/carla/dist/carla-*-<cp tag>-*.whl` | `CARLA_PACKAGE_ROOT` or `CARLA_UE4_ROOT` is set and ships one | it is the only artifact **guaranteed to match your simulator** |
+| 1 | **local wheel** — `<root>/PythonAPI/carla/dist/carla-*-<cp tag>-*.whl`, or `<root>/Build/<preset>/PythonAPI/dist/` on a UE5 checkout | one of `CARLA_PACKAGE_ROOT`, `CARLA_TARGET`, `CARLA_ROOT`, `CARLA_UE58_ROOT`, `CARLA_UE5_ROOT`, `CARLA_UE4_ROOT` is set and ships one. Wheels for another interpreter are reported as a **tag mismatch** | it is the only artifact **guaranteed to match your simulator** |
 | 2 | **PyPI** — `pip install carla==X.Y.Z` | any interpreter PyPI has a wheel for | clean and offline-free, but you must name the right version |
 | 3 | **egg** — `carla-*-py<X.Y>-*.egg` | older releases that ship an egg | nothing to install; it goes on `PYTHONPATH` (written as a `.pth` inside a venv) |
 
@@ -103,7 +103,9 @@ produces `WARNING: Client API version = X / Simulator API version = Y` on every
 connection and subtly missing API. So:
 
 - source 1 (local wheel) inherits the version from the release you actually have;
-- `detect`/`verify` query a reachable server and report `match` or `MISMATCH`;
+- `detect`/`verify` query a reachable server and report `match` or `MISMATCH`.
+  Only the release part is compared: a source-built server reports
+  `1.0-fe0178f89` against the wheel's `1.0`, and that is a match;
 - a mismatch is a **WARN, not a failure** — it is often intentional (talking to a
   remote server), so the skill reports it and continues.
 
