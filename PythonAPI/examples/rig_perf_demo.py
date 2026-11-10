@@ -19,6 +19,7 @@ same vehicle, waits for every camera on every tick (speed is irrelevant here),
 composes the tiles into a grid and stamps each frame with the FPS measured for
 that very tick in pass 1. The video therefore shows exactly what the rig saw
 while the labels are the live numbers, unperturbed by the video encoding.
+Pass 2 encodes with ffmpeg, which must be on PATH.
 
     # pass 1
     python rig_perf_demo.py measure --rig rgb --cameras 5 --dlss --seconds 30 --out runs/rgb5_dlss
@@ -29,6 +30,7 @@ while the labels are the live numbers, unperturbed by the video encoding.
 import argparse
 import json
 import os
+import shutil
 import subprocess
 import time
 
@@ -404,7 +406,8 @@ def main():
     m.add_argument('--cameras', default=5, type=int, help='1..5 cameras of the rig')
     m.add_argument('--width', default=CAMERA_WIDTH, type=int)
     m.add_argument('--height', default=CAMERA_HEIGHT, type=int)
-    m.add_argument('--dlss', action='store_true', help='DLSS Super Resolution (enable_dlss) on every camera')
+    m.add_argument('--dlss', action='store_true',
+                   help='DLSS Super Resolution (enable_dlss) on every camera; rgb rig only, rt_lens uses Ray Reconstruction')
     m.add_argument('--dlss-percentage', default=50.0, type=float)
     m.add_argument('--spp', default=4, type=int, help='rt_lens samples_per_pixel')
     m.add_argument('--no-denoiser', action='store_true', help='rt_lens without DLSS Ray Reconstruction')
@@ -423,8 +426,13 @@ def main():
     if args.command == 'measure':
         if not 1 <= args.cameras <= len(RIG):
             parser.error('--cameras must be 1..%d' % len(RIG))
+        if args.dlss and args.rig == 'rt_lens':
+            parser.error('--dlss is DLSS Super Resolution, which only the rgb rig supports; '
+                         'rt_lens is denoised by DLSS Ray Reconstruction (disable it with --no-denoiser)')
         measure(args)
     else:
+        if shutil.which('ffmpeg') is None:
+            parser.error('render needs ffmpeg on PATH to encode the video')
         render(args)
 
 
