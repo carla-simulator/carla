@@ -3,6 +3,8 @@
 //
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
+//
+// Additional functionality added by AVL List GmbH under the terms of the MIT license.
 
 #include <carla/client/Actor.h>
 #include <carla/client/TrafficLight.h>
@@ -206,6 +208,8 @@ void export_actor() {
       .def("get_wheel_steer_angle", &cc::Vehicle::GetWheelSteerAngle, (arg("wheel_location")))
       .def("set_wheel_pitch_angle", &cc::Vehicle::SetWheelPitchAngle, (arg("wheel_location")), (arg("angle_in_deg")))
       .def("get_wheel_pitch_angle", &cc::Vehicle::GetWheelPitchAngle, (arg("wheel_location")))
+      .def("set_wheel_height", &cc::Vehicle::SetWheelHeight, (arg("wheel_location")), (arg("height")))
+      .def("get_wheel_height", &cc::Vehicle::GetWheelHeight, (arg("wheel_location")))
       .def("get_light_state", CONST_CALL_WITHOUT_GIL(cc::Vehicle, GetLightState))
       .def("apply_physics_control", &cc::Vehicle::ApplyPhysicsControl, (arg("physics_control")))
       .def("get_physics_control", CONST_CALL_WITHOUT_GIL(cc::Vehicle, GetPhysicsControl))

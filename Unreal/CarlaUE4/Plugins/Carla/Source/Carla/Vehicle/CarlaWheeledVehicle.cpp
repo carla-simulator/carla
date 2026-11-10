@@ -4,6 +4,8 @@
 //
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
+//
+// Additional functionality added by AVL List GmbH under the terms of the MIT license.
 
 #include "Components/BoxComponent.h"
 #include "Engine/CollisionProfile.h"
@@ -967,7 +969,6 @@ float ACarlaWheeledVehicle::GetWheelSteerAngle(EVehicleWheelLocation WheelLocati
 }
 
 void ACarlaWheeledVehicle::SetWheelPitchAngle(EVehicleWheelLocation WheelLocation, float AngleInDeg) {
-
   if (bPhysicsEnabled == false)
   {
     check((uint8)WheelLocation >= 0)
@@ -982,19 +983,49 @@ void ACarlaWheeledVehicle::SetWheelPitchAngle(EVehicleWheelLocation WheelLocatio
 }
 
 float ACarlaWheeledVehicle::GetWheelPitchAngle(EVehicleWheelLocation WheelLocation) {
+  check((uint8)WheelLocation >= 0)
+  UVehicleAnimInstance *VehicleAnim = Cast<UVehicleAnimInstance>(GetMesh()->GetAnimInstance());
+  check(VehicleAnim != nullptr)
+  check(VehicleAnim->GetWheeledVehicleMovementComponent() != nullptr)
+
+  if (bPhysicsEnabled == true)
+  {
+    return VehicleAnim->GetWheeledVehicleMovementComponent()->Wheels[(uint8)WheelLocation]->GetRotationAngle();
+  }
+  else
+  {
+    return VehicleAnim->GetWheelPitchAngle((uint8)WheelLocation);
+  }
+}
+
+void ACarlaWheeledVehicle::SetWheelHeight(EVehicleWheelLocation WheelLocation, float Height) {
+  if (bPhysicsEnabled == false)
+  {
+    check((uint8)WheelLocation >= 0)
+    UVehicleAnimInstance *VehicleAnim = Cast<UVehicleAnimInstance>(GetMesh()->GetAnimInstance());
+    check(VehicleAnim != nullptr)
+    VehicleAnim->SetWheelHeight((uint8)WheelLocation, Height);
+  }
+  else
+  {
+    UE_LOG(LogCarla, Warning, TEXT("Cannot set wheel height. Physics are enabled."))
+  }
+}
+
+float ACarlaWheeledVehicle::GetWheelHeight(EVehicleWheelLocation WheelLocation) {
 
   check((uint8)WheelLocation >= 0)
   UVehicleAnimInstance *VehicleAnim = Cast<UVehicleAnimInstance>(GetMesh()->GetAnimInstance());
   check(VehicleAnim != nullptr)
   check(VehicleAnim->GetWheeledVehicleMovementComponent() != nullptr)
 
-  if (bPhysicsEnabled == true) 
+  if (bPhysicsEnabled == true)
   {
-    return VehicleAnim->GetWheeledVehicleMovementComponent()->Wheels[(uint8)WheelLocation]->GetRotationAngle();
+    return VehicleAnim->GetWheeledVehicleMovementComponent()->Wheels[(uint8)WheelLocation]->GetSuspensionOffset();
   }
-  else 
+  else
   {
-    return VehicleAnim->GetWheelPitchAngle((uint8)WheelLocation);
+    return VehicleAnim->GetWheelHeight((uint8)WheelLocation);
   }
 }
 

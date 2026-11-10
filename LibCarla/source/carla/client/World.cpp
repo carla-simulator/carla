@@ -3,6 +3,8 @@
 //
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
+//
+// Additional functionality added by AVL List GmbH under the terms of the MIT license.
 
 #include "carla/client/World.h"
 
@@ -268,6 +270,27 @@ namespace client {
       geom::Location location, float search_distance) const {
     const geom::Vector3D DownVector(0,0,-1);
     return ProjectPoint(location, DownVector, search_distance);
+  }
+
+  std::vector<boost::optional<rpc::ContactPoint>> World::GetContactPoints(
+      const std::vector<geom::Location>& locations,
+      const std::vector<ActorId>& ignored_actor_ids,
+      const std::vector<geom::Vector3D>& directions,
+      float search_distance) const {
+    auto result = _episode.Lock()->GetContactPoints(locations, directions, search_distance, ignored_actor_ids);
+
+    std::vector<boost::optional<rpc::ContactPoint>> points;
+    points.reserve(result.size());
+
+    for (auto& p : result) {
+      if (p.first) {
+        points.emplace_back(p.second);
+      } else {
+        points.emplace_back();
+      }
+    }
+
+    return points;
   }
 
   std::vector<rpc::LabelledPoint> World::CastRay(

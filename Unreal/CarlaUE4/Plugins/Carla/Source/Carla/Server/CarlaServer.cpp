@@ -3,6 +3,8 @@
 //
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
+//
+// Additional functionality added by AVL List GmbH under the terms of the MIT license.
 
 #include "Carla.h"
 #include "rpc/this_session.h"
@@ -63,6 +65,7 @@
 #include <carla/rpc/EpisodeInfo.h>
 #include <carla/rpc/EpisodeSettings.h>
 #include <carla/rpc/LabelledPoint.h>
+#include <carla/rpc/ContactPoint.h>
 #include <carla/rpc/LightState.h>
 #include <carla/rpc/MapInfo.h>
 #include <carla/rpc/MapLayer.h>
@@ -362,6 +365,8 @@ private:
 
 #define BIND_SYNC(name)   auto name = ServerBinder(# name, Server, true)
 #define BIND_ASYNC(name)  auto name = ServerBinder(# name, Server, false)
+
+static constexpr float meter_to_centimeter = 100.0f;
 
 // =============================================================================
 // -- Bind Actions -------------------------------------------------------------
@@ -2091,6 +2096,58 @@ BIND_SYNC(send) << [this](
     return Angle;
   };
 
+  BIND_SYNC(set_wheel_height) << [this](
+    cr::ActorId ActorId,
+    cr::VehicleWheelLocation WheelLocation,
+    float Height) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
+    if(!CarlaActor){
+      return RespondError(
+          "set_wheel_height",
+          ECarlaServerResponse::ActorNotFound,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    ECarlaServerResponse Response =
+        CarlaActor->SetWheelHeight(
+            static_cast<EVehicleWheelLocation>(WheelLocation), Height);
+    if (Response != ECarlaServerResponse::Success)
+    {
+      return RespondError(
+          "set_wheel_height",
+          Response,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    return R<void>::Success();
+  };
+
+  BIND_SYNC(get_wheel_height) << [this](
+      const cr::ActorId ActorId,
+      cr::VehicleWheelLocation WheelLocation) -> R<float>
+  {
+    REQUIRE_CARLA_EPISODE();
+    FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
+    if(!CarlaActor){
+      return RespondError(
+          "get_wheel_height",
+          ECarlaServerResponse::ActorNotFound,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    float Height;
+    ECarlaServerResponse Response =
+        CarlaActor->GetWheelHeight(
+            static_cast<EVehicleWheelLocation>(WheelLocation), Height);
+    if (Response != ECarlaServerResponse::Success)
+    {
+      return RespondError(
+          "get_wheel_height",
+          Response,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    return Height;
+  };
+
   BIND_SYNC(set_actor_simulate_physics) << [this](
       cr::ActorId ActorId,
       bool bEnabled) -> R<void>
@@ -3303,7 +3360,6 @@ BIND_SYNC(send) << [this](
   {
     REQUIRE_CARLA_EPISODE();
     auto *World = Episode->GetWorld();
-    constexpr float meter_to_centimeter = 100.0f;
     FVector UELocation = Location;
     ACarlaGameModeBase* GameMode = UCarlaStatics::GetGameMode(Episode->GetWorld());
     ALargeMapManager* LargeMap = GameMode->GetLMManager();
@@ -3313,6 +3369,52 @@ BIND_SYNC(send) << [this](
     }
     return URayTracer::ProjectPoint(UELocation, Direction.ToFVector(),
         meter_to_centimeter * SearchDistance, World);
+  };
+
+  BIND_SYNC(contact_points) << [this] (
+      const std::vector<cr::Location>& Locations,
+      const std::vector<cr::Vector3D>& Directions,
+      float SearchDistance,
+      const std::vector<cr::ActorId>& IgnoredActorIds)
+      -> R<std::vector<std::pair<bool,cr::ContactPoint>>>
+  {
+    REQUIRE_CARLA_EPISODE();
+    auto *World = Episode->GetWorld();
+    ACarlaGameModeBase *GameMode = UCarlaStatics::GetGameMode(World);
+    ALargeMapManager *LargeMap = GameMode->GetLMManager();
+
+    std::vector<const AActor *> IgnoredActors;
+    IgnoredActors.reserve(IgnoredActorIds.size());
+    for (const auto & Id : IgnoredActorIds)
+    {
+        FCarlaActor * View = Episode->FindCarlaActor(Id);
+        if (View)
+        {
+            IgnoredActors.emplace_back(View->GetActor());
+        }
+    }
+
+    std::vector<FVector> UELocations;
+    UELocations.reserve(Locations.size());
+    for (const auto & Location : Locations) {
+        if (LargeMap)
+        {
+            UELocations.emplace_back(LargeMap->GlobalToLocalLocation(Location));
+        }
+        else
+        {
+            UELocations.emplace_back(Location);
+        }
+    }
+
+    std::vector<FVector> UEDirections;
+    UEDirections.reserve(Directions.size());
+    for (const auto& Direction : Directions) {
+      UEDirections.emplace_back(Direction.ToFVector());
+    }
+
+    return URayTracer::ProjectPoints(UELocations, UEDirections,
+        meter_to_centimeter * SearchDistance, World, IgnoredActors);
   };
 
   BIND_SYNC(cast_ray) << [this]

@@ -3,6 +3,8 @@
 //
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
+//
+// Additional functionality added by AVL List GmbH under the terms of the MIT license.
 
 #include "CarlaActor.h"
 
@@ -847,6 +849,43 @@ ECarlaServerResponse FVehicleActor::GetWheelPitchAngle(
   }
   return ECarlaServerResponse::Success;
 }
+
+ECarlaServerResponse FVehicleActor::SetWheelHeight(
+    const EVehicleWheelLocation& WheelLocation, float height)
+{
+  if (IsDormant())
+  {
+  }
+  else
+  {
+    auto Vehicle = Cast<ACarlaWheeledVehicle>(GetActor());
+    if(Vehicle == nullptr){
+      return ECarlaServerResponse::NotAVehicle;
+    }
+    Vehicle->SetWheelHeight(WheelLocation, height);
+  }
+  return ECarlaServerResponse::Success;
+}
+
+ECarlaServerResponse FVehicleActor::GetWheelHeight(
+      const EVehicleWheelLocation& WheelLocation, float& Height)
+{
+  if (IsDormant())
+  {
+    Height = 0;
+  }
+  else
+  {
+    auto Vehicle = Cast<ACarlaWheeledVehicle>(GetActor());
+    if(Vehicle == nullptr){
+      return ECarlaServerResponse::NotAVehicle;
+    }
+
+    Height = Vehicle->GetWheelHeight(WheelLocation);
+  }
+  return ECarlaServerResponse::Success;
+}
+
 
 ECarlaServerResponse FVehicleActor::SetActorSimulatePhysics(bool bEnabled)
 {
