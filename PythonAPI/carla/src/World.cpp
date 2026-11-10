@@ -466,10 +466,10 @@ void export_world() {
     .def("get_traffic_light_from_opendrive_id", CONST_CALL_WITHOUT_GIL_1(cc::World, GetTrafficLightFromOpenDRIVE, const carla::road::SignId&), arg("traffic_light_id"))
     .def("get_traffic_lights_from_waypoint", CALL_RETURNING_LIST_2(cc::World, GetTrafficLightsFromWaypoint, const cc::Waypoint&, double), (arg("waypoint"), arg("distance")))
     .def("get_traffic_lights_in_junction", CALL_RETURNING_LIST_1(cc::World, GetTrafficLightsInJunction, carla::road::JuncId), (arg("junction_id")))
-    .def("reset_all_traffic_lights", &cc::World::ResetAllTrafficLights)
+    .def("reset_all_traffic_lights", CALL_WITHOUT_GIL(cc::World, ResetAllTrafficLights))
     .def("spawn_custom_mesh", &SpawnCustomMesh,
         (arg("vertices"), arg("triangles"), arg("material")="grass"))
-    .def("freeze_all_traffic_lights", &cc::World::FreezeAllTrafficLights, (arg("frozen")))
+    .def("freeze_all_traffic_lights", CALL_WITHOUT_GIL_1(cc::World, FreezeAllTrafficLights, bool), (arg("frozen")))
     .def("get_level_bbs", &GetLevelBBs, (arg("bb_type")=cr::CityObjectLabel::Any))
     .def("get_environment_objects", &GetEnvironmentObjects, (arg("object_type")=cr::CityObjectLabel::Any))
     .def("enable_environment_objects", &EnableEnvironmentObjects, (arg("env_objects_ids"), arg("enable")))

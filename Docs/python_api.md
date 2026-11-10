@@ -3172,7 +3172,7 @@ Sets a given time for the red state to be active.
         - `red_time` (_float<small> - seconds</small>_)  
     - **Getter:** _[carla.TrafficLight.get_red_time](#carla.TrafficLight.get_red_time)_  
 - <a name="carla.TrafficLight.set_state"></a>**<font color="#7fb800">set_state</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**state**</font>)<button class="SnipetButton" id="carla.TrafficLight.set_state-snipet_button">snippet &rarr;</button>  
-Sets a given state to a traffic light actor.  
+Sets a given state to a traffic light actor. The call returns once the server has applied it, so the snapshot of the next tick already carries the new state.  
     - **Parameters:**
         - `state` (_[carla.TrafficLightState](#carla.TrafficLightState)_)  
     - **Getter:** _[carla.TrafficLight.get_state](#carla.TrafficLight.get_state)_  
