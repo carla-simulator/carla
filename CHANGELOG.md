@@ -147,9 +147,13 @@
 * Fixed the `noise_seed` attribute of `sensor.lidar.ray_cast` being ignored, so every ray-cast LiDAR used the default seed.
 * Fixed the IMU sensor's compass yaw orientation, and the order in which sensors are disposed when their parent actor is destroyed.
 * Fixed several legacy UE4-era bugs across LibCarla and the Carla plugin: LiDAR memory reset, DVS validation, camera profiling, image reads, sensor materials and Python sensor teardown.
+* Fixed `sensor.other.radar` returning detections beyond its `range` (up to `range / cos(fov/2)`): off-axis rays were longer than the range. Every ray is now exactly `range` long.
+* Fixed the V2X CAM message sending vehicle length and width in millimetres. They are now in the ETSI unit of 0.1 m and clamped to the standard's range.
 
 #### Simulation and content
 
+* Fixed `Vehicle.enable_constant_velocity()` making vehicles unable to turn: it overwrote the whole velocity every frame, removing the sideways slip the tyres need to corner and the vertical velocity. It now forces only the velocity component along the requested vector and leaves the perpendicular components to physics (a zero vector still holds the vehicle still), so `ConstantVelocityAgent` and `automatic_control.py --agent=Constant` follow ordinary corners instead of leaving the road.
+* Fixed Town_C's vehicle spawn points sitting 4 m above the road, so every spawned vehicle dropped 4 m. They are now 0.5 m above it, as on the other maps.
 * Fixed **Town11 still loading as a legacy tiled map** through `ALargeMapManager`: it is now a World Partition map like Town12, Town13 and Town15, and has a pedestrian navmesh, so walkers can spawn and navigate on it. `CarlaLargeMapConvert` no longer fails to save a town whose tiles carry level-script blueprints or redirectors (`Illegal reference to private object`).
 * Fixed **walkers falling through the terrain on Town12** when spawned at a point from `get_random_location_from_navigation()` (#10212). The navmesh covers the terrain under some building footprints, and the building's cell could stream in after the walker. `get_random_location_from_navigation()` now only returns points whose surrounding cells are loaded and where a walker fits without overlapping static geometry, and a walker spawned inside a building or wall is refused with `Failed because collision at spawn position`. It also no longer returns the map origin, where a walker falls out of the map, when the navmesh sample finds no polygon.
 * Fixed the walker bounding box being centred on the actor pivot rather than the skeletal mesh, so `actor.bounding_box` now lines up with the visible pedestrian.
