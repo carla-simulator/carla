@@ -1,5 +1,9 @@
 numpy>=1.24.4
 psutil
 py-cpuinfo
-pygame
+# pygame has no wheels for Python 3.14 and later; pygame-ce is a drop-in fork.
+# pygame-ce is pinned to a reviewed release: check a new one before raising the pin.
+pygame; python_version < '3.14'
+pygame-ce==2.5.8; python_version >= '3.14'
+imageio
 python-tr

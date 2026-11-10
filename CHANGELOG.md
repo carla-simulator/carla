@@ -164,6 +164,9 @@
 * Fixed Multi-GPU secondary routing and map reloads: camera streams handed to clients now match the primary's stream ids, secondaries stay in sync across `load_world()`, a lost secondary fails over cleanly and the next secondary to connect takes over all of its sensors' streams (clients resume without a new `listen()` only if that secondary uses the same streaming address and port), a restarted secondary no longer replays an actor onto an unrelated local actor with the same id, a `-nullrhi` primary no longer crashes on camera requests, and a secondary that connects after `load_world()` now loads the primary's current map instead of staying on its default one.
 * Fixed the **Sign Generation Controller** of the Digital Twin Tool placing plates edge-on to the traffic (they looked blank) and leaving signs in the roadway. The plate now always stands at _Plate Height Cm_ instead of the `Sign1` socket of `SM_Pole05`, and `DisplaceLocationOutsideNeighboringRoads` snaps the sign to the lane height before measuring, counts parking, biking, shoulder and bidirectional lanes as carriageway, jumps to the outer edge of multi-lane roads on the side of the traffic (right- or left-hand), and removes, with a warning, a sign it cannot move out of the carriageway.
 * Fixed the **Traffic Light Tool** preview: it now reframes whenever the traffic light changes size and looks at the heads from a three-quarter front view, instead of starting inside the pole and staying there, and the _Import JSON..._ and _Export JSON..._ buttons no longer show garbage characters.
+* Fixed **synchronous mode running frames on its own on a server that had been used before**, which made `deterministic_collisions` runs differ after other scripts. Every `world.tick()` (or `apply_batch_sync(..., True)`) sent while the server was asynchronous was banked and never consumed, and once synchronous mode was turned on the server ran one frame per banked tick without any client ticking. Turning synchronous mode on now starts from no pending ticks, as on a fresh server.
+* Fixed `stop_replayer(keep_actors=False)` leaving the replayed actors in the scene, so every play/stop cycle added another copy of them. It destroys the actors the replayer spawned, also when the replay already reached its end; actors it reused from the scene, such as traffic lights, stay.
+* The server now names the missing file when a map has no pedestrian navigation mesh (`Failed to find the navigation mesh file 'Map.bin'`) instead of reporting a missing OpenDrive file.
 
 #### ROS 2
 
@@ -193,6 +196,8 @@
 * Fixed the client aborting with `std::terminate` when a light manager with unsent light changes outlived its client: its destructor now logs the error. It also unregisters its tick callback by the right id. An exception thrown by a stream callback is now logged instead of terminating the client.
 * Fixed an RPC server deadlock on shutdown, an overly strict `Vector3D` assert, OpenDRIVE lane width for centre lanes, busy-wait `yield()` calls and strict `RELEASE_ASSERT`s in road `Map`.
 * Fixed `generate_traffic.py` timing out on Town12 and Town13: the vehicle batch took longer than the hard-coded 10 s client timeout and left the spawned vehicles without a Traffic Manager. The timeout now defaults to 60 s and is set with `--timeout`.
+* Fixed combining `carla.MapLayer` values: `carla.MapLayer.Buildings | carla.MapLayer.ParkedVehicles` gave a plain `int`, which `load_world()` and `load_map_layer()` rejected, so the documented multi-layer example failed. `|`, `&`, `^` and `~` between layers now give a `carla.MapLayer`.
+* `Sensor.stop()` releases the GIL, so stopping a camera whose frame callback is still running no longer deadlocks the client at exit.
 
 #### Build and packaging
 
@@ -212,6 +217,9 @@
 * Fixed `PythonAPI/examples/manual_control.py` raising `NameError: name 'sys' is not defined` instead of their error message when the server cannot send the OpenDRIVE file or the map has no spawn points.
 * Fixed `PythonAPI/examples/no_rendering_mode.py` ignoring `--show-triggers`, `--show-connections` and `--show-spawn-points` when a cached map image existed; the flags are part of the cache name now.
 * Fixed the spawn check in `test_collision_determinism.py`, which raised `AttributeError` instead of reporting the failure, and `Sensor.get_current_detection_points` in the LiDAR smoke tests.
+* Fixed `PythonAPI/util/config.py --delta-seconds 0` and `--fps 0` (variable frame rate) always failing with a `TypeError`.
+* `PythonAPI/util/requirements.txt` installs `pygame-ce` on Python 3.14 and later, where `pygame` has no wheels and failed the whole install, and lists `imageio`, which `util/apply_texture.py` needs.
+* `PythonAPI/examples/deterministic_collisions.py` sets physics substepping instead of inheriting it, warns when the server runs frames this client did not tick, and exits with 1 when deterministic repetitions differ. `recorder_replay.py` stops cleanly when stdin closes, and `open3d_lidar.py` and `invertedai_traffic.py` exit with a message when their optional package is not installed.
 
 #### Documentation
 

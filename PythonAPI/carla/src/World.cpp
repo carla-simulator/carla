@@ -60,6 +60,48 @@ namespace rpc {
 } // namespace rpc
 } // namespace carla
 
+// carla.MapLayer values are bit flags. The enum derives from int, so without
+// these `A | B` gives a plain int, which load_world() and load_map_layer() do
+// not accept. Anything but another MapLayer falls back to int arithmetic.
+static boost::python::object MapLayerNotImplemented() {
+  namespace py = boost::python;
+  return py::object(py::handle<>(py::borrowed(Py_NotImplemented)));
+}
+
+template <typename Op>
+static boost::python::object MapLayerBinary(
+    carla::rpc::MapLayer self,
+    const boost::python::object &other,
+    Op op) {
+  namespace cr = carla::rpc;
+  boost::python::extract<cr::MapLayer> other_layer(other);
+  if (!other_layer.check()) {
+    return MapLayerNotImplemented();
+  }
+  const auto value = op(
+      static_cast<cr::MapLayerType>(self),
+      static_cast<cr::MapLayerType>(other_layer()));
+  return boost::python::object(static_cast<cr::MapLayer>(value));
+}
+
+static boost::python::object MapLayerOr(carla::rpc::MapLayer self, const boost::python::object &other) {
+  return MapLayerBinary(self, other, [](auto a, auto b) { return a | b; });
+}
+
+static boost::python::object MapLayerAnd(carla::rpc::MapLayer self, const boost::python::object &other) {
+  return MapLayerBinary(self, other, [](auto a, auto b) { return a & b; });
+}
+
+static boost::python::object MapLayerXor(carla::rpc::MapLayer self, const boost::python::object &other) {
+  return MapLayerBinary(self, other, [](auto a, auto b) { return a ^ b; });
+}
+
+static carla::rpc::MapLayer MapLayerInvert(carla::rpc::MapLayer self) {
+  namespace cr = carla::rpc;
+  return static_cast<cr::MapLayer>(
+      static_cast<cr::MapLayerType>(cr::MapLayer::All) & ~static_cast<cr::MapLayerType>(self));
+}
+
 static auto WaitForTick(const carla::client::World &world, double seconds) {
   carla::PythonUtil::ReleaseGIL unlock;
   return world.WaitForTick(TimeDurationFromSeconds(seconds));
@@ -313,7 +355,8 @@ void export_world() {
     .def_readonly("label", &cr::LabelledPoint::_label)
   ;
 
-  enum_<cr::MapLayer>("MapLayer")
+  enum_<cr::MapLayer> map_layer("MapLayer");
+  map_layer
     .value("NONE", cr::MapLayer::None)
     .value("Buildings", cr::MapLayer::Buildings)
     .value("Decals", cr::MapLayer::Decals)
@@ -326,6 +369,14 @@ void export_world() {
     .value("Walls", cr::MapLayer::Walls)
     .value("All", cr::MapLayer::All)
   ;
+  // Combining layers gives a MapLayer (see MapLayerBinary).
+  map_layer.attr("__or__") = make_function(&MapLayerOr);
+  map_layer.attr("__ror__") = make_function(&MapLayerOr);
+  map_layer.attr("__and__") = make_function(&MapLayerAnd);
+  map_layer.attr("__rand__") = make_function(&MapLayerAnd);
+  map_layer.attr("__xor__") = make_function(&MapLayerXor);
+  map_layer.attr("__rxor__") = make_function(&MapLayerXor);
+  map_layer.attr("__invert__") = make_function(&MapLayerInvert);
 
   enum_<cr::MaterialParameter>("MaterialParameter")
     .value("Normal", cr::MaterialParameter::Tex_Normal)
