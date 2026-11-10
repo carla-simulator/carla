@@ -198,6 +198,7 @@
 * Fixed `carla-pack add` dropping existing OpenDRIVE, traffic-light phase, navigation and Traffic Manager sidecars when re-adding an in-pack map without sidecar flags (#9987).
 * Fixed the Windows build: the setup installs the MSVC 14.38 toolset the engine fork needs, MSVC builds use `/W4`, and two compile and link errors in LibCarla.
 * Fixed the CMake toolchain picking the oldest clang sysroot when an upgraded engine keeps several side by side.
+* Fixed reconfiguring an already-built tree (e.g. `-DENABLE_ROS2=ON`) silently keeping the old options: UnrealBuildTool reused its cached makefile because the `Carla` and `CarlaTools` modules read CMake's generated `Options.def`, `Definitions.def`, `Includes.def` and `Libraries.def` without declaring them, so the rebuild reported success with a plugin that had no ROS 2 in it. Both modules now list those files as `ExternalDependencies`, and a change to any of them re-creates the makefile.
 * Fixed `Util/Docker/build.sh` failing to build the development image: the PythonAPI requirements are copied into the build context with their relative layout, so `-r ../carla/requirements.txt` resolves (#10177). The image also installs `libusb-1.0-0`, without which `open3d` cannot be imported.
 
 #### Examples and tests
