@@ -6,6 +6,8 @@
 
 #include "carla/client/detail/Simulator.h"
 
+#include <algorithm>
+
 #include "carla/Debug.h"
 #include "carla/Exception.h"
 #include "carla/Logging.h"
@@ -416,8 +418,12 @@ EpisodeProxy Simulator::GetCurrentEpisode() {
     const auto gca = (gc == GarbageCollectionPolicy::Inherit ? _gc_policy : gc);
     auto result = ActorFactory::MakeActor(GetCurrentEpisode(), actor, gca);
     // Snapshots up to (and including) this frame predate the spawn; see
-    // Simulator::GetActorState.
-    static_cast<ActorState &>(*result)._spawn_frame = _episode->GetState()->GetFrame();
+    // Simulator::GetActorState. The server's frame at the spawn is the right
+    // bound: the client's latest snapshot can lag behind it, and a snapshot the
+    // server built before the spawn would then arrive "newer" and mark the
+    // actor Invalid. A server that does not report it sends 0.
+    static_cast<ActorState &>(*result)._spawn_frame =
+        std::max<uint64_t>(actor.spawn_frame, _episode->GetState()->GetFrame());
     log_debug(
         result->GetDisplayId(),
         "created",

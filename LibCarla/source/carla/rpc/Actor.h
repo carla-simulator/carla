@@ -51,7 +51,13 @@ namespace rpc {
 
     /// @}
 
-    MSGPACK_DEFINE_ARRAY(id, parent_id, description, bounding_box, semantic_tags, stream_token);
+    /// Server frame counter when a spawn call created this actor: snapshots up
+    /// to and including this frame predate it. 0 when the actor did not come
+    /// from a spawn call, or from a server that does not report it. Last in the
+    /// array so that either side reads the other's older layout.
+    uint64_t spawn_frame = 0u;
+
+    MSGPACK_DEFINE_ARRAY(id, parent_id, description, bounding_box, semantic_tags, stream_token, spawn_frame);
   };
 
 } // namespace rpc

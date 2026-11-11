@@ -1194,7 +1194,11 @@ void FCarlaServer::FPimpl::BindActions()
       LargeMap->OnActorSpawned(*Result.Value);
     }
 
-    return Episode->SerializeActor(Result.Value);
+    cr::Actor SerializedActor = Episode->SerializeActor(Result.Value);
+    // RPCs run before the frame counter advances, so the next snapshot is the
+    // first one that can contain this actor.
+    SerializedActor.spawn_frame = FCarlaEngine::GetFrameCounter();
+    return SerializedActor;
   };
 
   BIND_SYNC(spawn_actor_with_parent) << [this](
@@ -1245,7 +1249,9 @@ void FCarlaServer::FPimpl::BindActions()
       Episode->PutActorToSleep(CarlaActor->GetActorId());
     }
 
-    return Episode->SerializeActor(CarlaActor);
+    cr::Actor SerializedActor = Episode->SerializeActor(CarlaActor);
+    SerializedActor.spawn_frame = FCarlaEngine::GetFrameCounter();
+    return SerializedActor;
   };
 
   BIND_SYNC(destroy_actor) << [this](cr::ActorId ActorId) -> R<bool>
