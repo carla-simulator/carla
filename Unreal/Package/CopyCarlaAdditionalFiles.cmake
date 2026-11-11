@@ -16,7 +16,12 @@ endif ()
 
 file (COPY_FILE ${CARLA_WORKSPACE_PATH}/LICENSE ${CARLA_PACKAGE_ARCHIVE_PATH}/LICENSE)
 file (COPY_FILE ${CARLA_WORKSPACE_PATH}/CHANGELOG.md ${CARLA_PACKAGE_ARCHIVE_PATH}/CHANGELOG)
-file (COPY_FILE ${CARLA_WORKSPACE_PATH}/Docs/release_readme.md ${CARLA_PACKAGE_ARCHIVE_PATH}/README)
+# One README per platform: the commands differ (CarlaUnreal.sh / CarlaUnreal.exe, python3 / python).
+if (WIN32)
+  file (COPY_FILE ${CARLA_WORKSPACE_PATH}/Docs/release_readme_windows.md ${CARLA_PACKAGE_ARCHIVE_PATH}/README)
+else ()
+  file (COPY_FILE ${CARLA_WORKSPACE_PATH}/Docs/release_readme.md ${CARLA_PACKAGE_ARCHIVE_PATH}/README)
+endif ()
 if (WIN32)
     set (EXE_EXT .exe)
 else ()

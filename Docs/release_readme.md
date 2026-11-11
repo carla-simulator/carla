@@ -5,15 +5,6 @@ Thanks for downloading CARLA!
 
 <https://carla.org/>
 
-The commands below are for Linux. On Windows, run them in a terminal in this
-folder with these changes:
-
-| Linux | Windows |
-|---|---|
-| `./CarlaUnreal.sh` | `CarlaUnreal.exe` |
-| `python3`, `pip3` | `python`, `pip` |
-| `PythonAPI/carla/dist/carla-*.whl` | the full name of the `.whl` file in `PythonAPI\carla\dist` (the Windows shell does not expand `*`) |
-
 How to run CARLA
 ----------------
 
