@@ -5,6 +5,15 @@ Thanks for downloading CARLA!
 
 <https://carla.org/>
 
+The commands below are for Linux. On Windows, run them in a terminal in this
+folder with these changes:
+
+| Linux | Windows |
+|---|---|
+| `./CarlaUnreal.sh` | `CarlaUnreal.exe` |
+| `python3`, `pip3` | `python`, `pip` |
+| `PythonAPI/carla/dist/carla-*.whl` | the full name of the `.whl` file in `PythonAPI\carla\dist` (the Windows shell does not expand `*`) |
+
 How to run CARLA
 ----------------
 
@@ -55,6 +64,17 @@ Running options
 ./CarlaUnreal.sh -quality-level=Low        # cheaper rendering
 ./CarlaUnreal.sh -ros2                     # native ROS 2 interface (only in a package built with ROS 2 enabled)
 ```
+
+More maps
+---------
+
+Further towns come as a content pack (`AdditionalMaps`) built for this very package. Install it with `Tools/carla_pack.py` (Python 3.8 or newer, nothing else needed), then load the towns like any other map:
+
+```sh
+python3 Tools/carla_pack.py install <AdditionalMaps>.tar.gz --server .
+```
+
+A pack built for another package is refused. `python3 Tools/carla_pack.py inspect <pack> --server .` checks a pack without installing it.
 
 For more details and running options, refer to the online documentation:
 
