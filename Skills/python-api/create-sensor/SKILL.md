@@ -112,8 +112,10 @@ Topic layout (`spawn` prints the exact list):
 | `other.lane_invasion`, `other.obstacle`, `other.rss` | **none** — no native publisher exists | — |
 
 Base name is `rt/carla/<ros_name>`, nested as
-`rt/carla/<parent ros_name>/<ros_name>` when attached; unnamed sensors become
-`actor<id>`. Transforms go to the single `rt/tf` topic, parented to the attach
+`rt/carla/<parent ros_name>/<ros_name>` when attached. Without a `ros_name`, a
+vehicle becomes `vehicle<actor id>` and a sensor `<last blueprint token><stream id>`
+(e.g. `rgb123`, stable for a run but not across runs), so a camera on an unnamed
+vehicle publishes on `/carla/vehicle30/rgb123/image`. Transforms go to the single `rt/tf` topic, parented to the attach
 parent's frame (or `map`).
 
 All of this is verified against a live server: a lidar spawned as

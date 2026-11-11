@@ -26,7 +26,7 @@ source "${HERE}/env.sh"
 MODE="${1:-topics}"; shift || true
 
 [ -d "${CARLA_ROS2_EXAMPLES}" ] \
-  || { echo "[ros] ERROR: ${CARLA_ROS2_EXAMPLES} not found — wrong CARLA_UE4_ROOT, or a checkout without the ROS 2 demo." >&2; exit 1; }
+  || { echo "[ros] ERROR: ${CARLA_ROS2_EXAMPLES} not found — export CARLA_ROS2_ROOT (a CARLA package or checkout with the ROS 2 demo)." >&2; exit 1; }
 command -v docker >/dev/null 2>&1 \
   || { echo "[ros] ERROR: docker is required (the ros2 CLI runs in a container here)." >&2; exit 1; }
 
@@ -140,10 +140,16 @@ case "${MODE}" in
   demo)
     # SIDE EFFECTS: this spawns a hero vehicle with four sensors on the running
     # server and drives it on autopilot. Only for an explicit request.
-    echo "[ros] running the in-checkout demo stack — it SPAWNS a hero vehicle + sensors."
-    exec "${CARLA_ROS2_EXAMPLES}/run_map_and_lidar_demo.sh" \
-      "--distro=${ROS_DISTRO_TAG}" "--rmw=${RMW}" \
-      "--host=${CARLA_HOST}" "--port=${CARLA_PORT}" "$@"
+    echo "[ros] running the demo stack — it SPAWNS a hero vehicle + sensors."
+    if [ -x "${CARLA_ROS2_EXAMPLES}/run_map_and_lidar_demo.sh" ]; then
+      exec "${CARLA_ROS2_EXAMPLES}/run_map_and_lidar_demo.sh" \
+        "--distro=${ROS_DISTRO_TAG}" "--rmw=${RMW}" \
+        "--host=${CARLA_HOST}" "--port=${CARLA_PORT}" "$@"
+    fi
+    # UE5 line: the demo is a plain client; the server does the ROS 2 publishing.
+    cd "${CARLA_ROS2_EXAMPLES}"
+    exec "${PYTHON:-python3}" ros2_native.py --file stack.json \
+      --host "${CARLA_HOST}" --port "${CARLA_PORT}" "$@"
     ;;
   rviz)
     [ -n "${DISPLAY:-}" ] || { echo "[ros] ERROR: no DISPLAY — RViz needs an X display." >&2; exit 1; }
