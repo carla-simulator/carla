@@ -147,9 +147,13 @@
 * Fixed the `noise_seed` attribute of `sensor.lidar.ray_cast` being ignored, so every ray-cast LiDAR used the default seed.
 * Fixed the IMU sensor's compass yaw orientation, and the order in which sensors are disposed when their parent actor is destroyed.
 * Fixed several legacy UE4-era bugs across LibCarla and the Carla plugin: LiDAR memory reset, DVS validation, camera profiling, image reads, sensor materials and Python sensor teardown.
+* Fixed `sensor.other.radar` returning detections beyond its `range` (up to `range / cos(fov/2)`): off-axis rays were longer than the range. Every ray is now exactly `range` long.
+* Fixed the V2X CAM message sending vehicle length and width in millimetres. They are now in the ETSI unit of 0.1 m and clamped to the standard's range.
 
 #### Simulation and content
 
+* Fixed `Vehicle.enable_constant_velocity()` making vehicles unable to turn: it overwrote the whole velocity every frame, removing the sideways slip the tyres need to corner and the vertical velocity. It now forces only the velocity component along the requested vector and leaves the perpendicular components to physics (a zero vector still holds the vehicle still), so `ConstantVelocityAgent` and `automatic_control.py --agent=Constant` follow ordinary corners instead of leaving the road.
+* Fixed Town_C's vehicle spawn points sitting 4 m above the road, so every spawned vehicle dropped 4 m. They are now 0.5 m above it, as on the other maps.
 * Fixed **Town11 still loading as a legacy tiled map** through `ALargeMapManager`: it is now a World Partition map like Town12, Town13 and Town15, and has a pedestrian navmesh, so walkers can spawn and navigate on it. `CarlaLargeMapConvert` no longer fails to save a town whose tiles carry level-script blueprints or redirectors (`Illegal reference to private object`).
 * Fixed **walkers falling through the terrain on Town12** when spawned at a point from `get_random_location_from_navigation()` (#10212). The navmesh covers the terrain under some building footprints, and the building's cell could stream in after the walker. `get_random_location_from_navigation()` now only returns points whose surrounding cells are loaded and where a walker fits without overlapping static geometry, and a walker spawned inside a building or wall is refused with `Failed because collision at spawn position`. It also no longer returns the map origin, where a walker falls out of the map, when the navmesh sample finds no polygon.
 * Fixed the walker bounding box being centred on the actor pivot rather than the skeletal mesh, so `actor.bounding_box` now lines up with the visible pedestrian.
@@ -221,9 +225,12 @@
 * Fixed `PythonAPI/examples/no_rendering_mode.py` ignoring `--show-triggers`, `--show-connections` and `--show-spawn-points` when a cached map image existed; the flags are part of the cache name now.
 * Fixed the spawn check in `test_collision_determinism.py`, which raised `AttributeError` instead of reporting the failure, and `Sensor.get_current_detection_points` in the LiDAR smoke tests.
 * Fixed `PythonAPI/util/config.py --delta-seconds 0` and `--fps 0` (variable frame rate) always failing with a `TypeError`.
+* Fixed `PythonAPI/examples/invertedai_traffic.py` failing before driving any traffic (#10221): it loads `Town10HD_Opt` when Inverted AI's `carla:Town10HD` has no plain `Town10HD` map, as on UE 5, and builds the `WaypointManager` with the `lanelet_map` the current `invertedai` SDK requires. `PythonAPI/examples/requirements.txt` pins `invertedai` to that tested commit instead of tracking `develop`.
 * Fixed `PythonAPI/examples/lightweather_test.py` crashing with `IndexError` on maps that register no street lights (Town11): it now tests the weather only and skips the light checks. It also moves the spectator to the snapshot camera first, so World Partition maps stream in the scene instead of rendering empty ground.
 * `PythonAPI/util/requirements.txt` installs `pygame-ce` on Python 3.14 and later, where `pygame` has no wheels and failed the whole install, and lists `imageio`, which `util/apply_texture.py` needs.
 * `PythonAPI/examples/deterministic_collisions.py` sets physics substepping instead of inheriting it, warns when the server runs frames this client did not tick, and exits with 1 when deterministic repetitions differ. `recorder_replay.py` stops cleanly when stdin closes, and `open3d_lidar.py` and `invertedai_traffic.py` exit with a message when their optional package is not installed.
+* Added `imageio` to `PythonAPI/examples/requirements.txt`: `examples/invertedai_traffic.py` imports it, but it was not listed, so the example failed with `ModuleNotFoundError` in a fresh environment.
+* Fixed `Util/Tools/RunPythonVersionTests.sh` running `sensor_synchronization.py` without `--port`, so its `examples` stage failed whenever the server was not on port 2000.
 
 #### Documentation
 

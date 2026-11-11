@@ -242,7 +242,7 @@
           Velocity vector in local space.  
         param_units: m/s
       doc: >
-        Sets a vehicle's velocity vector to a constant value over time. The resulting velocity will be approximately the `velocity` being set, as with __<font color="#7fb800">set_target_velocity()</font>__.  
+        Sets a vehicle's velocity vector to a constant value over time. The resulting velocity will be approximately the `velocity` being set, as with __<font color="#7fb800">set_target_velocity()</font>__. The component of the vehicle's velocity along `velocity` is forced to its length; the perpendicular components are left to physics, so the vehicle can still corner and follow the ground. A zero vector holds the vehicle still.
       note: >
         Only carla.Vehicle actors can use this method.  
       warning: >

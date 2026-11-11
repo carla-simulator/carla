@@ -25,7 +25,7 @@ python3 invertedai_traffic.py -n 30 -w 10
 | Flag | Default | What it does |
 |---|---|---|
 | `--iai-key` | `IAI_API_KEY` | API key. The environment variable wins over the flag. |
-| `--location` | `carla:Town10HD` | Map, in Inverted AI's naming. Only Town10HD is tested. |
+| `--location` | `carla:Town10HD` | Map, in Inverted AI's naming. Only Town10HD is tested. CARLA loads its `Town10HD_Opt` variant when the plain map is not available, as on UE 5. |
 | `--number-of-vehicles`, `-n` | 50 | Vehicles for Inverted AI to drive. |
 | `--number-of-walkers`, `-w` | 0 | Pedestrians, driven by CARLA's own controllers. |
 | `--sim-length` | 60 | Seconds to simulate. |

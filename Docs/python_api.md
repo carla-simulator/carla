@@ -105,7 +105,7 @@ Sets the actor's acceleration to a constant value over time.
     - **Parameters:**
         - `acceleration` (_[carla.Vector3D](#carla.Vector3D)<small> - m/s<sup>2</sup></small>_) - Acceleration vector in local space.  
 - <a name="carla.Actor.enable_constant_velocity"></a>**<font color="#7fb800">enable_constant_velocity</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**velocity**</font>)  
-Sets a vehicle's velocity vector to a constant value over time. The resulting velocity will be approximately the `velocity` being set, as with __<font color="#7fb800">set_target_velocity()</font>__.  
+Sets a vehicle's velocity vector to a constant value over time. The resulting velocity will be approximately the `velocity` being set, as with __<font color="#7fb800">set_target_velocity()</font>__. The component of the vehicle's velocity along `velocity` is forced to its length; the perpendicular components are left to physics, so the vehicle can still corner and follow the ground. A zero vector holds the vehicle still.  
     - **Parameters:**
         - `velocity` (_[carla.Vector3D](#carla.Vector3D)<small> - m/s</small>_) - Velocity vector in local space.  
     - **Note:** <font color="#8E8E8E">_Only [carla.Vehicle](#carla.Vehicle) actors can use this method._</font>  
