@@ -18,6 +18,7 @@
 
 #include <util/ue-header-guard-begin.h>
 #include "Components/BoxComponent.h"
+#include "Engine/SkeletalMesh.h"
 #include "Engine/CollisionProfile.h"
 #include "MovementComponents/DefaultMovementComponent.h"
 #include "Rendering/SkeletalMeshRenderData.h"
@@ -30,15 +31,19 @@
 
 namespace {
 
-void ConfigureCarlaSteeringInput(UChaosWheeledVehicleMovementComponent& MovementComponent)
+void ConfigureCarlaSteeringInput(UChaosWheeledVehicleMovementComponent& MovementComponent, bool bTwoWheeled = false)
 {
   // CARLA exposes VehicleControl.Steer as a linear normalized scalar.
   MovementComponent.SteeringInputRate.InputCurveFunction = EInputFunctionType::LinearFunction;
 
   // Chaos defaults to a fixed AngleRatio, while Ackermann keeps the left/right
   // wheel angles tied to the vehicle geometry.
-  MovementComponent.SteeringSetup.SteeringType = ESteeringType::Ackermann;
-
+  // Two-wheelers keep their blueprint's SingleAngle: on their 40 cm virtual track
+  // the Ackermann linkage has no solution past half lock.
+  if (!bTwoWheeled)
+  {
+    MovementComponent.SteeringSetup.SteeringType = ESteeringType::Ackermann;
+  }
 }
 
 } // namespace
@@ -78,7 +83,12 @@ void ACarlaWheeledVehicle::BeginPlay()
 {
   Super::BeginPlay();
 
-  ConfigureCarlaSteeringInput(*GetChaosWheeledVehicleMovementComponent());
+  const bool bTwoWheeled = IsTwoWheeledVehicle();
+  ConfigureCarlaSteeringInput(*GetChaosWheeledVehicleMovementComponent(), bTwoWheeled);
+  if (bTwoWheeled)
+  {
+    SetUpBikeRider();
+  }
 
   UDefaultMovementComponent::CreateDefaultMovementComponent(this);
 
@@ -879,8 +889,120 @@ FVector ACarlaWheeledVehicle::GetVelocity() const
 void ACarlaWheeledVehicle::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
   //ShowDebugTelemetry(false);
+  if (BikeRiderTick.IsTickFunctionRegistered())
+  {
+    BikeRiderTick.UnRegisterTickFunction();
+  }
   Super::EndPlay(EndPlayReason);
   RemoveReferenceToManager();
+}
+
+void FBikeRiderTickFunction::ExecuteTick(
+    float DeltaTime,
+    ELevelTick TickType,
+    ENamedThreads::Type CurrentThread,
+    const FGraphEventRef &MyCompletionGraphEvent)
+{
+  if (IsValid(Vehicle))
+  {
+    Vehicle->TickBikeRider();
+  }
+}
+
+void ACarlaWheeledVehicle::SetUpBikeRider()
+{
+  // BP_Base2wheeledNew samples the rider's IK targets (UpdateCharacterPosition)
+  // in its Tick, before physics, so the rider trails the moving bike. Sample
+  // them again after physics and let the rider's animation wait for that.
+  UpdateRiderFunction = FindFunction(TEXT("UpdateCharacterPosition"));
+  if (UpdateRiderFunction != nullptr && UpdateRiderFunction->ParmsSize != 0)
+  {
+    UpdateRiderFunction = nullptr;
+  }
+
+  const auto FindVectorVariable = [this](const TCHAR *Name) -> FStructProperty *
+  {
+    FStructProperty *Property = FindFProperty<FStructProperty>(GetClass(), Name);
+    return (Property != nullptr && Property->Struct == TBaseStructure<FVector>::Get()) ? Property : nullptr;
+  };
+  LeftHandTargetProperty = FindVectorVariable(TEXT("LeftHandlerLocation"));
+  RightHandTargetProperty = FindVectorVariable(TEXT("RightHandlerLocation"));
+
+  BikeRiderTick.Vehicle = this;
+  BikeRiderTick.TickGroup = TG_PostPhysics;
+  BikeRiderTick.bCanEverTick = true;
+  BikeRiderTick.bStartWithTickEnabled = true;
+  BikeRiderTick.RegisterTickFunction(GetLevel());
+  BikeRiderTick.AddPrerequisite(this, PrimaryActorTick);
+
+  // Pick a random rider from PedestrianModels.
+  TArray<USkeletalMesh *> RiderModels;
+  if (FArrayProperty *Models = FindFProperty<FArrayProperty>(GetClass(), TEXT("PedestrianModels")))
+  {
+    if (FObjectProperty *Element = CastField<FObjectProperty>(Models->Inner))
+    {
+      FScriptArrayHelper Array(Models, Models->ContainerPtrToValuePtr<void>(this));
+      for (int32 i = 0; i < Array.Num(); ++i)
+      {
+        if (USkeletalMesh *Model = Cast<USkeletalMesh>(Element->GetObjectPropertyValue(Array.GetRawPtr(i))))
+        {
+          RiderModels.Add(Model);
+        }
+      }
+    }
+  }
+
+  TArray<USkeletalMeshComponent *> SkeletalMeshes;
+  GetComponents(SkeletalMeshes);
+  for (USkeletalMeshComponent *Rider : SkeletalMeshes)
+  {
+    if (Rider != GetMesh())
+    {
+      if (RiderModels.Num() > 0)
+      {
+        Rider->SetSkinnedAssetAndUpdate(RiderModels[FMath::RandRange(0, RiderModels.Num() - 1)], true);
+      }
+      Rider->SetTickGroup(TG_PostPhysics);
+      Rider->PrimaryComponentTick.AddPrerequisite(this, BikeRiderTick);
+    }
+  }
+
+  if (FNumericProperty *Property =
+          FindFProperty<FNumericProperty>(GetClass(), TEXT("MaxEngineRotationSpeed")))
+  {
+    if (Property->IsFloatingPoint())
+    {
+      Property->SetFloatingPointPropertyValue(Property->ContainerPtrToValuePtr<void>(this), 1.0);
+    }
+  }
+}
+
+void ACarlaWheeledVehicle::TickBikeRider()
+{
+  if (GetMesh()->IsSimulatingPhysics())
+  {
+    UChaosWheeledVehicleMovementComponent *Movement = GetChaosWheeledVehicleMovementComponent();
+    const float MaxRotationSpeed = Movement->GetEngineMaxRotationSpeed();
+    SetRotationAnim(MaxRotationSpeed > 0.0f ? Movement->GetEngineRotationSpeed() / MaxRotationSpeed : 0.0f);
+  }
+  if (UpdateRiderFunction != nullptr)
+  {
+    ProcessEvent(UpdateRiderFunction, nullptr);
+
+    // Move the wrist targets off the handlebar sockets by RiderWristOffset.
+    const FTransform &Frame = GetActorTransform();
+    const FVector Offset = RiderWristOffset;
+    if (LeftHandTargetProperty != nullptr)
+    {
+      *LeftHandTargetProperty->ContainerPtrToValuePtr<FVector>(this) +=
+          Frame.TransformVector(FVector(Offset.X, -Offset.Y, Offset.Z));
+    }
+    if (RightHandTargetProperty != nullptr)
+    {
+      *RightHandTargetProperty->ContainerPtrToValuePtr<FVector>(this) +=
+          Frame.TransformVector(Offset);
+    }
+  }
 }
 
 void ACarlaWheeledVehicle::OpenDoor(const EVehicleDoor DoorIdx) {

@@ -12,6 +12,7 @@ variables:
   UE5_BRANCH: "ue5-dev-carla"
   UE_VOLUME: "carla-ue5-engine-22.04"
   CARLA_CONTENT_BRANCH: "ue5"
+  CARLA_CONTENT_BASE_REF: "ue5-dev"
   carla_version: "0.10.0"
   image_carla_release: "$CI_REGISTRY_IMAGE/carla-$carla_version:release"
   image_carla_release_slim: "$CI_REGISTRY_IMAGE/carla-$carla_version:release-slim"
@@ -161,6 +162,7 @@ build-carla:
         --workdir /workspaces/carla \
         --env=CARLA_UNREAL_ENGINE_PATH=/workspaces/unreal-engine \
         --env=CARLA_CONTENT_BRANCH="$CARLA_CONTENT_BRANCH" \
+        --env=CARLA_CONTENT_BASE_REF="$CARLA_CONTENT_BASE_REF" \
         --env=CI_JOB_TOKEN="$CI_JOB_TOKEN" \
         --env=NVIDIA_VISIBLE_DEVICES=all \
         --env=NVIDIA_DRIVER_CAPABILITIES=all \
@@ -171,7 +173,7 @@ build-carla:
 
       mkdir -p Unreal/CarlaUnreal/Content
       rm -rf Unreal/CarlaUnreal/content-openads
-      git clone -b ue5-dev --depth 1 https://bitbucket.org/carla-simulator/carla-content.git Unreal/CarlaUnreal/Content/Carla
+      git clone -b "${CARLA_CONTENT_BASE_REF}" --depth 1 https://bitbucket.org/carla-simulator/carla-content.git Unreal/CarlaUnreal/Content/Carla
 
       git clone \
         --single-branch --depth 1 -b "${CARLA_CONTENT_BRANCH}" \
