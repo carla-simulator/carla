@@ -148,7 +148,9 @@ try:
   else:
    factory=unreal.BlueprintFactory();factory.set_editor_property('parent_class',unreal.ChaosVehicleWheel);bp=at.create_asset(name,BPDEST,unreal.Blueprint,factory)
   cls=unreal.load_class(None,path+'.'+name+'_C');cdo=unreal.get_default_object(cls)
-  for prop,value in {'wheel_radius':33.625,'wheel_width':23.5,'max_steer_angle':35.0 if part[0]=='F' else 0.0,'affected_by_engine':True,'affected_by_steering':part[0]=='F','affected_by_handbrake':part[0]=='R','max_brake_torque':1800.0,'suspension_max_raise':7.0,'suspension_max_drop':9.0,'suspension_damping_ratio':.5}.items():cdo.set_editor_property(prop,value)
+  # Chaos defaults to Raycast/SimpleSweep, which let this low-bodied car rest on the road at some
+  # spawn points; Spherecast + ComplexSweep, as on the Lincoln MKZ and Mustang, keeps the wheels on it.
+  for prop,value in {'wheel_radius':33.625,'wheel_width':23.5,'max_steer_angle':35.0 if part[0]=='F' else 0.0,'affected_by_engine':True,'affected_by_steering':part[0]=='F','affected_by_handbrake':part[0]=='R','max_brake_torque':1800.0,'suspension_max_raise':7.0,'suspension_max_drop':9.0,'suspension_damping_ratio':1.0,'axle_type':unreal.AxleType.FRONT if part[0]=='F' else unreal.AxleType.REAR,'sweep_shape':unreal.SweepShape.SPHERECAST,'sweep_type':unreal.SweepType.COMPLEX_SWEEP}.items():cdo.set_editor_property(prop,value)
   unreal.BlueprintEditorLibrary.compile_blueprint(bp);eal.save_loaded_asset(bp);wheelclasses[part]=cls;wheels.set_editor_property('wheel_'+part.lower(),cls)
  parts=unreal.MergedVehicleMeshParts();anchors=unreal.VehicleMeshAnchorPoints()
  for part in manifest['parts']:
