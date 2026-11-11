@@ -195,7 +195,8 @@ used raw-filesystem checks that cannot see inside a `.pak`.
 DETACH=1 ROS2=1 bash scripts/run_server.sh game Town10HD_Opt
 ```
 
-The server logs its middleware on startup:
+A Development or editor build logs its middleware on startup (a Shipping
+package prints none of these lines; check it with `ros2 topic list` instead):
 
 ```
 LogCarla: ROS2: Creating ROS2 Instance...
@@ -231,7 +232,8 @@ s.enable_for_ros()          # starts it again
 Verified: `hasattr(sensor, 'enable_for_ros')` is `True`, `hasattr(vehicle, …)` is
 `False`.
 
-Topics observed from one ROS-enabled camera on a `hero` vehicle:
+Topics observed from one camera with `ros_name=front` on a vehicle with
+`ros_name=hero` and `role_name=hero`:
 
 ```
 /carla/hero/front/camera_info
@@ -242,7 +244,10 @@ Topics observed from one ROS-enabled camera on a `hero` vehicle:
 ```
 
 `ros_name` on the blueprint sets both the topic segment and the `frame_id`; the
-parent chain builds the path (`hero` → `front`).
+parent chain builds the path (`hero` → `front`). `role_name` does not name
+topics: it only creates the control subscriber (`hero` or `ego`). Without a
+`ros_name`, a vehicle is `vehicle<actor id>` and a sensor `<last blueprint
+token><stream id>`, e.g. `/carla/vehicle30/rgb123/image`.
 
 **There is no `/carla/map` topic on UE 5.8.** `CarlaMapPublisher` was removed, so
 the latched OpenDRIVE topic that exists on UE4 is gone — `"map"` survives only as

@@ -18,7 +18,7 @@
 #include "carla/rpc/EpisodeInfo.h"
 
 #include <atomic>
-#include <thread>
+#include <memory>
 #include <vector>
 
 namespace carla {
@@ -50,7 +50,7 @@ namespace detail {
 
     /// Whether OnEpisodeChanged has finished for the episode GetId() returns.
     bool IsEpisodeChangeHandled() const {
-      return _handled_episode_id.load() == GetId();
+      return _handled_episode_id->load() == GetId();
     }
 
     std::shared_ptr<const EpisodeState> GetState() const {
@@ -142,9 +142,8 @@ namespace detail {
 
     std::weak_ptr<Simulator> _simulator;
 
-    std::atomic<uint64_t> _handled_episode_id;
-
-    std::thread _tm_reset_thread;
+    /// Shared with the TM reset thread, which may outlive this Episode.
+    std::shared_ptr<std::atomic<uint64_t>> _handled_episode_id;
   };
 
 } // namespace detail

@@ -300,6 +300,8 @@ void TrafficManagerLocal::Step() {
 void TrafficManagerLocal::Run() {
   while (run_traffic_manger.load() && !parameters.GetSynchronousMode()) {
     Step();
+    // No TM lock held here: drop released vehicles.
+    registered_vehicles.TakeReleased();
   }
 }
 

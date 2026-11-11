@@ -173,16 +173,30 @@ def cmd_spawn(args):
     _report_ros(sensor, parent, args)
 
 
+def _resolved_ros_name(actor, explicit=None):
+    """The topic segment the server gives an actor (UActorDispatcher::RegisterActor).
+
+    ros_name defaults to the blueprint id. Left at that default, a vehicle becomes
+    "vehicle<actor id>" and anything else "<last blueprint token><stream id>"
+    (e.g. "rgb123"); the stream id is not visible to the client.
+    """
+    name = explicit or actor.attributes.get("ros_name", "") or actor.type_id
+    if name != actor.type_id:
+        return name
+    if "vehicle" in name:
+        return f"vehicle{actor.id}"
+    return name.rsplit(".", 1)[-1] + "<stream id>"
+
+
 def _report_ros(sensor, parent, args):
     """Print the topics this sensor is expected to publish, and the caveats."""
     applied = getattr(args, "applied", set())
-    ros_name = (args.ros_name if "ros_name" in applied else None) or f"actor{sensor.id}"
+    ros_name = _resolved_ros_name(sensor, args.ros_name if "ros_name" in applied else None)
     base = f"rt/carla/{ros_name}"
     if parent is not None:
         # On attach, the server registers the parent chain, so the sensor's base
         # topic is nested under its immediate parent's ros name.
-        parent_ros = parent.attributes.get("ros_name", "") or f"actor{parent.id}"
-        base = f"rt/carla/{parent_ros}/{ros_name}"
+        base = f"rt/carla/{_resolved_ros_name(parent)}/{ros_name}"
     topics = ros_topics_for(sensor.type_id, base)
     if "ros_topic_name" in applied:
         # The override replaces the whole generated base; lidar and radar then

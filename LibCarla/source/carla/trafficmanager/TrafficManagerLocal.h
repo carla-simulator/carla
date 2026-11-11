@@ -159,6 +159,10 @@ public:
   /// To reset the traffic manager for the episode @a episode_id.
   void Reset(uint64_t episode_id);
 
+  std::vector<ActorPtr> TakeReleasedActors() {
+    return registered_vehicles.TakeReleased();
+  }
+
   /// This method registers a vehicle with the traffic manager.
   void RegisterVehicles(const std::vector<ActorPtr> &actor_list);
 

@@ -89,6 +89,20 @@ The shared-memory column depends on the host and on the Fast-DDS patch version. 
 
 `--rmw=cyclonedds` behaves like the first column in every row (UDP only, no shared-memory support compiled in). `--rmw=zenoh` is independent of this table entirely; it requires the Zenoh router and `rmw_zenoh_cpp` peers as described above.
 
+#### Camera and lidar rates over UDP
+
+Over UDP, a sensor sample is many datagrams that arrive at once: about 2 MB for an 800x600 camera frame. The subscriber's socket buffer has to hold them until its DDS thread reads them, and the operating system default (about 200 KB on Linux) does not. The overflow drops datagrams, so whole samples are lost, with no warning on either side. With default buffers, an 800x600 camera and a default lidar at `sensor_tick=0.1` arrived at about 2 Hz instead of 10 Hz. Small messages (IMU, GNSS, small images) are not affected. The simulator itself delivers every sample; the loss is in the subscriber's socket.
+
+Give the subscriber a larger receive buffer. The profiles in `PythonAPI/examples/ros2/config/` ask for 16 MB (`fastrtps-profile.xml` for Fast-DDS, `cyclonedds.xml` for CycloneDDS). With them, the same camera and lidar arrived at 10.4 Hz. The kernel caps the request at `net.core.rmem_max`, which is about 200 KB by default on Ubuntu, so raise it once on the subscriber's host:
+
+```sh
+sudo sysctl -w net.core.rmem_max=16777216 net.core.wmem_max=16777216
+export FASTRTPS_DEFAULT_PROFILES_FILE=PythonAPI/examples/ros2/config/fastrtps-profile.xml  # Fast-DDS
+export CYCLONEDDS_URI=file://$PWD/PythonAPI/examples/ros2/config/cyclonedds.xml          # CycloneDDS
+```
+
+`netstat -su` shows the drops as `receive buffer errors`.
+
 ---
 ## ROS 2 domain id
 
