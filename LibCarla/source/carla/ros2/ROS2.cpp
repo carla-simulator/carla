@@ -6,6 +6,7 @@
 
 #include "carla/Logging.h"
 #include "carla/ros2/ROS2.h"
+#include "carla/ros2/ROS2SensorTypes.h"
 #include "carla/geom/GeoLocation.h"
 #include "carla/geom/Vector3D.h"
 #include "carla/sensor/data/DVSEvent.h"
@@ -60,43 +61,6 @@ namespace ros2 {
 
 // static fields
 std::shared_ptr<ROS2> ROS2::_instance;
-
-// list of sensors (should be equal to the list of SensorsRegistry)
-enum ESensors {
-  CollisionSensor,
-  DepthCamera,
-  NormalsCamera,
-  DVSCamera,
-  GnssSensor,
-  InertialMeasurementUnit,
-  LaneInvasionSensor,
-  ObstacleDetectionSensor,
-  OpticalFlowCamera,
-  Radar,
-  RayCastSemanticLidar,
-  RayCastLidar,
-  RssSensor,
-  SceneCaptureCamera,
-  SemanticSegmentationCamera,
-  InstanceSegmentationCamera,
-  WorldObserver,
-  // Keep these in lock-step with the SensorRegistry tuple order: the fisheye /
-  // wide-angle-lens cameras (ported in #9741) were added to SensorRegistry but
-  // were missing here, which shifted every following value out of sync with the
-  // registry index.
-  SceneCaptureCamera_WideAngleLens,
-  DepthCamera_WideAngleLens,
-  InstanceSegmentationCamera_WideAngleLens,
-  SemanticSegmentationCamera_WideAngleLens,
-  CameraGBufferUint8,
-  CameraGBufferFloat,
-  HSSLidar,
-  // Autoware vehicle interface (appended at the END, matching the
-  // SensorRegistry append; V2X sensors have no ROS2 dispatch and therefore
-  // no enum entry, mirroring the pre-existing convention).
-  VehicleStatusSensor,
-  AutowareGnssSensor
-};
 
 bool ROS2::Enable(bool enable, Middleware middleware, int domain_id) {
   // Select the ROS 2 middleware before any publisher or subscriber is created.
