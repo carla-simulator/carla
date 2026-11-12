@@ -49,7 +49,6 @@ TM behavior is adjusted through the Python API; the full list is in the [`carla.
 | Routes | [`set_path`](python_api.md#carla.TrafficManager.set_path), [`set_route`](python_api.md#carla.TrafficManager.set_route), [`get_next_action`](python_api.md#carla.TrafficManager.get_next_action), [`get_all_actions`](python_api.md#carla.TrafficManager.get_all_actions) |
 | Collisions | [`collision_detection`](python_api.md#carla.TrafficManager.collision_detection) |
 | Hybrid physics | [`set_hybrid_physics_mode`](python_api.md#carla.TrafficManager.set_hybrid_physics_mode), [`set_hybrid_physics_radius`](python_api.md#carla.TrafficManager.set_hybrid_physics_radius) |
-| Large maps | [`set_respawn_dormant_vehicles`](python_api.md#carla.TrafficManager.set_respawn_dormant_vehicles), [`set_boundaries_respawn_dormant_vehicles`](python_api.md#carla.TrafficManager.set_boundaries_respawn_dormant_vehicles) |
 | Determinism and modes | [`set_random_device_seed`](python_api.md#carla.TrafficManager.set_random_device_seed), [`set_synchronous_mode`](python_api.md#carla.TrafficManager.set_synchronous_mode), [`set_osm_mode`](python_api.md#carla.TrafficManager.set_osm_mode) |
 | Large vehicles | [`vehicle_large_vehicle_wide_turn`](python_api.md#carla.TrafficManager.vehicle_large_vehicle_wide_turn), [`global_large_vehicle_wide_turn`](python_api.md#carla.TrafficManager.global_large_vehicle_wide_turn) |
 | Lifecycle | [`get_port`](python_api.md#carla.TrafficManager.get_port), [`shut_down`](python_api.md#carla.TrafficManager.shut_down) |

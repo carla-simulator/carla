@@ -151,7 +151,7 @@
     - var_name: actor_active_distance
       type: float
       doc: >
-        Used for large maps only. Configures the distance from the hero vehicle to convert actors to dormant. Actors within this range will be active, and actors outside will become dormant.
+        Used for large maps only. Every actor is simulated whatever its distance to the hero vehicle; this value only bounds `tile_stream_distance`: when it is larger, the server raises `tile_stream_distance` to match.
     - var_name: spectator_as_ego
       type: bool
       doc: >
@@ -207,7 +207,7 @@
         default: 2000
         param_units: meters
         doc: >
-          Used for large maps only. Configures the distance from the hero vehicle to convert actors to dormant.
+          Used for large maps only. Every actor is simulated whatever its distance to the hero vehicle; this value only bounds `tile_stream_distance`: when it is larger, the server raises `tile_stream_distance` to match.
       - param_name: spectator_as_ego
         type: bool
         default: True

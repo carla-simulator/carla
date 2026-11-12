@@ -59,9 +59,8 @@ python3 PythonAPI/util/config.py --tile-stream-distance 1500 --actor-active-dist
 
 These belonged to the tiled maps of earlier releases. On World Partition maps the server retires the old large-map manager that implemented them:
 
-- __Dormant actors.__ No actor becomes dormant: `actor.is_dormant` is always `False`, and physics and rendering run for every actor whatever its distance to the ego. `actor_active_distance` has one effect left: when it is larger than `tile_stream_distance`, the server raises `tile_stream_distance` to match and logs `TileStreamingDistance will be increased`. Its default is 2000 m, so to stream less than 2000 m around the ego, lower `actor_active_distance` as well.
+- __`actor_active_distance`.__ Physics and rendering run for every actor whatever its distance to the ego. The setting has one effect left: when it is larger than `tile_stream_distance`, the server raises `tile_stream_distance` to match and logs `TileStreamingDistance will be increased`. Its default is 2000 m, so to stream less than 2000 m around the ego, lower `actor_active_distance` as well.
 - __`spectator_as_ego`.__ The spectator streams the map around itself in both cases.
-- __The Traffic Manager's dormant respawn__ ([`set_respawn_dormant_vehicles`](python_api.md#carla.TrafficManager.set_respawn_dormant_vehicles)) relies on dormant actors, so it has nothing to respawn on these maps.
 - __A single ego.__ There can be more than one: every actor with a `hero` or `ego_vehicle` role gets the ego radius.
 
 ---

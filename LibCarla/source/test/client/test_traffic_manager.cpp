@@ -500,7 +500,7 @@ constexpr double kNeverRead{-std::numeric_limits<double>::infinity()};
 }  // namespace
 
 TEST(TrafficManagerRefreshCadence, IsRefreshDue_NothingReadYetIsDue) {
-  EXPECT_TRUE(refresh::IsRefreshDue(0.0, kNeverRead, refresh::EPISODE_SETTINGS_REFRESH_PERIOD));
+  EXPECT_TRUE(refresh::IsRefreshDue(0.0, kNeverRead, refresh::WEATHER_REFRESH_PERIOD));
   EXPECT_TRUE(refresh::IsRefreshDue(1234.5, kNeverRead, refresh::VEHICLE_LIGHT_STATES_REFRESH_PERIOD));
 }
 

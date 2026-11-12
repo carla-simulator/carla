@@ -20,7 +20,6 @@ struct KinematicState {
   cg::Vector3D velocity;
   float speed_limit;
   bool physics_enabled;
-  bool is_dormant;
   cg::Location hybrid_end_location;
 };
 using KinematicStateMap = std::unordered_map<ActorId, KinematicState>;
@@ -94,9 +93,6 @@ public :
 
   bool IsPhysicsEnabled(const ActorId actor_id) const;
 
-  bool IsDormant(const ActorId actor_id) const;
-
-  cg::Location GetHeroLocation(const ActorId actor_id) const;
 
   TrafficLightState GetTLS(const ActorId actor_id) const;
 
