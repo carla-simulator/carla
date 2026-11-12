@@ -154,6 +154,7 @@
 
 #### Simulation and content
 
+* Fixed **the server stopping answering every client, with no dump, when one client stopped reading a sensor stream in synchronous mode** (#10233). The server waited without a limit for each message to be sent, on the render or game thread, so a `listen()` callback that never returned froze it for good. The wait is now bounded by the 10 s streaming timeout, after which that client's stream is dropped (its client reconnects on its own), and a slow client no longer holds the stream's lock that the other clients' connections need. Unreal's hang detector is also enabled (`[Core.System] HangDuration=120`, not fatal): a stuck game thread now logs its call stack.
 * Fixed `Vehicle.enable_constant_velocity()` making vehicles unable to turn: it overwrote the whole velocity every frame, removing the sideways slip the tyres need to corner and the vertical velocity. It now forces only the velocity component along the requested vector and leaves the perpendicular components to physics (a zero vector still holds the vehicle still), so `ConstantVelocityAgent` and `automatic_control.py --agent=Constant` follow ordinary corners instead of leaving the road.
 * Fixed Town_C's vehicle spawn points sitting 4 m above the road, so every spawned vehicle dropped 4 m. They are now 0.5 m above it, as on the other maps.
 * Fixed **Town11 still loading as a legacy tiled map** through `ALargeMapManager`: it is now a World Partition map like Town12, Town13 and Town15, and has a pedestrian navmesh, so walkers can spawn and navigate on it. `CarlaLargeMapConvert` no longer fails to save a town whose tiles carry level-script blueprints or redirectors (`Illegal reference to private object`).
@@ -194,6 +195,7 @@
 
 #### Python API and client
 
+* `Client.apply_batch_sync()`, `apply_batch()` and `get_required_files()` now release the GIL while they wait for the server, so sensor callbacks keep running meanwhile.
 * Fixed client signal identifier reads exceeding the 32 byte snapshot buffer.
 * Fixed clients failing `get_world()` against a packaged server: `get_required_files` leaked pak-relative paths that escaped the client cache. The server now sends content-relative names and refuses paths that resolve outside the content folder, previously an arbitrary-file-read vector.
 * Fixed `from carla.command import ...` by registering the `command` submodule in `sys.modules`.
