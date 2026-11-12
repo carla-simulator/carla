@@ -28,10 +28,6 @@
       type: bool
       doc: >
         Returns whether this actor is active (True) or not (False).
-    - var_name: is_dormant
-      type: bool
-      doc: >
-        Returns whether this actor is dormant (True) or not (False) - the opposite of is_active.
     - var_name: parent
       type: carla.Actor
       doc: >
@@ -43,7 +39,7 @@
     - var_name: actor_state
       type: carla.ActorState
       doc: >
-        Returns the carla.ActorState, which can identify if the actor is Active, Dormant or Invalid.
+        Returns the carla.ActorState, which can identify if the actor is Active or Invalid.
     - var_name: bounding_box
       type: carla.BoundingBox
       doc: >
@@ -242,7 +238,7 @@
           Velocity vector in local space.  
         param_units: m/s
       doc: >
-        Sets a vehicle's velocity vector to a constant value over time. The resulting velocity will be approximately the `velocity` being set, as with __<font color="#7fb800">set_target_velocity()</font>__.  
+        Sets a vehicle's velocity vector to a constant value over time. The resulting velocity will be approximately the `velocity` being set, as with __<font color="#7fb800">set_target_velocity()</font>__. The component of the vehicle's velocity along `velocity` is forced to its length; the perpendicular components are left to physics, so the vehicle can still corner and follow the ground. A zero vector holds the vehicle still.
       note: >
         Only carla.Vehicle actors can use this method.  
       warning: >
@@ -342,9 +338,6 @@
     - var_name: Active
       doc: >
         An actor is Active when it visualized and can affect other actors. 
-    - var_name: Dormant
-      doc: >
-        An actor is Dormant when it is not visualized and will not affect other actors through physics. For example, actors are dormant if they are on an unloaded tile in a large map. 
 
 
   - class_name: VehicleLightState
@@ -873,7 +866,7 @@
       - param_name: state
         type: carla.TrafficLightState
       doc: >
-        Sets a given state to a traffic light actor.
+        Sets a given state to a traffic light actor. The call returns once the server has applied it, so the snapshot of the next tick already carries the new state.
     # --------------------------------------
     - def_name: set_green_time
       params:

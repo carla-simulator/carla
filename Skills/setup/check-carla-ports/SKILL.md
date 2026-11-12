@@ -2,7 +2,7 @@
 name: check-carla-ports
 description: Reports which network ports CARLA and its tooling use on this machine and which are already taken — the simulator's RPC/streaming/secondary trio, the Traffic Manager, the Unreal MCP server, Alpamayo, NuRec and Cosmos — and names the process holding each one. Use before starting a second simulator or Traffic Manager, when a bind error appears ("failed to create because of bind error", "CARLA server failed to start on RPC port"), when a client connects to the wrong instance, or to pick a free port for a parallel run.
 license: MIT
-compatibility: Any Linux with bash and `ss` (iproute2); `lsof` works for everything but the full listing. NO CARLA checkout and NO running server required. Port defaults read from ue58-dev HEAD — RPC 2000, streaming RPC+1, secondary RPC+2, Traffic Manager 8000, Unreal MCP 6256, Cosmos 8010.
+compatibility: Any Linux with bash and `ss` (iproute2); `lsof` works too, with ports but no addresses in the full listing. On Windows, Git Bash with the stock `netstat` and `tasklist`. NO CARLA checkout and NO running server required. Port defaults read from ue58-dev HEAD — RPC 2000, streaming RPC+1, secondary RPC+2, Traffic Manager 8000, Unreal MCP 6256, Cosmos 8010.
 metadata:
   group: setup
   prerequisites: scripts/check_env.sh
@@ -23,7 +23,7 @@ The failure this prevents: **a bind error is read as a broken install.** CARLA's
 
 ```
 Progress:
-- [ ] Step 1: bash scripts/check_env.sh     (only fails with no ss and no lsof)
+- [ ] Step 1: bash scripts/check_env.sh     (only fails with no ss, no lsof and no Windows netstat)
 - [ ] Step 2: check — the CARLA ports and who holds them
 - [ ] Step 3: act — free the port, or move the service that wants it
 ```
@@ -88,4 +88,6 @@ __Never free a port by killing a process you did not start.__ An editor on these
 *   __The Traffic Manager lives in a client, not in the simulator.__ The first client to call `get_trafficmanager(port)` becomes its server; later clients on the same port attach to it. A free `8000` with vehicles already on autopilot means they are driven from another process.
 *   __`ports.sh` only sees TCP.__ ROS 2 is DDS over UDP, and its ports come from the domain id (`7400 + 250 × domain`), not from a port argument. Separate two ROS 2 stacks with `ROS_DOMAIN_ID`, not with ports.
 *   __A `0.0.0.0` bind is reachable from the network; `127.0.0.1` is not.__ The simulator binds all interfaces, the Unreal MCP server only localhost.
+*   __`in use (owner unknown)` means no tool could name the owner.__ With no `ss`, `lsof` or (on Windows) `netstat`, a port is probed with a plain connect: a busy one is reported busy without a process, and never as free.
+*   __On Windows the state column of `netstat` is localized__ (`LISTENING`, `ESCUCHANDO`, …), so a listener is matched by its wildcard foreign address (`0.0.0.0:0` / `[::]:0`), and the owner comes from `tasklist`.
 *   __Unreal's own ports are not CARLA's.__ `1981`/`1989` are UnrealTraceServer and `1985`/`8558` are Zen Server; they appear whenever the editor runs and are nothing to do with a CARLA bind error.

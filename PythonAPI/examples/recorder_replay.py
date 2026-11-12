@@ -31,7 +31,12 @@ def recorder_utilities(client):
     stop = False
 
     while not stop and not LAST_FRAME:
-        data = input("\nInput the next action: ")
+        try:
+            data = input("\nInput the next action: ")
+        except EOFError:
+            # No terminal on stdin (closed or redirected): stop as with 'S'.
+            print("  No more input: stopping")
+            break
         try:
             int_data = float(data)
             print("  Setting the replayer factor to {}".format(int_data))

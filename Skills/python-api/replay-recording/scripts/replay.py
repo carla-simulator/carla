@@ -8,7 +8,7 @@ Commands:
     play  --file run.log --time-factor 2.0   replay at 2x
     play  --file run.log --replay-sensors --replay-weather
     speed --factor 0.5                       change speed of the running replay
-    stop  [--keep-actors]                    stop replaying
+    stop  [--keep-actors] [--clear-scene]    stop replaying
 
 `play` re-creates the recorded scene on the server and prints the server's replay
 summary. `--follow` moves the spectator with that actor id (0 = no follow).
@@ -26,6 +26,7 @@ from __future__ import annotations
 
 import argparse
 import os
+import time
 
 import carla  # provided by the active interpreter; check_env.sh verifies this
 
@@ -55,9 +56,16 @@ def _stop_holders():
     the script itself.
 
     Local processes only: a holder on another machine cannot be signalled from
-    here.
+    here. Linux only, too: without /proc (Windows) there is nothing to match
+    argv against, and on Windows os.kill() with anything but a console event
+    TERMINATES the target -- a holder killed that way never cleans up.
     """
     import signal
+    if os.name == "nt" or not os.path.isdir("/proc"):
+        print("note: cannot look for resident spawn holders here (no /proc); stop "
+              "any `--hold` spawn with Ctrl+C yourself, or its actors stay in the "
+              "replay")
+        return []
     scripts = ("vehicles.py", "walkers.py", "sensors.py")
     stopped = []
     for entry in os.listdir("/proc"):
@@ -88,13 +96,17 @@ def _stop_holders():
         print(f"stopped holder pid {pid}: {os.path.basename(argv[1])} "
               "(SIGINT, so it cleans up its own actors)")
     # Let each one run its finally block: destroy its actors, restore the clock.
-    waited = 0
-    while any(_alive(pid) for pid, _ in stopped) and waited < 2000:
-        waited += 1
+    # Bounded, and it has to actually sleep: a bare counter spun through its
+    # budget in microseconds and returned before any holder had exited.
+    deadline = time.monotonic() + 20.0
+    while any(_alive(pid) for pid, _ in stopped) and time.monotonic() < deadline:
+        time.sleep(0.1)
     return stopped
 
 
 def _alive(pid):
+    if os.name == "nt":
+        return False   # os.kill(pid, 0) would terminate it on Windows
     try:
         os.kill(pid, 0)
         return True
@@ -121,7 +133,8 @@ def _release_clock_if_stalled(client):
           "needs no client to tick it")
 
 
-def _clear_scene(client):
+def _clear_scene(client, note="before replaying (--keep-scene to replay on top "
+                              "of what is there)"):
     """Empty the world before replaying.
 
     A replay RECREATES every actor the log holds, so anything already in the
@@ -160,8 +173,7 @@ def _clear_scene(client):
                     gone += 1
             except RuntimeError:
                 pass
-    print(f"cleared the scene: removed {gone} actor(s) before replaying "
-          "(--keep-scene to replay on top of what is there)")
+    print(f"cleared the scene: removed {gone} actor(s) {note}")
     return gone
 
 
@@ -195,8 +207,15 @@ def cmd_speed(args: argparse.Namespace) -> None:
 
 
 def cmd_stop(args: argparse.Namespace) -> None:
-    _client().stop_replayer(args.keep_actors)
+    client = _client()
+    client.stop_replayer(args.keep_actors)
     print(f"replay stopped (keep_actors={args.keep_actors})")
+    if args.clear_scene:
+        # For servers whose stop_replayer(False) leaves the replayed actors
+        # behind (CARLA 1.0 and earlier, and any replay that had already
+        # reached its end there). It removes every actor, not only replayed
+        # ones, so it is opt-in.
+        _clear_scene(client, note="left in the world")
 
 
 def main() -> None:
@@ -225,8 +244,11 @@ def main() -> None:
     psp.add_argument("--factor", type=float, required=True, help="time factor (2.0 = 2x, 0.5 = half)")
     psp.set_defaults(func=cmd_speed)
 
-    pst = sub.add_parser("stop", help="stop replaying")
+    pst = sub.add_parser("stop", help="stop replaying and remove the replayed actors")
     pst.add_argument("--keep-actors", action="store_true", help="leave replayed actors in the world")
+    pst.add_argument("--clear-scene", action="store_true",
+                     help="then remove every vehicle, walker, controller and sensor, "
+                          "for servers that leave replayed actors behind")
     pst.set_defaults(func=cmd_stop)
 
     args = p.parse_args()

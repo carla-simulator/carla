@@ -1656,7 +1656,7 @@ void ACarlaWheeledVehicle::ClearMirroredMotion()
 
 void ACarlaWheeledVehicle::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
-  //ShowDebugTelemetry(false);
+  ShowDebugTelemetry(false);
   DisarmSeedRewrite();
   Super::EndPlay(EndPlayReason);
   RemoveReferenceToManager();

@@ -42,7 +42,6 @@ static const float PHYSICS_RADIUS = 50.0f;
 // RPCs. In asynchronous mode each such RPC costs a full server frame of
 // latency; synchronous mode still reads them every step.
 namespace WorldInfoRefresh {
-static const double EPISODE_SETTINGS_REFRESH_PERIOD = 1.0;
 static const double VEHICLE_LIGHT_STATES_REFRESH_PERIOD = 0.25;
 static const double WEATHER_REFRESH_PERIOD = 1.0;
 // Bounds how many control batches can queue ahead of the server's game thread.
@@ -58,8 +57,8 @@ inline bool IsRefreshDue(const double now, const double last, const double perio
   return !(now >= last && (now - last) < period);
 }
 
-/// A vehicle the server already omitted from a fresh list (dormant on a large
-/// map) must not re-arm the unscheduled read on every other step.
+/// A vehicle the server already omitted from a fresh list must not re-arm the
+/// unscheduled read on every other step.
 [[nodiscard]] inline bool IsEarlyRefreshDue(
     const bool refreshed_this_step,
     const bool missing_from_the_last_refresh) {
@@ -191,7 +190,6 @@ static const float CRITICAL_BRAKING_MARGIN = 0.2f;
 static const float EPSILON_RELATIVE_SPEED = 0.001f;
 static const float MAX_JUNCTION_BLOCK_DISTANCE = 1.0f * WaypointSelection::SAFE_DISTANCE_AFTER_JUNCTION;
 static const float TWO_KM = 2000.0f;
-static const uint16_t ATTEMPTS_TO_TELEPORT = 5u;
 static const float LANDMARK_DETECTION_TIME = 3.5f;
 static const float TL_TARGET_VELOCITY = 15.0f / 3.6f;
 static const float STOP_TARGET_VELOCITY = 10.0f / 3.6f;

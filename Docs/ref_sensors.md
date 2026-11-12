@@ -103,7 +103,9 @@ normalized = (R + G * 256 + B * 256 * 256) / (256 * 256 * 256 - 1)
 in_meters = 1000 * normalized
 ```
 
-Save the output [carla.Image](python_api.md#carla.Image) to disk with a [carla.ColorConverter](python_api.md#carla.ColorConverter), which turns the distance stored in the RGB channels into a `[0, 1]` float and then into grayscale. Two converters give a depth view, `Depth` and `LogarithmicDepth`; both are millimetric, and the logarithmic one reads better for close objects.
+For metric measurements, decode the original RGB channels as above or save the packed image losslessly with `carla.ColorConverter.Raw`. The 24-bit encoding has a step of about 0.06 mm over 1000 m. This is the encoding resolution, not a guarantee of camera accuracy.
+
+For visualization, `carla.ColorConverter.Depth` produces 8-bit linear grayscale (about 3.92 m per gray level over 1000 m). `LogarithmicDepth` devotes more gray levels to nearby surfaces. Both conversions discard the original packed depth values.
 
 ```py
 raw_image.save_to_disk("path/to/save/converted/image", carla.ColorConverter.Depth)
@@ -1239,6 +1241,20 @@ Triggering conditions according to ETSI standard:
 - Speed change > 5 m/s
 - Time elapsed > CAM Generation time (configurable)
 - Low Frequency Container Time Elapsed > 500 ms
+
+Values in the message returned by `get()` are ETSI integer codes, not SI units, each rounded to the field's unit. Speed, vehicle length and vehicle width above their field's range are sent as its out-of-range code.
+
+| Field | Unit |
+|-------|------|
+| Latitude, longitude | 0.1 microdegree |
+| Altitude | 0.01 m |
+| Heading | 0.1° from north, clockwise |
+| Speed | 0.01 m/s |
+| Longitudinal acceleration | 0.1 m/s² |
+| Yaw rate | 0.01°/s |
+| Vehicle length, vehicle width | 0.1 m (a 4.89 m car is sent as 49) |
+
+For an actor's exact size, read [`actor.bounding_box`](python_api.md#carla.Actor.bounding_box) rather than the CAM.
 
 For the CAM V2X sensor, additional blueprint attributes apply:
 

@@ -23,18 +23,6 @@ how to re-check it after an upgrade, and what promoting it would take.
 - **To promote:** the gbuffer streams have to be assigned server-side; this is an
   upstream fix, not a usage question.
 
-### Map layers — accepted, do nothing
-- **Measured.** `unload_map_layer(MapLayer.Buildings)`, then a 40-ray sweep at
-  3 m: `Buildings` hit 9 times before, 9 after, 9 after reload. No streaming
-  activity in the server log.
-- **Read.** `ACarlaGameModeBase::UnLoadMapLayer` and
-  `ConvertMapLayerMaskToMapNames` match layer names against
-  `World->GetStreamingLevels()`; `Town10HD_Opt.umap` is 32.9 MB with **zero**
-  `LevelStreaming` references on 0.10.0, against 158 KB with two on 0.9.x. The
-  per-layer sublevels still exist as orphans under
-  `Content/Carla/Maps/Sublevels/Town10HD_Opt/`.
-- **Alternative:** `enable_environment_objects` ([[toggle-env-objects]]).
-
 ### `Landmark.waypoint` — always `None`
 - **Measured.** Town10HD_Opt: 68 landmarks, 68 with `waypoint is None`. All other
   fields populate.
@@ -88,7 +76,10 @@ how to re-check it after an upgrade, and what promoting it would take.
 | V2X | `sensor.other.v2x`, `sensor.other.v2x_custom` (**measured**); `ServerSideSensor.send()` (**measured**) | two actors exchanging a message, and the message format documented |
 | multi-GPU | `LibCarla/source/carla/multigpu/` (**read**); server accepts `-carla-primary-host`, `-carla-primary-port`, `-carla-secondary-port` (**read**) | two GPUs, or two machines; a primary/secondary pair actually rendering |
 | digital twins / OSM | `OpenDriveToMap.h`, `DigitalTwinsBaseWidget.h`, `MapGeneratorWidget.h`, `ProceduralBuildingUtilities.h`, `ProceduralWaterManager.h` (**read**) | these are editor **widgets**, not a CLI — a driving path has to be found first. The OSM to OpenDRIVE converter itself is always compiled in. | |
-| vehicle import (ue58) | pipeline understood; draft outside the library | the imported car spawns with 4 wheels and **does not move**; the physics-asset persistence fix is unverified |
+
+Vehicle import on ue58 used to be listed here. It now has a skill:
+[[carla-vehicle-authoring]] covers the Blender and Unreal pipeline, physics
+included, and its runtime validation.
 
 Note the asymmetry that makes RSS worth a special mention: the blueprint is
 present whether or not the feature is compiled in, so "it's in the blueprint
@@ -103,6 +94,21 @@ library" is not evidence of support. Same shape as gbuffers.
   particular nobody here has checked how it interacts with a packaged server.
 - **CarSim / Chrono hooks.** See the co-simulation row: the calls exist, the
   bridges do not.
+
+- **Map layers: Town01_Opt to Town07_Opt only.** Measured on the 1.0 weekly
+  `6c726a4a3` with the AdditionalMaps pack: `unload_map_layer` removes the layer
+  from a camera image and from `get_environment_objects()` (Town03_Opt
+  `Buildings`: 9254 -> 8513 objects, pixel diff 31.5 against 3.5 noise) and
+  `load_map_layer` restores it, on all seven towns. **Town10HD_Opt has no layers**:
+  its sublevels were merged into the persistent level on purpose (Content
+  `68520135b61`, 2024-07-02), so `ConvertMapLayerMaskToMapNames` matches no
+  streaming level and every call is a silent no-op (60433 objects before and after
+  for every layer). The `T10HD_*` files under `Maps/Sublevels/Town10HD_Opt/` are
+  leftovers. Sublevel-based layers are being phased out on UE 5; a grouping without
+  sublevels is planned (issue #10228). On Town10HD_Opt use
+  `enable_environment_objects` ([[toggle-env-objects]]).
+- **Re-check:** `unload_map_layer(MapLayer.Buildings)` on Town03_Opt and on
+  Town10HD_Opt, compare `get_environment_objects()` counts.
 
 ## Things worth knowing that are neither broken nor new features
 
@@ -128,5 +134,5 @@ Measured on 0.10.0, useful when judging whether a procedure will transfer:
 2. A row moves into `[broken]` with a measurement pasted in, as above.
 3. When a row becomes a skill, replace it with the skill name; do not leave both.
 4. If CARLA upgrades, re-stamp the header and re-run the cheap measurements: the
-   blueprint list, the physics-control field read, one `unload_map_layer` sweep,
+   blueprint list, the physics-control field read, one `unload_map_layer` check,
    and `probe`.

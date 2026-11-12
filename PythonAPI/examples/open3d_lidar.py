@@ -15,7 +15,12 @@ from datetime import datetime
 import random
 import numpy as np
 import matplotlib
-import open3d as o3d
+
+try:
+    import open3d as o3d
+except ImportError:
+    sys.exit('open3d is not installed. It has no wheel for every Python version: '
+             'see examples/requirements.txt.')
 
 import carla
 

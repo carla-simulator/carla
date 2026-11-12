@@ -34,6 +34,7 @@ from __future__ import annotations
 import argparse
 import os
 import random
+from collections import Counter
 
 import carla  # provided by the active interpreter; check_env.sh verifies this
 
@@ -239,7 +240,13 @@ def _spawn_at(client, transforms, bps, autopilot, tm_port):
         if autopilot:
             cmd = cmd.then(SetAutopilot(FutureActor, True, tm_port))  # atomic hand-off
         batch.append(cmd)
-    return [r.actor_id for r in client.apply_batch_sync(batch, True) if not r.error]
+    results = client.apply_batch_sync(batch, True)
+    # Say why the misses missed, once per distinct reason: "38 of 40 spawned"
+    # alone hides whether it was occupied spawn points (normal) or a bad
+    # blueprint/TM port (a bug).
+    for reason, n in Counter(r.error for r in results if r.error).most_common():
+        print(f"  {n} spawn(s) failed: {reason}")
+    return [r.actor_id for r in results if not r.error]
 
 
 def cmd_spawn(args):
@@ -350,13 +357,17 @@ def cmd_ego(args):
                     role="hero")
 
     # ROS 2 naming: read once, at registration, so it must be set before spawn.
-    # These attributes exist on every blueprint (ActorBlueprintFunctionLibrary).
-    if args.ros_name:
-        bp.set_attribute("ros_name", args.ros_name)
-    if args.ros_frame_id:
-        bp.set_attribute("ros_frame_id", args.ros_frame_id)
-    if args.no_ros_tf:
-        bp.set_attribute("ros_publish_tf", "false")
+    # Which attributes exist depends on the server line: ros_frame_id and
+    # ros_publish_tf are UE4-only (on UE 5.8 the frame id is the ros name).
+    for attr, value in (("ros_name", args.ros_name),
+                        ("ros_frame_id", args.ros_frame_id),
+                        ("ros_publish_tf", "false" if args.no_ros_tf else "")):
+        if not value:
+            continue
+        if bp.has_attribute(attr):
+            bp.set_attribute(attr, value)
+        else:
+            print(f"warning: {bp.id} has no {attr!r} attribute on this server; ignored")
 
     if args.at:
         x, y, z = (float(v) for v in args.at.split(","))

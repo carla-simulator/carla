@@ -20,6 +20,7 @@
 #include <fstream>
 #include <sstream>
 #include <unordered_map>
+#include <unordered_set>
 #include <functional>
 
 class UCarlaEpisode;
@@ -61,6 +62,18 @@ public:
   // void Start(void);
   void Stop(bool KeepActors = false);
 
+  /// Destroys the actors this replayer spawned that are still alive, even
+  /// when the replay already ended by itself (which keeps them). Called by
+  /// stop_replayer(keep_actors=False).
+  void DestroySpawnedActors(void);
+
+  /// Forgets the spawned actors, so a later DestroySpawnedActors() leaves
+  /// them alone. Called by stop_replayer(keep_actors=True).
+  void ForgetSpawnedActors(void)
+  {
+    SpawnedIds.clear();
+  }
+
   void Enable(void);
 
   void Disable(void);
@@ -73,6 +86,8 @@ public:
   // set episode
   void SetEpisode(UCarlaEpisode *ThisEpisode)
   {
+    // ids of a previous episode mean nothing in this one
+    SpawnedIds.clear();
     Episode = ThisEpisode;
     Helper.SetEpisode(ThisEpisode);
   }
@@ -120,6 +135,9 @@ private:
   std::vector<CarlaRecorderAnimWheels> PrevWheels;
   // mapping id
   std::unordered_map<uint32_t, uint32_t> MappedId;
+  // ids of the actors this replayer spawned (not the ones it reused, such as
+  // traffic lights), kept across replays until stop_replayer decides on them
+  std::unordered_set<uint32_t> SpawnedIds;
   // times
   double CurrentTime;
   double TimeToStop;

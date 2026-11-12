@@ -141,6 +141,54 @@ class TestRecorder(SyncSmokeTest):
             'pre-PR this faulted the server inside ACarlaRecorder::AddPhysicsControl '
             '/ AddTrafficLightTime / AddTriggerVolume on a null FindCarlaActor lookup.')
 
+    def _record_vehicle_alive_at_stop(self, basename):
+        """Record a vehicle that is still alive when the recorder stops (so the
+        log has no destroy event for it), then destroy the original."""
+        log_path = self._log_path(basename)
+        self.client.start_recorder(log_path)
+        vehicle = self._spawn_test_vehicle()
+        for _ in range(20):
+            self.world.tick()
+        self.client.stop_recorder()
+        vehicle.destroy()
+        for _ in range(5):
+            self.world.tick()
+        return log_path
+
+    def _vehicle_count(self):
+        self.world.tick()
+        return len(self.world.get_actors().filter('vehicle.*'))
+
+    def test_stop_replayer_removes_replayed_actors(self):
+        log_path = self._record_vehicle_alive_at_stop('stop_replayer_mid.log')
+        before = self._vehicle_count()
+
+        self.client.replay_file(log_path, 0.0, 0.0, 0)
+        for _ in range(5):
+            self.world.tick()
+        self.assertGreater(self._vehicle_count(), before)
+
+        self.client.stop_replayer(False)
+        self.assertEqual(
+            self._vehicle_count(), before,
+            'stop_replayer(keep_actors=False) left the replayed vehicle behind')
+
+    def test_stop_replayer_after_replay_ended_removes_actors(self):
+        log_path = self._record_vehicle_alive_at_stop('stop_replayer_end.log')
+        before = self._vehicle_count()
+
+        self.client.replay_file(log_path, 0.0, 0.0, 0)
+        # Past the end of the log: the replayer stops itself and keeps actors.
+        for _ in range(40):
+            self.world.tick()
+        self.assertGreater(self._vehicle_count(), before)
+
+        self.client.stop_replayer(False)
+        self.assertEqual(
+            self._vehicle_count(), before,
+            'stop_replayer(keep_actors=False) after the replay ended left the '
+            'replayed vehicle behind')
+
 
 if __name__ == '__main__':
     unittest.main()

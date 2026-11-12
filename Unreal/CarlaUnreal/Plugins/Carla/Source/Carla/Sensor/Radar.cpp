@@ -158,11 +158,14 @@ void ARadar::SendLineTraces(float DeltaTime)
       float Sin, Cos;
       FMath::SinCos(&Sin, &Cos, Angle);
 
-      const FVector EndLocation = RadarLocation + TransformRotator.RotateVector({
+      // Same direction as before, but every ray is exactly Range long, so
+      // off-axis rays no longer reach past the configured range.
+      const FVector Direction = FVector(
         Range,
         MaxRx * Radius * Cos,
         MaxRy * Radius * Sin
-      });
+      ).GetSafeNormal();
+      const FVector EndLocation = RadarLocation + TransformRotator.RotateVector(Direction * Range);
 
       const bool Hitted = GetWorld()->ParallelLineTraceSingleByChannel(
         OutHit,

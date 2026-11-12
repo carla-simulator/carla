@@ -100,7 +100,7 @@ location.z += 1.0
 spawn_point = carla.Transform(location)
 walker = world.try_spawn_actor(blueprint, spawn_point)
 if walker is None:
-    raise RuntimeError('could not spawn the walker, try another location')
+    raise RuntimeError('No free pedestrian spawn found; check the navigation mesh and spawn area')
 ```
 
 ### Control walker skeletons

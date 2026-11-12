@@ -8,7 +8,7 @@ bite when a load happens mid-pipeline.
 
 - The API surface
 - reset_settings: reset vs keep
-- Map layers (`_Opt` and large maps)
+- Map layers (Town01_Opt to Town07_Opt)
 - OpenDRIVE worlds
 - Verifying a load
 - Gotchas
@@ -70,7 +70,7 @@ mode** with a fixed delta. A plain `load_world("Town03")` silently drops you bac
 to asynchronous, free-running rendering — the client and server stop being in
 lockstep and captures desynchronise. `--keep` (`reset_settings=False`) is the fix.
 
-## Map layers (`_Opt` and large maps)
+## Map layers (Town01_Opt to Town07_Opt)
 
 `carla.MapLayer` is a bit-flag enum; combine values with `|`. Full set:
 
@@ -85,11 +85,13 @@ Two independent controls:
 - **After load** — `world.load_map_layer(...)` / `world.unload_map_layer(...)`
   stream layers in and out of the live world.
 
-Layers only exist on **layered maps**: the `_Opt` variants (`Town01_Opt` …
-`Town10HD_Opt`) and the large maps (`Town11`, `Town12`). On a fully-baked map
-(plain `Town03`, etc.) every layer is part of the base geometry and the toggle
-calls are silently ignored — not an error, just a no-op. `load_map.py` prints a
-note to this effect rather than pretending something changed.
+Layers only exist on maps whose layers are streaming sublevels. On the UE 5 line
+(CARLA 1.0) that is **Town01_Opt to Town07_Opt** (AdditionalMaps pack).
+**Town10HD_Opt has none**: its sublevels were merged into the persistent level on
+purpose, so the toggle calls are silently ignored there, as on every other map
+(the World Partition large maps, Town_C, Mine_01, the twins). Not an error, just a
+no-op; `load_map.py` prints a note rather than pretending something changed. On
+UE 4 (0.9.x) every `_Opt` town, Town10HD_Opt included, has layers.
 
 ## OpenDRIVE worlds
 

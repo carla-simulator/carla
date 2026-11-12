@@ -44,12 +44,9 @@ using namespace std::chrono_literals;
       _state(std::make_shared<EpisodeState>(info.id)),
       _token(info.token),
       _simulator(simulator),
-      _handled_episode_id(info.id) {}
+      _handled_episode_id(std::make_shared<std::atomic<uint64_t>>(info.id)) {}
 
   Episode::~Episode() {
-    if (_tm_reset_thread.joinable()) {
-      _tm_reset_thread.join();
-    }
     try {
       _client.UnSubscribeFromStream(_token);
     } catch (const std::exception &e) {
@@ -165,18 +162,9 @@ using namespace std::chrono_literals;
   }
 
   void Episode::OnEpisodeChanged(uint64_t episode_id) {
-    // Off the stream thread: the reset takes seconds and would hold back every snapshot.
-    if (_tm_reset_thread.joinable()) {
-      _tm_reset_thread.join();
-    }
-    _tm_reset_thread = std::thread([this, episode_id]() {
-      try {
-        traffic_manager::TrafficManager::Reset(episode_id);
-      } catch (const std::exception &e) {
-        log_error("failed to reset the Traffic Manager for the new episode:", e.what());
-      }
-      _handled_episode_id.store(episode_id);
-    });
+    // Hand the reset to the process-wide TM thread: resetting here can destroy clients and deadlock.
+    traffic_manager::TrafficManager::RequestReset(episode_id,
+        [handled = _handled_episode_id, episode_id]() { handled->store(episode_id); });
   }
 
   bool Episode::HasMapChangedSinceLastCall() {

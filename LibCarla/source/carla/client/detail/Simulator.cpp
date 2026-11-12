@@ -6,6 +6,8 @@
 
 #include "carla/client/detail/Simulator.h"
 
+#include <algorithm>
+
 #include "carla/Debug.h"
 #include "carla/Exception.h"
 #include "carla/Logging.h"
@@ -21,9 +23,18 @@
 #include "carla/trafficmanager/TrafficManager.h"
 #include "carla/sensor/Deserializer.h"
 
+#include "carla/ThreadPool.h"
+
 #include <chrono>
+#include <condition_variable>
+#include <deque>
 #include <exception>
+#include <mutex>
 #include <thread>
+
+#ifndef _WIN32
+#include <unistd.h>
+#endif
 
 using namespace std::string_literals;
 
@@ -84,6 +95,76 @@ namespace detail {
   Simulator::~Simulator() {
     // Join first, or ~Episode can run on a stream thread while _client dies.
     _client.StopStreaming();
+  }
+
+  namespace {
+
+    /// Destroys the Simulators whose last reference went away on a pool thread.
+    class SimulatorReaper {
+    public:
+
+      void Post(Simulator *simulator) {
+        std::unique_lock<std::mutex> lock(_mutex);
+        _queue.push_back(simulator);
+        // A forked child inherits _running but not the thread.
+        if (!_running || _owner != CurrentProcess()) {
+          _running = true;
+          _owner = CurrentProcess();
+          std::thread(&SimulatorReaper::Run, this).detach();
+        }
+        _cv.notify_all();
+      }
+
+    private:
+
+      static long CurrentProcess() {
+  #ifdef _WIN32
+        return 0;
+  #else
+        return static_cast<long>(::getpid());
+  #endif
+      }
+
+      void Run() {
+        std::unique_lock<std::mutex> lock(_mutex);
+        while (true) {
+          _cv.wait(lock, [this]() { return !_queue.empty(); });
+          Simulator *simulator = _queue.front();
+          _queue.pop_front();
+          lock.unlock();
+          try {
+            delete simulator;
+          } catch (const std::exception &e) {
+            log_error("failed to destroy a client:", e.what());
+          }
+          lock.lock();
+        }
+      }
+
+      std::mutex _mutex;
+      std::condition_variable _cv;
+      std::deque<Simulator *> _queue;
+      bool _running = false;
+      long _owner = 0;
+    };
+
+    SimulatorReaper &GetSimulatorReaper() {
+      // Never destroyed: the detached thread may outlive static destruction at exit.
+      static SimulatorReaper *instance = new SimulatorReaper();
+      return *instance;
+    }
+
+  } // namespace
+
+  void Simulator::Delete(Simulator *simulator) {
+    if (simulator == nullptr) {
+      return;
+    }
+    if (ThreadPool::IsPoolThread()) {
+      GetSimulatorReaper().Post(simulator);
+    } else {
+      delete simulator;
+    }
   }
 
   // ===========================================================================
@@ -416,8 +497,12 @@ EpisodeProxy Simulator::GetCurrentEpisode() {
     const auto gca = (gc == GarbageCollectionPolicy::Inherit ? _gc_policy : gc);
     auto result = ActorFactory::MakeActor(GetCurrentEpisode(), actor, gca);
     // Snapshots up to (and including) this frame predate the spawn; see
-    // Simulator::GetActorState.
-    static_cast<ActorState &>(*result)._spawn_frame = _episode->GetState()->GetFrame();
+    // Simulator::GetActorState. The server's frame at the spawn is the right
+    // bound: the client's latest snapshot can lag behind it, and a snapshot the
+    // server built before the spawn would then arrive "newer" and mark the
+    // actor Invalid. A server that does not report it sends 0.
+    static_cast<ActorState &>(*result)._spawn_frame =
+        std::max<uint64_t>(actor.spawn_frame, _episode->GetState()->GetFrame());
     log_debug(
         result->GetDisplayId(),
         "created",

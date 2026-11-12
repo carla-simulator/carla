@@ -691,30 +691,34 @@ namespace detail {
     _pimpl->AsyncCall("get_pose_from_animation", walker);
   }
 
+  // The traffic light setters wait for the server. A fire-and-forget call can
+  // reach the game thread after a tick_cue sent right behind it (the RPC
+  // threads dispatch a connection's messages concurrently), so the frame that
+  // tick returns would not carry the change yet.
   void Client::SetTrafficLightState(
       rpc::ActorId traffic_light,
       const rpc::TrafficLightState traffic_light_state) {
-    _pimpl->AsyncCall("set_traffic_light_state", traffic_light, traffic_light_state);
+    _pimpl->CallAndWait<void>("set_traffic_light_state", traffic_light, traffic_light_state);
   }
 
   void Client::SetTrafficLightGreenTime(rpc::ActorId traffic_light, float green_time) {
-    _pimpl->AsyncCall("set_traffic_light_green_time", traffic_light, green_time);
+    _pimpl->CallAndWait<void>("set_traffic_light_green_time", traffic_light, green_time);
   }
 
   void Client::SetTrafficLightYellowTime(rpc::ActorId traffic_light, float yellow_time) {
-    _pimpl->AsyncCall("set_traffic_light_yellow_time", traffic_light, yellow_time);
+    _pimpl->CallAndWait<void>("set_traffic_light_yellow_time", traffic_light, yellow_time);
   }
 
   void Client::SetTrafficLightRedTime(rpc::ActorId traffic_light, float red_time) {
-    _pimpl->AsyncCall("set_traffic_light_red_time", traffic_light, red_time);
+    _pimpl->CallAndWait<void>("set_traffic_light_red_time", traffic_light, red_time);
   }
 
   void Client::FreezeTrafficLight(rpc::ActorId traffic_light, bool freeze) {
-    _pimpl->AsyncCall("freeze_traffic_light", traffic_light, freeze);
+    _pimpl->CallAndWait<void>("freeze_traffic_light", traffic_light, freeze);
   }
 
   void Client::ResetTrafficLightGroup(rpc::ActorId traffic_light) {
-    _pimpl->AsyncCall("reset_traffic_light_group", traffic_light);
+    _pimpl->CallAndWait<void>("reset_traffic_light_group", traffic_light);
   }
 
   void Client::ResetAllTrafficLights() {
@@ -722,7 +726,7 @@ namespace detail {
   }
 
   void Client::FreezeAllTrafficLights(bool frozen) {
-    _pimpl->AsyncCall("freeze_all_traffic_lights", frozen);
+    _pimpl->CallAndWait<void>("freeze_all_traffic_lights", frozen);
   }
 
   std::vector<geom::BoundingBox> Client::GetLightBoxes(rpc::ActorId traffic_light) const {

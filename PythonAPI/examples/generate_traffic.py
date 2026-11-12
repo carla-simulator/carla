@@ -91,11 +91,12 @@ def main():
         '--hero', action='store_true', default=False,
         help='Set one of the vehicles as hero')
     argparser.add_argument(
-        '--respawn', action='store_true', default=False,
-        help='Automatically respawn dormant vehicles (only in large maps)')
-    argparser.add_argument(
         '--no-rendering', action='store_true', default=False,
         help='Activate no rendering mode')
+    argparser.add_argument(
+        '--timeout', metavar='T', default=60.0, type=float,
+        help='Client timeout in seconds (default: 60). Large maps such as Town12 '
+             'and Town13 need more than 10 s to spawn a batch of vehicles')
 
     args = argparser.parse_args()
 
@@ -105,7 +106,7 @@ def main():
     walkers_list = []
     all_id = []
     client = carla.Client(args.host, args.port)
-    client.set_timeout(10.0)
+    client.set_timeout(args.timeout)
     synchronous_master = False
     random.seed(args.seed if args.seed is not None else int(time.time()))
 
@@ -114,8 +115,6 @@ def main():
 
         traffic_manager = client.get_trafficmanager(args.tm_port)
         traffic_manager.set_global_distance_to_leading_vehicle(2.5)
-        if args.respawn:
-            traffic_manager.set_respawn_dormant_vehicles(True)
         if args.hybrid:
             traffic_manager.set_hybrid_physics_mode(True)
             traffic_manager.set_hybrid_physics_radius(70.0)
