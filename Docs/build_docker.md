@@ -8,6 +8,7 @@ Linux users can pull an image based on a CARLA release to run in a Docker contai
 
 - [__Before you begin__](#before-you-begin)
 - [__Pull the CARLA Docker image__](#pull-the-carla-docker-image)
+- [__Build the image from a package__](#build-the-image-from-a-package)
 - [__Run the image__](#run-the-image)
 - [__Get the client library__](#get-the-client-library)
 - [__Run several servers on different GPUs__](#run-several-servers-on-different-gpus)
@@ -43,6 +44,19 @@ docker pull carlasim/carla:1.0
 ```
 
 Always pull a tagged version. The `latest` tag is an old Unreal Engine 4 image.
+
+---
+## Build the image from a package
+
+A Linux package carries the `Dockerfile` of the release image at its root. Build the image from the extracted package folder:
+
+```sh
+tar -xzf CARLA_1.0.tar.gz
+cd Carla-1.0-Linux-Shipping
+docker build -t carlasim/carla:1.0 .
+```
+
+A package you build yourself with the `package` target is also left extracted in the build directory, for example `Build/Release/Package/Carla-<version>-Linux-Shipping/` with the `Release` preset: run `docker build` from that folder. The image is then run as described below.
 
 ---
 ## Run the image
