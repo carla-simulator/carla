@@ -183,6 +183,7 @@
 * Fixed **`/vehicle/status/gear_status` reporting NEUTRAL** while an Autoware-driven vehicle moves forward. Acceleration control never engages the transmission. While it is active, `GetVehicleCurrentGear()` now reports the first forward gear, so Autoware sees DRIVE. `get_telemetry_data()` reports the same gear.
 * Fixed camera fx in the ROS 2 `CameraInfo`, large map actor tagging, and camera frame and timestamp consistency.
 * Fixed `sensor.camera.instance_segmentation` publishing nothing on ROS 2, `sensor.camera.semantic_segmentation` publishing on an unresolved `semantic_segmentation__` topic, and `sensor.camera.rt_lens` publishing on `rt_lens__` although it has no ROS 2 publisher. The ROS 2 sensor type list had fallen out of step with the sensor registry when the ray-traced lens camera was added; it now has one entry per registry item, checked at compile time.
+* Fixed **CycloneDDS subscribers failing to start with the example profile** (`PythonAPI/examples/ros2/config/cyclonedds.xml`, used by `run_rviz.sh --rmw=cyclonedds`) on hosts with the default `net.core.rmem_max` (#10253). Its 16 MB socket receive buffer was a hard minimum, so `rmw_create_node` failed with `failed to create domain` and RViz showed nothing. The 16 MB is now the size requested, capped by the kernel, as in the Fast-DDS profile.
 
 #### Traffic Manager and agents
 
