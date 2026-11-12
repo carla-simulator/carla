@@ -13,8 +13,8 @@ namespace ros2 {
 
 /// Middleware-neutral QoS profile passed to IPublisherMiddleware::Init /
 /// ISubscriberMiddleware::Init when a topic needs QoS different from the
-/// vendor defaults (e.g. the Autoware command subscribers require
-/// RELIABLE + TRANSIENT_LOCAL to latch the last command).
+/// vendor defaults (e.g. a reader that must receive the last sample a
+/// TRANSIENT_LOCAL writer latched before it joined).
 ///
 /// This replaces tier4's TopicConfig (data_types.h) in the
 /// middleware-decoupled architecture: the domain id is NOT part of the
@@ -34,9 +34,9 @@ struct QosProfile {
   History      history{History::KeepLast};
   std::int32_t history_depth{1};
 
-  /// RELIABLE / TRANSIENT_LOCAL / KEEP_LAST depth 1 — the profile tier4 uses
-  /// for the Autoware command subscribers (latched commands survive a late
-  /// subscriber join).
+  /// RELIABLE / TRANSIENT_LOCAL / KEEP_LAST depth 1 — a latched sample
+  /// survives a late join. A reader with it matches TRANSIENT_LOCAL writers
+  /// only, which is why the Autoware command subscribers no longer use it.
   static QosProfile ReliableTransientLocal() {
     QosProfile p;
     p.reliability = Reliability::Reliable;
@@ -46,8 +46,9 @@ struct QosProfile {
     return p;
   }
 
-  /// RELIABLE / VOLATILE / KEEP_LAST depth 1 — the profile tier4 uses for the
-  /// Autoware report publishers.
+  /// RELIABLE / VOLATILE / KEEP_LAST depth 1 — the Autoware report publishers
+  /// and command subscribers (a volatile reader matches writers of either
+  /// durability).
   static QosProfile ReliableVolatile() {
     QosProfile p;
     p.reliability = Reliability::Reliable;

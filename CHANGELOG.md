@@ -178,6 +178,7 @@
 
 #### ROS 2
 
+* Fixed **Autoware's control commands not reaching a `ros2_autoware_control` vehicle when Autoware runs `control_command_gate`**, which replaces `vehicle_cmd_gate` in autoware_launch. The command subscribers were TRANSIENT_LOCAL, and DDS does not match a TRANSIENT_LOCAL reader with `control_command_gate`'s VOLATILE writers, so the vehicle never moved. They are now VOLATILE, which matches both gates.
 * Fixed **`/vehicle/status/gear_status` reporting NEUTRAL** while an Autoware-driven vehicle moves forward. Acceleration control never engages the transmission. While it is active, `GetVehicleCurrentGear()` now reports the first forward gear, so Autoware sees DRIVE. `get_telemetry_data()` reports the same gear.
 * Fixed camera fx in the ROS 2 `CameraInfo`, large map actor tagging, and camera frame and timestamp consistency.
 * Fixed `sensor.camera.instance_segmentation` publishing nothing on ROS 2, `sensor.camera.semantic_segmentation` publishing on an unresolved `semantic_segmentation__` topic, and `sensor.camera.rt_lens` publishing on `rt_lens__` although it has no ROS 2 publisher. The ROS 2 sensor type list had fallen out of step with the sensor registry when the ray-traced lens camera was added; it now has one entry per registry item, checked at compile time.

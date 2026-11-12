@@ -143,7 +143,7 @@ CARLA subscribes to these:
 | `/control/command/emergency_cmd` | `tier4_vehicle_msgs/VehicleEmergencyStamped` | Received, not applied. |
 | `/vehicle/engage` | `autoware_vehicle_msgs/Engage` | Received, not applied. |
 
-CARLA publishes the status topics as RELIABLE and VOLATILE with depth 1. It subscribes to the topics above as RELIABLE and TRANSIENT_LOCAL with depth 1. A publisher to them must offer TRANSIENT_LOCAL durability, for example `ros2 topic pub --qos-durability transient_local ...`.
+CARLA publishes the status topics as RELIABLE and VOLATILE with depth 1. It subscribes to the topics above as RELIABLE and VOLATILE with depth 1, which matches a publisher of either durability: Autoware's `vehicle_cmd_gate` (TRANSIENT_LOCAL) and its replacement `control_command_gate` (VOLATILE) alike.
 
 `autoware_demo.py` publishes the sensor kit on these topics:
 
