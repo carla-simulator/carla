@@ -59,11 +59,10 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 	* [__0041 - adult pedestrian 25__](#0041-adult-pedestrian-25)
 	* [__0042 - adult pedestrian 26__](#0042-adult-pedestrian-26)
 	* [__0043 - adult pedestrian 27__](#0043-adult-pedestrian-27)
-	* [__0044 - adult pedestrian 28__](#0044-adult-pedestrian-28)
-	* [__0045 - adult pedestrian 29__](#0045-adult-pedestrian-29)
-	* [__0046 - adult pedestrian 30__](#0046-adult-pedestrian-30)
-	* [__0047 - adult pedestrian 31__](#0047-adult-pedestrian-31)
-	* [__0048 - adult pedestrian 32__](#0048-adult-pedestrian-32)
+	* [__0045 - adult pedestrian 28__](#0045-adult-pedestrian-28)
+	* [__0046 - adult pedestrian 29__](#0046-adult-pedestrian-29)
+	* [__0047 - adult pedestrian 30__](#0047-adult-pedestrian-30)
+	* [__0048 - adult pedestrian 31__](#0048-adult-pedestrian-31)
 * __Children__
 	* [__0049 - child pedestrian 1__](#0049-child-pedestrian-1)
 	* [__0050 - child pedestrian 2__](#0050-child-pedestrian-2)
@@ -347,17 +346,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 * __Generation__: 2
 * __Can use wheelchair__: no
 
-### 0044 - adult pedestrian 28
-
-![pedestrian_0044](img/catalogue/pedestrians/pedestrian_0044_thumb.webp)
-
-* __Blueprint ID__: `walker.pedestrian.0044`
-* __Age__: adult
-* __Gender__: female
-* __Generation__: 2
-* __Can use wheelchair__: no
-
-### 0045 - adult pedestrian 29
+### 0045 - adult pedestrian 28
 
 ![pedestrian_0045](img/catalogue/pedestrians/pedestrian_0045_thumb.webp)
 
@@ -367,7 +356,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 * __Generation__: 2
 * __Can use wheelchair__: no
 
-### 0046 - adult pedestrian 30
+### 0046 - adult pedestrian 29
 
 ![pedestrian_0046](img/catalogue/pedestrians/pedestrian_0046_thumb.webp)
 
@@ -377,7 +366,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 * __Generation__: 2
 * __Can use wheelchair__: no
 
-### 0047 - adult pedestrian 31
+### 0047 - adult pedestrian 30
 
 ![pedestrian_0047](img/catalogue/pedestrians/pedestrian_0047_thumb.webp)
 
@@ -387,7 +376,7 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 * __Generation__: 2
 * __Can use wheelchair__: no
 
-### 0048 - adult pedestrian 32
+### 0048 - adult pedestrian 31
 
 ![pedestrian_0048](img/catalogue/pedestrians/pedestrian_0048_thumb.webp)
 
