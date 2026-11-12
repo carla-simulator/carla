@@ -539,8 +539,10 @@ void FCarlaEngine::NotifyInitGame(const UCarlaSettings &Settings)
       }
       if (!ROS2->Enable(true, Parsed.middleware, DomainId))
       {
+        // Either the middleware is not compiled in, or it failed to start
+        // (e.g. an invalid DDS profile); ROS2::Enable logged which one.
         UE_LOG(LogCarla, Error,
-            TEXT("ROS2: --rmw='%s' is not compiled into this binary. Available: %s. ROS2 is DISABLED for this session."),
+            TEXT("ROS2: middleware '%s' could not be enabled (compiled in: %s); see the ROS2 errors above. ROS2 is DISABLED for this session."),
             *Settings.RmwName,
             UTF8_TO_TCHAR(carla::ros2::GetAvailableMiddleware().c_str()));
       }
