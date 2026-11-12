@@ -12,6 +12,7 @@
 #include <carla/geom/Location.h>
 
 #include <random>
+#include <limits>
 
 using carla::geom::Ellipsoid;
 using carla::geom::GeoLocation;
@@ -156,5 +157,77 @@ TEST(OffsetTransform, inverse_is_exact) {
     ASSERT_NEAR(back.x, input.x, tolerance_m);
     ASSERT_NEAR(back.y, input.y, tolerance_m);
     ASSERT_NEAR(back.z, input.z, tolerance_m);
+  }
+}
+
+namespace {
+
+  struct ProjectionReference {
+    double latitude, longitude;
+    double easting, carla_y;
+    float input_x, input_y;
+    double inverse_latitude, inverse_longitude;
+  };
+
+  void CheckReference(const GeoProjection &projection, const ProjectionReference &reference) {
+    const auto forward = projection.GeoLocationToTransform(
+        GeoLocation(reference.latitude, reference.longitude, 25.0));
+    EXPECT_NEAR(forward.x, reference.easting, 0.5);
+    EXPECT_NEAR(forward.y, reference.carla_y, 0.5);
+    EXPECT_FLOAT_EQ(forward.z, 25.0f);
+
+    const auto inverse = projection.TransformToGeoLocation(
+        Location(reference.input_x, reference.input_y, -12.0f));
+    EXPECT_NEAR(inverse.latitude, reference.inverse_latitude, 1e-7);
+    EXPECT_NEAR(inverse.longitude, reference.inverse_longitude, 1e-7);
+    EXPECT_DOUBLE_EQ(inverse.altitude, -12.0);
+  }
+
+} // namespace
+
+// Absolute values from PROJ 9.8.1 through pyproj 3.8.0, with the projected
+// northing negated for CARLA. The inverse inputs are independent of the forward
+// outputs. Tolerances include float Location storage and the existing series
+// truncation; no PROJ dependency is needed to run these tests.
+TEST(GeoProjection, tm_absolute_reference_values) {
+  const auto ellipsoid = GeoProjection::Make(
+      TransverseMercatorParams(40.0, -3.0, 0.9996, 1000.0, -5000.0, Wgs84()));
+  for (const auto &reference : {
+       ProjectionReference{41.25, -5.5, -208466.1815950938, -136766.9518588526,
+           -140000.0f, -150000.0f, 41.38399198993458, -4.68633886928503},
+       ProjectionReference{35.5, -0.5, 227756.3730288867, 501389.9219361335,
+           170000.0f, 400000.0f, 36.4251548608718, -1.1148111277280819}}) {
+    CheckReference(ellipsoid, reference);
+  }
+
+  const auto sphere = GeoProjection::Make(TransverseMercatorParams(
+      -20.0, 179.0, 1.0, 12345.0, -23456.0,
+      Ellipsoid(6370997.0, std::numeric_limits<double>::infinity())));
+  for (const auto &reference : {
+       ProjectionReference{-29.25, -178.5, 254927.9193250977, 1054595.5714658573,
+           125000.0f, 850000.0f, -27.428643331970715, -179.8585967314688},
+       ProjectionReference{-10.75, 176.5, -260844.2846590113, -1003984.3744574662,
+           -135000.0f, -800000.0f, -12.591055991167458, 177.64235592521513}}) {
+    CheckReference(sphere, reference);
+  }
+}
+
+TEST(GeoProjection, utm_absolute_reference_values) {
+  const auto north = GeoProjection::Make(UniversalTransverseMercatorParams(31, true, Wgs84()));
+  for (const auto &reference : {
+       ProjectionReference{25.0, 0.5, 247673.89996248946, -2767275.2071806956,
+           350000.0f, -2500000.0f, 22.60022406288644, 1.5406959186871692},
+       ProjectionReference{70.0, 5.5, 595404.9704624246, -7767829.407630525,
+           580000.0f, -7500000.0f, 67.60463040686382, 4.881835645201831}}) {
+    CheckReference(north, reference);
+  }
+
+  const auto south = GeoProjection::Make(UniversalTransverseMercatorParams(31, false, Wgs84()));
+  for (const auto &reference : {
+       ProjectionReference{-42.0, 0.5, 292948.961828621, -5347200.193424389,
+           350000.0f, -4500000.0f, -49.63390362740616, 0.9226471068531007},
+       ProjectionReference{-10.0, 5.5, 774071.0533869967, -8893548.721745655,
+           650000.0f, -8500000.0f, -13.564602149676757, 4.386315841654348}}) {
+    CheckReference(south, reference);
   }
 }

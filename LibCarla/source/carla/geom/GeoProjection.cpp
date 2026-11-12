@@ -111,6 +111,11 @@ namespace geom {
         double T = std::tan(lat) * std::tan(lat);
         double C = ep2 * std::cos(lat) * std::cos(lat);
         double A = std::cos(lat) * dlon;
+        const double A2 = A * A;
+        const double A3 = A2 * A;
+        const double A4 = A2 * A2;
+        const double A5 = A4 * A;
+        const double A6 = A4 * A2;
 
         auto meridional_arc = [&](double phi) {
             return p.ellps.a * ((1.0 - e2 / 4.0 - 3.0 * e4 / 64.0 - 5.0 * e6 / 256.0) * phi
@@ -122,12 +127,12 @@ namespace geom {
         double M  = meridional_arc(lat);
         double M_0 = meridional_arc(lat_0);
 
-        double x = p.x_0 + p.k * N * (A + (1.0 - T + C) * std::pow(A, 3) / 6.0
-            + (5.0 - 18.0 * T + T * T + 72.0 * C - 58.0 * ep2) * std::pow(A, 5) / 120.0);
+        double x = p.x_0 + p.k * N * (A + (1.0 - T + C) * A3 / 6.0
+            + (5.0 - 18.0 * T + T * T + 72.0 * C - 58.0 * ep2) * A5 / 120.0);
 
-        double  y = p.y_0 + p.k * ((M - M_0) + N * std::tan(lat) * ((A*A) / 2.0
-            + (5.0 - T + 9.0 * C + 4.0 * C * C) * std::pow(A, 4) / 24.0
-            + (61.0 - 58.0 * T + T * T + 600.0 * C - 330.0 * ep2) * std::pow(A, 6) / 720.0));
+        double  y = p.y_0 + p.k * ((M - M_0) + N * std::tan(lat) * (A2 / 2.0
+            + (5.0 - T + 9.0 * C + 4.0 * C * C) * A4 / 24.0
+            + (61.0 - 58.0 * T + T * T + 600.0 * C - 330.0 * ep2) * A6 / 720.0));
 
         return Location(static_cast<float>(x), static_cast<float>(y), static_cast<float>(geolocation.altitude));
     }
@@ -153,18 +158,23 @@ namespace geom {
         double T = std::tan(lat) * std::tan(lat);
         double C = ep2 * std::cos(lat) * std::cos(lat);
         double A = std::cos(lat) * std::atan2(std::sin(lon - lon_0), std::cos(lon - lon_0));
+        const double A2 = A * A;
+        const double A3 = A2 * A;
+        const double A4 = A2 * A2;
+        const double A5 = A4 * A;
+        const double A6 = A4 * A2;
 
         double M = p.ellps.a * ((1.0 - e2 / 4.0 - 3.0 * e4 / 64.0 - 5.0 * e6 / 256.0) * lat
             - (3.0 * e2 / 8.0 + 3.0 * e4 / 32.0 + 45.0 * e6 / 1024.0) * std::sin(2.0 * lat)
             + (15.0 * e4 / 256.0 + 45.0 * e6 / 1024.0) * std::sin(4.0 * lat)
             - (35.0 * e6 / 3072.0) * std::sin(6.0 * lat));
 
-        double x = x_0 + k * N * (A + (1.0 - T + C) * std::pow(A, 3) / 6.0
-            + (5.0 - 18.0 * T + T * T + 72.0 * C - 58.0 * ep2) * std::pow(A, 5) / 120.0);
+        double x = x_0 + k * N * (A + (1.0 - T + C) * A3 / 6.0
+            + (5.0 - 18.0 * T + T * T + 72.0 * C - 58.0 * ep2) * A5 / 120.0);
 
-        double y = y_0 + k * (M + N * std::tan(lat) * ((A * A) / 2.0
-            + (5.0 - T + 9.0 * C + 4.0 * C * C) * std::pow(A, 4) / 24.0
-            + (61.0 - 58.0 * T + T * T + 600.0 * C - 330.0 * ep2) * std::pow(A, 6) / 720.0));
+        double y = y_0 + k * (M + N * std::tan(lat) * (A2 / 2.0
+            + (5.0 - T + 9.0 * C + 4.0 * C * C) * A4 / 24.0
+            + (61.0 - 58.0 * T + T * T + 600.0 * C - 330.0 * ep2) * A6 / 720.0));
 
         Location result(static_cast<float>(x), static_cast<float>(y), static_cast<float>(geolocation.altitude));
 
@@ -266,14 +276,19 @@ namespace geom {
         double T = tan1 * tan1;
         double C = ep2 * cos1 * cos1;
         double D  = x / N;
+        const double D2 = D * D;
+        const double D3 = D2 * D;
+        const double D4 = D2 * D2;
+        const double D5 = D4 * D;
+        const double D6 = D4 * D2;
 
         // Snyder TM inverse (to 6th order)
-        double lat = phi1 - (N * tan1 / R) * ((D * D) / 2.0
-            - (5.0 + 3.0 * T + 10.0 * C - 4.0 * C * C - 9.0 * ep2) * std::pow(D, 4) / 24.0
-            + (61.0 + 90.0 * T + 298.0 * C + 45.0 * T * T - 252.0 * ep2 - 3.0 * C * C) * std::pow(D, 6) / 720.0);
+        double lat = phi1 - (N * tan1 / R) * (D2 / 2.0
+            - (5.0 + 3.0 * T + 10.0 * C - 4.0 * C * C - 9.0 * ep2) * D4 / 24.0
+            + (61.0 + 90.0 * T + 298.0 * C + 45.0 * T * T - 252.0 * ep2 - 3.0 * C * C) * D6 / 720.0);
 
-        double lon = lon_0 + (D - (1.0 + 2.0 * T + C) * std::pow(D, 3) / 6.0
-            + (5.0 - 2.0 * C + 28.0 * T + 3.0 * C * C + 8.0 * ep2 + 24.0 * T * T) * std::pow(D, 5) / 120.0) / cos1;
+        double lon = lon_0 + (D - (1.0 + 2.0 * T + C) * D3 / 6.0
+            + (5.0 - 2.0 * C + 28.0 * T + 3.0 * C * C + 8.0 * ep2 + 24.0 * T * T) * D5 / 120.0) / cos1;
 
         lon = std::atan2(std::sin(lon), std::cos(lon));
 
@@ -326,13 +341,18 @@ namespace geom {
         double T = tan1 * tan1;
         double C = ep2 * cos1 * cos1;
         double D  = x / N;
+        const double D2 = D * D;
+        const double D3 = D2 * D;
+        const double D4 = D2 * D2;
+        const double D5 = D4 * D;
+        const double D6 = D4 * D2;
 
-        double lat = phi1 - (N * tan1 / R) * ((D * D) / 2.0
-            - (5.0 + 3.0 * T + 10.0 * C - 4.0 * C * C - 9.0 * ep2) * std::pow(D, 4) / 24.0
-            + (61.0 + 90.0 * T + 298.0 * C + 45.0 * T * T - 252.0 * ep2 - 3.0 * C * C) * std::pow(D, 6) / 720.0);
+        double lat = phi1 - (N * tan1 / R) * (D2 / 2.0
+            - (5.0 + 3.0 * T + 10.0 * C - 4.0 * C * C - 9.0 * ep2) * D4 / 24.0
+            + (61.0 + 90.0 * T + 298.0 * C + 45.0 * T * T - 252.0 * ep2 - 3.0 * C * C) * D6 / 720.0);
 
-        double lon = lon_0 + (D - (1.0 + 2.0 * T + C) * std::pow(D, 3) / 6.0
-            + (5.0 - 2.0 * C + 28.0 * T + 3.0 * C * C + 8.0 * ep2 + 24.0 * T * T) * std::pow(D, 5) / 120.0) / cos1;
+        double lon = lon_0 + (D - (1.0 + 2.0 * T + C) * D3 / 6.0
+            + (5.0 - 2.0 * C + 28.0 * T + 3.0 * C * C + 8.0 * ep2 + 24.0 * T * T) * D5 / 120.0) / cos1;
 
         lon = std::atan2(std::sin(lon), std::cos(lon));
 
