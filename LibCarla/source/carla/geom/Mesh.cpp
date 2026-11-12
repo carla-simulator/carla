@@ -91,7 +91,7 @@ namespace geom {
   }
 
   void Mesh::AddVertices(const std::vector<Mesh::vertex_type> &vertices) {
-    std::copy(vertices.begin(), vertices.end(), std::back_inserter(_vertices));
+    _vertices.insert(_vertices.end(), vertices.begin(), vertices.end());
   }
 
   void Mesh::AddNormal(normal_type normal) {
@@ -107,7 +107,7 @@ namespace geom {
   }
 
   void Mesh::AddUVs(const std::vector<uv_type> & uv) {
-    std::copy(uv.begin(), uv.end(), std::back_inserter(_uvs));
+    _uvs.insert(_uvs.end(), uv.begin(), uv.end());
   }
 
   void Mesh::AddMaterial(const std::string &material_name) {
