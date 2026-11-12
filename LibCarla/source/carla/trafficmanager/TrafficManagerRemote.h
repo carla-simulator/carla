@@ -152,15 +152,6 @@ public:
   /// Method to update an already set route.
   void UpdateImportedRoute(const ActorId &actor_id, const Route route);
 
-  /// Method to set automatic respawn of dormant vehicles.
-  void SetRespawnDormantVehicles(const bool mode_switch);
-
-  // Method to set boundaries to respawn of dormant vehicles.
-  void SetBoundariesRespawnDormantVehicles(const float lower_bound, const float upper_bound);
-
-  // Method to set boundaries to respawn of dormant vehicles.
-  void SetMaxBoundaries(const float lower, const float upper);
-
   virtual void ShutDown();
 
   /// Method to get the vehicle's next action.

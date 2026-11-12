@@ -136,7 +136,6 @@ size_t WaypointsAliveAfter(
   state.velocity = carla::geom::Vector3D(0.0f, 0.0f, 0.0f);
   state.speed_limit = 50.0f;
   state.physics_enabled = true;
-  state.is_dormant = false;
   ctm::StaticAttributes attributes;
   attributes.actor_type = ctm::ActorType::Vehicle;
   attributes.half_length = 2.0f;

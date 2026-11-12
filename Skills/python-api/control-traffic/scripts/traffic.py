@@ -3,8 +3,8 @@
 
 Commands:
     global   [--speed-diff -30] [--distance 2.5] [--seed 42]
-             [--hybrid on|off] [--hybrid-radius 70] [--respawn-dormant on|off]
-             [--osm on|off]                       TM-wide settings
+             [--hybrid on|off] [--hybrid-radius 70] [--osm on|off]
+                                                  TM-wide settings
     vehicle  <selector> [per-vehicle flags]        settings for one vehicle
     all      [--filter vehicle.*] [per-vehicle flags]  same, for every match
     sync     on|off                                TM synchronous mode
@@ -108,8 +108,6 @@ def cmd_global(args):
         tm.set_hybrid_physics_mode(_on(args.hybrid)); done.append(f"hybrid={args.hybrid}")
     if args.hybrid_radius is not None:
         tm.set_hybrid_physics_radius(args.hybrid_radius); done.append(f"hybrid_radius={args.hybrid_radius}")
-    if args.respawn_dormant is not None:
-        tm.set_respawn_dormant_vehicles(_on(args.respawn_dormant)); done.append(f"respawn_dormant={args.respawn_dormant}")
     if args.osm is not None:
         tm.set_osm_mode(_on(args.osm)); done.append(f"osm={args.osm}")
     if not done:
@@ -166,7 +164,7 @@ def main() -> None:
     pg.add_argument("--speed-diff", type=float); pg.add_argument("--distance", type=float)
     pg.add_argument("--seed", type=int)
     pg.add_argument("--hybrid", choices=("on", "off")); pg.add_argument("--hybrid-radius", type=float)
-    pg.add_argument("--respawn-dormant", choices=("on", "off")); pg.add_argument("--osm", choices=("on", "off"))
+    pg.add_argument("--osm", choices=("on", "off"))
     pg.set_defaults(func=cmd_global)
 
     pv = _pv_args(sub.add_parser("vehicle", help="settings for one vehicle"))

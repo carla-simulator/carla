@@ -91,9 +91,6 @@ def main():
         '--hero', action='store_true', default=False,
         help='Set one of the vehicles as hero')
     argparser.add_argument(
-        '--respawn', action='store_true', default=False,
-        help='Automatically respawn dormant vehicles (only in large maps)')
-    argparser.add_argument(
         '--no-rendering', action='store_true', default=False,
         help='Activate no rendering mode')
     argparser.add_argument(
@@ -118,8 +115,6 @@ def main():
 
         traffic_manager = client.get_trafficmanager(args.tm_port)
         traffic_manager.set_global_distance_to_leading_vehicle(2.5)
-        if args.respawn:
-            traffic_manager.set_respawn_dormant_vehicles(True)
         if args.hybrid:
             traffic_manager.set_hybrid_physics_mode(True)
             traffic_manager.set_hybrid_physics_radius(70.0)
