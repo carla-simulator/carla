@@ -179,6 +179,7 @@
 
 #### ROS 2
 
+* Fixed **the server crashing with a segmentation fault when its DDS middleware could not start** (#10259), e.g. when `CYCLONEDDS_URI` pointed at the example profile `PythonAPI/examples/ros2/config/cyclonedds.xml` as `Docs/ros2_native.md` suggests. The CycloneDDS and Fast-DDS publishers no longer write after a failed `Init()`, so the server logs the error and keeps running without those topics. The example profile also drops its `<SharedMemory>` element, which the server's CycloneDDS (built without shared memory) rejected; shared memory is off by default, so subscribers are unaffected.
 * Fixed **Autoware's control commands not reaching a `ros2_autoware_control` vehicle when Autoware runs `control_command_gate`**, which replaces `vehicle_cmd_gate` in autoware_launch. The command subscribers were TRANSIENT_LOCAL, and DDS does not match a TRANSIENT_LOCAL reader with `control_command_gate`'s VOLATILE writers, so the vehicle never moved. They are now VOLATILE, which matches both gates.
 * Fixed **`/vehicle/status/gear_status` reporting NEUTRAL** while an Autoware-driven vehicle moves forward. Acceleration control never engages the transmission. While it is active, `GetVehicleCurrentGear()` now reports the first forward gear, so Autoware sees DRIVE. `get_telemetry_data()` reports the same gear.
 * Fixed camera fx in the ROS 2 `CameraInfo`, large map actor tagging, and camera frame and timestamp consistency.

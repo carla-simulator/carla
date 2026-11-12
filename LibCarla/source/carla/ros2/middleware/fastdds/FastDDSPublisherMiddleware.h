@@ -189,6 +189,10 @@ class FastDDSPublisherMiddleware
 
  public:
   bool Publish(void* message_data) override {
+    // Init() failed (e.g. no participant): there is no writer to use.
+    if (_datawriter == nullptr) {
+      return false;
+    }
     eprosima::fastrtps::rtps::InstanceHandle_t instance_handle;
     erc rcode = _datawriter->write(message_data, instance_handle);
     if (rcode == erc::ReturnCodeValue::RETCODE_OK) {

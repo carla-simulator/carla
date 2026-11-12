@@ -142,6 +142,10 @@ class CycloneDDSPublisherMiddleware : public IPublisherMiddleware {
   // sends are ~50us. See FastDDSPublisherMiddleware.h for the failure mode
   // this guards against.
   bool Publish(void* message_data) override {
+    // Init() failed (e.g. no participant): there is no type or writer to use.
+    if (_writer <= 0 || _sertype == nullptr) {
+      return false;
+    }
     const msg_type* msg = static_cast<const msg_type*>(message_data);
     std::vector<uint8_t> cdr = serialize_to_cdr(*msg);
 
