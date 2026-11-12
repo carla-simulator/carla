@@ -193,6 +193,7 @@
 
 #### Python API and client
 
+* **Thread pool task results** — fixed `ThreadPool::Post` return-type deduction so value, void, reference and move-only task results can be retrieved through their futures.
 * Fixed client signal identifier reads exceeding the 32 byte snapshot buffer.
 * Fixed clients failing `get_world()` against a packaged server: `get_required_files` leaked pak-relative paths that escaped the client cache. The server now sends content-relative names and refuses paths that resolve outside the content folder, previously an arbitrary-file-read vector.
 * Fixed `from carla.command import ...` by registering the `command` submodule in `sys.modules`.
