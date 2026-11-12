@@ -9,9 +9,11 @@
         <General>
             <Transport>udp</Transport>
         </General>
-        <!-- Room for whole camera frames; capped by net.core.rmem_max (see Docs/ros2_native.md). -->
+        <!-- Room for whole camera frames. max is the size requested, capped by
+             net.core.rmem_max (see Docs/ros2_native.md); min="default" keeps a
+             lower limit from stopping the node, which then drops large samples. -->
         <Internal>
-            <SocketReceiveBufferSize min="16MB"/>
+            <SocketReceiveBufferSize min="default" max="16MB"/>
         </Internal>
     </Domain>
 </CycloneDDS>
