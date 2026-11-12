@@ -139,6 +139,7 @@
 * **Added a network ports reference** at `Docs/ref_ports.md`, under _Resources_: every port the simulator, the Traffic Manager, ROS 2 and the tooling open, what sets each one, and the two bind errors they produce.
 * **The `open-carla-pr` skill now verifies closed issues before opening a new one**: for each matching closed issue, discussion or merged PR it reads how it was closed, checks that the fix reached the user's branch (a fix merged into `ue4-dev` or `ue5-dev` is not in `ue58-dev` unless ported), and tries the fix or workaround on the repro. A solution that works means no new issue; one that fails is cited in the new issue's body.
 * **Reorganised the rendering documentation** under _Sensor simulation_: UE native rendering, with a new _Camera features_ section on the post-process presets, the ray-traced lens cameras and DLSS, next to NuRec, Cosmos and the sensor reference.
+* **Gave the C++ reference a main page and moved it to Doxygen 1.18.0**: `index.html` now opens on a compact index of the LibCarla namespaces and the Carla plugin's entry classes (`Util/CppReference/mainpage.md`) instead of a blank page, and the `UE5-Doxygen` workflow installs the pinned 1.18.0 release binary instead of Ubuntu's 1.9.8, which drops jQuery: the main page loads 181 KB instead of 302 KB. See `Docs/ref_cpp.md`.
 
 ### Bug fixes
 
