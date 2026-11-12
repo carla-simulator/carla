@@ -91,10 +91,11 @@ uses — work normally. Measured on Town10HD_Opt: 59 102 objects, 48 369 of them
 (`LibCarla/source/carla/rpc/ObjectLabel.h:48`). Code that iterates the enum by
 name is fine; code that hard-codes label integers is not.
 
-**Do not reach for map layers as an alternative here.** `load_map_layer` /
-`unload_map_layer` are accepted and silently do nothing on 0.10.0 — see
-[[load-map]] for the measurement and the cause. `enable_environment_objects` is
-the mechanism that actually hides geometry on this version.
+**Map layers are only an alternative on Town01_Opt to Town07_Opt.** On
+Town10HD_Opt (and every other UE 5 map) `load_map_layer` / `unload_map_layer` are
+accepted and silently do nothing — see [[load-map]] for the measurement and the
+cause. `enable_environment_objects` is the mechanism that hides geometry on every
+map.
 
 ## Examples
 

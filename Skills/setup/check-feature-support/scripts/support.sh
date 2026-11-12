@@ -50,6 +50,9 @@ LEGEND  [skill]  a vetted procedure exists in this collection — use it
   [works] Chaos / CarSim vehicle physics hooks      Vehicle.enable_chrono_physics(),
           enable_carsim(), use_carsim_road() exist on 0.10.0 — but see [broken] below
           for the tooling that used to drive them.
+  [works] map layers (load_map_layer/unload)        Town01_Opt to Town07_Opt only. Town10HD_Opt
+          has none (sublevels merged on purpose): the calls are a silent no-op there; use
+          enable_environment_objects (toggle-env-objects). Layers will be replaced (#10228).
 
 == Present, untested here ==
   [untested] RSS (Responsibility-Sensitive Safety)  sensor.other.rss is in the blueprint
@@ -67,7 +70,6 @@ LEGEND  [skill]  a vetted procedure exists in this collection — use it
 
 == Broken or removed on the UE5 line (measured on 0.10.0 / ue58-dev) ==
   [broken] GBuffer capture                          CRASHES THE SERVER. See `support.sh broken`.
-  [broken] map layers (load_map_layer/unload)       accepted, silently do nothing.
   [broken] Landmark.waypoint                        always None.
   [broken] VehiclePhysicsControl gear ratios        forward_gear_ratios / reverse_gear_ratios
            have no Python converter; reading raises TypeError.
@@ -97,13 +99,6 @@ GBuffer capture — CRASHES THE SERVER
   The API surface still exists on carla.ServerSideSensor and all seven
   GBufferTextureID members are present, which is what makes it dangerous. A plain
   camera on the same sensor works. Treat gbuffers as nonexistent.
-
-Map layers do nothing
-  unload_map_layer(MapLayer.Buildings) then a 40-ray sweep: Buildings hit 9 times
-  before, 9 after, 9 after reload; no streaming activity in the server log. Cause:
-  Town10HD_Opt.umap is 38.7 MB with ZERO LevelStreaming references on 0.10.0
-  (158 KB with two on 0.9.x) — the layers were baked into the persistent level, so
-  the mask matches nothing. Use enable_environment_objects instead.
 
 Landmark.waypoint is always None
   Town10HD_Opt: 68 landmarks, 68 with waypoint is None. Every other field
@@ -222,10 +217,8 @@ for name, note in (("apply_color_texture_to_object", "texture streaming: works, 
 # The UE5 line reports 0.10.0 before the 1.0 release and 1.x after it; both are
 # the same line, so gate on the line, not on one label.
 if ver.startswith("0.10") or ver.split(".")[0].isdigit() and int(ver.split(".")[0]) >= 1:
-    print(f"  UE5 line (server {ver}): gbuffers CRASH the server, map layers are a no-op"
-          " — `support.sh broken`")
-    if not ver.startswith("0.10"):
-        print("  (those two were measured on 0.10.0; re-check them on this build)")
+    print(f"  UE5 line (server {ver}): gbuffers CRASH the server — `support.sh broken`;"
+          " map layers only on Town01_Opt..Town07_Opt (none on Town10HD_Opt)")
 PY
 }
 

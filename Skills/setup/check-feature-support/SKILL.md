@@ -1,6 +1,6 @@
 ---
 name: check-feature-support
-description: Answers "can CARLA do X here, and is there a vetted procedure for it" before you promise anything, and detects client/server/tree version skew — a support matrix over the whole collection (covered by a skill / works but undocumented / present but untested / broken or removed), an index of the features that are verified BROKEN on 0.10.0 (gbuffers crash the server, map layers do nothing, Landmark.waypoint is None, standalone asset packages are gone), and a probe that reports what this machine's build flags and running server actually offer. Use when the user asks whether CARLA supports something, when a feature has no skill, when a UE4 tutorial's steps do not exist, or before improvising a procedure.
+description: Answers "can CARLA do X here, and is there a vetted procedure for it" before you promise anything, and detects client/server/tree version skew — a support matrix over the whole collection (covered by a skill / works but undocumented / present but untested / broken or removed), an index of the features that are verified BROKEN on 0.10.0 (gbuffers crash the server, Landmark.waypoint is None, standalone asset packages are gone), and a probe that reports what this machine's build flags and running server actually offer. Use when the user asks whether CARLA supports something, when a feature has no skill, when a UE4 tutorial's steps do not exist, or before improvising a procedure.
 license: MIT
 compatibility: Any Linux with bash, or Git Bash on Windows. NO CARLA required — `matrix` and `broken` answer offline; `probe` reports more when CARLA_UE58_ROOT/CARLA_UE5_ROOT/CARLA_UE4_ROOT/CARLA_TARGET is set, and more still against a running server with an importable `carla`. Every claim was measured or read from source on ue58-dev HEAD 718efd7cc (engine 5.8.0, CARLA 0.10.0) and the 0.9.16 UE4 tree; re-verify after upgrading either.
 metadata:
@@ -61,7 +61,7 @@ and warns on the two skews that cause wasted debugging:
 
 Note what `version` deliberately does **not** claim: that matching versions mean
 matching behaviour. `ENABLE_ROS2` and `ENABLE_RSS` are
-compile-time, and the map-layer breakage is a property of the *content* branch —
+compile-time, and which maps have map layers is a property of the *content* branch —
 two servers reporting `0.10.0` can differ completely. Use `matrix` for behaviour;
 use `version` to establish that your measurements are even about the right
 target.
@@ -117,8 +117,10 @@ exists. Tell the user it crashes the simulator; offer
 
 **Example 2: "hide the buildings so I can see the road network"**
 
-`matrix` shows map layers as `[broken]`. `enable_environment_objects` is the
-mechanism that works — that is [[toggle-env-objects]], a `[skill]` row.
+On Town10HD_Opt map layers do nothing (its layers were merged into the persistent
+level; only Town01_Opt to Town07_Opt have them, see `matrix`).
+`enable_environment_objects` is the mechanism that works on every map — that is
+[[toggle-env-objects]], a `[skill]` row.
 
 **Example 3: "set up SUMO co-simulation"**
 
