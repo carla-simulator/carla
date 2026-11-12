@@ -4321,16 +4321,16 @@ Class that defines specific physical parameters for wheel objects that will be p
 ### Instance Variables
 - <a name="carla.WheelPhysicsControl.wheel_index"></a>**<font color="#f8805a">wheel_index</font>** (_int_)  
 Index of the wheel in the vehicle's wheel list, being -1 when it has not been assigned yet.  
-- <a name="carla.WheelPhysicsControl.velocity"></a>**<font color="#f8805a">velocity</font>** (_[carla.Vector3D](#carla.Vector3D)<small> - cm/s</small>_)  
-Velocity of the wheel, relative to the vehicle.  
+- <a name="carla.WheelPhysicsControl.velocity"></a>**<font color="#f8805a">velocity</font>** (_[carla.Vector3D](#carla.Vector3D)<small> - m/s</small>_)  
+World velocity of the wheel's centre: the vehicle body's velocity at that point. Read-only: [carla.Vehicle.apply_physics_control](#carla.Vehicle.apply_physics_control) ignores it.  
 - <a name="carla.WheelPhysicsControl.sweep_type"></a>**<font color="#f8805a">sweep_type</font>** (_int_)  
 Geometry the sweep tests against, being 0 simple collision and 1 complex collision.  
 - <a name="carla.WheelPhysicsControl.sweep_shape"></a>**<font color="#f8805a">sweep_shape</font>** (_int_)  
 Shape used to find the ground under the wheel, being 0 a ray, 1 a sphere and 2 the wheel's own collision shape. The later the slower.  
-- <a name="carla.WheelPhysicsControl.old_location"></a>**<font color="#f8805a">old_location</font>** (_[carla.Location](#carla.Location)<small> - centimeters</small>_)  
-Position the wheel had on the previous simulation step, relative to the vehicle.  
-- <a name="carla.WheelPhysicsControl.location"></a>**<font color="#f8805a">location</font>** (_[carla.Location](#carla.Location)<small> - centimeters</small>_)  
-Position of the wheel, relative to the vehicle.  
+- <a name="carla.WheelPhysicsControl.old_location"></a>**<font color="#f8805a">old_location</font>** (_[carla.Location](#carla.Location)<small> - meters</small>_)  
+Where the wheel's centre was one simulation step earlier, estimated from its velocity. Read-only: [carla.Vehicle.apply_physics_control](#carla.Vehicle.apply_physics_control) ignores it.  
+- <a name="carla.WheelPhysicsControl.location"></a>**<font color="#f8805a">location</font>** (_[carla.Location](#carla.Location)<small> - meters</small>_)  
+World location of the wheel's centre, suspension travel included, in the same frame and units as [carla.Actor.get_location](#carla.Actor.get_location). Read-only: [carla.Vehicle.apply_physics_control](#carla.Vehicle.apply_physics_control) ignores it.  
 - <a name="carla.WheelPhysicsControl.lateral_slip_graph"></a>**<font color="#f8805a">lateral_slip_graph</font>** (_list([carla.Vector2D](#carla.Vector2D))_)  
 Curve of lateral friction against slip angle, as a list of points where x is the slip angle in degrees and y the friction multiplier.  
 - <a name="carla.WheelPhysicsControl.external_torque_combine_method"></a>**<font color="#f8805a">external_torque_combine_method</font>** (_int_)  
