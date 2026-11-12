@@ -46,6 +46,8 @@
 #include "HAL/FileManager.h"
 #include "HAL/IConsoleManager.h"
 #include "HAL/PlatformProcess.h"
+#include "HAL/ThreadHeartBeat.h"
+#include "UObject/UObjectGlobals.h"
 #include "HAL/PlatformTime.h"
 #include "Misc/App.h"
 #include "Misc/FileHelper.h"
@@ -192,6 +194,9 @@ FCarlaEngine::~FCarlaEngine()
       GEngine->OnTravelFailure().Remove(OnTravelFailureHandle);
     }
     FWorldDelegates::OnPreWorldInitialization.Remove(OnPreWorldInitializationHandle);
+    FCoreUObjectDelegates::PreLoadMap.Remove(OnPreLoadMapHandle);
+    FCoreUObjectDelegates::PostLoadMapWithWorld.Remove(OnPostLoadMapHandle);
+    ResumeHeartBeatAfterLoad();
   }
 }
 
@@ -273,6 +278,10 @@ void FCarlaEngine::NotifyInitGame(const UCarlaSettings &Settings)
     OnPreWorldInitializationHandle = FWorldDelegates::OnPreWorldInitialization.AddRaw(
         this,
         &FCarlaEngine::OnPreWorldInitialization);
+    OnPreLoadMapHandle = FCoreUObjectDelegates::PreLoadMap.AddLambda(
+        [this](const FString &) { SuspendHeartBeatForLoad(); });
+    OnPostLoadMapHandle = FCoreUObjectDelegates::PostLoadMapWithWorld.AddLambda(
+        [this](UWorld *) { ResumeHeartBeatAfterLoad(); });
 
     bIsRunning = true;
 
@@ -942,10 +951,13 @@ void FCarlaEngine::OnPreTick(UWorld *World, ELevelTick TickType, float DeltaSeco
     Server.GetStreamingServer().SetSynchronousMode(true);
   }
 
-  // process RPC commands
+  // process RPC commands. Waiting here for a client's tick is not a hang:
+  // keep the game thread's heartbeat going so Unreal's hang detector only
+  // reports a game thread that is stuck somewhere else (#10233).
   do
   {
     Server.RunSome(1u);
+    FThreadHeartBeat::Get().HeartBeat();
   }
   while (bSynchronousMode && !Server.TickCueReceived());
 
@@ -1050,6 +1062,8 @@ void FCarlaEngine::OnBeginFrame()
   do
   {
     Server.RunSome(1u);
+    // An idle primary (synchronous mode, no client ticking) is not a hang here.
+    FThreadHeartBeat::Get().HeartBeat();
     if (!bCanWait || bLoadMapPending || IsEngineExitRequested() || !Secondary->IsConnected())
     {
       break;
@@ -1378,6 +1392,24 @@ void FCarlaEngine::OnPostTick(UWorld *World, ELevelTick TickType, float DeltaSec
     ResetSimulationState();
   }
   bFramePlayedThisTick = false;
+}
+
+void FCarlaEngine::SuspendHeartBeatForLoad()
+{
+  if (!bHeartBeatSuspendedForLoad)
+  {
+    bHeartBeatSuspendedForLoad = true;
+    FThreadHeartBeat::Get().SuspendHeartBeat();
+  }
+}
+
+void FCarlaEngine::ResumeHeartBeatAfterLoad()
+{
+  if (bHeartBeatSuspendedForLoad)
+  {
+    bHeartBeatSuspendedForLoad = false;
+    FThreadHeartBeat::Get().ResumeHeartBeat();
+  }
 }
 
 void FCarlaEngine::OnPreWorldInitialization(UWorld *World, const UWorld::InitializationValues IVS)

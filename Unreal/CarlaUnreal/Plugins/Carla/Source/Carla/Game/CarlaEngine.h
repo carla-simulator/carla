@@ -221,6 +221,14 @@ private:
 
   FDelegateHandle OnPreWorldInitializationHandle;
 
+  // Game thread: Unreal's hang detector (Core.System HangDuration) is paused
+  // while a map loads, which legitimately keeps the game thread busy.
+  FDelegateHandle OnPreLoadMapHandle;
+  FDelegateHandle OnPostLoadMapHandle;
+  bool bHeartBeatSuspendedForLoad = false;
+  void SuspendHeartBeatForLoad();
+  void ResumeHeartBeatAfterLoad();
+
   /// Value of p.Chaos.AccelerationStructureUseDynamicTree before deterministic
   /// collisions changed it; unset while they are off.
   TOptional<int32> DynamicTreeBeforeDeterministicCollisions;
