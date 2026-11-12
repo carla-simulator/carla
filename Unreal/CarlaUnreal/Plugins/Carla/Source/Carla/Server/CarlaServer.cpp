@@ -806,13 +806,13 @@ void FCarlaServer::FPimpl::BindActions()
       }
     }
 
-    // Generated OpenDRIVE worlds keep their xodr/nav in Saved/; they are
-    // served under the conventional Carla/Maps/{OpenDrive,Nav}/ names and
-    // filtered by the requested sub-folder like the content walk above.
+    // Files in Saved/ are served under the conventional Carla/Maps names.
     const FString SavedDir = FPaths::ConvertRelativePathToFull(FPaths::ProjectSavedDir()) / TEXT("");
+    const FString NavFileName = Episode->GetMapName() + TEXT(".bin");
+    const FString SavedNav = SavedDir / TEXT("Nav") / NavFileName;
+    const FString Folder = UTF8_TO_TCHAR(folder.c_str());
     if (bGeneratedWorld)
     {
-      const FString Folder = UTF8_TO_TCHAR(folder.c_str());
       const bool bWantXODR = Folder.IsEmpty() || Folder.StartsWith(TEXT("OpenDrive"), ESearchCase::IgnoreCase);
       const bool bWantNav = Folder.IsEmpty() || Folder.StartsWith(TEXT("Nav"), ESearchCase::IgnoreCase);
       if (bWantNav)
@@ -824,9 +824,28 @@ void FCarlaServer::FPimpl::BindActions()
       // Where this server keeps the xodr: a Multi-GPU secondary has its own
       // folder, and builds no navigation mesh.
       const FString SavedXODR = UOpenDrive::GetSavedXODRPath(Episode->GetMapName());
-      const FString SavedNav = SavedDir / TEXT("Nav") / (Episode->GetMapName() + TEXT(".bin"));
       if (bWantXODR && IFileManager::Get().FileExists(*SavedXODR)) Files.Add(SavedXODR);
       if (bWantNav && !bIsSecondaryServer && IFileManager::Get().FileExists(*SavedNav)) Files.Add(SavedNav);
+    }
+    else if (!bIsSecondaryServer &&
+             (Folder.IsEmpty() || Folder.Equals(TEXT("Nav/"), ESearchCase::IgnoreCase) ||
+              Folder.Equals(TEXT("Nav\\"), ESearchCase::IgnoreCase)) &&
+             IFileManager::Get().FileExists(*SavedNav))
+    {
+      // WalkerNavigation uses the first Nav entry. The Saved override and a
+      // bundled file at this location have the same client-visible name.
+      const FString ContentNav = FPaths::ProjectContentDir() / TEXT("Carla/Maps/Nav") / NavFileName;
+      Files.RemoveAll([&ContentNav](const FString &File)
+      {
+        return FPaths::IsSamePath(File, ContentNav);
+      });
+      Files.Insert(SavedNav, 0);
+    }
+
+    if (Files.IsEmpty())
+    {
+      UE_LOG(LogCarla, Warning, TEXT("get_required_files: no files found for map '%s' in folder '%s'"),
+          *Episode->GetMapName(), *Folder);
     }
 
     // Remove the start of the path until the content folder and put each file
