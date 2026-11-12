@@ -188,6 +188,7 @@
 * Fixed the Traffic Manager leaking its whole in-memory road graph (several hundred MB on a large map) every time it shut down or rebuilt its map for a new episode. Its waypoints link to each other with shared pointers, so the cycles kept them all alive; those links are now broken when the map is destroyed.
 * Fixed `BehaviorAgent.run_step` raising `AttributeError` once the local planner's waypoint queue empties, for instance at the end of a route.
 * Fixed the Traffic Manager's localization stage never forgetting the junction a vehicle is entering (`vehicles_at_junction_entrance`) when the vehicle is removed or the Traffic Manager is reset.
+* Fixed the Traffic Manager rebuilding its road graph on Town11 and Town13 from the AdditionalMaps pack although the pack ships their cache: `client.get_required_files()` now also serves a map's OpenDRIVE, navigation and Traffic Manager files from the mounted content pack that declares the map (`<pack>/Content/Maps/{OpenDrive,Nav,TM}/`). A copy in the base content still takes precedence.
 
 #### Python API and client
 

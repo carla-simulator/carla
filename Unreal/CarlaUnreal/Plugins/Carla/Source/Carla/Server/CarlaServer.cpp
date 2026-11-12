@@ -762,6 +762,50 @@ void FCarlaServer::FPimpl::BindActions()
       IFileManager::Get().FindFilesRecursive(Files, *folderDir, *(fileName + ".bin"), true, false, false);
     }
 
+    // Also serve the map's files from its pack's Content/Maps/, unless the base content already has that kind.
+    const UCarlaContentPackManager *MapPacks = UCarlaContentPackManager::Get();
+    if (!bGeneratedWorld && MapPacks != nullptr)
+    {
+      const auto KindOf = [](const FString &InFile, const FString &Root)
+      {
+        FString Relative = FPaths::ConvertRelativePathToFull(InFile);
+        Relative.RemoveFromStart(Root / TEXT(""));
+        FString Kind, Rest;
+        if (!Relative.Split(TEXT("/"), &Kind, &Rest))
+        {
+          Kind.Reset();
+        }
+        return Kind.ToLower() + TEXT("|") + FPaths::GetExtension(InFile).ToLower();
+      };
+      TSet<FString> FoundKinds;
+      for (const FString &File : Files)
+      {
+        FoundKinds.Add(KindOf(File, mapDir));
+      }
+      const FString MapName = Episode->GetMapName();
+      for (const FCarlaContentPack &Pack : MapPacks->GetPacks())
+      {
+        if (!Pack.bMounted || !Pack.Manifest.GetMapNames().Contains(MapName))
+        {
+          continue;
+        }
+        const FString PackMapsDir = Pack.ContentDir / TEXT("Maps");
+        const FString PackFolderDir = PackMapsDir / UTF8_TO_TCHAR(folder.c_str());
+        TArray<FString> PackFiles;
+        IFileManager::Get().FindFilesRecursive(PackFiles, *PackFolderDir, *(MapName + TEXT(".xodr")), true, false, false);
+        IFileManager::Get().FindFilesRecursive(PackFiles, *PackFolderDir, *(MapName + TEXT(".bin")), true, false, false);
+        for (const FString &File : PackFiles)
+        {
+          const FString Kind = KindOf(File, PackMapsDir);
+          if (!FoundKinds.Contains(Kind))
+          {
+            FoundKinds.Add(Kind);
+            Files.Add(File);
+          }
+        }
+      }
+    }
+
     // Generated OpenDRIVE worlds keep their xodr/nav in Saved/; they are
     // served under the conventional Carla/Maps/{OpenDrive,Nav}/ names and
     // filtered by the requested sub-folder like the content walk above.
