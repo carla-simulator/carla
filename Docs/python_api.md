@@ -626,20 +626,20 @@ Creates a new world with default settings using `map_name` map. All actors in th
         - `map_name` (_str_) - Name of the map to be used in this world. Accepts both full paths and map names, e.g. '/Game/Carla/Maps/Town01_Opt' or 'Town01_Opt'. The name is matched against the map file name, ignoring case, so it has to be exact. Remember that these paths are dynamic.  
         - `reset_settings` (_bool_) - Option to reset the episode setting to default values, set to false to keep the current settings. This is useful to keep sync mode when changing map and to keep deterministic scenarios.  
         - `map_layers` (_[carla.MapLayer](#carla.MapLayer)_) - Layers of the map that will be loaded. By default all layers are loaded. This parameter works like a flag mask.  
-    - **Warning:** <font color="#ED2F2F">_`map_layers` are only available for "Opt" maps_</font>  
+    - **Warning:** <font color="#ED2F2F">_`map_layers` only has an effect on Town01_Opt to Town07_Opt. Town10HD_Opt has no layers (see [carla.MapLayer](#carla.MapLayer))._</font>  
 - <a name="carla.Client.load_world_if_different"></a>**<font color="#7fb800">load_world_if_different</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**map_name**</font>, <font color="#00a6ed">**reset_settings**=True</font>, <font color="#00a6ed">**map_layers**=[carla.MapLayer.All](#carla.MapLayer.All)</font>)  
 Returns the current world, loading <b>map_name</b> first unless it is already the map in use.  
     - **Parameters:**
         - `map_name` (_str_) - Name of the map, which has to match the one in use exactly for it not to be reloaded.  
         - `reset_settings` (_bool_) - Resets the settings to their default values when the map is loaded.  
-        - `map_layers` (_[carla.MapLayer](#carla.MapLayer)_) - Layers to load. Only has an effect on layered maps.  
+        - `map_layers` (_[carla.MapLayer](#carla.MapLayer)_) - Layers to load. Only has an effect on Town01_Opt to Town07_Opt (see [carla.MapLayer](#carla.MapLayer)).  
     - **Return:** _[carla.World](#carla.World)_  
 - <a name="carla.Client.load_world_if_different"></a>**<font color="#7fb800">load_world_if_different</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**map_name**</font>, <font color="#00a6ed">**reset_settings**=True</font>, <font color="#00a6ed">**map_layers**=[carla.MapLayer.All](#carla.MapLayer.All)</font>)  
 Returns the current world, loading <b>map_name</b> first unless it is already the map in use.  
     - **Parameters:**
         - `map_name` (_str_) - Name of the map, which has to match the one in use exactly for it not to be reloaded.  
         - `reset_settings` (_bool_) - Resets the settings to their default values when the map is loaded.  
-        - `map_layers` (_[carla.MapLayer](#carla.MapLayer)_) - Layers to load. Only has an effect on layered maps.  
+        - `map_layers` (_[carla.MapLayer](#carla.MapLayer)_) - Layers to load. Only has an effect on Town01_Opt to Town07_Opt (see [carla.MapLayer](#carla.MapLayer)).  
     - **Return:** _[carla.World](#carla.World)_  
 - <a name="carla.Client.mount_content_pack"></a>**<font color="#7fb800">mount_content_pack</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**path**</font>)  
 Mounts a content pack (a content-only Unreal plugin cooked against this CARLA release, with a `carla-pack.json` manifest) into the running server without a restart. Its maps are listed by [carla.Client.get_available_maps](#carla.Client.get_available_maps) and loadable with [carla.Client.load_world](#carla.Client.load_world), and its vehicles, walkers, props and blueprints (`Config/*.json`) are in the blueprint library at once; an entry that overrides an existing blueprint takes effect at the next episode. Raises a RuntimeError naming the reason when the path is not a pack, the pack was built for another base release or platform, or a pack of that name is already mounted.  
@@ -2322,7 +2322,7 @@ Returns a waypoint if all the parameters passed are correct. Otherwise, returns 
 ---
 
 ## carla.MapLayer<a name="carla.MapLayer"></a>
-Class that represents each manageable layer of the map. Can be used as flags: combining layers with `|`, `&`, `^` or `~` gives another layer, which `load_world()` and `load_map_layer()` accept. __WARNING: Only "Opt" maps are able to work with map layers.__.  
+Class that represents each manageable layer of the map. Can be used as flags: combining layers with `|`, `&`, `^` or `~` gives another layer, which `load_world()` and `load_map_layer()` accept. __WARNING: Map layers only work on Town01_Opt to Town07_Opt, whose layers are streaming sublevels. Town10HD_Opt has its layers merged into the persistent level and ignores them; use environment objects (`get_environment_objects()` / `enable_environment_objects()`) to hide groups of objects there. Sublevel-based layers are being phased out on UE 5 and will be replaced by a grouping that does not use sublevels.__.  
 
 ### Instance Variables
 - <a name="carla.MapLayer.NONE"></a>**<font color="#f8805a">NONE</font>**  
@@ -4561,7 +4561,7 @@ Returns whether the map has a weather actor, and so whether the weather can be r
 Loads the selected layers to the level. If the layer is already loaded the call has no effect.  
     - **Parameters:**
         - `map_layers` (_[carla.MapLayer](#carla.MapLayer)_) - Mask of level layers to be loaded.  
-    - **Warning:** <font color="#ED2F2F">_This only affects "Opt" maps. The minimum layout includes roads, sidewalks, traffic lights and traffic signs._</font>  
+    - **Warning:** <font color="#ED2F2F">_Only Town01_Opt to Town07_Opt have map layers; on Town10HD_Opt and the other maps the call has no effect. See [carla.MapLayer](#carla.MapLayer). The minimum layout includes roads, sidewalks, traffic lights and traffic signs._</font>  
 - <a name="carla.World.on_tick"></a>**<font color="#7fb800">on_tick</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**callback**</font>)  
 This method is used in [__asynchronous__ mode](core_synchrony.md). It starts callbacks from the client for the function defined as `callback`, and returns the ID of the callback. The function will be called everytime the server ticks. It requires a [carla.WorldSnapshot](#carla.WorldSnapshot) as argument, which can be retrieved from __<font color="#7fb800">wait_for_tick()</font>__. Use __<font color="#7fb800">remove_on_tick()</font>__ to stop the callbacks.  
     - **Parameters:**
@@ -4612,7 +4612,7 @@ Same as __<font color="#7fb800">spawn_actor()</font>__ but returns <b>None</b> o
 Unloads the selected layers to the level. If the layer is already unloaded the call has no effect.  
     - **Parameters:**
         - `map_layers` (_[carla.MapLayer](#carla.MapLayer)_) - Mask of level layers to be unloaded.  
-    - **Warning:** <font color="#ED2F2F">_This only affects "Opt" maps. The minimum layout includes roads, sidewalks, traffic lights and traffic signs._</font>  
+    - **Warning:** <font color="#ED2F2F">_Only Town01_Opt to Town07_Opt have map layers; on Town10HD_Opt and the other maps the call has no effect. See [carla.MapLayer](#carla.MapLayer). The minimum layout includes roads, sidewalks, traffic lights and traffic signs._</font>  
 - <a name="carla.World.wait_for_tick"></a>**<font color="#7fb800">wait_for_tick</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**seconds**=10.0</font>)  
 This method is used in [__asynchronous__ mode](core_synchrony.md). It makes the client wait for a server tick. When the next frame is computed, the server will tick and return a snapshot describing the new state of the world.  
     - **Parameters:**

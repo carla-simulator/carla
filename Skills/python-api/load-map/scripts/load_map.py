@@ -17,8 +17,9 @@ map name + settings, because a load can silently land you on a different map or
 reset the sync/rendering settings out from under a pipeline.
 
 Connection comes from the environment (see env.sh): CARLA_HOST, CARLA_PORT,
-CARLA_TIMEOUT. Layers only take effect on layered ("_Opt" / large) maps; on a
-fully-baked map the server ignores layer ops (documented, not an error).
+CARLA_TIMEOUT. Layers only take effect on maps with layer sublevels (UE 5 line:
+Town01_Opt..Town07_Opt; UE 4: every "_Opt" map); elsewhere the server ignores
+layer ops (documented, not an error).
 """
 from __future__ import annotations
 
@@ -213,14 +214,17 @@ def cmd_layer(args: argparse.Namespace) -> None:
         world.unload_map_layer(_parse_layers(args.unload))
         action = f"unloaded layers {args.unload}"
     _report(world, f"({action})")
-    print("  note: layer ops are no-ops on fully-baked (non-'_Opt') maps")
-    # On the UE5 line they are no-ops on EVERY map: the UE5 conversion flattened
-    # the per-layer sublevels into the persistent level, so the mask matches
-    # nothing in World->GetStreamingLevels(). The call still returns success.
+    print("  note: layer ops are no-ops on maps without layer sublevels")
+    # On the UE5 line only Town01_Opt..Town07_Opt keep their layer sublevels.
+    # Town10HD_Opt had them merged into the persistent level on purpose, so the
+    # mask matches nothing in World->GetStreamingLevels() and the call still
+    # returns success.
     try:
-        if _is_ue5_line(client.get_server_version()):
-            print("  WARNING UE5 line: layer ops do nothing on ANY map — the layer "
-                  "sublevels were baked into the persistent level.")
+        name = world.get_map().name.split("/")[-1]
+        if _is_ue5_line(client.get_server_version()) and not (
+                name.startswith("Town0") and name.endswith("_Opt")):
+            print(f"  WARNING UE5 line: {name} has no map layers (only "
+                  "Town01_Opt..Town07_Opt do); this call changed nothing.")
             print("          Hide geometry with enable_environment_objects "
                   "(toggle-env-objects) instead.")
     except Exception:
