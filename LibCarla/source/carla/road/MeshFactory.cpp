@@ -1124,7 +1124,7 @@ std::map<road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>> MeshFactory:
     for (size_t lane_mesh_idx = 0; lane_mesh_idx < lane_meshes.size(); ++lane_mesh_idx) {
       auto& mesh = lane_meshes[lane_mesh_idx];
       for(size_t i = 0; i < mesh->GetVerticesNum(); ++i) {
-        if (i > 2 && i < mesh->GetVerticesNum() - 2) {
+        if (i >= 2 && i < mesh->GetVerticesNum() - 2) {
           auto& vertex = mesh->GetVertices()[i];
           Point point(vertex.x, vertex.y, vertex.z);
           auto closest_vertices = rtree.GetNearestNeighbours(point, 20);

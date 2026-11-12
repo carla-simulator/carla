@@ -154,6 +154,7 @@
 
 #### Simulation and content
 
+* Fixed road mesh smoothing skipping the first interior vertex, which could leave a one-sided ridge while the other interior vertices were relaxed.
 * Fixed `Vehicle.enable_constant_velocity()` making vehicles unable to turn: it overwrote the whole velocity every frame, removing the sideways slip the tyres need to corner and the vertical velocity. It now forces only the velocity component along the requested vector and leaves the perpendicular components to physics (a zero vector still holds the vehicle still), so `ConstantVelocityAgent` and `automatic_control.py --agent=Constant` follow ordinary corners instead of leaving the road.
 * Fixed Town_C's vehicle spawn points sitting 4 m above the road, so every spawned vehicle dropped 4 m. They are now 0.5 m above it, as on the other maps.
 * Fixed **Town11 still loading as a legacy tiled map** through `ALargeMapManager`: it is now a World Partition map like Town12, Town13 and Town15, and has a pedestrian navmesh, so walkers can spawn and navigate on it. `CarlaLargeMapConvert` no longer fails to save a town whose tiles carry level-script blueprints or redirectors (`Illegal reference to private object`).
