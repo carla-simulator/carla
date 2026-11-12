@@ -138,6 +138,7 @@
 * **Expanded the traffic light and traffic sign authoring pages**: the Traffic Light Tool with an animated build from scratch, its presets, pieces and light atlas; placing a regional `BP_Sign` with its pole, plates and secondary signs; and the regional sign catalog in its three styles.
 * **Added a network ports reference** at `Docs/ref_ports.md`, under _Resources_: every port the simulator, the Traffic Manager, ROS 2 and the tooling open, what sets each one, and the two bind errors they produce.
 * **Reorganised the rendering documentation** under _Sensor simulation_: UE native rendering, with a new _Camera features_ section on the post-process presets, the ray-traced lens cameras and DLSS, next to NuRec, Cosmos and the sensor reference.
+* **Gave the C++ reference a main page and moved it to Doxygen 1.18.0**: `index.html` now opens on a compact index of the LibCarla namespaces and the Carla plugin's entry classes (`Util/CppReference/mainpage.md`) instead of a blank page, and the `UE5-Doxygen` workflow installs the pinned 1.18.0 release binary instead of Ubuntu's 1.9.8, which drops jQuery: the main page loads 181 KB instead of 302 KB. See `Docs/ref_cpp.md`.
 
 ### Bug fixes
 
