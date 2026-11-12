@@ -28,8 +28,16 @@ import os
 import tempfile
 import time
 import unittest
+from queue import Queue
+
+import carla
+import numpy as np
 
 from . import SyncSmokeTest
+from .test_lidar import wait_for_frame
+
+SEMANTIC_POINT = np.dtype([('x', 'f4'), ('y', 'f4'), ('z', 'f4'), ('cos', 'f4'),
+                           ('object_idx', 'u4'), ('object_tag', 'u4')])
 
 
 class TestRecorder(SyncSmokeTest):
@@ -188,6 +196,71 @@ class TestRecorder(SyncSmokeTest):
             self._vehicle_count(), before,
             'stop_replayer(keep_actors=False) after the replay ended left the '
             'replayed vehicle behind')
+
+
+    def _semantic_lidar_points_on(self, actor):
+        """Points of a semantic LiDAR 3 m above @a actor that hit it."""
+        bp = self.world.get_blueprint_library().find('sensor.lidar.ray_cast_semantic')
+        for key, value in {'channels': '32', 'range': '10', 'points_per_second': '200000',
+                           'rotation_frequency': '20', 'upper_fov': '-30',
+                           'lower_fov': '-90'}.items():
+            bp.set_attribute(key, value)
+        lidar = self.world.spawn_actor(
+            bp, carla.Transform(actor.get_location() + carla.Location(z=3.0)))
+        data_queue = Queue()
+        lidar.listen(lambda data: data_queue.put((data.frame, bytes(data.raw_data))))
+        try:
+            frame = self.world.tick()
+            points = np.frombuffer(wait_for_frame(self, data_queue, frame)[1], dtype=SEMANTIC_POINT)
+        finally:
+            lidar.stop()
+            lidar.destroy()
+        return int(np.count_nonzero(points['object_idx'] == actor.id))
+
+    def test_replayed_actors_visible_to_sensors(self):
+        """Replayed vehicles and walkers keep query collision, so sensors see them."""
+        log_path = self._log_path('replay_visible_to_sensors.log')
+        blueprint_library = self.world.get_blueprint_library()
+
+        self.client.start_recorder(log_path)
+        vehicle = self._spawn_test_vehicle()
+        walker_bp = blueprint_library.filter('walker.pedestrian.*')[0]
+        location = self.world.get_random_location_from_navigation()
+        self.assertIsNotNone(location, 'Town10HD_Opt has no navigation mesh')
+        walker = self.world.spawn_actor(walker_bp, carla.Transform(location + carla.Location(z=1.0)))
+        controller = self.world.spawn_actor(
+            blueprint_library.find('controller.ai.walker'), carla.Transform(), attach_to=walker)
+        self.world.tick()
+        controller.start()
+        controller.go_to_location(self.world.get_random_location_from_navigation())
+        for _ in range(40):
+            self.world.tick()
+        self.client.stop_recorder()
+        controller.stop()
+        for actor in (controller, walker, vehicle):
+            actor.destroy()
+        for _ in range(5):
+            self.world.tick()
+
+        self.client.replay_file(log_path, 0.0, 0.0, 0)
+        for _ in range(20):
+            self.world.tick()
+        replayed = {
+            'vehicle': self.world.get_actors().filter('vehicle.*'),
+            'walker': self.world.get_actors().filter('walker.pedestrian.*'),
+        }
+        for kind, actors in replayed.items():
+            self.assertEqual(len(actors), 1, 'expected one replayed %s' % kind)
+            actor = actors[0]
+            location = actor.get_location()
+            hits = self.world.cast_ray(location + carla.Location(z=3.0), location - carla.Location(z=1.5))
+            label = carla.CityObjectLabel.Car if kind == 'vehicle' else carla.CityObjectLabel.Pedestrians
+            self.assertTrue(any(hit.label == label for hit in hits),
+                            'world.cast_ray does not hit the replayed %s' % kind)
+            self.assertGreater(self._semantic_lidar_points_on(actor), 0,
+                               'The semantic LiDAR does not hit the replayed %s' % kind)
+
+        self.client.stop_replayer(False)
 
 
 if __name__ == '__main__':

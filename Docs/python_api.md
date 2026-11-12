@@ -4066,9 +4066,9 @@ Sets the destination that the pedestrian will reach.
     - **Parameters:**
         - `destination` (_[carla.Location](#carla.Location)<small> - meters</small>_)  
 - <a name="carla.WalkerAIController.start"></a>**<font color="#7fb800">start</font>**(<font color="#00a6ed">**self**</font>)  
-Enables AI control for its parent walker.  
+Enables AI control for its parent walker. The walker keeps its collision, so ray-cast sensors and [carla.World.cast_ray](#carla.World.cast_ray) detect it.  
 - <a name="carla.WalkerAIController.stop"></a>**<font color="#7fb800">stop</font>**(<font color="#00a6ed">**self**</font>)<button class="SnipetButton" id="carla.WalkerAIController.stop-snipet_button">snippet &rarr;</button>  
-Disables AI control for its parent walker.  
+Disables AI control for its parent walker and gives the walker its movement back, so it obeys [carla.Walker.apply_control](#carla.Walker.apply_control) again.  
 
 ##### Setters
 - <a name="carla.WalkerAIController.set_max_speed"></a>**<font color="#7fb800">set_max_speed</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**speed**=1.4</font>)  

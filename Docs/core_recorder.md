@@ -89,6 +89,8 @@ client.replay_file("recording01.log", time_start, duration, follow_id)
 | `offset` | 10 m behind, 5 m above, pitched 25&deg; down | Where the spectator sits relative to the followed actor. Ignored when `follow_id` is `0`. |
 | `map_override` | empty | Name of the map to replay on, instead of the one the recording names. For replaying on a different variant of the same road network. |
 
+Replayed vehicles and pedestrians have no physics and query-only collision: they push nothing, but sensors (including those re-spawned with `replay_sensors`) and `world.cast_ray()` detect them.
+
 At the end of the playback, vehicles may be returned to autopilot and pedestrians stop, depending on how the replayer was configured.
 
 

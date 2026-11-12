@@ -726,11 +726,11 @@
     # --------------------------------------
     - def_name: start
       doc: >
-        Enables AI control for its parent walker. 
+        Enables AI control for its parent walker. The walker keeps its collision, so ray-cast sensors and carla.World.cast_ray detect it.
     # --------------------------------------
     - def_name: stop
       doc: >
-        Disables AI control for its parent walker. 
+        Disables AI control for its parent walker and gives the walker its movement back, so it obeys carla.Walker.apply_control again.
     # --------------------------------------
     - def_name: set_max_speed
       params:
