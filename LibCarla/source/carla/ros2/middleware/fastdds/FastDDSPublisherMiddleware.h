@@ -191,6 +191,11 @@ class FastDDSPublisherMiddleware
   bool Publish(void* message_data) override {
     // Init() failed (e.g. no participant): there is no writer to use.
     if (_datawriter == nullptr) {
+      if (!_reported_not_ready.exchange(true)) {
+        log_error("FastDDSPublisherMiddleware::Publish called on a publisher "
+                  "whose Init() failed (see the errors above); all its messages "
+                  "are dropped");
+      }
       return false;
     }
     eprosima::fastrtps::rtps::InstanceHandle_t instance_handle;
@@ -220,6 +225,7 @@ class FastDDSPublisherMiddleware
 
   std::string        _topic_name;
   std::atomic<bool>  _alive { false };
+  std::atomic<bool>  _reported_not_ready { false };
 };
 
 } // namespace ros2
