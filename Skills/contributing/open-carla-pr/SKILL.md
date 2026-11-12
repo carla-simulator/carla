@@ -81,18 +81,51 @@ without running this search and showing the user what it found.**
    (`gh issue view <n> --repo carla-simulator/carla --comments`, or the
    discussion URL). Check the version and branch they were reported on. A
    UE4-era issue may not apply to `ue58-dev`, and vice versa.
-3. **Decide, and tell the user which case it is, with the links:**
+3. **Check every relevant closed thread, and verify its solution.** A closed
+   hit is not a dead end and not a reason to open a new issue. It usually
+   holds the fix, a workaround or the answer. For each closed issue, closed
+   discussion or merged PR that matches the symptom:
+   1. **Find out how it was closed.**
+      ```bash
+      gh issue view <n> --repo carla-simulator/carla --json stateReason,closedByPullRequestsReferences --comments
+      gh pr view <pr> --repo carla-simulator/carla --json state,baseRefName,mergeCommit
+      ```
+      `stateReason` is `COMPLETED` (fixed or answered) or `NOT_PLANNED`
+      (won't fix, stale, duplicate, not a bug). Read the comments to the end:
+      the fix is often a PR linked only in a comment, a config change, a
+      workaround, or "duplicate of #<m>" (follow #<m> and check it the same way).
+   2. **Fix in a PR: check it is in the user's tree.** Check the PR's
+      `baseRefName`: a fix merged into `ue4-dev` or `ue5-dev` is not in
+      `ue58-dev` unless it was ported (search for the port:
+      `git log --oneline --grep '#<n>' --grep '<pr title words>'`). Then
+      `git merge-base --is-ancestor <mergeCommit> HEAD` (exit 0 = present).
+      Not present: the answer is to update or cherry-pick it. Present: go to
+      the next step and reproduce.
+   3. **Apply the solution and reproduce.** Run the user's repro with the fix
+      present, or with the workaround or setting from the thread applied.
+      Do not assume it works because the thread says so, and do not assume
+      it fails because the symptom looks the same.
+   4. **Report each one to the user:** the link, how it was closed, the
+      solution it gives, and what happened when you tried it (works / still
+      fails, with the output). A solution that works ends the search, and no
+      issue is opened. One that fails goes into the new issue's body:
+      `Tried the fix from #<n> (<commit>) / the workaround from #<n>: still <symptom>`.
+      This saves the triager from proposing it again.
+4. **Decide, and tell the user which case it is, with the links:**
 
    | Found | Do instead of creating |
    |---|---|
    | Open issue or discussion about the same thing | Add to it: a comment with the new information (your Setup, a smaller repro, a log) or a 👍 reaction. Do not post "+1" comments. A fix PR then uses its `Fixes #<n>` |
-   | Closed issue, fixed | Check whether the fix is in the user's tree (`git log --oneline --grep '#<n>'`, or `git merge-base --is-ancestor <fix commit> HEAD`). If it is not, the answer is to update. If it is and the bug is back, open a **new** issue that links the old one as a regression |
-   | Closed as "not a bug" / answered discussion | That answer is the reply. Show it to the user |
+   | Closed issue, fixed | Verified in step 3. Fix not in the tree: the answer is to update. Fix present and the bug reproduces: open a **new** issue that links the old one as a regression (`Regression of #<n>`), with the step 3 result |
+   | Closed with a workaround or setting | Verified in step 3. It works: show it to the user, no issue. It does not: open a new issue linking it, with what you tried |
+   | Closed as "not a bug" / answered discussion | That answer is the reply. Show it to the user, after checking in step 3 that it applies to their case |
+   | Closed as not planned / stale, no solution | Do not open a copy hoping for a different outcome. Read why it was closed. If the reason no longer holds (new branch, new information), open a new issue that links it and says what changed |
    | Open PR already addressing it | Point the user to it (review, test it) instead of a parallel issue or PR |
    | Related but different | Create the new one, and link the related threads in its body (`Related to #<n>`) |
    | Nothing relevant | Create it, and say in the body what you searched for, so a triager does not repeat it |
 
-Report the queries you ran and the result to the user before drafting anything.
+Report the queries you ran, the closed threads you checked and the result of
+trying their solutions to the user before drafting anything.
 
 ### Step 1: Confirm the target
 
@@ -434,6 +467,10 @@ venue; a discussion leaves a link the PR can cite.
   matches words, not meaning. Split it into the API name, the error text and
   the symptom, and include closed threads. The fix, or the answer, is often
   in a closed one.
+- **A closed issue's fix is assumed rather than tried.** "Fixed in #<n>" says
+  nothing about the user's tree: the PR may target another branch (`ue4-dev`,
+  `ue5-dev`) and never have been ported, or the bug may have come back.
+  Check `baseRefName` and `merge-base --is-ancestor`, then reproduce.
 - **Questions are not issues.** Support questions filed as issues get
   redirected to Discussions. File a bug only once you can reproduce it.
 - **Never invent the Setup block.** A wrong CARLA commit or GPU driver in a
