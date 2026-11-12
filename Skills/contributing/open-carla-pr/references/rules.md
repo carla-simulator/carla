@@ -30,6 +30,9 @@ first on GitHub Discussions or the Discord server, and check the issue board.
 **Never open an issue or a discussion without first searching the open and closed
 issues, pull requests and discussions for a duplicate.** If one exists, add to it
 (new information or a 👍) instead. A related thread gets linked from the new one.
+For each relevant **closed** thread, find its solution (fix PR, workaround,
+answer), check that it is in the user's tree, and try it on the repro. Open a
+new issue only if it does not solve the problem, and say in it what you tried.
 
 Before reporting a bug: check it has not been reported, read the docs and the
 FAQ (`Docs/build_faq.md`), and give the branch and commit, UE version, platform

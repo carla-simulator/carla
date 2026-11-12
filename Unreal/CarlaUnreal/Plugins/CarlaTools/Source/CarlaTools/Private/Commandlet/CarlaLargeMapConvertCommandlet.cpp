@@ -10,7 +10,10 @@
 
 #include <util/ue-header-guard-begin.h>
 #include "Engine/DirectionalLight.h"
+#include "Engine/BlueprintGeneratedClass.h"
 #include "Engine/ExponentialHeightFog.h"
+#include "Engine/LevelScriptActor.h"
+#include "Engine/LevelScriptBlueprint.h"
 #include "Engine/LevelStreaming.h"
 #include "Engine/SkyLight.h"
 #include "Engine/World.h"
@@ -20,6 +23,9 @@
 #include "Misc/FileHelper.h"
 #include "Misc/PackageName.h"
 #include "Misc/Paths.h"
+#include "UObject/ObjectRedirector.h"
+#include "UObject/Package.h"
+#include "UObject/UObjectHash.h"
 #include <util/ue-header-guard-end.h>
 
 DEFINE_LOG_CATEGORY_STATIC(LogCarlaLargeMapConvert, Log, All);
@@ -81,6 +87,68 @@ int32 UCarlaLargeMapConvertCommandlet::Main(const FString& Params)
   }
 
   return Result;
+}
+
+void UCarlaLargeMapConvertCommandlet::PerformAdditionalWorldCleanup(UWorld* World) const
+{
+  Super::PerformAdditionalWorldCleanup(World);
+
+  // A sub-level whose level-script blueprint has no nodes counts as having no
+  // level script, so the stock commandlet renames every non-actor object of
+  // that tile package -- the ULevelScriptBlueprint, its generated class, the
+  // SKEL class and the CDO -- into the main package. Those objects still point
+  // at the tile's ULevel, which is deleted with the tile, and saving the main
+  // map then fails. They carry no logic: send them to the transient package.
+  ULevel* MainLevel = World->PersistentLevel;
+  UPackage* MainPackage = World->GetPackage();
+  const UClass* MainScriptClass =
+      MainLevel->GetLevelScriptActor() ? MainLevel->GetLevelScriptActor()->GetClass() : nullptr;
+
+  auto IsTileScriptClass = [MainScriptClass](const UClass* Class)
+  {
+    return Class != nullptr &&
+        Cast<UBlueprintGeneratedClass>(Class) != nullptr &&
+        Class->IsChildOf(ALevelScriptActor::StaticClass()) &&
+        Class != MainScriptClass &&
+        !(MainScriptClass && Class->GetName() == TEXT("SKEL_") + MainScriptClass->GetName());
+  };
+
+  TArray<UObject*> ToDiscard;
+  ForEachObjectWithPackage(MainPackage, [&](UObject* Object)
+  {
+    if (Object->GetOuter() != MainPackage)
+    {
+      return true;
+    }
+    const ULevelScriptBlueprint* Blueprint = Cast<ULevelScriptBlueprint>(Object);
+    const bool bTileBlueprint = Blueprint != nullptr &&
+        (MainScriptClass == nullptr || Blueprint->GeneratedClass != MainScriptClass);
+    const bool bTileClass = IsTileScriptClass(Cast<UClass>(Object));
+    const bool bTileDefault = Object->HasAnyFlags(RF_ClassDefaultObject) &&
+        IsTileScriptClass(Object->GetClass());
+    // Town11's tiles also carry ~65 redirectors each to the other tiles'
+    // worlds; once the tiles are deleted they only produce failed imports.
+    const UObjectRedirector* Redirector = Cast<UObjectRedirector>(Object);
+    const bool bTileRedirector = Redirector != nullptr &&
+        (Redirector->DestinationObject == nullptr ||
+         Redirector->DestinationObject->GetPackage() != MainPackage);
+    if (bTileBlueprint || bTileClass || bTileDefault || bTileRedirector)
+    {
+      ToDiscard.Add(Object);
+    }
+    return true;
+  }, false);
+
+  for (UObject* Object : ToDiscard)
+  {
+    Object->Rename(nullptr, GetTransientPackage(),
+        REN_DontCreateRedirectors | REN_NonTransactional);
+    Object->ClearFlags(RF_Public | RF_Standalone);
+    Object->MarkAsGarbage();
+  }
+  UE_LOG(LogCarlaLargeMapConvert, Display, TEXT(
+      "Discarded %d tile level-script objects and redirectors."),
+      ToDiscard.Num());
 }
 
 void UCarlaLargeMapConvertCommandlet::OnWorldLoaded(UWorld* World)

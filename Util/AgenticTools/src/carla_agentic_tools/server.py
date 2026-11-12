@@ -64,7 +64,10 @@ GROUP_REQUIREMENTS = {
     # that names the wrong engine branch sends the user into a multi-hour build of
     # the wrong thing. If the branches converge later, merge the groups then.
     "ue5": (("CARLA_UE5_ROOT",), "a CARLA ue5-dev checkout (UE 5.5)"),
-    "ue58": (("CARLA_UE58_ROOT",), "a CARLA ue58-dev checkout (UE 5.8)"),
+    # A standalone package is enough for run-carla-ue58-server, so it opens the
+    # group too; the build skills still ask for the checkout they need.
+    "ue58": (("CARLA_UE58_ROOT", "CARLA_TARGET", "CARLA_PACKAGE_ROOT"),
+             "a CARLA ue58-dev checkout (UE 5.8) or a standalone package"),
     "scenario-runner": (("SCENARIO_RUNNER_ROOT",), "a scenario_runner checkout"),
     "leaderboard": (("LEADERBOARD_ROOT",), "a leaderboard checkout (plus its matching scenario_runner)"),
     "scenic": (("SCENIC_ROOT",), "a Scenic install"),

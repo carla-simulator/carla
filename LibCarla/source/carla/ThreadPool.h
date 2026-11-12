@@ -52,7 +52,15 @@ namespace carla {
     /// threads if @a worker_threads is provided, otherwise use all available
     /// hardware concurrency.
     void AsyncRun(size_t worker_threads) {
-      _workers.CreateThreads(worker_threads, [this]() { Run(); });
+      _workers.CreateThreads(worker_threads, [this]() {
+        IsPoolThreadFlag() = true;
+        Run();
+      });
+    }
+
+    /// Whether the calling thread is a ThreadPool worker (it must not destroy its own pool).
+    static bool IsPoolThread() {
+      return IsPoolThreadFlag();
     }
 
     /// @copydoc AsyncRun(size_t)
@@ -83,6 +91,11 @@ namespace carla {
     }
 
   private:
+
+    static bool &IsPoolThreadFlag() {
+      static thread_local bool is_pool_thread = false;
+      return is_pool_thread;
+    }
 
     boost::asio::io_context _io_context;
 

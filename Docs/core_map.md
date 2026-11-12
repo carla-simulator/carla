@@ -371,13 +371,12 @@ The hero's ring is the one to tune; the rest only need the ground under their wh
 
 Two further settings apply only to these maps:
 
-- `actor_active_distance` — beyond this distance from the hero, actors become dormant: still registered, no longer simulated. It is never allowed to exceed `tile_stream_distance`; the server raises the streaming distance to match and warns if you set it higher.
+- `actor_active_distance` — every actor is simulated whatever its distance to the hero; this value only bounds `tile_stream_distance`: the server raises the streaming distance to match and warns if you set it higher.
 - `spectator_as_ego` — whether the spectator also loads cells around itself when no ego actor exists. Turn it off if your script spawns its ego immediately.
 
 ```py
 settings = world.get_settings()
 settings.tile_stream_distance = 2000.0     # metres of map kept loaded around the hero
-settings.actor_active_distance = 1000.0    # beyond this, actors go dormant
 settings.spectator_as_ego = False
 world.apply_settings(settings)
 

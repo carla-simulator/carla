@@ -217,8 +217,10 @@ def detect_carla(path: str | Path) -> dict:
         info["flavor"] = "ue4"
         info["vars"]["CARLA_UE4_ROOT"] = str(p)
     else:
+        # .exe: a Windows package (CarlaUnreal.exe; CarlaUE4.exe on 0.9.x).
         launcher = next((c for c in ("CarlaUE4.sh", "CarlaUnreal.sh",
-                                     "LinuxNoEditor/CarlaUE4.sh")
+                                     "LinuxNoEditor/CarlaUE4.sh", "CarlaUnreal.exe",
+                                     "CarlaUE4.exe", "WindowsNoEditor/CarlaUE4.exe")
                          if (p / c).is_file()), "")
         if launcher:
             info["kind"] = "release"

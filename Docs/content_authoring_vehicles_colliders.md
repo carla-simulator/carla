@@ -2,6 +2,8 @@
 
 This tutorial explains how to create more accurate collision boundaries for vehicles (relative to the original shape of the object). These can be used as physics collider, compatible with collision detection, or as a secondary collider used by raycast-based sensors such as the LIDAR to retrieve more accurate data. New colliders can be integrated into CARLA so that all the community can benefit from these. Find out more about how to contribute to the content repository [here](cont_contribution_guidelines.md).
 
+Every vehicle needs both a collider for physics (`SMC_<vehicle>`) and a collider for raycast sensors (`SM_sc_<vehicle>`); see [Collision mesh and raycast mesh](content_authoring_vehicles.md#collision-mesh-and-raycast-mesh) for what each one does. This page covers making them more detailed.
+
 There are two approaches to create the new colliders, but they are not completely equivalent.
 
 *   __Raycast colliders__ — This approach requires some basic 3D modelling skills. A secondary collider is added to the vehicle so that raycast-based sensors such as the LIDAR retrieve more precise data.  
@@ -30,6 +32,9 @@ __2.1__ Open a 3D modelling software and, using the original mesh as reference, 
 <div class="img-caption">Modelling a low-density collider over the original body mesh, used as reference.</div>
 
 __2.2__ Save the new mesh as FBX. Name the mesh as `SM_sc_<model_of_vehicle>.fbx`. E.g. `SM_sc_audiTT.fbx`.
+
+![sm_sc_raycast_mesh](img/content_authoring_vehicles/sm_sc_raycast_mesh.webp)
+<div class="img-caption">A finished raycast mesh, <code>SM_sc_&lt;vehicle&gt;</code>: a low-poly hull of the bodywork plus the wheels as simple cylinders.</div>
 
 !!! Note
     As for the wheels and additional elements such as roofs, mudguards, etc. the new mesh should follow the geometry quite accurately. Placing simple cubes will not do it.

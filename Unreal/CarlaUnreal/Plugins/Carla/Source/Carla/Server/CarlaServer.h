@@ -43,6 +43,12 @@ public:
   
   bool TickCueReceived();
 
+  /// Drops the tick cues banked so far. A tick cue is counted whatever the
+  /// mode but only consumed in synchronous mode, so cues sent while
+  /// asynchronous would otherwise let the server run that many frames on its
+  /// own once synchronous mode is turned on.
+  void ResetTickCues();
+
   /// A Multi-GPU secondary refuses every call that would change its world.
   void SetIsSecondaryServer(bool bIsSecondary);
 

@@ -150,9 +150,10 @@ nav:
     - 'Running the tests': 'dev_testing.md'
     - 'Make a release': 'dev_make_release.md'
 
-# Shipped as the README of the package (Unreal/Package/CopyCarlaAdditionalFiles.cmake), not a site page
+# Shipped as the README of the package (Unreal/Package/CopyCarlaAdditionalFiles.cmake, one per platform), not a site page
 not_in_nav: |
   /release_readme.md
+  /release_readme_windows.md
 
 # section-index: a section whose first page has no title opens that page from the section title
 plugins:

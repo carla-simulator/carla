@@ -762,6 +762,50 @@ void FCarlaServer::FPimpl::BindActions()
       IFileManager::Get().FindFilesRecursive(Files, *folderDir, *(fileName + ".bin"), true, false, false);
     }
 
+    // Also serve the map's files from its pack's Content/Maps/, unless the base content already has that kind.
+    const UCarlaContentPackManager *MapPacks = UCarlaContentPackManager::Get();
+    if (!bGeneratedWorld && MapPacks != nullptr)
+    {
+      const auto KindOf = [](const FString &InFile, const FString &Root)
+      {
+        FString Relative = FPaths::ConvertRelativePathToFull(InFile);
+        Relative.RemoveFromStart(Root / TEXT(""));
+        FString Kind, Rest;
+        if (!Relative.Split(TEXT("/"), &Kind, &Rest))
+        {
+          Kind.Reset();
+        }
+        return Kind.ToLower() + TEXT("|") + FPaths::GetExtension(InFile).ToLower();
+      };
+      TSet<FString> FoundKinds;
+      for (const FString &File : Files)
+      {
+        FoundKinds.Add(KindOf(File, mapDir));
+      }
+      const FString MapName = Episode->GetMapName();
+      for (const FCarlaContentPack &Pack : MapPacks->GetPacks())
+      {
+        if (!Pack.bMounted || !Pack.Manifest.GetMapNames().Contains(MapName))
+        {
+          continue;
+        }
+        const FString PackMapsDir = Pack.ContentDir / TEXT("Maps");
+        const FString PackFolderDir = PackMapsDir / UTF8_TO_TCHAR(folder.c_str());
+        TArray<FString> PackFiles;
+        IFileManager::Get().FindFilesRecursive(PackFiles, *PackFolderDir, *(MapName + TEXT(".xodr")), true, false, false);
+        IFileManager::Get().FindFilesRecursive(PackFiles, *PackFolderDir, *(MapName + TEXT(".bin")), true, false, false);
+        for (const FString &File : PackFiles)
+        {
+          const FString Kind = KindOf(File, PackMapsDir);
+          if (!FoundKinds.Contains(Kind))
+          {
+            FoundKinds.Add(Kind);
+            Files.Add(File);
+          }
+        }
+      }
+    }
+
     // Files in Saved/ are served under the conventional Carla/Maps names.
     const FString SavedDir = FPaths::ConvertRelativePathToFull(FPaths::ProjectSavedDir()) / TEXT("");
     const FString NavFileName = Episode->GetMapName() + TEXT(".bin");
@@ -1213,7 +1257,11 @@ void FCarlaServer::FPimpl::BindActions()
       LargeMap->OnActorSpawned(*Result.Value);
     }
 
-    return Episode->SerializeActor(Result.Value);
+    cr::Actor SerializedActor = Episode->SerializeActor(Result.Value);
+    // RPCs run before the frame counter advances, so the next snapshot is the
+    // first one that can contain this actor.
+    SerializedActor.spawn_frame = FCarlaEngine::GetFrameCounter();
+    return SerializedActor;
   };
 
   BIND_SYNC(spawn_actor_with_parent) << [this](
@@ -1264,7 +1312,9 @@ void FCarlaServer::FPimpl::BindActions()
       Episode->PutActorToSleep(CarlaActor->GetActorId());
     }
 
-    return Episode->SerializeActor(CarlaActor);
+    cr::Actor SerializedActor = Episode->SerializeActor(CarlaActor);
+    SerializedActor.spawn_frame = FCarlaEngine::GetFrameCounter();
+    return SerializedActor;
   };
 
   BIND_SYNC(destroy_actor) << [this](cr::ActorId ActorId) -> R<bool>
@@ -4158,6 +4208,14 @@ bool FCarlaServer::TickCueReceived()
   if (!flag)
     (void)Pimpl->TickCuesReceived.fetch_add(1, std::memory_order_release);
   return flag;
+}
+
+void FCarlaServer::ResetTickCues()
+{
+  if (Pimpl != nullptr)
+  {
+    Pimpl->TickCuesReceived.store(0u, std::memory_order_release);
+  }
 }
 
 void FCarlaServer::Stop()

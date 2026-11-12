@@ -76,8 +76,11 @@ The two frames differ by a **mirror of the Y axis**, `S = diag(1, −1, 1)`:
 |-----------|-----------------------|----------------------------------|
 | location  | `(x, y, z)`           | `(x, −y, z)`                     |
 | rotation  | `(roll, pitch, yaw)`  | `(roll, −pitch, −yaw)`           |
-| 3×3 / 4×4 | `M`                   | `S · M · S`                      |
+| 3×3 rotation | `R`              | `S · R · S`                      |
+| 4×4 transform | `M`             | `H · M · H`, where `H = diag(1, −1, 1, 1)` |
 | quaternion| —                     | from the FLU Euler triple above  |
+
+For a homogeneous transform, the fourth diagonal entry keeps the homogeneous coordinate unchanged. Multiplying on both sides converts both frames of the rotation; the translation column becomes `(x, −y, z)`.
 
 **Pitch and yaw flip; roll does not.** Worked example: CARLA `(roll, pitch, yaw) = (10, 20, 30)` is FLU `(10, −20, −30)`.
 
@@ -100,7 +103,7 @@ flu = transform.to_right_handed()      # carla.RightHandedTransform
 flu.location                           # carla.RightHandedVector3D (x, y, z)
 flu.rotation                           # carla.RightHandedRotation (roll, pitch, yaw), degrees
 flu.get_quaternion()                   # carla.Quaternion (x, y, z, w), right-handed
-flu.get_matrix()                       # 4x4 row-major, == S @ get_matrix() @ S
+flu.get_matrix()                       # 4x4 row-major, == H @ transform.get_matrix() @ H
 
 back = carla.Transform.from_right_handed(flu)   # exact round trip
 ```

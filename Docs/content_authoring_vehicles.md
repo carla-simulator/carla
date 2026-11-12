@@ -121,6 +121,35 @@ For each part select the object and go to *File > Export selection*. Leave the d
 
 When exporting the bodywork/chassis and wheels, you should select all the mesh items and all the bones before exporting, to ensure the bones are included in the FBX and it is then imported into Unreal Engine as a skeletal mesh. All other parts should be exported individually, with no bones selected, to ensure they are imported as static meshes in Unreal Engine.
 
+### Collision mesh and raycast mesh
+
+The visible bodywork is too detailed for physics and for sensors, so a vehicle needs two extra low-poly meshes. Without them the vehicle can look correct in the camera but collide wrongly, or be detected wrongly by the LIDAR and other raycast sensors.
+
+| Mesh | Name | What it is for |
+|---|---|---|
+| Collision mesh | `SMC_<vehicle>` | Physics. It is the shape the vehicle collides with. |
+| Raycast mesh | `SM_sc_<vehicle>` | Raycast sensors such as the LIDAR. It is the surface their rays hit. |
+
+What to model:
+
+- __Collision mesh__: a closed hull that follows the bodywork, without the wheels. The wheels have their own collision.
+- __Raycast mesh__: the same hull, plus the wheels as simple cylinders with a small gap around each one.
+
+Some guidelines for both meshes:
+
+- Keep them low poly: the fewer triangles, the better. Around 1,000 triangles is a good reference, not a strict limit. A simple hull of a car body needs a few hundred, and adding the wheels stays around that figure.
+- Follow the silhouette of the bodywork, but leave out side mirrors, antennas and other thin parts, which would make the hull too wide.
+- Keep the underside of the collision mesh flat and about 20 cm above the ground, as on CARLA's own cars, even if the bodywork hangs lower. A lower hull scrapes the road when the vehicle brakes or leans, and the scrape slows it down and fires collision events against the road. The visible bodywork keeps its real height.
+- Keep the same origin, scale and forward axis as the rest of the vehicle, so that they line up with the bodywork in Unreal.
+
+Both are imported as static meshes and connected later: the collision mesh in [the physics asset](#collision-mesh), the raycast mesh in the vehicle blueprint's [*Custom Collision* component](#vehicle-blueprint). For more detailed colliders, see [Generate detailed colliders](content_authoring_vehicles_colliders.md).
+
+![smc_collision_mesh](img/content_authoring_vehicles/smc_collision_mesh.webp)
+<div class="img-caption">Collision mesh, <code>SMC_&lt;vehicle&gt;</code>: a low-poly hull of the bodywork, without the wheels.</div>
+
+![sm_sc_raycast_mesh](img/content_authoring_vehicles/sm_sc_raycast_mesh.webp)
+<div class="img-caption">Raycast mesh, <code>SM_sc_&lt;vehicle&gt;</code>: the same hull plus the wheels as simple cylinders, with a gap around each wheel.</div>
+
 ---
 ## Importing into unreal engine
 
@@ -160,12 +189,12 @@ __Automatically generated collision mesh__: First, we need to define the collisi
 ![regenerate_body](img/content_authoring_vehicles/single_convex_hull.webp)
 <div class="img-caption">The physics asset with a collision generated automatically as a single convex hull.</div>
 
-__Modelled collision mesh__: If the built-in or automatically generated collision primitives do not fit the vehicle well, model the collision hull by hand. It should be a low poly analogue of the surface profile of your vehicle. High poly collision meshes may degrade physics performance. Generally for vehicles it's best not to include the wheel profile in the collision mesh.
+__Modelled collision mesh__: This is the `SMC_<vehicle>` mesh described in [Collision mesh and raycast mesh](#collision-mesh-and-raycast-mesh). If the built-in or automatically generated collision primitives do not fit the vehicle well, model the collision hull by hand. It should be a low poly analogue of the surface profile of your vehicle. High poly collision meshes may degrade physics performance. Generally for vehicles it's best not to include the wheel profile in the collision mesh.
 
 ![regenerate_body](img/content_authoring_vehicles/collision_mesh.webp)
 <div class="img-caption">A hand-modelled, low-poly collision hull following the body of the vehicle.</div>
 
-To use the manually modeled collision mesh, first import it by dragging it into the vehicle's content folder. Right click on the *Vehicle_Base* item in the *Skeleton Tree* panel of the *Physics Asset* editor and select *Copy Collision From StaticMesh*.
+To use the manually modeled collision mesh, `SMC_<vehicle>`, first import it by dragging it into the vehicle's content folder. Right click on the *Vehicle_Base* item in the *Skeleton Tree* panel of the *Physics Asset* editor and select *Copy Collision From StaticMesh*.
 
 ![regenerate_body](img/content_authoring_vehicles/copy_collision.webp)
 <div class="img-caption"><b>Copy Collision From StaticMesh</b> on <code>Vehicle_Base</code> in the Skeleton Tree of the physics asset.</div>
@@ -228,6 +257,8 @@ Open each blueprint individually and repeat the following configuration steps:
 - Set the *Axle Type* according to the wheel position (front or rear)
 - Set the *Wheel Radius*, *Wheel Width* and *Wheel mass* according to the dimensions and specifications of your vehicle model, you may need to measure these dimensions in your 3D application
 - Set the *Friction Force Multiplier* to 3.5
+- Set *Sweep Shape* to *Spherecast* and *Sweep Type* to *ComplexSweep*. With the default *Raycast*, a car with a low body can lose wheel contact at some spawn points, settle on its chassis and fail to move
+- Set *Suspension Damping Ratio* to 1.0, as on the Lincoln MKZ and the Mustang
 - Set the *Brake*, *Handbrake*, *Engine*, *ABS* and *Traction control* settings according to the specification of your vehicle. Front, rear or four wheel drive is set in the *Differential Setup* of the vehicle movement component, not in the wheel
 
 Adjust the max steer angle as needed, the default value of 50 will suit most applications. Most vehicles have a max steering angle between 30 and 50.
@@ -248,7 +279,7 @@ Click on the mesh in the component's panel:
 - Set *EnablePhysics* to true
 - Assign the vehicle skeletal mesh and AnimClass
 - Set the *Center Of Mass Override* to be within the body of the vehicle, for example 50cm for a normal car. You may need to adjust this parameter if the vehicle behaves strangely, for example if it rolls easily on corners.
-- In the components panel, select *Custom Collision (Inherited)* search for the raycast sensor mesh that you imported
+- In the components panel, select *Custom Collision (Inherited)* and set its *Static Mesh* to the raycast mesh you imported, `SM_sc_<vehicle>` (see [Collision mesh and raycast mesh](#collision-mesh-and-raycast-mesh)). If the blueprint was duplicated from another vehicle, this component still holds that vehicle's raycast mesh, and sensors would see the other vehicle's shape
 - Modify the *Physics Constraints* components of the blueprint adding the respective components names
 
 ### Vehicle movement component configuration

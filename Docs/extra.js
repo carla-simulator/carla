@@ -1,4 +1,4 @@
-// Download page: show when the nightly was last built successfully.
+// Download page: show when the nightly and weekly builds last succeeded.
 async function getLastWorkflowRun(owner, repo, workflowFileName) {
     const url = `https://api.github.com/repos/${owner}/${repo}/actions/workflows/${workflowFileName}/runs?status=success&per_page=1`;
     try {
@@ -15,17 +15,21 @@ async function getLastWorkflowRun(owner, repo, workflowFileName) {
     return null;
 }
 
+// Each "Last successful build" line names its workflow in data-workflow: the
+// nightly is ue5_dev.yml and the weekly is ue5_weekly.yml.
 $(document).ready(function () {
-    const timeElement = document.getElementById('last-run-time');
-    const linkElement = document.getElementById('last-run-link');
-    if (!timeElement) { return; }
-    getLastWorkflowRun('carla-simulator', 'carla', 'ue5_dev.yml').then(result => {
-        if (!result) { timeElement.textContent = 'unavailable'; return; }
-        timeElement.textContent = new Date(result.timestamp).toLocaleString('en-US', {
-            weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
-            hour: '2-digit', minute: '2-digit', timeZoneName: 'short'
+    document.querySelectorAll('.last-build[data-workflow]').forEach(function (line) {
+        const timeElement = line.querySelector('.last-build-time');
+        const linkElement = line.querySelector('.last-build-link');
+        if (!timeElement) { return; }
+        getLastWorkflowRun('carla-simulator', 'carla', line.dataset.workflow).then(result => {
+            if (!result) { timeElement.textContent = 'unavailable'; return; }
+            timeElement.textContent = new Date(result.timestamp).toLocaleString('en-US', {
+                weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+                hour: '2-digit', minute: '2-digit', timeZoneName: 'short'
+            });
+            if (linkElement) { linkElement.setAttribute('href', result.url); }
         });
-        if (linkElement) { linkElement.setAttribute('href', result.url); }
     });
 });
 

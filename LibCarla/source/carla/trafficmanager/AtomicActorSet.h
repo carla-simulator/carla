@@ -27,6 +27,8 @@ namespace traffic_manager {
     std::mutex modification_mutex;
     std::map<ActorId, ActorPtr> actor_set;
     int state_counter;
+    /// Removed actors, kept alive until TakeReleased() so they die outside TM locks.
+    std::vector<ActorPtr> released;
 
   public:
 
@@ -65,8 +67,10 @@ namespace traffic_manager {
 
       std::scoped_lock<std::mutex> lock(modification_mutex);
       for (auto& actor_id: actor_id_list) {
-        if (actor_set.find(actor_id) != actor_set.end()){
-          actor_set.erase(actor_id);
+        auto it = actor_set.find(actor_id);
+        if (it != actor_set.end()){
+          released.push_back(std::move(it->second));
+          actor_set.erase(it);
         }
       }
       ++state_counter;
@@ -79,6 +83,7 @@ namespace traffic_manager {
         ActorPtr actor = actor_set.at(actor_id);
         actor->Destroy();
         actor_set.erase(actor_id);
+        released.push_back(std::move(actor));
         ++state_counter;
       }
     }
@@ -104,7 +109,19 @@ namespace traffic_manager {
     void Clear() {
 
       std::scoped_lock<std::mutex> lock(modification_mutex);
-      return actor_set.clear();
+      for (auto &entry : actor_set) {
+        released.push_back(std::move(entry.second));
+      }
+      actor_set.clear();
+    }
+
+    /// Actors removed since the last call; drop them with no lock held.
+    std::vector<ActorPtr> TakeReleased() {
+
+      std::scoped_lock<std::mutex> lock(modification_mutex);
+      std::vector<ActorPtr> result;
+      result.swap(released);
+      return result;
     }
 
   };

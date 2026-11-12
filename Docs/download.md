@@ -4,6 +4,7 @@ Where to get CARLA, and which build matches which engine version. The [quick sta
 
 - [__Latest release__](#latest-release)
 - [__Nightly build__](#nightly-build)
+- [__Weekly build__](#weekly-build)
 - [__Docker__](#docker)
 
 ---
@@ -25,7 +26,7 @@ An automated build of the development branch. It carries the latest fixes and fe
 | [CARLA Nightly Build (Linux)](https://downloads.carlasim.com/Linux/Dev/CARLA_UE5_Latest.tar.gz) | `ue58-dev` | Unreal Engine 5.8 |
 | [CARLA Nightly Build (Windows)](https://downloads.carlasim.com/Windows/Dev/CARLA_UE5_Latest.zip) | `ue58-dev` | Unreal Engine 5.8 |
 
-<p><a id="last-run-link" href='https://github.com/carla-simulator/carla/actions'>Last successful build</a>: <span id="last-run-time" class="loading">Loading...</span></p>
+<p class="last-build" data-workflow="ue5_dev.yml"><a class="last-build-link" href='https://github.com/carla-simulator/carla/actions/workflows/ue5_dev.yml'>Last successful build</a>: <span class="last-build-time loading">Loading...</span></p>
 
 !!! Note
     For the Unreal Engine 4.26 nightly, see the [downloads page](https://carla.readthedocs.io/en/latest/download/) of the UE4 documentation.
@@ -39,6 +40,8 @@ The development branch built every Sunday, with the [AdditionalMaps](map_content
 | --- | --- | --- | --- |
 | [CARLA Weekly Build (Linux)](https://downloads.carlasim.com/Linux/Dev/CARLA_UE5_Weekly.tar.gz) | [AdditionalMaps (Linux)](https://downloads.carlasim.com/Linux/Dev/CARLA_UE5_Weekly_AdditionalMaps.tar.gz) | `ue58-dev` | Unreal Engine 5.8 |
 | [CARLA Weekly Build (Windows)](https://downloads.carlasim.com/Windows/Dev/CARLA_UE5_Weekly.zip) | [AdditionalMaps (Windows)](https://downloads.carlasim.com/Windows/Dev/CARLA_UE5_Weekly_AdditionalMaps.tar.gz) | `ue58-dev` | Unreal Engine 5.8 |
+
+<p class="last-build" data-workflow="ue5_weekly.yml"><a class="last-build-link" href='https://github.com/carla-simulator/carla/actions/workflows/ue5_weekly.yml'>Last successful build</a>: <span class="last-build-time loading">Loading...</span></p>
 
 ---
 ## Docker

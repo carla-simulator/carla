@@ -364,7 +364,9 @@ ai_controller.stop()
 ```
 
 !!! Important
-    On maps where the client runs the navigation (every map except the World Partition maps listed in [Large maps](core_large_maps.md#pedestrian-navigation)), the walkers only move while the client that started their controllers calls `world.tick()` or `world.wait_for_tick()`. A script that starts the controllers and then sleeps leaves them standing. While a controller moves a walker, `walker.get_velocity()` reads zero; compare locations to measure its speed.
+    On maps where the client runs the navigation (every map except the World Partition maps listed in [Large maps](core_large_maps.md#pedestrian-navigation)), the walkers only move while the client that started their controllers calls `world.tick()` or `world.wait_for_tick()`. A script that starts the controllers and then sleeps leaves them standing. In asynchronous mode they cover the simulation time elapsed since that client's previous tick, up to one second, so they walk at their set speed whatever the client's tick rate. While a controller moves a walker, `walker.get_velocity()` reads zero; compare locations to measure its speed.
+
+A walker driven by an AI controller keeps its collision, so ray-cast sensors (LiDAR, radar) and `world.cast_ray()` detect it. `stop()` gives the walker its movement back, so it obeys `apply_control()` again.
 
 When a walker reaches the target location, they will automatically walk to another random point. If the target point is not reachable, walkers will go to the closest point from their current location.
 

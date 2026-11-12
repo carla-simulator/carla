@@ -68,6 +68,9 @@ namespace detail {
 
     ~Simulator();
 
+    /// Deleter: on a pool thread, destroy on a background thread (~Simulator joins the pools).
+    static void Delete(Simulator *simulator);
+
     /// @}
     // =========================================================================
     /// @name Load a new episode

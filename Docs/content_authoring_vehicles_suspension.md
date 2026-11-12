@@ -39,6 +39,9 @@ These are the properties under the __Suspension__ category of a wheel blueprint,
 
 CARLA's vehicles override several of these. The Audi TT's front left wheel, for example, uses `Suspension Max Raise` and `Max Drop` of `7.5`, a `Suspension Damping Ratio` of `1.0`, and a `Spherecast` with `ComplexSweep`.
 
+!!! Important
+    For a new car, change `Sweep Shape` and `Sweep Type` from the defaults in the table to `Spherecast` and `ComplexSweep`. Some older CARLA vehicles still use `Raycast`, but `Raycast` can lose contact with the road at some spawn points. A car with a low body then settles on its chassis and does not move. Test the vehicle at every spawn point of a map, not just one.
+
 !!! Note
     A stiffer vehicle wants smaller `Suspension Max Raise` and `Max Drop` with a higher `Spring Rate` and `Damping Ratio`; a soft, off-road one wants the opposite. Raise `Rollbar Scaling` to keep a tall vehicle from leaning in corners.
 

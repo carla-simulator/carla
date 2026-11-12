@@ -107,25 +107,54 @@ class BehaviorAgent(BasicAgent):
         behind_vehicle_state, behind_vehicle, _ = self._vehicle_obstacle_detected(vehicle_list, max(
             self._behavior.min_proximity_threshold, self._speed_limit / 2), up_angle_th=180, low_angle_th=160)
         if behind_vehicle_state and self._speed < get_speed(behind_vehicle):
-            if (right_turn == carla.LaneChange.Right or right_turn ==
-                    carla.LaneChange.Both) and waypoint.lane_id * right_wpt.lane_id > 0 and right_wpt.lane_type == carla.LaneType.Driving:
+            if (right_wpt is not None
+                    and right_turn in (carla.LaneChange.Right, carla.LaneChange.Both)
+                    and waypoint.lane_id * right_wpt.lane_id > 0
+                    and right_wpt.lane_type == carla.LaneType.Driving):
                 new_vehicle_state, _, _ = self._vehicle_obstacle_detected(vehicle_list, max(
                     self._behavior.min_proximity_threshold, self._speed_limit / 2), up_angle_th=180, lane_offset=1)
-                if not new_vehicle_state:
+                if not new_vehicle_state and self._evade_tailgater(waypoint, 'right'):
                     print("Tailgating, moving to the right!")
-                    end_waypoint = self._local_planner.target_waypoint
-                    self._behavior.tailgate_counter = 200
-                    self.set_destination(end_waypoint.transform.location,
-                                         right_wpt.transform.location)
-            elif left_turn == carla.LaneChange.Left and waypoint.lane_id * left_wpt.lane_id > 0 and left_wpt.lane_type == carla.LaneType.Driving:
+            elif (left_wpt is not None
+                    and left_turn in (carla.LaneChange.Left, carla.LaneChange.Both)
+                    and waypoint.lane_id * left_wpt.lane_id > 0
+                    and left_wpt.lane_type == carla.LaneType.Driving):
                 new_vehicle_state, _, _ = self._vehicle_obstacle_detected(vehicle_list, max(
                     self._behavior.min_proximity_threshold, self._speed_limit / 2), up_angle_th=180, lane_offset=-1)
-                if not new_vehicle_state:
+                if not new_vehicle_state and self._evade_tailgater(waypoint, 'left'):
                     print("Tailgating, moving to the left!")
-                    end_waypoint = self._local_planner.target_waypoint
-                    self._behavior.tailgate_counter = 200
-                    self.set_destination(end_waypoint.transform.location,
-                                         left_wpt.transform.location)
+
+    def _evade_tailgater(self, waypoint, direction):
+        """
+        Moves the agent to the adjacent lane and keeps its route: the new plan
+        is a lane change, followed by the route from the adjacent lane to the
+        end of the current plan.
+
+            :param waypoint: current waypoint of the agent
+            :param direction: 'left' or 'right'
+            :return: True if the lane change was planned
+        """
+        plan = self._local_planner.get_plan()
+        if not plan:
+            return False
+        end_location = plan[-1][0].transform.location
+
+        speed = self._vehicle.get_velocity().length()
+        path = self._generate_lane_change_path(
+            waypoint, direction,
+            distance_same_lane=0,
+            distance_other_lane=max(3.0 * speed, 10.0),
+            lane_change_distance=max(2.0 * speed, 10.0),
+            check=False,
+            lane_changes=1,
+            step_distance=self._sampling_resolution)
+        if not path:
+            return False
+
+        self._behavior.tailgate_counter = 200
+        self.set_global_plan(path)
+        self.set_destination(end_location, path[-1][0].transform.location, clean_queue=False)
+        return True
 
     def collision_and_car_avoid_manager(self, waypoint):
         """

@@ -17,7 +17,13 @@ import argparse
 import logging
 import math
 import random
-import invertedai as iai
+import sys
+
+try:
+    import invertedai as iai
+except ImportError:
+    sys.exit('invertedai is not installed. examples/requirements.txt only installs it '
+             'on Linux with Python < 3.13.')
 import numpy as np
 import imageio
 
@@ -480,6 +486,12 @@ def setup_carla_environment(host, port, location):
 
     client = carla.Client(host, port)
     client.set_timeout(200.0)
+
+    # InvertedAI names the map after the original town (carla:Town10HD), while
+    # CARLA on UE 5 only ships its layered variant (Town10HD_Opt)
+    available_maps = [m.split("/")[-1] for m in client.get_available_maps()]
+    if map_name not in available_maps and map_name + "_Opt" in available_maps:
+        map_name = map_name + "_Opt"
 
     # Configure the simulation environment
     world = client.load_world(map_name)
@@ -948,8 +960,8 @@ def main():
     print(f"Number of agents initialized: {len(response.agent_states)}")
 
     wp_manager = iai.WaypointManager(
-        location_info_response = location_info_response,
         cfg = iai.WaypointManagerConfig(
+            lanelet_map=location_info_response.get_lanelet_map(),
             random_seed=seed,
             fail_soft=True
         )

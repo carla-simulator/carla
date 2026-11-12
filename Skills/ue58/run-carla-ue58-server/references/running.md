@@ -131,7 +131,8 @@ rather than a blocker.
 Build with `-DENABLE_ROS2=ON`, run with `-ros2`. Both are required; either alone
 gives silence.
 
-Startup log on success:
+Startup log on success (Development and editor builds only; a Shipping package
+prints none of these lines, so check it with `ros2 topic list`):
 
 ```
 LogCarla: ROS2: Creating ROS2 Instance...
@@ -170,7 +171,10 @@ RSS and G-buffer sensors have no ROS 2 publisher at all.
 `rt/carla/<parent chain>/<ros_name>` on the wire, which ROS clients see as
 `/carla/...`. Suffixes `/image`, `/camera_info`, `/point_cloud`.
 
-Observed with one camera named `front` on a vehicle named `hero`:
+Observed with one camera with `ros_name=front` on a vehicle with `ros_name=hero`
+and `role_name=hero` (`role_name` only creates the control subscriber; it never
+names topics). Without a `ros_name`, a vehicle is `vehicle<actor id>` and a sensor
+`<last blueprint token><stream id>`, e.g. `/carla/vehicle30/rgb123/image`:
 
 ```
 /carla/hero/front/camera_info

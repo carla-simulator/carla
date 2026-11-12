@@ -49,7 +49,9 @@ else
   warn "carla not importable — probe skips the live checks (see install-python-api)"
 fi
 
-if command -v ss >/dev/null 2>&1 && ss -ltn 2>/dev/null | grep -q ":${CARLA_PORT}\b"; then
+# A connect, not `ss`: it works in Git Bash, and it asks the host the probe will
+# actually query instead of whatever listens on this machine.
+if carla_port_busy "${CARLA_PORT}" "${CARLA_HOST}"; then
   ok "something is listening on ${CARLA_PORT} (probe will query it)"
 else
   warn "nothing listening on ${CARLA_HOST}:${CARLA_PORT} — start a server for the live checks"

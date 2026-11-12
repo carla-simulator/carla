@@ -4,6 +4,11 @@ Every TCP and UDP port CARLA and its tooling open, what listens on it, and how t
 
 Nothing here shares a default with anything else, which took moving two of them off `8000`: the Unreal MCP server to `6256` and the Cosmos example server to `8010`, since the Traffic Manager was there first. The documentation preview still defaults to `8000`, so do not run `mkdocs serve` and a Traffic Manager on one machine without moving one of them.
 
+!!! agent "Agentic CARLA"
+    *"Which CARLA ports are in use on this machine, and what is holding them? I want to start a second simulator."*
+
+    Skills: `check-carla-ports`. [Set up Agentic CARLA](agent_skills.md#set-up-agentic-carla).
+
 ## Simulator
 
 | Port | Service | Bound by | Change it with |

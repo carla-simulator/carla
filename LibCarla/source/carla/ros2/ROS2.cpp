@@ -6,6 +6,7 @@
 
 #include "carla/Logging.h"
 #include "carla/ros2/ROS2.h"
+#include "carla/ros2/ROS2SensorTypes.h"
 #include "carla/geom/GeoLocation.h"
 #include "carla/geom/Vector3D.h"
 #include "carla/sensor/data/DVSEvent.h"
@@ -61,43 +62,6 @@ namespace ros2 {
 // static fields
 std::shared_ptr<ROS2> ROS2::_instance;
 
-// list of sensors (should be equal to the list of SensorsRegistry)
-enum ESensors {
-  CollisionSensor,
-  DepthCamera,
-  NormalsCamera,
-  DVSCamera,
-  GnssSensor,
-  InertialMeasurementUnit,
-  LaneInvasionSensor,
-  ObstacleDetectionSensor,
-  OpticalFlowCamera,
-  Radar,
-  RayCastSemanticLidar,
-  RayCastLidar,
-  RssSensor,
-  SceneCaptureCamera,
-  SemanticSegmentationCamera,
-  InstanceSegmentationCamera,
-  WorldObserver,
-  // Keep these in lock-step with the SensorRegistry tuple order: the fisheye /
-  // wide-angle-lens cameras (ported in #9741) were added to SensorRegistry but
-  // were missing here, which shifted every following value out of sync with the
-  // registry index.
-  SceneCaptureCamera_WideAngleLens,
-  DepthCamera_WideAngleLens,
-  InstanceSegmentationCamera_WideAngleLens,
-  SemanticSegmentationCamera_WideAngleLens,
-  CameraGBufferUint8,
-  CameraGBufferFloat,
-  HSSLidar,
-  // Autoware vehicle interface (appended at the END, matching the
-  // SensorRegistry append; V2X sensors have no ROS2 dispatch and therefore
-  // no enum entry, mirroring the pre-existing convention).
-  VehicleStatusSensor,
-  AutowareGnssSensor
-};
-
 bool ROS2::Enable(bool enable, Middleware middleware, int domain_id) {
   // Select the ROS 2 middleware before any publisher or subscriber is created.
   // SetActiveMiddleware is the DDS-free bridge that resolves availability inside
@@ -123,11 +87,29 @@ bool ROS2::Enable(bool enable, Middleware middleware, int domain_id) {
     log_info("ROS2: using middleware '", MiddlewareToString(middleware),
         "', domain id: ", resolved.id, " (", domain_source, ")");
   }
+  // The clock publisher is the first entity created, so it is the one that
+  // brings the middleware up (DDS participant or Zenoh session).
+  auto clock_publisher = std::make_shared<CarlaClockPublisher>();
+  if (enable && !clock_publisher->IsReady()) {
+    log_error("**********************************************************************");
+    log_error("ROS2: middleware", MiddlewareToString(middleware),
+              "FAILED TO START. ROS2 is DISABLED for this session:");
+    log_error("ROS2: no topic will be published and no ROS 2 control will be received.");
+    const char *config_var =
+        (middleware == Middleware::CycloneDDS) ? "CYCLONEDDS_URI"
+        : (middleware == Middleware::FastDDS)  ? "FASTRTPS_DEFAULT_PROFILES_FILE"
+                                               : "ZENOH_SESSION_CONFIG_URI / ZENOH_CONFIG_OVERRIDE";
+    log_error("ROS2: the errors above give the cause. Check the", config_var,
+              "configuration, the domain id and the network interfaces.");
+    log_error("**********************************************************************");
+    _enabled = false;
+    return false;
+  }
   _enabled = enable;
   log_info("ROS2 enabled: ", _enabled.load());
   {
     std::lock_guard<std::mutex> lock(_mutex);
-    _clock_publisher = std::make_shared<CarlaClockPublisher>();
+    _clock_publisher = std::move(clock_publisher);
   }
 #if defined(WITH_ROS2_DEMO)
   _basic_publisher = std::make_shared<BasicPublisher>();

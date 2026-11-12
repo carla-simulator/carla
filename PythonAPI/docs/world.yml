@@ -151,7 +151,7 @@
     - var_name: actor_active_distance
       type: float
       doc: >
-        Used for large maps only. Configures the distance from the hero vehicle to convert actors to dormant. Actors within this range will be active, and actors outside will become dormant.
+        Used for large maps only. Every actor is simulated whatever its distance to the hero vehicle; this value only bounds `tile_stream_distance`: when it is larger, the server raises `tile_stream_distance` to match.
     - var_name: spectator_as_ego
       type: bool
       doc: >
@@ -207,7 +207,7 @@
         default: 2000
         param_units: meters
         doc: >
-          Used for large maps only. Configures the distance from the hero vehicle to convert actors to dormant.
+          Used for large maps only. Every actor is simulated whatever its distance to the hero vehicle; this value only bounds `tile_stream_distance`: when it is larger, the server raises `tile_stream_distance` to match.
       - param_name: spectator_as_ego
         type: bool
         default: True
@@ -322,8 +322,15 @@
   - class_name: MapLayer
     # - DESCRIPTION ------------------------
     doc: >
-      Class that represents each manageable layer of the map. Can be used as flags.
-      __WARNING: Only "Opt" maps are able to work with map layers.__
+      Class that represents each manageable layer of the map. Can be used as flags:
+      combining layers with `|`, `&`, `^` or `~` gives another layer, which
+      `load_world()` and `load_map_layer()` accept.
+      __WARNING: Map layers only work on Town01_Opt to Town07_Opt, whose layers are
+      streaming sublevels. Town10HD_Opt has its layers merged into the persistent
+      level and ignores them; use environment objects
+      (`get_environment_objects()` / `enable_environment_objects()`) to hide groups
+      of objects there. Sublevel-based layers are being phased out on UE 5 and will
+      be replaced by a grouping that does not use sublevels.__
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: NONE
@@ -919,7 +926,9 @@
       doc: >
         Loads the selected layers to the level.
         If the layer is already loaded the call has no effect.
-      warning: This only affects "Opt" maps. The minimum layout includes roads, sidewalks, traffic lights and traffic signs.
+      warning: >
+        Only Town01_Opt to Town07_Opt have map layers; on Town10HD_Opt and the other maps the call has no effect.
+        See carla.MapLayer. The minimum layout includes roads, sidewalks, traffic lights and traffic signs.
     # --------------------------------------
     - def_name: unload_map_layer
       params: 
@@ -930,7 +939,9 @@
       doc: >
         Unloads the selected layers to the level.
         If the layer is already unloaded the call has no effect.
-      warning: This only affects "Opt" maps. The minimum layout includes roads, sidewalks, traffic lights and traffic signs.
+      warning: >
+        Only Town01_Opt to Town07_Opt have map layers; on Town10HD_Opt and the other maps the call has no effect.
+        See carla.MapLayer. The minimum layout includes roads, sidewalks, traffic lights and traffic signs.
     # --------------------------------------
     - def_name: set_pedestrians_cross_factor
       params:
