@@ -92,6 +92,7 @@
 * **Ray-cast LiDARs are much faster** (`sensor.lidar.ray_cast`, `ray_cast_semantic`, `hss_lidar`): they simulate on background tasks that overlap the other sensors' work, and several LiDARs run in parallel. Three semantic LiDARs on Town10 went from 130 to 86 ms per frame. Output is unchanged for a given seed; `carla.Lidar.Batch 0` restores sequential simulation.
 * **Reworked the quality levels** (`-quality-level=<Low|Medium|High|Epic>`, case-sensitive, Epic by default) on UE 5.8 scalability groups. Every tier now keeps the full view distance, foliage density and simulation content (Low used to cut them, which changed what a sensor saw), and lowering the tier only costs image quality. Epic looks exactly as before; only Epic uses hardware ray tracing on ordinary cameras, and `rt_lens` works on all of them.
 * **Optimized the DVS camera** grayscale conversion, about 8x faster in log mode and 4x in linear, with bit-identical output.
+* **Pedestrians are cheaper to move**: a walker no longer refreshes overlaps on every body of its physics asset each time it moves or animates, and a walker teleported by the client-side crowd or the replayer drops its capsule and trigger boxes from scene queries. Keeping AI walkers and replayed actors visible to sensors (#10068) therefore costs about 4% of the tick with 150 walkers and 40 vehicles on Town10HD instead of 25%, and about 6% while replaying them.
 * **Made volumetric clouds cheaper** at the Epic and Cine quality levels, with no visible difference (`r.VolumetricRenderTarget.Mode=2`).
 
 #### Sensors and content
@@ -152,6 +153,9 @@
 * Fixed several legacy UE4-era bugs across LibCarla and the Carla plugin: LiDAR memory reset, DVS validation, camera profiling, image reads, sensor materials and Python sensor teardown.
 * Fixed `sensor.other.radar` returning detections beyond its `range` (up to `range / cos(fov/2)`): off-axis rays were longer than the range. Every ray is now exactly `range` long.
 * Fixed the V2X CAM message sending vehicle length and width in millimetres. They are now in the ETSI unit of 0.1 m and clamped to the standard's range.
+* Fixed **walkers driven by `controller.ai.walker` being invisible to the LiDAR, the radar and `world.cast_ray()`** on the maps where the client runs the navigation (Town01–05, Town10HD) (#10068). `start()` no longer turns the walker's collision off, and `stop()` now gives the walker its movement back, so it obeys `apply_control()` again.
+* Fixed **replayed vehicles and pedestrians being invisible to sensors**, including those re-spawned with `replay_sensors=True`: the replayer turned their collision off. They now have query-only collision during the replay, so they still push nothing, and replayed walkers get their movement back when the replay ends.
+* Fixed the wheelchair of a wheelchair-user pedestrian being invisible to ray-cast sensors (LiDAR, radar).
 
 #### Simulation and content
 

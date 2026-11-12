@@ -23,6 +23,7 @@
 
 class UCarlaEpisode;
 class FCarlaActor;
+class UPrimitiveComponent;
 struct FActorDescription;
 
 class CarlaReplayerHelper
@@ -107,6 +108,18 @@ public:
 private:
 
   UCarlaEpisode *Episode {nullptr};
+
+  // Collision state of the replayed actors' primitives, restored when the replay finishes.
+  struct FReplayedPrimitive
+  {
+    TWeakObjectPtr<UPrimitiveComponent> Primitive;
+    uint8 CollisionEnabled;
+    bool bGenerateOverlapEvents;
+  };
+  TArray<FReplayedPrimitive> ReplayedPrimitives;
+
+  // Keep a replayed actor visible to sensors without letting it push anything or fire overlaps.
+  void MakeReplayedActorQueryOnly(AActor *Actor);
 
   std::pair<int, FCarlaActor*>TryToCreateReplayerActor(
     FVector &Location,
