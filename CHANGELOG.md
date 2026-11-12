@@ -181,6 +181,7 @@
 
 #### Traffic Manager and agents
 
+* **Traffic Manager parameter snapshots** — copy values while holding the parameter map's lock, preventing concurrent updates or removals from invalidating a returned value.
 * Fixed autopilot vehicles accelerating hard away from stops, junctions and roundabouts, and cutting tight corners too fast; both now stay within a comfortable acceleration bound. Also fixed the Traffic Manager's asynchronous loop drifting off the server frame rate, lights flickering on vehicles the server does not report, and an unbounded command queue on a slow server.
 * Fixed a Traffic Manager segfault when reaching a vehicle that is no longer available.
 * Fixed the Python client crashing or reading stale snapshots around a map load while a Traffic Manager was alive. Destroying a client during the Traffic Manager's reset segfaulted, the reset ran on the streaming thread (holding back every snapshot for seconds, so `wait_for_tick()` returned frames from before a `set_state()`), and every client alive in the process reset it again, sometimes onto the old episode. The reset now runs once per episode on its own thread, `load_world()` returns after it, and switching the Traffic Manager's synchronous mode no longer races it.
