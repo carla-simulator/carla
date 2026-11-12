@@ -1453,6 +1453,138 @@ def find_asset_registry(staged_pack, pack_dir, name, platform, override=None):
                     .format(ASSET_REGISTRY, name, ", ".join(str(c) for c in candidates)))
 
 
+# --------------------------------------------------------------------------
+# base-package files in the pack's .pak
+# --------------------------------------------------------------------------
+# A DLC cook that references /Game content includes the project in its Zen cook
+# manifest, and that manifest adds the project's DirectoriesToAlwaysStageAsUFS
+# (DefaultGame.ini: Carla/Maps/Nav, Carla/Maps/TM, ...) to the cook output. UAT then
+# stages them into the pack's .pak under the base mount point (<Project>/Content/...):
+# copies of base-package files that a pack built from another commit would shadow.
+# The pack ships its own sidecars loose (PluginSettings.ini), so those entries are
+# removed from the .pak after the cook.
+
+PAK_LIST_ENTRY_RE = re.compile(
+    r'"(?P<path>[^"]+)" offset: (?P<offset>\d+), size: (?P<size>\d+) bytes, '
+    r'sha1: (?P<sha1>[0-9A-Fa-f]{40}), compression: (?P<compression>[^.]+)\.')
+PAK_LIST_MOUNT_RE = re.compile(r'with mount point "(?P<mount>[^"]*)"')
+# Serialized FPakEntry in front of an uncompressed, unencrypted entry's data.  The
+# size is found per pak (and every extracted file is checked against its sha1).
+PAK_ENTRY_HEADER_SEARCH = range(0, 257)
+
+
+def unrealpak_path(engine):
+    if os.name == "nt":
+        return Path(engine) / "Engine" / "Binaries" / "Win64" / "UnrealPak.exe"
+    if sys.platform == "darwin":
+        return Path(engine) / "Engine" / "Binaries" / "Mac" / "UnrealPak"
+    return Path(engine) / "Engine" / "Binaries" / "Linux" / "UnrealPak"
+
+
+def parse_pak_listing(text):
+    """(mount point, [entry dicts]) from `UnrealPak <pak> -List` output."""
+    m = PAK_LIST_MOUNT_RE.search(text)
+    if not m:
+        raise PackError("no mount point in the UnrealPak listing")
+    entries = []
+    for e in PAK_LIST_ENTRY_RE.finditer(text):
+        entries.append({"path": e.group("path"), "offset": int(e.group("offset")),
+                        "size": int(e.group("size")), "sha1": e.group("sha1").lower(),
+                        "compression": e.group("compression").strip()})
+    return m.group("mount"), entries
+
+
+def list_pak(unrealpak, pak):
+    r = subprocess.run([str(unrealpak), str(pak), "-List"], stdout=subprocess.PIPE,
+                       stderr=subprocess.STDOUT, universal_newlines=True, errors="replace")
+    if r.returncode != 0:
+        raise PackError("UnrealPak -List failed on {} (exit {})".format(pak, r.returncode))
+    return parse_pak_listing(r.stdout)
+
+
+def base_content_entries(entries, project_name):
+    """Entries under the base game's mount point: <Project>/Content/..."""
+    prefix = project_name + "/Content/"
+    return [e for e in entries if e["path"].startswith(prefix)]
+
+
+def sha1_file(path):
+    h = hashlib.sha1()
+    with open(str(path), "rb") as f:
+        for chunk in iter(lambda: f.read(1 << 20), b""):
+            h.update(chunk)
+    return h.hexdigest()
+
+
+def read_pak_entry(pak_file, entry, header_size=None):
+    """The bytes of an uncompressed pak entry, checked against its sha1.  Returns
+    (data, header_size); header_size is searched when not given."""
+    if entry["compression"].lower() != "none":
+        raise PackError("{} is compressed ({}); cannot rewrite the pak".format(entry["path"], entry["compression"]))
+    candidates = [header_size] if header_size is not None else PAK_ENTRY_HEADER_SEARCH
+    for h in candidates:
+        pak_file.seek(entry["offset"] + h)
+        data = pak_file.read(entry["size"])
+        if len(data) == entry["size"] and hashlib.sha1(data).hexdigest() == entry["sha1"]:
+            return data, h
+    raise PackError("cannot read {} from the pak (sha1 mismatch)".format(entry["path"]))
+
+
+def strip_base_content_from_pak(unrealpak, pak, project_name, cooked_root=None):
+    """Rewrite `pak` without its <Project>/Content/... entries; returns the removed paths.
+
+    Each kept entry is taken, in order, from: the cook output (`cooked_root`/<path>, the
+    source UAT packed) when it matches the sha1 the pak lists; the pak itself when the
+    entry is stored uncompressed (checked against the same sha1); otherwise the cook
+    output file as is.  The last case is the AssetRegistry.bin UAT strips while packing:
+    the server reads the pack's loose AssetRegistry.bin (ContentPackManager), never the
+    in-pak copy.  The rewritten pak stores the kept entries uncompressed."""
+    pak = Path(pak)
+    mount, entries = list_pak(unrealpak, pak)
+    drop = base_content_entries(entries, project_name)
+    if not drop:
+        return []
+    dropped = {e["path"] for e in drop}
+    keep = [e for e in entries if e["path"] not in dropped]
+    with tempfile.TemporaryDirectory(prefix=".strip.", dir=str(pak.parent)) as tmp:
+        tmp = Path(tmp)
+        lines, header = [], None
+        with open(str(pak), "rb") as f:
+            for e in keep:
+                cooked = Path(cooked_root) / e["path"] if cooked_root else None
+                if cooked is not None and cooked.is_file() and sha1_file(cooked) == e["sha1"]:
+                    data = cooked.read_bytes()
+                elif e["compression"].lower() == "none":
+                    data, header = read_pak_entry(f, e, header)
+                elif cooked is not None and cooked.is_file():
+                    info("{}: in-pak copy differs from the cook output; packing the cook output's"
+                         .format(e["path"]))
+                    data = cooked.read_bytes()
+                    e = dict(e, sha1=hashlib.sha1(data).hexdigest())
+                    keep = [k if k["path"] != e["path"] else e for k in keep]
+                else:
+                    raise PackError("cannot rewrite {}: {} is compressed and not in the cook output"
+                                    .format(pak.name, e["path"]))
+                src = tmp / "files" / e["path"]
+                src.parent.mkdir(parents=True, exist_ok=True)
+                src.write_bytes(data)
+                lines.append('"{}" "{}{}"'.format(src, mount, e["path"]))
+        response = tmp / "files.txt"
+        response.write_text("\n".join(lines) + "\n")
+        new_pak = tmp / pak.name
+        r = subprocess.run([str(unrealpak), str(new_pak), "-create={}".format(response)],
+                           stdout=subprocess.PIPE, stderr=subprocess.STDOUT, universal_newlines=True,
+                           errors="replace")
+        if r.returncode != 0 or not new_pak.is_file():
+            raise PackError("UnrealPak -create failed for {} (exit {})".format(pak.name, r.returncode))
+        new_mount, new_entries = list_pak(unrealpak, new_pak)
+        if new_mount != mount or sorted((e["path"], e["sha1"]) for e in new_entries) != \
+                sorted((e["path"], e["sha1"]) for e in keep):
+            raise PackError("rewritten {} does not match the kept entries".format(pak.name))
+        shutil.move(str(new_pak), str(pak))
+    return sorted(dropped)
+
+
 def collect_pak_sets(paks_dir):
     """Group <base>.pak/.utoc/.ucas(+ _sN.ucas partitions) by base name."""
     sets = {}
@@ -1472,7 +1604,7 @@ def collect_pak_sets(paks_dir):
 
 
 def assemble_pack(pack_dir, manifest, staged_pack, out_dir, platform, release, eng, registry,
-                  rename=False):
+                  rename=False, unrealpak=None, project_name=None):
     """Normalise the staged DLC output into the distributed pack folder and tar it.
 
     Pack layout (verified in the spike):
@@ -1527,6 +1659,17 @@ def assemble_pack(pack_dir, manifest, staged_pack, out_dir, platform, release, e
         for files in sets.values():
             for f in files:
                 copy_any(f, out_paks / f.name)
+
+    # base-package files the cook put into the pack's .pak (see strip_base_content_from_pak)
+    for pak in sorted(out_paks.glob("*.pak")):
+        if unrealpak is None:
+            warn("no UnrealPak (no engine given): {} is not checked for base-package files".format(pak.name))
+            continue
+        removed = strip_base_content_from_pak(unrealpak, pak, project_name,
+                                              Path(pack_dir) / "Saved" / "Cooked" / cook_platform(platform))
+        if removed:
+            info("removed {} base-package file(s) from {} ({} ...)".format(
+                len(removed), pak.name, ", ".join(removed[:3])))
 
     copy_any(registry, out_pack / ASSET_REGISTRY)
 
@@ -1757,8 +1900,14 @@ def cmd_build(args):
     staged_pack = find_staged_pack(staging_dir, name, platform)
     registry = find_asset_registry(staged_pack, pack_dir, name, platform, args.asset_registry)
     info("asset registry: {}".format(registry))
+    unrealpak = unrealpak_path(engine) if engine else None
+    if unrealpak is not None and not unrealpak.is_file():
+        if not args.skip_cook:
+            raise PackError("UnrealPak not found: {} (build the engine's UnrealPak)".format(unrealpak))
+        unrealpak = None
     out_pack, tar_path = assemble_pack(pack_dir, manifest, staged_pack, out_dir, platform,
-                                       release, eng, registry, rename=args.rename)
+                                       release, eng, registry, rename=args.rename,
+                                       unrealpak=unrealpak, project_name=project.stem)
     size = tar_path.stat().st_size
     info("pack folder: {}".format(out_pack))
     info("wrote {} ({:.1f} MB)".format(tar_path, size / 1e6))
