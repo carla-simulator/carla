@@ -137,6 +137,7 @@
 * **Updated the walker skeleton tutorial** to `carla.WalkerBoneControlIn`, `Walker.set_bones` and `Walker.show_pose`, and fixed the bone names in its skeleton tree.
 * **Expanded the traffic light and traffic sign authoring pages**: the Traffic Light Tool with an animated build from scratch, its presets, pieces and light atlas; placing a regional `BP_Sign` with its pole, plates and secondary signs; and the regional sign catalog in its three styles.
 * **Added a network ports reference** at `Docs/ref_ports.md`, under _Resources_: every port the simulator, the Traffic Manager, ROS 2 and the tooling open, what sets each one, and the two bind errors they produce.
+* **The `open-carla-pr` skill now verifies closed issues before opening a new one**: for each matching closed issue, discussion or merged PR it reads how it was closed, checks that the fix reached the user's branch (a fix merged into `ue4-dev` or `ue5-dev` is not in `ue58-dev` unless ported), and tries the fix or workaround on the repro. A solution that works means no new issue; one that fails is cited in the new issue's body.
 * **Reorganised the rendering documentation** under _Sensor simulation_: UE native rendering, with a new _Camera features_ section on the post-process presets, the ray-traced lens cameras and DLSS, next to NuRec, Cosmos and the sensor reference.
 
 ### Bug fixes
