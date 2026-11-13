@@ -39,6 +39,17 @@ def _fresh(world):
     return world
 
 
+def _send(world):
+    """Wait until the LightManager has sent its queued changes to the server.
+
+    It sends them from an on-tick callback, which runs after the snapshot that
+    wait_for_tick() returns is published; the second wait returns only once the
+    first frame's callbacks have finished.
+    """
+    world.wait_for_tick()
+    world.wait_for_tick()
+
+
 def _done(msg):
     """Print, flush, and hard-exit.
 
@@ -91,13 +102,15 @@ def _color(s):
 
 def cmd_on(args):
     client = _client()
-    lm = _fresh(client.get_world()).get_lightmanager()
+    world = _fresh(client.get_world())
+    lm = world.get_lightmanager()
     lights = _lights(lm, args.group)
     lm.turn_on(lights)
     if args.color:
         lm.set_color(lights, _color(args.color))
     if args.intensity is not None:
         lm.set_intensity(lights, args.intensity)
+    _send(world)
     _done(f"turned ON {len(lights)} '{args.group}' lights"
           + (f", color={args.color}" if args.color else "")
           + (f", intensity={args.intensity}" if args.intensity is not None else ""))
@@ -105,15 +118,18 @@ def cmd_on(args):
 
 def cmd_off(args):
     client = _client()
-    lm = _fresh(client.get_world()).get_lightmanager()
+    world = _fresh(client.get_world())
+    lm = world.get_lightmanager()
     lights = _lights(lm, args.group)
     lm.turn_off(lights)
+    _send(world)
     _done(f"turned OFF {len(lights)} '{args.group}' lights")
 
 
 def cmd_set(args):
     client = _client()
-    lm = _fresh(client.get_world()).get_lightmanager()
+    world = _fresh(client.get_world())
+    lm = world.get_lightmanager()
     lights = _lights(lm, args.group)
     if not args.color and args.intensity is None:
         raise SystemExit("set needs --color and/or --intensity")
@@ -121,6 +137,7 @@ def cmd_set(args):
         lm.set_color(lights, _color(args.color))
     if args.intensity is not None:
         lm.set_intensity(lights, args.intensity)
+    _send(world)
     _done(f"set {len(lights)} '{args.group}' lights"
           + (f", color={args.color}" if args.color else "")
           + (f", intensity={args.intensity}" if args.intensity is not None else ""))
