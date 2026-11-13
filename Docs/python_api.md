@@ -49,14 +49,12 @@ The identifier of the blueprint this actor was based on, e.g. `vehicle.ford.must
 Returns whether the actor still exists according to the latest world snapshot received by the client (False after it was destroyed, through this handle or any other). A handle returned by spawn_actor() is reported alive (and is_active True) until a snapshot newer than the spawn arrives, so it can be used right away in both synchronous and asynchronous mode; handles obtained from world.get_actor()/get_actors() only reflect the snapshots. Because the value is snapshot-based, an actor removed with `client.apply_batch_sync([[carla.command.DestroyActor](#carla.command.DestroyActor)(...)])` still reads True until the next snapshot arrives (`world.tick()` in synchronous mode, `world.wait_for_tick()` otherwise); `actor.destroy()` on the same handle clears it immediately.  
 - <a name="carla.Actor.is_active"></a>**<font color="#f8805a">is_active</font>** (_bool_)  
 Returns whether this actor is active (True) or not (False).  
-- <a name="carla.Actor.is_dormant"></a>**<font color="#f8805a">is_dormant</font>** (_bool_)  
-Returns whether this actor is dormant (True) or not (False) - the opposite of is_active.  
 - <a name="carla.Actor.parent"></a>**<font color="#f8805a">parent</font>** (_[carla.Actor](#carla.Actor)_)  
 Actors may be attached to a parent actor that they will follow around. This is said actor.  
 - <a name="carla.Actor.semantic_tags"></a>**<font color="#f8805a">semantic_tags</font>** (_list(int)_)  
 A list of semantic tags provided by the blueprint listing components for this actor. E.g. a traffic light could be tagged with `Pole` and `TrafficLight`. These tags are used by the semantic segmentation sensor. Find more about this and other sensors [here](ref_sensors.md#semantic-segmentation-camera).  
 - <a name="carla.Actor.actor_state"></a>**<font color="#f8805a">actor_state</font>** (_[carla.ActorState](#carla.ActorState)_)  
-Returns the [carla.ActorState](#carla.ActorState), which can identify if the actor is Active, Dormant or Invalid.  
+Returns the [carla.ActorState](#carla.ActorState), which can identify if the actor is Active or Invalid.  
 - <a name="carla.Actor.bounding_box"></a>**<font color="#f8805a">bounding_box</font>** (_[carla.BoundingBox](#carla.BoundingBox)_)  
 Bounding box containing the geometry of the actor. Its location and rotation are relative to the actor it is attached to.  
 
@@ -375,8 +373,6 @@ Class that defines the state of an actor.
 An actor is Invalid if a problem has occurred.  
 - <a name="carla.ActorState.Active"></a>**<font color="#f8805a">Active</font>**  
 An actor is Active when it visualized and can affect other actors.  
-- <a name="carla.ActorState.Dormant"></a>**<font color="#f8805a">Dormant</font>**  
-An actor is Dormant when it is not visualized and will not affect other actors through physics. For example, actors are dormant if they are on an unloaded tile in a large map.  
 
 ---
 
@@ -3316,12 +3312,6 @@ Returns the port where the Traffic Manager is connected. If the object is a TM-C
     - **Return:** _uint16_  
 
 ##### Setters
-- <a name="carla.TrafficManager.set_boundaries_respawn_dormant_vehicles"></a>**<font color="#7fb800">set_boundaries_respawn_dormant_vehicles</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**lower_bound**=25.0</font>, <font color="#00a6ed">**upper_bound**=actor_active_distance</font>)  
-Sets the upper and lower boundaries for dormant actors to be respawned near the hero vehicle.  
-    - **Parameters:**
-        - `lower_bound` (_float_) - The minimum distance in meters from the hero vehicle that a dormant actor will be respawned.  
-        - `upper_bound` (_float_) - The maximum distance in meters from the hero vehicle that a dormant actor will be respawned.  
-    - **Warning:** <font color="#ED2F2F">_The `upper_bound` cannot be higher than the `actor_active_distance`. The `lower_bound` cannot be less than 25._</font>  
 - <a name="carla.TrafficManager.set_desired_speed"></a>**<font color="#7fb800">set_desired_speed</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**speed**</font>)  
 Sets the speed of a vehicle to the specified value.  
     - **Parameters:**
@@ -3354,10 +3344,6 @@ Sets a list of locations for a vehicle to follow while controlled by the Traffic
 Sets a specific random seed for the Traffic Manager, thereby setting it to be deterministic.  
     - **Parameters:**
         - `value` (_int_) - Seed value for the random number generation of the Traffic Manager.  
-- <a name="carla.TrafficManager.set_respawn_dormant_vehicles"></a>**<font color="#7fb800">set_respawn_dormant_vehicles</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**mode_switch**=False</font>)  
-If __True__, vehicles in large maps will respawn near the hero vehicle when they become dormant. Otherwise, they will stay dormant until they are within `actor_active_distance` of the hero vehicle again.  
-    - **Parameters:**
-        - `mode_switch` (_bool_)  
 - <a name="carla.TrafficManager.set_route"></a>**<font color="#7fb800">set_route</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**path**</font>, <font color="#00a6ed">**empty_buffer**=True</font>)  
 Sets a list of route instructions for a vehicle to follow while controlled by the Traffic Manager. The possible route instructions are 'Left', 'Right', 'Straight'.  
     - **Parameters:**
@@ -4080,9 +4066,9 @@ Sets the destination that the pedestrian will reach.
     - **Parameters:**
         - `destination` (_[carla.Location](#carla.Location)<small> - meters</small>_)  
 - <a name="carla.WalkerAIController.start"></a>**<font color="#7fb800">start</font>**(<font color="#00a6ed">**self**</font>)  
-Enables AI control for its parent walker.  
+Enables AI control for its parent walker. The walker keeps its collision, so ray-cast sensors and [carla.World.cast_ray](#carla.World.cast_ray) detect it.  
 - <a name="carla.WalkerAIController.stop"></a>**<font color="#7fb800">stop</font>**(<font color="#00a6ed">**self**</font>)<button class="SnipetButton" id="carla.WalkerAIController.stop-snipet_button">snippet &rarr;</button>  
-Disables AI control for its parent walker.  
+Disables AI control for its parent walker and gives the walker its movement back, so it obeys [carla.Walker.apply_control](#carla.Walker.apply_control) again.  
 
 ##### Setters
 - <a name="carla.WalkerAIController.set_max_speed"></a>**<font color="#7fb800">set_max_speed</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**speed**=1.4</font>)  
@@ -4335,16 +4321,16 @@ Class that defines specific physical parameters for wheel objects that will be p
 ### Instance Variables
 - <a name="carla.WheelPhysicsControl.wheel_index"></a>**<font color="#f8805a">wheel_index</font>** (_int_)  
 Index of the wheel in the vehicle's wheel list, being -1 when it has not been assigned yet.  
-- <a name="carla.WheelPhysicsControl.velocity"></a>**<font color="#f8805a">velocity</font>** (_[carla.Vector3D](#carla.Vector3D)<small> - cm/s</small>_)  
-Velocity of the wheel, relative to the vehicle.  
+- <a name="carla.WheelPhysicsControl.velocity"></a>**<font color="#f8805a">velocity</font>** (_[carla.Vector3D](#carla.Vector3D)<small> - m/s</small>_)  
+World velocity of the wheel's centre: the vehicle body's velocity at that point. Read-only: [carla.Vehicle.apply_physics_control](#carla.Vehicle.apply_physics_control) ignores it.  
 - <a name="carla.WheelPhysicsControl.sweep_type"></a>**<font color="#f8805a">sweep_type</font>** (_int_)  
 Geometry the sweep tests against, being 0 simple collision and 1 complex collision.  
 - <a name="carla.WheelPhysicsControl.sweep_shape"></a>**<font color="#f8805a">sweep_shape</font>** (_int_)  
 Shape used to find the ground under the wheel, being 0 a ray, 1 a sphere and 2 the wheel's own collision shape. The later the slower.  
-- <a name="carla.WheelPhysicsControl.old_location"></a>**<font color="#f8805a">old_location</font>** (_[carla.Location](#carla.Location)<small> - centimeters</small>_)  
-Position the wheel had on the previous simulation step, relative to the vehicle.  
-- <a name="carla.WheelPhysicsControl.location"></a>**<font color="#f8805a">location</font>** (_[carla.Location](#carla.Location)<small> - centimeters</small>_)  
-Position of the wheel, relative to the vehicle.  
+- <a name="carla.WheelPhysicsControl.old_location"></a>**<font color="#f8805a">old_location</font>** (_[carla.Location](#carla.Location)<small> - meters</small>_)  
+Where the wheel's centre was one simulation step earlier, estimated from its velocity. Read-only: [carla.Vehicle.apply_physics_control](#carla.Vehicle.apply_physics_control) ignores it.  
+- <a name="carla.WheelPhysicsControl.location"></a>**<font color="#f8805a">location</font>** (_[carla.Location](#carla.Location)<small> - meters</small>_)  
+World location of the wheel's centre, suspension travel included, in the same frame and units as [carla.Actor.get_location](#carla.Actor.get_location). Read-only: [carla.Vehicle.apply_physics_control](#carla.Vehicle.apply_physics_control) ignores it.  
 - <a name="carla.WheelPhysicsControl.lateral_slip_graph"></a>**<font color="#f8805a">lateral_slip_graph</font>** (_list([carla.Vector2D](#carla.Vector2D))_)  
 Curve of lateral friction against slip angle, as a list of points where x is the slip angle in degrees and y the friction multiplier.  
 - <a name="carla.WheelPhysicsControl.external_torque_combine_method"></a>**<font color="#f8805a">external_torque_combine_method</font>** (_int_)  
@@ -4773,7 +4759,7 @@ Defines wether to use deterministic physics for pedestrian death animations or p
 - <a name="carla.WorldSettings.tile_stream_distance"></a>**<font color="#f8805a">tile_stream_distance</font>** (_float_)  
 Used for large maps only. Configures the maximum distance from the hero vehicle to stream tiled maps. Regions of the map within this range will be visible (and capable of simulating physics). Regions outside this region will not be loaded.  
 - <a name="carla.WorldSettings.actor_active_distance"></a>**<font color="#f8805a">actor_active_distance</font>** (_float_)  
-Used for large maps only. Configures the distance from the hero vehicle to convert actors to dormant. Actors within this range will be active, and actors outside will become dormant.  
+Used for large maps only. Every actor is simulated whatever its distance to the hero vehicle; this value only bounds `tile_stream_distance`: when it is larger, the server raises `tile_stream_distance` to match.  
 - <a name="carla.WorldSettings.spectator_as_ego"></a>**<font color="#f8805a">spectator_as_ego</font>** (_bool_)  
 Used for large maps only. Defines the influence of the spectator on tile loading in Large Maps. By default, the spectator will provoke loading of neighboring tiles in the absence of an ego actor. This might be inconvenient for applications that immediately spawn an ego actor.  
 - <a name="carla.WorldSettings.adjust_signs_height_to_ground"></a>**<font color="#f8805a">adjust_signs_height_to_ground</font>** (_bool_)  
@@ -4791,7 +4777,7 @@ Creates an object containing desired settings that could later be applied throug
         - `max_culling_distance` (_float<small> - meters</small>_) - Configure the max draw distance for each mesh of the level.  
         - `deterministic_ragdolls` (_bool_) - Defines wether to use deterministic physics or ragdoll simulation for pedestrian deaths.  
         - `tile_stream_distance` (_float<small> - meters</small>_) - Used for large maps only. Configures the maximum distance from the hero vehicle to stream tiled maps.  
-        - `actor_active_distance` (_float<small> - meters</small>_) - Used for large maps only. Configures the distance from the hero vehicle to convert actors to dormant.  
+        - `actor_active_distance` (_float<small> - meters</small>_) - Used for large maps only. Every actor is simulated whatever its distance to the hero vehicle; this value only bounds `tile_stream_distance`: when it is larger, the server raises `tile_stream_distance` to match.  
         - `spectator_as_ego` (_bool_) - Used for large maps only. Defines the influence of the spectator on tile loading in Large Maps.  
         - `adjust_signs_height_to_ground` (_bool_) - Set this to true to move OpenDRIVE-generated traffic signs and traffic lights onto the ground below them after spawning.  
         - `deterministic_collisions` (_bool_) - Set this to true for collisions that repeat exactly between runs. Takes effect at the next map load that keeps the settings (`reset_settings=False`).  

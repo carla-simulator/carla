@@ -80,7 +80,6 @@ namespace detail {
       // get the agent state
       if (_nav.IsWalkerAlive(handle.walker, alive)) {
         if (!alive) {
-          _simulator.lock()->SetActorCollisions(handle.walker, true);
           _simulator.lock()->SetActorDead(handle.walker);
           // remove from the crowd
           _nav.RemoveAgent(handle.walker);

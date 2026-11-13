@@ -906,9 +906,14 @@ FVehiclePhysicsControl ACarlaWheeledVehicle::GetVehiclePhysicsControl() const
     Out.MaxBrakeTorque = In.MaxBrakeTorque;
     Out.MaxHandBrakeTorque = In.MaxHandBrakeTorque;
     Out.WheelIndex = In.WheelIndex;
-    Out.Location = In.Location;
-    Out.OldLocation = In.OldLocation;
-    Out.Velocity = In.Velocity;
+    // UChaosVehicleWheel's Location, OldLocation and Velocity are PhysX
+    // leftovers that Chaos never updates, so they are always zero.
+    // The wheel centre moves with the vehicle body: its velocity is the body's at that point (vehicles do not tick, so nothing is cached).
+    Out.Location = GetWheelWorldLocation(i);
+    const FBodyInstance *RootBody = GetMesh()->GetBodyInstance();
+    Out.Velocity = RootBody != nullptr && RootBody->IsValidBodyInstance() ?
+        RootBody->GetUnrealWorldVelocityAtPoint(Out.Location) : FVector::ZeroVector;
+    Out.OldLocation = Out.Location - Out.Velocity * GetWorld()->GetDeltaSeconds();
     // If some of the wheels use Spherecast, it will be used for everyone
     // if we call ApplyPhisicsControl() as it has no sense to have it only for one.
     if (In.SweepShape == ESweepShape::Spherecast)
@@ -1390,6 +1395,26 @@ FWheelAnimationData ACarlaWheeledVehicle::GetDrawnWheelPose(int32 WheelIndex) co
     return *Pose;
   }
   return GetWheelPose(WheelIndex);
+}
+
+FVector ACarlaWheeledVehicle::GetWheelWorldLocation(int32 WheelIndex) const
+{
+  const UChaosWheeledVehicleMovementComponent *Movement = GetChaosWheeledVehicleMovementComponent();
+  const UChaosVehicleWheel *Wheel = GetWheelDefaults(WheelIndex);
+  if (Movement == nullptr || Wheel == nullptr)
+  {
+    return GetActorLocation();
+  }
+  // The resting position Chaos gives the wheel (GetWheelRestingPosition, which
+  // is protected), relative to the root body, plus the drawn suspension travel.
+  const FChaosWheelSetup &WheelSetup = Movement->WheelSetups[WheelIndex];
+  const FVector Local =
+      Movement->LocateBoneOffset(WheelSetup.BoneName, Wheel->Offset + WheelSetup.AdditionalOffset) +
+      GetWheelPose(WheelIndex).LocOffset;
+  const FBodyInstance *RootBody = GetMesh()->GetBodyInstance();
+  const FTransform RootBodyTransform = RootBody != nullptr && RootBody->IsValidBodyInstance() ?
+      RootBody->GetUnrealWorldTransform() : GetMesh()->GetComponentTransform();
+  return RootBodyTransform.TransformPosition(Local);
 }
 
 TArray<FWheelAnimationData> ACarlaWheeledVehicle::GetWheelPoses() const

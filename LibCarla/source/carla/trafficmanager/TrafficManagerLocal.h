@@ -18,7 +18,6 @@
 #include "carla/client/World.h"
 #include "carla/Memory.h"
 #include "carla/rpc/Command.h"
-#include "carla/rpc/EpisodeSettings.h"
 
 #include "carla/trafficmanager/AtomicActorSet.h"
 #include "carla/trafficmanager/InMemoryMap.h"
@@ -107,10 +106,6 @@ private:
   std::unique_ptr<std::thread> worker_thread;
   /// Last processed frame
   size_t last_frame{0};
-  /// Cached episode settings; they only change through world.apply_settings.
-  rpc::EpisodeSettings episode_settings;
-  /// Simulation time of the last episode settings refresh.
-  double last_settings_update {-std::numeric_limits<double>::infinity()};
   /// Starts at the limit so the first batch of an episode is waited for.
   uint64_t unwaited_control_batches {
       constants::WorldInfoRefresh::MAX_UNWAITED_CONTROL_BATCHES};
@@ -280,15 +275,6 @@ public:
 
   /// Method to update an already set route.
   void UpdateImportedRoute(const ActorId &actor_id, const Route route);
-
-  /// Method to set automatic respawn of dormant vehicles.
-  void SetRespawnDormantVehicles(const bool mode_switch);
-
-  /// Method to set boundaries to respawn of dormant vehicles.
-  void SetBoundariesRespawnDormantVehicles(const float lower_bound, const float upper_bound);
-
-  /// Method to set limits for boundaries when respawning dormant vehicles.
-  void SetMaxBoundaries(const float lower, const float upper);
 
   /// Method to get the vehicle's next action.
   Action GetNextAction(const ActorId &actor_id);

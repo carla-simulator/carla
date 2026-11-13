@@ -190,13 +190,6 @@ void TrafficManagerLocal::Step() {
     last_frame = timestamp.frame;
   }
 
-  if (synchronous_mode ||
-      IsRefreshDue(timestamp.elapsed_seconds, last_settings_update, EPISODE_SETTINGS_REFRESH_PERIOD)) {
-    episode_settings = episode_proxy.Lock()->GetEpisodeSettings();
-    last_settings_update = timestamp.elapsed_seconds;
-  }
-  parameters.SetMaxBoundaries(20.0f, episode_settings.actor_active_distance);
-
   std::unique_lock<std::mutex> registration_lock(registration_mutex);
   // Updating simulation state, actor life cycle and performing necessary cleanup.
   alsm.Update();
@@ -339,8 +332,6 @@ void TrafficManagerLocal::Stop() {
   vehicle_light_stage.Reset();
 
   last_frame = 0;
-  episode_settings = rpc::EpisodeSettings{};
-  last_settings_update = -std::numeric_limits<double>::infinity();
   unwaited_control_batches = MAX_UNWAITED_CONTROL_BATCHES;
 
   buffer_map.clear();
@@ -510,18 +501,6 @@ void TrafficManagerLocal::RemoveImportedRoute(const ActorId &actor_id, const boo
 
 void TrafficManagerLocal::UpdateImportedRoute(const ActorId &actor_id, const Route route) {
   parameters.UpdateImportedRoute(actor_id, route);
-}
-
-void TrafficManagerLocal::SetRespawnDormantVehicles(const bool mode_switch) {
-  parameters.SetRespawnDormantVehicles(mode_switch);
-}
-
-void TrafficManagerLocal::SetBoundariesRespawnDormantVehicles(const float lower_bound, const float upper_bound) {
-  parameters.SetBoundariesRespawnDormantVehicles(lower_bound, upper_bound);
-}
-
-void TrafficManagerLocal::SetMaxBoundaries(const float lower, const float upper) {
-  parameters.SetMaxBoundaries(lower, upper);
 }
 
 Action TrafficManagerLocal::GetNextAction(const ActorId &actor_id) {
