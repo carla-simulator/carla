@@ -15,6 +15,7 @@
 #include <third-party/odrSpiral/odrSpiral.h>
 
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <stdexcept>
 
@@ -72,6 +73,53 @@ namespace element {
     const double curve_start = (_curve_start);
     const double curve_dot = (curve_end - curve_start) / (_length);
     const double s_o = curve_start / curve_dot;
+    const double max_curvature = std::max(std::abs(curve_start),
+        std::abs(curve_start + curve_dot * dist));
+    const double turn_bound = max_curvature * dist;
+
+    // A distant Fresnel origin loses the difference between nearby samples,
+    // or even maps both samples to the asymptotic limit. Integrate the local
+    // tangent instead when the origin phase or subtraction is ill-conditioned.
+    // Bound the fallback's work and its conversion to an interval count.
+    constexpr double max_fallback_turn = 64.0;
+    if (curve_dot != 0.0 && turn_bound <= max_fallback_turn &&
+        (std::abs(curve_start) > 1024.0 * std::sqrt(std::abs(curve_dot)) ||
+         std::abs(s_o) > 1e6 * dist)) {
+      p.tangent = _heading + dist * (curve_start + 0.5 * curve_dot * dist);
+      if (dist == 0.0) {
+        return p;
+      }
+
+      // Eight-point Gauss-Legendre quadrature, with at most one radian of
+      // heading change per interval. Each positive node also supplies -node.
+      constexpr std::array<std::pair<double, double>, 4> quadrature{{
+        {0.1834346424956498, 0.3626837833783620},
+        {0.5255324099163290, 0.3137066458778873},
+        {0.7966664774136267, 0.2223810344533745},
+        {0.9602898564975363, 0.1012285362903763}
+      }};
+      const size_t intervals = std::max(size_t(1),
+          static_cast<size_t>(std::ceil(turn_bound)));
+      const double step = dist / static_cast<double>(intervals);
+      const double half_step = 0.5 * step;
+      double dx = 0.0;
+      double dy = 0.0;
+      for (size_t i = 0; i < intervals; ++i) {
+        const double midpoint = (static_cast<double>(i) + 0.5) * step;
+        for (const auto &[node, weight] : quadrature) {
+          for (double s : {midpoint - half_step * node,
+                           midpoint + half_step * node}) {
+            const double angle = _heading + s * (curve_start + 0.5 * curve_dot * s);
+            dx += half_step * weight * std::cos(angle);
+            dy += half_step * weight * std::sin(angle);
+          }
+        }
+      }
+      p.location.x += static_cast<float>(dx);
+      p.location.y += static_cast<float>(dy);
+      return p;
+    }
+
     double s = s_o + dist;
 
     double x;
