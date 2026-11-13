@@ -154,6 +154,7 @@ namespace element {
       last_v = current_v;
 
     }
+    DEBUG_ASSERT(_spline.size() >= 2u);
   }
 
   DirectedPoint GeometryParamPoly3::PosFromDist(double dist) const {
@@ -196,7 +197,6 @@ namespace element {
     double current_s = 0;
     double last_u = _polyU.Evaluate(param_p);
     double last_v = _polyV.Evaluate(param_p);
-    _spline.reserve(number_intervals + 1u);
     _spline.push_back({
         last_u,
         last_v,
@@ -227,6 +227,7 @@ namespace element {
         break;
       }
     }
+    DEBUG_ASSERT(_spline.size() >= 2u);
   }
 } // namespace element
 } // namespace road
