@@ -52,4 +52,8 @@ BOOST_PYTHON_MODULE(carla) {
   export_ad_rss();
 #endif
   export_osm2odr();
+
+  // CARLA's threads must stop calling into Python before it is finalized.
+  object atexit = import("atexit");
+  atexit.attr("register")(make_function(&carla::PythonUtil::OnInterpreterExit));
 }

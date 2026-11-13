@@ -88,7 +88,6 @@ void export_actor() {
   enum_<cr::ActorState>("ActorState")
     .value("Invalid", cr::ActorState::Invalid)
     .value("Active", cr::ActorState::Active)
-    .value("Dormant", cr::ActorState::Dormant)
   ;
 
   class_<std::vector<int>>("VectorOfInts")
@@ -104,7 +103,6 @@ void export_actor() {
       .add_property("semantic_tags", &GetSemanticTags)
       .add_property("actor_state", CALL_WITHOUT_GIL(cc::Actor, GetActorState))
       .add_property("is_alive", CALL_WITHOUT_GIL(cc::Actor, IsAlive))
-      .add_property("is_dormant", CALL_WITHOUT_GIL(cc::Actor, IsDormant))
       .add_property("is_active", CALL_WITHOUT_GIL(cc::Actor, IsActive))
       .add_property("attributes", +[] (const cc::Actor &self) {
         boost::python::dict attribute_dict;

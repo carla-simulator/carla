@@ -33,8 +33,13 @@ public:
   bool Publish() override;
   bool Write(std::int32_t seconds, std::uint32_t nanoseconds);
 
+  /// False when the writer could not be created, i.e. the middleware
+  /// failed to start (no participant or session).
+  bool IsReady() const { return _ready; }
+
 private:
   std::shared_ptr<PublisherImpl<CarlaClockMsgTraits>> _impl;
+  bool _ready = false;
 };
 
 }  // namespace ros2

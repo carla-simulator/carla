@@ -855,6 +855,10 @@ private:
   /// GetWheelPose for every wheel.
   TArray<FWheelAnimationData> GetWheelPoses() const;
 
+  /// World location, in cm, of the centre of the wheel at WheelIndex as shown:
+  /// its resting position plus the suspension travel of GetWheelPose.
+  FVector GetWheelWorldLocation(int32 WheelIndex) const;
+
   /// Sets the Chaos wheels to these poses, so that they do not jump when Chaos
   /// takes over the wheels again.
   void SeedChaosWheels(const TArray<FWheelAnimationData> &Poses);

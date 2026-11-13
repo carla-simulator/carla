@@ -1687,11 +1687,22 @@ ECarlaServerResponse FWalkerActor::SetActorSimulatePhysics(bool bEnabled)
       return ECarlaServerResponse::NotAWalker;
     }
     auto CharacterMovement = Cast<UCharacterMovementComponent>(Character->GetCharacterMovement());
+    auto* Walker = Cast<AWalkerBase>(Character);
+    if (bEnabled && Walker != nullptr && !Walker->bAlive)
+    {
+      // A dead walker's corpse stays still (Kill() disabled its movement).
+      return ECarlaServerResponse::Success;
+    }
     if(bEnabled) {
       CharacterMovement->SetDefaultMovementMode();
     }
     else {
       CharacterMovement->DisableMovement();
+    }
+    if (Walker != nullptr)
+    {
+      // Without its own movement the walker is teleported by the client crowd or the replayer.
+      Walker->SetTeleportDriven(!bEnabled);
     }
   }
   return ECarlaServerResponse::Success;
