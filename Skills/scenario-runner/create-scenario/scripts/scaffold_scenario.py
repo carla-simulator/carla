@@ -368,7 +368,7 @@ def do_validate(args) -> None:
     # Parse rather than import: importing needs carla + a live SimulationData,
     # and every mistake worth catching here is visible in the AST.
     try:
-        tree = ast.parse(py_path.read_text())
+        tree = ast.parse(py_path.read_text(encoding="utf-8"))
     except SyntaxError as e:
         bad(f"syntax error at line {e.lineno}: {e.msg}")
         sys.exit(rc)

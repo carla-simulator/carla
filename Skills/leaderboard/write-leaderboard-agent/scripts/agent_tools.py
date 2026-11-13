@@ -187,7 +187,7 @@ def load_sensors(agent_path: Path) -> tuple[list[dict], str | None]:
     """
     name = agent_path.stem
     expect = name.title().replace("_", "")
-    src = agent_path.read_text()
+    src = agent_path.read_text(encoding="utf-8")
     tree = ast.parse(src)
     cls = next((n for n in ast.walk(tree) if isinstance(n, ast.ClassDef) and n.name == expect), None)
     if cls is None:
