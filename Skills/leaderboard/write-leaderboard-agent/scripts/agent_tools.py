@@ -172,7 +172,7 @@ def do_scaffold(args) -> None:
         name=args.name, file=path.name, track=args.track, track_enum=args.track,
         version=version, out=path, ctor=ctor,
         map_sensor=MAP_SENSOR if args.track.startswith("MAP") else "",
-    ))
+    ), encoding="utf-8")
     print(f"wrote {path}   (leaderboard {version}, track {args.track})")
     print(f"\nvalidate : python3 {sys.argv[0]} validate --agent {path} --track {args.track}")
     print(f"run      : TEAM_AGENT={path} bash ../run-leaderboard-evaluation/scripts/run_leaderboard.sh --routes-subset 0")

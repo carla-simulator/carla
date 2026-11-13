@@ -245,6 +245,7 @@
 * Fixed `apply_texture.py` to accept RGB diffuse images and update normal or ORM maps without a diffuse texture.
 * Fixed `PythonAPI/examples/manual_control.py` raising `NameError: name 'sys' is not defined` instead of their error message when the server cannot send the OpenDRIVE file or the map has no spawn points.
 * Fixed `PythonAPI/examples/no_rendering_mode.py` ignoring `--show-triggers`, `--show-connections` and `--show-spawn-points` when a cached map image existed; the flags are part of the cache name now.
+* Fixed the `create-scenario` and `write-leaderboard-agent` skills writing their generated files in the system code page on Windows (cp1252), so the templates' em dash made them unreadable as UTF-8. They, and `read-leaderboard-results`' merged results, are now written as UTF-8.
 * Fixed the spawn check in `test_collision_determinism.py`, which raised `AttributeError` instead of reporting the failure, and `Sensor.get_current_detection_points` in the LiDAR smoke tests.
 * Fixed `PythonAPI/util/config.py --delta-seconds 0` and `--fps 0` (variable frame rate) always failing with a `TypeError`.
 * Fixed `PythonAPI/examples/invertedai_traffic.py` failing before driving any traffic (#10221): it loads `Town10HD_Opt` when Inverted AI's `carla:Town10HD` has no plain `Town10HD` map, as on UE 5, and builds the `WaypointManager` with the `lanelet_map` the current `invertedai` SDK requires. `PythonAPI/examples/requirements.txt` pins `invertedai` to that tested commit instead of tracking `develop`.
