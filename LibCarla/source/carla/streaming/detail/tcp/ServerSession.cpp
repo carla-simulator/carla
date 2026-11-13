@@ -85,9 +85,30 @@ namespace tcp {
     }
     if (_is_writing) {
       if (_server.IsSynchronousMode()) {
-        // wait until previous message has been sent
+        // Wait until the previous message has been sent, but not forever: the
+        // caller is the game thread or the render thread, and a client that
+        // stops reading this socket (a listen() callback that never returns,
+        // a frozen process) would otherwise stall the whole server, every
+        // other client included (#10233). Drop that client instead; its
+        // streaming client reconnects on its own.
+        const auto start = std::chrono::steady_clock::now();
+        const auto limit = _timeout.to_chrono();
+        bool warned = false;
         while (_is_writing) {
           std::this_thread::sleep_for(std::chrono::microseconds(100));
+          const auto waited = std::chrono::steady_clock::now() - start;
+          if (!warned && waited > std::chrono::seconds(1)) {
+            warned = true;
+            log_warning("streaming session", _session_id, "for stream", _stream_id,
+                ": client is not reading, synchronous send blocked for 1 s");
+          }
+          if (waited > limit) {
+            log_error("streaming session", _session_id, "for stream", _stream_id,
+                ": client did not read for", _timeout.milliseconds(),
+                "ms in synchronous mode, closing the session and dropping the message");
+            Close();
+            return;
+          }
         }
       } else {
         // ignore this message
@@ -110,9 +131,17 @@ namespace tcp {
 
     log_debug("session", _session_id, ": sending message of", message->size(), "bytes");
 
-    _deadline.expires_after(_timeout.to_chrono());
-    boost::asio::async_write(_socket, message->GetBufferSequence(), 
-      boost::asio::bind_executor(_strand, handle_sent));
+    // Start the write on the session's strand: the socket and the timer are
+    // not thread-safe, and CloseNow() runs on the strand.
+    boost::asio::post(_strand, [this, self, message, handle_sent]() mutable {
+      if (_is_closed || !_socket.is_open()) {
+        _is_writing = false;
+        return;
+      }
+      _deadline.expires_after(_timeout.to_chrono());
+      boost::asio::async_write(_socket, message->GetBufferSequence(),
+        boost::asio::bind_executor(_strand, std::move(handle_sent)));
+    });
   }
 
   void ServerSession::Close() {

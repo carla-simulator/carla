@@ -80,6 +80,8 @@ void AWalkerBase::AttachWheelchair()
   WheelchairComponent->SetCollisionProfileName(TEXT("CharacterMesh"));
   WheelchairComponent->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
   WheelchairComponent->SetCollisionObjectType(ECC_Pawn);
+  WheelchairComponent->SetCollisionResponseToChannel(ECC_GameTraceChannel1 /*SensorObject*/, ECR_Block);
+  WheelchairComponent->SetCollisionResponseToChannel(ECC_GameTraceChannel2 /*SensorTrace*/, ECR_Block);
   WheelchairComponent->RegisterComponent();
   WheelchairComponent->AttachToComponent(
       WalkerMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
@@ -178,6 +180,12 @@ void AWalkerBase::BeginPlay()
       }
     }
   }
+  // Nothing needs the body mesh's overlaps, which re-query every physics body on each teleport (#10068).
+  if (USkeletalMeshComponent *BodyMesh = GetMesh())
+  {
+    BodyMesh->SetGenerateOverlapEvents(false);
+    BodyMesh->bUpdateOverlapsOnAnimationFinalize = false;
+  }
   if (AWalkerBase_IsMirror(*this))
   {
     // No local death detection, nor the Blueprint triggers that kill on
@@ -201,6 +209,40 @@ void AWalkerBase::BeginPlay()
   GetWorldTimerManager().SetTimer(
       VehicleSensorTimer, this, &AWalkerBase::CheckVehicleImpact,
       VehicleSensorPeriod, /*bLoop=*/true);
+}
+
+void AWalkerBase::SetTeleportDriven(bool bEnable)
+{
+  if (!bEnable)
+  {
+    for (const FSuspendedPrimitive &Suspended : SuspendedPrimitives)
+    {
+      if (Suspended.Primitive.IsValid())
+      {
+        Suspended.Primitive->SetCollisionEnabled(Suspended.CollisionEnabled);
+        Suspended.Primitive->SetGenerateOverlapEvents(Suspended.bGenerateOverlapEvents);
+      }
+    }
+    SuspendedPrimitives.Reset();
+    return;
+  }
+  if (!SuspendedPrimitives.IsEmpty())
+  {
+    return;
+  }
+  TArray<UPrimitiveComponent *> Primitives;
+  GetComponents<UPrimitiveComponent>(Primitives, false);
+  for (UPrimitiveComponent *Primitive : Primitives)
+  {
+    // Only what ray-cast sensors hit (body mesh, wheelchair) keeps collision; the capsule and triggers only cost queries.
+    if (Primitive->GetCollisionResponseToChannel(ECC_GameTraceChannel2 /*SensorTrace*/) == ECR_Block)
+    {
+      continue;
+    }
+    SuspendedPrimitives.Add({Primitive, Primitive->BodyInstance.GetCollisionEnabled(false), Primitive->GetGenerateOverlapEvents()});
+    Primitive->SetGenerateOverlapEvents(false);
+    Primitive->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+  }
 }
 
 void AWalkerBase::OnBodyHit(AActor *, AActor *OtherActor,

@@ -22,6 +22,11 @@ if (WIN32)
 else ()
   file (COPY_FILE ${CARLA_WORKSPACE_PATH}/Docs/release_readme.md ${CARLA_PACKAGE_ARCHIVE_PATH}/README)
 endif ()
+# The release Docker image is built from the package root:
+#   docker build -t carlasim/carla:<version> .
+if (NOT WIN32)
+  file (COPY_FILE ${CARLA_WORKSPACE_PATH}/Util/Docker/Release.Dockerfile ${CARLA_PACKAGE_ARCHIVE_PATH}/Dockerfile)
+endif ()
 if (WIN32)
     set (EXE_EXT .exe)
 else ()

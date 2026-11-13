@@ -185,4 +185,4 @@ Same constants as `GearReport`, in a `command` field.
 Everything is published __reliable__, __volatile__, with a __keep-last__ history of depth 1 — the Fast-DDS writer defaults, and what an Autoware-style stack expects.
 A subscriber created with a best-effort policy still matches a reliable publisher; the opposite does not.
 
-The Autoware command subscribers are the one exception: they are __transient local__, so a command published before the vehicle was spawned still reaches it.
+The Autoware command subscribers are __volatile__ too, so they match a command publisher of either durability: Autoware's `vehicle_cmd_gate` publishes them transient local, its `control_command_gate` volatile. A command published before the vehicle was spawned is therefore not delivered; Autoware republishes its commands at the control rate.

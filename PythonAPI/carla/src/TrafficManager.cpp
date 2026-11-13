@@ -109,8 +109,6 @@ void export_trafficmanager() {
     .def("set_osm_mode", &carla::traffic_manager::TrafficManager::SetOSMMode, (arg("mode_switch")))
     .def("set_path", &InterSetCustomPath, (arg("actor"), arg("path"), arg("empty_buffer")=true))
     .def("set_route", &InterSetImportedRoute, (arg("actor"), arg("path"), arg("empty_buffer")=true))
-    .def("set_respawn_dormant_vehicles", &carla::traffic_manager::TrafficManager::SetRespawnDormantVehicles, (arg("mode_switch")))
-    .def("set_boundaries_respawn_dormant_vehicles", &carla::traffic_manager::TrafficManager::SetBoundariesRespawnDormantVehicles, (arg("lower_bound"), arg("upper_bound")))
     .def("get_next_action", &InterGetNextAction, (arg("actor")))
     .def("get_all_actions", &InterGetActionBuffer, (arg("actor")))
     .def("shut_down", &ctm::TrafficManager::ShutDown);

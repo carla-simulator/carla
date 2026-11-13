@@ -45,11 +45,18 @@ namespace detail {
         return;
       }
 
-      // try write multiple stream
-      std::scoped_lock<std::mutex> lock(_mutex);
-      if (_sessions.size() > 0) {
+      // try write multiple stream. Copy the sessions and write without the
+      // lock: a synchronous-mode write may block on a slow client, and the
+      // streaming io threads take this lock (under the Dispatcher's) to
+      // connect or disconnect sessions (#10233).
+      std::vector<std::shared_ptr<Session>> sessions;
+      {
+        std::scoped_lock<std::mutex> lock(_mutex);
+        sessions = _sessions;
+      }
+      if (sessions.size() > 0) {
         auto message = Session::MakeMessage(buffers...);
-        for (auto &s : _sessions) {
+        for (auto &s : sessions) {
           if (s != nullptr) {
             s->Write(message);
             log_debug("sensor ", s->get_stream_id()," data sent ");

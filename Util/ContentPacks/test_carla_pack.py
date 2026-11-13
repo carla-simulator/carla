@@ -1025,6 +1025,14 @@ class TestBuild(PackTestBase):
         os.chmod(str(self.engine / "Engine" / "Build" / "BatchFiles" / "RunUAT.sh"), 0o755)
         return record
 
+    def fake_unrealpak(self):
+        """An UnrealPak whose -List shows only pack-owned entries (nothing to strip)."""
+        exe = cp.unrealpak_path(self.engine)
+        write(exe, '#!/bin/sh\necho \'LogPakFile: Display: Listing x.pak with mount point "../../../"\'\n'
+                   'echo \'LogPakFile: Display: "CarlaUnreal/Plugins/Packs/TestPack/AssetRegistry.bin" offset: 0, '
+                   'size: 1 bytes, sha1: %s, compression: None.\'\n' % ("0" * 40))
+        os.chmod(str(exe), 0o755)
+
     def test_build_flips_descriptor_for_the_cook_and_restores_it(self):
         self.init_and_add()
         uplugin = self.pack_dir / "TestPack.uplugin"
@@ -1033,6 +1041,7 @@ class TestBuild(PackTestBase):
         staged = self.tmp / "Staged"
         self.fake_staged(staged)
         record = self.fake_uat(0)
+        self.fake_unrealpak()
         rc, out, err = run("build", PACK, "--project", self.project, "--base", self.base_tar,
                            "--engine", self.engine, "--staged", staged, "--out", self.tmp / "out")
         self.assertEqual(rc, 0, err)
@@ -1131,6 +1140,49 @@ class TestBuild(PackTestBase):
         self.assertEqual(rc, 1)
         self.assertIn("no staged output", err)
 
+
+
+class TestPakStrip(unittest.TestCase):
+    LISTING = (
+        'LogPakFile: Display: Listing AdditionalMapsCarlaUnreal-Linux.pak with mount point "../../../"\n'
+        '[t][  0]LogPakFile: Display: "CarlaUnreal/Content/Carla/Maps/Nav/Town01.bin" offset: 0, size: 3 bytes, '
+        'sha1: 6C977BC6BB06F536445687C20403F7D3D6FCA350, compression: None.\n'
+        '[t][  0]LogPakFile: Display: "CarlaUnreal/Plugins/Packs/AdditionalMaps/AssetRegistry.bin" offset: 56, '
+        'size: 4 bytes, sha1: 0000000000000000000000000000000000000000, compression: None.\n'
+        '[t][  0]LogPakFile: Display: "ue.projectstore" offset: 113, size: 2 bytes, '
+        'sha1: 0000000000000000000000000000000000000000, compression: None.\n')
+
+    def test_parse_listing(self):
+        mount, entries = cp.parse_pak_listing(self.LISTING)
+        self.assertEqual(mount, "../../../")
+        self.assertEqual([e["path"] for e in entries],
+                         ["CarlaUnreal/Content/Carla/Maps/Nav/Town01.bin",
+                          "CarlaUnreal/Plugins/Packs/AdditionalMaps/AssetRegistry.bin", "ue.projectstore"])
+        self.assertEqual(entries[1]["offset"], 56)
+        self.assertEqual(entries[0]["sha1"], "6c977bc6bb06f536445687c20403f7d3d6fca350")
+        with self.assertRaises(cp.PackError):
+            cp.parse_pak_listing("no mount point here")
+
+    def test_only_base_content_is_selected(self):
+        _, entries = cp.parse_pak_listing(self.LISTING)
+        self.assertEqual([e["path"] for e in cp.base_content_entries(entries, "CarlaUnreal")],
+                         ["CarlaUnreal/Content/Carla/Maps/Nav/Town01.bin"])
+        self.assertEqual(cp.base_content_entries(entries, "OtherProject"), [])
+
+    def test_read_entry_finds_header_and_checks_sha1(self):
+        import hashlib
+        payload = b"pack-owned bytes"
+        blob = b"H" * 53 + payload + b"tail"
+        entry = {"path": "a", "offset": 0, "size": len(payload),
+                 "sha1": hashlib.sha1(payload).hexdigest(), "compression": "None"}
+        with tempfile.TemporaryFile() as f:
+            f.write(blob)
+            data, header = cp.read_pak_entry(f, entry)
+            self.assertEqual((data, header), (payload, 53))
+            with self.assertRaises(cp.PackError):
+                cp.read_pak_entry(f, dict(entry, sha1="0" * 40))
+            with self.assertRaises(cp.PackError):
+                cp.read_pak_entry(f, dict(entry, compression="Oodle"))
 
 class TestInspectVerifyInstall(PackTestBase):
     def test_round_trip(self):

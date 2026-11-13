@@ -73,7 +73,12 @@ static auto ContentPackInfoMaps(const carla::rpc::ContentPackInfo &self) {
 
 static auto GetRequiredFiles(const carla::client::Client &self, const std::string &folder, const bool download) {
   boost::python::list result;
-  for (const auto &str : self.GetRequiredFiles(folder, download)) {
+  std::vector<std::string> files;
+  {
+    carla::PythonUtil::ReleaseGIL unlock;
+    files = self.GetRequiredFiles(folder, download);
+  }
+  for (const auto &str : files) {
     result.append(str);
   }
   return result;
@@ -87,8 +92,14 @@ static void ApplyBatchCommands(
   std::vector<CommandType> cmds{
     boost::python::stl_input_iterator<CommandType>(commands),
         boost::python::stl_input_iterator<CommandType>()};
+  carla::PythonUtil::ReleaseGIL unlock;
   self.ApplyBatch(std::move(cmds), do_tick);
 }
+
+static std::vector<carla::rpc::CommandResponse> ApplyBatchCommandsSyncNoGIL(
+    const carla::client::Client &self,
+    std::vector<carla::rpc::Command> &cmds,
+    bool do_tick);
 
 static auto ApplyBatchCommandsSync(
     const carla::client::Client &self,
@@ -101,11 +112,29 @@ static auto ApplyBatchCommandsSync(
     boost::python::stl_input_iterator<CommandType>()
   };
 
+  // Release the GIL while waiting for the server: a sensor callback waiting
+  // for the GIL stops its streaming thread from reading the socket, and in
+  // synchronous mode the server then blocks sending to it (#10233).
+  std::vector<carla::rpc::CommandResponse> responses;
+  {
+    carla::PythonUtil::ReleaseGIL unlock;
+    responses = ApplyBatchCommandsSyncNoGIL(self, cmds, do_tick);
+  }
+
   boost::python::list result;
-  auto responses = self.ApplyBatchSync(cmds, do_tick);
   for (auto &response : responses) {
     result.append(std::move(response));
   }
+  return result;
+}
+
+static std::vector<carla::rpc::CommandResponse> ApplyBatchCommandsSyncNoGIL(
+    const carla::client::Client &self,
+    std::vector<carla::rpc::Command> &cmds,
+    bool do_tick) {
+
+  using CommandType = carla::rpc::Command;
+  auto responses = self.ApplyBatchSync(cmds, do_tick);
 
   // check for autopilot command
   std::vector<carla::traffic_manager::ActorPtr> vehicles_to_enable(cmds.size(), nullptr);
@@ -208,7 +237,7 @@ static auto ApplyBatchCommandsSync(
     self.GetInstanceTM(tm_port).UnregisterVehicles(sorted_vehicle_to_disable);
   }
 
-  return result;
+  return responses;
 }
 
 void export_client() {

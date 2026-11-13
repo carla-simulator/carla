@@ -652,6 +652,11 @@ inline auto MakeCallback(boost::python::object callback) {
 
   // Make a lambda callback.
   return [callback=std::move(callback_ptr)](auto message) {
+    // Runs on CARLA's threads, which can outlive the interpreter.
+    carla::PythonUtil::PythonCallScope scope;
+    if (!scope) {
+      return;
+    }
     carla::PythonUtil::AcquireGIL lock;
     try {
       py::call<void>(callback->ptr(), py::object(message));

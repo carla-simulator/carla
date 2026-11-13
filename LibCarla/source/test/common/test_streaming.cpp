@@ -19,6 +19,8 @@
 
 #include <atomic>
 #include <chrono>
+#include <future>
+#include <thread>
 
 using namespace std::chrono_literals;
 
@@ -406,4 +408,63 @@ TEST(streaming, ros_topic_visibility_manual_toggle) {
   EXPECT_TRUE(srv.IsEnabledForROS(sensor_id));
   srv.DisableForROS(sensor_id);
   EXPECT_FALSE(srv.IsEnabledForROS(sensor_id));
+}
+
+// In synchronous mode the server waits for the previous message of a session
+// to be sent before writing the next one. A client that stops reading (a
+// listen() callback that never returns) used to keep that wait going forever,
+// on the game or render thread, and the whole server stopped answering
+// (#10233). The wait is now bounded by the session timeout: the stuck client
+// is dropped and the other clients of the same stream keep receiving.
+TEST(streaming, sync_mode_client_not_reading_does_not_block_writer) {
+  using namespace carla::streaming;
+  constexpr auto timeout = 1s;
+  // Larger than the socket buffers, so a client that does not read blocks the
+  // second write.
+  const std::string big(32u * 1024u * 1024u, 'x');
+
+  Server srv(TESTING_PORT);
+  srv.SetTimeout(timeout);
+  srv.SetSynchronousMode(true);
+  srv.AsyncRun(4u);
+  auto stream = srv.MakeStream();
+
+  std::promise<void> release;
+  std::shared_future<void> released = release.get_future().share();
+  std::atomic_size_t stuck_count{0u};
+  Client stuck;
+  stuck.AsyncRun(1u);
+  stuck.Subscribe(stream.token(), [&](auto) {
+    ++stuck_count;
+    released.wait();  // never returns until the end of the test
+  });
+
+  std::atomic_size_t healthy_count{0u};
+  Client healthy;
+  healthy.AsyncRun(1u);
+  healthy.Subscribe(stream.token(), [&](auto) { ++healthy_count; });
+
+  std::this_thread::sleep_for(200ms);  // let both sessions connect
+
+  carla::Buffer Buf(boost::asio::buffer(big.c_str(), big.size()));
+  carla::SharedBufferView BufView = carla::BufferView::CreateFrom(std::move(Buf));
+  constexpr size_t number_of_messages = 6u;
+  const auto start = std::chrono::steady_clock::now();
+  for (auto i = 0u; i < number_of_messages; ++i) {
+    carla::SharedBufferView View = BufView;
+    stream.Write(View);
+  }
+  const auto elapsed = std::chrono::steady_clock::now() - start;
+
+  // At most one bounded wait for the stuck session, then it is dropped.
+  EXPECT_LT(elapsed, 3 * timeout);
+  EXPECT_GE(stuck_count, 1u);
+  for (auto i = 0; i < 100 && healthy_count < number_of_messages - 1u; ++i) {
+    std::this_thread::sleep_for(20ms);
+  }
+  // Only the message written while the stuck session was being dropped may
+  // be lost.
+  EXPECT_GE(healthy_count, number_of_messages - 1u);
+
+  release.set_value();
 }

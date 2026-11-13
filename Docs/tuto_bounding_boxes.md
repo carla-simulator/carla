@@ -377,27 +377,12 @@ while True:
 
                 if forward_vec.dot(ray) > 1:
                     verts = [v for v in bb.get_world_vertices(npc.get_transform())]
-                    x_max = -10000
-                    x_min = 10000
-                    y_max = -10000
-                    y_min = 10000
-
-                    for vert in verts:
-                        p = get_image_point(vert, K, world_2_camera)
-                        if p is None:
-                            continue
-                        # Find the rightmost vertex
-                        if p[0] > x_max:
-                            x_max = p[0]
-                        # Find the leftmost vertex
-                        if p[0] < x_min:
-                            x_min = p[0]
-                        # Find the highest vertex
-                        if p[1] > y_max:
-                            y_max = p[1]
-                        # Find the lowest  vertex
-                        if p[1] < y_min:
-                            y_min = p[1]
+                    pixels = [get_image_point(vert, K, world_2_camera) for vert in verts]
+                    visible = [p for p in pixels if p is not None]
+                    if not visible:
+                        continue
+                    x_min, y_min = np.min(visible, axis=0)
+                    x_max, y_max = np.max(visible, axis=0)
 
                     cv2.line(img, (int(x_min),int(y_min)), (int(x_max),int(y_min)), colour, 1)
                     cv2.line(img, (int(x_min),int(y_max)), (int(x_max),int(y_max)), colour, 1)
@@ -458,23 +443,13 @@ while True:
                 ray = npc.get_transform().location - vehicle.get_transform().location
                 if forward_vec.dot(ray) > 1:
                     verts = [v for v in bb.get_world_vertices(npc.get_transform())]
-                    x_max = -10000
-                    x_min = 10000
-                    y_max = -10000
-                    y_min = 10000
-                    for vert in verts:
-                        p = get_image_point(vert, K, world_2_camera)
-                        if p is None:
-                            continue
-                        if p[0] > x_max:
-                            x_max = p[0]
-                        if p[0] < x_min:
-                            x_min = p[0]
-                        if p[1] > y_max:
-                            y_max = p[1]
-                        if p[1] < y_min:
-                            y_min = p[1]
-        
+                    pixels = [get_image_point(vert, K, world_2_camera) for vert in verts]
+                    visible = [p for p in pixels if p is not None]
+                    if not visible:
+                        continue
+                    x_min, y_min = np.min(visible, axis=0)
+                    x_max, y_max = np.max(visible, axis=0)
+
                     # Add the object to the frame (ensure it is inside the image)
                     if x_min > 0 and x_max < image_w and y_min > 0 and y_max < image_h: 
                         writer.addObject('vehicle', x_min, y_min, x_max, y_max)
