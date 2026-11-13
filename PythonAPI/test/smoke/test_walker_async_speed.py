@@ -15,8 +15,8 @@ from . import SmokeTest
 WORLD = "Town10HD_Opt"
 WALKERS = 8
 SPEED = 1.4
-# Median speed a crowd of walkers set to SPEED reaches: they stop at
-# crossings, avoid each other and turn, about 1.1-1.3 m/s in sync mode too.
+# Median speed along the path a crowd of walkers set to SPEED reaches: they
+# slow down to avoid each other and to turn, about 1.3-1.4 m/s.
 MIN_SPEED = 0.8
 # Simulation time each client step covers, and the longest sleep for it.
 CLIENT_STEP = 0.25
@@ -97,7 +97,11 @@ class TestWalkerAsyncSpeed(SmokeTest):
             # than real time).
             sleep = 0.0
             first = self.world.wait_for_tick()
-            start = {walker.id: walker.get_location() for walker, _ in pairs}
+            # Speed along the path, not from the net displacement: over minutes
+            # of simulation walkers turn corners and pick new destinations.
+            last = {walker.id: first.find(walker.id).get_transform().location
+                    for walker, _ in pairs}
+            path = {walker.id: 0.0 for walker, _ in pairs}
             snapshot = first
             steps = []
             deadline = time.time() + 10.0
@@ -109,6 +113,10 @@ class TestWalkerAsyncSpeed(SmokeTest):
                 wall = time.time() - wall_start
                 step = snapshot.timestamp.elapsed_seconds - previous
                 steps.append(step)
+                for walker, _ in pairs:
+                    location = snapshot.find(walker.id).get_transform().location
+                    path[walker.id] += location.distance(last[walker.id])
+                    last[walker.id] = location
                 # Sleep that would make this step CLIENT_STEP long at this server speed, half applied.
                 wanted = CLIENT_STEP * wall / max(step, 1e-3) - (wall - sleep)
                 sleep = min(MAX_SLEEP, max(0.0, 0.5 * (sleep + wanted)))
@@ -125,8 +133,7 @@ class TestWalkerAsyncSpeed(SmokeTest):
                 "catch-up limit walkers lose time by design" % statistics.median(steps))
 
             elapsed = snapshot.timestamp.elapsed_seconds - first.timestamp.elapsed_seconds
-            speeds = [walker.get_location().distance(start[walker.id]) / elapsed
-                      for walker, _ in pairs]
+            speeds = [length / elapsed for length in path.values()]
             median = statistics.median(speeds)
             print("  client saw %d of %d frames, median step %.2f s, median walker speed %.2f m/s"
                   % (seen, frames, statistics.median(steps), median))
