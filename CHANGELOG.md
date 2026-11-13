@@ -156,6 +156,7 @@
 * Fixed **walkers driven by `controller.ai.walker` being invisible to the LiDAR, the radar and `world.cast_ray()`** on the maps where the client runs the navigation (Town01–05, Town10HD) (#10068). `start()` no longer turns the walker's collision off, and `stop()` now gives the walker its movement back, so it obeys `apply_control()` again.
 * Fixed **replayed vehicles and pedestrians being invisible to sensors**, including those re-spawned with `replay_sensors=True`: the replayer turned their collision off. They now have query-only collision during the replay, so they still push nothing, and replayed walkers get their movement back when the replay ends.
 * Fixed the wheelchair of a wheelchair-user pedestrian being invisible to ray-cast sensors (LiDAR, radar).
+* Fixed the editor's `SensorSpawnerActor` crashing with radar point drawing on when it had spawned any sensor other than a radar: `DrawRadarSensorPoints` tested the sensor instead of the radar cast, and dereferenced null for every other sensor.
 
 #### Simulation and content
 
