@@ -148,6 +148,7 @@
 
 #### Sensors
 
+* Fixed **`sensor.camera.rt_lens_instance` labelling the sky `Unlabeled` (0)** instead of `Sky` (11) like the raster segmentation cameras (#10295): camera rays that hit nothing are now tagged `Sky` with id `0xFFFF`. The fix is in the engine's path tracer, CarlaUnreal/UnrealEngine#69.
 * Fixed every native sensor (LiDAR, radar, IMU, cameras) simulating only the last physics substep instead of the true elapsed time when `sensor_tick` spanned more than one substep, which halved LiDAR's swept angle and skewed IMU and radar readings.
 * Fixed the `noise_seed` attribute of `sensor.lidar.ray_cast` being ignored, so every ray-cast LiDAR used the default seed.
 * Fixed the IMU sensor's compass yaw orientation, and the order in which sensors are disposed when their parent actor is destroyed.
