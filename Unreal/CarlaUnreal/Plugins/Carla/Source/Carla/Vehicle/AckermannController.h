@@ -144,6 +144,19 @@ private:
   // Simulation state
   float DeltaTime = 0.0f;                // [s]
 
+  // The control loop is tuned for steps of 10 ms and longer. Its acceleration
+  // estimate and derivative terms divide by the step, so at shorter steps the
+  // standstill jitter of the vehicle swamps them and the pedal flips between
+  // throttle and brake (#10291). Shorter frames are therefore accumulated and
+  // the loop runs at most once per MinControlPeriod, holding its last command
+  // in between, and sees the mean speed over the period rather than one
+  // frame's speed, so suspension oscillations do not alias into it. Frames of
+  // MinControlPeriod or longer run the loop every frame, exactly as before.
+  static constexpr float MinControlPeriod = 0.01f;  // [s]
+  float AccumulatedTime = 0.0f;          // [s]
+  float AccumulatedDistance = 0.0f;      // [m], forward speed integrated over AccumulatedTime
+  bool bControlUpdateDue = false;
+
   // Vehicle state
   float VehicleMaxSteering = 0.0f;       // [rad]
 
