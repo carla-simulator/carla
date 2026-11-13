@@ -5,7 +5,6 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "carla/ros2/publishers/CarlaLidarPublisher.h"
-#include "carla/ros2/publishers/LidarAzimuth.h"
 
 #include <cmath>
 #include <cstring>
@@ -76,11 +75,13 @@ bool CarlaLidarPublisher::WriteExtendedPointCloud(
     const std::uint8_t *data,
     const std::uint32_t *channel_point_counts,
     std::size_t channel_count,
-    const std::vector<float> &vertical_angles) {
+    const std::vector<float> &vertical_angles,
+    const LidarAzimuthRange &azimuth_range) {
   _extended = true;
   _channel_point_counts.assign(
       channel_point_counts, channel_point_counts + channel_count);
   _vertical_angles = vertical_angles;
+  _azimuth_range = azimuth_range;
   return CarlaPointCloudPublisher::WritePointCloud(
       seconds, nanoseconds, height, width, data);
 }
@@ -123,11 +124,11 @@ std::vector<std::uint8_t> CarlaLidarPublisher::ComputePointCloud(
     point.intensity = static_cast<std::uint8_t>(input[i].intensity);
     point.z = input[i].z;
     // return_type stays 0 (tier4 leaves it as dummy data).
-    // Distance and azimuth come from the (already mirrored) Cartesian
-    // coordinates. The azimuth is the scan angle Autoware expects: in
-    // [0, 2*pi), increasing along a ring in scan order (see LidarAzimuth.h).
+    // Azimuth/distance are derived from the (already mirrored) Cartesian
+    // coordinates, matching tier4's post-conversion computation. The azimuth
+    // direction and range follow the sensor's azimuth_* attributes.
     point.distance = std::hypot(point.x, point.y, point.z);
-    point.azimuth = LidarScanAzimuth(point.x, point.y);
+    point.azimuth = ComputeLidarAzimuth(point.x, point.y, _azimuth_range);
     // Autoware's distortion corrector reads time_stamp as a nanosecond offset
     // from header.stamp. CARLA casts every ray of a scan at the same sim
     // instant, so the offset is zero for all points.

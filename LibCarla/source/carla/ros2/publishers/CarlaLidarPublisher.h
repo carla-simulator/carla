@@ -7,6 +7,7 @@
 #pragma once
 
 #include "carla/ros2/publishers/CarlaPointCloudPublisher.h"
+#include "carla/ros2/publishers/PointCloudFieldsLayout.h"
 
 #include <cstdint>
 #include <vector>
@@ -38,7 +39,8 @@ public:
   // kLidarFieldsEx. `data` is the raw XYZI buffer (`width` points of 4
   // float32s), `channel_point_counts` holds `channel_count` per-channel point
   // counts (the LidarData header tail), and `vertical_angles` provides one
-  // elevation (radians) per channel.
+  // elevation (radians) per channel. `azimuth_range` sets how the azimuth
+  // field is measured.
   bool WriteExtendedPointCloud(
       std::int32_t seconds,
       std::uint32_t nanoseconds,
@@ -47,7 +49,8 @@ public:
       const std::uint8_t *data,
       const std::uint32_t *channel_point_counts,
       std::size_t channel_count,
-      const std::vector<float> &vertical_angles);
+      const std::vector<float> &vertical_angles,
+      const LidarAzimuthRange &azimuth_range = {});
 
 private:
   [[nodiscard]] std::size_t GetPointSize() const override;
@@ -61,6 +64,7 @@ private:
   bool _extended = false;
   std::vector<std::uint32_t> _channel_point_counts;
   std::vector<float> _vertical_angles;
+  LidarAzimuthRange _azimuth_range;
 };
 
 }  // namespace ros2

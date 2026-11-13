@@ -73,4 +73,19 @@ struct CARLA_API FLidarDescription
   /// Horizontal resolution of the lidar, in degrees.
   UPROPERTY(EditAnywhere)
   float HorizontalResolution = 0.1f;
+
+  /// Whether the azimuth of the ROS 2 extended (Autoware XYZIRCAEDT) point
+  /// cloud grows clockwise seen from above. Counter-clockwise by default.
+  UPROPERTY(EditAnywhere)
+  bool AzimuthClockwise = false;
+
+  /// Start of the interval the ROS 2 extended point cloud's azimuth is
+  /// reported in, in degrees from the sensor's forward axis.
+  UPROPERTY(EditAnywhere)
+  float AzimuthRangeStart = -180.0f;
+
+  /// End of that interval, in degrees. AzimuthRangeEnd - AzimuthRangeStart
+  /// is 360.
+  UPROPERTY(EditAnywhere)
+  float AzimuthRangeEnd = 180.0f;
 };

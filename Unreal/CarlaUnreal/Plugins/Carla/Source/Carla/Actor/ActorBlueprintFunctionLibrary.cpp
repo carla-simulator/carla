@@ -1549,6 +1549,22 @@ void UActorBlueprintFunctionLibrary::MakeLidarDefinition(
   StdDevLidar.Id = TEXT("noise_stddev");
   StdDevLidar.Type = EActorAttributeType::Float;
   StdDevLidar.RecommendedValues = {TEXT("0.0")};
+  // Azimuth of the ROS 2 extended (Autoware XYZIRCAEDT) point cloud: the
+  // direction it grows in, and the interval it is reported in (degrees from
+  // forward). The defaults are atan2(y, x) in the ROS frame.
+  FActorVariation AzimuthDirection;
+  AzimuthDirection.Id = TEXT("azimuth_direction");
+  AzimuthDirection.Type = EActorAttributeType::String;
+  AzimuthDirection.RecommendedValues = {TEXT("counterclockwise"), TEXT("clockwise")};
+  AzimuthDirection.bRestrictToRecommended = true;
+  FActorVariation AzimuthRangeStart;
+  AzimuthRangeStart.Id = TEXT("azimuth_range_start");
+  AzimuthRangeStart.Type = EActorAttributeType::Float;
+  AzimuthRangeStart.RecommendedValues = {TEXT("-180.0")};
+  FActorVariation AzimuthRangeEnd;
+  AzimuthRangeEnd.Id = TEXT("azimuth_range_end");
+  AzimuthRangeEnd.Type = EActorAttributeType::Float;
+  AzimuthRangeEnd.RecommendedValues = {TEXT("180.0")};
 
   if (Id == "ray_cast")
   {
@@ -1564,7 +1580,10 @@ void UActorBlueprintFunctionLibrary::MakeLidarDefinition(
                                   DropOffIntensityLimit,
                                   DropOffAtZeroIntensity,
                                   StdDevLidar,
-                                  HorizontalFOV});
+                                  HorizontalFOV,
+                                  AzimuthDirection,
+                                  AzimuthRangeStart,
+                                  AzimuthRangeEnd});
   }
   else if (Id == "hss_lidar")
   {
@@ -2571,6 +2590,23 @@ void UActorBlueprintFunctionLibrary::SetLidar(
       RetrieveActorAttributeToFloat("noise_stddev", Description.Variations, Lidar.NoiseStdDev);
   Lidar.HorizontalResolution =
       RetrieveActorAttributeToFloat("horizontal_resolution", Description.Variations, Lidar.HorizontalResolution);
+  Lidar.AzimuthClockwise =
+      RetrieveActorAttributeToString("azimuth_direction", Description.Variations, TEXT("counterclockwise")) == TEXT("clockwise");
+  const float AzimuthRangeStart =
+      RetrieveActorAttributeToFloat("azimuth_range_start", Description.Variations, Lidar.AzimuthRangeStart);
+  const float AzimuthRangeEnd =
+      RetrieveActorAttributeToFloat("azimuth_range_end", Description.Variations, Lidar.AzimuthRangeEnd);
+  if (FMath::IsNearlyEqual(AzimuthRangeEnd - AzimuthRangeStart, 360.0f, 1e-3f))
+  {
+    Lidar.AzimuthRangeStart = AzimuthRangeStart;
+    Lidar.AzimuthRangeEnd = AzimuthRangeEnd;
+  }
+  else
+  {
+    UE_LOG(LogCarla, Warning,
+        TEXT("azimuth_range_start (%f) and azimuth_range_end (%f) must be 360 degrees apart; keeping [%f, %f]."),
+        AzimuthRangeStart, AzimuthRangeEnd, Lidar.AzimuthRangeStart, Lidar.AzimuthRangeEnd);
+  }
 }
 
 void UActorBlueprintFunctionLibrary::SetGnss(
