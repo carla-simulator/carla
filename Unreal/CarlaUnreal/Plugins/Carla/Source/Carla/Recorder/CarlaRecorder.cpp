@@ -86,6 +86,16 @@ void ACarlaRecorder::SetReplayerIgnoreSpectator(bool IgnoreSpectator)
 void ACarlaRecorder::StopReplayer(bool KeepActors)
 {
   Replayer.Stop(KeepActors);
+  // A replay that reached its end stopped itself keeping its actors, so
+  // Stop() alone would leave them: remove what is left on request.
+  if (KeepActors)
+  {
+    Replayer.ForgetSpawnedActors();
+  }
+  else
+  {
+    Replayer.DestroySpawnedActors();
+  }
 }
 
 void ACarlaRecorder::Ticking(float DeltaSeconds)

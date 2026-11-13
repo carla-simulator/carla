@@ -224,7 +224,8 @@ def main():
         settings.fixed_delta_seconds = (1.0 / args.fps) if args.fps > 0.0 else 0.0
 
     if args.delta_seconds is not None or args.fps is not None:
-        if settings.fixed_delta_seconds > 0.0:
+        # The binding reads a fixed_delta_seconds of 0 back as None.
+        if settings.fixed_delta_seconds:
             print('Set fixed frame rate %.2f milliseconds (%d FPS)' % (
                 1000.0 * settings.fixed_delta_seconds,
                 1.0 / settings.fixed_delta_seconds))

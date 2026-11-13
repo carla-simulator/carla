@@ -24,6 +24,10 @@ jobs:
     environment: docs
     env:
       DEST: Doxygen/html
+      # Doxygen release binary, pinned with its checksum (the digest GitHub
+      # shows for the release asset). Ubuntu's apt package lags far behind.
+      DOXYGEN_VERSION: 1.18.0
+      DOXYGEN_SHA256: 14fa81bdc34171edb5f1f02b1d60e74802f0439b77fa44e592565d517d72df90
     steps:
       - name: Check branch
         run: |
@@ -38,10 +42,18 @@ jobs:
       - name: Install Doxygen
         run: |
           sudo apt-get update
-          sudo apt-get install -y doxygen rsync
+          sudo apt-get install -y rsync
+          tarball="doxygen-${DOXYGEN_VERSION}.linux.bin.tar.gz"
+          curl -fsSL --retry 3 -o "$RUNNER_TEMP/$tarball" \
+            "https://github.com/doxygen/doxygen/releases/download/Release_${DOXYGEN_VERSION//./_}/$tarball"
+          echo "$DOXYGEN_SHA256  $RUNNER_TEMP/$tarball" | sha256sum -c -
+          tar -xzf "$RUNNER_TEMP/$tarball" -C "$RUNNER_TEMP" "doxygen-${DOXYGEN_VERSION}/bin/doxygen"
+          echo "$RUNNER_TEMP/doxygen-${DOXYGEN_VERSION}/bin" >> "$GITHUB_PATH"
 
       - name: Generate documentation
-        run: doxygen Doxyfile
+        run: |
+          doxygen --version
+          doxygen Doxyfile
 
       - name: Upload Doxygen warnings
         if: always()

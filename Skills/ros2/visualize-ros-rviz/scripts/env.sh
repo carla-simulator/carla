@@ -6,7 +6,9 @@
 # (PythonAPI/examples/ros2), from Docker images built on demand. It needs no
 # local ROS 2 installation and never launches a simulator.
 #
-#   CARLA_UE4_ROOT  the carla checkout holding PythonAPI/examples/ros2
+#   CARLA_ROS2_ROOT a CARLA package or checkout holding PythonAPI/examples/ros2;
+#                   defaults to the first of CARLA_UE4_ROOT, CARLA_UE58_ROOT,
+#                   CARLA_UE5_ROOT, CARLA_PACKAGE_ROOT, CARLA_TARGET, $PWD that has it
 #   ROS_DISTRO_TAG  humble (default) | jazzy      -> image tag + python tag
 #   RMW             fastdds (default) | cyclonedds | zenoh
 #   ROS_DOMAIN_ID   0..232; must match the server's --ros-domain-id
@@ -22,31 +24,34 @@
 # variable still wins. See Skills/_common/env_common.sh.
 . "$(dirname "${BASH_SOURCE[0]}")/../../../_common/env_common.sh"
 
-_KEEP_CARLA_ROOT="${CARLA_UE4_ROOT:-}"
+_KEEP_CARLA_ROOT="${CARLA_ROS2_ROOT:-}"
 if [ -n "${CARLA_ENV_ACTIVATE:-}" ] && [ -f "${CARLA_ENV_ACTIVATE}" ]; then
   # shellcheck disable=SC1090
   source "${CARLA_ENV_ACTIVATE}"
 fi
-[ -n "${_KEEP_CARLA_ROOT}" ] && CARLA_UE4_ROOT="${_KEEP_CARLA_ROOT}"
+[ -n "${_KEEP_CARLA_ROOT}" ] && CARLA_ROS2_ROOT="${_KEEP_CARLA_ROOT}"
 
-# --- Resolve the target CARLA checkout --------------------------------------
-# Precedence: explicit CARLA_UE4_ROOT > $PWD if it is a checkout > path-derived
-# guess (only meaningful when this repo was dropped INTO a checkout).
+# --- Resolve the CARLA tree that holds the ROS 2 demo -----------------------
+# Any CARLA package or checkout (UE4 or UE5 line) ships PythonAPI/examples/ros2.
+# Precedence: explicit CARLA_ROS2_ROOT > the CARLA roots other skills use >
+# $PWD > path-derived guess (only meaningful when this repo sits INSIDE a tree).
 _SKILL_SCRIPTS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 _DERIVED_ROOT="$(cd "${_SKILL_SCRIPTS_DIR}/../../../../.." && pwd)"
-_UPROJECT_REL="Unreal/CarlaUE4/CarlaUE4.uproject"
 
-if [ -z "${CARLA_UE4_ROOT:-}" ]; then
-  if [ -f "${PWD}/${_UPROJECT_REL}" ]; then
-    CARLA_UE4_ROOT="${PWD}"
-  elif [ -f "${_DERIVED_ROOT}/${_UPROJECT_REL}" ]; then
-    CARLA_UE4_ROOT="${_DERIVED_ROOT}"
-  fi
+if [ -z "${CARLA_ROS2_ROOT:-}" ]; then
+  for _c in "${CARLA_UE4_ROOT:-}" "${CARLA_UE58_ROOT:-}" "${CARLA_UE5_ROOT:-}" \
+            "${CARLA_PACKAGE_ROOT:-}" "${CARLA_TARGET:-}" "${PWD}" "${_DERIVED_ROOT}"; do
+    if [ -n "${_c}" ] && [ -f "${_c}/PythonAPI/examples/ros2/run_rviz.sh" ]; then
+      CARLA_ROS2_ROOT="${_c}"
+      break
+    fi
+  done
+  unset _c
 fi
-export CARLA_UE4_ROOT="${CARLA_UE4_ROOT:-}"
+export CARLA_ROS2_ROOT="${CARLA_ROS2_ROOT:-}"
 
-# The in-checkout demo directory this skill drives. Everything below lives there.
-export CARLA_ROS2_EXAMPLES="${CARLA_UE4_ROOT}/PythonAPI/examples/ros2"
+# The demo directory this skill drives. Everything below lives there.
+export CARLA_ROS2_EXAMPLES="${CARLA_ROS2_ROOT}/PythonAPI/examples/ros2"
 
 # --- Middleware / distro / domain -------------------------------------------
 # ROS_DISTRO is a standard variable a sourced ROS setup.bash would own, so the
@@ -78,9 +83,9 @@ esac
 export CARLA_HOST="${CARLA_HOST:-localhost}"
 export CARLA_PORT="${CARLA_PORT:-2000}"
 
-unset _KEEP_CARLA_ROOT _SKILL_SCRIPTS_DIR _DERIVED_ROOT _UPROJECT_REL
+unset _KEEP_CARLA_ROOT _SKILL_SCRIPTS_DIR _DERIVED_ROOT
 
-echo "[env] CARLA_UE4_ROOT  = ${CARLA_UE4_ROOT:-<unset — export it>}"
+echo "[env] CARLA_ROS2_ROOT = ${CARLA_ROS2_ROOT:-<not found — export it>}"
 echo "[env] distro/rmw      = ${ROS_DISTRO_TAG}/${RMW} (${RMW_IMPLEMENTATION})"
 echo "[env] domain          = ${ROS_DOMAIN_ID:-<default 0 — must match the server>}"
 echo "[env] server          = ${CARLA_HOST}:${CARLA_PORT}"

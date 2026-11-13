@@ -9,5 +9,6 @@ matplotlib
 scipy
 opencv-python
 Pillow
+imageio
 # Supports Python 3.12 at most.
-invertedai @ git+https://github.com/inverted-ai/invertedai.git@develop ; sys_platform == "linux" and python_version < '3.13'
+invertedai @ git+https://github.com/inverted-ai/invertedai.git@f75d618171e2d04a0406fc1136cf7519f315fb04 ; sys_platform == "linux" and python_version < '3.13'

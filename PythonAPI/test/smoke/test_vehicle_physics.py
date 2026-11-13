@@ -51,7 +51,7 @@ def equal_physics_control(pc_a, pc_b):
             continue
 
         if not equal_tol(getattr(pc_a, key), getattr(pc_b, key), 1e-3):
-            error_msg = "Car property: '%s' in VehiclePhysicsControl does not match: %.4f %.4f" \
+            error_msg = "Car property: '%s' in VehiclePhysicsControl does not match: %s %s" \
               % (key, getattr(pc_a, key), getattr(pc_b, key))
             return False, error_msg
 
@@ -62,11 +62,12 @@ def equal_physics_control(pc_a, pc_b):
 
     for w in range(0, len(pc_a.wheels)):
         for key in dir(pc_a.wheels[w]):
-            if key.startswith('__') or key == "position":
+            # Wheel state reported by the simulator, not a setting apply_physics_control applies.
+            if key.startswith('__') or key in ("position", "location", "old_location", "velocity"):
                 continue
 
             if not equal_tol(getattr(pc_a.wheels[w], key), getattr(pc_b.wheels[w], key), 1e-3):
-                error_msg = "Wheel property: '%s' in VehiclePhysicsControl does not match: %.4f %.4f" \
+                error_msg = "Wheel property: '%s' in VehiclePhysicsControl does not match: %s %s" \
                 % (key, getattr(pc_a.wheels[w], key), getattr(pc_b.wheels[w], key))
                 return False, error_msg
 

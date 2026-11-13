@@ -16,6 +16,12 @@ from . import SmokeTest
 # SmokeTest.tearDown loads Town03, which does not exist on the package.
 TEST_TOWN = "Town10HD_Opt"
 
+# Bones in each pedestrian skeleton. Skel_Pedestrian_G2 has 66; the GEN3
+# children (walker.pedestrian.0051/0052) use Skel_Pedestrian_G3, which has
+# 26 because it has no finger bones. A walker of any other generation must
+# report at least one bone.
+WALKER_MIN_BONES_BY_GENERATION = {2: 66, 3: 26}
+
 
 class TestActorIntrospection(SmokeTest):
 
@@ -102,22 +108,57 @@ class TestActorIntrospection(SmokeTest):
 
     def test_walker_bones(self):
         print("TestActorIntrospection.test_walker_bones")
-        walker = self._spawn("walker.pedestrian.*")
-
-        bone_names = walker.get_bone_names()
-        bone_world = walker.get_bone_world_transforms()
-        bone_rel = walker.get_bone_relative_transforms()
-
-        # The CARLA pedestrian mannequin has > 50 bones; 30 is a safe
-        # magnitude guard against a regression that zeros out the
-        # skinned-mesh iterator.
-        self.assertGreater(
-            len(bone_names), 30,
-            f"walker reported only {len(bone_names)} bones",
+        blueprints = sorted(
+            self.world.get_blueprint_library().filter("walker.pedestrian.*"),
+            key=lambda bp: bp.id,
         )
-        self.assertEqual(
-            len(bone_world), len(bone_rel),
-            "world and relative bone transform counts must match",
+        self.assertTrue(len(blueprints) > 0, "no walker.pedestrian.* blueprint")
+        spawn_points = self.world.get_map().get_spawn_points()
+        self.assertTrue(len(spawn_points) > 0, "map has no spawn points")
+
+        report = []
+        failures = []
+        for blueprint in blueprints:
+            generation = (
+                blueprint.get_attribute("generation").as_int()
+                if blueprint.has_attribute("generation") else None
+            )
+            walker = None
+            for spawn_point in spawn_points:
+                walker = self.world.try_spawn_actor(blueprint, spawn_point)
+                if walker is not None:
+                    break
+            if walker is None:
+                failures.append(f"{blueprint.id} (gen {generation}): could not spawn")
+                continue
+            try:
+                self.world.wait_for_tick()
+                bone_names = walker.get_bone_names()
+                bone_world = walker.get_bone_world_transforms()
+                bone_rel = walker.get_bone_relative_transforms()
+            finally:
+                walker.destroy()
+
+            report.append(
+                f"{blueprint.id} gen={generation} bones={len(bone_names)} "
+                f"world={len(bone_world)} rel={len(bone_rel)}"
+            )
+            min_bones = WALKER_MIN_BONES_BY_GENERATION.get(generation, 1)
+            if len(bone_names) < min_bones:
+                failures.append(
+                    f"{blueprint.id} (gen {generation}): {len(bone_names)} bones, "
+                    f"expected at least {min_bones}"
+                )
+            if not len(bone_names) == len(bone_world) == len(bone_rel):
+                failures.append(
+                    f"{blueprint.id} (gen {generation}): {len(bone_names)} names, "
+                    f"{len(bone_world)} world, {len(bone_rel)} relative transforms"
+                )
+
+        print("\n".join(report))
+        self.assertFalse(
+            failures,
+            f"{len(failures)}/{len(blueprints)} walkers failed:\n" + "\n".join(failures),
         )
 
     def test_component_not_found_raises(self):

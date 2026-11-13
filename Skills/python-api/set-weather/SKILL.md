@@ -81,9 +81,11 @@ python3 scripts/weather.py preset ClearNight
 # a preset with a tweak (foggier hard rain at sunset)
 python3 scripts/weather.py set --base HardRainSunset --fog-density 40
 
-# a from-scratch composition (misty grey afternoon, roads still wet)
+# a composition on top of the live weather (misty grey afternoon, roads still
+# wet). --precipitation 0 because unset fields keep their current value: without
+# it, rain already falling keeps falling through the "mist"
 python3 scripts/weather.py set \
-    --cloudiness 90 --fog-density 20 --fog-distance 60 \
+    --cloudiness 90 --precipitation 0 --fog-density 20 --fog-distance 60 \
     --precipitation-deposits 50 --wetness 40 --sun-altitude-angle 40
 ```
 

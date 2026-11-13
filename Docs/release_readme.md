@@ -56,6 +56,17 @@ Running options
 ./CarlaUnreal.sh -ros2                     # native ROS 2 interface (only in a package built with ROS 2 enabled)
 ```
 
+More maps
+---------
+
+Further towns come as a content pack (`AdditionalMaps`) built for this very package. Install it with `Tools/carla_pack.py` (Python 3.8 or newer, nothing else needed), then load the towns like any other map:
+
+```sh
+python3 Tools/carla_pack.py install <AdditionalMaps>.tar.gz --server .
+```
+
+A pack built for another package is refused. `python3 Tools/carla_pack.py inspect <pack> --server .` checks a pack without installing it.
+
 For more details and running options, refer to the online documentation:
 
 <https://carla-ue5.readthedocs.io>

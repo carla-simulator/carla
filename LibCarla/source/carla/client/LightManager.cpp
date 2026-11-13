@@ -52,12 +52,15 @@ void LightManager::SetEpisode(detail::WeakEpisodeProxy episode) {
 
 std::vector<Light> LightManager::GetAllLights(LightGroup type) const {
   std::vector<Light> result;
+  std::scoped_lock<std::mutex> lock(_mutex);
 
-  for(auto lights_state : _lights_state) {
+  for(const auto &lights_state : _lights_state) {
     LightGroup group = lights_state.second._group;
     if((type == LightGroup::None) || (group == type)) {
       auto it_light = _lights.find(lights_state.first);
-      result.push_back(it_light->second);
+      if(it_light != _lights.end()) {
+        result.push_back(it_light->second);
+      }
     }
   }
 
@@ -93,13 +96,16 @@ std::vector<bool> LightManager::IsActive(std::vector<Light>& lights) const {
 
 std::vector<Light> LightManager::GetTurnedOnLights(LightGroup type) const {
   std::vector<Light> result;
+  std::scoped_lock<std::mutex> lock(_mutex);
 
-  for(auto lights_state : _lights_state) {
-    LightState& state = lights_state.second;
+  for(const auto &lights_state : _lights_state) {
+    const LightState& state = lights_state.second;
     LightGroup group = state._group;
     if( (type == LightGroup::None || group == type) && state._active ) {
       auto it_light = _lights.find(lights_state.first);
-      result.push_back(it_light->second);
+      if(it_light != _lights.end()) {
+        result.push_back(it_light->second);
+      }
     }
   }
 
@@ -108,13 +114,16 @@ std::vector<Light> LightManager::GetTurnedOnLights(LightGroup type) const {
 
 std::vector<Light> LightManager::GetTurnedOffLights(LightGroup type) const {
   std::vector<Light> result;
+  std::scoped_lock<std::mutex> lock(_mutex);
 
-  for(auto lights_state : _lights_state) {
-    LightState& state = lights_state.second;
+  for(const auto &lights_state : _lights_state) {
+    const LightState& state = lights_state.second;
     LightGroup group = state._group;
     if( (type == LightGroup::None || group == type) && !state._active ) {
       auto it_light = _lights.find(lights_state.first);
-      result.push_back(it_light->second);
+      if(it_light != _lights.end()) {
+        result.push_back(it_light->second);
+      }
     }
   }
 
@@ -200,28 +209,33 @@ void LightManager::SetLightState(std::vector<Light>& lights, std::vector<LightSt
 std::vector<LightState> LightManager::GetLightState(std::vector<Light>& lights) const {
   std::vector<LightState> result;
   for(Light& light : lights) {
-    result.push_back( RetrieveLightState(light._id) );
+    result.push_back( GetLightState(light._id) );
   }
   return result;
 }
 
 Color LightManager::GetColor(LightId id) const {
+  std::scoped_lock<std::mutex> lock(_mutex);
   return RetrieveLightState(id)._color;
 }
 
 float LightManager::GetIntensity(LightId id) const {
+  std::scoped_lock<std::mutex> lock(_mutex);
   return RetrieveLightState(id)._intensity;
 }
 
 LightState LightManager::GetLightState(LightId id) const {
+  std::scoped_lock<std::mutex> lock(_mutex);
   return RetrieveLightState(id);
 }
 
 LightGroup LightManager::GetLightGroup(LightId id) const {
+  std::scoped_lock<std::mutex> lock(_mutex);
   return RetrieveLightState(id)._group;
 }
 
 bool LightManager::IsActive(LightId id) const {
+  std::scoped_lock<std::mutex> lock(_mutex);
   return RetrieveLightState(id)._active;
 }
 
@@ -281,12 +295,18 @@ const LightState& LightManager::RetrieveLightState(LightId id) const {
 }
 
 void LightManager::QueryLightsStateToServer() {
-  std::scoped_lock<std::mutex> lock(_mutex);
+  // A snapshot can ask for a light update while the client is shutting down: nothing to update then.
+  SharedPtr<detail::Simulator> simulator;
+  try {
+    simulator = _episode.Lock();
+  } catch (const std::runtime_error &) {
+    return;
+  }
   // Send blocking query
-  std::vector<rpc::LightState> lights_snapshot = _episode.Lock()->QueryLightsStateToServer();
+  std::vector<rpc::LightState> lights_snapshot = simulator->QueryLightsStateToServer();
 
   // Update lights
-  SharedPtr<LightManager> lm = _episode.Lock()->GetLightManager();
+  SharedPtr<LightManager> lm = simulator->GetLightManager();
 
   // The snapshot is the whole set of lights the server has now: lights of
   // World Partition cells that streamed out are gone from it, and their ids
@@ -303,6 +323,8 @@ void LightManager::QueryLightsStateToServer() {
     );
     lights[it._id] = Light(lm, it._location, it._id);
   }
+  // Lock only for the swap: readers must not wait on the RPC above.
+  std::scoped_lock<std::mutex> lock(_mutex);
   _lights_state = std::move(lights_state);
   _lights = std::move(lights);
 }

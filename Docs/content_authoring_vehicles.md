@@ -139,6 +139,7 @@ Some guidelines for both meshes:
 
 - Keep them low poly: the fewer triangles, the better. Around 1,000 triangles is a good reference, not a strict limit. A simple hull of a car body needs a few hundred, and adding the wheels stays around that figure.
 - Follow the silhouette of the bodywork, but leave out side mirrors, antennas and other thin parts, which would make the hull too wide.
+- Keep the underside of the collision mesh flat and about 20 cm above the ground, as on CARLA's own cars, even if the bodywork hangs lower. A lower hull scrapes the road when the vehicle brakes or leans, and the scrape slows it down and fires collision events against the road. The visible bodywork keeps its real height.
 - Keep the same origin, scale and forward axis as the rest of the vehicle, so that they line up with the bodywork in Unreal.
 
 Both are imported as static meshes and connected later: the collision mesh in [the physics asset](#collision-mesh), the raycast mesh in the vehicle blueprint's [*Custom Collision* component](#vehicle-blueprint). For more detailed colliders, see [Generate detailed colliders](content_authoring_vehicles_colliders.md).
@@ -256,6 +257,8 @@ Open each blueprint individually and repeat the following configuration steps:
 - Set the *Axle Type* according to the wheel position (front or rear)
 - Set the *Wheel Radius*, *Wheel Width* and *Wheel mass* according to the dimensions and specifications of your vehicle model, you may need to measure these dimensions in your 3D application
 - Set the *Friction Force Multiplier* to 3.5
+- Set *Sweep Shape* to *Spherecast* and *Sweep Type* to *ComplexSweep*. With the default *Raycast*, a car with a low body can lose wheel contact at some spawn points, settle on its chassis and fail to move
+- Set *Suspension Damping Ratio* to 1.0, as on the Lincoln MKZ and the Mustang
 - Set the *Brake*, *Handbrake*, *Engine*, *ABS* and *Traction control* settings according to the specification of your vehicle. Front, rear or four wheel drive is set in the *Differential Setup* of the vehicle movement component, not in the wheel
 
 Adjust the max steer angle as needed, the default value of 50 will suit most applications. Most vehicles have a max steering angle between 30 and 50.

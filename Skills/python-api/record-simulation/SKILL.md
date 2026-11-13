@@ -66,7 +66,8 @@ python3 scripts/record.py start --file /tmp/run.log --extra
 ```
 
 Use an **absolute** `--file` so you know where the log lands (a relative name
-goes under the server's `CarlaUE4/Saved/`).
+goes under the server's `CarlaUnreal/Saved/`, or `CarlaUE4/Saved/` on a
+UE4 server).
 
 ### Verify
 
@@ -107,7 +108,8 @@ Solution: expected — re-attach sensors and replay with `--replay-sensors`
 (replay-recording skill) to regenerate them.
 
 **Problem: file not found where I expected**
-Cause: relative name resolves on the server, under CarlaUE4/Saved/.
+Cause: relative name resolves on the server, under CarlaUnreal/Saved/
+(CarlaUE4/Saved/ on a UE4 server).
 Solution: pass an absolute path, and remember it is on the server machine.
 
 ## Outputs

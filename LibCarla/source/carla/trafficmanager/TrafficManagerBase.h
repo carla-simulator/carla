@@ -38,6 +38,9 @@ public:
   /// To reset the traffic manager for the episode @a episode_id.
   virtual void Reset(uint64_t episode_id) = 0;
 
+  /// Vehicles released since the last call; the caller drops them with no TM lock held.
+  virtual std::vector<ActorPtr> TakeReleasedActors() { return {}; }
+
   /// Protected constructor for singleton lifecycle management.
   TrafficManagerBase() {};
 
@@ -157,15 +160,6 @@ public:
 
   /// Method to update an already set route.
   virtual void UpdateImportedRoute(const ActorId &actor_id, const Route route) = 0;
-
-  /// Method to set automatic respawn of dormant vehicles.
-  virtual void SetRespawnDormantVehicles(const bool mode_switch) = 0;
-
-  /// Method to set boundaries for respawning vehicles.
-  virtual void SetBoundariesRespawnDormantVehicles(const float lower_bound, const float upper_bound) = 0;
-
-  /// Method to set limits for boundaries when respawning vehicles.
-  virtual void SetMaxBoundaries(const float lower, const float upper) = 0;
 
   /// Method to get the vehicle's next action.
   virtual Action GetNextAction(const ActorId &actor_id) = 0;

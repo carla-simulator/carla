@@ -30,18 +30,17 @@ import sys
 import carla  # provided by the active interpreter; check_env.sh verifies this
 
 
-def _fresh(world):
-    """A world handle that already holds a snapshot.
+def _world(client: carla.Client) -> carla.World:
+    """The world handle, WITHOUT waiting for a frame first.
 
-    In synchronous mode a freshly connected client has not seen a frame yet, so
-    `get_actors()` comes back EMPTY and every --id/--filter lookup reports "no
-    matching actor" while the scene is full of them. Observed against a live
-    world holding 48 vehicles. One frame of waiting is the whole fix, and it
-    must be a wait rather than a tick: another client owns that clock.
+    The other python-api skills wait one tick in synchronous mode (`_fresh`) so
+    that get_actors() is populated. This one must not: it reads and writes only
+    WorldSettings, which are RPCs that need no snapshot, and it is the tool for
+    getting OUT of a synchronous world nobody ticks -- `async` after `sync`, or
+    after a holder died. Waiting for a tick there blocks until the client timeout
+    and the command fails without changing anything.
     """
-    if world.get_settings().synchronous_mode:
-        world.wait_for_tick()
-    return world
+    return client.get_world()
 
 
 def _client() -> carla.Client:
@@ -76,7 +75,7 @@ def _report(world: carla.World, tm_mode: "bool | None", note: str) -> None:
 
 
 def cmd_show(_: argparse.Namespace) -> None:
-    world = _fresh(_client().get_world())
+    world = _world(_client())
     _report(world, None, "(current settings)")
 
 
@@ -88,7 +87,7 @@ def cmd_sync(args: argparse.Namespace) -> None:
         sys.exit("fixed step must be > 0")
 
     client = _client()
-    world = _fresh(client.get_world())
+    world = _world(client)
     s = world.get_settings()
     s.synchronous_mode = True
     s.fixed_delta_seconds = delta
@@ -116,7 +115,7 @@ def cmd_sync(args: argparse.Namespace) -> None:
 
 def cmd_async(args: argparse.Namespace) -> None:
     client = _client()
-    world = _fresh(client.get_world())
+    world = _world(client)
     s = world.get_settings()
     s.synchronous_mode = False
     s.fixed_delta_seconds = None   # None = variable, server-driven time step
@@ -129,7 +128,7 @@ def cmd_async(args: argparse.Namespace) -> None:
 
 
 def cmd_set(args: argparse.Namespace) -> None:
-    world = _fresh(_client().get_world())
+    world = _world(_client())
     s = world.get_settings()
     changed = []
     if args.no_rendering is not None:

@@ -28,6 +28,9 @@
 
 #include <util/ue-header-guard-begin.h>
 #include "Async/Async.h"
+#include "CollisionQueryParams.h"
+#include "Components/CapsuleComponent.h"
+#include "Engine/OverlapResult.h"
 #include "HAL/PlatformProcess.h"
 #include "Components/WorldPartitionStreamingSourceComponent.h"
 #include "WorldPartition/WorldPartition.h"
@@ -595,6 +598,38 @@ std::string UCarlaEpisode::StartRecorder(std::string Name, bool AdditionalData, 
   return result;
 }
 
+bool UCarlaEpisode::IsWalkerInsideBuilding(const AWalkerBase &Walker) const
+{
+  // A small probe at the capsule centre: a walker whose capsule merely
+  // touches a facade gets pushed sideways and is fine, and the terrain a
+  // walker spawned at ground level sinks into is not a building.
+  constexpr float ProbeRadius = 10.0f;
+  const UCapsuleComponent *Capsule = Walker.GetCapsuleComponent();
+  const FVector Center = Capsule != nullptr
+      ? Capsule->GetComponentLocation() : Walker.GetActorLocation();
+
+  FCollisionQueryParams Params(SCENE_QUERY_STAT(CarlaWalkerInsideBuilding), false, &Walker);
+  TArray<FOverlapResult> Overlaps;
+  GetWorld()->OverlapMultiByObjectType(
+      Overlaps, Center, FQuat::Identity,
+      FCollisionObjectQueryParams(ECC_WorldStatic),
+      FCollisionShape::MakeSphere(ProbeRadius), Params);
+  for (const FOverlapResult &Overlap : Overlaps)
+  {
+    const UPrimitiveComponent *Component = Overlap.GetComponent();
+    if (Component == nullptr)
+    {
+      continue;
+    }
+    const crp::CityObjectLabel Label = ATagger::GetTagOfTaggedComponent(*Component);
+    if (Label == crp::CityObjectLabel::Buildings || Label == crp::CityObjectLabel::Walls)
+    {
+      return true;
+    }
+  }
+  return false;
+}
+
 TPair<EActorSpawnResultStatus, FCarlaActor*> UCarlaEpisode::SpawnActorWithInfo(
     const FTransform &Transform,
     FActorDescription thisActorDescription,
@@ -652,6 +687,24 @@ TPair<EActorSpawnResultStatus, FCarlaActor*> UCarlaEpisode::SpawnActorWithInfo(
           "WP streaming source on %s (role %s, radius %.0f cm): completed=%d"),
           *Actor->GetName(), Attribute ? *Attribute->Value : TEXT("none"), Shape.Radius,
           WPSubsystem ? WPSubsystem->IsStreamingCompleted(Source) : -1);
+
+      // A walker's cells can bring in a building on top of it: the navmesh
+      // covers the terrain under some building footprints, and the building's
+      // cell may only stream in with the walker's own source. Physics then
+      // pushes the walker down through the terrain (#10212). Refuse the spawn
+      // like any other spawn collision instead. Replays and Multi-GPU
+      // secondaries reproduce spawns the primary already accepted.
+      if (AWalkerBase* Walker = Cast<AWalkerBase>(Actor);
+          Walker != nullptr && bIsPrimaryServer &&
+          !Recorder->GetReplayer()->IsEnabled() &&
+          IsWalkerInsideBuilding(*Walker))
+      {
+        UE_LOG(LogCarla, Warning, TEXT(
+            "Walker '%s' spawned inside a building at %s; spawn refused"),
+            *thisActorDescription.Id, *Actor->GetActorLocation().ToString());
+        ActorDispatcher->DestroyActor(result.Value->GetActorId());
+        return MakeTuple(EActorSpawnResultStatus::Collision, nullptr);
+      }
     }
   }
   if (result.Key == EActorSpawnResultStatus::Success && bIsPrimaryServer)
