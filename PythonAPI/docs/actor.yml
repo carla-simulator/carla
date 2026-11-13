@@ -28,10 +28,6 @@
       type: bool
       doc: >
         Returns whether this actor is active (True) or not (False).
-    - var_name: is_dormant
-      type: bool
-      doc: >
-        Returns whether this actor is dormant (True) or not (False) - the opposite of is_active.
     - var_name: parent
       type: carla.Actor
       doc: >
@@ -43,7 +39,7 @@
     - var_name: actor_state
       type: carla.ActorState
       doc: >
-        Returns the carla.ActorState, which can identify if the actor is Active, Dormant or Invalid.
+        Returns the carla.ActorState, which can identify if the actor is Active or Invalid.
     - var_name: bounding_box
       type: carla.BoundingBox
       doc: >
@@ -342,9 +338,6 @@
     - var_name: Active
       doc: >
         An actor is Active when it visualized and can affect other actors. 
-    - var_name: Dormant
-      doc: >
-        An actor is Dormant when it is not visualized and will not affect other actors through physics. For example, actors are dormant if they are on an unloaded tile in a large map. 
 
 
   - class_name: VehicleLightState
@@ -733,11 +726,11 @@
     # --------------------------------------
     - def_name: start
       doc: >
-        Enables AI control for its parent walker. 
+        Enables AI control for its parent walker. The walker keeps its collision, so ray-cast sensors and carla.World.cast_ray detect it.
     # --------------------------------------
     - def_name: stop
       doc: >
-        Disables AI control for its parent walker. 
+        Disables AI control for its parent walker and gives the walker its movement back, so it obeys carla.Walker.apply_control again.
     # --------------------------------------
     - def_name: set_max_speed
       params:

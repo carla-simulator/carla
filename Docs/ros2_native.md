@@ -93,7 +93,7 @@ The shared-memory column depends on the host and on the Fast-DDS patch version. 
 
 Over UDP, a sensor sample is many datagrams that arrive at once: about 2 MB for an 800x600 camera frame. The subscriber's socket buffer has to hold them until its DDS thread reads them, and the operating system default (about 200 KB on Linux) does not. The overflow drops datagrams, so whole samples are lost, with no warning on either side. With default buffers, an 800x600 camera and a default lidar at `sensor_tick=0.1` arrived at about 2 Hz instead of 10 Hz. Small messages (IMU, GNSS, small images) are not affected. The simulator itself delivers every sample; the loss is in the subscriber's socket.
 
-Give the subscriber a larger receive buffer. The profiles in `PythonAPI/examples/ros2/config/` ask for 16 MB (`fastrtps-profile.xml` for Fast-DDS, `cyclonedds.xml` for CycloneDDS). With them, the same camera and lidar arrived at 10.4 Hz. The kernel caps the request at `net.core.rmem_max`, which is about 200 KB by default on Ubuntu, so raise it once on the subscriber's host:
+Give the subscriber a larger receive buffer. The profiles in `PythonAPI/examples/ros2/config/` ask for 16 MB (`fastrtps-profile.xml` for Fast-DDS, `cyclonedds.xml` for CycloneDDS). With them, the same camera and lidar arrived at 10.4 Hz. The kernel caps the request at `net.core.rmem_max`, which is about 200 KB by default on Ubuntu. Below 16 MB the subscribers still start, but large samples are dropped as described above (CycloneDDS logs `failed to increase socket receive buffer size ... continuing with ...`). Raise the limit once on the subscriber's host:
 
 ```sh
 sudo sysctl -w net.core.rmem_max=16777216 net.core.wmem_max=16777216

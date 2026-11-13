@@ -32,50 +32,48 @@ void TrafficLightStage::Update(const unsigned long index) {
   bool traffic_light_hazard = false;
 
   const ActorId ego_actor_id = vehicle_id_list.at(index);
-  if (!simulation_state.IsDormant(ego_actor_id)) {
 
-    JunctionID current_junction_id = -1;
-    if (vehicle_last_junction.find(ego_actor_id) != vehicle_last_junction.end()) {
-      current_junction_id = vehicle_last_junction.at(ego_actor_id);
+  JunctionID current_junction_id = -1;
+  if (vehicle_last_junction.find(ego_actor_id) != vehicle_last_junction.end()) {
+    current_junction_id = vehicle_last_junction.at(ego_actor_id);
+  }
+  auto affected_junction_id = GetAffectedJunctionId(ego_actor_id);
+
+  current_timestamp = world.GetSnapshot().GetTimestamp();
+
+  const TrafficLightState tl_state = simulation_state.GetTLS(ego_actor_id);
+  const TLS traffic_light_state = tl_state.tl_state;
+  const bool is_at_traffic_light = tl_state.at_traffic_light;
+
+  // We determine to stop if the vehicle found a traffic light in yellow / red.
+  if (is_at_traffic_light &&
+      traffic_light_state != TLS::Green &&
+      traffic_light_state != TLS::Off &&
+      parameters.GetPercentageRunningLight(ego_actor_id) <= random_device.next()) {
+    // Remove actor from non-signalized junction if it is affected by a traffic light.
+    if (current_junction_id != -1) {
+      RemoveActor(ego_actor_id);
     }
-    auto affected_junction_id = GetAffectedJunctionId(ego_actor_id);
-
-    current_timestamp = world.GetSnapshot().GetTimestamp();
-
-    const TrafficLightState tl_state = simulation_state.GetTLS(ego_actor_id);
-    const TLS traffic_light_state = tl_state.tl_state;
-    const bool is_at_traffic_light = tl_state.at_traffic_light;
-
-    // We determine to stop if the vehicle found a traffic light in yellow / red.
-    if (is_at_traffic_light &&
-        traffic_light_state != TLS::Green &&
-        traffic_light_state != TLS::Off &&
-        parameters.GetPercentageRunningLight(ego_actor_id) <= random_device.next()) {
-      // Remove actor from non-signalized junction if it is affected by a traffic light.
-      if (current_junction_id != -1) {
-        RemoveActor(ego_actor_id);
-      }
-      traffic_light_hazard = true;
+    traffic_light_hazard = true;
+  }
+  // The vehicle is currently at a non signalized junction, so handle its priorities.
+  // Don't use the next condition as bounding boxes might switch to green
+  else if (current_junction_id != -1)
+  {
+    if ( affected_junction_id == -1 || affected_junction_id != current_junction_id ) {
+      RemoveActor(ego_actor_id);
     }
-    // The vehicle is currently at a non signalized junction, so handle its priorities.
-    // Don't use the next condition as bounding boxes might switch to green
-    else if (current_junction_id != -1)
-    {
-      if ( affected_junction_id == -1 || affected_junction_id != current_junction_id ) {
-        RemoveActor(ego_actor_id);
-      }
-      else {
-        traffic_light_hazard = HandleNonSignalisedJunction(ego_actor_id, affected_junction_id, current_timestamp);
-      }
+    else {
+      traffic_light_hazard = HandleNonSignalisedJunction(ego_actor_id, affected_junction_id, current_timestamp);
     }
-    else if (affected_junction_id != -1 &&
-            !is_at_traffic_light &&
-            traffic_light_state != TLS::Green &&
-            parameters.GetPercentageRunningSign(ego_actor_id) <= random_device.next()) {
+  }
+  else if (affected_junction_id != -1 &&
+          !is_at_traffic_light &&
+          traffic_light_state != TLS::Green &&
+          parameters.GetPercentageRunningSign(ego_actor_id) <= random_device.next()) {
 
-      AddActorToNonSignalisedJunction(ego_actor_id, affected_junction_id);
-      traffic_light_hazard = true;
-    }
+    AddActorToNonSignalisedJunction(ego_actor_id, affected_junction_id);
+    traffic_light_hazard = true;
   }
   output_array.at(index) = traffic_light_hazard;
 }

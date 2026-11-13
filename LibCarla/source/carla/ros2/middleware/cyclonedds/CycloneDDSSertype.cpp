@@ -298,7 +298,18 @@ dds_entity_t carla_cdr_get_participant() {
   static dds_entity_t participant = []() {
     const dds_domainid_t domain_id =
         static_cast<dds_domainid_t>(MiddlewareConfig::GetEffectiveDomainId());
-    return dds_create_participant(domain_id, nullptr, nullptr);
+    const dds_entity_t created =
+        dds_create_participant(domain_id, nullptr, nullptr);
+    if (created < 0) {
+      const char* uri = std::getenv("CYCLONEDDS_URI");
+      log_error("CycloneDDS: failed to create the domain participant. Domain:",
+                domain_id, "Reason:", dds_strretcode(created), "Code:", created);
+      log_error("CycloneDDS: CYCLONEDDS_URI =",
+                (uri != nullptr) ? uri : "<not set>");
+      log_error("CycloneDDS: a configuration error, if any, is printed by "
+                "CycloneDDS just before these messages.");
+    }
+    return created;
   }();
   return participant;
 }

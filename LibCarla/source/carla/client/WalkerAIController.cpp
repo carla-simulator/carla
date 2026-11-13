@@ -43,9 +43,8 @@ namespace client {
       auto nav = simulator->GetNavigation();
       if (nav != nullptr) {
         nav->AddWalker(walker->GetId(), walker->GetLocation());
-        // disable physics and collision of walker actor
+        // The crowd teleports the walker; keep its collision on or sensors miss it (#10068).
         simulator->SetActorSimulatePhysics(*walker, false);
-        simulator->SetActorCollisions(*walker, false);
       }
     }
   }
@@ -72,6 +71,12 @@ namespace client {
       auto nav = simulator->GetNavigation();
       if (nav != nullptr) {
         nav->RemoveWalker(walker->GetId());
+        // Restore movement so a stopped walker obeys apply_control() again.
+        try {
+          simulator->SetActorSimulatePhysics(*walker, true);
+        } catch (const std::exception &e) {
+          log_warning("NAV: could not restore movement of walker", walker->GetId(), ":", e.what());
+        }
       }
     }
   }

@@ -986,22 +986,6 @@ Spawnable pedestrians. See the [pedestrian catalogue](catalogue_pedestrians.md);
 | `speed` | Float | `0` | `0.0`, `1.7`, `4.0` | yes |
 | `use_wheelchair` | Bool | `false` | `false` | yes |
 
-### walker.pedestrian.0044
-
-| Attribute | Type | Default | Values | Modifiable |
-| --- | --- | --- | --- | --- |
-| `age` | String | `adult` |  | no |
-| `can_use_wheelchair` | Bool | `false` |  | no |
-| `gender` | String | `female` |  | no |
-| `generation` | Int | `2` |  | no |
-| `is_invincible` | Bool | `true` | `true` | yes |
-| `role_name` | String | `pedestrian` | `pedestrian` | yes |
-| `ros_name` | String | `walker.pedestrian.0044` | `walker.pedestrian.0044` | yes |
-| `ros_topic_name` | String | `walker.pedestrian.0044` | `walker.pedestrian.0044` | yes |
-| `special_type` | String | `""` |  | no |
-| `speed` | Float | `0` | `0.0`, `1.7`, `4.0` | yes |
-| `use_wheelchair` | Bool | `false` | `false` | yes |
-
 ### walker.pedestrian.0045
 
 | Attribute | Type | Default | Values | Modifiable |

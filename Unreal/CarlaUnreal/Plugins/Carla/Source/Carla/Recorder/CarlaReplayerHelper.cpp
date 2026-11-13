@@ -131,6 +131,35 @@ FCarlaActor *CarlaReplayerHelper::FindTrafficSignAt(FVector Location)
   return nullptr;
 }
 
+// query-only collision on a replayed actor, restored by ProcessReplayerFinish
+void CarlaReplayerHelper::MakeReplayedActorQueryOnly(AActor *Actor)
+{
+  if (Actor == nullptr)
+  {
+    return;
+  }
+  Actor->SetActorEnableCollision(true);
+  TArray<UPrimitiveComponent *> Primitives;
+  Actor->GetComponents<UPrimitiveComponent>(Primitives);
+  for (UPrimitiveComponent *Primitive : Primitives)
+  {
+    const ECollisionEnabled::Type Enabled = Primitive->BodyInstance.GetCollisionEnabled(false);
+    const bool bOverlaps = Primitive->GetGenerateOverlapEvents();
+    // Only the body (root) and what ray-cast sensors hit keep query collision; the rest would only cost queries on every move.
+    const bool bSensorVisible = Primitive == Actor->GetRootComponent() ||
+        Primitive->GetCollisionResponseToChannel(ECC_GameTraceChannel2 /*SensorTrace*/) == ECR_Block;
+    const ECollisionEnabled::Type Replayed =
+        Enabled == ECollisionEnabled::NoCollision || !bSensorVisible ? ECollisionEnabled::NoCollision : ECollisionEnabled::QueryOnly;
+    if (Replayed == Enabled && !bOverlaps)
+    {
+      continue;
+    }
+    ReplayedPrimitives.Add({Primitive, static_cast<uint8>(Enabled), bOverlaps});
+    Primitive->SetGenerateOverlapEvents(false);
+    Primitive->SetCollisionEnabled(Replayed);
+  }
+}
+
 // enable / disable physics for an actor
 bool CarlaReplayerHelper::SetActorSimulatePhysics(FCarlaActor* CarlaActor, bool bEnabled)
 {
@@ -217,8 +246,8 @@ std::pair<int, uint32_t> CarlaReplayerHelper::ProcessReplayerEventAdd(
       {
         // disable physics
         SetActorSimulatePhysics(result.second, false);
-        // disable collisions
-        result.second->GetActor()->SetActorEnableCollision(false);
+        // query-only collision, so sensors still see the replayed actor
+        MakeReplayedActorQueryOnly(result.second->GetActor());
         // disable autopilot for vehicles
         if (result.second->GetActorType() == FCarlaActor::ActorType::Vehicle)
           SetActorAutopilot(result.second, false, false);
@@ -565,6 +594,17 @@ void CarlaReplayerHelper::ProcessReplayerWalkerBones(const CarlaRecorderWalkerBo
 // replay finish
 bool CarlaReplayerHelper::ProcessReplayerFinish(bool bApplyAutopilot, bool bIgnoreHero, std::unordered_map<uint32_t, bool> &IsHero)
 {
+  // restore the collision MakeReplayedActorQueryOnly() reduced
+  for (const FReplayedPrimitive &Replayed : ReplayedPrimitives)
+  {
+    if (Replayed.Primitive.IsValid())
+    {
+      Replayed.Primitive->SetCollisionEnabled(static_cast<ECollisionEnabled::Type>(Replayed.CollisionEnabled));
+      Replayed.Primitive->SetGenerateOverlapEvents(Replayed.bGenerateOverlapEvents);
+    }
+  }
+  ReplayedPrimitives.Reset();
+
   // set autopilot and physics to all AI vehicles
   const FActorRegistry& Registry = Episode->GetActorRegistry();
   for (auto& It : Registry)
@@ -586,13 +626,6 @@ bool CarlaReplayerHelper::ProcessReplayerFinish(bool bApplyAutopilot, bool bIgno
             {
               CarlaVehicle->SetWheelAnimationOverride(false);
             }
-            // ProcessReplayerEventAdd also disabled collision on replayed
-            // vehicles; restore it or they are left permanently undrivable
-            // (no wheel contact) after the replay ends.
-            if (CarlaActor->GetActor())
-            {
-              CarlaActor->GetActor()->SetActorEnableCollision(true);
-            }
             SetActorVelocity(CarlaActor, FVector(0, 0, 0));
             FVehicleControl Control;
             Control.Throttle = 0.0f;
@@ -608,8 +641,9 @@ bool CarlaReplayerHelper::ProcessReplayerFinish(bool bApplyAutopilot, bool bIgno
 
       // walkers
       case FCarlaActor::ActorType::Walker:
-        // stop walker
+        // stop walker and give it its movement back
         SetWalkerSpeed(CarlaActor->GetActorId(), 0.0f);
+        SetActorSimulatePhysics(CarlaActor, true);
         break;
     }
   }

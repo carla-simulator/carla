@@ -87,11 +87,29 @@ bool ROS2::Enable(bool enable, Middleware middleware, int domain_id) {
     log_info("ROS2: using middleware '", MiddlewareToString(middleware),
         "', domain id: ", resolved.id, " (", domain_source, ")");
   }
+  // The clock publisher is the first entity created, so it is the one that
+  // brings the middleware up (DDS participant or Zenoh session).
+  auto clock_publisher = std::make_shared<CarlaClockPublisher>();
+  if (enable && !clock_publisher->IsReady()) {
+    log_error("**********************************************************************");
+    log_error("ROS2: middleware", MiddlewareToString(middleware),
+              "FAILED TO START. ROS2 is DISABLED for this session:");
+    log_error("ROS2: no topic will be published and no ROS 2 control will be received.");
+    const char *config_var =
+        (middleware == Middleware::CycloneDDS) ? "CYCLONEDDS_URI"
+        : (middleware == Middleware::FastDDS)  ? "FASTRTPS_DEFAULT_PROFILES_FILE"
+                                               : "ZENOH_SESSION_CONFIG_URI / ZENOH_CONFIG_OVERRIDE";
+    log_error("ROS2: the errors above give the cause. Check the", config_var,
+              "configuration, the domain id and the network interfaces.");
+    log_error("**********************************************************************");
+    _enabled = false;
+    return false;
+  }
   _enabled = enable;
   log_info("ROS2 enabled: ", _enabled.load());
   {
     std::lock_guard<std::mutex> lock(_mutex);
-    _clock_publisher = std::make_shared<CarlaClockPublisher>();
+    _clock_publisher = std::move(clock_publisher);
   }
 #if defined(WITH_ROS2_DEMO)
   _basic_publisher = std::make_shared<BasicPublisher>();

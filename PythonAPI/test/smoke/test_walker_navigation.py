@@ -5,10 +5,16 @@
 # For a copy, see <https://opensource.org/licenses/MIT>.
 
 import time
+from queue import Queue
 
 import carla
+import numpy as np
 
 from . import SyncSmokeTest
+from .test_lidar import wait_for_frame
+
+SEMANTIC_POINT = np.dtype([('x', 'f4'), ('y', 'f4'), ('z', 'f4'), ('cos', 'f4'),
+                           ('object_idx', 'u4'), ('object_tag', 'u4')])
 
 
 WORLD = "Town10HD_Opt"
@@ -118,5 +124,85 @@ class TestWalkerNavigation(SyncSmokeTest):
             if controller is not None:
                 controller.stop()
                 controller.destroy()
+            walker.destroy()
+            self.world.tick()
+
+    def _spawn_ai_walker(self):
+        blueprint_library = self.world.get_blueprint_library()
+        walker_bp = blueprint_library.filter("walker.pedestrian.*")[0]
+        if walker_bp.has_attribute("is_invincible"):
+            walker_bp.set_attribute("is_invincible", "false")
+        spawn_location = self._random_navigation_location()
+        spawn_location.z += 1.0
+        walker = self.world.spawn_actor(walker_bp, carla.Transform(spawn_location))
+        controller = self.world.spawn_actor(
+            blueprint_library.find("controller.ai.walker"), carla.Transform(), attach_to=walker)
+        self.world.tick()
+        controller.start()
+        controller.go_to_location(self._destination_away_from(spawn_location))
+        controller.set_max_speed(1.4)
+        return walker, controller
+
+    def _cast_ray_hits_walker(self, walker):
+        location = walker.get_location()
+        hits = self.world.cast_ray(location + carla.Location(z=3.0), location - carla.Location(z=1.5))
+        return any(hit.label == carla.CityObjectLabel.Pedestrians for hit in hits)
+
+    def _semantic_lidar_points_on(self, walker):
+        # Above the walker, looking down: nothing on a sidewalk can occlude it.
+        bp = self.world.get_blueprint_library().find("sensor.lidar.ray_cast_semantic")
+        for key, value in {"channels": "32", "range": "10", "points_per_second": "200000",
+                           "rotation_frequency": "20", "upper_fov": "-30",
+                           "lower_fov": "-90"}.items():
+            bp.set_attribute(key, value)
+        lidar = self.world.spawn_actor(
+            bp, carla.Transform(walker.get_location() + carla.Location(z=3.0)))
+        data_queue = Queue()
+        lidar.listen(lambda data: data_queue.put((data.frame, bytes(data.raw_data))))
+        try:
+            frame = self.world.tick()
+            points = np.frombuffer(wait_for_frame(self, data_queue, frame)[1], dtype=SEMANTIC_POINT)
+        finally:
+            lidar.stop()
+            lidar.destroy()
+        return int(np.count_nonzero(points["object_idx"] == walker.id))
+
+    def test_ai_walker_visible_to_sensors(self):
+        """A walker driven by the client-side crowd stays visible to ray-cast sensors (#10068)."""
+        print("TestWalkerNavigation.test_ai_walker_visible_to_sensors")
+        walker, controller = self._spawn_ai_walker()
+        try:
+            for _ in range(20):
+                self.world.tick()
+            self.assertTrue(self._cast_ray_hits_walker(walker),
+                            "world.cast_ray does not hit the AI-driven walker")
+            self.assertGreater(self._semantic_lidar_points_on(walker), 0,
+                               "The semantic LiDAR does not hit the AI-driven walker")
+        finally:
+            controller.stop()
+            controller.destroy()
+            walker.destroy()
+            self.world.tick()
+
+    def test_stopped_ai_walker_obeys_control(self):
+        """stop() gives the walker its movement back, and it stays visible."""
+        print("TestWalkerNavigation.test_stopped_ai_walker_obeys_control")
+        walker, controller = self._spawn_ai_walker()
+        try:
+            for _ in range(10):
+                self.world.tick()
+            controller.stop()
+            self.world.tick()
+            start = walker.get_location()
+            walker.apply_control(carla.WalkerControl(
+                walker.get_transform().get_forward_vector(), 1.4))
+            for _ in range(40):
+                self.world.tick()
+            self.assertGreater(walker.get_location().distance(start), 1.0,
+                               "A stopped AI walker does not obey apply_control()")
+            self.assertTrue(self._cast_ray_hits_walker(walker),
+                            "world.cast_ray does not hit the stopped walker")
+        finally:
+            controller.destroy()
             walker.destroy()
             self.world.tick()

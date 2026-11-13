@@ -67,7 +67,10 @@ efd::DomainParticipant* FastDDSSharedParticipant::acquire() {
     _participant =
         efd::DomainParticipantFactory::get_instance()->create_participant(domain_id, pqos);
     if (_participant == nullptr) {
-      log_error("FastDDSSharedParticipant: Failed to create DomainParticipant");
+      const char* profiles = std::getenv("FASTRTPS_DEFAULT_PROFILES_FILE");
+      log_error("FastDDSSharedParticipant: Failed to create DomainParticipant. Domain:",
+                domain_id, "FASTRTPS_DEFAULT_PROFILES_FILE =",
+                (profiles != nullptr) ? profiles : "<not set>");
       return nullptr;
     }
   }

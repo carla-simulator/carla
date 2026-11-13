@@ -25,21 +25,6 @@ void Parameters::SetHybridPhysicsMode(const bool mode_switch) {
   hybrid_physics_mode.store(mode_switch);
 }
 
-void Parameters::SetRespawnDormantVehicles(const bool mode_switch) {
-
-  respawn_dormant_vehicles.store(mode_switch);
-}
-
-void Parameters::SetMaxBoundaries(const float lower, const float upper) {
-  min_lower_bound = lower;
-  max_upper_bound = upper;
-}
-
-void Parameters::SetBoundariesRespawnDormantVehicles(const float lower_bound, const float upper_bound) {
-  respawn_lower_bound = min_lower_bound > lower_bound ? min_lower_bound : lower_bound;
-  respawn_upper_bound = max_upper_bound < upper_bound ? max_upper_bound : upper_bound;
-}
-
 void Parameters::SetPercentageSpeedDifference(const ActorPtr &actor, const float percentage) {
 
   float new_percentage = std::min(100.0f, percentage);
@@ -431,21 +416,6 @@ float Parameters::GetPercentageIgnoreVehicles(const ActorId &actor_id) const {
 bool Parameters::GetHybridPhysicsMode() const {
 
   return hybrid_physics_mode.load();
-}
-
-bool Parameters::GetRespawnDormantVehicles() const {
-
-  return respawn_dormant_vehicles.load();
-}
-
-float Parameters::GetLowerBoundaryRespawnDormantVehicles() const {
-
-  return respawn_lower_bound.load();
-}
-
-float Parameters::GetUpperBoundaryRespawnDormantVehicles() const {
-
-  return respawn_upper_bound.load();
 }
 
 
