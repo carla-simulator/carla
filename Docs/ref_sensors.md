@@ -333,7 +333,7 @@ The rotation of the LIDAR can be tuned to cover a specific angle on every simula
 | `sensor_tick`      | float  | 0.0   | Simulation seconds between sensor captures (ticks). |
 | `noise_stddev`     | float  | 0.0   | Standard deviation of the noise model to disturb each point along the vector of its raycast. |
 | `noise_seed`       | int    | 0     | Seed of the random generator behind the drop-off and the noise. Set it to make a run reproducible. |
-| `azimuth_direction` | str   | counterclockwise | Direction, seen from above, in which the `azimuth` field of the ROS 2 extended (Autoware XYZIRCAEDT) point cloud grows: `counterclockwise` or `clockwise`. Zero is the sensor's forward axis. |
+| `azimuth_direction` | str   | counterclockwise | Direction, seen from above, in which the `azimuth` field of the ROS 2 extended (Autoware XYZIRCAEDT) point cloud grows: `counterclockwise` or `clockwise`. Zero is the sensor's forward axis. All LiDAR blueprints accept these three attributes. |
 | `azimuth_range_start` | float | -180.0 | Start, in degrees, of the interval that `azimuth` is reported in. |
 | `azimuth_range_end` | float | 180.0 | End, in degrees, of that interval. It must be 360 degrees after `azimuth_range_start`, otherwise both keep their defaults. The defaults give `atan2(y, x)` in the ROS frame. Autoware's LiDAR drivers report `clockwise` in [0, 360). |
 
@@ -418,6 +418,9 @@ direction, leaving angular position unaffected.
 | `noise_stddev` | float | 0.0 | Stddev of per-point Gaussian distance noise. |
 | `noise_seed` | int | 0 | Seed for the per-sensor random engine. |
 | `sensor_tick` | float | 0.0 | Simulated seconds between captures. 0 means every tick. |
+| `azimuth_direction` | str | counterclockwise | Same as for `sensor.lidar.ray_cast`. Applies to ROS 2 layouts with an `azimuth` field; this sensor's current ROS 2 layout has none, so it is accepted for consistency and has no effect yet. |
+| `azimuth_range_start` | float | -180.0 | Same as for `sensor.lidar.ray_cast` (see `azimuth_direction`). |
+| `azimuth_range_end` | float | 180.0 | Same as for `sensor.lidar.ray_cast` (see `azimuth_direction`). |
 
 #### Output attributes
 
@@ -890,6 +893,9 @@ __2.__ Run the simulation using `python3 PythonAPI/util/config.py --fps 10`.
 | `lower_fov`        | float | -30.0 | Angle in degrees of the lowest laser.     |
 | `horizontal_fov`   | float | 360.0 | Horizontal field of view in degrees, 0 - 360. |
 | `sensor_tick`      | float | 0.0  | Simulation seconds between sensor captures (ticks).   |
+| `azimuth_direction` | str | counterclockwise | Same as for `sensor.lidar.ray_cast`. Applies to ROS 2 layouts with an `azimuth` field; this sensor's current ROS 2 layout has none, so it is accepted for consistency and has no effect yet. |
+| `azimuth_range_start` | float | -180.0 | Same as for `sensor.lidar.ray_cast` (see `azimuth_direction`). |
+| `azimuth_range_end` | float | 180.0 | Same as for `sensor.lidar.ray_cast` (see `azimuth_direction`). |
 
 
 

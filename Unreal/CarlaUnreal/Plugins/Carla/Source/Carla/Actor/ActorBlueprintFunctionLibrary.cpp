@@ -1551,7 +1551,9 @@ void UActorBlueprintFunctionLibrary::MakeLidarDefinition(
   StdDevLidar.RecommendedValues = {TEXT("0.0")};
   // Azimuth of the ROS 2 extended (Autoware XYZIRCAEDT) point cloud: the
   // direction it grows in, and the interval it is reported in (degrees from
-  // forward). The defaults are atan2(y, x) in the ROS frame.
+  // forward). The defaults are atan2(y, x) in the ROS frame. Every lidar takes
+  // them, through the shared SetLidar(); they apply where the published layout
+  // has an azimuth field, which today is ray_cast's extended layout.
   FActorVariation AzimuthDirection;
   AzimuthDirection.Id = TEXT("azimuth_direction");
   AzimuthDirection.Type = EActorAttributeType::String;
@@ -1612,7 +1614,10 @@ void UActorBlueprintFunctionLibrary::MakeLidarDefinition(
         DropOffAtZeroIntensity,
         StdDevLidar,
         HorizontalFOV,
-        HorizontalResolution});
+        HorizontalResolution,
+        AzimuthDirection,
+        AzimuthRangeStart,
+        AzimuthRangeEnd});
   }
   else if (Id == "ray_cast_semantic")
   {
@@ -1622,7 +1627,10 @@ void UActorBlueprintFunctionLibrary::MakeLidarDefinition(
                                   Frequency,
                                   UpperFOV,
                                   LowerFOV,
-                                  HorizontalFOV});
+                                  HorizontalFOV,
+                                  AzimuthDirection,
+                                  AzimuthRangeStart,
+                                  AzimuthRangeEnd});
   }
   else
   {
