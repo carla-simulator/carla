@@ -15,6 +15,12 @@ from . import SmokeTest
 WORLD = "Town10HD_Opt"
 WALKERS = 8
 SPEED = 1.4
+# Median speed a crowd of walkers set to SPEED reaches: they stop at
+# crossings, avoid each other and turn, about 1.1-1.3 m/s in sync mode too.
+MIN_SPEED = 0.8
+# Simulation time each client step covers, and the longest sleep for it.
+CLIENT_STEP = 0.25
+MAX_SLEEP = 0.25
 
 
 class TestWalkerAsyncSpeed(SmokeTest):
@@ -82,31 +88,50 @@ class TestWalkerAsyncSpeed(SmokeTest):
             # Let them start walking before measuring.
             for _ in range(20):
                 self.world.wait_for_tick()
-                time.sleep(0.05)
 
+            # A slow client: it sleeps between ticks, so the server keeps
+            # producing frames it never sees. The sleep is adjusted after every
+            # step so that each covers about CLIENT_STEP of simulation, well
+            # within the crowd's 1 s catch-up limit, however fast the server
+            # runs (a packaged one in asynchronous mode runs many times faster
+            # than real time).
+            sleep = 0.0
             first = self.world.wait_for_tick()
             start = {walker.id: walker.get_location() for walker, _ in pairs}
-            seen = 1
             snapshot = first
+            steps = []
             deadline = time.time() + 10.0
             while time.time() < deadline:
-                # A slow client: the server keeps producing frames meanwhile.
-                time.sleep(0.05)
+                wall_start = time.time()
+                time.sleep(sleep)
+                previous = snapshot.timestamp.elapsed_seconds
                 snapshot = self.world.wait_for_tick()
-                seen += 1
+                wall = time.time() - wall_start
+                step = snapshot.timestamp.elapsed_seconds - previous
+                steps.append(step)
+                # Sleep that would make this step CLIENT_STEP long at this server speed, half applied.
+                wanted = CLIENT_STEP * wall / max(step, 1e-3) - (wall - sleep)
+                sleep = min(MAX_SLEEP, max(0.0, 0.5 * (sleep + wanted)))
 
+            seen = len(steps) + 1
             frames = snapshot.frame - first.frame + 1
             self.assertLess(
-                seen, 0.8 * frames,
-                "the client saw %d of %d frames; it must skip frames for this test to "
-                "mean anything" % (seen, frames))
+                seen, 0.2 * frames,
+                "the client saw %d of %d frames; it must skip most of them for this test "
+                "to mean anything" % (seen, frames))
+            self.assertLess(
+                statistics.median(steps), 0.8,
+                "client steps covered a median %.2f s of simulation; past the crowd's 1 s "
+                "catch-up limit walkers lose time by design" % statistics.median(steps))
 
             elapsed = snapshot.timestamp.elapsed_seconds - first.timestamp.elapsed_seconds
             speeds = [walker.get_location().distance(start[walker.id]) / elapsed
                       for walker, _ in pairs]
             median = statistics.median(speeds)
+            print("  client saw %d of %d frames, median step %.2f s, median walker speed %.2f m/s"
+                  % (seen, frames, statistics.median(steps), median))
             self.assertGreater(
-                median, 1.0,
+                median, MIN_SPEED,
                 "walkers move at a median %.2f m/s with max speed %.1f m/s; the crowd is "
                 "losing the time of the frames the client skips" % (median, SPEED))
             self.assertLess(
