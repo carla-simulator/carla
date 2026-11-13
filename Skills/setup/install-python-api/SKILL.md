@@ -110,8 +110,8 @@ connection and subtly missing API. So:
   remote server), so the skill reports it and continues.
 
 For releases before 1.0, `numpy<2` is pinned in the same pip transaction: their
-bindings are built against the numpy 1.x C API and fail on import under 2.x.
-CARLA 1.0 and later are built against numpy 2, so nothing is pinned.
+bindings fail on import under numpy 2.x. CARLA 1.0 and later support numpy 2
+(Boost 1.90.0, #9737), so nothing is pinned.
 
 ## Examples
 

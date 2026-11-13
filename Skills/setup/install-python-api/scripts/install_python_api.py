@@ -229,7 +229,7 @@ def _report_tag_mismatch() -> None:
 
 
 def needs_numpy1(version: str) -> bool:
-    """Releases before 1.0 are built against the numpy 1.x C API; 1.0+ against 2.x."""
+    """Releases before 1.0 fail with numpy 2; 1.0 supports it (Boost 1.90.0, #9737)."""
     m = re.match(r"(\d+)", version)
     return bool(m) and int(m.group(1)) < 1
 

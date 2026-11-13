@@ -233,8 +233,7 @@ def cmd_install(args) -> None:
     else:
         print(f"[install] pip install -r {req} (into {sys.executable})")
         subprocess.run([sys.executable, "-m", "pip", "install", "-r", str(req)], check=True)
-        # Pre-1.0 bindings (wheels and eggs) are built against the numpy 1.x C
-        # API; 1.0 and later are built against numpy 2. Report, never downgrade.
+        # Pre-1.0 bindings (wheels and eggs) fail under numpy 2; 1.0+ supports it. Report, never downgrade.
         try:
             import numpy
 

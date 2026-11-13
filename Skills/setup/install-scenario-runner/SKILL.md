@@ -110,8 +110,8 @@ The `py-trees` pin is **not optional** and differs by branch: `ue58-dev` pins
 changed in 2.x, so a scenario written for one major version fails with attribute
 or type errors on the other. Always install from the checkout's own
 `requirements.txt` rather than a remembered version. With a CARLA client
-before 1.0, `numpy` must stay `<2`: those bindings are built against the 1.x C API.
-CARLA 1.0 and later are built against numpy 2.
+before 1.0, `numpy` must stay `<2`: those bindings fail under numpy 2.
+CARLA 1.0 and later support numpy 2 (Boost 1.90.0, #9737).
 
 ### Step 5: Environment
 
