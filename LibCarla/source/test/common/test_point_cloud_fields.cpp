@@ -8,6 +8,8 @@
 
 #include <carla/ros2/publishers/PointCloudFieldsLayout.h>
 
+#include <cmath>
+
 namespace {
 
 constexpr std::uint32_t SizeOf(carla::ros2::PointFieldDataType datatype) {
@@ -117,4 +119,59 @@ TEST(PointCloudFields, layouts_offsets_are_monotonically_increasing) {
   check_monotonic(carla::ros2::kSemanticLidarFields);
   check_monotonic(carla::ros2::kRadarFields);
   check_monotonic(carla::ros2::kDvsFields);
+}
+
+namespace {
+
+constexpr float kPi = 3.14159265358979323846f;
+
+}  // namespace
+
+// The default azimuth range is atan2(y, x) in the ROS frame, unchanged.
+TEST(PointCloudFields, lidar_azimuth_default_is_atan2) {
+  const carla::ros2::LidarAzimuthRange range =
+      carla::ros2::LidarAzimuthRange::FromDegrees(false, -180.0f, 180.0f);
+  for (int i = 0; i < 3600; ++i) {
+    const float angle = static_cast<float>(i) * 0.1f * kPi / 180.0f;
+    const float x = std::cos(angle);
+    const float y = std::sin(angle);
+    EXPECT_EQ(carla::ros2::ComputeLidarAzimuth(x, y, range), std::atan2(y, x));
+  }
+  // Both edges directly behind the sensor stay where atan2 puts them.
+  EXPECT_EQ(carla::ros2::ComputeLidarAzimuth(-1.0f, 0.0f, range), std::atan2(0.0f, -1.0f));
+  EXPECT_EQ(carla::ros2::ComputeLidarAzimuth(-1.0f, -0.0f, range), std::atan2(-0.0f, -1.0f));
+  const carla::ros2::LidarAzimuthRange default_range{};
+  EXPECT_EQ(default_range.start, range.start);
+  EXPECT_EQ(default_range.end, range.end);
+  EXPECT_FALSE(default_range.clockwise);
+}
+
+// Clockwise from forward in [0, 360) is the rotation angle Autoware's LiDAR
+// drivers report: forward, right, behind and left are 0, 90, 180 and 270.
+TEST(PointCloudFields, lidar_azimuth_clockwise_zero_to_two_pi) {
+  const carla::ros2::LidarAzimuthRange range =
+      carla::ros2::LidarAzimuthRange::FromDegrees(true, 0.0f, 360.0f);
+  EXPECT_NEAR(carla::ros2::ComputeLidarAzimuth(1.0f, 0.0f, range), 0.0f, 1e-6f);
+  EXPECT_NEAR(carla::ros2::ComputeLidarAzimuth(0.0f, -1.0f, range), 0.5f * kPi, 1e-6f);
+  EXPECT_NEAR(carla::ros2::ComputeLidarAzimuth(-1.0f, 0.0f, range), kPi, 1e-6f);
+  EXPECT_NEAR(carla::ros2::ComputeLidarAzimuth(0.0f, 1.0f, range), 1.5f * kPi, 1e-6f);
+  for (int i = 0; i < 3600; ++i) {
+    const float angle = static_cast<float>(i) * 0.1f * kPi / 180.0f;
+    const float azimuth =
+        carla::ros2::ComputeLidarAzimuth(std::cos(angle), std::sin(angle), range);
+    EXPECT_GE(azimuth, range.start);
+    EXPECT_LT(azimuth, range.end);
+  }
+  // A point just left of forward wraps to just under 2*pi, never onto it.
+  EXPECT_LT(carla::ros2::ComputeLidarAzimuth(1.0f, 1e-30f, range), range.end);
+  // CARLA's LiDAR sweeps clockwise seen from above (towards -y in the ROS
+  // frame), so along a ring the azimuth grows by the horizontal step.
+  const float step = 0.2f * kPi / 180.0f;
+  for (int i = 1; i < 1800; ++i) {
+    const float previous = -static_cast<float>(i - 1) * step;
+    const float current = -static_cast<float>(i) * step;
+    const float a = carla::ros2::ComputeLidarAzimuth(std::cos(previous), std::sin(previous), range);
+    const float b = carla::ros2::ComputeLidarAzimuth(std::cos(current), std::sin(current), range);
+    EXPECT_NEAR(b - a, step, 1e-4f) << "at step " << i;
+  }
 }

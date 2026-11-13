@@ -7,6 +7,7 @@
 #pragma once
 
 #include <array>
+#include <cmath>
 #include <cstdint>
 #include <string_view>
 
@@ -62,6 +63,49 @@ inline constexpr std::array<PointFieldDescriptor, 10> kLidarFieldsEx = {{
     {"distance",    24u, PointFieldDataType::Float32, 1u},
     {"time_stamp",  28u, PointFieldDataType::UInt32,  1u},
 }};
+
+inline constexpr double kLidarAzimuthPi = 3.14159265358979323846;
+
+// How the extended layout's `azimuth` is measured, set per sensor through the
+// `azimuth_direction`, `azimuth_range_start` and `azimuth_range_end`
+// blueprint attributes. Angles are in the ROS frame (x forward, y left) and
+// zero at +x. The default, counter-clockwise in [-pi, pi], is atan2(y, x).
+// Autoware's LiDAR drivers instead report the rotation angle, clockwise in
+// [0, 2*pi), which is CARLA's sweep direction.
+struct LidarAzimuthRange {
+  bool clockwise = false;
+  // Radians. `end` - `start` is a full turn.
+  float start = static_cast<float>(-kLidarAzimuthPi);
+  float end = static_cast<float>(kLidarAzimuthPi);
+
+  // From the blueprint attributes' degrees. The conversion runs in double so
+  // that -180/180 land on the same floats atan2 returns for -pi/pi.
+  static LidarAzimuthRange FromDegrees(bool clockwise, float start_deg, float end_deg) {
+    LidarAzimuthRange range;
+    range.clockwise = clockwise;
+    range.start = static_cast<float>(static_cast<double>(start_deg) * kLidarAzimuthPi / 180.0);
+    range.end = static_cast<float>(static_cast<double>(end_deg) * kLidarAzimuthPi / 180.0);
+    return range;
+  }
+};
+
+inline float ComputeLidarAzimuth(float x, float y, const LidarAzimuthRange &range) {
+  constexpr float kTwoPi = static_cast<float>(2.0 * kLidarAzimuthPi);
+  float azimuth = std::atan2(range.clockwise ? -y : y, x);  // [-pi, pi]
+  // Only angles outside the range are wrapped, so the default range returns
+  // atan2 unchanged, its +-pi edges included.
+  if (azimuth < range.start || azimuth > range.end) {
+    azimuth = range.start + std::fmod(azimuth - range.start, kTwoPi);
+    if (azimuth < range.start) {
+      azimuth += kTwoPi;
+    }
+    // A full turn in float can round onto `end`; report it as `start`.
+    if (azimuth >= range.end) {
+      azimuth = range.start;
+    }
+  }
+  return azimuth;
+}
 
 // Semantic lidar: 6 fields. 4 FLOAT32 + 2 UINT32. Point stride = 24 B =
 // sizeof(sensor::data::SemanticLidarDetection).

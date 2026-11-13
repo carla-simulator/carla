@@ -740,7 +740,8 @@ void ROS2::ProcessDataFromLidar(
     float upper_fov_limit,
     float lower_fov_limit,
     carla::sensor::data::LidarData &data,
-    void *actor) {
+    void *actor,
+    const LidarAzimuthRange &azimuth_range) {
   const Stamp stamp = GetStamp();
   if (auto base = GetOrCreateSensor(ESensors::RayCastLidar, stream_id, actor)) {
     auto publisher = std::dynamic_pointer_cast<CarlaLidarPublisher>(base);
@@ -767,7 +768,8 @@ void ROS2::ProcessDataFromLidar(
           reinterpret_cast<const std::uint8_t *>(data._points.data()),
           data._header.data() + carla::sensor::data::LidarData::Index::SIZE,
           data._header.size() - carla::sensor::data::LidarData::Index::SIZE,
-          vertical_angles);
+          vertical_angles,
+          azimuth_range);
     } else {
       publisher->WritePointCloud(
           stamp.seconds, stamp.nanoseconds, 1u, width,
