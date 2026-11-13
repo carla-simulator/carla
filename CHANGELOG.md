@@ -263,6 +263,7 @@
 
 #### Documentation
 
+* Fixed the message type of `sensor.other.autoware_gnss` on `/pose` in the ROS 2 sensors and messages pages: it is `geometry_msgs/Pose`, not `PoseStamped` (#10297).
 * Clarified the depth camera's 24-bit distance encoding and the precision of its grayscale visualization.
 * **Fixed the CARLA 1.0 download links** in the quick start and the download page, and corrected the ROS 2 native and Autoware pages against a runtime check of the 1.0 package.
 * Corrected the coordinate-conventions guide to use a homogeneous change of basis for 4×4 poses.
