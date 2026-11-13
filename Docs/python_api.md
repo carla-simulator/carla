@@ -3625,6 +3625,11 @@ Enables Chrono physics on a spawned vehicle.
 - <a name="carla.Vehicle.is_at_traffic_light"></a>**<font color="#7fb800">is_at_traffic_light</font>**(<font color="#00a6ed">**self**</font>)  
 Vehicles will be affected by a traffic light when the light is red and the vehicle is inside its bounding box. The client returns whether a traffic light is affecting this vehicle according to last tick (it does not call the simulator).  
     - **Return:** _bool_  
+- <a name="carla.Vehicle.is_door_open"></a>**<font color="#7fb800">is_door_open</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**door_idx**</font>)  
+Returns whether the door `door_idx` is open, whoever opened it (this client, another client or the replayer). With [carla.VehicleDoor.All](#carla.VehicleDoor.All), returns whether every door the vehicle has is open. A door the vehicle does not have is never open. The client returns the state of the last tick: the method does not call the simulator, so a door opened with open_door() reads as open after the next tick.  
+    - **Parameters:**
+        - `door_idx` (_[carla.VehicleDoor](#carla.VehicleDoor)_) - door index.  
+    - **Return:** _bool_  
 - <a name="carla.Vehicle.open_door"></a>**<font color="#7fb800">open_door</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**door_idx**</font>)  
 Open the door `door_idx` if the vehicle has it. Use [carla.VehicleDoor.All](#carla.VehicleDoor.All) to open all available doors.  
     - **Parameters:**
@@ -3813,6 +3818,10 @@ Front right door.
 Back left door.  
 - <a name="carla.VehicleDoor.RR"></a>**<font color="#f8805a">RR</font>**  
 Back right door.  
+- <a name="carla.VehicleDoor.Hood"></a>**<font color="#f8805a">Hood</font>**  
+Hood, on vehicles that have one configured as a fifth door.  
+- <a name="carla.VehicleDoor.Trunk"></a>**<font color="#f8805a">Trunk</font>**  
+Trunk, on vehicles that have one configured as a sixth door.  
 - <a name="carla.VehicleDoor.All"></a>**<font color="#f8805a">All</font>**  
 Represents all doors.  
 

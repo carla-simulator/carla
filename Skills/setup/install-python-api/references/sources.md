@@ -89,8 +89,10 @@ and exits 0, because a missing server does not make the install wrong.
 
 ## numpy
 
-CARLA's bindings are compiled against the numpy **1.x** C API. Under numpy 2.x,
-`import carla` raises at import time. The installer therefore pins `numpy<2` in the
+CARLA **1.0** and later support numpy 2 (Boost 1.90.0, #9737), and the installer pins nothing.
+
+Releases before 1.0 do not support numpy 2. Under numpy 2.x,
+`import carla` raises at import time. For them the installer pins `numpy<2` in the
 same pip transaction (`numpy 1.26.4` is the last 1.x, and it has cp310-cp312
 wheels). If a project genuinely needs numpy 2, it needs a separate environment
 from the CARLA client.
