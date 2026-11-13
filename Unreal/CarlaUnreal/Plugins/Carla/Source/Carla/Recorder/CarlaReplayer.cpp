@@ -408,12 +408,10 @@ void CarlaReplayer::ProcessToTime(double Time, bool IsFirstTime)
           SkipPacket();
         break;
 
-      // vehicle door animation
+      // vehicle door events: applied while seeking too, as a door stays as
+      // the last event before the start time left it
       case static_cast<char>(CarlaRecorderPacketId::VehicleDoor):
-        if (bFrameFound)
-          ProcessDoorVehicle();
-        else
-          SkipPacket();
+        ProcessDoorVehicle();
         break;
 
       // scene lights animation
