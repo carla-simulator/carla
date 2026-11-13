@@ -228,7 +228,13 @@ def _report_tag_mismatch() -> None:
             print(f"    {w}")
 
 
-def pip_install(target: str, dry: bool) -> int:
+def needs_numpy1(version: str) -> bool:
+    """Releases before 1.0 are built against the numpy 1.x C API; 1.0+ against 2.x."""
+    m = re.match(r"(\d+)", version)
+    return bool(m) and int(m.group(1)) < 1
+
+
+def pip_install(target: str, version: str, dry: bool) -> int:
     """pip into the TARGET interpreter, never into this script's own."""
     cmd = [PY, "-m", "pip", "install", target]
     # A user-site install is the least surprising outside a venv; inside one, pip
@@ -238,9 +244,9 @@ def pip_install(target: str, dry: bool) -> int:
         capture_output=True, text=True).stdout.strip() == "True"
     if not in_venv:
         cmd.insert(4, "--user")
-    # CARLA's bindings are compiled against the numpy 1.x C API and crash on
-    # import under 2.x, so pin it in the same transaction.
-    cmd.append("numpy<2")
+    # Pre-1.0 bindings fail on import under numpy 2: pin in the same transaction.
+    if needs_numpy1(version):
+        cmd.append("numpy<2")
     print("  " + " ".join(cmd))
     if dry:
         print("  (dry run — nothing executed)")
@@ -260,7 +266,7 @@ def cmd_install(args) -> int:
         _report_tag_mismatch()
     if src in ("auto", "local") and wheels:
         print(f"source: local wheel ({wheels[0].name}) — matches your simulator")
-        rc = pip_install(str(wheels[0]), args.dry_run)
+        rc = pip_install(str(wheels[0]), wheels[0].name.split("-")[1], args.dry_run)
     elif src in ("auto", "pypi"):
         version = args.version or package_version()
         if not version:
@@ -274,7 +280,7 @@ def cmd_install(args) -> int:
                   "or build it (build-carla-ue4 step 04).", file=sys.stderr)
             return 2
         print(f"source: PyPI carla=={version}")
-        rc = pip_install(f"carla=={version}", args.dry_run)
+        rc = pip_install(f"carla=={version}", version, args.dry_run)
     elif src in ("auto", "egg") and eggs:
         egg = eggs[0]
         print(f"source: bundled egg ({egg.name}) — nothing to install, it goes on PYTHONPATH")

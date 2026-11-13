@@ -233,14 +233,15 @@ def cmd_install(args) -> None:
     else:
         print(f"[install] pip install -r {req} (into {sys.executable})")
         subprocess.run([sys.executable, "-m", "pip", "install", "-r", str(req)], check=True)
-        # The CARLA bindings are built against the numpy 1.x C API: numpy 2
-        # imports fine and then fails on the first array the simulator hands
-        # back. Report rather than silently downgrading someone's environment.
+        # Pre-1.0 bindings (wheels and eggs) are built against the numpy 1.x C
+        # API; 1.0 and later are built against numpy 2. Report, never downgrade.
         try:
             import numpy
 
-            if parse_version(numpy.__version__) >= (2,):
-                print(f"[install] WARNING numpy {numpy.__version__} is too new for the CARLA bindings")
+            cv = client_version()
+            pre_1_0 = cv == "unknown" or (cv is not None and parse_version(cv) < (1,))
+            if pre_1_0 and parse_version(numpy.__version__) >= (2,):
+                print(f"[install] WARNING numpy {numpy.__version__} is too new for the CARLA {cv} bindings")
                 print(f"[install]   fix with: {sys.executable} -m pip install 'numpy<2'")
         except Exception:
             pass
