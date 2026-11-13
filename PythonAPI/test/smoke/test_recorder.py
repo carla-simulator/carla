@@ -198,6 +198,77 @@ class TestRecorder(SyncSmokeTest):
             'replayed vehicle behind')
 
 
+    def _replayed_vehicle(self):
+        vehicles = self.world.get_actors().filter('vehicle.*')
+        self.assertEqual(len(vehicles), 1, 'expected one replayed vehicle')
+        return vehicles[0]
+
+    def _replay_doors_at(self, log_path, start, ticks):
+        """Replays @a log_path from @a start seconds for @a ticks ticks and
+        returns which of the front-left and rear-right doors are open."""
+        self.client.replay_file(log_path, start, 0.0, 0)
+        for _ in range(ticks):
+            self.world.tick()
+        vehicle = self._replayed_vehicle()
+        doors = (vehicle.is_door_open(carla.VehicleDoor.FL),
+                 vehicle.is_door_open(carla.VehicleDoor.RR))
+        self.client.stop_replayer(False)
+        for _ in range(3):
+            self.world.tick()
+        return doors
+
+    def test_replay_reproduces_door_events(self):
+        """Door events replay, also when the replay starts after them (#7701)."""
+        log_path = self._log_path('replay_doors.log')
+        self.client.start_recorder(log_path)
+        vehicle = self._spawn_test_vehicle()
+        for _ in range(10):
+            self.world.tick()
+        vehicle.open_door(carla.VehicleDoor.FL)
+        vehicle.open_door(carla.VehicleDoor.RR)
+        for _ in range(10):
+            self.world.tick()
+        # Rebuilds the door constraints, which must neither close the doors
+        # nor record anything.
+        vehicle.apply_physics_control(vehicle.get_physics_control())
+        for _ in range(10):
+            self.world.tick()
+        vehicle.close_door(carla.VehicleDoor.RR)
+        for _ in range(20):
+            self.world.tick()
+        self.client.stop_recorder()
+        vehicle.destroy()
+        for _ in range(5):
+            self.world.tick()
+
+        info = self.client.show_recorder_file_info(log_path, True)
+        self.assertEqual(info.count('Door opened'), 2, info)
+        self.assertEqual(info.count('Door closed'), 1, info)
+
+        # Recorded: both closed until 0.5 s, both open until 1.5 s, then only FL.
+        self.assertEqual(self._replay_doors_at(log_path, 0.0, 3), (False, False))
+        self.assertEqual(self._replay_doors_at(log_path, 0.0, 20), (True, True))
+        self.assertEqual(self._replay_doors_at(log_path, 1.0, 3), (True, True),
+                         'a replay that starts after the doors opened lost them')
+        self.assertEqual(self._replay_doors_at(log_path, 2.0, 3), (True, False))
+
+    def test_record_captures_doors_open_at_start(self):
+        """A door open before the recording starts replays open (#7701)."""
+        log_path = self._log_path('replay_doors_open_at_start.log')
+        vehicle = self._spawn_test_vehicle()
+        vehicle.open_door(carla.VehicleDoor.FL)
+        for _ in range(5):
+            self.world.tick()
+        self.client.start_recorder(log_path)
+        for _ in range(10):
+            self.world.tick()
+        self.client.stop_recorder()
+        vehicle.destroy()
+        for _ in range(5):
+            self.world.tick()
+
+        self.assertEqual(self._replay_doors_at(log_path, 0.0, 3), (True, False))
+
     def _semantic_lidar_points_on(self, actor):
         """Points of a semantic LiDAR 3 m above @a actor that hit it."""
         bp = self.world.get_blueprint_library().find('sensor.lidar.ray_cast_semantic')
