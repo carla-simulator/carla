@@ -2598,8 +2598,18 @@ void UActorBlueprintFunctionLibrary::SetLidar(
       RetrieveActorAttributeToFloat("noise_stddev", Description.Variations, Lidar.NoiseStdDev);
   Lidar.HorizontalResolution =
       RetrieveActorAttributeToFloat("horizontal_resolution", Description.Variations, Lidar.HorizontalResolution);
-  Lidar.AzimuthClockwise =
-      RetrieveActorAttributeToString("azimuth_direction", Description.Variations, TEXT("counterclockwise")) == TEXT("clockwise");
+  const FString AzimuthDirection =
+      RetrieveActorAttributeToString("azimuth_direction", Description.Variations, TEXT("counterclockwise"));
+  if (AzimuthDirection == TEXT("clockwise") || AzimuthDirection == TEXT("counterclockwise"))
+  {
+    Lidar.AzimuthClockwise = AzimuthDirection == TEXT("clockwise");
+  }
+  else
+  {
+    UE_LOG(LogCarla, Warning,
+        TEXT("azimuth_direction must be 'counterclockwise' or 'clockwise', not '%s'; keeping '%s'."),
+        *AzimuthDirection, Lidar.AzimuthClockwise ? TEXT("clockwise") : TEXT("counterclockwise"));
+  }
   const float AzimuthRangeStart =
       RetrieveActorAttributeToFloat("azimuth_range_start", Description.Variations, Lidar.AzimuthRangeStart);
   const float AzimuthRangeEnd =
