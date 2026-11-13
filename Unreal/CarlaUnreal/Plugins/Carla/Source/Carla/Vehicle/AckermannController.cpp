@@ -207,10 +207,7 @@ void FAckermannController::UpdateVehicleControlCommand() {
 void FAckermannController::UpdateVehicleState(const ACarlaWheeledVehicle* Vehicle) {
   TRACE_CPUPROFILER_EVENT_SCOPE_STR(__FUNCTION__);
 
-  // Accumulate short frames so the loop below runs at most once per
-  // MinControlPeriod, over the time elapsed since its last run.
-  // The tolerance keeps a fixed 10 ms step, rounded to float, running every
-  // frame.
+  // Run at most once per MinControlPeriod; the tolerance absorbs float rounding of a 10 ms step.
   const float FrameDeltaTime = Vehicle->GetWorld()->GetDeltaSeconds();
   AccumulatedTime += FrameDeltaTime;
   AccumulatedDistance += FrameDeltaTime * Vehicle->GetVehicleForwardSpeed() / 100.0f;  // From cm/s to m/s

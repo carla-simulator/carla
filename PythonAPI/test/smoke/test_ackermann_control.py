@@ -4,14 +4,7 @@
 # This work is licensed under the terms of the MIT license.
 # For a copy, see <https://opensource.org/licenses/MIT>.
 
-"""Smoke test: Ackermann control starts a vehicle that is standing still.
-
-The Ackermann controller used to be unable to start a resting vehicle when
-the physics step was 4 ms or less: the vehicle never moved while the pedal
-flipped between throttle and brake (#10291). Small steps happen in
-synchronous mode with a small fixed_delta_seconds, and on any fast
-asynchronous server.
-"""
+"""Smoke test: Ackermann control starts a resting vehicle at small physics steps (#10291)."""
 
 import carla
 
