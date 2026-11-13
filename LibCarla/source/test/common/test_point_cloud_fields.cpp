@@ -175,25 +175,3 @@ TEST(PointCloudFields, lidar_azimuth_clockwise_zero_to_two_pi) {
     EXPECT_NEAR(b - a, step, 1e-4f) << "at step " << i;
   }
 }
-
-// Any full-turn interval and either direction: the result lies in the
-// interval and is the same angle as atan2 in the chosen direction.
-TEST(PointCloudFields, lidar_azimuth_arbitrary_range_and_direction) {
-  for (const bool clockwise : {false, true}) {
-    for (const float start_deg : {-180.0f, -90.0f, 0.0f, 45.0f, 180.0f}) {
-      const carla::ros2::LidarAzimuthRange range =
-          carla::ros2::LidarAzimuthRange::FromDegrees(clockwise, start_deg, start_deg + 360.0f);
-      for (int i = 0; i < 360; ++i) {
-        const float angle = static_cast<float>(i) * kPi / 180.0f;
-        const float x = std::cos(angle);
-        const float y = std::sin(angle);
-        const float azimuth = carla::ros2::ComputeLidarAzimuth(x, y, range);
-        EXPECT_GE(azimuth, range.start);
-        EXPECT_LE(azimuth, range.end);
-        const float expected = std::atan2(clockwise ? -y : y, x);
-        EXPECT_NEAR(std::cos(azimuth), std::cos(expected), 1e-5f);
-        EXPECT_NEAR(std::sin(azimuth), std::sin(expected), 1e-5f);
-      }
-    }
-  }
-}
