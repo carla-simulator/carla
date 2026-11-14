@@ -106,7 +106,7 @@
 #### ROS 2 and ecosystem
 
 * **`run_carla_autoware.sh --with-rviz`** now starts RViz on a CARLA-adapted config in classical mode too, showing the front camera and following the ego.
-* **Upgraded Fast-DDS** from v2.11.2 to the v2.14.6 LTS line on Fast-CDR 2.x, keeping the XCDRv1 wire format so topics stay compatible with every ROS 2 distribution.
+* **Upgraded Fast-DDS** from v2.11.2 to **v2.14.7 LTS** (Fast-CDR 2.2.8), keeping the XCDRv1 wire format for ROS 2 interoperability.
 * **Restricted the native ROS 2 FastDDS transport to UDPv4 by default.** The builtin UDPv4+SHM default silently delivered no data across a container, uid or version boundary. Set `FASTDDS_BUILTIN_TRANSPORTS=DEFAULT` to restore shared memory.
 * **Reworked the ROS 2 native sensor publishers** behind a shared publisher and subscriber template layer, unified the camera and point-cloud publishers, and added an Ackermann control subscriber.
 * **Updated the `invertedai_traffic.py` example** with ego-vehicle integration and video generation improvements.
