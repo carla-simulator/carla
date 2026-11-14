@@ -41,7 +41,8 @@ namespace traffic_manager {
       return map.find(key) != map.end();
     }
 
-    const Value &GetValue(const Key &key) const {
+    // Copy while locked so the result outlives later updates or removals.
+    Value GetValue(const Key &key) const {
 
       std::scoped_lock<std::mutex> lock(map_mutex);
       return map.at(key);
