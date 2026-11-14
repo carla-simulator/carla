@@ -26,7 +26,7 @@ The message types are defined in `LibCarla/source/carla/ros2/types/msg/` and ser
 | [`sensor_msgs/PointCloud2`](https://docs.ros.org/en/jazzy/p/sensor_msgs/interfaces/msg/PointCloud2.html) | `<sensor>/point_cloud` | LIDAR, semantic LIDAR, HSS LIDAR, radar, and the DVS camera's events |
 | [`sensor_msgs/Imu`](https://docs.ros.org/en/jazzy/p/sensor_msgs/interfaces/msg/Imu.html) | `<sensor>` | `sensor.other.imu` |
 | [`sensor_msgs/NavSatFix`](https://docs.ros.org/en/jazzy/p/sensor_msgs/interfaces/msg/NavSatFix.html) | `<sensor>` | `sensor.other.gnss` |
-| [`geometry_msgs/PoseStamped`](https://docs.ros.org/en/jazzy/p/geometry_msgs/interfaces/msg/PoseStamped.html) | `<sensor>/pose` | `sensor.other.autoware_gnss` |
+| [`geometry_msgs/Pose`](https://docs.ros.org/en/jazzy/p/geometry_msgs/interfaces/msg/Pose.html) | `<sensor>/pose` | `sensor.other.autoware_gnss` |
 | [`geometry_msgs/PoseWithCovarianceStamped`](https://docs.ros.org/en/jazzy/p/geometry_msgs/interfaces/msg/PoseWithCovarianceStamped.html) | `<sensor>/pose_with_covariance` | `sensor.other.autoware_gnss` |
 | [`carla_msgs/CarlaCollisionEvent`](#carlacollisionevent) | `<sensor>` | `sensor.other.collision` |
 | [`autoware_vehicle_msgs/VelocityReport`](#velocityreport) | `/vehicle/status/velocity_status` | `sensor.other.vehicle_status` |
