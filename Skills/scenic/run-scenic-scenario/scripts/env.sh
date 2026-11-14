@@ -33,8 +33,18 @@ export PYTHON="${PYTHON:-python3}"
 # The CLI must come from the same interpreter that will import carla, or a run
 # picks up a Scenic from a different environment and fails on the model import.
 if [ -z "${SCENIC_BIN:-}" ]; then
-  _pybin="$(dirname "$(command -v "${PYTHON}" 2>/dev/null || echo /usr/bin/python3)")"
-  if [ -x "${_pybin}/scenic" ]; then SCENIC_BIN="${_pybin}/scenic"; else SCENIC_BIN="$(command -v scenic || true)"; fi
+  SCENIC_BIN="$("${PYTHON}" - <<'PY' | tr -d '\r' || true
+import os
+from pathlib import Path
+import sysconfig
+directory = Path(sysconfig.get_path("scripts"))
+for name in ("scenic.exe", "scenic") if os.name == "nt" else ("scenic",):
+    candidate = directory / name
+    if candidate.is_file() and os.access(candidate, os.X_OK):
+        print(candidate.as_posix())
+        break
+PY
+)"
 fi
 export SCENIC_BIN="${SCENIC_BIN:-}"
 
@@ -48,7 +58,8 @@ fi
 # Fall back to wherever the package actually imported from, so the group is
 # available on a pip-only install rather than looking unconfigured.
 if [ -z "${SCENIC_ROOT:-}" ] && [ -n "${SCENIC_BIN}" ]; then
-  SCENIC_ROOT="$("${PYTHON}" -c 'import os,scenic;print(os.path.dirname(scenic.__file__))' 2>/dev/null || true)"
+  SCENIC_ROOT="$("${PYTHON}" -c 'from pathlib import Path;import scenic;print(Path(scenic.__file__).parent.as_posix())' \
+    2>/dev/null | tr -d '\r' || true)"
 fi
 export SCENIC_ROOT="${SCENIC_ROOT:-}"
 

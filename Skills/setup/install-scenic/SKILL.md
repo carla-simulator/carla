@@ -23,9 +23,7 @@ install error:
 1. **The `scenic` CLI and the `carla` client must be in ONE interpreter.** Scenic
    loads the client itself when a scenario names the CARLA model. Split them and
    the failure arrives mid-run as a model import error, not at install time.
-2. **Scenic's blueprint tables are keyed on the CARLA *client* version.** With no
-   table for that version, every vehicle and prop category resolves empty and
-   *every* scenario fails at sample time with "no blueprints recorded".
+2. **Scenic selects blueprint tables from the CARLA client version.** Scenic 3.1.1 uses a fallback table when the exact version is absent. Validate the selected ids against the server before simulation.
 
 So the install order is **client first, Scenic second**, into the same
 interpreter. `install_scenic.py` refuses to install into an interpreter with no
@@ -88,15 +86,15 @@ copies under `srunner/scenic/`.
 python3 scripts/install_scenic.py verify
 ```
 
-Checks the five things that actually matter, and exits non-zero on any:
+Verification checks imports and interpreter ownership. A missing exact blueprint table produces a warning.
 
 | Check | Why it matters |
 |---|---|
 | `scenic` importable | the install worked |
 | CLI belongs to this interpreter | otherwise a run uses a different Scenic |
 | `carla` client present | Scenic loads it for the CARLA model |
-| `carla` is the extension, not a directory | a directory named `carla` on `sys.path` imports as an empty namespace package |
-| blueprint table for this client version | otherwise every category is empty |
+| `carla` has a module file | an empty namespace package can shadow the client; regular packages remain valid |
+| blueprint table for this client version | missing exact tables warn about fallback ids |
 | `scenic.simulators.carla.simulator` imports | the real binding between Scenic and the client |
 
 Then export the root, which is what the `scenic` skill group is gated on:
@@ -142,7 +140,7 @@ name the id explicitly. See [[create-scenic-scenario]].
 **Example 3: "scenic is installed but a scenario cannot import the model"**
 
 Almost always the two halves in different environments. `verify` compares the
-CLI's directory against the interpreter's and fails loudly on a mismatch.
+CLI's directory against the selected interpreter's `sysconfig` scripts directory and fails on a mismatch.
 
 ## Troubleshooting
 
@@ -154,14 +152,11 @@ you genuinely want Scenic alone.
 
 **Problem: the `scenic` command runs a different Scenic than expected**
 Cause: a version manager's shim directory precedes the environment on `PATH`.
-Solution: call the CLI by full path — `<env>/bin/scenic` — which is what the
-scenic skills' `env.sh` derives from `PYTHON`.
+Solution: use the CLI in the selected interpreter's scripts directory. The scenic skills derive this path from `PYTHON` through `sysconfig`. Windows installations use `Scripts/scenic.exe`.
 
 **Problem: `no blueprint table for client X`**
-Cause: the installed Scenic predates that CARLA release.
-Solution: `install` without `--version` to take the newest; `plan` prints the
-available versions. If none has a table for that client, Scenic does not support
-it yet.
+Cause: the installed Scenic has no exact table for that client version.
+Solution: run `verify` to check the simulator interface. Scenic 3.1.1 can select a fallback table. Validate its blueprint ids against the server before simulation. See [the upstream selection logic](https://github.com/Scenic-Foundation/Scenic/blob/v3.1.1/src/scenic/simulators/carla/blueprints.py).
 
 **Problem: no example scenarios after installing**
 Cause: expected — the wheel excludes `examples/`, and the sdist does too.
