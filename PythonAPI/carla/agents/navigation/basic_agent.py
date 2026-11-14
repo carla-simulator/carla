@@ -10,7 +10,7 @@ It can also make use of the global route planner to follow a specifed route
 """
 
 import carla
-from shapely.geometry import Polygon
+from shapely.geometry import MultiPoint, Polygon
 
 from agents.navigation.local_planner import LocalPlanner, RoadOption
 from agents.navigation.global_route_planner import GlobalRoutePlanner
@@ -353,7 +353,7 @@ class BasicAgent(object):
             if len(route_bb) < 3:
                 return None
 
-            return Polygon(route_bb)
+            return Polygon(route_bb[::2] + route_bb[1::2][::-1])
       
         if self._ignore_vehicles:
             return ObstacleDetectionResult(False, None, -1)
@@ -374,8 +374,9 @@ class BasicAgent(object):
         if ego_wpt.lane_id < 0 and lane_offset != 0:
             lane_offset *= -1
 
-        # Get the transform of the front of the ego
-        ego_front_transform = ego_transform
+        # Keep the actor center for distance and route geometry.
+        ego_front_transform = carla.Transform(
+            ego_transform.location, ego_transform.rotation)
         ego_front_transform.location += carla.Location(
             self._vehicle.bounding_box.extent.x * ego_transform.get_forward_vector())
 
@@ -401,7 +402,7 @@ class BasicAgent(object):
                 target_bb = target_vehicle.bounding_box
                 target_vertices = target_bb.get_world_vertices(target_vehicle.get_transform())
                 target_list = [[v.x, v.y, v.z] for v in target_vertices]
-                target_polygon = Polygon(target_list)
+                target_polygon = MultiPoint(target_list).convex_hull
 
                 if route_polygon.intersects(target_polygon):
                     return ObstacleDetectionResult(True, target_vehicle, compute_distance(target_vehicle.get_location(), ego_location))
@@ -418,7 +419,8 @@ class BasicAgent(object):
 
                 target_forward_vector = target_transform.get_forward_vector()
                 target_extent = target_vehicle.bounding_box.extent.x
-                target_rear_transform = target_transform
+                target_rear_transform = carla.Transform(
+                    target_transform.location, target_transform.rotation)
                 target_rear_transform.location -= carla.Location(
                     x=target_extent * target_forward_vector.x,
                     y=target_extent * target_forward_vector.y,

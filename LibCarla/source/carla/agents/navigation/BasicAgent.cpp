@@ -8,6 +8,7 @@
 #include "carla/agents/navigation/GlobalRoutePlanner.h"
 #include "carla/agents/navigation/LocalPlanner.h"
 #include "carla/agents/navigation/Misc.h"
+#include "carla/agents/navigation/ObstacleGeometry.h"
 #include "carla/agents/navigation/Types.h"
 
 #include "carla/client/Actor.h"
@@ -25,10 +26,6 @@
 #include "carla/road/element/LaneMarking.h"
 #include "carla/rpc/TrafficLightState.h"
 
-#include <boost/geometry.hpp>
-#include <boost/geometry/geometries/point_xy.hpp>
-#include <boost/geometry/geometries/polygon.hpp>
-
 #include <algorithm>
 #include <array>
 #include <cmath>
@@ -40,8 +37,7 @@ namespace agents {
 namespace navigation {
 
 namespace bg = boost::geometry;
-using BgPoint   = bg::model::d2::point_xy<double>;
-using BgPolygon = bg::model::polygon<BgPoint>;
+using BgPolygon = detail::ObstaclePolygon;
 
 using LaneType   = road::Lane::LaneType;
 using LaneChange = road::element::LaneMarking::LaneChange;
@@ -401,12 +397,7 @@ BasicAgent::VehicleObstacle BasicAgent::VehicleObstacleDetected(
       return std::nullopt;
     }
 
-    BgPolygon poly;
-    for (const auto &v : route_bb) {
-      bg::append(poly.outer(), BgPoint(v[0], v[1]));
-    }
-    bg::correct(poly);
-    return poly;
+    return detail::BuildRoutePolygon(route_bb);
   };
 
   std::optional<BgPolygon> route_polygon = build_route_polygon();
@@ -431,11 +422,7 @@ BasicAgent::VehicleObstacle BasicAgent::VehicleObstacleDetected(
       const auto &target_bb = actor->GetBoundingBox();
       const auto vertices = target_bb.GetWorldVertices(actor->GetTransform());
 
-      BgPolygon target_poly;
-      for (const auto &v : vertices) {
-        bg::append(target_poly.outer(), BgPoint(v.x, v.y));
-      }
-      bg::correct(target_poly);
+      const BgPolygon target_poly = detail::ProjectBoundingBox(vertices);
 
       if (bg::intersects(*route_polygon, target_poly)) {
         result.affected = true;
