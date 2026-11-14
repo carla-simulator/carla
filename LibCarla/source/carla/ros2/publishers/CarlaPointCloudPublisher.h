@@ -67,13 +67,15 @@ protected:
   [[nodiscard]] virtual std::vector<std::uint8_t> ComputePointCloud(
       std::uint32_t height, std::uint32_t width, const std::uint8_t *data) const = 0;
 
-private:
+  // Writes an already laid out point buffer (GetPointSize() bytes per point).
   bool WritePointCloud(
       std::int32_t seconds,
       std::uint32_t nanoseconds,
       std::uint32_t height,
       std::uint32_t width,
       std::vector<std::uint8_t> data);
+
+private:
 
   std::shared_ptr<PublisherImpl<CarlaPointCloudMsgTraits>> _impl;
 };

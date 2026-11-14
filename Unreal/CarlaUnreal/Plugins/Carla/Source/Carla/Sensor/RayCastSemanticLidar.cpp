@@ -198,6 +198,10 @@ void ARayCastSemanticLidar::SimulateLidar(const float DeltaTime, bool bLockPhysi
 
   ComputeAndSaveDetections(ActorTransform);
 
+  LastSweepStartAngle = CurrentHorizontalAngle;
+  LastSweepAngle = AngleDistanceOfTick;
+  LastRaysPerChannel = PointsToScanWithOneLaser;
+
   const float HorizontalAngle = carla::geom::Math::ToRadians(
       std::fmod(CurrentHorizontalAngle + AngleDistanceOfTick, Description.HorizontalFov));
   SemanticLidarData.SetHorizontalAngle(HorizontalAngle);

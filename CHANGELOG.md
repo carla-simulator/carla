@@ -26,6 +26,7 @@
 * Added the **V2X sensor family**: a CAM service sensor (`sensor.other.v2x`), a custom binary-payload sensor (`sensor.other.v2x_custom`), a configurable path-loss propagation model and owner-less infrastructure (V2I) sensors.
 * Added **`World.get_imu_sensor_gravity`/`set_imu_sensor_gravity`** to read and set the gravity the IMU accelerometer uses.
 * Added **`PythonAPI/examples/rig_perf_demo.py`**, a two-pass multi-camera rig benchmark: `measure` records the delivered frame rate of an N-camera rig, `render` replays it into a labelled grid video.
+* Added a **ROS 2 LiDAR driver mode**: with `ros_driver_mode` on `sensor.lidar.ray_cast`, the native ROS 2 publisher assembles the per-step slices into full rotations cut at `ros_scan_cut_angle`, stamped at their first point, with per-point `time_stamp` offsets and points in firing order, as a LiDAR driver publishes them. Autoware's distortion corrector and ring outlier filter consume it directly. Off by default; the per-step output is unchanged.
 
 #### Maps and content
 
