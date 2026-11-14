@@ -42,7 +42,12 @@ namespace geom {
     }
 
     void InsertElements(const std::vector<TreeElement> &elements) {
-      _rtree.insert(elements.begin(), elements.end());
+      if (_rtree.empty()) {
+        // Use packed construction for a complete initial batch.
+        _rtree = decltype(_rtree)(elements.begin(), elements.end());
+      } else {
+        _rtree.insert(elements.begin(), elements.end());
+      }
     }
 
     /// Return nearest neighbors with a user defined filter.
@@ -99,7 +104,12 @@ namespace geom {
     }
 
     void InsertElements(const std::vector<TreeElement> &elements) {
-      _rtree.insert(elements.begin(), elements.end());
+      if (_rtree.empty()) {
+        // Use packed construction for a complete initial batch.
+        _rtree = decltype(_rtree)(elements.begin(), elements.end());
+      } else {
+        _rtree.insert(elements.begin(), elements.end());
+      }
     }
 
     /// Return nearest neighbors with a user defined filter.
