@@ -104,11 +104,14 @@ namespace element {
   }
 
   DirectedPoint GeometryPoly3::PosFromDist(double dist) const {
-    auto result = _rtree.GetNearestNeighbours(
-        Rtree::BPoint(static_cast<float>(dist))).front();
-
-    auto &val1 = result.second.first;
-    auto &val2 = result.second.second;
+    // Arc lengths are ordered, so locate the containing interval directly.
+    auto upper = std::upper_bound(_spline.begin() + 1, _spline.end(), dist,
+        [](double s, const SplinePoint &point) { return s < point.s; });
+    if (upper == _spline.end()) {
+      --upper;
+    }
+    const auto &val1 = *(upper - 1);
+    const auto &val2 = *upper;
 
     double rate = (val2.s - dist) / (val2.s - val1.s);
     double u = rate * val1.u + (1.0 - rate) * val2.u;
@@ -136,8 +139,7 @@ namespace element {
     double current_u = 0;
     double last_u = 0;
     double last_v = _poly.Evaluate(current_u);
-    double last_s = 0;
-    RtreeValue last_val{last_u, last_v, last_s, _poly.Tangent(current_u)};
+    _spline.push_back({last_u, last_v, 0.0, _poly.Tangent(current_u)});
     while (current_s < _length + delta_u) {
       current_u += delta_u;
       double current_v = _poly.Evaluate(current_u);
@@ -146,26 +148,23 @@ namespace element {
       double ds = sqrt(du * du + dv * dv);
       current_s += ds;
       double current_t = _poly.Tangent(current_u);
-      RtreeValue current_val{current_u, current_v, current_s, current_t};
-
-      Rtree::BPoint p1(static_cast<float>(last_s));
-      Rtree::BPoint p2(static_cast<float>(current_s));
-      _rtree.InsertElement(Rtree::BSegment(p1, p2), last_val, current_val);
+      _spline.push_back({current_u, current_v, current_s, current_t});
 
       last_u = current_u;
       last_v = current_v;
-      last_s = current_s;
-      last_val = current_val;
 
     }
+    DEBUG_ASSERT(_spline.size() >= 2u);
   }
 
   DirectedPoint GeometryParamPoly3::PosFromDist(double dist) const {
-    auto result = _rtree.GetNearestNeighbours(
-        Rtree::BPoint(static_cast<float>(dist))).front();
-
-    auto &val1 = result.second.first;
-    auto &val2 = result.second.second;
+    auto upper = std::upper_bound(_spline.begin() + 1, _spline.end(), dist,
+        [](double s, const SplinePoint &point) { return s < point.s; });
+    if (upper == _spline.end()) {
+      --upper;
+    }
+    const auto &val1 = *(upper - 1);
+    const auto &val2 = *upper;
     double rate = (val2.s - dist) / (val2.s - val1.s);
     double u = rate * val1.u + (1.0 - rate) * val2.u;
     double v = rate * val1.v + (1.0 - rate) * val2.v;
@@ -198,13 +197,12 @@ namespace element {
     double current_s = 0;
     double last_u = _polyU.Evaluate(param_p);
     double last_v = _polyV.Evaluate(param_p);
-    double last_s = 0;
-    RtreeValue last_val{
+    _spline.push_back({
         last_u,
         last_v,
-        last_s,
+        0.0,
         _polyU.Tangent(param_p),
-        _polyV.Tangent(param_p) };
+        _polyV.Tangent(param_p)});
     for(size_t i = 0; i < number_intervals; ++i) {
       param_p += delta_p;
       double current_u = _polyU.Evaluate(param_p);
@@ -215,26 +213,21 @@ namespace element {
       current_s += ds;
       double current_t_u = _polyU.Tangent(param_p);
       double current_t_v = _polyV.Tangent(param_p);
-      RtreeValue current_val{
+      _spline.push_back({
           current_u,
           current_v,
           current_s,
           current_t_u,
-          current_t_v };
-
-      Rtree::BPoint p1(static_cast<float>(last_s));
-      Rtree::BPoint p2(static_cast<float>(current_s));
-      _rtree.InsertElement(Rtree::BSegment(p1, p2), last_val, current_val);
+          current_t_v});
 
       last_u = current_u;
       last_v = current_v;
-      last_s = current_s;
-      last_val = current_val;
 
       if(current_s > _length){
         break;
       }
     }
+    DEBUG_ASSERT(_spline.size() >= 2u);
   }
 } // namespace element
 } // namespace road
