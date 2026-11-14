@@ -19,7 +19,7 @@ import shutil
 import subprocess
 import sys
 import argparse
-import threading
+from concurrent.futures import ThreadPoolExecutor
 import copy
 
 # Global variables
@@ -442,13 +442,13 @@ def import_assets_from_json_list(json_list, batch_size):
             package_name = filename.replace(".json", "")
 
             # we need to build the binary file for navigation of pedestrians
-            thr = threading.Thread(target=build_binary_for_navigation, args=(package_name, dirname, maps,))
-            thr.start()
-
-            if (len(maps) > 0 and "tiles" in maps[0]):
-                import_assets(package_name, dirname, props, maps, 0, 0, batch_size)
-            else:
-                import_assets(package_name, dirname, props, maps, 0, 0, 0)
+            with ThreadPoolExecutor(max_workers=1) as executor:
+                navigation = executor.submit(build_binary_for_navigation, package_name, dirname, maps)
+                if (len(maps) > 0 and "tiles" in maps[0]):
+                    import_assets(package_name, dirname, props, maps, 0, 0, batch_size)
+                else:
+                    import_assets(package_name, dirname, props, maps, 0, 0, 0)
+                navigation.result()
 
             if not package_name:
                 print("No Packages JSONs found, nothing to import. Skipping package.")
@@ -462,7 +462,6 @@ def import_assets_from_json_list(json_list, batch_size):
                 prepare_maps_commandlet_for_cooking(package_name, only_prepare_maps=True)
                 load_asset_materials_commandlet(package_name)
                 build_binary_for_tm(package_name, dirname, maps)
-            thr.join()
 
 
 def load_asset_materials_commandlet(package_name):
@@ -506,7 +505,7 @@ def build_binary_for_navigation(package_name, dirname, maps):
 
         # get the target name
         target_name = umap["name"]
-        xodr_filename = os.path.basename(umap["xodr"])
+        xodr_filename = os.path.basename(umap.get("xodr", ""))
         xodr_path_target = ""
 
         # copy the XODR file into docker utils folder
@@ -537,28 +536,31 @@ def build_binary_for_navigation(package_name, dirname, maps):
             # os.rename(os.path.join(folder, xodr_filename), os.path.join(folder, "%s.xodr" % fbx_name_no_ext))
 
             # make the conversion
+            nav_path_source = os.path.join(folder, "%s.bin" % fbx_name_no_ext)
+            if os.path.exists(nav_path_source):
+                os.remove(nav_path_source)
             if os.name == "nt":
-                subprocess.call(["build.bat", fbx_name_no_ext, xodr_filename], cwd=folder, shell=True)
+                subprocess.check_call(["build.bat", fbx_name_no_ext, os.path.splitext(xodr_filename)[0]],
+                                      cwd=folder, shell=True)
             else:
-                subprocess.call(["chmod +x build.sh"], cwd=folder, shell=True)
-                subprocess.call("./build.sh %s %s" % (fbx_name_no_ext, xodr_filename), cwd=folder, shell=True)
+                subprocess.check_call(["bash", "build.sh", fbx_name_no_ext, os.path.splitext(xodr_filename)[0]],
+                                      cwd=folder, env=dict(os.environ, PYTHON=sys.executable))
+            if not os.path.isfile(nav_path_source):
+                raise OSError(errno.ENOENT, "Navigation build did not produce a binary", nav_path_source)
 
             # rename the xodr with the original name
             # os.rename(os.path.join(folder, "%s.xodr" % fbx_name_no_ext), os.path.join(folder, xodr_filename))
 
             # copy the binary file
-            nav_path_source = os.path.join(folder, "%s.bin" % fbx_name_no_ext)
             nav_folder_target = os.path.join(CARLA_ROOT_PATH, "Unreal", "CarlaUnreal", "Content", package_name, "Maps", target_name, "Nav")
-            if os.path.exists(nav_path_source):
-                if not os.path.exists(nav_folder_target):
-                    os.makedirs(nav_folder_target)
-                nav_path_target = os.path.join(nav_folder_target, "%s.bin" % fbx_name_no_ext)
-                print('Copying "' + nav_path_source + '" to "' + nav_path_target + '"')
-                shutil.copy2(nav_path_source, nav_path_target)
+            if not os.path.exists(nav_folder_target):
+                os.makedirs(nav_folder_target)
+            nav_path_target = os.path.join(nav_folder_target, "%s.bin" % fbx_name_no_ext)
+            print('Copying "' + nav_path_source + '" to "' + nav_path_target + '"')
+            shutil.copy2(nav_path_source, nav_path_target)
 
             # remove files
-            if os.path.exists(nav_path_source):
-                os.remove(nav_path_source)
+            os.remove(nav_path_source)
 
             if os.path.exists(fbx_path_target):
                 os.remove(fbx_path_target)
