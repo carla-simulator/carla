@@ -37,10 +37,11 @@ namespace carla {
       return _io_context;
     }
 
-    /// Post a task to the pool.
+    /// Post a task to the pool and return a future for its result.
+    /// The packaged task invokes its stored, decayed callable as an lvalue.
     template <
       typename FunctorT,
-      typename ResultT = typename std::invoke_result_t<FunctorT()>>
+      typename ResultT = std::invoke_result_t<std::decay_t<FunctorT> &>>
     std::future<ResultT> Post(FunctorT &&functor) {
       auto task = std::packaged_task<ResultT()>(std::forward<FunctorT>(functor));
       auto future = task.get_future();
