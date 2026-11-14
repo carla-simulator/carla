@@ -13,6 +13,8 @@
 #include "carla/geom/Transform.h"
 #include "carla/nav/WalkerManager.h"
 #include "carla/rpc/ActorId.h"
+#include <optional>
+
 #include <Recast.h>
 #include <DetourCrowd.h>
 #include <DetourNavMesh.h>
@@ -123,6 +125,8 @@ namespace nav {
     bool _ready { false };
     std::vector<uint8_t> _binary_mesh;
     double _delta_seconds { 0.0 };
+    /// Simulation time of the snapshot the crowd last advanced to; unset before the first update.
+    std::optional<double> _last_elapsed_seconds;
     /// meshes
     dtNavMesh *_nav_mesh { nullptr };
     dtNavMeshQuery *_nav_query { nullptr };

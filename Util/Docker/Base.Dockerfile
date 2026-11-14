@@ -36,7 +36,7 @@ USER root
 # - wget curl rsync unzip git git-lfs: essential CLI tools used in CARLA build scripts
 # - libpng-dev libtiff5-dev libjpeg-dev: image libraries for CARLA's Python API
 # - tzdata sed libxml2-dev: build utilities
-# - libnss3-dev libatk-bridge2.0-dev libxkbcommon-dev libgbm-dev: required by UE5 editor
+# - libnss3-dev libatk-bridge2.0-dev libxkbcommon-dev libgbm-dev libxcomposite1 libxdamage1: required by UE5 editor
 # - libpango1.0-dev libasound2-dev: display and audio support for UE5
 RUN apt-get update && \
     apt-get install -y \
@@ -66,6 +66,8 @@ RUN apt-get update && \
         libatk-bridge2.0-dev \
         libxkbcommon-dev \
         libgbm-dev \
+        libxcomposite1 \
+        libxdamage1 \
         libpango1.0-dev \
         libasound2-dev \
     && rm -rf /var/lib/apt/lists/*

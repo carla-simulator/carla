@@ -522,9 +522,12 @@ void CaService::AddBasicVehicleContainerHighFrequency(CAMContainer::HighFrequenc
     float length = bb.Extent.X * 2.0;                                   // half box
     float width = bb.Extent.Y * 2.0;                                    // half box
 
-    bvc.vehicleLength.vehicleLengthValue = std::round(length * 10.0); // 0.1 meter
+    // cm -> 0.1 m units, clamped to the ETSI range (outOfRange marks anything larger)
+    bvc.vehicleLength.vehicleLengthValue = FMath::Clamp<long>(std::lround(length / 10.0),
+        ITSContainer::VehicleLengthValue_tenCentimeters, ITSContainer::VehicleLengthValue_outOfRange);
     bvc.vehicleLength.vehicleLengthConfidenceIndication = ITSContainer::VehicleLengthConfidenceIndication_unavailable;
-    bvc.vehicleWidth = std::round(width * 10.0); // 0.1 meter
+    bvc.vehicleWidth = FMath::Clamp<long>(std::lround(width / 10.0),
+        ITSContainer::VehicleWidth_tenCentimeters, ITSContainer::VehicleWidth_outOfRange);
 
     // acceleration
     carla::geom::Vector3D Accel = ComputeAccelerometer(DeltaTime);

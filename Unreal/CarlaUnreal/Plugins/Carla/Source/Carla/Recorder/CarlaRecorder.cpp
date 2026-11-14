@@ -86,6 +86,16 @@ void ACarlaRecorder::SetReplayerIgnoreSpectator(bool IgnoreSpectator)
 void ACarlaRecorder::StopReplayer(bool KeepActors)
 {
   Replayer.Stop(KeepActors);
+  // A replay that reached its end stopped itself keeping its actors, so
+  // Stop() alone would leave them: remove what is left on request.
+  if (KeepActors)
+  {
+    Replayer.ForgetSpawnedActors();
+  }
+  else
+  {
+    Replayer.DestroySpawnedActors();
+  }
 }
 
 void ACarlaRecorder::Ticking(float DeltaSeconds)
@@ -753,6 +763,7 @@ void ACarlaRecorder::AddExistingActors(void)
           static_cast<uint8_t>(CarlaActor->GetActorType()),
           CarlaActor->GetActorGlobalTransform(),
           CarlaActor->GetActorInfo()->Description);
+      AddExistingDoors(*CarlaActor);
     }
   }
 
@@ -768,6 +779,36 @@ void ACarlaRecorder::AddExistingActors(void)
     }
   }
 
+}
+
+void ACarlaRecorder::AddExistingDoors(const FCarlaActor &CarlaActor)
+{
+  // Door packets are events: a door open before the recording starts is
+  // recorded as opening in the first frame.
+  if (CarlaActor.GetActorType() != FCarlaActor::ActorType::Vehicle)
+  {
+    return;
+  }
+  uint8 OpenDoors = 0u;
+  if (const ACarlaWheeledVehicle *Vehicle = Cast<ACarlaWheeledVehicle>(CarlaActor.GetActor()))
+  {
+    OpenDoors = Vehicle->GetOpenDoorMask();
+  }
+  else if (const FVehicleData *Data = CarlaActor.GetActorData<FVehicleData>())
+  {
+    OpenDoors = Data->OpenDoorMask;
+  }
+  for (uint8 i = 0u; i < 8u; ++i)
+  {
+    if ((OpenDoors & (1u << i)) != 0u)
+    {
+      CarlaRecorderDoorVehicle DoorVehicle;
+      DoorVehicle.DatabaseId = CarlaActor.GetActorId();
+      DoorVehicle.Doors = static_cast<CarlaRecorderDoorVehicle::VehicleDoorType>(i);
+      DoorVehicle.bIsOpen = true;
+      AddDoorVehicle(DoorVehicle);
+    }
+  }
 }
 
 void ACarlaRecorder::AddExistingWeather(void)

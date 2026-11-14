@@ -126,5 +126,5 @@ Everything in `PythonAPI/util`, run from that directory:
 | `show_topology.py`, `show_junctions.py`, `show_crosswalks.py` | Draw the road graph, the junctions and the crosswalks over the map. |
 | `show_traffic_lights.py`, `manage_traffic_light.py` | Inspect and control traffic lights. |
 | `manage_environment_objects.py` | List and toggle the map's environment objects. |
-| `change_map_layer.py` | Load and unload the layers of a layered (`_Opt`) map. |
+| `change_map_layer.py` | Load and unload the layers of a layered map (Town01_Opt to Town07_Opt; Town10HD_Opt has no layers). |
 | `apply_texture.py` | Replaces the texture of an object in the map from an image file. |

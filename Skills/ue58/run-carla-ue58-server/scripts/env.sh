@@ -8,7 +8,10 @@
 #   cmake --build Build/<PRESET> --target <TARGET>
 #
 #   CARLA_UE58_ROOT             the carla checkout on branch ue58-dev
-#   CARLA_UNREAL_ENGINE_PATH    the CarlaUnreal/UnrealEngine fork, branch ue58-dev-carla
+#   CARLA_TARGET / CARLA_PACKAGE_ROOT
+#                               a standalone package (CarlaUnreal.sh, or
+#                               CarlaUnreal.exe on Windows); needs no checkout
+#   CARLA_UNREAL_ENGINE_PATH    the engine fork, branch ue58-dev-carla (default: the CMake cache's; a package needs none)
 #   CARLA_PRESET                CMake preset: Release (default) | Development | Debug
 #   CARLA_HOST / CARLA_PORT     where a running simulator listens (127.0.0.1:2000)
 #   PYTHON                      interpreter that imports carla   (default python3)
@@ -76,10 +79,30 @@ carla_ue58_flavor() {
   fi
 }
 
-# Newest packaged server launcher produced by the `package` target.
-carla_ue58_package_sh() {
-  ls -1dt "${CARLA_UE58_ROOT:-/nonexistent}"/Build/*/Package/Carla-*/CarlaUnreal.sh 2>/dev/null | head -1
+# Unreal's name for this platform's binaries directory, and its exe suffix.
+carla_ue58_platform() { if carla_is_windows; then echo Win64; else echo Linux; fi; }
+carla_ue58_exe() { if carla_is_windows; then echo .exe; fi; }
+
+# The packaged server's launcher: CarlaUnreal.exe on Windows, CarlaUnreal.sh
+# elsewhere. A standalone package the user named wins (CARLA_TARGET, then
+# CARLA_PACKAGE_ROOT), with the launcher at its top level or one directory down
+# (an archive extracted into a folder of its own, e.g. Carla-1.0-Win64-Shipping/).
+# Then the newest package the `package` target built in the checkout. Modelled
+# on ue4/run-carla-server's carla_detect_target.
+carla_ue58_package_launcher() {
+  local name="CarlaUnreal.sh" cand l
+  carla_is_windows && name="CarlaUnreal.exe"
+  for cand in "${CARLA_TARGET:-}" "${CARLA_PACKAGE_ROOT:-}"; do
+    [ -n "${cand}" ] && [ -d "${cand}" ] || continue
+    for l in "${cand}/${name}" "${cand}"/*/"${name}"; do
+      [ -f "${l}" ] && { printf '%s\n' "${l}"; return 0; }
+    done
+  done
+  ls -1dt "${CARLA_UE58_ROOT:-/nonexistent}"/Build/*/Package/Carla-*/"${name}" 2>/dev/null | head -1
 }
+
+# Kept for callers that predate the standalone-package lookup.
+carla_ue58_package_sh() { carla_ue58_package_launcher; }
 
 # --- resolution --------------------------------------------------------------
 
@@ -106,6 +129,9 @@ fi
 export CARLA_UNREAL_ENGINE_PATH="${CARLA_UNREAL_ENGINE_PATH:-}"
 
 echo "[env] CARLA_UE58_ROOT          = ${CARLA_UE58_ROOT:-<unset>}  (branch $(carla_ue58_branch), flavor $(carla_ue58_flavor))"
+_pkg="$(carla_ue58_package_launcher || true)"
+[ -n "${_pkg}" ] && echo "[env] package launcher         = ${_pkg}"
+unset _pkg
 echo "[env] CARLA_UNREAL_ENGINE_PATH = ${CARLA_UNREAL_ENGINE_PATH:-<unset>}  (engine $(carla_engine_version))"
 echo "[env] CARLA_PRESET             = ${CARLA_PRESET}  -> $(carla_ue58_build_dir)"
 echo "[env] CARLA_HOST:PORT          = ${CARLA_HOST}:${CARLA_PORT}"

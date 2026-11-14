@@ -18,10 +18,12 @@ carla.WorldSettings.deterministic_collisions makes it repeat exactly. It
 applies when a map loads, so this script applies it and then reloads the map
 keeping the settings (reset_settings=False).
 
-Run it with --no-deterministic to see the default behaviour.
+Run it with --no-deterministic to see the default behaviour. With
+deterministic collisions on, the script exits with 1 if the repetitions differ.
 """
 
 import argparse
+import sys
 
 import carla
 
@@ -35,6 +37,11 @@ def set_up_world(client, deterministic):
     settings = world.get_settings()
     settings.synchronous_mode = True
     settings.fixed_delta_seconds = 0.05
+    # Physics substepping set explicitly, not inherited from whatever the
+    # previous client left: it changes how the crash ends.
+    settings.substepping = True
+    settings.max_substep_delta_time = 0.01
+    settings.max_substeps = 10
     settings.deterministic_collisions = deterministic
     world.apply_settings(settings)
     # reset_settings=False keeps the settings just applied, and the reload
@@ -67,7 +74,12 @@ def run_crash(client):
     actors = [world.get_actor(actor_id) for actor_id in actor_ids]
     trajectory = []
     for _ in range(TICKS):
-        world.tick()
+        ticked = world.tick()
+        if world.get_snapshot().frame != ticked:
+            # Something else advanced the server: the samples no longer match
+            # this client's ticks, so the runs cannot be compared.
+            print(f'  warning: the server is at frame {world.get_snapshot().frame} '
+                  f'after this client ticked frame {ticked}')
         frame = []
         for actor in actors:
             location, velocity = actor.get_location(), actor.get_velocity()
@@ -123,8 +135,10 @@ def main():
         outcomes = len(set(tuple(trajectory) for trajectory in trajectories))
         if outcomes == 1:
             print(f'All {args.repetitions} repetitions ended the same.')
-        else:
-            print(f'{args.repetitions} repetitions gave {outcomes} different outcomes.')
+            return 0
+        print(f'{args.repetitions} repetitions gave {outcomes} different outcomes.')
+        # Only a failure when deterministic collisions were asked for.
+        return 1 if deterministic else 0
 
     finally:
         # Back to the original settings; the reload turns
@@ -136,6 +150,6 @@ def main():
 
 if __name__ == '__main__':
     try:
-        main()
+        sys.exit(main())
     except KeyboardInterrupt:
         pass

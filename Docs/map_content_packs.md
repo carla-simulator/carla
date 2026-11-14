@@ -4,7 +4,7 @@ The CARLA package ships Town10HD_Opt, Town12 and Town15. The towns below are not
 
 ## Installing AdditionalMaps
 
-Download a package and the `AdditionalMaps` tarball built with it: a release, or the weekly build of the development branch, made every Sunday. The weekly pair is under `https://downloads.carlasim.com/Linux/Dev/`: `CARLA_UE5_Weekly.tar.gz` (the package) and `CARLA_UE5_Weekly_AdditionalMaps.tar.gz` (the pack). For Windows it is under `https://downloads.carlasim.com/Windows/Dev/`: `CARLA_UE5_Weekly.zip` and `CARLA_UE5_Weekly_AdditionalMaps.tar.gz`. The nightly `CARLA_UE5_Latest` package is a different build and has no pack that installs into it. Install the pack with `carla-pack`. Installing only needs `Util/ContentPacks/carla_pack.py` from the CARLA repository (Python 3.8+, standard library only):
+Download a package and the `AdditionalMaps` tarball built with it: a release, or the weekly build of the development branch, made every Sunday. The weekly pair is under `https://downloads.carlasim.com/Linux/Dev/`: `CARLA_UE5_Weekly.tar.gz` (the package) and `CARLA_UE5_Weekly_AdditionalMaps.tar.gz` (the pack). For Windows it is under `https://downloads.carlasim.com/Windows/Dev/`: `CARLA_UE5_Weekly.zip` and `CARLA_UE5_Weekly_AdditionalMaps.tar.gz`. The nightly `CARLA_UE5_Latest` package is a different build and has no pack that installs into it. Install the pack with `carla-pack`. Installing only needs `carla_pack.py`, which packages ship in `Tools/` (or `Util/ContentPacks/carla_pack.py` in the CARLA repository; Python 3.8+, standard library only):
 
 ```sh
 python3 carla_pack.py install CARLA_UE5_Weekly_AdditionalMaps.tar.gz --server /opt/carla

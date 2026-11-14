@@ -16,6 +16,18 @@
 #include "carla/trafficmanager/TrafficManagerLocal.h"
 #include "carla/trafficmanager/TrafficManagerRemote.h"
 
+#include "carla/Logging.h"
+
+#include <condition_variable>
+#include <deque>
+#include <exception>
+#include <thread>
+#include <utility>
+
+#ifndef _WIN32
+#include <unistd.h>
+#endif
+
 #define DEBUG_PRINT_TM  0
 #define IP_DATA_BUFFER_SIZE     80
 
@@ -42,41 +54,145 @@ TrafficManager::TrafficManager(
   }
 }
 
+// Released vehicles and deleted TMs are dropped after unlocking _mutex: they may destroy a client.
+
+static void AppendReleased(std::vector<ActorPtr> &out, TrafficManagerBase &tm) {
+  auto released = tm.TakeReleasedActors();
+  out.insert(out.end(),
+             std::make_move_iterator(released.begin()),
+             std::make_move_iterator(released.end()));
+}
+
 void TrafficManager::Release() {
-  std::scoped_lock<std::mutex> lock(_mutex);
-  for(auto& tm : _tm_map) {
-    tm.second->Release();
-    TrafficManagerBase *base_ptr = tm.second;
-    delete base_ptr;
+  std::vector<ActorPtr> released;
+  std::vector<TrafficManagerBase *> to_delete;
+  {
+    std::scoped_lock<std::mutex> lock(_mutex);
+    for(auto& tm : _tm_map) {
+      tm.second->Release();
+      AppendReleased(released, *tm.second);
+      to_delete.push_back(tm.second);
+    }
+    _tm_map.clear();
   }
-  _tm_map.clear();
+  for (auto *tm_ptr : to_delete) {
+    delete tm_ptr;
+  }
 }
 
 void TrafficManager::Reset(uint64_t episode_id) {
-  std::scoped_lock<std::mutex> lock(_mutex);
-  for(auto& tm : _tm_map) {
-    tm.second->Reset(episode_id);
+  std::vector<ActorPtr> released;
+  {
+    std::scoped_lock<std::mutex> lock(_mutex);
+    for(auto& tm : _tm_map) {
+      tm.second->Reset(episode_id);
+      AppendReleased(released, *tm.second);
+    }
   }
 }
 
 void TrafficManager::Tick() {
-  std::scoped_lock<std::mutex> lock(_mutex);
-  for(auto& tm : _tm_map) {
-    tm.second->SynchronousTick();
+  std::vector<ActorPtr> released;
+  {
+    std::scoped_lock<std::mutex> lock(_mutex);
+    for(auto& tm : _tm_map) {
+      tm.second->SynchronousTick();
+      AppendReleased(released, *tm.second);
+    }
   }
 }
 
 void TrafficManager::ShutDown() {
-  TrafficManagerBase* tm_ptr = GetTM(_port);
-  std::scoped_lock<std::mutex> lock(_mutex);
-  auto it = _tm_map.find(_port);
-  if (it != _tm_map.end()) {
-    _tm_map.erase(it);
+  TrafficManagerBase* tm_ptr = nullptr;
+  std::vector<ActorPtr> released;
+  {
+    std::scoped_lock<std::mutex> lock(_mutex);
+    auto it = _tm_map.find(_port);
+    if (it != _tm_map.end()) {
+      tm_ptr = it->second;
+      _tm_map.erase(it);
+    }
+    if(tm_ptr != nullptr) {
+      tm_ptr->ShutDown();
+      AppendReleased(released, *tm_ptr);
+    }
   }
-  if(tm_ptr != nullptr) {
-    tm_ptr->ShutDown();
-    delete tm_ptr;
+  delete tm_ptr;
+}
+
+namespace {
+
+  /// Resets the TMs on an episode change; owned by no client, so it never joins itself.
+  class EpisodeResetThread {
+  public:
+
+    void Post(uint64_t episode_id, std::function<void()> on_done) {
+      std::unique_lock<std::mutex> lock(_mutex);
+      _queue.emplace_back(episode_id, std::move(on_done));
+      // A forked child inherits _running but not the thread.
+      if (!_running || _owner != CurrentProcess()) {
+        _running = true;
+        _owner = CurrentProcess();
+        std::thread(&EpisodeResetThread::Run, this).detach();
+      }
+      _cv.notify_all();
+    }
+
+  private:
+
+    static long CurrentProcess() {
+#ifdef _WIN32
+      return 0;
+#else
+      return static_cast<long>(::getpid());
+#endif
+    }
+
+    void Run() {
+      std::unique_lock<std::mutex> lock(_mutex);
+      while (true) {
+        _cv.wait(lock, [this]() { return !_queue.empty(); });
+        auto item = std::move(_queue.front());
+        _queue.pop_front();
+        const bool reset = !_has_last || item.first != _last_episode_id;
+        _last_episode_id = item.first;
+        _has_last = true;
+        lock.unlock();
+        if (reset) {
+          try {
+            TrafficManager::Reset(item.first);
+          } catch (const std::exception &e) {
+            log_error("failed to reset the Traffic Manager for the new episode:", e.what());
+          }
+        }
+        if (item.second) {
+          item.second();
+        }
+        // Drop the callback before re-locking.
+        item = {};
+        lock.lock();
+      }
+    }
+
+    std::mutex _mutex;
+    std::condition_variable _cv;
+    std::deque<std::pair<uint64_t, std::function<void()>>> _queue;
+    uint64_t _last_episode_id = 0u;
+    bool _has_last = false;
+    bool _running = false;
+    long _owner = 0;
+  };
+
+  EpisodeResetThread &GetEpisodeResetThread() {
+    // Never destroyed: the detached thread may outlive static destruction at exit.
+    static EpisodeResetThread *instance = new EpisodeResetThread();
+    return *instance;
   }
+
+} // namespace
+
+void TrafficManager::RequestReset(uint64_t episode_id, std::function<void()> on_done) {
+  GetEpisodeResetThread().Post(episode_id, std::move(on_done));
 }
 
 void TrafficManager::CreateTrafficManagerServer(

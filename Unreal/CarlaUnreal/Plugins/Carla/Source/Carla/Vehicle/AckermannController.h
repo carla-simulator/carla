@@ -144,6 +144,12 @@ private:
   // Simulation state
   float DeltaTime = 0.0f;                // [s]
 
+  // The loop is tuned for steps of 10 ms or more; shorter frames are accumulated (#10291).
+  static constexpr float MinControlPeriod = 0.01f;  // [s]
+  float AccumulatedTime = 0.0f;          // [s]
+  float AccumulatedDistance = 0.0f;      // [m], forward speed integrated over AccumulatedTime
+  bool bControlUpdateDue = false;
+
   // Vehicle state
   float VehicleMaxSteering = 0.0f;       // [rad]
 

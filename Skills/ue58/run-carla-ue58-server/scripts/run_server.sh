@@ -118,7 +118,13 @@ launch() {
     # and when that goes away it dies with 'close: Bad file descriptor' followed
     # by Signal 11. setsid + nohup + </dev/null detaches it properly.
     local log="${TMPDIR:-/tmp}/carla-ue58-${PORT}.log"
-    setsid nohup "$@" >"${log}" 2>&1 </dev/null &
+    if command -v setsid >/dev/null 2>&1; then
+      setsid nohup "$@" >"${log}" 2>&1 </dev/null &
+    else
+      # Git Bash has no setsid; nohup plus disown is the closest it gets.
+      nohup "$@" >"${log}" 2>&1 </dev/null &
+      disown
+    fi
     echo "[run] detached, pid $!, log ${log}"
     wait_ready
   else
@@ -145,9 +151,9 @@ case "${MODE}" in
 
 detect)
   echo "== What can run here =="
-  P="$(carla_ue58_package_sh)"
-  [ -n "${P}" ] && echo "  package : ${P}" || echo "  package : none built (package-carla-ue58)"
-  EB="${CARLA_UNREAL_ENGINE_PATH}/Engine/Binaries/Linux/UnrealEditor"
+  P="$(carla_ue58_package_launcher)"
+  [ -n "${P}" ] && echo "  package : ${P}" || echo "  package : none built (package-carla-ue58), none named by CARLA_TARGET/CARLA_PACKAGE_ROOT"
+  EB="${CARLA_UNREAL_ENGINE_PATH}/Engine/Binaries/$(carla_ue58_platform)/UnrealEditor$(carla_ue58_exe)"
   UPROJ="${CARLA_UE58_ROOT}/Unreal/CarlaUnreal/CarlaUnreal.uproject"
   if [ -x "${EB}" ] && [ -f "${UPROJ}" ]; then
     echo "  editor  : ${EB}"
@@ -157,7 +163,7 @@ detect)
   fi
   # The uncooked Development game target cannot start: it is built to load COOKED
   # content and the tree has none, so it dies on the missing global shader cache.
-  SGB="${CARLA_UE58_ROOT}/Unreal/CarlaUnreal/Binaries/Linux/CarlaUnreal"
+  SGB="${CARLA_UE58_ROOT}/Unreal/CarlaUnreal/Binaries/$(carla_ue58_platform)/CarlaUnreal$(carla_ue58_exe)"
   [ -x "${SGB}" ] && echo "  NOTE    : ${SGB} exists but CANNOT start ('built to load COOKED content')"
   echo
   echo "== Ports =="
@@ -179,7 +185,7 @@ game)
   # binary with -game. nurec/README.md recommends the standalone game binary,
   # which cannot start (see detect).
   preflight_ports
-  EB="${CARLA_UNREAL_ENGINE_PATH}/Engine/Binaries/Linux/UnrealEditor"
+  EB="${CARLA_UNREAL_ENGINE_PATH}/Engine/Binaries/$(carla_ue58_platform)/UnrealEditor$(carla_ue58_exe)"
   UPROJ="${CARLA_UE58_ROOT}/Unreal/CarlaUnreal/CarlaUnreal.uproject"
   [ -x "${EB}" ] || { echo "ERROR ${EB} missing — build the engine" >&2; exit 3; }
   [ -f "${UPROJ}" ] || { echo "ERROR ${UPROJ} missing" >&2; exit 3; }
@@ -192,8 +198,8 @@ game)
 
 package)
   preflight_ports
-  P="$(carla_ue58_package_sh)"
-  [ -n "${P}" ] || { echo "ERROR no package built — see package-carla-ue58" >&2; exit 3; }
+  P="$(carla_ue58_package_launcher)"
+  [ -n "${P}" ] || { echo "ERROR no package built — see package-carla-ue58, or point CARLA_PACKAGE_ROOT at an extracted one" >&2; exit 3; }
   common_args
   CMD=("${P}")
   [ -n "${MAP}" ] && CMD+=("${MAP}")
@@ -230,7 +236,9 @@ try:
     sv, cv = c.get_server_version(), c.get_client_version()
 except Exception as e:
     sys.exit(f"FAIL no server at {host}:{port} ({e})")
-print(f"PASS server {sv} / client {cv}" + ("" if sv == cv else "   <-- MISMATCH"))
+# A source-built server appends its commit (1.0-fe0178f89) to the release the
+# wheel reports (1.0); only the release part has to agree.
+print(f"PASS server {sv} / client {cv}" + ("" if sv.split('-')[0] == cv.split('-')[0] else "   <-- MISMATCH"))
 t0 = time.time()
 try:
     w = c.get_world()
@@ -256,10 +264,16 @@ PY
 
 stop)
   STOPPED=0
-  for comm in "${COMM_PKG}" "${COMM_EDITOR}"; do
-    if pgrep -x "${comm}" >/dev/null 2>&1; then
-      echo "[run] stopping ${comm} ($(pgrep -x "${comm}" | tr '\n' ' '))"
-      pkill -x "${comm}"
+  if carla_is_windows; then
+    # The packaged CarlaUnreal.exe is a launcher; the server is its child.
+    NAMES=(CarlaUnreal-Win64-Shipping.exe CarlaUnreal.exe UnrealEditor.exe)
+  else
+    NAMES=("${COMM_PKG}" "${COMM_EDITOR}")
+  fi
+  for comm in "${NAMES[@]}"; do
+    if PIDS="$(carla_proc_find "${comm}")"; then
+      echo "[run] stopping ${comm} (${PIDS})"
+      carla_proc_kill "${comm}"
       STOPPED=1
     fi
   done

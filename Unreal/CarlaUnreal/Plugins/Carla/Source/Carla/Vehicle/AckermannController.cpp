@@ -75,21 +75,28 @@ void FAckermannController::Reset() {
 
   LastVehicleSpeed = 0.0f;
   LastVehicleAcceleration = 0.0f;
+
+  AccumulatedTime = 0.0f;
+  AccumulatedDistance = 0.0f;
+  bControlUpdateDue = false;
 }
 
 void FAckermannController::RunLoop(FVehicleControl& Control) {
   TRACE_CPUPROFILER_EVENT_SCOPE_STR(__FUNCTION__);
 
-  // Lateral Control
-  RunControlSteering();
+  // Between control periods the last command is held (see MinControlPeriod).
+  if (bControlUpdateDue) {
+    // Lateral Control
+    RunControlSteering();
 
-  // Longitudinal Control
-  bool bStopped = RunControlFullStop();
-  if (!bStopped) {
-    RunControlReverse();
-    RunControlSpeed();
-    RunControlAcceleration();
-    UpdateVehicleControlCommand();
+    // Longitudinal Control
+    bool bStopped = RunControlFullStop();
+    if (!bStopped) {
+      RunControlReverse();
+      RunControlSpeed();
+      RunControlAcceleration();
+      UpdateVehicleControlCommand();
+    }
   }
 
   // Update control command
@@ -200,15 +207,26 @@ void FAckermannController::UpdateVehicleControlCommand() {
 void FAckermannController::UpdateVehicleState(const ACarlaWheeledVehicle* Vehicle) {
   TRACE_CPUPROFILER_EVENT_SCOPE_STR(__FUNCTION__);
 
+  // Run at most once per MinControlPeriod; the tolerance absorbs float rounding of a 10 ms step.
+  const float FrameDeltaTime = Vehicle->GetWorld()->GetDeltaSeconds();
+  AccumulatedTime += FrameDeltaTime;
+  AccumulatedDistance += FrameDeltaTime * Vehicle->GetVehicleForwardSpeed() / 100.0f;  // From cm/s to m/s
+  bControlUpdateDue = AccumulatedTime >= MinControlPeriod - 1e-5f;
+  if (!bControlUpdateDue) {
+    return;
+  }
+
   LastVehicleSpeed = VehicleSpeed;
   LastVehicleAcceleration = VehicleAcceleration;
 
   // Update simulation state
-  DeltaTime = Vehicle->GetWorld()->GetDeltaSeconds();
+  DeltaTime = AccumulatedTime;
 
   // Update Vehicle state
   VehicleSteer = Vehicle->GetVehicleControl().Steer * VehicleMaxSteering;
-  VehicleSpeed = Vehicle->GetVehicleForwardSpeed() / 100.0f;  // From cm/s to m/s
+  VehicleSpeed = AccumulatedDistance / AccumulatedTime;  // Mean over the period
+  AccumulatedTime = 0.0f;
+  AccumulatedDistance = 0.0f;
   float CurrentAcceleration = (VehicleSpeed - LastVehicleSpeed) / DeltaTime;
   // Apply an average filter for the acceleration.
   VehicleAcceleration = (4.0f*LastVehicleAcceleration + CurrentAcceleration) / 5.0f;

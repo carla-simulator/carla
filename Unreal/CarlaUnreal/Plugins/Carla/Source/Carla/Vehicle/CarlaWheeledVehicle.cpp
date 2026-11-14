@@ -906,9 +906,14 @@ FVehiclePhysicsControl ACarlaWheeledVehicle::GetVehiclePhysicsControl() const
     Out.MaxBrakeTorque = In.MaxBrakeTorque;
     Out.MaxHandBrakeTorque = In.MaxHandBrakeTorque;
     Out.WheelIndex = In.WheelIndex;
-    Out.Location = In.Location;
-    Out.OldLocation = In.OldLocation;
-    Out.Velocity = In.Velocity;
+    // UChaosVehicleWheel's Location, OldLocation and Velocity are PhysX
+    // leftovers that Chaos never updates, so they are always zero.
+    // The wheel centre moves with the vehicle body: its velocity is the body's at that point (vehicles do not tick, so nothing is cached).
+    Out.Location = GetWheelWorldLocation(i);
+    const FBodyInstance *RootBody = GetMesh()->GetBodyInstance();
+    Out.Velocity = RootBody != nullptr && RootBody->IsValidBodyInstance() ?
+        RootBody->GetUnrealWorldVelocityAtPoint(Out.Location) : FVector::ZeroVector;
+    Out.OldLocation = Out.Location - Out.Velocity * GetWorld()->GetDeltaSeconds();
     // If some of the wheels use Spherecast, it will be used for everyone
     // if we call ApplyPhisicsControl() as it has no sense to have it only for one.
     if (In.SweepShape == ESweepShape::Spherecast)
@@ -1392,6 +1397,26 @@ FWheelAnimationData ACarlaWheeledVehicle::GetDrawnWheelPose(int32 WheelIndex) co
   return GetWheelPose(WheelIndex);
 }
 
+FVector ACarlaWheeledVehicle::GetWheelWorldLocation(int32 WheelIndex) const
+{
+  const UChaosWheeledVehicleMovementComponent *Movement = GetChaosWheeledVehicleMovementComponent();
+  const UChaosVehicleWheel *Wheel = GetWheelDefaults(WheelIndex);
+  if (Movement == nullptr || Wheel == nullptr)
+  {
+    return GetActorLocation();
+  }
+  // The resting position Chaos gives the wheel (GetWheelRestingPosition, which
+  // is protected), relative to the root body, plus the drawn suspension travel.
+  const FChaosWheelSetup &WheelSetup = Movement->WheelSetups[WheelIndex];
+  const FVector Local =
+      Movement->LocateBoneOffset(WheelSetup.BoneName, Wheel->Offset + WheelSetup.AdditionalOffset) +
+      GetWheelPose(WheelIndex).LocOffset;
+  const FBodyInstance *RootBody = GetMesh()->GetBodyInstance();
+  const FTransform RootBodyTransform = RootBody != nullptr && RootBody->IsValidBodyInstance() ?
+      RootBody->GetUnrealWorldTransform() : GetMesh()->GetComponentTransform();
+  return RootBodyTransform.TransformPosition(Local);
+}
+
 TArray<FWheelAnimationData> ACarlaWheeledVehicle::GetWheelPoses() const
 {
   TArray<FWheelAnimationData> Poses;
@@ -1621,6 +1646,13 @@ void ACarlaWheeledVehicle::SetSimulatePhysics(bool enabled) {
 
 void ACarlaWheeledVehicle::ResetConstraints()
 {
+  // Rebuilding the constraints must not change which doors are open: physics
+  // control and physics toggles (the replayer's among them) call this. A
+  // Multi-GPU mirror's doors are posed from the primary instead, next frame.
+  const uint8 OpenDoors = OpenDoorMask;
+  const UCarlaEpisode *Episode = UCarlaStatics::GetCurrentEpisode(GetWorld());
+  const bool bReopen = (Episode == nullptr) || Episode->bIsPrimaryServer;
+  TGuardValue<bool> NoRecording(bResettingDoorConstraints, true);
   for (int i = 0; i < ConstraintsComponents.Num(); i++)
   {
     OpenDoorPhys(EVehicleDoor(i));
@@ -1628,6 +1660,13 @@ void ACarlaWheeledVehicle::ResetConstraints()
   for (int i = 0; i < ConstraintsComponents.Num(); i++)
   {
     CloseDoorPhys(EVehicleDoor(i));
+  }
+  for (int i = 0; bReopen && (i < ConstraintsComponents.Num()); i++)
+  {
+    if ((OpenDoors & (1u << i)) != 0u)
+    {
+      OpenDoorPhys(EVehicleDoor(i));
+    }
   }
 }
 
@@ -1656,7 +1695,7 @@ void ACarlaWheeledVehicle::ClearMirroredMotion()
 
 void ACarlaWheeledVehicle::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
-  //ShowDebugTelemetry(false);
+  ShowDebugTelemetry(false);
   DisarmSeedRewrite();
   Super::EndPlay(EndPlayReason);
   RemoveReferenceToManager();
@@ -1726,6 +1765,7 @@ void ACarlaWheeledVehicle::OpenDoorPhys(const EVehicleDoor DoorIdx)
     (*CollisionDisable)->InitComponentConstraint();
   }
 
+  OpenDoorMask |= static_cast<uint8>(1u << static_cast<int>(DoorIdx));
   RecordDoorChange(DoorIdx, true);
 }
 
@@ -1747,6 +1787,7 @@ void ACarlaWheeledVehicle::CloseDoorPhys(const EVehicleDoor DoorIdx)
   DoorComponent->SetWorldTransform(DoorInitialTransform);
   DoorComponent->AttachToComponent(
     GetMesh(), FAttachmentTransformRules(EAttachmentRule::KeepWorld, true));
+  OpenDoorMask &= static_cast<uint8>(~(1u << static_cast<int>(DoorIdx)));
   RecordDoorChange(DoorIdx, false);
 }
 
@@ -1768,6 +1809,14 @@ TArray<TPair<int32, FTransform>> ACarlaWheeledVehicle::GetOpenDoorPoses() const
 
 void ACarlaWheeledVehicle::SetMirroredDoorPoses(const TArray<TPair<int32, FTransform>> &OpenDoors)
 {
+  OpenDoorMask = 0u;
+  for (const TPair<int32, FTransform> &Open : OpenDoors)
+  {
+    if ((Open.Key >= 0) && (Open.Key < 8))
+    {
+      OpenDoorMask |= static_cast<uint8>(1u << Open.Key);
+    }
+  }
   const FTransform ActorTransform = GetActorTransform();
   for (int32 i = 0; i < ConstraintsComponents.Num(); ++i)
   {
@@ -1802,6 +1851,10 @@ void ACarlaWheeledVehicle::SetMirroredDoorPoses(const TArray<TPair<int32, FTrans
 
 void ACarlaWheeledVehicle::RecordDoorChange(const EVehicleDoor DoorIdx, bool bIsOpen)
 {
+  if (bResettingDoorConstraints)
+  {
+    return;
+  }
   auto* Recorder = UCarlaStatics::GetRecorder(GetWorld());
   if (Recorder && Recorder->IsEnabled())
   {

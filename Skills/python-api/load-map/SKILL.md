@@ -62,14 +62,17 @@ Names are returned stripped of the `/Game/Carla/Maps/` prefix, so `Town03`,
 **Friendly names resolve, but not uniformly** — `load` maps a bare town name to
 the map actually used: `Town2` → `Town02` (non-opt, like every numbered town
 except one), but **`Town10` → `Town10HD_Opt`** (Town10's canonical map is the
-layered HD one; plain `Town10HD` exists but is effectively unused). An explicit
-exact name (`Town02_Opt`, `Town10HD`) is always honoured as typed; `load` prints
-what it resolved to.
+layered HD one; plain `Town10HD` exists but is effectively unused). When the
+non-opt map is not hosted, the `_Opt` one is used instead: the UE5 line ships
+only those, so `Town03` loads `Town03_Opt` there. An explicit exact name
+(`Town02_Opt`, `Town10HD`) is always honoured as typed; `load` prints what it
+resolved to.
 
 ### Step 3: Do the operation
 
 ```bash
-# load a map, resetting settings to default (the plain case)
+# load a map, resetting settings to default (the plain case);
+# on the UE5 line this resolves to Town03_Opt
 python3 scripts/load_map.py load --map Town03
 
 # load a map but KEEP current settings — use inside a sync-mode pipeline
@@ -131,25 +134,26 @@ above.
 
 ## On CARLA 0.10.0 (the UE5 line: 5.5 and 5.8)
 
-**Map layers are a silent no-op on 0.10.0.** The calls succeed, return without
-error, and change nothing. Measured on Town10HD_Opt with a 40-ray sweep at 3 m
-height: `Buildings` geometry was hit 9 times before `unload_map_layer(
-MapLayer.Buildings)`, 9 times after, and 9 times again after reloading — and the
-server log records no streaming activity at all.
+**Map layers work on Town01_Opt to Town07_Opt only.** Measured on the 1.0 weekly
+(`6c726a4a3`, AdditionalMaps pack): unloading a layer removes it from the camera
+image and from `get_environment_objects()` (Town03_Opt `Buildings`: 9254 -> 8513
+objects) and loading it brings it back, on all seven towns.
 
-The cause is content, not the API. `ACarlaGameModeBase::UnLoadMapLayer` still
-streams sublevels, and `ConvertMapLayerMaskToMapNames` matches layer names
-against `World->GetStreamingLevels()` — but the UE5 conversion **flattened the
-layers into the persistent level**. `Town10HD_Opt.umap` is 32.9 MB with **zero**
-`LevelStreaming` references on 0.10.0, against 158 KB with two on 0.9.x, where it
-streamed `T10HD_Buildings`, `T10HD_Props`, `T10HD_Foliage` and friends. The
-sublevel `.umap` files still sit in `Content/Carla/Maps/Sublevels/Town10HD_Opt/`
-as orphans, so nothing matches and nothing happens.
+**Town10HD_Opt has no map layers.** Its sublevels were merged into the persistent
+level on purpose (Content `68520135b61`, 2024-07-02), because sublevels are being
+phased out on UE 5. `ACarlaGameModeBase::UnLoadMapLayer` streams the sublevels whose
+name contains the layer name (`ConvertMapLayerMaskToMapNames` against
+`World->GetStreamingLevels()`); `Town10HD_Opt.umap` has none, so every call returns
+success and changes nothing (60433 environment objects before and after, for every
+layer). The `T10HD_*` files under `Content/Carla/Maps/Sublevels/Town10HD_Opt/` are
+leftovers. A grouping that does not use sublevels is planned to replace map layers
+(issue #10228); the classic towns keep theirs until then.
 
-To hide geometry on 0.10.0 use `enable_environment_objects` instead
-([[toggle-env-objects]]). `load_world`, `reload_world`,
-`get_available_maps`, `generate_opendrive_world` and the settings-preservation
-behaviour are all unchanged.
+To hide geometry on Town10HD_Opt use `enable_environment_objects` instead
+([[toggle-env-objects]]): hiding its 49651 `Buildings` objects removes the
+buildings from the image. `load_world`, `reload_world`, `get_available_maps`,
+`generate_opendrive_world` and the settings-preservation behaviour are all
+unchanged.
 
 `get_ego_spawn_points()` is new, and **UE 5.8 only** — spawn points the map author
 marked for the hero vehicle, a subset of `get_spawn_points()`. On 5.5 it raises

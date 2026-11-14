@@ -263,18 +263,6 @@ void TrafficManagerRemote::UpdateImportedRoute(const ActorId &actor_id, const Ro
   client.UpdateImportedRoute(actor_id, route);
 }
 
-void TrafficManagerRemote::SetRespawnDormantVehicles(const bool mode_switch) {
-  client.SetRespawnDormantVehicles(mode_switch);
-}
-
-void TrafficManagerRemote::SetBoundariesRespawnDormantVehicles(const float lower_bound, const float upper_bound) {
-  client.SetBoundariesRespawnDormantVehicles(lower_bound, upper_bound);
-}
-
-void TrafficManagerRemote::SetMaxBoundaries(const float lower, const float upper) {
-  client.SetMaxBoundaries(lower, upper);
-}
-
 void TrafficManagerRemote::ShutDown() {
   client.ShutDown();
 }

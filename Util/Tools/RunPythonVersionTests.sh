@@ -138,7 +138,7 @@ EXAMPLES=(
   "automatic_control.py|--port ${PORT} --sync --res 640x360 -l"
   "manual_control.py|--port ${PORT} --autopilot --res 640x360"
   "no_rendering_mode.py|--port ${PORT} --res 800x600"
-  "sensor_synchronization.py|"
+  "sensor_synchronization.py|--port ${PORT}"
   "visualize_multiple_sensors.py|--port ${PORT} --res 1280x720"
   "dynamic_day_night_weather_cycle.py|--port ${PORT} --speed 50"
   "lane_explorer.py|--port ${PORT} -t 0.05"

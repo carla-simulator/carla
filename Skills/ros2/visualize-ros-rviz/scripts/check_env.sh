@@ -19,16 +19,24 @@ warn(){ echo "  WARN $*"; }
 bad(){  echo "  FAIL $*"; rc=1; }
 
 echo "== CARLA checkout / demo files =="
-if [ -z "${CARLA_UE4_ROOT}" ]; then
-  bad "CARLA_UE4_ROOT is unset — export it, or run from inside a carla checkout"
+if [ -z "${CARLA_ROS2_ROOT}" ]; then
+  bad "no CARLA package or checkout with PythonAPI/examples/ros2 found — export CARLA_ROS2_ROOT"
 elif [ -d "${CARLA_ROS2_EXAMPLES}" ]; then
   ok "demo dir: ${CARLA_ROS2_EXAMPLES}"
-  for f in run_rviz.sh run_map_and_lidar_demo.sh rviz/ros2_native.rviz stack.json; do
+  for f in run_rviz.sh rviz/ros2_native.rviz stack.json; do
     [ -e "${CARLA_ROS2_EXAMPLES}/${f}" ] && ok "  ${f}" \
-      || bad "  ${f} missing — this checkout predates the native ROS 2 demo"
+      || bad "  ${f} missing — this tree predates the native ROS 2 demo"
   done
+  # UE4 line: run_map_and_lidar_demo.sh (dockerised); UE5 line: ros2_native.py.
+  if [ -e "${CARLA_ROS2_EXAMPLES}/run_map_and_lidar_demo.sh" ]; then
+    ok "  run_map_and_lidar_demo.sh (demo)"
+  elif [ -e "${CARLA_ROS2_EXAMPLES}/ros2_native.py" ]; then
+    ok "  ros2_native.py (demo; runs with the local python's carla module)"
+  else
+    bad "  no demo script (run_map_and_lidar_demo.sh or ros2_native.py)"
+  fi
 else
-  bad "no PythonAPI/examples/ros2 under ${CARLA_UE4_ROOT} — checkout too old, or CARLA_UE4_ROOT is wrong"
+  bad "no PythonAPI/examples/ros2 under ${CARLA_ROS2_ROOT} — export CARLA_ROS2_ROOT"
 fi
 
 echo "== Docker =="
@@ -62,13 +70,20 @@ esac
 if docker image inspect "${CARLA_DEMO_IMAGE}" >/dev/null 2>&1; then
   ok "demo image already built — the wheel is baked in"
 elif [ -n "${CARLA_WHEEL_TAG}" ] && \
-     compgen -G "${CARLA_UE4_ROOT}/PythonAPI/carla/dist/carla-*-${CARLA_WHEEL_TAG}-*.whl" >/dev/null; then
-  ok "wheel found: $(basename "$(ls -1 "${CARLA_UE4_ROOT}"/PythonAPI/carla/dist/carla-*-"${CARLA_WHEEL_TAG}"-*.whl | head -1)")"
+     compgen -G "${CARLA_ROS2_ROOT}/PythonAPI/carla/dist/carla-*-${CARLA_WHEEL_TAG}-*.whl" >/dev/null; then
+  ok "wheel found: $(basename "$(ls -1 "${CARLA_ROS2_ROOT}"/PythonAPI/carla/dist/carla-*-"${CARLA_WHEEL_TAG}"-*.whl | head -1)")"
 else
   warn "no ${CARLA_WHEEL_TAG:-?} wheel in PythonAPI/carla/dist — needed only to BUILD the demo image (make PythonAPI, or pass --wheel)"
 fi
 
 echo "== Middleware =="
+# The shipped profiles ask for 16 MB socket buffers; the kernel caps them at rmem_max.
+RMEM_MAX="$(cat /proc/sys/net/core/rmem_max 2>/dev/null || echo 0)"
+if [ "${RMEM_MAX}" -ge 16777216 ]; then
+  ok "net.core.rmem_max=${RMEM_MAX} (camera/lidar topics arrive at the sensor rate)"
+else
+  warn "net.core.rmem_max=${RMEM_MAX}: large camera/lidar samples are dropped over UDP (hz far below sensor_tick) — sudo sysctl -w net.core.rmem_max=16777216"
+fi
 case "${RMW}" in
   fastdds|cyclonedds|zenoh) ok "RMW=${RMW} -> ${RMW_IMPLEMENTATION}";;
   *) bad "RMW='${RMW}' unsupported (fastdds | cyclonedds | zenoh)";;

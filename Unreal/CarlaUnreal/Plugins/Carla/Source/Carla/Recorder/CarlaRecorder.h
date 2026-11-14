@@ -250,6 +250,7 @@ private:
 
   void AddExistingActors(void);
   void AddExistingWeather(void);
+  void AddExistingDoors(const FCarlaActor &CarlaActor);
   void AddActorPosition(FCarlaActor *CarlaActor);
   void AddWalkerAnimation(FCarlaActor *CarlaActor);
   void AddBikerAnimation(FCarlaActor *CarlaActor);

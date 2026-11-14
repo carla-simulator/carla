@@ -65,7 +65,15 @@ void UVehicleVelocityControl::TickComponent(float DeltaTime, enum ELevelTick Tic
     return;
   }
   PrimitiveComponent->WakeRigidBody(NAME_None);
-  FTransform Transf = OwnerVehicle->GetActorTransform();
-  const FVector LocVel = Transf.TransformVector(TargetVelocity);
-  PrimitiveComponent->SetPhysicsLinearVelocity(LocVel, false, "None");
+  const FTransform Transf = OwnerVehicle->GetActorTransform();
+  // Force only the component along TargetVelocity; physics keeps the perpendicular
+  // part so the tyres can corner and the vehicle follows the ground. Zero stops it.
+  FVector Local = FVector::ZeroVector;
+  const FVector Dir = TargetVelocity.GetSafeNormal();
+  if (!Dir.IsZero())
+  {
+    const FVector Current = Transf.InverseTransformVectorNoScale(PrimitiveComponent->GetPhysicsLinearVelocity());
+    Local = Current - FVector::DotProduct(Current, Dir) * Dir + TargetVelocity;
+  }
+  PrimitiveComponent->SetPhysicsLinearVelocity(Transf.TransformVectorNoScale(Local), false, "None");
 }

@@ -88,7 +88,6 @@ void export_actor() {
   enum_<cr::ActorState>("ActorState")
     .value("Invalid", cr::ActorState::Invalid)
     .value("Active", cr::ActorState::Active)
-    .value("Dormant", cr::ActorState::Dormant)
   ;
 
   class_<std::vector<int>>("VectorOfInts")
@@ -104,7 +103,6 @@ void export_actor() {
       .add_property("semantic_tags", &GetSemanticTags)
       .add_property("actor_state", CALL_WITHOUT_GIL(cc::Actor, GetActorState))
       .add_property("is_alive", CALL_WITHOUT_GIL(cc::Actor, IsAlive))
-      .add_property("is_dormant", CALL_WITHOUT_GIL(cc::Actor, IsDormant))
       .add_property("is_active", CALL_WITHOUT_GIL(cc::Actor, IsActive))
       .add_property("attributes", +[] (const cc::Actor &self) {
         boost::python::dict attribute_dict;
@@ -183,6 +181,8 @@ void export_actor() {
     .value("FR", cr::VehicleDoor::FR)
     .value("RL", cr::VehicleDoor::RL)
     .value("RR", cr::VehicleDoor::RR)
+    .value("Hood", cr::VehicleDoor::Hood)
+    .value("Trunk", cr::VehicleDoor::Trunk)
     .value("All", cr::VehicleDoor::All)
   ;
 
@@ -201,6 +201,7 @@ void export_actor() {
       .def("set_light_state", &cc::Vehicle::SetLightState, (arg("light_state")))
       .def("open_door", &cc::Vehicle::OpenDoor, (arg("door_idx")))
       .def("close_door", &cc::Vehicle::CloseDoor, (arg("door_idx")))
+      .def("is_door_open", &cc::Vehicle::IsDoorOpen, (arg("door_idx")))
       .def("set_wheel_steer_direction", &cc::Vehicle::SetWheelSteerDirection, (arg("wheel_location")), (arg("angle_in_deg")))
       .def("get_wheel_steer_angle", &cc::Vehicle::GetWheelSteerAngle, (arg("wheel_location")))
       .def("set_wheel_pitch_angle", &cc::Vehicle::SetWheelPitchAngle, (arg("wheel_location")), (arg("angle_in_deg")))
@@ -269,20 +270,20 @@ void export_actor() {
       "TrafficLight",
       no_init)
       .add_property("state", &cc::TrafficLight::GetState)
-      .def("set_state", &cc::TrafficLight::SetState, (arg("state")))
+      .def("set_state", CALL_WITHOUT_GIL_1(cc::TrafficLight, SetState, cr::TrafficLightState), (arg("state")))
       .def("get_state", &cc::TrafficLight::GetState)
-      .def("set_green_time", &cc::TrafficLight::SetGreenTime, (arg("green_time")))
+      .def("set_green_time", CALL_WITHOUT_GIL_1(cc::TrafficLight, SetGreenTime, float), (arg("green_time")))
       .def("get_green_time", &cc::TrafficLight::GetGreenTime)
-      .def("set_yellow_time", &cc::TrafficLight::SetYellowTime, (arg("yellow_time")))
+      .def("set_yellow_time", CALL_WITHOUT_GIL_1(cc::TrafficLight, SetYellowTime, float), (arg("yellow_time")))
       .def("get_yellow_time", &cc::TrafficLight::GetYellowTime)
-      .def("set_red_time", &cc::TrafficLight::SetRedTime, (arg("red_time")))
+      .def("set_red_time", CALL_WITHOUT_GIL_1(cc::TrafficLight, SetRedTime, float), (arg("red_time")))
       .def("get_red_time", &cc::TrafficLight::GetRedTime)
       .def("get_elapsed_time", &cc::TrafficLight::GetElapsedTime)
-      .def("freeze", &cc::TrafficLight::Freeze, (arg("freeze")))
+      .def("freeze", CALL_WITHOUT_GIL_1(cc::TrafficLight, Freeze, bool), (arg("freeze")))
       .def("is_frozen", &cc::TrafficLight::IsFrozen)
       .def("get_pole_index", &cc::TrafficLight::GetPoleIndex)
       .def("get_group_traffic_lights", &GetGroupTrafficLights)
-      .def("reset_group", &cc::TrafficLight::ResetGroup)
+      .def("reset_group", CALL_WITHOUT_GIL(cc::TrafficLight, ResetGroup))
       .def("get_light_boxes", &GetLightBoxes)
       .def(self_ns::str(self_ns::self))
   ;

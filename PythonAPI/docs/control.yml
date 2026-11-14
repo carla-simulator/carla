@@ -667,9 +667,9 @@
     # --------------------------------------
     - var_name: velocity
       type: carla.Vector3D
-      var_units: cm/s
+      var_units: m/s
       doc: >
-        Velocity of the wheel, relative to the vehicle.
+        World velocity of the wheel's centre: the vehicle body's velocity at that point. Read-only: carla.Vehicle.apply_physics_control ignores it.
     # --------------------------------------
     - var_name: sweep_type
       type: int
@@ -683,15 +683,15 @@
     # --------------------------------------
     - var_name: old_location
       type: carla.Location
-      var_units: centimeters
+      var_units: meters
       doc: >
-        Position the wheel had on the previous simulation step, relative to the vehicle.
+        Where the wheel's centre was one simulation step earlier, estimated from its velocity. Read-only: carla.Vehicle.apply_physics_control ignores it.
     # --------------------------------------
     - var_name: location
       type: carla.Location
-      var_units: centimeters
+      var_units: meters
       doc: >
-        Position of the wheel, relative to the vehicle.
+        World location of the wheel's centre, suspension travel included, in the same frame and units as carla.Actor.get_location. Read-only: carla.Vehicle.apply_physics_control ignores it.
     # --------------------------------------
     - var_name: lateral_slip_graph
       type: list(carla.Vector2D)

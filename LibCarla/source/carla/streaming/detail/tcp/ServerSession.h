@@ -109,7 +109,8 @@ namespace tcp {
 
     callback_function_type _on_closed;
 
-    bool _is_writing = false;
+    /// Set by the sending thread, cleared by the write handler on the strand.
+    std::atomic_bool _is_writing{false};
     std::atomic_bool _is_closed{false};
   };
 

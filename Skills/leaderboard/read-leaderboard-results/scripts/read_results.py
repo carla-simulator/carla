@@ -268,7 +268,7 @@ def cmd_merge(args) -> None:
             added += 1
     base["_checkpoint"]["records"].sort(key=lambda r: r.get("index", 0))
     out = Path(args.out) if args.out else Path(args.results[0]).with_name("merged_results.json")
-    out.write_text(json.dumps(base, indent=4))
+    out.write_text(json.dumps(base, indent=4), encoding="utf-8")
     print(f"merged {added} route(s) into {out} ({len(seen)} total)")
     print("NOTE the global_record is NOT recomputed here — use the leaderboard's own")
     print("     scripts/merge_statistics.py if you need an official global score.")

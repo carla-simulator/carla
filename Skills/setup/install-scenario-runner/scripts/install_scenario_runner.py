@@ -53,6 +53,16 @@ def sh(cmd: list[str], cwd: str | None = None, check: bool = True) -> str:
     return (p.stdout or "").strip()
 
 
+def pythonpath_export(*parts: str) -> str:
+    """An `export PYTHONPATH=...` line this interpreter can read.
+
+    Joined with os.pathsep, not a hard-coded ':': a native Windows Python (run
+    from Git Bash) splits on ';', and the whole value stays inside one pair of
+    quotes so the ';' is not taken as a shell command separator.
+    """
+    return 'export PYTHONPATH="' + os.pathsep.join(parts + ("${PYTHONPATH}",)) + '"'
+
+
 def have(mod: str) -> bool:
     """Is `mod` importable?
 
@@ -189,7 +199,7 @@ def cmd_plan(args) -> None:
     print(f"{sys.executable} -m pip install -r {target}/requirements.txt")
     print(f"export SCENARIO_RUNNER_ROOT={target}")
     print("export CARLA_ROOT=/path/to/CARLA            # needed for the `agents` package")
-    print('export PYTHONPATH="${SCENARIO_RUNNER_ROOT}:${CARLA_ROOT}/PythonAPI/carla:${PYTHONPATH}"')
+    print(pythonpath_export("${SCENARIO_RUNNER_ROOT}", "${CARLA_ROOT}/PythonAPI/carla"))
 
 
 def cmd_install(args) -> None:
@@ -223,14 +233,14 @@ def cmd_install(args) -> None:
     else:
         print(f"[install] pip install -r {req} (into {sys.executable})")
         subprocess.run([sys.executable, "-m", "pip", "install", "-r", str(req)], check=True)
-        # The CARLA bindings are built against the numpy 1.x C API: numpy 2
-        # imports fine and then fails on the first array the simulator hands
-        # back. Report rather than silently downgrading someone's environment.
+        # Pre-1.0 bindings (wheels and eggs) fail under numpy 2; 1.0+ supports it. Report, never downgrade.
         try:
             import numpy
 
-            if parse_version(numpy.__version__) >= (2,):
-                print(f"[install] WARNING numpy {numpy.__version__} is too new for the CARLA bindings")
+            cv = client_version()
+            pre_1_0 = cv == "unknown" or (cv is not None and parse_version(cv) < (1,))
+            if pre_1_0 and parse_version(numpy.__version__) >= (2,):
+                print(f"[install] WARNING numpy {numpy.__version__} is too new for the CARLA {cv} bindings")
                 print(f"[install]   fix with: {sys.executable} -m pip install 'numpy<2'")
         except Exception:
             pass
@@ -238,7 +248,7 @@ def cmd_install(args) -> None:
     print("\n[install] done. Export these, then run `verify`:")
     print(f"  export SCENARIO_RUNNER_ROOT={root}")
     print("  export CARLA_ROOT=/path/to/CARLA")
-    print('  export PYTHONPATH="${SCENARIO_RUNNER_ROOT}:${CARLA_ROOT}/PythonAPI/carla:${PYTHONPATH}"')
+    print("  " + pythonpath_export("${SCENARIO_RUNNER_ROOT}", "${CARLA_ROOT}/PythonAPI/carla"))
 
 
 def cmd_verify(args) -> None:

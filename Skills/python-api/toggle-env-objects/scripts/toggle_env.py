@@ -92,9 +92,14 @@ def _toggle(args, enable: bool):
               + (f" name~{args.name!r}" if args.name else "") + " — nothing to " + verb)
         return
     if getattr(args, "dry_run", False):
-        print(f"[dry-run] would {verb} {len(ids)} object(s) of label={args.label}")
+        print(f"[dry-run] would {verb} {len(ids)} object(s) of label={args.label}"
+              + (f" name~{args.name!r}" if args.name else ""))
         for o in objs[:10]:
-            print(f"    {o.name}")
+            l = o.transform.location
+            print(f"    id={o.id:6d}  {str(o.type).split('.')[-1]:12s}  {o.name:40s}  "
+                  f"({l.x:.0f},{l.y:.0f},{l.z:.0f})")
+        if len(objs) > 10:
+            print(f"    ... and {len(objs) - 10} more")
         return
     world.enable_environment_objects(ids, enable)
     print(f"{verb}d {len(ids)} object(s) of label={args.label}"
