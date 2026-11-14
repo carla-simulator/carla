@@ -87,7 +87,7 @@ Knobs (all env vars on `run_scenario.sh`):
 | `RELOAD=0` | do **not** reload the world (default reloads; needed when the map differs) |
 | `SYNC=1` | synchronous mode at `FRAME_RATE` Hz — required for reproducibility |
 | `FRAME_RATE` | sync tick rate, default 20 |
-| `OUTPUT=1` / `FILE=1` / `JSON=1` / `JUNIT=1` | result to stdout / .txt / .json / .xml |
+| `FILE=1` / `JSON=1` / `JUNIT=1` | result to .txt / .json / .xml; stdout is always enabled |
 | `OUTPUT_DIR` | where those files land |
 | `REPETITIONS` / `RANDOMIZE=1` | repeat count / randomise scenario parameters |
 | `AGENT` / `AGENT_CONFIG` | drive the ego with an agent (**route mode only** — see below) |
@@ -204,8 +204,9 @@ already exports `PYTHONIOENCODING=utf-8`.
 
 ## Outputs
 
-A scenario executed on the server, a criteria pass/fail report on stdout (with
-`OUTPUT=1`) and optional `.txt`/`.json`/`.xml` result files in `OUTPUT_DIR`. With
+The wrapper always requests a criteria report on stdout. A missing report or an execution traceback returns a nonzero status, including when ScenarioRunner itself returns zero. Completed scenarios with unsuccessful criteria retain a zero execution status.
+
+Optional `.txt`/`.json`/`.xml` result files are written in `OUTPUT_DIR`. With
 `RECORD=dir`, a CARLA recorder log plus a criteria JSON under
 `$SCENARIO_RUNNER_ROOT/dir/`, replayable with [[replay-recording]] and analysable
 with [[analyze-scenario-results]].

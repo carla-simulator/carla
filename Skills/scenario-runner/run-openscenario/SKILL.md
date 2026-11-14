@@ -62,14 +62,14 @@ seconds into a run, after the world has already been reloaded.
 source scripts/env.sh
 
 # OpenSCENARIO 1.x
-bash scripts/run_openscenario.sh run "$SCENARIO_RUNNER_ROOT/srunner/examples/FollowLeadingVehicle.xosc"
+bash scripts/run_openscenario.sh run "$SCENARIO_RUNNER_ROOT/srunner/osc_examples/FollowLeadingVehicle.xosc"
 
 # with global parameter overrides — note the 'key: value' comma-separated form
 PARAMS='leadingSpeed: 8.0, egoSpeed: 12.0' \
     bash scripts/run_openscenario.sh run .../FollowLeadingVehicle.xosc
 
 # OpenSCENARIO 2.0
-bash scripts/run_openscenario.sh run2 "$SCENARIO_RUNNER_ROOT/srunner/examples/cut_in_and_slow_right.osc"
+bash scripts/run_openscenario.sh run2 "$SCENARIO_RUNNER_ROOT/srunner/osc_examples/cut_in_and_slow_right.osc"
 ```
 
 Direct equivalents:
@@ -86,6 +86,8 @@ stripped, so a value containing either character breaks the parse.
 
 The OSC timeout is hard-coded to `100000` seconds for both flags. A stuck OSC run
 does not time out on its own; interrupt it.
+
+The wrapper accepts paths relative to the calling directory and absolute paths. It passes OSC 2.0 inputs relative to the ScenarioRunner checkout because its preprocessor adds that root. On Windows, the input and checkout must be on the same drive.
 
 ### Step 4: Who drives the ego
 
@@ -162,8 +164,7 @@ do.
 
 ## Outputs
 
-The scenario executed on the server, with the same criteria report as any other
-ScenarioRunner run (`OUTPUT=1`, `JSON=1`, `OUTPUT_DIR` all work the same way).
+The wrapper always requests a criteria report on stdout. `JSON=1` and `OUTPUT_DIR` control optional result files. A missing report or an execution traceback returns a nonzero status, including when ScenarioRunner itself returns zero. Completed scenarios with unsuccessful criteria retain a zero execution status.
 `validate` prints a schema verdict, the map required, the entities and the
 overridable parameters, and exits non-zero if the file cannot run.
 

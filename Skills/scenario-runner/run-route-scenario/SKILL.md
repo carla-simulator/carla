@@ -182,8 +182,9 @@ Solution: raise `TIMEOUT`; the Leaderboard sets `tile_stream_distance` and
 
 ## Outputs
 
-The route driven by the agent, a criteria report (`OUTPUT=1`, `JSON=1`,
-`OUTPUT_DIR`), and optionally a recorder log plus criteria JSON under
+The wrapper always requests a criteria report on stdout. A missing report or an execution traceback returns a nonzero status, including when ScenarioRunner itself returns zero. Completed routes with unsuccessful criteria retain a zero execution status.
+
+`JSON=1` and `OUTPUT_DIR` control optional result files. A recorder log plus criteria JSON can be written under
 `$SCENARIO_RUNNER_ROOT/$RECORD/`. `list`/`show` print route structure without
 touching the simulator.
 

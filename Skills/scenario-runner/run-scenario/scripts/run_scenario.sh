@@ -8,7 +8,7 @@
 # Knobs (env):
 #   RELOAD=0        do not reload the world (default 1 — required if the map differs)
 #   SYNC=1          synchronous mode at FRAME_RATE Hz (default 20)
-#   OUTPUT/FILE/JSON/JUNIT=1   result to stdout / .txt / .json / .xml
+#   FILE/JSON/JUNIT=1   result to .txt / .json / .xml (stdout is always enabled)
 #   OUTPUT_DIR      directory for result files
 #   REPETITIONS     repeat count (default 1)
 #   RANDOMIZE=1     randomise scenario parameters
@@ -27,6 +27,7 @@ source "${HERE}/env.sh"
 # wrapper must survive a non-zero exit from the tool it runs, or its verification
 # and cleanup are skipped precisely when a run failed.
 set +e
+source "${HERE}/../../_common/runner_result.sh" || exit 1
 
 
 SCENARIO="${1:-}"
@@ -50,7 +51,8 @@ TIMEOUT="${TIMEOUT:-120}"
 # --- preflight: does the requested scenario exist, and on which map? ----------
 # scenario_runner.py's own failure for a bad name is a bare "not supported ...
 # Exiting" after it has already connected and reloaded the world, so check first.
-read -r FOUND WANT_TOWN <<<"$("${PYTHON}" - "${SCENARIO_RUNNER_ROOT}" "${SCENARIO}" <<'PY'
+read -r FOUND WANT_TOWN <<<"$("${PYTHON}" - \
+  "$(carla_native_path "${SCENARIO_RUNNER_ROOT}")" "${SCENARIO}" <<'PY' | tr -d '\r'
 import glob, sys, xml.etree.ElementTree as ET
 root, want = sys.argv[1], sys.argv[2]
 group = want.split("group:", 1)[1] if want.startswith("group:") else None
@@ -75,7 +77,7 @@ if [ "${FOUND}" != "yes" ]; then
 fi
 echo "[run] ${SCENARIO} -> town ${WANT_TOWN}"
 
-CUR_TOWN="$("${PYTHON}" - "${CARLA_HOST}" "${CARLA_PORT}" <<'PY'
+CUR_TOWN="$("${PYTHON}" - "${CARLA_HOST}" "${CARLA_PORT}" <<'PY' | tr -d '\r'
 import sys
 try:
     import carla
@@ -101,6 +103,7 @@ fi
 # with no ticking client is indistinguishable from a hung server for every other
 # tool. Runs on normal exit, on error and on Ctrl-C.
 reset_async() {
+  [ -z "${LOG:-}" ] || rm -f "${LOG}"
   [ "${SYNC}" = "1" ] || return 0
   "${PYTHON}" - "${CARLA_HOST}" "${CARLA_PORT}" "${CARLA_TM_PORT}" <<'PY' || true
 import sys
@@ -117,9 +120,10 @@ except Exception as e:
     print(f"[run] WARNING could not reset async mode: {e}")
 PY
 }
+LOG=""
 trap reset_async EXIT INT TERM
 
-ARGS=(--scenario "${SCENARIO}"
+ARGS=(--scenario "${SCENARIO}" --output
       --host "${CARLA_HOST}" --port "${CARLA_PORT}"
       --trafficManagerPort "${CARLA_TM_PORT}"
       --timeout "${TIMEOUT}" --repetitions "${REPETITIONS}")
@@ -128,7 +132,6 @@ ARGS=(--scenario "${SCENARIO}"
 [ "${DEBUG:-0}" = "1" ]          && ARGS+=(--debug)
 [ "${RANDOMIZE:-0}" = "1" ]      && ARGS+=(--randomize)
 [ "${WAIT_FOR_EGO:-0}" = "1" ]   && ARGS+=(--waitForEgo)
-[ "${OUTPUT:-0}" = "1" ]         && ARGS+=(--output)
 [ "${FILE:-0}" = "1" ]           && ARGS+=(--file)
 [ "${JSON:-0}" = "1" ]           && ARGS+=(--json)
 [ "${JUNIT:-0}" = "1" ]          && ARGS+=(--junit)
@@ -140,10 +143,10 @@ ARGS=(--scenario "${SCENARIO}"
 echo "[run] ${PYTHON} scenario_runner.py ${ARGS[*]}"
 echo "[run] NOTE most scenarios need something to drive the ego:"
 echo "[run]       ${PYTHON} ${SCENARIO_RUNNER_ROOT}/manual_control.py"
-cd "${SCENARIO_RUNNER_ROOT}"
+cd "${SCENARIO_RUNNER_ROOT}" || exit 1
 # -u: Python block-buffers stdout when it is not a tty, so redirecting a long
 # run to a log otherwise shows nothing until it finishes.
-LOG="$(mktemp)"
+LOG="$(mktemp)" || exit 1
 # scenario_runner can print its verdict and then never exit — the unsupported-name
 # path destroys the ego and hangs. Without a wall-clock guard that hangs the caller
 # too, and the verification below never gets to run. 30 min is far beyond any
@@ -159,30 +162,7 @@ else
 fi
 echo "[run] scenario_runner exited ${RC}"
 
-# scenario_runner.py catches its own exceptions and still returns 0, so the exit
-# code alone reports success for a run that never started. Confirm the artifact:
-# a scenario that actually ran prints a criteria table.
-if grep -q "Criteria Information" "${LOG}"; then
-  echo "[run] PASS a criteria report was produced"
-  grep -qE "GLOBAL RESULT.*(FAILURE|TIMEOUT)" "${LOG}" \
-    && echo "[run] NOTE the scenario ran but did not pass — most need a driver for the ego"
-elif grep -qE "not supported .*Exiting|no scenario with name" "${LOG}"; then
-  # SR prints the scenario TYPE here, not the config name. The config can be
-  # present in the XML while the class that implements it was deleted.
-  echo "[run] FAIL ScenarioRunner has no implementation for that scenario type on"
-  echo "[run]      this branch, or the config name is wrong. A config listed in the"
-  echo "[run]      XML with no class behind it cannot run."
-  echo "[run]      python3 ${HERE}/list_scenarios.py --types   shows what resolves"
-  RC=1
-elif grep -q "load_world" "${LOG}" && grep -q "std::exception" "${LOG}"; then
-  echo "[run] FAIL the map did not load in time. Loading one large map from another"
-  echo "[run]      in the editor can exceed the client timeout; raise TIMEOUT, or"
-  echo "[run]      load the town first and re-run with RELOAD=0."
-  RC=1
-else
-  echo "[run] FAIL no criteria report — the scenario did not complete. Last lines:"
-  tail -5 "${LOG}" | sed 's/^/[run]        /'
-  [ "${RC}" -eq 0 ] && RC=1
-fi
+carla_sr_result "${RC}" "${LOG}"
+RC=$?
 rm -f "${LOG}"
 exit ${RC}

@@ -6,7 +6,7 @@
 #   bash run_route.sh run   routes.xml [id]       # drive it (AGENT required)
 #
 # Knobs (env): AGENT (required for run), AGENT_CONFIG, REPETITIONS,
-#              OUTPUT/FILE_OUT/JSON/JUNIT=1, OUTPUT_DIR, RECORD, DEBUG=1, TIMEOUT,
+#              FILE_OUT/JSON/JUNIT=1, OUTPUT_DIR, RECORD, DEBUG=1, TIMEOUT,
 #              FRAME_RATE (route mode is always synchronous when an agent is used)
 set -uo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -16,6 +16,7 @@ source "${HERE}/env.sh"
 # wrapper must survive a non-zero exit from the tool it runs, or its verification
 # and cleanup are skipped precisely when a run failed.
 set +e
+source "${HERE}/../../_common/runner_result.sh" || exit 1
 
 
 CMD="${1:-}"; ROUTES="${2:-}"; RID="${3:-}"
@@ -118,7 +119,11 @@ fi
 
 # ScenarioRunner derives the class name from the file name; a mismatch is a bare
 # AttributeError after the world has already been reloaded, so check up front.
-EXPECT="$("${PYTHON}" -c "import os,sys;print(os.path.basename(sys.argv[1]).split('.')[0].title().replace('_',''))" "${AGENT}")"
+EXPECT="$("${PYTHON}" - "$(carla_native_path "${AGENT}")" <<'PY' | tr -d '\r'
+import os, sys
+print(os.path.basename(sys.argv[1]).split('.')[0].title().replace('_',''))
+PY
+)"
 if ! grep -qE "^class[[:space:]]+${EXPECT}\b" "${AGENT}"; then
   echo "ERROR: ${AGENT} must define 'class ${EXPECT}' (the name is derived from the file name)" >&2
   grep -nE '^class [A-Za-z_]+' "${AGENT}" | sed 's/^/       found: /' >&2
@@ -126,14 +131,19 @@ if ! grep -qE "^class[[:space:]]+${EXPECT}\b" "${AGENT}"; then
 fi
 echo "[run] agent class ${EXPECT} found in ${AGENT}"
 
-ARGS=(--route "${ROUTES}" --agent "${AGENT}"
+ROUTE_INPUT="$("${PYTHON}" -c 'import os,sys; print(os.path.abspath(sys.argv[1]))' "$(carla_native_path "${ROUTES}")" | tr -d '\r')"
+RC=$?
+[ "${RC}" -eq 0 ] || exit "${RC}"
+AGENT_INPUT="$("${PYTHON}" -c 'import os,sys; print(os.path.abspath(sys.argv[1]))' "$(carla_native_path "${AGENT}")" | tr -d '\r')"
+RC=$?
+[ "${RC}" -eq 0 ] || exit "${RC}"
+ARGS=(--route "${ROUTE_INPUT}" --agent "${AGENT_INPUT}" --output
       --host "${CARLA_HOST}" --port "${CARLA_PORT}" --trafficManagerPort "${CARLA_TM_PORT}"
       --timeout "${TIMEOUT:-60}" --repetitions "${REPETITIONS:-1}"
       --frameRate "${FRAME_RATE:-20}")
 [ -n "${RID}" ]                 && ARGS+=(--route-id "${RID}")
 [ -n "${AGENT_CONFIG:-}" ]      && ARGS+=(--agentConfig "${AGENT_CONFIG}")
 [ "${DEBUG:-0}" = "1" ]         && ARGS+=(--debug)
-[ "${OUTPUT:-0}" = "1" ]        && ARGS+=(--output)
 [ "${FILE_OUT:-0}" = "1" ]      && ARGS+=(--file)
 [ "${JSON:-0}" = "1" ]          && ARGS+=(--json)
 [ "${JUNIT:-0}" = "1" ]         && ARGS+=(--junit)
@@ -142,6 +152,7 @@ ARGS=(--route "${ROUTES}" --agent "${AGENT}"
 
 # Route mode forces --sync when an agent is given, so the reset is unconditional.
 reset_async() {
+  [ -z "${LOG:-}" ] || rm -f "${LOG}"
   "${PYTHON}" - "${CARLA_HOST}" "${CARLA_PORT}" "${CARLA_TM_PORT}" <<'PY' || true
 import sys
 try:
@@ -157,14 +168,18 @@ except Exception as e:
     print(f"[run] WARNING could not reset async mode: {e}")
 PY
 }
+LOG=""
 trap reset_async EXIT INT TERM
 
 echo "[run] ${PYTHON} scenario_runner.py ${ARGS[*]}"
 echo "[run] route mode forces --reloadWorld and --sync; the world WILL be reloaded"
-cd "${SCENARIO_RUNNER_ROOT}"
+cd "${SCENARIO_RUNNER_ROOT}" || exit 1
 # -u: Python block-buffers stdout when it is not a tty, so redirecting a long
 # run to a log otherwise shows nothing until it finishes.
-"${PYTHON}" -u scenario_runner.py "${ARGS[@]}"
-RC=$?
+LOG="$(mktemp)" || exit 1
+"${PYTHON}" -u scenario_runner.py "${ARGS[@]}" 2>&1 | tee "${LOG}"
+RC=${PIPESTATUS[0]}
 echo "[run] scenario_runner exited ${RC}"
+carla_sr_result "${RC}" "${LOG}"
+RC=$?
 exit ${RC}

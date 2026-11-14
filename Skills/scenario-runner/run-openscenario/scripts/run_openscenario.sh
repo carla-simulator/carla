@@ -8,7 +8,7 @@
 #
 # Knobs (env): PARAMS='k: v, k2: v2'   global ParameterDeclarations override (1.x only)
 #              SYNC=1 FRAME_RATE=20    synchronous mode
-#              OUTPUT/FILE/JSON/JUNIT=1, OUTPUT_DIR, RECORD, DEBUG=1, TIMEOUT
+#              FILE_OUT/JSON/JUNIT=1, OUTPUT_DIR, RECORD, DEBUG=1, TIMEOUT
 set -uo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck disable=SC1091
@@ -17,6 +17,7 @@ source "${HERE}/env.sh"
 # wrapper must survive a non-zero exit from the tool it runs, or its verification
 # and cleanup are skipped precisely when a run failed.
 set +e
+source "${HERE}/../../_common/runner_result.sh" || exit 1
 
 
 CMD="${1:-}"
@@ -138,9 +139,20 @@ PY
   ;;
 run|run2)
   [ -n "${FILE}" ] || { echo "usage: bash run_openscenario.sh ${CMD} <file>" >&2; exit 2; }
-  [ -f "${FILE}" ] || { echo "ERROR: ${FILE} does not exist" >&2; exit 3; }
+  FILE_INPUT="$("${PYTHON}" - "$(carla_native_path "${FILE}")" \
+    "$(carla_native_path "${SCENARIO_RUNNER_ROOT}")" "${CMD}" <<'PY' | tr -d '\r'
+import os, sys
+path = os.path.abspath(sys.argv[1])
+if not os.path.isfile(path):
+    sys.exit(f"ERROR: {path} does not exist")
+# OSC2's preprocessor prefixes SCENARIO_RUNNER_ROOT itself.
+print(os.path.relpath(path, os.path.abspath(sys.argv[2])) if sys.argv[3] == "run2" else path)
+PY
+  )"
+  RC=$?
+  [ "${RC}" -eq 0 ] || exit "${RC}"
   FLAG=--openscenario; [ "${CMD}" = "run2" ] && FLAG=--openscenario2
-  ARGS=("${FLAG}" "$(cd "$(dirname "${FILE}")" && pwd)/$(basename "${FILE}")"
+  ARGS=("${FLAG}" "${FILE_INPUT}" --output
         --host "${CARLA_HOST}" --port "${CARLA_PORT}" --trafficManagerPort "${CARLA_TM_PORT}"
         --timeout "${TIMEOUT:-120}")
   if [ -n "${PARAMS:-}" ]; then
@@ -152,7 +164,6 @@ run|run2)
   fi
   [ "${SYNC:-0}" = "1" ]      && ARGS+=(--sync --frameRate "${FRAME_RATE:-20}")
   [ "${DEBUG:-0}" = "1" ]     && ARGS+=(--debug)
-  [ "${OUTPUT:-0}" = "1" ]    && ARGS+=(--output)
   [ "${FILE_OUT:-0}" = "1" ]  && ARGS+=(--file)
   [ "${JSON:-0}" = "1" ]      && ARGS+=(--json)
   [ "${JUNIT:-0}" = "1" ]     && ARGS+=(--junit)
@@ -160,6 +171,7 @@ run|run2)
   [ -n "${RECORD:-}" ]        && { mkdir -p "${SCENARIO_RUNNER_ROOT}/${RECORD}"; ARGS+=(--record "${RECORD}"); }
 
   reset_async() {
+    [ -z "${LOG:-}" ] || rm -f "${LOG}"
     [ "${SYNC:-0}" = "1" ] || return 0
     "${PYTHON}" - "${CARLA_HOST}" "${CARLA_PORT}" "${CARLA_TM_PORT}" <<'PY' || true
 import sys
@@ -176,16 +188,20 @@ except Exception as e:
     print(f"[run] WARNING could not reset async mode: {e}")
 PY
   }
+  LOG=""
   trap reset_async EXIT INT TERM
 
   echo "[run] ${PYTHON} scenario_runner.py ${ARGS[*]}"
   echo "[run] NOTE the OSC timeout is hard-coded to 100000s; interrupt a stalled run yourself"
-  cd "${SCENARIO_RUNNER_ROOT}"
+  cd "${SCENARIO_RUNNER_ROOT}" || exit 1
   # -u: Python block-buffers stdout when it is not a tty, so redirecting a long
   # run to a log otherwise shows nothing until it finishes.
-  "${PYTHON}" -u scenario_runner.py "${ARGS[@]}"
-  RC=$?
+  LOG="$(mktemp)" || exit 1
+  "${PYTHON}" -u scenario_runner.py "${ARGS[@]}" 2>&1 | tee "${LOG}"
+  RC=${PIPESTATUS[0]}
   echo "[run] scenario_runner exited ${RC}"
+  carla_sr_result "${RC}" "${LOG}"
+  RC=$?
   exit ${RC}
   ;;
 *)

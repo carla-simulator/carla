@@ -241,8 +241,9 @@ def cmd_metrics(args) -> None:
         log = cand if cand.exists() else log
     if not log.exists():
         sys.exit(f"recording {log} not found (--record writes under {root})")
+    log = log.resolve()
     cmd = [sys.executable, str(root / "metrics_manager.py"),
-           "--metric", args.metric, "--log", str(log),
+           "--metric", args.metric, "--log", os.path.relpath(log, root),
            "--host", args.host, "--port", str(args.port)]
     crit = args.criteria
     if not crit:
