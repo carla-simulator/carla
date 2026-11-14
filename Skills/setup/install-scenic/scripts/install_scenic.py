@@ -7,11 +7,9 @@ Subcommands
     install  pip install Scenic into the interpreter that has `carla`
     verify   prove the CLI, the client and the blueprint table agree
 
-Scenic is pure Python — nothing is built. The whole problem is that Scenic's
-`scenic` CLI and CARLA's `carla` client must live in ONE interpreter, and that
-Scenic's blueprint tables are keyed on the CARLA *client* version. Miss either and
-the failure is not an install error: it is a model import that fails mid-run, or
-every vehicle category resolving empty.
+Scenic's CLI and CARLA's client must share an interpreter. Scenic selects its
+blueprint data from the client version. Missing exact tables are advisory;
+the simulator import check verifies that the interface can load.
 """
 from __future__ import annotations
 
@@ -55,12 +53,25 @@ def module_file(interp: str, mod: str) -> str | None:
     return p.stdout.strip() or None
 
 
+def scripts_dir(interp: str) -> Path | None:
+    """Read the scripts directory from the selected interpreter."""
+    result = subprocess.run(
+        [interp, "-c", "import sysconfig;print(sysconfig.get_path('scripts'))"],
+        capture_output=True, text=True, check=False)
+    if result.returncode != 0 or not result.stdout.strip():
+        return None
+    return Path(result.stdout.strip()).resolve()
+
+
 def cli_for(interp: str) -> str | None:
     """The scenic CLI that belongs to `interp`, not whatever is first on PATH.
     A pyenv shim on PATH commonly points at a different environment."""
-    cand = Path(interp).parent / "scenic"
-    if cand.is_file() and os.access(cand, os.X_OK):
-        return str(cand)
+    directory = scripts_dir(interp)
+    if directory is not None:
+        for name in ("scenic.exe", "scenic") if os.name == "nt" else ("scenic",):
+            candidate = directory / name
+            if candidate.is_file() and os.access(candidate, os.X_OK):
+                return str(candidate)
     return shutil.which("scenic")
 
 
@@ -75,14 +86,6 @@ def blueprint_versions(interp: str) -> list[str] | None:
         return json.loads(p.stdout.strip())
     except Exception:
         return None
-
-
-def available_versions(interp: str) -> list[str]:
-    out = sh([interp, "-m", "pip", "index", "versions", PKG], check=False)
-    for line in out.splitlines():
-        if "Available versions:" in line:
-            return [v.strip() for v in line.split(":", 1)[1].split(",")]
-    return []
 
 
 def report(args) -> dict:
@@ -110,11 +113,11 @@ def cmd_detect(args) -> None:
     if d["tables"] is not None:
         print("blueprint tables for CARLA: %s" % ", ".join(d["tables"]))
         if d["carla"] and d["carla"] not in d["tables"]:
-            print("  ^ no table for client %s — every category resolves empty" % d["carla"])
+            print("  WARNING: no exact table for client %s; validate fallback blueprint ids" % d["carla"])
     # The CLI must belong to this interpreter or a run picks up a different Scenic.
     if d["cli"] and d["scenic"]:
         owner = Path(d["cli"]).parent
-        if owner != Path(d["interpreter"]).parent:
+        if scripts_dir(d["interpreter"]) != owner.resolve():
             print("WARNING: the CLI at %s does not belong to %s" % (d["cli"], d["interpreter"]))
 
 
@@ -131,11 +134,8 @@ def cmd_plan(args) -> None:
     if d["scenic"]:
         print("# scenic %s already installed" % d["scenic"])
         if d["carla"] and d["tables"] and d["carla"] not in d["tables"]:
-            print("# but it has no blueprint table for client %s — upgrade:" % d["carla"])
-            print("%s -m pip install --upgrade %s" % (interp, PKG))
-            av = available_versions(interp)
-            if av:
-                print("#   available: %s" % ", ".join(av[:8]))
+            print("# No exact blueprint table for client %s; validate fallback ids." % d["carla"])
+            print("# Run `verify` to check the simulator interface.")
         else:
             print("# nothing to do; run `verify`")
     else:
@@ -183,19 +183,18 @@ def cmd_verify(args) -> None:
 
     ok("scenic %s" % d["scenic"]) if d["scenic"] else bad("scenic not importable from %s" % interp)
     ok("CLI at %s" % d["cli"]) if d["cli"] else bad("no scenic CLI for this interpreter")
-    if d["cli"] and Path(d["cli"]).parent != Path(interp).parent:
+    if d["cli"] and Path(d["cli"]).parent.resolve() != scripts_dir(interp):
         bad("CLI %s belongs to a different environment than %s" % (d["cli"], interp))
     ok("carla client %s" % d["carla"]) if d["carla"] else bad("no carla client in this interpreter")
-    if d["carla_module"] and d["carla_module"].endswith("__init__.py"):
-        # A directory named `carla` on sys.path imports as a namespace package.
-        bad("`carla` resolved to a package directory, not the client extension")
+    if d["carla"] and not d["carla_module"]:
+        bad("`carla` has no module file; check for a shadowing namespace package")
     if d["scenic"] and d["carla"]:
         t = d["tables"] or []
         if d["carla"] in t:
             ok("blueprint table present for client %s" % d["carla"])
         else:
-            bad("no blueprint table for client %s (has: %s) — upgrade scenic"
-                % (d["carla"], ", ".join(t) or "none"))
+            print("  WARN no exact blueprint table for client %s (has: %s); validate fallback ids"
+                  % (d["carla"], ", ".join(t) or "none"))
     # The world model is model.scenic — a Scenic file, not an importable module.
     # What actually breaks when the two halves live in different environments is
     # the simulator interface, which does `import carla` at module load. Test that.
