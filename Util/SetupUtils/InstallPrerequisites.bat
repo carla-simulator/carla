@@ -7,18 +7,18 @@ set python_version_default=3.8.10
 
 rem https://learn.microsoft.com/en-us/visualstudio/install/workload-component-id-vs-community?view=vs-2022&preserve-view=true
 set visual_studio_components=^
-    Microsoft.VisualStudio.Workload.NativeDesktop ^
-    Microsoft.VisualStudio.Workload.NativeGame ^
-    Microsoft.VisualStudio.Workload.ManagedDesktop ^
-    Microsoft.VisualStudio.Component.Windows10SDK.22621 ^
-    Microsoft.VisualStudio.Component.VC.CMake.Project ^
-    Microsoft.Net.Component.4.8.SDK ^
-    Microsoft.Net.ComponentGroup.4.8.1.DeveloperTools ^
-    Microsoft.VisualStudio.Component.VC.Llvm.Clang ^
-    Microsoft.VisualStudio.Component.VC.Llvm.ClangToolset ^
-    Microsoft.VisualStudio.ComponentGroup.NativeDesktop.Llvm.Clang ^
-    Microsoft.VisualStudio.Component.VC.14.38.17.8.x86.x64 ^
-    Microsoft.Component.PythonTools
+    --add Microsoft.VisualStudio.Workload.NativeDesktop ^
+    --add Microsoft.VisualStudio.Workload.NativeGame ^
+    --add Microsoft.VisualStudio.Workload.ManagedDesktop ^
+    --add Microsoft.VisualStudio.Component.Windows11SDK.22621 ^
+    --add Microsoft.VisualStudio.Component.VC.CMake.Project ^
+    --add Microsoft.Net.Component.4.8.SDK ^
+    --add Microsoft.Net.ComponentGroup.4.8.1.DeveloperTools ^
+    --add Microsoft.VisualStudio.Component.VC.Llvm.Clang ^
+    --add Microsoft.VisualStudio.Component.VC.Llvm.ClangToolset ^
+    --add Microsoft.VisualStudio.ComponentGroup.NativeDesktop.Llvm.Clang ^
+    --add Microsoft.VisualStudio.Component.VC.14.38.17.8.x86.x64 ^
+    --add Microsoft.Component.PythonTools
 
 rem -- PARSE COMMAND LINE ARGUMENTS --
 
@@ -73,7 +73,7 @@ if not exist %cd%\Temp (
 pushd Temp
 curl -L -O https://aka.ms/vs/17/release/vs_community.exe || exit /b
 popd Temp
-%cd%\Temp\vs_community.exe --add %visual_studio_components% --installWhileDownloading --passive --wait || exit /b
+%cd%\Temp\vs_community.exe %visual_studio_components% --installWhileDownloading --passive --wait || exit /b
 del %cd%\Temp\vs_community.exe
 rmdir %cd%\Temp
 
