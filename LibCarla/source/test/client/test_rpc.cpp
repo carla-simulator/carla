@@ -14,9 +14,45 @@
 #include <carla/rpc/Server.h>
 
 #include <thread>
+#include <utility>
 
 using namespace carla::rpc;
 using namespace std::chrono_literals;
+
+TEST(rpc, mutable_response_copy_preserves_actor_id) {
+  Response<ActorId> original{42u};
+  const auto &constant = original;
+  const Response<ActorId> constant_copy(constant);
+  ASSERT_FALSE(constant_copy.HasError());
+  EXPECT_EQ(constant_copy.Get(), 42u);
+
+  Response<ActorId> copy(original);
+  ASSERT_FALSE(copy.HasError());
+  EXPECT_EQ(copy.Get(), 42u);
+  EXPECT_EQ(original.Get(), 42u);
+
+  Response<ActorId> moved(std::move(copy));
+  ASSERT_FALSE(moved.HasError());
+  EXPECT_EQ(moved.Get(), 42u);
+}
+
+TEST(rpc, mutable_response_copy_preserves_error) {
+  Response<ActorId> original{ResponseError{"spawn failed"}};
+  const auto &constant = original;
+  const Response<ActorId> constant_copy(constant);
+  ASSERT_TRUE(constant_copy.HasError());
+  EXPECT_EQ(constant_copy.GetError().What(), "spawn failed");
+
+  Response<ActorId> copy(original);
+  ASSERT_TRUE(copy.HasError());
+  EXPECT_EQ(copy.GetError().What(), "spawn failed");
+  EXPECT_EQ(original.GetError().What(), "spawn failed");
+
+  Response<ActorId> assigned{7u};
+  assigned = original;
+  ASSERT_TRUE(assigned.HasError());
+  EXPECT_EQ(assigned.GetError().What(), "spawn failed");
+}
 
 TEST(rpc, compilation_tests) {
   Server server(TESTING_PORT);
