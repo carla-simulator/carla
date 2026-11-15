@@ -1105,6 +1105,17 @@ DVS is a camera and therefore has all the attributes available in the RGB camera
 | `use_log`            | bool    | true    | Whether to work in the logarithmic intensity scale.  |
 | `log_eps`            | float   | 0.001  | Epsilon value used to convert images to log: `L = log(eps + I / 255.0)`.<br>  Where `I` is the grayscale value of the RGB image: <br>`I = 0.2989*R + 0.5870*G + 0.1140*B`. |
 
+#### Output attributes
+
+| Data attribute | Type | Description |
+| --- | --- | --- |
+| `DVSEvent.t` | int | Simulation time of the event in nanoseconds since the beginning of the episode. |
+| `DVSEventArray.timestamp` | float | Simulation time of the measurement in seconds since the beginning of the episode. |
+
+Convert the interval between two events to seconds with `(event_b.t - event_a.t) * 1e-9`.
+
+Recorded DVS frames in `manual_control.py` produce a PNG preview and a structured NumPy event array in `_out/`. Both files use the frame number, for example `00000037.png` and `00000037.npy`. The NumPy array preserves every event's `x`, `y`, `t` and `pol` values. Load it with `numpy.load(path, allow_pickle=False)`.
+
 <br>
 
 ---

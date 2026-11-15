@@ -932,8 +932,8 @@ Class that defines a DVS event. An event is a quadruple, so a tuple of 4 element
 X pixel coordinate.  
 - <a name="carla.DVSEvent.y"></a>**<font color="#f8805a">y</font>** (_int_)  
 Y pixel coordinate.  
-- <a name="carla.DVSEvent.t"></a>**<font color="#f8805a">t</font>** (_int_)  
-Timestamp of the moment the event happened.  
+- <a name="carla.DVSEvent.t"></a>**<font color="#f8805a">t</font>** (_int<small> - nanoseconds</small>_)  
+Simulation time when the event occurred.  
 - <a name="carla.DVSEvent.pol"></a>**<font color="#f8805a">pol</font>** (_bool_)  
 Polarity of the event. __True__ for positive and __False__ for negative.  
 
@@ -963,6 +963,7 @@ Converts the stream of events to an array of int values in the following order <
 Returns an array with the polarity of all the events in the stream.  
 - <a name="carla.DVSEventArray.to_array_t"></a>**<font color="#7fb800">to_array_t</font>**(<font color="#00a6ed">**self**</font>)  
 Returns an array with the timestamp of all the events in the stream.  
+    - **Return:** _list(int)<small> - nanoseconds</small>_  
 - <a name="carla.DVSEventArray.to_array_x"></a>**<font color="#7fb800">to_array_x</font>**(<font color="#00a6ed">**self**</font>)  
 Returns an array with X pixel coordinate of all the events in the stream.  
 - <a name="carla.DVSEventArray.to_array_y"></a>**<font color="#7fb800">to_array_y</font>**(<font color="#00a6ed">**self**</font>)  
