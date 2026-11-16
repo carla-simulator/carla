@@ -34,7 +34,7 @@ Pull the image of the CARLA release you use, giving its version as the tag. For 
 docker pull carlasim/carla:0.9.16
 ```
 
-Do not use the `latest` tag: it does not follow the releases, so it may not be the version you expect.
+Do not use the `latest` tag: it refers to the latest version of CARLA on Unreal Engine 5. Pin the version tag instead.
 
 __2. Run the CARLA container.__
 
