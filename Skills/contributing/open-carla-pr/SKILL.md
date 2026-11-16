@@ -1,6 +1,6 @@
 ---
 name: open-carla-pr
-description: Takes a contribution to CARLA on UE 5.8 from first contact to merged-ready pull request against ue58-dev — reporting a bug or requesting a feature as a GitHub issue from the repo's templates, opening a GitHub Discussion to agree a CI workflow change or a large feature with the maintainers before coding, then branch naming, syncing with the base, reviewing the diff against the contribution rules (CHANGELOG entry, no unagreed CI workflow changes, no hand-edited generated docs, whitespace, C++ exceptions, pylint, tests that are not weakened), the local build and tests CI does not run, and filling .github/pull_request_template.md before `gh pr create`. Use when the user asks to "open a PR", "open an issue", "report a bug in CARLA", "request a feature", "open a discussion", "propose a CI workflow", "ask the maintainers before coding", "contribute this to CARLA", "prepare my branch for review", "fill the PR template", "is my change ready to merge", or "what does CARLA require in a pull request".
+description: Takes a contribution to CARLA on UE 5.8 from first contact to merged-ready pull request against ue58-dev — reporting a bug or requesting a feature as a GitHub issue from the repo's templates, opening a GitHub Discussion to agree a CI workflow change or a large feature with the maintainers before coding, then branch naming, syncing with the base, reviewing the diff against the contribution rules (CHANGELOG entry, no unagreed CI workflow changes, no hand-edited generated docs, whitespace, C++ exceptions, pylint, tests that are not weakened), the mandatory local check (editor + unit + smoke tests), and filling .github/pull_request_template.md before `gh pr create`. Use when the user asks to "open a PR", "open an issue", "report a bug in CARLA", "request a feature", "open a discussion", "propose a CI workflow", "ask the maintainers before coding", "contribute this to CARLA", "prepare my branch for review", "fill the PR template", "is my change ready to merge", or "what does CARLA require in a pull request".
 license: MIT
 compatibility: Any OS with git, the GitHub CLI (gh, authenticated) and python3, inside a CARLA checkout on branch ue58-dev or a branch made from it. Building and testing additionally needs the build-carla-ue58 environment. UE4 (ue4-dev) contributions are out of scope.
 metadata:
@@ -39,7 +39,7 @@ Progress:
 - [ ] Step 1: Confirm the target — ue58-dev tree, GitHub (not content) change
 - [ ] Step 2: Branch from an up-to-date ue58-dev, named user/topic
 - [ ] Step 3: Review the diff against the rules, fix every finding
-- [ ] Step 4: Build and run the tests CI will not run
+- [ ] Step 4: Build, open the editor, run the local checks (mandatory)
 - [ ] Step 5: Commit and push (after the user confirms)
 - [ ] Step 6: Fill the PR template, open the PR (after the user confirms)
 - [ ] Step 7: Watch the checks
@@ -257,35 +257,106 @@ Go through every check. Each one cites the rule it enforces in
 Report the findings to the user as a short list (rule → file → fix) and fix
 them before going on.
 
-### Step 4: Build and run the tests CI will not run
+### Step 4: Build, open the editor and run the local checks (mandatory)
 
 CI on a PR to `ue58-dev` configures the `Release` preset with
 `-DENABLE_ROS2=ON -DBUILD_LIBCARLA_TESTS=ON`. It builds the client, the Python
 API, the server and the package, and it runs the two LibCarla test binaries.
-**It runs no Python tests.** Skip this step only for docs-only PRs.
+**It runs no Python tests and never opens the editor.** So the full local
+check below, the ue58 equivalent of the old `make check`, is **mandatory**
+before Step 5. Its results go under **Where has this been tested?** in the
+PR body.
+
+**Rules for agents, no exceptions:**
+
+- **Run it, do not reason about it.** Editing a test, or writing a new one,
+  is not testing. A test you changed counts only once you ran it on this
+  branch and saw it pass, and you saw it fail without the fix where that
+  is possible.
+- **Build the branch you are proposing.** Run every test against binaries
+  built from the current `HEAD`, not against an older build, a downloaded
+  package or someone else's server.
+- **A failure blocks the PR.** Fix the code. A test that also fails on a
+  clean `ue58-dev` is pre-existing: show that it fails on the base too, and
+  name it under **Possible Drawbacks**. Never skip it, mark it expected to
+  fail or loosen it to get green.
+- **Cannot run a step?** Stop and tell the user which step and why: no
+  display for the editor, no GPU, no built engine. Never open the PR with the
+  step silently missing. Open it only if the user decides to, and then list
+  the step as not run under **Possible Drawbacks**.
+
+Only a docs-only PR (Step 3, item 10) skips this step. Run it on the Linux
+tree; `Build/Release` below is the preset build directory, so use `Build` if
+the tree was configured without a preset.
+
+#### 4a. Build everything the PR touches
 
 ```bash
-cmake --build Build/Release --target carla-client carla-python-api carla-server
-cmake --build Build/Release --target libcarla_test_server libcarla_test_client
-./Build/Release/LibCarla/libcarla_test_server
-./Build/Release/LibCarla/libcarla_test_client
+cmake --build Build/Release --target carla-client carla-python-api carla-server carla-unreal-editor
+cmake --build Build/Release --target carla-python-api-install   # the wheel the tests import
 ```
 
 If the tree is not configured yet, or a target fails, follow
-[[build-carla-ue58]]. The OpenDRIVE tests need `Build/test-content` (see
-`Docs/dev_testing.md`).
+[[build-carla-ue58]]. Building with warnings is a failure too (Step 3, item 6).
 
-**Packaging locally is not strictly required, but it is strongly
-recommended.** CI builds the package too, and failures that only appear
-there cost a full CI round trip each: cook errors, assets missing from the
-cook, and code that compiles in the editor but not in a shipping build.
-Anything that touches `Unreal/`, content references, cook or config files is
-at risk. Build the package with [[package-carla-ue58]] before opening the PR,
-and smoke-test against the packaged server rather than the editor. If you
-skip it, say so under **Possible Drawbacks**.
+#### 4b. Open the Unreal Editor and check it loads
 
-For anything touching the server or the Python API, run the smoke tests against
-a dedicated server on **port 3654** (see [[run-carla-ue58-server]]):
+A C++ or content change can compile and still break the editor: a module that
+fails to load, an asset that no longer resolves, a crash on map load or in
+Play-In-Editor. Open it on the branch's build:
+
+```bash
+# rebuilds the editor target, then opens it; it blocks until the editor
+# closes, so an agent runs it in the background
+cmake --build Build/Release --target launch
+```
+
+Wait for the editor to finish loading the default map (the first open after
+a C++ change also compiles shaders, which takes minutes). Then check:
+
+```bash
+LOG=Unreal/CarlaUnreal/Saved/Logs/CarlaUnreal.log
+grep -E 'Took .* seconds to LoadMap' "$LOG"                              # the map loaded
+grep -nE 'Fatal error|Assertion failed|Unhandled Exception' "$LOG"       # must be empty
+grep -nE 'LogCarla[A-Za-z]*: Error:' "$LOG"                              # read every hit
+pgrep -f 'UnrealEditor.*CarlaUnreal.uproject' >/dev/null && echo "editor still running"
+```
+
+- The editor process is still running and the map is open, with no crash
+  reporter window.
+- No `Log*Carla*: Error:` line that a clean `ue58-dev` does not also print.
+  `LogModelContextProtocol: Starting MCP server` is printed early in start-up,
+  so it does not mean the editor finished loading.
+- With `unreal-mcp` connected (the editor started before the agent session,
+  or `/mcp` → `unreal-mcp` → **Reconnect**), read the output log through it
+  and start a short Play-In-Editor session. If the change touches actors,
+  sensors or vehicles, place one in the level and check that it spawns and
+  ticks without errors.
+- Close the editor (**File → Exit**) before 4d. A Play-In-Editor session
+  starts its own CARLA server, and `run_server.sh stop` ends every
+  `UnrealEditor` process, the open editor included.
+
+The editor needs a display. Without one, the step cannot run: stop and tell
+the user (see the rules above). `-nullrhi` or the `-game` server is not a
+substitute, because neither loads the editor modules.
+
+#### 4c. Unit tests: LibCarla and Python API
+
+```bash
+cmake --build Build/Release --target libcarla_test_server libcarla_test_client
+./Build/Release/LibCarla/libcarla_test_server
+./Build/Release/LibCarla/libcarla_test_client
+pip3 install -r PythonAPI/test/requirements.txt
+(cd PythonAPI/test/unit && python3 -m nose2 -v)
+```
+
+The OpenDRIVE tests need `Build/test-content` (see `Docs/dev_testing.md`).
+
+#### 4d. Smoke tests against a server built from this branch
+
+Start a dedicated server on **port 3654** from the tree you just built, with
+[[run-carla-ue58-server]] (`PORT=3654 DETACH=1 bash scripts/run_server.sh game`),
+then run the whole list, not only the tests you touched:
 
 ```bash
 cd PythonAPI/test
@@ -293,11 +364,35 @@ python3 test_connection.py -p 3654 --timeout=60.0
 python3 -m nose2 -v $(cat smoke_test_list.txt)
 ```
 
-Record what you ran and on what: the PR body needs it, and "tests pass"
-without a platform and a list is not an answer.
+For a change to the ROS 2 interface, run `smoke.test_ros2` again with a server
+started with `ROS2=1`. Stop the server afterwards.
+
+#### 4e. Record the results
+
+Keep the summary line of each suite (`[  PASSED  ] N tests`, `Ran N tests …
+OK`), the commit they ran on (`git rev-parse --short HEAD`) and what the
+editor check showed. They go under **Where has this been tested?** in the
+PR, not under **Tests**. If the branch
+changes after this (a fix, a rebase onto a newer `ue58-dev`), run the
+checks again: results from an older commit do not count. "Tests pass"
+without a commit, a platform and a list of suites is not an answer.
+
+#### 4f. Package (strongly recommended)
+
+**Packaging locally is not strictly required, but it is strongly
+recommended.** CI builds the package too, and failures that only appear
+there cost a full CI round trip each: cook errors, assets missing from the
+cook, and code that compiles in the editor but not in a shipping build.
+Anything that touches `Unreal/`, content references, cook or config files is
+at risk. Build the package with [[package-carla-ue58]] before opening the PR,
+and run the smoke tests of 4d against the packaged server as well. If you
+skip it, say so under **Possible Drawbacks**.
 
 ### Step 5: Commit and push
 
+- **Do not push without Step 4.** Every check of 4a–4d passed on the commit
+  you are about to push, or the user decided to go ahead with a named step
+  not run. Re-run Step 4 if the code changed since.
 - Commit messages: an imperative subject line that says what changed
   ("Fix wheel spin when Chaos is not simulating"), not "fixes" or
   "final changes". Follow the repository's commit attribution rules.
@@ -317,8 +412,8 @@ nothing. Fill each section from evidence:
 |---|---|
 | **Description** | What changed and why, from `git log "$BASE"..HEAD` and the diff. Name the user-visible effect first, then the mechanism. Mention new API, options, and docs pages. |
 | **Fixes #** | The issue number, if any (from Step 0's search or [Opening an issue](#opening-an-issue)). `Fixes #<n>` closes it on merge. Check it with `gh issue view <n> --repo carla-simulator/carla`. Otherwise delete the line, never leave `Fixes #` empty. |
-| **Where has this been tested?** | Platform: `lsb_release -ds` (or OS name). Python: `python3 --version` of the interpreter that ran the tests. Unreal Engine: `5.8` (from `$CARLA_UNREAL_ENGINE_PATH/Engine/Build/Build.version`). |
-| **Tests** | Each new or modified test, what it asserts, and which regression it catches. List what you ran in Step 4. Write `None` only if no tests apply, and say why. |
+| **Where has this been tested?** | Platform: `lsb_release -ds` (or OS name). Python: `python3 --version` of the interpreter that ran the tests. Unreal Engine: `5.8` (from `$CARLA_UNREAL_ENGINE_PATH/Engine/Build/Build.version`). **Local checks**, from Step 4e: the commit, the editor check (opened, map loaded, PIE if run), and the summary line of each suite (LibCarla server and client, Python unit, smoke). A docs-only PR writes `Docs-only`. Never left empty for a code change. |
+| **Tests** | Only the tests this PR adds or modifies: what each one asserts, why it was added or changed, and which regression it catches. Not the local run results, which go in the row above. Write `None` if the PR adds or modifies no test, and say why none is needed. |
 | **CI workflows** | `None`, unless `.github/workflows/` changed: then the URL of the agreed discussion from [Opening a discussion](#opening-a-discussion). |
 | **Possible Drawbacks** | Behaviour changes, performance cost, API breaks, assets or content that must land at the same time, things not tested (e.g. Windows). |
 
@@ -449,6 +544,12 @@ venue; a discussion leaves a link the PR can cite.
   an old fork can still point at the previous one.
 - **A green CI tick does not mean the Python side works.** CI runs no Python
   tests; a broken smoke test only shows up when a reviewer runs it.
+- **A modified test that was never run proves nothing.** Agents tend to edit
+  the test until it reads right and move on. Step 4 is there so that every
+  test in the PR has been run, on this commit, against a build of it.
+- **CI never opens the editor.** A module that fails to load, or a crash on
+  map load or in Play-In-Editor, passes CI and breaks every developer's
+  editor after the merge. That is why 4b is not optional.
 - **Workflow changes without a prior agreement are not merged**, however
   good. Raise the discussion first and put its link in the body.
 - **Weakening a test to make it pass hides the regression it guards.** Fix the

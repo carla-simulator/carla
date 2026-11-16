@@ -151,3 +151,25 @@ packaged builds. See [`Docs/agent_skills.md`](Docs/agent_skills.md#unreal-mcp-in
 - Smoke tests live in `PythonAPI/test/smoke/` and need a running server on
   port 3654.
 - Add a `CHANGELOG.md` entry under `## LATEST Changes` for user-visible changes.
+
+## Before any pull request (mandatory)
+
+CI builds the code and runs only the LibCarla unit tests. It runs no Python
+tests and never opens the editor. Before you push a code change for a pull
+request, follow Step 4 of [`open-carla-pr`](Skills/contributing/open-carla-pr/SKILL.md)
+on the branch's own commit:
+
+1. Build it, including `carla-unreal-editor`.
+2. Open the Unreal Editor (`cmake --build Build/Release --target launch`) and
+   check that it loads the default map and stays up, with no crash and no new
+   Carla errors in the log.
+3. Run the LibCarla unit tests, the Python API unit tests and the whole smoke
+   list against a server on port 3654 started from that build.
+4. Report the commit and each result under **Where has this been tested?** in
+   the PR. The **Tests** section is only for which tests the PR adds or
+   modifies and why.
+
+Editing or adding a test is not testing it: a test counts only once you ran it
+and it passed. Never skip, loosen or delete a test to get a pass. If a step
+cannot run (no display, no GPU, no built engine), stop and tell the user. Do not
+open the PR with the step silently left out.
