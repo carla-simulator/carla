@@ -65,8 +65,10 @@ Each CARLA package includes pre-installed maps that you can use out-of-the-box. 
 Install the Python client library from [PyPi](https://pypi.org/project/carla/) using PIP for an officially released version:
 
 ```sh
-python3 -m pip install carla # carla==0.9.14 <= For a specific version
+python3 -m pip install carla==0.9.16
 ```
+
+Always give the version of your CARLA package. Without a version, PIP installs the latest `carla` on PyPI, which from CARLA 1.0 is the client for Unreal Engine 5 and cannot connect to an Unreal Engine 4 server.
 
 CARLA packages also have Python wheels included inside `PythonAPI/carla/dist`. **If you are using a custom package built from source or the CARLA-latest package, you need to install the wheels included in the package, not the wheels from PyPi**. From inside this directory, install the relevant wheel with PIP:
 
