@@ -231,6 +231,7 @@
 * Fixed `generate_traffic.py` timing out on Town12 and Town13: the vehicle batch took longer than the hard-coded 10 s client timeout and left the spawned vehicles without a Traffic Manager. The timeout now defaults to 60 s and is set with `--timeout`.
 * Fixed combining `carla.MapLayer` values: `carla.MapLayer.Buildings | carla.MapLayer.ParkedVehicles` gave a plain `int`, which `load_world()` and `load_map_layer()` rejected, so the documented multi-layer example failed. `|`, `&`, `^` and `~` between layers now give a `carla.MapLayer`.
 * `Sensor.stop()` releases the GIL, so stopping a camera whose frame callback is still running no longer deadlocks the client at exit.
+* Fixed **a sensor callback that blocks or runs long stalling other streams of the same client**: another sensor stopped delivering data, or `world.tick()` and `world.wait_for_tick()` timed out because the world snapshots were held back, for roughly one pair of streams in 193. Each stream of a client now has its own strand: Boost.Asio shares the implementations of `io_context::strand` among the strands of an `io_context`.
 
 #### Build and packaging
 
