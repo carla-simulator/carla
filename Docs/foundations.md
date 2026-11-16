@@ -3,8 +3,10 @@
 This page introduces the fundamental concepts required to understand how the CARLA server and client operate and communicate through the API. CARLA operates using a server-client architecture, whereby the CARLA server runs the simulation and instructions are sent to it by the client(s). The client code communicates with the server using the [__API__](python_api.md). To use the Python API you must install the module through PIP:
 
 ```sh
-python3 -m pip install carla
+python3 -m pip install carla==0.9.16
 ```
+
+Give the version of your CARLA server. Without a version, PIP installs the latest `carla` on PyPI, which is the client for CARLA 1.0 on Unreal Engine 5 and cannot connect to an Unreal Engine 4 server.
 
 Also make sure to import the CARLA package in your python scripts:
 

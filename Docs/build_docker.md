@@ -28,15 +28,13 @@ You will need to have installed:
 
 __1. Pull the CARLA image.__
 
-You can pull either the latest CARLA image or a specific release version. The latest image refers to the most [recent packaged release](https://github.com/carla-simulator/carla/releases). To pull the image, run one of the following commands:
+Pull the image of the CARLA release you use, giving its version as the tag. For CARLA 0.9.16, the last release on Unreal Engine 4.26, run:
 
 ```sh
-# Pull the latest image
-docker pull carlasim/carla:latest
-
-# Pull a specific version
 docker pull carlasim/carla:0.9.16
 ```
+
+Do not use the `latest` tag: it does not follow the releases, so it may not be the version you expect.
 
 __2. Run the CARLA container.__
 
