@@ -53,7 +53,7 @@ Here are the previous versions of CARLA with links to the specific documentation
 
 ### Docker
 
-All versions are available to pull from DockerHub. Always give the version as the tag; `latest` does not follow the releases, so it may not be the version you expect. For CARLA 0.9.16, the last release on Unreal Engine 4.26:
+All versions are available to pull from DockerHub. Always give the version as the tag; `latest` refers to the latest version of CARLA on Unreal Engine 5. For CARLA 0.9.16, the last release on Unreal Engine 4.26:
 
 ```sh
 docker pull carlasim/carla:0.9.16
