@@ -76,7 +76,7 @@ The package is a compressed file, `CARLA_1.0.tar.gz` on Linux and `CARLA_1.0.zip
 ---
 ## Install client library
 
-Install the CARLA client library from the wheel provided with the package. The client and the server must be the same version, and the wheel in the package always matches its server.
+Install the CARLA client library from the wheel provided with the package, or [from PyPI](#from-pypi). The client and the server must be the same version, and the wheel in the package always matches its server.
 
 ### Linux
 
@@ -94,8 +94,18 @@ pip3 install carla-<version>-cp310-cp310-win_amd64.whl
 
 Each wheel is built for one Python minor version and one platform, for example `carla-<version>-cp310-cp310-linux_x86_64.whl` for Python 3.10 on Linux. A package can ship several, one per Python version it was built for. Release packages ship wheels for Python 3.10 to 3.15. Install the one whose `cpXY` tag matches your interpreter, since installing a wheel on another Python version fails.
 
+### From PyPI
+
+The client of each release is also published on PyPI, and the latest one is the CARLA 1.0 client:
+
+```sh
+pip3 install carla
+```
+
+To pin the version, install `carla==1.0`.
+
 !!! Warning
-    Do not install the client with `pip3 install carla`. The `carla` package on PyPI is the client for the Unreal Engine 4 version of CARLA and cannot connect to this server.
+    The `carla` releases on PyPI up to 0.9.16 are clients for the Unreal Engine 4 version of CARLA and cannot connect to this server. If an older `carla` is already installed, upgrade it with `pip3 install --upgrade carla`.
 
 ---
 ## Running CARLA
