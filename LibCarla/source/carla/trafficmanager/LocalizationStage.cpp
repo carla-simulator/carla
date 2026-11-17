@@ -605,15 +605,19 @@ void LocalizationStage::ImportPath(Path &imported_path, Buffer &waypoint_buffer,
         float min_distance = std::numeric_limits<float>::infinity();
         for (uint64_t k = 0u; k < next_waypoints.size(); ++k) {
           SimpleWaypointPtr junction_end_point = next_waypoints.at(k);
-          while (!junction_end_point->CheckJunction()) {
-            junction_end_point = junction_end_point->GetNextWaypoint().front();
-          }
-          while (junction_end_point->CheckJunction()) {
-            junction_end_point = junction_end_point->GetNextWaypoint().front();
-          }
-          while (next_waypoints.at(k)->DistanceSquared(junction_end_point) < 50.0f) {
-            junction_end_point = junction_end_point->GetNextWaypoint().front();
-          }
+          // Moves junction_end_point one step forward. Returns false, without
+          // moving, when the branch dead-ends.
+          auto step_forward = [&junction_end_point]() {
+            const auto next = junction_end_point->GetNextWaypoint();
+            if (next.empty()) {
+              return false;
+            }
+            junction_end_point = next.front();
+            return true;
+          };
+          while (!junction_end_point->CheckJunction() && step_forward()) {}
+          while (junction_end_point->CheckJunction() && step_forward()) {}
+          while (next_waypoints.at(k)->DistanceSquared(junction_end_point) < 50.0f && step_forward()) {}
           float jep_road_id = junction_end_point->GetWaypoint()->GetRoadId();
           if (jep_road_id == imported_road_id) {
             selection_index = k;
