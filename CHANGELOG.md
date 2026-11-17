@@ -12,6 +12,7 @@
 #### Agentic CARLA
 
 * Added an **agent skill library**: 64 vetted CARLA procedures under `Skills/`, covering setup, the Python API, UE 4.26 / 5.5 / 5.8 builds, packaging, asset imports, Scenario Runner, Leaderboard, Scenic, native ROS 2, the documentation itself, and contributing back: issues, discussions and pull requests against `ue58-dev`. `Util/AgenticTools/` serves the same library over MCP. See `Docs/agent_skills.md`.
+* **Packages ship the skill library**: `Skills/` and `Util/AgenticTools/` are copied to the package root with an `AGENTS.md` and a `.mcp.json` written for a package, so an assistant opened in a downloaded CARLA finds the skills of the commit it was built from, with nothing to install.
 * Enabled Epic's **Unreal MCP** plugin (`ModelContextProtocol` + `EditorToolset`) in the CarlaUnreal editor: opening the project starts an MCP server on `http://localhost:6256/mcp`, and the repo's `.mcp.json` registers it as `unreal-mcp` so Claude Code connects to the running editor with no setup. Editor only: `-game` and packaged builds do not load it. See `Docs/agent_skills.md`.
 
 #### Sensor simulation
