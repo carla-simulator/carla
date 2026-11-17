@@ -240,6 +240,7 @@
 * Fixed the Windows build: the setup installs the MSVC 14.38 toolset the engine fork needs, MSVC builds use `/W4`, and two compile and link errors in LibCarla.
 * Fixed the CMake toolchain picking the oldest clang sysroot when an upgraded engine keeps several side by side.
 * Fixed reconfiguring an already-built tree (e.g. `-DENABLE_ROS2=ON`) silently keeping the old options: UnrealBuildTool reused its cached makefile because the `Carla` and `CarlaTools` modules read CMake's generated `Options.def`, `Definitions.def`, `Includes.def` and `Libraries.def` without declaring them, so the rebuild reported success with a plugin that had no ROS 2 in it. Both modules now list those files as `ExternalDependencies`, and a change to any of them re-creates the makefile.
+* Fixed the package `VERSION` file writing an empty `UnrealEngine git hash` (#10318), and a `Content git hash` that was really CARLA's when the content folder is not a clone of its own. A hash is now only read from the root of a git checkout. Otherwise the field says `unknown (<reason>)` and packaging prints a warning. The file also records the engine version from `Engine/Build/Build.version`, so a package built from an engine that is not a git checkout can still be traced.
 * Fixed `Util/Docker/build.sh` failing to build the development image: the PythonAPI requirements are copied into the build context with their relative layout, so `-r ../carla/requirements.txt` resolves (#10177). The image also installs `libusb-1.0-0`, without which `open3d` cannot be imported.
 
 #### Examples and tests
