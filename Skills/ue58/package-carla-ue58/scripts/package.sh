@@ -225,6 +225,27 @@ inspect)
     || warn "no wheel under PythonAPI/carla/dist — clients must install one separately"
   [ -d "${P}/PythonAPI/examples" ] && ok "$(ls -1 "${P}"/PythonAPI/examples/*.py 2>/dev/null | wc -l) example scripts bundled"
 
+  echo "== Agent skills =="
+  # Copied from git-tracked files only, so a tree that is not a git checkout
+  # packages none (CopyCarlaAdditionalFiles.cmake warns and carries on).
+  NSK="$(ls -1 "${P}"/Skills/*/*/SKILL.md 2>/dev/null | wc -l)"
+  if [ "${NSK}" -gt 0 ]; then
+    ok "${NSK} skills under Skills/"
+    [ -f "${P}/Util/AgenticTools/bin/carla-agentic-tools.js" ] && ok "MCP server Util/AgenticTools" \
+      || warn "no Util/AgenticTools — the skills are there but nothing serves them over MCP"
+    # Both are written for the package: the repository's own would send an
+    # assistant to the build and to the editor's unreal-mcp, absent here.
+    if [ -f "${P}/AGENTS.md" ] && grep -q '^## Skill catalogue' "${P}/AGENTS.md"; then
+      ok "AGENTS.md with the skill catalogue"
+    else
+      warn "no AGENTS.md with a skill catalogue — an assistant opened in the package does not find the skills"
+    fi
+    [ -f "${P}/.mcp.json" ] && ok ".mcp.json registers the MCP server" \
+      || warn "no .mcp.json — MCP clients do not start the server on their own"
+  else
+    warn "no Skills/ at the package root — built from a tree that is not a git checkout?"
+  fi
+
   echo "== Archive =="
   TGZ="$(ls -1t "${CARLA_UE58_ROOT}"/Build/*/Package/*.tar.gz 2>/dev/null | head -1)"
   [ -n "${TGZ}" ] && ok "$(basename "${TGZ}") ($(du -h "${TGZ}"|cut -f1))" || warn "no .tar.gz archive"

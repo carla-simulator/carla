@@ -67,6 +67,11 @@ python Tools\carla_pack.py install <AdditionalMaps>.tar.gz --server .
 
 A pack built for another package is refused. `python Tools\carla_pack.py inspect <pack> --server .` checks a pack without installing it.
 
+Using an AI coding assistant
+----------------------------
+
+This package ships the CARLA agent skills: procedures tested by the CARLA team for running the server, installing the client and driving the simulation, in `Skills\`. Open your assistant (Claude Code, Codex, Cursor...) in this folder and ask for what you need, for example *"start a CARLA server, spawn 50 vehicles and follow one with the spectator"*. `AGENTS.md` points the assistant at the skills, and `.mcp.json` registers the CARLA MCP server in `Util\AgenticTools\` for clients that support MCP (needs Node 12 or later). The skill scripts are POSIX shell: on Windows the assistant runs them from Git Bash.
+
 For more details and running options, refer to the online documentation:
 
 <https://carla-ue5.readthedocs.io>
