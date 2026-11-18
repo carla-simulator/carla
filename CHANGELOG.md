@@ -214,6 +214,7 @@
 
 #### Python API and client
 
+* **Client navigation sampling**: sample usable crosswalk or grass polygons when sidewalks are absent, accept the final permitted query and retain all bytes when loading a mesh file.
 * Fixed **scripts crashing at exit while callbacks are registered** (segmentation fault or `Fatal Python error: gilstate_tss_set`, about one exit in three on Python 3.14, e.g. `automatic_control.py`): CARLA's client threads kept calling `on_tick` and sensor callbacks into an interpreter that was being finalized. The `carla` module now stops them through an `atexit` hook and waits for the callbacks already running.
 * `Client.apply_batch_sync()`, `apply_batch()` and `get_required_files()` now release the GIL while they wait for the server, so sensor callbacks keep running meanwhile.
 * Fixed client signal identifier reads exceeding the 32 byte snapshot buffer.
