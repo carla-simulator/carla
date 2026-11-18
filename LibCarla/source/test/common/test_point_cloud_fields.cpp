@@ -175,3 +175,44 @@ TEST(PointCloudFields, lidar_azimuth_clockwise_zero_to_two_pi) {
     EXPECT_NEAR(b - a, step, 1e-4f) << "at step " << i;
   }
 }
+
+// The azimuth parameters are generic, so any full-turn interval and either
+// direction work: the result lies in the interval, is the same angle as atan2
+// in the chosen direction, and grows along a sweep in that direction, wrapping
+// exactly once per turn.
+TEST(PointCloudFields, lidar_azimuth_arbitrary_range_and_direction) {
+  constexpr float kTwoPi = 2.0f * kPi;
+  const float step = 0.2f * kPi / 180.0f;
+  constexpr int kSteps = 1800;  // One full turn at the step above.
+  for (const bool clockwise : {false, true}) {
+    for (const float start_deg : {-180.0f, -90.0f, 0.0f, 45.0f, 180.0f}) {
+      const carla::ros2::LidarAzimuthRange range =
+          carla::ros2::LidarAzimuthRange::FromDegrees(clockwise, start_deg, start_deg + 360.0f);
+      int wraps = 0;
+      float previous = 0.0f;
+      for (int i = 0; i <= kSteps; ++i) {
+        // Sweep in the chosen direction, seen from above in the ROS frame.
+        const float angle = static_cast<float>(i) * step;
+        const float x = std::cos(angle);
+        const float y = clockwise ? -std::sin(angle) : std::sin(angle);
+        const float azimuth = carla::ros2::ComputeLidarAzimuth(x, y, range);
+        EXPECT_GE(azimuth, range.start) << "start " << start_deg << " step " << i;
+        EXPECT_LE(azimuth, range.end) << "start " << start_deg << " step " << i;
+        const float expected = std::atan2(clockwise ? -y : y, x);
+        EXPECT_NEAR(std::cos(azimuth), std::cos(expected), 1e-5f);
+        EXPECT_NEAR(std::sin(azimuth), std::sin(expected), 1e-5f);
+        if (i > 0) {
+          const float delta = azimuth - previous;
+          if (delta < 0.0f) {
+            ++wraps;
+            EXPECT_NEAR(delta, step - kTwoPi, 1e-3f) << "start " << start_deg << " step " << i;
+          } else {
+            EXPECT_NEAR(delta, step, 1e-3f) << "start " << start_deg << " step " << i;
+          }
+        }
+        previous = azimuth;
+      }
+      EXPECT_EQ(wraps, 1) << "start " << start_deg << (clockwise ? " clockwise" : " counterclockwise");
+    }
+  }
+}
