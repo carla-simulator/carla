@@ -33,7 +33,10 @@ void USpeedLimitComponent::InitializeSign(const carla::road::Map &Map)
   auto* Signal = GetSignal(Map);
   if (Signal)
   {
-    SetSpeedLimit(Signal->GetValue());
+    // A 274 sign's value converted from its unit, the same limit the
+    // OpenDRIVE map applies once the sign is passed.
+    const auto Limit = Signal->GetSpeedLimitKmh();
+    SetSpeedLimit(Limit.has_value() ? static_cast<float>(*Limit) : Signal->GetValue());
   }
 
   for (auto& Reference : References)
