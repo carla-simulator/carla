@@ -68,6 +68,13 @@ public:
     return Stream->AreClientsListening();
   }
 
+  /// Like AreClientsListening(), but ignoring the ROS 2 flag.
+  bool AreSessionsListening()
+  {
+    check(Stream.has_value());
+    return Stream->AreSessionsListening();
+  }
+
 private:
 
   std::optional<StreamType> Stream;

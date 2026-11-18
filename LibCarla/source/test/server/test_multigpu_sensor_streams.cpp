@@ -7,6 +7,7 @@
 #include <carla/Buffer.h>
 #include <carla/BufferView.h>
 #include <carla/multigpu/mirroredActors.h>
+#include <carla/multigpu/sensorOwnership.h>
 #include <carla/multigpu/sensorStreamRegistry.h>
 #include <carla/streaming/Client.h>
 #include <carla/streaming/Server.h>
@@ -697,3 +698,201 @@ TEST(MultiGpuSensorStreams, episode_change_keeps_the_broadcast_alias) {
   EXPECT_EQ(secondary.server.FindStreamAlias(broadcast_id), std::optional<stream_id_type>(broadcast_id));
 }
 
+
+namespace {
+
+  using carla::multigpu::OwnsSensor;
+  using carla::multigpu::ProcessRole;
+  using carla::multigpu::ShouldProduceSensorData;
+
+} // namespace
+
+TEST(MultiGpuSensorOwnership, standalone_owns_every_sensor) {
+  for (const bool routed : {false, true}) {
+    for (const bool primary_only : {false, true}) {
+      for (const bool routed_here : {false, true}) {
+        EXPECT_TRUE(OwnsSensor(ProcessRole::Standalone, routed, primary_only, routed_here, routed_here));
+      }
+    }
+  }
+}
+
+TEST(MultiGpuSensorOwnership, primary_owns_sensors_not_routed_to_a_live_secondary) {
+  EXPECT_TRUE(OwnsSensor(ProcessRole::Primary, false, false, false, false));
+  EXPECT_FALSE(OwnsSensor(ProcessRole::Primary, true, false, false, false));
+}
+
+TEST(MultiGpuSensorOwnership, primary_always_owns_primary_only_sensors) {
+  EXPECT_TRUE(OwnsSensor(ProcessRole::Primary, false, true, false, false));
+  EXPECT_TRUE(OwnsSensor(ProcessRole::Primary, true, true, false, false));
+}
+
+TEST(MultiGpuSensorOwnership, secondary_owns_only_sensors_routed_to_it_while_connected) {
+  EXPECT_TRUE(OwnsSensor(ProcessRole::Secondary, false, false, true, true));
+  EXPECT_FALSE(OwnsSensor(ProcessRole::Secondary, false, false, true, false));
+  EXPECT_FALSE(OwnsSensor(ProcessRole::Secondary, false, false, false, true));
+}
+
+TEST(MultiGpuSensorOwnership, secondary_never_owns_primary_only_sensors) {
+  EXPECT_FALSE(OwnsSensor(ProcessRole::Secondary, false, true, true, true));
+  EXPECT_FALSE(OwnsSensor(ProcessRole::Secondary, false, true, true, false));
+}
+
+// The primary's and the secondary's views of one route can disagree for a
+// while: the primary noticed a lost secondary first, or the secondary noticed
+// the lost connection first, or the route moved to secondary_b.
+TEST(MultiGpuSensorOwnership, stale_routes_never_give_a_sensor_two_owners) {
+  struct View {
+    bool primary_sees_live_route;
+    bool a_connected;
+    bool a_routed_here;
+    bool b_routed_here;
+    int expected_owners;
+  };
+  const View views[] = {
+    {true, true, true, false, 1},    // consistent: routed to a
+    {false, true, false, false, 1},  // consistent: not routed
+    {true, true, false, true, 1},    // route moved from a to b
+    {false, false, true, false, 1},  // a lost the connection and the primary noticed it
+    {true, false, true, false, 0},   // a noticed first: nobody publishes until the primary does
+  };
+  for (const auto &view : views) {
+    const int owners =
+        static_cast<int>(OwnsSensor(ProcessRole::Primary, view.primary_sees_live_route, false, false, false)) +
+        static_cast<int>(OwnsSensor(ProcessRole::Secondary, false, false, view.a_connected, view.a_routed_here)) +
+        static_cast<int>(OwnsSensor(ProcessRole::Secondary, false, false, true, view.b_routed_here));
+    EXPECT_EQ(owners, view.expected_owners)
+        << "primary_sees_live_route=" << view.primary_sees_live_route
+        << " a_connected=" << view.a_connected << " a_routed_here=" << view.a_routed_here
+        << " b_routed_here=" << view.b_routed_here;
+  }
+}
+
+TEST(MultiGpuSensorOwnership, client_sessions_are_served_whatever_the_owner) {
+  EXPECT_TRUE(ShouldProduceSensorData(false, true, true));
+  EXPECT_TRUE(ShouldProduceSensorData(true, true, true));
+}
+
+TEST(MultiGpuSensorOwnership, a_ros_only_listener_is_served_by_the_owner_only) {
+  EXPECT_TRUE(ShouldProduceSensorData(true, false, true));
+  EXPECT_FALSE(ShouldProduceSensorData(false, false, true));
+  EXPECT_FALSE(ShouldProduceSensorData(true, false, false));
+}
+
+static_assert(OwnsSensor(ProcessRole::Primary, true, true, false, false));
+static_assert(!OwnsSensor(ProcessRole::Primary, true, false, false, false));
+static_assert(!OwnsSensor(ProcessRole::Secondary, false, true, true, true));
+
+TEST(MultiGpuSensorOwnership, a_ros_enabled_stream_has_no_session_listener) {
+  SecondaryStreams secondary;
+  auto stream = secondary.server.MakeStream();
+  secondary.server.EnableForROS(StreamIdOf(stream));
+  EXPECT_TRUE(stream.AreClientsListening());
+  EXPECT_FALSE(stream.AreSessionsListening());
+
+  ASSERT_TRUE(secondary.server.FindToken(StreamIdOf(stream)).has_value());
+  EXPECT_TRUE(stream.AreSessionsListening());
+}
+
+TEST(MultiGpuSensorOwnership, drop_routes_forgets_the_routes_and_their_aliases) {
+  SecondaryStreams secondary;
+  auto sensor = secondary.server.MakeStream();
+  EXPECT_FALSE(secondary.registry.Bind(secondary.server, 7u, StreamIdOf(sensor), true).has_value());
+  ASSERT_TRUE(secondary.registry.Resolve(secondary.server, 7u, 100u).has_value());
+
+  secondary.registry.DropRoutes(secondary.server);
+  EXPECT_FALSE(secondary.registry.IsRoutedHere(StreamIdOf(sensor)));
+  EXPECT_FALSE(secondary.server.FindStreamAlias(100u).has_value());
+
+  ASSERT_TRUE(secondary.registry.Resolve(secondary.server, 7u, 100u).has_value());
+  EXPECT_TRUE(secondary.registry.IsRoutedHere(StreamIdOf(sensor)));
+}
+
+TEST(MultiGpuSensorOwnership, a_bound_sensor_is_not_routed_here_until_its_token_is_resolved) {
+  SecondaryStreams secondary;
+  auto sensor = secondary.server.MakeStream();
+  EXPECT_FALSE(secondary.registry.Bind(secondary.server, 7u, StreamIdOf(sensor), true).has_value());
+  EXPECT_FALSE(secondary.registry.IsRoutedHere(StreamIdOf(sensor)));
+
+  ASSERT_TRUE(secondary.registry.Resolve(secondary.server, 7u, 100u).has_value());
+  EXPECT_TRUE(secondary.registry.IsRoutedHere(StreamIdOf(sensor)));
+}
+
+TEST(MultiGpuSensorOwnership, a_sensor_adopting_its_reservation_is_routed_here) {
+  SecondaryStreams secondary;
+  ASSERT_TRUE(secondary.registry.Resolve(secondary.server, 7u, 100u).has_value());
+  auto sensor = secondary.server.MakeStream();
+  EXPECT_FALSE(secondary.registry.IsRoutedHere(StreamIdOf(sensor)));
+
+  const auto adopted = secondary.registry.Bind(secondary.server, 7u, StreamIdOf(sensor), true);
+  ASSERT_TRUE(adopted.has_value());
+  EXPECT_TRUE(secondary.registry.IsRoutedHere(StreamIdOf(*adopted)));
+}
+
+TEST(MultiGpuSensorOwnership, a_retargeted_sensor_moves_the_route_to_its_stream) {
+  SecondaryStreams secondary;
+  ASSERT_TRUE(secondary.registry.Resolve(secondary.server, 7u, 100u).has_value());
+  const auto reserved_id = secondary.server.FindStreamAlias(100u);
+  ASSERT_TRUE(reserved_id.has_value());
+  auto sensor = secondary.server.MakeStream();
+
+  EXPECT_FALSE(secondary.registry.Bind(secondary.server, 7u, StreamIdOf(sensor), false).has_value());
+  EXPECT_TRUE(secondary.registry.IsRoutedHere(StreamIdOf(sensor)));
+  EXPECT_FALSE(secondary.registry.IsRoutedHere(*reserved_id));
+}
+
+TEST(MultiGpuSensorOwnership, unbind_drops_the_route) {
+  SecondaryStreams secondary;
+  auto sensor = secondary.server.MakeStream();
+  EXPECT_FALSE(secondary.registry.Bind(secondary.server, 7u, StreamIdOf(sensor), true).has_value());
+  ASSERT_TRUE(secondary.registry.Resolve(secondary.server, 7u, 100u).has_value());
+
+  secondary.registry.Unbind(secondary.server, 7u);
+  EXPECT_FALSE(secondary.registry.IsRoutedHere(StreamIdOf(sensor)));
+}
+
+TEST(MultiGpuSensorOwnership, episode_change_drops_the_route_until_the_token_is_resolved_again) {
+  SecondaryStreams secondary;
+  auto sensor = secondary.server.MakeStream();
+  EXPECT_FALSE(secondary.registry.Bind(secondary.server, 7u, StreamIdOf(sensor), true).has_value());
+  ASSERT_TRUE(secondary.registry.Resolve(secondary.server, 7u, 100u).has_value());
+
+  const auto epoch = secondary.registry.BeginEpisodeChange(secondary.server);
+  EXPECT_FALSE(secondary.registry.IsRoutedHere(StreamIdOf(sensor)));
+
+  secondary.registry.OpenEpisode(epoch);
+  auto new_sensor = secondary.server.MakeStream();
+  EXPECT_FALSE(secondary.registry.Bind(secondary.server, 7u, StreamIdOf(new_sensor), true).has_value());
+  EXPECT_FALSE(secondary.registry.IsRoutedHere(StreamIdOf(new_sensor)));
+
+  ASSERT_TRUE(secondary.registry.Resolve(secondary.server, 7u, 200u).has_value());
+  EXPECT_TRUE(secondary.registry.IsRoutedHere(StreamIdOf(new_sensor)));
+}
+
+TEST(MultiGpuSensorOwnership, secondaries_with_colliding_local_ids_own_only_what_was_routed_to_them) {
+  SecondaryStreams secondary_a;
+  SecondaryStreams secondary_b;
+  auto sensor_a = secondary_a.server.MakeStream();
+  auto sensor_b = secondary_b.server.MakeStream();
+  ASSERT_EQ(StreamIdOf(sensor_a), StreamIdOf(sensor_b));
+  EXPECT_FALSE(secondary_a.registry.Bind(secondary_a.server, 7u, StreamIdOf(sensor_a), true).has_value());
+  EXPECT_FALSE(secondary_b.registry.Bind(secondary_b.server, 7u, StreamIdOf(sensor_b), true).has_value());
+
+  ASSERT_TRUE(secondary_b.registry.Resolve(secondary_b.server, 7u, 100u).has_value());
+  EXPECT_FALSE(secondary_a.registry.IsRoutedHere(StreamIdOf(sensor_a)));
+  EXPECT_TRUE(secondary_b.registry.IsRoutedHere(StreamIdOf(sensor_b)));
+}
+
+TEST(MultiGpuSensorOwnership, unrelated_streams_are_not_routed_here) {
+  SecondaryStreams secondary;
+  auto routed = secondary.server.MakeStream();
+  auto mirrored = secondary.server.MakeStream();
+  EXPECT_FALSE(secondary.registry.Bind(secondary.server, 7u, StreamIdOf(routed), true).has_value());
+  EXPECT_FALSE(secondary.registry.Bind(secondary.server, 8u, StreamIdOf(mirrored), true).has_value());
+  ASSERT_TRUE(secondary.registry.Resolve(secondary.server, 7u, 100u).has_value());
+
+  EXPECT_TRUE(secondary.registry.IsRoutedHere(StreamIdOf(routed)));
+  EXPECT_FALSE(secondary.registry.IsRoutedHere(StreamIdOf(mirrored)));
+  EXPECT_FALSE(secondary.registry.IsRoutedHere(100u));
+  EXPECT_FALSE(secondary.registry.IsRoutedHere(0u));
+}

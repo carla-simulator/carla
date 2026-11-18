@@ -15,8 +15,10 @@
 #include "carla/streaming/detail/Types.h"
 
 #include <atomic>
+#include <functional>
 #include <memory>
 #include <mutex>
+#include <shared_mutex>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
@@ -77,6 +79,20 @@ public:
   bool IsEnabled() { return _enabled; }
   void SetFrame(uint64_t frame);
   void SetTimestamp(double timestamp);
+
+  /// Multi-GPU: only the process owning a sensor publishes it. Without a query
+  /// (single server) every sensor is owned. Setting a query waits for the
+  /// calls of the previous one in flight; the query must not call into ROS2.
+  using PublicationOwnerQuery =
+      std::function<bool(carla::streaming::detail::stream_id_type stream_id, bool primary_only)>;
+  void SetPublicationOwnerQuery(PublicationOwnerQuery query);
+  [[nodiscard]]
+  bool OwnsPublication(carla::streaming::detail::stream_id_type stream_id, bool primary_only = false) const;
+  /// Drops the publishers created for @a actor, e.g. after this process lost
+  /// its ownership, so the topic keeps a single writer.
+  void ReleasePublication(void *actor);
+  /// Must be called before Enable(): only the clock owner keeps /clock.
+  void SetClockOwner(bool clock_owner) { _clock_owner = clock_owner; }
 
   // Global TF gate (tier4 port): when false, no sensor broadcasts its
   // transform on /tf. Complements the per-sensor publish_tf flag set at
@@ -320,6 +336,11 @@ private:
   mutable std::mutex _mutex;
 
   std::atomic<bool> _enabled{false};
+  bool _clock_owner{true};
+  // Set while this process keeps the middleware up without a /clock writer.
+  bool _holds_middleware_context{false};
+  mutable std::shared_mutex _owner_query_mutex;
+  PublicationOwnerQuery _owner_query;
   std::atomic<bool> _publish_tf{true};
   std::atomic<uint64_t> _frame{0};
   Stamp _stamp;
