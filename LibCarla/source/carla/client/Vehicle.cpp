@@ -14,6 +14,8 @@
 
 #include "carla/trafficmanager/TrafficManager.h"
 
+#include <algorithm>
+
 namespace carla {
 
 using TM = traffic_manager::TrafficManager;
@@ -77,6 +79,17 @@ namespace client {
 
   void Vehicle::CloseDoor(const VehicleDoor door_idx) {
     GetEpisode().Lock()->CloseVehicleDoor(*this, rpc::VehicleDoor(door_idx));
+  }
+
+  bool Vehicle::IsDoorOpen(const VehicleDoor door_idx) const {
+    const auto &data = GetEpisode().Lock()->GetActorSnapshot(*this).state.vehicle_data;
+    const unsigned count = std::min<unsigned>(data.door_count, 8u);
+    if (door_idx == VehicleDoor::All) {
+      const unsigned all = (1u << count) - 1u;
+      return (count > 0u) && ((data.open_doors & all) == all);
+    }
+    const unsigned index = static_cast<unsigned>(door_idx);
+    return (index < count) && ((data.open_doors & (1u << index)) != 0u);
   }
 
   void Vehicle::SetLightState(const LightState &light_state) {

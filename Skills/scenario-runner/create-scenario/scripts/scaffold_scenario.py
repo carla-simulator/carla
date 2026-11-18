@@ -329,8 +329,8 @@ def do_scaffold(args) -> None:
         timeout=args.timeout,
         init_body=INIT[args.template],
         behavior_body=BEHAVIOR[args.template].format(name=name, **_syntax),
-    ))
-    xml_path.write_text(XML.format(name=name, town=town, x=x, y=y, z=z, yaw=yaw, ego=ego))
+    ), encoding="utf-8")
+    xml_path.write_text(XML.format(name=name, town=town, x=x, y=y, z=z, yaw=yaw, ego=ego), encoding="utf-8")
     print(f"wrote {py_path}")
     print(f"wrote {xml_path}")
     print(f"\ntemplate : {args.template} — {TEMPLATES[args.template]}")
@@ -368,7 +368,7 @@ def do_validate(args) -> None:
     # Parse rather than import: importing needs carla + a live SimulationData,
     # and every mistake worth catching here is visible in the AST.
     try:
-        tree = ast.parse(py_path.read_text())
+        tree = ast.parse(py_path.read_text(encoding="utf-8"))
     except SyntaxError as e:
         bad(f"syntax error at line {e.lineno}: {e.msg}")
         sys.exit(rc)

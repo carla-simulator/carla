@@ -135,6 +135,18 @@ jobs:
           call "%VCVARS%" || exit /b 1
           cmake --build Build\Release --target package
 
+      # Every build of the tree, the extra Python ones included, writes
+      # LibCarla/source/carla/Version.h, and the server compiles what is there.
+      - name: Check release version
+        if: inputs.release-version != ''
+        env:
+          RELEASE_VERSION: ${{ inputs.release-version }}
+        run: |
+          findstr /L /C:"return \"%RELEASE_VERSION%\";" LibCarla\source\carla\Version.h >nul && exit /b 0
+          echo ::error::LibCarla/source/carla/Version.h does not carry the release version %RELEASE_VERSION%
+          findstr /C:"return" LibCarla\source\carla\Version.h
+          exit /b 1
+
       - name: Build AdditionalMaps pack
         if: inputs.additional-maps == true
         env:

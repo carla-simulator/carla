@@ -100,9 +100,6 @@ void AVehicleStatusSensor::CollectAndStream(float /*DeltaSeconds*/)
   // Update cached velocity info
   SetVelocityInfoToLocal(Vehicle);
 
-  // Get Max Steering
-  const auto MaxSteerAngleInRadians = FMath::DegreesToRadians(Vehicle->GetMaximumSteerAngle());
-
   // Control flags (b0 = reverse, b1 = manual gear shift)
   const auto& Control = Vehicle->GetVehicleControl();
   const auto Flags = (Control.bReverse ? 0x01 : 0) | (Control.bManualGearShift ? 0x02 : 0);
@@ -125,7 +122,9 @@ void AVehicleStatusSensor::CollectAndStream(float /*DeltaSeconds*/)
     static_cast<float>(Vehicle->GetActorRotation().Pitch),
     static_cast<float>(Vehicle->GetActorRotation().Yaw),
     static_cast<float>(Vehicle->GetActorRotation().Roll),
-    static_cast<float>(Vehicle->GetVehicleControl().Steer * MaxSteerAngleInRadians),
+    // Normalized: the ROS 2 side maps it to a tire angle with the steering
+    // compensation table, which is keyed on the normalized input (#10294).
+    static_cast<float>(Control.Steer),
     static_cast<int32_t>(Vehicle->GetVehicleCurrentGear()),
     static_cast<uint8_t>(TurnMask),
     static_cast<uint8_t>(Flags),

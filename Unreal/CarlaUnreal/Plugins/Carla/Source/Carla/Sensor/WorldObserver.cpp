@@ -68,6 +68,8 @@ static auto FWorldObserver_GetActorState(const FCarlaActor &View, const FActorRe
       // Get the failure state by checking the rollover one as it is the only one currently implemented.
       // This will have to be expanded once more states are added
       state.vehicle_data.failure_state = Vehicle->GetFailureState();
+      state.vehicle_data.open_doors = Vehicle->GetOpenDoorMask();
+      state.vehicle_data.door_count = static_cast<uint8_t>(FMath::Min(Vehicle->GetDoorCount(), 8));
     }
   }
 
@@ -195,6 +197,8 @@ static auto FWorldObserver_GetDormantActorState(const FCarlaActor &View, const F
       state.vehicle_data.traffic_light_state = TLS::Green;
       state.vehicle_data.speed_limit = ActorData->SpeedLimit;
       state.vehicle_data.has_traffic_light = false;
+      state.vehicle_data.open_doors = ActorData->OpenDoorMask;
+      state.vehicle_data.door_count = ActorData->DoorCount;
   }
   else if (AType::Walker == View.GetActorType())
   {

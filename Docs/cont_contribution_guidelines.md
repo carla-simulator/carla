@@ -65,7 +65,14 @@ Before adding a test, ask two questions of it: does it do something useful, and 
 *   __Do not weaken a test to make it pass.__ Removing assertions, widening tolerances or skipping a test hides the regression it was there to catch. If the expected behaviour really changed, explain why in the pull request.
 *   __Say what each test checks.__ The pull request template has a __Tests__ field: list each new or modified test and the regression it would catch.
 
-CI runs only the LibCarla unit tests ([What CI runs](dev_testing.md#what-ci-runs)). The Python unit, smoke and integration tests have to be run locally: the unit tests after a change to LibCarla or the Python API, and the smoke tests after a change to the server.
+CI runs only the LibCarla unit tests ([What CI runs](dev_testing.md#what-ci-runs)), and it never opens the editor. So before a pull request with any code change, run the full local check on the branch's own commit, the equivalent of the old `make check`:
+
+1.  Build the branch: `cmake --build Build --target carla-client carla-python-api carla-server carla-unreal-editor`.
+2.  Open the Unreal Editor on that build (`cmake --build Build --target launch`) and check that it loads the default map and keeps running, with no crash and no new Carla errors in `Unreal/CarlaUnreal/Saved/Logs/CarlaUnreal.log`. A short Play-In-Editor session is recommended.
+3.  Run the LibCarla unit tests and the Python API unit tests ([LibCarla unit tests](dev_testing.md#libcarla-unit-tests), [Python API unit tests](dev_testing.md#python-api-unit-tests)).
+4.  Start a server on port 3654 from that build and run the whole smoke test list ([Smoke tests](dev_testing.md#smoke-tests)).
+
+Changing or adding a test is not the same as running it. Every test in the pull request has to have run and passed locally. The __Where has this been tested?__ field of the template reports what ran and on which commit; the __Tests__ field is only for the tests the pull request adds or modifies, and why. This applies equally to pull requests prepared with AI coding assistants. A failure blocks the pull request unless it also happens on a clean `ue58-dev`; in that case, say so in the pull request instead of skipping the test.
 
 ### CI workflows
 
@@ -93,9 +100,11 @@ Contributions and new features are merged to the development branch, `ue58-dev`.
 Before a pull request to `ue58-dev`:
 
 *   [ ] The branch is up-to-date with `ue58-dev` and tested with the latest changes.
-*   [ ] The code compiles: `cmake --build Build --target carla-client carla-python-api carla-server`.
-*   [ ] The LibCarla unit tests pass ([LibCarla unit tests](dev_testing.md#libcarla-unit-tests)), and so do the Python API unit tests if the Python API changed ([Python API unit tests](dev_testing.md#python-api-unit-tests)).
-*   [ ] The smoke tests pass against a running server on port 3654 ([Smoke tests](dev_testing.md#smoke-tests)). On Linux: `cd PythonAPI/test && python3 -m nose2 -v $(cat smoke_test_list.txt)`.
+*   [ ] The code compiles: `cmake --build Build --target carla-client carla-python-api carla-server carla-unreal-editor`.
+*   [ ] The Unreal Editor opens on that build, loads the default map and keeps running without a crash or new Carla errors ([Tests](#tests)).
+*   [ ] The LibCarla unit tests and the Python API unit tests pass ([LibCarla unit tests](dev_testing.md#libcarla-unit-tests), [Python API unit tests](dev_testing.md#python-api-unit-tests)).
+*   [ ] The whole smoke test list passes against a server on port 3654 started from that build ([Smoke tests](dev_testing.md#smoke-tests)). On Linux: `cd PythonAPI/test && python3 -m nose2 -v $(cat smoke_test_list.txt)`.
+*   [ ] The __Where has this been tested?__ field of the pull request lists what ran locally, on which commit, with each suite's result.
 *   [ ] The change is tested, with the fewest tests that show it works: each one asserts behaviour, would fail on a regression, is not redundant, flaky or slow, and extends an existing test where one fits ([Tests](#tests)).
 *   [ ] Any new or changed CI workflow was agreed with the core maintainers beforehand, and the discussion is linked in the pull request ([CI workflows](#ci-workflows)).
 *   [ ] `CHANGELOG.md` has an entry under `## LATEST Changes` for any user-visible change.

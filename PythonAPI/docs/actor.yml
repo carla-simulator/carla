@@ -642,6 +642,16 @@
           door index
       doc: >
         Close the door `door_idx` if the vehicle has it. Use carla.VehicleDoor.All to close all available doors.
+    # --------------------------------------
+    - def_name: is_door_open
+      params:
+      - param_name: door_idx
+        type: carla.VehicleDoor
+        doc: >
+          door index
+      return: bool
+      doc: >
+        Returns whether the door `door_idx` is open, whoever opened it (this client, another client or the replayer). With carla.VehicleDoor.All, returns whether every door the vehicle has is open. A door the vehicle does not have is never open. The client returns the state of the last tick: the method does not call the simulator, so a door opened with open_door() reads as open after the next tick.
 
 
   - class_name: Walker
@@ -950,6 +960,12 @@
     - var_name: RR
       doc: >
         Back right door.
+    - var_name: Hood
+      doc: >
+        Hood, on vehicles that have one configured as a fifth door.
+    - var_name: Trunk
+      doc: >
+        Trunk, on vehicles that have one configured as a sixth door.
     - var_name: All
       doc: >
         Represents all doors.

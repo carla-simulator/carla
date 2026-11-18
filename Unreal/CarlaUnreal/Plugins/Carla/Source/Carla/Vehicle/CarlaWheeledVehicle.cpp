@@ -1646,6 +1646,13 @@ void ACarlaWheeledVehicle::SetSimulatePhysics(bool enabled) {
 
 void ACarlaWheeledVehicle::ResetConstraints()
 {
+  // Rebuilding the constraints must not change which doors are open: physics
+  // control and physics toggles (the replayer's among them) call this. A
+  // Multi-GPU mirror's doors are posed from the primary instead, next frame.
+  const uint8 OpenDoors = OpenDoorMask;
+  const UCarlaEpisode *Episode = UCarlaStatics::GetCurrentEpisode(GetWorld());
+  const bool bReopen = (Episode == nullptr) || Episode->bIsPrimaryServer;
+  TGuardValue<bool> NoRecording(bResettingDoorConstraints, true);
   for (int i = 0; i < ConstraintsComponents.Num(); i++)
   {
     OpenDoorPhys(EVehicleDoor(i));
@@ -1653,6 +1660,13 @@ void ACarlaWheeledVehicle::ResetConstraints()
   for (int i = 0; i < ConstraintsComponents.Num(); i++)
   {
     CloseDoorPhys(EVehicleDoor(i));
+  }
+  for (int i = 0; bReopen && (i < ConstraintsComponents.Num()); i++)
+  {
+    if ((OpenDoors & (1u << i)) != 0u)
+    {
+      OpenDoorPhys(EVehicleDoor(i));
+    }
   }
 }
 
@@ -1751,6 +1765,7 @@ void ACarlaWheeledVehicle::OpenDoorPhys(const EVehicleDoor DoorIdx)
     (*CollisionDisable)->InitComponentConstraint();
   }
 
+  OpenDoorMask |= static_cast<uint8>(1u << static_cast<int>(DoorIdx));
   RecordDoorChange(DoorIdx, true);
 }
 
@@ -1772,6 +1787,7 @@ void ACarlaWheeledVehicle::CloseDoorPhys(const EVehicleDoor DoorIdx)
   DoorComponent->SetWorldTransform(DoorInitialTransform);
   DoorComponent->AttachToComponent(
     GetMesh(), FAttachmentTransformRules(EAttachmentRule::KeepWorld, true));
+  OpenDoorMask &= static_cast<uint8>(~(1u << static_cast<int>(DoorIdx)));
   RecordDoorChange(DoorIdx, false);
 }
 
@@ -1793,6 +1809,14 @@ TArray<TPair<int32, FTransform>> ACarlaWheeledVehicle::GetOpenDoorPoses() const
 
 void ACarlaWheeledVehicle::SetMirroredDoorPoses(const TArray<TPair<int32, FTransform>> &OpenDoors)
 {
+  OpenDoorMask = 0u;
+  for (const TPair<int32, FTransform> &Open : OpenDoors)
+  {
+    if ((Open.Key >= 0) && (Open.Key < 8))
+    {
+      OpenDoorMask |= static_cast<uint8>(1u << Open.Key);
+    }
+  }
   const FTransform ActorTransform = GetActorTransform();
   for (int32 i = 0; i < ConstraintsComponents.Num(); ++i)
   {
@@ -1827,6 +1851,10 @@ void ACarlaWheeledVehicle::SetMirroredDoorPoses(const TArray<TPair<int32, FTrans
 
 void ACarlaWheeledVehicle::RecordDoorChange(const EVehicleDoor DoorIdx, bool bIsOpen)
 {
+  if (bResettingDoorConstraints)
+  {
+    return;
+  }
   auto* Recorder = UCarlaStatics::GetRecorder(GetWorld());
   if (Recorder && Recorder->IsEnabled())
   {

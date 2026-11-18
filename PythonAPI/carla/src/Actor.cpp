@@ -181,6 +181,8 @@ void export_actor() {
     .value("FR", cr::VehicleDoor::FR)
     .value("RL", cr::VehicleDoor::RL)
     .value("RR", cr::VehicleDoor::RR)
+    .value("Hood", cr::VehicleDoor::Hood)
+    .value("Trunk", cr::VehicleDoor::Trunk)
     .value("All", cr::VehicleDoor::All)
   ;
 
@@ -199,6 +201,7 @@ void export_actor() {
       .def("set_light_state", &cc::Vehicle::SetLightState, (arg("light_state")))
       .def("open_door", &cc::Vehicle::OpenDoor, (arg("door_idx")))
       .def("close_door", &cc::Vehicle::CloseDoor, (arg("door_idx")))
+      .def("is_door_open", &cc::Vehicle::IsDoorOpen, (arg("door_idx")))
       .def("set_wheel_steer_direction", &cc::Vehicle::SetWheelSteerDirection, (arg("wheel_location")), (arg("angle_in_deg")))
       .def("get_wheel_steer_angle", &cc::Vehicle::GetWheelSteerAngle, (arg("wheel_location")))
       .def("set_wheel_pitch_angle", &cc::Vehicle::SetWheelPitchAngle, (arg("wheel_location")), (arg("angle_in_deg")))

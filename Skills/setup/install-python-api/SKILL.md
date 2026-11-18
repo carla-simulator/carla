@@ -1,6 +1,6 @@
 ---
 name: install-python-api
-description: Installs the CARLA Python client (the `carla` package) into a chosen interpreter so the other python-api skills work — from a wheel bundled with your release or checkout, from PyPI (`pip install carla==X.Y.Z`), or by putting an older release's .egg on PYTHONPATH. Detects what is already present, picks the source that matches your simulator's version, pins numpy<2, and verifies `import carla` plus the client/server version match. Use when the user asks to "install the CARLA Python API", "pip install carla", "set up the carla python package", or when a skill reports "cannot import carla".
+description: Installs the CARLA Python client (the `carla` package) into a chosen interpreter so the other python-api skills work — from a wheel bundled with your release or checkout, from PyPI (`pip install carla==X.Y.Z`), or by putting an older release's .egg on PYTHONPATH. Detects what is already present, picks the source that matches your simulator's version, pins numpy<2 for releases before 1.0, and verifies `import carla` plus the client/server version match. Use when the user asks to "install the CARLA Python API", "pip install carla", "set up the carla python package", or when a skill reports "cannot import carla".
 license: MIT
 compatibility: Linux, macOS or Windows with a Python 3.10+ interpreter and pip. Needs either a local CARLA release/checkout containing PythonAPI/carla/dist, or network access to PyPI. Installs only the client — it never touches the simulator, and needs no running server (a reachable one is used to check the version match).
 metadata:
@@ -109,8 +109,9 @@ connection and subtly missing API. So:
 - a mismatch is a **WARN, not a failure** — it is often intentional (talking to a
   remote server), so the skill reports it and continues.
 
-`numpy<2` is pinned in the same pip transaction: CARLA's bindings are built
-against the numpy 1.x C API and crash on import under 2.x.
+For releases before 1.0, `numpy<2` is pinned in the same pip transaction: their
+bindings fail on import under numpy 2.x. CARLA 1.0 and later support numpy 2
+(Boost 1.90.0, #9737), so nothing is pinned.
 
 ## Examples
 
@@ -195,7 +196,7 @@ the skill can write the `.pth` for you.
 ## Outputs
 
 A `carla` package importable by the target interpreter (or, for an egg, a
-`PYTHONPATH`/`.pth` entry), plus `numpy<2`. Nothing else on the system changes.
+`PYTHONPATH`/`.pth` entry), plus `numpy<2` for releases before 1.0. Nothing else on the system changes.
 
 Source details, the PyPI tag matrix, egg mechanics and version-matching rules:
 [`references/sources.md`](references/sources.md).

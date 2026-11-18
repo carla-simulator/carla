@@ -444,7 +444,7 @@ std::string CarlaRecorderQuery::QueryInfo(std::string Filename, bool bShowAll)
           std::string opened_doors_list;
 
           Info << "  Id: " << DoorVehicle.DatabaseId << std::endl;
-          Info << "  Doors opened: ";
+          Info << (DoorVehicle.bIsOpen ? "  Door opened: " : "  Door closed: ");
           if (eDoorVehicle == EVehicleDoor::FL)
             Info << " Front Left " << std::endl;
           if (eDoorVehicle == EVehicleDoor::FR)

@@ -91,6 +91,11 @@ public:
 
   carla::rpc::VehicleFailureState FailureState;
 
+  /// Doors open when the vehicle went dormant, as ACarlaWheeledVehicle::GetOpenDoorMask.
+  uint8 OpenDoorMask = 0u;
+
+  uint8 DoorCount = 0u;
+
   virtual void RecordActorData(FCarlaActor* CarlaActor, UCarlaEpisode* CarlaEpisode) override;
 
   virtual void RestoreActorData(FCarlaActor* CarlaActor, UCarlaEpisode* CarlaEpisode) override;

@@ -417,7 +417,7 @@ The rider's animation state on a bicycle or motorcycle.
 
 ### Packet 23 - Vehicle door
 
-Doors opening and closing. Holds records only in the frames where a door changed.
+Doors opening and closing. Holds records only in the frames where a door changed, and in the first frame, one opening record for each door already open when the recording started. The replayer applies these records while it seeks to a start time too, so a door is replayed as the last record before that time left it.
 
 | Type | Field | Description |
 | --- | --- | --- |
