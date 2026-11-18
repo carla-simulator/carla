@@ -69,7 +69,8 @@ LEGEND  [skill]  a vetted procedure exists in this collection — use it
           this build, so the OSM->OpenDRIVE half is not even compiled in.
 
 == Broken or removed on the UE5 line (measured on 0.10.0 / ue58-dev) ==
-  [broken] GBuffer capture                          CRASHES THE SERVER. See `support.sh broken`.
+  [broken] GBuffer capture                          not built on UE 5.8: RuntimeError, or a server
+           crash up to CARLA 1.0. See `support.sh broken`.
   [broken] Landmark.waypoint                        always None.
   [broken] VehiclePhysicsControl gear ratios        forward_gear_ratios / reverse_gear_ratios
            have no Python converter; reading raises TypeError.
@@ -91,9 +92,13 @@ cmd_broken() {
 Verified broken or removed on 0.10.0 / ue58-dev. Each line is a measurement or a
 source reading, not a guess.
 
-GBuffer capture — CRASHES THE SERVER
-  listen_to_gbuffer() raises RuntimeError std::exception client-side and takes the
-  simulator down with:
+GBuffer capture — not available on UE 5.8
+  It is compiled in only when the engine provides GBufferView.h, and the UE 5.8
+  fork does not. A server whose get_gbuffer_token checks CARLA_HAS_GBUFFER_API
+  (ue58-dev after CARLA 1.0) refuses the call and keeps running:
+      RuntimeError: ... GBuffer capture is not available in this build ...
+  On older servers (0.10.0, CARLA 1.0) listen_to_gbuffer() raises RuntimeError
+  std::exception client-side and takes the simulator down with:
       Assertion failed: Stream.has_value() [Carla/Sensor/DataStream.h] [Line: 55]
       SIGSEGV ... FCameraGBufferUint8::GetToken() const
   The API surface still exists on carla.ServerSideSensor and all seven
@@ -217,7 +222,7 @@ for name, note in (("apply_color_texture_to_object", "texture streaming: works, 
 # The UE5 line reports 0.10.0 before the 1.0 release and 1.x after it; both are
 # the same line, so gate on the line, not on one label.
 if ver.startswith("0.10") or ver.split(".")[0].isdigit() and int(ver.split(".")[0]) >= 1:
-    print(f"  UE5 line (server {ver}): gbuffers CRASH the server — `support.sh broken`;"
+    print(f"  UE5 line (server {ver}): no gbuffers, the call raises or crashes the server — `support.sh broken`;"
           " map layers only on Town01_Opt..Town07_Opt (none on Town10HD_Opt)")
 PY
 }

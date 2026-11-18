@@ -161,6 +161,7 @@
 * Fixed **replayed vehicles and pedestrians being invisible to sensors**, including those re-spawned with `replay_sensors=True`: the replayer turned their collision off. They now have query-only collision during the replay, so they still push nothing, and replayed walkers get their movement back when the replay ends.
 * Fixed the wheelchair of a wheelchair-user pedestrian being invisible to ray-cast sensors (LiDAR, radar).
 * Fixed the editor's `SensorSpawnerActor` crashing with radar point drawing on when it had spawned any sensor other than a radar: `DrawRadarSensorPoints` tested the sensor instead of the radar cast, and dereferenced null for every other sensor.
+* Fixed **`listen_to_gbuffer()` and `stop_gbuffer()` crashing the server**: `get_gbuffer_token` read the token of a G-buffer stream that was never opened. G-buffer capture is not built on Unreal Engine 5.8 (its engine has no `GBufferView.h`), so both calls now raise a `RuntimeError` that says so, and the server keeps running.
 
 #### Simulation and content
 

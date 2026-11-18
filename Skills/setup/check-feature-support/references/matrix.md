@@ -9,7 +9,13 @@ how to re-check it after an upgrade, and what promoting it would take.
 
 ## `[broken]` — verified broken or removed
 
-### GBuffer capture — crashes the server
+### GBuffer capture — not available on UE 5.8
+- **Read.** G-buffer capture is compiled in only when the engine provides
+  `GBufferView.h` (`SceneCaptureSensor.h`), and the UE 5.8 fork does not, so no
+  G-buffer frame is ever produced. A server whose `get_gbuffer_token` checks
+  `CARLA_HAS_GBUFFER_API` (ue58-dev after CARLA 1.0) refuses the call:
+  `listen_to_gbuffer` raises `RuntimeError: ... GBuffer capture is not available
+  in this build ...` and the server keeps running. Older servers crash, as below.
 - **Measured.** One `listen_to_gbuffer(GBufferTextureID.SceneColor, cb)` call
   raised `RuntimeError: std::exception` client-side and killed the simulator:
   `Assertion failed: Stream.has_value() [Carla/Sensor/DataStream.h] [Line: 55]`,
@@ -19,9 +25,10 @@ how to re-check it after an upgrade, and what promoting it would take.
   `is_listening_gbuffer` on `carla.ServerSideSensor`, all seven
   `GBufferTextureID` members — which is why it must be called out rather than
   left to discovery.
-- **Re-check:** spawn a camera, call `listen_to_gbuffer`, watch the server.
-- **To promote:** the gbuffer streams have to be assigned server-side; this is an
-  upstream fix, not a usage question.
+- **Re-check:** spawn a camera, call `listen_to_gbuffer`, watch the server
+  (`smoke.test_gbuffer` does this).
+- **To promote:** an engine that provides `GBufferView.h`, and the gbuffer
+  streams assigned server-side; this is an upstream fix, not a usage question.
 
 ### `Landmark.waypoint` — always `None`
 - **Measured.** Town10HD_Opt: 68 landmarks, 68 with `waypoint is None`. All other

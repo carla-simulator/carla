@@ -112,7 +112,8 @@ the Autoware integration is shipped, and whether the multi-GPU sources are there
 
 `broken` first. On 0.10.0 `listen_to_gbuffer()` asserts on
 `Stream.has_value()` and takes the server down, while the whole API surface still
-exists. Tell the user it crashes the simulator; offer
+exists. Tell the user G-buffers are not available on UE 5.8 (newer ue58-dev
+servers raise `RuntimeError` instead of crashing); offer
 `sensor.camera.normals` instead, which is a real sensor.
 
 **Example 2: "hide the buildings so I can see the road network"**
