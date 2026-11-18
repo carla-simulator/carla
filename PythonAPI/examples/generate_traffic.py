@@ -82,7 +82,7 @@ def main():
         '-s', '--seed', metavar='S', type=int,
         help='Set random device seed and deterministic mode for Traffic Manager')
     argparser.add_argument(
-        '--seedw', metavar='S', default=0, type=int,
+        '--seedw', metavar='S', default=None, type=int,
         help='Set the seed for pedestrians module')
     argparser.add_argument(
         '--car-lights-on', action='store_true', default=False,
@@ -207,7 +207,7 @@ def main():
         # some settings
         percentagePedestriansRunning = 0.0      # how many pedestrians will run
         percentagePedestriansCrossing = 0.0     # how many pedestrians will walk through the road
-        if args.seedw:
+        if args.seedw is not None:
             world.set_pedestrians_seed(args.seedw)
             random.seed(args.seedw)
         # 1. take all the random locations to spawn
