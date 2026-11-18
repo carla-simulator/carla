@@ -14,7 +14,7 @@ transforms, traffic-light states, vehicle/walker animation — NOT sensor output
 (additional_data) adds velocities, accelerations and control inputs.
 
 The .log is written on the SERVER. A relative --file lands under the server's
-CarlaUE4/Saved/; pass an absolute path to place it precisely. After stopping,
+CarlaUnreal/Saved/ (CarlaUE4/Saved/ on UE4); pass an absolute path to place it. After stopping,
 this verifies by asking the server to parse the file back (frame count/duration),
 because start/stop themselves don't confirm anything was captured.
 
@@ -52,8 +52,14 @@ def _client() -> carla.Client:
 def _verify(client: carla.Client, name: str) -> None:
     """Parse the just-written file back and show its header, as proof of capture."""
     info = client.show_recorder_file_info(name, False)
-    head = "\n".join(info.splitlines()[:6]) if info else "(empty)"
+    lines = info.splitlines() if info else []
+    head = "\n".join(lines[:6]) if lines else "(empty)"
     print(f"\nVERIFY (parsed {name} back from the server):\n{head}")
+    # The proof of capture is the summary at the END of the parse, not the
+    # header: print the Frames:/Duration: lines too.
+    tail = [l for l in lines[6:] if l.startswith(("Frames:", "Duration:"))]
+    if tail:
+        print("\n".join(tail))
     if "Frames" not in info and "frames" not in info:
         print("  WARNING: no frame section — the file may be empty or unreadable")
 

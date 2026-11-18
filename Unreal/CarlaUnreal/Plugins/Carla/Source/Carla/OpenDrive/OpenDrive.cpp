@@ -17,10 +17,18 @@
 #include "HAL/FileManagerGeneric.h"
 #include <util/ue-header-guard-end.h>
 
+static FString UOpenDrive_SavedXODRDirectory;
+
 FString UOpenDrive::GetSavedXODRPath(const FString &MapName)
 {
-  return FPaths::ConvertRelativePathToFull(
-      FPaths::ProjectSavedDir() / TEXT("OpenDrive") / (MapName + TEXT(".xodr")));
+  const FString Directory = UOpenDrive_SavedXODRDirectory.IsEmpty() ?
+      FPaths::ProjectSavedDir() / TEXT("OpenDrive") : UOpenDrive_SavedXODRDirectory;
+  return FPaths::ConvertRelativePathToFull(Directory / (MapName + TEXT(".xodr")));
+}
+
+void UOpenDrive::SetSavedXODRDirectory(const FString &Directory)
+{
+  UOpenDrive_SavedXODRDirectory = Directory;
 }
 
 FString UOpenDrive::FindPathToXODRFile(const FString &InMapName){

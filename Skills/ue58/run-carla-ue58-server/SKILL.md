@@ -2,7 +2,7 @@
 name: run-carla-ue58-server
 description: Starts a CARLA UE 5.8 server from a ue58-dev tree — the editor binary in -game mode (the working headless server), the packaged shipping build, or the full editor — with offscreen/nullrhi rendering, custom RPC and streaming ports, and native ROS 2 via the single-dash -ros2 flag. Probes a running server, and stops one cleanly despite the 15-character process-name truncation. Use when the user asks to "run/start CARLA UE5", "launch a ue58 server", "run headless", "publish ROS 2 topics from UE5", or a client cannot reach the simulator.
 license: MIT
-compatibility: Linux with a built ue58-dev tree (engine + carla-unreal) or a package. Rendering modes need Vulkan; -nullrhi does not. ROS 2 needs -DENABLE_ROS2=ON at build time. Verified live against ue58-dev HEAD 718efd7cc, engine 5.8, CARLA 0.10.0 — editor -game and packaged shipping, with and without ROS 2.
+compatibility: Linux with a built ue58-dev tree (engine + carla-unreal) or a package. On Windows, Git Bash with a standalone package (CarlaUnreal.exe) for package/probe/stop. Rendering modes need Vulkan; -nullrhi does not. ROS 2 needs -DENABLE_ROS2=ON at build time. Verified live against ue58-dev HEAD 718efd7cc, engine 5.8, CARLA 0.10.0 — editor -game and packaged shipping, with and without ROS 2.
 metadata:
   group: ue58
   prerequisites: scripts/check_env.sh
@@ -20,8 +20,8 @@ Three ways to get a server, and the choice matters more than on UE4:
 
 | Mode | What it is | Use it when |
 |---|---|---|
-| `game` | the **editor binary** with `-game` | **default.** Full client support, map switching, 29 maps visible |
-| `package` | `Build/<preset>/Package/.../CarlaUnreal.sh` | shipping a build; accept the map limitations below |
+| `game` | the **editor binary** with `-game` | **default.** Full client support, every map in the tree |
+| `package` | a standalone package named by `CARLA_TARGET` / `CARLA_PACKAGE_ROOT`, else `Build/<preset>/Package/.../CarlaUnreal.sh` | shipping a build; only the cooked maps exist, see below |
 | `editor` | the full editor GUI | authoring, visual debugging |
 
 There is a fourth thing that looks like the answer and is not:
@@ -56,6 +56,10 @@ DETACH=1 ROS2=1 bash scripts/run_server.sh game Town10HD_Opt
 # the packaged server
 DETACH=1 bash scripts/run_server.sh package Town10HD_Opt
 
+# a standalone package with no checkout (a downloaded or copied build); the
+# launcher may sit at its top level or one directory down
+CARLA_PACKAGE_ROOT=/path/to/package DETACH=1 bash scripts/run_server.sh package
+
 # a second server alongside the first
 PORT=3000 DETACH=1 bash scripts/run_server.sh game
 ```
@@ -78,7 +82,13 @@ PORT=3000 DETACH=1 bash scripts/run_server.sh game
 **`DETACH=1` is not a convenience.** A plain trailing `&` leaves the server
 holding the shell's stdio; when that goes away it dies with
 `close: Bad file descriptor` and then Signal 11. The script uses
-`setsid nohup … </dev/null &`.
+`setsid nohup … </dev/null &`, or `nohup … & disown` where there is no `setsid`
+(Git Bash).
+
+**On Windows (Git Bash)** only a standalone package runs: `CarlaUnreal.exe`
+under `CARLA_TARGET` or `CARLA_PACKAGE_ROOT`. With no checkout beside it,
+`check_env.sh` reports the checkout, engine and toolchain as INFO rather than
+blockers. `package`, `probe` and `stop` work; `stop` uses `taskkill /F /T`.
 
 ### Filling the screen (and why not `-fullscreen` by default)
 
@@ -150,7 +160,9 @@ binary appears as `CarlaUnreal-Lin`, never `CarlaUnreal-Linux-Shipping`. A
 `pkill -x CarlaUnreal-Linux-Shipping` matches nothing, exits as if it worked, and
 leaves the port held — the next launch then dies with
 `bind: Address already in use` followed by Signal 11. `stop` uses the truncated
-name and then waits on the **port**, not the process.
+name and then waits on the **port**, not the process. On Windows it matches the
+full image names instead (`CarlaUnreal-Win64-Shipping.exe`, `CarlaUnreal.exe`,
+`UnrealEditor.exe`), which `tasklist` does not truncate.
 
 Also: **the server takes SIGSEGV on SIGTERM on this branch**, and the Python
 client segfaults at interpreter teardown after completing its work. Exit codes are
@@ -158,26 +170,24 @@ useless as a pass/fail signal here; check the port and the results instead.
 
 ## Packaged vs game mode — measured, not assumed
 
-Both were exercised on this branch. The packaged server is more usable than the
-older report suggests, but its map handling is broken:
+Map discovery reads the AssetRegistry since `da94ed2b7` (content packs), so it
+works inside a `.pak`. Measured 2026-10-26 (Shipping package, ue58-dev `6bb051b2e`, cook scope `Town10HD_Opt+OpenDriveMap+EmptyMap+Town12`):
 
 | | `game` | `package` |
 |---|---|---|
-| `get_world()` | works | **works** |
-| spawn vehicle | works | **works** |
-| `get_random_location_from_navigation()` | works | **works** |
-| `get_available_maps()` | **29 maps** | **`[]` — empty** |
-| `load_world('Town10HD_Opt')`, `'Town_C'` | works | works |
-| `load_world('Town12')`, `'Town13')` | works | **fails** (`std::exception`) |
+| `get_world()` | works | works |
+| spawn vehicle | works | works |
+| `get_random_location_from_navigation()` | works | works (Town12: server-side navigation, no `.bin`) |
+| `get_available_maps()` | every map in the tree | the cooked maps: `['Town10HD_Opt', 'EmptyMap', 'Town12']` (`OpenDriveMap` not listed) |
+| `load_world('Town12')` | works | works (`Carla/Maps/Town12/Town12`) |
+| map on the command line | loads it | **ignored**: `/Game/Carla/Maps/Town12/Town12` booted `Town10HD_Opt` |
 
-Root cause of the map failures: two raw-filesystem checks that cannot see inside a
-`.pak` — `UCarlaStatics::GetAllMapNames()` uses
-`IFileManager::FindFilesRecursive(..., "*.umap")` and `LoadNewEpisode()` gates on
-`FPaths::FileExists()`. AssetRegistry-based discovery exists on
-`ue58-dev-windows` and is **not merged into `ue58-dev`**.
-
-So: use `package` for a fixed-map deployment, `game` whenever you need discovery
-or map switching.
+A package only has the maps in its cook scope (`CARLA_MAPS_TO_COOK`, see
+[[package-carla-ue58]]); `load_world` on any other fails. To start on a given map,
+launch the package and call `load_world()` after connecting. Before `da94ed2b7`,
+`get_available_maps()` returned `[]` in a package and nested large maps
+(`Town12/Town12`) did not load, because `GetAllMapNames()` and `LoadNewEpisode()`
+used raw-filesystem checks that cannot see inside a `.pak`.
 
 ## ROS 2
 
@@ -185,7 +195,8 @@ or map switching.
 DETACH=1 ROS2=1 bash scripts/run_server.sh game Town10HD_Opt
 ```
 
-The server logs its middleware on startup:
+A Development or editor build logs its middleware on startup (a Shipping
+package prints none of these lines; check it with `ros2 topic list` instead):
 
 ```
 LogCarla: ROS2: Creating ROS2 Instance...
@@ -205,18 +216,24 @@ search string, so `TEXT("-ros2")` matches `-ros2` — the opposite of UE4, where
 explicit `Strifind` fallback in `CarlaSettings.cpp`, but `-ros2` works on every
 ue58 commit.
 
-**Sensors must be enabled individually, and the call moved.** In UE 5.8
-`enable_for_ros()` is on **`Sensor`**, not on `Actor` as in 0.9.16:
+**Sensors publish by default, and the call moved.** The project setting
+`ROS2TopicVisibility` is on by default, so every sensor that has a ROS 2
+publisher publishes as soon as it spawns. Call `enable_for_ros()` only when
+that setting is off or after `disable_for_ros()`. In UE 5.8 the call is on
+**`Sensor`**, not on `Actor` as in 0.9.16:
 
 ```python
 s = world.spawn_actor(cam_bp, transform, attach_to=vehicle)
-s.enable_for_ros()          # without this the sensor is never ticked
+s.is_enabled_for_ros()      # True right after spawn
+s.disable_for_ros()         # stops the topic
+s.enable_for_ros()          # starts it again
 ```
 
 Verified: `hasattr(sensor, 'enable_for_ros')` is `True`, `hasattr(vehicle, …)` is
 `False`.
 
-Topics observed from one ROS-enabled camera on a `hero` vehicle:
+Topics observed from one camera with `ros_name=front` on a vehicle with
+`ros_name=hero` and `role_name=hero`:
 
 ```
 /carla/hero/front/camera_info
@@ -227,7 +244,10 @@ Topics observed from one ROS-enabled camera on a `hero` vehicle:
 ```
 
 `ros_name` on the blueprint sets both the topic segment and the `frame_id`; the
-parent chain builds the path (`hero` → `front`).
+parent chain builds the path (`hero` → `front`). `role_name` does not name
+topics: it only creates the control subscriber (`hero` or `ego`). Without a
+`ros_name`, a vehicle is `vehicle<actor id>` and a sensor `<last blueprint
+token><stream id>`, e.g. `/carla/vehicle30/rgb123/image`.
 
 **There is no `/carla/map` topic on UE 5.8.** `CarlaMapPublisher` was removed, so
 the latched OpenDRIVE topic that exists on UE4 is gone — `"map"` survives only as
@@ -244,13 +264,13 @@ which compiles shaders.
 **Example 2: "publish camera images to ROS 2"**
 
 `DETACH=1 ROS2=1 bash scripts/run_server.sh game`, spawn a `hero` vehicle and a
-camera with `ros_name`, call `enable_for_ros()`, then `ros2 topic list`. No DDS
+camera with `ros_name`, then `ros2 topic list`. No DDS
 profile file needed.
 
 **Example 3: "the client can't find any maps"**
 
-You are on a packaged server. `get_available_maps()` cannot work inside a `.pak`
-on this branch. Switch to `game` mode.
+On a packaged server the list holds only the cooked maps. An empty list means a
+tree older than `da94ed2b7`: update `ue58-dev` and repackage, or use `game` mode.
 
 **Example 4: "run two servers"**
 
@@ -291,8 +311,9 @@ Solution: judge by results, not exit status. Known, cosmetic, and the reason no
 script here gates on `$?` from the server.
 
 **Problem: `load_world` fails for a large map**
-Cause: packaged mode; see the table above.
-Solution: `game` mode.
+Cause: on a package, the map is not in the cook scope, or the tree predates
+`da94ed2b7` (see the table above).
+Solution: add the map to `CARLA_MAPS_TO_COOK` and repackage, or use `game` mode.
 
 **Problem: the RPC port never comes up**
 Cause: usually first-launch shader compilation, which can far exceed the 120 s the

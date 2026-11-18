@@ -11,17 +11,13 @@
 #include "CarlaTools.h"
 #include "GenerationPathsHelper.h"
 
-#if defined(WITH_OSM2ODR) && __has_include(<OSM2ODR.h>)
-  #define HAS_OSM2ODR
-  #include <OSM2ODR.h>
-#endif
+#include <osm2odr/OSM2ODR.h>
 
 void UCustomFileDownloader::ConvertOSMInOpenDrive(
     FString FilePath,
     float Lat_0, float Lon_0,
     const FOpenDriveFileGenerationParameters& OpenDriveGenParams)
 {
-#ifdef HAS_OSM2ODR
   IPlatformFile &FileManager = FPlatformFileManager::Get().GetPlatformFile();
 
   FString FileContent;
@@ -73,11 +69,6 @@ void UCustomFileDownloader::ConvertOSMInOpenDrive(
   {
     UE_LOG(LogCarlaTools, Error, TEXT("FileManipulation: Failed to write FString to file."));
   }
-#else
-  UE_LOG(LogCarlaTools, Error, TEXT(
-      "ConvertOSMInOpenDrive: CARLA was built without OSM2ODR support; cannot convert \"%s\"."),
-      *FilePath);
-#endif
 }
 
 void UCustomFileDownloader::StartDownload()

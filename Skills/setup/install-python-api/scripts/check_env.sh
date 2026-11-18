@@ -47,22 +47,50 @@ fi
 
 echo "== Sources to install from =="
 FOUND=0
-if [ -n "${CARLA_PACKAGE_ROOT}${CARLA_UE4_ROOT}" ]; then
-  for root in "${CARLA_PACKAGE_ROOT}" "${CARLA_UE4_ROOT}"; do
-    [ -n "${root}" ] || continue
-    W=$(find -L "${root}" -path "*PythonAPI/carla/dist/carla-*${CARLA_PY_TAG}*.whl" -print 2>/dev/null | head -3)
-    E=$(find -L "${root}" -path "*PythonAPI/carla/dist/carla-*py${CARLA_PY_XY}*.egg" -print 2>/dev/null | head -3)
-    if [ -n "${W}" ]; then
-      ok "bundled wheel(s) matching ${CARLA_PY_TAG} under ${root}:"; printf '        %s\n' ${W}; FOUND=1
+# Client artifacts named like $2 under root $1. A release (or a UE4 checkout,
+# whose cooked Dist/ nests one) is searched recursively; a UE5 checkout only at
+# its two known places, because it holds millions of content files.
+artifacts() {
+  if [ "$3" = deep ]; then
+    find -L "$1" -path "*PythonAPI/carla/dist/$2" -print 2>/dev/null | head -3
+  else
+    # $2 is a glob and has to expand here, so it stays unquoted.
+    # shellcheck disable=SC2086,SC2012
+    ls -1d "$1"/PythonAPI/carla/dist/$2 "$1"/Build/*/PythonAPI/dist/$2 2>/dev/null | head -3
+  fi
+}
+SEEN=":"
+for var in CARLA_PACKAGE_ROOT CARLA_TARGET CARLA_ROOT CARLA_UE58_ROOT CARLA_UE5_ROOT CARLA_UE4_ROOT; do
+  root="${!var:-}"
+  [ -n "${root}" ] || continue
+  case "${SEEN}" in *":${root}:"*) continue ;; esac
+  SEEN="${SEEN}${root}:"
+  depth=shallow
+  case "${var}" in
+    CARLA_PACKAGE_ROOT|CARLA_TARGET|CARLA_UE4_ROOT)
+      [ -d "${root}/Unreal/CarlaUnreal" ] || depth=deep ;;
+  esac
+  W=$(artifacts "${root}" "carla-*${CARLA_PY_TAG}*.whl" "${depth}")
+  E=$(artifacts "${root}" "carla-*py${CARLA_PY_XY}*.egg" "${depth}")
+  if [ -n "${W}" ]; then
+    ok "bundled wheel(s) matching ${CARLA_PY_TAG} under ${root}:"; printf '        %s\n' ${W}; FOUND=1
+  fi
+  if [ -n "${E}" ]; then
+    ok "bundled egg(s) for py${CARLA_PY_XY} under ${root}:"; printf '        %s\n' ${E}; FOUND=1
+  fi
+  if [ -z "${W}${E}" ]; then
+    OTHER=$(artifacts "${root}" "carla-*.whl" "${depth}")
+    if [ -n "${OTHER}" ]; then
+      warn "tag mismatch under ${root}: wheel(s) exist, none for ${CARLA_PY_TAG} — set PYTHON to the interpreter they were built for:"
+      # shellcheck disable=SC2086  # split on purpose: one path per line
+      printf '        %s\n' ${OTHER}
+    else
+      warn "no artifact matching this interpreter under ${root}"
     fi
-    if [ -n "${E}" ]; then
-      ok "bundled egg(s) for py${CARLA_PY_XY} under ${root}:"; printf '        %s\n' ${E}; FOUND=1
-    fi
-    [ -n "${W}${E}" ] || warn "no artifact matching this interpreter under ${root}"
-  done
-else
-  warn "neither CARLA_PACKAGE_ROOT nor CARLA_UE4_ROOT is set — only the PyPI source is available"
-fi
+  fi
+done
+[ "${SEEN}" != ":" ] \
+  || warn "none of CARLA_PACKAGE_ROOT/CARLA_TARGET/CARLA_ROOT/CARLA_UE58_ROOT/CARLA_UE5_ROOT/CARLA_UE4_ROOT is set — only the PyPI source is available"
 # PyPI is the fallback and needs no local files, but it only has wheels for some
 # interpreters (0.9.16: cp310/311/312, linux+windows), so probe rather than guess.
 if command -v curl >/dev/null 2>&1; then

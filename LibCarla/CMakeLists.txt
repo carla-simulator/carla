@@ -11,9 +11,29 @@ set (
   ${CARLA_WORKSPACE_PATH}/LibCarla/source
 )
 
-carla_two_step_configure_file (
-  ${LIBCARLA_SOURCE_PATH}/carla/Version.h
-  ${LIBCARLA_SOURCE_PATH}/carla/Version.h.in
+# Version.h: the release version, the tag at HEAD, or <version>-<commit>.
+# Written now so it exists before anything compiles, and again by the
+# carla-version target on every build so the commit stays current.
+set (CARLA_VERSION_SOURCE ${LIBCARLA_SOURCE_PATH}/carla/Version.h.in)
+set (CARLA_VERSION_DESTINATION ${LIBCARLA_SOURCE_PATH}/carla/Version.h)
+set (CARLA_VERSION_GIT_DIR ${CARLA_WORKSPACE_PATH})
+include (${CARLA_WORKSPACE_PATH}/CMake/CarlaVersion.cmake)
+message (STATUS "CARLA version string: ${CARLA_VERSION_STRING}")
+
+carla_add_custom_target (
+  carla-version
+  "Refresh LibCarla/source/carla/Version.h from git (release version, tag or commit)."
+  COMMAND
+    ${CMAKE_COMMAND}
+    -DCARLA_VERSION=${CARLA_VERSION}
+    -DCARLA_RELEASE_VERSION=${CARLA_RELEASE_VERSION}
+    -DCARLA_VERSION_GIT_DIR=${CARLA_VERSION_GIT_DIR}
+    -DCARLA_VERSION_SOURCE=${CARLA_VERSION_SOURCE}
+    -DCARLA_VERSION_DESTINATION=${CARLA_VERSION_DESTINATION}
+    -P ${CARLA_WORKSPACE_PATH}/CMake/CarlaVersion.cmake
+  BYPRODUCTS
+    ${CARLA_VERSION_DESTINATION}
+  VERBATIM
 )
 
 if (WIN32)
@@ -111,6 +131,21 @@ endif ()
 
 
 
+# The OSM to OpenDRIVE converter, shared by the client (the Python API binding)
+# and the server (the editor's Digital Twin tool).
+file (
+  GLOB
+  LIBCARLA_SOURCES_OSM2ODR
+  ${LIBCARLA_SOURCE_PATH}/osm2odr/*.cpp
+)
+file (
+  GLOB
+  LIBCARLA_HEADERS_OSM2ODR
+  ${LIBCARLA_SOURCE_PATH}/osm2odr/*.h
+)
+
+
+
 if (BUILD_CARLA_SERVER)
 
   file (
@@ -152,6 +187,12 @@ if (BUILD_CARLA_SERVER)
     ${LIBCARLA_SOURCE_PATH}/third-party/odrSpiral/*.cpp
     ${LIBCARLA_SOURCE_PATH}/third-party/moodycamel/*.cpp
     ${LIBCARLA_SOURCE_PATH}/third-party/pugixml/*.cpp
+  )
+
+  list (
+    APPEND
+    LIBCARLA_SERVER_SOURCES_THIRD_PARTY
+    ${LIBCARLA_SOURCES_OSM2ODR}
   )
 
   file (
@@ -206,6 +247,12 @@ if (BUILD_CARLA_SERVER)
     ${LIBCARLA_SOURCE_PATH}/third-party/odrSpiral/*.h
     ${LIBCARLA_SOURCE_PATH}/third-party/moodycamel/*.h
     ${LIBCARLA_SOURCE_PATH}/third-party/pugixml/*.hpp
+  )
+
+  list (
+    APPEND
+    LIBCARLA_SERVER_HEADERS_THIRD_PARTY
+    ${LIBCARLA_HEADERS_OSM2ODR}
   )
 
   # glibc 2.38+ compat shim (compiled as C11 to avoid __isoc23_strtol redirect)
@@ -370,6 +417,17 @@ if (BUILD_CARLA_CLIENT)
     ${LIBCARLA_SOURCE_PATH}/third-party/pugixml/*.cpp
   )
 
+  list (
+    APPEND
+    LIBCARLA_CLIENT_SOURCES_THIRD_PARTY
+    ${LIBCARLA_SOURCES_OSM2ODR}
+  )
+  list (
+    APPEND
+    LIBCARLA_CLIENT_HEADERS_THIRD_PARTY
+    ${LIBCARLA_HEADERS_OSM2ODR}
+  )
+
   carla_add_library (
     carla-client
     "Build the CARLA client."
@@ -477,6 +535,10 @@ if (BUILD_LIBCARLA_TESTS)
     ${LIBCARLA_SOURCE_PATH}/test/common/*.cpp
   )
 
+  if (NOT BUILD_LIBCARLA_MULTIGPU_TESTS)
+    list (FILTER LIBCARLA_TEST_COMMON_SOURCES EXCLUDE REGEX "/test_multigpu_[^/]*\\.cpp$")
+  endif ()
+
   if (BUILD_CARLA_SERVER)
 
     file (
@@ -484,6 +546,10 @@ if (BUILD_LIBCARLA_TESTS)
       LIBCARLA_TEST_SERVER_SOURCES
       ${LIBCARLA_SOURCE_PATH}/test/server/*.cpp
     )
+
+    if (NOT BUILD_LIBCARLA_MULTIGPU_TESTS)
+      list (FILTER LIBCARLA_TEST_SERVER_SOURCES EXCLUDE REGEX "/test_multigpu_[^/]*\\.cpp$")
+    endif ()
 
     if (NOT ENABLE_ROS2)
       list (
@@ -594,3 +660,11 @@ if (BUILD_LIBCARLA_TESTS)
   endif ()
 
 endif ()
+
+
+
+foreach (TARGET_NAME carla-server carla-client)
+  if (TARGET ${TARGET_NAME})
+    add_dependencies (${TARGET_NAME} carla-version)
+  endif ()
+endforeach ()

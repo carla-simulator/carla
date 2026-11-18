@@ -39,8 +39,8 @@ scope)
   echo "no compression  : $(carla_ue58_cmake_opt CARLA_UNREAL_PACKAGE_NO_COMPRESSION)"
   if [ -z "${MAPS}" ]; then
     echo "cook scope      : <empty> — falls back to DefaultGame.ini MapsToCook:"
-    echo "                    Town10HD_Opt, OpenDriveMap, TestMaps/EmptyMap, Mine_01,"
-    echo "                    Town15/Town15   (bCookAll=False, so NOT every map)"
+    echo "                    Town10HD_Opt, OpenDriveMap, TestMaps/EmptyMap,"
+    echo "                    Town12/Town12, Town15/Town15   (bCookAll=False, so NOT every map)"
     echo "  WARNING Town15 is in that default list and CANNOT be cooked (573"
     echo "  WARNING unresolvable MaterialInstanceDynamic imports), so the"
     echo "  WARNING out-of-the-box package build FAILS. Set an explicit scope."
@@ -122,17 +122,17 @@ inspect)
   fi
 
   echo "== Binaries =="
-  SH="${P}/Linux/CarlaUnreal.sh"
+  SH="${P}/CarlaUnreal.sh"
   [ -f "${SH}" ] && ok "launcher CarlaUnreal.sh" || bad "launcher ${SH} missing"
-  BIN="$(ls -1 "${P}"/Linux/CarlaUnreal/Binaries/Linux/CarlaUnreal-Linux-* 2>/dev/null | head -1)"
+  BIN="$(ls -1 "${P}"/CarlaUnreal/Binaries/Linux/CarlaUnreal-Linux-* 2>/dev/null | head -1)"
   if [ -n "${BIN}" ]; then
     ok "server binary $(basename "${BIN}") ($(du -h "${BIN}" | cut -f1))"
   else
-    bad "no CarlaUnreal-Linux-* binary under Linux/CarlaUnreal/Binaries/Linux"
+    bad "no CarlaUnreal-Linux-* binary under CarlaUnreal/Binaries/Linux"
   fi
 
   echo "== Pak container =="
-  PAKS="${P}/Linux/CarlaUnreal/Content/Paks"
+  PAKS="${P}/CarlaUnreal/Content/Paks"
   if [ -d "${PAKS}" ]; then
     for f in pakchunk0-Linux.pak pakchunk0-Linux.ucas pakchunk0-Linux.utoc global.ucas global.utoc; do
       if [ -f "${PAKS}/${f}" ]; then
@@ -225,17 +225,39 @@ inspect)
     || warn "no wheel under PythonAPI/carla/dist — clients must install one separately"
   [ -d "${P}/PythonAPI/examples" ] && ok "$(ls -1 "${P}"/PythonAPI/examples/*.py 2>/dev/null | wc -l) example scripts bundled"
 
+  echo "== Agent skills =="
+  # Copied from git-tracked files only, so a tree that is not a git checkout
+  # packages none (CopyCarlaAdditionalFiles.cmake warns and carries on).
+  NSK="$(ls -1 "${P}"/Skills/*/*/SKILL.md 2>/dev/null | wc -l)"
+  if [ "${NSK}" -gt 0 ]; then
+    ok "${NSK} skills under Skills/"
+    [ -f "${P}/Util/AgenticTools/bin/carla-agentic-tools.js" ] && ok "MCP server Util/AgenticTools" \
+      || warn "no Util/AgenticTools — the skills are there but nothing serves them over MCP"
+    # Both are written for the package: the repository's own would send an
+    # assistant to the build and to the editor's unreal-mcp, absent here.
+    if [ -f "${P}/AGENTS.md" ] && grep -q '^## Skill catalogue' "${P}/AGENTS.md"; then
+      ok "AGENTS.md with the skill catalogue"
+    else
+      warn "no AGENTS.md with a skill catalogue — an assistant opened in the package does not find the skills"
+    fi
+    [ -f "${P}/.mcp.json" ] && ok ".mcp.json registers the MCP server" \
+      || warn "no .mcp.json — MCP clients do not start the server on their own"
+  else
+    warn "no Skills/ at the package root — built from a tree that is not a git checkout?"
+  fi
+
   echo "== Archive =="
   TGZ="$(ls -1t "${CARLA_UE58_ROOT}"/Build/*/Package/*.tar.gz 2>/dev/null | head -1)"
   [ -n "${TGZ}" ] && ok "$(basename "${TGZ}") ($(du -h "${TGZ}"|cut -f1))" || warn "no .tar.gz archive"
 
-  echo "== Packaged-server limitations (measured) =="
-  warn "get_available_maps() returns [] from a package: GetAllMapNames() is a raw"
-  warn "  FindFilesRecursive(\"*.umap\") that cannot see inside a .pak."
-  warn "load_world() resolves ONLY /Game/Carla/Maps/<Name> (FindMapPath's single pak"
-  warn "  fallback), so nested large maps like Town12/Town12 fail and imported maps"
-  warn "  under /Game/<Pkg>/Maps/ fail. Small maps load by exact name."
-  warn "get_world(), spawning and navigation DO work against a packaged server."
+  echo "== Packaged-server behaviour (measured) =="
+  ok "get_available_maps() lists the cooked maps; discovery goes through the"
+  ok "  asset registry, which sees inside a .pak (CarlaStatics.cpp, 60fd70e44)."
+  ok "load_world() resolves them, nested ones included: a twin at"
+  ok "  Carla/Maps/Twins/<Name>/<Name> loads by leaf name and by relative path."
+  ok "get_world(), spawning and navigation work against a packaged server."
+  warn "The asset registry asserts off the game thread, so an off-thread call"
+  warn "  gets an empty list."
 
   echo "== Result =="
   [ "$rc" -eq 0 ] && echo "  package looks consistent (warnings are non-blocking)" \
@@ -245,7 +267,7 @@ inspect)
 
 list)
   P="$(pkg_root)"
-  PAK="${P}/Linux/CarlaUnreal/Content/Paks/pakchunk0-Linux.pak"
+  PAK="${P}/CarlaUnreal/Content/Paks/pakchunk0-Linux.pak"
   [ -f "${PAK}" ] || { echo "no pak at ${PAK}" >&2; exit 3; }
   PAT="${1:-Carla/Maps}"
   echo "# strings matching '${PAT}' in $(basename "${PAK}")"

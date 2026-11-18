@@ -276,7 +276,8 @@ void ARayCastSemanticLidar::ComputeRawDetection(const FHitResult& HitInfo, const
       const FCarlaActor* view = Registry.FindCarlaActor(actor);
       if (view != nullptr)
       {
-        Detection.object_idx = view->GetActorId();
+        // On a Multi-GPU secondary, the id the primary's clients know.
+        Detection.object_idx = view->GetPrimaryActorId();
       }
     }
     else
@@ -308,4 +309,25 @@ bool ARayCastSemanticLidar::ShootLaser(const float VerticalAngle, const float Ho
     TraceParams,
     FCollisionResponseParams::DefaultResponseParam
   );
+}
+
+void ARayCastSemanticLidar::GetMirrorState(carla::multigpu::SensorState &State) const
+{
+  State.lidar_horizontal_angle = SemanticLidarData.GetHorizontalAngle();
+  if (RandomEngine != nullptr)
+  {
+    State.random_engine = RandomEngine->GetState();
+  }
+}
+
+void ARayCastSemanticLidar::SetMirrorState(const carla::multigpu::SensorState &State)
+{
+  if (State.lidar_horizontal_angle)
+  {
+    SemanticLidarData.SetHorizontalAngle(*State.lidar_horizontal_angle);
+  }
+  if (State.random_engine && (RandomEngine != nullptr))
+  {
+    RandomEngine->SetState(*State.random_engine);
+  }
 }

@@ -190,13 +190,6 @@ void TrafficManagerLocal::Step() {
     last_frame = timestamp.frame;
   }
 
-  if (synchronous_mode ||
-      IsRefreshDue(timestamp.elapsed_seconds, last_settings_update, EPISODE_SETTINGS_REFRESH_PERIOD)) {
-    episode_settings = episode_proxy.Lock()->GetEpisodeSettings();
-    last_settings_update = timestamp.elapsed_seconds;
-  }
-  parameters.SetMaxBoundaries(20.0f, episode_settings.actor_active_distance);
-
   std::unique_lock<std::mutex> registration_lock(registration_mutex);
   // Updating simulation state, actor life cycle and performing necessary cleanup.
   alsm.Update();
@@ -300,6 +293,8 @@ void TrafficManagerLocal::Step() {
 void TrafficManagerLocal::Run() {
   while (run_traffic_manger.load() && !parameters.GetSynchronousMode()) {
     Step();
+    // No TM lock held here: drop released vehicles.
+    registered_vehicles.TakeReleased();
   }
 }
 
@@ -313,16 +308,15 @@ bool TrafficManagerLocal::SynchronousTick() {
 void TrafficManagerLocal::Stop() {
   run_traffic_manger.store(false);
 
-  bool synchronous_mode = parameters.GetSynchronousMode();
-  if (!synchronous_mode) {
-    if (worker_thread) {
-      if (worker_thread->joinable()) {
-        worker_thread->join();
-      }
-      worker_thread.reset();
+  // Join regardless of mode, or Start() may overwrite a joinable thread.
+  if (worker_thread) {
+    if (worker_thread->joinable()) {
+      worker_thread->join();
     }
+    worker_thread.reset();
   }
 
+  std::unique_lock<std::mutex> registration_lock(registration_mutex);
   vehicle_id_list.clear();
   registered_vehicles.Clear();
   registered_vehicles_state = -1;
@@ -338,8 +332,6 @@ void TrafficManagerLocal::Stop() {
   vehicle_light_stage.Reset();
 
   last_frame = 0;
-  episode_settings = rpc::EpisodeSettings{};
-  last_settings_update = -std::numeric_limits<double>::infinity();
   unwaited_control_batches = MAX_UNWAITED_CONTROL_BATCHES;
 
   buffer_map.clear();
@@ -347,6 +339,7 @@ void TrafficManagerLocal::Stop() {
   collision_frame.clear();
   tl_frame.clear();
   control_frame.clear();
+  registration_lock.unlock();
 
   run_traffic_manger.store(true);
 }
@@ -358,9 +351,19 @@ void TrafficManagerLocal::Release() {
   local_map.reset();
 }
 
-void TrafficManagerLocal::Reset() {
+void TrafficManagerLocal::Reset(uint64_t episode_id) {
+  // Every client alive in the process reports the change; reset once.
+  if (episode_proxy.GetId() == episode_id) {
+    return;
+  }
+  // Our client may see the change after another one; wait, or we'd reset onto the old episode.
+  auto simulator = episode_proxy.Lock();
+  const auto deadline = std::chrono::steady_clock::now() + simulator->GetNetworkingTimeout().to_chrono();
+  while (simulator->GetCurrentEpisodeId() != episode_id && std::chrono::steady_clock::now() < deadline) {
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+  }
   Release();
-  episode_proxy = episode_proxy.Lock()->GetCurrentEpisode();
+  episode_proxy = simulator->GetCurrentEpisode();
   world = cc::World(episode_proxy);
   SetupLocalMap();
   Start();
@@ -498,18 +501,6 @@ void TrafficManagerLocal::RemoveImportedRoute(const ActorId &actor_id, const boo
 
 void TrafficManagerLocal::UpdateImportedRoute(const ActorId &actor_id, const Route route) {
   parameters.UpdateImportedRoute(actor_id, route);
-}
-
-void TrafficManagerLocal::SetRespawnDormantVehicles(const bool mode_switch) {
-  parameters.SetRespawnDormantVehicles(mode_switch);
-}
-
-void TrafficManagerLocal::SetBoundariesRespawnDormantVehicles(const float lower_bound, const float upper_bound) {
-  parameters.SetBoundariesRespawnDormantVehicles(lower_bound, upper_bound);
-}
-
-void TrafficManagerLocal::SetMaxBoundaries(const float lower, const float upper) {
-  parameters.SetMaxBoundaries(lower, upper);
 }
 
 Action TrafficManagerLocal::GetNextAction(const ActorId &actor_id) {

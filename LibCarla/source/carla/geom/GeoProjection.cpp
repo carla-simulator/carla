@@ -24,32 +24,39 @@ namespace geom {
     return radians * 180.0 / Math::Pi<double>();
     }
 
+    // CARLA locations are left-handed (y towards the south, the OpenDRIVE y negated); the projections work in the
+    // right-handed OpenDRIVE inertial frame (y towards the north). The change is its own inverse.
+    static Location SwapHandedness(Location location) {
+    location.y = -location.y;
+    return location;
+    }
+
     Location GeoProjection::GeoLocationToTransform(const GeoLocation& geolocation) const {
         switch (static_cast<ProjectionType>(params.index())) {
 
             case ProjectionType::TransverseMercator: {
                 auto& p = boost::variant2::get<TransverseMercatorParams>(params);
-                return GeoLocationToTransformTransverseMercator(geolocation, p);
+                return SwapHandedness(GeoLocationToTransformTransverseMercator(geolocation, p));
             }
 
             case ProjectionType::UniversalTransverseMercator: {
                 auto& p = boost::variant2::get<UniversalTransverseMercatorParams>(params);
-                return GeoLocationToTransformUniversalTransverseMercator(geolocation, p);
+                return SwapHandedness(GeoLocationToTransformUniversalTransverseMercator(geolocation, p));
             }
 
             case ProjectionType::WebMercator: {
                 auto& p = boost::variant2::get<WebMercatorParams>(params);
-                return GeoLocationToTransformWebMercator(geolocation, p);
+                return SwapHandedness(GeoLocationToTransformWebMercator(geolocation, p));
             }
 
             case ProjectionType::LambertConformalConic: {
                 auto& p = boost::variant2::get<LambertConformalConicParams>(params);
-                return GeoLocationToTransformLambertConformalConic(geolocation, p);
+                return SwapHandedness(GeoLocationToTransformLambertConformalConic(geolocation, p));
             }
 
             default: {
                 auto& p = boost::variant2::get<TransverseMercatorParams>(params);
-                return GeoLocationToTransformTransverseMercator(geolocation, p);
+                return SwapHandedness(GeoLocationToTransformTransverseMercator(geolocation, p));
             }
         }
     }
@@ -58,27 +65,27 @@ namespace geom {
         switch (static_cast<ProjectionType>(params.index())) {
             case ProjectionType::TransverseMercator: {
                 auto& p = boost::variant2::get<TransverseMercatorParams>(params);
-                return TransformToGeoLocationTransverseMercator(location, p);
+                return TransformToGeoLocationTransverseMercator(SwapHandedness(location), p);
             }
 
             case ProjectionType::UniversalTransverseMercator: {
                 auto& p = boost::variant2::get<UniversalTransverseMercatorParams>(params);
-                return TransformToGeoLocationUniversalTransverseMercator(location, p);
+                return TransformToGeoLocationUniversalTransverseMercator(SwapHandedness(location), p);
             }
 
             case ProjectionType::WebMercator: {
                 auto& p = boost::variant2::get<WebMercatorParams>(params);
-                return TransformToGeoLocationWebMercator(location, p);
+                return TransformToGeoLocationWebMercator(SwapHandedness(location), p);
             }
 
             case ProjectionType::LambertConformalConic:{
                 auto& p = boost::variant2::get<LambertConformalConicParams>(params);
-                return TransformToGeoLocationLambertConformalConic(location, p);
+                return TransformToGeoLocationLambertConformalConic(SwapHandedness(location), p);
             }
 
             default: {
                 auto& p = boost::variant2::get<TransverseMercatorParams>(params);
-                return TransformToGeoLocationTransverseMercator(location, p);
+                return TransformToGeoLocationTransverseMercator(SwapHandedness(location), p);
             }
         }
     }

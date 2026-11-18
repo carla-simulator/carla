@@ -201,6 +201,10 @@ public:
 
   void SetLightState(carla::rpc::LightState LightState);
 
+  /// SetLightState with the exact values (the RPC color has 8 bits per
+  /// channel): how Multi-GPU secondaries replay the primary's lights.
+  void SetLightState(float Intensity, FLinearColor Color, ELightType Type, bool bOn);
+
   FVector GetLocation() const;
 
   UFUNCTION(BlueprintPure, Category = "Carla Light")

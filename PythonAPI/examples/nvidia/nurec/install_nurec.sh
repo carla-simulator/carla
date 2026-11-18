@@ -2,7 +2,6 @@
 
 set -euo pipefail
 
-CARLA_VERSION=0.10.0
 # Pin the renderer version used by this integration. A floating latest tag can
 # change its gRPC surface underneath the checked-in stubs.
 NUREC_IMAGE_DEFAULT="nvcr.io/nvidia/nre/nre-ga:26.04.01"
@@ -18,6 +17,8 @@ CARLA_ROOT=$(realpath "${BASH_SOURCE[0]}")
 CARLA_ROOT=$(dirname "$CARLA_ROOT")
 CARLA_ROOT=$CARLA_ROOT/../../../..
 CARLA_ROOT=$(realpath "$CARLA_ROOT")
+# The CARLA version is set only in the top-level CMakeLists.txt; it names the wheel.
+CARLA_VERSION=${CARLA_VERSION:-$(sed -nE 's/^\s*set\s*\(\s*CARLA_VERSION_(MAJOR|MINOR|PATCH)\s+([0-9]+)\s*\)\s*$/\2/p' "$CARLA_ROOT/CMakeLists.txt" | paste -sd.)}
 PYTHON_API_ROOT=$CARLA_ROOT/PythonAPI
 CARLA_NUREC_ROOT=$PYTHON_API_ROOT/examples/nvidia/nurec
 

@@ -26,17 +26,19 @@ REPO = "https://github.com/carla-simulator/scenario_runner.git"
 # (predicate on the parsed client version) -> branch, why
 #
 # Ordered; first match wins. Numeric per-component comparison matters here:
-# 0.10.0 > 0.9.16, which is also why scenario_runner's own MIN_CARLA_VERSION
-# check ('0.9.14') passes on UE5 clients.
+# 1.0 > 0.10.0 > 0.9.16.
 BRANCHES = [
-    ("ue5-master", lambda v: v >= (0, 10), "CARLA 0.10.0+ is UE5; master targets UE4 maps and blueprints"),
+    ("ue58-dev", lambda v: v >= (1,), "CARLA 1.x: ue58-dev is the CARLA 1.0 branch"),
+    ("ue5-master", lambda v: v >= (0, 10), "CARLA 0.10.x is the UE 5.5 release"),
     ("master", lambda v: v >= (0, 9, 14), "master supports CARLA 0.9.14 through 0.9.16"),
     ("leaderboard-1.0", lambda v: v >= (0, 9, 10) and v < (0, 9, 11), "CARLA 0.9.10.1 is the Leaderboard 1.0 build"),
 ]
 
 FLAVORS = {
     "master": "UE4, CARLA 0.9.14-0.9.16. All towns; ~21 standalone scenario types.",
-    "ue5-master": "UE5, CARLA 0.10.0. Town10HD_Opt only; 'vehicle.lincoln.mkz'; weather control disabled; + Scenic.",
+    "ue58-dev": "CARLA 1.0 on UE 5.8. Town01_Opt-Town05_Opt + Town10HD_Opt, "
+                "96 configs; UE5 map/blueprint name translation; route-mode fixes; py-trees 2.6; + Scenic. The default branch.",
+    "ue5-master": "UE 5.5, CARLA 0.10.0 release. Town10HD_Opt only; 'vehicle.lincoln.mkz'; weather control disabled; + Scenic.",
     "leaderboard-2.1": "Leaderboard 2.1 (identical commit to leaderboard-2.0).",
     "leaderboard-2.0": "Leaderboard 2.0 (identical commit to leaderboard-2.1).",
     "leaderboard-1.0": "Leaderboard 1.0, CARLA 0.9.10.1.",
@@ -49,6 +51,16 @@ def sh(cmd: list[str], cwd: str | None = None, check: bool = True) -> str:
     if check and p.returncode != 0:
         sys.exit(f"FAILED: {' '.join(cmd)}\n{p.stdout}{p.stderr}")
     return (p.stdout or "").strip()
+
+
+def pythonpath_export(*parts: str) -> str:
+    """An `export PYTHONPATH=...` line this interpreter can read.
+
+    Joined with os.pathsep, not a hard-coded ':': a native Windows Python (run
+    from Git Bash) splits on ';', and the whole value stays inside one pair of
+    quotes so the ';' is not taken as a shell command separator.
+    """
+    return 'export PYTHONPATH="' + os.pathsep.join(parts + ("${PYTHONPATH}",)) + '"'
 
 
 def have(mod: str) -> bool:
@@ -113,9 +125,27 @@ def branch_of(root: Path) -> str:
     return sh(["git", "-C", str(root), "rev-parse", "--abbrev-ref", "HEAD"], check=False) or "unknown"
 
 
+def config_value(key: str) -> str:
+    """`key` from the environment, else from the files Skills/_common/env_common.sh
+    reads (./.carla-tools.env, then the user config). Values are taken literally."""
+    if os.environ.get(key):
+        return os.environ[key]
+    xdg = os.environ.get("XDG_CONFIG_HOME") or str(Path.home() / ".config")
+    user = os.environ.get("CARLA_TOOLS_CONFIG") or f"{xdg}/carla-agentic-tools/config.env"
+    for f in (Path.cwd() / ".carla-tools.env", Path(user)):
+        try:
+            for line in f.read_text().splitlines():
+                k, sep, v = line.partition("=")
+                if sep and k.strip() == key and v.strip():
+                    return v.strip()
+        except OSError:
+            continue
+    return ""
+
+
 def recommend(ver: str | None) -> tuple[str, str]:
     if not ver or ver == "unknown":
-        return "master", "no client version could be read — master is the default for UE4 CARLA"
+        return "ue58-dev", "no client version could be read; ue58-dev (CARLA 1.0) is the default branch"
     if ver == "leaderboard":
         return "leaderboard-2.1", "the client reports version 'leaderboard': this is a Leaderboard CARLA build"
     v = parse_version(ver)
@@ -169,7 +199,7 @@ def cmd_plan(args) -> None:
     print(f"{sys.executable} -m pip install -r {target}/requirements.txt")
     print(f"export SCENARIO_RUNNER_ROOT={target}")
     print("export CARLA_ROOT=/path/to/CARLA            # needed for the `agents` package")
-    print('export PYTHONPATH="${SCENARIO_RUNNER_ROOT}:${CARLA_ROOT}/PythonAPI/carla:${PYTHONPATH}"')
+    print(pythonpath_export("${SCENARIO_RUNNER_ROOT}", "${CARLA_ROOT}/PythonAPI/carla"))
 
 
 def cmd_install(args) -> None:
@@ -203,14 +233,14 @@ def cmd_install(args) -> None:
     else:
         print(f"[install] pip install -r {req} (into {sys.executable})")
         subprocess.run([sys.executable, "-m", "pip", "install", "-r", str(req)], check=True)
-        # The CARLA bindings are built against the numpy 1.x C API: numpy 2
-        # imports fine and then fails on the first array the simulator hands
-        # back. Report rather than silently downgrading someone's environment.
+        # Pre-1.0 bindings (wheels and eggs) fail under numpy 2; 1.0+ supports it. Report, never downgrade.
         try:
             import numpy
 
-            if parse_version(numpy.__version__) >= (2,):
-                print(f"[install] WARNING numpy {numpy.__version__} is too new for the CARLA bindings")
+            cv = client_version()
+            pre_1_0 = cv == "unknown" or (cv is not None and parse_version(cv) < (1,))
+            if pre_1_0 and parse_version(numpy.__version__) >= (2,):
+                print(f"[install] WARNING numpy {numpy.__version__} is too new for the CARLA {cv} bindings")
                 print(f"[install]   fix with: {sys.executable} -m pip install 'numpy<2'")
         except Exception:
             pass
@@ -218,7 +248,7 @@ def cmd_install(args) -> None:
     print("\n[install] done. Export these, then run `verify`:")
     print(f"  export SCENARIO_RUNNER_ROOT={root}")
     print("  export CARLA_ROOT=/path/to/CARLA")
-    print('  export PYTHONPATH="${SCENARIO_RUNNER_ROOT}:${CARLA_ROOT}/PythonAPI/carla:${PYTHONPATH}"')
+    print("  " + pythonpath_export("${SCENARIO_RUNNER_ROOT}", "${CARLA_ROOT}/PythonAPI/carla"))
 
 
 def cmd_verify(args) -> None:
@@ -233,7 +263,7 @@ def cmd_verify(args) -> None:
         ("carla", "run the install-python-api skill"),
         ("agents.navigation.global_route_planner", "add $CARLA_ROOT/PythonAPI/carla to PYTHONPATH"),
         ("py_trees", "pip install -r requirements.txt"),
-        ("srunner.scenariomanager.carla_data_provider", "add SCENARIO_RUNNER_ROOT to PYTHONPATH"),
+        ("srunner.scenariomanager.simulation_data", "add SCENARIO_RUNNER_ROOT to PYTHONPATH"),
     ]:
         try:
             __import__(mod)
@@ -246,7 +276,8 @@ def cmd_verify(args) -> None:
         import py_trees
 
         v = py_trees.__version__
-        print(f"py_trees : {v}{'' if v.startswith('0.8') else '  <-- only 0.8.x works'}")
+        print(f"py_trees : {v} (install from the checkout's requirements.txt: "
+              f"ue58-dev pins 2.6.0, the other branches 0.8.3)")
     except Exception:
         pass
 
@@ -268,7 +299,7 @@ def cmd_verify(args) -> None:
         if n:
             print(f"xosc     : {n} OpenSCENARIO files in srunner/{d}/")
     if (root / "srunner" / "scenic").is_dir():
-        print(f"scenic   : {len(list((root / 'srunner' / 'scenic').glob('*.scenic')))} .scenic files (ue5-master)")
+        print(f"scenic   : {len(list((root / 'srunner' / 'scenic').glob('*.scenic')))} .scenic files (ue5-master / ue58-dev)")
 
     sv = server_version(args.host, args.port)
     print(f"server   : {sv or f'unreachable at {args.host}:{args.port} (start one to run anything)'}")

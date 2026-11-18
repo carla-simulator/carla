@@ -38,8 +38,8 @@ public:
   /// To release the traffic manager.
   void Release();
 
-  /// To reset the traffic manager.
-  void Reset();
+  /// To reset the traffic manager for the episode @a episode_id.
+  void Reset(uint64_t episode_id);
 
   /// Constructor store remote location information.
   TrafficManagerRemote(const std::pair<std::string, uint16_t> &_serverTM, carla::client::detail::EpisodeProxy &episodeProxy);
@@ -151,15 +151,6 @@ public:
 
   /// Method to update an already set route.
   void UpdateImportedRoute(const ActorId &actor_id, const Route route);
-
-  /// Method to set automatic respawn of dormant vehicles.
-  void SetRespawnDormantVehicles(const bool mode_switch);
-
-  // Method to set boundaries to respawn of dormant vehicles.
-  void SetBoundariesRespawnDormantVehicles(const float lower_bound, const float upper_bound);
-
-  // Method to set boundaries to respawn of dormant vehicles.
-  void SetMaxBoundaries(const float lower, const float upper);
 
   virtual void ShutDown();
 

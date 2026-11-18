@@ -46,6 +46,15 @@ static TAutoConsoleVariable<int32> CVarRTLensSyncBlockingPipelineCreation(
     TEXT("  1: set r.RayTracing.NonBlockingPipelineCreation 0 while synchronous, restore it when asynchronous (default)."),
     ECVF_Default);
 
+// The path-traced view's eye adaptation can meter the raw sun disk radiance and
+// adapt to ~EV18 (measured on Town12), crushing the frame to black. Its
+// exposure range is the camera profile's, with the upper end capped here.
+static TAutoConsoleVariable<float> CVarRTLensMaxAutoExposureEV(
+    TEXT("carla.RTLens.MaxAutoExposureEV"),
+    12.0f,
+    TEXT("Upper limit (EV100) of the rt_lens auto exposure range; the lower limit is the camera profile's."),
+    ECVF_Default);
+
 // =============================================================================
 // -- Local static helpers ------------------------------------------------------
 // =============================================================================
@@ -162,24 +171,24 @@ ASceneCaptureCamera_RayTracedLens::ASceneCaptureCamera_RayTracedLens(const FObje
 
 void ASceneCaptureCamera_RayTracedLens::SetRayTracedLensExposure()
 {
-  // Pin the capture to the same daylight histogram exposure the viewport
-  // uses (see AWeather::PushWeatherToSky). Left to the world's volumes, the
-  // path-traced view's eye adaptation can meter the raw sun disk radiance
-  // and adapt to ~EV18 (measured on Town12), crushing the whole frame to
-  // black while the identical view on another map sits at EV10.
+  // Keep the camera profile's auto exposure (method, speeds, bias and the
+  // lower end of its range, which night scenes need) and only cap the upper
+  // end, so the path-traced view cannot meter the sun disk and go black (see
+  // carla.RTLens.MaxAutoExposureEV). A fixed daylight range (EV 10-12) used to
+  // be pinned here, which crushed every night frame to black.
   auto &PostProcessSettings = CaptureComponent2D->PostProcessSettings;
-  PostProcessSettings.bOverride_AutoExposureMethod = true;
-  PostProcessSettings.AutoExposureMethod = AEM_Histogram;
-  PostProcessSettings.bOverride_AutoExposureBias = true;
-  PostProcessSettings.AutoExposureBias = 0.0f;
-  PostProcessSettings.bOverride_AutoExposureMinBrightness = true;
-  PostProcessSettings.AutoExposureMinBrightness = 10.0f;
-  PostProcessSettings.bOverride_AutoExposureMaxBrightness = true;
-  PostProcessSettings.AutoExposureMaxBrightness = 12.0f;
-  PostProcessSettings.bOverride_AutoExposureSpeedUp = true;
-  PostProcessSettings.AutoExposureSpeedUp = 3.0f;
-  PostProcessSettings.bOverride_AutoExposureSpeedDown = true;
-  PostProcessSettings.AutoExposureSpeedDown = 1.0f;
+  const float MaxEV = CVarRTLensMaxAutoExposureEV.GetValueOnGameThread();
+  if (!PostProcessSettings.bOverride_AutoExposureMaxBrightness ||
+      PostProcessSettings.AutoExposureMaxBrightness > MaxEV)
+  {
+    PostProcessSettings.bOverride_AutoExposureMaxBrightness = true;
+    PostProcessSettings.AutoExposureMaxBrightness = MaxEV;
+  }
+  if (PostProcessSettings.bOverride_AutoExposureMinBrightness &&
+      PostProcessSettings.AutoExposureMinBrightness > MaxEV)
+  {
+    PostProcessSettings.AutoExposureMinBrightness = MaxEV;
+  }
 }
 
 void ASceneCaptureCamera_RayTracedLens::Set(const FActorDescription &Description)
@@ -314,14 +323,15 @@ void ASceneCaptureCamera_RayTracedLens::Set(const FActorDescription &Description
   CaptureComponent2D->PostProcessSettings.PathTracingSamplesPerPixel = SamplesPerPixel;
   CaptureComponent2D->PostProcessSettings.PathTracingEnableDenoiser = bEnableDenoiser;
 
-  // SetCamera above may have rewritten the exposure block from generic
-  // attributes; re-pin it (see SetRayTracedLensExposure).
+  // SetCamera above loaded the camera profile; cap its exposure range (see
+  // SetRayTracedLensExposure).
   SetRayTracedLensExposure();
 
   // exposure_mode=manual: deterministic exposure from the profile's physical
-  // camera plus exposure_compensation (EV); needed when the layer is composited
-  // against an external render and the frame content (show-only actors over a
-  // black background) would drive the histogram.
+  // camera; needed when the layer is composited against an external render and
+  // the frame content (show-only actors over a black background) would drive
+  // the histogram. exposure_compensation (EV) adds to the profile's bias in
+  // either mode.
   {
     const FString ExposureMode = UActorBlueprintFunctionLibrary::RetrieveActorAttributeToString(
         "exposure_mode", Variations, TEXT("auto"));
@@ -331,8 +341,9 @@ void ASceneCaptureCamera_RayTracedLens::Set(const FActorDescription &Description
       PPS.bOverride_AutoExposureMethod = true;
       PPS.AutoExposureMethod = AEM_Manual;
     }
+    const float ProfileBias = PPS.bOverride_AutoExposureBias ? PPS.AutoExposureBias : 0.0f;
     PPS.bOverride_AutoExposureBias = true;
-    PPS.AutoExposureBias = UActorBlueprintFunctionLibrary::RetrieveActorAttributeToFloat(
+    PPS.AutoExposureBias = ProfileBias + UActorBlueprintFunctionLibrary::RetrieveActorAttributeToFloat(
         "exposure_compensation", Variations, 0.0f);
   }
 }

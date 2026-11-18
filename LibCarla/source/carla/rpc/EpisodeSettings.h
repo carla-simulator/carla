@@ -51,10 +51,12 @@ namespace rpc {
 
     bool adjust_signs_height_to_ground = false;
 
+    bool deterministic_collisions = false;
+
     MSGPACK_DEFINE_ARRAY(synchronous_mode, no_rendering_mode, fixed_delta_seconds, substepping,
         max_substep_delta_time, max_substeps, max_culling_distance, deterministic_ragdolls,
         tile_stream_distance, actor_active_distance, spectator_as_ego,
-        adjust_signs_height_to_ground);
+        adjust_signs_height_to_ground, deterministic_collisions);
 
     // =========================================================================
     // -- Constructors ---------------------------------------------------------
@@ -74,7 +76,8 @@ namespace rpc {
         float tile_stream_distance = 3000.f,
         float actor_active_distance = 2000.f,
         bool spectator_as_ego = true,
-        bool adjust_signs_height_to_ground = false)
+        bool adjust_signs_height_to_ground = false,
+        bool deterministic_collisions = false)
       : synchronous_mode(synchronous_mode),
         no_rendering_mode(no_rendering_mode),
         fixed_delta_seconds(
@@ -87,7 +90,8 @@ namespace rpc {
         tile_stream_distance(tile_stream_distance),
         actor_active_distance(actor_active_distance),
         spectator_as_ego(spectator_as_ego),
-        adjust_signs_height_to_ground(adjust_signs_height_to_ground) {}
+        adjust_signs_height_to_ground(adjust_signs_height_to_ground),
+        deterministic_collisions(deterministic_collisions) {}
 
     // =========================================================================
     // -- Comparison operators -------------------------------------------------
@@ -106,7 +110,8 @@ namespace rpc {
           (tile_stream_distance == rhs.tile_stream_distance) &&
           (actor_active_distance == rhs.actor_active_distance) &&
           (spectator_as_ego == rhs.spectator_as_ego) &&
-          (adjust_signs_height_to_ground == rhs.adjust_signs_height_to_ground);
+          (adjust_signs_height_to_ground == rhs.adjust_signs_height_to_ground) &&
+          (deterministic_collisions == rhs.deterministic_collisions);
     }
 
     bool operator!=(const EpisodeSettings &rhs) const {
@@ -132,7 +137,8 @@ namespace rpc {
             Settings.TileStreamingDistance,
             Settings.ActorActiveDistance,
             Settings.SpectatorAsEgo,
-            Settings.bAdjustSignsHeightToGround) {
+            Settings.bAdjustSignsHeightToGround,
+            Settings.bDeterministicCollisions) {
       constexpr float CMTOM = 1.f/100.f;
       tile_stream_distance = CMTOM * Settings.TileStreamingDistance;
       actor_active_distance = CMTOM * Settings.ActorActiveDistance;
@@ -155,6 +161,7 @@ namespace rpc {
       Settings.ActorActiveDistance = MTOCM * actor_active_distance;
       Settings.SpectatorAsEgo = spectator_as_ego;
       Settings.bAdjustSignsHeightToGround = adjust_signs_height_to_ground;
+      Settings.bDeterministicCollisions = deterministic_collisions;
 
       return Settings;
     }

@@ -48,6 +48,9 @@ struct CARLA_API FMapData
   FString Path;
 
   bool bUseCarlaMapMaterials;
+
+  /// Build one map out of a tiled .fbx set instead of a sublevel per tile.
+  bool bMergeTiles = false;
 };
 
 /// Struct containing all assets data read from .Package.json file.

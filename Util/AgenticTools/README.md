@@ -7,12 +7,14 @@
 A library of **vetted CARLA procedures** ("skills") for any agent. Each skill is
 a `SKILL.md` plus executable scripts with its failure modes encoded, so an agent
 discovers the right procedure and checks its prerequisites instead of improvising
-from the Makefile.
+it.
 
 ## Quick start
 
 Inside a CARLA checkout there is nothing to do: the root `.mcp.json` starts the
-server. To use the skills from another project, register the server by path:
+server. A CARLA package ships the same `Skills/` and `Util/AgenticTools/` at its
+root, with its own `AGENTS.md` and `.mcp.json`, so the same holds there. To use
+the skills from another project, register the server by path:
 
 ```bash
 claude mcp add carla -s user -- node /path/to/carla/Util/AgenticTools/bin/carla-agentic-tools.js

@@ -25,16 +25,17 @@ export CARLA_TIMEOUT="${CARLA_TIMEOUT:-10.0}"
 export PYTHON="${PYTHON:-python3}"
 
 # Resolve a carla checkout that contains the agents package.
+# Same candidates, in the same order, as the scenario-runner skills: a
+# standalone package (CARLA_TARGET / CARLA_PACKAGE_ROOT) ships agents too.
 if [ -z "${CARLA_ROOT:-}" ]; then
-  if [ -n "${CARLA_UE4_ROOT:-}" ] && [ -d "${CARLA_UE4_ROOT}/PythonAPI/carla/agents" ]; then
-    CARLA_ROOT="${CARLA_UE4_ROOT}"
-  elif [ -d "${PWD}/PythonAPI/carla/agents" ]; then
-    CARLA_ROOT="${PWD}"
-  fi
+  for _c in "${CARLA_TARGET:-}" "${CARLA_PACKAGE_ROOT:-}" "${CARLA_UE4_ROOT:-}" \
+            "${CARLA_UE58_ROOT:-}" "${CARLA_UE5_ROOT:-}" "${PWD}"; do
+    if [ -n "${_c}" ] && [ -d "${_c}/PythonAPI/carla/agents" ]; then CARLA_ROOT="${_c}"; break; fi
+  done
 fi
 export CARLA_ROOT="${CARLA_ROOT:-}"
 if [ -n "${CARLA_ROOT}" ] && [ -d "${CARLA_ROOT}/PythonAPI/carla" ]; then
-  export PYTHONPATH="${CARLA_ROOT}/PythonAPI/carla:${PYTHONPATH:-}"
+  carla_pythonpath_prepend "${CARLA_ROOT}/PythonAPI/carla"
 fi
 
 echo "[env] CARLA_HOST:PORT = ${CARLA_HOST}:${CARLA_PORT}  (timeout ${CARLA_TIMEOUT}s)"

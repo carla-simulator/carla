@@ -20,6 +20,13 @@ namespace traffic_manager {
   }
   SimpleWaypoint::~SimpleWaypoint() {}
 
+  void SimpleWaypoint::ClearLinks() {
+    next_waypoints.clear();
+    previous_waypoints.clear();
+    next_left_waypoint.reset();
+    next_right_waypoint.reset();
+  }
+
   std::vector<SimpleWaypointPtr> SimpleWaypoint::GetNextWaypoint() const {
     return next_waypoints;
   }

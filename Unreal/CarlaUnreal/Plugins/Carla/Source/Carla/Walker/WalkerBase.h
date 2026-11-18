@@ -115,7 +115,19 @@ public:
 
   virtual void BeginPlay() override;
 
+  /// Teleport-driven walkers (client-side crowd, replayer) skip overlap queries; the body mesh stays visible to sensors.
+  void SetTeleportDriven(bool bEnable);
+
 private:
+
+  /// Collision state SetTeleportDriven() suspended, restored when the walker moves by itself again.
+  struct FSuspendedPrimitive
+  {
+    TWeakObjectPtr<UPrimitiveComponent> Primitive;
+    ECollisionEnabled::Type CollisionEnabled;
+    bool bGenerateOverlapEvents;
+  };
+  TArray<FSuspendedPrimitive> SuspendedPrimitives;
 
   UFUNCTION()
   void OnBodyHit(AActor *SelfActor, AActor *OtherActor,

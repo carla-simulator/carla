@@ -13,26 +13,18 @@
 #if WITH_EDITOR
 #include "FileHelpers.h"
 #endif
-#include "UObject/ConstructorHelpers.h"
+#include "UObject/SoftObjectPath.h"
 
 DEFINE_LOG_CATEGORY(LogCarlaToolsMapGenerateTileCommandlet);
 
 
 UGenerateTileCommandlet::UGenerateTileCommandlet()
 {
-#if WITH_EDITOR
-  ConstructorHelpers::FClassFinder<UOpenDriveToMap> OpenDrivelassFinder(TEXT("/CarlaDigitalTwinsTool/BP_OpenDriveToMap"));
-  OpenDriveClass = OpenDrivelassFinder.Class;
-#endif
 }
 
 UGenerateTileCommandlet::UGenerateTileCommandlet(const FObjectInitializer& Initializer)
   : Super(Initializer)
 {
-#if WITH_EDITOR
-  ConstructorHelpers::FClassFinder<UOpenDriveToMap> OpenDrivelassFinder(TEXT("/CarlaDigitalTwinsTool/BP_OpenDriveToMap"));
-  OpenDriveClass = OpenDrivelassFinder.Class;
-#endif
 }
 
 #if WITH_EDITORONLY_DATA
@@ -71,9 +63,18 @@ int32 UGenerateTileCommandlet::Main(const FString &Params)
   }
 
 
+  // Resolved here, not in the constructor: the blueprint lives in the content-only
+  // CarlaDigitalTwinsTool plugin, which most checkouts do not have.
+  if (OpenDriveClass == nullptr)
+  {
+    OpenDriveClass = FSoftClassPath(
+        TEXT("/CarlaDigitalTwinsTool/BP_OpenDriveToMap.BP_OpenDriveToMap_C")).TryLoadClass<UOpenDriveToMap>();
+  }
+
   if(OpenDriveClass == nullptr )
   {
-    UE_LOG(LogCarlaToolsMapGenerateTileCommandlet, Error, TEXT("OpenDrive class is not properly set"));
+    UE_LOG(LogCarlaToolsMapGenerateTileCommandlet, Error,
+        TEXT("OpenDrive class is not properly set: the CarlaDigitalTwinsTool content is not installed"));
     return -1;
   }
   OpenDriveMap = NewObject<UOpenDriveToMap>(this, OpenDriveClass);

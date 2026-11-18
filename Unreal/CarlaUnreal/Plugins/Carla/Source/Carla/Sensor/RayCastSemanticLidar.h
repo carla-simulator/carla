@@ -46,6 +46,10 @@ public:
 
   virtual void SendData(const float DeltaTime);
 
+  void GetMirrorState(carla::multigpu::SensorState &State) const override;
+
+  void SetMirrorState(const carla::multigpu::SensorState &State) override;
+
 protected:
   virtual void BeginPlay() override;
   virtual void EndPlay(EEndPlayReason::Type EndPlayReason) override;

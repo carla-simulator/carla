@@ -18,6 +18,8 @@ For a complete vehicle, verify:
 
 - Catalog discovery, spawn, settle, ground contact, body/sensor bounds, and semantic classification.
 - Acceleration, braking, steering, wheel spin, suspension, caliper alignment without spin, and moving clearance.
+- **Every spawn point, not one.** In synchronous mode, spawn the vehicle at each of the map's spawn points (Town10HD_Opt has 155) with a `sensor.other.collision` attached. Let it settle for 20 ticks, apply throttle 0.3 for 60 ticks, and record the distance moved and any `static.road` events. A healthy car moves at every point and reports no road contact. Run a stock car (Lincoln MKZ) as the baseline. One or two hand-picked spawn points missed the Model 3's sweep problem, which showed at 10 of 155.
+- **A fleet under Traffic Manager.** Spawn about 40 of the vehicle on autopilot for 60 s, several seeds, and count `static.road` collision events, stuck vehicles (under 20 m travelled) and top speed against the same run with a stock car. Single-vehicle braking tests did not reproduce the chassis scrape the fleet run found; it needed TM braking combined with body roll at road seams.
 - Every supported door separately and together, including close and actor destruction.
 - API paint variation across all body panels.
 - Isolated lamp states plus relevant combinations, from both rear sides and front. Confirm state round-trips **and** visible pixels; test road illumination separately from glowing lenses. Check temporal behavior where indicators blink.

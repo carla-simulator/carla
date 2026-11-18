@@ -65,10 +65,10 @@ void ReadValue(std::istream &InFile, T &OutObj)
 template <typename T>
 void ReadStdVector(std::istream &InFile, std::vector<T> &OutVec)
 {
-  uint32_t VecSize;
+  uint32_t VecSize = 0;
   ReadValue<uint32_t>(InFile, VecSize);
   OutVec.clear();
-  for (uint32_t i = 0; i < VecSize; ++i)
+  for (uint32_t i = 0; (i < VecSize) && InFile; ++i)
   {
     T InObj;
     ReadValue<T>(InFile, InObj);
@@ -79,10 +79,10 @@ void ReadStdVector(std::istream &InFile, std::vector<T> &OutVec)
 template <typename T>
 void ReadTArray(std::istream &InFile, TArray<T> &OutVec)
 {
-  uint32_t VecSize;
+  uint32_t VecSize = 0;
   ReadValue<uint32_t>(InFile, VecSize);
   OutVec.Empty();
-  for (uint32_t i = 0; i < VecSize; ++i)
+  for (uint32_t i = 0; (i < VecSize) && InFile; ++i)
   {
     T InObj;
     ReadValue<T>(InFile, InObj);

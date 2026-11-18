@@ -14,7 +14,9 @@
 #include "carla/ros2/middleware/MiddlewareConfig.h"
 #include "carla/streaming/detail/Types.h"
 
+#include <atomic>
 #include <memory>
+#include <mutex>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
@@ -81,7 +83,7 @@ public:
   // RegisterSensor time; both must be true for a transform to go out.
   // Exposed to the client through World.set_publish_tf (later phase).
   void SetPublishTF(bool publish_tf) { _publish_tf = publish_tf; }
-  bool GetPublishTF() const { return _publish_tf; }
+  bool GetPublishTF() const { return _publish_tf.load(); }
 
   // actor registration API: replaces the legacy AddActorRosName /
   // GetActorRosName / GetActorParentRosName surface that PR-2 stubbed and
@@ -130,12 +132,17 @@ public:
 
   // enabling streams to publish
   void EnableStream(carla::streaming::detail::stream_id_type id) {
+    std::lock_guard<std::mutex> lock(_mutex);
     _publish_stream.insert(id);
   }
   bool IsStreamEnabled(carla::streaming::detail::stream_id_type id) {
+    std::lock_guard<std::mutex> lock(_mutex);
     return _publish_stream.count(id) > 0;
   }
-  void ResetStreams() { _publish_stream.clear(); }
+  void ResetStreams() {
+    std::lock_guard<std::mutex> lock(_mutex);
+    _publish_stream.clear();
+  }
 
   // receiving data to publish
   void ProcessDataFromCamera(
@@ -244,6 +251,23 @@ private:
     bool publish_tf{true};
   };
 
+  struct Stamp {
+    int32_t seconds{0};
+    uint32_t nanoseconds{0};
+  };
+
+  // Takes _mutex.
+  Stamp GetStamp() const;
+
+  // The helpers below up to ResolveAutoStreamSuffix expect _mutex to be held
+  // by the caller, except the GetOrCreate* factories and PublishTransform,
+  // which take it themselves.
+  void UnregisterSensorLocked(void *actor);
+  void DropPublishersLocked(void *actor);
+  // True while the actor is registered or carries a topic override; late
+  // deliveries for destroyed actors must not re-create their publishers.
+  bool IsKnownActorLocked(void *actor) const;
+
   // Resolves an actor's `rt/carla/[parent/]ros_name` base topic by walking the
   // parent chain. Returns empty if the actor is not registered.
   std::string BuildBaseTopicName(void *actor) const;
@@ -264,7 +288,12 @@ private:
   // Lazy-creates the per-sensor transform publisher, gated on the actor's
   // publish_tf flag (set at RegisterSensor time). Returns nullptr if the
   // sensor opted out.
-  std::shared_ptr<CarlaTransformPublisher> GetOrCreateTransformPublisher(void *actor);
+  std::shared_ptr<CarlaTransformPublisher> GetOrCreateTransformPublisherLocked(void *actor);
+
+  // Broadcasts the sensor transform on /tf. Resolves the publisher and frame
+  // names under the lock, then writes outside it.
+  void PublishTransform(
+      void *actor, const Stamp &stamp, const carla::geom::Transform &sensor_transform);
 
   // Camera-side counterpart of GetOrCreateSensor for publishers that inherit
   // CarlaCameraPublisher (the RGB / Depth / SS / IS / Normals / OpticalFlow
@@ -285,11 +314,15 @@ private:
 
   static std::shared_ptr<ROS2> _instance;
 
-  bool _enabled{false};
-  bool _publish_tf{true};
-  uint64_t _frame{0};
-  int32_t _seconds{0};
-  uint32_t _nanoseconds{0};
+  // Camera readbacks publish from parallel render-thread workers while the
+  // game thread registers and destroys actors, so the maps below and the
+  // stamp are guarded by this mutex.
+  mutable std::mutex _mutex;
+
+  std::atomic<bool> _enabled{false};
+  std::atomic<bool> _publish_tf{true};
+  std::atomic<uint64_t> _frame{0};
+  Stamp _stamp;
 
   std::unordered_map<void *, ActorRegistration> _registrations;
   // Exact-topic overrides; empty string means "no override".

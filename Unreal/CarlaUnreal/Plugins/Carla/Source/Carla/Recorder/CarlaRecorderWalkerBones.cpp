@@ -8,6 +8,9 @@
 #include "CarlaRecorder.h"
 #include "CarlaRecorderHelpers.h"
 
+#include <algorithm>
+#include <limits>
+
 void CarlaRecorderWalkerBones::Write(std::ofstream &OutFile)
 {
   // database id
@@ -75,7 +78,7 @@ void CarlaRecorderWalkersBones::Write(std::ofstream &OutFile)
   WriteValue<uint32_t>(OutFile, Total);
 
   // write total records
-  Total = Walkers.size();
+  Total = std::min<size_t>(Walkers.size(), std::numeric_limits<uint16_t>::max());
   WriteValue<uint16_t>(OutFile, Total);
 
   // write records

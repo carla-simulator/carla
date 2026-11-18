@@ -42,8 +42,9 @@ using namespace std::chrono_literals;
   Episode::Episode(Client &client, const rpc::EpisodeInfo &info, std::weak_ptr<Simulator> simulator)
     : _client(client),
       _state(std::make_shared<EpisodeState>(info.id)),
+      _token(info.token),
       _simulator(simulator),
-      _token(info.token) {}
+      _handled_episode_id(std::make_shared<std::atomic<uint64_t>>(info.id)) {}
 
   Episode::~Episode() {
     try {
@@ -106,7 +107,12 @@ using namespace std::chrono_literals;
           } while (!self->_state.compare_exchange(&prev, next));
 
           if(UpdateLights || HasMapChanged) {
-            self->_on_light_update_callbacks.Call(next);
+            // The LightManager queries the server here; a time-out or a dying Simulator must not terminate the process.
+            try {
+              self->_on_light_update_callbacks.Call(next);
+            } catch (const std::exception &e) {
+              log_error("failed to update the lights for the new snapshot:", e.what());
+            }
           }
 
           if(HasMapChanged) {
@@ -115,7 +121,7 @@ using namespace std::chrono_literals;
 
           /// Episode change
           if(episode_changed) {
-            self->OnEpisodeChanged();
+            self->OnEpisodeChanged(next->GetEpisodeId());
           }
 
           // Notify waiting threads and do the callbacks.
@@ -155,8 +161,10 @@ using namespace std::chrono_literals;
     traffic_manager::TrafficManager::Release();
   }
 
-  void Episode::OnEpisodeChanged() {
-    traffic_manager::TrafficManager::Reset();
+  void Episode::OnEpisodeChanged(uint64_t episode_id) {
+    // Hand the reset to the process-wide TM thread: resetting here can destroy clients and deadlock.
+    traffic_manager::TrafficManager::RequestReset(episode_id,
+        [handled = _handled_episode_id, episode_id]() { handled->store(episode_id); });
   }
 
   bool Episode::HasMapChangedSinceLastCall() {

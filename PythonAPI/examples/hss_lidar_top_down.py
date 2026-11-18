@@ -14,6 +14,7 @@ ego vehicle sits at the bottom centre and the forward 120-degree wedge fans
 out upward. Points are coloured by distance: near is red, far is blue.
 """
 
+import argparse
 import glob
 import os
 import sys
@@ -67,7 +68,16 @@ def top_down_pixels(measurement):
 
 
 def main():
-    client = carla.Client('localhost', 2000)
+    argparser = argparse.ArgumentParser(description=__doc__)
+    argparser.add_argument(
+        '--host', metavar='H', default='127.0.0.1',
+        help='IP of the host server (default: 127.0.0.1)')
+    argparser.add_argument(
+        '-p', '--port', metavar='P', default=2000, type=int,
+        help='TCP port to listen to (default: 2000)')
+    args = argparser.parse_args()
+
+    client = carla.Client(args.host, args.port)
     client.set_timeout(15.0)
     world = client.get_world()
     bp_lib = world.get_blueprint_library()

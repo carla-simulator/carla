@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1180" height="470" viewBox="0 0 1180 470"><defs><marker id="ah_ink" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#2b2b2b"/></marker><marker id="ah_sub" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#5f6b73"/></marker><marker id="ah_line" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#c9d3da"/></marker><marker id="ah_card" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#f5f8fa"/></marker><marker id="ah_blue" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#2980b9"/></marker><marker id="ah_red" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#d9534f"/></marker><marker id="ah_green" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#3c9a5f"/></marker><marker id="ah_orange" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#e69138"/></marker><marker id="ah_purple" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#7e57c2"/></marker><marker id="ah_white" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#ffffff"/></marker><marker id="ah_soft_blue" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#e3f0f9"/></marker><marker id="ah_soft_red" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#fbe6e5"/></marker><marker id="ah_soft_green" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#e4f3e9"/></marker><marker id="ah_soft_orange" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#fdf0e1"/></marker><marker id="ah_soft_purple" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#efe9f8"/></marker></defs>
+<rect width="1180" height="470" fill="#ffffff"/>
+<rect x="470" y="20" width="240" height="58" rx="10" fill="#f5f8fa" stroke="#5f6b73" stroke-width="2"/>
+<text x="590.0" y="46.25" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="15" fill="#2b2b2b" font-weight="bold" text-anchor="middle" xml:space="preserve">LeadBrakes</text>
+<text x="590.0" y="64.75" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" fill="#5f6b73" font-weight="normal" text-anchor="middle" xml:space="preserve">Parallel: ends when one child succeeds</text>
+<rect x="150" y="120" width="230" height="58" rx="10" fill="#f5f8fa" stroke="#5f6b73" stroke-width="2"/>
+<text x="265.0" y="146.25" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="15" fill="#2b2b2b" font-weight="bold" text-anchor="middle" xml:space="preserve">Sequence</text>
+<text x="265.0" y="164.75" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" fill="#5f6b73" font-weight="normal" text-anchor="middle" xml:space="preserve">start trigger, then your tree</text>
+<rect x="560" y="120" width="200" height="58" rx="10" fill="#e4f3e9" stroke="#3c9a5f" stroke-width="2"/>
+<text x="660.0" y="146.25" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="15" fill="#2b2b2b" font-weight="bold" text-anchor="middle" xml:space="preserve">Test Criteria</text>
+<text x="660.0" y="164.75" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" fill="#5f6b73" font-weight="normal" text-anchor="middle" xml:space="preserve">Parallel</text>
+<rect x="790" y="120" width="170" height="58" rx="10" fill="#fdf0e1" stroke="#e69138" stroke-width="2"/>
+<text x="875.0" y="146.25" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="15" fill="#2b2b2b" font-weight="bold" text-anchor="middle" xml:space="preserve">TimeOut</text>
+<text x="875.0" y="164.75" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" fill="#5f6b73" font-weight="normal" text-anchor="middle" xml:space="preserve">self.timeout</text>
+<rect x="970" y="120" width="200" height="58" rx="10" fill="#f5f8fa" stroke="#5f6b73" stroke-width="2"/>
+<text x="1070.0" y="155.0" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="15" fill="#2b2b2b" font-weight="bold" text-anchor="middle" xml:space="preserve"></text>
+<text x="1070" y="154" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13.5" fill="#2b2b2b" font-weight="bold" text-anchor="middle" xml:space="preserve">UpdateAllActorControls</text>
+<path d="M 590.0 78 L 590.0 92 L 265.0 92 L 265.0 120" stroke="#c9d3da" stroke-width="2" fill="none"/>
+<path d="M 590.0 78 L 590.0 92 L 660.0 92 L 660.0 120" stroke="#c9d3da" stroke-width="2" fill="none"/>
+<path d="M 590.0 78 L 590.0 92 L 875.0 92 L 875.0 120" stroke="#c9d3da" stroke-width="2" fill="none"/>
+<path d="M 590.0 78 L 590.0 92 L 1070.0 92 L 1070.0 120" stroke="#c9d3da" stroke-width="2" fill="none"/>
+<rect x="20" y="220" width="190" height="58" rx="10" fill="#f5f8fa" stroke="#5f6b73" stroke-width="2"/>
+<text x="115.0" y="246.25" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="15" fill="#2b2b2b" font-weight="bold" text-anchor="middle" xml:space="preserve">TimeToArrival</text>
+<text x="115.0" y="264.75" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" fill="#5f6b73" font-weight="normal" text-anchor="middle" xml:space="preserve">start trigger</text>
+<rect x="330" y="220" width="220" height="58" rx="10" fill="#e3f0f9" stroke="#2980b9" stroke-width="2"/>
+<text x="440.0" y="246.25" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="15" fill="#2b2b2b" font-weight="bold" text-anchor="middle" xml:space="preserve">LeadBrakes</text>
+<text x="440.0" y="264.75" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" fill="#5f6b73" font-weight="normal" text-anchor="middle" xml:space="preserve">Sequence (your tree)</text>
+<path d="M 265.0 178 L 265.0 192 L 115.0 192 L 115.0 220" stroke="#c9d3da" stroke-width="2" fill="none"/>
+<path d="M 265.0 178 L 265.0 192 L 440.0 192 L 440.0 220" stroke="#c9d3da" stroke-width="2" fill="none"/>
+<rect x="560" y="220" width="200" height="58" rx="10" fill="#e4f3e9" stroke="#3c9a5f" stroke-width="2"/>
+<text x="660.0" y="246.25" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="15" fill="#2b2b2b" font-weight="bold" text-anchor="middle" xml:space="preserve">CollisionTest</text>
+<text x="660.0" y="264.75" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" fill="#5f6b73" font-weight="normal" text-anchor="middle" xml:space="preserve">criterion</text>
+<path d="M 660.0 178 L 660.0 192 L 660.0 192 L 660.0 220" stroke="#c9d3da" stroke-width="2" fill="none"/>
+<rect x="20" y="320" width="160" height="58" rx="10" fill="#e3f0f9" stroke="#2980b9" stroke-width="2"/>
+<text x="100.0" y="346.25" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="15" fill="#2b2b2b" font-weight="bold" text-anchor="middle" xml:space="preserve">EgoStarts</text>
+<text x="100.0" y="364.75" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" fill="#5f6b73" font-weight="normal" text-anchor="middle" xml:space="preserve">DriveDistance</text>
+<path d="M 440.0 278 L 440.0 292 L 100.0 292 L 100.0 320" stroke="#c9d3da" stroke-width="2" fill="none"/>
+<rect x="200" y="320" width="210" height="58" rx="10" fill="#e3f0f9" stroke="#2980b9" stroke-width="2"/>
+<text x="305.0" y="346.25" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="15" fill="#2b2b2b" font-weight="bold" text-anchor="middle" xml:space="preserve">LeadDrives</text>
+<text x="305.0" y="364.75" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" fill="#5f6b73" font-weight="normal" text-anchor="middle" xml:space="preserve">Parallel</text>
+<path d="M 440.0 278 L 440.0 292 L 305.0 292 L 305.0 320" stroke="#c9d3da" stroke-width="2" fill="none"/>
+<rect x="430" y="320" width="160" height="58" rx="10" fill="#e3f0f9" stroke="#2980b9" stroke-width="2"/>
+<text x="510.0" y="346.25" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="15" fill="#2b2b2b" font-weight="bold" text-anchor="middle" xml:space="preserve">Stopping</text>
+<text x="510.0" y="364.75" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" fill="#5f6b73" font-weight="normal" text-anchor="middle" xml:space="preserve">StopVehicle</text>
+<path d="M 440.0 278 L 440.0 292 L 510.0 292 L 510.0 320" stroke="#c9d3da" stroke-width="2" fill="none"/>
+<rect x="610" y="320" width="160" height="58" rx="10" fill="#e3f0f9" stroke="#2980b9" stroke-width="2"/>
+<text x="690.0" y="346.25" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="15" fill="#2b2b2b" font-weight="bold" text-anchor="middle" xml:space="preserve">EgoStopped</text>
+<text x="690.0" y="364.75" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" fill="#5f6b73" font-weight="normal" text-anchor="middle" xml:space="preserve">StandStill</text>
+<path d="M 440.0 278 L 440.0 292 L 690.0 292 L 690.0 320" stroke="#c9d3da" stroke-width="2" fill="none"/>
+<rect x="790" y="320" width="160" height="58" rx="10" fill="#e3f0f9" stroke="#2980b9" stroke-width="2"/>
+<text x="870.0" y="355.0" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="15" fill="#2b2b2b" font-weight="bold" text-anchor="middle" xml:space="preserve">ActorDestroy</text>
+<path d="M 440.0 278 L 440.0 292 L 870.0 292 L 870.0 320" stroke="#c9d3da" stroke-width="2" fill="none"/>
+<rect x="150" y="405" width="150" height="58" rx="10" fill="#e3f0f9" stroke="#2980b9" stroke-width="2"/>
+<text x="225.0" y="440.0" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="15" fill="#2b2b2b" font-weight="bold" text-anchor="middle" xml:space="preserve">FollowWaypoints</text>
+<rect x="310" y="405" width="150" height="58" rx="10" fill="#e3f0f9" stroke="#2980b9" stroke-width="2"/>
+<text x="385.0" y="440.0" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="15" fill="#2b2b2b" font-weight="bold" text-anchor="middle" xml:space="preserve">DriveDistance</text>
+<path d="M 305.0 378 L 305.0 392 L 225.0 392 L 225.0 405" stroke="#c9d3da" stroke-width="2" fill="none"/>
+<path d="M 305.0 378 L 305.0 392 L 385.0 392 L 385.0 405" stroke="#c9d3da" stroke-width="2" fill="none"/>
+<rect x="985" y="240" width="22" height="18" rx="4" fill="#f5f8fa" stroke="#5f6b73" stroke-width="2"/>
+<text x="1017" y="254" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13.5" fill="#2b2b2b" font-weight="normal" text-anchor="start" xml:space="preserve">added by BasicScenario</text>
+<rect x="985" y="270" width="22" height="18" rx="4" fill="#e3f0f9" stroke="#2980b9" stroke-width="2"/>
+<text x="1017" y="284" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13.5" fill="#2b2b2b" font-weight="normal" text-anchor="start" xml:space="preserve">_create_behavior()</text>
+<rect x="985" y="300" width="22" height="18" rx="4" fill="#e4f3e9" stroke="#3c9a5f" stroke-width="2"/>
+<text x="1017" y="314" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13.5" fill="#2b2b2b" font-weight="normal" text-anchor="start" xml:space="preserve">_create_test_criteria()</text>
+<rect x="985" y="330" width="22" height="18" rx="4" fill="#fdf0e1" stroke="#e69138" stroke-width="2"/>
+<text x="1017" y="344" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13.5" fill="#2b2b2b" font-weight="normal" text-anchor="start" xml:space="preserve">timeout</text>
+</svg>

@@ -27,10 +27,8 @@ class TestSynchronousMode(SyncSmokeTest):
             synchronous_mode=True,
             fixed_delta_seconds=0.05)
         for _ in range(0, 4):
-            self.world = self.client.reload_world()
+            self.world = self.reload_world()
             self.world.apply_settings(settings)
-            # workaround: give time to UE4 to clean memory after loading (old assets)
-            time.sleep(5)
 
     def test_camera_on_synchronous_mode(self):
         # Regression test for carla-simulator/carla#9898
@@ -179,3 +177,28 @@ class TestSynchronousMode(SyncSmokeTest):
 
         a_t0, a_t1 = self.batch_scenario(False, True)
         self.assertEqual(a_t0+1, a_t1, "Something has failed with the apply_batch_sync. These frames should be consecutive: %d %d" % (a_t0, a_t1))
+
+    def test_async_ticks_not_replayed_in_sync(self):
+        # Ticks sent while asynchronous used to be banked on the server and
+        # then run as free frames once synchronous mode was turned on, which
+        # broke deterministic runs on a server that had been used before.
+        print("TestSynchronousMode.test_async_ticks_not_replayed_in_sync")
+        banked = 50
+        self.world.apply_settings(carla.WorldSettings(
+            no_rendering_mode=False,
+            synchronous_mode=False))
+        for _ in range(banked):
+            self.world.tick()
+        frame_async = self.world.get_snapshot().frame
+
+        self.world.apply_settings(carla.WorldSettings(
+            no_rendering_mode=False,
+            synchronous_mode=True,
+            fixed_delta_seconds=0.05))
+        # Nobody ticks: a synchronous server must stay where it is.
+        time.sleep(1.0)
+        advanced = self.world.get_snapshot().frame - frame_async
+        self.assertLess(
+            advanced, banked // 5,
+            "the server ran %d frames after entering synchronous mode with "
+            "no client ticking" % advanced)

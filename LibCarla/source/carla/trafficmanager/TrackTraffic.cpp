@@ -76,28 +76,6 @@ void TrackTraffic::UpdateGridPosition(const ActorId actor_id, const Buffer &buff
 }
 
 
-bool TrackTraffic::IsGeoGridFree(const GeoGridId geogrid_id) const {
-    if (grid_to_actors.find(geogrid_id) != grid_to_actors.end()) {
-        return grid_to_actors.at(geogrid_id).empty();
-    }
-    return true;
-}
-
-void TrackTraffic::AddTakenGrid(const GeoGridId geogrid_id, const ActorId actor_id) {
-    if (grid_to_actors.find(geogrid_id) == grid_to_actors.end()) {
-        grid_to_actors.insert({geogrid_id, {actor_id}});
-    }
-}
-
-
-void TrackTraffic::SetHeroLocation(const cg::Location _location) {
-    hero_location = _location;
-}
-
-cg::Location TrackTraffic::GetHeroLocation() const {
-    return hero_location;
-}
-
 ActorIdSet TrackTraffic::GetOverlappingVehicles(ActorId actor_id) const {
     ActorIdSet actor_id_set;
 

@@ -41,10 +41,15 @@ docker run --rm --gpus all -v $(pwd):$(pwd) $NUREC_IMAGE \
 Terminal 1 — CARLA UE5 server (source build):
 
 ```sh
-# Standalone binary
-./Unreal/CarlaUnreal/Binaries/Linux/CarlaUnreal -carla-rpc-port=2000 -RenderOffScreen
+# Editor binary in -game mode: the headless server on this branch
+${CARLA_UNREAL_ENGINE_PATH}/Engine/Binaries/Linux/UnrealEditor \
+    ${CARLA_ROOT}/Unreal/CarlaUnreal/CarlaUnreal.uproject \
+    -game -RenderOffScreen -nosound -carla-rpc-port=2000
 # or the editor: cmake --build Build/Release --target launch-only
 ```
+
+`Unreal/CarlaUnreal/Binaries/Linux/CarlaUnreal` is the uncooked Development target and exits on the
+missing global shader cache; it cannot serve.
 
 Terminal 2 — replay with image export:
 

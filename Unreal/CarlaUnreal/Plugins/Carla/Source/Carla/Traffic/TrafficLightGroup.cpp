@@ -50,6 +50,12 @@ void ATrafficLightGroup::Tick(float DeltaTime)
   auto* Episode = UCarlaStatics::GetCurrentEpisode(GetWorld());
   if (Episode)
   {
+    // A Multi-GPU secondary takes every light's state from the primary's
+    // frames: cycling here too would switch lights ahead of the primary.
+    if (!Episode->bIsPrimaryServer)
+    {
+      return;
+    }
     auto* Replayer = Episode->GetReplayer();
     if (Replayer)
     {

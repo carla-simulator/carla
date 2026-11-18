@@ -42,8 +42,8 @@ client/.venv/bin/pip install -e server/workers -e server   # API + mock worker i
 Or interactively:
 
 ```sh
-client/.venv/bin/carla-cosmos serve --mock --port 8000    # prints COSMOS_URL / COSMOS_TOKEN exports
-export COSMOS_URL=http://127.0.0.1:8000 COSMOS_TOKEN=...
+client/.venv/bin/carla-cosmos serve --mock --port 8010    # prints COSMOS_URL / COSMOS_TOKEN exports
+export COSMOS_URL=http://127.0.0.1:8010 COSMOS_TOKEN=...
 carla-cosmos models
 carla-cosmos synthetic-clip --out ./clips --frames 16 --scene
 carla-cosmos submit --clip clips/synthetic_xxxx --backend cosmos3-nano \
@@ -341,7 +341,7 @@ Backends and where they run (profiles auto-select from the GPUs seen):
 ```python
 from carla_cosmos import Clip, CosmosClient
 
-client = CosmosClient("http://node:8000", token="cc_...")   # or COSMOS_URL / COSMOS_TOKEN
+client = CosmosClient("http://node:8010", token="cc_...")   # or COSMOS_URL / COSMOS_TOKEN
 client.wait_ready()
 job = client.submit_clip(Clip.load("clips/abc"), "cosmos3-nano", prompt="golden hour",
                          controls={"depth": "clip", "seg": "clip", "edge": "derive"})

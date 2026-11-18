@@ -146,9 +146,18 @@ static bool UCarlaStatics_IsHiddenMap(const FString& PathOrPackage)
   {
     return FPaths::GetBaseFilename(PathOrPackage) != TEXT("EmptyMap");
   }
-  return PathOrPackage.Contains("OpenDriveMap") || PathOrPackage.Contains("Sublevels") ||
+  if (PathOrPackage.Contains("OpenDriveMap") || PathOrPackage.Contains("Sublevels") ||
       PathOrPackage.Contains("/BaseMap/") || PathOrPackage.Contains("/BaseLargeMap/") ||
-      PathOrPackage.Contains("_Tile_");
+      PathOrPackage.Contains("_Tile_"))
+  {
+    return true;
+  }
+
+  // A map lives either directly in a Maps folder or in a folder of its own
+  // name; anything else is a sublevel (Town15_Road) or an editor helper asset.
+  const FString Base = FPaths::GetBaseFilename(PathOrPackage);
+  const FString Parent = FPaths::GetCleanFilename(FPaths::GetPath(PathOrPackage));
+  return Parent != TEXT("Maps") && Parent != Base;
 }
 
 TArray<FString> UCarlaStatics::GetAllMapNames()

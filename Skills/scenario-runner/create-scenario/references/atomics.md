@@ -45,8 +45,8 @@ right moment — spawn far away in `_initialize_actors`, teleport in when trigge
 `TrafficLightManipulator`, `OpenVehicleDoor`, `StartRecorder`, `StopRecorder`,
 `RunScript`.
 
-`ChangeWeather` is a no-op on `ue5-master` (weather behaviours are commented out in
-`basic_scenario.py`).
+`ChangeWeather` is a no-op on `ue5-master` and `ue58-dev` (the weather calls are
+commented out in `basic_scenario.py`).
 
 **Control flow**
 
@@ -83,8 +83,9 @@ into the oncoming lane (overtakes, `*TwoWays` scenarios) without failing
 | `TimeOfDayComparison`, `TimeOfWaitComparison`, `OSCStartEndCondition` | OpenSCENARIO support |
 
 Conditions return RUNNING until satisfied, so they are used as the first child of a
-`Sequence` or as the trigger side of a `Parallel` with
-`SUCCESS_ON_ONE`.
+`Sequence` or as the trigger side of a `Parallel` whose policy succeeds on one child:
+`ParallelPolicy.SuccessOnOne()` on `ue58-dev` (py_trees 2.x), `ParallelPolicy.SUCCESS_ON_ONE`
+on the branches still pinned to py_trees 0.8.3.
 
 ## Criteria — `atomic_criteria.py`
 

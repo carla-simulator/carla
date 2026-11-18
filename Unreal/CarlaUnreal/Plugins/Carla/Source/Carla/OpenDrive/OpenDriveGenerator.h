@@ -121,6 +121,9 @@ public:
   /// and spawns the actual content.
   void GeneratePoles();
 
+  /// True while the street-furniture PCG scatter is still spawning; it finishes over the next frames.
+  bool IsStreetFurnitureGenerating() const;
+
   /// Generates spawn points along the road.
   void GenerateSpawnPoints();
 
@@ -372,6 +375,10 @@ protected:
   /// on the placed AOpenDriveGenerator instance in OpenDriveMap.umap.
   UPROPERTY(Category = "Street Furniture", EditAnywhere)
   TSoftObjectPtr<UPCGGraphInterface> StreetFurnitureGraph;
+
+  /// PCG seed of the furniture scatter; with it, every server and run places the same furniture and banners.
+  UPROPERTY(Category = "Street Furniture", EditAnywhere)
+  int32 StreetFurnitureSeed = 42;
 
   /// Tag used to mark lamp-pole anchor points for the PCG graph to sample.
   UPROPERTY(Category = "Street Furniture", EditAnywhere)

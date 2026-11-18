@@ -18,7 +18,7 @@ import pygame
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--host", default="127.0.0.1")
-    parser.add_argument("--port", type=int, required=True)
+    parser.add_argument("--port", type=int, default=2000)
     parser.add_argument("--map", default="Town10HD_Opt")
     parser.add_argument("--capture-dir", type=Path)
     args = parser.parse_args()

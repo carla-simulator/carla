@@ -13,6 +13,7 @@
 #include "carla/nav/WalkerManager.h"
 #include "carla/geom/Math.h"
 
+#include <algorithm>
 #include <iterator>
 #include <fstream>
 #include <mutex>
@@ -39,6 +40,9 @@ namespace nav {
   static const float AGENT_UNBLOCK_DISTANCE = 0.5f;
   static const float AGENT_UNBLOCK_DISTANCE_SQUARED = AGENT_UNBLOCK_DISTANCE * AGENT_UNBLOCK_DISTANCE;
   static const float AGENT_UNBLOCK_TIME = 4.0f;
+  // Longest simulation time the crowd catches up in one update, and its largest Detour step.
+  static const double MAX_NAV_CATCH_UP = 1.0;
+  static const double MAX_NAV_STEP = 0.1;
 
   static const float AREA_GRASS_COST =  1.0f;
   static const float AREA_ROAD_COST  = 10.0f;
@@ -840,12 +844,24 @@ namespace nav {
 
     DEBUG_ASSERT(_crowd != nullptr);
 
-    // update crowd agents
-    _delta_seconds = state.GetTimestamp().delta_seconds;
-    {
+    // Advance by the simulation time since the last update: in asynchronous mode the client skips frames (#10255).
+    const auto &timestamp = state.GetTimestamp();
+    double dt = timestamp.delta_seconds;
+    if (_last_elapsed_seconds.has_value() && timestamp.elapsed_seconds >= *_last_elapsed_seconds) {
+      dt = timestamp.elapsed_seconds - *_last_elapsed_seconds;
+    }
+    _last_elapsed_seconds = timestamp.elapsed_seconds;
+    if (dt <= 0.0) {
+      return;
+    }
+    dt = std::min(dt, MAX_NAV_CATCH_UP);
+    _delta_seconds = dt;
+
+    // update crowd agents, in steps Detour handles well
+    for (double remaining = dt; remaining > 0.0; remaining -= MAX_NAV_STEP) {
       // critical section, force single thread running this
       std::scoped_lock<std::mutex> lock(_mutex);
-      _crowd->update(static_cast<float>(_delta_seconds), nullptr);
+      _crowd->update(static_cast<float>(std::min(remaining, MAX_NAV_STEP)), nullptr);
     }
 
     // update the walkers route
@@ -977,7 +993,7 @@ namespace nav {
     if (per > 1.0f) per = 1.0f;
     float rotation_speed = per * 6.0f;
     trans.rotation.yaw = _yaw_walkers[id] +
-    (shortest_angle * rotation_speed * static_cast<float>(_delta_seconds));
+    (shortest_angle * std::min(1.0f, rotation_speed * static_cast<float>(_delta_seconds)));
     _yaw_walkers[id] = trans.rotation.yaw;
 
     return true;

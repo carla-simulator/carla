@@ -237,11 +237,12 @@ def test_f8_lifecycle(client, world):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--port", type=int, default=3000)
+    ap.add_argument("--host", default="127.0.0.1")
+    ap.add_argument("-p", "--port", type=int, default=2000)
     ap.add_argument("--only", nargs="*", default=None,
                     help="subset like f4 f5 f7 f8")
     args = ap.parse_args()
-    client = carla.Client("localhost", args.port)
+    client = carla.Client(args.host, args.port)
     client.set_timeout(30.0)
     world = client.get_world()
     print("server:", client.get_server_version())

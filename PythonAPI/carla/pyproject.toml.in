@@ -5,17 +5,18 @@ build-backend = 'scikit_build_core.build'
 [tool.scikit-build]
 wheel.packages = ['carla']
 cmake.version = '>=@CMAKE_MAJOR_VERSION@.@CMAKE_MINOR_VERSION@'
-cmake.build-type = '@CMAKE_BUILD_TYPE@'
-cmake.args = [
-  @CARLA_PYTHON_API_CMAKE_ARGS@
-]
+# The build type, generator and paths of the CARLA build come from the
+# carla-python-api target's environment (SKBUILD_CMAKE_BUILD_TYPE,
+# CMAKE_GENERATOR, SKBUILD_CMAKE_DEFINE), so builds for different Python
+# versions can share this file.
 ninja.version=">=1.10"
 ninja.make-fallback=true
 
 [project]
 name = 'carla'
 version = '@CARLA_VERSION@'
-requires-python = '>=@Python3_VERSION_MAJOR@.@Python3_VERSION_MINOR@'
+# The wheel's cpXY tag pins the interpreter it was built for.
+requires-python = '>=3.8'
 authors = [ { name = 'The CARLA team', email = 'carla.simulator@gmail.com' } ]
 description = 'Python API for communicating with the CARLA server.'
 readme = 'README.md'

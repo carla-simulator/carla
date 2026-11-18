@@ -5,6 +5,8 @@
 # For a copy, see <https://opensource.org/licenses/MIT>.
 
 
+import carla
+
 from . import SmokeTest
 
 
@@ -22,3 +24,20 @@ class TestWorld(SmokeTest):
                 self.assertAlmostEqual(expected_delta_seconds, delta_seconds)
         settings.fixed_delta_seconds = None
         world.apply_settings(settings)
+
+    def test_map_layer_flags_combine(self):
+        print("TestWorld.test_map_layer_flags_combine")
+        combined = carla.MapLayer.Ground | carla.MapLayer.Buildings
+        # A combination stays a MapLayer, which load_map_layer() accepts.
+        self.assertIsInstance(combined, carla.MapLayer)
+        self.assertEqual(int(combined), int(carla.MapLayer.Ground) | int(carla.MapLayer.Buildings))
+        self.assertIsInstance(combined & carla.MapLayer.Ground, carla.MapLayer)
+        self.assertEqual(int(combined & carla.MapLayer.Ground), int(carla.MapLayer.Ground))
+        self.assertIsInstance(~carla.MapLayer.ParkedVehicles, carla.MapLayer)
+        self.assertEqual(int(~carla.MapLayer.All), int(carla.MapLayer.NONE))
+        # A plain int on either side keeps int arithmetic.
+        self.assertNotIsInstance(combined | 0x200, carla.MapLayer)
+        self.assertNotIsInstance(0x200 | combined, carla.MapLayer)
+        world = self.client.get_world()
+        world.load_map_layer(combined)
+        world.unload_map_layer(carla.MapLayer.Ground | carla.MapLayer.Buildings)

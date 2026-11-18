@@ -101,7 +101,8 @@ private:
 
   detail::WeakEpisodeProxy _episode;
 
-  std::mutex _mutex;
+  // Guards the maps above: the streaming thread replaces them on every light update.
+  mutable std::mutex _mutex;
 
   LightState _state;
   size_t _on_tick_register_id = 0;

@@ -29,8 +29,15 @@ ASensor::ASensor(const FObjectInitializer &ObjectInitializer)
 
 void ASensor::BeginPlay()
 {
-  Super::BeginPlay();
   UCarlaEpisode* CurrentEpisode = UCarlaStatics::GetCurrentEpisode(GetWorld());
+  if (CurrentEpisode && !CurrentEpisode->bIsPrimaryServer)
+  {
+    // A mirror ticks every engine frame, and acts only on the frames the
+    // primary's sensor ticked (SetPrimaryTick); before the tick registers.
+    bPrimaryDrivenTick = true;
+    SetActorTickInterval(0.0f);
+  }
+  Super::BeginPlay();
   FSensorManager& SensorManager = CurrentEpisode->GetSensorManager();
   SensorManager.RegisterSensor(this);
 }
@@ -62,7 +69,16 @@ std::optional<FActorAttribute> ASensor::GetAttribute(const FString Name)
 void ASensor::Tick(const float DeltaTime)
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(ASensor::Tick);
-  Super::Tick(DeltaTime);
+  float SensorDeltaTime = DeltaTime;
+  if (bPrimaryDrivenTick)
+  {
+    if (PrimaryTickFrame != GFrameCounter)
+    {
+      return;
+    }
+    SensorDeltaTime = PrimaryTickDeltaSeconds;
+  }
+  Super::Tick(SensorDeltaTime);
   if (bClientsListening)
   {
     if(!Stream.AreClientsListening())
@@ -81,8 +97,8 @@ void ASensor::Tick(const float DeltaTime)
   }
   
   ReadyToTick = true;
-  ReadyToTickDeltaSeconds = DeltaTime;
-  PrePhysTick(DeltaTime);
+  ReadyToTickDeltaSeconds = SensorDeltaTime;
+  PrePhysTick(SensorDeltaTime);
 }
 
 void ASensor::SetSeed(const int32 InSeed)

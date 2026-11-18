@@ -57,12 +57,12 @@ void CarlaRecorderDoorVehicles::Write(std::ostream &OutFile)
 
 void CarlaRecorderDoorVehicles::Read(std::istream &InFile)
 {
-  uint16_t Total;
+  uint16_t Total = 0;
   CarlaRecorderDoorVehicle DoorVehicle;
 
   // read Total walkers
   ReadValue<uint16_t>(InFile, Total);
-  for (uint16_t i = 0; i < Total; ++i)
+  for (uint16_t i = 0; (i < Total) && InFile; ++i)
   {
     DoorVehicle.Read(InFile);
     Add(DoorVehicle);

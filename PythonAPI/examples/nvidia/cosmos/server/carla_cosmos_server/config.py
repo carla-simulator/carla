@@ -4,7 +4,7 @@
 variable                     default                meaning
 ===========================  =====================  ===================================================
 COSMOS_STATE                 /state                 tokens, SQLite, blobs, job inputs/results
-COSMOS_HOST / COSMOS_PORT    0.0.0.0 / 8000         API bind address
+COSMOS_HOST / COSMOS_PORT    0.0.0.0 / 8010         API bind address (the image overrides it to 8000)
 COSMOS_PROFILE               auto                   runtime profile name or ``auto`` (GPU detection)
 COSMOS_MODE                  auto                   planned layout: ``latency`` (one query uses every
                                                     GPU, workers time-share them) | ``throughput``
@@ -89,7 +89,7 @@ def _env_bool(name: str, default: bool) -> bool:
 class Settings:
     state_dir: Path = field(default_factory=lambda: Path(_env("STATE", "/state")))
     host: str = field(default_factory=lambda: _env("HOST", "0.0.0.0"))
-    port: int = field(default_factory=lambda: int(_env("PORT", "8000")))
+    port: int = field(default_factory=lambda: int(_env("PORT", "8010")))
     profile: str = field(default_factory=lambda: _env("PROFILE", "auto"))
     mode: str = field(default_factory=lambda: _env("MODE", "auto"))
     profiles_dir: Path = field(default_factory=lambda: Path(_env("PROFILES_DIR", str(DEFAULT_PROFILES_DIR))))

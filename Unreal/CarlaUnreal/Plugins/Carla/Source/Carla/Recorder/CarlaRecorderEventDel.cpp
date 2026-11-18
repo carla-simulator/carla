@@ -8,6 +8,9 @@
 #include "CarlaRecorder.h"
 #include "CarlaRecorderHelpers.h"
 
+#include <algorithm>
+#include <limits>
+
 void CarlaRecorderEventDel::Read(std::istream &InFile)
 {
     // database id
@@ -43,7 +46,7 @@ void CarlaRecorderEventsDel::Write(std::ostream &OutFile)
     WriteValue<uint32_t>(OutFile, Total);
 
     // write total records
-    Total = Events.size();
+    Total = std::min<size_t>(Events.size(), std::numeric_limits<uint16_t>::max());
     WriteValue<uint16_t>(OutFile, Total);
 
     for (uint16_t i=0; i<Total; ++i)
@@ -61,12 +64,12 @@ void CarlaRecorderEventsDel::Write(std::ostream &OutFile)
 
 void CarlaRecorderEventsDel::Read(std::istream &InFile)
 {
-    uint16_t i, Total;
+    uint16_t i, Total = 0;
     CarlaRecorderEventDel EventDel;
 
     // process destroy events
     ReadValue<uint16_t>(InFile, Total);
-    for (i = 0; i < Total; ++i)
+    for (i = 0; (i < Total) && InFile; ++i)
     {
         EventDel.Read(InFile);
         Add(EventDel);

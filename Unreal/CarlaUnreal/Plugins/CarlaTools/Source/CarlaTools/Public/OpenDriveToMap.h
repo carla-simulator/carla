@@ -130,14 +130,18 @@ public:
   static void UpdateInstancedMeshCoordinates(
       UHierarchicalInstancedStaticMeshComponent* Component, FVector TileOrigin);
 
-  /// Push InLocation (cm) sideways out of the driving lanes of the level's OpenDRIVE (looked
+  /// Push InLocation (cm) sideways out of the carriageway of the level's OpenDRIVE (looked
   /// up next to the level, see ResolveLevelXodrPath). Returns InLocation unchanged when the
   /// level has no OpenDRIVE file.
   UFUNCTION(BlueprintCallable, Category = "Assets Placement")
   static FVector DisplaceLocationOutsideNeighboringRoads(const UObject* WorldContextObject, FVector InLocation, float SteppingPercentage = 0.66f, float RoadLimitPadding = 10.0f);
 
-  /// Same on an already parsed map (no file access per call).
-  static FVector DisplaceLocationOutsideNeighboringRoads(const carla::road::Map& Map, FVector InLocation, float SteppingPercentage = 0.66f, float RoadLimitPadding = 10.0f);
+  /// Same on an already parsed map (no file access per call). The location moves to just past
+  /// the outer edge of the nearest carriageway (driving, shoulder, parking, biking lanes) plus
+  /// RoadLimitPadding (cm), repeated while it still lands in a carriageway, at most
+  /// MaxIterations times. bOutIsClear, when given, tells whether it ended clear of every lane.
+  /// Z is returned unchanged.
+  static FVector DisplaceLocationOutsideNeighboringRoads(const carla::road::Map& Map, FVector InLocation, float SteppingPercentage = 0.66f, float RoadLimitPadding = 10.0f, int32 MaxIterations = 10, bool* bOutIsClear = nullptr);
 
   /// Absolute path of the .xodr of the named level: Content/Carla/Maps/Twins/<Level>/OpenDrive,
   /// Content/Carla/Maps/OpenDrive, then the legacy Plugins/<Level>/Content/Maps/OpenDrive. Empty when none exists.

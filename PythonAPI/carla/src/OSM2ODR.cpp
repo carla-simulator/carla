@@ -6,9 +6,7 @@
 
 #include <PythonAPI.h>
 
-#ifdef CARLA_PYTHON_API_HAS_OSM2ODR
-
-#include <OSM2ODR.h>
+#include <osm2odr/OSM2ODR.h>
 
 // Empty class to emulate the namespace in the PythonAPI
 class OSM2ODR {};
@@ -18,6 +16,7 @@ namespace osm2odr {
     out << "Osm2odrSettings(use_offsets=" << (settings.use_offsets ? "true" : "false")
         << ", offset_x=" << settings.offset_x << ", offset_y=" << settings.offset_y
         << ", default_lane_width=" << settings.default_lane_width
+        << ", default_sidewalk_width=" << settings.default_sidewalk_width
         << ", elevation_layer_height=" << settings.elevation_layer_height << ")";
     return out;
   }
@@ -38,6 +37,7 @@ void export_osm2odr() {
     .add_property("offset_x", &OSM2ODRSettings::offset_x, &OSM2ODRSettings::offset_x)
     .add_property("offset_y", &OSM2ODRSettings::offset_y, &OSM2ODRSettings::offset_y)
     .add_property("default_lane_width", &OSM2ODRSettings::default_lane_width, &OSM2ODRSettings::default_lane_width)
+    .add_property("default_sidewalk_width", &OSM2ODRSettings::default_sidewalk_width, &OSM2ODRSettings::default_sidewalk_width)
     .add_property("elevation_layer_height", &OSM2ODRSettings::elevation_layer_height, &OSM2ODRSettings::elevation_layer_height)
     .add_property("proj_string", &OSM2ODRSettings::proj_string, &OSM2ODRSettings::proj_string)
     .add_property("center_map", &OSM2ODRSettings::center_map, &OSM2ODRSettings::center_map)
@@ -53,9 +53,3 @@ void export_osm2odr() {
       .staticmethod("convert")
   ;
 }
-
-#else
-
-#pragma message("WARNING: Building CARLA PythonAPI without OSM2ODR support.")
-
-#endif

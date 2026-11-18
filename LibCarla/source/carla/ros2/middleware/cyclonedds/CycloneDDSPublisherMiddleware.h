@@ -142,6 +142,15 @@ class CycloneDDSPublisherMiddleware : public IPublisherMiddleware {
   // sends are ~50us. See FastDDSPublisherMiddleware.h for the failure mode
   // this guards against.
   bool Publish(void* message_data) override {
+    // Init() failed (e.g. no participant): there is no type or writer to use.
+    if (_writer <= 0 || _sertype == nullptr) {
+      if (!_reported_not_ready.exchange(true)) {
+        log_error("CycloneDDSPublisherMiddleware::Publish called on a publisher "
+                  "whose Init() failed (see the errors above); all its messages "
+                  "are dropped");
+      }
+      return false;
+    }
     const msg_type* msg = static_cast<const msg_type*>(message_data);
     std::vector<uint8_t> cdr = serialize_to_cdr(*msg);
 
@@ -193,6 +202,7 @@ class CycloneDDSPublisherMiddleware : public IPublisherMiddleware {
 
   std::string        _topic_name;
   std::atomic<bool>  _alive { false };
+  std::atomic<bool>  _reported_not_ready { false };
 };
 
 } // namespace ros2

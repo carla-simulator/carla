@@ -70,7 +70,10 @@ namespace tcp {
 
     boost::asio::ip::tcp::socket _socket;
 
-    boost::asio::io_context::strand _strand;
+    // Not io_context::strand: those share 193 implementations among all the
+    // strands of an io_context, so a callback that blocks in one stream
+    // would also stop every other stream that got the same implementation.
+    boost::asio::strand<boost::asio::io_context::executor_type> _strand;
 
     boost::asio::steady_timer _connection_timer;
 

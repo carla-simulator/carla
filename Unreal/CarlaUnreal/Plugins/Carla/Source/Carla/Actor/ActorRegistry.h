@@ -88,6 +88,9 @@ public:
     return PtrToId ? FindCarlaActor(*PtrToId) : nullptr;
   }
 
+  /// Returns the sensor whose data stream has id @a Id, or nullptr.
+  FCarlaActor* FindCarlaActorFromStream(carla::streaming::detail::stream_id_type Id);
+
   FString GetDescriptionFromStream(carla::streaming::detail::stream_id_type Id);
 
   void PutActorToSleep(IdType Id, UCarlaEpisode* CarlaEpisode);

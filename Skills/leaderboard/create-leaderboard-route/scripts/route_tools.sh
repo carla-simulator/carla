@@ -98,11 +98,16 @@ if ids != [str(i) for i in range(len(ids))]:
     warn("route ids are not 0..N-1: --routes-subset indexes POSITION, not id, so they "
          "will not line up")
 
+# ue58-dev vendors the scenarios under the leaderboard; older versions keep
+# them in scenario_runner, so look in both.
 known = set()
-for f in glob.glob(f"{sr}/srunner/scenarios/*.py"):
-    known |= set(re.findall(r"^class (\w+)\(", open(f, errors="replace").read(), re.M))
+for pat in (f"{os.environ.get('LEADERBOARD_ROOT','')}/leaderboard/scenarios/*.py",
+            f"{sr}/srunner/scenarios/*.py"):
+    for f in glob.glob(pat):
+        known |= set(re.findall(r"^class (\w+)\(", open(f, errors="replace").read(), re.M))
 if not known:
-    warn(f"no scenario classes found under {sr} — cannot check scenario types")
+    warn("no scenario classes found in the leaderboard or scenario_runner — "
+         "cannot check scenario types")
 
 avail = None
 try:

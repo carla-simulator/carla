@@ -64,8 +64,13 @@ python3 scripts/toggle_env.py list --label Buildings      # count + sample of bu
 
 python3 scripts/toggle_env.py disable --label Buildings   # hide all buildings
 python3 scripts/toggle_env.py disable --label Vegetation --dry-run   # preview first
-python3 scripts/toggle_env.py disable --label Poles --name lamp      # subset by name
 python3 scripts/toggle_env.py enable  --label Buildings   # bring them back
+
+# a subset by name: list the label first, then pass a substring of a name it
+# printed. Object names differ per map, so never guess one.
+python3 scripts/toggle_env.py list    --label Poles
+python3 scripts/toggle_env.py disable --label Poles --name <substring> --dry-run
+python3 scripts/toggle_env.py disable --label Poles --name <substring>
 ```
 
 ### Step 4: Confirm
@@ -86,10 +91,11 @@ uses — work normally. Measured on Town10HD_Opt: 59 102 objects, 48 369 of them
 (`LibCarla/source/carla/rpc/ObjectLabel.h:48`). Code that iterates the enum by
 name is fine; code that hard-codes label integers is not.
 
-**Do not reach for map layers as an alternative here.** `load_map_layer` /
-`unload_map_layer` are accepted and silently do nothing on 0.10.0 — see
-[[load-map]] for the measurement and the cause. `enable_environment_objects` is
-the mechanism that actually hides geometry on this version.
+**Map layers are only an alternative on Town01_Opt to Town07_Opt.** On
+Town10HD_Opt (and every other UE 5 map) `load_map_layer` / `unload_map_layer` are
+accepted and silently do nothing — see [[load-map]] for the measurement and the
+cause. `enable_environment_objects` is the mechanism that hides geometry on every
+map.
 
 ## Examples
 

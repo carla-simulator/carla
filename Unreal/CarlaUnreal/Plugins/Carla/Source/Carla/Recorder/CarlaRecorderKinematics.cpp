@@ -57,3 +57,25 @@ void CarlaRecorderActorsKinematics::Write(std::ostream &OutFile)
     Kinematic.Write(OutFile);
   }
 }
+
+void CarlaRecorderActorsKinematics::Read(std::istream &InFile)
+{
+  uint16_t Total = 0;
+  ReadValue<uint16_t>(InFile, Total);
+  for (uint16_t i = 0; (i < Total) && InFile; ++i)
+  {
+    CarlaRecorderKinematics Record;
+    Record.Read(InFile);
+    Add(Record);
+  }
+}
+
+const std::vector<CarlaRecorderKinematics>& CarlaRecorderActorsKinematics::GetKinematics() const
+{
+  return Kinematics;
+}
+
+bool CarlaRecorderActorsKinematics::IsEmpty() const
+{
+  return Kinematics.empty();
+}

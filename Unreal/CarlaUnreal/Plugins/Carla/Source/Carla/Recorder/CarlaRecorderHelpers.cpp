@@ -13,8 +13,9 @@
 #include <fstream>
 #include <vector>
 
-// create a temporal buffer to convert from and to FString and bytes
-static std::vector<uint8_t> CarlaRecorderHelperBuffer;
+// create a temporal buffer to convert from and to FString and bytes; one per
+// thread, since Multi-GPU frames are parsed off the game thread
+static thread_local std::vector<uint8_t> CarlaRecorderHelperBuffer;
 
 // get the final path + filename
 std::string GetRecorderFilename(std::string Filename)
@@ -88,7 +89,7 @@ void ReadFTransform(std::ifstream &InFile, FTransform &OutObj)
 // read binary data to FString (length + text)
 void ReadFString(std::istream &InFile, FString &OutObj)
 {
-  uint16_t Length;
+  uint16_t Length = 0;
   ReadValue<uint16_t>(InFile, Length);
   // make room in vector buffer
   if (CarlaRecorderHelperBuffer.capacity() < Length + 1)

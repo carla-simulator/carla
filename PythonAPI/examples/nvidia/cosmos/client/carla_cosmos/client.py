@@ -2,7 +2,7 @@
 
 ::
 
-    client = CosmosClient("http://node:8000", token="cc_...")      # or COSMOS_URL / COSMOS_TOKEN
+    client = CosmosClient("http://node:8010", token="cc_...")      # or COSMOS_URL / COSMOS_TOKEN
     client.wait_ready()
     job = client.submit_clip(Clip.load("clips/abc"), "cosmos3-nano",
                              prompt="golden hour, wet asphalt",
@@ -49,7 +49,7 @@ if TYPE_CHECKING:  # pragma: no cover
 
 log = logging.getLogger(__name__)
 
-DEFAULT_URL = "http://localhost:8000"
+DEFAULT_URL = "http://localhost:8010"
 CHUNK = 4 << 20
 
 BLUR_HINTS = ("blur", "vis")

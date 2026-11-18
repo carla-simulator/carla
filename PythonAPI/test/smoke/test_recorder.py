@@ -28,8 +28,16 @@ import os
 import tempfile
 import time
 import unittest
+from queue import Queue
+
+import carla
+import numpy as np
 
 from . import SyncSmokeTest
+from .test_lidar import wait_for_frame
+
+SEMANTIC_POINT = np.dtype([('x', 'f4'), ('y', 'f4'), ('z', 'f4'), ('cos', 'f4'),
+                           ('object_idx', 'u4'), ('object_tag', 'u4')])
 
 
 class TestRecorder(SyncSmokeTest):
@@ -140,6 +148,190 @@ class TestRecorder(SyncSmokeTest):
             'Server did not respond to get_snapshot() after recording across an actor destroy; '
             'pre-PR this faulted the server inside ACarlaRecorder::AddPhysicsControl '
             '/ AddTrafficLightTime / AddTriggerVolume on a null FindCarlaActor lookup.')
+
+    def _record_vehicle_alive_at_stop(self, basename):
+        """Record a vehicle that is still alive when the recorder stops (so the
+        log has no destroy event for it), then destroy the original."""
+        log_path = self._log_path(basename)
+        self.client.start_recorder(log_path)
+        vehicle = self._spawn_test_vehicle()
+        for _ in range(20):
+            self.world.tick()
+        self.client.stop_recorder()
+        vehicle.destroy()
+        for _ in range(5):
+            self.world.tick()
+        return log_path
+
+    def _vehicle_count(self):
+        self.world.tick()
+        return len(self.world.get_actors().filter('vehicle.*'))
+
+    def test_stop_replayer_removes_replayed_actors(self):
+        log_path = self._record_vehicle_alive_at_stop('stop_replayer_mid.log')
+        before = self._vehicle_count()
+
+        self.client.replay_file(log_path, 0.0, 0.0, 0)
+        for _ in range(5):
+            self.world.tick()
+        self.assertGreater(self._vehicle_count(), before)
+
+        self.client.stop_replayer(False)
+        self.assertEqual(
+            self._vehicle_count(), before,
+            'stop_replayer(keep_actors=False) left the replayed vehicle behind')
+
+    def test_stop_replayer_after_replay_ended_removes_actors(self):
+        log_path = self._record_vehicle_alive_at_stop('stop_replayer_end.log')
+        before = self._vehicle_count()
+
+        self.client.replay_file(log_path, 0.0, 0.0, 0)
+        # Past the end of the log: the replayer stops itself and keeps actors.
+        for _ in range(40):
+            self.world.tick()
+        self.assertGreater(self._vehicle_count(), before)
+
+        self.client.stop_replayer(False)
+        self.assertEqual(
+            self._vehicle_count(), before,
+            'stop_replayer(keep_actors=False) after the replay ended left the '
+            'replayed vehicle behind')
+
+
+    def _replayed_vehicle(self):
+        vehicles = self.world.get_actors().filter('vehicle.*')
+        self.assertEqual(len(vehicles), 1, 'expected one replayed vehicle')
+        return vehicles[0]
+
+    def _replay_doors_at(self, log_path, start, ticks):
+        """Replays @a log_path from @a start seconds for @a ticks ticks and
+        returns which of the front-left and rear-right doors are open."""
+        self.client.replay_file(log_path, start, 0.0, 0)
+        for _ in range(ticks):
+            self.world.tick()
+        vehicle = self._replayed_vehicle()
+        doors = (vehicle.is_door_open(carla.VehicleDoor.FL),
+                 vehicle.is_door_open(carla.VehicleDoor.RR))
+        self.client.stop_replayer(False)
+        for _ in range(3):
+            self.world.tick()
+        return doors
+
+    def test_replay_reproduces_door_events(self):
+        """Door events replay, also when the replay starts after them (#7701)."""
+        log_path = self._log_path('replay_doors.log')
+        self.client.start_recorder(log_path)
+        vehicle = self._spawn_test_vehicle()
+        for _ in range(10):
+            self.world.tick()
+        vehicle.open_door(carla.VehicleDoor.FL)
+        vehicle.open_door(carla.VehicleDoor.RR)
+        for _ in range(10):
+            self.world.tick()
+        # Rebuilds the door constraints, which must neither close the doors
+        # nor record anything.
+        vehicle.apply_physics_control(vehicle.get_physics_control())
+        for _ in range(10):
+            self.world.tick()
+        vehicle.close_door(carla.VehicleDoor.RR)
+        for _ in range(20):
+            self.world.tick()
+        self.client.stop_recorder()
+        vehicle.destroy()
+        for _ in range(5):
+            self.world.tick()
+
+        info = self.client.show_recorder_file_info(log_path, True)
+        self.assertEqual(info.count('Door opened'), 2, info)
+        self.assertEqual(info.count('Door closed'), 1, info)
+
+        # Recorded: both closed until 0.5 s, both open until 1.5 s, then only FL.
+        self.assertEqual(self._replay_doors_at(log_path, 0.0, 3), (False, False))
+        self.assertEqual(self._replay_doors_at(log_path, 0.0, 20), (True, True))
+        self.assertEqual(self._replay_doors_at(log_path, 1.0, 3), (True, True),
+                         'a replay that starts after the doors opened lost them')
+        self.assertEqual(self._replay_doors_at(log_path, 2.0, 3), (True, False))
+
+    def test_record_captures_doors_open_at_start(self):
+        """A door open before the recording starts replays open (#7701)."""
+        log_path = self._log_path('replay_doors_open_at_start.log')
+        vehicle = self._spawn_test_vehicle()
+        vehicle.open_door(carla.VehicleDoor.FL)
+        for _ in range(5):
+            self.world.tick()
+        self.client.start_recorder(log_path)
+        for _ in range(10):
+            self.world.tick()
+        self.client.stop_recorder()
+        vehicle.destroy()
+        for _ in range(5):
+            self.world.tick()
+
+        self.assertEqual(self._replay_doors_at(log_path, 0.0, 3), (True, False))
+
+    def _semantic_lidar_points_on(self, actor):
+        """Points of a semantic LiDAR 3 m above @a actor that hit it."""
+        bp = self.world.get_blueprint_library().find('sensor.lidar.ray_cast_semantic')
+        for key, value in {'channels': '32', 'range': '10', 'points_per_second': '200000',
+                           'rotation_frequency': '20', 'upper_fov': '-30',
+                           'lower_fov': '-90'}.items():
+            bp.set_attribute(key, value)
+        lidar = self.world.spawn_actor(
+            bp, carla.Transform(actor.get_location() + carla.Location(z=3.0)))
+        data_queue = Queue()
+        lidar.listen(lambda data: data_queue.put((data.frame, bytes(data.raw_data))))
+        try:
+            frame = self.world.tick()
+            points = np.frombuffer(wait_for_frame(self, data_queue, frame)[1], dtype=SEMANTIC_POINT)
+        finally:
+            lidar.stop()
+            lidar.destroy()
+        return int(np.count_nonzero(points['object_idx'] == actor.id))
+
+    def test_replayed_actors_visible_to_sensors(self):
+        """Replayed vehicles and walkers keep query collision, so sensors see them."""
+        log_path = self._log_path('replay_visible_to_sensors.log')
+        blueprint_library = self.world.get_blueprint_library()
+
+        self.client.start_recorder(log_path)
+        vehicle = self._spawn_test_vehicle()
+        walker_bp = blueprint_library.filter('walker.pedestrian.*')[0]
+        location = self.world.get_random_location_from_navigation()
+        self.assertIsNotNone(location, 'Town10HD_Opt has no navigation mesh')
+        walker = self.world.spawn_actor(walker_bp, carla.Transform(location + carla.Location(z=1.0)))
+        controller = self.world.spawn_actor(
+            blueprint_library.find('controller.ai.walker'), carla.Transform(), attach_to=walker)
+        self.world.tick()
+        controller.start()
+        controller.go_to_location(self.world.get_random_location_from_navigation())
+        for _ in range(40):
+            self.world.tick()
+        self.client.stop_recorder()
+        controller.stop()
+        for actor in (controller, walker, vehicle):
+            actor.destroy()
+        for _ in range(5):
+            self.world.tick()
+
+        self.client.replay_file(log_path, 0.0, 0.0, 0)
+        for _ in range(20):
+            self.world.tick()
+        replayed = {
+            'vehicle': self.world.get_actors().filter('vehicle.*'),
+            'walker': self.world.get_actors().filter('walker.pedestrian.*'),
+        }
+        for kind, actors in replayed.items():
+            self.assertEqual(len(actors), 1, 'expected one replayed %s' % kind)
+            actor = actors[0]
+            location = actor.get_location()
+            hits = self.world.cast_ray(location + carla.Location(z=3.0), location - carla.Location(z=1.5))
+            label = carla.CityObjectLabel.Car if kind == 'vehicle' else carla.CityObjectLabel.Pedestrians
+            self.assertTrue(any(hit.label == label for hit in hits),
+                            'world.cast_ray does not hit the replayed %s' % kind)
+            self.assertGreater(self._semantic_lidar_points_on(actor), 0,
+                               'The semantic LiDAR does not hit the replayed %s' % kind)
+
+        self.client.stop_replayer(False)
 
 
 if __name__ == '__main__':

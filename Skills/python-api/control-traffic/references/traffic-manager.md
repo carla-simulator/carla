@@ -22,7 +22,6 @@ Global (`global` command):
 | `set_global_distance_to_leading_vehicle(m)` | following distance, metres |
 | `set_random_device_seed(n)` | deterministic TM decisions (needs sync too) |
 | `set_hybrid_physics_mode(bool)` + `set_hybrid_physics_radius(m)` | full physics only near the hero; far cars are teleported cheaply |
-| `set_respawn_dormant_vehicles(bool)` | recycle far/dormant cars (large maps) |
 | `set_osm_mode(bool)` | OpenStreetMap-imported road behaviour |
 | `set_synchronous_mode(bool)` | TM steps with the world's tick |
 
@@ -71,4 +70,4 @@ sync mode the world must be ticked for the TM to advance the cars.
 - **spawn-vehicles** enrols cars in autopilot (this TM); **control-vehicle** takes
   a car OUT of autopilot for manual driving — don't tune a manually-driven car
   here.
-- Hybrid physics + dormant respawn matter mainly on the large maps (Town11/12).
+- Hybrid physics matters mainly on the large maps (Town12, Town13, Town15).

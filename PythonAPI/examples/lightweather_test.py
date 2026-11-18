@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 """Light + weather API functional test against a running CARLA UE5 server."""
+import argparse
 import time
 
 import numpy as np
 from PIL import Image
 import carla
 
-OUT = "/home/german/Projects/CARLA_SOURCE"
+OUT = "."
 
 
 def snap(world, tag, loc, rot):
@@ -29,9 +30,11 @@ def snap(world, tag, loc, rot):
 
 
 def main():
-    import sys
-    port = int(sys.argv[1]) if len(sys.argv) > 1 else 3000
-    client = carla.Client("localhost", port)
+    ap = argparse.ArgumentParser(description=__doc__)
+    ap.add_argument("--host", default="127.0.0.1")
+    ap.add_argument("-p", "--port", type=int, default=2000)
+    args = ap.parse_args()
+    client = carla.Client(args.host, args.port)
     client.set_timeout(10.0)
     world = client.get_world()
     original = world.get_weather()
@@ -40,10 +43,23 @@ def main():
     lights = lm.get_all_lights(carla.LightGroup.Street)
     print("street lights:", len(lights))
 
-    # camera pose near first street light (map may have real-world elevation)
-    ref = lights[0].location
-    loc = carla.Location(x=ref.x + 15.0, y=ref.y, z=ref.z + 2.0)
-    rot = carla.Rotation(pitch=-8, yaw=180)
+    if lights:
+        # camera pose near first street light (map may have real-world elevation)
+        ref = lights[0].location
+        loc = carla.Location(x=ref.x + 15.0, y=ref.y, z=ref.z + 2.0)
+        rot = carla.Rotation(pitch=-8, yaw=180)
+    else:
+        # some maps (e.g. Town11) register no street lights: still test the
+        # weather, from the first spawn point, and skip the light checks
+        print("no street lights on this map: testing the weather only")
+        sp = world.get_map().get_spawn_points()[0]
+        loc = carla.Location(x=sp.location.x, y=sp.location.y, z=sp.location.z + 2.0)
+        rot = carla.Rotation(pitch=-8, yaw=sp.rotation.yaw)
+
+    # World Partition maps only stream in the cells around the spectator and
+    # the vehicles: move the spectator to the camera so the scene is loaded
+    world.get_spectator().set_transform(carla.Transform(loc, rot))
+    time.sleep(5.0)
 
     try:
         # --- day ---
@@ -59,6 +75,10 @@ def main():
         on_night = sum(1 for l in lm.get_all_lights(carla.LightGroup.Street) if l.is_on)
         print("night: lights on =", on_night)
         snap(world, "night", loc, rot)
+
+        if not lights:
+            print("PASS (weather only, light checks skipped)")
+            return
 
         # --- manual toggle: switch all street lights off at night ---
         lm.turn_off(lights)

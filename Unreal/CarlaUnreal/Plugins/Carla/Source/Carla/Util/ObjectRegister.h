@@ -36,6 +36,14 @@ public:
   UFUNCTION(Category = "Carla Object Register")
   void EnableEnvironmentObjects(const TSet<uint64>& EnvObjectIds, bool Enable);
 
+  /// The ids of @a EnvObjectIds that are registered now.
+  TSet<uint64> FindEnvironmentObjects(const TSet<uint64>& EnvObjectIds) const;
+
+  /// The ids of @a EnvObjectIds registered now for an actor of @a Actors.
+  TSet<uint64> FindEnvironmentObjectsOf(
+      const TSet<uint64>& EnvObjectIds,
+      const TSet<const AActor*>& Actors) const;
+
 private:
 
   void RegisterEnvironmentObject(
@@ -64,7 +72,7 @@ private:
 
   void EnableISMComp(FEnvironmentObject& EnvironmentObject, bool Enable);
 
-  TMultiMap<uint64, const UStaticMeshComponent*> ObjectIdToComp;
+  TMultiMap<uint64, TWeakObjectPtr<const UStaticMeshComponent>> ObjectIdToComp;
 
   UPROPERTY(Category = "Carla Object Register", EditAnywhere)
   TArray<FEnvironmentObject> EnvironmentObjects;

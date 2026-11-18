@@ -25,9 +25,7 @@ extern void export_lightmanager();
 #ifdef LIBCARLA_RSS_ENABLED
 extern void export_ad_rss();
 #endif
-#ifdef CARLA_PYTHON_API_HAS_OSM2ODR
 extern void export_osm2odr();
-#endif
 
 BOOST_PYTHON_MODULE(carla) {
   using namespace boost::python;
@@ -53,7 +51,9 @@ BOOST_PYTHON_MODULE(carla) {
 #ifdef LIBCARLA_RSS_ENABLED
   export_ad_rss();
 #endif
-#ifdef CARLA_PYTHON_API_HAS_OSM2ODR
   export_osm2odr();
-#endif
+
+  // CARLA's threads must stop calling into Python before it is finalized.
+  object atexit = import("atexit");
+  atexit.attr("register")(make_function(&carla::PythonUtil::OnInterpreterExit));
 }

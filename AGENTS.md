@@ -4,15 +4,14 @@ Guidance for any coding agent working in this repository.
 
 ## Skills
 
-This repo ships a library of **60 vetted CARLA procedures** under
+This repo ships a library of **64 vetted CARLA procedures** under
 [`Skills/`](Skills/). Each is a directory containing a `SKILL.md` with YAML
-frontmatter (`name`, `description`, `compatibility`), the step-by-step
+frontmatter (`name`, `description`, `compatibility`, `metadata`), the step-by-step
 procedure, and often `scripts/` and `references/` beside it.
 
 **These skills are the source of truth** for building, packaging, cooking,
-map/vehicle/asset import, running servers, scenarios and ROS 2. The raw
-`Makefile` and `Util/BuildTools` scripts are a fallback for tasks no skill
-covers.
+map/vehicle/asset import, running servers, scenarios and ROS 2, and they cover
+most of the commands those tasks need.
 
 ### How to use them
 
@@ -37,7 +36,22 @@ Project config is in [`.mcp.json`](.mcp.json); clients that read it get the
 tools automatically. Agents without MCP should read `Skills/` directly — the
 files are the source of truth either way.
 
+`.mcp.json` also registers `unreal-mcp` (`http://localhost:6256/mcp`), Epic's
+Unreal MCP server, which the CarlaUnreal editor starts on load. It acts on the
+open editor (actors, viewport camera, assets, output log), not on a running
+CARLA server, and is only up while the full editor is open — not in `-game` or
+packaged builds. See [`Docs/agent_skills.md`](Docs/agent_skills.md#unreal-mcp-in-the-editor).
+
 ## Skill catalogue
+
+### `contributing`
+
+- **`open-carla-pr`** — Takes a contribution to CARLA on UE 5.8 from first contact to a pull request against ue58-dev — bug and feature issues from the repo's templates, GitHub Discussions to agree CI or large changes first....
+
+### `docs`
+
+- **`audit-carla-docs`** — Finds undocumented and rotting documentation in a CARLA checkout — unreleased features, bindings missing from the API reference, documented API that no longer exists....
+- **`document-carla-feature`** — Writes the missing CARLA documentation that the audit found, one category at a time, in CARLA's house style....
 
 ### `leaderboard`
 
@@ -94,6 +108,7 @@ files are the source of truth either way.
 
 ### `setup`
 
+- **`check-carla-ports`** — Reports which network ports CARLA and its tooling use on this machine and which are already taken — the simulator's RPC/streaming/secondary trio, the....
 - **`check-feature-support`** — Answers "can CARLA do X here, and is there a vetted procedure for it" before you promise anything, and detects client/server/tree version skew — a....
 - **`download-carla`** — Downloads CARLA so nothing has to be fetched by hand — an official release package for any published version (resolved live from the GitHub....
 - **`install-leaderboard`** — Installs the CARLA Autonomous Driving Leaderboard (leaderboard.carla.org) at a chosen version — 1.0, 2.0 or 2.1 — together with the exact....
@@ -136,3 +151,25 @@ files are the source of truth either way.
 - Smoke tests live in `PythonAPI/test/smoke/` and need a running server on
   port 3654.
 - Add a `CHANGELOG.md` entry under `## LATEST Changes` for user-visible changes.
+
+## Before any pull request (mandatory)
+
+CI builds the code and runs only the LibCarla unit tests. It runs no Python
+tests and never opens the editor. Before you push a code change for a pull
+request, follow Step 4 of [`open-carla-pr`](Skills/contributing/open-carla-pr/SKILL.md)
+on the branch's own commit:
+
+1. Build it, including `carla-unreal-editor`.
+2. Open the Unreal Editor (`cmake --build Build/Release --target launch`) and
+   check that it loads the default map and stays up, with no crash and no new
+   Carla errors in the log.
+3. Run the LibCarla unit tests, the Python API unit tests and the whole smoke
+   list against a server on port 3654 started from that build.
+4. Report the commit and each result under **Where has this been tested?** in
+   the PR. The **Tests** section is only for which tests the PR adds or
+   modifies and why.
+
+Editing or adding a test is not testing it: a test counts only once you ran it
+and it passed. Never skip, loosen or delete a test to get a pass. If a step
+cannot run (no display, no GPU, no built engine), stop and tell the user. Do not
+open the PR with the step silently left out.

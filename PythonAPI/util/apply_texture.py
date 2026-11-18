@@ -18,7 +18,7 @@ import carla
 
 def get_8bit_texture(image):
     if image is None:
-        return carla.TextureFloatColor(0,0)
+        return carla.TextureColor(0,0)
     height = len(image)
     width = len(image[0])
     texture = carla.TextureColor(width,height)
@@ -28,7 +28,7 @@ def get_8bit_texture(image):
             r = int(color[0])
             g = int(color[1])
             b = int(color[2])
-            a = int(color[3])
+            a = int(color[3]) if len(color) > 3 else 255
             texture.set(x, height - y - 1, carla.Color(r,g,b,a))
     return texture
 
@@ -73,19 +73,20 @@ def main():
         help='Path to normal map to update')
     args = argparser.parse_args()
 
+    if not args.list:
+        if not args.object_name:
+            argparser.error('--object-name is required to apply textures')
+        if not (args.diffuse or args.normal or args.ao_roughness_metallic_emissive):
+            argparser.error('specify at least one texture map')
+
     client = carla.Client(args.host, args.port)
     client.set_timeout(20.0)
 
     world = client.get_world()
 
     if args.list:
-        names = list(filter(lambda k: 'Apartment' in k, world.get_names_of_all_objects()))
-        for name in names:
+        for name in world.get_names_of_all_objects():
             print(name)
-        return
-
-    if args.object_name == '':
-        print('Error: missing object name to apply texture')
         return
 
     diffuse = None

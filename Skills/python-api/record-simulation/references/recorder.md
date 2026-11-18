@@ -35,8 +35,9 @@ Per simulation frame, the recorder stores world state, not renders:
 
 `start_recorder(name)` writes on the **server**:
 
-- **Relative** name → under the server's `CarlaUE4/Saved/` directory (source
-  build) or the packaged build's `.../CarlaUE4/Saved/`.
+- **Relative** name → under the server's `CarlaUnreal/Saved/` directory (source
+  build) or the packaged build's `.../CarlaUnreal/Saved/`. A UE4 server uses
+  `CarlaUE4/Saved/` instead.
 - **Absolute** path → exactly there, on the server machine.
 
 On a remote server the `.log` is on that host, not the client — copy it over if

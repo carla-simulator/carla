@@ -45,6 +45,10 @@ void FPixelReader::WritePixelsToBuffer(
 
   auto RenderResource =
       static_cast<const FTextureRenderTarget2DResource *>(RenderTarget.GetResource());
+  if (RenderResource == nullptr)
+  {
+    return;
+  }
   auto Texture = RenderResource->GetRenderTargetTexture();
   if (!Texture)
   {

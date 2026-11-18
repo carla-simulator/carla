@@ -1,7 +1,29 @@
 <!---
 
-The images in this page were taken by hand, one scene each;
-PythonAPI/docs/catalogue_doc_gen.py only writes the page around them.
+The images in this page were captured by PythonAPI/docs/catalogue_doc_gen.py with these settings:
+
+Town: Town10HD_Opt
+
+Actor transform: Transform(Location(x=102.900002, y=-20.000000, z=0.500000), Rotation(pitch=0.000000, yaw=90.000000, roll=0.000000))
+Camera: framed on each actor's bounding box, bearing=35.0, fill=0.85, min_distance=2.5, pitch=-15.0
+Camera resolution: 1920x1080
+camera.fov = 60
+camera.post_process_profile = Cinematic
+
+weather.cloudiness = 15
+weather.dust_storm = 0.0
+weather.fog_density = 0.0056
+weather.fog_distance = 0.0
+weather.fog_falloff = 0.2
+weather.mie_scattering_scale = 0.0
+weather.precipitation = 0.0
+weather.precipitation_deposits = 0.0
+weather.rayleigh_scattering_scale = 0.0331
+weather.scattering_intensity = 0
+weather.sun_altitude_angle = 45
+weather.sun_azimuth_angle = 230
+weather.wetness = 0.0
+weather.wind_intensity = 0.35
 
 Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it.
 
@@ -133,69 +155,81 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Barrel
 
-![static_prop_barrel](../img/catalogue/props/static_prop_barrel.webp)
+![static_prop_barrel](img/catalogue/props/static_prop_barrel_thumb.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.barrel</span>
+* __Blueprint ID__: `static.prop.barrel`
 * __Base type__: containers
 * __Subtype__: barrels
 * __Size__: small
 
 ### Garbage container
 
-![static_prop_container](../img/catalogue/props/static_prop_container.webp)
+![static_prop_container](img/catalogue/props/static_prop_container_thumb.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.container</span>
+* __Blueprint ID__: `static.prop.container`
 * __Base type__: containers
 * __Subtype__: bins
 * __Size__: medium
 
 ### Dumpster
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.dumpster</span>
+![static_prop_dumpster](img/catalogue/props/static_prop_dumpster_thumb.webp)
+
+* __Blueprint ID__: `static.prop.dumpster`
 * __Base type__: containers
 * __Subtype__: bins
 * __Size__: medium
 
 ### Dumpster02
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.dumpster02</span>
+![static_prop_dumpster02](img/catalogue/props/static_prop_dumpster02_thumb.webp)
+
+* __Blueprint ID__: `static.prop.dumpster02`
 * __Base type__: containers
 * __Subtype__: bins
 * __Size__: medium
 
 ### Recyclecardboard
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.recyclecardboard</span>
+![static_prop_recyclecardboard](img/catalogue/props/static_prop_recyclecardboard_thumb.webp)
+
+* __Blueprint ID__: `static.prop.recyclecardboard`
 * __Base type__: containers
 * __Subtype__: bins
 * __Size__: medium
 
 ### Recycleglass
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.recycleglass</span>
+![static_prop_recycleglass](img/catalogue/props/static_prop_recycleglass_thumb.webp)
+
+* __Blueprint ID__: `static.prop.recycleglass`
 * __Base type__: containers
 * __Subtype__: bins
 * __Size__: medium
 
 ### Recycleorganic
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.recycleorganic</span>
+![static_prop_recycleorganic](img/catalogue/props/static_prop_recycleorganic_thumb.webp)
+
+* __Blueprint ID__: `static.prop.recycleorganic`
 * __Base type__: containers
 * __Subtype__: bins
 * __Size__: medium
 
 ### Recycleplastic
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.recycleplastic</span>
+![static_prop_recycleplastic](img/catalogue/props/static_prop_recycleplastic_thumb.webp)
+
+* __Blueprint ID__: `static.prop.recycleplastic`
 * __Base type__: containers
 * __Subtype__: bins
 * __Size__: medium
 
 ### Creased box 01
 
-![static_prop_creasedbox01](../img/catalogue/props/static_prop_creasedbox01.webp)
+![static_prop_creasedbox01](img/catalogue/props/static_prop_creasedbox01_thumb.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.creasedbox01</span>
+* __Blueprint ID__: `static.prop.creasedbox01`
 * __Base type__: containers
 * __Subtype__: boxes
 * __Size__: small
@@ -206,124 +240,126 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Trash bag
 
-![static_prop_trashbag](../img/catalogue/props/static_prop_trashbag.webp)
+![static_prop_trashbag](img/catalogue/props/static_prop_trashbag_thumb.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.trashbag</span>
+* __Blueprint ID__: `static.prop.trashbag`
 * __Base type__: garbage
 * __Subtype__: bags
 * __Size__: small
 
 ### Cola can
 
-![static_prop_colacan](../img/catalogue/props/static_prop_colacan.webp)
+![static_prop_colacan](img/catalogue/props/static_prop_colacan_thumb.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.colacan</span>
+* __Blueprint ID__: `static.prop.colacan`
 * __Base type__: garbage
 * __Subtype__: garbage
 * __Size__: tiny
 
 ### Garbage 01
 
-![static_prop_garbage01](../img/catalogue/props/static_prop_garbage01.webp)
+![static_prop_garbage01](img/catalogue/props/static_prop_garbage01_thumb.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.garbage01</span>
+* __Blueprint ID__: `static.prop.garbage01`
 * __Base type__: garbage
 * __Subtype__: garbage
 * __Size__: tiny
 
 ### Garbage 02
 
-![static_prop_garbage02](../img/catalogue/props/static_prop_garbage02.webp)
+![static_prop_garbage02](img/catalogue/props/static_prop_garbage02_thumb.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.garbage02</span>
+* __Blueprint ID__: `static.prop.garbage02`
 * __Base type__: garbage
 * __Subtype__: garbage
 * __Size__: tiny
 
 ### Garbage 03
 
-![static_prop_garbage03](../img/catalogue/props/static_prop_garbage03.webp)
+![static_prop_garbage03](img/catalogue/props/static_prop_garbage03_thumb.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.garbage03</span>
+* __Blueprint ID__: `static.prop.garbage03`
 * __Base type__: garbage
 * __Subtype__: garbage
 * __Size__: tiny
 
 ### Garbage 04
 
-![static_prop_garbage04](../img/catalogue/props/static_prop_garbage04.webp)
+![static_prop_garbage04](img/catalogue/props/static_prop_garbage04_thumb.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.garbage04</span>
+* __Blueprint ID__: `static.prop.garbage04`
 * __Base type__: garbage
 * __Subtype__: garbage
 * __Size__: tiny
 
 ### Garbage 05
 
-![static_prop_garbage05](../img/catalogue/props/static_prop_garbage05.webp)
+![static_prop_garbage05](img/catalogue/props/static_prop_garbage05_thumb.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.garbage05</span>
+* __Blueprint ID__: `static.prop.garbage05`
 * __Base type__: garbage
 * __Subtype__: garbage
 * __Size__: tiny
 
 ### Garbage 06
 
-![static_prop_garbage06](../img/catalogue/props/static_prop_garbage06.webp)
+![static_prop_garbage06](img/catalogue/props/static_prop_garbage06_thumb.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.garbage06</span>
+* __Blueprint ID__: `static.prop.garbage06`
 * __Base type__: garbage
 * __Subtype__: garbage
 * __Size__: tiny
 
 ### Garbage platform 01
 
-![static_prop_platformgarbage01](../img/catalogue/props/static_prop_platformgarbage01.webp)
+![static_prop_platformgarbage01](img/catalogue/props/static_prop_platformgarbage01_thumb.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.platformgarbage01</span>
+* __Blueprint ID__: `static.prop.platformgarbage01`
 * __Base type__: garbage
 * __Subtype__: platforms
 * __Size__: medium
 
 ### Trash can 01
 
-![static_prop_trashcan01](../img/catalogue/props/static_prop_trashcan01.webp)
+![static_prop_trashcan01](img/catalogue/props/static_prop_trashcan01_thumb.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.trashcan01</span>
+* __Blueprint ID__: `static.prop.trashcan01`
 * __Base type__: garbage
 * __Subtype__: trash_cans
 * __Size__: small
 
 ### Trash can 02
 
-![static_prop_trashcan02](../img/catalogue/props/static_prop_trashcan02.webp)
+![static_prop_trashcan02](img/catalogue/props/static_prop_trashcan02_thumb.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.trashcan02</span>
+* __Blueprint ID__: `static.prop.trashcan02`
 * __Base type__: garbage
 * __Subtype__: trash_cans
 * __Size__: small
 
 ### Trash can 03
 
-![static_prop_trashcan03](../img/catalogue/props/static_prop_trashcan03.webp)
+![static_prop_trashcan03](img/catalogue/props/static_prop_trashcan03_thumb.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.trashcan03</span>
+* __Blueprint ID__: `static.prop.trashcan03`
 * __Base type__: garbage
 * __Subtype__: trash_cans
 * __Size__: small
 
 ### Trash can 04
 
-![static_prop_trashcan04](../img/catalogue/props/static_prop_trashcan04.webp)
+![static_prop_trashcan04](img/catalogue/props/static_prop_trashcan04_thumb.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.trashcan04</span>
+* __Blueprint ID__: `static.prop.trashcan04`
 * __Base type__: garbage
 * __Subtype__: trash_cans
 * __Size__: small
 
 ### Trashcan05
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.trashcan05</span>
+![static_prop_trashcan05](img/catalogue/props/static_prop_trashcan05_thumb.webp)
+
+* __Blueprint ID__: `static.prop.trashcan05`
 * __Base type__: garbage
 * __Subtype__: trash_cans
 * __Size__: small
@@ -334,153 +370,153 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Pergola
 
-![static_prop_pergola](../img/catalogue/props/static_prop_pergola.webp)
+![static_prop_pergola](img/catalogue/props/static_prop_pergola_thumb.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.pergola</span>
+* __Blueprint ID__: `static.prop.pergola`
 * __Base type__: park_garden
 * __Subtype__: furniture
 * __Size__: big
 
 ### Plastic chair
 
-![static_prop_plasticchair](../img/catalogue/props/static_prop_plasticchair.webp)
+![static_prop_plasticchair](img/catalogue/props/static_prop_plasticchair_thumb.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.plasticchair</span>
+* __Blueprint ID__: `static.prop.plasticchair`
 * __Base type__: park_garden
 * __Subtype__: furniture
 * __Size__: small
 
 ### Plastic table
 
-![static_prop_plastictable](../img/catalogue/props/static_prop_plastictable.webp)
+![static_prop_plastictable](img/catalogue/props/static_prop_plastictable_thumb.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.plastictable</span>
+* __Blueprint ID__: `static.prop.plastictable`
 * __Base type__: park_garden
 * __Subtype__: furniture
 * __Size__: medium
 
 ### Swing
 
-![static_prop_swing](../img/catalogue/props/static_prop_swing.webp)
+![static_prop_swing](img/catalogue/props/static_prop_swing_thumb.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.swing</span>
+* __Blueprint ID__: `static.prop.swing`
 * __Base type__: park_garden
 * __Subtype__: furniture
 * __Size__: medium
 
 ### Swingcouch
 
-![static_prop_swingcouch](../img/catalogue/props/static_prop_swingcouch.webp)
+![static_prop_swingcouch](img/catalogue/props/static_prop_swingcouch_thumb.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.swingcouch</span>
+* __Blueprint ID__: `static.prop.swingcouch`
 * __Base type__: park_garden
 * __Subtype__: furniture
 * __Size__: medium
 
 ### Trampoline
 
-![static_prop_trampoline](../img/catalogue/props/static_prop_trampoline.webp)
+![static_prop_trampoline](img/catalogue/props/static_prop_trampoline_thumb.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.trampoline</span>
+* __Blueprint ID__: `static.prop.trampoline`
 * __Base type__: park_garden
 * __Subtype__: furniture
 * __Size__: big
 
 ### Barbeque
 
-![static_prop_barbeque](../img/catalogue/props/static_prop_barbeque.webp)
+![static_prop_barbeque](img/catalogue/props/static_prop_barbeque_thumb.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.barbeque</span>
+* __Blueprint ID__: `static.prop.barbeque`
 * __Base type__: park_garden
 * __Subtype__: other
 * __Size__: small
 
 ### Doghouse
 
-![static_prop_doghouse](../img/catalogue/props/static_prop_doghouse.webp)
+![static_prop_doghouse](img/catalogue/props/static_prop_doghouse_thumb.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.doghouse</span>
+* __Blueprint ID__: `static.prop.doghouse`
 * __Base type__: park_garden
 * __Subtype__: other
 * __Size__: small
 
 ### Gnome
 
-![static_prop_gnome](../img/catalogue/props/static_prop_gnome.webp)
+![static_prop_gnome](img/catalogue/props/static_prop_gnome_thumb.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.gnome</span>
+* __Blueprint ID__: `static.prop.gnome`
 * __Base type__: park_garden
 * __Subtype__: other
 * __Size__: small
 
 ### Haybale
 
-![static_prop_haybale](../img/catalogue/props/static_prop_haybale.webp)
+![static_prop_haybale](img/catalogue/props/static_prop_haybale_thumb.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.haybale</span>
+* __Blueprint ID__: `static.prop.haybale`
 * __Base type__: park_garden
 * __Subtype__: other
 * __Size__: medium
 
 ### Plantpot 01
 
-![static_prop_plantpot01](../img/catalogue/props/static_prop_plantpot01.webp)
+![static_prop_plantpot01](img/catalogue/props/static_prop_plantpot01_thumb.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.plantpot01</span>
+* __Blueprint ID__: `static.prop.plantpot01`
 * __Base type__: park_garden
 * __Subtype__: plantpots
 * __Size__: small
 
 ### Plantpot 02
 
-![static_prop_plantpot02](../img/catalogue/props/static_prop_plantpot02.webp)
+![static_prop_plantpot02](img/catalogue/props/static_prop_plantpot02_thumb.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.plantpot02</span>
+* __Blueprint ID__: `static.prop.plantpot02`
 * __Base type__: park_garden
 * __Subtype__: plantpots
 * __Size__: small
 
 ### Plantpot 03
 
-![static_prop_plantpot03](../img/catalogue/props/static_prop_plantpot03.webp)
+![static_prop_plantpot03](img/catalogue/props/static_prop_plantpot03_thumb.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.plantpot03</span>
+* __Blueprint ID__: `static.prop.plantpot03`
 * __Base type__: park_garden
 * __Subtype__: plantpots
 * __Size__: small
 
 ### Plantpot 04
 
-![static_prop_plantpot04](../img/catalogue/props/static_prop_plantpot04.webp)
+![static_prop_plantpot04](img/catalogue/props/static_prop_plantpot04_thumb.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.plantpot04</span>
+* __Blueprint ID__: `static.prop.plantpot04`
 * __Base type__: park_garden
 * __Subtype__: plantpots
 * __Size__: small
 
 ### Plantpot 05
 
-![static_prop_plantpot05](../img/catalogue/props/static_prop_plantpot05.webp)
+![static_prop_plantpot05](img/catalogue/props/static_prop_plantpot05_thumb.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.plantpot05</span>
+* __Blueprint ID__: `static.prop.plantpot05`
 * __Base type__: park_garden
 * __Subtype__: plantpots
 * __Size__: small
 
 ### Plantpot 06
 
-![static_prop_plantpot06](../img/catalogue/props/static_prop_plantpot06.webp)
+![static_prop_plantpot06](img/catalogue/props/static_prop_plantpot06_thumb.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.plantpot06</span>
+* __Blueprint ID__: `static.prop.plantpot06`
 * __Base type__: park_garden
 * __Subtype__: plantpots
 * __Size__: small
 
 ### Plantpot 07
 
-![static_prop_plantpot07](../img/catalogue/props/static_prop_plantpot07.webp)
+![static_prop_plantpot07](img/catalogue/props/static_prop_plantpot07_thumb.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.plantpot07</span>
+* __Blueprint ID__: `static.prop.plantpot07`
 * __Base type__: park_garden
 * __Subtype__: plantpots
 * __Size__: small
@@ -491,99 +527,99 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Plastic bag
 
-![static_prop_plasticbag](../img/catalogue/props/static_prop_plasticbag.webp)
+![static_prop_plasticbag](img/catalogue/props/static_prop_plasticbag_thumb.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.plasticbag</span>
+* __Blueprint ID__: `static.prop.plasticbag`
 * __Base type__: personal
 * __Subtype__: bags
 * __Size__: small
 
 ### Shopping bag
 
-![static_prop_shoppingbag](../img/catalogue/props/static_prop_shoppingbag.webp)
+![static_prop_shoppingbag](img/catalogue/props/static_prop_shoppingbag_thumb.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.shoppingbag</span>
+* __Blueprint ID__: `static.prop.shoppingbag`
 * __Base type__: personal
 * __Subtype__: bags
 * __Size__: small
 
 ### Shopping cart
 
-![static_prop_shoppingcart](../img/catalogue/props/static_prop_shoppingcart.webp)
+![static_prop_shoppingcart](img/catalogue/props/static_prop_shoppingcart_thumb.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.shoppingcart</span>
+* __Blueprint ID__: `static.prop.shoppingcart`
 * __Base type__: personal
 * __Subtype__: carts
 * __Size__: medium
 
 ### Shopping trolley
 
-![static_prop_shoppingtrolley](../img/catalogue/props/static_prop_shoppingtrolley.webp)
+![static_prop_shoppingtrolley](img/catalogue/props/static_prop_shoppingtrolley_thumb.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.shoppingtrolley</span>
+* __Blueprint ID__: `static.prop.shoppingtrolley`
 * __Base type__: personal
 * __Subtype__: carts
 * __Size__: small
 
 ### Briefcase
 
-![static_prop_briefcase](../img/catalogue/props/static_prop_briefcase.webp)
+![static_prop_briefcase](img/catalogue/props/static_prop_briefcase_thumb.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.briefcase</span>
+* __Blueprint ID__: `static.prop.briefcase`
 * __Base type__: personal
 * __Subtype__: cases
 * __Size__: small
 
 ### Guitarcase
 
-![static_prop_guitarcase](../img/catalogue/props/static_prop_guitarcase.webp)
+![static_prop_guitarcase](img/catalogue/props/static_prop_guitarcase_thumb.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.guitarcase</span>
+* __Blueprint ID__: `static.prop.guitarcase`
 * __Base type__: personal
 * __Subtype__: cases
 * __Size__: small
 
 ### Travel case
 
-![static_prop_travelcase](../img/catalogue/props/static_prop_travelcase.webp)
+![static_prop_travelcase](img/catalogue/props/static_prop_travelcase_thumb.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.travelcase</span>
+* __Blueprint ID__: `static.prop.travelcase`
 * __Base type__: personal
 * __Subtype__: cases
 * __Size__: small
 
 ### Bike helmet
 
-![static_prop_bikehelmet](../img/catalogue/props/static_prop_bikehelmet.webp)
+![static_prop_bikehelmet](img/catalogue/props/static_prop_bikehelmet_thumb.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.bikehelmet</span>
+* __Blueprint ID__: `static.prop.bikehelmet`
 * __Base type__: personal
 * __Subtype__: clothing
 * __Size__: tiny
 
 ### Motor helmet
 
-![static_prop_motorhelmet](../img/catalogue/props/static_prop_motorhelmet.webp)
+![static_prop_motorhelmet](img/catalogue/props/static_prop_motorhelmet_thumb.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.motorhelmet</span>
+* __Blueprint ID__: `static.prop.motorhelmet`
 * __Base type__: personal
 * __Subtype__: clothing
 * __Size__: small
 
 ### Mobile
 
-![static_prop_mobile](../img/catalogue/props/static_prop_mobile.webp)
+![static_prop_mobile](img/catalogue/props/static_prop_mobile_thumb.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.mobile</span>
+* __Blueprint ID__: `static.prop.mobile`
 * __Base type__: personal
 * __Subtype__: personal_effects
 * __Size__: tiny
 
 ### Purse
 
-![static_prop_purse](../img/catalogue/props/static_prop_purse.webp)
+![static_prop_purse](img/catalogue/props/static_prop_purse_thumb.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.purse</span>
+* __Blueprint ID__: `static.prop.purse`
 * __Base type__: personal
 * __Subtype__: personal_effects
 * __Size__: small
@@ -594,126 +630,126 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Street barrier
 
-![static_prop_streetbarrier](../img/catalogue/props/static_prop_streetbarrier.webp)
+![static_prop_streetbarrier](img/catalogue/props/static_prop_streetbarrier_thumb.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.streetbarrier</span>
+* __Blueprint ID__: `static.prop.streetbarrier`
 * __Base type__: road
 * __Subtype__: barriers
 * __Size__: small
 
 ### Construction cone
 
-![static_prop_constructioncone](../img/catalogue/props/static_prop_constructioncone.webp)
+![static_prop_constructioncone](img/catalogue/props/static_prop_constructioncone_thumb.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.constructioncone</span>
+* __Blueprint ID__: `static.prop.constructioncone`
 * __Base type__: road
 * __Subtype__: cones
 * __Size__: small
 
 ### Traffic cone 01
 
-![static_prop_trafficcone01](../img/catalogue/props/static_prop_trafficcone01.webp)
+![static_prop_trafficcone01](img/catalogue/props/static_prop_trafficcone01_thumb.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.trafficcone01</span>
+* __Blueprint ID__: `static.prop.trafficcone01`
 * __Base type__: road
 * __Subtype__: cones
 * __Size__: small
 
 ### Traffic cone 02
 
-![static_prop_trafficcone02](../img/catalogue/props/static_prop_trafficcone02.webp)
+![static_prop_trafficcone02](img/catalogue/props/static_prop_trafficcone02_thumb.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.trafficcone02</span>
+* __Blueprint ID__: `static.prop.trafficcone02`
 * __Base type__: road
 * __Subtype__: cones
 * __Size__: small
 
 ### Warning construction
 
-![static_prop_warningconstruction](../img/catalogue/props/static_prop_warningconstruction.webp)
+![static_prop_warningconstruction](img/catalogue/props/static_prop_warningconstruction_thumb.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.warningconstruction</span>
+* __Blueprint ID__: `static.prop.warningconstruction`
 * __Base type__: road
 * __Subtype__: construction
 * __Size__: medium
 
 ### Brokentile 01
 
-![static_prop_brokentile01](../img/catalogue/props/static_prop_brokentile01.webp)
+![static_prop_brokentile01](img/catalogue/props/static_prop_brokentile01_thumb.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.brokentile01</span>
+* __Blueprint ID__: `static.prop.brokentile01`
 * __Base type__: road
 * __Subtype__: debris
 * __Size__: tiny
 
 ### Brokentile 02
 
-![static_prop_brokentile02](../img/catalogue/props/static_prop_brokentile02.webp)
+![static_prop_brokentile02](img/catalogue/props/static_prop_brokentile02_thumb.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.brokentile02</span>
+* __Blueprint ID__: `static.prop.brokentile02`
 * __Base type__: road
 * __Subtype__: debris
 * __Size__: tiny
 
 ### Brokentile 03
 
-![static_prop_brokentile03](../img/catalogue/props/static_prop_brokentile03.webp)
+![static_prop_brokentile03](img/catalogue/props/static_prop_brokentile03_thumb.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.brokentile03</span>
+* __Blueprint ID__: `static.prop.brokentile03`
 * __Base type__: road
 * __Subtype__: debris
 * __Size__: tiny
 
 ### Brokentile 04
 
-![static_prop_brokentile04](../img/catalogue/props/static_prop_brokentile04.webp)
+![static_prop_brokentile04](img/catalogue/props/static_prop_brokentile04_thumb.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.brokentile04</span>
+* __Blueprint ID__: `static.prop.brokentile04`
 * __Base type__: road
 * __Subtype__: debris
 * __Size__: tiny
 
 ### Dirt debris 01
 
-![static_prop_dirtdebris01](../img/catalogue/props/static_prop_dirtdebris01.webp)
+![static_prop_dirtdebris01](img/catalogue/props/static_prop_dirtdebris01_thumb.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.dirtdebris01</span>
+* __Blueprint ID__: `static.prop.dirtdebris01`
 * __Base type__: road
 * __Subtype__: debris
 * __Size__: small
 
 ### Dirt debris 02
 
-![static_prop_dirtdebris02](../img/catalogue/props/static_prop_dirtdebris02.webp)
+![static_prop_dirtdebris02](img/catalogue/props/static_prop_dirtdebris02_thumb.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.dirtdebris02</span>
+* __Blueprint ID__: `static.prop.dirtdebris02`
 * __Base type__: road
 * __Subtype__: debris
 * __Size__: small
 
 ### Dirt debris 03
 
-![static_prop_dirtdebris03](../img/catalogue/props/static_prop_dirtdebris03.webp)
+![static_prop_dirtdebris03](img/catalogue/props/static_prop_dirtdebris03_thumb.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.dirtdebris03</span>
+* __Blueprint ID__: `static.prop.dirtdebris03`
 * __Base type__: road
 * __Subtype__: debris
 * __Size__: small
 
 ### Traffic warning
 
-![static_prop_trafficwarning](../img/catalogue/props/static_prop_trafficwarning.webp)
+![static_prop_trafficwarning](img/catalogue/props/static_prop_trafficwarning_thumb.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.trafficwarning</span>
+* __Blueprint ID__: `static.prop.trafficwarning`
 * __Base type__: road
 * __Subtype__: signs
 * __Size__: big
 
 ### Warning accident
 
-![static_prop_warningaccident](../img/catalogue/props/static_prop_warningaccident.webp)
+![static_prop_warningaccident](img/catalogue/props/static_prop_warningaccident_thumb.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.warningaccident</span>
+* __Blueprint ID__: `static.prop.warningaccident`
 * __Base type__: road
 * __Subtype__: signs
 * __Size__: medium
@@ -724,144 +760,144 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Chain barrier
 
-![static_prop_chainbarrier](../img/catalogue/props/static_prop_chainbarrier.webp)
+![static_prop_chainbarrier](img/catalogue/props/static_prop_chainbarrier_thumb.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.chainbarrier</span>
+* __Blueprint ID__: `static.prop.chainbarrier`
 * __Base type__: sidewalk
 * __Subtype__: barriers
 * __Size__: medium
 
 ### Chain barrier end
 
-![static_prop_chainbarrierend](../img/catalogue/props/static_prop_chainbarrierend.webp)
+![static_prop_chainbarrierend](img/catalogue/props/static_prop_chainbarrierend_thumb.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.chainbarrierend</span>
+* __Blueprint ID__: `static.prop.chainbarrierend`
 * __Base type__: sidewalk
 * __Subtype__: barriers
 * __Size__: small
 
 ### Bench 01
 
-![static_prop_bench01](../img/catalogue/props/static_prop_bench01.webp)
+![static_prop_bench01](img/catalogue/props/static_prop_bench01_thumb.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.bench01</span>
+* __Blueprint ID__: `static.prop.bench01`
 * __Base type__: sidewalk
 * __Subtype__: benches
 * __Size__: medium
 
 ### Bench 02
 
-![static_prop_bench02](../img/catalogue/props/static_prop_bench02.webp)
+![static_prop_bench02](img/catalogue/props/static_prop_bench02_thumb.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.bench02</span>
+* __Blueprint ID__: `static.prop.bench02`
 * __Base type__: sidewalk
 * __Subtype__: benches
 * __Size__: medium
 
 ### Kiosk 01
 
-![static_prop_kiosk_01](../img/catalogue/props/static_prop_kiosk_01.webp)
+![static_prop_kiosk_01](img/catalogue/props/static_prop_kiosk_01_thumb.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.kiosk_01</span>
+* __Blueprint ID__: `static.prop.kiosk_01`
 * __Base type__: sidewalk
 * __Subtype__: commercial
 * __Size__: medium
 
 ### Fountain
 
-![static_prop_fountain](../img/catalogue/props/static_prop_fountain.webp)
+![static_prop_fountain](img/catalogue/props/static_prop_fountain_thumb.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.fountain</span>
+* __Blueprint ID__: `static.prop.fountain`
 * __Base type__: sidewalk
 * __Subtype__: monuments
 * __Size__: big
 
 ### Map table
 
-![static_prop_maptable](../img/catalogue/props/static_prop_maptable.webp)
+![static_prop_maptable](img/catalogue/props/static_prop_maptable_thumb.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.maptable</span>
+* __Blueprint ID__: `static.prop.maptable`
 * __Base type__: sidewalk
 * __Subtype__: monuments
 * __Size__: medium
 
 ### Advertisement
 
-![static_prop_advertisement](../img/catalogue/props/static_prop_advertisement.webp)
+![static_prop_advertisement](img/catalogue/props/static_prop_advertisement_thumb.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.advertisement</span>
+* __Blueprint ID__: `static.prop.advertisement`
 * __Base type__: sidewalk
 * __Subtype__: signs
 * __Size__: medium
 
 ### Street sign
 
-![static_prop_streetsign](../img/catalogue/props/static_prop_streetsign.webp)
+![static_prop_streetsign](img/catalogue/props/static_prop_streetsign_thumb.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.streetsign</span>
+* __Blueprint ID__: `static.prop.streetsign`
 * __Base type__: sidewalk
 * __Subtype__: signs
 * __Size__: small
 
 ### Street sign 01
 
-![static_prop_streetsign01](../img/catalogue/props/static_prop_streetsign01.webp)
+![static_prop_streetsign01](img/catalogue/props/static_prop_streetsign01_thumb.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.streetsign01</span>
+* __Blueprint ID__: `static.prop.streetsign01`
 * __Base type__: sidewalk
 * __Subtype__: signs
 * __Size__: medium
 
 ### Street sign 04
 
-![static_prop_streetsign04](../img/catalogue/props/static_prop_streetsign04.webp)
+![static_prop_streetsign04](img/catalogue/props/static_prop_streetsign04_thumb.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.streetsign04</span>
+* __Blueprint ID__: `static.prop.streetsign04`
 * __Base type__: sidewalk
 * __Subtype__: signs
 * __Size__: small
 
 ### Bus stop
 
-![static_prop_busstop](../img/catalogue/props/static_prop_busstop.webp)
+![static_prop_busstop](img/catalogue/props/static_prop_busstop_thumb.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.busstop</span>
+* __Blueprint ID__: `static.prop.busstop`
 * __Base type__: sidewalk
 * __Subtype__: transport
 * __Size__: big
 
 ### ATM
 
-![static_prop_atm](../img/catalogue/props/static_prop_atm.webp)
+![static_prop_atm](img/catalogue/props/static_prop_atm_thumb.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.atm</span>
+* __Blueprint ID__: `static.prop.atm`
 * __Base type__: sidewalk
 * __Subtype__: utilities
 * __Size__: medium
 
 ### Mailbox
 
-![static_prop_mailbox](../img/catalogue/props/static_prop_mailbox.webp)
+![static_prop_mailbox](img/catalogue/props/static_prop_mailbox_thumb.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.mailbox</span>
+* __Blueprint ID__: `static.prop.mailbox`
 * __Base type__: sidewalk
 * __Subtype__: utilities
 * __Size__: small
 
 ### Street fountain
 
-![static_prop_streetfountain](../img/catalogue/props/static_prop_streetfountain.webp)
+![static_prop_streetfountain](img/catalogue/props/static_prop_streetfountain_thumb.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.streetfountain</span>
+* __Blueprint ID__: `static.prop.streetfountain`
 * __Base type__: sidewalk
 * __Subtype__: utilities
 * __Size__: small
 
 ### Vending machine
 
-![static_prop_vendingmachine](../img/catalogue/props/static_prop_vendingmachine.webp)
+![static_prop_vendingmachine](img/catalogue/props/static_prop_vendingmachine_thumb.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.vendingmachine</span>
+* __Blueprint ID__: `static.prop.vendingmachine`
 * __Base type__: sidewalk
 * __Subtype__: utilities
 * __Size__: medium
@@ -872,9 +908,9 @@ Do not edit this page by hand, PythonAPI/docs/catalogue_doc_gen.py overwrites it
 
 ### Calibrator
 
-![static_prop_calibrator](../img/catalogue/props/static_prop_calibrator.webp)
+![static_prop_calibrator](img/catalogue/props/static_prop_calibrator_thumb.webp)
 
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.calibrator</span>
+* __Blueprint ID__: `static.prop.calibrator`
 * __Base type__: utility
 * __Subtype__: calibration
 * __Size__: small

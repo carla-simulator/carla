@@ -6,7 +6,7 @@
     carla-cosmos watch JOB [--out DIR]
     carla-cosmos result JOB [--out DIR]
     carla-cosmos cancel JOB
-    carla-cosmos serve [--image IMG] [--port 8000] [--state DIR] [--gpus all] [--profile P] | --stop | --mock
+    carla-cosmos serve [--image IMG] [--port 8010] [--state DIR] [--gpus all] [--profile P] | --stop | --mock
     carla-cosmos classes
     carla-cosmos synthetic-clip --out DIR [--frames 93 --fps 16 | --av7]
     carla-cosmos preview --clip DIR [--cameras camera:front:wide:120fov] [--frames 0:60] [--out DIR] [--grid] [--no-horizon]
@@ -234,7 +234,7 @@ def cmd_serve(args) -> int:
         return 0
     if args.mock:
         state = Path(args.state or "~/.carla-cosmos/mock-state").expanduser()
-        srv = serve.MockServer(state, port=args.port or 8000, token=args.token)
+        srv = serve.MockServer(state, port=args.port or serve.DEFAULT_HOST_PORT, token=args.token)
         client = srv.start()
         print(f"mock server ready at {srv.url}\n  export COSMOS_URL={srv.url}\n  export COSMOS_TOKEN={srv.token}")
         try:
@@ -245,7 +245,7 @@ def cmd_serve(args) -> int:
         finally:
             srv.stop()
         return 0
-    c, client = serve.ensure_server(image=args.image, port=args.port or 8000,
+    c, client = serve.ensure_server(image=args.image, port=args.port or serve.DEFAULT_HOST_PORT,
                                     state_dir=args.state or "~/.carla-cosmos/state", gpus=args.gpus,
                                     profile=args.profile, token=args.token)
     print(f"server ready: {c.url}  (container {c.name}, image {c.image})")
@@ -309,7 +309,7 @@ def cmd_preview(args) -> int:
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(prog="carla-cosmos", description=__doc__,
                                 formatter_class=argparse.RawDescriptionHelpFormatter)
-    p.add_argument("--url", default=None, help="server URL (COSMOS_URL, default http://localhost:8000)")
+    p.add_argument("--url", default=None, help="server URL (COSMOS_URL, default http://localhost:8010)")
     p.add_argument("--token", default=None, help="bearer token (COSMOS_TOKEN)")
     p.add_argument("--token-file", default=None, help="file with the bearer token (COSMOS_TOKEN_FILE)")
     sub = p.add_subparsers(dest="cmd", required=True)

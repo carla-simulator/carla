@@ -8,7 +8,9 @@
 
 #include "Carla.h"
 #include "Carla/Actor/ActorBlueprintFunctionLibrary.h"
+#include "Carla/Actor/CarlaActor.h"
 #include "Carla/Game/CarlaEpisode.h"
+#include "Carla/Game/CarlaStatics.h"
 #include "Carla/Vehicle/CarlaWheeledVehicle.h"
 #include "Carla/Vehicle/VehicleLightState.h"
 
@@ -77,6 +79,13 @@ TObjectPtr<ACarlaWheeledVehicle> AVehicleStatusSensor::FindAttachmentParentVehic
 
 void AVehicleStatusSensor::CollectAndStream(float /*DeltaSeconds*/)
 {
+  const UCarlaEpisode *CurrentEpisode = UCarlaStatics::GetCurrentEpisode(GetWorld());
+  if (!OwningVehicle.IsValid() && (CurrentEpisode != nullptr) && !CurrentEpisode->bIsPrimaryServer)
+  {
+    // A Multi-GPU mirror is attached in the frame it is spawned, and streams
+    // from the primary sensor's first tick, not the timer's.
+    OwningVehicle = FindAttachmentParentVehicle();
+  }
   if (!OwningVehicle.IsValid())
   {
     return;
@@ -90,9 +99,6 @@ void AVehicleStatusSensor::CollectAndStream(float /*DeltaSeconds*/)
 
   // Update cached velocity info
   SetVelocityInfoToLocal(Vehicle);
-
-  // Get Max Steering
-  const auto MaxSteerAngleInRadians = FMath::DegreesToRadians(Vehicle->GetMaximumSteerAngle());
 
   // Control flags (b0 = reverse, b1 = manual gear shift)
   const auto& Control = Vehicle->GetVehicleControl();
@@ -116,7 +122,9 @@ void AVehicleStatusSensor::CollectAndStream(float /*DeltaSeconds*/)
     static_cast<float>(Vehicle->GetActorRotation().Pitch),
     static_cast<float>(Vehicle->GetActorRotation().Yaw),
     static_cast<float>(Vehicle->GetActorRotation().Roll),
-    static_cast<float>(Vehicle->GetVehicleControl().Steer * MaxSteerAngleInRadians),
+    // Normalized: the ROS 2 side maps it to a tire angle with the steering
+    // compensation table, which is keyed on the normalized input (#10294).
+    static_cast<float>(Control.Steer),
     static_cast<int32_t>(Vehicle->GetVehicleCurrentGear()),
     static_cast<uint8_t>(TurnMask),
     static_cast<uint8_t>(Flags),
@@ -171,9 +179,18 @@ void AVehicleStatusSensor::SetVelocityInfoToLocal(const AActor* VehicleActor)
   const FQuat InvRot = VehicleActor->GetActorTransform().GetRotation().Inverse();
   VelocityInfo.Velocity = InvRot.RotateVector(CmpsToMps(WorldVel_cmps));
 
-  // Physics angular velocity (rad/s, world space)
+  // Physics angular velocity (rad/s, world space); a Multi-GPU mirror, which
+  // never simulates, has the primary's, when the primary's body simulates.
   FVector WorldAngVel = FVector::ZeroVector;
-  if (UPrimitiveComponent* RootPrim = Cast<UPrimitiveComponent>(VehicleActor->GetRootComponent()))
+  if (const auto* MirroredVehicle = Cast<ACarlaWheeledVehicle>(VehicleActor);
+      (MirroredVehicle != nullptr) && MirroredVehicle->HasMirroredMotion())
+  {
+    if (MirroredVehicle->IsMirroredSimulatingPhysics())
+    {
+      WorldAngVel = CarlaGetActorAngularVelocityInRadians(*VehicleActor);
+    }
+  }
+  else if (UPrimitiveComponent* RootPrim = Cast<UPrimitiveComponent>(VehicleActor->GetRootComponent()))
   {
     if (RootPrim->IsSimulatingPhysics())
     {

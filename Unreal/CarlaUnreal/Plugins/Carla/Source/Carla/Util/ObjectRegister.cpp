@@ -42,6 +42,21 @@ void UObjectRegister::RegisterObjects(TArray<AActor*> Actors)
 {
   // Empties the array but doesn't change memory allocations
   EnvironmentObjects.Reset();
+  // Kept across registrations: a hidden traffic-light box registers no more
+  // (it has no bounds), and its id must still reach its components to show it
+  // again. Only components that are gone are dropped.
+  for (auto It = ObjectIdToComp.CreateIterator(); It; ++It)
+  {
+    if (!It.Value().IsValid())
+    {
+      It.RemoveCurrent();
+    }
+  }
+  // Foliage instance ids count instances from here: from zero on every
+  // registration, an instance keeps its id whenever the objects register
+  // again (a map layer loaded or unloaded), and two servers with the same
+  // levels loaded give it the same one.
+  FoliageActorInstanceCount = 0;
 
   for(AActor* Actor : Actors)
   {
@@ -127,6 +142,44 @@ void UObjectRegister::EnableEnvironmentObjects(const TSet<uint64>& EnvObjectIds,
 
 }
 
+TSet<uint64> UObjectRegister::FindEnvironmentObjects(const TSet<uint64>& EnvObjectIds) const
+{
+  TSet<uint64> Found;
+  if (EnvObjectIds.Num() == 0)
+  {
+    return Found;
+  }
+  for (const FEnvironmentObject& EnvironmentObject : EnvironmentObjects)
+  {
+    if (EnvObjectIds.Contains(EnvironmentObject.Id))
+    {
+      Found.Add(EnvironmentObject.Id);
+    }
+  }
+  return Found;
+}
+
+TSet<uint64> UObjectRegister::FindEnvironmentObjectsOf(
+    const TSet<uint64>& EnvObjectIds,
+    const TSet<const AActor*>& Actors) const
+{
+  TSet<uint64> Found;
+  if (EnvObjectIds.Num() == 0)
+  {
+    return Found;
+  }
+  for (const FEnvironmentObject& EnvironmentObject : EnvironmentObjects)
+  {
+    if (EnvObjectIds.Contains(EnvironmentObject.Id) &&
+        EnvironmentObject.Actor.IsValid() &&
+        Actors.Contains(EnvironmentObject.Actor.Get()))
+    {
+      Found.Add(EnvironmentObject.Id);
+    }
+  }
+  return Found;
+}
+
 void UObjectRegister::RegisterEnvironmentObject(
     AActor* Actor,
     FBoundingBox& BoundingBox,
@@ -205,7 +258,7 @@ void UObjectRegister::RegisterTrafficLight(ATrafficLightBase* TrafficLight)
     UBoundingBoxCalculator::GetMeshCompsFromActorBoundingBox(TrafficLight, BB, StaticMeshComps);
     for(const UStaticMeshComponent* Comp : StaticMeshComps)
     {
-      ObjectIdToComp.Emplace(EnvironmentObject.Id, Comp);
+      ObjectIdToComp.AddUnique(EnvironmentObject.Id, Comp);
     }
   }
 }
@@ -269,7 +322,7 @@ void UObjectRegister::RegisterISMComponents(AActor* Actor)
       EnvironmentObject.ObjectLabel = static_cast<crp::CityObjectLabel>(Tag);
       EnvironmentObjects.Emplace(EnvironmentObject);
 
-      ObjectIdToComp.Emplace(InstanceId, Comp);
+      ObjectIdToComp.AddUnique(InstanceId, Comp);
       InstanceCount++;
     }
   }
@@ -375,7 +428,11 @@ void UObjectRegister::EnableEnvironmentObject(
 
 void UObjectRegister::EnableActor(FEnvironmentObject& EnvironmentObject, bool Enable)
 {
-  AActor* Actor = EnvironmentObject.Actor;
+  AActor* Actor = EnvironmentObject.Actor.Get();
+  if (!IsValid(Actor))
+  {
+    return;
+  }
 
   Actor->SetActorHiddenInGame(!Enable);
   Actor->SetActorEnableCollision(Enable);
@@ -391,12 +448,16 @@ void UObjectRegister::EnableTrafficLight(FEnvironmentObject& EnvironmentObject, 
   // i.e.: The light box is composed by various SMComponents, one per light,
   //       we need to enable/disable all of them
 
-  TArray<const UStaticMeshComponent*> ObjectComps;
+  TArray<TWeakObjectPtr<const UStaticMeshComponent>> ObjectComps;
   ObjectIdToComp.MultiFind(EnvironmentObject.Id, ObjectComps);
 
-  for(const UStaticMeshComponent* Comp : ObjectComps)
+  for(const TWeakObjectPtr<const UStaticMeshComponent>& Comp : ObjectComps)
   {
-    UStaticMeshComponent* SMComp = const_cast<UStaticMeshComponent*>(Comp);
+    if (!Comp.IsValid())
+    {
+      continue;
+    }
+    UStaticMeshComponent* SMComp = const_cast<UStaticMeshComponent*>(Comp.Get());
     SMComp->SetHiddenInGame(!Enable);
     ECollisionEnabled::Type CollisionType = Enable ? ECollisionEnabled::Type::QueryAndPhysics : ECollisionEnabled::Type::NoCollision;
     SMComp->SetCollisionEnabled(CollisionType);
@@ -406,11 +467,15 @@ void UObjectRegister::EnableTrafficLight(FEnvironmentObject& EnvironmentObject, 
 
 void UObjectRegister::EnableISMComp(FEnvironmentObject& EnvironmentObject, bool Enable)
 {
-  TArray<const UStaticMeshComponent*> ObjectComps;
+  TArray<TWeakObjectPtr<const UStaticMeshComponent>> ObjectComps;
   TArray<FString> InstanceName;
   FTransform InstanceTransform = EnvironmentObject.Transform;
 
   ObjectIdToComp.MultiFind(EnvironmentObject.Id, ObjectComps);
+  if (ObjectComps.Num() == 0 || !ObjectComps[0].IsValid())
+  {
+    return;
+  }
   EnvironmentObject.Name.ParseIntoArray(InstanceName, TEXT("_"), false);
 
   int Index = FCString::Atoi(*InstanceName[InstanceName.Num() - 1]);
@@ -421,8 +486,12 @@ void UObjectRegister::EnableISMComp(FEnvironmentObject& EnvironmentObject, bool 
     InstanceTransform.SetScale3D(FVector(0.0f));
   }
 
-  UStaticMeshComponent* SMComp = const_cast<UStaticMeshComponent*>(ObjectComps[0]);
+  UStaticMeshComponent* SMComp = const_cast<UStaticMeshComponent*>(ObjectComps[0].Get());
   UInstancedStaticMeshComponent* ISMComp = Cast<UInstancedStaticMeshComponent>(SMComp);
-  bool Result = ISMComp->UpdateInstanceTransform(Index, InstanceTransform, true, true);
+  if (ISMComp == nullptr)
+  {
+    return;
+  }
+  ISMComp->UpdateInstanceTransform(Index, InstanceTransform, true, true);
 
 }

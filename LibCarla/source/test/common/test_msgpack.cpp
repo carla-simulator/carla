@@ -71,6 +71,48 @@ TEST(msgpack, actor) {
   ASSERT_EQ(result.bounding_box, actor.bounding_box);
 }
 
+namespace {
+  // rpc::Actor as it was before spawn_frame was appended.
+  struct ActorWithoutSpawnFrame {
+    carla::rpc::ActorId id = 0u;
+    carla::rpc::ActorId parent_id = 0u;
+    ActorDescription description;
+    carla::geom::BoundingBox bounding_box;
+    std::vector<uint8_t> semantic_tags;
+    std::vector<unsigned char> stream_token;
+    MSGPACK_DEFINE_ARRAY(id, parent_id, description, bounding_box, semantic_tags, stream_token);
+  };
+} // namespace
+
+TEST(msgpack, actor_spawn_frame_is_compatible_both_ways) {
+  namespace c = carla;
+  Actor actor;
+  actor.id = 42u;
+  actor.parent_id = 7u;
+  actor.description.id = "vehicle.tesla.model3";
+  actor.spawn_frame = 123456u;
+
+  auto round_trip = c::MsgPack::UnPack<Actor>(c::MsgPack::Pack(actor));
+  ASSERT_EQ(round_trip.spawn_frame, actor.spawn_frame);
+
+  // A new client reading an old server's reply: no spawn_frame, defaults to 0.
+  ActorWithoutSpawnFrame old_actor;
+  old_actor.id = 42u;
+  old_actor.parent_id = 7u;
+  old_actor.description.id = "vehicle.tesla.model3";
+  auto from_old = c::MsgPack::UnPack<Actor>(c::MsgPack::Pack(old_actor));
+  ASSERT_EQ(from_old.id, old_actor.id);
+  ASSERT_EQ(from_old.parent_id, old_actor.parent_id);
+  ASSERT_EQ(from_old.description.id, old_actor.description.id);
+  ASSERT_EQ(from_old.spawn_frame, 0u);
+
+  // An old client reading a new server's reply ignores the extra field.
+  auto from_new = c::MsgPack::UnPack<ActorWithoutSpawnFrame>(c::MsgPack::Pack(actor));
+  ASSERT_EQ(from_new.id, actor.id);
+  ASSERT_EQ(from_new.parent_id, actor.parent_id);
+  ASSERT_EQ(from_new.description.id, actor.description.id);
+}
+
 TEST(msgpack, variant) {
   using mp = carla::MsgPack;
 

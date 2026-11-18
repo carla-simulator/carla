@@ -96,6 +96,20 @@ TEST(GeoProjection, tm_preserves_relative_offsets) {
   ASSERT_NEAR(back_b.y - back_a.y, b.y - a.y, tolerance_m);
 }
 
+TEST(GeoProjection, tm_north_is_minus_y) {
+  // CARLA locations are left-handed: north is -y and east is +x, as in the
+  // OpenDRIVE inertial frame with y negated. Pins the absolute orientation,
+  // which the round trips above cannot see.
+  const GeoProjection projection = TransverseMercator();
+  const GeoLocation origin = projection.TransformToGeoLocation(Location{0.0f, 0.0f, 0.0f});
+  const GeoLocation north = projection.TransformToGeoLocation(Location{0.0f, -100.0f, 0.0f});
+  const GeoLocation east = projection.TransformToGeoLocation(Location{100.0f, 0.0f, 0.0f});
+  ASSERT_GT(north.latitude, origin.latitude);
+  ASSERT_NEAR(north.longitude, origin.longitude, 1e-9);
+  ASSERT_GT(east.longitude, origin.longitude);
+  ASSERT_NEAR(east.latitude, origin.latitude, 1e-9);
+}
+
 TEST(GeoProjection, tm_altitude_passes_through) {
   // Altitude is carried through the projection unchanged regardless of
   // horizontal position.

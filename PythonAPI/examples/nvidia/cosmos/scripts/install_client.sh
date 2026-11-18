@@ -5,12 +5,13 @@
 
 set -euo pipefail
 
-CARLA_VERSION=0.10.0
 PYTHON_EXECUTABLE=python
 
 COSMOS_ROOT=$(realpath "$(dirname "$(realpath "${BASH_SOURCE[0]}")")/..")
 CARLA_ROOT=$(realpath "$COSMOS_ROOT/../../../..")
 CLIENT_ROOT=$COSMOS_ROOT/client
+# The CARLA version is set only in the top-level CMakeLists.txt; it names the wheel.
+CARLA_VERSION=${CARLA_VERSION:-$(sed -nE 's/^\s*set\s*\(\s*CARLA_VERSION_(MAJOR|MINOR|PATCH)\s+([0-9]+)\s*\)\s*$/\2/p' "$CARLA_ROOT/CMakeLists.txt" | paste -sd.)}
 
 options=$(getopt -o "i:" --long "python:" -n 'install_client.sh' -- "$@")
 eval set -- "$options"

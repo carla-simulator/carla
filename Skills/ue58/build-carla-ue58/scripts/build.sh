@@ -68,7 +68,6 @@ configure)
   ARGS=(--preset "${CARLA_PRESET}")
   [ "${ROS2:-0}" = "1" ]     && ARGS+=(-DENABLE_ROS2=ON)
   [ "${RSS:-0}" = "1" ]      && ARGS+=(-DENABLE_RSS=ON)
-  [ "${OSM2ODR:-0}" = "1" ]  && ARGS+=(-DENABLE_OSM2ODR=ON)
   [ "${PYTORCH:-0}" = "1" ]  && ARGS+=(-DENABLE_PYTORCH=ON)
   [ -n "${DLSS:-}" ]         && ARGS+=(-DCARLA_DLSS_SDK_PATH="${DLSS}")
   # System Qt is often installed but not linkable against the UE toolchain; the

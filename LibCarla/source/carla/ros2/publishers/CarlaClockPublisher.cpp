@@ -20,7 +20,8 @@ struct CarlaClockMsgTraits {
 CarlaClockPublisher::CarlaClockPublisher()
   : BasePublisher("rt/clock"),
     _impl(std::make_shared<PublisherImpl<CarlaClockMsgTraits>>()) {
-  if (!_impl->Init(GetBaseTopicName())) {
+  _ready = _impl->Init(GetBaseTopicName());
+  if (!_ready) {
     log_error("CarlaClockPublisher: failed to initialise writer for rt/clock");
   }
 }

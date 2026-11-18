@@ -10,7 +10,7 @@
 import math
 import argparse
 import copy
-from multiprocessing import Pool
+import signal
 from PIL import Image
 
 import carla
@@ -276,6 +276,12 @@ def write_image(frame, id, buffer):
 def main():
     argparser = argparse.ArgumentParser(description='Show a pedestrian skeleton')
     argparser.add_argument(
+        '--host', metavar='H', default='127.0.0.1',
+        help='IP of the host server (default: 127.0.0.1)')
+    argparser.add_argument(
+        '-p', '--port', metavar='P', default=2000, type=int,
+        help='TCP port to listen to (default: 2000)')
+    argparser.add_argument(
         '--fov', default=60, type=int,
         help='FOV for camera')
     argparser.add_argument(
@@ -294,7 +300,7 @@ def main():
     font = get_font()
     clock = pygame.time.Clock()
 
-    client = carla.Client('localhost', 2000)
+    client = carla.Client(args.host, args.port)
     client.set_timeout(5.0)
 
     world = client.get_world()
@@ -329,8 +335,17 @@ def main():
     image_h = camera_bp.get_attribute("image_size_y").as_int()
     fov = camera_bp.get_attribute("fov").as_float()
 
+    # Ctrl+C only asks the loop to stop, so it never interrupts a blocking
+    # queue.get() in CarlaSyncMode; a second Ctrl+C forces the exit.
+    stop_requested = []
+
+    def request_stop(signum, _frame):
+        stop_requested.append(signum)
+        signal.signal(signal.SIGINT, signal.default_int_handler)
+
+    signal.signal(signal.SIGINT, request_stop)
+
     try:
-        pool = Pool(processes=5)
         # Create a synchronous mode context.
         with CarlaSyncMode(world, camera, fps=30) as sync_mode:
             
@@ -340,7 +355,7 @@ def main():
             blending = 0
             turning = 0
             while True:
-                if should_quit():
+                if should_quit() or stop_requested:
                     return
                 clock.tick()
 
@@ -389,7 +404,6 @@ def main():
                 draw_points_on_buffer(buffer, image_w, image_h, points2d[1:], (255, 0, 0), 4)
 
                 draw_image(display, buffer)
-                # pool.apply_async(write_image, (snapshot.frame, "ped", buffer))
 
                 # display.blit(font.render('%d bones' % len(points), True, (255, 255, 255)), (8, 10))
 
@@ -398,10 +412,11 @@ def main():
     finally:
         # time.sleep(5)
         print('destroying actors.')
+        camera.stop()
+        controller.stop()
         for actor in actor_list:
             actor.destroy()
         pygame.quit()
-        pool.close()
         print('done.')
 
 

@@ -68,6 +68,8 @@ static auto FWorldObserver_GetActorState(const FCarlaActor &View, const FActorRe
       // Get the failure state by checking the rollover one as it is the only one currently implemented.
       // This will have to be expanded once more states are added
       state.vehicle_data.failure_state = Vehicle->GetFailureState();
+      state.vehicle_data.open_doors = Vehicle->GetOpenDoorMask();
+      state.vehicle_data.door_count = static_cast<uint8_t>(FMath::Min(Vehicle->GetDoorCount(), 8));
     }
   }
 
@@ -195,6 +197,8 @@ static auto FWorldObserver_GetDormantActorState(const FCarlaActor &View, const F
       state.vehicle_data.traffic_light_state = TLS::Green;
       state.vehicle_data.speed_limit = ActorData->SpeedLimit;
       state.vehicle_data.has_traffic_light = false;
+      state.vehicle_data.open_doors = ActorData->OpenDoorMask;
+      state.vehicle_data.door_count = ActorData->DoorCount;
   }
   else if (AType::Walker == View.GetActorType())
   {
@@ -266,10 +270,13 @@ static auto FWorldObserver_GetDormantActorState(const FCarlaActor &View, const F
   return state;
 }
 
-static carla::geom::Vector3D FWorldObserver_GetAngularVelocity(const AActor &Actor)
+static carla::geom::Vector3D FWorldObserver_GetAngularVelocity(const FCarlaActor &View, const AActor &Actor)
 {
   const auto RootComponent = Cast<UPrimitiveComponent>(Actor.GetRootComponent());
+  // A Multi-GPU secondary's mirror has the primary's, not motion of its own.
   const FVector AngularVelocity =
+      View.HasMirroredKinematics() ?
+          View.GetActorAngularVelocity() :
       RootComponent != nullptr ?
           RootComponent->GetPhysicsAngularVelocityInDegrees() :
           FVector{0.0f, 0.0f, 0.0f};
@@ -390,7 +397,7 @@ static carla::Buffer FWorldObserver_Serialize(
       // unaffected: the base FCarlaActor::GetActorVelocity() still just
       // returns GetActor()->GetVelocity(), identical to before.
       Velocity = TO_METERS * View->GetActorVelocity();
-      AngularVelocity = FWorldObserver_GetAngularVelocity(*Actor);
+      AngularVelocity = FWorldObserver_GetAngularVelocity(*View, *Actor);
       Acceleration = FWorldObserver_GetAcceleration(*View, Velocity, DeltaSeconds);
       State = FWorldObserver_GetActorState(*View, Registry);
     }

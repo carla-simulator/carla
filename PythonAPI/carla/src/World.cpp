@@ -44,7 +44,8 @@ namespace rpc {
         << ",max_substeps=" << settings.max_substeps
         << ",max_culling_distance=" << settings.max_culling_distance
         << ",deterministic_ragdolls=" << BoolToStr(settings.deterministic_ragdolls)
-        << ",adjust_signs_height_to_ground=" << BoolToStr(settings.adjust_signs_height_to_ground) << ')';
+        << ",adjust_signs_height_to_ground=" << BoolToStr(settings.adjust_signs_height_to_ground)
+        << ",deterministic_collisions=" << BoolToStr(settings.deterministic_collisions) << ')';
     return out;
   }
 
@@ -58,6 +59,48 @@ namespace rpc {
 
 } // namespace rpc
 } // namespace carla
+
+// carla.MapLayer values are bit flags. The enum derives from int, so without
+// these `A | B` gives a plain int, which load_world() and load_map_layer() do
+// not accept. Anything but another MapLayer falls back to int arithmetic.
+static boost::python::object MapLayerNotImplemented() {
+  namespace py = boost::python;
+  return py::object(py::handle<>(py::borrowed(Py_NotImplemented)));
+}
+
+template <typename Op>
+static boost::python::object MapLayerBinary(
+    carla::rpc::MapLayer self,
+    const boost::python::object &other,
+    Op op) {
+  namespace cr = carla::rpc;
+  boost::python::extract<cr::MapLayer> other_layer(other);
+  if (!other_layer.check()) {
+    return MapLayerNotImplemented();
+  }
+  const auto value = op(
+      static_cast<cr::MapLayerType>(self),
+      static_cast<cr::MapLayerType>(other_layer()));
+  return boost::python::object(static_cast<cr::MapLayer>(value));
+}
+
+static boost::python::object MapLayerOr(carla::rpc::MapLayer self, const boost::python::object &other) {
+  return MapLayerBinary(self, other, [](auto a, auto b) { return a | b; });
+}
+
+static boost::python::object MapLayerAnd(carla::rpc::MapLayer self, const boost::python::object &other) {
+  return MapLayerBinary(self, other, [](auto a, auto b) { return a & b; });
+}
+
+static boost::python::object MapLayerXor(carla::rpc::MapLayer self, const boost::python::object &other) {
+  return MapLayerBinary(self, other, [](auto a, auto b) { return a ^ b; });
+}
+
+static carla::rpc::MapLayer MapLayerInvert(carla::rpc::MapLayer self) {
+  namespace cr = carla::rpc;
+  return static_cast<cr::MapLayer>(
+      static_cast<cr::MapLayerType>(cr::MapLayer::All) & ~static_cast<cr::MapLayerType>(self));
+}
 
 static auto WaitForTick(const carla::client::World &world, double seconds) {
   carla::PythonUtil::ReleaseGIL unlock;
@@ -219,7 +262,7 @@ void export_world() {
   ;
 
   class_<cr::EpisodeSettings>("WorldSettings")
-    .def(init<bool, bool, double, bool, double, int, float, bool, float, float, bool, bool>(
+    .def(init<bool, bool, double, bool, double, int, float, bool, float, float, bool, bool, bool>(
         (arg("synchronous_mode")=false,
          arg("no_rendering_mode")=false,
          arg("fixed_delta_seconds")=0.0,
@@ -231,7 +274,8 @@ void export_world() {
          arg("tile_stream_distance")=3000.f,
          arg("actor_active_distance")=2000.f,
          arg("spectator_as_ego")=true,
-         arg("adjust_signs_height_to_ground")=false)))
+         arg("adjust_signs_height_to_ground")=false,
+         arg("deterministic_collisions")=false)))
     .def_readwrite("synchronous_mode", &cr::EpisodeSettings::synchronous_mode)
     .def_readwrite("no_rendering_mode", &cr::EpisodeSettings::no_rendering_mode)
     .def_readwrite("substepping", &cr::EpisodeSettings::substepping)
@@ -251,6 +295,7 @@ void export_world() {
     .def_readwrite("actor_active_distance", &cr::EpisodeSettings::actor_active_distance)
     .def_readwrite("spectator_as_ego", &cr::EpisodeSettings::spectator_as_ego)
     .def_readwrite("adjust_signs_height_to_ground", &cr::EpisodeSettings::adjust_signs_height_to_ground)
+    .def_readwrite("deterministic_collisions", &cr::EpisodeSettings::deterministic_collisions)
     .def("__eq__", &cr::EpisodeSettings::operator==)
     .def("__ne__", &cr::EpisodeSettings::operator!=)
     .def(self_ns::str(self_ns::self))
@@ -310,7 +355,8 @@ void export_world() {
     .def_readonly("label", &cr::LabelledPoint::_label)
   ;
 
-  enum_<cr::MapLayer>("MapLayer")
+  enum_<cr::MapLayer> map_layer("MapLayer");
+  map_layer
     .value("NONE", cr::MapLayer::None)
     .value("Buildings", cr::MapLayer::Buildings)
     .value("Decals", cr::MapLayer::Decals)
@@ -323,6 +369,14 @@ void export_world() {
     .value("Walls", cr::MapLayer::Walls)
     .value("All", cr::MapLayer::All)
   ;
+  // Combining layers gives a MapLayer (see MapLayerBinary).
+  map_layer.attr("__or__") = make_function(&MapLayerOr);
+  map_layer.attr("__ror__") = make_function(&MapLayerOr);
+  map_layer.attr("__and__") = make_function(&MapLayerAnd);
+  map_layer.attr("__rand__") = make_function(&MapLayerAnd);
+  map_layer.attr("__xor__") = make_function(&MapLayerXor);
+  map_layer.attr("__rxor__") = make_function(&MapLayerXor);
+  map_layer.attr("__invert__") = make_function(&MapLayerInvert);
 
   enum_<cr::MaterialParameter>("MaterialParameter")
     .value("Normal", cr::MaterialParameter::Tex_Normal)
@@ -412,10 +466,10 @@ void export_world() {
     .def("get_traffic_light_from_opendrive_id", CONST_CALL_WITHOUT_GIL_1(cc::World, GetTrafficLightFromOpenDRIVE, const carla::road::SignId&), arg("traffic_light_id"))
     .def("get_traffic_lights_from_waypoint", CALL_RETURNING_LIST_2(cc::World, GetTrafficLightsFromWaypoint, const cc::Waypoint&, double), (arg("waypoint"), arg("distance")))
     .def("get_traffic_lights_in_junction", CALL_RETURNING_LIST_1(cc::World, GetTrafficLightsInJunction, carla::road::JuncId), (arg("junction_id")))
-    .def("reset_all_traffic_lights", &cc::World::ResetAllTrafficLights)
+    .def("reset_all_traffic_lights", CALL_WITHOUT_GIL(cc::World, ResetAllTrafficLights))
     .def("spawn_custom_mesh", &SpawnCustomMesh,
         (arg("vertices"), arg("triangles"), arg("material")="grass"))
-    .def("freeze_all_traffic_lights", &cc::World::FreezeAllTrafficLights, (arg("frozen")))
+    .def("freeze_all_traffic_lights", CALL_WITHOUT_GIL_1(cc::World, FreezeAllTrafficLights, bool), (arg("frozen")))
     .def("get_level_bbs", &GetLevelBBs, (arg("bb_type")=cr::CityObjectLabel::Any))
     .def("get_environment_objects", &GetEnvironmentObjects, (arg("object_type")=cr::CityObjectLabel::Any))
     .def("enable_environment_objects", &EnableEnvironmentObjects, (arg("env_objects_ids"), arg("enable")))

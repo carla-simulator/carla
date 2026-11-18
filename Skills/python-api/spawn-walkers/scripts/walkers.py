@@ -5,6 +5,8 @@ Commands:
 
     spawn   --count 30 [--speed-min 1.0 --speed-max 1.8] [--cross-factor 0.1]
             [--seed 42] [--no-wander]            spawn walkers + AI controllers
+            [--hold | --seconds 30]              keep them walking (until Ctrl+C,
+                                                 or for N simulated seconds)
     destroy                                      stop + destroy, in the right order
 
 Each pedestrian is a `walker.pedestrian.*` actor paired with a
@@ -167,8 +169,12 @@ def _cleanup(client, controller_ids, walker_ids, keep):
     print(f"removed {gone} pedestrian actor(s) this run spawned", flush=True)
 
 
-def _hold(world) -> None:
+def _hold(world, seconds: float = 0.0) -> None:
     """Stay alive pumping ticks until Ctrl+C, so the walkers actually walk.
+
+    With `seconds` > 0 it also returns by itself once that much SIMULATED time
+    has passed, read off the world clock as the other skills' waits are, so a
+    scripted run needs no Ctrl+C.
 
     Verified on 0.10.0, async mode, identical spawn either way:
       idle loop time.sleep(30)      -> 0/10 walkers move, 0.00 m in 6 s
@@ -181,10 +187,16 @@ def _hold(world) -> None:
     spot. In sync mode world.tick() pumps it just the same.
     """
     print("holding the crowd (pumping ticks — walkers only move while a client "
-          "does); Ctrl+C to release", flush=True)
+          "does); " + (f"releasing after {seconds:g}s of simulated time, or "
+                       if seconds > 0 else "") + "Ctrl+C to release", flush=True)
+    start = world.get_snapshot().timestamp.elapsed_seconds
     try:
         while True:
             _advance(world)
+            if seconds > 0 and \
+                    world.get_snapshot().timestamp.elapsed_seconds - start >= seconds:
+                print(f"released after {seconds:g}s of simulated time", flush=True)
+                return
     except KeyboardInterrupt:
         print("\nreleased: the walkers will stop advancing")
 
@@ -241,6 +253,9 @@ def _ensure_walking(world, controllers, walker_ids, args):
 
 
 def cmd_spawn(args):
+    # --seconds N is a hold that ends by itself, with the same cleanup.
+    if args.seconds > 0:
+        args.hold = True
     client = _client()
     world = _fresh(client.get_world())
     previous = _claim_clock(world, args.delta, allow_sync=not args.no_sync)
@@ -318,7 +333,7 @@ def cmd_spawn(args):
               f"(nav-point collisions / spawn failures — normal at high counts)")
     try:
         if args.hold and not args.no_wander:
-            _hold(world)
+            _hold(world, args.seconds)
         elif not args.no_wander and previous is not None:
             print("  note: this client owns the clock and is about to exit, so "
                   "nothing will tick — use --hold, or let another client (a "
@@ -460,6 +475,9 @@ def main() -> None:
                          "By default a held run destroys what it spawned")
     ps.add_argument("--hold", action="store_true",
                     help="stay alive pumping ticks so the crowd keeps walking (Ctrl+C to stop)")
+    ps.add_argument("--seconds", type=float, default=0.0,
+                    help="hold for this many seconds of SIMULATED time, then "
+                         "clean up and exit (implies --hold; 0 = until Ctrl+C)")
     ps.set_defaults(func=cmd_spawn)
 
     sub.add_parser("destroy", help="stop + destroy controllers then walkers").set_defaults(func=cmd_destroy)

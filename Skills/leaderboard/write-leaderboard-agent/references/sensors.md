@@ -128,7 +128,7 @@ accumulates across a 90-route run.
 | File | What it is |
 |---|---|
 | `leaderboard/autoagents/dummy_agent.py` | minimal template, zero control |
-| `leaderboard/autoagents/npc_agent.py` | Traffic-Manager autopilot following the route — the "setup works" baseline |
+| `leaderboard/autoagents/npc_agent.py` | a `BasicAgent` at 30 km/h following the route (not the Traffic Manager); the "setup works" baseline |
 | `leaderboard/autoagents/human_agent.py` | pygame window, keyboard, optional side mirrors |
 | `leaderboard/autoagents/log_agent.py` | replays a recorded control log (master only) |
 | `leaderboard/autoagents/ros1_agent.py`, `ros2_agent.py` | thin subclasses of `ROSBaseAgent` |

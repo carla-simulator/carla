@@ -154,14 +154,13 @@ class PackTestBase(unittest.TestCase):
         return out_dir / PACK, tar_path, cooked
 
     def fake_server(self, release: "str | None" = RELEASE):
-        """<Package>/Linux/CarlaUnreal layout with BaseRelease at both stamp locations."""
-        server = self.tmp / "Package" / "Linux"
+        """<Package>/CarlaUnreal layout with BaseRelease at both stamp locations."""
+        server = self.tmp / "Package"
         write(server / "CarlaUnreal.sh", "#!/bin/sh\n")
+        (server / "CarlaUnreal" / "Binaries" / "Linux").mkdir(parents=True, exist_ok=True)
         if release is not None:
             write(server / "CarlaUnreal" / "BaseRelease", release + "\n")
-            write(server.parent / "BaseRelease", release + "\n")
-        else:
-            (server / "CarlaUnreal").mkdir(parents=True, exist_ok=True)
+            write(server / "BaseRelease", release + "\n")
         return server
 
 
@@ -214,6 +213,12 @@ class TestInitAdd(PackTestBase):
         self.assertEqual(rc, 1)
         self.assertIn("already exists", err)
 
+    def test_init_reports_the_pack_version_flag(self):
+        rc, _, err = run("init", PACK, "--project", self.project, "--pack-version", "x")
+        self.assertEqual(rc, 1)
+        self.assertIn("invalid --pack-version 'x'", err)
+        self.assertFalse(self.pack_dir.exists())
+
     def test_add_map_and_catalogs_updates_layout_and_manifest(self):
         err = self.init_and_add()
         c = self.pack_dir / "Content"
@@ -244,6 +249,105 @@ class TestInitAdd(PackTestBase):
         self.assertEqual(rc, 0, err)
         m = json.loads((self.pack_dir / "carla-pack.json").read_text())
         self.assertEqual(len(m["maps"]), 1)
+        self.assertEqual(m["maps"][0]["nav"], "Maps/Nav/TestTown.bin")
+
+    def in_pack_map_with_sidecars(self):
+        write(self.xodr.with_name("map_logic.json"), '{"phases": [1]}')
+        tm = write(self.tmp / "authored" / "TM" / "TestTown.bin", b"tm")
+        self.init_and_add()
+        umap = self.pack_dir / "Content" / "Maps" / "TestTown.umap"
+        rc, _, err = run("add", PACK, "--project", self.project, "--map", umap,
+                         "--xodr", self.xodr, "--nav", self.nav, "--tm", tm)
+        self.assertEqual(rc, 0, err)
+        manifest = json.loads((self.pack_dir / "carla-pack.json").read_text())
+        return umap, manifest["maps"][0], tm
+
+    def test_readd_in_pack_map_preserves_omitted_sidecars(self):
+        umap, original, tm = self.in_pack_map_with_sidecars()
+        content = self.pack_dir / "Content"
+        files = {p.relative_to(content): p.read_bytes() for p in content.rglob("*") if p.is_file()}
+        # The authored sources need not remain available after their first add.
+        for source in (self.xodr, self.xodr.with_name("map_logic.json"), self.nav, tm):
+            source.unlink()
+        for _ in range(2):
+            rc, _, err = run("add", PACK, "--project", self.project, "--map", umap)
+            self.assertEqual(rc, 0, err)
+            self.assertNotIn("has no OpenDRIVE", err)
+            manifest = json.loads((self.pack_dir / "carla-pack.json").read_text())
+            self.assertEqual(manifest["maps"], [original])
+            self.assertEqual({p.relative_to(content): p.read_bytes()
+                              for p in content.rglob("*") if p.is_file()}, files)
+
+    def test_readd_in_pack_map_replaces_only_selected_sidecars(self):
+        umap, original, _ = self.in_pack_map_with_sidecars()
+        content = self.pack_dir / "Content"
+        for flag, source, destination in (
+                ("--nav", self.tmp / "replacement-nav.bin", content / original["nav"]),
+                ("--tm", self.tmp / "replacement-tm" / "TestTown.bin",
+                 content / original["tm"] / "TestTown.bin")):
+            with self.subTest(flag=flag):
+                write(source, b"replacement")
+                rc, _, err = run("add", PACK, "--project", self.project, "--map", umap, flag, source)
+                self.assertEqual(rc, 0, err)
+                self.assertNotIn("has no OpenDRIVE", err)
+                manifest = json.loads((self.pack_dir / "carla-pack.json").read_text())
+                self.assertEqual(manifest["maps"], [original])
+                self.assertEqual(destination.read_bytes(), b"replacement")
+                self.assertEqual((content / original["xodr"]).read_bytes(), b"<OpenDRIVE/>")
+                self.assertEqual((content / original["map_logic"]).read_text(), '{"phases": [1]}')
+
+    def test_no_sidecar_flags_unregister_and_delete_the_files(self):
+        umap, original, _ = self.in_pack_map_with_sidecars()
+        content = self.pack_dir / "Content"
+        for key in ("xodr", "nav", "tm"):
+            self.assertTrue((content / original[key]).exists())
+
+        rc, _, err = run("add", PACK, "--project", self.project, "--map", umap,
+                         "--no-xodr", "--no-nav", "--no-tm")
+        self.assertEqual(rc, 0, err)
+        entry = json.loads((self.pack_dir / "carla-pack.json").read_text())["maps"][0]
+        self.assertEqual(entry["xodr"], "")
+        self.assertNotIn("map_logic", entry)
+        self.assertNotIn("nav", entry)
+        self.assertNotIn("tm", entry)
+        for key in ("xodr", "map_logic", "nav", "tm"):
+            self.assertFalse((content / original[key]).exists(), key)
+
+    def test_a_sidecar_flag_and_its_negation_are_mutually_exclusive(self):
+        umap, _, _ = self.in_pack_map_with_sidecars()
+
+        rc, _, err = run("add", PACK, "--project", self.project, "--map", umap,
+                         "--xodr", self.xodr, "--no-xodr")
+        self.assertNotEqual(rc, 0)
+        self.assertIn("--xodr and --no-xodr are mutually exclusive", err)
+
+    def test_readd_in_pack_map_replaces_xodr_and_removes_obsolete_logic(self):
+        umap, original, _ = self.in_pack_map_with_sidecars()
+        content = self.pack_dir / "Content"
+        replacement = write(self.tmp / "replacement" / "TestTown.xodr", "<updated/>")
+        logic = write(replacement.with_name("map_logic.json"), '{"phases": [2]}')
+        rc, _, err = run("add", PACK, "--project", self.project, "--map", umap,
+                         "--xodr", replacement)
+        self.assertEqual(rc, 0, err)
+        self.assertEqual((content / original["xodr"]).read_text(), "<updated/>")
+        self.assertEqual((content / original["map_logic"]).read_bytes(), logic.read_bytes())
+        # An explicitly supplied XODR without a phase file replaces both the old
+        # road network and its phases, even though the other flags are omitted.
+        bare = write(self.tmp / "without-logic" / "TestTown.xodr", "<bare/>")
+        rc, _, err = run("add", PACK, "--project", self.project, "--map", umap, "--xodr", bare)
+        self.assertEqual(rc, 0, err)
+        manifest = json.loads((self.pack_dir / "carla-pack.json").read_text())
+        expected = dict(original, xodr="Maps/OpenDrive/TestTown.xodr")
+        del expected["map_logic"]
+        self.assertEqual(manifest["maps"], [expected])
+        self.assertFalse((content / original["xodr"]).exists())
+        self.assertFalse((content / original["map_logic"]).exists())
+        self.assertEqual((content / expected["xodr"]).read_text(), "<bare/>")
+        self.assertEqual((content / expected["nav"]).read_bytes(), b"nav")
+        self.assertEqual((content / expected["tm"] / "TestTown.bin").read_bytes(), b"tm")
+        rc, _, err = run("add", PACK, "--project", self.project, "--map", umap)
+        self.assertEqual(rc, 0, err)
+        self.assertEqual(json.loads((self.pack_dir / "carla-pack.json").read_text())["maps"], [expected])
 
     FAKE_EDITOR = """#!/bin/sh
 # stand-in for UnrealEditor-Cmd: 'Save As' the map into the pack (external actors too),
@@ -494,6 +598,35 @@ echo '{"ok": true, "load": true, "save": true, "seconds": 1.0, "error": ""}' > "
         rc, out, err = run("build", "Towns2", "--project", self.project, "--engine", self.engine, "--dry-run")
         self.assertEqual(rc, 1)
         self.assertIn("several base releases found", err)
+
+    def test_create_reads_maps_from_a_json_file(self):
+        for t in ("Town01_Opt", "Town12", "Town13"):
+            self.existing_town(t)
+        build_dir = self.tmp / "Build" / "Release" / "Package"
+        shutil.copy(str(self.base_tar), str(write(build_dir / self.base_tar.name, b"")))
+        as_object = write(self.tmp / "maps.json", json.dumps({"maps": ["Town01_Opt", "Town12"]}))
+        rc, out, err = run("create", "Towns2", "Town13", "Town12", "--maps-file", as_object,
+                           "--project", self.project, "--engine", self.engine, "--dry-run")
+        self.assertEqual(rc, 0, err)
+        m = json.loads((self.root / "Towns2" / "carla-pack.json").read_text())
+        self.assertEqual([x["name"] for x in m["maps"]], ["Town13", "Town12", "Town01_Opt"])   # no duplicates
+        as_list = write(self.tmp / "list.json", json.dumps(["Town13"]))
+        rc, out, err = run("create", "Towns1", "--maps-file", as_list,
+                           "--project", self.project, "--engine", self.engine, "--dry-run")
+        self.assertEqual(rc, 0, err)
+        self.assertEqual([x["name"] for x in json.loads((self.root / "Towns1" / "carla-pack.json")
+                                                        .read_text())["maps"]], ["Town13"])
+        # bad files and an empty list fail before the pack is created
+        for name, content, message in (("bad.json", "{", "not valid JSON"),
+                                       ("shape.json", json.dumps({"towns": ["Town13"]}), "expected a JSON list"),
+                                       ("empty.json", "[]", "no maps given"),
+                                       ("missing.json", None, "cannot read")):
+            path = self.tmp / name if content is None else write(self.tmp / name, content)
+            rc, _, err = run("create", "Towns3", "--maps-file", path, "--project", self.project,
+                             "--engine", self.engine, "--dry-run")
+            self.assertEqual(rc, 1, name)
+            self.assertIn(message, err)
+        self.assertFalse((self.root / "Towns3").exists())
 
     def test_flat_town_takes_only_its_own_sidecars(self):
         """Town01_Opt lives flat in Maps/ next to the shared Maps/TM, Maps/Nav, Maps/OpenDrive folders:
@@ -892,6 +1025,14 @@ class TestBuild(PackTestBase):
         os.chmod(str(self.engine / "Engine" / "Build" / "BatchFiles" / "RunUAT.sh"), 0o755)
         return record
 
+    def fake_unrealpak(self):
+        """An UnrealPak whose -List shows only pack-owned entries (nothing to strip)."""
+        exe = cp.unrealpak_path(self.engine)
+        write(exe, '#!/bin/sh\necho \'LogPakFile: Display: Listing x.pak with mount point "../../../"\'\n'
+                   'echo \'LogPakFile: Display: "CarlaUnreal/Plugins/Packs/TestPack/AssetRegistry.bin" offset: 0, '
+                   'size: 1 bytes, sha1: %s, compression: None.\'\n' % ("0" * 40))
+        os.chmod(str(exe), 0o755)
+
     def test_build_flips_descriptor_for_the_cook_and_restores_it(self):
         self.init_and_add()
         uplugin = self.pack_dir / "TestPack.uplugin"
@@ -900,6 +1041,7 @@ class TestBuild(PackTestBase):
         staged = self.tmp / "Staged"
         self.fake_staged(staged)
         record = self.fake_uat(0)
+        self.fake_unrealpak()
         rc, out, err = run("build", PACK, "--project", self.project, "--base", self.base_tar,
                            "--engine", self.engine, "--staged", staged, "--out", self.tmp / "out")
         self.assertEqual(rc, 0, err)
@@ -999,6 +1141,49 @@ class TestBuild(PackTestBase):
         self.assertIn("no staged output", err)
 
 
+
+class TestPakStrip(unittest.TestCase):
+    LISTING = (
+        'LogPakFile: Display: Listing AdditionalMapsCarlaUnreal-Linux.pak with mount point "../../../"\n'
+        '[t][  0]LogPakFile: Display: "CarlaUnreal/Content/Carla/Maps/Nav/Town01.bin" offset: 0, size: 3 bytes, '
+        'sha1: 6C977BC6BB06F536445687C20403F7D3D6FCA350, compression: None.\n'
+        '[t][  0]LogPakFile: Display: "CarlaUnreal/Plugins/Packs/AdditionalMaps/AssetRegistry.bin" offset: 56, '
+        'size: 4 bytes, sha1: 0000000000000000000000000000000000000000, compression: None.\n'
+        '[t][  0]LogPakFile: Display: "ue.projectstore" offset: 113, size: 2 bytes, '
+        'sha1: 0000000000000000000000000000000000000000, compression: None.\n')
+
+    def test_parse_listing(self):
+        mount, entries = cp.parse_pak_listing(self.LISTING)
+        self.assertEqual(mount, "../../../")
+        self.assertEqual([e["path"] for e in entries],
+                         ["CarlaUnreal/Content/Carla/Maps/Nav/Town01.bin",
+                          "CarlaUnreal/Plugins/Packs/AdditionalMaps/AssetRegistry.bin", "ue.projectstore"])
+        self.assertEqual(entries[1]["offset"], 56)
+        self.assertEqual(entries[0]["sha1"], "6c977bc6bb06f536445687c20403f7d3d6fca350")
+        with self.assertRaises(cp.PackError):
+            cp.parse_pak_listing("no mount point here")
+
+    def test_only_base_content_is_selected(self):
+        _, entries = cp.parse_pak_listing(self.LISTING)
+        self.assertEqual([e["path"] for e in cp.base_content_entries(entries, "CarlaUnreal")],
+                         ["CarlaUnreal/Content/Carla/Maps/Nav/Town01.bin"])
+        self.assertEqual(cp.base_content_entries(entries, "OtherProject"), [])
+
+    def test_read_entry_finds_header_and_checks_sha1(self):
+        import hashlib
+        payload = b"pack-owned bytes"
+        blob = b"H" * 53 + payload + b"tail"
+        entry = {"path": "a", "offset": 0, "size": len(payload),
+                 "sha1": hashlib.sha1(payload).hexdigest(), "compression": "None"}
+        with tempfile.TemporaryFile() as f:
+            f.write(blob)
+            data, header = cp.read_pak_entry(f, entry)
+            self.assertEqual((data, header), (payload, 53))
+            with self.assertRaises(cp.PackError):
+                cp.read_pak_entry(f, dict(entry, sha1="0" * 40))
+            with self.assertRaises(cp.PackError):
+                cp.read_pak_entry(f, dict(entry, compression="Oodle"))
+
 class TestInspectVerifyInstall(PackTestBase):
     def test_round_trip(self):
         self.init_and_add()
@@ -1039,19 +1224,22 @@ class TestInspectVerifyInstall(PackTestBase):
         self.assertTrue((installed / "Content" / "Config" / "Vehicles.json").is_file())
         self.assertEqual(run("verify", installed)[0], 0)
         self.assertIn("mount_content_pack", out)
+        for step in ("reading ", "extracting ", "verifying checksums of {} files".format(len(manifest["files"])),
+                     "[1/", "installed "):
+            self.assertIn(step, out)
         self.assertEqual([p.name for p in (server / "CarlaUnreal" / "Packs").iterdir()], [PACK])
 
         rc, _, err = run("install", tar_path, "--server", server)
         self.assertEqual(rc, 1)
         self.assertIn("already installed", err)
         self.assertEqual(run("install", tar_path, "--server", server, "--force")[0], 0)
-        # --server accepts <Package>, <Package>/Linux and <Package>/Linux/CarlaUnreal
-        for s_dir in (server.parent, server, server / "CarlaUnreal"):
+        # --server accepts <Package> and <Package>/CarlaUnreal
+        for s_dir in (server, server / "CarlaUnreal"):
             rc, out, err = run("inspect", tar_path, "--server", s_dir, "--json")
             self.assertEqual(rc, 0, err)
             self.assertEqual(json.loads(out)["server"]["path"], str(server / "CarlaUnreal"))
         shutil.rmtree(str(installed))
-        self.assertEqual(run("install", tar_path, "--server", server.parent)[0], 0)
+        self.assertEqual(run("install", tar_path, "--server", server)[0], 0)
         self.assertTrue((installed / "carla-pack.json").is_file())
 
     def test_base_release_mismatch(self):

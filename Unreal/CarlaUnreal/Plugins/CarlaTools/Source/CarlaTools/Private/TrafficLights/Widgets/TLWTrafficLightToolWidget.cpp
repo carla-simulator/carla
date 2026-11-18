@@ -139,6 +139,7 @@ void STrafficLightToolWidget::Rebuild()
 	}
 
 	UpdatePreviewActor();
+	PreviewViewport->ResetFrameIfBoundsChanged();
 	PreviewViewport->Reload();
 
 	RefreshPoleList();
@@ -1253,7 +1254,7 @@ TSharedRef<SWidget> STrafficLightToolWidget::BuildPoleSection()
         .Padding(10)
         [
             SNew(SButton)
-            .Text(FText::FromString("Import JSON…"))
+            .Text(FText::FromString("Import JSON..."))
             .OnClicked(this, &STrafficLightToolWidget::OnImportJSONClicked)
         ]
     // Export JSON Button
@@ -1262,7 +1263,7 @@ TSharedRef<SWidget> STrafficLightToolWidget::BuildPoleSection()
 	.Padding(10)
 	[
 		SNew(SButton)
-		.Text(FText::FromString("Export JSON…"))
+		.Text(FText::FromString("Export JSON..."))
 		.OnClicked(this, &STrafficLightToolWidget::OnExportJSONClicked)
 	]
     // — Modify Button — (only visible when actor is selected)

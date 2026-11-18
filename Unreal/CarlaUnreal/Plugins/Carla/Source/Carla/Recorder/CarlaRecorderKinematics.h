@@ -32,6 +32,12 @@ class CarlaRecorderActorsKinematics
 
   void Write(std::ostream &OutFile);
 
+  void Read(std::istream &InFile);
+
+  const std::vector<CarlaRecorderKinematics>& GetKinematics() const;
+
+  bool IsEmpty() const;
+
 private:
 
   std::vector<CarlaRecorderKinematics> Kinematics;

@@ -18,6 +18,49 @@
 #undef LIBCARLA_SENSOR_REGISTRY_WITH_SENSOR_INCLUDES
 #include <util/ue-header-guard-end.h>
 
+#include <carla/ros2/ROS2SensorTypes.h>
+
+// The ROS 2 interface receives a camera's type as its SensorRegistry position
+// and reads it as carla::ros2::ESensors: keep the two in lock-step.
+#define CARLA_CHECK_ROS2_SENSOR_TYPE(SensorT, Enum) \
+  static_assert(carla::sensor::SensorRegistry::get<SensorT *>::index == carla::ros2::ESensors::Enum, \
+      "carla::ros2::ESensors::" #Enum " does not match the SensorRegistry position of " #SensorT)
+CARLA_CHECK_ROS2_SENSOR_TYPE(ACollisionSensor, CollisionSensor);
+CARLA_CHECK_ROS2_SENSOR_TYPE(ADepthCamera, DepthCamera);
+CARLA_CHECK_ROS2_SENSOR_TYPE(ANormalsCamera, NormalsCamera);
+CARLA_CHECK_ROS2_SENSOR_TYPE(ADVSCamera, DVSCamera);
+CARLA_CHECK_ROS2_SENSOR_TYPE(AGnssSensor, GnssSensor);
+CARLA_CHECK_ROS2_SENSOR_TYPE(AInertialMeasurementUnit, InertialMeasurementUnit);
+CARLA_CHECK_ROS2_SENSOR_TYPE(ALaneInvasionSensor, LaneInvasionSensor);
+CARLA_CHECK_ROS2_SENSOR_TYPE(AObstacleDetectionSensor, ObstacleDetectionSensor);
+CARLA_CHECK_ROS2_SENSOR_TYPE(AOpticalFlowCamera, OpticalFlowCamera);
+CARLA_CHECK_ROS2_SENSOR_TYPE(ARadar, Radar);
+CARLA_CHECK_ROS2_SENSOR_TYPE(ARayCastSemanticLidar, RayCastSemanticLidar);
+CARLA_CHECK_ROS2_SENSOR_TYPE(ARayCastLidar, RayCastLidar);
+CARLA_CHECK_ROS2_SENSOR_TYPE(ARssSensor, RssSensor);
+CARLA_CHECK_ROS2_SENSOR_TYPE(ASceneCaptureCamera, SceneCaptureCamera);
+CARLA_CHECK_ROS2_SENSOR_TYPE(ASceneCaptureCamera_RayTracedLens, SceneCaptureCamera_RayTracedLens);
+CARLA_CHECK_ROS2_SENSOR_TYPE(ASemanticSegmentationCamera, SemanticSegmentationCamera);
+CARLA_CHECK_ROS2_SENSOR_TYPE(AInstanceSegmentationCamera, InstanceSegmentationCamera);
+CARLA_CHECK_ROS2_SENSOR_TYPE(FWorldObserver, WorldObserver);
+CARLA_CHECK_ROS2_SENSOR_TYPE(ASceneCaptureCamera_WideAngleLens, SceneCaptureCamera_WideAngleLens);
+CARLA_CHECK_ROS2_SENSOR_TYPE(ADepthCamera_WideAngleLens, DepthCamera_WideAngleLens);
+CARLA_CHECK_ROS2_SENSOR_TYPE(AInstanceSegmentationCamera_WideAngleLens, InstanceSegmentationCamera_WideAngleLens);
+CARLA_CHECK_ROS2_SENSOR_TYPE(ASemanticSegmentationCamera_WideAngleLens, SemanticSegmentationCamera_WideAngleLens);
+CARLA_CHECK_ROS2_SENSOR_TYPE(FCameraGBufferUint8, CameraGBufferUint8);
+CARLA_CHECK_ROS2_SENSOR_TYPE(FCameraGBufferFloat, CameraGBufferFloat);
+CARLA_CHECK_ROS2_SENSOR_TYPE(AHSSLidar, HSSLidar);
+CARLA_CHECK_ROS2_SENSOR_TYPE(AV2XSensor, V2XSensor);
+CARLA_CHECK_ROS2_SENSOR_TYPE(ACustomV2XSensor, CustomV2XSensor);
+CARLA_CHECK_ROS2_SENSOR_TYPE(AVehicleStatusSensor, VehicleStatusSensor);
+CARLA_CHECK_ROS2_SENSOR_TYPE(AAutowareGnssSensor, AutowareGnssSensor);
+CARLA_CHECK_ROS2_SENSOR_TYPE(ASceneCaptureCamera_RayTracedLensDistance, SceneCaptureCamera_RayTracedLensDistance);
+CARLA_CHECK_ROS2_SENSOR_TYPE(ASceneCaptureCamera_RayTracedLensInstance, SceneCaptureCamera_RayTracedLensInstance);
+static_assert(carla::sensor::SensorRegistry::size() == carla::ros2::ESensors::SensorTypeCount,
+    "carla::ros2::ESensors needs one entry per SensorRegistry item");
+#undef CARLA_CHECK_ROS2_SENSOR_TYPE
+
+
 #include <type_traits>
 
 // =============================================================================

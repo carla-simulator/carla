@@ -238,7 +238,7 @@ class Capture:
 
     # ------------------------------------------------------------------ public API
     def run(self, out_dir: str | Path, clip_id: str, *, seed: int | None = None,
-            recorder: RecorderInfo | None = None, carla_version: str = "0.10.0",
+            recorder: RecorderInfo | None = None, carla_version: str = "unknown",
             progress: Callable[[int, int], None] | None = None) -> Clip:
         """Capture ``self.frames`` frames and write the clip to ``out_dir/clip_id``."""
         clip_dir = Path(out_dir) / clip_id

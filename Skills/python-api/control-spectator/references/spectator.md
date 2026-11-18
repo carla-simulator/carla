@@ -18,10 +18,12 @@ The spectator already exists, so it cannot be re-spawned attached.
 
 Two real options:
 
-1. **Follow** (this skill): re-set the spectator's transform every world tick via
-   `world.on_tick(cb)` so it tracks the target. `remove_on_tick(id)` stops it. In
-   async mode the server ticks continuously (smooth); in sync mode it updates only
-   when a client ticks the world.
+1. **Follow** (this skill): re-set the spectator's transform once per world
+   frame, from a `wait_for_tick()` loop, so it tracks the target. A
+   `world.on_tick(cb)` callback does the same, but its thread made the script
+   exit with rc=127 after it had finished, so the loop is used instead. In
+   async mode the server ticks continuously (smooth); in sync mode it updates
+   only when a client ticks the world.
 2. **Attached camera sensor** (create-sensor skill): spawn a `sensor.camera.rgb`
    with `attach_to=actor, attachment_type=SpringArm` for a smooth chase camera you
    can also record. That is a real attachment — but a sensor, not the spectator.

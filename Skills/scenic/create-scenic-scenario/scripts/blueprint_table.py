@@ -27,7 +27,7 @@ from pathlib import Path
 def config_dir() -> Path:
     """Content/Carla/Config, from CARLA_ROOT or the usual sibling layouts."""
     cands = []
-    for var in ("CARLA_ROOT", "CARLA_UE5_ROOT", "CARLA_TARGET", "CARLA_PACKAGE_ROOT", "CARLA_UE4_ROOT"):
+    for var in ("CARLA_ROOT", "CARLA_UE58_ROOT", "CARLA_UE5_ROOT", "CARLA_TARGET", "CARLA_PACKAGE_ROOT", "CARLA_UE4_ROOT"):
         v = os.environ.get(var)
         if v:
             cands += [Path(v) / "Unreal/CarlaUnreal/Content/Carla/Config",

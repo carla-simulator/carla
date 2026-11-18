@@ -41,9 +41,12 @@ public:
 
 	void Reload();
 	void ResetFrame();
+	/** Frame the preview again when its bounds changed since the last framing. */
+	void ResetFrameIfBoundsChanged();
 
 private:
 	ATrafficLightActor* PreviewTrafficLight{nullptr};
+	FBox LastFramedBounds{ForceInit};
 
 	TUniquePtr<FPreviewScene> PreviewScene;
 	TSharedPtr<FEditorViewportClient> ViewportClient;

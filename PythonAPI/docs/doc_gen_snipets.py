@@ -54,14 +54,14 @@ class Documentation:
 
     def __init__(self, path, images_path):
         self._snipets_path = os.path.join(os.path.dirname(path), 'snipets')
-        self._files = [f for f in os.listdir(self._snipets_path) if f.endswith('.py')]
+        self._files = sorted(f for f in os.listdir(self._snipets_path) if f.endswith('.py'))
         self._snipets = list()
         for snipet_file in self._files:
             current_snipet_path = os.path.join(self._snipets_path, snipet_file)
             self._snipets.append(current_snipet_path)
         # Gather snipet images
         self._snipets_images_path = images_path
-        self._files_images = [f for f in os.listdir(self._snipets_images_path)]
+        self._files_images = sorted(os.listdir(self._snipets_images_path))
         self._snipets_images = list()
         for snipet_image in self._files_images:
             current_image_path = os.path.join(self._snipets_images_path, snipet_image)
@@ -116,7 +116,9 @@ class Documentation:
             for snipet_path_to_image in self._snipets_images:
                 snipet_image_name = os.path.splitext(os.path.basename(snipet_path_to_image))[0]
                 if snipet_name == snipet_image_name:
-                    md.textn("\n<img src=\"/img/snipets_images/"+os.path.basename(snipet_path_to_image)+"\">\n")
+                    # Relative to the page, not "/img/...": the site is served
+                    # under a version prefix, where an absolute path 404s.
+                    md.textn("\n<img src=\"../img/snipets_images/"+os.path.basename(snipet_path_to_image)+"\">\n")
             md.textn("</div>\n")
         # Closing div
         md.textn("\n</div>\n")

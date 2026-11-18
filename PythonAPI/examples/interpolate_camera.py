@@ -140,7 +140,7 @@ def main():
         help='Activates synchronous mode.')
     args = argparser.parse_args()
 
-    client = carla.Client('localhost', 2000)
+    client = carla.Client(args.host, args.port)
     world = client.get_world()
 
     try:

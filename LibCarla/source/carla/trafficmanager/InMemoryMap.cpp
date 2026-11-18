@@ -19,7 +19,16 @@ namespace traffic_manager {
   using RawNodeList = std::vector<WaypointPtr>;
 
   InMemoryMap::InMemoryMap(WorldMap world_map) : _world_map(world_map) {}
-  InMemoryMap::~InMemoryMap() {}
+  InMemoryMap::~InMemoryMap() {
+    // The waypoints link to each other with shared pointers: without breaking
+    // the cycles, the whole dense topology would outlive the map, leaking it on
+    // every Traffic Manager shut down and every map change.
+    for (auto &simple_waypoint : dense_topology) {
+      if (simple_waypoint != nullptr) {
+        simple_waypoint->ClearLinks();
+      }
+    }
+  }
 
   SegmentId InMemoryMap::GetSegmentId(const WaypointPtr &wp) const {
     return std::make_tuple(wp->GetRoadId(), wp->GetLaneId(), wp->GetSectionId());

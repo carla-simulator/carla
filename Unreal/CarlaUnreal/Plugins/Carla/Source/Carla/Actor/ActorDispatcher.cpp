@@ -9,6 +9,7 @@
 #include "Carla/Actor/ActorBlueprintFunctionLibrary.h"
 #include "Carla/Actor/ActorROS2Handler.h"
 #include "Carla/Actor/CarlaActorFactory.h"
+#include "Carla/Game/CarlaEpisode.h"
 #include "Carla/Game/Tagger.h"
 #include "Carla/Vehicle/VehicleControl.h"
 
@@ -354,6 +355,14 @@ void UActorDispatcher::OnActorDestroyed(AActor *Actor)
 
   if (CarlaActor && CarlaActor->IsActive())
   {
+    // An actor can also go without the episode destroying it (a life span
+    // that ran out, falling out of the world): Multi-GPU secondaries mirror it
+    // and must drop it too. FFrameData ignores a second report of the same id.
+    UCarlaEpisode *Episode = Cast<UCarlaEpisode>(GetOuter());
+    if (Episode && Episode->bIsPrimaryServer)
+    {
+      Episode->GetFrameData().AddEvent(CarlaRecorderEventDel{CarlaActor->GetActorId()});
+    }
     Registry.Deregister(CarlaActor->GetActorId());
   }
 }

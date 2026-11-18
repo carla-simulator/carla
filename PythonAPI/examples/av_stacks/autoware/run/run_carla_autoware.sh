@@ -343,6 +343,12 @@ pause() {   # give a freshly started component time to come up
 }
 
 # ---------------------------------------------------------------- teardown --
+# A pidfile entry is a process group (start_proc runs each command under
+# setsid). The group is alive while any member is: the CARLA server's leader
+# is the CarlaUnreal.sh wrapper, which exits on SIGTERM while the engine
+# binary in the same group keeps running and holds the RPC port.
+group_alive() { kill -0 -- "-$1" 2>/dev/null || kill -0 "$1" 2>/dev/null; }
+
 teardown() {
     local status=$?
     trap - INT TERM EXIT
@@ -354,7 +360,7 @@ teardown() {
         local idx
         for ((idx=${#lines[@]}-1; idx>=0; idx--)); do
             name="${lines[$idx]%% *}"; pid="${lines[$idx]##* }"
-            if kill -0 "$pid" 2>/dev/null; then
+            if group_alive "$pid"; then
                 log "  SIGTERM -> '$name' (pgid $pid)"
                 kill -TERM -- "-$pid" 2>/dev/null || kill -TERM "$pid" 2>/dev/null || true
             fi
@@ -364,14 +370,14 @@ teardown() {
             local alive=false
             for line in "${lines[@]}"; do
                 pid="${line##* }"
-                kill -0 "$pid" 2>/dev/null && alive=true
+                group_alive "$pid" && alive=true
             done
             $alive || break
             sleep 1; ((waited++)) || true
         done
         for ((idx=${#lines[@]}-1; idx>=0; idx--)); do
             name="${lines[$idx]%% *}"; pid="${lines[$idx]##* }"
-            if kill -0 "$pid" 2>/dev/null; then
+            if group_alive "$pid"; then
                 log "  SIGKILL -> '$name' (pgid $pid) [did not exit within 15 s]"
                 kill -KILL -- "-$pid" 2>/dev/null || kill -KILL "$pid" 2>/dev/null || true
             fi
@@ -701,7 +707,7 @@ if [[ "$RMEM_MAX" -lt 67108864 || "$WMEM_MAX" -lt 67108864 ]]; then
 fi
 
 # CARLA server binary: packaged CarlaUnreal.sh preferred, editor -game fallback.
-# Packaged layout on this branch: Build/<cfg>/Package/Carla-*-Linux-*/Linux/CarlaUnreal.sh
+# Packaged layout on this branch: Build/<cfg>/Package/Carla-*-Linux-*/CarlaUnreal.sh
 # --server editor skips package discovery: a stale package silently misses
 # recent simulator-side fixes (the editor -game path always runs the current
 # plugin binaries built into the repo tree).
@@ -712,7 +718,7 @@ if [[ "$SERVER_PREF" != "editor" ]]; then
     if [[ -n "$CARLA_ROOT_ARG" ]]; then
         CANDIDATES+=("$CARLA_ROOT_ARG/CarlaUnreal.sh" "$CARLA_ROOT_ARG/Linux/CarlaUnreal.sh")
     fi
-    for cand in "$REPO_ROOT"/Build/*/Package/Carla-*/Linux/CarlaUnreal.sh; do
+    for cand in "$REPO_ROOT"/Build/*/Package/Carla-*/CarlaUnreal.sh; do
         CANDIDATES+=("$cand")   # unmatched globs stay literal and fail -x below
     done
 fi
@@ -726,7 +732,7 @@ if [[ -z "$SERVER_LAUNCHER" ]]; then
     if [[ -n "${UE_ROOT:-}" && -x "$UE_ROOT/Engine/Binaries/Linux/UnrealEditor" && -f "$UPROJECT" ]]; then
         SERVER_KIND="editor"
     else
-        preflight_fail "no packaged CarlaUnreal.sh found (searched under --carla-root '$CARLA_ROOT_ARG' and $REPO_ROOT/Build/*/Package/Carla-*/Linux/) and no usable editor fallback (need UE_ROOT set and $UPROJECT present). Package CARLA or pass --carla-root <dir-containing-CarlaUnreal.sh>"
+        preflight_fail "no packaged CarlaUnreal.sh found (searched under --carla-root '$CARLA_ROOT_ARG' and $REPO_ROOT/Build/*/Package/Carla-*/) and no usable editor fallback (need UE_ROOT set and $UPROJECT present). Package CARLA or pass --carla-root <dir-containing-CarlaUnreal.sh>"
         SERVER_KIND="editor"   # dry-run: show the editor-fallback command with \$UE_ROOT placeholder
     fi
 fi
@@ -987,9 +993,9 @@ CLASSICAL_SRC_CMD="${STACK_PRELUDE}exec ros2 launch autoware_launch e2e_simulato
 # in e2e mode (no perception stack) -- the panel stays black. Generate a copy
 # repointed at the raw front VAD camera. Best-effort: if the ws config or the
 # expected topic line is missing, fall back to the stock config.
-# The same applies to classical mode on CARLA: the traffic-light module is
-# switched off by the CARLA overrides, so the panel is repointed at the
-# front camera autoware_demo.py spawns for exactly this purpose
+# Classical mode on CARLA also repoints the panel: the light states come
+# from CARLA ground truth, so the traffic-light debug image is not useful.
+# It shows the front camera autoware_demo.py spawns for exactly this purpose
 # (/sensing/camera/front/image). Override with --rviz-image-topic.
 if [[ -z "$RVIZ_IMAGE_TOPIC" ]]; then
     if [[ "$MODE" == "e2e" ]]; then RVIZ_IMAGE_TOPIC="/sensing/camera/CAM_FRONT/image_raw/image"

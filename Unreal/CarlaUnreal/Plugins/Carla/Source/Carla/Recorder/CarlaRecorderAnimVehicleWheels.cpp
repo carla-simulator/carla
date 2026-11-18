@@ -8,6 +8,9 @@
 #include "CarlaRecorder.h"
 #include "CarlaRecorderHelpers.h"
 
+#include <algorithm>
+#include <limits>
+
 void WheelInfo::Write(std::ostream &OutFile) const
 {
   WriteValue<EVehicleWheelLocation>(OutFile, Location);
@@ -37,8 +40,9 @@ void CarlaRecorderAnimWheels::Read(std::istream &InFile)
   ReadValue<uint32_t>(InFile, DatabaseId);
   uint32_t NumWheels = 0;
   ReadValue<uint32_t>(InFile, NumWheels);
-  WheelValues.reserve(NumWheels);
-  for (size_t i = 0; i < NumWheels; ++i)
+  // The same object is read again for every vehicle of a packet.
+  WheelValues.clear();
+  for (size_t i = 0; (i < NumWheels) && InFile; ++i)
   {
     WheelInfo Wheel;
     Wheel.Read(InFile);
@@ -70,7 +74,7 @@ void CarlaRecorderAnimVehicleWheels::Write(std::ostream &OutFile)
   WriteValue<uint32_t>(OutFile, Total);
 
   // write total records
-  Total = VehicleWheels.size();
+  Total = std::min<size_t>(VehicleWheels.size(), std::numeric_limits<uint16_t>::max());
   WriteValue<uint16_t>(OutFile, Total);
 
   for (uint16_t i=0; i<Total; ++i)
@@ -86,12 +90,12 @@ void CarlaRecorderAnimVehicleWheels::Write(std::ostream &OutFile)
 
 void CarlaRecorderAnimVehicleWheels::Read(std::istream &InFile)
 {
-  uint16_t i, Total;
+  uint16_t i, Total = 0;
   CarlaRecorderAnimWheels Wheels;
 
   // read Total Vehicles
   ReadValue<uint16_t>(InFile, Total);
-  for (i = 0; i < Total; ++i)
+  for (i = 0; (i < Total) && InFile; ++i)
   {
     Wheels.Read(InFile);
     Add(Wheels);

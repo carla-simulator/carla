@@ -20,8 +20,9 @@ metadata:
 Everything else in this collection acts through the RPC API. This skill is the
 **consumer** side: it proves what is really on the DDS wire and draws it. It
 never launches a simulator, and it needs no ROS 2 on the host — the `ros2` CLI
-and RViz run inside images built from the checkout's own
-`PythonAPI/examples/ros2/`.
+and RViz run inside images built from the `PythonAPI/examples/ros2/` of a CARLA
+package or checkout (`CARLA_ROS2_ROOT`, found automatically from the other CARLA
+roots or `$PWD`).
 
 Use it after [[run-carla-server]] `ROS2=1`: `world-data ros-topics` says what
 *should* be published, this says what *is*.
@@ -89,9 +90,10 @@ actors and restores the world settings on exit (single Ctrl+C). A second
 concurrent run fails fast on the fixed container name instead of spawning a
 duplicate hero on the same topics.
 
-`rviz` is read-only and needs `$DISPLAY`. Both modes delegate to the checkout's
-own `run_map_and_lidar_demo.sh` / `run_rviz.sh`, so their behaviour is never
-forked here.
+`rviz` is read-only and needs `$DISPLAY`. Both modes delegate to the tree's own
+scripts, so their behaviour is never forked here: `run_rviz.sh`, and for `demo`
+`run_map_and_lidar_demo.sh` on the UE4 line or `ros2_native.py --file stack.json`
+(run with the local python's `carla` module) on the UE5 line.
 
 ## On CARLA 0.10.0 (the UE5 line: 5.5 and 5.8)
 
@@ -121,6 +123,7 @@ TF tree can now mean "switched off globally" rather than "no sensor publishing".
 | `RMW` | `fastdds` | `fastdds` · `cyclonedds` · `zenoh` — **must match the server's `--rmw`** |
 | `ROS_DOMAIN_ID` | unset (0) | **must match the server's `--ros-domain-id`** |
 | `CARLA_HOST`/`CARLA_PORT` | `localhost`/`2000` | the server the demo stack connects to |
+| `CARLA_ROS2_ROOT` | first of `CARLA_UE4_ROOT`, `CARLA_UE58_ROOT`, `CARLA_UE5_ROOT`, `CARLA_PACKAGE_ROOT`, `CARLA_TARGET`, `$PWD` with the demo | the CARLA package or checkout whose `PythonAPI/examples/ros2` is used |
 
 Images are named `carla-rviz-<distro>-<rmw>` and
 `carla-map-and-lidar-demo-<distro>-<rmw>`, so each combination is built once and

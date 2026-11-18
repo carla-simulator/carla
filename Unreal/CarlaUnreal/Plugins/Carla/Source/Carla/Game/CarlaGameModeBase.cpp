@@ -161,15 +161,10 @@ void ACarlaGameModeBase::InitGame(
     UE_LOG(LogCarla, Error, TEXT("Missing CarlaSettingsDelegate!"));
   }
 
-  if (World->GetWorldPartition() != nullptr &&
-      UGameplayStatics::GetActorOfClass(World, ASkyBase::StaticClass()) == nullptr)
+  if (UGameplayStatics::GetActorOfClass(World, ASkyBase::StaticClass()) == nullptr)
   {
-    // Legacy tiled maps converted to World Partition have no sun/sky rig (the
-    // conversion drops the legacy DirectionalLight/SkyLight, which would
-    // otherwise stream in as static orphan lights stuck at the saved sun
-    // angle). BP_CarlaWeather drives all lighting through the components of a
-    // single ASkyBase-derived actor, so spawn the standard BP_Carla_Sky (the
-    // same rig Town10 places in-level) before the weather actor is created.
+    // Imported maps and converted tiled maps carry no sun/sky rig, and
+    // BP_CarlaWeather drives all lighting through a single ASkyBase actor.
     UClass* SkyClass = LoadClass<ASkyBase>(
         nullptr,
         TEXT("/Game/Carla/Blueprints/LevelDesign/BP_Carla_Sky.BP_Carla_Sky_C"));
@@ -195,8 +190,7 @@ void ACarlaGameModeBase::InitGame(
           }
         }
       }
-      UE_LOG(LogCarla, Log, TEXT(
-          "World Partition map without a sky rig: spawned BP_Carla_Sky"));
+      UE_LOG(LogCarla, Log, TEXT("Map without a sky rig: spawned BP_Carla_Sky"));
     }
     // BP_GeneralSceneSettings used to be spawned alongside the sky here too,
     // but everything it did (post-process delta-baseline, cloud density) is
@@ -230,6 +224,14 @@ void ACarlaGameModeBase::InitGame(
   }
 
   GameInstance->NotifyInitGame();
+
+  // Known before any actor of this map begins play: actors that behave
+  // differently on a Multi-GPU secondary check it in BeginPlay, while
+  // NotifyBeginEpisode only sets it once they all have.
+  if (FCarlaEngine *CarlaEngine = GameInstance->GetCarlaEngine())
+  {
+    Episode->bIsPrimaryServer = CarlaEngine->IsPrimaryServer();
+  }
 
   OnEpisodeSettingsChangeHandle = FCarlaStaticDelegates::OnEpisodeSettingsChange.AddUObject(
         this,
@@ -371,7 +373,8 @@ void ACarlaGameModeBase::BeginPlay()
       // in the table (the stock towns) are left to the table on purpose: it
       // is what they have always rendered with, and several JSON entries
       // (e.g. Town10HD_Opt) disagree with it.
-      if (!IsMapInBlueprintWeatherTable(Episode->Weather, MapName))
+      // A Multi-GPU secondary gets the primary's weather instead.
+      if (Episode->bIsPrimaryServer && !IsMapInBlueprintWeatherTable(Episode->Weather, MapName))
       {
         TWeakObjectPtr<AWeather> WeakWeather = Episode->Weather;
         World->GetTimerManager().SetTimerForNextTick([WeakWeather, DefaultWeather]()
@@ -866,7 +869,33 @@ void ACarlaGameModeBase::RegisterEnvironmentObjects()
   // Get all actors of the level
   TArray<AActor*> FoundActors;
   UGameplayStatics::GetAllActorsOfClass(GetWorld(), AActor::StaticClass(), FoundActors);
+  // A disabled object whose actor is still in the world stays disabled, also
+  // when it registers again under another id (a hidden instance is moved
+  // away, and its id hashes its location; a hidden traffic-light box has no
+  // bounds). One that streamed out with its layer is gone, and comes back
+  // enabled.
+  TSet<uint64> StillLoaded;
+  if (DisabledEnvironmentObjects.Num() > 0)
+  {
+    TSet<const AActor*> LoadedActors;
+    LoadedActors.Reserve(FoundActors.Num());
+    for (const AActor* Actor : FoundActors)
+    {
+      LoadedActors.Add(Actor);
+    }
+    StillLoaded = ObjectRegister->FindEnvironmentObjectsOf(DisabledEnvironmentObjects, LoadedActors);
+  }
   ObjectRegister->RegisterObjects(FoundActors);
+  ++EnvironmentObjectsRegistrations;
+  if (DisabledEnvironmentObjects.Num() > 0)
+  {
+    TSet<uint64> Kept = StillLoaded.Union(ObjectRegister->FindEnvironmentObjects(DisabledEnvironmentObjects));
+    if (Kept.Num() != DisabledEnvironmentObjects.Num())
+    {
+      DisabledEnvironmentObjects = MoveTemp(Kept);
+      ++EnvironmentObjectsSerial;
+    }
+  }
 }
 
 void ACarlaGameModeBase::EnableEnvironmentObjects(
@@ -874,10 +903,24 @@ void ACarlaGameModeBase::EnableEnvironmentObjects(
   bool Enable)
 {
   ObjectRegister->EnableEnvironmentObjects(EnvObjectIds, Enable);
+  // Only objects that exist: an unknown id changes nothing.
+  for (const uint64 Id : ObjectRegister->FindEnvironmentObjects(EnvObjectIds))
+  {
+    if (Enable)
+    {
+      DisabledEnvironmentObjects.Remove(Id);
+    }
+    else
+    {
+      DisabledEnvironmentObjects.Add(Id);
+    }
+  }
+  ++EnvironmentObjectsSerial;
 }
 
 void ACarlaGameModeBase::LoadMapLayer(int32 MapLayers)
 {
+  LoadedMapLayers |= MapLayers;
   const UWorld* World = GetWorld();
   UGameplayStatics::FlushLevelStreaming(World);
 
@@ -903,6 +946,7 @@ void ACarlaGameModeBase::LoadMapLayer(int32 MapLayers)
 
 void ACarlaGameModeBase::UnLoadMapLayer(int32 MapLayers)
 {
+  LoadedMapLayers &= ~MapLayers;
   const UWorld* World = GetWorld();
 
   TArray<FName> LevelsToUnLoad;

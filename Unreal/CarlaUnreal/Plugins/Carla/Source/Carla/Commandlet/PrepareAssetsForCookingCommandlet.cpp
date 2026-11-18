@@ -421,6 +421,7 @@ FAssetsPaths UPrepareAssetsForCookingCommandlet::GetAssetsPathFromPackage(const 
         MapData.Name = MapJsonObject->GetStringField(TEXT("name"));
         MapData.Path = MapJsonObject->GetStringField(TEXT("path"));
         MapData.bUseCarlaMapMaterials = MapJsonObject->GetBoolField(TEXT("use_carla_materials"));
+        MapJsonObject->TryGetBoolField(TEXT("merge_tiles"), MapData.bMergeTiles);
 
         AssetsPaths.MapsPaths.Add(std::move(MapData));
       }
@@ -568,7 +569,9 @@ void UPrepareAssetsForCookingCommandlet::PrepareMapsForCooking(
     TArray<FString> DataPath = {DefaultPath, RoadsPath, RoadLinesPath, TerrainPath, SidewalkPath};
 
     // check whether we have a single map or a map in tiles
-    if (!IsMapInTiles(DataPath))
+    // A merged tiled map imports its tiles into one world: the .fbx vertices are
+    // already in world space, so only the sublevel split has to be skipped.
+    if (Map.bMergeTiles || !IsMapInTiles(DataPath))
     {
       UE_LOG(LogTemp, Log, TEXT("Cooking map"));
       // Load World

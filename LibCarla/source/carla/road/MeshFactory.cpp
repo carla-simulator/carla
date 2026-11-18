@@ -866,6 +866,9 @@ std::map<road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>> MeshFactory:
             break;
           }
         }
+      } else {
+        // A lane without a <roadMark> record (optional in OpenDRIVE) must still advance.
+        s_current += road_param.resolution;
       }
     } while (s_current < s_end);
 
@@ -1026,6 +1029,9 @@ std::map<road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>> MeshFactory:
             break;
           }
         }
+      } else {
+        // A lane without a <roadMark> record (optional in OpenDRIVE) must still advance.
+        s_current += road_param.resolution;
       }
     } while (s_current < s_end);
 

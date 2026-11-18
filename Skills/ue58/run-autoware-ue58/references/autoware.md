@@ -65,7 +65,7 @@ The `rt/` prefix is DDS-side; a ROS 2 node sees `/vehicle/status/velocity_status
   runtime fallback, and a build without it has no DDS interface at all. `probe`
   reads it from `CMakeCache.txt`, the only honest source
   ([[build-carla-ue58]]).
-- **Run time**: `-ros2`, single dash. `--ros2` is silently ignored on ue58.
+- **Run time**: `-ros2`, single dash. CARLA 1.0 also accepts `--ros2`.
 
 Verified on this machine: `ENABLE_ROS2:BOOL=ON` in `Build/Release/CMakeCache.txt`.
 
@@ -139,23 +139,23 @@ It also sanitises the environment on purpose: `CONDA_*`, `VIRTUAL_ENV`,
 from `PATH`, keeping only enough of the original `PATH` to find a Python that can
 `import carla`.
 
-**RMW asymmetry**: the simulator side defaults to `fastdds` and the script warns
-that `cyclonedds` there has a known fragmented-receive bug; the Autoware side
+**RMW asymmetry**: the simulator side defaults to `fastdds`. `cyclonedds` there
+is also validated, because the fragmented-receive bug is fixed. The Autoware side
 always uses cyclonedds (or zenoh). This is the one configuration detail most
 likely to produce "topics exist but nothing arrives".
 
 ## 7. What was NOT verified
 
-- The Autoware stack was never launched here: no source workspace at
-  `~/autoware`. A docker image
-  (`ghcr.io/autowarefoundation/autoware:universe-cuda-jazzy`) is present, so
-  `--stack docker` is plausible on this machine but untried.
+- The Autoware stack was not launched in this session: no source workspace at
+  `~/autoware`. Later, on 2026-11-02, the classical stack ran with
+  `--stack docker` (`ghcr.io/autowarefoundation/autoware:universe-cuda-jazzy`)
+  against the CARLA 1.0 package. It reached ARRIVED with both `--rmw fastdds`
+  and `--rmw cyclonedds`.
 - No live topic capture. The contract above is from the constructors, not from
   `ros2 topic list`. The `ros2` group's [[visualize-ros-rviz]] is the tool for
   closing that gap.
 - The ROS-2-enabled server did not reach a listening port inside a 120 s wait in
   this session (a plain server did, in ~20 s). Slower start, not a failure — but
   it means the end-to-end path is unmeasured.
-- ROS 2 Humble is what the launcher sources (`/opt/ros/humble/setup.bash`), while
-  the local docker image is a `jazzy` build. Whether that combination works was
-  not tested.
+- The launcher sources the Autoware workspace, else `/opt/ros/jazzy`, else
+  `/opt/ros/humble`. `--stack docker` needs no host ROS 2.

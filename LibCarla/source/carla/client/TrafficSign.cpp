@@ -9,6 +9,8 @@
 #include "carla/client/ActorList.h"
 #include "carla/client/Map.h"
 
+#include <algorithm>
+#include <iterator>
 #include <unordered_map>
 #include <unordered_set>
 
@@ -16,7 +18,9 @@ namespace carla {
 namespace client {
 
   carla::road::SignId TrafficSign::GetSignId() const {
-    return std::string(GetEpisode().Lock()->GetActorSnapshot(*this).state.traffic_light_data.sign_id);
+    const auto snapshot = GetEpisode().Lock()->GetActorSnapshot(*this);
+    const auto &sign_id = snapshot.state.traffic_light_data.sign_id;
+    return {sign_id, std::find(std::begin(sign_id), std::end(sign_id), '\0')};
   }
 
   std::vector<SharedPtr<Waypoint>> TrafficSign::GetAffectedLaneWaypoints() const {

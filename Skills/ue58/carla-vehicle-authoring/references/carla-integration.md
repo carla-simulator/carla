@@ -20,11 +20,30 @@ Verify exported axes, units, transforms, wheel bones/pivots, wheel radius, and c
 
 The reference architecture uses a hidden skeletal physics scaffold with modular visible meshes. Hidden bones must still refresh. Explicitly assign and save the vehicle's intended physics asset on the skeletal mesh; an inherited template physics asset previously survived authoring and produced unstable collisions. Validate the assignment after fresh load.
 
+The physics collision comes from the vehicle's `SMC_<name>` mesh, copied into the physics asset, and raycast sensors hit the `SM_sc_<name>` mesh set on the Blueprint's `CustomCollision` component. Build and connect both as described in [collision-sensor-meshes.md](collision-sensor-meshes.md); a vehicle duplicated from a donor otherwise keeps the donor's sensor mesh.
+
 After programmatically changing collision geometry, invalidate/rebuild cooked Chaos collision and save the owning packages. The reference native helper in `USDImporterWidget.cpp` was corrected for this and package filenames. Visual wheel components use `NoCollision` and `auto_weld=False`; Chaos wheel contact supplies tire interaction. These settings belong to this architecture, not every possible vehicle rig.
 
 Check door pivots, simple collision, API ordering, and constraint lifecycle. CARLA's reference code tears down door constraints before welding to avoid Chaos self-joints. Collision response depends on shapes, masses, transforms, contacts, constraints, and timesteps; do not mask launch-on-impact bugs with arbitrary damping.
 
 Configure plausible dynamics for the actual vehicle. Separate stability evidence from validated manufacturer dynamics. Reuse tests, not the Model 3's numerical tuning.
+
+### Wheel blueprints
+
+A `ChaosVehicleWheel` blueprint created from scratch keeps the Chaos defaults. The sweep defaults are the dangerous ones; axle type and damping only align the car with the reference ones. Set these on all four wheel classes, as the Lincoln MKZ, Mustang and Audi TT do:
+
+| Property | Set to | Chaos default |
+| --- | --- | --- |
+| `sweep_shape` | `SweepShape.SPHERECAST` | `RAYCAST` |
+| `sweep_type` | `SweepType.COMPLEX_SWEEP` | `SIMPLE_SWEEP` |
+| `axle_type` | `AxleType.FRONT` / `AxleType.REAR` by position | `UNDEFINED` |
+| `suspension_damping_ratio` | `1.0` (stock cars) | `0.5` |
+
+The sweep is the one that matters. The Model 3 shipped with `RAYCAST`/`SIMPLE_SWEEP` and a body 10 cm above the road: at 10 of the 155 Town10HD_Opt spawn points it dropped onto its chassis, kept touching `static.road` and did not move under throttle. Changing only the sweep to `SPHERECAST`/`COMPLEX_SWEEP` fixed all ten; damping and axle type alone fixed none. Several stock vehicles still use `RAYCAST` without trouble because their body sits about 20 cm up, so do not read a donor's raycast wheels as proof that it is safe.
+
+Set these as class defaults in the editor (Python: `unreal.get_default_object(wheel_bp.generated_class()).set_editor_property(...)`, compile, save). Test the saved blueprint, not runtime overrides: setting the sweep fields through `apply_physics_control()` fixed only 3 of the Model 3's 10 failing spawn points, against 10 of 10 in the blueprint, and [tuto_vehicle_physics.md](../../../../Docs/tuto_vehicle_physics.md) documents that the suspension values are not applied from a client. Restart the server after saving; a running server keeps the classes it loaded.
+
+Brake torque sets the deceleration: with four braked wheels, `a ≈ 4 · max_brake_torque / (wheel_radius_m · mass)` until tyre grip caps it. Lincoln MKZ: 1000 Nm, 0.355 m, 1696 kg gives 6.6 m/s²; measured stop from 30 km/h 5.5 m (6.3 m/s²). Model 3: 1800 Nm, 0.336 m, 1850 kg gives 11.6 m/s², grip-capped to a measured 3.9 m stop (about 9 m/s², near the real car's 1 g). Real figures are acceptable; report the measured stop next to a stock car's so the difference is a stated choice. Brake torque did not cause the Model 3's road scrapes: 1000 Nm gave the same rate.
 
 ## Opt-in modular support
 

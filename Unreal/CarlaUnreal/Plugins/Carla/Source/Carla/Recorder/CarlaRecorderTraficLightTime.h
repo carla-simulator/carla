@@ -33,6 +33,12 @@ class CarlaRecorderTrafficLightTimes
 
   void Write(std::ostream &OutFile);
 
+  void Read(std::istream &InFile);
+
+  const std::vector<CarlaRecorderTrafficLightTime>& GetTrafficLightTimes() const;
+
+  bool IsEmpty() const;
+
 private:
 
   std::vector<CarlaRecorderTrafficLightTime> TrafficLightTimes;

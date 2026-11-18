@@ -65,11 +65,15 @@ done
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CARLA_ROOT=${SCRIPT_DIR}/../..
 
-# Copy python requirements into the Docker build context
+# Copy python requirements into the Docker build context.
+# The PythonAPI ones keep their relative layout because they include each other
+# (PythonAPI/examples/requirements.txt has `-r ../carla/requirements.txt`).
 rm -rf ${SCRIPT_DIR}/.tmp && mkdir ${SCRIPT_DIR}/.tmp
 cp ${CARLA_ROOT}/requirements.txt ${SCRIPT_DIR}/.tmp/requirements.txt
-cp ${CARLA_ROOT}/PythonAPI/examples/requirements.txt ${SCRIPT_DIR}/.tmp/examples_requirements.txt
-cp ${CARLA_ROOT}/PythonAPI/util/requirements.txt ${SCRIPT_DIR}/.tmp/util_requirements.txt
+for dir in carla examples util; do
+  mkdir -p ${SCRIPT_DIR}/.tmp/PythonAPI/${dir}
+  cp ${CARLA_ROOT}/PythonAPI/${dir}/requirements.txt ${SCRIPT_DIR}/.tmp/PythonAPI/${dir}/requirements.txt
+done
 
 # Build base image
 echo "Building base image carla-base:ue5-${UBUNTU_DISTRO}"

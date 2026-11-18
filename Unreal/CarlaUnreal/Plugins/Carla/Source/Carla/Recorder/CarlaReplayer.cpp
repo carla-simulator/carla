@@ -34,6 +34,20 @@ void CarlaReplayer::Stop(bool bKeepActors)
     File.close();
 }
 
+void CarlaReplayer::DestroySpawnedActors(void)
+{
+  if (Episode == nullptr)
+  {
+    SpawnedIds.clear();
+    return;
+  }
+  for (uint32_t Id : SpawnedIds)
+  {
+    Helper.ProcessReplayerEventDel(Id);
+  }
+  SpawnedIds.clear();
+}
+
 bool CarlaReplayer::ReadHeader()
 {
   if (File.eof())
@@ -394,12 +408,10 @@ void CarlaReplayer::ProcessToTime(double Time, bool IsFirstTime)
           SkipPacket();
         break;
 
-      // vehicle door animation
+      // vehicle door events: applied while seeking too, as a door stays as
+      // the last event before the start time left it
       case static_cast<char>(CarlaRecorderPacketId::VehicleDoor):
-        if (bFrameFound)
-          ProcessDoorVehicle();
-        else
-          SkipPacket();
+        ProcessDoorVehicle();
         break;
 
       // scene lights animation
@@ -497,6 +509,7 @@ void CarlaReplayer::ProcessEventsAdd(void)
       case 1:
         // mapping id (recorded Id is a new Id in replayer)
         MappedId[EventAdd.DatabaseId] = Result.second;
+        SpawnedIds.insert(Result.second);
         break;
 
       // actor reused from existing
@@ -541,6 +554,7 @@ void CarlaReplayer::ProcessEventsDel(void)
   {
     EventDel.Read(File);
     Helper.ProcessReplayerEventDel(MappedId[EventDel.DatabaseId]);
+    SpawnedIds.erase(MappedId[EventDel.DatabaseId]);
     MappedId.erase(EventDel.DatabaseId);
   }
 }

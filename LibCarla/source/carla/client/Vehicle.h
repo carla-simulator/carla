@@ -74,6 +74,14 @@ namespace client {
     /// Close a door in this vehicle
     void CloseDoor(const VehicleDoor door_idx);
 
+    /// Return whether @a door_idx of this vehicle is open; for
+    /// VehicleDoor::All, whether every door it has is open. A door the vehicle
+    /// does not have is never open.
+    ///
+    /// @note This function does not call the simulator, it returns the data
+    /// received in the last tick.
+    bool IsDoorOpen(const VehicleDoor door_idx) const;
+
     /// Sets a @a LightState to this vehicle.
     void SetLightState(const LightState &light_state);
 

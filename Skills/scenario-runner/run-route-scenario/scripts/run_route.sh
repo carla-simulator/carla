@@ -39,7 +39,7 @@ fmt = "2.x" if routes[0].find("waypoints") is not None else "1.0"
 print(f"# {path}: {len(routes)} route(s), format {fmt}")
 if fmt == "1.0":
     print("# WARNING 1.0 format: geometry only. Scenarios live in a separate --scenarios JSON,")
-    print("#         which scenario_runner.py on master/ue5-master does not accept.")
+    print("#         which scenario_runner.py on master/ue5-master/ue58-dev does not accept.")
 
 known = set()
 for f in glob.glob(f"{root}/srunner/scenarios/*.py"):

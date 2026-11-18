@@ -32,23 +32,25 @@ Relevant configure-time options:
 Build/<preset>/Package/
 ├── Carla-0.10.0-Linux-Shipping/
 │   ├── VERSION                       carla / content / engine git hashes
-│   ├── CHANGELOG  LICENSE  README
-│   ├── Linux/
-│   │   ├── CarlaUnreal.sh            2-line shim -> the binary below
-│   │   ├── CarlaUnreal/
-│   │   │   ├── Binaries/Linux/CarlaUnreal-Linux-Shipping   (192 MB)
-│   │   │   └── Content/Paks/
-│   │   │       ├── pakchunk0-Linux.pak    237 MB   loose/UFS entries
-│   │   │       ├── pakchunk0-Linux.ucas   9.6 GB   IoStore container
-│   │   │       ├── pakchunk0-Linux.utoc   6.8 MB   index into the .ucas
-│   │   │       ├── global.ucas           3.2 MB
-│   │   │       └── global.utoc           4 KB
-│   │   └── Engine/
+│   ├── BaseRelease  CHANGELOG  LICENSE  NOTICES.txt  README
+│   ├── AGENTS.md  .mcp.json          written for a package: catalogue + the CARLA MCP server only
+│   ├── CarlaUnreal.sh                2-line shim -> the binary below
+│   ├── CarlaUnreal/
+│   │   ├── Binaries/Linux/CarlaUnreal-Linux-Shipping   (192 MB)
+│   │   └── Content/Paks/
+│   │       ├── pakchunk0-Linux.pak    237 MB   loose/UFS entries
+│   │       ├── pakchunk0-Linux.ucas   9.6 GB   IoStore container
+│   │       ├── pakchunk0-Linux.utoc   6.8 MB   index into the .ucas
+│   │       ├── global.ucas           3.2 MB
+│   │       └── global.utoc           4 KB
+│   ├── Engine/
 │   ├── PythonAPI/
 │   │   ├── carla/dist/carla-0.10.0-cp310-cp310-linux_x86_64.whl
 │   │   ├── examples/                 25 scripts
 │   │   └── util/
-│   └── Tools/
+│   ├── Skills/                       the agent skill library, git-tracked files only
+│   ├── Tools/
+│   └── Util/AgenticTools/            the MCP server that serves Skills/
 ├── Carla-0.10.0-Linux-Shipping.tar.gz   11 GB
 └── StagedBuilds/
 ```
@@ -201,13 +203,16 @@ a `.ucas` from 16:14. POSIX unlink semantics make it unlikely on Linux, but
 `package.sh build` refuses to start with a server running and
 `package.sh inspect` compares timestamps (18 s spread on a good build).
 
-### Packaged map discovery does not work
+### Packaged map discovery
 
-`get_available_maps()` returns `[]` and `load_world()` fails for large maps —
-`GetAllMapNames()` uses `FindFilesRecursive(..., "*.umap")` and `LoadNewEpisode()`
-gates on `FPaths::FileExists()`, neither of which sees inside a `.pak`.
-AssetRegistry discovery exists on `ue58-dev-windows`, not merged. Small maps still
-load by exact name. Detail and measurements in [[run-carla-ue58-server]].
+Fixed in `ue58-dev` by `da94ed2b7` (content packs): `GetAllMapNames()` queries the
+AssetRegistry instead of `FindFilesRecursive(..., "*.umap")`, which could not see
+inside a `.pak`. Before it, `get_available_maps()` returned `[]` and
+`load_world()` failed for nested large maps. Measured 2026-10-26 (Shipping,
+ue58-dev `6bb051b2e`, scope `Town10HD_Opt+OpenDriveMap+EmptyMap+Town12`):
+`get_available_maps()` = `['Town10HD_Opt', 'EmptyMap', 'Town12']`,
+`load_world('Town12')` OK (`Carla/Maps/Town12/Town12`). The map passed on the
+command line was ignored (booted `Town10HD_Opt`); use `load_world()`.
 
 ### OFPA duplicate-name warnings
 
@@ -225,11 +230,13 @@ runtime is correct. Not a failure; worth fixing by scoping the mount.
 
 ### Zen server across cook → stage
 
-Hit on both platforms with different fixes. Linux uses
-`[Zen.AutoLaunch] LimitProcessLifetime=False`, which needs no manual server.
-Windows uses `-NoZenAutoLaunch=127.0.0.1` and requires `zenserver.exe --port 8558`
-already running — `-NoZenAutoLaunch` points UAT at an external server, it does not
-start one. Do not copy the Windows recipe onto Linux.
+The engine manages Zen; nothing is started by hand. The cook auto-launches it on
+the editor store (`~/.config/Epic/UnrealEngine/Common/Zen/Data`) with the cook as
+owner, so it exits with the cook. Staging finds no server and has UnrealPak start
+one on the same store (`-StartZenServerForStage`,
+`CopyBuildToStagingDirectory.Automation.cs:968-991`), which lives until UAT exits.
+The 20-minute `HttpClient.Timeout` once blamed on this was the oplog reader
+starving its thread pool, fixed in the engine at `0e9b85970da9`.
 
 ### DLSS is not staged
 
@@ -246,9 +253,9 @@ be redistributed inside a built application is a licensing question first.
 | Fix | Windows | On `ue58-dev` |
 |---|---|---|
 | `-pak -iostore` | needed | **yes**, upstream |
-| AssetRegistry map discovery (Issue 1) | needed | **no** |
+| AssetRegistry map discovery (Issue 1) | needed | **yes**, `da94ed2b7` (measured 2026-10-26) |
 | `-culturesToStage=en` ICU (Issue 2) | needed | **no** — never bit on Linux |
-| Zen survives cook→stage (Issue 7) | `-NoZenAutoLaunch` | different route |
+| Zen survives cook→stage (Issue 7) | engine-managed, untested | **yes**, no flag; needs the engine reader fix |
 | Town12 `DirectoriesToAlwaysStageAsUFS` (Issue 13) | needed | **no** — and it needs to cover Town13 + `Config/PostProcess` too |
 | Cook-scope exclusion | — | Linux-side, not upstream |
 

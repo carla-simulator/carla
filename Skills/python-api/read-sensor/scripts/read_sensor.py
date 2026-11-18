@@ -30,6 +30,7 @@ import json
 import queue
 import math
 import os
+import sys
 import threading
 import time
 
@@ -141,6 +142,35 @@ def _render_frame(data, type_id, cc):
     return None
 
 
+def _stop_and_drain(world, sensors, frames=None):
+    """Stop listening, then let callbacks already in flight run out.
+
+    stop() returns while a callback can still be executing on the client's
+    streaming thread. Tearing the process down under it is what left `info` on an
+    RGB camera hanging at exit after it had printed its result. One more frame
+    lets those callbacks finish; the queue is emptied so nothing still holds
+    sensor data when the client goes away.
+    """
+    for s in sensors:
+        try:
+            s.stop()
+        except RuntimeError:
+            pass
+    try:
+        if _OWNS_CLOCK:
+            world.tick()
+        else:
+            world.wait_for_tick(2.0)
+    except RuntimeError:
+        pass   # a stalled clock: nothing more is coming anyway
+    if frames is not None:
+        while True:
+            try:
+                frames.get_nowait()
+            except queue.Empty:
+                break
+
+
 # ---- commands --------------------------------------------------------------
 
 def cmd_info(args):
@@ -155,7 +185,7 @@ def cmd_info(args):
 
     sensor.listen(cb)
     ok = ev.wait(args.seconds)
-    sensor.stop()
+    _stop_and_drain(world, [sensor])
     if not ok:
         raise SystemExit(f"no data from id={sensor.id} within {args.seconds}s "
                          "(is the world ticking? sensor_tick too high?)")
@@ -352,7 +382,7 @@ def cmd_save(args):
                 frames.get_nowait()
                 dropped += 1
     finally:
-        sensor.stop()
+        _stop_and_drain(world, [sensor], frames)
         if jsonl:
             jsonl.close()
         _release_clock(world, previous)
@@ -384,7 +414,7 @@ def cmd_show(args):
                 pass
         except KeyboardInterrupt:
             pass
-        sensor.stop()
+        _stop_and_drain(world, [sensor])
         return
 
     import pygame  # only needed for the window
@@ -429,7 +459,7 @@ def cmd_show(args):
         clock.tick(30)
         if span is not None and _elapsed(latest) >= span:
             running = False
-    sensor.stop()
+    _stop_and_drain(world, [sensor])
     pygame.quit()
     print(f"closed window for id={sensor.id} ({sensor.type_id})")
 
@@ -492,8 +522,7 @@ def cmd_grid(args):
         clock.tick(30)
         if span is not None and _elapsed(seen) >= span:
             running = False
-    for s in sensors:
-        s.stop()
+    _stop_and_drain(world, sensors)
     pygame.quit()
     print(f"closed grid of {len(sensors)} sensors")
 
@@ -536,19 +565,40 @@ def cmd_ros_info(args):
     world = _fresh(_client().get_world())
     sensor = _resolve(world, args)
     ros_name = sensor.attributes.get("ros_name", "") or f"actor{sensor.id}"
+    # ros_frame_id / ros_publish_tf are per-actor attributes on the UE4 line
+    # only. The UE5 line has neither: the frame id is the ros name, and rt/tf
+    # is switched for the whole world by World.set_publish_tf().
     frame_id = sensor.attributes.get("ros_frame_id", "") or ros_name
-    publish_tf = sensor.attributes.get("ros_publish_tf", "true").lower() != "false"
+    if "ros_publish_tf" in sensor.attributes:
+        publish_tf = sensor.attributes["ros_publish_tf"].lower() != "false"
+        tf_why = "ros_publish_tf=false"
+    else:
+        try:
+            publish_tf = bool(world.get_publish_tf())
+        except AttributeError:          # client without the binding
+            publish_tf = True
+        tf_why = "World.get_publish_tf() is False"
 
     base = f"rt/carla/{ros_name}"
     parent = sensor.parent
     if parent is not None:
         parent_ros = parent.attributes.get("ros_name", "") or f"actor{parent.id}"
         base = f"rt/carla/{parent_ros}/{ros_name}"
+    # ros_topic_name replaces the whole generated base; the server treats the
+    # blueprint id (the attribute's default) as "not set".
+    override = sensor.attributes.get("ros_topic_name", "")
+    if override and override != sensor.type_id:
+        base = "rt" + ("" if override.startswith("/") else "/") + override
 
     print(f"sensor id={sensor.id} ({sensor.type_id})")
     print(f"  ros_name={ros_name!r} frame_id={frame_id!r} "
           f"parent_frame={'map' if parent is None else (parent.attributes.get('ros_frame_id') or parent.attributes.get('ros_name') or f'actor{parent.id}')}")
     topics = _ros_topics_for(sensor.type_id, base)
+    if override and override != sensor.type_id:
+        print(f"  ros_topic_name={override!r} overrides the generated topic")
+        # With an override the lidar and radar publishers drop their suffix.
+        if sensor.type_id.startswith("sensor.lidar.") or sensor.type_id == "sensor.other.radar":
+            topics = [(base, m) for _, m in topics]
     if not topics:
         print(f"  NO native publisher for {sensor.type_id} — it never appears on ROS")
     for t, m in topics:
@@ -562,7 +612,7 @@ def cmd_ros_info(args):
         qos = "best_effort" if t.endswith(("/image", "/camera_info", "/point_cloud")) else "reliable"
         print(f"  {t}  [{m}]  qos={qos}, depth=1, durability=transient_local on fastdds"
               f"   (ROS node sees /{t[3:]})")
-    print(f"  rt/tf: {'yes' if publish_tf else 'no (ros_publish_tf=false)'}")
+    print(f"  rt/tf: {'yes' if publish_tf else f'no ({tf_why})'}")
 
     # is_listening covers Python listeners only; enable_for_ros is a separate
     # server-side flag, and it is the one that makes a sensor tick for ROS.
@@ -629,7 +679,24 @@ def main() -> None:
         .set_defaults(func=cmd_ros_info)
 
     args = p.parse_args()
-    args.func(args)
+    rc = 0
+    try:
+        args.func(args)
+    except SystemExit as e:
+        if isinstance(e.code, int):
+            rc = e.code
+        elif e.code is not None:
+            print(e.code, file=sys.stderr)
+            rc = 1
+    except KeyboardInterrupt:
+        rc = 130
+    # os._exit, not a normal return: interpreter teardown destroys the client
+    # and joins its streaming threads, and with a sensor just stopped that join
+    # is where the process hung after printing its result. Everything this
+    # script owns is already released above, so skipping teardown loses nothing.
+    sys.stdout.flush()
+    sys.stderr.flush()
+    os._exit(rc)
 
 
 if __name__ == "__main__":

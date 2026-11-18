@@ -191,7 +191,9 @@ function detectCarla(input) {
     info.flavor = "ue4";
     info.vars.CARLA_UE4_ROOT = p;
   } else {
-    const launcher = ["CarlaUE4.sh", "CarlaUnreal.sh", "LinuxNoEditor/CarlaUE4.sh"]
+    // .exe: a Windows package (CarlaUnreal.exe; CarlaUE4.exe on 0.9.x).
+    const launcher = ["CarlaUE4.sh", "CarlaUnreal.sh", "LinuxNoEditor/CarlaUE4.sh",
+      "CarlaUnreal.exe", "CarlaUE4.exe", "WindowsNoEditor/CarlaUE4.exe"]
       .find((c) => isFile(path.join(p, c)));
     if (launcher) {
       info.kind = "release";

@@ -15,12 +15,12 @@ $CARLA_UNREAL_ENGINE_PATH/Engine/Binaries/Linux/UnrealEditor \
 ```
 
 The default choice. Runs against the uncooked tree, so it needs no package, and it
-is the only mode with working map discovery.
+sees every map in the tree, cooked or not.
 
 ### `package` — the shipping build
 
 ```bash
-Build/<preset>/Package/Carla-<ver>-Linux-Shipping/Linux/CarlaUnreal.sh \
+Build/<preset>/Package/Carla-<ver>-Linux-Shipping/CarlaUnreal.sh \
     Town10HD_Opt -RenderOffScreen -carla-rpc-port=2000
 ```
 
@@ -98,23 +98,25 @@ and waypoint work are all fine under `-nullrhi`.
 | blueprint library | 168 | 168 |
 | `try_spawn_actor(vehicle)` | works | works |
 | `get_random_location_from_navigation()` | works | works |
-| `get_available_maps()` | **29** | **0** |
+| `get_available_maps()` | 29 | **0** before `da94ed2b7`; the cooked maps after |
 | `load_world('Town10HD_Opt')` | works | works |
 | `load_world('Town_C')` | works | works |
-| `load_world('Town12')` | works | **`std::exception`** |
-| `load_world('Town13')` | works | **`std::exception`** |
+| `load_world('Town12')` | works | `std::exception` before `da94ed2b7`; works after |
+| `load_world('Town13')` | works | `std::exception` before `da94ed2b7` |
 | `load_world('NoSuchTown')` | fails (correctly) | fails |
 
 The 29 maps `game` mode reports include the Town15 sublevels
 (`Town15_Buildings`, `Town15_Road`, …) and the map-generator templates, so the
 list is discovery output rather than a list of playable towns.
 
-Cause of the packaged failures: `UCarlaStatics::GetAllMapNames()` uses
+Cause of the old packaged failures: `UCarlaStatics::GetAllMapNames()` used
 `IFileManager::FindFilesRecursive(..., "*.umap")` and
-`UCarlaEpisode::LoadNewEpisode()` gates on `FPaths::FileExists()` — neither can
-see inside a `.pak`. AssetRegistry-based discovery
-(`GetMapPackageNamesFromAssetRegistry()`, package-path `FindMapPath()`) exists on
-`ue58-dev-windows` and has **not** been merged to `ue58-dev`.
+`UCarlaEpisode::LoadNewEpisode()` gated on `FPaths::FileExists()`, neither of
+which sees inside a `.pak`. `da94ed2b7` (content packs) moved discovery to the
+AssetRegistry. Measured 2026-10-26 (Shipping package, ue58-dev `6bb051b2e`, cook scope `Town10HD_Opt+OpenDriveMap+EmptyMap+Town12`): `get_available_maps()` =
+`['Town10HD_Opt', 'EmptyMap', 'Town12']` (`OpenDriveMap` not listed),
+`load_world('Town12')` OK, and the map passed on the command line was ignored
+(booted `Town10HD_Opt`), so switch with `load_world()` after connecting.
 
 An earlier Linux report claimed a client cannot reach a packaged server at all —
 a `FileTransfer::WriteFile` path escape (`../../../` out of
@@ -129,7 +131,8 @@ rather than a blocker.
 Build with `-DENABLE_ROS2=ON`, run with `-ros2`. Both are required; either alone
 gives silence.
 
-Startup log on success:
+Startup log on success (Development and editor builds only; a Shipping package
+prints none of these lines, so check it with `ros2 topic list`):
 
 ```
 LogCarla: ROS2: Creating ROS2 Instance...
@@ -158,15 +161,20 @@ UE 5.8, not on `Actor` as in 0.9.16. Confirmed at runtime:
 `hasattr(sensor, 'enable_for_ros') == True`,
 `hasattr(vehicle, 'enable_for_ros') == False`.
 
-Without the call the sensor is never ticked — `ASensor::Tick` returns early unless
-something is listening, and a ROS subscriber is not a stream client.
+Sensors publish without the call. `ROS2TopicVisibility` is on by default, so
+`is_enabled_for_ros()` is `True` right after spawn. Call `enable_for_ros()` only
+when that setting is off or after `disable_for_ros()`. Lane invasion, obstacle,
+RSS and G-buffer sensors have no ROS 2 publisher at all.
 
 ### Topic naming
 
 `rt/carla/<parent chain>/<ros_name>` on the wire, which ROS clients see as
 `/carla/...`. Suffixes `/image`, `/camera_info`, `/point_cloud`.
 
-Observed with one camera named `front` on a vehicle named `hero`:
+Observed with one camera with `ros_name=front` on a vehicle with `ros_name=hero`
+and `role_name=hero` (`role_name` only creates the control subscriber; it never
+names topics). Without a `ros_name`, a vehicle is `vehicle<actor id>` and a sensor
+`<last blueprint token><stream id>`, e.g. `/carla/vehicle30/rgb123/image`:
 
 ```
 /carla/hero/front/camera_info
@@ -193,8 +201,7 @@ message types (`GearReport`, `VelocityReport`, `TurnIndicatorsCommand`, `Control
 `Lateral`, `Longitudinal`, …).
 
 ROS 2 is **Linux-only**: `Carla.Build.cs:186-193` hardcodes `Binaries/Linux` and
-`.so` with no platform branch, for every middleware. `Docs/ros2_native.md:19`
-claims Windows FastDDS support; it is wrong.
+`.so` with no platform branch, for every middleware.
 
 ## Shutdown
 

@@ -39,8 +39,12 @@
         Computes the squared length of the vector.
     # --------------------------------------
     - def_name: make_unit_vector
-      return: carla.Vector3D
+      return: carla.Vector2D
       params:
+      - param_name: epsilon
+        type: float
+        doc: >
+          Length below which the vector is considered null and returned unchanged. Defaults to the machine epsilon for floats.
       doc: >
         Returns a vector with the same direction and unitary length.
     # --------------------------------------
@@ -133,6 +137,10 @@
     - def_name: make_unit_vector
       return: carla.Vector3D
       params:
+      - param_name: epsilon
+        type: float
+        doc: >
+          Length below which the vector is considered null and returned unchanged. Defaults to the machine epsilon for floats.
       doc: >
         Returns a vector with the same direction and unitary length.
     # --------------------------------------
@@ -323,7 +331,7 @@
     - def_name: to_right_handed
       return: carla.RightHandedVector3D
       doc: >
-        Converts this location to a right-handed, x-forward / y-**left** / z-up frame (ROS REP-103 "FLU") by mirroring the Y axis: `(x, y, z)` becomes `(x, -y, z)`. See [Coordinate conventions](/coordinate_conventions).
+        Converts this location to a right-handed, x-forward / y-**left** / z-up frame (ROS REP-103 "FLU") by mirroring the Y axis: `(x, y, z)` becomes `(x, -y, z)`. See [Coordinate conventions](core_coordinate_conventions.md).
     # --------------------------------------
     - def_name: from_right_handed
       params:
@@ -343,8 +351,7 @@
       Class that represents a 3D rotation and therefore, an orientation in space. CARLA uses the Unreal Engine coordinates system. This is a Z-up left-handed system.  <br>
 
       <br>The constructor method follows a specific order of declaration: `(pitch, yaw, roll)`, which corresponds to `(Y-rotation,Z-rotation,X-rotation)`.  <br>
-      <br>![UE4_Rotation](https://d26ilriwvtzlb.cloudfront.net/8/83/BRMC_9.jpg)
-      *Unreal Engine's coordinates system*
+      <br>The frame, the rotation order and how to convert to a right-handed (FLU) convention are described in [Coordinate conventions](core_coordinate_conventions.md).
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: pitch
@@ -417,7 +424,7 @@
     - def_name: to_right_handed
       return: carla.RightHandedRotation
       doc: >
-        Converts this rotation to a right-handed, x-forward / y-**left** / z-up frame (ROS REP-103 "FLU"). Mirroring the Y axis negates **pitch and yaw** and leaves roll alone, so `(roll, pitch, yaw) = (10, 20, 30)` becomes `(10, -20, -30)`. See [Coordinate conventions](/coordinate_conventions).
+        Converts this rotation to a right-handed, x-forward / y-**left** / z-up frame (ROS REP-103 "FLU"). Mirroring the Y axis negates **pitch and yaw** and leaves roll alone, so `(roll, pitch, yaw) = (10, 20, 30)` becomes `(10, -20, -30)`. See [Coordinate conventions](core_coordinate_conventions.md).
     # --------------------------------------
     - def_name: from_right_handed
       params:
@@ -585,7 +592,7 @@
     # --------------------------------------
     - def_name: transform_vector
       params:
-      - param_name: in_vector
+      - param_name: in_point
         type: carla.Vector3D
         doc: >
           Vector to which the transformation will be applied.
@@ -620,7 +627,7 @@
     - def_name: to_right_handed
       return: carla.RightHandedTransform
       doc: >
-        Converts this transform to a right-handed, x-forward / y-**left** / z-up frame (ROS REP-103 "FLU"). The location becomes `(x, -y, z)` and the rotation `(roll, -pitch, -yaw)`; equivalently the pose matrix becomes `S * get_matrix() * S` with `S = diag(1, -1, 1, 1)`. See [Coordinate conventions](/coordinate_conventions).
+        Converts this transform to a right-handed, x-forward / y-**left** / z-up frame (ROS REP-103 "FLU"). The location becomes `(x, -y, z)` and the rotation `(roll, -pitch, -yaw)`; equivalently the pose matrix becomes `S * get_matrix() * S` with `S = diag(1, -1, 1, 1)`. See [Coordinate conventions](core_coordinate_conventions.md).
     # --------------------------------------
     - def_name: from_right_handed
       params:
@@ -659,7 +666,7 @@
     doc: >
       A 3D vector in a **right-handed** frame: x forward, y **left**, z up (ROS [REP-103](https://www.ros.org/reps/rep-0103.html) "FLU").  <br>
 
-      <br>This is a boundary type. The simulator never returns one; you get it from `carla.Location.to_right_handed()` and hand it back with `carla.Location.from_right_handed()`. See [Coordinate conventions](/coordinate_conventions).
+      <br>This is a boundary type. The simulator never returns one; you get it from `carla.Location.to_right_handed()` and hand it back with `carla.Location.from_right_handed()`. See [Coordinate conventions](core_coordinate_conventions.md).
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: x
@@ -709,7 +716,7 @@
 
       <br>The three angles compose as the intrinsic Z-Y-X sequence `Rz(yaw) * Ry(pitch) * Rx(roll)` with the standard right-handed elementary matrices — the same thing `scipy.spatial.transform.Rotation.from_euler("xyz", ...)` and `tf2::Quaternion::setRPY` mean by "roll pitch yaw".  <br>
 
-      <br>This is **not** `carla.Rotation`. Get one from `carla.Rotation.to_right_handed()`; see [Coordinate conventions](/coordinate_conventions).
+      <br>This is **not** `carla.Rotation`. Get one from `carla.Rotation.to_right_handed()`; see [Coordinate conventions](core_coordinate_conventions.md).
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: roll
@@ -778,7 +785,7 @@
 
       <br>This is the explicit boundary type between CARLA's left-handed world and every right-handed consumer (ROS 2 / tf2, NVIDIA ClipGT rigs, scipy, Open3D). Build one with `carla.Transform.to_right_handed()` and go back with `carla.Transform.from_right_handed()`; the handedness change then happens exactly once, here, instead of at every call site.  <br>
 
-      <br>See [Coordinate conventions](/coordinate_conventions).
+      <br>See [Coordinate conventions](core_coordinate_conventions.md).
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: location
@@ -873,12 +880,12 @@
     - def_name: contains
       return: bool
       params:
-      - param_name: world_point
+      - param_name: point
         type: carla.Location
         param_units: meters
         doc: >
           The point in world space to be checked.
-      - param_name: transform
+      - param_name: bbox_transform
         type: carla.Transform
         doc: >
           Contains location and rotation needed to convert this object's local space to world space.

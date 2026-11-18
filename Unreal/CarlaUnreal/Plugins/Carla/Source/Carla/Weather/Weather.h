@@ -61,6 +61,13 @@ public:
     return Weather;
   }
 
+  /// How many times ApplyWeather ran: Multi-GPU secondaries mirror every
+  /// apply, also the ones that set the same values again.
+  uint64 GetApplySerial() const
+  {
+    return ApplySerial;
+  }
+
   /// Returns whether the day night cycle is active (automatic on/off switch when changin to night mode)
   UFUNCTION(BlueprintCallable)
   const bool &GetDayNightCycle() const
@@ -162,4 +169,6 @@ private:
 
   UPROPERTY(EditAnywhere, Category = "Weather")
   bool DayNightCycle = true;
+
+  uint64 ApplySerial = 0u;
 };

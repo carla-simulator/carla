@@ -86,11 +86,324 @@ void MotionPlanStage::Update(const unsigned long index) {
   // Instanciating teleportation transform as current vehicle transform.
   cg::Transform teleportation_transform = cg::Transform(vehicle_location, vehicle_rotation);
 
-  // Get information about the hero location from the actor_id state.
-  cg::Location hero_location = track_traffic.GetHeroLocation();
-  bool is_hero_alive = hero_location != cg::Location(0, 0, 0);
+  // Target velocity for vehicle.
+  float max_target_velocity = parameters.GetVehicleTargetVelocity(actor_id, vehicle_speed_limit) / 3.6f;
 
-  if (simulation_state.IsDormant(actor_id) && parameters.GetRespawnDormantVehicles() && is_hero_alive) {
+  // Algorithm to reduce speed near landmarks
+  float max_landmark_target_velocity = GetLandmarkTargetVelocity(*(waypoint_buffer.at(0)), vehicle_location, actor_id, max_target_velocity);
+
+  // Algorithm to reduce speed near turns
+  float max_turn_target_velocity = GetTurnTargetVelocity(waypoint_buffer, vehicle_location, max_target_velocity);
+  max_target_velocity = std::min(std::min(max_target_velocity, max_landmark_target_velocity), max_turn_target_velocity);
+
+  // Collision handling and target velocity correction.
+  std::pair<bool, float> collision_response = CollisionHandling(collision_hazard, tl_hazard, vehicle_velocity,
+                                                                vehicle_heading, max_target_velocity);
+  bool collision_emergency_stop = collision_response.first;
+  float dynamic_target_velocity = collision_response.second;
+
+  // Don't enter junction if there isn't enough free space after the junction.
+  bool safe_after_junction = SafeAfterJunction(localization, tl_hazard, collision_emergency_stop);
+
+  // In case of collision or traffic light hazard.
+  bool emergency_stop = tl_hazard || collision_emergency_stop || !safe_after_junction;
+
+  if (vehicle_physics_enabled) {
+    ActuationSignal actuation_signal{0.0f, 0.0f, 0.0f};
+
+    // Vehicle steering geometry. See constants::PID: the pursuit law and
+    // the steering-authority normalization below are computed from the
+    // vehicle's own wheelbase (approximated from the bounding-box length)
+    // and physical wheel lock instead of the car-class anchor.
+    const float vehicle_length{2.0f * simulation_state.GetDimensions(actor_id).x};
+    const float wheel_lock{std::max(simulation_state.GetMaxSteerAngle(actor_id), 1.0f)};
+    const float wheelbase{constants::PID::WHEELBASE_FRACTION * vehicle_length};
+
+    // The pursuit reference is the actor origin (bounding-box centre).
+    // Kinematically pure pursuit is exact at the rear axle, but for lane
+    // containment of a rigid body the centre is the optimal reference (the
+    // body then splits its wheelbase chord evenly across the lane), and a
+    // rear-axle reference was measured to add enough loop delay on long
+    // vehicles to weave through tight junction turns.
+    const cg::Location &pursuit_reference{vehicle_location};
+
+    // Resolve the target waypoint by interpolating along the buffer at
+    // target_point_distance ahead of the reference.
+    float target_point_distance{std::clamp(
+        vehicle_speed * TARGET_WAYPOINT_TIME_HORIZON,
+        MIN_TARGET_WAYPOINT_DISTANCE,
+        MAX_TARGET_WAYPOINT_DISTANCE)};
+    auto target_data = GetTargetData(
+        waypoint_buffer,
+        target_point_distance,
+        pursuit_reference);
+
+    // Curvature-aware pursuit-distance cap. Pursuing a point d ahead tracks
+    // the chord of the path, which cuts a curve of radius R by the sagitta
+    // ~d^2/(8R): through junction turns (R ~ 11 m on Town10) the vehicle
+    // turns in before the lane does and sweeps ~1.4 m into the adjacent
+    // lane. Bound d so the geometric cut stays below
+    // MAX_PURSUIT_CHORD_SAGITTA; straight paths (R -> inf) are unaffected.
+    const auto mid_data = GetTargetData(
+        waypoint_buffer,
+        0.5f * target_point_distance,
+        pursuit_reference);
+    const float local_radius = GetThreePointCircleRadius(
+        waypoint_buffer.front()->GetLocation(),
+        mid_data.first,
+        target_data.first);
+    const float sagitta_distance_cap =
+        std::sqrt(8.0f * local_radius * MAX_PURSUIT_CHORD_SAGITTA);
+    if (sagitta_distance_cap < target_point_distance) {
+      target_point_distance = std::max(sagitta_distance_cap,
+                                       MIN_TARGET_WAYPOINT_DISTANCE);
+      target_data = GetTargetData(
+          waypoint_buffer,
+          target_point_distance,
+          pursuit_reference);
+    }
+    const uint64_t target_index = target_data.second;
+    cg::Location target_location{target_data.first};
+    const SimpleWaypointPtr target_waypoint = waypoint_buffer.at(target_index);
+
+    // The lateral PID linearizes the pure-pursuit law, whose equivalent
+    // proportional gain is inversely proportional to the pursuit distance
+    // (kappa = 2 * sin(alpha) / d). The gains are tuned at the cruise
+    // anchor d = MAX_TARGET_WAYPOINT_DISTANCE; when the target sits closer
+    // (low speed, or the curvature cap above) the loop gain must scale by
+    // d_ref / d or the controller winds on steering too slowly for the
+    // path curvature and runs wide through junction turns.
+    const float lateral_gain_scale =
+        MAX_TARGET_WAYPOINT_DISTANCE / std::max(target_point_distance, 1.0f);
+
+    // Steering-authority normalization: normalized steer maps to curvature
+    // as kappa = tan(steer * max_steer_angle) / wheelbase, so long vehicles
+    // produce proportionally less curvature per command than the car-class
+    // fleet the gains and the STEER_LIMIT_GAIN envelope are anchored on.
+    // The STEER_LIMIT_GAIN envelope is a physical curvature guard, so it
+    // scales with the vehicle's authority. See constants::PID.
+    const float steer_authority_correction{std::clamp(
+        (vehicle_length / constants::PID::REF_VEHICLE_LENGTH) *
+            (constants::PID::REF_MAX_STEER_ANGLE / wheel_lock),
+        1.0f, constants::PID::MAX_STEER_AUTHORITY_CORRECTION)};
+
+    float base_offset{CalculateBaseOffset(
+        actor_id,
+        waypoint_buffer,
+        target_waypoint->CheckJunction(),
+        target_index)};
+    const auto right_vector = target_waypoint->GetTransform().GetRightVector();
+
+    // Suppress the wide-turn swing when the side it would move into is
+    // occupied by a nearby vehicle (parked, stopped or adjacent traffic).
+    if (std::abs(base_offset) > EPSILON) {
+      const cg::Vector3D offset_direction{
+          (base_offset > 0.0f) ? right_vector : (-1.0f * right_vector)};
+      if (IsWideTurnSideOccupied(actor_id, offset_direction, std::abs(base_offset))) {
+        base_offset = 0.0f;
+      }
+    }
+
+    const float offset{parameters.GetLaneOffset(actor_id) + base_offset};
+    const auto offset_location = cg::Location(cg::Vector3D(
+        offset * right_vector.x,
+        offset * right_vector.y,
+        0.0f));
+    target_location = target_location + offset_location;
+
+    // Compute the angular deviation directly as the angle between the
+    // vehicle heading and the target direction. atan2(0, 0) is
+    // well-defined and returns 0 when the reference and target locations
+    // coincide on the very first tick before any displacement.
+    const cg::Vector3D target_vector{target_location - pursuit_reference};
+    const float target_yaw{std::atan2(target_vector.y, target_vector.x) * 180.0f / PI};
+    float angular_deviation{target_yaw - vehicle_rotation.yaw};
+    if (angular_deviation > 180.0f) {
+      angular_deviation -= 360.0f;
+    } else if (angular_deviation < -180.0f) {
+      angular_deviation += 360.0f;
+    }
+    angular_deviation /= 180.0f;  // Normalised to [-1, 1].
+
+    // Full throttle with saturated steering produces accelerating donuts
+    // when the target sits far off-heading (after a spin, a collision or
+    // a wrong-way resume). Cap the target speed while grossly misaligned
+    // so full-lock turns stay tight; speed resumes as heading converges.
+    if (std::abs(angular_deviation) > 0.25f) {  // > 45 degrees
+      dynamic_target_velocity = std::min(dynamic_target_velocity, 3.0f);
+    }
+    // --- Stuck / misaligned vehicle recovery (K-turn) -----------------
+    // Two situations the forward PID cannot solve: a vehicle commanded to
+    // move (no red light, no vehicle ahead) that stays immobile is wedged
+    // against something and would grind at full lock forever; a vehicle
+    // whose target sits far off-heading (spun by a collision, player
+    // driving, wrong-way resume) would chase a target behind itself in
+    // full-lock circles. Both run a K-turn: alternate reverse and forward
+    // phases with full steering toward the target until roughly aligned,
+    // then resume the PID with a fresh state.
+    {
+      using namespace constants::StuckRecovery;
+      const double now = current_timestamp.elapsed_seconds;
+      const float abs_deviation = std::abs(angular_deviation);
+      bool recovering = false;
+      auto rec_it = recovery_state.find(actor_id);
+      if (rec_it != recovery_state.end()) {
+        if (abs_deviation < ALIGN_EXIT_DEVIATION) {
+          recovery_state.erase(rec_it);
+          stuck_since.erase(actor_id);
+          // Seed the fresh PID state with the current deviation: a zeroed
+          // previous deviation would make the first post-recovery tick see
+          // the full residual error as a one-tick change and kick the
+          // derivative term into a saturated steer, restarting the swing
+          // the K-turn just corrected.
+          pid_state_map[actor_id] = StateEntry{current_timestamp, angular_deviation, 0.0f, 0.0f};
+        } else {
+          recovering = true;
+          if (now >= rec_it->second.phase_until) {
+            rec_it->second.reversing = !rec_it->second.reversing;
+            rec_it->second.phase_until = now + PHASE_DURATION;
+          }
+          // Refresh the latched direction only once the deviation sign is
+          // unambiguous (target no longer near dead-astern).
+          if (abs_deviation < 0.5f) {
+            rec_it->second.steer_direction =
+                (angular_deviation > 0.0f) ? 1.0f : -1.0f;
+          }
+        }
+      }
+      if (!recovering && !emergency_stop) {
+        bool stuck_trigger = false;
+        if (dynamic_target_velocity > STUCK_SPEED && vehicle_speed < STUCK_SPEED) {
+          auto stuck_it = stuck_since.insert({actor_id, now}).first;
+          stuck_trigger = (now - stuck_it->second > STUCK_TIME);
+        } else {
+          stuck_since.erase(actor_id);
+        }
+        const bool misaligned = abs_deviation > ALIGN_ENTER_DEVIATION &&
+                                vehicle_speed < MISALIGN_MAX_SPEED;
+        if (stuck_trigger || misaligned) {
+          recovery_state[actor_id] = RecoveryState{
+              now + PHASE_DURATION, true,
+              (angular_deviation > 0.0f) ? 1.0f : -1.0f};
+          recovering = true;
+        }
+      }
+      if (recovering) {
+        const RecoveryState &rs = recovery_state.at(actor_id);
+        carla::rpc::VehicleControl recovery_control;
+        recovery_control.reverse = rs.reversing;
+        recovery_control.throttle = rs.reversing ? REVERSE_THROTTLE : FORWARD_THROTTLE;
+        recovery_control.brake = 0.0f;
+        recovery_control.steer =
+            (rs.reversing ? -rs.steer_direction : rs.steer_direction) * RECOVERY_STEER;
+        output_array.at(index) = carla::rpc::Command::ApplyVehicleControl(actor_id, recovery_control);
+        return;
+      }
+    }
+
+    // If previous state for vehicle not found, initialize state entry.
+    if (pid_state_map.find(actor_id) == pid_state_map.end()) {
+      const auto initial_state = StateEntry{current_timestamp, 0.0f, 0.0f, 0.0f};
+      pid_state_map.insert({actor_id, initial_state});
+    }
+
+    // Retrieving the previous state.
+    traffic_manager::StateEntry previous_state;
+    previous_state = pid_state_map.at(actor_id);
+
+    // Select PID parameters.
+    std::vector<float> longitudinal_parameters;
+    std::vector<float> lateral_parameters;
+    if (vehicle_speed > HIGHWAY_SPEED) {
+      longitudinal_parameters = highway_longitudinal_parameters;
+      lateral_parameters = highway_lateral_parameters;
+    } else {
+      longitudinal_parameters = urban_longitudinal_parameters;
+      lateral_parameters = urban_lateral_parameters;
+    }
+
+    // Measured controller period in simulation time. In synchronous mode
+    // this is fixed_delta_seconds; in asynchronous mode it is one server
+    // frame, which under render load can stretch well past the nominal DT
+    // the gains were tuned at -- RunStep compensates. Non-positive values
+    // (first tick after registration or a recovery reseed, where previous
+    // and current share a timestamp) fall back to the nominal period.
+    float control_dt = static_cast<float>(
+        current_timestamp.elapsed_seconds - previous_state.time_instance.elapsed_seconds);
+    if (control_dt <= 0.0f) {
+      control_dt = DT;
+    }
+
+    const float reference_velocity{PID::ShapeReferenceVelocity(
+        previous_state.reference_velocity,
+        vehicle_speed,
+        dynamic_target_velocity,
+        control_dt,
+        emergency_stop)};
+    const float velocity_deviation{PID::RelativeVelocityDeviation(
+        reference_velocity, vehicle_speed, dynamic_target_velocity)};
+
+    // If physics is enabled for the vehicle, use PID controller.
+    // State update for vehicle.
+    current_state = {current_timestamp, angular_deviation, velocity_deviation, 0.0f};
+    current_state.reference_velocity = reference_velocity;
+
+    // Geometric pure-pursuit lateral command. The previous linearized
+    // proportional term (P * deviation) was tuned at car-scale commands
+    // (|steer| ~ 0.1) and over-curves long vehicles, which need
+    // |steer| ~ 0.4-0.5 through junction turns where tan(steer * lock) is
+    // well past its linear range (measured: trucks settling ~1 m inside
+    // their reference). Commanding the pure-pursuit curvature
+    // kappa = margin * 2 sin(alpha) / d and inverting the vehicle's own
+    // steering map atan(wheelbase * kappa) / lock is exact for every
+    // geometry, and reduces to the validated P = 2 linear gain for the
+    // anchor car at the cruise pursuit distance (see Constants.h).
+    const float wheel_lock_rad{wheel_lock * PI / 180.0f};
+    const float alpha_rad{angular_deviation * PI};
+    const float pursuit_curvature{constants::PID::PURSUIT_CURVATURE_MARGIN *
+                                  2.0f * std::sin(alpha_rad) /
+                                  std::max(target_point_distance, 1.0f)};
+    const float pursuit_steer{std::atan(wheelbase * pursuit_curvature) /
+                              wheel_lock_rad};
+
+    // Damping (derivative) scale: pursuit-distance schedule x authority,
+    // capped at the ceiling the schedule alone reaches on the tuned fleet.
+    const float lateral_damping_scale{std::min(
+        lateral_gain_scale * steer_authority_correction,
+        constants::PID::MAX_LATERAL_GAIN_SCALE)};
+
+    // Controller actuation.
+    actuation_signal = PID::RunStep(current_state, previous_state,
+                                    longitudinal_parameters, lateral_parameters,
+                                    vehicle_speed, control_dt,
+                                    pursuit_steer,
+                                    lateral_damping_scale,
+                                    steer_authority_correction);
+
+    if (emergency_stop) {
+      actuation_signal.throttle = 0.0f;
+      actuation_signal.brake = 1.0f;
+    } else {
+      PID::SmoothActuation(previous_state, control_dt, vehicle_speed, actuation_signal);
+    }
+
+    // Constructing the actuation signal.
+    carla::rpc::VehicleControl vehicle_control;
+    vehicle_control.throttle = actuation_signal.throttle;
+    vehicle_control.brake = actuation_signal.brake;
+    vehicle_control.steer = actuation_signal.steer;
+
+    output_array.at(index) = carla::rpc::Command::ApplyVehicleControl(actor_id, vehicle_control);
+
+    // Updating PID state.
+    current_state.steer = actuation_signal.steer;
+    current_state.throttle = actuation_signal.throttle;
+    current_state.brake = actuation_signal.brake;
+    StateEntry &state = pid_state_map.at(actor_id);
+    state = current_state;
+  }
+  // For physics-less vehicles, determine position and orientation for teleportation.
+  else {
     // Flushing controller state for vehicle.
     current_state = {current_timestamp,
                     0.0f, 0.0f,
@@ -101,401 +414,36 @@ void MotionPlanStage::Update(const unsigned long index) {
       teleportation_instance.insert({actor_id, current_timestamp});
     }
 
-    // Get lower and upper bound for teleporting vehicle.
-    float lower_bound = parameters.GetLowerBoundaryRespawnDormantVehicles();
-    float upper_bound = parameters.GetUpperBoundaryRespawnDormantVehicles();
-    float dilate_factor = (upper_bound-lower_bound)/100.0f;
-
     // Measuring time elapsed since last teleportation for the vehicle.
     double elapsed_time = current_timestamp.elapsed_seconds - teleportation_instance.at(actor_id).elapsed_seconds;
 
-    if (parameters.GetSynchronousMode() || elapsed_time > HYBRID_MODE_DT) {
-      float random_sample = (static_cast<float>(random_device.next())*dilate_factor) + lower_bound;
-      NodeList teleport_waypoint_list = local_map->GetWaypointsInDelta(hero_location, ATTEMPTS_TO_TELEPORT, random_sample);
-      if (!teleport_waypoint_list.empty()) {
-        for (auto &teleport_waypoint : teleport_waypoint_list) {
-          GeoGridId geogrid_id = teleport_waypoint->GetGeodesicGridId();
-          if (track_traffic.IsGeoGridFree(geogrid_id)) {
-            teleportation_transform = teleport_waypoint->GetTransform();
-            teleportation_transform.location.z += 0.5f;
-            track_traffic.AddTakenGrid(geogrid_id, actor_id);
-            break;
-          }
-        }
+    // Find a location ahead of the vehicle for teleportation to achieve intended velocity.
+    if (!emergency_stop && (parameters.GetSynchronousMode() || elapsed_time > HYBRID_MODE_DT)) {
+
+      // Target displacement magnitude to achieve target velocity.
+      const float target_displacement = dynamic_target_velocity * HYBRID_MODE_DT_FL;
+      SimpleWaypointPtr teleport_target = waypoint_buffer.front();
+      cg::Transform target_base_transform = teleport_target->GetTransform();
+      cg::Location target_base_location = target_base_transform.location;
+      cg::Vector3D target_heading = target_base_transform.GetForwardVector();
+      cg::Vector3D correct_heading = (target_base_location - vehicle_location).MakeUnitVector(EPSILON);
+
+      if (vehicle_location.Distance(target_base_location) < target_displacement) {
+        cg::Location teleportation_location = vehicle_location + cg::Location(target_heading.MakeUnitVector(EPSILON) * target_displacement);
+        teleportation_transform = cg::Transform(teleportation_location, target_base_transform.rotation);
       }
+      else {
+        cg::Location teleportation_location = vehicle_location + cg::Location(correct_heading * target_displacement);
+        teleportation_transform = cg::Transform(teleportation_location, target_base_transform.rotation);
+      }
+    // In case of an emergency stop, stay in the same location.
+    // Also, teleport only once every dt in asynchronous mode.
+    } else {
+      teleportation_transform = cg::Transform(vehicle_location, simulation_state.GetRotation(actor_id));
     }
+    // Constructing the actuation signal.
     output_array.at(index) = carla::rpc::Command::ApplyTransform(actor_id, teleportation_transform);
-
-    // Update the simulation state with the new transform of the vehicle after teleporting it.
-    KinematicState kinematic_state{teleportation_transform.location,
-                                   teleportation_transform.rotation,
-                                   vehicle_velocity, vehicle_speed_limit,
-                                   vehicle_physics_enabled, simulation_state.IsDormant(actor_id),
-                                   teleportation_transform.location};
-    simulation_state.UpdateKinematicState(actor_id, kinematic_state);
-  }
-
-  else {
-
-    // Target velocity for vehicle.
-    float max_target_velocity = parameters.GetVehicleTargetVelocity(actor_id, vehicle_speed_limit) / 3.6f;
-
-    // Algorithm to reduce speed near landmarks
-    float max_landmark_target_velocity = GetLandmarkTargetVelocity(*(waypoint_buffer.at(0)), vehicle_location, actor_id, max_target_velocity);
-
-    // Algorithm to reduce speed near turns
-    float max_turn_target_velocity = GetTurnTargetVelocity(waypoint_buffer, vehicle_location, max_target_velocity);
-    max_target_velocity = std::min(std::min(max_target_velocity, max_landmark_target_velocity), max_turn_target_velocity);
-
-    // Collision handling and target velocity correction.
-    std::pair<bool, float> collision_response = CollisionHandling(collision_hazard, tl_hazard, vehicle_velocity,
-                                                                  vehicle_heading, max_target_velocity);
-    bool collision_emergency_stop = collision_response.first;
-    float dynamic_target_velocity = collision_response.second;
-
-    // Don't enter junction if there isn't enough free space after the junction.
-    bool safe_after_junction = SafeAfterJunction(localization, tl_hazard, collision_emergency_stop);
-
-    // In case of collision or traffic light hazard.
-    bool emergency_stop = tl_hazard || collision_emergency_stop || !safe_after_junction;
-
-    if (vehicle_physics_enabled && !simulation_state.IsDormant(actor_id)) {
-      ActuationSignal actuation_signal{0.0f, 0.0f, 0.0f};
-
-      // Vehicle steering geometry. See constants::PID: the pursuit law and
-      // the steering-authority normalization below are computed from the
-      // vehicle's own wheelbase (approximated from the bounding-box length)
-      // and physical wheel lock instead of the car-class anchor.
-      const float vehicle_length{2.0f * simulation_state.GetDimensions(actor_id).x};
-      const float wheel_lock{std::max(simulation_state.GetMaxSteerAngle(actor_id), 1.0f)};
-      const float wheelbase{constants::PID::WHEELBASE_FRACTION * vehicle_length};
-
-      // The pursuit reference is the actor origin (bounding-box centre).
-      // Kinematically pure pursuit is exact at the rear axle, but for lane
-      // containment of a rigid body the centre is the optimal reference (the
-      // body then splits its wheelbase chord evenly across the lane), and a
-      // rear-axle reference was measured to add enough loop delay on long
-      // vehicles to weave through tight junction turns.
-      const cg::Location &pursuit_reference{vehicle_location};
-
-      // Resolve the target waypoint by interpolating along the buffer at
-      // target_point_distance ahead of the reference.
-      float target_point_distance{std::clamp(
-          vehicle_speed * TARGET_WAYPOINT_TIME_HORIZON,
-          MIN_TARGET_WAYPOINT_DISTANCE,
-          MAX_TARGET_WAYPOINT_DISTANCE)};
-      auto target_data = GetTargetData(
-          waypoint_buffer,
-          target_point_distance,
-          pursuit_reference);
-
-      // Curvature-aware pursuit-distance cap. Pursuing a point d ahead tracks
-      // the chord of the path, which cuts a curve of radius R by the sagitta
-      // ~d^2/(8R): through junction turns (R ~ 11 m on Town10) the vehicle
-      // turns in before the lane does and sweeps ~1.4 m into the adjacent
-      // lane. Bound d so the geometric cut stays below
-      // MAX_PURSUIT_CHORD_SAGITTA; straight paths (R -> inf) are unaffected.
-      const auto mid_data = GetTargetData(
-          waypoint_buffer,
-          0.5f * target_point_distance,
-          pursuit_reference);
-      const float local_radius = GetThreePointCircleRadius(
-          waypoint_buffer.front()->GetLocation(),
-          mid_data.first,
-          target_data.first);
-      const float sagitta_distance_cap =
-          std::sqrt(8.0f * local_radius * MAX_PURSUIT_CHORD_SAGITTA);
-      if (sagitta_distance_cap < target_point_distance) {
-        target_point_distance = std::max(sagitta_distance_cap,
-                                         MIN_TARGET_WAYPOINT_DISTANCE);
-        target_data = GetTargetData(
-            waypoint_buffer,
-            target_point_distance,
-            pursuit_reference);
-      }
-      const uint64_t target_index = target_data.second;
-      cg::Location target_location{target_data.first};
-      const SimpleWaypointPtr target_waypoint = waypoint_buffer.at(target_index);
-
-      // The lateral PID linearizes the pure-pursuit law, whose equivalent
-      // proportional gain is inversely proportional to the pursuit distance
-      // (kappa = 2 * sin(alpha) / d). The gains are tuned at the cruise
-      // anchor d = MAX_TARGET_WAYPOINT_DISTANCE; when the target sits closer
-      // (low speed, or the curvature cap above) the loop gain must scale by
-      // d_ref / d or the controller winds on steering too slowly for the
-      // path curvature and runs wide through junction turns.
-      const float lateral_gain_scale =
-          MAX_TARGET_WAYPOINT_DISTANCE / std::max(target_point_distance, 1.0f);
-
-      // Steering-authority normalization: normalized steer maps to curvature
-      // as kappa = tan(steer * max_steer_angle) / wheelbase, so long vehicles
-      // produce proportionally less curvature per command than the car-class
-      // fleet the gains and the STEER_LIMIT_GAIN envelope are anchored on.
-      // The STEER_LIMIT_GAIN envelope is a physical curvature guard, so it
-      // scales with the vehicle's authority. See constants::PID.
-      const float steer_authority_correction{std::clamp(
-          (vehicle_length / constants::PID::REF_VEHICLE_LENGTH) *
-              (constants::PID::REF_MAX_STEER_ANGLE / wheel_lock),
-          1.0f, constants::PID::MAX_STEER_AUTHORITY_CORRECTION)};
-
-      float base_offset{CalculateBaseOffset(
-          actor_id,
-          waypoint_buffer,
-          target_waypoint->CheckJunction(),
-          target_index)};
-      const auto right_vector = target_waypoint->GetTransform().GetRightVector();
-
-      // Suppress the wide-turn swing when the side it would move into is
-      // occupied by a nearby vehicle (parked, stopped or adjacent traffic).
-      if (std::abs(base_offset) > EPSILON) {
-        const cg::Vector3D offset_direction{
-            (base_offset > 0.0f) ? right_vector : (-1.0f * right_vector)};
-        if (IsWideTurnSideOccupied(actor_id, offset_direction, std::abs(base_offset))) {
-          base_offset = 0.0f;
-        }
-      }
-
-      const float offset{parameters.GetLaneOffset(actor_id) + base_offset};
-      const auto offset_location = cg::Location(cg::Vector3D(
-          offset * right_vector.x,
-          offset * right_vector.y,
-          0.0f));
-      target_location = target_location + offset_location;
-
-      // Compute the angular deviation directly as the angle between the
-      // vehicle heading and the target direction. atan2(0, 0) is
-      // well-defined and returns 0 when the reference and target locations
-      // coincide on the very first tick before any displacement.
-      const cg::Vector3D target_vector{target_location - pursuit_reference};
-      const float target_yaw{std::atan2(target_vector.y, target_vector.x) * 180.0f / PI};
-      float angular_deviation{target_yaw - vehicle_rotation.yaw};
-      if (angular_deviation > 180.0f) {
-        angular_deviation -= 360.0f;
-      } else if (angular_deviation < -180.0f) {
-        angular_deviation += 360.0f;
-      }
-      angular_deviation /= 180.0f;  // Normalised to [-1, 1].
-
-      // Full throttle with saturated steering produces accelerating donuts
-      // when the target sits far off-heading (after a spin, a collision or
-      // a wrong-way resume). Cap the target speed while grossly misaligned
-      // so full-lock turns stay tight; speed resumes as heading converges.
-      if (std::abs(angular_deviation) > 0.25f) {  // > 45 degrees
-        dynamic_target_velocity = std::min(dynamic_target_velocity, 3.0f);
-      }
-      // --- Stuck / misaligned vehicle recovery (K-turn) -----------------
-      // Two situations the forward PID cannot solve: a vehicle commanded to
-      // move (no red light, no vehicle ahead) that stays immobile is wedged
-      // against something and would grind at full lock forever; a vehicle
-      // whose target sits far off-heading (spun by a collision, player
-      // driving, wrong-way resume) would chase a target behind itself in
-      // full-lock circles. Both run a K-turn: alternate reverse and forward
-      // phases with full steering toward the target until roughly aligned,
-      // then resume the PID with a fresh state.
-      {
-        using namespace constants::StuckRecovery;
-        const double now = current_timestamp.elapsed_seconds;
-        const float abs_deviation = std::abs(angular_deviation);
-        bool recovering = false;
-        auto rec_it = recovery_state.find(actor_id);
-        if (rec_it != recovery_state.end()) {
-          if (abs_deviation < ALIGN_EXIT_DEVIATION) {
-            recovery_state.erase(rec_it);
-            stuck_since.erase(actor_id);
-            // Seed the fresh PID state with the current deviation: a zeroed
-            // previous deviation would make the first post-recovery tick see
-            // the full residual error as a one-tick change and kick the
-            // derivative term into a saturated steer, restarting the swing
-            // the K-turn just corrected.
-            pid_state_map[actor_id] = StateEntry{current_timestamp, angular_deviation, 0.0f, 0.0f};
-          } else {
-            recovering = true;
-            if (now >= rec_it->second.phase_until) {
-              rec_it->second.reversing = !rec_it->second.reversing;
-              rec_it->second.phase_until = now + PHASE_DURATION;
-            }
-            // Refresh the latched direction only once the deviation sign is
-            // unambiguous (target no longer near dead-astern).
-            if (abs_deviation < 0.5f) {
-              rec_it->second.steer_direction =
-                  (angular_deviation > 0.0f) ? 1.0f : -1.0f;
-            }
-          }
-        }
-        if (!recovering && !emergency_stop) {
-          bool stuck_trigger = false;
-          if (dynamic_target_velocity > STUCK_SPEED && vehicle_speed < STUCK_SPEED) {
-            auto stuck_it = stuck_since.insert({actor_id, now}).first;
-            stuck_trigger = (now - stuck_it->second > STUCK_TIME);
-          } else {
-            stuck_since.erase(actor_id);
-          }
-          const bool misaligned = abs_deviation > ALIGN_ENTER_DEVIATION &&
-                                  vehicle_speed < MISALIGN_MAX_SPEED;
-          if (stuck_trigger || misaligned) {
-            recovery_state[actor_id] = RecoveryState{
-                now + PHASE_DURATION, true,
-                (angular_deviation > 0.0f) ? 1.0f : -1.0f};
-            recovering = true;
-          }
-        }
-        if (recovering) {
-          const RecoveryState &rs = recovery_state.at(actor_id);
-          carla::rpc::VehicleControl recovery_control;
-          recovery_control.reverse = rs.reversing;
-          recovery_control.throttle = rs.reversing ? REVERSE_THROTTLE : FORWARD_THROTTLE;
-          recovery_control.brake = 0.0f;
-          recovery_control.steer =
-              (rs.reversing ? -rs.steer_direction : rs.steer_direction) * RECOVERY_STEER;
-          output_array.at(index) = carla::rpc::Command::ApplyVehicleControl(actor_id, recovery_control);
-          return;
-        }
-      }
-
-      // If previous state for vehicle not found, initialize state entry.
-      if (pid_state_map.find(actor_id) == pid_state_map.end()) {
-        const auto initial_state = StateEntry{current_timestamp, 0.0f, 0.0f, 0.0f};
-        pid_state_map.insert({actor_id, initial_state});
-      }
-
-      // Retrieving the previous state.
-      traffic_manager::StateEntry previous_state;
-      previous_state = pid_state_map.at(actor_id);
-
-      // Select PID parameters.
-      std::vector<float> longitudinal_parameters;
-      std::vector<float> lateral_parameters;
-      if (vehicle_speed > HIGHWAY_SPEED) {
-        longitudinal_parameters = highway_longitudinal_parameters;
-        lateral_parameters = highway_lateral_parameters;
-      } else {
-        longitudinal_parameters = urban_longitudinal_parameters;
-        lateral_parameters = urban_lateral_parameters;
-      }
-
-      // Measured controller period in simulation time. In synchronous mode
-      // this is fixed_delta_seconds; in asynchronous mode it is one server
-      // frame, which under render load can stretch well past the nominal DT
-      // the gains were tuned at -- RunStep compensates. Non-positive values
-      // (first tick after registration or a recovery reseed, where previous
-      // and current share a timestamp) fall back to the nominal period.
-      float control_dt = static_cast<float>(
-          current_timestamp.elapsed_seconds - previous_state.time_instance.elapsed_seconds);
-      if (control_dt <= 0.0f) {
-        control_dt = DT;
-      }
-
-      const float reference_velocity{PID::ShapeReferenceVelocity(
-          previous_state.reference_velocity,
-          vehicle_speed,
-          dynamic_target_velocity,
-          control_dt,
-          emergency_stop)};
-      const float velocity_deviation{PID::RelativeVelocityDeviation(
-          reference_velocity, vehicle_speed, dynamic_target_velocity)};
-
-      // If physics is enabled for the vehicle, use PID controller.
-      // State update for vehicle.
-      current_state = {current_timestamp, angular_deviation, velocity_deviation, 0.0f};
-      current_state.reference_velocity = reference_velocity;
-
-      // Geometric pure-pursuit lateral command. The previous linearized
-      // proportional term (P * deviation) was tuned at car-scale commands
-      // (|steer| ~ 0.1) and over-curves long vehicles, which need
-      // |steer| ~ 0.4-0.5 through junction turns where tan(steer * lock) is
-      // well past its linear range (measured: trucks settling ~1 m inside
-      // their reference). Commanding the pure-pursuit curvature
-      // kappa = margin * 2 sin(alpha) / d and inverting the vehicle's own
-      // steering map atan(wheelbase * kappa) / lock is exact for every
-      // geometry, and reduces to the validated P = 2 linear gain for the
-      // anchor car at the cruise pursuit distance (see Constants.h).
-      const float wheel_lock_rad{wheel_lock * PI / 180.0f};
-      const float alpha_rad{angular_deviation * PI};
-      const float pursuit_curvature{constants::PID::PURSUIT_CURVATURE_MARGIN *
-                                    2.0f * std::sin(alpha_rad) /
-                                    std::max(target_point_distance, 1.0f)};
-      const float pursuit_steer{std::atan(wheelbase * pursuit_curvature) /
-                                wheel_lock_rad};
-
-      // Damping (derivative) scale: pursuit-distance schedule x authority,
-      // capped at the ceiling the schedule alone reaches on the tuned fleet.
-      const float lateral_damping_scale{std::min(
-          lateral_gain_scale * steer_authority_correction,
-          constants::PID::MAX_LATERAL_GAIN_SCALE)};
-
-      // Controller actuation.
-      actuation_signal = PID::RunStep(current_state, previous_state,
-                                      longitudinal_parameters, lateral_parameters,
-                                      vehicle_speed, control_dt,
-                                      pursuit_steer,
-                                      lateral_damping_scale,
-                                      steer_authority_correction);
-
-      if (emergency_stop) {
-        actuation_signal.throttle = 0.0f;
-        actuation_signal.brake = 1.0f;
-      } else {
-        PID::SmoothActuation(previous_state, control_dt, vehicle_speed, actuation_signal);
-      }
-
-      // Constructing the actuation signal.
-      carla::rpc::VehicleControl vehicle_control;
-      vehicle_control.throttle = actuation_signal.throttle;
-      vehicle_control.brake = actuation_signal.brake;
-      vehicle_control.steer = actuation_signal.steer;
-
-      output_array.at(index) = carla::rpc::Command::ApplyVehicleControl(actor_id, vehicle_control);
-
-      // Updating PID state.
-      current_state.steer = actuation_signal.steer;
-      current_state.throttle = actuation_signal.throttle;
-      current_state.brake = actuation_signal.brake;
-      StateEntry &state = pid_state_map.at(actor_id);
-      state = current_state;
-    }
-    // For physics-less vehicles, determine position and orientation for teleportation.
-    else {
-      // Flushing controller state for vehicle.
-      current_state = {current_timestamp,
-                      0.0f, 0.0f,
-                      0.0f};
-
-      // Add entry to teleportation duration clock table if not present.
-      if (teleportation_instance.find(actor_id) == teleportation_instance.end()) {
-        teleportation_instance.insert({actor_id, current_timestamp});
-      }
-
-      // Measuring time elapsed since last teleportation for the vehicle.
-      double elapsed_time = current_timestamp.elapsed_seconds - teleportation_instance.at(actor_id).elapsed_seconds;
-
-      // Find a location ahead of the vehicle for teleportation to achieve intended velocity.
-      if (!emergency_stop && (parameters.GetSynchronousMode() || elapsed_time > HYBRID_MODE_DT)) {
-
-        // Target displacement magnitude to achieve target velocity.
-        const float target_displacement = dynamic_target_velocity * HYBRID_MODE_DT_FL;
-        SimpleWaypointPtr teleport_target = waypoint_buffer.front();
-        cg::Transform target_base_transform = teleport_target->GetTransform();
-        cg::Location target_base_location = target_base_transform.location;
-        cg::Vector3D target_heading = target_base_transform.GetForwardVector();
-        cg::Vector3D correct_heading = (target_base_location - vehicle_location).MakeUnitVector(EPSILON);
-
-        if (vehicle_location.Distance(target_base_location) < target_displacement) {
-          cg::Location teleportation_location = vehicle_location + cg::Location(target_heading.MakeUnitVector(EPSILON) * target_displacement);
-          teleportation_transform = cg::Transform(teleportation_location, target_base_transform.rotation);
-        }
-        else {
-          cg::Location teleportation_location = vehicle_location + cg::Location(correct_heading * target_displacement);
-          teleportation_transform = cg::Transform(teleportation_location, target_base_transform.rotation);
-        }
-      // In case of an emergency stop, stay in the same location.
-      // Also, teleport only once every dt in asynchronous mode.
-      } else {
-        teleportation_transform = cg::Transform(vehicle_location, simulation_state.GetRotation(actor_id));
-      }
-      // Constructing the actuation signal.
-      output_array.at(index) = carla::rpc::Command::ApplyTransform(actor_id, teleportation_transform);
-      simulation_state.UpdateKinematicHybridEndLocation(actor_id, teleportation_transform.location);
-    }
+    simulation_state.UpdateKinematicHybridEndLocation(actor_id, teleportation_transform.location);
   }
 }
 

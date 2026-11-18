@@ -257,7 +257,7 @@ def run_simulation(args, client):
         world = client.get_world()
         original_settings = world.get_settings()
 
-        traffic_manager = client.get_trafficmanager(8000)
+        traffic_manager = client.get_trafficmanager(args.tm_port)
         traffic_manager.set_synchronous_mode(True)
 
         settings = world.get_settings()
@@ -269,7 +269,7 @@ def run_simulation(args, client):
         bp = random.choice(world.get_blueprint_library().filter(args.filter))
         vehicle = world.spawn_actor(bp, random.choice(world.get_map().get_spawn_points()))
         vehicle_list.append(vehicle)
-        vehicle.set_autopilot(True)
+        vehicle.set_autopilot(True, args.tm_port)
 
         # Display Manager organize all the sensors an its display in a window
         # If can easily configure the grid and the total window size
@@ -330,6 +330,9 @@ def main():
     argparser.add_argument(
         '-p', '--port', metavar='P', default=2000, type=int,
         help='TCP port to listen to (default: 2000)')
+    argparser.add_argument(
+        '--tm-port', metavar='P', default=8000, type=int,
+        help='Port to communicate with TM (default: 8000)')
     argparser.add_argument(
         '--res', metavar='WIDTHxHEIGHT', default='1280x720',
         help='window resolution (default: 1280x720)')

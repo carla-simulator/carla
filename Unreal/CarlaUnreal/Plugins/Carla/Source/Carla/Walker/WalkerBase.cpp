@@ -7,6 +7,7 @@
 #include "WalkerBase.h"
 #include "Carla.h"
 #include "Carla/Game/CarlaStatics.h"
+#include "Carla/Game/CarlaEpisode.h"
 #include "Carla/Game/Tagger.h"
 #include "Carla/Vehicle/CarlaWheeledVehicle.h"
 #include "Carla/Walker/WalkerController.h"
@@ -79,6 +80,8 @@ void AWalkerBase::AttachWheelchair()
   WheelchairComponent->SetCollisionProfileName(TEXT("CharacterMesh"));
   WheelchairComponent->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
   WheelchairComponent->SetCollisionObjectType(ECC_Pawn);
+  WheelchairComponent->SetCollisionResponseToChannel(ECC_GameTraceChannel1 /*SensorObject*/, ECR_Block);
+  WheelchairComponent->SetCollisionResponseToChannel(ECC_GameTraceChannel2 /*SensorTrace*/, ECR_Block);
   WheelchairComponent->RegisterComponent();
   WheelchairComponent->AttachToComponent(
       WalkerMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
@@ -132,6 +135,14 @@ void AWalkerBase::AttachWheelchair()
       *GetName(), ChairAnimMode);
 }
 
+/// Whether @a Walker mirrors a walker of a Multi-GPU primary: its fate (hits,
+/// death, ragdoll) is the primary's, never decided here.
+static bool AWalkerBase_IsMirror(const AActor &Walker)
+{
+  const UCarlaEpisode *Episode = UCarlaStatics::GetCurrentEpisode(Walker.GetWorld());
+  return (Episode != nullptr) && !Episode->bIsPrimaryServer;
+}
+
 void AWalkerBase::BeginPlay()
 {
   Super::BeginPlay();
@@ -169,6 +180,24 @@ void AWalkerBase::BeginPlay()
       }
     }
   }
+  // Nothing needs the body mesh's overlaps, which re-query every physics body on each teleport (#10068).
+  if (USkeletalMeshComponent *BodyMesh = GetMesh())
+  {
+    BodyMesh->SetGenerateOverlapEvents(false);
+    BodyMesh->bUpdateOverlapsOnAnimationFinalize = false;
+  }
+  if (AWalkerBase_IsMirror(*this))
+  {
+    // No local death detection, nor the Blueprint triggers that kill on
+    // overlap: the primary's frames say when this walker dies.
+    TArray<UPrimitiveComponent *> Primitives;
+    GetComponents<UPrimitiveComponent>(Primitives, false);
+    for (UPrimitiveComponent *Primitive : Primitives)
+    {
+      Primitive->SetGenerateOverlapEvents(false);
+    }
+    return;
+  }
   // Primary detection: the physical hit itself. The same contact also
   // feeds the collision sensor, so clients keep receiving the collision
   // event exactly like they always have; the capsule is un-walled right
@@ -180,6 +209,40 @@ void AWalkerBase::BeginPlay()
   GetWorldTimerManager().SetTimer(
       VehicleSensorTimer, this, &AWalkerBase::CheckVehicleImpact,
       VehicleSensorPeriod, /*bLoop=*/true);
+}
+
+void AWalkerBase::SetTeleportDriven(bool bEnable)
+{
+  if (!bEnable)
+  {
+    for (const FSuspendedPrimitive &Suspended : SuspendedPrimitives)
+    {
+      if (Suspended.Primitive.IsValid())
+      {
+        Suspended.Primitive->SetCollisionEnabled(Suspended.CollisionEnabled);
+        Suspended.Primitive->SetGenerateOverlapEvents(Suspended.bGenerateOverlapEvents);
+      }
+    }
+    SuspendedPrimitives.Reset();
+    return;
+  }
+  if (!SuspendedPrimitives.IsEmpty())
+  {
+    return;
+  }
+  TArray<UPrimitiveComponent *> Primitives;
+  GetComponents<UPrimitiveComponent>(Primitives, false);
+  for (UPrimitiveComponent *Primitive : Primitives)
+  {
+    // Only what ray-cast sensors hit (body mesh, wheelchair) keeps collision; the capsule and triggers only cost queries.
+    if (Primitive->GetCollisionResponseToChannel(ECC_GameTraceChannel2 /*SensorTrace*/) == ECR_Block)
+    {
+      continue;
+    }
+    SuspendedPrimitives.Add({Primitive, Primitive->BodyInstance.GetCollisionEnabled(false), Primitive->GetGenerateOverlapEvents()});
+    Primitive->SetGenerateOverlapEvents(false);
+    Primitive->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+  }
 }
 
 void AWalkerBase::OnBodyHit(AActor *, AActor *OtherActor,
@@ -301,7 +364,7 @@ void AWalkerBase::CheckVehicleImpact()
 
 void AWalkerBase::Kill(FVector ImpactVelocity, AActor *Killer)
 {
-  if (!bAlive)
+  if (!bAlive || AWalkerBase_IsMirror(*this))
   {
     return;
   }

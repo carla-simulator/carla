@@ -21,7 +21,8 @@ namespace ros2 {
 // (superseded).
 //
 // Topics (fixed absolute names, DDS "rt/" prefix, QoS RELIABLE /
-// TRANSIENT_LOCAL / KEEP_LAST depth 1 per tier4):
+// VOLATILE / KEEP_LAST depth 1, which matches TRANSIENT_LOCAL and VOLATILE
+// command writers alike):
 //   /control/command/control_cmd         autoware_control_msgs/Control
 //   /control/command/gear_cmd            autoware_vehicle_msgs/GearCommand
 //   /control/command/turn_indicators_cmd autoware_vehicle_msgs/TurnIndicatorsCommand

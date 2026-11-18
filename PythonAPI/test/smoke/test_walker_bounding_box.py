@@ -26,8 +26,7 @@ class TestWalkerBoundingBox(SyncSmokeTest):
     def setUp(self):
         super(TestWalkerBoundingBox, self).setUp()
         if self.world.get_map().name.split("/")[-1] != WORLD:
-            self.client.load_world(WORLD)
-            time.sleep(5)
+            self.load_world(WORLD)
             self.world = self.client.get_world()
             settings = carla.WorldSettings(
                 no_rendering_mode=False,
@@ -43,8 +42,7 @@ class TestWalkerBoundingBox(SyncSmokeTest):
         self.world.apply_settings(self.settings)
         self.world.tick()
         self.settings = None
-        self.client.load_world(WORLD)
-        time.sleep(5)
+        self.load_world(WORLD)
         self.world = None
         self.client = None
 

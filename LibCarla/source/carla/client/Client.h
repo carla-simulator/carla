@@ -208,7 +208,8 @@ namespace client {
       uint16_t port,
       size_t worker_threads)
     : _simulator(
-        std::make_shared<detail::Simulator>(host, port, worker_threads)) {}
+        new detail::Simulator(host, port, worker_threads),
+        &detail::Simulator::Delete) {}
 
 } // namespace client
 } // namespace carla

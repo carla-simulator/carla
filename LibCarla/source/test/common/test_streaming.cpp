@@ -18,6 +18,11 @@
 #include <boost/asio/executor_work_guard.hpp>
 
 #include <atomic>
+#include <chrono>
+#include <future>
+#include <string>
+#include <thread>
+#include <vector>
 
 using namespace std::chrono_literals;
 
@@ -34,7 +39,12 @@ public:
   }
 
   ~io_context_running() {
+    stop();
+  }
+
+  void stop() {
     service.stop();
+    _threads.JoinAll();
   }
 
 private:
@@ -81,7 +91,7 @@ TEST(streaming, low_level_sending_strings) {
   std::this_thread::sleep_for(2ms);
   ASSERT_GE(message_count, number_of_messages - 3u);
 
-  io.service.stop();
+  io.stop();
 }
 
 TEST(streaming, low_level_unsubscribing) {
@@ -130,7 +140,7 @@ TEST(streaming, low_level_unsubscribing) {
     ASSERT_GE(message_count, number_of_messages - 3u);
   }
 
-  io.service.stop();
+  io.stop();
 }
 
 TEST(streaming, low_level_tcp_small_message) {
@@ -160,7 +170,9 @@ TEST(streaming, low_level_tcp_small_message) {
     std::cout << "done!\n";
   }, [](std::shared_ptr<tcp::ServerSession>) { std::cout << "session closed!\n"; });
 
-  Dispatcher dispatcher{make_endpoint<tcp::Client::protocol_type>(srv.GetLocalEndpoint())};
+  // Use loopback: Windows refuses to connect to the 0.0.0.0 wildcard the server binds to.
+  Dispatcher dispatcher{make_endpoint<tcp::Client::protocol_type>(
+      {make_localhost_address(), srv.GetLocalEndpoint().port()})};
   auto stream = dispatcher.MakeStream();
   auto c = std::make_shared<tcp::Client>(io_context, stream.token(), [&](carla::Buffer message) {
     ++message_count;
@@ -178,6 +190,62 @@ TEST(streaming, low_level_tcp_small_message) {
       [&]() { io_context.run(); });
 
   std::this_thread::sleep_for(2s);
+  io_context.stop();
+  done = true;
+  std::cout << "client received " << message_count << " messages\n";
+  ASSERT_GT(message_count, 10u);
+  c->Stop();
+}
+
+// A callback that throws, such as an RPC timing out in the light refresh after
+// a map change (#10165), used to escape io_context::run() and call
+// std::terminate. The client now logs it and keeps reading the stream.
+TEST(streaming, low_level_tcp_callback_exception_does_not_terminate) {
+  using namespace carla::streaming;
+  using namespace carla::streaming::detail;
+
+  boost::asio::io_context io_context;
+  tcp::Server::endpoint ep(boost::asio::ip::tcp::v4(), TESTING_PORT);
+
+  tcp::Server srv(io_context, ep);
+  srv.SetTimeout(1s);
+  std::atomic_bool done{false};
+  std::atomic_size_t message_count{0u};
+
+  const std::string msg = "Hola!";
+
+  srv.Listen([&](std::shared_ptr<tcp::ServerSession> session) {
+    carla::Buffer Buf(boost::asio::buffer(msg.c_str(), msg.size()));
+    carla::SharedBufferView BufView = carla::BufferView::CreateFrom(std::move(Buf));
+    while (!done) {
+      std::this_thread::sleep_for(1ns);
+      carla::SharedBufferView View = BufView;
+      session->Write(View);
+    }
+  }, [](std::shared_ptr<tcp::ServerSession>) {});
+
+  // Use loopback: Windows refuses to connect to the 0.0.0.0 wildcard the server binds to.
+  Dispatcher dispatcher{make_endpoint<tcp::Client::protocol_type>(
+      {make_localhost_address(), srv.GetLocalEndpoint().port()})};
+  auto stream = dispatcher.MakeStream();
+  auto c = std::make_shared<tcp::Client>(io_context, stream.token(), [&](carla::Buffer) {
+    if (++message_count == 1u) {
+      throw std::runtime_error("callback failure on the first message");
+    }
+  });
+  c->Connect();
+
+  // We need at least two threads because this server loop consumes one.
+  carla::ThreadGroup threads;
+  threads.CreateThreads(
+      std::max(2u, std::thread::hardware_concurrency()),
+      [&]() { io_context.run(); });
+
+  // Wait for the messages instead of a fixed 2 s: a retried connect takes ~2 s to fail on Windows.
+  const auto deadline = std::chrono::steady_clock::now() + 15s;
+  while (message_count <= 10u && std::chrono::steady_clock::now() < deadline) {
+    std::this_thread::sleep_for(10ms);
+  }
   io_context.stop();
   done = true;
   std::cout << "client received " << message_count << " messages\n";
@@ -205,7 +273,11 @@ TEST(streaming, stream_outlives_server) {
     carla::Buffer Buf(boost::asio::buffer(message.c_str(), message.size()));
     carla::SharedBufferView BufView = carla::BufferView::CreateFrom(std::move(Buf));
     while (!done) {
-      std::this_thread::sleep_for(1ms);
+      // sleep_for(1ms) takes ~15 ms on Windows, too slow for the client's 20 ms window.
+      const auto next_write = std::chrono::steady_clock::now() + 1ms;
+      while (!done && std::chrono::steady_clock::now() < next_write) {
+        std::this_thread::yield();
+      }
       auto s = std::atomic_load_explicit(&stream, std::memory_order_relaxed);
       if (s != nullptr) {
         carla::SharedBufferView View = BufView;
@@ -338,4 +410,147 @@ TEST(streaming, ros_topic_visibility_manual_toggle) {
   EXPECT_TRUE(srv.IsEnabledForROS(sensor_id));
   srv.DisableForROS(sensor_id);
   EXPECT_FALSE(srv.IsEnabledForROS(sensor_id));
+}
+
+// In synchronous mode the server waits for the previous message of a session
+// to be sent before writing the next one. A client that stops reading (a
+// listen() callback that never returns) used to keep that wait going forever,
+// on the game or render thread, and the whole server stopped answering
+// (#10233). The wait is now bounded by the session timeout: the stuck client
+// is dropped and the other clients of the same stream keep receiving.
+TEST(streaming, sync_mode_client_not_reading_does_not_block_writer) {
+  using namespace carla::streaming;
+  constexpr auto timeout = 1s;
+  // Larger than the socket buffers, so a client that does not read blocks the
+  // second write.
+  const std::string big(32u * 1024u * 1024u, 'x');
+
+  Server srv(TESTING_PORT);
+  srv.SetTimeout(timeout);
+  srv.SetSynchronousMode(true);
+  srv.AsyncRun(4u);
+  auto stream = srv.MakeStream();
+
+  std::promise<void> release;
+  std::shared_future<void> released = release.get_future().share();
+  std::atomic_size_t stuck_count{0u};
+  Client stuck;
+  stuck.AsyncRun(1u);
+  stuck.Subscribe(stream.token(), [&](auto) {
+    ++stuck_count;
+    released.wait();  // never returns until the end of the test
+  });
+
+  std::atomic_size_t healthy_count{0u};
+  Client healthy;
+  healthy.AsyncRun(1u);
+  healthy.Subscribe(stream.token(), [&](auto) { ++healthy_count; });
+
+  std::this_thread::sleep_for(200ms);  // let both sessions connect
+
+  carla::Buffer Buf(boost::asio::buffer(big.c_str(), big.size()));
+  carla::SharedBufferView BufView = carla::BufferView::CreateFrom(std::move(Buf));
+  constexpr size_t number_of_messages = 6u;
+  const auto start = std::chrono::steady_clock::now();
+  for (auto i = 0u; i < number_of_messages; ++i) {
+    carla::SharedBufferView View = BufView;
+    stream.Write(View);
+  }
+  const auto elapsed = std::chrono::steady_clock::now() - start;
+
+  // At most one bounded wait for the stuck session, then it is dropped.
+  EXPECT_LT(elapsed, 3 * timeout);
+  EXPECT_GE(stuck_count, 1u);
+  for (auto i = 0; i < 100 && healthy_count < number_of_messages - 1u; ++i) {
+    std::this_thread::sleep_for(20ms);
+  }
+  // Only the message written while the stuck session was being dropped may
+  // be lost.
+  EXPECT_GE(healthy_count, number_of_messages - 1u);
+
+  release.set_value();
+}
+
+// A client runs the callback of each stream on that stream's strand. The
+// strands of boost::asio::io_context::strand are not independent: each takes
+// one of 193 shared implementations, so two streams of one client could end
+// up serialized. A listen() callback that blocked then stopped an unrelated
+// stream too, the world snapshots for instance, and world.tick() timed out.
+// With 1000 other streams, at least one shares the blocked one's
+// implementation in 99.4 % of the runs.
+TEST(streaming, blocked_callback_does_not_stall_other_streams) {
+  using namespace carla::streaming;
+  constexpr size_t batches = 10u;
+  // Two sockets per stream in this process: stay well below the usual limit
+  // of 1024 open files.
+  constexpr size_t streams_per_batch = 100u;
+  const std::string message = "Hello client, how are you?";
+
+  auto write = [&](Stream &stream) {
+    carla::Buffer Buf(boost::asio::buffer(message.c_str(), message.size()));
+    carla::SharedBufferView View = carla::BufferView::CreateFrom(std::move(Buf));
+    stream.Write(View);
+  };
+
+  Server srv(TESTING_PORT);
+  srv.AsyncRun(4u);
+
+  std::promise<void> release;
+  std::shared_future<void> released = release.get_future().share();
+  std::atomic_bool blocked{false};
+  std::vector<std::atomic_size_t> received(batches * streams_per_batch);
+  for (auto &count : received) {
+    count = 0u;
+  }
+
+  Client c;
+  c.AsyncRun(4u);
+  // Declared after the client, so the callback is released before the
+  // client joins its threads, also when an assertion leaves the test early.
+  struct Releaser {
+    std::promise<void> &promise;
+    ~Releaser() { promise.set_value(); }
+  } releaser{release};
+
+  auto blocked_stream = srv.MakeStream();
+  c.Subscribe(blocked_stream.token(), [&blocked, released](auto) {
+    blocked = true;
+    released.wait();  // never returns until the end of the test
+  });
+  for (auto i = 0; i < 500 && !blocked; ++i) {
+    write(blocked_stream);  // lost until the session is connected
+    std::this_thread::sleep_for(10ms);
+  }
+  ASSERT_TRUE(blocked);
+
+  for (auto batch = 0u; batch < batches; ++batch) {
+    const size_t first = batch * streams_per_batch;
+    std::vector<Stream> streams;
+    streams.reserve(streams_per_batch);
+    for (auto i = 0u; i < streams_per_batch; ++i) {
+      streams.emplace_back(srv.MakeStream());
+      c.Subscribe(streams.back().token(), [&received, index = first + i](auto) {
+        ++received[index];
+      });
+    }
+
+    const auto deadline = std::chrono::steady_clock::now() + 5s;
+    size_t silent = streams_per_batch;
+    while (silent > 0u && std::chrono::steady_clock::now() < deadline) {
+      std::this_thread::sleep_for(10ms);
+      silent = 0u;
+      for (auto i = 0u; i < streams_per_batch; ++i) {
+        if (received[first + i] == 0u) {
+          ++silent;
+          write(streams[i]);  // lost until the session is connected
+        }
+      }
+    }
+    ASSERT_EQ(silent, 0u) << silent << " streams of batch " << batch
+        << " delivered nothing while the callback of another stream was blocked";
+
+    for (auto &stream : streams) {
+      c.UnSubscribe(stream.token());
+    }
+  }
 }

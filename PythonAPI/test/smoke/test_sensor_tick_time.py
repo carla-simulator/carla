@@ -31,18 +31,21 @@ class TestSensorTickTime(SyncSmokeTest):
     bp_lib = self.world.get_blueprint_library()
 
     sensor_exception = {
-      "sensor.camera.depth",
-      "sensor.camera.normals",
-      "sensor.camera.optical_flow",
-      "sensor.camera.rgb",
-      "sensor.camera.semantic_segmentation",
-      "sensor.camera.dvs",
-      "sensor.other.obstacle",
-      "sensor.camera.instance_segmentation",
-      "sensor.camera.rgb_fisheye",
-      "sensor.camera.depth_fisheye",
-      "sensor.camera.semantic_segmentation_fisheye",
-      "sensor.camera.instance_segmentation_fisheye"
+      "sensor.camera.depth",                          # render pipeline schedule
+      "sensor.camera.normals",                        # render pipeline schedule
+      "sensor.camera.optical_flow",                   # render pipeline schedule
+      "sensor.camera.rgb",                            # render pipeline schedule
+      "sensor.camera.semantic_segmentation",          # render pipeline schedule
+      "sensor.camera.dvs",                            # render pipeline schedule
+      "sensor.camera.instance_segmentation",          # render pipeline schedule
+      "sensor.camera.rgb_fisheye",                    # render pipeline schedule
+      "sensor.camera.depth_fisheye",                  # render pipeline schedule
+      "sensor.camera.semantic_segmentation_fisheye",  # render pipeline schedule
+      "sensor.camera.instance_segmentation_fisheye",  # render pipeline schedule
+      "sensor.other.obstacle",                        # event based sensor
+      "sensor.other.v2x",                             # receive only
+      "sensor.other.v2x_custom",                      # receive only
+      "sensor.other.vehicle_status"                   # needs parent vehicle
     }
     spawned_sensors = []
     sensor_tick = 1.0

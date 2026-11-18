@@ -2,7 +2,7 @@
 name: run-openscenario
 description: Runs standard-format scenarios through ScenarioRunner — ASAM OpenSCENARIO 1.x (.xosc, via --openscenario, with catalogs and ParameterDeclaration overrides) and OpenSCENARIO 2.0 (.osc, via --openscenario2, the ANTLR/osc2 pipeline). Validates a file against the schema before running, lists the bundled examples, and reports which OSC features ScenarioRunner actually implements. Use when the user asks to "run an xosc", "run an OpenSCENARIO file", "use the OpenSCENARIO standard", "run a .osc / OSC2 scenario", or hands over a scenario file from another tool.
 license: MIT
-compatibility: Any OS with a scenario_runner checkout, importable CARLA PythonAPI and a running server. OSC 1.x needs xmlschema==1.0.18; OSC 2.0 needs antlr4-python3-runtime==4.10 and graphviz. Example locations differ by branch (srunner/examples on master, srunner/osc_examples on ue5-master).
+compatibility: Any OS with a scenario_runner checkout, importable CARLA PythonAPI and a running server. OSC 1.x needs xmlschema==1.0.18; OSC 2.0 needs antlr4-python3-runtime==4.10 and graphviz. Example locations differ by branch (srunner/examples on master, srunner/osc_examples on ue5-master and ue58-dev).
 metadata:
   group: scenario-runner
   prerequisites: scripts/check_env.sh
@@ -98,6 +98,9 @@ that declares the ego with an *external* controller does not — same silent
 python3 "$SCENARIO_RUNNER_ROOT/manual_control.py" -a --rolename=hero
 ```
 
+`--rolename` picks the actor (default `hero`); `-a` hands it to the autopilot.
+Drop `-a` to drive it by keyboard.
+
 `OscControllerExample.xosc` is the file to read for how controllers are wired.
 
 ## Examples
@@ -119,7 +122,7 @@ done
 **Example 3: "try OpenSCENARIO 2.0"**
 
 `list` shows the `.osc` corpus (`cut_in_and_slow_right.osc`, `overtake1.osc`,
-`follow_trajectory.osc`, …). On `ue5-master` they live in
+`follow_trajectory.osc`, …). On `ue5-master` and `ue58-dev` they live in
 `srunner/osc_examples/`, not `srunner/examples/`. Expect gaps: the osc2 pipeline
 parses a subset of the language and raises from `srunner/osc2/` on the rest.
 

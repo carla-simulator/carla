@@ -37,7 +37,10 @@ public:
       _message(make_special_message(message_size)),
       _client_callback(),
       _work_to_do(boost::asio::make_work_guard(_client_callback)),
-      _success_ratio(success_ratio) {}
+      _success_ratio(success_ratio) {
+    // Sync mode blocks on a pending write instead of dropping the message.
+    _server.SetSynchronousMode(true);
+  }
 
   void AddStream() {
     Stream stream = _server.MakeStream();

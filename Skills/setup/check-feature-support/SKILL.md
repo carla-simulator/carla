@@ -1,8 +1,8 @@
 ---
 name: check-feature-support
-description: Answers "can CARLA do X here, and is there a vetted procedure for it" before you promise anything, and detects client/server/tree version skew — a support matrix over the whole collection (covered by a skill / works but undocumented / present but untested / broken or removed), an index of the features that are verified BROKEN on 0.10.0 (gbuffers crash the server, map layers do nothing, Landmark.waypoint is None, standalone asset packages are gone), and a probe that reports what this machine's build flags and running server actually offer. Use when the user asks whether CARLA supports something, when a feature has no skill, when a UE4 tutorial's steps do not exist, or before improvising a procedure.
+description: Answers "can CARLA do X here, and is there a vetted procedure for it" before you promise anything, and detects client/server/tree version skew — a support matrix over the whole collection (covered by a skill / works but undocumented / present but untested / broken or removed), an index of the features that are verified BROKEN on 0.10.0 (gbuffers crash the server, Landmark.waypoint is None, standalone asset packages are gone), and a probe that reports what this machine's build flags and running server actually offer. Use when the user asks whether CARLA supports something, when a feature has no skill, when a UE4 tutorial's steps do not exist, or before improvising a procedure.
 license: MIT
-compatibility: Any Linux with bash. NO CARLA required — `matrix` and `broken` answer offline; `probe` reports more when CARLA_UE58_ROOT/CARLA_UE5_ROOT/CARLA_UE4_ROOT/CARLA_TARGET is set, and more still against a running server with an importable `carla`. Every claim was measured or read from source on ue58-dev HEAD 718efd7cc (engine 5.8.0, CARLA 0.10.0) and the 0.9.16 UE4 tree; re-verify after upgrading either.
+compatibility: Any Linux with bash, or Git Bash on Windows. NO CARLA required — `matrix` and `broken` answer offline; `probe` reports more when CARLA_UE58_ROOT/CARLA_UE5_ROOT/CARLA_UE4_ROOT/CARLA_TARGET is set, and more still against a running server with an importable `carla`. Every claim was measured or read from source on ue58-dev HEAD 718efd7cc (engine 5.8.0, CARLA 0.10.0) and the 0.9.16 UE4 tree; re-verify after upgrading either.
 metadata:
   group: setup
   prerequisites: scripts/check_env.sh
@@ -60,8 +60,8 @@ and warns on the two skews that cause wasted debugging:
   is why one API was briefly reported as removed when it had only moved class.
 
 Note what `version` deliberately does **not** claim: that matching versions mean
-matching behaviour. `ENABLE_ROS2`, `ENABLE_RSS` and `ENABLE_OSM2ODR` are
-compile-time, and the map-layer breakage is a property of the *content* branch —
+matching behaviour. `ENABLE_ROS2` and `ENABLE_RSS` are
+compile-time, and which maps have map layers is a property of the *content* branch —
 two servers reporting `0.10.0` can differ completely. Use `matrix` for behaviour;
 use `version` to establish that your measurements are even about the right
 target.
@@ -97,7 +97,6 @@ is the only honest source:
 
 - `ENABLE_RSS` — `sensor.other.rss` appears in the blueprint library either way,
   and cannot function without it. On the tree measured here it is **OFF**.
-- `ENABLE_OSM2ODR` — the OSM→OpenDRIVE half of digital twins. **OFF** here.
 - `ENABLE_ROS2` — no native ROS 2 interface at all without it, and it cannot be
   switched on at runtime ([[run-autoware-ue58]], [[build-carla-ue58]]).
 
@@ -118,8 +117,10 @@ exists. Tell the user it crashes the simulator; offer
 
 **Example 2: "hide the buildings so I can see the road network"**
 
-`matrix` shows map layers as `[broken]`. `enable_environment_objects` is the
-mechanism that works — that is [[toggle-env-objects]], a `[skill]` row.
+On Town10HD_Opt map layers do nothing (its layers were merged into the persistent
+level; only Town01_Opt to Town07_Opt have them, see `matrix`).
+`enable_environment_objects` is the mechanism that works on every map — that is
+[[toggle-env-objects]], a `[skill]` row.
 
 **Example 3: "set up SUMO co-simulation"**
 
@@ -135,16 +136,12 @@ exercised it afterwards".
 
 **Example 5: "add a vehicle to ue58"**
 
-`[untested]` — **to be done; there is no skill for it in this version.** The
-pipeline is known and gets as far as a vehicle that registers, spawns and reports
-four wheels in `get_physics_control()`; it does not move, because the physics asset
-does not survive an editor restart on the skeletal mesh. Deferred to a later
-version rather than shipped half-working.
+`[skill]` — use [[carla-vehicle-authoring]]. It covers the Blender and Unreal
+pipeline, including wheels, physics and runtime validation through the API.
 
-So: say it is not supported yet, offer to investigate, and do **not** adapt
-[[import-carla-ue58-walker]]'s procedure. Walkers bind to a *shared* skeleton;
-vehicles need a per-vehicle skeleton plus a persisted physics asset, which is the
-one step still unsolved.
+Do **not** adapt [[import-carla-ue58-walker]]'s procedure instead. Walkers bind
+to a *shared* skeleton; vehicles need a per-vehicle skeleton plus a persisted
+physics asset.
 
 ## Troubleshooting
 

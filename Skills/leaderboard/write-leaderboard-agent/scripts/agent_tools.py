@@ -172,7 +172,7 @@ def do_scaffold(args) -> None:
         name=args.name, file=path.name, track=args.track, track_enum=args.track,
         version=version, out=path, ctor=ctor,
         map_sensor=MAP_SENSOR if args.track.startswith("MAP") else "",
-    ))
+    ), encoding="utf-8")
     print(f"wrote {path}   (leaderboard {version}, track {args.track})")
     print(f"\nvalidate : python3 {sys.argv[0]} validate --agent {path} --track {args.track}")
     print(f"run      : TEAM_AGENT={path} bash ../run-leaderboard-evaluation/scripts/run_leaderboard.sh --routes-subset 0")
@@ -187,7 +187,7 @@ def load_sensors(agent_path: Path) -> tuple[list[dict], str | None]:
     """
     name = agent_path.stem
     expect = name.title().replace("_", "")
-    src = agent_path.read_text()
+    src = agent_path.read_text(encoding="utf-8")
     tree = ast.parse(src)
     cls = next((n for n in ast.walk(tree) if isinstance(n, ast.ClassDef) and n.name == expect), None)
     if cls is None:

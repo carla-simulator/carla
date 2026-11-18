@@ -1,0 +1,88 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1260" height="760" viewBox="0 0 1260 760"><defs><marker id="ah_ink" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#2b2b2b"/></marker><marker id="ah_sub" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#5f6b73"/></marker><marker id="ah_line" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#c9d3da"/></marker><marker id="ah_card" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#f5f8fa"/></marker><marker id="ah_blue" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#2980b9"/></marker><marker id="ah_red" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#d9534f"/></marker><marker id="ah_green" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#3c9a5f"/></marker><marker id="ah_orange" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#e69138"/></marker><marker id="ah_purple" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#7e57c2"/></marker><marker id="ah_white" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#ffffff"/></marker><marker id="ah_soft_blue" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#e3f0f9"/></marker><marker id="ah_soft_red" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#fbe6e5"/></marker><marker id="ah_soft_green" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#e4f3e9"/></marker><marker id="ah_soft_orange" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#fdf0e1"/></marker><marker id="ah_soft_purple" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#efe9f8"/></marker></defs>
+<rect width="1260" height="760" fill="#ffffff"/>
+<text x="630.0" y="42" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="26" fill="#2b2b2b" font-weight="bold" text-anchor="middle" xml:space="preserve">Traffic Manager architecture</text>
+<text x="630.0" y="68" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="14.5" fill="#5f6b73" font-weight="normal" text-anchor="middle" xml:space="preserve">One cycle per simulation step; the code is in LibCarla/source/carla/trafficmanager</text>
+<rect x="1110" y="100" width="120" height="560" rx="10" fill="#fbe6e5" stroke="#d9534f" stroke-width="2"/>
+<text x="1170.0" y="376.75" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="19" fill="#2b2b2b" font-weight="bold" text-anchor="middle" xml:space="preserve">CARLA</text>
+<text x="1170.0" y="396.25" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13.5" fill="#5f6b73" font-weight="normal" text-anchor="middle" xml:space="preserve">server</text>
+<rect x="60" y="100" width="930" height="66" rx="10" fill="#e3f0f9" stroke="#2980b9" stroke-width="2"/>
+<text x="525.0" y="130.25" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="16" fill="#2b2b2b" font-weight="bold" text-anchor="middle" xml:space="preserve">Agent Lifecycle &amp; State Management (ALSM)</text>
+<text x="525.0" y="148.75" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" fill="#5f6b73" font-weight="normal" text-anchor="middle" xml:space="preserve">reads every vehicle and walker from the server, once per cycle</text>
+<line x1="1110" y1="133" x2="994" y2="133" stroke="#2b2b2b" stroke-width="2" marker-end="url(#ah_ink)"/>
+<text x="1052" y="124" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" fill="#5f6b73" font-weight="normal" text-anchor="middle" xml:space="preserve">world state</text>
+<rect x="60" y="210" width="200" height="70" rx="10" fill="#efe9f8" stroke="#7e57c2" stroke-width="2"/>
+<text x="160.0" y="242.5" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="15" fill="#2b2b2b" font-weight="bold" text-anchor="middle" xml:space="preserve">Vehicle registry</text>
+<text x="160.0" y="260.5" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" fill="#5f6b73" font-weight="normal" text-anchor="middle" xml:space="preserve">TM vehicles, others</text>
+<rect x="560" y="210" width="430" height="70" rx="10" fill="#e3f0f9" stroke="#2980b9" stroke-width="2"/>
+<text x="775.0" y="242.5" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="15" fill="#2b2b2b" font-weight="bold" text-anchor="middle" xml:space="preserve">Simulation state</text>
+<text x="775.0" y="260.5" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" fill="#5f6b73" font-weight="normal" text-anchor="middle" xml:space="preserve">cached position, velocity, bounding box, light state</text>
+<line x1="160" y1="166" x2="160" y2="206" stroke="#2b2b2b" stroke-width="2" marker-end="url(#ah_ink)"/>
+<line x1="775" y1="166" x2="775" y2="206" stroke="#2b2b2b" stroke-width="2" marker-end="url(#ah_ink)"/>
+<rect x="60" y="320" width="930" height="190" rx="12" fill="#f5f8fa" stroke="#e69138" stroke-width="2"/>
+<text x="76" y="346" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="16" fill="#e69138" font-weight="bold" text-anchor="start" xml:space="preserve">Control loop</text>
+<text x="974" y="346" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12.5" fill="#5f6b73" font-weight="normal" text-anchor="end" xml:space="preserve">each stage runs over all vehicles before the next one starts</text>
+<rect x="80" y="380" width="170" height="90" rx="8" fill="#fdf0e1" stroke="#e69138" stroke-width="1.8"/>
+<text x="165.0" y="412" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" fill="#e69138" font-weight="bold" text-anchor="middle" xml:space="preserve">STAGE 1</text>
+<text x="165.0" y="434" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="15" fill="#2b2b2b" font-weight="bold" text-anchor="middle" xml:space="preserve">Localization</text>
+<text x="165.0" y="454" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#5f6b73" font-weight="normal" text-anchor="middle" xml:space="preserve">path ahead, lane changes</text>
+<rect x="262" y="370" width="10" height="110" rx="2" fill="#9aa5ad" stroke="#9aa5ad" stroke-width="1"/>
+<rect x="284" y="380" width="170" height="90" rx="8" fill="#fdf0e1" stroke="#e69138" stroke-width="1.8"/>
+<text x="369.0" y="412" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" fill="#e69138" font-weight="bold" text-anchor="middle" xml:space="preserve">STAGE 2</text>
+<text x="369.0" y="434" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="15" fill="#2b2b2b" font-weight="bold" text-anchor="middle" xml:space="preserve">Collision</text>
+<text x="369.0" y="454" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#5f6b73" font-weight="normal" text-anchor="middle" xml:space="preserve">hazards on the path</text>
+<rect x="466" y="370" width="10" height="110" rx="2" fill="#9aa5ad" stroke="#9aa5ad" stroke-width="1"/>
+<rect x="488" y="370" width="486" height="110" rx="8" fill="none" stroke="#e69138" stroke-width="1.2" stroke-dasharray="5,4"/>
+<text x="900" y="496" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" fill="#5f6b73" font-weight="normal" text-anchor="middle" font-style="italic" xml:space="preserve">per vehicle, in sequence</text>
+<rect x="500" y="380" width="150" height="90" rx="8" fill="#fdf0e1" stroke="#e69138" stroke-width="1.8"/>
+<text x="575.0" y="412" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" fill="#e69138" font-weight="bold" text-anchor="middle" xml:space="preserve">STAGE 3</text>
+<text x="575.0" y="434" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="15" fill="#2b2b2b" font-weight="bold" text-anchor="middle" xml:space="preserve">Traffic light</text>
+<text x="575.0" y="454" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#5f6b73" font-weight="normal" text-anchor="middle" xml:space="preserve">lights, stops, junctions</text>
+<rect x="660" y="380" width="150" height="90" rx="8" fill="#fdf0e1" stroke="#e69138" stroke-width="1.8"/>
+<text x="735.0" y="412" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" fill="#e69138" font-weight="bold" text-anchor="middle" xml:space="preserve">STAGE 4</text>
+<text x="735.0" y="434" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="15" fill="#2b2b2b" font-weight="bold" text-anchor="middle" xml:space="preserve">Motion planner</text>
+<text x="735.0" y="454" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#5f6b73" font-weight="normal" text-anchor="middle" xml:space="preserve">target speed, PID</text>
+<rect x="820" y="380" width="145" height="90" rx="8" fill="#fdf0e1" stroke="#e69138" stroke-width="1.8"/>
+<text x="892.5" y="412" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" fill="#e69138" font-weight="bold" text-anchor="middle" xml:space="preserve">STAGE 5</text>
+<text x="892.5" y="434" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="15" fill="#2b2b2b" font-weight="bold" text-anchor="middle" xml:space="preserve">Vehicle lights</text>
+<text x="892.5" y="454" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#5f6b73" font-weight="normal" text-anchor="middle" xml:space="preserve">indicators, brake, beams</text>
+<line x1="250" y1="425" x2="262" y2="425" stroke="#2b2b2b" stroke-width="1.5" marker-end="url(#ah_ink)"/>
+<line x1="454" y1="425" x2="466" y2="425" stroke="#2b2b2b" stroke-width="1.5" marker-end="url(#ah_ink)"/>
+<line x1="650" y1="425" x2="660" y2="425" stroke="#2b2b2b" stroke-width="1.5" marker-end="url(#ah_ink)"/>
+<line x1="810" y1="425" x2="820" y2="425" stroke="#2b2b2b" stroke-width="1.5" marker-end="url(#ah_ink)"/>
+<line x1="160" y1="280" x2="160" y2="316" stroke="#2b2b2b" stroke-width="2" marker-end="url(#ah_ink)"/>
+<text x="170" y="304" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" fill="#5f6b73" font-weight="normal" text-anchor="start" xml:space="preserve">vehicles to update</text>
+<line x1="775" y1="280" x2="775" y2="316" stroke="#2b2b2b" stroke-width="2" marker-end="url(#ah_ink)"/>
+<text x="785" y="304" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" fill="#5f6b73" font-weight="normal" text-anchor="start" xml:space="preserve">state read by every stage</text>
+<rect x="80" y="560" width="250" height="70" rx="10" fill="#e4f3e9" stroke="#3c9a5f" stroke-width="2"/>
+<text x="205.0" y="592.5" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="15" fill="#2b2b2b" font-weight="bold" text-anchor="middle" xml:space="preserve">In-Memory Map</text>
+<text x="205.0" y="610.5" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" fill="#5f6b73" font-weight="normal" text-anchor="middle" xml:space="preserve">map as a grid of waypoints</text>
+<rect x="370" y="560" width="330" height="70" rx="10" fill="#e4f3e9" stroke="#3c9a5f" stroke-width="2"/>
+<text x="535.0" y="592.5" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="15" fill="#2b2b2b" font-weight="bold" text-anchor="middle" xml:space="preserve">Path buffers &amp; vehicle tracking</text>
+<text x="535.0" y="610.5" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" fill="#5f6b73" font-weight="normal" text-anchor="middle" xml:space="preserve">path of every vehicle (PBVT)</text>
+<rect x="730" y="560" width="200" height="70" rx="10" fill="#efe9f8" stroke="#7e57c2" stroke-width="2"/>
+<text x="830.0" y="592.5" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="15" fill="#2b2b2b" font-weight="bold" text-anchor="middle" xml:space="preserve">PID controller</text>
+<text x="830.0" y="610.5" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" fill="#5f6b73" font-weight="normal" text-anchor="middle" xml:space="preserve">throttle, brake, steer</text>
+<line x1="140" y1="556" x2="140" y2="474" stroke="#2b2b2b" stroke-width="1.5" marker-end="url(#ah_ink)"/>
+<path d="M220,470 L220,525 L400,525 L400,556" stroke="#2b2b2b" stroke-width="1.5" fill="none" marker-end="url(#ah_ink)"/>
+<text x="228" y="518" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#5f6b73" font-weight="normal" text-anchor="start" xml:space="preserve">writes paths</text>
+<line x1="440" y1="556" x2="440" y2="474" stroke="#2b2b2b" stroke-width="1.5" marker-end="url(#ah_ink)"/>
+<line x1="575" y1="556" x2="575" y2="474" stroke="#2b2b2b" stroke-width="1.5" marker-end="url(#ah_ink)"/>
+<line x1="685" y1="556" x2="685" y2="474" stroke="#2b2b2b" stroke-width="1.5" marker-end="url(#ah_ink)"/>
+<text x="452" y="545" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="11.5" fill="#5f6b73" font-weight="normal" text-anchor="start" xml:space="preserve">read by stages 2-4</text>
+<line x1="760" y1="474" x2="760" y2="556" stroke="#2b2b2b" stroke-width="1.5" marker-end="url(#ah_ink)"/>
+<line x1="790" y1="556" x2="790" y2="474" stroke="#2b2b2b" stroke-width="1.5" marker-end="url(#ah_ink)"/>
+<rect x="1000" y="380" width="96" height="70" rx="10" fill="#efe9f8" stroke="#7e57c2" stroke-width="2"/>
+<text x="1048.0" y="411.5" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="14" fill="#2b2b2b" font-weight="bold" text-anchor="middle" xml:space="preserve">Command</text>
+<text x="1048.0" y="431.5" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="14" fill="#5f6b73" font-weight="normal" text-anchor="middle" xml:space="preserve">array</text>
+<line x1="990" y1="415" x2="998" y2="415" stroke="#2b2b2b" stroke-width="1.5" marker-end="url(#ah_ink)"/>
+<line x1="1096" y1="415" x2="1108" y2="415" stroke="#2b2b2b" stroke-width="2" marker-end="url(#ah_ink)"/>
+<text x="1048" y="476" font-family="'DejaVu Sans Mono', Consolas, monospace" font-size="11.5" fill="#5f6b73" font-weight="normal" text-anchor="middle" xml:space="preserve">apply_batch</text>
+<text x="1048" y="492" font-family="'DejaVu Sans Mono', Consolas, monospace" font-size="11.5" fill="#5f6b73" font-weight="normal" text-anchor="middle" xml:space="preserve">(_sync)</text>
+<rect x="80" y="680" width="22" height="16" rx="3" fill="#fdf0e1" stroke="#e69138" stroke-width="1.2"/>
+<text x="110" y="693" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" fill="#5f6b73" font-weight="normal" text-anchor="start" xml:space="preserve">stage</text>
+<rect x="330" y="680" width="22" height="16" rx="3" fill="#9aa5ad" stroke="#9aa5ad" stroke-width="1.2"/>
+<text x="360" y="693" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" fill="#5f6b73" font-weight="normal" text-anchor="start" xml:space="preserve">synchronization barrier</text>
+<rect x="580" y="680" width="22" height="16" rx="3" fill="#e4f3e9" stroke="#3c9a5f" stroke-width="1.2"/>
+<text x="610" y="693" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="13" fill="#5f6b73" font-weight="normal" text-anchor="start" xml:space="preserve">helper module</text>
+<text x="1230" y="730" font-family="Lato, 'Helvetica Neue', Arial, sans-serif" font-size="12" fill="#5f6b73" font-weight="normal" text-anchor="end" font-style="italic" xml:space="preserve">Stage 5 runs after the motion planner and adds SetVehicleLightState commands to the same batch.</text>
+</svg>

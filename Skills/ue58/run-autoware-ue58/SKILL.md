@@ -2,7 +2,7 @@
 name: run-autoware-ue58
 description: Runs the Autoware autonomous-driving stack against CARLA on UE 5.8 over CARLA's native ROS 2 interface — no bridge process. Reports the DDS contract (rt/vehicle/status/* out, rt/control/command/* in), the Autoware-only sensor blueprints, generates the lanelet2 + point-cloud map artifacts Autoware needs instead of an .xodr, and drives the two shipped modes (classical NDT stack, or the camera-only VAD end-to-end model). Use when the user asks to "run Autoware on CARLA", "connect an AV stack", "drive the ego from Autoware", "generate a lanelet2 map", or asks which topics CARLA exchanges with Autoware.
 license: MIT
-compatibility: Linux, a ue58-dev tree BUILT with -DENABLE_ROS2=ON, and a server STARTED with the single-dash -ros2 flag. Autoware itself is external (a source workspace at AUTOWARE_WS, or the autowarefoundation docker image) and needs ROS 2 Humble at /opt/ros/humble. PARTLY VERIFIED on ue58-dev HEAD 718efd7cc, engine 5.8.0, CARLA 0.10.0 - probe, topics, sensors and the launcher dry run were executed here; the Autoware stack itself was NOT run (no source workspace on this machine), so the driving loop is documented from the shipped scripts and source, not measured.
+compatibility: Linux, a ue58-dev tree BUILT with -DENABLE_ROS2=ON, and a server STARTED with the single-dash -ros2 flag. Autoware itself is external (a source workspace at AUTOWARE_WS, or the autowarefoundation docker image). The launcher sources the workspace, else /opt/ros/jazzy, else /opt/ros/humble, and --stack docker needs no host ROS 2. PARTLY VERIFIED on ue58-dev HEAD 718efd7cc, engine 5.8.0, CARLA 0.10.0 - probe, topics, sensors and the launcher dry run were executed here; the Autoware stack itself was NOT run in that session (no source workspace on this machine). On 2026-11-02 the classical stack ran against the CARLA 1.0 package with the universe-cuda-jazzy docker image and reached ARRIVED.
 metadata:
   group: ue58
   prerequisites: scripts/check_env.sh
@@ -134,9 +134,9 @@ Other launcher options worth knowing: `--town`, `--stack auto|source|docker`,
 (default 42).
 
 **Keep the RMWs straight.** The launcher defaults the *simulator* side to
-`fastdds` and explicitly warns against `cyclonedds` there (a known
-fragmented-receive bug); the *Autoware* side always runs cyclonedds, with a
-generated config. Both sides must share `ROS_DOMAIN_ID`.
+`fastdds`. `cyclonedds` on the simulator is also validated, because the
+fragmented-receive bug is fixed. The *Autoware* side always runs cyclonedds,
+with a generated config. Both sides must share `ROS_DOMAIN_ID`.
 
 ## Examples
 
@@ -171,11 +171,13 @@ vehicle — confirm the server actually got `-ros2`, and that both sides share
 Cause: ROS 2 not compiled in, or the server started without `-ros2`.
 Solution: `probe` reports the cache value; rebuild with `-DENABLE_ROS2=ON`
 ([[build-carla-ue58]]) and start with `ROS2=1` ([[run-carla-ue58-server]]). The
-flag is single-dash on ue58 — `--ros2` is silently ignored.
+flag is `-ros2`. CARLA 1.0 also accepts `--ros2`.
 
 **Problem: `ros2` command not found in the dry-run commands**
-Cause: no ROS 2 on the host; the launcher sources `/opt/ros/humble/setup.bash`.
-Solution: install ROS 2 Humble, or use `--stack docker`.
+Cause: no ROS 2 on the host. The launcher sources the Autoware workspace, else
+`/opt/ros/jazzy`, else `/opt/ros/humble`.
+Solution: install ROS 2 Jazzy or Humble, or use `--stack docker`, which needs
+no host ROS 2.
 
 **Problem: the stack cannot localise / rejects the map**
 Cause: missing or partial map artifacts — `.xodr` is not enough.

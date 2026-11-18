@@ -578,6 +578,10 @@ private:
   FVehicleAckermannControl LastAppliedAckermannControl;
   FVehiclePhysicsControl LastPhysicsControl;
 
+  /// Applies LastPhysicsControl.Wheels to the live Chaos wheels. Call it after
+  /// every RecreatePhysicsState(), which resets them to the class defaults.
+  void ApplyWheelPhysicsControl();
+
   bool bAckermannControlActive = false;
   FAckermannController AckermannController;
 
@@ -722,6 +726,9 @@ public:
   /// Unit vector, component space, along which the wheel's suspension drops.
   FVector GetWheelSuspensionAxis(int32 WheelIndex) const;
 
+  /// Wheel pose the animation instance drew this frame (else GetWheelPose); what secondaries must draw.
+  FWheelAnimationData GetDrawnWheelPose(int32 WheelIndex) const;
+
   UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
   void OpenDoor(const EVehicleDoor DoorIdx);
 
@@ -737,7 +744,62 @@ public:
   UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
   void RecordDoorChange(const EVehicleDoor DoorIdx, const bool bIsOpen); 
 
+  /// Number of doors this vehicle can open (its configured door constraints).
+  int32 GetDoorCount() const
+  {
+    return ConstraintsComponents.Num();
+  }
+
+  /// Bit i set when door i (an EVehicleDoor below All) is open: OpenDoorPhys
+  /// opened it and CloseDoorPhys has not closed it since.
+  uint8 GetOpenDoorMask() const
+  {
+    return OpenDoorMask;
+  }
+
+  /// Every door open now (a physics body of its own while open), by door
+  /// index, with its pose relative to the vehicle.
+  TArray<TPair<int32, FTransform>> GetOpenDoorPoses() const;
+
+  /// Multi-GPU secondary: shows these doors open, at these poses relative to
+  /// the vehicle, and every other door closed. A mirror's doors are posed,
+  /// never simulated.
+  void SetMirroredDoorPoses(const TArray<TPair<int32, FTransform>> &OpenDoors);
+
   virtual FVector GetVelocity() const override;
+
+  /// Multi-GPU secondary: the primary's motion of the vehicle this one mirrors
+  /// (world frame, cm/s), which GetVelocity and GetVehicleForwardSpeed report
+  /// instead of this body's: a mirror never moves on its own.
+  void SetMirroredMotion(const FVector &Velocity, float ForwardSpeed);
+
+  void ClearMirroredMotion();
+
+  bool HasMirroredMotion() const
+  {
+    return bHasMirroredMotion;
+  }
+
+  /// Multi-GPU secondary: the primary's gear, which GetVehicleCurrentGear
+  /// reports instead of the idle drivetrain's, its manual gear shift, and
+  /// whether the primary's body simulates physics.
+  void SetMirroredDrivetrain(int32 Gear, bool bManualGearShift, bool bSimulatingPhysics)
+  {
+    bHasMirroredGear = true;
+    MirroredGear = Gear;
+    bMirroredManualGearShift = bManualGearShift;
+    bMirroredSimulatingPhysics = bSimulatingPhysics;
+  }
+
+  bool GetMirroredManualGearShift() const
+  {
+    return bMirroredManualGearShift;
+  }
+
+  bool IsMirroredSimulatingPhysics() const
+  {
+    return bMirroredSimulatingPhysics;
+  }
 
   UFUNCTION()
   FPoseSnapshot GetWorldTransformedPose();
@@ -761,6 +823,26 @@ public:
       UPhysicsConstraintComponent*Component, const FRotator &NewAngle);
  
 private:
+
+  bool bHasMirroredMotion = false;
+
+  /// Set while ResetConstraints cycles the doors, which is not a door change.
+  bool bResettingDoorConstraints = false;
+
+  /// What GetOpenDoorMask returns.
+  uint8 OpenDoorMask = 0u;
+
+  FVector MirroredVelocity = FVector::ZeroVector;
+
+  float MirroredForwardSpeed = 0.0f;
+
+  bool bHasMirroredGear = false;
+
+  int32 MirroredGear = 0;
+
+  bool bMirroredManualGearShift = false;
+
+  bool bMirroredSimulatingPhysics = false;
 
   UPROPERTY(Category="CARLA Wheeled Vehicle", VisibleAnywhere)
   bool bPhysicsEnabled = true;
@@ -791,6 +873,10 @@ private:
 
   /// GetWheelPose for every wheel.
   TArray<FWheelAnimationData> GetWheelPoses() const;
+
+  /// World location, in cm, of the centre of the wheel at WheelIndex as shown:
+  /// its resting position plus the suspension travel of GetWheelPose.
+  FVector GetWheelWorldLocation(int32 WheelIndex) const;
 
   /// Sets the Chaos wheels to these poses, so that they do not jump when Chaos
   /// takes over the wheels again.

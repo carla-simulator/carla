@@ -80,7 +80,11 @@ void TrafficManagerRemote::Release() {
   Stop();
 }
 
-void TrafficManagerRemote::Reset() {
+void TrafficManagerRemote::Reset(uint64_t episode_id) {
+  // Every client alive in the process reports the change; reset once.
+  if (episodeProxyTM.GetId() == episode_id) {
+    return;
+  }
   Stop();
 
   carla::client::detail::EpisodeProxy episode_proxy = episodeProxyTM.Lock()->GetCurrentEpisode();
@@ -257,18 +261,6 @@ void TrafficManagerRemote::RemoveImportedRoute(const ActorId &actor_id, const bo
 
 void TrafficManagerRemote::UpdateImportedRoute(const ActorId &actor_id, const Route route) {
   client.UpdateImportedRoute(actor_id, route);
-}
-
-void TrafficManagerRemote::SetRespawnDormantVehicles(const bool mode_switch) {
-  client.SetRespawnDormantVehicles(mode_switch);
-}
-
-void TrafficManagerRemote::SetBoundariesRespawnDormantVehicles(const float lower_bound, const float upper_bound) {
-  client.SetBoundariesRespawnDormantVehicles(lower_bound, upper_bound);
-}
-
-void TrafficManagerRemote::SetMaxBoundaries(const float lower, const float upper) {
-  client.SetMaxBoundaries(lower, upper);
 }
 
 void TrafficManagerRemote::ShutDown() {

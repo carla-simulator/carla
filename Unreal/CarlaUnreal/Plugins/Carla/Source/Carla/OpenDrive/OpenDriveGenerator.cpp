@@ -1944,6 +1944,7 @@ void AOpenDriveGenerator::GeneratePoles()
       PCGBoundsComponent->UpdateBounds();
     }
     PCGComponent->SetGraph(Graph);
+    PCGComponent->Seed = StreetFurnitureSeed;
     PCGComponent->Generate(true);
   }
   else
@@ -1953,6 +1954,11 @@ void AOpenDriveGenerator::GeneratePoles()
         TEXT("anchors were still spawned and are ready to sample once a graph is assigned)."),
         TotalAnchors);
   }
+}
+
+bool AOpenDriveGenerator::IsStreetFurnitureGenerating() const
+{
+  return PCGComponent != nullptr && PCGComponent->IsGenerating();
 }
 
 void AOpenDriveGenerator::GenerateSpawnPoints()

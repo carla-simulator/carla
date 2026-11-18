@@ -4,11 +4,9 @@
 # This work is licensed under the terms of the MIT license.
 # For a copy, see <https://opensource.org/licenses/MIT>.
 
-import time
-
 import carla
 
-from . import SmokeTest
+from . import SyncSmokeTest
 
 
 OUTSIDE_JUNCTION_TRAFFIC_LIGHT_XODR = """<?xml version="1.0" encoding="UTF-8"?>
@@ -69,7 +67,7 @@ OUTSIDE_JUNCTION_TRAFFIC_LIGHT_XODR = """<?xml version="1.0" encoding="UTF-8"?>
 """
 
 
-class TestTrafficLight(SmokeTest):
+class TestTrafficLight(SyncSmokeTest):
     def test_outside_junction_snapshot(self):
         print("TestTrafficLight.test_outside_junction_snapshot")
         parameters = carla.OpendriveGenerationParameters(
@@ -79,17 +77,18 @@ class TestTrafficLight(SmokeTest):
             additional_width=0.6,
             smooth_junctions=True,
             enable_mesh_visibility=True)
+        # A synchronous tick returns once the client holds its frame, so it reflects the set_state() before it.
         world = self.client.generate_opendrive_world(
-            OUTSIDE_JUNCTION_TRAFFIC_LIGHT_XODR, parameters)
+            OUTSIDE_JUNCTION_TRAFFIC_LIGHT_XODR, parameters, reset_settings=False)
+        self.world = world
 
-        deadline = time.time() + 30.0
         traffic_lights = []
-        while time.time() < deadline:
+        for _ in range(100):
+            world.tick()
             traffic_lights = list(
                 world.get_actors().filter("traffic.traffic_light*"))
             if traffic_lights:
                 break
-            time.sleep(0.25)
 
         self.assertEqual(1, len(traffic_lights))
         traffic_light = traffic_lights[0]
@@ -98,10 +97,12 @@ class TestTrafficLight(SmokeTest):
         self.assertGreater(traffic_light.get_yellow_time(), 0.0)
         self.assertGreater(traffic_light.get_red_time(), 0.0)
 
+        # Only set_state() changes the light, not its controller's own cycle.
+        traffic_light.freeze(True)
         for expected_state in (
                 carla.TrafficLightState.Green,
                 carla.TrafficLightState.Yellow,
                 carla.TrafficLightState.Red):
             traffic_light.set_state(expected_state)
-            self.assertIsNotNone(world.wait_for_tick(seconds=30.0))
+            world.tick()
             self.assertEqual(expected_state, traffic_light.get_state())

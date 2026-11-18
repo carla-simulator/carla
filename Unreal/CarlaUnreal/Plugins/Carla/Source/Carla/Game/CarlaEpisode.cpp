@@ -21,12 +21,16 @@
 #include "Carla/Walker/WalkerBase.h"
 
 #include <util/disable-ue4-macros.h>
+#include <carla/MsgPack.h>
 #include <carla/opendrive/OpenDriveParser.h>
 #include <carla/rpc/String.h>
 #include <util/enable-ue4-macros.h>
 
 #include <util/ue-header-guard-begin.h>
 #include "Async/Async.h"
+#include "CollisionQueryParams.h"
+#include "Components/CapsuleComponent.h"
+#include "Engine/OverlapResult.h"
 #include "HAL/PlatformProcess.h"
 #include "Components/WorldPartitionStreamingSourceComponent.h"
 #include "WorldPartition/WorldPartition.h"
@@ -171,10 +175,18 @@ bool UCarlaEpisode::LoadNewEpisode(const FString &MapString, bool ResetSettings)
       {
         FCarlaEngine *CarlaEngine = GameInstance->GetCarlaEngine();
         auto SecondaryServer = CarlaEngine->GetSecondaryServer();
-        if (SecondaryServer->HasClientsConnected()) 
+        // A world generated from OpenDRIVE: the secondaries generate the same.
+        carla::multigpu::LoadMapExtras Extras;
+        TArray<uint8> OpenDrive;
+        if (FPaths::GetBaseFilename(FinalPath).Equals(TEXT("OpenDriveMap"), ESearchCase::IgnoreCase) &&
+            FFileHelper::LoadFileToArray(OpenDrive, *UOpenDrive::GetSavedXODRPath(TEXT("OpenDriveMap")), FILEREAD_Silent))
         {
-          SecondaryServer->GetCommander().SendLoadMap(std::string(TCHAR_TO_UTF8(*FinalPath)));
+          Extras.opendrive = std::string(reinterpret_cast<const char *>(OpenDrive.GetData()), OpenDrive.Num());
+          const carla::Buffer Parameters = carla::MsgPack::Pack(GameInstance->GetOpendriveGenerationParameters());
+          Extras.generation_parameters =
+              std::string(reinterpret_cast<const char *>(Parameters.data()), Parameters.size());
         }
+        SecondaryServer->GetCommander().SendLoadMap(std::string(TCHAR_TO_UTF8(*FinalPath)), Extras);
       }
     }
   }
@@ -368,6 +380,57 @@ carla::rpc::Actor UCarlaEpisode::SerializeActor(FCarlaActor *CarlaActor) const
   return Actor;
 }
 
+carla::rpc::Actor UCarlaEpisode::SerializeActorWithPrimaryIds(AActor *Actor) const
+{
+  carla::rpc::Actor Serialized = SerializeActor(Actor);
+  if (!bIsPrimaryServer)
+  {
+    const FActorRegistry &Registry = ActorDispatcher->GetActorRegistry();
+    if (const FCarlaActor *Mirror = Registry.FindCarlaActor(Serialized.id))
+    {
+      Serialized.id = Mirror->GetPrimaryActorId();
+    }
+    if (Serialized.parent_id != 0u)
+    {
+      if (const FCarlaActor *Parent = Registry.FindCarlaActor(Serialized.parent_id))
+      {
+        Serialized.parent_id = Parent->GetPrimaryActorId();
+      }
+    }
+  }
+  return Serialized;
+}
+
+void UCarlaEpisode::AddRosParentNames(FCarlaActor &Child)
+{
+#if defined(WITH_ROS2)
+  auto ROS2 = carla::ros2::ROS2::GetInstance();
+  if (!ROS2->IsEnabled())
+  {
+    return;
+  }
+  FCarlaActor *CurrentActor = FindCarlaActor(Child.GetParent());
+  while (CurrentActor)
+  {
+    for (const auto &Attr : CurrentActor->GetActorInfo()->Description.Variations)
+    {
+      if (Attr.Key == "ros_name")
+      {
+        ROS2->AddActorParentRosName(static_cast<void*>(Child.GetActor()), static_cast<void*>(CurrentActor->GetActor()));
+      }
+      // NOTE: tier4 also propagated each ancestor's ros_topic_name onto the
+      // child here, but their AddActorRosTopicName used map::insert, so the
+      // dispatcher's earlier per-actor registration (own override or "")
+      // always won and the call was a no-op. Our AddActorRosTopicName is
+      // insert_or_assign (re-registration idempotency), which made the
+      // propagation live and clobbered every attached sensor's own
+      // ros_topic_name with its ancestor's — so it is dropped entirely.
+    }
+    CurrentActor = FindCarlaActor(CurrentActor->GetParent());
+  }
+#endif
+}
+
 carla::rpc::Actor UCarlaEpisode::SerializeActor(AActor* Actor) const
 {
   FCarlaActor* CarlaActor = FindCarlaActor(Actor);
@@ -535,6 +598,38 @@ std::string UCarlaEpisode::StartRecorder(std::string Name, bool AdditionalData, 
   return result;
 }
 
+bool UCarlaEpisode::IsWalkerInsideBuilding(const AWalkerBase &Walker) const
+{
+  // A small probe at the capsule centre: a walker whose capsule merely
+  // touches a facade gets pushed sideways and is fine, and the terrain a
+  // walker spawned at ground level sinks into is not a building.
+  constexpr float ProbeRadius = 10.0f;
+  const UCapsuleComponent *Capsule = Walker.GetCapsuleComponent();
+  const FVector Center = Capsule != nullptr
+      ? Capsule->GetComponentLocation() : Walker.GetActorLocation();
+
+  FCollisionQueryParams Params(SCENE_QUERY_STAT(CarlaWalkerInsideBuilding), false, &Walker);
+  TArray<FOverlapResult> Overlaps;
+  GetWorld()->OverlapMultiByObjectType(
+      Overlaps, Center, FQuat::Identity,
+      FCollisionObjectQueryParams(ECC_WorldStatic),
+      FCollisionShape::MakeSphere(ProbeRadius), Params);
+  for (const FOverlapResult &Overlap : Overlaps)
+  {
+    const UPrimitiveComponent *Component = Overlap.GetComponent();
+    if (Component == nullptr)
+    {
+      continue;
+    }
+    const crp::CityObjectLabel Label = ATagger::GetTagOfTaggedComponent(*Component);
+    if (Label == crp::CityObjectLabel::Buildings || Label == crp::CityObjectLabel::Walls)
+    {
+      return true;
+    }
+  }
+  return false;
+}
+
 TPair<EActorSpawnResultStatus, FCarlaActor*> UCarlaEpisode::SpawnActorWithInfo(
     const FTransform &Transform,
     FActorDescription thisActorDescription,
@@ -592,6 +687,24 @@ TPair<EActorSpawnResultStatus, FCarlaActor*> UCarlaEpisode::SpawnActorWithInfo(
           "WP streaming source on %s (role %s, radius %.0f cm): completed=%d"),
           *Actor->GetName(), Attribute ? *Attribute->Value : TEXT("none"), Shape.Radius,
           WPSubsystem ? WPSubsystem->IsStreamingCompleted(Source) : -1);
+
+      // A walker's cells can bring in a building on top of it: the navmesh
+      // covers the terrain under some building footprints, and the building's
+      // cell may only stream in with the walker's own source. Physics then
+      // pushes the walker down through the terrain (#10212). Refuse the spawn
+      // like any other spawn collision instead. Replays and Multi-GPU
+      // secondaries reproduce spawns the primary already accepted.
+      if (AWalkerBase* Walker = Cast<AWalkerBase>(Actor);
+          Walker != nullptr && bIsPrimaryServer &&
+          !Recorder->GetReplayer()->IsEnabled() &&
+          IsWalkerInsideBuilding(*Walker))
+      {
+        UE_LOG(LogCarla, Warning, TEXT(
+            "Walker '%s' spawned inside a building at %s; spawn refused"),
+            *thisActorDescription.Id, *Actor->GetActorLocation().ToString());
+        ActorDispatcher->DestroyActor(result.Value->GetActorId());
+        return MakeTuple(EActorSpawnResultStatus::Collision, nullptr);
+      }
     }
   }
   if (result.Key == EActorSpawnResultStatus::Success && bIsPrimaryServer)

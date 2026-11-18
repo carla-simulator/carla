@@ -2,7 +2,7 @@
 name: write-leaderboard-agent
 description: Writes an autonomous agent for the CARLA Leaderboard — an AutonomousAgent subclass with setup/sensors/run_step/destroy, a sensor suite inside the track's budget, and the right constructor signature for the leaderboard version (1.0 and 2.x differ). Generates a working skeleton, validates the sensor configuration against the real per-track limits offline, and covers the ROS1/ROS2 agent base classes. Use when the user asks to "write a leaderboard agent", "make my agent work with the leaderboard", "add sensors to my agent", "port my agent to 2.1", or hits SensorConfigurationInvalid.
 license: MIT
-compatibility: Any OS with a leaderboard + scenario_runner checkout. Validation runs offline. Running the agent needs a matching CARLA. Sensor budgets and the constructor signature depend on the leaderboard version — 1.0 differs from 2.0/2.1.
+compatibility: Any OS with a leaderboard checkout (plus a matching scenario_runner for 1.0/2.0/2.1). Validation runs offline. Running the agent needs a matching CARLA. Sensor budgets and the constructor signature depend on the leaderboard version — 1.0 differs from 2.0/2.1.
 metadata:
   group: leaderboard
   prerequisites: scripts/check_env.sh

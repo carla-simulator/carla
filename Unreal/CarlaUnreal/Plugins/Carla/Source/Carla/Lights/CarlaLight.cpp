@@ -364,6 +364,12 @@ void UCarlaLight::SetLightIntensity(float Intensity)
 {
   LightIntensity = Intensity;
   ApplyIntensityToComponents(Intensity);
+  // Not recorded on its own (SetLightState is), but Multi-GPU secondaries
+  // mirror every change.
+  if (auto* Episode = UCarlaStatics::GetCurrentEpisode(GetWorld()))
+  {
+    Episode->MarkSceneLightChanged(GetId());
+  }
 }
 
 float UCarlaLight::GetLightIntensity() const
@@ -569,12 +575,21 @@ carla::rpc::LightState UCarlaLight::GetLightState()
 
 void UCarlaLight::SetLightState(carla::rpc::LightState LightState)
 {
-  LightIntensity = LightState._intensity;
-  LightColor = LightState._color;
-  LightType = static_cast<ELightType>(LightState._group);
-  flags = LightState._active ? (flags | ECarlaLightFlags::TurnedOn) : (flags & ~ECarlaLightFlags::TurnedOn);
+  SetLightState(
+      LightState._intensity,
+      LightState._color,
+      static_cast<ELightType>(LightState._group),
+      LightState._active);
+}
+
+void UCarlaLight::SetLightState(float Intensity, FLinearColor Color, ELightType Type, bool bOn)
+{
+  LightIntensity = Intensity;
+  LightColor = Color;
+  LightType = Type;
+  flags = bOn ? (flags | ECarlaLightFlags::TurnedOn) : (flags & ~ECarlaLightFlags::TurnedOn);
   UpdateLights();
-  ApplyLightOnToComponents(LightState._active);
+  ApplyLightOnToComponents(bOn);
   ApplyLegacyComponentConversion();
   RecordLightChange();
 }
@@ -615,5 +630,6 @@ void UCarlaLight::RecordLightChange() const
     {
       Recorder->AddEventLightSceneChanged(this);
     }
+    Episode->MarkSceneLightChanged(GetId());
   }
 }

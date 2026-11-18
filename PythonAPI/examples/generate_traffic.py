@@ -61,8 +61,8 @@ def main():
         '--filterv', metavar='PATTERN', default='vehicle.*',
         help='Filter vehicle model (default: "vehicle.*")')
     argparser.add_argument(
-        '--generationv', metavar='G', default='All',
-        help='restrict to certain vehicle generation (values: "2","3","All" - default: "All")')
+        '--generationv', metavar='G', default='3',
+        help='restrict to certain vehicle generation (values: "1","2","3","All" - default: "3")')
     argparser.add_argument(
         '--filterw', metavar='PATTERN', default='walker.pedestrian.*',
         help='Filter pedestrian type (default: "walker.pedestrian.*")')
@@ -91,11 +91,12 @@ def main():
         '--hero', action='store_true', default=False,
         help='Set one of the vehicles as hero')
     argparser.add_argument(
-        '--respawn', action='store_true', default=False,
-        help='Automatically respawn dormant vehicles (only in large maps)')
-    argparser.add_argument(
         '--no-rendering', action='store_true', default=False,
         help='Activate no rendering mode')
+    argparser.add_argument(
+        '--timeout', metavar='T', default=60.0, type=float,
+        help='Client timeout in seconds (default: 60). Large maps such as Town12 '
+             'and Town13 need more than 10 s to spawn a batch of vehicles')
 
     args = argparser.parse_args()
 
@@ -105,7 +106,7 @@ def main():
     walkers_list = []
     all_id = []
     client = carla.Client(args.host, args.port)
-    client.set_timeout(10.0)
+    client.set_timeout(args.timeout)
     synchronous_master = False
     random.seed(args.seed if args.seed is not None else int(time.time()))
 
@@ -114,8 +115,6 @@ def main():
 
         traffic_manager = client.get_trafficmanager(args.tm_port)
         traffic_manager.set_global_distance_to_leading_vehicle(2.5)
-        if args.respawn:
-            traffic_manager.set_respawn_dormant_vehicles(True)
         if args.hybrid:
             traffic_manager.set_hybrid_physics_mode(True)
             traffic_manager.set_hybrid_physics_radius(70.0)
@@ -229,6 +228,10 @@ def main():
             # set as not invincible
             if walker_bp.has_attribute('is_invincible'):
                 walker_bp.set_attribute('is_invincible', 'false')
+            # 11% of the pedestrians that support it ride a wheelchair; the
+            # blueprint is reused between walkers, so set the flag both ways
+            if walker_bp.has_attribute('can_use_wheelchair') and walker_bp.get_attribute('can_use_wheelchair').as_bool():
+                walker_bp.set_attribute('use_wheelchair', 'true' if random.randint(0, 100) < 11 else 'false')
             # set the max speed
             if walker_bp.has_attribute('speed'):
                 if (random.random() > percentagePedestriansRunning):

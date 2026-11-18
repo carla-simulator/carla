@@ -56,12 +56,12 @@ void CarlaRecorderAnimWalkers::Write(std::ostream &OutFile)
 
 void CarlaRecorderAnimWalkers::Read(std::istream &InFile)
 {
-  uint16_t i, Total;
+  uint16_t i, Total = 0;
   CarlaRecorderAnimWalker Walker;
 
   // read Total walkers
   ReadValue<uint16_t>(InFile, Total);
-  for (i = 0; i < Total; ++i)
+  for (i = 0; (i < Total) && InFile; ++i)
   {
     Walker.Read(InFile);
     Add(Walker);

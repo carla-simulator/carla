@@ -11,10 +11,13 @@
 #                        own python is not the one that should carry the client —
 #                        the usual case under uvx/pipx, where the MCP server runs
 #                        in an isolated env whose python is first on PATH.
-#   CARLA_PACKAGE_ROOT   extracted CARLA release (the dir holding CarlaUE4.sh).
-#                        Its bundled wheel/egg is the preferred source, because it
-#                        matches the simulator exactly.
-#   CARLA_UE4_ROOT       source checkout; its PythonAPI/carla/dist is searched too.
+#   CARLA_PACKAGE_ROOT   extracted CARLA release (the dir holding CarlaUE4.sh,
+#                        CarlaUnreal.sh or CarlaUnreal.exe). Its bundled wheel/egg
+#                        is the preferred source, because it matches the
+#                        simulator exactly.
+#   CARLA_TARGET, CARLA_ROOT, CARLA_UE58_ROOT, CARLA_UE5_ROOT, CARLA_UE4_ROOT
+#                        searched too, in that order: PythonAPI/carla/dist, and
+#                        Build/<preset>/PythonAPI/dist on a UE5 checkout.
 #   CARLA_HOST/PORT      a running server, used only to read its version for the
 #                        match check (default 127.0.0.1:2000).
 #
@@ -41,6 +44,10 @@ PYTHON_BIN="$(command -v "${PYTHON}" 2>/dev/null || true)"
 export PYTHON_BIN
 
 export CARLA_PACKAGE_ROOT="${CARLA_PACKAGE_ROOT:-}"
+export CARLA_TARGET="${CARLA_TARGET:-}"
+export CARLA_ROOT="${CARLA_ROOT:-}"
+export CARLA_UE58_ROOT="${CARLA_UE58_ROOT:-}"
+export CARLA_UE5_ROOT="${CARLA_UE5_ROOT:-}"
 export CARLA_UE4_ROOT="${CARLA_UE4_ROOT:-}"
 export CARLA_HOST="${CARLA_HOST:-127.0.0.1}"
 export CARLA_PORT="${CARLA_PORT:-2000}"
@@ -58,4 +65,7 @@ unset _KEEP_PY
 
 echo "[env] PYTHON             = ${PYTHON_BIN:-<not found: ${PYTHON}>} ${CARLA_PY_XY:+(${CARLA_PY_XY}, ${CARLA_PY_TAG})}"
 echo "[env] CARLA_PACKAGE_ROOT = ${CARLA_PACKAGE_ROOT:-<unset>}"
-echo "[env] CARLA_UE4_ROOT     = ${CARLA_UE4_ROOT:-<unset>}"
+for _v in CARLA_TARGET CARLA_ROOT CARLA_UE58_ROOT CARLA_UE5_ROOT CARLA_UE4_ROOT; do
+  [ -n "${!_v}" ] && printf '[env] %-18s = %s\n' "${_v}" "${!_v}"
+done
+unset _v

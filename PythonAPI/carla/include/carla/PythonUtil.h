@@ -10,6 +10,10 @@
 
 #include "carla/NonCopyable.h"
 
+#include <atomic>
+#include <chrono>
+#include <thread>
+
 #if defined(__clang__)
 #  pragma clang diagnostic push
 #  pragma clang diagnostic ignored "-Wdeprecated-register"
@@ -61,12 +65,68 @@ namespace carla {
       PyThreadState *_state;
     };
 
+    /// CARLA's client threads keep delivering world ticks and sensor data
+    /// while Python shuts down, because nothing guarantees that the Client
+    /// is destroyed before the interpreter is. Entering a finalized
+    /// interpreter (PyGILState_Ensure) crashes the process, e.g. with
+    /// "Fatal Python error: gilstate_tss_set" or a segmentation fault.
+    ///
+    /// Code that enters Python from a CARLA thread first opens a
+    /// PythonCallScope and gives up if it is refused. The carla module
+    /// registers OnInterpreterExit() with atexit, which runs at the start of
+    /// Py_FinalizeEx while the interpreter is still alive: from then on every
+    /// new scope is refused, and the scopes already open are waited for.
+    class PythonCallScope : private NonCopyable {
+    public:
+
+      // Sequentially consistent on both sides: either OnInterpreterExit()
+      // sees this scope in InFlight(), or this scope sees Exiting().
+      PythonCallScope() {
+        InFlight().fetch_add(1);
+        _allowed = !Exiting().load();
+      }
+
+      ~PythonCallScope() {
+        InFlight().fetch_sub(1);
+      }
+
+      explicit operator bool() const {
+        return _allowed;
+      }
+
+    private:
+
+      bool _allowed;
+    };
+
+    /// Registered with atexit by the carla module; called with the GIL held.
+    static void OnInterpreterExit() {
+      Exiting().store(true);
+      // Let the callbacks already inside finish; they need the GIL.
+      ReleaseGIL unlock;
+      const auto deadline =
+          std::chrono::steady_clock::now() + std::chrono::seconds(5);
+      while (InFlight().load() > 0 &&
+             std::chrono::steady_clock::now() < deadline) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+      }
+    }
+
     class AcquireGILDeleter {
     public:
 
       template <typename T>
       void operator()(T *ptr) const {
-        if (ptr != nullptr && !PythonUtil::ThisThreadHasTheGIL()) {
+        if (ptr == nullptr) {
+          return;
+        }
+        PythonCallScope scope;
+        if (!scope) {
+          // The interpreter is exiting: leave the object to the operating
+          // system instead of touching Python.
+          return;
+        }
+        if (!PythonUtil::ThisThreadHasTheGIL()) {
           AcquireGIL lock;
           delete ptr;
         } else {
@@ -88,6 +148,18 @@ namespace carla {
         }
       }
     };
+
+  private:
+
+    static std::atomic_bool &Exiting() {
+      static std::atomic_bool exiting{false};
+      return exiting;
+    }
+
+    static std::atomic_int &InFlight() {
+      static std::atomic_int in_flight{0};
+      return in_flight;
+    }
   };
 
 } // namespace carla

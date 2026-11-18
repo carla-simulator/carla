@@ -17,6 +17,8 @@
 #include "carla/client/detail/EpisodeProxy.h"
 #include "carla/rpc/EpisodeInfo.h"
 
+#include <atomic>
+#include <memory>
 #include <vector>
 
 namespace carla {
@@ -44,6 +46,11 @@ namespace detail {
 
     auto GetId() const {
       return GetState()->GetEpisodeId();
+    }
+
+    /// Whether OnEpisodeChanged has finished for the episode GetId() returns.
+    bool IsEpisodeChangeHandled() const {
+      return _handled_episode_id->load() == GetId();
     }
 
     std::shared_ptr<const EpisodeState> GetState() const {
@@ -107,7 +114,7 @@ namespace detail {
 
     void OnEpisodeStarted();
 
-    void OnEpisodeChanged();
+    void OnEpisodeChanged(uint64_t episode_id);
 
     Client &_client;
 
@@ -134,6 +141,9 @@ namespace detail {
     bool _should_update_map = true;
 
     std::weak_ptr<Simulator> _simulator;
+
+    /// Shared with the TM reset thread, which may outlive this Episode.
+    std::shared_ptr<std::atomic<uint64_t>> _handled_episode_id;
   };
 
 } // namespace detail

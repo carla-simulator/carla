@@ -34,21 +34,25 @@ else
   case "${FL}" in
     ue4) ok "flavor ue4 — CARLA 0.9.14+ (UE4). Scenarios in Town01..Town10HD_Opt" ;;
     ue5) ok "flavor ue5 — CARLA 0.10.0 (UE5). Town10HD_Opt only; just 11 of 101 configs were ported to it"
-         ok "  blueprints are 'vehicle.lincoln.mkz' (no _2017); weather behaviours are disabled" ;;
-    ue58) ok "flavor ue58 — CARLA 1.0 on UE 5.8 (pre-release builds report 0.10.0). Towns 1-5 + Town10HD_Opt, all as _Opt"
+         ok "  blueprints are 'vehicle.lincoln.mkz' (no _2017); weather behaviours are disabled"
+         warn "  ue5-master is for the UE 5.5 0.10.x release; CARLA 1.0 needs ue58-dev" ;;
+    ue58) ok "flavor ue58 — CARLA 1.0, the default branch. Towns 1-5 + Town10HD_Opt, all as _Opt"
           ok "  96 configs, every one resolving to a scenario class (ue5-master had 11 runnable:"
           ok "  the rest named non-_Opt towns that do not exist in the UE5 content)"
           ok "  ego is 'vehicle.lincoln.mkz'; vision blockers are 'static.prop.dumpster'"
           ok "  verify after any XML change: python3 scripts/list_scenarios.py --check" ;;
     lb2) ok "flavor lb2 — pinned to Leaderboard 2.0/2.1; routes are Town12/Town13, needs the leaderboard CARLA build" ;;
     lb1) ok "flavor lb1 — pinned to Leaderboard 1.0; needs CARLA 0.9.10.1 exactly" ;;
-    *)   warn "branch '${BR}' is not one of master / ue5-master / leaderboard-{1.0,2.0,2.1} — compatibility unknown" ;;
+    *)   warn "branch '${BR}' is not one of master / ue58-dev / ue5-master / leaderboard-{1.0,2.0,2.1}: compatibility unknown" ;;
   esac
 fi
 
+SR_PYTREES_PIN="$(carla_sr_pinned_pytrees)"
+export SR_PYTREES_PIN
+
 echo "== Python client =="
 "${PYTHON}" - <<'PY'
-import importlib.util as u, sys
+import importlib.util as u, sys, os
 def ok(m): print(f"  PASS {m}")
 def bad(m): print(f"  FAIL {m}"); sys.exit(3)
 def warn(m): print(f"  WARN {m}")
@@ -90,19 +94,22 @@ missing = [m for m in ("py_trees", "networkx", "shapely", "xmlschema", "tabulate
 if missing:
     bad(f"missing requirements: {', '.join(missing)} — pip install -r $SCENARIO_RUNNER_ROOT/requirements.txt")
 ok("scenario_runner requirements importable")
-# py_trees 0.8.3 — the version ScenarioRunner pins — exposes no __version__
-# attribute, so read the distribution metadata. Reading the attribute raised
-# AttributeError and aborted the whole preflight on a *correct* install.
+# py_trees 0.8.3 exposes no __version__ attribute, so read the distribution
+# metadata. Reading the attribute raised AttributeError and aborted the whole
+# preflight on a *correct* install.
 try:
     from importlib.metadata import version as _dist_version
     _pt = _dist_version("py_trees")
 except Exception:
     import py_trees
     _pt = getattr(py_trees, "__version__", "")
+# The wanted version is whatever this checkout pins: ue58-dev is on 2.x, the
+# older branches on 0.8.3, and a tree built for one breaks on the other.
+_want = os.environ.get("SR_PYTREES_PIN", "")
 if not _pt:
     warn("cannot determine the py_trees version")
-elif not _pt.startswith("0.8"):
-    warn(f"py_trees {_pt}: only 0.8.x is supported, behaviour trees break on 2.x")
+elif _want and _pt.split(".")[:2] != _want.split(".")[:2]:
+    warn(f"py_trees {_pt}: this scenario_runner pins {_want}, behaviour trees break across major versions")
 PY
 [ $? -ne 0 ] && rc=1
 

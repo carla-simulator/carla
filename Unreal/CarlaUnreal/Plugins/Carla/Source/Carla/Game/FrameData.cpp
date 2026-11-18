@@ -9,16 +9,26 @@
 #include "Carla/Game/CarlaEpisode.h"
 #include "Carla/Actor/CarlaActor.h"
 #include "Carla/Game/CarlaEngine.h"
+#include "Carla/Game/CarlaGameModeBase.h"
 #include "Carla/Traffic/TrafficLightController.h"
 #include "Carla/Traffic/TrafficLightGroup.h"
 #include "Carla/MapGen/LargeMapManager.h"
 #include "Carla/Game/CarlaStatics.h"
 #include "Carla/Settings/CarlaSettings.h"
 #include "Carla/Lights/CarlaLightSubsystem.h"
+#include "Carla/Sensor/Sensor.h"
+#include "Carla/Vehicle/CarlaWheeledVehicle.h"
+#include "Carla/Weather/Weather.h"
 
 #include <util/disable-ue4-macros.h>
+#include "carla/multigpu/mirroredActors.h"
 #include "carla/rpc/VehicleLightState.h"
 #include <util/enable-ue4-macros.h>
+
+#include <util/ue-header-guard-begin.h>
+#include "GameFramework/Character.h"
+#include "GameFramework/CharacterMovementComponent.h"
+#include <util/ue-header-guard-end.h>
 
 void FFrameData::GetFrameData(UCarlaEpisode *ThisEpisode, bool bAdditionalData, bool bIncludeActorsAgain)
 {
@@ -36,12 +46,33 @@ void FFrameData::GetFrameData(UCarlaEpisode *ThisEpisode, bool bAdditionalData, 
   {
     FCarlaActor* View = It->Value.Get();
 
+    if (bAdditionalData)
+    {
+      AddActorAppearance(View, bIncludeActorsAgain);
+    }
+
     switch (View->GetActorType())
     {
       // save the transform for props
       case FCarlaActor::ActorType::Other:
+        AddActorPosition(View);
+        // a prop that simulates physics moves: mirrors need its velocities
+        if (bAdditionalData && !View->IsDormant() && (View->GetActor() != nullptr))
+        {
+          const auto *Root = Cast<UPrimitiveComponent>(View->GetActor()->GetRootComponent());
+          if ((Root != nullptr) && Root->IsSimulatingPhysics())
+          {
+            AddActorKinematics(View);
+          }
+        }
+        break;
+
       case FCarlaActor::ActorType::Sensor:
         AddActorPosition(View);
+        if (bAdditionalData)
+        {
+          AddSensorTick(View);
+        }
         break;
 
       // save the transform of all vehicles
@@ -49,7 +80,7 @@ void FFrameData::GetFrameData(UCarlaEpisode *ThisEpisode, bool bAdditionalData, 
         AddActorPosition(View);
         AddVehicleAnimation(View);
         AddVehicleLight(View);
-        AddVehicleWheelsAnimation(View);
+        AddVehicleParts(View);
         if (bAdditionalData)
         {
           AddActorKinematics(View);
@@ -69,21 +100,230 @@ void FFrameData::GetFrameData(UCarlaEpisode *ThisEpisode, bool bAdditionalData, 
       // save the state of each traffic light
       case FCarlaActor::ActorType::TrafficLight:
         AddTrafficLightState(View);
+        if (bAdditionalData)
+        {
+          // its timings too, cheap and self-healing for a secondary
+          if (const auto *TrafficLight = Cast<ATrafficLightBase>(View->GetActor()))
+          {
+            TrafficLightTimes.Add(CarlaRecorderTrafficLightTime{
+                View->GetActorId(),
+                TrafficLight->GetGreenTime(),
+                TrafficLight->GetYellowTime(),
+                TrafficLight->GetRedTime()});
+          }
+        }
         break;
     }
+  }
+  if (bAdditionalData)
+  {
+    // Forget the appearance of the actors gone.
+    auto &Appearances = Episode->GetMultiGpuWorldState().Appearances;
+    if (Appearances.size() > static_cast<size_t>(Registry.Num()))
+    {
+      for (auto It = Appearances.begin(); It != Appearances.end();)
+      {
+        It = Registry.Contains(It->first) ? std::next(It) : Appearances.erase(It);
+      }
+    }
+    AddWorldState(bIncludeActorsAgain);
   }
   GetFrameCounter();
 }
 
+namespace
+{
+  CarlaRecorderWeather FFrameData_ToRecord(const FWeatherParameters &Weather)
+  {
+    CarlaRecorderWeather Record;
+    Record.Cloudiness              = Weather.Cloudiness;
+    Record.Precipitation           = Weather.Precipitation;
+    Record.PrecipitationDeposits   = Weather.PrecipitationDeposits;
+    Record.WindIntensity           = Weather.WindIntensity;
+    Record.SunAzimuthAngle         = Weather.SunAzimuthAngle;
+    Record.SunAltitudeAngle        = Weather.SunAltitudeAngle;
+    Record.FogDensity              = Weather.FogDensity;
+    Record.FogDistance             = Weather.FogDistance;
+    Record.FogFalloff              = Weather.FogFalloff;
+    Record.Wetness                 = Weather.Wetness;
+    Record.ScatteringIntensity     = Weather.ScatteringIntensity;
+    Record.MieScatteringScale      = Weather.MieScatteringScale;
+    Record.RayleighScatteringScale = Weather.RayleighScatteringScale;
+    Record.DustStorm               = Weather.DustStorm;
+    return Record;
+  }
+
+  std::vector<uint64_t> FFrameData_SortedIds(const TSet<uint64> &Ids)
+  {
+    std::vector<uint64_t> Sorted;
+    Sorted.reserve(Ids.Num());
+    for (const uint64 Id : Ids)
+    {
+      Sorted.push_back(Id);
+    }
+    std::sort(Sorted.begin(), Sorted.end());
+    return Sorted;
+  }
+
+  TSet<uint64> FFrameData_IdSet(const std::vector<uint64_t> &Ids)
+  {
+    TSet<uint64> Set;
+    Set.Reserve(static_cast<int32>(Ids.size()));
+    for (const uint64_t Id : Ids)
+    {
+      Set.Add(Id);
+    }
+    return Set;
+  }
+
+  FWeatherParameters FFrameData_FromRecord(const CarlaRecorderWeather &Record)
+  {
+    FWeatherParameters Weather;
+    Weather.Cloudiness              = Record.Cloudiness;
+    Weather.Precipitation           = Record.Precipitation;
+    Weather.PrecipitationDeposits   = Record.PrecipitationDeposits;
+    Weather.WindIntensity           = Record.WindIntensity;
+    Weather.SunAzimuthAngle         = Record.SunAzimuthAngle;
+    Weather.SunAltitudeAngle        = Record.SunAltitudeAngle;
+    Weather.FogDensity              = Record.FogDensity;
+    Weather.FogDistance             = Record.FogDistance;
+    Weather.FogFalloff              = Record.FogFalloff;
+    Weather.Wetness                 = Record.Wetness;
+    Weather.ScatteringIntensity     = Record.ScatteringIntensity;
+    Weather.MieScatteringScale      = Record.MieScatteringScale;
+    Weather.RayleighScatteringScale = Record.RayleighScatteringScale;
+    Weather.DustStorm               = Record.DustStorm;
+    return Weather;
+  }
+} // namespace
+
+void FFrameData::AddActorAppearance(FCarlaActor *CarlaActor, bool bFullResync)
+{
+  const AActor *Actor = CarlaActor->IsDormant() ? nullptr : CarlaActor->GetActor();
+  if (Actor == nullptr)
+  {
+    return;
+  }
+  FMirroredAppearance Appearance;
+  Appearance.bCollisions = Actor->GetActorEnableCollision();
+  Appearance.bHidden = Actor->IsHidden();
+  Appearance.Scale = Actor->GetActorScale3D();
+  auto &Sent = Episode->GetMultiGpuWorldState().Appearances;
+  const auto It = Sent.find(CarlaActor->GetActorId());
+  if (!bFullResync && (It != Sent.end()) && (It->second == Appearance))
+  {
+    return;
+  }
+  Sent[CarlaActor->GetActorId()] = Appearance;
+  carla::multigpu::ActorAppearance Record;
+  Record.actor_id = CarlaActor->GetActorId();
+  Record.collisions = Appearance.bCollisions;
+  Record.hidden = Appearance.bHidden;
+  Record.scale = std::array<double, 3>{Appearance.Scale.X, Appearance.Scale.Y, Appearance.Scale.Z};
+  MirrorAppearances.actors.push_back(std::move(Record));
+}
+
+void FFrameData::AddWorldState(bool bFullResync)
+{
+  FPrimaryWorldState &Sent = Episode->GetMultiGpuWorldState();
+  UWorld *World = Episode->GetWorld();
+  ACarlaGameModeBase *GameMode = UCarlaStatics::GetGameMode(World);
+  UCarlaLightSubsystem *LightSubsystem = World ? World->GetSubsystem<UCarlaLightSubsystem>() : nullptr;
+
+  // Applied again with the same values is still an apply to mirror.
+  if (AWeather *Weather = Episode->GetWeather())
+  {
+    if (bFullResync || (Weather->GetApplySerial() != Sent.WeatherSerial))
+    {
+      Sent.WeatherSerial = Weather->GetApplySerial();
+      Weathers.Add(FFrameData_ToRecord(Weather->GetCurrentWeather()));
+    }
+  }
+
+  carla::multigpu::WorldGlobals Globals;
+  if (GameMode != nullptr)
+  {
+    Globals.map_layers = static_cast<uint16_t>(GameMode->GetLoadedMapLayers());
+    Globals.imu_gravity = GameMode->IMUSensorGravity;
+  }
+  if (LightSubsystem != nullptr)
+  {
+    Globals.day_night_cycle = LightSubsystem->GetDayNightCycle();
+    Globals.has_day_time_state = LightSubsystem->GetDayTimeState(Globals.last_is_day);
+  }
+#if defined(WITH_ROS2)
+  auto ROS2 = carla::ros2::ROS2::GetInstance();
+  if (ROS2 && ROS2->IsEnabled())
+  {
+    Globals.publish_tf = ROS2->GetPublishTF();
+  }
+#endif
+  MirrorWorldGlobals = Globals;
+
+  if ((GameMode != nullptr) &&
+      (bFullResync || (GameMode->GetEnvironmentObjectsSerial() != Sent.EnvironmentObjectsSerial)))
+  {
+    Sent.EnvironmentObjectsSerial = GameMode->GetEnvironmentObjectsSerial();
+    MirrorWorldObjects.disabled_environment_objects =
+        FFrameData_SortedIds(GameMode->GetDisabledEnvironmentObjects());
+  }
+
+  // Each light's state at the end of this frame, after any weather change.
+  if (LightSubsystem != nullptr)
+  {
+    if (bFullResync)
+    {
+      for (const auto &Light : LightSubsystem->GetLights())
+      {
+        if (IsValid(Light.Value) && IsValid(Light.Value->GetOwner()))
+        {
+          AddEventLightSceneChanged(Light.Value);
+        }
+      }
+    }
+    else
+    {
+      for (const int32 LightId : Sent.ChangedLights)
+      {
+        UCarlaLight *Light = LightSubsystem->GetLight(LightId);
+        if (IsValid(Light) && IsValid(Light->GetOwner()))
+        {
+          AddEventLightSceneChanged(Light);
+        }
+      }
+    }
+  }
+  Sent.ChangedLights.Reset();
+}
+
+namespace
+{
+  /// The local actor a primary id was replayed onto, if any.
+  template <typename MapT>
+  std::optional<uint32_t> FindMirror(const MapT &MappedId, uint32_t PrimaryId)
+  {
+    const auto It = MappedId.find(PrimaryId);
+    return (It != MappedId.end()) ? std::optional<uint32_t>(It->second) : std::nullopt;
+  }
+} // namespace
+
 void FFrameData::PlayFrameData(
     UCarlaEpisode *ThisEpisode,
-    std::unordered_map<uint32_t, uint32_t>& MappedId)
+    std::unordered_map<uint32_t, uint32_t>& MappedId,
+    FMirrorState &MirrorState,
+    TFunctionRef<void(uint32_t, uint32_t, bool)> OnActorAdded,
+    TFunctionRef<void(uint32_t)> OnActorRemoved)
 {
+  Episode = ThisEpisode;
+  const bool bFullResync = MultiGpuFrameTime && MultiGpuFrameTime->full_resync;
+  std::unordered_set<uint32_t> AddedIds;
+
+  // First: what the rest of the frame sets can live in a map layer.
+  PlayMapLayers();
 
   for(const CarlaRecorderEventAdd &EventAdd : EventsAdd.GetEvents())
   {
     uint32_t OldId = EventAdd.DatabaseId;
-    // Todo: check memory corruption of EventAdd.DatabaseId
     auto Result = ProcessReplayerEventAdd(
         EventAdd.Location,
         EventAdd.Rotation,
@@ -103,83 +343,508 @@ void FFrameData::PlayFrameData(
       case 1:
         // mapping id (recorded Id is a new Id in replayer)
         MappedId[OldId] = Result.second;
+        MirrorState.CreatedIds.insert(Result.second);
+        PrepareMirroredActor(Episode->FindCarlaActor(Result.second), OldId);
         UE_LOG(LogCarla, Log, TEXT("actor created"));
+        OnActorAdded(OldId, Result.second, true);
         break;
 
       // actor reused from existing
       case 2:
         // mapping id (say desired Id is mapped to what)
         MappedId[OldId] = Result.second;
+        PrepareMirroredActor(Episode->FindCarlaActor(Result.second), OldId);
         UE_LOG(LogCarla, Log, TEXT("actor reused"));
+        OnActorAdded(OldId, Result.second, false);
         break;
+    }
+    AddedIds.insert(OldId);
+  }
+
+  // Attachments, retrying those whose actors were not mirrored yet.
+  {
+    std::vector<std::pair<uint32_t, uint32_t>> Parents = std::move(MirrorState.PendingParents);
+    MirrorState.PendingParents.clear();
+    for (const CarlaRecorderEventParent &EventParent : EventsParent.GetEvents())
+    {
+      Parents.emplace_back(EventParent.DatabaseId, EventParent.DatabaseIdParent);
+    }
+    for (const auto &Parent : Parents)
+    {
+      if (!ProcessReplayerEventParent(Parent.first, Parent.second, MappedId))
+      {
+        MirrorState.PendingParents.push_back(Parent);
+      }
     }
   }
 
+  std::unordered_set<uint32_t> RemovedIds;
   for (const CarlaRecorderEventDel &EventDel : EventsDel.GetEvents())
   {
-    ProcessReplayerEventDel(MappedId[EventDel.DatabaseId]);
-    MappedId.erase(EventDel.DatabaseId);
+    if (const std::optional<uint32_t> Local = FindMirror(MappedId, EventDel.DatabaseId))
+    {
+      ProcessReplayerEventDel(*Local);
+      MirrorState.CreatedIds.erase(*Local);
+      MappedId.erase(EventDel.DatabaseId);
+    }
+    RemovedIds.insert(EventDel.DatabaseId);
+    OnActorRemoved(EventDel.DatabaseId);
   }
 
-  for (const CarlaRecorderPosition &Position : Positions.GetPositions())
+  if (bFullResync)
   {
-    CarlaRecorderPosition Pos = Position;
-    auto NewId = MappedId.find(Pos.DatabaseId);
-    if (NewId != MappedId.end())
+    // A full resync announces every live actor of the primary: a mirror this
+    // secondary spawned for any other one outlived its actor (its removal was
+    // missed) and goes away.
+    for (auto It = MappedId.begin(); It != MappedId.end();)
     {
-      Pos.DatabaseId = NewId->second;
-      ProcessReplayerPosition(Pos, Pos, 0.0, 0.0);
+      const uint32_t PrimaryId = It->first;
+      const uint32_t LocalId = It->second;
+      if ((AddedIds.count(PrimaryId) == 0u) && (MirrorState.CreatedIds.count(LocalId) != 0u))
+      {
+        ProcessReplayerEventDel(LocalId);
+        MirrorState.CreatedIds.erase(LocalId);
+        It = MappedId.erase(It);
+        RemovedIds.insert(PrimaryId);
+        OnActorRemoved(PrimaryId);
+      }
+      else
+      {
+        ++It;
+      }
+    }
+  }
+  if (!RemovedIds.empty() || bFullResync)
+  {
+    // An attachment can no longer be replayed once either actor is gone.
+    auto &Pending = MirrorState.PendingParents;
+    Pending.erase(std::remove_if(Pending.begin(), Pending.end(), [&](const auto &Parent)
+        {
+          const auto Gone = [&](uint32_t Id)
+          {
+            return (RemovedIds.count(Id) != 0u) || (bFullResync && (AddedIds.count(Id) == 0u));
+          };
+          return Gone(Parent.first) || Gone(Parent.second);
+        }),
+        Pending.end());
+  }
+
+  PlayAppearances(MappedId);
+  PlayPositions(MappedId, MirrorState);
+  PlayKinematics(MappedId);
+
+  for (const CarlaRecorderTrafficLightTime &Time : TrafficLightTimes.GetTrafficLightTimes())
+  {
+    const std::optional<uint32_t> Local = FindMirror(MappedId, Time.DatabaseId);
+    FCarlaActor *CarlaActor = Local ? Episode->FindCarlaActor(*Local) : nullptr;
+    auto *TrafficLight = CarlaActor ? Cast<ATrafficLightBase>(CarlaActor->GetActor()) : nullptr;
+    if (TrafficLight == nullptr)
+    {
+      continue;
+    }
+    if (TrafficLight->GetGreenTime() != Time.GreenTime)
+    {
+      TrafficLight->SetGreenTime(Time.GreenTime);
+    }
+    if (TrafficLight->GetYellowTime() != Time.YellowTime)
+    {
+      TrafficLight->SetYellowTime(Time.YellowTime);
+    }
+    if (TrafficLight->GetRedTime() != Time.RedTime)
+    {
+      TrafficLight->SetRedTime(Time.RedTime);
     }
   }
 
   for (const CarlaRecorderStateTrafficLight &State : States.GetStates())
   {
-    CarlaRecorderStateTrafficLight StateTrafficLight = State;
-    StateTrafficLight.DatabaseId = MappedId[StateTrafficLight.DatabaseId];
-    ProcessReplayerStateTrafficLight(StateTrafficLight);
+    if (const std::optional<uint32_t> Local = FindMirror(MappedId, State.DatabaseId))
+    {
+      CarlaRecorderStateTrafficLight StateTrafficLight = State;
+      StateTrafficLight.DatabaseId = *Local;
+      ProcessReplayerStateTrafficLight(StateTrafficLight);
+    }
   }
+
+  // Before packet 8: the control replayed there takes the manual gear shift
+  // from the drivetrain set here.
+  PlayVehicleParts(MappedId);
 
   for (const CarlaRecorderAnimVehicle &AnimVehicle : Vehicles.GetVehicles())
   {
-    CarlaRecorderAnimVehicle Vehicle = AnimVehicle;
-    Vehicle.DatabaseId = MappedId[Vehicle.DatabaseId];
-    ProcessReplayerAnimVehicle(Vehicle);
-  }
-
-  for (const CarlaRecorderAnimWheels &AnimWheel : Wheels.GetVehicleWheels())
-  {
-    CarlaRecorderAnimWheels AnimWheels = AnimWheel;
-    AnimWheels.DatabaseId = MappedId[AnimWheels.DatabaseId];
-    ProcessReplayerAnimVehicleWheels(AnimWheels);
+    if (const std::optional<uint32_t> Local = FindMirror(MappedId, AnimVehicle.DatabaseId))
+    {
+      CarlaRecorderAnimVehicle Vehicle = AnimVehicle;
+      Vehicle.DatabaseId = *Local;
+      ProcessReplayerAnimVehicle(Vehicle);
+    }
   }
 
   for (const CarlaRecorderAnimWalker &AnimWalker : Walkers.GetWalkers())
   {
-    CarlaRecorderAnimWalker Walker = AnimWalker;
-    Walker.DatabaseId = MappedId[Walker.DatabaseId];
-    ProcessReplayerAnimWalker(Walker);
+    if (const std::optional<uint32_t> Local = FindMirror(MappedId, AnimWalker.DatabaseId))
+    {
+      CarlaRecorderAnimWalker Walker = AnimWalker;
+      Walker.DatabaseId = *Local;
+      ProcessReplayerAnimWalker(Walker);
+    }
   }
 
   for (const CarlaRecorderAnimBiker &AnimBiker : Bikers.GetBikers())
   {
-    CarlaRecorderAnimBiker Biker = AnimBiker;
-    Biker.DatabaseId = MappedId[Biker.DatabaseId];
-    ProcessReplayerAnimBiker(Biker);
+    if (const std::optional<uint32_t> Local = FindMirror(MappedId, AnimBiker.DatabaseId))
+    {
+      CarlaRecorderAnimBiker Biker = AnimBiker;
+      Biker.DatabaseId = *Local;
+      ProcessReplayerAnimBiker(Biker);
+    }
   }
 
   for (const CarlaRecorderLightVehicle &LightVehicle : LightVehicles.GetLightVehicles())
   {
-    CarlaRecorderLightVehicle Light = LightVehicle;
-    Light.DatabaseId = MappedId[Light.DatabaseId];
-    ProcessReplayerLightVehicle(Light);
+    if (const std::optional<uint32_t> Local = FindMirror(MappedId, LightVehicle.DatabaseId))
+    {
+      CarlaRecorderLightVehicle Light = LightVehicle;
+      Light.DatabaseId = *Local;
+      ProcessReplayerLightVehicle(Light);
+    }
   }
+
+  // Before the scene lights: a day/night change switches lights, and the
+  // lights then get the state the primary's had at the end of the frame.
+  PlayWorldState(MirrorState);
 
   for (const CarlaRecorderLightScene &Light : LightScenes.GetLights())
   {
     ProcessReplayerLightScene(Light);
   }
 
+  // Sensors last, once their mirrors exist: the state each primary sensor
+  // starts this frame's tick from, then which of them tick, with what delta.
+  const auto FindSensor = [&](uint32_t PrimaryId) -> ASensor *
+  {
+    const std::optional<uint32_t> Local = FindMirror(MappedId, PrimaryId);
+    FCarlaActor *CarlaActor = Local ? Episode->FindCarlaActor(*Local) : nullptr;
+    return CarlaActor ? Cast<ASensor>(CarlaActor->GetActor()) : nullptr;
+  };
+  for (const carla::multigpu::SensorState &State : MirrorSensorStates.states)
+  {
+    if (ASensor *Sensor = FindSensor(State.actor_id))
+    {
+      Sensor->SetMirrorState(State);
+    }
+  }
+  for (const carla::multigpu::SensorTick &Tick : MirrorSensorTicks.ticks)
+  {
+    if (ASensor *Sensor = FindSensor(Tick.actor_id))
+    {
+      Sensor->SetPrimaryTick(Tick.delta_seconds);
+    }
+  }
+
   SetFrameCounter();
+}
+
+void FFrameData::PlayMapLayers()
+{
+  ACarlaGameModeBase *GameMode = UCarlaStatics::GetGameMode(Episode->GetWorld());
+  if (!MirrorWorldGlobals || (GameMode == nullptr))
+  {
+    return;
+  }
+  // Both flush level streaming: the layers are there for the rest of the frame.
+  const std::pair<uint16_t, uint16_t> Diff = carla::multigpu::ComputeMapLayerDiff(
+      static_cast<uint16_t>(GameMode->GetLoadedMapLayers()), MirrorWorldGlobals->map_layers);
+  if (Diff.first != 0u)
+  {
+    GameMode->LoadMapLayer(Diff.first);
+  }
+  if (Diff.second != 0u)
+  {
+    GameMode->UnLoadMapLayer(Diff.second);
+  }
+}
+
+void FFrameData::PlayAppearances(const std::unordered_map<uint32_t, uint32_t>& MappedId)
+{
+  for (const carla::multigpu::ActorAppearance &Appearance : MirrorAppearances.actors)
+  {
+    const std::optional<uint32_t> Local = FindMirror(MappedId, Appearance.actor_id);
+    FCarlaActor *CarlaActor = Local ? Episode->FindCarlaActor(*Local) : nullptr;
+    AActor *Actor = ((CarlaActor != nullptr) && !CarlaActor->IsDormant()) ? CarlaActor->GetActor() : nullptr;
+    if (Actor == nullptr)
+    {
+      continue;
+    }
+    if (Appearance.collisions && (Actor->GetActorEnableCollision() != *Appearance.collisions))
+    {
+      Actor->SetActorEnableCollision(*Appearance.collisions);
+    }
+    if (Appearance.hidden && (Actor->IsHidden() != *Appearance.hidden))
+    {
+      Actor->SetActorHiddenInGame(*Appearance.hidden);
+    }
+    if (Appearance.scale)
+    {
+      const FVector Scale((*Appearance.scale)[0], (*Appearance.scale)[1], (*Appearance.scale)[2]);
+      if (!Actor->GetActorScale3D().Equals(Scale, 0.0))
+      {
+        USceneComponent *Root = Actor->GetRootComponent();
+        if ((Root != nullptr) && (Root->GetMobility() != EComponentMobility::Movable))
+        {
+          Root->SetMobility(EComponentMobility::Movable);
+        }
+        Actor->SetActorScale3D(Scale);
+      }
+    }
+  }
+}
+
+void FFrameData::PlayWorldState(FMirrorState &MirrorState)
+{
+  UWorld *World = Episode->GetWorld();
+  ACarlaGameModeBase *GameMode = UCarlaStatics::GetGameMode(World);
+  UCarlaLightSubsystem *LightSubsystem = World ? World->GetSubsystem<UCarlaLightSubsystem>() : nullptr;
+
+  if (MirrorWorldGlobals)
+  {
+    const carla::multigpu::WorldGlobals &Globals = *MirrorWorldGlobals;
+    if (GameMode != nullptr)
+    {
+      GameMode->IMUSensorGravity = Globals.imu_gravity;
+    }
+    // Before the weather, which switches lights only with the cycle on.
+    if ((LightSubsystem != nullptr) && (LightSubsystem->GetDayNightCycle() != Globals.day_night_cycle))
+    {
+      LightSubsystem->SetDayNightCycle(Globals.day_night_cycle);
+    }
+#if defined(WITH_ROS2)
+    auto ROS2 = carla::ros2::ROS2::GetInstance();
+    if (ROS2 && ROS2->IsEnabled() && (ROS2->GetPublishTF() != Globals.publish_tf))
+    {
+      ROS2->SetPublishTF(Globals.publish_tf);
+    }
+#endif
+  }
+
+  if (AWeather *Weather = Episode->GetWeather())
+  {
+    for (const CarlaRecorderWeather &Record : Weathers.GetWeathers())
+    {
+      Weather->ApplyWeather(FFrameData_FromRecord(Record));
+    }
+  }
+
+  // The day/night state the primary's lights follow, even where this
+  // server's own threshold decided otherwise.
+  if (MirrorWorldGlobals && (LightSubsystem != nullptr) &&
+      MirrorWorldGlobals->day_night_cycle && MirrorWorldGlobals->has_day_time_state)
+  {
+    bool bIsDay = true;
+    if (!LightSubsystem->GetDayTimeState(bIsDay) || (bIsDay != MirrorWorldGlobals->last_is_day))
+    {
+      LightSubsystem->NotifyDayTimeChange(MirrorWorldGlobals->last_is_day);
+    }
+  }
+
+  // Environment objects: again whenever this server registers its objects
+  // anew, for those of a layer that was still streaming in.
+  bool bApplyObjects = false;
+  if (MirrorWorldObjects.disabled_environment_objects)
+  {
+    MirrorState.DisabledObjects = *MirrorWorldObjects.disabled_environment_objects;
+    bApplyObjects = true;
+  }
+  if ((GameMode != nullptr) && MirrorState.DisabledObjects &&
+      (bApplyObjects || (GameMode->GetEnvironmentObjectsRegistrations() != MirrorState.DisabledObjectsRegistrations)))
+  {
+    MirrorState.DisabledObjectsRegistrations = GameMode->GetEnvironmentObjectsRegistrations();
+    const auto Diff = carla::multigpu::DiffSortedIds(
+        FFrameData_SortedIds(GameMode->GetDisabledEnvironmentObjects()), *MirrorState.DisabledObjects);
+    if (!Diff.second.empty())
+    {
+      GameMode->EnableEnvironmentObjects(FFrameData_IdSet(Diff.second), true);
+    }
+    if (!Diff.first.empty())
+    {
+      GameMode->EnableEnvironmentObjects(FFrameData_IdSet(Diff.first), false);
+    }
+  }
+}
+
+void FFrameData::PlayPositions(
+    const std::unordered_map<uint32_t, uint32_t>& MappedId,
+    FMirrorState &MirrorState)
+{
+  MirrorState.PlayedPoses.clear();
+  if (MirrorPositions.positions.empty())
+  {
+    // A frame from a primary without packet 34.
+    for (const CarlaRecorderPosition &Position : Positions.GetPositions())
+    {
+      if (const std::optional<uint32_t> Local = FindMirror(MappedId, Position.DatabaseId))
+      {
+        CarlaRecorderPosition Pos = Position;
+        Pos.DatabaseId = *Local;
+        ProcessReplayerPosition(Pos, Pos, 0.0, 0.0);
+      }
+    }
+    return;
+  }
+
+  std::vector<uint32_t> LocalIds;
+  std::unordered_map<uint32_t, FTransform> Poses;
+  std::unordered_map<uint32_t, uint32_t> Parents;
+  LocalIds.reserve(MirrorPositions.positions.size());
+  for (const carla::multigpu::MirroredPosition &Position : MirrorPositions.positions)
+  {
+    const std::optional<uint32_t> Local = FindMirror(MappedId, Position.id);
+    FCarlaActor *CarlaActor = Local ? Episode->FindCarlaActor(*Local) : nullptr;
+    if (CarlaActor == nullptr)
+    {
+      continue;
+    }
+    LocalIds.push_back(*Local);
+    Poses.emplace(*Local, FTransform(
+        FQuat(Position.rotation[0], Position.rotation[1], Position.rotation[2], Position.rotation[3]),
+        FVector(Position.location[0], Position.location[1], Position.location[2])));
+    if (CarlaActor->GetParent() != 0u)
+    {
+      Parents.emplace(*Local, CarlaActor->GetParent());
+    }
+  }
+  // Parents first: moving a parent moves its attached children, which then
+  // get their own exact pose.
+  for (const uint32_t LocalId : carla::multigpu::OrderParentsFirst(LocalIds, Parents))
+  {
+    FCarlaActor *CarlaActor = Episode->FindCarlaActor(LocalId);
+    const FTransform &Pose = Poses[LocalId];
+    PlaceMirror(*CarlaActor, Pose);
+    MirrorState.PlayedPoses.emplace_back(LocalId, Pose);
+  }
+}
+
+/// What the engine reads when no CARLA code asks the episode: the mirror's
+/// movement component, vehicle motion and root velocity.
+static void FFrameData_SetMirroredMotion(FCarlaActor &CarlaActor, const FVector &Velocity)
+{
+  if (CarlaActor.IsDormant() || (CarlaActor.GetActor() == nullptr))
+  {
+    return;
+  }
+  AActor *Actor = CarlaActor.GetActor();
+  if (auto *Vehicle = Cast<ACarlaWheeledVehicle>(Actor))
+  {
+    Vehicle->SetMirroredMotion(Velocity, FVector::DotProduct(Velocity, Vehicle->GetActorForwardVector()));
+  }
+  else if (auto *Character = Cast<ACharacter>(Actor))
+  {
+    if (UCharacterMovementComponent *Movement = Character->GetCharacterMovement())
+    {
+      Movement->Velocity = Velocity;
+    }
+  }
+  if (USceneComponent *Root = Actor->GetRootComponent())
+  {
+    Root->ComponentVelocity = Velocity;
+  }
+}
+
+void FFrameData::PlayKinematics(const std::unordered_map<uint32_t, uint32_t>& MappedId)
+{
+  const uint64_t ThisFrame = FrameCounter.FrameCounter;
+  for (const CarlaRecorderKinematics &Kinematic : Kinematics.GetKinematics())
+  {
+    const std::optional<uint32_t> Local = FindMirror(MappedId, Kinematic.DatabaseId);
+    FCarlaActor *CarlaActor = Local ? Episode->FindCarlaActor(*Local) : nullptr;
+    if (CarlaActor != nullptr)
+    {
+      CarlaActor->SetMirroredKinematics(Kinematic.LinearVelocity, Kinematic.AngularVelocity, ThisFrame);
+      FFrameData_SetMirroredMotion(*CarlaActor, Kinematic.LinearVelocity);
+    }
+  }
+  // A mirror this frame carries no velocities for (a prop that came to
+  // rest) stands still, rather than keep the last ones it got.
+  for (const auto &Mapped : MappedId)
+  {
+    FCarlaActor *CarlaActor = Episode->FindCarlaActor(Mapped.second);
+    if ((CarlaActor != nullptr) && CarlaActor->HasMirroredKinematics() &&
+        (CarlaActor->GetMirroredKinematicsFrame() != ThisFrame))
+    {
+      CarlaActor->ClearMirroredKinematics();
+      FFrameData_SetMirroredMotion(*CarlaActor, FVector::ZeroVector);
+    }
+  }
+}
+
+void FFrameData::PlaceMirror(FCarlaActor &CarlaActor, FTransform Transform)
+{
+  if (CarlaActor.IsDormant())
+  {
+    if (const FActorData *Data = CarlaActor.GetActorData())
+    {
+      Transform.SetScale3D(Data->Scale);
+    }
+    CarlaActor.SetActorGlobalTransform(Transform, ETeleportType::None);
+    return;
+  }
+  AActor *Actor = CarlaActor.GetActor();
+  if (Actor == nullptr)
+  {
+    return;
+  }
+  // The primary's pose, the mirror's own scale (a spawn attribute).
+  Transform.SetScale3D(Actor->GetActorScale3D());
+  USceneComponent *Root = Actor->GetRootComponent();
+  if ((Root != nullptr) && (Root->GetMobility() != EComponentMobility::Movable))
+  {
+    // A static actor that moved on the primary: such a root refuses to move.
+    if (CarlaActor.GetActorGlobalTransform().Equals(Transform, 1e-3))
+    {
+      return;
+    }
+    Root->SetMobility(EComponentMobility::Movable);
+  }
+  // No teleport: the renderer keeps the previous pose for motion vectors.
+  CarlaActor.SetActorGlobalTransform(Transform, ETeleportType::None);
+}
+
+void FFrameData::PrepareMirroredActor(FCarlaActor *CarlaActor, uint32_t PrimaryActorId)
+{
+  if (CarlaActor == nullptr)
+  {
+    return;
+  }
+  CarlaActor->SetPrimaryActorId(PrimaryActorId);
+  switch (CarlaActor->GetActorType())
+  {
+    case FCarlaActor::ActorType::Vehicle:
+      // ProcessReplayerEventAdd disabled its physics already.
+      break;
+
+    case FCarlaActor::ActorType::Walker:
+      // No local movement: MOVE_None, so it cannot drift between frames.
+      CarlaActor->SetActorSimulatePhysics(false);
+      break;
+
+    case FCarlaActor::ActorType::Other:
+      if (!CarlaActor->IsDormant() && (CarlaActor->GetActor() != nullptr))
+      {
+        // Not FCarlaActor::SetActorSimulatePhysics, which also changes the
+        // collision settings the primary's prop has.
+        if (auto *Root = Cast<UPrimitiveComponent>(CarlaActor->GetActor()->GetRootComponent()))
+        {
+          if (Root->IsSimulatingPhysics())
+          {
+            Root->SetSimulatePhysics(false);
+          }
+        }
+      }
+      break;
+
+    default:
+      break;
+  }
 }
 
 void FFrameData::Clear()
@@ -191,7 +856,6 @@ void FFrameData::Clear()
   Positions.Clear();
   States.Clear();
   Vehicles.Clear();
-  Wheels.Clear();
   Walkers.Clear();
   Bikers.Clear();
   LightVehicles.Clear();
@@ -201,103 +865,228 @@ void FFrameData::Clear()
   TriggerVolumes.Clear();
   PhysicsControls.Clear();
   TrafficLightTimes.Clear();
+  Weathers.Clear();
   FrameCounter.FrameCounter = 0;
+  MultiGpuFrameTime.reset();
+  MirrorPositions.positions.clear();
+  MirrorVehicleParts.vehicles.clear();
+  MirrorSensorTicks.ticks.clear();
+  MirrorSensorStates.states.clear();
+  bHasSensorTicks = false;
+  MirrorWorldGlobals.reset();
+  MirrorWorldObjects.disabled_environment_objects.reset();
+  MirrorAppearances.actors.clear();
 }
+
+static_assert(
+    static_cast<uint8_t>(CarlaRecorderPacketId::MultiGpuFrameTime) == carla::multigpu::FrameTime::kPacketId,
+    "packet ids are fixed: see LibCarla/source/carla/multigpu");
+static_assert(
+    static_cast<uint8_t>(CarlaRecorderPacketId::MultiGpuPositions) == carla::multigpu::MirroredPositions::kPacketId,
+    "packet ids are fixed: see LibCarla/source/carla/multigpu");
+static_assert(
+    static_cast<uint8_t>(CarlaRecorderPacketId::MultiGpuSensorTicks) == carla::multigpu::SensorTicks::kPacketId,
+    "packet ids are fixed: see LibCarla/source/carla/multigpu");
+static_assert(
+    static_cast<uint8_t>(CarlaRecorderPacketId::MultiGpuSensorState) == carla::multigpu::SensorStates::kPacketId,
+    "packet ids are fixed: see LibCarla/source/carla/multigpu");
+static_assert(
+    static_cast<uint8_t>(CarlaRecorderPacketId::MultiGpuVehicleParts) == carla::multigpu::MirroredVehicleParts::kPacketId,
+    "packet ids are fixed: see LibCarla/source/carla/multigpu");
+static_assert(
+    static_cast<uint8_t>(CarlaRecorderPacketId::MultiGpuWorldGlobals) == carla::multigpu::WorldGlobals::kPacketId,
+    "packet ids are fixed: see LibCarla/source/carla/multigpu");
+static_assert(
+    static_cast<uint8_t>(CarlaRecorderPacketId::MultiGpuWorldObjects) == carla::multigpu::WorldObjects::kPacketId,
+    "packet ids are fixed: see LibCarla/source/carla/multigpu");
+static_assert(
+    static_cast<uint8_t>(CarlaRecorderPacketId::MultiGpuActorAppearance) == carla::multigpu::ActorAppearances::kPacketId,
+    "packet ids are fixed: see LibCarla/source/carla/multigpu");
 
 void FFrameData::Write(std::ostream& OutStream)
 {
+  // First, so that a secondary knows the frame's time before anything else.
+  if (MultiGpuFrameTime)
+  {
+    MultiGpuFrameTime->Write(OutStream);
+  }
   EventsAdd.Write(OutStream);
   EventsDel.Write(OutStream);
   EventsParent.Write(OutStream);
-  Positions.Write(OutStream);
+  MirrorPositions.Write(OutStream);
+  Kinematics.Write(OutStream);
   States.Write(OutStream);
   Vehicles.Write(OutStream);
-  Wheels.Write(OutStream);
+  MirrorVehicleParts.Write(OutStream);
   Walkers.Write(OutStream);
   Bikers.Write(OutStream);
   LightVehicles.Write(OutStream);
   LightScenes.Write(OutStream);
   TrafficLightTimes.Write(OutStream);
+  Weathers.Write(OutStream);
+  if (MirrorWorldGlobals)
+  {
+    MirrorWorldGlobals->Write(OutStream);
+  }
+  if (!MirrorWorldObjects.empty())
+  {
+    MirrorWorldObjects.Write(OutStream);
+  }
+  if (!MirrorAppearances.actors.empty())
+  {
+    MirrorAppearances.Write(OutStream);
+  }
+  if (!MirrorSensorStates.states.empty())
+  {
+    MirrorSensorStates.Write(OutStream);
+  }
+  // Always, even when empty: a secondary's mirrors tick only on what it lists.
+  MirrorSensorTicks.Write(OutStream);
   FrameCounter.Write(OutStream);
 }
 
-void FFrameData::Read(std::istream& InStream)
+static_assert(
+    static_cast<uint8_t>(CarlaRecorderPacketId::FrameCounter) == carla::multigpu::kFrameCounterPacketId,
+    "the frame data codec reads the frame counter itself");
+
+carla::multigpu::FrameDataReadResult FFrameData::Read(const uint8_t *Data, size_t Size)
 {
   Clear();
-  while(!InStream.eof())
+  const carla::multigpu::FrameDataReadResult Result = carla::multigpu::ReadFrameData(Data, Size,
+      [this](uint8_t Id, std::istream &InStream, uint32_t PacketSize)
+      {
+        switch (static_cast<CarlaRecorderPacketId>(Id))
+        {
+          case CarlaRecorderPacketId::EventAdd:
+            EventsAdd.Read(InStream);
+            return true;
+          case CarlaRecorderPacketId::EventDel:
+            EventsDel.Read(InStream);
+            return true;
+          case CarlaRecorderPacketId::EventParent:
+            EventsParent.Read(InStream);
+            return true;
+          case CarlaRecorderPacketId::Position:
+            Positions.Read(InStream);
+            return true;
+          case CarlaRecorderPacketId::State:
+            States.Read(InStream);
+            return true;
+          case CarlaRecorderPacketId::AnimVehicle:
+            Vehicles.Read(InStream);
+            return true;
+          case CarlaRecorderPacketId::AnimWalker:
+            Walkers.Read(InStream);
+            return true;
+          case CarlaRecorderPacketId::MultiGpuVehicleParts:
+            MirrorVehicleParts.Read(InStream, PacketSize);
+            return true;
+          case CarlaRecorderPacketId::AnimBiker:
+            Bikers.Read(InStream);
+            return true;
+          case CarlaRecorderPacketId::VehicleLight:
+            LightVehicles.Read(InStream);
+            return true;
+          case CarlaRecorderPacketId::SceneLight:
+            LightScenes.Read(InStream);
+            return true;
+          case CarlaRecorderPacketId::Kinematics:
+            Kinematics.Read(InStream);
+            return true;
+          case CarlaRecorderPacketId::TrafficLightTime:
+            TrafficLightTimes.Read(InStream);
+            return true;
+          case CarlaRecorderPacketId::Weather:
+            Weathers.Read(InStream);
+            return true;
+          case CarlaRecorderPacketId::MultiGpuWorldGlobals:
+          {
+            carla::multigpu::WorldGlobals Globals;
+            // A short packet fails InStream, so the codec stops there.
+            if (Globals.Read(InStream, PacketSize))
+            {
+              MirrorWorldGlobals = Globals;
+            }
+            return true;
+          }
+          case CarlaRecorderPacketId::MultiGpuWorldObjects:
+            MirrorWorldObjects.Read(InStream, PacketSize);
+            return true;
+          case CarlaRecorderPacketId::MultiGpuActorAppearance:
+            MirrorAppearances.Read(InStream, PacketSize);
+            return true;
+          case CarlaRecorderPacketId::MultiGpuSensorTicks:
+            bHasSensorTicks = MirrorSensorTicks.Read(InStream, PacketSize);
+            return true;
+          case CarlaRecorderPacketId::MultiGpuSensorState:
+            MirrorSensorStates.Read(InStream, PacketSize);
+            return true;
+          case CarlaRecorderPacketId::MultiGpuPositions:
+            // A short packet fails InStream, so the codec stops there.
+            MirrorPositions.Read(InStream, PacketSize);
+            return true;
+          case CarlaRecorderPacketId::MultiGpuFrameTime:
+          {
+            carla::multigpu::FrameTime Time;
+            // A short packet fails InStream, so the codec stops there.
+            if (Time.Read(InStream, PacketSize))
+            {
+              MultiGpuFrameTime = Time;
+            }
+            return true;
+          }
+          default:
+            // Unknown here (written by another build): the codec skips it.
+            return false;
+        }
+      });
+  FrameCounter.FrameCounter = Result.frame.value_or(0u);
+  carla::multigpu::FrameDataReadResult Checked = Result;
+  if (Checked.IsComplete() && MultiGpuFrameTime && (MultiGpuFrameTime->frame != FrameCounter.FrameCounter))
   {
-    Header header;
-    ReadValue<char>(InStream, header.Id);
-    ReadValue<uint32_t>(InStream, header.Size);
-    switch (header.Id)
-    {
-      // events add
-      case static_cast<char>(CarlaRecorderPacketId::EventAdd):
-        EventsAdd.Read(InStream);
-        break;
-
-      // events del
-      case static_cast<char>(CarlaRecorderPacketId::EventDel):
-        EventsDel.Read(InStream);
-        break;
-
-      // events parent
-      case static_cast<char>(CarlaRecorderPacketId::EventParent):
-        EventsParent.Read(InStream);
-        break;
-
-      // positions
-      case static_cast<char>(CarlaRecorderPacketId::Position):
-        Positions.Read(InStream);
-        break;
-
-      // states
-      case static_cast<char>(CarlaRecorderPacketId::State):
-        States.Read(InStream);
-        break;
-
-      // vehicle animation
-      case static_cast<char>(CarlaRecorderPacketId::AnimVehicle):
-        Vehicles.Read(InStream);
-        break;
-
-      // walker animation
-      case static_cast<char>(CarlaRecorderPacketId::AnimWalker):
-        Walkers.Read(InStream);
-        break;
-
-      // walker animation
-      case static_cast<char>(CarlaRecorderPacketId::AnimVehicleWheels):
-        Wheels.Read(InStream);
-        break;
-
-      // walker animation
-      case static_cast<char>(CarlaRecorderPacketId::AnimBiker):
-        Bikers.Read(InStream);
-        break;
-
-      // vehicle light animation
-      case static_cast<char>(CarlaRecorderPacketId::VehicleLight):
-        LightVehicles.Read(InStream);
-        break;
-
-      // scene lights animation
-      case static_cast<char>(CarlaRecorderPacketId::SceneLight):
-        LightScenes.Read(InStream);
-        break;
-
-      case static_cast<char>(CarlaRecorderPacketId::FrameCounter):
-        FrameCounter.Read(InStream);
-        break;
-
-      // unknown packet, just skip
-      default:
-        // skip packet
-        InStream.seekg(header.Size, std::ios::cur);
-        break;
-
-    }
+    Checked.status = carla::multigpu::FrameDataStatus::Inconsistent;
+    Checked.packet_id = carla::multigpu::FrameTime::kPacketId;
   }
+  return Checked;
+}
+
+void FrameTimeFromSettings(const FEpisodeSettings &Settings, carla::multigpu::FrameTime &Time)
+{
+  Time.synchronous_mode = Settings.bSynchronousMode;
+  Time.no_rendering_mode = Settings.bNoRenderingMode;
+  Time.fixed_delta_seconds.reset();
+  if (Settings.FixedDeltaSeconds.IsSet())
+  {
+    Time.fixed_delta_seconds = Settings.FixedDeltaSeconds.GetValue();
+  }
+  Time.substepping = Settings.bSubstepping;
+  Time.max_substep_delta_time = Settings.MaxSubstepDeltaTime;
+  Time.max_substeps = Settings.MaxSubsteps;
+  Time.max_culling_distance = Settings.MaxCullingDistance;
+  Time.deterministic_ragdolls = Settings.bDeterministicRagdolls;
+  Time.tile_streaming_distance = Settings.TileStreamingDistance;
+  Time.actor_active_distance = Settings.ActorActiveDistance;
+  Time.spectator_as_ego = Settings.SpectatorAsEgo;
+  Time.adjust_signs_height_to_ground = Settings.bAdjustSignsHeightToGround;
+}
+
+void SettingsFromFrameTime(const carla::multigpu::FrameTime &Time, FEpisodeSettings &Settings)
+{
+  Settings.bSynchronousMode = Time.synchronous_mode;
+  Settings.FixedDeltaSeconds.Reset();
+  if (Time.fixed_delta_seconds)
+  {
+    Settings.FixedDeltaSeconds = *Time.fixed_delta_seconds;
+  }
+  Settings.bSubstepping = Time.substepping;
+  Settings.MaxSubstepDeltaTime = Time.max_substep_delta_time;
+  Settings.MaxSubsteps = Time.max_substeps;
+  Settings.MaxCullingDistance = Time.max_culling_distance;
+  Settings.bDeterministicRagdolls = Time.deterministic_ragdolls;
+  Settings.TileStreamingDistance = Time.tile_streaming_distance;
+  Settings.ActorActiveDistance = Time.actor_active_distance;
+  Settings.SpectatorAsEgo = Time.spectator_as_ego;
+  Settings.bAdjustSignsHeightToGround = Time.adjust_signs_height_to_ground;
 }
 
 void FFrameData::CreateRecorderEventAdd(
@@ -380,14 +1169,20 @@ void FFrameData::AddActorPosition(FCarlaActor *CarlaActor)
 {
   check(CarlaActor != nullptr);
 
-  FTransform Transform = CarlaActor->GetActorGlobalTransform();
-  // get position of the vehicle
-  AddPosition(CarlaRecorderPosition
-  {
-    CarlaActor->GetActorId(),
-    Transform.GetLocation(),
-    Transform.GetRotation().Euler()
-  });
+  // As a quaternion: an Euler round trip snaps pitch near +-90 degrees.
+  const FTransform Transform = CarlaActor->GetActorGlobalTransform();
+  const FVector Location = Transform.GetLocation();
+  const FQuat Rotation = Transform.GetRotation();
+  carla::multigpu::MirroredPosition Position;
+  Position.id = CarlaActor->GetActorId();
+  Position.location[0] = Location.X;
+  Position.location[1] = Location.Y;
+  Position.location[2] = Location.Z;
+  Position.rotation[0] = Rotation.X;
+  Position.rotation[1] = Rotation.Y;
+  Position.rotation[2] = Rotation.Z;
+  Position.rotation[3] = Rotation.W;
+  MirrorPositions.positions.push_back(Position);
 }
 
 void FFrameData::AddVehicleAnimation(FCarlaActor *CarlaActor)
@@ -413,10 +1208,10 @@ void FFrameData::AddVehicleAnimation(FCarlaActor *CarlaActor)
   AddAnimVehicle(Record);
 }
 
-void FFrameData::AddVehicleWheelsAnimation(FCarlaActor *CarlaActor)
+void FFrameData::AddVehicleParts(FCarlaActor *CarlaActor)
 {
   check(CarlaActor != nullptr)
-  if (CarlaActor->IsPendingKill())
+  if (CarlaActor->IsPendingKill() || CarlaActor->IsDormant())
     return;
   if (CarlaActor->GetActorType() != FCarlaActor::ActorType::Vehicle)
     return;
@@ -429,22 +1224,34 @@ void FFrameData::AddVehicleWheelsAnimation(FCarlaActor *CarlaActor)
   if (Movement == nullptr)
     return;
 
-  CarlaRecorderAnimWheels Record;
-  Record.DatabaseId = CarlaActor->GetActorId();
-  Record.WheelValues.reserve(Movement->WheelSetups.Num());
+  carla::multigpu::VehicleParts Parts;
+  Parts.actor_id = CarlaActor->GetActorId();
+  Parts.wheels.reserve(Movement->WheelSetups.Num());
 
-  // The getters return the pose shown, whether Chaos, the animation instance
-  // or the wheel animation override set it.
-  for (uint8 i = 0; CarlaVehicle->HasWheel(i); ++i)
+  // Send the pose the server drew, not the Chaos output, which can be a frame apart.
+  for (int32 i = 0; CarlaVehicle->HasWheel(i); ++i)
   {
-    WheelInfo Wheel;
-    Wheel.Location = static_cast<EVehicleWheelLocation>(i);
-    Wheel.SteeringAngle = CarlaVehicle->GetWheelSteerAngle(Wheel.Location);
-    Wheel.TireRotation = CarlaVehicle->GetWheelPitchAngle(Wheel.Location);
-    Record.WheelValues.push_back(Wheel);
+    const FWheelAnimationData Pose = CarlaVehicle->GetDrawnWheelPose(i);
+    Parts.wheels.push_back(carla::multigpu::WheelPose{
+        static_cast<float>(Pose.RotOffset.Yaw),
+        static_cast<float>(Pose.RotOffset.Pitch),
+        static_cast<float>(-FVector::DotProduct(Pose.LocOffset, CarlaVehicle->GetWheelSuspensionAxis(i)))});
   }
-
-  AddAnimVehicleWheels(Record);
+  Parts.current_gear = CarlaVehicle->GetVehicleCurrentGear();
+  Parts.manual_gear_shift = CarlaVehicle->GetVehicleControl().bManualGearShift;
+  const auto *Root = Cast<UPrimitiveComponent>(CarlaVehicle->GetRootComponent());
+  Parts.simulating_physics = (Root != nullptr) && Root->IsSimulatingPhysics();
+  for (const TPair<int32, FTransform> &Door : CarlaVehicle->GetOpenDoorPoses())
+  {
+    carla::multigpu::DoorPose Pose;
+    Pose.door = static_cast<uint8_t>(Door.Key);
+    const FVector Location = Door.Value.GetLocation();
+    const FQuat Rotation = Door.Value.GetRotation();
+    Pose.location = {Location.X, Location.Y, Location.Z};
+    Pose.rotation = {Rotation.X, Rotation.Y, Rotation.Z, Rotation.W};
+    Parts.open_doors.push_back(Pose);
+  }
+  MirrorVehicleParts.vehicles.push_back(std::move(Parts));
 
   if (CarlaVehicle->IsTwoWheeledVehicle())
   {
@@ -511,17 +1318,36 @@ void FFrameData::AddActorKinematics(FCarlaActor *CarlaActor)
 {
   check(CarlaActor != nullptr);
 
-  FVector Velocity, AngularVelocity;
-  constexpr float TO_METERS = 1e-2;
-  Velocity = TO_METERS* CarlaActor->GetActorVelocity();
-  AngularVelocity = CarlaActor->GetActorAngularVelocity();
+  // World frame, in UE units: cm/s and rad/s (for Multi-GPU secondaries; the
+  // .log recorder writes its own kinematics).
   CarlaRecorderKinematics Kinematic =
   {
     CarlaActor->GetActorId(),
-    Velocity,
-    AngularVelocity
-   };
-   AddKinematics(Kinematic);
+    CarlaActor->GetActorVelocity(),
+    FMath::DegreesToRadians(CarlaActor->GetActorAngularVelocity())
+  };
+  AddKinematics(Kinematic);
+}
+
+void FFrameData::AddSensorTick(FCarlaActor *CarlaActor)
+{
+  check(CarlaActor != nullptr);
+  // Still set here: the frame is built before the sensors capture, which
+  // clears it. Its state is therefore the one this tick starts from.
+  const ASensor *Sensor = Cast<ASensor>(CarlaActor->GetActor());
+  if ((Sensor == nullptr) || !Sensor->IsReadyToTick())
+  {
+    return;
+  }
+  MirrorSensorTicks.ticks.push_back(
+      carla::multigpu::SensorTick{CarlaActor->GetActorId(), Sensor->GetReadyToTickDeltaSeconds()});
+  carla::multigpu::SensorState State;
+  State.actor_id = CarlaActor->GetActorId();
+  Sensor->GetMirrorState(State);
+  if (!State.empty())
+  {
+    MirrorSensorStates.states.push_back(std::move(State));
+  }
 }
 
 void FFrameData::AddActorBoundingBox(FCarlaActor *CarlaActor)
@@ -599,6 +1425,15 @@ void FFrameData::AddEvent(const CarlaRecorderEventAdd &Event)
 
 void FFrameData::AddEvent(const CarlaRecorderEventDel &Event)
 {
+  // An actor destroyed through the episode is reported again when the engine
+  // destroys it; a secondary needs it once.
+  for (const CarlaRecorderEventDel &Existing : EventsDel.GetEvents())
+  {
+    if (Existing.DatabaseId == Event.DatabaseId)
+    {
+      return;
+    }
+  }
   EventsDel.Add(std::move(Event));
 }
 
@@ -659,11 +1494,6 @@ void FFrameData::AddAnimVehicle(const CarlaRecorderAnimVehicle &Vehicle)
   Vehicles.Add(Vehicle);
 }
 
-void FFrameData::AddAnimVehicleWheels(const CarlaRecorderAnimWheels &VehicleWheels)
-{
-  Wheels.Add(VehicleWheels);
-}
-
 void FFrameData::AddAnimBiker(const CarlaRecorderAnimBiker &Biker)
 {
   Bikers.Add(Biker);
@@ -708,6 +1538,92 @@ void FFrameData::GetFrameCounter()
   FrameCounter.FrameCounter = FCarlaEngine::GetFrameCounter();
 }
 
+namespace
+{
+  // Local actors as seen by carla::multigpu::PlanReplayedActor.
+  class FReplayedActorLookup
+  {
+  public:
+    FReplayedActorLookup(UCarlaEpisode &InEpisode, const FActorDescription &InDescription, const FVector &InLocation)
+      : Episode(InEpisode), Description(InDescription), Location(InLocation) {}
+
+    bool IsSameKind(uint32_t LocalId) const
+    {
+      const FActorInfo *Info = FindInfo(LocalId);
+      return (Info != nullptr) && (Info->Description.Id == Description.Id);
+    }
+
+    std::optional<uint32_t> FindMapActor() const
+    {
+      if (Description.Id == TEXT("spectator"))
+      {
+        APawn *Spectator = Episode.GetSpectatorPawn();
+        const FCarlaActor *CarlaActor = (Spectator != nullptr) ? Episode.FindCarlaActor(Spectator) : nullptr;
+        return (CarlaActor != nullptr) ? std::optional<uint32_t>(CarlaActor->GetActorId()) : std::nullopt;
+      }
+      if (Description.Id != TEXT("static.prop.mesh"))
+      {
+        return std::nullopt;
+      }
+      // Same truncated location as FindTrafficSignAt.
+      const FIntVector Cell(static_cast<int32>(Location.X), static_cast<int32>(Location.Y), static_cast<int32>(Location.Z));
+      for (auto It = Episode.GetActorRegistry().begin(); It != Episode.GetActorRegistry().end(); ++It)
+      {
+        const FCarlaActor *CarlaActor = It->Value.Get();
+        if ((CarlaActor == nullptr) || !IsMapActorLike(CarlaActor->GetActorId()))
+        {
+          continue;
+        }
+        const FVector Other = CarlaActor->GetActorGlobalLocation();
+        if (Cell == FIntVector(static_cast<int32>(Other.X), static_cast<int32>(Other.Y), static_cast<int32>(Other.Z)))
+        {
+          return CarlaActor->GetActorId();
+        }
+      }
+      return std::nullopt;
+    }
+
+    // The map registers the spectator and movable static meshes at BeginPlay
+    // (UCarlaEpisode::InitializeAtBeginPlay); the primary resends them on a
+    // full resync.
+    bool IsMapActorLike(uint32_t LocalId) const
+    {
+      const FActorInfo *Info = FindInfo(LocalId);
+      if ((Info == nullptr) || (Info->Description.Id != Description.Id))
+      {
+        return false;
+      }
+      if (Description.Id == TEXT("spectator"))
+      {
+        return true;
+      }
+      if (Description.Id != TEXT("static.prop.mesh"))
+      {
+        return false;
+      }
+      const FActorAttribute *Mesh = Description.Variations.Find(TEXT("mesh_path"));
+      const FActorAttribute *OtherMesh = Info->Description.Variations.Find(TEXT("mesh_path"));
+      return (Mesh != nullptr) && (OtherMesh != nullptr) && (Mesh->Value == OtherMesh->Value);
+    }
+
+    bool Contains(uint32_t LocalId) const
+    {
+      return Episode.GetActorRegistry().Contains(LocalId);
+    }
+
+  private:
+    const FActorInfo *FindInfo(uint32_t LocalId) const
+    {
+      const FCarlaActor *CarlaActor = Episode.FindCarlaActor(LocalId);
+      return (CarlaActor != nullptr) ? CarlaActor->GetActorInfo() : nullptr;
+    }
+
+    UCarlaEpisode &Episode;
+    const FActorDescription &Description;
+    const FVector &Location;
+  };
+}
+
 // create or reuse an actor for replaying
 std::pair<int, FCarlaActor*> FFrameData::CreateOrReuseActor(
     FVector &Location,
@@ -738,46 +1654,26 @@ std::pair<int, FCarlaActor*> FFrameData::CreateOrReuseActor(
   }
   else if (SpawnSensors || !ActorDesc.Id.StartsWith("sensor."))
   {
-    // check if an actor of that type already exist with same id
-    if (Episode->GetActorRegistry().Contains(DesiredId))
+    const carla::multigpu::ReplayedActorPlan Plan = carla::multigpu::PlanReplayedActor(
+        MappedId, DesiredId, FReplayedActorLookup(*Episode, ActorDesc, Location));
+    if (Plan.reuse)
     {
-      auto* CarlaActor = Episode->FindCarlaActor(DesiredId);
-      const FActorDescription *desc = &CarlaActor->GetActorInfo()->Description;
-      if (desc->Id == ActorDesc.Id)
-      {
-        // we don't need to create, actor of same type already exist
-        // relocate
-        FRotator Rot = FRotator::MakeFromEuler(Rotation);
-        FTransform Trans2(Rot, Location, FVector(1, 1, 1));
-        CarlaActor->SetActorGlobalTransform(Trans2);
-        return std::pair<int, FCarlaActor*>(2, CarlaActor);
-      }
-    }
-    else if (MappedId.find(DesiredId) != MappedId.end() && Episode->GetActorRegistry().Contains(MappedId[DesiredId]))
-    {
-      auto* CarlaActor = Episode->FindCarlaActor(MappedId[DesiredId]);
-      const FActorDescription *desc = &CarlaActor->GetActorInfo()->Description;
-      if (desc->Id == ActorDesc.Id)
-      {
-        // we don't need to create, actor of same type already exist
-        // relocate
-        FRotator Rot = FRotator::MakeFromEuler(Rotation);
-        FTransform Trans2(Rot, Location, FVector(1, 1, 1));
-        CarlaActor->SetActorGlobalTransform(Trans2);
-        return std::pair<int, FCarlaActor*>(2, CarlaActor);
-      }
+      FCarlaActor *CarlaActor = Episode->FindCarlaActor(*Plan.reuse);
+      FRotator Rot = FRotator::MakeFromEuler(Rotation);
+      PlaceMirror(*CarlaActor, FTransform(Rot, Location));
+      return std::pair<int, FCarlaActor*>(2, CarlaActor);
     }
     // create new actor
     // create the transform
     FRotator Rot = FRotator::MakeFromEuler(Rotation);
     FTransform Trans(Rot, FVector(0, 0, 100000), FVector(1, 1, 1));
     // create as new actor
-    TPair<EActorSpawnResultStatus, FCarlaActor*> Result = Episode->SpawnActorWithInfo(Trans, ActorDesc, DesiredId);
+    TPair<EActorSpawnResultStatus, FCarlaActor*> Result = Episode->SpawnActorWithInfo(Trans, ActorDesc, Plan.spawn_id);
     if (Result.Key == EActorSpawnResultStatus::Success)
     {
-      // relocate
-      FTransform Trans2(Rot, Location, FVector(1, 1, 1));
-      Result.Value->SetActorGlobalTransform(Trans2);
+      // relocate, keeping the scale the actor was spawned with (and moving
+      // a static root, e.g. a mass-less prop, which refuses to move otherwise)
+      PlaceMirror(*Result.Value, FTransform(Rot, Location));
       ALargeMapManager * LargeMapManager = UCarlaStatics::GetLargeMapManager(Episode->GetWorld());
       if (LargeMapManager)
       {
@@ -874,37 +1770,54 @@ bool FFrameData::ProcessReplayerEventDel(uint32_t DatabaseId)
 }
 
 // replay event for parenting actors
-bool FFrameData::ProcessReplayerEventParent(uint32_t ChildId, uint32_t ParentId)
+bool FFrameData::ProcessReplayerEventParent(
+    uint32_t ChildId,
+    uint32_t ParentId,
+    const std::unordered_map<uint32_t, uint32_t>& MappedId)
 {
   check(Episode != nullptr);
-  FCarlaActor * Child = Episode->FindCarlaActor(ChildId);
-  FCarlaActor * Parent = Episode->FindCarlaActor(ParentId);
-  if(!Child)
+  const std::optional<uint32_t> LocalChild = FindMirror(MappedId, ChildId);
+  const std::optional<uint32_t> LocalParent = FindMirror(MappedId, ParentId);
+  FCarlaActor *Child = LocalChild ? Episode->FindCarlaActor(*LocalChild) : nullptr;
+  FCarlaActor *Parent = LocalParent ? Episode->FindCarlaActor(*LocalParent) : nullptr;
+  if ((Child == nullptr) || (Parent == nullptr))
   {
-    UE_LOG(LogCarla, Log, TEXT("Parenting Child actors not found"));
     return false;
   }
-  if(!Parent)
-  {
-    UE_LOG(LogCarla, Log, TEXT("Parenting Parent actors not found"));
-    return false;
-  }
-  Child->SetParent(ParentId);
+  // Every full resync replays every attachment: only a new one registers the
+  // ROS 2 parent names, which pile up otherwise ("hero/hero").
+  const bool bNewParent = (Child->GetParent() != Parent->GetActorId());
+  Child->SetParent(Parent->GetActorId());
   Child->SetAttachmentType(carla::rpc::AttachmentType::Rigid);
   Parent->AddChildren(Child->GetActorId());
-  if(!Parent->IsDormant())
+  if (Parent->IsDormant())
   {
-    if(!Child->IsDormant())
+    // Putting a parent to sleep puts its children to sleep too.
+    if (!Child->IsDormant())
     {
-      Episode->AttachActors(
-          Child->GetActor(),
-          Parent->GetActor(),
-          static_cast<EAttachmentType>(carla::rpc::AttachmentType::Rigid));
+      Episode->PutActorToSleep(Child->GetActorId());
     }
   }
-  else
+  else if (!Child->IsDormant() && (Child->GetActor() != nullptr) && (Parent->GetActor() != nullptr))
   {
-    Episode->PutActorToSleep(Child->GetActorId());
+    // Always rigid, keeping the child where it is: every frame sets its exact
+    // pose (after its parent's), whatever attachment the primary used.
+    AActor *ChildActor = Child->GetActor();
+    AActor *ParentActor = Parent->GetActor();
+    if (ChildActor->GetAttachParentActor() != ParentActor)
+    {
+      ChildActor->AttachToActor(ParentActor, FAttachmentTransformRules::KeepWorldTransform);
+    }
+    // Sensors read their parent's motion through their owner (the IMU). A
+    // collision sensor binds its owner's hit event in SetOwner.
+    if (ChildActor->GetOwner() != ParentActor)
+    {
+      ChildActor->SetOwner(ParentActor);
+    }
+  }
+  if (bNewParent)
+  {
+    Episode->AddRosParentNames(*Child);
   }
   return true;
 }
@@ -1002,33 +1915,51 @@ void FFrameData::ProcessReplayerAnimVehicle(CarlaRecorderAnimVehicle Vehicle)
     Control.bHandBrake = Vehicle.bHandbrake;
     Control.bReverse = (Vehicle.Gear < 0);
     Control.Gear = Vehicle.Gear;
-    Control.bManualGearShift = false;
+    const auto *CarlaVehicle = Cast<ACarlaWheeledVehicle>(CarlaActor->GetActor());
+    Control.bManualGearShift = (CarlaVehicle != nullptr) && CarlaVehicle->GetMirroredManualGearShift();
     CarlaActor->ApplyControlToVehicle(Control, EVehicleInputPriority::User);
   }
 }
 
-void FFrameData::ProcessReplayerAnimVehicleWheels(CarlaRecorderAnimWheels VehicleAnimWheels)
+void FFrameData::PlayVehicleParts(const std::unordered_map<uint32_t, uint32_t>& MappedId)
 {
-  check(Episode != nullptr)
-  auto CarlaActor = Episode->FindCarlaActor(VehicleAnimWheels.DatabaseId);
-  if (CarlaActor == nullptr)
-    return;
-  if (CarlaActor->GetActorType() != FCarlaActor::ActorType::Vehicle)
-    return;
-  auto CarlaVehicle = Cast<ACarlaWheeledVehicle>(CarlaActor->GetActor());
-  check(CarlaVehicle != nullptr)
-  // Without it the wheels cannot be posed, and roll on their own instead.
-  if (!CarlaVehicle->HasCarlaVehicleAnimation())
-    return;
-
-  // Released in ProcessReplayerFinish.
-  CarlaVehicle->SetWheelAnimationOverride(true);
-  for (const WheelInfo& Element : VehicleAnimWheels.WheelValues)
+  for (const carla::multigpu::VehicleParts &Parts : MirrorVehicleParts.vehicles)
   {
-    if (!CarlaVehicle->HasWheel(static_cast<int32>(Element.Location)))
+    const std::optional<uint32_t> Local = FindMirror(MappedId, Parts.actor_id);
+    FCarlaActor *CarlaActor = Local ? Episode->FindCarlaActor(*Local) : nullptr;
+    auto *CarlaVehicle = ((CarlaActor != nullptr) && !CarlaActor->IsDormant()) ?
+        Cast<ACarlaWheeledVehicle>(CarlaActor->GetActor()) : nullptr;
+    if (CarlaVehicle == nullptr)
+    {
       continue;
-    CarlaVehicle->SetWheelSteerDirection(Element.Location, Element.SteeringAngle);
-    CarlaVehicle->SetWheelPitchAngle(Element.Location, Element.TireRotation);
+    }
+    // Without it the wheels cannot be posed, and roll on their own instead.
+    if (CarlaVehicle->HasCarlaVehicleAnimation())
+    {
+      if (!CarlaVehicle->IsWheelAnimationOverridden())
+      {
+        CarlaVehicle->SetWheelAnimationOverride(true);
+      }
+      for (int32 i = 0; (i < static_cast<int32>(Parts.wheels.size())) && CarlaVehicle->HasWheel(i); ++i)
+      {
+        const EVehicleWheelLocation Location = static_cast<EVehicleWheelLocation>(i);
+        CarlaVehicle->SetWheelSteerDirection(Location, Parts.wheels[i].steer);
+        CarlaVehicle->SetWheelPitchAngle(Location, Parts.wheels[i].spin);
+        CarlaVehicle->SetWheelSuspensionOffset(Location, Parts.wheels[i].suspension_offset);
+      }
+    }
+    if (Parts.current_gear)
+    {
+      CarlaVehicle->SetMirroredDrivetrain(*Parts.current_gear, Parts.manual_gear_shift, Parts.simulating_physics);
+    }
+    TArray<TPair<int32, FTransform>> OpenDoors;
+    for (const carla::multigpu::DoorPose &Door : Parts.open_doors)
+    {
+      OpenDoors.Emplace(Door.door, FTransform(
+          FQuat(Door.rotation[0], Door.rotation[1], Door.rotation[2], Door.rotation[3]),
+          FVector(Door.location[0], Door.location[1], Door.location[2])));
+    }
+    CarlaVehicle->SetMirroredDoorPoses(OpenDoors);
   }
 }
 
@@ -1058,10 +1989,14 @@ void FFrameData::ProcessReplayerLightScene(CarlaRecorderLightScene LightScene)
     auto* CarlaLight = CarlaLightSubsystem->GetLight(LightScene.LightId);
     if (CarlaLight)
     {
-      CarlaLight->SetLightIntensity(LightScene.Intensity);
-      CarlaLight->SetLightColor(LightScene.Color);
-      CarlaLight->SetLightOn(LightScene.bOn);
-      CarlaLight->SetLightType(static_cast<ELightType>(LightScene.Type));
+      // Through the call the primary's light changes take (the client's
+      // LightManager), which several lamp blueprints handle differently from
+      // the separate setters, with the primary's exact color.
+      CarlaLight->SetLightState(
+          LightScene.Intensity,
+          LightScene.Color,
+          static_cast<ELightType>(LightScene.Type),
+          LightScene.bOn);
     }
   }
 }
@@ -1212,7 +2147,7 @@ FCarlaActor *FFrameData::FindTrafficSignAt(FVector Location)
 void FFrameData::AddExistingActors(void)
 {
   // registring all existing actors in first frame
-  FActorRegistry Registry = Episode->GetActorRegistry();
+  const FActorRegistry &Registry = Episode->GetActorRegistry();
   for (auto& It : Registry)
   {
     const FCarlaActor* CarlaActor = It.Value.Get();
@@ -1225,6 +2160,16 @@ void FFrameData::AddExistingActors(void)
           CarlaActor->GetActorGlobalTransform(),
           CarlaActor->GetActorInfo()->Description,
           false);
+    }
+  }
+  // and their attachments, for a secondary that rebuilds from scratch
+  for (auto& It : Registry)
+  {
+    const FCarlaActor* CarlaActor = It.Value.Get();
+    if ((CarlaActor != nullptr) && (CarlaActor->GetParent() != 0u) &&
+        (Registry.FindCarlaActor(CarlaActor->GetParent()) != nullptr))
+    {
+      AddEvent(CarlaRecorderEventParent{CarlaActor->GetActorId(), CarlaActor->GetParent()});
     }
   }
 }

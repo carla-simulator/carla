@@ -101,7 +101,17 @@ a good guide to what matters: `HardBreakRoute` 573, `ControlLoss` 429,
 `DynamicObjectCrossing` 351, `PriorityAtJunction` 237, `ParkedObstacleTwoWays` 204,
 `HazardAtSideLaneTwoWays` 177, then a long tail.
 
-## ue5-master — the port is partial
+## ue58-dev (CARLA on UE 5.8)
+
+`--list` shows **96** configs. Their towns are Town01_Opt to Town05_Opt and
+Town10HD_Opt, and the branch translates UE5 map and blueprint names. `<weather>`
+in a config is applied, for a scenario run outside a route.
+
+Scenarios take no `world` argument here, and read the world, map and global route
+planner from `BasicScenario`; `CarlaDataProvider` is gone, replaced by
+`SimulationData`. See the repo's `Docs/CHANGELOG.md`.
+
+## ue5-master: the port is partial (CARLA 0.10.0 on UE 5.5)
 
 101 configs, of which **11** name `Town10HD_Opt`, the only map CARLA 0.10.0 ships:
 

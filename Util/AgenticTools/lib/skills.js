@@ -15,7 +15,10 @@ const GROUP_REQUIREMENTS = {
   ue4: [["CARLA_UE4_ROOT", "CARLA_TARGET", "CARLA_PACKAGE_ROOT"],
     "a CARLA ue4-dev checkout or an extracted release"],
   ue5: [["CARLA_UE5_ROOT"], "a CARLA ue5-dev checkout (UE 5.5)"],
-  ue58: [["CARLA_UE58_ROOT"], "a CARLA ue58-dev checkout (UE 5.8)"],
+  // A standalone package is enough for run-carla-ue58-server, so it opens the
+  // group too; the build skills still ask for the checkout they need.
+  ue58: [["CARLA_UE58_ROOT", "CARLA_TARGET", "CARLA_PACKAGE_ROOT"],
+    "a CARLA ue58-dev checkout (UE 5.8) or a standalone package"],
   "scenario-runner": [["SCENARIO_RUNNER_ROOT"], "a scenario_runner checkout"],
   leaderboard: [["LEADERBOARD_ROOT"], "a leaderboard checkout (plus its matching scenario_runner)"],
   scenic: [["SCENIC_ROOT"], "a Scenic install"],
@@ -41,8 +44,8 @@ for (const [name, keys] of Object.entries(PROVIDES)) PROVIDERS[keys[0]] = name;
 
 const SERVER_INSTRUCTIONS = `CARLA build, packaging, cooking, map, vehicle, asset, and server/simulation
 tasks have vetted procedures in this server's skill library, each with its
-failure modes encoded. The skills are the source of truth for these tasks;
-the raw Makefile and Util/BuildTools scripts are a fallback when none matches.
+failure modes encoded. The skills are the source of truth for these tasks and
+cover most of the commands they need.
 list_skills finds a skill, read_skill(name) returns its procedure,
 check_prerequisites(name) verifies its environment.
 

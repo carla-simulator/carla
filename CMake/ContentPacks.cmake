@@ -4,6 +4,13 @@
 #   cmake --build Build --target content-packs-test          run the tool's unit tests
 #   cmake --build Build --target pack-<Pack>                 cook + tar Plugins/Packs/<Pack>
 #   cmake --build Build --target pack-<Pack>-dry-run         print the UAT command only
+#   cmake --build Build --target package-additional-maps     create + cook + tar the AdditionalMaps pack
+#   cmake --build Build --target package-additional-maps-dry-run
+#
+# package-additional-maps builds the towns the default package does not cook
+# (the list in CARLA_ADDITIONAL_MAPS_FILE) into one pack, written next to the
+# package tarball. Like pack-<Pack> it needs the base release, so run the
+# package target first; it does not depend on it to avoid a second cook.
 #
 # pack-<Pack> targets exist for every directory under Unreal/CarlaUnreal/Plugins/Packs
 # that holds a carla-pack.json, plus any names listed in CARLA_CONTENT_PACKS. They
@@ -120,3 +127,51 @@ endif ()
 foreach (PACK_NAME ${CARLA_CONTENT_PACK_NAMES})
   carla_add_content_pack_target (${PACK_NAME})
 endforeach ()
+
+set (
+  CARLA_ADDITIONAL_MAPS_FILE
+  ${CARLA_WORKSPACE_PATH}/Util/ContentPacks/AdditionalMaps.json
+  CACHE FILEPATH
+  "JSON list of the maps package-additional-maps puts in the pack \
+([\"Town01_Opt\", ...] or {\"maps\": [...]}); read at build time."
+)
+
+set (
+  CARLA_ADDITIONAL_MAPS_PACK
+  AdditionalMaps
+  CACHE STRING
+  "Name of the pack package-additional-maps creates (also its /<Name>/ mount point)."
+)
+
+set (CARLA_ADDITIONAL_MAPS_ARGS
+  ${CARLA_CONTENT_PACKS_TOOL}
+  create ${CARLA_ADDITIONAL_MAPS_PACK}
+  --maps-file ${CARLA_ADDITIONAL_MAPS_FILE}
+  --project ${CARLA_CONTENT_PACKS_PROJECT}
+  --base ${CARLA_CONTENT_PACKS_BASE_PATH}
+  # The default package (the one deployed) is Shipping.
+  --config Shipping
+  --platform ${UE_SYSTEM_NAME}
+  --pack-version ${CARLA_VERSION}
+  --description "CARLA towns not shipped in the default package"
+  --out ${CMAKE_BINARY_DIR}/Package
+)
+if (NOT "${CARLA_UNREAL_ENGINE_PATH}" STREQUAL "")
+  list (APPEND CARLA_ADDITIONAL_MAPS_ARGS --engine ${CARLA_UNREAL_ENGINE_PATH})
+endif ()
+
+carla_add_custom_target (
+  package-additional-maps
+  "Cook the maps of CARLA_ADDITIONAL_MAPS_FILE as the ${CARLA_ADDITIONAL_MAPS_PACK} content pack."
+  COMMAND ${CARLA_CONTENT_PACKS_PYTHON} ${CARLA_ADDITIONAL_MAPS_ARGS}
+  USES_TERMINAL
+  VERBATIM
+)
+
+carla_add_custom_target (
+  package-additional-maps-dry-run
+  "Create the ${CARLA_ADDITIONAL_MAPS_PACK} pack sources and print the UAT command only."
+  COMMAND ${CARLA_CONTENT_PACKS_PYTHON} ${CARLA_ADDITIONAL_MAPS_ARGS} --dry-run
+  USES_TERMINAL
+  VERBATIM
+)

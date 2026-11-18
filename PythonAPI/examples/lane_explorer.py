@@ -109,7 +109,7 @@ def main():
 
     try:
         client = carla.Client(args.host, args.port)
-        client.set_timeout(2.0)
+        client.set_timeout(10.0)
 
         world = client.get_world()
         m = world.get_map()

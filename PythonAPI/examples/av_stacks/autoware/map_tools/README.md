@@ -21,7 +21,7 @@ for the default town.
 ### 1. Prebuilt (Town01–Town07, Town10HD) — no server needed
 
 ```bash
-./fetch_prebuilt_maps.sh Town10HD_Opt        # -> <this dir>/maps/Town10HD/
+./fetch_prebuilt_maps.sh Town03              # -> <this dir>/maps/Town03/
 ./fetch_prebuilt_maps.sh Town03 /custom/dir  # explicit output dir
 ```
 
@@ -31,6 +31,10 @@ no traffic-light regulatory elements, small pcd/osm origin offsets, and the
 pcd scores low against UE5.8 lidar returns (the run script relaxes the NDT
 convergence threshold to compensate; regenerating the pcd — option 2 —
 removes the need).
+
+Town10HD needs no fetch, because `maps/Town10HD/` already holds the UE 5.8
+artifacts. If you fetch Town10HD into that default directory, the script
+overwrites them with the UE4-era ones.
 
 **MetaInfo requirement**: Autoware's route_handler only accepts a lanelet2
 map whose `<osm>` root carries a

@@ -1,8 +1,8 @@
 ---
 name: import-carla-ue58-map
-description: Gets a custom map into CARLA on UE 5.8 — the four distinct routes and which one to pick — via Util/Tools/Import.py for FBX+OpenDRIVE assets into a source build, CARLA_MAPS_TO_COOK to ship a map inside a package, or client.generate_opendrive_world() for an OpenDRIVE-only map at runtime with no build at all. Covers where imported assets land, why an imported map cannot be loaded from a package by name, and the four capabilities the UE4 skill has that ue58 lacks — standalone asset packages, their installer, semantic-material tagging, and a pedestrian navmesh that is generated but silently skipped. Use when the user asks to "import a map", "add a custom map", "load my .xodr", "package my own town", or "create a standalone map package".
+description: Gets a custom map into CARLA on UE 5.8 — the four distinct routes and which one to pick — via Util/Tools/Import.py for FBX+OpenDRIVE assets into a source build, CARLA_MAPS_TO_COOK to ship a map inside a package, or client.generate_opendrive_world() for an OpenDRIVE-only map at runtime with no build at all. Covers where imported assets land, how a tiled export is merged into one streamable map and converted to World Partition, and the capabilities the UE4 skill has that ue58 lacks — standalone asset packages, their installer, semantic-material tagging, and a pedestrian navmesh that is generated but silently skipped. Use when the user asks to "import a map", "add a custom map", "load my .xodr", "package my own town", or "create a standalone map package".
 license: MIT
-compatibility: Linux with a built ue58-dev tree; the editor commandlets need CARLA_UNREAL_ENGINE_PATH and an importable `carla` client. The OpenDRIVE-only route needs only a running server. VERIFIED end to end on ue58-dev HEAD 718efd7cc, engine 5.8.0 - Route B was run with a real RoadRunner pair (31.7 MB FBX + 515 KB OpenDRIVE 1.4), producing a map that loads on a server with 24 spawn points, 80 topology edges, 80 crosswalks and 36 landmarks, and on which a vehicle spawns and resolves to a lane. Route A (cook scope) and Route C (runtime OpenDRIVE) were verified earlier. The pedestrian nav mesh is NOT produced - see the gap below.
+compatibility: Linux with a built ue58-dev tree; the editor commandlets need CARLA_UNREAL_ENGINE_PATH and an importable `carla` client. The OpenDRIVE-only route needs only a running server. VERIFIED end to end on ue58-dev 80b3d27f1, engine 5.8.0 - a single-FBX and a tiled RoadRunner export were both imported, converted to World Partition, cooked into a Shipping package and loaded from it by name (get_available_maps listed both), each giving topology, waypoints and spawn points and rendering lit. The pedestrian nav mesh is NOT produced - see the gap below.
 metadata:
   group: ue58
   prerequisites: scripts/check_env.sh
@@ -201,6 +201,30 @@ Invalid Destination Path ()` appears twice, from the empty props list in the
 generated descriptor, and does not affect the map. `FBXImport: Warning: No
 smoothing group information` reflects the exporter's settings, not the import.
 
+**A tiled export** — `<Name>_Tile_<X>_<Y>.fbx` files beside one `<Name>.xodr` — is
+imported as **one** map, with each tile's meshes kept as separate assets. There is
+no flag and no sublevel split: the legacy per-tile levels could not be converted to
+World Partition and had no runtime streaming, so the importer no longer produces
+them. Tiling still matters, because CARLA places one actor per mesh node and World
+Partition streams whole actors: the same geometry came in as 24 meshes tiled versus
+2 untiled.
+
+**Converting to World Partition** is a separate, optional step, and it is the stock
+engine commandlet, not CARLA's:
+
+```bash
+UnrealEditor-Cmd /abs/path/to/CarlaUnreal.uproject -run=WorldPartitionConvert \
+    /Game/<Package>/Maps/<Map>/<Map> \
+    -AllowCommandletRendering -unattended -nosound
+```
+
+The `.uproject` path must be absolute — a relative one fails with `Failed to open
+descriptor file`. Close the editor first and delete
+`Content/__ExternalActors__/<Package>` from any earlier conversion. Use
+`CarlaLargeMapConvert` **only** for the legacy tiled towns (`Town11`–`Town13`); it
+is a subclass for WorldComposition tiles and is not the route for an imported map.
+Measured: 136 ms, 29 external actors for a 24-mesh map.
+
 Where things land — **this is the part that decides whether Route A will work
 afterwards**:
 
@@ -226,24 +250,22 @@ MAPS="/Game/Carla/Maps/Town10HD_Opt,/Game/MyPackage/Maps/MyTown" \
     bash ../build-carla-ue58/scripts/build.sh configure
 ```
 
-**A cooked imported map still may not load by name.** `UCarlaStatics::FindMapPath`
-first does a filesystem `FindFilesRecursive("*.umap")`, which finds nothing inside
-a `.pak`, then falls back to exactly one package path:
+**A cooked imported map loads by name from a package.** This used to be false and
+the fix is easy to miss: `da94ed2b7` moved discovery to the asset registry
+(`UCarlaStatics_GetRegistryWorlds`), which sees inside a Pak/IoStore container
+where the old `FindFilesRecursive("*.umap")` walk found nothing. The map does
+**not** have to sit at `/Game/Carla/Maps/<Name>` any more.
 
-```cpp
-const FString ProjectMapPackage = FString::Printf(TEXT("/Game/Carla/Maps/%s"), *MapName);
-if (FPackageName::DoesPackageExist(ProjectMapPackage)) return ProjectMapPackage;
+Measured on a Shipping package cooking `Town10HD_Opt` plus two imported maps:
+
+```
+get_available_maps() -> ['Town10HD_Opt', 'singlefbx', 'singlefbxwp']
+load_world('singlefbx')    -> SingleFbx/Maps/singlefbx/singlefbx
+load_world('singlefbxwp')  -> SingleFbxWp/Maps/singlefbxwp/singlefbxwp
 ```
 
-So from a package, `load_world("X")` resolves **only** if the map sits at
-`/Game/Carla/Maps/X`. An imported map at `/Game/MyPackage/Maps/MyTown` does not,
-and neither does a nested large map at `/Game/Carla/Maps/Town12/Town12` —
-measured: `load_world('Town12')` raises `std::exception` from a package while
-`load_world('Town_C')` works.
-
-**Consequence:** to be loadable from a package, an imported map must end up under
-`/Game/Carla/Maps/<Name>`. In the editor it works from anywhere, because the
-filesystem search succeeds there.
+The registry asserts off the game thread, so an off-thread `get_available_maps()`
+still returns `[]` — the likely origin of the old "returns nothing" reports.
 
 ### Step 4: Verify
 
@@ -271,11 +293,11 @@ maps anywhere in `Content`, so this isolates import problems from packaging ones
 
 **Example 3: "ship my imported map in a package"**
 
-Route B, then move/import it so it lands under `/Game/Carla/Maps/<Name>`, then
-Route A with `MAPS="...,<Name>"`. Verify with
-[[package-carla-ue58]] `inspect` that its `.xodr`/`TM` staged — per-map
-subdirectories are **not** in `DirectoriesToAlwaysStageAsUFS`, which is the same
-gap that leaves Town12/Town13 without road data.
+Route B, then Route A with the map's full package path. It no longer has to be
+moved under `/Game/Carla/Maps/`. The sidecar directories are derived from the cook
+scope by `Unreal/Package/GenerateCookedMapStaging.cmake`, so the `.xodr` and TM
+cache of exactly the maps being cooked are staged; verify with
+[[package-carla-ue58]] `inspect`.
 
 **Example 4: "make a standalone map package to give someone"**
 
@@ -294,11 +316,38 @@ Cause: it imports `carla` at module scope for the TM cache
 (`carla.Map(...).cook_in_memory_map()`).
 Solution: install the wheel — [[build-carla-ue58]] `pythonapi`.
 
+**Problem: `ImportError: libcarla-client.so: cannot open shared object file`**
+Cause: the installed wheel links against shared libraries that live in the build
+tree and are not on the loader path. Fixing the first reveals
+`libboost_python310.so.1.90.0`, then `libRecast.so.1`.
+Solution: put every `.so` directory of the build on the path before running the
+importer:
+```bash
+export LD_LIBRARY_PATH="$(find "${CARLA_UE58_ROOT}/Build" -name '*.so' -o -name '*.so.*' \
+    | xargs -n1 dirname | sort -u | tr '\n' ':')$LD_LIBRARY_PATH"
+```
+
+**Problem: `WorldPartitionConvert` dies with `Assertion failed: Index >= 0`**
+Cause: the map holds a saved `BP_Carla_Sky`. A rig serialized into the level
+cannot survive the conversion (`UObjectArray.h:1083`, from
+`UWorldPartitionConvertCommandlet::Main`).
+Solution: do not place the rig in the map. The server spawns one at `InitGame` for
+any map without one, and the editor shows a transient preview, so a saved rig is
+never needed.
+
+**Problem: the conversion commandlet exits with `Signal 11` and writes no log**
+Cause: a startup crash before the engine initialises; seen twice, not
+deterministic, and nothing is written when it happens.
+Solution: re-run it. Check for `Conversion took` in the output rather than
+trusting the exit code.
+
 **Problem: the import runs but the map is not in the editor**
 Cause: the commandlets failed while `Import.py` continued — it uses
-`subprocess.call` for the POSIX path and does not check the return code.
+`subprocess.call` for the POSIX path and does not check the return code. Note that
+`ImportAssets` and `PrepareAssetsForCooking` end with `Exiting abnormally (error
+code: 1)` on a **successful** run, so the exit code is not a signal either way.
 Solution: read the commandlet output; `plan` prints the exact commands so you can
-run one by hand.
+run one by hand. Check the content on disk, not the exit status.
 
 **Problem: `KeyError: 'xodr'` or nav/TM steps skipped**
 Cause: the generated package JSON has no `xodr`/`source` for the map, so
@@ -307,8 +356,9 @@ Solution: name the `.xodr` exactly like the `.fbx`, or write the package `.json`
 by hand.
 
 **Problem: imported map works in the editor, `load_world` fails from a package**
-Cause: the pak fallback only checks `/Game/Carla/Maps/<Name>`.
-Solution: get the map to that path, or use the editor / `-game` mode.
+Cause: on a tree older than `da94ed2b7` discovery could not see inside a `.pak`.
+Or the map is simply not in the cook scope.
+Solution: update, and check the map is listed in `CARLA_MAPS_TO_COOK`.
 
 **Problem: imported map loads but has no traffic and walkers cannot spawn**
 Cause: missing TM cache or navigation mesh. Town_C ships without either, so this

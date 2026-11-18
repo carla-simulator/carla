@@ -7,6 +7,9 @@
 #include "carla/multigpu/incomingMessage.h"
 #include "carla/multigpu/secondary.h"
 
+#include "carla/multigpu/commands.h"
+#include "carla/multigpu/keepAlive.h"
+
 #include "carla/BufferPool.h"
 #include "carla/Debug.h"
 #include "carla/Exception.h"
@@ -58,7 +61,7 @@ namespace multigpu {
   }
 
   void Secondary::Connect() {
-    AsyncRun(2u);
+    std::call_once(_run_flag, [this]() { AsyncRun(2u); });
 
     _commander.set_secondary(shared_from_this());
 
@@ -72,7 +75,8 @@ namespace multigpu {
       }
 
       if (self->_socket.is_open()) {
-        self->_socket.close();
+        // As Disconnect(): what is queued belongs to the connection closed here.
+        self->Disconnect();
       }
 
       auto handle_connect = [weak](boost::system::error_code ec) {
@@ -92,6 +96,8 @@ namespace multigpu {
         // This forces not using Nagle's algorithm.
         // Improves the sync mode velocity on Linux by a factor of ~3.
         self->_socket.set_option(boost::asio::ip::tcp::no_delay(true));
+        EnableKeepAlive(self->_socket);
+        self->_connected = true;
 
         log_info("secondary server: connected to ", self->_endpoint);
 
@@ -103,16 +109,14 @@ namespace multigpu {
   }
 
   void Secondary::Stop() {
+    _done = true;
+    _connected = false;
+    // Joins the io threads, so no command callback runs after Stop() returns;
+    // the socket and timer are then only touched from this thread.
+    _pool.Stop();
     _connection_timer.cancel();
-    std::weak_ptr<Secondary> weak = shared_from_this();
-    boost::asio::post(_strand, [weak]() {
-      auto self = weak.lock();
-      if (!self) return;
-      self->_done = true;
-      if (self->_socket.is_open()) {
-        self->_socket.close();
-      }
-    });
+    boost::system::error_code ec;
+    _socket.close(ec);
   }
 
   void Secondary::Reconnect() {
@@ -135,90 +139,69 @@ namespace multigpu {
     DEBUG_ASSERT(message != nullptr);
     DEBUG_ASSERT(!message->empty());
     std::weak_ptr<Secondary> weak = shared_from_this();
-    boost::asio::post(_strand, [=]() {
+    boost::asio::post(_strand, [weak, message]() {
       auto self = weak.lock();
       if (!self) return;
       if (!self->_socket.is_open()) {
         return;
       }
-
-      auto handle_sent = [weak, message](const boost::system::error_code &ec, size_t) {
-        auto self = weak.lock();
-        if (!self) return;
-        if (ec) {
-          log_error("error sending data: ", ec.message());
-        }
-      };
-
-      // _deadline.expires_after(_timeout.to_chrono());
-      boost::asio::async_write(
-          self->_socket,
-          message->GetBufferSequence(),
-          boost::asio::bind_executor(self->_strand, handle_sent));
+      self->_write_queue.push_back(message);
+      if (!self->_is_writing) {
+        self->WriteNext();
+      }
     });
+  }
+
+  void Secondary::WriteNext() {
+    if (_write_queue.empty() || !_socket.is_open()) {
+      _write_queue.clear();
+      _is_writing = false;
+      return;
+    }
+    _is_writing = true;
+    const message_type message = _write_queue.front();
+    const uint64_t generation = _write_generation;
+    std::weak_ptr<Secondary> weak = shared_from_this();
+    auto handle_sent = [weak, message, generation](const boost::system::error_code &ec, size_t) {
+      auto self = weak.lock();
+      if (!self) return;
+      // Disconnect() dropped the queue this write was the front of: what the
+      // queue holds now, if anything, came after.
+      if (generation != self->_write_generation) {
+        return;
+      }
+      if (ec) {
+        log_error("error sending data: ", ec.message());
+        self->_write_queue.clear();
+        self->_is_writing = false;
+        return;
+      }
+      self->_write_queue.pop_front();
+      self->WriteNext();
+    };
+
+    boost::asio::async_write(
+        _socket,
+        message->GetBufferSequence(),
+        boost::asio::bind_executor(_strand, handle_sent));
   }
 
   void Secondary::Write(Buffer buffer) {
-    auto view_data = carla::BufferView::CreateFrom(std::move(buffer));
-    auto message = Secondary::MakeMessage(view_data);
-
-    DEBUG_ASSERT(message != nullptr);
-    DEBUG_ASSERT(!message->empty());
-    std::weak_ptr<Secondary> weak = shared_from_this();
-    boost::asio::post(_strand, [=]() {
-      auto self = weak.lock();
-      if (!self) return;
-      if (!self->_socket.is_open()) {
-        return;
-      }
-
-      auto handle_sent = [weak, message](const boost::system::error_code &ec, size_t) {
-        auto self = weak.lock();
-        if (!self) return;
-        if (ec) {
-          log_error("error sending data: ", ec.message());
-        }
-      };
-
-      // _deadline.expires_after(_timeout.to_chrono());
-      boost::asio::async_write(
-          self->_socket,
-          message->GetBufferSequence(),
-          boost::asio::bind_executor(self->_strand, handle_sent));
-    });
+    Write(Secondary::MakeMessage(carla::BufferView::CreateFrom(std::move(buffer))));
   }
 
   void Secondary::Write(std::string text) {
-    std::weak_ptr<Secondary> weak = shared_from_this();
-    boost::asio::post(_strand, [=]() {
-      auto self = weak.lock();
-      if (!self) return;
-      if (!self->_socket.is_open()) {
-        return;
-      }
+    // One message, size prefix included, through the same ordered queue.
+    Write(Buffer(reinterpret_cast<const unsigned char *>(text.data()), text.size()));
+  }
 
-      auto handle_sent = [weak](const boost::system::error_code &ec, size_t) {
-        auto self = weak.lock();
-        if (!self) return;
-        if (ec) {
-          log_error("error sending data: ", ec.message());
-        }
-      };
-
-      // _deadline.expires_after(_timeout.to_chrono());
-      // sent first size buffer
-      uint32_t this_size = static_cast<uint32_t>(text.size());
-      boost::asio::async_write(
-          self->_socket,
-          boost::asio::buffer(&this_size, sizeof(this_size)),
-          boost::asio::bind_executor(self->_strand, handle_sent));
-
-      // send characters
-      boost::asio::async_write(
-          self->_socket,
-          boost::asio::buffer(text.c_str(), text.size()),
-          boost::asio::bind_executor(self->_strand, handle_sent));
-    });
+  void Secondary::Disconnect() {
+    _connected = false;
+    _write_queue.clear();
+    _is_writing = false;
+    ++_write_generation;
+    boost::system::error_code ignored;
+    _socket.close(ignored);
   }
 
   void Secondary::ReadData() {
@@ -243,9 +226,12 @@ namespace multigpu {
           self->GetCommander().process_command(message->pop());
           self->ReadData();
         } else {
-          // As usual, if anything fails start over from the very top.
-          log_error("secondary server: failed to read data: ", ec.message());
-          // Connect();
+          // The primary is gone. Established sessions are not resumed: close
+          // ours, so the primary's side sees it closed too.
+          if (!self->_done) {
+            log_error("secondary server: failed to read data: ", ec.message());
+          }
+          self->Disconnect();
         }
       };
 
@@ -254,7 +240,11 @@ namespace multigpu {
         size_t DEBUG_ONLY(bytes)) {
           auto self = weak.lock();
           if (!self) return;
-          if (!ec && (message->size() > 0u)) {
+          if (!ec && (message->size() > kMaxMultiGpuMessageBytes)) {
+            log_error("secondary server: the primary announced a", message->size(),
+                "byte message, larger than any valid one; disconnecting");
+            self->Disconnect();
+          } else if (!ec && (message->size() > 0u)) {
             DEBUG_ASSERT_EQ(bytes, sizeof(carla::streaming::detail::message_size_type));
             if (self->_done) {
               return;
@@ -265,11 +255,11 @@ namespace multigpu {
                 self->_socket,
                 message->buffer(),
                 boost::asio::bind_executor(self->_strand, handle_read_data));
-          } else if (!self->_done) {
-            log_error("secondary server: failed to read header: ", ec.message());
-            // DEBUG_ONLY(printf("size  = ", message->size()));
-            // DEBUG_ONLY(printf("bytes = ", bytes));
-            // Connect();
+          } else {
+            if (!self->_done) {
+              log_error("secondary server: failed to read header: ", ec.message());
+            }
+            self->Disconnect();
           }
         };
 

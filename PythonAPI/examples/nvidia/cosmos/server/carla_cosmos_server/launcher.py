@@ -71,7 +71,7 @@ def main(argv: list[str] | None = None) -> int:
                                 formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("--state", help="state directory (COSMOS_STATE, default /state)")
     p.add_argument("--host", help="bind address (COSMOS_HOST, default 0.0.0.0)")
-    p.add_argument("--port", type=int, help="port (COSMOS_PORT, default 8000)")
+    p.add_argument("--port", type=int, help="port (COSMOS_PORT, default 8010)")
     p.add_argument("--profile", help="runtime profile name or 'auto' (COSMOS_PROFILE)")
     p.add_argument("--mode", choices=MODES,
                    help="planned layout: latency (one query uses every GPU) | throughput (one worker per model on "

@@ -161,16 +161,26 @@ def cmd_watch(args):
     actor = _resolve(world, args)
     period = 1.0 / args.hz
     print(f"watching id={actor.id} ({actor.type_id}) for {args.seconds}s at {args.hz} Hz:")
-    _print(world, actor)
-    print("  ---")
-    since = 0.0
+    # Sample k is due at start + k*period of simulated time, the first one
+    # included. Accumulating per-frame deltas and resetting to zero instead
+    # drifted late by up to a frame per sample (a 10 Hz watch on a ~30 fps
+    # world printed ~7.5 samples a second), and the extra sample before the
+    # loop made the count one more than seconds*hz.
+    start = None
+    k = 0
     for snapshot in _for_seconds(world, args.seconds):
-        since += snapshot.timestamp.delta_seconds
-        if since < period:
+        now = snapshot.timestamp.elapsed_seconds
+        if start is None:
+            start = now
+        slot = int((now - start) / period + 1e-6)   # the latest slot now due
+        if slot < k:
             continue
-        since = 0.0
+        if slot * period >= args.seconds - 1e-6:
+            break   # float drift can deliver one frame at exactly `seconds`
         _print(world, actor)
         print("  ---")
+        # Next slot after this frame; a long frame skips slots, it never bursts.
+        k = slot + 1
 
 
 def _sel(sp):

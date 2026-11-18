@@ -153,6 +153,14 @@ public:
 
   /// @}
 
+  /// The engine's state, to continue its exact sequence elsewhere (a
+  /// Multi-GPU secondary's mirror of a sensor).
+  uint32 GetState() const;
+
+  /// Continue from @a State, as GetState returned it; an impossible value is
+  /// ignored.
+  void SetState(uint32 State);
+
 private:
 
   std::minstd_rand Engine;

@@ -37,7 +37,7 @@ node (see `.omc/plans/cosmos-handoff.md`); they exclude queueing and upload.
 ## Running them
 
 ```bash
-export COSMOS_URL=http://<node>:8000
+export COSMOS_URL=http://<node>:8010
 export COSMOS_TOKEN=cc_...
 export COSMOS_RESULTS=$PWD/cosmos-results          # optional, see below
 
@@ -145,7 +145,7 @@ python nurec_to_cosmos.py --sample 00040136-e651-4abd-991d-0655ccda9430 \
 carla-cosmos preview --clip cosmos-results/_clips/nurec_..._wm_30fps --grid
 
 # The real thing (needs a NuRec Render Engine; see ../../nurec/README.md):
-export COSMOS_URL=http://<node>:8000
+export COSMOS_URL=http://<node>:8010
 python nurec_to_cosmos.py --sample <uuid> --mode both --nre-endpoint <node>:46435 --wait
 
 # The clip the three showcase rows share: seven views, Cosmos 3's wsm rule (101*k), 6.7 s.
@@ -219,7 +219,7 @@ night street answering a daylight prompt.
 `showcase.py` runs one job per conditioning setup and keeps everything:
 
 ```bash
-export COSMOS_URL=http://<node>:8000
+export COSMOS_URL=http://<node>:8010
 export COSMOS_TOKEN=cc_...
 export COSMOS_RESULTS=/home/german/Projects/CARLA_SOURCE/cosmos-results
 

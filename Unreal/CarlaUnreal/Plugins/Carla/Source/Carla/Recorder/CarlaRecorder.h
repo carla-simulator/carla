@@ -72,7 +72,20 @@ enum class CarlaRecorderPacketId : uint8_t
   AnimVehicleWheels,
   AnimBiker,
   VehicleDoor,
-  Weather
+  Weather,
+
+  // Multi-GPU frame data (SEND_FRAME) only; never written to .log files. The
+  // values are fixed, see LibCarla/source/carla/multigpu.
+  MultiGpuFrameTime = 25,
+  MultiGpuSensorTicks = 26,
+  MultiGpuSensorState = 27,
+  MultiGpuWorldGlobals = 28,
+  MultiGpuWorldObjects = 29,
+  MultiGpuActorAppearance = 30,
+  MultiGpuWorldAssets = 31,
+  MultiGpuVehicleParts = 32,
+  MultiGpuWalkerPose = 33,
+  MultiGpuPositions = 34
 };
 
 /// Recorder for the simulation
@@ -237,6 +250,7 @@ private:
 
   void AddExistingActors(void);
   void AddExistingWeather(void);
+  void AddExistingDoors(const FCarlaActor &CarlaActor);
   void AddActorPosition(FCarlaActor *CarlaActor);
   void AddWalkerAnimation(FCarlaActor *CarlaActor);
   void AddBikerAnimation(FCarlaActor *CarlaActor);
