@@ -234,6 +234,7 @@
 * Fixed combining `carla.MapLayer` values: `carla.MapLayer.Buildings | carla.MapLayer.ParkedVehicles` gave a plain `int`, which `load_world()` and `load_map_layer()` rejected, so the documented multi-layer example failed. `|`, `&`, `^` and `~` between layers now give a `carla.MapLayer`.
 * `Sensor.stop()` releases the GIL, so stopping a camera whose frame callback is still running no longer deadlocks the client at exit.
 * Fixed **a sensor callback that blocks or runs long stalling other streams of the same client**: another sensor stopped delivering data, or `world.tick()` and `world.wait_for_tick()` timed out because the world snapshots were held back, for roughly one pair of streams in 193. Each stream of a client now has its own strand: Boost.Asio shares the implementations of `io_context::strand` among the strands of an `io_context`.
+* Fixed `World.debug` shapes glowing and showing up as reflections on car windows in packaged (Shipping) builds. The server multiplied their colour by 1000 in Shipping only; shapes now use the colour you pass in every build, and stay visible at night.
 
 #### Build and packaging
 
