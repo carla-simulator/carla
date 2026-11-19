@@ -7,28 +7,14 @@
 namespace carla {
 namespace multigpu {
 
-enum class ProcessRole {
-  Standalone,
-  Primary,
-  Secondary
-};
+/// Whether the primary publishes a sensor on ROS 2.
+constexpr bool PrimaryOwnsSensor(bool primary_only_sensor, bool routed_to_live_secondary) {
+  return primary_only_sensor || !routed_to_live_secondary;
+}
 
-/// Whether this process publishes a sensor on ROS 2.
-constexpr bool OwnsSensor(
-    ProcessRole role,
-    bool routed_to_live_secondary,
-    bool primary_only_sensor,
-    bool connected_to_primary,
-    bool routed_here) {
-  switch (role) {
-    case ProcessRole::Primary:
-      return primary_only_sensor || !routed_to_live_secondary;
-    case ProcessRole::Secondary:
-      return !primary_only_sensor && connected_to_primary && routed_here;
-    case ProcessRole::Standalone:
-      break;
-  }
-  return true;
+/// Whether a secondary publishes a sensor on ROS 2.
+constexpr bool SecondaryOwnsSensor(bool primary_only_sensor, bool connected_to_primary, bool routed_here) {
+  return !primary_only_sensor && connected_to_primary && routed_here;
 }
 
 /// Whether a sensor must produce data in this process.

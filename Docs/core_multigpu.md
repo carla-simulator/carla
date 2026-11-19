@@ -176,6 +176,17 @@ Every frame the primary sends what changed in its world, and on a full resynchro
 - When a sensor moves (its secondary is lost and the primary or another secondary takes it, or a map is loaded), the server that loses it drops its publishers.
 
 ---
+## Running the unit tests
+
+The Multi-GPU unit tests (`test_multigpu_*`) are not built by default, so CI never runs them. Build and run them manually:
+
+```sh
+cmake -DBUILD_LIBCARLA_MULTIGPU_TESTS=ON Build
+cmake --build Build --target libcarla_test_server
+./Build/LibCarla/libcarla_test_server
+```
+
+---
 ## Limitations
 
 - __No camera fallback on a `-nullrhi` primary.__ If every secondary disconnects, cameras stop producing data, and new camera `listen()` calls fail until a secondary connects.
