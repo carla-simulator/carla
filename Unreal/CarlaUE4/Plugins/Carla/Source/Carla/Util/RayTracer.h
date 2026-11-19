@@ -3,6 +3,8 @@
 //
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
+//
+// Additional functionality added by AVL List GmbH under the terms of the MIT license.
 
 #pragma once
 
@@ -13,6 +15,7 @@
 #include <compiler/disable-ue4-macros.h>
 #include "carla/rpc/ObjectLabel.h"
 #include "carla/rpc/LabelledPoint.h"
+#include "carla/rpc/ContactPoint.h"
 #include <compiler/enable-ue4-macros.h>
 
 #include <vector>
@@ -32,5 +35,12 @@ public:
 
   static std::pair<bool, carla::rpc::LabelledPoint> ProjectPoint(
       FVector StartLocation, FVector Direction, float MaxDistance, UWorld * World);
+
+  static std::vector<std::pair<bool, carla::rpc::ContactPoint>> ProjectPoints(
+      const std::vector<FVector>& StartLocations,
+      const std::vector<FVector>& Directions,
+      float MaxDistance,
+      UWorld * World,
+      const std::vector<const AActor *>& IgnoredActors);
 
 };
