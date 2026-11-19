@@ -101,6 +101,11 @@ void ASensor::Tick(const float DeltaTime)
   PrePhysTick(SensorDeltaTime);
 }
 
+bool ASensor::CanSkipRayCastSimulation()
+{
+  return !(bSavingDataToDisk || bHasInProcessConsumer || AreClientsListening());
+}
+
 void ASensor::SetSeed(const int32 InSeed)
 {
   check(RandomEngine != nullptr);

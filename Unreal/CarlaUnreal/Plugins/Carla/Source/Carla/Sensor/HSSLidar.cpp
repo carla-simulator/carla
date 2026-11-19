@@ -152,6 +152,13 @@ bool AHSSLidar::PostprocessDetection(FDetection& Detection) const
     return RandomEngine->GetUniformFloat() < DropOffAlpha * Intensity + DropOffBeta;
 }
 
+bool AHSSLidar::DrawsRandomNumbers() const
+{
+  constexpr float Epsilon = std::numeric_limits<float>::epsilon();
+  return (Description.NoiseStdDev > Epsilon) || DropOffGenActive ||
+      ((Description.DropOffAtZeroIntensity > Epsilon) && (Description.DropOffIntensityLimit > Epsilon));
+}
+
 void AHSSLidar::ResetDetections(uint32_t Channels, uint32_t MaxPointsPerChannel)
 {
   ResetChannelDetections(Detections, Channels, MaxPointsPerChannel);

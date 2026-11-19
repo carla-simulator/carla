@@ -470,3 +470,159 @@ class TestSemanticTags(SyncSmokeTest):
         self.assertTrue(len(vehicle_tags) > 0, "The semantic LiDAR did not hit the vehicle.")
         self.assertTrue(np.all(vehicle_tags == int(carla.CityObjectLabel.Car)),
                         "Vehicle points have tags %s, expected Car." % sorted(set(vehicle_tags.tolist())))
+
+
+class TestUnlistenedRayCastSensors(SyncSmokeTest):
+    """Ray-cast sensors nobody listens to may skip their traces, but must deliver correct data once listened to."""
+
+    UNLISTENED_TICKS = 5
+    LISTENED_TICKS = 5
+    SENSORS = [
+        ('sensor.lidar.ray_cast', {'channels': '32', 'range': '50', 'points_per_second': '100000',
+                                   'rotation_frequency': '20'}),
+        ('sensor.lidar.ray_cast_semantic', {'channels': '32', 'range': '50', 'points_per_second': '100000',
+                                            'rotation_frequency': '20'}),
+        ('sensor.lidar.hss_lidar', {'channels': '32', 'range': '50', 'horizontal_resolution': '0.2'}),
+        ('sensor.other.radar', {'range': '50'}),
+    ]
+
+    def spawn(self, bp_id, attributes):
+        bp = self.world.get_blueprint_library().find(bp_id)
+        for key, value in attributes.items():
+            bp.set_attribute(key, value)
+        tranf = self.world.get_map().get_spawn_points()[0]
+        tranf.location.z += 3
+        return self.world.spawn_actor(bp, tranf)
+
+    def listen(self, sensor):
+        data_queue = Queue()
+        sensor.listen(lambda data: data_queue.put((data.frame, bytes(data.raw_data))))
+        return data_queue
+
+    def destroy(self, sensors):
+        for sensor in sensors:
+            if sensor.is_listening():
+                sensor.stop()
+            sensor.destroy()
+        self.world.tick()
+
+    def spawn_all(self, sensors, specs):
+        """Appends each spawned sensor to sensors, so the caller destroys them even if a later spawn fails."""
+        for bp_id, attributes in specs:
+            sensors.append(self.spawn(bp_id, attributes))
+            self.set_enabled_for_ros(sensors[-1], False)
+
+    def set_enabled_for_ros(self, sensor, enabled):
+        """A stream enabled for ROS counts as listened, so it is never skipped. With ROS 2 on, sensors start enabled
+        unless ROS2TopicVisibility is off; setting it explicitly makes the tests independent of both."""
+        if enabled:
+            sensor.enable_for_ros()
+        else:
+            sensor.disable_for_ros()
+        # The setters are asynchronous, so poll until the server has applied the change.
+        deadline = time.time() + 5.0
+        while sensor.is_enabled_for_ros() != enabled and time.time() < deadline:
+            time.sleep(0.05)
+        self.assertEqual(sensor.is_enabled_for_ros(), enabled)
+
+    def record(self, bp_id, attributes, ticks_before=0, listen_before=True, enabled_for_ros=False):
+        """Ticks ticks_before times, listening or not, then returns the next LISTENED_TICKS frames."""
+        sensor = self.spawn(bp_id, attributes)
+        try:
+            self.set_enabled_for_ros(sensor, enabled_for_ros)
+            data_queue = self.listen(sensor) if listen_before else None
+            for _ in range(ticks_before):
+                self.world.tick()
+            if data_queue is None:
+                data_queue = self.listen(sensor)
+            return [wait_for_frame(self, data_queue, self.world.tick())[1] for _ in range(self.LISTENED_TICKS)]
+        finally:
+            self.destroy([sensor])
+
+    def test_late_listen(self):
+        print("TestUnlistenedRayCastSensors.test_late_listen")
+        sensors = []
+        try:
+            self.spawn_all(sensors, self.SENSORS)
+            for _ in range(self.UNLISTENED_TICKS):
+                self.world.tick()
+            queues = [self.listen(sensor) for sensor in sensors]
+            for _ in range(self.LISTENED_TICKS):
+                frame = self.world.tick()
+                for (bp_id, _), data_queue in zip(self.SENSORS, queues):
+                    raw = wait_for_frame(self, data_queue, frame)[1]
+                    if bp_id.startswith('sensor.lidar.'):
+                        self.assertTrue(len(raw) > 0, "%s frame %d has no points." % (bp_id, frame))
+        finally:
+            self.destroy(sensors)
+
+    def test_late_listen_keeps_scan_phase(self):
+        print("TestUnlistenedRayCastSensors.test_late_listen_keeps_scan_phase")
+        # Half a turn per tick and an odd number of unlistened ticks, so a lost scan phase changes the data.
+        attributes = {'channels': '32', 'range': '50', 'points_per_second': '100000', 'rotation_frequency': '10',
+                      'dropoff_general_rate': '0.0', 'dropoff_intensity_limit': '0.0'}
+        for bp_id in ('sensor.lidar.ray_cast_semantic', 'sensor.lidar.ray_cast'):
+            bp = self.world.get_blueprint_library().find(bp_id)
+            sensor_attributes = {k: v for k, v in attributes.items() if bp.has_attribute(k)}
+            reference = self.record(bp_id, sensor_attributes, self.UNLISTENED_TICKS, listen_before=True)
+            late = self.record(bp_id, sensor_attributes, self.UNLISTENED_TICKS, listen_before=False)
+            for idx, (a, b) in enumerate(zip(reference, late)):
+                self.assertTrue(len(a) > 0, "%s frame %d has no points." % (bp_id, idx))
+                self.assertEqual(a, b, "%s frame %d differs after a late listen." % (bp_id, idx))
+
+    def test_unlistened_sensors_do_not_change_listened_output(self):
+        print("TestUnlistenedRayCastSensors.test_unlistened_sensors_do_not_change_listened_output")
+        bp_id, attributes = TestLidarFixedSeedOutput.LIDARS[0]
+        alone = self.record(bp_id, attributes)
+        others = []
+        try:
+            self.spawn_all(others, self.SENSORS)
+            with_others = self.record(bp_id, attributes)
+        finally:
+            self.destroy(others)
+        for idx, (a, b) in enumerate(zip(alone, with_others)):
+            self.assertTrue(len(a) > 0, "Frame %d has no points." % idx)
+            self.assertEqual(a, b, "Frame %d changed with unlistened sensors in the world." % idx)
+
+    NOISY_SENSORS = [
+        ('sensor.lidar.ray_cast', {'channels': '32', 'range': '50', 'points_per_second': '100000',
+                                   'rotation_frequency': '10', 'dropoff_general_rate': '0.0',
+                                   'dropoff_intensity_limit': '0.0', 'noise_stddev': '0.05',
+                                   'noise_seed': '4242'}),
+        ('sensor.lidar.hss_lidar', {'channels': '32', 'range': '50', 'horizontal_resolution': '0.2',
+                                    'dropoff_general_rate': '0.0', 'dropoff_intensity_limit': '0.0',
+                                    'noise_stddev': '0.05', 'noise_seed': '4242'}),
+        ('sensor.other.radar', {'range': '50', 'points_per_second': '10000', 'noise_seed': '4242'}),
+    ]
+
+    def test_late_listen_skips_noise(self):
+        print("TestUnlistenedRayCastSensors.test_late_listen_skips_noise")
+        for bp_id, attributes in self.NOISY_SENSORS:
+            with self.subTest(sensor=bp_id):
+                reference = self.record(bp_id, attributes, self.UNLISTENED_TICKS, listen_before=True)
+                late = self.record(bp_id, attributes, self.UNLISTENED_TICKS, listen_before=False)
+                for idx, (a, b) in enumerate(zip(reference, late)):
+                    self.assertTrue(len(a) > 0, "%s frame %d has no data." % (bp_id, idx))
+                    if bp_id.startswith('sensor.lidar.'):
+                        self.assertEqual(len(a), len(b), "%s frame %d has a different point count." % (bp_id, idx))
+                if bp_id.startswith('sensor.lidar.'):
+                    # A skipped LiDAR tick reseeds its noise instead of drawing it, since the draw count depends
+                    # on the hits; equal data means the unlistened ticks were traced.
+                    self.assertTrue(reference[0] != late[0],
+                                    "%s listened late reproduced the random draws of one listened from the start, "
+                                    "so its unlistened ticks were traced." % bp_id)
+                else:
+                    # A skipped radar tick draws the ray directions a traced one draws, so Multi-GPU secondaries,
+                    # which continue from the primary's random state, do not repeat one ray pattern every frame.
+                    # This asserts equality, so it does not show that the radar skips; the LiDAR cases do.
+                    for idx, (a, b) in enumerate(zip(reference, late)):
+                        self.assertEqual(a, b, "%s frame %d differs after a late listen." % (bp_id, idx))
+
+    def test_enabled_for_ros_keeps_simulating(self):
+        print("TestUnlistenedRayCastSensors.test_enabled_for_ros_keeps_simulating")
+        bp_id, attributes = self.NOISY_SENSORS[0]
+        reference = self.record(bp_id, attributes, self.UNLISTENED_TICKS, listen_before=True, enabled_for_ros=True)
+        late = self.record(bp_id, attributes, self.UNLISTENED_TICKS, listen_before=False, enabled_for_ros=True)
+        for idx, (a, b) in enumerate(zip(reference, late)):
+            self.assertTrue(len(a) > 0, "Frame %d has no points." % idx)
+            self.assertEqual(a, b, "Frame %d differs: a sensor enabled for ROS skipped its unlistened ticks." % idx)

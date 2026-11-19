@@ -46,6 +46,7 @@ private:
 
   void PreprocessRays(uint32_t Channels, uint32_t MaxPointsPerChannel) override;
   bool PostprocessDetection(FDetection& Detection) const;
+  bool DrawsRandomNumbers() const override;
 
   void WriteDetectionAsync(uint32_t Channel, const FHitResult& HitInfo, const FTransform& InverseSensorTransform, const FVector& SensorLocation) override;
   void ResetDetections(uint32_t Channels, uint32_t MaxPointsPerChannel) override;
