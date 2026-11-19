@@ -290,7 +290,10 @@ protected:
         W, H,
         Fov,
         BufferView,
-        &Sensor);
+        &Sensor,
+        // the capture's time: the image is delivered after the GPU readback,
+        // possibly once the next frame has started
+        CaptureContext.Timestamp);
     }
 #endif
 
