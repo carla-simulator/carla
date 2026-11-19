@@ -134,6 +134,15 @@
 * **Enabled the LibCarla GoogleTest suite** (server and client) and gated both in CI.
 * **Added a Visual C++ Redistributable prerequisite** and troubleshooting note to the Windows quickstart (#9560), and corrected Doxygen parameter names across the LibCarla headers.
 * **Added `--no-xodr`, `--no-nav` and `--no-tm` to `carla-pack add`**, which unregister a sidecar of an in-pack map and delete the staged file; omitting a flag keeps the registered file.
+* **Removed `ALargeMapManager`**, the UE4-era tiled large map. Every large map is now World Partition, and the manager already removed itself from those maps on load.
+  * Actor transforms, spawning, the recorder, multi-GPU mirroring, sensors, traffic signal volumes, debug drawing, ray casts and the location-based RPCs no longer convert coordinates through it. Global and local coordinates are now the same everywhere.
+  * The importer no longer has a sublevel-per-tile mode: a tiled `.fbx` set is always imported as one map, and `merge_tiles` is gone from the package JSON.
+  * Removed the tile helpers from the editor tools: `MoveActorsToSubLevelWithLargeMap`, `CreateSubLevels` and `ForceStreamingLevelsToUnload` in `HoudiniImporterWidget`, and `MoveActorsToSubLevels` and `MoveActorsToSubLevelWithLargeMap` in `OpenDriveToMap`. `MapGeneratorWidget` no longer configures a manager.
+  * `CustomTerrainPhysicsComponent` no longer streams per-tile heightmaps; that path never ran without the manager. `carla.Terrain.AsyncHeightmapLoad` and `HeightMapOffset` are gone.
+  * `SoilTypeManager` computes its soil tiles itself, with its new `TileSize` and `Tile0Offset`.
+  * `VegetationManager` takes its hero from `AddVehicle`.
+  * A `ClassRedirect` turns the actor into a plain `AActor` in maps saved with one, and `CarlaLargeMapConvert` still drops it.
+  * `carla.WorldSettings.spectator_as_ego` is documented as having no effect.
 
 #### Documentation
 

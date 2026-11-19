@@ -4773,7 +4773,7 @@ Used for large maps only. Configures the maximum distance from the hero vehicle 
 - <a name="carla.WorldSettings.actor_active_distance"></a>**<font color="#f8805a">actor_active_distance</font>** (_float_)  
 Used for large maps only. Every actor is simulated whatever its distance to the hero vehicle; this value only bounds `tile_stream_distance`: when it is larger, the server raises `tile_stream_distance` to match.  
 - <a name="carla.WorldSettings.spectator_as_ego"></a>**<font color="#f8805a">spectator_as_ego</font>** (_bool_)  
-Used for large maps only. Defines the influence of the spectator on tile loading in Large Maps. By default, the spectator will provoke loading of neighboring tiles in the absence of an ego actor. This might be inconvenient for applications that immediately spawn an ego actor.  
+Has no effect. It configured the spectator's influence on tile loading in the legacy tiled large maps, and it is kept so that scripts which set it keep working.  
 - <a name="carla.WorldSettings.adjust_signs_height_to_ground"></a>**<font color="#f8805a">adjust_signs_height_to_ground</font>** (_bool_)  
 When enabled, OpenDRIVE-generated traffic signs and traffic lights are moved onto the ground below them after spawning, and their trigger volumes keep their position. Only generated actors are moved, never signs placed by hand in the level. It is false by default. Enabling it also adjusts the signs that are already spawned, so it can be enabled at any time. Disabling it stops further adjustment but does not move adjusted signs back. On a World Partition map the ground streams in around the streaming source, so each sign is adjusted when the cell below it becomes resident. The flag is kept by a map load with `reset_settings=False`, and it reads true on a map whose traffic light manager enables it.  
 - <a name="carla.WorldSettings.deterministic_collisions"></a>**<font color="#f8805a">deterministic_collisions</font>** (_bool_)  
@@ -4790,7 +4790,7 @@ Creates an object containing desired settings that could later be applied throug
         - `deterministic_ragdolls` (_bool_) - Defines wether to use deterministic physics or ragdoll simulation for pedestrian deaths.  
         - `tile_stream_distance` (_float<small> - meters</small>_) - Used for large maps only. Configures the maximum distance from the hero vehicle to stream tiled maps.  
         - `actor_active_distance` (_float<small> - meters</small>_) - Used for large maps only. Every actor is simulated whatever its distance to the hero vehicle; this value only bounds `tile_stream_distance`: when it is larger, the server raises `tile_stream_distance` to match.  
-        - `spectator_as_ego` (_bool_) - Used for large maps only. Defines the influence of the spectator on tile loading in Large Maps.  
+        - `spectator_as_ego` (_bool_) - Has no effect. It configured the legacy tiled large maps, and it is kept so that scripts which set it keep working.  
         - `adjust_signs_height_to_ground` (_bool_) - Set this to true to move OpenDRIVE-generated traffic signs and traffic lights onto the ground below them after spawning.  
         - `deterministic_collisions` (_bool_) - Set this to true for collisions that repeat exactly between runs. Takes effect at the next map load that keeps the settings (`reset_settings=False`).  
 

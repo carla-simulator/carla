@@ -15,7 +15,6 @@
 #include "Carla/Vehicle/VehicleSpawnPoint.h"
 #include "Carla/Game/CarlaStatics.h"
 #include "Carla/Game/CarlaStaticDelegates.h"
-#include "Carla/MapGen/LargeMapManager.h"
 #include "Carla/Game/Tagger.h"
 #include "Carla/Vehicle/CarlaWheeledVehicle.h"
 #include "Carla/Walker/WalkerBase.h"
@@ -635,21 +634,13 @@ TPair<EActorSpawnResultStatus, FCarlaActor*> UCarlaEpisode::SpawnActorWithInfo(
     FActorDescription thisActorDescription,
     FCarlaActor::IdType DesiredId)
 {
-  ALargeMapManager* LargeMap = UCarlaStatics::GetLargeMapManager(GetWorld());
-  FTransform LocalTransform = Transform;
-  if(LargeMap)
-  {
-    LocalTransform = LargeMap->GlobalToLocalTransform(LocalTransform);
-  }
-
-  // NewTransform.AddToTranslation(-1.0f * FVector(CurrentMapOrigin));
-  auto result = ActorDispatcher->SpawnActor(LocalTransform, thisActorDescription, DesiredId);
+  auto result = ActorDispatcher->SpawnActor(Transform, thisActorDescription, DesiredId);
   if (result.Key == EActorSpawnResultStatus::Success &&
       GetWorld()->GetWorldPartition() != nullptr)
   {
     // World Partition map: every physics actor needs the ground under it
-    // resident, mirroring the tile streaming the legacy LargeMapManager
-    // provided on tiled maps. The engine only streams cells around registered
+    // resident, as the legacy tiled maps streamed tiles around every actor.
+    // The engine only streams cells around registered
     // streaming sources; without one, a vehicle spawned away from the
     // spectator free-falls through the unloaded road.
     AActor* Actor = result.Value->GetActor();

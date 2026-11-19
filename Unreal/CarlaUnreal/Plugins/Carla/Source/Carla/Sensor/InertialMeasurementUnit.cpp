@@ -9,7 +9,6 @@
 #include "Carla/Actor/ActorBlueprintFunctionLibrary.h"
 #include "Carla/Actor/CarlaActor.h"
 #include "Carla/Game/CarlaStatics.h"
-#include "Carla/MapGen/LargeMapManager.h"
 #include "Carla/Sensor/WorldObserver.h"
 #include "Carla/Vehicle/CarlaWheeledVehicle.h"
 
@@ -285,20 +284,14 @@ void AInertialMeasurementUnit::BeginPlay()
   Super::BeginPlay();
 }
 
-/// World-frame location, the same on every server (a large map rebases each
-/// server's local origin on its own).
-static std::array<double, 3> FIMU_ToWorld(const AActor &Sensor, const FVector &Local)
+static std::array<double, 3> FIMU_ToArray(const FVector &Location)
 {
-  const ALargeMapManager *LargeMap = UCarlaStatics::GetLargeMapManager(Sensor.GetWorld());
-  const FVector World = (LargeMap != nullptr) ? LargeMap->LocalToGlobalLocation(Local) : Local;
-  return {World.X, World.Y, World.Z};
+  return {Location.X, Location.Y, Location.Z};
 }
 
-static FVector FIMU_ToLocal(const AActor &Sensor, const std::array<double, 3> &World)
+static FVector FIMU_ToVector(const std::array<double, 3> &Location)
 {
-  const FVector Location(World[0], World[1], World[2]);
-  const ALargeMapManager *LargeMap = UCarlaStatics::GetLargeMapManager(Sensor.GetWorld());
-  return (LargeMap != nullptr) ? LargeMap->GlobalToLocalLocation(Location) : Location;
+  return FVector(Location[0], Location[1], Location[2]);
 }
 
 void AInertialMeasurementUnit::GetMirrorState(carla::multigpu::SensorState &State) const
@@ -308,8 +301,8 @@ void AInertialMeasurementUnit::GetMirrorState(carla::multigpu::SensorState &Stat
     State.random_engine = RandomEngine->GetState();
   }
   carla::multigpu::ImuHistory History;
-  History.older_location = FIMU_ToWorld(*this, PrevLocation[0]);
-  History.last_location = FIMU_ToWorld(*this, PrevLocation[1]);
+  History.older_location = FIMU_ToArray(PrevLocation[0]);
+  History.last_location = FIMU_ToArray(PrevLocation[1]);
   History.last_delta_seconds = PrevDeltaTime;
   State.imu_history = History;
   const FQuat LocalRotation = RootComponent->GetRelativeTransform().GetRotation();
@@ -324,8 +317,8 @@ void AInertialMeasurementUnit::SetMirrorState(const carla::multigpu::SensorState
   }
   if (State.imu_history)
   {
-    PrevLocation[0] = FIMU_ToLocal(*this, State.imu_history->older_location);
-    PrevLocation[1] = FIMU_ToLocal(*this, State.imu_history->last_location);
+    PrevLocation[0] = FIMU_ToVector(State.imu_history->older_location);
+    PrevLocation[1] = FIMU_ToVector(State.imu_history->last_location);
     PrevDeltaTime = State.imu_history->last_delta_seconds;
   }
   if (State.imu_local_rotation)

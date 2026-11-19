@@ -369,15 +369,15 @@ A cell loads when a __streaming source__ comes near it, and CARLA registers one 
 
 The hero's ring is the one to tune; the rest only need the ground under their wheels. Spawning blocks until the cells under the new actor are resident, so an actor never falls through a road that has not loaded yet.
 
-Two further settings apply only to these maps:
+One further setting applies only to these maps:
 
 - `actor_active_distance` — every actor is simulated whatever its distance to the hero; this value only bounds `tile_stream_distance`: the server raises the streaming distance to match and warns if you set it higher.
-- `spectator_as_ego` — whether the spectator also loads cells around itself when no ego actor exists. Turn it off if your script spawns its ego immediately.
+
+`spectator_as_ego` has no effect: it configured the legacy tiled maps, and it is kept so that scripts which set it keep working.
 
 ```py
 settings = world.get_settings()
 settings.tile_stream_distance = 2000.0     # metres of map kept loaded around the hero
-settings.spectator_as_ego = False
 world.apply_settings(settings)
 
 ego_bp = world.get_blueprint_library().find('vehicle.lincoln.mkz')
@@ -403,7 +403,7 @@ What streams afterwards depends on how the geometry was split, not on the map's 
 
 ### Converting a legacy tiled town
 
-A town built with CARLA's own tiling — the UE4-era large maps, `Town11` to `Town13` among them — is a different case: its tiles are registered in WorldComposition and carry no `FWorldTileInfo` positions, so the stock commandlet merges every tile at the origin. `CarlaLargeMapConvert` is the subclass that handles them. It reads the grid from the map's `TilesInfo.txt`, places each tile the way `ALargeMapManager` did at runtime, removes the legacy static lighting rig the weather-driven sky now replaces, and renames the map's `.xodr` and Traffic Manager files when `-ConversionSuffix` saves the result under a new name:
+A town built with CARLA's own tiling — the UE4-era large maps, `Town11` to `Town13` among them — is a different case: its tiles are registered in WorldComposition and carry no `FWorldTileInfo` positions, so the stock commandlet merges every tile at the origin. `CarlaLargeMapConvert` is the subclass that handles them. It reads the grid from the map's `TilesInfo.txt`, places each tile where the legacy tiled maps placed it at runtime, removes the legacy static lighting rig the weather-driven sky now replaces, and renames the map's `.xodr` and Traffic Manager files when `-ConversionSuffix` saves the result under a new name:
 
 ```sh
 UnrealEditor-Cmd /abs/path/to/CarlaUnreal.uproject -run=CarlaLargeMapConvert \

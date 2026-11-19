@@ -8,7 +8,6 @@
 #include "TrafficLightState.h"
 #include "Carla/Vehicle/CarlaWheeledVehicle.h"
 #include "Carla/Game/CarlaStatics.h"
-#include "Carla/MapGen/LargeMapManager.h"
 
 #include <util/disable-ue4-macros.h>
 #include <carla/road/element/RoadInfoSpeed.h>
@@ -80,11 +79,6 @@ void UStopSignComponent::InitializeSign(const carla::road::Map &Map)
               LaneDistance + epsilon, LaneDistance + LaneLength - epsilon);
         }
         FTransform BoxTransform = Map.ComputeTransform(box_waypoint);
-        ALargeMapManager* LargeMapManager = UCarlaStatics::GetLargeMapManager(GetWorld());
-        if (LargeMapManager)
-        {
-          BoxTransform = LargeMapManager->GlobalToLocalTransform(BoxTransform);
-        }
         GenerateStopBox(BoxTransform, FVector(100*BoxLength, 100*BoxWidth, 100*BoxHeight));
 
         auto Predecessors = Map.GetPredecessors(signal_waypoint);
@@ -139,11 +133,6 @@ void UStopSignComponent::InitializeSign(const carla::road::Map &Map)
             float UEBoxSize = 100*BoxSize;
 
             FTransform BoxTransform = Map.ComputeTransform(NextWaypoint);
-            ALargeMapManager* LargeMapManager = UCarlaStatics::GetLargeMapManager(GetWorld());
-            if (LargeMapManager)
-            {
-              BoxTransform = LargeMapManager->GlobalToLocalTransform(BoxTransform);
-            }
             GenerateCheckBox(BoxTransform, UEBoxSize);
             while (true)
             {
@@ -158,10 +147,6 @@ void UStopSignComponent::InitializeSign(const carla::road::Map &Map)
                 break;
               }
               BoxTransform = Map.ComputeTransform(NextWaypoint);
-              if (LargeMapManager)
-              {
-                BoxTransform = LargeMapManager->GlobalToLocalTransform(BoxTransform);
-              }
               GenerateCheckBox(BoxTransform, UEBoxSize);
             }
             // Cover the road before the junction
