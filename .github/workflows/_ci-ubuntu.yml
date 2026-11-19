@@ -156,6 +156,19 @@ jobs:
         run: |
           cmake --build Build/Release --target package
 
+      # Every build of the tree, the extra Python ones included, writes
+      # LibCarla/source/carla/Version.h, and the server compiles what is there.
+      - name: Check release version
+        if: inputs.release-version != ''
+        env:
+          RELEASE_VERSION: ${{ inputs.release-version }}
+        run: |
+          if ! grep -qF "return \"${RELEASE_VERSION}\";" LibCarla/source/carla/Version.h; then
+            echo "::error::LibCarla/source/carla/Version.h does not carry the release version ${RELEASE_VERSION}"
+            grep return LibCarla/source/carla/Version.h || true
+            exit 1
+          fi
+
       - name: Build AdditionalMaps pack
         if: inputs.additional-maps == true
         env:

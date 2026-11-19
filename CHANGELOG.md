@@ -12,6 +12,7 @@
 #### Agentic CARLA
 
 * Added an **agent skill library**: 64 vetted CARLA procedures under `Skills/`, covering setup, the Python API, UE 4.26 / 5.5 / 5.8 builds, packaging, asset imports, Scenario Runner, Leaderboard, Scenic, native ROS 2, the documentation itself, and contributing back: issues, discussions and pull requests against `ue58-dev`. `Util/AgenticTools/` serves the same library over MCP. See `Docs/agent_skills.md`.
+* **Packages ship the skill library**: `Skills/` and `Util/AgenticTools/` are copied to the package root with an `AGENTS.md` and a `.mcp.json` written for a package, so an assistant opened in a downloaded CARLA finds the skills of the commit it was built from, with nothing to install.
 * Enabled Epic's **Unreal MCP** plugin (`ModelContextProtocol` + `EditorToolset`) in the CarlaUnreal editor: opening the project starts an MCP server on `http://localhost:6256/mcp`, and the repo's `.mcp.json` registers it as `unreal-mcp` so Claude Code connects to the running editor with no setup. Editor only: `-game` and packaged builds do not load it. See `Docs/agent_skills.md`.
 
 #### Sensor simulation
@@ -141,6 +142,7 @@
 * **Expanded the traffic light and traffic sign authoring pages**: the Traffic Light Tool with an animated build from scratch, its presets, pieces and light atlas; placing a regional `BP_Sign` with its pole, plates and secondary signs; and the regional sign catalog in its three styles.
 * **Added a network ports reference** at `Docs/ref_ports.md`, under _Resources_: every port the simulator, the Traffic Manager, ROS 2 and the tooling open, what sets each one, and the two bind errors they produce.
 * **The `open-carla-pr` skill now verifies closed issues before opening a new one**: for each matching closed issue, discussion or merged PR it reads how it was closed, checks that the fix reached the user's branch (a fix merged into `ue4-dev` or `ue5-dev` is not in `ue58-dev` unless ported), and tries the fix or workaround on the repro. A solution that works means no new issue; one that fails is cited in the new issue's body.
+* **A local check is now mandatory before every pull request with code changes**, the `ue58-dev` equivalent of the old `make check`: build the branch, open the Unreal Editor and check that it loads the default map without a crash or new Carla errors, then run the LibCarla, Python API unit and whole smoke test suites against that build and report the commit and results under _Where has this been tested?_ in the PR. The contribution guidelines, the PR template, `AGENTS.md` and the `open-carla-pr` skill require it, so agents that open PRs have to run the tests, not only edit them.
 * **Reorganised the rendering documentation** under _Sensor simulation_: UE native rendering, with a new _Camera features_ section on the post-process presets, the ray-traced lens cameras and DLSS, next to NuRec, Cosmos and the sensor reference.
 * **Gave the C++ reference a main page and moved it to Doxygen 1.18.0**: `index.html` now opens on a compact index of the LibCarla namespaces and the Carla plugin's entry classes (`Util/CppReference/mainpage.md`) instead of a blank page, and the `UE5-Doxygen` workflow installs the pinned 1.18.0 release binary instead of Ubuntu's 1.9.8, which drops jQuery: the main page loads 181 KB instead of 302 KB. See `Docs/ref_cpp.md`.
 
@@ -148,6 +150,7 @@
 
 #### Sensors
 
+* Fixed **`sensor.camera.rt_lens_instance` labelling the sky `Unlabeled` (0)** instead of `Sky` (11) like the raster segmentation cameras (#10295): camera rays that hit nothing are now tagged `Sky` with id `0xFFFF`. The fix is in the engine's path tracer, CarlaUnreal/UnrealEngine#69.
 * Fixed every native sensor (LiDAR, radar, IMU, cameras) simulating only the last physics substep instead of the true elapsed time when `sensor_tick` spanned more than one substep, which halved LiDAR's swept angle and skewed IMU and radar readings.
 * Fixed the `noise_seed` attribute of `sensor.lidar.ray_cast` being ignored, so every ray-cast LiDAR used the default seed.
 * Fixed the IMU sensor's compass yaw orientation, and the order in which sensors are disposed when their parent actor is destroyed.
@@ -158,6 +161,7 @@
 * Fixed **replayed vehicles and pedestrians being invisible to sensors**, including those re-spawned with `replay_sensors=True`: the replayer turned their collision off. They now have query-only collision during the replay, so they still push nothing, and replayed walkers get their movement back when the replay ends.
 * Fixed the wheelchair of a wheelchair-user pedestrian being invisible to ray-cast sensors (LiDAR, radar).
 * Fixed the editor's `SensorSpawnerActor` crashing with radar point drawing on when it had spawned any sensor other than a radar: `DrawRadarSensorPoints` tested the sensor instead of the radar cast, and dereferenced null for every other sensor.
+* Fixed **`listen_to_gbuffer()` and `stop_gbuffer()` crashing the server**: `get_gbuffer_token` read the token of a G-buffer stream that was never opened. G-buffer capture is not built on Unreal Engine 5.8 (its engine has no `GBufferView.h`), so both calls now raise a `RuntimeError` that says so, and the server keeps running.
 
 #### Simulation and content
 
@@ -189,6 +193,7 @@
 
 #### ROS 2
 
+* Fixed **the Autoware `/vehicle/status/steering_status` reporting about 1.2 times the real tire angle** (#10294): the vehicle status sensor sent the wheel angle in radians to a steering compensation table keyed on the normalized steer. It now sends the normalized steer, and the reported angle matches the commanded one.
 * Fixed **the server crashing with a segmentation fault when its DDS middleware could not start** (#10259), e.g. when `CYCLONEDDS_URI` pointed at the example profile `PythonAPI/examples/ros2/config/cyclonedds.xml` as `Docs/ros2_native.md` suggests. When the middleware fails to start, the server now says so loudly (the DDS reason, the profile in use, and a banner stating that ROS 2 is disabled and nothing will be published), disables ROS 2 for the session and keeps running. The CycloneDDS and Fast-DDS publishers no longer write after a failed `Init()`, and report the dropped messages once. The example profile also drops its `<SharedMemory>` element, which the server's CycloneDDS (built without shared memory) rejected; shared memory is off by default, so subscribers are unaffected.
 * Fixed **Autoware's control commands not reaching a `ros2_autoware_control` vehicle when Autoware runs `control_command_gate`**, which replaces `vehicle_cmd_gate` in autoware_launch. The command subscribers were TRANSIENT_LOCAL, and DDS does not match a TRANSIENT_LOCAL reader with `control_command_gate`'s VOLATILE writers, so the vehicle never moved. They are now VOLATILE, which matches both gates.
 * Fixed **`/vehicle/status/gear_status` reporting NEUTRAL** while an Autoware-driven vehicle moves forward. Acceleration control never engages the transmission. While it is active, `GetVehicleCurrentGear()` now reports the first forward gear, so Autoware sees DRIVE. `get_telemetry_data()` reports the same gear.
@@ -228,6 +233,8 @@
 * Fixed `generate_traffic.py` timing out on Town12 and Town13: the vehicle batch took longer than the hard-coded 10 s client timeout and left the spawned vehicles without a Traffic Manager. The timeout now defaults to 60 s and is set with `--timeout`.
 * Fixed combining `carla.MapLayer` values: `carla.MapLayer.Buildings | carla.MapLayer.ParkedVehicles` gave a plain `int`, which `load_world()` and `load_map_layer()` rejected, so the documented multi-layer example failed. `|`, `&`, `^` and `~` between layers now give a `carla.MapLayer`.
 * `Sensor.stop()` releases the GIL, so stopping a camera whose frame callback is still running no longer deadlocks the client at exit.
+* Fixed **a sensor callback that blocks or runs long stalling other streams of the same client**: another sensor stopped delivering data, or `world.tick()` and `world.wait_for_tick()` timed out because the world snapshots were held back, for roughly one pair of streams in 193. Each stream of a client now has its own strand: Boost.Asio shares the implementations of `io_context::strand` among the strands of an `io_context`.
+* Fixed `World.debug` shapes glowing and showing up as reflections on car windows in packaged (Shipping) builds. The server multiplied their colour by 1000 in Shipping only; shapes now use the colour you pass in every build, and stay visible at night.
 
 #### Build and packaging
 
@@ -236,6 +243,7 @@
 * Fixed the Windows build: the setup installs the MSVC 14.38 toolset the engine fork needs, MSVC builds use `/W4`, and two compile and link errors in LibCarla.
 * Fixed the CMake toolchain picking the oldest clang sysroot when an upgraded engine keeps several side by side.
 * Fixed reconfiguring an already-built tree (e.g. `-DENABLE_ROS2=ON`) silently keeping the old options: UnrealBuildTool reused its cached makefile because the `Carla` and `CarlaTools` modules read CMake's generated `Options.def`, `Definitions.def`, `Includes.def` and `Libraries.def` without declaring them, so the rebuild reported success with a plugin that had no ROS 2 in it. Both modules now list those files as `ExternalDependencies`, and a change to any of them re-creates the makefile.
+* Fixed the package `VERSION` file writing an empty `UnrealEngine git hash` (#10318), and a `Content git hash` that was really CARLA's when the content folder is not a clone of its own. A hash is now only read from the root of a git checkout. Otherwise the field says `unknown (<reason>)` and packaging prints a warning. The file also records the engine version from `Engine/Build/Build.version`, so a package built from an engine that is not a git checkout can still be traced.
 * Fixed `Util/Docker/build.sh` failing to build the development image: the PythonAPI requirements are copied into the build context with their relative layout, so `-r ../carla/requirements.txt` resolves (#10177). The image also installs `libusb-1.0-0`, without which `open3d` cannot be imported.
 
 #### Examples and tests
@@ -243,6 +251,7 @@
 * Fixed `draw_skeleton.py` hanging on Ctrl+C: an unused `multiprocessing` pool caught the interrupt in its workers. The example now stops on Ctrl+C, stops the camera and walker controller, and destroys its actors.
 
 * Fixed **the agent skills on Windows (Git Bash with a native Python)** and a batch of script bugs found by the weekly package test. `PYTHONPATH` is built with the interpreter's separator and `D:\` paths, `check-carla-ports` falls back to `netstat`/`tasklist` and never reports a busy port as free, `run-carla-ue58-server` runs and stops a standalone package (`CarlaUnreal.exe`) with no checkout, and `install-python-api` searches every configured CARLA root and no longer reports `1.0` against `1.0-<commit>` as a mismatch. Also fixed: `set-world-settings async` hanging on a synchronous world nobody ticks, `read-sensor` and `control-spectator follow` hanging or failing at exit, `replay-recording` reading `/proc` on Windows (and a `stop --clear-scene` for servers that leave replayed actors behind), `create-sensor` and `spawn-vehicles ego` failing on `--ros-frame-id`/`--no-ros-tf` where the attribute does not exist (and the new `--ros-topic-name`), `load-map` not resolving `Town03` to `Town03_Opt`, and evenly spaced `telemetry watch` samples. Plus `spawn-walkers --seconds`, grouped spawn errors in `spawn-vehicles`, and stale paths and examples in the docs.
+* Fixed `spawn-vehicles ego` handing out a bike or motorbike at random, which the navigation agents tip over, so `navigate-to` never arrived (#10320). The ego is now a four-wheeled car unless `--filter` or `--base-type` narrow it, or `--any` is passed. It also prints the location it spawned at instead of `(0,0,0)`.
 * Fixed **the Autoware `stop_all.sh` and the launcher teardown leaving the CARLA server running**. They checked only the leader of each process group. The `CarlaUnreal.sh` wrapper exits on SIGTERM, but the engine binary kept running and held the RPC port, so the next launch failed. They now check the whole group and SIGKILL it after the grace period.
 * Added `typing_extensions` to `PythonAPI/carla/requirements.txt`. The navigation agents import it, but it was not listed, so `import agents.navigation.basic_agent` failed in a fresh environment.
 * Restored wheelchair pedestrians in `PythonAPI/examples/generate_traffic.py`: 11% of the walkers whose blueprint reports `can_use_wheelchair` are now spawned with `use_wheelchair` set, as on `ue4-dev`.

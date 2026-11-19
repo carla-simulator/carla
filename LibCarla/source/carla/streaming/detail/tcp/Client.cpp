@@ -74,7 +74,7 @@ namespace tcp {
       _token(token),
       _callback(std::move(callback)),
       _socket(io_context),
-      _strand(io_context),
+      _strand(boost::asio::make_strand(io_context)),
       _connection_timer(io_context),
       _buffer_pool(std::make_shared<BufferPool>()) {
     if (!_token.protocol_is_tcp()) {

@@ -41,13 +41,21 @@ and Python version. Keep threads focused and single-themed.
 ## Pre-PR checklist (from the guidelines)
 
 - [ ] Branch up to date with `ue58-dev` and tested with the latest changes.
-- [ ] Compiles: `cmake --build Build --target carla-client carla-python-api carla-server`.
-- [ ] LibCarla unit tests pass (`libcarla_test_server`, `libcarla_test_client`).
+- [ ] Compiles without warnings: `cmake --build Build --target carla-client carla-python-api carla-server carla-unreal-editor`.
+- [ ] **Local check, mandatory for every code change** (the ue58 equivalent of
+      the old `make check`; CI runs none of it except the LibCarla tests), on
+      the PR's own commit and a build of it:
+  - [ ] The Unreal Editor opens on that build (`cmake --build Build --target launch`),
+        loads the default map and stays up, with no crash and no new Carla errors in the log.
+  - [ ] LibCarla unit tests pass (`libcarla_test_server`, `libcarla_test_client`).
+  - [ ] Python API unit tests pass: `cd PythonAPI/test/unit && python3 -m nose2 -v`.
+  - [ ] Smoke tests pass against a server on port 3654 started from that build:
+        `cd PythonAPI/test && python3 -m nose2 -v $(cat smoke_test_list.txt)`.
+  - [ ] The results (commit, editor check, each suite's summary line) are under
+        **Where has this been tested?** in the PR, not under **Tests**.
 - [ ] *(Strongly recommended, not required)* The package builds locally. CI
       builds it too, and cook or shipping-only failures otherwise cost a CI round trip.
-- [ ] Smoke tests pass against a server on port 3654:
-      `cd PythonAPI/test && python3 -m nose2 -v $(cat smoke_test_list.txt)`.
-- [ ] New or modified tests add real value (see Tests).
+- [ ] New or modified tests add real value (see Tests), and were run, not only edited.
 - [ ] Any new or changed CI workflow was agreed beforehand, and the discussion is linked.
 - [ ] `CHANGELOG.md` entry under `## LATEST Changes` for any user-visible change.
 - [ ] Documentation extended if necessary.
@@ -81,6 +89,10 @@ Every test runs in CI on every PR, so each must earn its compute.
 - Do not weaken an existing test to make it pass (removing asserts, widening
   tolerances, skipping). If the expected behaviour changed, explain it in the PR.
 - The PR says what each new or modified test checks and which regression it catches.
+- Changing a test is not testing. Every new or modified test is run locally on
+  the PR's commit and passes; the whole smoke list runs, not only the tests
+  touched. A failure that also happens on a clean `ue58-dev` is reported in the
+  PR, never skipped or loosened.
 
 | Suite | Location | Server |
 |---|---|---|
@@ -127,4 +139,5 @@ search the output for `does not contain an anchor`. Style:
 ## PR template sections (`.github/pull_request_template.md`)
 
 Description · `Fixes #` · Where has this been tested? (Platform(s), Python
-version(s), Unreal Engine version(s)) · Tests · CI workflows · Possible Drawbacks.
+version(s), Unreal Engine version(s), local checks and the commit they ran on) ·
+Tests (only the tests added or modified, and why) · CI workflows · Possible Drawbacks.

@@ -33,6 +33,7 @@ Build/<preset>/Package/
 ├── Carla-0.10.0-Linux-Shipping/
 │   ├── VERSION                       carla / content / engine git hashes
 │   ├── BaseRelease  CHANGELOG  LICENSE  NOTICES.txt  README
+│   ├── AGENTS.md  .mcp.json          written for a package: catalogue + the CARLA MCP server only
 │   ├── CarlaUnreal.sh                2-line shim -> the binary below
 │   ├── CarlaUnreal/
 │   │   ├── Binaries/Linux/CarlaUnreal-Linux-Shipping   (192 MB)
@@ -47,7 +48,9 @@ Build/<preset>/Package/
 │   │   ├── carla/dist/carla-0.10.0-cp310-cp310-linux_x86_64.whl
 │   │   ├── examples/                 25 scripts
 │   │   └── util/
-│   └── Tools/
+│   ├── Skills/                       the agent skill library, git-tracked files only
+│   ├── Tools/
+│   └── Util/AgenticTools/            the MCP server that serves Skills/
 ├── Carla-0.10.0-Linux-Shipping.tar.gz   11 GB
 └── StagedBuilds/
 ```
