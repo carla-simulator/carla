@@ -101,6 +101,12 @@ void AWalkerBase::AttachWheelchair()
   WalkerMesh->AddLocalOffset(FVector(0.0f, 0.0f, -RiderDrop));
   WheelchairComponent->AddLocalOffset(FVector(0.0f, 0.0f, RiderDrop));
 
+  // Move the rider back onto the seat (walker forward axis); the chair keeps its place.
+  constexpr float RiderBack = 25.0f;
+  WalkerMesh->AddRelativeLocation(FVector(-RiderBack, 0.0f, 0.0f));
+  WheelchairComponent->AddRelativeLocation(
+      WalkerMesh->GetRelativeRotation().UnrotateVector(FVector(RiderBack, 0.0f, 0.0f)));
+
   // Wheelchair animation: the migrated UE4 AnimBlueprint if it loads and
   // compiled (it blends idle/rolling by speed), else a looping rolling
   // animation.
