@@ -13,11 +13,13 @@
 
 #include "Carla/Game/Tagger.h"
 #include "Carla/Vehicle/VehicleControl.h"
+#include "Carla/Vehicle/VehiclePhysicsControl.h"
 
 #include "GameFramework/Controller.h"
 
 #include <compiler/disable-ue4-macros.h>
 #include "carla/ros2/ROS2.h"
+#include "carla/rpc/VehiclePhysicsControl.h"
 #include <compiler/enable-ue4-macros.h>
 
 void UActorDispatcher::Bind(FActorDefinition Definition, SpawnFunctionType Functor)
@@ -219,6 +221,24 @@ FCarlaActor* UActorDispatcher::RegisterActor(
             ActorROS2Handler Handler(UEActor, RosName);
             boost::variant2::visit(Handler, Data);
           });
+
+        // Publish the latched static description of the vehicle.
+        FVehiclePhysicsControl PhysicsControl;
+        if (View->GetPhysicsControl(PhysicsControl) == ECarlaServerResponse::Success)
+        {
+          ROS2->ProcessVehicleInfo(
+              static_cast<void*>(&Actor),
+              View->GetActorId(),
+              std::string(TCHAR_TO_UTF8(*Description.Id)),
+              std::string(TCHAR_TO_UTF8(*Description.GetAttribute("role_name").Value)),
+              carla::geom::Transform(View->GetActorGlobalTransform()),
+              carla::rpc::VehiclePhysicsControl(PhysicsControl));
+        }
+        else
+        {
+          UE_LOG(LogCarla, Warning,
+              TEXT("UActorDispatcher: failed to get physics control, skipping ROS2 vehicle info"));
+        }
       }
     }
     #endif

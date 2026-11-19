@@ -8,7 +8,7 @@ The native ROS 2 interface publishes a latched `std_msgs/String` with the full O
 
 * **Lane markers**: the OpenDRIVE string is parsed client-side and converted into a latched `visualization_msgs/MarkerArray` on `/carla/map_markers`. Lane boundaries are computed from the true lane width given by the OpenDRIVE (centerline plus and minus half the lane width), and each lane edge is published as one continuous polyline.
 * **Hero vehicle and sensors**: a vehicle with camera, lidar, GNSS and IMU drives on autopilot, with every sensor publishing natively (no bridge).
-* **Combined view**: a `map->hero` transform is broadcast every simulation tick, completing the TF chain `map->hero-><sensor>`, so the lidar point cloud and the vehicle TF tree render at their world position on top of the lane network.
+* **Combined view**: the simulator publishes the REP-105 transform tree natively (`map->odom` latched on `/tf_static`, `odom->hero` on `/tf` every frame), so the lidar point cloud and the vehicle TF tree render at their world position on top of the lane network.
 
 ## Files
 
@@ -29,7 +29,6 @@ The `map_and_lidar_demo/` folder holds the internals of the demo image:
 | `map_and_lidar_demo/build.sh` | Builds the `carla-map-and-lidar-demo-<distro>-<rmw>` image. Run automatically by `run_map_and_lidar_demo.sh`. |
 | `map_and_lidar_demo/launcher.sh` | In-image entry point. Launches the helpers and stops them all together when the first one exits or the container is stopped. |
 | `map_and_lidar_demo/map_to_markers.py` | Subscribes to the latched `/carla/map`, parses the OpenDRIVE with the carla Python package (no simulator connection needed) and publishes the lane markers on `/carla/map_markers`. |
-| `map_and_lidar_demo/ego_tf_broadcaster.py` | Broadcasts the `map->hero` transform every simulation tick through the Python API, stamped with simulation time. |
 | `map_and_lidar_demo/cleanup.py` | Destroys leftover hero vehicles and their sensors and restores asynchronous mode. Run automatically at stack startup and shutdown so an unclean exit never leaks a second vehicle publishing on the same topics. |
 
 ## Prerequisites
@@ -97,7 +96,6 @@ Each helper can also run directly from any ROS 2 environment that has the `carla
 ```bash
 python3 ros2_native.py --file stack.json
 python3 map_and_lidar_demo/map_to_markers.py
-python3 map_and_lidar_demo/ego_tf_broadcaster.py
 python3 map_and_lidar_demo/cleanup.py
 ```
 

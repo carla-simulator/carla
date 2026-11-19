@@ -27,6 +27,10 @@ namespace carla {
     class GeoLocation;
     class Vector3D;
   }
+  namespace rpc {
+    class VehicleControl;
+    class VehiclePhysicsControl;
+  }
   namespace sensor {
     namespace data {
       struct DVSEvent;
@@ -45,6 +49,10 @@ namespace ros2 {
   class CarlaTransformPublisher;
   class CarlaClockPublisher;
   class CarlaMapPublisher;
+  class CarlaOdometryPublisher;
+  class CarlaEgoVehicleStatusPublisher;
+  class CarlaEgoVehicleInfoPublisher;
+  class CarlaStaticTransformPublisher;
 
 class ROS2
 {
@@ -89,6 +97,10 @@ class ROS2
 
     void RegisterVehicle(void *actor, std::string ros_name, std::string frame_id, ActorCallback callback);
     void UnregisterVehicle(void *actor);
+
+    // True when RegisterVehicle created the per-vehicle data publishers for
+    // this actor and UnregisterVehicle has not destroyed them yet.
+    bool IsVehicleRegistered(void *actor) const;
 
     // Receiving data to publish
     void ProcessDataFromCamera(
@@ -145,6 +157,24 @@ class ROS2
     // topic. Called once per episode; re-publishing refreshes the latched
     // sample after a map change.
     void ProcessDataFromMap(const std::string &open_drive);
+    // Publishes odometry, vehicle status and the dynamic odom -> <vehicle>
+    // transform for a registered vehicle. Called once per frame.
+    void ProcessDataFromVehicle(
+      void *actor,
+      const carla::geom::Transform vehicle_transform,
+      carla::geom::Vector3D velocity,
+      carla::geom::Vector3D angular_velocity,
+      float delta_seconds,
+      const carla::rpc::VehicleControl &control);
+    // Publishes the latched static description of a registered vehicle.
+    // Called once at registration.
+    void ProcessVehicleInfo(
+      void *actor,
+      uint32_t id,
+      const std::string &type_id,
+      const std::string &role_name,
+      const carla::geom::Transform vehicle_transform,
+      const carla::rpc::VehiclePhysicsControl &physics_control);
 
   private:
     std::shared_ptr<CarlaTransformPublisher> GetOrCreateTransformPublisher(void *actor);
@@ -181,6 +211,16 @@ class ROS2
 
   std::unordered_map<void *, bool> _tfs;
   std::unordered_map<void *, std::shared_ptr<CarlaTransformPublisher>> _tf_publishers;
+
+  // Per-vehicle data publishers, created at RegisterVehicle and destroyed at
+  // UnregisterVehicle/Shutdown.
+  struct VehiclePublishers {
+    std::shared_ptr<CarlaOdometryPublisher> odometry;
+    std::shared_ptr<CarlaEgoVehicleStatusPublisher> status;
+    std::shared_ptr<CarlaEgoVehicleInfoPublisher> info;
+  };
+  std::unordered_map<void *, VehiclePublishers> _vehicle_publishers;
+  std::shared_ptr<CarlaStaticTransformPublisher> _static_tf_publisher;
 };
 
 } // namespace ros2
