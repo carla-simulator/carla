@@ -81,9 +81,7 @@ class PrimaryCommands {
     /// Drops the routing of a destroyed sensor so it is never routed again.
     void ForgetSensor(stream_id sensor_id);
 
-    /// Whether @a sensor_id is routed to a secondary that is still connected.
-    /// Never waits for a round trip in flight; callable from any thread.
-    [[nodiscard]]
+    /// Whether @a sensor_id is routed to a connected secondary; never waits on a round trip.
     bool IsRouted(stream_id sensor_id) const;
 
   private:
@@ -140,8 +138,7 @@ class PrimaryCommands {
     // session would otherwise clobber each other's promise.
     std::mutex _mutex;
 
-    // Mirror of the _servers sessions for IsRouted(), which must not wait on
-    // _mutex while a round trip holds it.
+    // Mirror of the _servers sessions, readable without _mutex.
     mutable std::mutex _routes_mutex;
     std::unordered_map<stream_id, std::weak_ptr<Primary>> _routes;
 };

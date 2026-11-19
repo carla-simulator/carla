@@ -124,8 +124,7 @@ public:
     return Stream.IsStreamReady();
   }
 
-  /// Clients subscribed to this server's own stream are always served; while
-  /// another Multi-GPU process owns the sensor, ROS 2 alone does not count.
+  /// Own-stream clients are always served; ROS 2 alone does not count while another process owns the sensor.
   bool AreClientsListening()
   {
     return carla::multigpu::ShouldProduceSensorData(
@@ -358,7 +357,7 @@ private:
 
   bool bClientsListening = false;
 
-  /// Game thread writes it each tick; capture and readback threads read it.
+  /// Written by the game thread each tick, read by capture and readback threads.
   std::atomic<bool> bOwnsSensorStream{true};
 
   void UpdateSensorStreamOwnership();

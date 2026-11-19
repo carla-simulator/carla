@@ -64,14 +64,10 @@ public:
   [[nodiscard]]
   bool IsEpisodeOpen();
 
-  /// Whether the primary routed the sensor of the local @a local_stream_id to
-  /// this secondary, i.e. Resolve() granted its token in the current episode.
-  /// Any thread.
-  [[nodiscard]]
+  /// Whether the primary routed the sensor of @a local_stream_id to this secondary.
   bool IsRoutedHere(stream_id_type local_stream_id) const;
 
-  /// The connection to the primary dropped: forgets which sensors it routed
-  /// here, keeping the bindings and reservations.
+  /// Forgets the routed sensors after the connection to the primary drops.
   void DropRoutes(carla::streaming::Server &server);
 
 private:
