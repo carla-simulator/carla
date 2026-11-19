@@ -133,47 +133,69 @@ namespace multigpu {
 
     std::vector<VehicleParts> vehicles;
 
+    // Sizes of each piece on the wire, so that Write can stream the packet
+    // without building it in nested buffers first.
+    static constexpr uint32_t kFieldHeaderSize = sizeof(uint8_t) + sizeof(uint32_t);
+    static constexpr uint32_t kListHeaderSize = sizeof(uint32_t) + sizeof(uint16_t);
+    static constexpr uint32_t kDrivetrainSize = sizeof(int32_t) + sizeof(uint8_t);
+
+    static uint32_t RecordSize(const VehicleParts &vehicle) {
+      uint32_t size = sizeof(vehicle.actor_id);
+      size += kFieldHeaderSize + kListHeaderSize +
+          static_cast<uint32_t>(vehicle.wheels.size()) * kWheelRecordSizeV1;
+      if (!vehicle.open_doors.empty()) {
+        size += kFieldHeaderSize + kListHeaderSize +
+            static_cast<uint32_t>(vehicle.open_doors.size()) * kDoorRecordSizeV1;
+      }
+      if (vehicle.current_gear) {
+        size += kFieldHeaderSize + kDrivetrainSize;
+      }
+      return size;
+    }
+
     void Write(std::ostream &out) const {
-      std::ostringstream payload;
-      detail::WritePod(payload, static_cast<uint32_t>(vehicles.size()));
+      uint32_t payload_size = sizeof(uint32_t);
       for (const VehicleParts &vehicle : vehicles) {
-        std::ostringstream record;
-        detail::WritePod(record, vehicle.actor_id);
-        {
-          std::ostringstream value;
-          WriteFixedListHeader(value, static_cast<uint32_t>(vehicle.wheels.size()), kWheelRecordSizeV1);
-          for (const WheelPose &wheel : vehicle.wheels) {
-            detail::WritePod(value, wheel.steer);
-            detail::WritePod(value, wheel.spin);
-            detail::WritePod(value, wheel.suspension_offset);
-          }
-          WriteField(record, kWheels, value.str());
+        payload_size += sizeof(uint32_t) + RecordSize(vehicle);
+      }
+      WriteFrameDataHeader(out, kPacketId, payload_size);
+      detail::WritePod(out, static_cast<uint32_t>(vehicles.size()));
+      for (const VehicleParts &vehicle : vehicles) {
+        detail::WritePod(out, RecordSize(vehicle));
+        detail::WritePod(out, vehicle.actor_id);
+        detail::WritePod(out, kWheels);
+        detail::WritePod(out, kListHeaderSize +
+            static_cast<uint32_t>(vehicle.wheels.size()) * kWheelRecordSizeV1);
+        WriteFixedListHeader(out, static_cast<uint32_t>(vehicle.wheels.size()), kWheelRecordSizeV1);
+        for (const WheelPose &wheel : vehicle.wheels) {
+          detail::WritePod(out, wheel.steer);
+          detail::WritePod(out, wheel.spin);
+          detail::WritePod(out, wheel.suspension_offset);
         }
         if (!vehicle.open_doors.empty()) {
-          std::ostringstream value;
-          WriteFixedListHeader(value, static_cast<uint32_t>(vehicle.open_doors.size()), kDoorRecordSizeV1);
+          detail::WritePod(out, kOpenDoors);
+          detail::WritePod(out, kListHeaderSize +
+              static_cast<uint32_t>(vehicle.open_doors.size()) * kDoorRecordSizeV1);
+          WriteFixedListHeader(out, static_cast<uint32_t>(vehicle.open_doors.size()), kDoorRecordSizeV1);
           for (const DoorPose &door : vehicle.open_doors) {
-            detail::WritePod(value, door.door);
+            detail::WritePod(out, door.door);
             for (double axis : door.location) {
-              detail::WritePod(value, axis);
+              detail::WritePod(out, axis);
             }
             for (double axis : door.rotation) {
-              detail::WritePod(value, axis);
+              detail::WritePod(out, axis);
             }
           }
-          WriteField(record, kOpenDoors, value.str());
         }
         if (vehicle.current_gear) {
-          std::ostringstream value;
-          detail::WritePod(value, *vehicle.current_gear);
+          detail::WritePod(out, kDrivetrain);
+          detail::WritePod(out, kDrivetrainSize);
+          detail::WritePod(out, *vehicle.current_gear);
           const uint8_t flags =
               (vehicle.manual_gear_shift ? 1u : 0u) | (vehicle.simulating_physics ? 2u : 0u);
-          detail::WritePod(value, flags);
-          WriteField(record, kDrivetrain, value.str());
+          detail::WritePod(out, flags);
         }
-        WriteSizedBytes(payload, record.str());
       }
-      WriteFrameDataPacket(out, kPacketId, payload.str());
     }
 
     bool Read(std::istream &in, uint32_t size) {

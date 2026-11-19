@@ -11,6 +11,7 @@
 #include "carla/Logging.h"
 
 #include <cstdint>
+#include <cstring>
 #include <limits>
 #include <memory>
 #include <type_traits>
@@ -270,10 +271,14 @@ namespace carla {
     /// allocated if the capacity is not enough and the data is copied.
     void resize(uint64_t size) {
       if(_capacity < size) {
+        // Keep what the buffer holds: copy the old contents, not as many
+        // bytes as the new size, which read past the old block.
         std::unique_ptr<value_type[]> data = std::move(_data);
-        uint64_t old_size = size;
+        const size_type old_size = _size;
         reset(size);
-        copy_from(data.get(), static_cast<size_type>(old_size));
+        if (old_size > 0u) {
+          std::memcpy(_data.get(), data.get(), old_size);
+        }
       }
       _size = static_cast<size_type>(size);
     }

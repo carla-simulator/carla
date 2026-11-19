@@ -27,6 +27,7 @@
 
 #include <util/ue-header-guard-begin.h>
 #include "GameFramework/Character.h"
+#include "HAL/IConsoleManager.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include <util/ue-header-guard-end.h>
 
@@ -296,6 +297,13 @@ void FFrameData::AddWorldState(bool bFullResync)
   Sent.ChangedLights.Reset();
 }
 
+static TAutoConsoleVariable<int32> CVarCarlaMultiGpuFastPlay(
+    TEXT("carla.MultiGpu.FastPlay"),
+    1,
+    TEXT("Multi-GPU secondary: play mirror poses and velocities on the fast path (1) or on the ")
+    TEXT("previous one (0), which gives the same result; to compare the two with carla.MultiGpu.StateHash."),
+    ECVF_Default);
+
 namespace
 {
   /// The local actor a primary id was replayed onto, if any.
@@ -431,7 +439,7 @@ void FFrameData::PlayFrameData(
 
   PlayAppearances(MappedId);
   PlayPositions(MappedId, MirrorState);
-  PlayKinematics(MappedId);
+  PlayKinematics(MappedId, MirrorState);
 
   for (const CarlaRecorderTrafficLightTime &Time : TrafficLightTimes.GetTrafficLightTimes())
   {
@@ -692,10 +700,50 @@ void FFrameData::PlayPositions(
     return;
   }
 
-  std::vector<uint32_t> LocalIds;
-  std::unordered_map<uint32_t, FTransform> Poses;
-  std::unordered_map<uint32_t, uint32_t> Parents;
-  LocalIds.reserve(MirrorPositions.positions.size());
+  if (CVarCarlaMultiGpuFastPlay.GetValueOnGameThread() == 0)
+  {
+    std::vector<uint32_t> LocalIds;
+    std::unordered_map<uint32_t, FTransform> Poses;
+    std::unordered_map<uint32_t, uint32_t> Parents;
+    LocalIds.reserve(MirrorPositions.positions.size());
+    for (const carla::multigpu::MirroredPosition &Position : MirrorPositions.positions)
+    {
+      const std::optional<uint32_t> Local = FindMirror(MappedId, Position.id);
+      FCarlaActor *CarlaActor = Local ? Episode->FindCarlaActor(*Local) : nullptr;
+      if (CarlaActor == nullptr)
+      {
+        continue;
+      }
+      LocalIds.push_back(*Local);
+      Poses.emplace(*Local, FTransform(
+          FQuat(Position.rotation[0], Position.rotation[1], Position.rotation[2], Position.rotation[3]),
+          FVector(Position.location[0], Position.location[1], Position.location[2])));
+      if (CarlaActor->GetParent() != 0u)
+      {
+        Parents.emplace(*Local, CarlaActor->GetParent());
+      }
+    }
+    // Parents first: moving a parent moves its attached children, which then
+    // get their own exact pose.
+    for (const uint32_t LocalId : carla::multigpu::OrderParentsFirst(LocalIds, Parents))
+    {
+      FCarlaActor *CarlaActor = Episode->FindCarlaActor(LocalId);
+      const FTransform &Pose = Poses[LocalId];
+      PlaceMirror(*CarlaActor, Pose);
+      MirrorState.PlayedPoses.emplace_back(LocalId, Pose);
+    }
+    return;
+  }
+
+  struct FMirrorPose
+  {
+    uint32_t LocalId;
+    FCarlaActor *CarlaActor;
+    FTransform Pose;
+  };
+  std::vector<FMirrorPose> Mirrors;
+  Mirrors.reserve(MirrorPositions.positions.size());
+  bool bAnyParent = false;
   for (const carla::multigpu::MirroredPosition &Position : MirrorPositions.positions)
   {
     const std::optional<uint32_t> Local = FindMirror(MappedId, Position.id);
@@ -704,23 +752,44 @@ void FFrameData::PlayPositions(
     {
       continue;
     }
-    LocalIds.push_back(*Local);
-    Poses.emplace(*Local, FTransform(
+    Mirrors.push_back({*Local, CarlaActor, FTransform(
         FQuat(Position.rotation[0], Position.rotation[1], Position.rotation[2], Position.rotation[3]),
-        FVector(Position.location[0], Position.location[1], Position.location[2])));
-    if (CarlaActor->GetParent() != 0u)
+        FVector(Position.location[0], Position.location[1], Position.location[2]))});
+    bAnyParent = bAnyParent || (CarlaActor->GetParent() != 0u);
+  }
+  MirrorState.PlayedPoses.reserve(Mirrors.size());
+  if (!bAnyParent)
+  {
+    // Nothing attached: OrderParentsFirst would keep this order.
+    for (const FMirrorPose &Mirror : Mirrors)
     {
-      Parents.emplace(*Local, CarlaActor->GetParent());
+      PlaceMirror(*Mirror.CarlaActor, Mirror.Pose);
+      MirrorState.PlayedPoses.emplace_back(Mirror.LocalId, Mirror.Pose);
+    }
+    return;
+  }
+
+  std::vector<uint32_t> LocalIds;
+  std::unordered_map<uint32_t, size_t> Index;
+  std::unordered_map<uint32_t, uint32_t> Parents;
+  LocalIds.reserve(Mirrors.size());
+  for (size_t i = 0u; i < Mirrors.size(); ++i)
+  {
+    const FMirrorPose &Mirror = Mirrors[i];
+    LocalIds.push_back(Mirror.LocalId);
+    Index.emplace(Mirror.LocalId, i);
+    if (Mirror.CarlaActor->GetParent() != 0u)
+    {
+      Parents.emplace(Mirror.LocalId, Mirror.CarlaActor->GetParent());
     }
   }
   // Parents first: moving a parent moves its attached children, which then
   // get their own exact pose.
   for (const uint32_t LocalId : carla::multigpu::OrderParentsFirst(LocalIds, Parents))
   {
-    FCarlaActor *CarlaActor = Episode->FindCarlaActor(LocalId);
-    const FTransform &Pose = Poses[LocalId];
-    PlaceMirror(*CarlaActor, Pose);
-    MirrorState.PlayedPoses.emplace_back(LocalId, Pose);
+    const FMirrorPose &Mirror = Mirrors[Index.at(LocalId)];
+    PlaceMirror(*Mirror.CarlaActor, Mirror.Pose);
+    MirrorState.PlayedPoses.emplace_back(LocalId, Mirror.Pose);
   }
 }
 
@@ -750,9 +819,13 @@ static void FFrameData_SetMirroredMotion(FCarlaActor &CarlaActor, const FVector 
   }
 }
 
-void FFrameData::PlayKinematics(const std::unordered_map<uint32_t, uint32_t>& MappedId)
+void FFrameData::PlayKinematics(
+    const std::unordered_map<uint32_t, uint32_t>& MappedId,
+    FMirrorState &MirrorState)
 {
   const uint64_t ThisFrame = FrameCounter.FrameCounter;
+  std::vector<uint32_t> KinematicIds;
+  KinematicIds.reserve(Kinematics.GetKinematics().size());
   for (const CarlaRecorderKinematics &Kinematic : Kinematics.GetKinematics())
   {
     const std::optional<uint32_t> Local = FindMirror(MappedId, Kinematic.DatabaseId);
@@ -761,13 +834,31 @@ void FFrameData::PlayKinematics(const std::unordered_map<uint32_t, uint32_t>& Ma
     {
       CarlaActor->SetMirroredKinematics(Kinematic.LinearVelocity, Kinematic.AngularVelocity, ThisFrame);
       FFrameData_SetMirroredMotion(*CarlaActor, Kinematic.LinearVelocity);
+      KinematicIds.push_back(*Local);
     }
   }
   // A mirror this frame carries no velocities for (a prop that came to
-  // rest) stands still, rather than keep the last ones it got.
-  for (const auto &Mapped : MappedId)
+  // rest) stands still, rather than keep the last ones it got. Only this
+  // function gives a mirror velocities, so only the ones the last frame gave
+  // them to can hold any: no need to look at every mirror.
+  if (CVarCarlaMultiGpuFastPlay.GetValueOnGameThread() == 0)
   {
-    FCarlaActor *CarlaActor = Episode->FindCarlaActor(Mapped.second);
+    for (const auto &Mapped : MappedId)
+    {
+      FCarlaActor *CarlaActor = Episode->FindCarlaActor(Mapped.second);
+      if ((CarlaActor != nullptr) && CarlaActor->HasMirroredKinematics() &&
+          (CarlaActor->GetMirroredKinematicsFrame() != ThisFrame))
+      {
+        CarlaActor->ClearMirroredKinematics();
+        FFrameData_SetMirroredMotion(*CarlaActor, FVector::ZeroVector);
+      }
+    }
+    MirrorState.KinematicIds = std::move(KinematicIds);
+    return;
+  }
+  for (const uint32_t LocalId : MirrorState.KinematicIds)
+  {
+    FCarlaActor *CarlaActor = Episode->FindCarlaActor(LocalId);
     if ((CarlaActor != nullptr) && CarlaActor->HasMirroredKinematics() &&
         (CarlaActor->GetMirroredKinematicsFrame() != ThisFrame))
     {
@@ -775,6 +866,7 @@ void FFrameData::PlayKinematics(const std::unordered_map<uint32_t, uint32_t>& Ma
       FFrameData_SetMirroredMotion(*CarlaActor, FVector::ZeroVector);
     }
   }
+  MirrorState.KinematicIds = std::move(KinematicIds);
 }
 
 void FFrameData::PlaceMirror(FCarlaActor &CarlaActor, FTransform Transform)
@@ -851,6 +943,7 @@ void FFrameData::Clear()
 {
   EventsAdd.Clear();
   EventsDel.Clear();
+  DeletedIds.clear();
   EventsParent.Clear();
   Collisions.Clear();
   Positions.Clear();
@@ -1427,12 +1520,9 @@ void FFrameData::AddEvent(const CarlaRecorderEventDel &Event)
 {
   // An actor destroyed through the episode is reported again when the engine
   // destroys it; a secondary needs it once.
-  for (const CarlaRecorderEventDel &Existing : EventsDel.GetEvents())
+  if (!DeletedIds.insert(Event.DatabaseId).second)
   {
-    if (Existing.DatabaseId == Event.DatabaseId)
-    {
-      return;
-    }
+    return;
   }
   EventsDel.Add(std::move(Event));
 }

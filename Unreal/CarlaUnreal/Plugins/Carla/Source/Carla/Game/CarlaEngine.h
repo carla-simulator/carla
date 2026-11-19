@@ -30,6 +30,7 @@
 #include <util/ue-header-guard-end.h>
 
 #include <atomic>
+#include <deque>
 #include <mutex>
 #include <optional>
 
@@ -257,7 +258,7 @@ private:
   std::shared_ptr<carla::multigpu::Router>    SecondaryServer;
   std::shared_ptr<carla::multigpu::Secondary> Secondary;
 
-  std::vector<FFrameData> FramesToProcess;
+  std::deque<FFrameData> FramesToProcess;
   std::mutex FrameToProcessMutex;
 
   // Tracks whether this secondary is currently considered behind the
@@ -270,6 +271,10 @@ private:
   // another build; guarded by FrameToProcessMutex.
   uint64_t DroppedFrames = 0u;
   bool bWarnedFrameFormat = false;
+
+  /// Size of the last frame sent to the secondaries: the next one starts
+  /// with room for it, so it is written without growing the buffer.
+  size_t LastFrameDataSize = 0u;
 
   // Game thread only: BindReplayedSensor warns once per opened episode.
   bool bWarnedSensorBindRefused = false;
