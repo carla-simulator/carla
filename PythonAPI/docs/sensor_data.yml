@@ -638,8 +638,9 @@
     # --------------------------------------
     - var_name: t
       type: int
+      var_units: nanoseconds
       doc: >
-        Timestamp of the moment the event happened.
+        Simulation time when the event occurred.
     # --------------------------------------
     - var_name: pol
       type: bool
@@ -693,6 +694,8 @@
         Returns an array with Y pixel coordinate of all the events in the stream.
     # --------------------------------------
     - def_name: to_array_t
+      return: list(int)
+      return_units: nanoseconds
       doc: >
         Returns an array with the timestamp of all the events in the stream.
     # --------------------------------------
