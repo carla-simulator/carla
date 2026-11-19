@@ -6,7 +6,6 @@
 
 #include <PythonAPI.h>
 
-#include <thread>
 
 #include <boost/python/stl_iterator.hpp>
 
@@ -150,105 +149,58 @@ static std::vector<carla::rpc::CommandResponse> ApplyBatchCommandsSyncNoGIL(
   using CommandType = carla::rpc::Command;
   auto responses = self.ApplyBatchSync(cmds, do_tick);
 
-  // check for autopilot command
-  std::vector<carla::traffic_manager::ActorPtr> vehicles_to_enable(cmds.size(), nullptr);
-  std::vector<carla::traffic_manager::ActorPtr> vehicles_to_disable(cmds.size(), nullptr);
-  carla::client::World world = self.GetWorld();
+  // Find the SetAutopilot commands, on their own or in a SpawnActor's
+  // do_after, of the commands that succeeded. Most batches have none.
+  struct AutopilotRequest {
+    carla::rpc::ActorId id;
+    bool enabled;
+  };
+  std::vector<AutopilotRequest> requests;
   uint16_t tm_port = 8000;
-
-  std::atomic<size_t> vehicles_to_enable_index;
-  std::atomic<size_t> vehicles_to_disable_index;
-
-  vehicles_to_enable_index.store(0);
-  vehicles_to_disable_index.store(0);
-
-  auto ProcessCommand = [&](size_t min_index, size_t max_index) {
-    for (size_t i = min_index; i < max_index; ++i) {
-      if (!responses[i].HasError()) {
-
-        bool isAutopilot = false;
-        bool autopilotValue = false;
-
-        CommandType::CommandType& cmd_type = cmds[i].command;
-
-        // check SpawnActor command
-        if (const auto *maybe_spawn_actor_cmd = std::get_if<carla::rpc::Command::SpawnActor>(&cmd_type)) {
-          // check inside 'do_after'
-          for (auto &cmd : maybe_spawn_actor_cmd->do_after) {
-            if (const auto *maybe_set_autopilot_command = std::get_if<carla::rpc::Command::SetAutopilot>(&cmd.command)) {
-              tm_port = maybe_set_autopilot_command->tm_port;
-              autopilotValue = maybe_set_autopilot_command->enabled;
-              isAutopilot = true;
-            }
-          }
-        }
-        // check SetAutopilot command
-        else if (const auto *maybe_set_autopilot_command = std::get_if<carla::rpc::Command::SetAutopilot>(&cmd_type)) {
-          tm_port = maybe_set_autopilot_command->tm_port;
-          autopilotValue = maybe_set_autopilot_command->enabled;
-          isAutopilot = true;
-        }
-
-        // check if found any SetAutopilot command
-        if (isAutopilot) {
-          // get the id
-          carla::rpc::ActorId id = static_cast<carla::rpc::ActorId>(responses[i].Get());
-
-          // get all actors
-          carla::SharedPtr<carla::client::Actor> actor;
-          actor = world.GetActor(id);
-
-          // check to enable or disable
-          if (actor) {
-            if (autopilotValue) {
-              size_t index = vehicles_to_enable_index.fetch_add(1);
-              vehicles_to_enable[index] = actor;
-            } else {
-              size_t index = vehicles_to_disable_index.fetch_add(1);
-              vehicles_to_disable[index] = actor;
-            }
-          }
+  for (size_t i = 0; i < cmds.size() && i < responses.size(); ++i) {
+    if (responses[i].HasError()) {
+      continue;
+    }
+    const CommandType::CommandType &cmd_type = cmds[i].command;
+    const carla::rpc::Command::SetAutopilot *autopilot = nullptr;
+    if (const auto *spawn = std::get_if<carla::rpc::Command::SpawnActor>(&cmd_type)) {
+      for (const auto &cmd : spawn->do_after) {
+        if (const auto *maybe = std::get_if<carla::rpc::Command::SetAutopilot>(&cmd.command)) {
+          autopilot = maybe;
         }
       }
+    } else {
+      autopilot = std::get_if<carla::rpc::Command::SetAutopilot>(&cmd_type);
     }
-  };
-
-  const size_t TaskLimit = 50;
-  size_t num_commands = cmds.size();
-  size_t num_batches = num_commands / TaskLimit;
-
-  std::vector<std::thread*> t(num_batches+1);
-
-  for(size_t n = 0; n < num_batches; n++) {
-    t[n] = new std::thread(ProcessCommand, n * TaskLimit, (n+1) * TaskLimit);
+    if (autopilot != nullptr) {
+      tm_port = autopilot->tm_port;
+      requests.push_back({static_cast<carla::rpc::ActorId>(responses[i].Get()), autopilot->enabled});
+    }
   }
-  t[num_batches] = new std::thread(ProcessCommand, num_batches * TaskLimit, num_commands);
-
-  for(size_t n = 0; n <= num_batches; n++) {
-    if(t[n]->joinable()){
-      t[n]->join();
-    }
-    delete t[n];
+  if (requests.empty()) {
+    return responses;
   }
 
-  // Fix vector size
-  vehicles_to_enable.resize(vehicles_to_enable_index.load());
-  vehicles_to_disable.resize(vehicles_to_disable_index.load());
-  // Release memory
-  vehicles_to_enable.shrink_to_fit();
-  vehicles_to_disable.shrink_to_fit();
+  carla::client::World world = self.GetWorld();
+  std::vector<carla::traffic_manager::ActorPtr> vehicles_to_enable;
+  std::vector<carla::traffic_manager::ActorPtr> vehicles_to_disable;
+  for (const auto &request : requests) {
+    carla::SharedPtr<carla::client::Actor> actor = world.GetActor(request.id);
+    if (actor) {
+      (request.enabled ? vehicles_to_enable : vehicles_to_disable).push_back(actor);
+    }
+  }
 
   // Ensure the TM always receives the same vector by sorting the elements
-  std::vector<carla::traffic_manager::ActorPtr> sorted_vehicle_to_enable = vehicles_to_enable;
-  std::sort(sorted_vehicle_to_enable.begin(), sorted_vehicle_to_enable.end(), [](carla::traffic_manager::ActorPtr &a, carla::traffic_manager::ActorPtr &b) {return a->GetId() < b->GetId(); });
+  const auto by_id = [](const carla::traffic_manager::ActorPtr &a, const carla::traffic_manager::ActorPtr &b) {
+    return a->GetId() < b->GetId();
+  };
+  std::sort(vehicles_to_enable.begin(), vehicles_to_enable.end(), by_id);
+  std::sort(vehicles_to_disable.begin(), vehicles_to_disable.end(), by_id);
 
-  std::vector<carla::traffic_manager::ActorPtr> sorted_vehicle_to_disable = vehicles_to_disable;
-  std::sort(sorted_vehicle_to_disable.begin(), sorted_vehicle_to_disable.end(), [](carla::traffic_manager::ActorPtr &a, carla::traffic_manager::ActorPtr &b) {return a->GetId() < b->GetId(); });
-
-  // check if any autopilot command was sent
-  if (sorted_vehicle_to_enable.size() || sorted_vehicle_to_disable.size()) {
-    self.GetInstanceTM(tm_port).RegisterVehicles(sorted_vehicle_to_enable);
-    self.GetInstanceTM(tm_port).UnregisterVehicles(sorted_vehicle_to_disable);
+  if (!vehicles_to_enable.empty() || !vehicles_to_disable.empty()) {
+    self.GetInstanceTM(tm_port).RegisterVehicles(vehicles_to_enable);
+    self.GetInstanceTM(tm_port).UnregisterVehicles(vehicles_to_disable);
   }
 
   return responses;

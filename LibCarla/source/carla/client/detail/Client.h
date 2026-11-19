@@ -545,6 +545,11 @@ namespace detail {
         std::vector<rpc::Command> commands,
         bool do_tick_cue);
 
+    /// Applies @a commands and sends the tick cue in one round trip. Returns
+    /// the responses and the frame the tick produces.
+    std::pair<std::vector<rpc::CommandResponse>, uint64_t> ApplyBatchAndTick(
+        std::vector<rpc::Command> commands);
+
     uint64_t SendTickCue();
 
     std::vector<rpc::LightState> QueryLightsStateToServer() const;

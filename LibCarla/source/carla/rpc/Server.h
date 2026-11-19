@@ -115,7 +115,9 @@ namespace detail {
     template <typename FuncT>
     static auto WrapSyncCall(std::atomic_bool &shutdown_in_progress, boost::asio::io_context &io, FuncT &&functor) {
       return [&shutdown_in_progress, &io, functor=std::forward<FuncT>(functor)](Metadata metadata, Args... args) -> R {
-        auto task = std::packaged_task<R()>([functor=std::move(functor), args...]() {
+        // Move the decoded arguments into the task: a batch of commands would
+        // otherwise be copied once more on its way to the game thread.
+        auto task = std::packaged_task<R()>([functor=std::move(functor), ...args=std::move(args)]() {
           const uint64_t start = ServerPerfStats::NowNs();
           if constexpr (std::is_void_v<R>) {
             functor(args...);

@@ -3962,6 +3962,26 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
     return result;
   };
 
+  // apply_batch followed by tick_cue in the same game-thread task, so that a
+  // synchronous client applies its commands and ticks in one round trip.
+  // Returns the responses and the frame the tick produces.
+  BIND_SYNC(apply_batch_and_tick) << [=](
+      const std::vector<cr::Command> &commands) -> R<std::pair<std::vector<CR>, uint64_t>>
+  {
+    std::vector<CR> result;
+    result.reserve(commands.size());
+    for (const auto &command : commands)
+    {
+      result.emplace_back(std::visit(command_visitor, command.command));
+    }
+    auto frame = tick_cue();
+    if (frame.HasError())
+    {
+      return frame.GetError();
+    }
+    return std::make_pair(std::move(result), frame.Get());
+  };
+
   // ~~ Light Subsystem ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
   BIND_SYNC(query_lights_state) << [this](std::string client) -> R<std::vector<cr::LightState>>

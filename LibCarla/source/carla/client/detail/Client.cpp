@@ -882,6 +882,12 @@ namespace detail {
     return result.as<std::vector<rpc::CommandResponse>>();
   }
 
+  std::pair<std::vector<rpc::CommandResponse>, uint64_t> Client::ApplyBatchAndTick(
+      std::vector<rpc::Command> commands) {
+    using return_t = std::pair<std::vector<rpc::CommandResponse>, uint64_t>;
+    return _pimpl->CallAndWait<return_t>("apply_batch_and_tick", std::move(commands));
+  }
+
   uint64_t Client::SendTickCue() {
     return _pimpl->CallAndWait<uint64_t>("tick_cue");
   }
