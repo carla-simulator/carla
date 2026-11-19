@@ -3524,12 +3524,7 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
     }
 
 #ifndef CARLA_HAS_GBUFFER_API
-    // G-buffer capture is compiled in only when the engine provides
-    // GBufferView.h (see SceneCaptureSensor.h). SensorFactory does not open
-    // the CameraGBuffers streams (those assignments are commented out), so
-    // GetToken() on one of them would fail check(Stream.has_value()) and take
-    // the server down. This guard covers builds without GBufferView.h; a
-    // build with it still needs those streams opened server-side.
+    // G-buffer streams are never opened here; GetToken() would crash (#10329).
     return RespondError(
         "get_gbuffer_token",
         "GBuffer capture is not available in this build (its Unreal Engine has no GBufferView.h)",
