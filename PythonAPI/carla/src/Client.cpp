@@ -16,6 +16,20 @@ namespace cg = carla::geom;
 namespace carla {
 namespace rpc {
 
+  std::ostream &operator<<(std::ostream &out, const ServerPerfCounters &c) {
+    out << "ServerPerfCounters(frames=" << c.frames
+        << ", sync_calls=" << c.sync_calls
+        << ", sync_call_ns=" << c.sync_call_ns
+        << ", async_calls=" << c.async_calls
+        << ", rpc_loop_ns=" << c.rpc_loop_ns
+        << ", backlog_sum=" << c.backlog_sum
+        << ", backlog_max=" << c.backlog_max
+        << ", snapshots=" << c.snapshots
+        << ", snapshot_ns=" << c.snapshot_ns
+        << ", snapshot_bytes=" << c.snapshot_bytes << ")";
+    return out;
+  }
+
   std::ostream &operator<<(std::ostream &out, const ContentPackInfo &pack) {
     out << "ContentPackInfo(name=" << pack.name
         << ", version=" << pack.version
@@ -245,6 +259,20 @@ void export_client() {
   namespace cc = carla::client;
   namespace rpc = carla::rpc;
 
+  class_<rpc::ServerPerfCounters>("ServerPerfCounters", no_init)
+    .def_readonly("frames", &rpc::ServerPerfCounters::frames)
+    .def_readonly("sync_calls", &rpc::ServerPerfCounters::sync_calls)
+    .def_readonly("sync_call_ns", &rpc::ServerPerfCounters::sync_call_ns)
+    .def_readonly("async_calls", &rpc::ServerPerfCounters::async_calls)
+    .def_readonly("rpc_loop_ns", &rpc::ServerPerfCounters::rpc_loop_ns)
+    .def_readonly("backlog_sum", &rpc::ServerPerfCounters::backlog_sum)
+    .def_readonly("backlog_max", &rpc::ServerPerfCounters::backlog_max)
+    .def_readonly("snapshots", &rpc::ServerPerfCounters::snapshots)
+    .def_readonly("snapshot_ns", &rpc::ServerPerfCounters::snapshot_ns)
+    .def_readonly("snapshot_bytes", &rpc::ServerPerfCounters::snapshot_bytes)
+    .def(self_ns::str(self_ns::self))
+  ;
+
   class_<rpc::ContentPackInfo>("ContentPackInfo", no_init)
     .def_readonly("name", &rpc::ContentPackInfo::name)
     .def_readonly("version", &rpc::ContentPackInfo::version)
@@ -294,6 +322,7 @@ void export_client() {
     .def("set_timeout", &::SetTimeout, (arg("seconds")))
     .def("get_client_version", &cc::Client::GetClientVersion)
     .def("get_server_version", CONST_CALL_WITHOUT_GIL(cc::Client, GetServerVersion))
+    .def("get_server_perf_counters", CONST_CALL_WITHOUT_GIL(cc::Client, GetServerPerfCounters))
     .def("get_world", &cc::Client::GetWorld)
     .def("get_available_maps", &GetAvailableMaps)
     .def("get_content_packs", &GetContentPacks)

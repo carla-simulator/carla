@@ -209,6 +209,10 @@ namespace detail {
       return _client.GetServerVersion();
     }
 
+    rpc::ServerPerfCounters GetServerPerfCounters() {
+      return _client.GetServerPerfCounters();
+    }
+
     /// @}
     // =========================================================================
     /// @name Tick

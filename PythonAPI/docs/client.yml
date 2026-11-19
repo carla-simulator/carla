@@ -354,6 +354,12 @@
       doc: >
         Returns the server libcarla version by consulting it in the "Version.h" file. Both client and server should use the same libcarla version.
     # --------------------------------------
+    - def_name: get_server_perf_counters
+      params:
+      return: carla.ServerPerfCounters
+      doc: >
+        Returns the server's cumulative RPC and frame counters since it started. Read them before and after a piece of work and subtract the two to get what that work cost on the server, for example the game-thread time spent in RPC calls per frame.
+    # --------------------------------------
     - def_name: get_trafficmanager
       params:
       - param_name: port
@@ -434,6 +440,62 @@
           Name of the file you are requesting.
       doc: >
         Requests one of the required files returned by carla.Client.get_required_files.
+
+  - class_name: ServerPerfCounters
+    # - DESCRIPTION ------------------------
+    doc: >
+      Cumulative counters of the server's RPC and frame work since it started, as returned by carla.Client.get_server_perf_counters. Every value only grows, so the difference between two readings measures what happened in between.
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: frames
+      type: int
+      doc: >
+        Frames whose RPC loop finished on the game thread.
+    - var_name: sync_calls
+      type: int
+      doc: >
+        RPC calls run on the game thread.
+    - var_name: sync_call_ns
+      type: int
+      var_units: nanoseconds
+      doc: >
+        Game-thread time spent inside those calls.
+    - var_name: async_calls
+      type: int
+      doc: >
+        RPC calls run on the server's RPC worker threads.
+    - var_name: rpc_loop_ns
+      type: int
+      var_units: nanoseconds
+      doc: >
+        Game-thread time spent in the per-frame RPC loop. In synchronous mode it includes the time spent waiting for the client's tick.
+    - var_name: backlog_sum
+      type: int
+      doc: >
+        Game-thread calls still queued when a frame's RPC loop ended, summed over all frames. Divided by the number of frames, it is the average backlog.
+    - var_name: backlog_max
+      type: int
+      doc: >
+        Largest number of game-thread calls still queued at the end of a frame's RPC loop.
+    - var_name: snapshots
+      type: int
+      doc: >
+        World snapshots serialized and sent to the clients.
+    - var_name: snapshot_ns
+      type: int
+      var_units: nanoseconds
+      doc: >
+        Time spent serializing those snapshots.
+    - var_name: snapshot_bytes
+      type: int
+      var_units: bytes
+      doc: >
+        Total size of those snapshots.
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __str__
+      return: str
+    # --------------------------------------
 
   - class_name: ContentPackInfo
     # - DESCRIPTION ------------------------

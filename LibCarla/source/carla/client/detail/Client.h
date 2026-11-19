@@ -16,6 +16,7 @@
 #include "carla/rpc/AttachmentType.h"
 #include "carla/rpc/Command.h"
 #include "carla/rpc/ContentPackInfo.h"
+#include "carla/rpc/ServerPerfCounters.h"
 #include "carla/rpc/CommandResponse.h"
 #include "carla/rpc/CustomV2XBytes.h"
 #include "carla/rpc/EnvironmentObject.h"
@@ -100,6 +101,8 @@ namespace detail {
     std::string GetClientVersion();
 
     std::string GetServerVersion();
+
+    rpc::ServerPerfCounters GetServerPerfCounters();
 
     void LoadEpisode(std::string map_name, bool reset_settings = true, rpc::MapLayer map_layer = rpc::MapLayer::All);
 

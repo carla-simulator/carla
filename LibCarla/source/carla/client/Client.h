@@ -52,6 +52,11 @@ namespace client {
       return _simulator->GetServerVersion();
     }
 
+    /// Return the server's cumulative RPC and frame counters.
+    rpc::ServerPerfCounters GetServerPerfCounters() const {
+      return _simulator->GetServerPerfCounters();
+    }
+
     std::vector<std::string> GetAvailableMaps() const {
       return _simulator->GetAvailableMaps();
     }

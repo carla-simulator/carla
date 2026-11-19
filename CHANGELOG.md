@@ -96,6 +96,8 @@
 * **Optimized the DVS camera** grayscale conversion, about 8x faster in log mode and 4x in linear, with bit-identical output.
 * **Pedestrians are cheaper to move**: a walker no longer refreshes overlaps on every body of its physics asset each time it moves or animates, and a walker teleported by the client-side crowd or the replayer drops its capsule and trigger boxes from scene queries. Keeping AI walkers and replayed actors visible to sensors (#10068) therefore costs about 4% of the tick with 150 walkers and 40 vehicles on Town10HD instead of 25%, and about 6% while replaying them.
 * **Made volumetric clouds cheaper** at the Epic and Cine quality levels, with no visible difference (`r.VolumetricRenderTarget.Mode=2`).
+* **Added `carla.Client.get_server_perf_counters()`**: cumulative counters of the server's RPC and frame work. They cover calls run on the game thread and the time they took, calls run on the RPC workers, the per-frame RPC loop and the calls still queued when it ends, and snapshot serialization time and size. Read them twice and subtract to see what a workload costs on the server.
+* **Added `PythonAPI/util/actor_batch_benchmark.py`**, which measures the tick time when one or more clients teleport, read, or let the Traffic Manager drive many actors. It reports percentiles, client CPU and the server counters as JSON, and can hash every transform to compare two builds.
 
 #### Sensors and content
 

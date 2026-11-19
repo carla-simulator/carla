@@ -43,6 +43,7 @@
 #include <carla/Sockets.h>
 #include <carla/Version.h>
 #include <carla/rpc/AckermannControllerSettings.h>
+#include <carla/rpc/ServerPerfCounters.h>
 #include <carla/rpc/Actor.h>
 #include <carla/rpc/ActorDefinition.h>
 #include <carla/rpc/ActorDescription.h>
@@ -409,6 +410,11 @@ void FCarlaServer::FPimpl::BindActions()
   BIND_ASYNC(version) << [] () -> R<std::string>
   {
     return carla::version();
+  };
+
+  BIND_ASYNC(get_server_perf_counters) << [] () -> R<cr::ServerPerfCounters>
+  {
+    return carla::rpc::ServerPerfStats::Get().Snapshot();
   };
 
   // ~~ Tick ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
