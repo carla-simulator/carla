@@ -290,29 +290,35 @@ class TestLidarBatchConsistency(SyncSmokeTest):
 
     FRAMES = 10
 
-    def record(self, attributes, extra_lidars=0):
+    def record(self, attributes_list, extra_lidars=0):
+        """Spawns one LiDAR per attributes dict at the same pose and returns each one's frames. The noise of a frame
+        is a function of the noise seed and the frame number, so data is only comparable within one run."""
         bp_lib = self.world.get_blueprint_library()
         tranf = self.world.get_map().get_spawn_points()[0]
         tranf.location.z += 3
 
-        bp = bp_lib.find("sensor.lidar.ray_cast")
-        for key in attributes:
-            bp.set_attribute(key, attributes[key])
-        lidar = self.world.spawn_actor(bp, tranf)
-        others = [self.world.spawn_actor(bp_lib.find("sensor.lidar.ray_cast"), tranf) for _ in range(extra_lidars)]
-
-        data_queue = Queue()
-        lidar.listen(lambda data: data_queue.put((data.frame, bytes(data.raw_data))))
-        for other in others:
-            other.listen(lambda data: None)
-
-        frames = []
+        lidars = []
+        queues = []
+        others = []
         try:
+            for attributes in attributes_list:
+                bp = bp_lib.find("sensor.lidar.ray_cast")
+                for key in attributes:
+                    bp.set_attribute(key, attributes[key])
+                lidars.append(self.world.spawn_actor(bp, tranf))
+                queues.append(Queue())
+                lidars[-1].listen(lambda data, q=queues[-1]: q.put((data.frame, bytes(data.raw_data))))
+            for _ in range(extra_lidars):
+                others.append(self.world.spawn_actor(bp_lib.find("sensor.lidar.ray_cast"), tranf))
+                others[-1].listen(lambda data: None)
+
+            frames = [[] for _ in lidars]
             for _ in range(self.FRAMES):
                 frame = self.world.tick()
-                frames.append(wait_for_frame(self, data_queue, frame)[1])
+                for idx, data_queue in enumerate(queues):
+                    frames[idx].append(wait_for_frame(self, data_queue, frame)[1])
         finally:
-            for sensor in [lidar] + others:
+            for sensor in lidars + others:
                 sensor.stop()
                 sensor.destroy()
             self.world.tick()
@@ -320,36 +326,46 @@ class TestLidarBatchConsistency(SyncSmokeTest):
 
     def test_single_and_batch_match(self):
         print("TestLidarBatchConsistency.test_single_and_batch_match")
-        # Noise and dropoff enabled so the random sequence is covered as well.
+        # Without noise and drop-off the data does not depend on the frame, so two runs are comparable.
         attributes = {'channels' : '32', 'range' : '50', 'points_per_second': '100000',
-          'rotation_frequency': '20', 'noise_stddev': '0.02', 'noise_seed': '4242'}
+          'rotation_frequency': '20', 'dropoff_general_rate': '0.0', 'dropoff_intensity_limit': '0.0'}
 
-        single = self.record(attributes)
-        batch = self.record(attributes, extra_lidars=2)
+        single = self.record([attributes])[0]
+        batch = self.record([attributes], extra_lidars=2)[0]
 
         self.assertEqual(len(single), len(batch))
         for idx, (a, b) in enumerate(zip(single, batch)):
             self.assertTrue(len(a) > 0, "Frame %d has no points." % idx)
             self.assertEqual(a, b, "Frame %d differs between the single and the batched LiDAR." % idx)
 
+    def test_batched_noise_is_independent(self):
+        print("TestLidarBatchConsistency.test_batched_noise_is_independent")
+        attributes = {'channels' : '32', 'range' : '50', 'points_per_second': '100000',
+          'rotation_frequency': '20', 'noise_stddev': '0.02', 'noise_seed': '4242'}
+
+        first, second = self.record([attributes, attributes], extra_lidars=2)
+
+        for idx, (a, b) in enumerate(zip(first, second)):
+            self.assertTrue(len(a) > 0, "Frame %d has no points." % idx)
+            self.assertEqual(a, b, "Frame %d differs between two batched LiDARs with the same seed." % idx)
+
     def test_noise_seed(self):
         print("TestLidarBatchConsistency.test_noise_seed")
         attributes = {'channels' : '32', 'range' : '50', 'points_per_second': '100000',
           'rotation_frequency': '20', 'noise_stddev': '0.02'}
 
-        seed_1 = self.record(dict(attributes, noise_seed='1'))
-        seed_1_again = self.record(dict(attributes, noise_seed='1'))
-        seed_2 = self.record(dict(attributes, noise_seed='2'))
+        seed_1, seed_1_again, seed_2 = self.record([
+            dict(attributes, noise_seed='1'), dict(attributes, noise_seed='1'), dict(attributes, noise_seed='2')])
 
         self.assertEqual(len(seed_1), len(seed_2))
         for idx, (a, b, c) in enumerate(zip(seed_1, seed_1_again, seed_2)):
             self.assertTrue(len(a) > 0, "Frame %d has no points." % idx)
-            self.assertTrue(a == b, "Frame %d differs between two runs with the same noise_seed." % idx)
+            self.assertTrue(a == b, "Frame %d differs between two LiDARs with the same noise_seed." % idx)
         self.assertTrue(any(a != c for a, c in zip(seed_1, seed_2)), "Different noise_seed values produced identical data.")
 
 
 class TestLidarFixedSeedOutput(SyncSmokeTest):
-    """Each LiDAR type must produce identical per-channel counts and point bytes for the same seed and scene."""
+    """Each LiDAR type must produce identical per-channel counts and point bytes for the same seed, frame and scene."""
 
     FRAMES = 10
     # Noise and drop-off enabled where supported, so the random sequence is covered too.
@@ -361,33 +377,37 @@ class TestLidarFixedSeedOutput(SyncSmokeTest):
         ('sensor.lidar.hss_lidar', dict(BASE, horizontal_resolution='0.2', **NOISE)),
     ]
 
-    def record(self, bp_id, attributes):
-        bp = self.world.get_blueprint_library().find(bp_id)
-        for key, value in attributes.items():
-            bp.set_attribute(key, value)
+    def record(self, bp_id, attributes, count=2):
+        """Spawns count identical LiDARs at the same pose and returns each one's frames."""
         tranf = self.world.get_map().get_spawn_points()[0]
         tranf.location.z += 3
-        lidar = self.world.spawn_actor(bp, tranf)
-
-        data_queue = Queue()
-        lidar.listen(lambda data: data_queue.put(
-            (data.frame, [data.get_point_count(c) for c in range(data.channels)], bytes(data.raw_data))))
-        frames = []
+        lidars = []
+        queues = []
         try:
+            for _ in range(count):
+                bp = self.world.get_blueprint_library().find(bp_id)
+                for key, value in attributes.items():
+                    bp.set_attribute(key, value)
+                lidars.append(self.world.spawn_actor(bp, tranf))
+                queues.append(Queue())
+                lidars[-1].listen(lambda data, q=queues[-1]: q.put(
+                    (data.frame, [data.get_point_count(c) for c in range(data.channels)], bytes(data.raw_data))))
+            frames = [[] for _ in lidars]
             for _ in range(self.FRAMES):
                 frame = self.world.tick()
-                frames.append(wait_for_frame(self, data_queue, frame)[1:])
+                for idx, data_queue in enumerate(queues):
+                    frames[idx].append(wait_for_frame(self, data_queue, frame)[1:])
         finally:
-            lidar.stop()
-            lidar.destroy()
+            for lidar in lidars:
+                lidar.stop()
+                lidar.destroy()
             self.world.tick()
         return frames
 
     def test_repeated_runs_match(self):
         print("TestLidarFixedSeedOutput.test_repeated_runs_match")
         for bp_id, attributes in self.LIDARS:
-            first = self.record(bp_id, attributes)
-            second = self.record(bp_id, attributes)
+            first, second = self.record(bp_id, attributes)
             self.assertEqual(len(first), len(second))
             for idx, ((counts_a, raw_a), (counts_b, raw_b)) in enumerate(zip(first, second)):
                 self.assertTrue(sum(counts_a) > 0, "%s frame %d has no points." % (bp_id, idx))
@@ -470,3 +490,166 @@ class TestSemanticTags(SyncSmokeTest):
         self.assertTrue(len(vehicle_tags) > 0, "The semantic LiDAR did not hit the vehicle.")
         self.assertTrue(np.all(vehicle_tags == int(carla.CityObjectLabel.Car)),
                         "Vehicle points have tags %s, expected Car." % sorted(set(vehicle_tags.tolist())))
+
+
+class TestUnlistenedRayCastSensors(SyncSmokeTest):
+    """Ray-cast sensors nobody listens to may skip their traces, but must deliver correct data once listened to."""
+
+    UNLISTENED_TICKS = 5
+    LISTENED_TICKS = 5
+    SENSORS = [
+        ('sensor.lidar.ray_cast', {'channels': '32', 'range': '50', 'points_per_second': '100000',
+                                   'rotation_frequency': '20'}),
+        ('sensor.lidar.ray_cast_semantic', {'channels': '32', 'range': '50', 'points_per_second': '100000',
+                                            'rotation_frequency': '20'}),
+        ('sensor.lidar.hss_lidar', {'channels': '32', 'range': '50', 'horizontal_resolution': '0.2'}),
+        ('sensor.other.radar', {'range': '50'}),
+    ]
+
+    def spawn(self, bp_id, attributes):
+        bp = self.world.get_blueprint_library().find(bp_id)
+        for key, value in attributes.items():
+            bp.set_attribute(key, value)
+        tranf = self.world.get_map().get_spawn_points()[0]
+        tranf.location.z += 3
+        return self.world.spawn_actor(bp, tranf)
+
+    def listen(self, sensor):
+        data_queue = Queue()
+        sensor.listen(lambda data: data_queue.put((data.frame, bytes(data.raw_data))))
+        return data_queue
+
+    def destroy(self, sensors):
+        for sensor in sensors:
+            if sensor.is_listening():
+                sensor.stop()
+            sensor.destroy()
+        self.world.tick()
+
+    def spawn_all(self, sensors, specs):
+        """Appends each spawned sensor to sensors, so the caller destroys them even if a later spawn fails."""
+        for bp_id, attributes in specs:
+            sensors.append(self.spawn(bp_id, attributes))
+            self.set_enabled_for_ros(sensors[-1], False)
+
+    def set_enabled_for_ros(self, sensor, enabled):
+        """A stream enabled for ROS counts as listened, so it is never skipped. With ROS 2 on, sensors start enabled
+        unless ROS2TopicVisibility is off; setting it explicitly makes the tests independent of both."""
+        if enabled:
+            sensor.enable_for_ros()
+        else:
+            sensor.disable_for_ros()
+        # The setters are asynchronous, so poll until the server has applied the change.
+        deadline = time.time() + 5.0
+        while sensor.is_enabled_for_ros() != enabled and time.time() < deadline:
+            time.sleep(0.05)
+        self.assertEqual(sensor.is_enabled_for_ros(), enabled)
+
+    def record(self, bp_id, attributes, ticks_before=0, listen_before=True, enabled_for_ros=False):
+        """Ticks ticks_before times, listening or not, then returns the next LISTENED_TICKS frames."""
+        sensor = self.spawn(bp_id, attributes)
+        try:
+            self.set_enabled_for_ros(sensor, enabled_for_ros)
+            data_queue = self.listen(sensor) if listen_before else None
+            for _ in range(ticks_before):
+                self.world.tick()
+            if data_queue is None:
+                data_queue = self.listen(sensor)
+            return [wait_for_frame(self, data_queue, self.world.tick())[1] for _ in range(self.LISTENED_TICKS)]
+        finally:
+            self.destroy([sensor])
+
+    def record_pair(self, bp_id, attributes, enabled_for_ros=False):
+        """Two identical sensors at the same pose, one listened to from the start and one after UNLISTENED_TICKS.
+        Returns the frames both deliver once both listen, which are the same frame numbers."""
+        reference = self.spawn(bp_id, attributes)
+        late = self.spawn(bp_id, attributes)
+        sensors = [reference, late]
+        try:
+            for sensor in sensors:
+                self.set_enabled_for_ros(sensor, enabled_for_ros)
+            reference_queue = self.listen(reference)
+            for _ in range(self.UNLISTENED_TICKS):
+                self.world.tick()
+            late_queue = self.listen(late)
+            reference_frames = []
+            late_frames = []
+            for _ in range(self.LISTENED_TICKS):
+                frame = self.world.tick()
+                reference_frames.append(wait_for_frame(self, reference_queue, frame)[1])
+                late_frames.append(wait_for_frame(self, late_queue, frame)[1])
+            return reference_frames, late_frames
+        finally:
+            self.destroy(sensors)
+
+    def test_late_listen(self):
+        print("TestUnlistenedRayCastSensors.test_late_listen")
+        sensors = []
+        try:
+            self.spawn_all(sensors, self.SENSORS)
+            for _ in range(self.UNLISTENED_TICKS):
+                self.world.tick()
+            queues = [self.listen(sensor) for sensor in sensors]
+            for _ in range(self.LISTENED_TICKS):
+                frame = self.world.tick()
+                for (bp_id, _), data_queue in zip(self.SENSORS, queues):
+                    raw = wait_for_frame(self, data_queue, frame)[1]
+                    if bp_id.startswith('sensor.lidar.'):
+                        self.assertTrue(len(raw) > 0, "%s frame %d has no points." % (bp_id, frame))
+        finally:
+            self.destroy(sensors)
+
+    def test_late_listen_keeps_scan_phase(self):
+        print("TestUnlistenedRayCastSensors.test_late_listen_keeps_scan_phase")
+        # Half a turn per tick and an odd number of unlistened ticks, so a lost scan phase changes the data.
+        attributes = {'channels': '32', 'range': '50', 'points_per_second': '100000', 'rotation_frequency': '10',
+                      'dropoff_general_rate': '0.0', 'dropoff_intensity_limit': '0.0'}
+        for bp_id in ('sensor.lidar.ray_cast_semantic', 'sensor.lidar.ray_cast'):
+            bp = self.world.get_blueprint_library().find(bp_id)
+            sensor_attributes = {k: v for k, v in attributes.items() if bp.has_attribute(k)}
+            reference = self.record(bp_id, sensor_attributes, self.UNLISTENED_TICKS, listen_before=True)
+            late = self.record(bp_id, sensor_attributes, self.UNLISTENED_TICKS, listen_before=False)
+            for idx, (a, b) in enumerate(zip(reference, late)):
+                self.assertTrue(len(a) > 0, "%s frame %d has no points." % (bp_id, idx))
+                self.assertEqual(a, b, "%s frame %d differs after a late listen." % (bp_id, idx))
+
+    def test_unlistened_sensors_do_not_change_listened_output(self):
+        print("TestUnlistenedRayCastSensors.test_unlistened_sensors_do_not_change_listened_output")
+        # Without noise and drop-off the data does not depend on the frame, so two runs are comparable.
+        bp_id, attributes = self.SENSORS[0]
+        attributes = dict(attributes, dropoff_general_rate='0.0', dropoff_intensity_limit='0.0')
+        alone = self.record(bp_id, attributes)
+        others = []
+        try:
+            self.spawn_all(others, self.SENSORS)
+            with_others = self.record(bp_id, attributes)
+        finally:
+            self.destroy(others)
+        for idx, (a, b) in enumerate(zip(alone, with_others)):
+            self.assertTrue(len(a) > 0, "Frame %d has no points." % idx)
+            self.assertEqual(a, b, "Frame %d changed with unlistened sensors in the world." % idx)
+
+    NOISY_SENSORS = [
+        ('sensor.lidar.ray_cast', {'channels': '32', 'range': '50', 'points_per_second': '100000',
+                                   'rotation_frequency': '10', 'noise_stddev': '0.05', 'noise_seed': '4242'}),
+        ('sensor.lidar.hss_lidar', {'channels': '32', 'range': '50', 'horizontal_resolution': '0.2',
+                                    'noise_stddev': '0.05', 'noise_seed': '4242'}),
+        ('sensor.other.radar', {'range': '50', 'points_per_second': '10000', 'noise_seed': '4242'}),
+    ]
+
+    def test_late_listen_keeps_noise(self):
+        print("TestUnlistenedRayCastSensors.test_late_listen_keeps_noise")
+        for bp_id, attributes in self.NOISY_SENSORS:
+            with self.subTest(sensor=bp_id):
+                reference, late = self.record_pair(bp_id, attributes)
+                for idx, (a, b) in enumerate(zip(reference, late)):
+                    self.assertTrue(len(a) > 0, "%s frame %d has no data." % (bp_id, idx))
+                    self.assertEqual(a, b, "%s frame %d differs after a late listen." % (bp_id, idx))
+
+    def test_late_listen_enabled_for_ros(self):
+        print("TestUnlistenedRayCastSensors.test_late_listen_enabled_for_ros")
+        bp_id, attributes = self.NOISY_SENSORS[0]
+        reference, late = self.record_pair(bp_id, attributes, enabled_for_ros=True)
+        for idx, (a, b) in enumerate(zip(reference, late)):
+            self.assertTrue(len(a) > 0, "Frame %d has no points." % idx)
+            self.assertEqual(a, b, "Frame %d differs after a late listen of a sensor enabled for ROS." % idx)

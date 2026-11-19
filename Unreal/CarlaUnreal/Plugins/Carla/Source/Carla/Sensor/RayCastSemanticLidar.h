@@ -50,12 +50,19 @@ public:
 
   void SetMirrorState(const carla::multigpu::SensorState &State) override;
 
+  /// Advances the scan state of a tick whose simulation is skipped.
+  virtual void SkipSimulation(const float DeltaTime);
+
 protected:
   virtual void BeginPlay() override;
   virtual void EndPlay(EEndPlayReason::Type EndPlayReason) override;
 
   /// Creates a Laser for each channel.
   void CreateLasers();
+
+  uint32 GetPointsToScanWithOneLaser(const float DeltaTime) const;
+
+  void AdvanceHorizontalAngle(const float DeltaTime);
 
   /// Shoot a laser ray-trace, return whether the laser hit something.
   bool ShootLaser(const float VerticalAngle, float HorizontalAngle, FHitResult &HitResult, FCollisionQueryParams& TraceParams,

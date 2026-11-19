@@ -81,6 +81,11 @@ void ARadar::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaTime)
   TRACE_CPUPROFILER_EVENT_SCOPE(ARadar::PostPhysTick);
   CalculateCurrentVelocity(DeltaTime);
 
+  if (CanSkipRayCastSimulation())
+  {
+    return;
+  }
+
   RadarData.Reset();
   SendLineTraces(DeltaTime);
 
@@ -137,6 +142,7 @@ void ARadar::SendLineTraces(float DeltaTime)
   const int NumPoints = (int)(PointsPerSecond * DeltaTime);
 
   // Generate the parameters of the rays in a deterministic way
+  SeedRandomEngineForFrame();
   Rays.clear();
   Rays.resize(NumPoints);
   for (int i = 0; i < Rays.size(); i++) {
@@ -226,19 +232,11 @@ float ARadar::CalculateRelativeVelocity(const FHitResult& OutHit, const FVector&
 
 void ARadar::GetMirrorState(carla::multigpu::SensorState &State) const
 {
-  if (RandomEngine != nullptr)
-  {
-    State.random_engine = RandomEngine->GetState();
-  }
   State.radar_previous_location = std::array<double, 3>{PrevLocation.X, PrevLocation.Y, PrevLocation.Z};
 }
 
 void ARadar::SetMirrorState(const carla::multigpu::SensorState &State)
 {
-  if (State.random_engine && (RandomEngine != nullptr))
-  {
-    RandomEngine->SetState(*State.random_engine);
-  }
   if (State.radar_previous_location)
   {
     const auto &World = *State.radar_previous_location;
