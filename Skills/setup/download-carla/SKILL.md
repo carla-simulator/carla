@@ -60,7 +60,7 @@ python3 scripts/download_carla.py resolve --version 0.9.16   # real URLs + sizes
 python3 scripts/download_carla.py release                    # newest stable, extracted
 python3 scripts/download_carla.py release --version 0.9.15 --with-maps
 python3 scripts/download_carla.py nightly
-python3 scripts/download_carla.py nightly --ue5              # the UE5 line, Linux only
+python3 scripts/download_carla.py nightly --ue5              # the UE 5.8 line (1.0+)
 python3 scripts/download_carla.py git --ref ue4-dev
 python3 scripts/download_carla.py docker --version 0.9.16
 ```
@@ -132,13 +132,10 @@ mirror used, so a future breakage is visible rather than silent.
 
 ## AdditionalMaps
 
-`--with-maps` fetches the extra towns, and they are *not* extracted: they are
-staged into the release's `Import/` directory, because a package imports them with
-its own script:
+`--with-maps` fetches the extra towns. What happens next depends on the line:
 
-```bash
-cd <release> && ./ImportAssets.sh
-```
+- **UE4 (0.9.x):** they are *not* extracted but staged into the release's `Import/` directory, because the package imports them with its own script: `cd <release> && ./ImportAssets.sh`.
+- **UE 5.8 (1.0+):** they are a content pack (`AdditionalMaps_<version>.tar.gz`, a `.tar.gz` on Windows too), installed into `<release>/CarlaUnreal/Packs/` with the package's own `Tools/carla_pack.py`. For the weekly build, a locally built package or a custom map list, use [[get-carla-additional-maps]].
 
 ## Examples
 
@@ -211,11 +208,6 @@ Cause: an interrupted extraction, or a release whose launcher has another name
 Solution: the skill searches for both and warns when neither appears; check the
 printed path, and re-run with `--keep-archive` to retry extraction without
 re-downloading.
-
-**Problem: `the UE5 nightly is published for Linux only`**
-Cause: no `Windows/Dev/CARLA_UE5_Latest.zip` is published — the UE5 nightly is a
-Linux artifact only.
-Solution: `release --version 0.10.0` gives a UE5 build on Windows.
 
 **Problem: Docker image runs but no client works**
 Cause: the image ships the simulator only.
