@@ -181,9 +181,9 @@ Every frame the primary sends what changed in its world, and on a full resynchro
 The Multi-GPU unit tests (`test_multigpu_*`) are not built by default, so CI never runs them. Build and run them manually:
 
 ```sh
-cmake -DBUILD_LIBCARLA_MULTIGPU_TESTS=ON Build
-cmake --build Build --target libcarla_test_server
-./Build/LibCarla/libcarla_test_server
+cmake --preset Release -DBUILD_LIBCARLA_MULTIGPU_TESTS=ON
+cmake --build Build/Release --target libcarla_test_server
+./Build/Release/LibCarla/libcarla_test_server --gtest_filter='MultiGpu*'
 ```
 
 ---
