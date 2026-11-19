@@ -124,8 +124,7 @@ void ASensor::UpdateSensorStreamOwnership()
   const bool bOwns = CarlaEngine->OwnsSensorStream(StreamId, false);
   bOwnsSensorStream = bOwns;
 #if defined(WITH_ROS2)
-  // Every tick, not only on the transition: a readback started before the
-  // ownership moved may still have created a publisher.
+  // Every tick: a readback started before the ownership moved may have created a publisher.
   if (!bOwns)
   {
     auto ROS2 = carla::ros2::ROS2::GetInstance();

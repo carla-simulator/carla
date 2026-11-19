@@ -108,9 +108,7 @@ public:
     return bIsPrimaryServer;
   }
 
-  /// Whether this process captures and publishes the sensor of the local
-  /// @a StreamId (see carla::multigpu::OwnsSensor). Any thread once
-  /// NotifyInitGame has run.
+  /// Whether this process captures and publishes the sensor of the local @a StreamId.
   bool OwnsSensorStream(carla::streaming::detail::stream_id_type StreamId, bool bPrimaryOnly) const;
 
 private:

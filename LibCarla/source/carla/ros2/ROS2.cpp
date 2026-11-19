@@ -87,10 +87,7 @@ bool ROS2::Enable(bool enable, Middleware middleware, int domain_id) {
     log_info("ROS2: using middleware '", MiddlewareToString(middleware),
         "', domain id: ", resolved.id, " (", domain_source, ")");
   }
-  // The clock publisher is the first entity created, so it is the one that
-  // brings the middleware up (DDS participant or Zenoh session). A Multi-GPU
-  // secondary mirrors the primary's time and has no /clock writer, so it holds
-  // the middleware up without one.
+  // The clock publisher brings the middleware up; a secondary holds it up without a /clock writer.
   std::shared_ptr<CarlaClockPublisher> clock_publisher;
   bool ready = true;
   if (_clock_owner) {

@@ -43,11 +43,7 @@ std::string GetAvailableMiddleware();
 /// read.
 ResolvedDomainId SetActiveDomainId(int domain_id);
 
-/// Brings the active middleware up (DDS participant or Zenoh session) and keeps
-/// it up without creating any topic, for a process that may publish nothing
-/// for a while. @return false if it failed to start. Every successful call
-/// must be paired with one ReleaseMiddlewareContext() under the same active
-/// middleware.
+/// Brings the middleware up without creating a topic; pair each success with ReleaseMiddlewareContext().
 bool AcquireMiddlewareContext();
 void ReleaseMiddlewareContext();
 

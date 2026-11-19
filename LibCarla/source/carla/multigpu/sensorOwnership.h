@@ -13,11 +13,7 @@ enum class ProcessRole {
   Secondary
 };
 
-/// Whether this process publishes a sensor on ROS 2. The primary keeps every
-/// sensor not routed to a live secondary, and its primary-only sensors
-/// (collision, vehicle status) always; a secondary owns a sensor only while
-/// it is connected to the primary and the primary routed the sensor there.
-[[nodiscard]]
+/// Whether this process publishes a sensor on ROS 2.
 constexpr bool OwnsSensor(
     ProcessRole role,
     bool routed_to_live_secondary,
@@ -35,10 +31,7 @@ constexpr bool OwnsSensor(
   return true;
 }
 
-/// Whether a sensor must produce data in this process. Clients subscribed to
-/// this process's own stream are always served; ownership only decides
-/// whether it works for ROS 2 alone.
-[[nodiscard]]
+/// Whether a sensor must produce data in this process.
 constexpr bool ShouldProduceSensorData(
     bool owns_sensor,
     bool has_client_sessions,
