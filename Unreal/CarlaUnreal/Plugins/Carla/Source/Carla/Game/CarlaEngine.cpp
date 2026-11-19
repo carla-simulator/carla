@@ -740,8 +740,8 @@ void FCarlaEngine::SendEpisodeReady()
 
 bool FCarlaEngine::OwnsSensorStream(carla::streaming::detail::stream_id_type StreamId, bool bPrimaryOnly) const
 {
-  using carla::multigpu::OwnsSensor;
-  using carla::multigpu::ProcessRole;
+  using carla::multigpu::PrimaryOwnsSensor;
+  using carla::multigpu::SecondaryOwnsSensor;
   if (!bIsRunning)
   {
     return true;
@@ -749,10 +749,10 @@ bool FCarlaEngine::OwnsSensorStream(carla::streaming::detail::stream_id_type Str
   if (bIsPrimaryServer)
   {
     const bool bRouted = SecondaryServer && SecondaryServer->GetCommander().IsRouted(StreamId);
-    return OwnsSensor(ProcessRole::Primary, bRouted, bPrimaryOnly, false, false);
+    return PrimaryOwnsSensor(bPrimaryOnly, bRouted);
   }
   const bool bConnected = Secondary && Secondary->IsConnected();
-  return OwnsSensor(ProcessRole::Secondary, false, bPrimaryOnly, bConnected, SensorStreams.IsRoutedHere(StreamId));
+  return SecondaryOwnsSensor(bPrimaryOnly, bConnected, SensorStreams.IsRoutedHere(StreamId));
 }
 
 void FCarlaEngine::DetachFromPrimary(const char *Reason)
