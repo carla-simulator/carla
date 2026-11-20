@@ -403,7 +403,8 @@ class GlobalRoutePlanner:
                         if select_edge['type'] == RoadOption.LANEFOLLOW:
                             if neighbor != route[index + 1]:
                                 sv = select_edge['net_vector']
-                                cross_list.append(np.cross(cv, sv)[2])
+                                if sv is not None:
+                                    cross_list.append(np.cross(cv, sv)[2])
                     next_cross = np.cross(cv, nv)[2]
                     deviation = math.acos(np.clip(
                         np.dot(cv, nv) / (np.linalg.norm(cv) * np.linalg.norm(nv)), -1.0, 1.0))
