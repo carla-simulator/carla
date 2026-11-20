@@ -181,6 +181,9 @@ jobs:
 
       - name: Run smoke tests
         if: inputs.smoke-test-python-versions != ''
+        env:
+          # smoke.test_client checks the reported version against it.
+          CARLA_RELEASE_VERSION: ${{ inputs.release-version }}
         run: |
           PYTHONS=()
           for VERSION in $(echo "${SMOKE_TEST_PYTHON_VERSIONS}" | tr ', ' '\n\n' | sed '/^$/d'); do
