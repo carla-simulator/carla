@@ -10,12 +10,17 @@
 #include "carla/ros2/types/msg/AckermannDrive.h"
 #include "carla/ros2/types/msg/AckermannDriveStamped.h"
 #include "carla/ros2/types/msg/CameraInfo.h"
+#include "carla/ros2/types/msg/CarlaBoundingBox.h"
 #include "carla/ros2/types/msg/CarlaCollisionEvent.h"
 #include "carla/ros2/types/msg/CarlaEgoVehicleControl.h"
 #include "carla/ros2/types/msg/CarlaEgoVehicleInfo.h"
 #include "carla/ros2/types/msg/CarlaEgoVehicleInfoWheel.h"
 #include "carla/ros2/types/msg/CarlaEgoVehicleStatus.h"
 #include "carla/ros2/types/msg/CarlaLineInvasion.h"
+#include "carla/ros2/types/msg/CarlaTrafficLightInfo.h"
+#include "carla/ros2/types/msg/CarlaTrafficLightInfoList.h"
+#include "carla/ros2/types/msg/CarlaTrafficLightStatus.h"
+#include "carla/ros2/types/msg/CarlaTrafficLightStatusList.h"
 #include "carla/ros2/types/msg/Clock.h"
 #include "carla/ros2/types/msg/Float32.h"
 #include "carla/ros2/types/msg/Header.h"
@@ -123,6 +128,17 @@ template<> struct CdrTopicInfo<msg::CameraInfo> {
   static size_t max_serialized_size() { return 3793u; }
 };
 
+template<> struct CdrTopicInfo<msg::CarlaBoundingBox> {
+  static const char* type_name() {
+    return "carla_msgs::msg::dds_::CarlaBoundingBox_";
+  }
+  static const char* type_hash() {
+    return "RIHS01_64150a58baddf4ecdfd2adcc41b74bc2a7caaa1677545e971b47623ca1c31b63";
+  }
+  // Two Vector3 (6 × float64).
+  static size_t max_serialized_size() { return 48u; }
+};
+
 template<> struct CdrTopicInfo<msg::CarlaCollisionEvent> {
   static const char* type_name() {
     return "carla_msgs::msg::dds_::CarlaCollisionEvent_";
@@ -183,6 +199,50 @@ template<> struct CdrTopicInfo<msg::CarlaLineInvasion> {
     return "RIHS01_1d81c780738761101e1b4cb165af96ed32b8aa5cd523713c9b28d1ee95af719b";
   }
   static size_t max_serialized_size() { return 672u; }
+};
+
+template<> struct CdrTopicInfo<msg::CarlaTrafficLightInfo> {
+  static const char* type_name() {
+    return "carla_msgs::msg::dds_::CarlaTrafficLightInfo_";
+  }
+  static const char* type_hash() {
+    return "RIHS01_c6bc358a736c0843889a6f65d8070f9891619a250fcc58ad51ffb9f87dd138b4";
+  }
+  // uint32 + 4 padding + Pose (7 × float64) + CarlaBoundingBox (6 × float64).
+  static size_t max_serialized_size() { return 112u; }
+};
+
+template<> struct CdrTopicInfo<msg::CarlaTrafficLightInfoList> {
+  static const char* type_name() {
+    return "carla_msgs::msg::dds_::CarlaTrafficLightInfoList_";
+  }
+  static const char* type_hash() {
+    return "RIHS01_9a13ecb7abe8b5b53c9dc5b7794981c90bd04b0556f8ab66cf26863ac600fde6";
+  }
+  // Sized for a 4-byte length plus 64 aligned 112-byte entries.
+  static size_t max_serialized_size() { return 7176u; }
+};
+
+template<> struct CdrTopicInfo<msg::CarlaTrafficLightStatus> {
+  static const char* type_name() {
+    return "carla_msgs::msg::dds_::CarlaTrafficLightStatus_";
+  }
+  static const char* type_hash() {
+    return "RIHS01_e4a58f6956c9d395f8aa8df33b6aa2765cb83c8522ec3e676196dc49485bf0b8";
+  }
+  // One uint32 plus one uint8.
+  static size_t max_serialized_size() { return 5u; }
+};
+
+template<> struct CdrTopicInfo<msg::CarlaTrafficLightStatusList> {
+  static const char* type_name() {
+    return "carla_msgs::msg::dds_::CarlaTrafficLightStatusList_";
+  }
+  static const char* type_hash() {
+    return "RIHS01_07f3b9ec436d9925e8b55f229d420336a997e824911afdb299f2dd0f32a26268";
+  }
+  // Sized for a 4-byte length plus 64 aligned 8-byte entries.
+  static size_t max_serialized_size() { return 516u; }
 };
 
 template<> struct CdrTopicInfo<msg::Clock> {
