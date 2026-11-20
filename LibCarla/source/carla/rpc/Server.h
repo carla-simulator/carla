@@ -10,6 +10,7 @@
 #include "carla/Time.h"
 #include "carla/rpc/Metadata.h"
 #include "carla/rpc/Response.h"
+#include "carla/rpc/ServerPerfCounters.h"
 
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/post.hpp>
@@ -20,6 +21,7 @@
 #include <atomic>
 #include <future>
 #include <stdexcept>
+#include <type_traits>
 
 namespace carla {
 namespace rpc {
@@ -113,9 +115,20 @@ namespace detail {
     template <typename FuncT>
     static auto WrapSyncCall(std::atomic_bool &shutdown_in_progress, boost::asio::io_context &io, FuncT &&functor) {
       return [&shutdown_in_progress, &io, functor=std::forward<FuncT>(functor)](Metadata metadata, Args... args) -> R {
-        auto task = std::packaged_task<R()>([functor=std::move(functor), args...]() {
-          return functor(args...);
+        // Move the decoded arguments into the task: a batch of commands would
+        // otherwise be copied once more on its way to the game thread.
+        auto task = std::packaged_task<R()>([functor=std::move(functor), ...args=std::move(args)]() {
+          const uint64_t start = ServerPerfStats::NowNs();
+          if constexpr (std::is_void_v<R>) {
+            functor(args...);
+            ServerPerfStats::Get().OnSyncCallDone(ServerPerfStats::NowNs() - start);
+          } else {
+            R result = functor(args...);
+            ServerPerfStats::Get().OnSyncCallDone(ServerPerfStats::NowNs() - start);
+            return result;
+          }
         });
+        ServerPerfStats::Get().OnSyncCallPosted();
         if (metadata.IsResponseIgnored()) {
           // Post task and ignore result.
           boost::asio::post(io, MoveHandler(task));
@@ -143,6 +156,7 @@ namespace detail {
     template <typename FuncT>
     static auto WrapAsyncCall(FuncT &&functor) {
       return [functor=std::forward<FuncT>(functor)](::carla::rpc::Metadata metadata, Args... args) -> R {
+        ServerPerfStats::Get().OnAsyncCall();
         if (metadata.IsResponseIgnored()) {
           functor(args...);
           return R();

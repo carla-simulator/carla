@@ -209,6 +209,10 @@ namespace detail {
       return _client.GetServerVersion();
     }
 
+    rpc::ServerPerfCounters GetServerPerfCounters() {
+      return _client.GetServerPerfCounters();
+    }
+
     /// @}
     // =========================================================================
     /// @name Tick
@@ -538,7 +542,7 @@ namespace detail {
     }
 
     void AddActorTorque(const Actor &actor, const geom::Vector3D &torque) {
-      _client.AddActorAngularImpulse(actor.GetId(), torque);
+      _client.AddActorTorque(actor.GetId(), torque);
     }
 
     geom::Transform GetActorComponentWorldTransform(const Actor &actor, const std::string &component_name) {
@@ -921,6 +925,25 @@ namespace detail {
 
     auto ApplyBatchSync(std::vector<rpc::Command> commands, bool do_tick_cue) {
       return _client.ApplyBatchSync(std::move(commands), do_tick_cue);
+    }
+
+    /// Applies @a commands, ticks the walker navigation and the world, and
+    /// waits for the new frame: the same as ApplyBatchSync followed by Tick,
+    /// in one round trip.
+    std::vector<rpc::CommandResponse> ApplyBatchSyncAndTick(
+        std::vector<rpc::Command> commands,
+        time_duration timeout);
+
+    /// Applies a blob of typed actor updates and returns one status per
+    /// update. With @a do_tick, also ticks the walker navigation and the
+    /// world and waits for the new frame, as Tick does.
+    std::vector<uint8_t> ApplyActorUpdates(
+        std::vector<uint8_t> blob,
+        bool do_tick,
+        time_duration timeout);
+
+    void ApplyActorUpdatesAsync(std::vector<uint8_t> blob) {
+      _client.ApplyActorUpdatesAsync(std::move(blob));
     }
 
     /// @}

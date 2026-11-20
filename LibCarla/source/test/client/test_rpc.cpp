@@ -13,6 +13,8 @@
 #include <carla/rpc/Response.h>
 #include <carla/rpc/Server.h>
 
+#include <chrono>
+#include <iostream>
 #include <thread>
 
 using namespace carla::rpc;
@@ -61,4 +63,59 @@ TEST(rpc, server_bind_sync_run_on_game_thread) {
   }
   std::cout << "game thread: run " << i << " slices.\n";
   ASSERT_TRUE(done);
+}
+
+TEST(rpc, fence_orders_fire_and_forget_before_a_waiting_call) {
+  const uint16_t port = (TESTING_PORT != 0u ? TESTING_PORT : 2017u);
+
+  Server server(port);
+
+  // Game thread only: no lock needed.
+  size_t applied = 0u;
+  server.BindSync("apply", [&](int) { ++applied; });
+  server.BindSync("tick", [&]() -> uint64_t { return applied; });
+
+  // Several RPC threads, so that one connection's messages are dispatched
+  // concurrently, as on the CARLA server.
+  server.AsyncRun(4u);
+
+  constexpr size_t kTicks = 200u;
+  constexpr size_t kCallsPerTick = 25u;
+
+  std::atomic_bool done{false};
+  std::atomic_bool failed{false};
+  std::atomic_size_t late{0u};
+
+  carla::ThreadGroup threads;
+  threads.CreateThread([&]() {
+    try {
+      Client client("127.0.0.1", port);
+      client.set_timeout(10000);
+      for (size_t tick = 1u; tick <= kTicks; ++tick) {
+        for (size_t i = 0u; i < kCallsPerTick; ++i) {
+          client.async_call("apply", static_cast<int>(i));
+        }
+        // Every fire-and-forget call made so far is applied before the tick.
+        const auto seen = client.call("tick").as<uint64_t>();
+        if (seen != tick * kCallsPerTick) {
+          ++late;
+        }
+      }
+    } catch (const std::exception &e) {
+      std::cerr << "client failed: " << e.what() << '\n';
+      failed = true;
+    }
+    done = true;
+  });
+
+  // SyncRunFor returns at once when no task is queued, so bound the game
+  // thread loop by time, not by iterations.
+  const auto deadline = std::chrono::steady_clock::now() + 60s;
+  while (!done && (std::chrono::steady_clock::now() < deadline)) {
+    server.SyncRunFor(1ms);
+  }
+  ASSERT_TRUE(done);
+  ASSERT_FALSE(failed);
+  ASSERT_EQ(late.load(), 0u);
+  ASSERT_EQ(applied, kTicks * kCallsPerTick);
 }
