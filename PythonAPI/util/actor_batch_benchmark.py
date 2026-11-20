@@ -198,13 +198,15 @@ class BenchmarkClient:
         """Client 0 ticks the world."""
         return self.index == 0
 
-    def __init__(self, args, share, index):
+    def __init__(self, args, share, index, client=None):
         self.args = args
         self.ids, plain_paths = share
         self.paths = to_transforms(plain_paths)
         self.index = index
-        self.client = carla.Client(args.host, args.port)
-        self.client.set_timeout(args.timeout)
+        if client is None:
+            client = carla.Client(args.host, args.port)
+            client.set_timeout(args.timeout)
+        self.client = client
         self.world = self.client.get_world()
         self.actors = {}
         if args.api == 'per_actor' or (args.mode == 'read' and args.api != 'snapshot'):
@@ -293,12 +295,15 @@ def run_client(args, share, index, barrier, results):
     BenchmarkClient(args, share, index).run(barrier, results)
 
 
-def run_clients(args, ids, paths):
+def run_clients(args, ids, paths, client):
     """Runs every client; returns their results, client 0 first."""
     plain = to_tuples(paths)
     if args.clients == 1:
+        # In this process, and through the client that owns the Traffic
+        # Manager: a tick steps the TM once that client holds the new frame, so
+        # a TM read through another client could see part of the previous one.
         queue = multiprocessing.Queue()
-        run_client(args, (ids, plain), 0, None, queue)
+        BenchmarkClient(args, (ids, plain), 0, client).run(None, queue)
         return [queue.get()]
     # 'spawn', not 'fork': this process already holds a connected client whose
     # network threads would not survive a fork.
@@ -378,7 +383,7 @@ def main():
             client.apply_batch_sync(
                 [carla.command.SetAutopilot(actor_id, True, traffic_manager.get_port())
                  for actor_id in ids], True)
-        results = run_clients(args, ids, paths)
+        results = run_clients(args, ids, paths, client)
         summary = dict(results[0])
         summary.update({
             'mode': args.mode, 'api': args.api, 'actors': len(ids), 'clients': args.clients,
