@@ -101,7 +101,7 @@
   * Vehicle parts (packet 32) are no longer built in nested buffers.
   * The primary reads back one frame in 120 to check it, instead of every frame (`carla.MultiGpu.VerifyFrames`).
   * Secondaries look each mirror up once per frame. They skip the parent ordering when nothing is attached, and clear stale velocities only on the mirrors the previous frame moved, instead of on every mirror.
-  * New `carla.MultiGpu.StateHash` logs a per-frame hash of the mirrors' state, to compare builds. See `Docs/core_multigpu.md`.
+  * New `carla.MultiGpu.StateHash` logs a per-frame hash of the mirrors' state, to compare builds, and `carla.MultiGpu.Stats` logs the mean time spent writing or playing a frame. See `Docs/core_multigpu.md`.
 
 #### Sensors and content
 

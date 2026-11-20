@@ -94,6 +94,51 @@ static TAutoConsoleVariable<int32> CVarCarlaMultiGpuStateHash(
     TEXT("(poses and velocities), to compare two builds frame by frame (1 = on, 0 = off)."),
     ECVF_Default);
 
+static TAutoConsoleVariable<int32> CVarCarlaMultiGpuStats(
+    TEXT("carla.MultiGpu.Stats"),
+    0,
+    TEXT("Multi-GPU: every N frames, log the mean game-thread time spent writing (primary) or ")
+    TEXT("playing (secondary) a frame, and its size (0 = off)."),
+    ECVF_Default);
+
+/// Game-thread time spent on multi-GPU frames, logged by carla.MultiGpu.Stats.
+struct FCarlaEngine_MultiGpuStats
+{
+  uint64 Frames = 0u;
+  uint64 Bytes = 0u;
+  uint64 WriteCycles = 0u;
+  uint64 VerifyCycles = 0u;
+  uint64 VerifiedFrames = 0u;
+  uint64 PlayCycles = 0u;
+
+  /// Logs and restarts the means once @a Every frames are in.
+  void Flush(int32 Every, bool bPrimary)
+  {
+    if ((Every <= 0) || (Frames < static_cast<uint64>(Every)))
+    {
+      return;
+    }
+    const double Ms = FPlatformTime::GetSecondsPerCycle64() * 1000.0;
+    const double PerFrame = 1.0 / static_cast<double>(Frames);
+    if (bPrimary)
+    {
+      UE_LOG(LogCarla, Log,
+          TEXT("Multi-GPU stats: %llu frames, write %.3f ms, verify %.3f ms per verified frame (%llu), %.1f KiB per frame"),
+          Frames, WriteCycles * Ms * PerFrame,
+          VerifiedFrames > 0u ? VerifyCycles * Ms / static_cast<double>(VerifiedFrames) : 0.0,
+          VerifiedFrames, Bytes * PerFrame / 1024.0);
+    }
+    else
+    {
+      UE_LOG(LogCarla, Log, TEXT("Multi-GPU stats: %llu frames, play %.3f ms per frame"),
+          Frames, PlayCycles * Ms * PerFrame);
+    }
+    *this = FCarlaEngine_MultiGpuStats{};
+  }
+};
+
+static FCarlaEngine_MultiGpuStats GCarlaEngine_MultiGpuStats;
+
 /// FNV-1a over the mirrors' poses and velocities, by primary id: the same on
 /// two secondaries that applied the same frames the same way.
 static uint64 FCarlaEngine_MirrorStateHash(
@@ -1210,6 +1255,8 @@ void FCarlaEngine::PlayPrimaryFrame(UWorld &World, float DeltaSeconds, FFrameDat
     }
   }
 
+  const int32 StatsEvery = CVarCarlaMultiGpuStats.GetValueOnGameThread();
+  const uint64 PlayStart = (StatsEvery > 0) ? FPlatformTime::Cycles64() : 0u;
   {
     TRACE_CPUPROFILER_EVENT_SCOPE_STR("FramesToProcess.PlayFrameData");
     // Ends with the frame counter set to the primary's frame number.
@@ -1225,6 +1272,13 @@ void FCarlaEngine::PlayPrimaryFrame(UWorld &World, float DeltaSeconds, FFrameDat
         {
           SensorStreams.Unbind(Server.GetStreamingServer(), PrimaryActorId);
         });
+  }
+
+  if (StatsEvery > 0)
+  {
+    GCarlaEngine_MultiGpuStats.PlayCycles += FPlatformTime::Cycles64() - PlayStart;
+    ++GCarlaEngine_MultiGpuStats.Frames;
+    GCarlaEngine_MultiGpuStats.Flush(StatsEvery, false);
   }
 
   if (CVarCarlaMultiGpuStateHash.GetValueOnGameThread() != 0)
@@ -1379,17 +1433,27 @@ void FCarlaEngine::OnPostTick(UWorld *World, ELevelTick TickType, float DeltaSec
       FrameTimeFromSettings(GetCurrentEpisode()->GetSettings(), Time);
       FrameData.SetFrameTime(Time);
 
+      const int32 StatsEvery = CVarCarlaMultiGpuStats.GetValueOnGameThread();
+      const uint64 WriteStart = (StatsEvery > 0) ? FPlatformTime::Cycles64() : 0u;
+
       // Written once, straight into the buffer that is sent: no stream copy.
       carla::multigpu::BufferStreamBuf FrameBuffer(LastFrameDataSize + LastFrameDataSize / 4u);
       std::ostream OutStream(&FrameBuffer);
       FrameData.Write(OutStream);
       carla::Buffer FrameBytes = FrameBuffer.Release();
       LastFrameDataSize = FrameBytes.size();
+      if (StatsEvery > 0)
+      {
+        GCarlaEngine_MultiGpuStats.WriteCycles += FPlatformTime::Cycles64() - WriteStart;
+        GCarlaEngine_MultiGpuStats.Bytes += FrameBytes.size();
+        ++GCarlaEngine_MultiGpuStats.Frames;
+      }
 
 #if !UE_BUILD_SHIPPING
       const int32 VerifyEvery = CVarCarlaMultiGpuVerifyFrames.GetValueOnGameThread();
       if ((VerifyEvery > 0) && (Time.frame % static_cast<uint64_t>(VerifyEvery) == 0u))
       {
+        const uint64 VerifyStart = (StatsEvery > 0) ? FPlatformTime::Cycles64() : 0u;
         FFrameData Check;
         const carla::multigpu::FrameDataReadResult Result =
             Check.Read(FrameBytes.data(), FrameBytes.size());
@@ -1401,8 +1465,14 @@ void FCarlaEngine::OnPostTick(UWorld *World, ELevelTick TickType, float DeltaSec
               static_cast<uint32>(Result.packet_id), static_cast<uint64>(Result.offset),
               Result.skipped, Result.grown);
         }
+        if (StatsEvery > 0)
+        {
+          GCarlaEngine_MultiGpuStats.VerifyCycles += FPlatformTime::Cycles64() - VerifyStart;
+          ++GCarlaEngine_MultiGpuStats.VerifiedFrames;
+        }
       }
 #endif // !UE_BUILD_SHIPPING
+      GCarlaEngine_MultiGpuStats.Flush(StatsEvery, true);
 
       // send frame data to secondary
       SecondaryServer->GetCommander().SendFrameData(std::move(FrameBytes));

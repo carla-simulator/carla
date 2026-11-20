@@ -181,6 +181,7 @@ These console variables help check that the secondaries replay what the primary 
 |---|---|---|---|
 | `carla.MultiGpu.VerifyFrames` | primary | `120` | Reads one frame in N back after writing it, and logs an error when it does not parse completely with this build. `1` checks every frame, `0` turns the check off. Not available in Shipping builds. |
 | `carla.MultiGpu.StateHash` | secondary | `0` | Logs `Multi-GPU state hash: frame <n> <hash>` for every frame played: a hash of every mirror's pose and velocity. Two secondaries, or two builds of one, that applied the same frames the same way log the same hashes. |
+| `carla.MultiGpu.Stats` | both | `0` | Every N frames, logs `Multi-GPU stats:` with the mean game-thread time the primary spends writing a frame (and reading it back, on the frames `VerifyFrames` checks) and the frame size, or the mean time a secondary spends playing one. |
 | `carla.MultiGpu.FastPlay` | secondary | `1` | `0` plays mirror poses and velocities the way earlier builds did. The result is the same; run one secondary with each value and `StateHash` on to check it. |
 
 ---
