@@ -151,7 +151,11 @@ public:
       const carla::geom::Transform sensor_transform,
       int W, int H, float Fov,
       const carla::SharedBufferView buffer,
-      void *actor = nullptr);
+      void *actor = nullptr,
+      // Simulation time of the capture [s]; negative: the current frame's. The
+      // image is published after its GPU readback, possibly once the next frame
+      // has started.
+      double capture_time = -1.0);
   void ProcessDataFromGNSS(
       uint64_t sensor_type,
       carla::streaming::detail::stream_id_type stream_id,
