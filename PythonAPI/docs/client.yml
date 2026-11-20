@@ -132,8 +132,7 @@
       - param_name: map_name
         type: str
         doc: >
-          Name of the map to be used in this world. Accepts both full paths and map names, e.g.
-          '/Game/Carla/Maps/Town01_Opt' or 'Town01_Opt'. The name is matched against the map file name, ignoring case, so it has to be exact. Remember that these paths are dynamic.
+          Name of the map to be used in this world, as `get_available_maps()` lists it, e.g. 'Town01_Opt' or 'Town13'. The name is matched against the map file name, ignoring case, so it has to be exact. A path relative to `/Game/Carla/Maps` also works ('Town13/Town13'); a full package path ('/Game/Carla/Maps/Town01_Opt') does not, and a content pack's own maps (`/<Pack>/Maps/...`) load by name only.
       - param_name: reset_settings
         type: bool
         default: true
@@ -147,7 +146,7 @@
           Layers of the map that will be loaded. By default all layers are loaded.
           This parameter works like a flag mask.
       warning: >
-        `map_layers` only has an effect on Town01_Opt to Town07_Opt. Town10HD_Opt has no layers (see carla.MapLayer).
+        `map_layers` only has an effect on Town01_Opt to Town07_Opt, and it only adds layers: the layers left out of the mask are loaded too. To start without some layers, load the map and then call carla.World.unload_map_layer. Town10HD_Opt has no layers (see carla.MapLayer).
       doc: >
         Creates a new world with default settings using `map_name` map. All actors in the current world will be destroyed.
     # --------------------------------------

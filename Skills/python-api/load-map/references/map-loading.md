@@ -81,7 +81,7 @@ Two independent controls:
 
 - **At load time** — `load_world(map, map_layers=...)` decides which layers exist
   when the map comes up. `MapLayer.NONE` gives the barest map (roads/ground only);
-  `MapLayer.All` (default) loads everything.
+  `MapLayer.All` (default) loads everything. On 1.0 this only adds layers: every layer still loads (measured on the release, Town03_Opt with `MapLayer.Ground` rendered all its houses), so unload the unwanted ones after the load, as `load_map.py load --layers` does.
 - **After load** — `world.load_map_layer(...)` / `world.unload_map_layer(...)`
   stream layers in and out of the live world.
 
