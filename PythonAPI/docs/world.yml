@@ -804,7 +804,7 @@
     - def_name: get_random_location_from_navigation
       return: carla.Location
       doc: >
-        This can only be used with walkers. It retrieves a random location to be used as a destination using the __<font color="#7fb800">go_to_location()</font>__ method in carla.WalkerAIController. This location will be part of a sidewalk. Roads, crosswalks and grass zones are excluded. The method does not take into consideration locations of existing actors so if a collision happens when trying to spawn an actor, it will return an error. Take a look at [`generate_traffic.py`](https://github.com/carla-simulator/carla/blob/ue58-dev/PythonAPI/examples/generate_traffic.py) for an example.
+        Returns a random pedestrian navigation location. Client navigation prefers sidewalks and uses crosswalks or grass when the loaded mesh has no usable sidewalk polygons. Its default sampling filter excludes road polygons. Server navigation samples its loaded engine navmesh. Returns `None` when no acceptable location is found. A returned point does not guarantee that an actor can spawn without a collision. See [`generate_traffic.py`](https://github.com/carla-simulator/carla/blob/ue58-dev/PythonAPI/examples/generate_traffic.py) for an example.
     # --------------------------------------
     - def_name: get_settings
       return: carla.WorldSettings
