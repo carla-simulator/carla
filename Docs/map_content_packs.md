@@ -4,13 +4,18 @@ The CARLA package ships Town10HD_Opt, Town12 and Town15. The towns below are not
 
 ## Installing AdditionalMaps
 
+!!! agent "Agentic CARLA"
+    *"Install the AdditionalMaps that matches my CARLA package and load Town03_Opt."*
+
+    Skills: `get-carla-additional-maps`, `install-carla-content-pack`, `manage-content-packs`. [Set up Agentic CARLA](agent_skills.md#set-up-agentic-carla).
+
 Download a package and the `AdditionalMaps` tarball built with it: a release, or the weekly build of the development branch, made every Sunday. The weekly pair is under `https://downloads.carlasim.com/Linux/Dev/`: `CARLA_UE5_Weekly.tar.gz` (the package) and `CARLA_UE5_Weekly_AdditionalMaps.tar.gz` (the pack). For Windows it is under `https://downloads.carlasim.com/Windows/Dev/`: `CARLA_UE5_Weekly.zip` and `CARLA_UE5_Weekly_AdditionalMaps.tar.gz`. The nightly `CARLA_UE5_Latest` package is a different build and has no pack that installs into it. Install the pack with `carla-pack`. Installing only needs `carla_pack.py`, which packages ship in `Tools/` (or `Util/ContentPacks/carla_pack.py` in the CARLA repository; Python 3.8+, standard library only):
 
 ```sh
 python3 carla_pack.py install CARLA_UE5_Weekly_AdditionalMaps.tar.gz --server /opt/carla
 ```
 
-Once installed, the towns load like any other map: `client.load_world('Town13')`. The pack only installs into the package it was built with: a pack from another build is refused (`was built against base release ...`). See [Installing a pack](content_authoring_packs.md#installing-a-pack) for mounting a pack from the Python API.
+Once installed, the towns load like any other map: `client.load_world('Town13')`. Install the pack built with your package: the release's with the release, the weekly's with the weekly. `carla-pack` only refuses a pack built for another CARLA version (`base release mismatch`). Every build of one version carries the same base release name, so a pack from another build of the same version installs, and its towns can then load with buildings missing. See [Installing a pack](content_authoring_packs.md#installing-a-pack) for mounting a pack from the Python API.
 
 ## Building it yourself
 

@@ -1,6 +1,6 @@
 # Agentic CARLA skills
 
-CARLA ships a library of 64 vetted procedures for AI coding assistants, under [`Skills/`](https://github.com/carla-simulator/carla/tree/ue58-dev/Skills) in the repository and at the root of every CARLA package. An assistant working inside a CARLA checkout or a package finds them automatically and follows them instead of improvising a procedure of its own.
+CARLA ships a library of 68 vetted procedures for AI coding assistants, under [`Skills/`](https://github.com/carla-simulator/carla/tree/ue58-dev/Skills) in the repository and at the root of every CARLA package. An assistant working inside a CARLA checkout or a package finds them automatically and follows them instead of improvising a procedure of its own.
 
 Each skill is a directory holding a `SKILL.md` — YAML frontmatter (`name`, `description`, `compatibility` and `metadata`) followed by the step-by-step procedure — plus the `scripts/` and `references/` it needs. The procedures encode the failure modes that make the obvious approach fail, which is the point of them: they are the source of truth for these tasks, not a summary of the docs.
 
