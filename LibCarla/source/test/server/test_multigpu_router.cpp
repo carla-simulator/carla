@@ -13,6 +13,8 @@
 #include <carla/multigpu/primaryCommands.h>
 #include <carla/multigpu/router.h>
 #include <carla/multigpu/secondary.h>
+#include <carla/multigpu/sensorOwnership.h>
+#include <carla/streaming/Server.h>
 #include <carla/streaming/detail/Token.h>
 
 #include <boost/asio/io_context.hpp>
@@ -1824,4 +1826,157 @@ TEST_F(MultiGpuRouterTest, session_connecting_later_gets_the_remembered_generate
       std::string_view(reinterpret_cast<const char *>(again[0].payload.data()), again[0].payload.size()));
   EXPECT_EQ(plain.map, "Town01");
   EXPECT_FALSE(plain.extras.opendrive.has_value());
+}
+
+TEST_F(MultiGpuRouterTest, is_routed_is_false_before_the_sensor_is_routed) {
+  auto router = std::make_shared<carla::multigpu::Router>(TESTING_PORT);
+  router->AsyncRun(1u);
+  router->TestConnectSession(MakeFakeSession());
+  carla::multigpu::PrimaryCommands commander(router);
+  EXPECT_FALSE(commander.IsRouted(42u));
+}
+
+TEST_F(MultiGpuRouterTest, is_routed_is_true_for_the_routed_sensor_only) {
+  auto router = std::make_shared<carla::multigpu::Router>(TESTING_PORT);
+  router->AsyncRun(1u);
+  auto session = MakeFakeSession();
+  router->TestConnectSession(session);
+  carla::multigpu::PrimaryCommands commander(router);
+  ASSERT_TRUE(RouteSensor(*router, commander, session, 2030u));
+  EXPECT_TRUE(commander.IsRouted(42u));
+  EXPECT_FALSE(commander.IsRouted(43u));
+}
+
+TEST_F(MultiGpuRouterTest, is_routed_is_false_once_the_secondary_disconnects) {
+  auto router = std::make_shared<carla::multigpu::Router>(TESTING_PORT);
+  router->AsyncRun(1u);
+  auto session_a = MakeFakeSession();
+  auto session_b = MakeFakeSession();
+  router->TestConnectSession(session_a);
+  router->TestConnectSession(session_b);
+  carla::multigpu::PrimaryCommands commander(router);
+  ASSERT_TRUE(RouteSensor(*router, commander, session_a, 2031u));
+
+  router->TestDisconnectSession(session_a);
+  EXPECT_FALSE(commander.IsRouted(42u));
+}
+
+TEST_F(MultiGpuRouterTest, is_routed_follows_a_sensor_rerouted_to_a_new_secondary) {
+  auto router = std::make_shared<carla::multigpu::Router>(TESTING_PORT);
+  router->AsyncRun(1u);
+  auto lost = MakeFakeSession();
+  router->TestConnectSession(lost);
+  carla::multigpu::PrimaryCommands commander(router);
+  ASSERT_TRUE(RouteSensor(*router, commander, lost, 2032u));
+  router->TestDisconnectSession(lost);
+  auto replacement = MakeFakeSession();
+  router->TestConnectSession(replacement);
+  ASSERT_FALSE(commander.IsRouted(42u));
+
+  auto rerouting = std::async(std::launch::async, [&commander]() { return commander.RerouteLostSensors(); });
+  ASSERT_TRUE(Answer(*router, replacement, MakeTokenReply(7u, 2033u)));
+  ASSERT_EQ(rerouting.wait_for(std::chrono::seconds(2)), std::future_status::ready);
+  ASSERT_EQ(rerouting.get(), 1u);
+  EXPECT_TRUE(commander.IsRouted(42u));
+}
+
+TEST_F(MultiGpuRouterTest, is_routed_is_false_after_load_map) {
+  auto router = std::make_shared<carla::multigpu::Router>(TESTING_PORT);
+  router->AsyncRun(1u);
+  auto session = MakeFakeSession();
+  router->TestConnectSession(session);
+  carla::multigpu::PrimaryCommands commander(router);
+  ASSERT_TRUE(RouteSensor(*router, commander, session, 2034u));
+
+  commander.SendLoadMap("/Game/Carla/Maps/Town10HD_Opt");
+  EXPECT_FALSE(commander.IsRouted(42u));
+}
+
+TEST_F(MultiGpuRouterTest, is_routed_is_false_after_forget_sensor) {
+  auto router = std::make_shared<carla::multigpu::Router>(TESTING_PORT);
+  router->AsyncRun(1u);
+  auto session = MakeFakeSession();
+  router->TestConnectSession(session);
+  carla::multigpu::PrimaryCommands commander(router);
+  ASSERT_TRUE(RouteSensor(*router, commander, session, 2035u));
+
+  commander.ForgetSensor(42u);
+  EXPECT_FALSE(commander.IsRouted(42u));
+}
+
+TEST_F(MultiGpuRouterTest, is_routed_is_false_after_the_secondary_refuses_the_sensor) {
+  auto router = std::make_shared<carla::multigpu::Router>(TESTING_PORT);
+  router->AsyncRun(1u);
+  auto session = MakeFakeSession();
+  router->TestConnectSession(session);
+  carla::multigpu::PrimaryCommands commander(router);
+  ASSERT_TRUE(RouteSensor(*router, commander, session, 2036u));
+  router->TestDisconnectSession(session);
+  auto replacement = MakeFakeSession();
+  router->TestConnectSession(replacement);
+
+  auto refused = std::async(std::launch::async, [&commander]() { return commander.GetToken(42u, 9u); });
+  ASSERT_TRUE(Answer(*router, replacement, MakeBuffer(carla::multigpu::kTokenNotReadyMarker)));
+  ASSERT_EQ(refused.wait_for(std::chrono::seconds(2)), std::future_status::ready);
+  EXPECT_FALSE(refused.get().has_value());
+  EXPECT_FALSE(commander.IsRouted(42u));
+}
+
+TEST_F(MultiGpuRouterTest, is_routed_does_not_wait_for_a_request_in_flight) {
+  auto router = std::make_shared<carla::multigpu::Router>(TESTING_PORT);
+  router->AsyncRun(1u);
+  auto session = MakeFakeSession();
+  router->TestConnectSession(session);
+  carla::multigpu::PrimaryCommands commander(router);
+  ASSERT_TRUE(RouteSensor(*router, commander, session, 2037u));
+
+  auto pending = std::async(std::launch::async, [&commander]() { return commander.GetToken(77u, 10u); });
+  ASSERT_TRUE(WaitUntilPending(*router, session));
+  auto routed = std::async(std::launch::async, [&commander]() { return commander.IsRouted(42u); });
+  ASSERT_EQ(routed.wait_for(std::chrono::seconds(2)), std::future_status::ready);
+  EXPECT_TRUE(routed.get());
+  EXPECT_FALSE(commander.IsRouted(77u));
+
+  router->TestHandleResponse(session, MakeTokenReply(77u, 2038u));
+  ASSERT_EQ(pending.wait_for(std::chrono::seconds(2)), std::future_status::ready);
+  EXPECT_TRUE(commander.IsRouted(77u));
+}
+
+TEST_F(MultiGpuRouterTest, a_client_of_the_primary_stream_keeps_its_data_after_a_reroute) {
+  using carla::multigpu::PrimaryOwnsSensor;
+  using carla::multigpu::ShouldProduceSensorData;
+  carla::streaming::Server primary_streams(TESTING_PORT);
+  primary_streams.AsyncRun(1u);
+  auto listened = primary_streams.MakeStream();
+  auto ros_only = primary_streams.MakeStream();
+  const auto listened_id = carla::streaming::detail::token_type(listened.token()).get_stream_id();
+  const auto ros_only_id = carla::streaming::detail::token_type(ros_only.token()).get_stream_id();
+
+  auto router = std::make_shared<carla::multigpu::Router>(TESTING_PORT);
+  router->AsyncRun(1u);
+  auto lost = MakeFakeSession();
+  router->TestConnectSession(lost);
+  carla::multigpu::PrimaryCommands commander(router);
+  ASSERT_TRUE(RouteSensorTo(*router, commander, lost, listened_id, 9u, 2040u));
+  ASSERT_TRUE(RouteSensorTo(*router, commander, lost, ros_only_id, 10u, 2040u));
+  router->TestDisconnectSession(lost);
+
+  // With no secondary connected, a client gets the primary's token and the primary publishes the other sensor.
+  static_cast<void>(primary_streams.GetToken(listened_id));
+  primary_streams.EnableForROS(ros_only_id);
+
+  auto replacement = MakeFakeSession();
+  router->TestConnectSession(replacement);
+  auto rerouting = std::async(std::launch::async, [&commander]() { return commander.RerouteLostSensors(); });
+  ASSERT_TRUE(Answer(*router, replacement, MakeTokenReply(listened_id, 2041u)));
+  ASSERT_TRUE(Answer(*router, replacement, MakeTokenReply(ros_only_id, 2041u)));
+  ASSERT_EQ(rerouting.wait_for(std::chrono::seconds(2)), std::future_status::ready);
+  ASSERT_EQ(rerouting.get(), 2u);
+
+  const bool owns_listened = PrimaryOwnsSensor(false, commander.IsRouted(listened_id));
+  const bool owns_ros_only = PrimaryOwnsSensor(false, commander.IsRouted(ros_only_id));
+  EXPECT_FALSE(owns_listened);
+  EXPECT_FALSE(owns_ros_only);
+  EXPECT_TRUE(ShouldProduceSensorData(owns_listened, listened.AreSessionsListening(), listened.AreClientsListening()));
+  EXPECT_FALSE(ShouldProduceSensorData(owns_ros_only, ros_only.AreSessionsListening(), ros_only.AreClientsListening()));
 }

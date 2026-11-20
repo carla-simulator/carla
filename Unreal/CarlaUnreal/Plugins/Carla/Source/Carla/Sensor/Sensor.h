@@ -16,12 +16,15 @@
 #include <carla/Buffer.h>
 #include <carla/BufferView.h>
 #include <carla/sensor/SensorRegistry.h>
+#include <carla/multigpu/sensorOwnership.h>
 #include <carla/multigpu/sensorSync.h>
 #include <util/enable-ue4-macros.h>
 
 #include <util/ue-header-guard-begin.h>
 #include "GameFramework/Actor.h"
 #include <util/ue-header-guard-end.h>
+
+#include <atomic>
 
 #include "Sensor.generated.h"
 
@@ -121,9 +124,11 @@ public:
     return Stream.IsStreamReady();
   }
 
+  /// Own-stream clients are always served; ROS 2 alone does not count while another process owns the sensor.
   bool AreClientsListening()
-  { 
-    return Stream.AreClientsListening();
+  {
+    return carla::multigpu::ShouldProduceSensorData(
+        bOwnsSensorStream, Stream.AreSessionsListening(), Stream.AreClientsListening());
   }
 
   void Tick(const float DeltaTime) final;
@@ -336,5 +341,10 @@ private:
   float PrimaryTickDeltaSeconds = 0.0f;
 
   bool bClientsListening = false;
+
+  /// Written by the game thread each tick, read by capture and readback threads.
+  std::atomic<bool> bOwnsSensorStream{true};
+
+  void UpdateSensorStreamOwnership();
 
 };

@@ -11,6 +11,8 @@
 
 #include <dlfcn.h>
 
+#include <atomic>
+
 namespace carla {
 namespace ros2 {
 
@@ -72,6 +74,12 @@ void apply_config_overrides(z_loaned_config_t* cfg) {
 
 }  // namespace
 
+namespace {
+
+std::atomic<bool> g_session_open{false};
+
+}  // namespace
+
 const z_loaned_session_t* zenoh_get_shared_session() {
   static z_owned_session_t session = [] {
     z_owned_config_t cfg;
@@ -90,6 +98,8 @@ const z_loaned_session_t* zenoh_get_shared_session() {
     z_owned_session_t s;
     if (z_open(&s, z_move(cfg), nullptr) != Z_OK) {
       log_error("ZenohSharedSession: z_open failed");
+    } else {
+      g_session_open = true;
     }
     return s;
   }();
@@ -112,6 +122,11 @@ const z_loaned_session_t* zenoh_get_shared_session() {
   (void)node_token;
 
   return z_session_loan(&session);
+}
+
+bool zenoh_shared_session_is_open() {
+  (void)zenoh_get_shared_session();
+  return g_session_open;
 }
 
 const std::string& zenoh_session_zid() {

@@ -64,6 +64,12 @@ public:
   [[nodiscard]]
   bool IsEpisodeOpen();
 
+  /// Whether the primary routed the sensor of @a local_stream_id to this secondary.
+  bool IsRoutedHere(stream_id_type local_stream_id) const;
+
+  /// Forgets the routed sensors after the connection to the primary drops.
+  void DropRoutes(carla::streaming::Server &server);
+
 private:
   struct Entry {
     stream_id_type stream_id;
@@ -73,7 +79,7 @@ private:
 
   static void Forget(carla::streaming::Server &server, const Entry &entry);
 
-  std::mutex _mutex;
+  mutable std::mutex _mutex;
   epoch_type _epoch = 0u;
   bool _bindable = false;
   std::unordered_map<actor_id_type, Entry> _entries;

@@ -108,6 +108,9 @@ public:
     return bIsPrimaryServer;
   }
 
+  /// Whether this process captures and publishes the sensor of the local @a StreamId.
+  bool OwnsSensorStream(carla::streaming::detail::stream_id_type StreamId, bool bPrimaryOnly) const;
+
 private:
 
   void OnPreTick(UWorld *World, ELevelTick TickType, float DeltaSeconds);

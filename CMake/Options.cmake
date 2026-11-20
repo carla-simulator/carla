@@ -41,7 +41,7 @@ carla_option (
 
 carla_option (
   BUILD_LIBCARLA_MULTIGPU_TESTS
-  "Build the Multi-GPU LibCarla tests (test_multigpu_*). Off for now while the Multi-GPU work stabilises."
+  "Build the Multi-GPU LibCarla tests (test_multigpu_*). Off by default so CI does not build them; enable it to run them manually."
   OFF
 )
 

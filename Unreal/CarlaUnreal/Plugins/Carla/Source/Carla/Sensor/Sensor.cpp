@@ -13,6 +13,12 @@
 #include <Carla/Sensor/ImageUtil.h>
 #include <Carla/Sensor/ShaderBasedSensor.h>
 
+#if defined(WITH_ROS2)
+#include <util/disable-ue4-macros.h>
+#include "carla/ros2/ROS2.h"
+#include <util/enable-ue4-macros.h>
+#endif
+
 #include <util/ue-header-guard-begin.h>
 #include <Engine/CollisionProfile.h>
 #include <util/ue-header-guard-end.h>
@@ -79,9 +85,10 @@ void ASensor::Tick(const float DeltaTime)
     SensorDeltaTime = PrimaryTickDeltaSeconds;
   }
   Super::Tick(SensorDeltaTime);
+  UpdateSensorStreamOwnership();
   if (bClientsListening)
   {
-    if(!Stream.AreClientsListening())
+    if(!AreClientsListening())
     {
       OnLastClientDisconnected();
       bClientsListening = false;
@@ -89,7 +96,7 @@ void ASensor::Tick(const float DeltaTime)
   }
   else
   {
-    if(Stream.AreClientsListening())
+    if(AreClientsListening())
     {
       OnFirstClientConnected();
       bClientsListening = true;
@@ -99,6 +106,34 @@ void ASensor::Tick(const float DeltaTime)
   ReadyToTick = true;
   ReadyToTickDeltaSeconds = SensorDeltaTime;
   PrePhysTick(SensorDeltaTime);
+}
+
+void ASensor::UpdateSensorStreamOwnership()
+{
+  if (!Stream.IsStreamReady())
+  {
+    return;
+  }
+  UCarlaGameInstance *GameInstance = UCarlaStatics::GetGameInstance(this);
+  const FCarlaEngine *CarlaEngine = (GameInstance != nullptr) ? GameInstance->GetCarlaEngine() : nullptr;
+  if (CarlaEngine == nullptr)
+  {
+    return;
+  }
+  const auto StreamId = carla::streaming::detail::token_type(Stream.GetToken()).get_stream_id();
+  const bool bOwns = CarlaEngine->OwnsSensorStream(StreamId, false);
+  bOwnsSensorStream = bOwns;
+#if defined(WITH_ROS2)
+  // Every tick: a readback started before the ownership moved may have created a publisher.
+  if (!bOwns)
+  {
+    auto ROS2 = carla::ros2::ROS2::GetInstance();
+    if (ROS2->IsEnabled())
+    {
+      ROS2->ReleasePublication(this);
+    }
+  }
+#endif
 }
 
 void ASensor::SetSeed(const int32 InSeed)

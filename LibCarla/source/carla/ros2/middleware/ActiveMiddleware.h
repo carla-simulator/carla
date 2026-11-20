@@ -43,5 +43,9 @@ std::string GetAvailableMiddleware();
 /// read.
 ResolvedDomainId SetActiveDomainId(int domain_id);
 
+/// Brings the middleware up without creating a topic; pair each success with ReleaseMiddlewareContext().
+bool AcquireMiddlewareContext();
+void ReleaseMiddlewareContext();
+
 } // namespace ros2
 } // namespace carla

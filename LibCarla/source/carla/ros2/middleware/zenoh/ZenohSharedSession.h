@@ -21,6 +21,9 @@ namespace ros2 {
 /// list the node in their graph cache.
 const z_loaned_session_t* zenoh_get_shared_session();
 
+/// Opens the shared Session if needed; false if z_open failed.
+bool zenoh_shared_session_is_open();
+
 /// Hex string form of the shared Session's ZID, suitable for rmw_zenoh
 /// liveliness keyexprs. Cached after first call.
 const std::string& zenoh_session_zid();
