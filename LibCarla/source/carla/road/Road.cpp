@@ -191,56 +191,51 @@ namespace road {
     }
     const double clamped_s = geom::Math::Clamp(s, 0.0, _length);
 
-    // Evaluate one station (all records sharing the same s): pick the record
-    // with the greatest t <= query t, clamping below the first record.
-    auto EvalStation = [t](const std::vector<const element::RoadInfoLateralShape *> &station) {
-      const element::RoadInfoLateralShape *chosen = station.front();
-      for (const auto *record : station) {
-        if (record->GetT() <= t) {
-          chosen = record;
+    // Select the greatest t <= the query, or the smallest t when the query
+    // precedes every record. Station records need not be ordered by t.
+    auto ChooseRecord = [t](const auto *chosen, const auto *record) {
+      const double chosen_t = chosen->GetT();
+      const double record_t = record->GetT();
+      if ((chosen_t > t && record_t < chosen_t) ||
+          (record_t <= t && record_t > chosen_t)) {
+        return record;
+      }
+      return chosen;
+    };
+
+    // Records are ordered by s. Keep one selected piece per bracketing
+    // station, without sorting or copying all of the stations on the road.
+    const element::RoadInfoLateralShape *before = nullptr;
+    const element::RoadInfoLateralShape *after = nullptr;
+    for (const auto *record : shapes) {
+      const double station_s = record->GetDistance();
+      if (station_s <= clamped_s) {
+        if (before == nullptr || before->GetDistance() != station_s) {
+          before = record;
         } else {
+          before = ChooseRecord(before, record);
+        }
+      } else {
+        if (after == nullptr) {
+          after = record;
+        } else if (after->GetDistance() != station_s) {
           break;
+        } else {
+          after = ChooseRecord(after, record);
         }
       }
-      return chosen->Evaluate(t);
-    };
+    }
 
-    // Records come ordered by s; group them into stations and keep the two
-    // stations bracketing clamped_s.
-    std::vector<const element::RoadInfoLateralShape *> before, after;
-    double s_before = -1.0, s_after = -1.0;
-    std::vector<const element::RoadInfoLateralShape *> current;
-    double s_current = -1.0;
-    auto CloseStation = [&]() {
-      if (current.empty()) {
-        return;
-      }
-      std::sort(current.begin(), current.end(),
-          [](const auto *a, const auto *b) { return a->GetT() < b->GetT(); });
-      if (s_current <= clamped_s) {
-        before = current; s_before = s_current;
-      } else if (after.empty()) {
-        after = current; s_after = s_current;
-      }
-      current.clear();
-    };
-    for (const auto *record : shapes) {
-      if (record->GetDistance() != s_current) {
-        CloseStation();
-        s_current = record->GetDistance();
-      }
-      current.push_back(record);
+    if (before == nullptr) {
+      return after == nullptr ? 0.0 : after->Evaluate(t);
     }
-    CloseStation();
-
-    if (before.empty()) {
-      return after.empty() ? 0.0 : EvalStation(after);
+    if (after == nullptr) {
+      return before->Evaluate(t);
     }
-    if (after.empty() || s_after <= s_before) {
-      return EvalStation(before);
-    }
+    const double s_before = before->GetDistance();
+    const double s_after = after->GetDistance();
     const double u = (clamped_s - s_before) / (s_after - s_before);
-    return (1.0 - u) * EvalStation(before) + u * EvalStation(after);
+    return (1.0 - u) * before->Evaluate(t) + u * after->Evaluate(t);
   }
 
   element::DirectedPoint Road::GetDirectedPointIn(const double s) const {
