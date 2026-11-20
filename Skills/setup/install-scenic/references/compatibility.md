@@ -25,8 +25,7 @@ Two habits avoid it entirely:
 - install both into one dedicated virtualenv,
 - invoke the CLI by full path, `<env>/bin/scenic`.
 
-`verify` compares the CLI's parent directory against the interpreter's and fails
-on a mismatch rather than letting it surface later.
+`verify` compares the CLI's parent directory with the selected interpreter's `sysconfig.get_path("scripts")`. This supports both Unix `bin/scenic` and Windows `Scripts/scenic.exe`.
 
 ## Blueprint tables are keyed on the client version
 
@@ -37,9 +36,7 @@ table. It never asks the server what exists.
 
 Consequences worth internalising:
 
-- **No table for that client version** → every category resolves empty → *every*
-  scenario fails at sample time with "no blueprints recorded". Looks like a broken
-  install; it is a version gap.
+- **A missing exact table produces a warning.** Scenic 3.1.1 selects the newest table with the same major and minor version, or the newest recorded table. Validate the resulting ids against the server before simulation. The [upstream selection logic](https://github.com/Scenic-Foundation/Scenic/blob/v3.1.1/src/scenic/simulators/carla/blueprints.py) defines this fallback.
 - **Client and server must match exactly.** A mismatched pair means Scenic hands
   out ids from the wrong release, and the failure lands at spawn time as an opaque
   `std::exception` from `blueprintLib.find()` that never names the id.
@@ -49,8 +46,7 @@ Consequences worth internalising:
 - **Upgrading Scenic is what adds a new CARLA release**, so prefer the newest
   version unless something pins you.
 
-`install_scenic.py detect` prints the table versions; `plan` prints the available
-Scenic versions when the current one has no table for your client.
+`install_scenic.py detect` prints the table versions. `verify` checks that Scenic's simulator interface imports with the selected client.
 
 ## The wheel has no scenarios
 
