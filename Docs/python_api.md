@@ -730,6 +730,9 @@ Asks the server which files are required by the client to use the current map. O
     - **Parameters:**
         - `folder` (_str_) - Folder where files required by the client will be downloaded to.  
         - `download` (_bool_) - If True, downloads files that are not already in cache.  
+- <a name="carla.Client.get_server_perf_counters"></a>**<font color="#7fb800">get_server_perf_counters</font>**(<font color="#00a6ed">**self**</font>)  
+Returns the server's cumulative RPC and frame counters since it started. Read them before and after a piece of work and subtract the two to get what that work cost on the server, for example the game-thread time spent in RPC calls per frame.  
+    - **Return:** _[carla.ServerPerfCounters](#carla.ServerPerfCounters)_  
 - <a name="carla.Client.get_server_version"></a>**<font color="#7fb800">get_server_version</font>**(<font color="#00a6ed">**self**</font>)  
 Returns the server libcarla version by consulting it in the "Version.h" file. Both client and server should use the same libcarla version.  
     - **Return:** _str_  
@@ -2999,6 +3002,39 @@ Frame count when the data was generated.
 Simulation-time when the data was generated.  
 - <a name="carla.SensorData.transform"></a>**<font color="#f8805a">transform</font>** (_[carla.Transform](#carla.Transform)_)  
 Sensor's transform when the data was generated.  
+
+---
+
+## carla.ServerPerfCounters<a name="carla.ServerPerfCounters"></a>
+Cumulative counters of the server's RPC and frame work since it started, as returned by [carla.Client.get_server_perf_counters](#carla.Client.get_server_perf_counters). Every value only grows, so the difference between two readings measures what happened in between.  
+
+### Instance Variables
+- <a name="carla.ServerPerfCounters.frames"></a>**<font color="#f8805a">frames</font>** (_int_)  
+Frames whose RPC loop finished on the game thread.  
+- <a name="carla.ServerPerfCounters.sync_calls"></a>**<font color="#f8805a">sync_calls</font>** (_int_)  
+RPC calls run on the game thread.  
+- <a name="carla.ServerPerfCounters.sync_call_ns"></a>**<font color="#f8805a">sync_call_ns</font>** (_int<small> - nanoseconds</small>_)  
+Game-thread time spent inside those calls.  
+- <a name="carla.ServerPerfCounters.async_calls"></a>**<font color="#f8805a">async_calls</font>** (_int_)  
+RPC calls run on the server's RPC worker threads.  
+- <a name="carla.ServerPerfCounters.rpc_loop_ns"></a>**<font color="#f8805a">rpc_loop_ns</font>** (_int<small> - nanoseconds</small>_)  
+Game-thread time spent in the per-frame RPC loop. In synchronous mode it includes the time spent waiting for the client's tick.  
+- <a name="carla.ServerPerfCounters.backlog_sum"></a>**<font color="#f8805a">backlog_sum</font>** (_int_)  
+Game-thread calls still queued when a frame's RPC loop ended, summed over all frames. Divided by the number of frames, it is the average backlog.  
+- <a name="carla.ServerPerfCounters.backlog_max"></a>**<font color="#f8805a">backlog_max</font>** (_int_)  
+Largest number of game-thread calls still queued at the end of a frame's RPC loop.  
+- <a name="carla.ServerPerfCounters.snapshots"></a>**<font color="#f8805a">snapshots</font>** (_int_)  
+World snapshots serialized and sent to the clients.  
+- <a name="carla.ServerPerfCounters.snapshot_ns"></a>**<font color="#f8805a">snapshot_ns</font>** (_int<small> - nanoseconds</small>_)  
+Time spent serializing those snapshots.  
+- <a name="carla.ServerPerfCounters.snapshot_bytes"></a>**<font color="#f8805a">snapshot_bytes</font>** (_int<small> - bytes</small>_)  
+Total size of those snapshots.  
+
+### Methods
+
+##### Dunder methods
+- <a name="carla.ServerPerfCounters.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
+    - **Return:** _str_  
 
 ---
 

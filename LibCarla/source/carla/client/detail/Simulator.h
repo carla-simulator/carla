@@ -209,6 +209,10 @@ namespace detail {
       return _client.GetServerVersion();
     }
 
+    rpc::ServerPerfCounters GetServerPerfCounters() {
+      return _client.GetServerPerfCounters();
+    }
+
     /// @}
     // =========================================================================
     /// @name Tick
@@ -538,7 +542,7 @@ namespace detail {
     }
 
     void AddActorTorque(const Actor &actor, const geom::Vector3D &torque) {
-      _client.AddActorAngularImpulse(actor.GetId(), torque);
+      _client.AddActorTorque(actor.GetId(), torque);
     }
 
     geom::Transform GetActorComponentWorldTransform(const Actor &actor, const std::string &component_name) {
@@ -922,6 +926,13 @@ namespace detail {
     auto ApplyBatchSync(std::vector<rpc::Command> commands, bool do_tick_cue) {
       return _client.ApplyBatchSync(std::move(commands), do_tick_cue);
     }
+
+    /// Applies @a commands, ticks the walker navigation and the world, and
+    /// waits for the new frame: the same as ApplyBatchSync followed by Tick,
+    /// in one round trip.
+    std::vector<rpc::CommandResponse> ApplyBatchSyncAndTick(
+        std::vector<rpc::Command> commands,
+        time_duration timeout);
 
     /// @}
     // =========================================================================

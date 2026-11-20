@@ -99,6 +99,9 @@
 * **Optimized the DVS camera** grayscale conversion, about 8x faster in log mode and 4x in linear, with bit-identical output.
 * **Pedestrians are cheaper to move**: a walker no longer refreshes overlaps on every body of its physics asset each time it moves or animates, and a walker teleported by the client-side crowd or the replayer drops its capsule and trigger boxes from scene queries. Keeping AI walkers and replayed actors visible to sensors (#10068) therefore costs about 4% of the tick with 150 walkers and 40 vehicles on Town10HD instead of 25%, and about 6% while replaying them.
 * **Made volumetric clouds cheaper** at the Epic and Cine quality levels, with no visible difference (`r.VolumetricRenderTarget.Mode=2`).
+* **Added `carla.Client.get_server_perf_counters()`**: cumulative counters of the server's RPC and frame work. They cover calls run on the game thread and the time they took, calls run on the RPC workers, the per-frame RPC loop and the calls still queued when it ends, and snapshot serialization time and size. Read them twice and subtract to see what a workload costs on the server.
+* **`Client.apply_batch_sync(commands, True)` takes one round trip instead of three**. The commands, the walker navigation's commands and the tick cue go to the server in one call (`apply_batch_and_tick`), in the same order as before, and only the caller's responses are returned. Waiting for the new frame no longer polls every 100 µs. Decoding a command batch on the server no longer builds every command type for each command, and the batch is moved instead of copied on its way to the game thread. `apply_batch_sync` no longer starts a thread per 50 commands to look for `SetAutopilot`.
+* **Added `PythonAPI/util/actor_batch_benchmark.py`**, which measures the tick time when one or more clients teleport, read, or let the Traffic Manager drive many actors. It reports percentiles, client CPU and the server counters as JSON, and can hash every transform to compare two builds.
 
 #### Sensors and content
 
@@ -220,6 +223,8 @@
 
 * Fixed **scripts crashing at exit while callbacks are registered** (segmentation fault or `Fatal Python error: gilstate_tss_set`, about one exit in three on Python 3.14, e.g. `automatic_control.py`): CARLA's client threads kept calling `on_tick` and sensor callbacks into an interpreter that was being finalized. The `carla` module now stops them through an `atexit` hook and waits for the callbacks already running.
 * `Client.apply_batch_sync()`, `apply_batch()` and `get_required_files()` now release the GIL while they wait for the server, so sensor callbacks keep running meanwhile.
+* Fixed **`Actor.add_torque()` applying an angular impulse**: the client sent the angular-impulse call instead of the torque one. A torque now changes the angular velocity over the step, about `dt` times less than an impulse of the same magnitude.
+* Fixed **copies of a command response losing their value**: copying a `carla::rpc::Response` from a non-const object went through its converting constructor and `operator bool`, so the copy held 1 (or 0 for an error) instead of the actor id. It surfaced with the new `apply_batch_and_tick` call.
 * Fixed client signal identifier reads exceeding the 32 byte snapshot buffer.
 * Fixed clients failing `get_world()` against a packaged server: `get_required_files` leaked pak-relative paths that escaped the client cache. The server now sends content-relative names and refuses paths that resolve outside the content folder, previously an arbitrary-file-read vector.
 * Fixed `from carla.command import ...` by registering the `command` submodule in `sys.modules`.

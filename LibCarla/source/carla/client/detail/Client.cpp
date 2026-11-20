@@ -144,6 +144,10 @@ namespace detail {
     return _pimpl->CallAndWait<std::string>("version");
   }
 
+  rpc::ServerPerfCounters Client::GetServerPerfCounters() {
+    return _pimpl->CallAndWait<rpc::ServerPerfCounters>("get_server_perf_counters");
+  }
+
   void Client::LoadEpisode(std::string map_name, bool reset_settings, rpc::MapLayer map_layer) {
     // Await response, we need to be sure in this one.
     _pimpl->CallAndWait<void>("load_new_episode", std::move(map_name), reset_settings, map_layer);
@@ -876,6 +880,12 @@ namespace detail {
       bool do_tick_cue) {
     auto result = _pimpl->RawCall("apply_batch", std::move(commands), do_tick_cue);
     return result.as<std::vector<rpc::CommandResponse>>();
+  }
+
+  std::pair<std::vector<rpc::CommandResponse>, uint64_t> Client::ApplyBatchAndTick(
+      std::vector<rpc::Command> commands) {
+    using return_t = std::pair<std::vector<rpc::CommandResponse>, uint64_t>;
+    return _pimpl->CallAndWait<return_t>("apply_batch_and_tick", std::move(commands));
   }
 
   uint64_t Client::SendTickCue() {
