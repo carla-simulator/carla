@@ -17,6 +17,7 @@ name = 'carla'
 version = '@CARLA_VERSION@'
 # The wheel's cpXY tag pins the interpreter it was built for.
 requires-python = '>=3.8'
+dependencies = [ 'numpy>=1.18.4', 'networkx>=2.5', 'shapely>=1.7.1' ]
 authors = [ { name = 'The CARLA team', email = 'carla.simulator@gmail.com' } ]
 description = 'Python API for communicating with the CARLA server.'
 readme = 'README.md'

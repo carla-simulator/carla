@@ -21,12 +21,9 @@ Any of the three can be configured through its constructor and methods, or subcl
 
 ## Use the provided agents
 
-__1.__ Import the agent class you want to use. The agents live in `PythonAPI/carla/agents`, which the `carla` wheel does not install, so put it on the path first — this is what `automatic_control.py` does. They also need `networkx` and `shapely`.
+__1.__ Import the agent class you want to use. The `carla` wheel installs the `agents` package and its NumPy, NetworkX and Shapely dependencies.
 
 ```py
-import sys
-sys.path.append('<CARLA>/PythonAPI/carla')
-
 # To import a basic agent
 from agents.navigation.basic_agent import BasicAgent
 
