@@ -3523,6 +3523,14 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
           " Actor Id: " + FString::FromInt(ActorId));
     }
 
+#ifndef CARLA_HAS_GBUFFER_API
+    // G-buffer streams are never opened here; GetToken() would crash (#10329).
+    return RespondError(
+        "get_gbuffer_token",
+        "GBuffer capture is not available in this build (its Unreal Engine has no GBufferView.h)",
+        " Actor Id: " + FString::FromInt(ActorId) +
+        ", GBuffer Id: " + FString::FromInt(GBufferId));
+#else
     switch (GBufferId)
     {
       case 0:
@@ -3594,6 +3602,7 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
         UE_LOG(LogCarla, Error, TEXT("Requested invalid GBuffer ID %u"), GBufferId);
         return {};
     }
+#endif
   };
 
   // ~~ Logging and playback ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

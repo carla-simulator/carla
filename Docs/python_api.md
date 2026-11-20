@@ -2959,6 +2959,8 @@ The function the sensor will be calling to every time the desired GBuffer textur
     - **Parameters:**
         - `gbuffer_id` (_[carla.GBufferTextureID](#carla.GBufferTextureID)_) - The ID of the target Unreal Engine GBuffer texture.  
         - `callback` (_function_) - The called function with one argument containing the received GBuffer texture.  
+    - **Warning:** <font color="#ED2F2F">_G-buffer capture needs an Unreal Engine that provides `GBufferView.h`. The Unreal Engine 5.8 fork that CARLA builds on does not, so G-buffers are not available on UE 5.8._</font>  
+    - **Raises:** RuntimeError when the server was built without G-buffer support ("GBuffer capture is not available in this build").  
 - <a name="carla.Sensor.send"></a>**<font color="#7fb800">send</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**message**</font>)  
 Instructs the sensor to send the bytes given by `message` to all other custom V2X sensors on the next tick. Only supported on the custom V2X sensor (`sensor.other.v2x_custom`).  
     - **Parameters:**
@@ -2969,6 +2971,7 @@ Commands the sensor to stop listening for data.
 Commands the sensor to stop listening for the specified GBuffer texture.  
     - **Parameters:**
         - `gbuffer_id` (_[carla.GBufferTextureID](#carla.GBufferTextureID)_) - The ID of the Unreal Engine GBuffer texture.  
+    - **Raises:** RuntimeError when the server was built without G-buffer support ("GBuffer capture is not available in this build").  
 
 ##### Dunder methods
 - <a name="carla.Sensor.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  

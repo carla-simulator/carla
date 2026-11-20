@@ -113,6 +113,8 @@ python3 scripts/vehicles.py line --at 30,20,0 --count 5 --gap 15 --no-autopilot 
 
 # one hero/ego vehicle (autopilot off) — the anchor for control/sensors/telemetry
 python3 scripts/vehicles.py ego --at 30,20,0        # prints its actor id + role=hero
+# the ego is a four-wheeled car unless --filter/--base-type narrow it, or --any
+python3 scripts/vehicles.py ego --filter 'vehicle.kawasaki.*'   # a motorbike, on purpose
 
 # ...named for ROS 2: publishes TF as "hero" and accepts ROS control commands
 python3 scripts/vehicles.py ego --at 30,20,0 --ros-name hero

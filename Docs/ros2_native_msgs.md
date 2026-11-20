@@ -19,15 +19,15 @@ The message types are defined in `LibCarla/source/carla/ros2/types/msg/` and ser
 
 | Message | Published on | Source |
 |---|---|---|
-| [`rosgraph_msgs/Clock`](https://docs.ros.org/en/jazzy/p/rosgraph_msgs/interfaces/msg/Clock.html) | `/clock` | The simulation clock, every frame |
-| [`tf2_msgs/TFMessage`](https://docs.ros.org/en/jazzy/p/tf2_msgs/interfaces/msg/TFMessage.html) | `/tf` | One transform per actor |
-| [`sensor_msgs/Image`](https://docs.ros.org/en/jazzy/p/sensor_msgs/interfaces/msg/Image.html) | `<sensor>/image` | RGB, depth, semantic, instance, normals, optical flow and DVS cameras |
-| [`sensor_msgs/CameraInfo`](https://docs.ros.org/en/jazzy/p/sensor_msgs/interfaces/msg/CameraInfo.html) | `<sensor>/camera_info` | The same cameras |
-| [`sensor_msgs/PointCloud2`](https://docs.ros.org/en/jazzy/p/sensor_msgs/interfaces/msg/PointCloud2.html) | `<sensor>/point_cloud` | LIDAR, semantic LIDAR, HSS LIDAR, radar, and the DVS camera's events |
-| [`sensor_msgs/Imu`](https://docs.ros.org/en/jazzy/p/sensor_msgs/interfaces/msg/Imu.html) | `<sensor>` | `sensor.other.imu` |
-| [`sensor_msgs/NavSatFix`](https://docs.ros.org/en/jazzy/p/sensor_msgs/interfaces/msg/NavSatFix.html) | `<sensor>` | `sensor.other.gnss` |
-| [`geometry_msgs/PoseStamped`](https://docs.ros.org/en/jazzy/p/geometry_msgs/interfaces/msg/PoseStamped.html) | `<sensor>/pose` | `sensor.other.autoware_gnss` |
-| [`geometry_msgs/PoseWithCovarianceStamped`](https://docs.ros.org/en/jazzy/p/geometry_msgs/interfaces/msg/PoseWithCovarianceStamped.html) | `<sensor>/pose_with_covariance` | `sensor.other.autoware_gnss` |
+| [`rosgraph_msgs/Clock`](https://docs.ros.org/en/jazzy/p/rosgraph_msgs/msg/Clock.html) | `/clock` | The simulation clock, every frame |
+| [`tf2_msgs/TFMessage`](https://docs.ros.org/en/jazzy/p/tf2_msgs/msg/TFMessage.html) | `/tf` | One transform per actor |
+| [`sensor_msgs/Image`](https://docs.ros.org/en/jazzy/p/sensor_msgs/msg/Image.html) | `<sensor>/image` | RGB, depth, semantic, instance, normals, optical flow and DVS cameras |
+| [`sensor_msgs/CameraInfo`](https://docs.ros.org/en/jazzy/p/sensor_msgs/msg/CameraInfo.html) | `<sensor>/camera_info` | The same cameras |
+| [`sensor_msgs/PointCloud2`](https://docs.ros.org/en/jazzy/p/sensor_msgs/msg/PointCloud2.html) | `<sensor>/point_cloud` | LIDAR, semantic LIDAR, HSS LIDAR, radar, and the DVS camera's events |
+| [`sensor_msgs/Imu`](https://docs.ros.org/en/jazzy/p/sensor_msgs/msg/Imu.html) | `<sensor>` | `sensor.other.imu` |
+| [`sensor_msgs/NavSatFix`](https://docs.ros.org/en/jazzy/p/sensor_msgs/msg/NavSatFix.html) | `<sensor>` | `sensor.other.gnss` |
+| [`geometry_msgs/Pose`](https://docs.ros.org/en/jazzy/p/geometry_msgs/msg/Pose.html) | `<sensor>/pose` | `sensor.other.autoware_gnss` |
+| [`geometry_msgs/PoseWithCovarianceStamped`](https://docs.ros.org/en/jazzy/p/geometry_msgs/msg/PoseWithCovarianceStamped.html) | `<sensor>/pose_with_covariance` | `sensor.other.autoware_gnss` |
 | [`carla_msgs/CarlaCollisionEvent`](#carlacollisionevent) | `<sensor>` | `sensor.other.collision` |
 | [`autoware_vehicle_msgs/VelocityReport`](#velocityreport) | `/vehicle/status/velocity_status` | `sensor.other.vehicle_status` |
 | [`autoware_vehicle_msgs/SteeringReport`](#steeringreport) | `/vehicle/status/steering_status` | `sensor.other.vehicle_status` |
@@ -68,7 +68,7 @@ The direct control command, equivalent to [carla.VehicleControl](python_api.md#c
 
 | Field | Type | Description |
 |---|---|---|
-| `header` | [Header](https://docs.ros.org/en/jazzy/p/std_msgs/interfaces/msg/Header.html) | Time stamp and frame id of the command. |
+| `header` | [Header](https://docs.ros.org/en/jazzy/p/std_msgs/msg/Header.html) | Time stamp and frame id of the command. |
 | `throttle` | float32 | Throttle, `[0.0, 1.0]`. |
 | `steer` | float32 | Steering, `[-1.0, 1.0]`, positive to the right. |
 | `brake` | float32 | Brake, `[0.0, 1.0]`. |
@@ -83,9 +83,9 @@ Published by `sensor.other.collision` on every impact.
 
 | Field | Type | Description |
 |---|---|---|
-| `header` | [Header](https://docs.ros.org/en/jazzy/p/std_msgs/interfaces/msg/Header.html) | Time stamp and frame id of the event. |
+| `header` | [Header](https://docs.ros.org/en/jazzy/p/std_msgs/msg/Header.html) | Time stamp and frame id of the event. |
 | `other_actor_id` | uint32 | Id of the actor that was hit. |
-| `normal_impulse` | [geometry_msgs/Vector3](https://docs.ros.org/en/jazzy/p/geometry_msgs/interfaces/msg/Vector3.html) | Impulse resulting from the collision. |
+| `normal_impulse` | [geometry_msgs/Vector3](https://docs.ros.org/en/jazzy/p/geometry_msgs/msg/Vector3.html) | Impulse resulting from the collision. |
 
 ### AckermannDriveStamped
 
