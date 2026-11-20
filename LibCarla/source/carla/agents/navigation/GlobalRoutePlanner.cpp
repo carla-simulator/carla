@@ -5,6 +5,7 @@
 
 #include "carla/agents/navigation/GlobalRoutePlanner.h"
 
+#include "carla/client/Lane.h"
 #include "carla/client/Map.h"
 #include "carla/client/Waypoint.h"
 #include "carla/geom/Transform.h"
@@ -23,6 +24,47 @@ namespace agents {
 namespace navigation {
 
 namespace {
+
+  std::vector<SharedPtr<client::Waypoint>> SampleLane(
+      const SharedPtr<client::Waypoint> &waypoint,
+      double resolution, bool include_endpoint = false) {
+    const auto lane = waypoint->GetLane();
+    const double end_s = lane->GetDistance()
+        + (lane->IsPositiveDirection() ? lane->GetLength() : 0.0);
+    const double remaining = std::abs(end_s - waypoint->GetDistance());
+    const double epsilon = std::min(1e-6, remaining / 2.0);
+    const auto next_in_lane = [&](double distance) {
+      const auto candidates = waypoint->GetNext(distance);
+      const auto match = std::find_if(candidates.begin(), candidates.end(),
+          [&](const auto &candidate) {
+            return candidate->GetRoadId() == waypoint->GetRoadId()
+                && candidate->GetSectionId() == waypoint->GetSectionId()
+                && candidate->GetLaneId() == waypoint->GetLaneId();
+          });
+      return match != candidates.end() ? *match : nullptr;
+    };
+    std::vector<SharedPtr<client::Waypoint>> path;
+    for (double distance = resolution; distance < remaining - epsilon;
+         distance += resolution) {
+      auto sample = next_in_lane(distance);
+      if (!sample) {
+        break;
+      }
+      path.push_back(std::move(sample));
+    }
+    if (include_endpoint) {
+      auto endpoint = remaining > 0.0
+          ? next_in_lane(remaining - epsilon) : waypoint;
+      if (endpoint && (path.empty()
+          || path.back()->GetDistance() != endpoint->GetDistance())) {
+        path.push_back(std::move(endpoint));
+      }
+      if (path.empty()) {
+        path.push_back(waypoint);
+      }
+    }
+    return path;
+  }
 
   // Mirrors agents.tools.misc.vector(): unit vector from a -> b with an
   // epsilon added to the norm to avoid division by zero (matches numpy's
@@ -132,30 +174,7 @@ void GlobalRoutePlanner::BuildTopology() {
     seg.entry_xyz = std::make_tuple(x1, y1, z1);
     seg.exit_xyz  = std::make_tuple(x2, y2, z2);
 
-    const auto end_loc = wp2->GetTransform().location;
-    if (wp1->GetTransform().location.Distance(end_loc) > _sampling_resolution) {
-      auto next_wps = wp1->GetNext(_sampling_resolution);
-      if (next_wps.empty()) {
-        // Mirror Python: still record the (empty-path) segment.
-        _topology.push_back(std::move(seg));
-        continue;
-      }
-      auto w = next_wps[0];
-      while (w && w->GetTransform().location.Distance(end_loc) > _sampling_resolution) {
-        seg.path.push_back(w);
-        auto step = w->GetNext(_sampling_resolution);
-        if (step.empty()) {
-          break;
-        }
-        w = step[0];
-      }
-    } else {
-      auto next_wps = wp1->GetNext(_sampling_resolution);
-      if (next_wps.empty()) {
-        continue;  // skip degenerate segment
-      }
-      seg.path.push_back(next_wps[0]);
-    }
+    seg.path = SampleLane(wp1, _sampling_resolution);
 
     _topology.push_back(std::move(seg));
   }
@@ -207,7 +226,6 @@ void GlobalRoutePlanner::BuildGraph() {
 // -----------------------------------------------------------------------------
 void GlobalRoutePlanner::FindLooseEnds() {
   int count_loose_ends = 0;
-  const double hop = _sampling_resolution;
 
   for (const auto &segment : _topology) {
     const auto &end_wp = segment.exit;
@@ -232,16 +250,7 @@ void GlobalRoutePlanner::FindLooseEnds() {
     const NodeId n2 = -1 * count_loose_ends;            // NEGATIVE id sentinel
     _road_id_to_edge[road_id][section_id][lane_id] = {n1, n2};
 
-    std::vector<SharedPtr<client::Waypoint>> path;
-    auto next_wps = end_wp->GetNext(hop);
-    while (!next_wps.empty()
-           && next_wps[0]
-           && next_wps[0]->GetRoadId()    == road_id
-           && next_wps[0]->GetSectionId() == section_id
-           && next_wps[0]->GetLaneId()    == lane_id) {
-      path.push_back(next_wps[0]);
-      next_wps = next_wps[0]->GetNext(hop);
-    }
+    auto path = SampleLane(end_wp, _sampling_resolution, true);
 
     if (!path.empty()) {
       const auto &tail_loc = path.back()->GetTransform().location;

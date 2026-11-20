@@ -6,9 +6,9 @@
 // Server-free unit tests for the C++ port of agents.navigation.* (issue
 // carla-simulator/carla#9554). The tests exercise the parts that don't need
 // a live CARLA server: the Types.h enums and behavior factories, the pure
-// helpers in Misc.h, and the Default*Options() factories on the planner /
-// agent classes. Behaviour that requires a Vehicle / Map / TrafficLight is
-// covered by integration tests run against a real server.
+// helpers in Misc.h, the Default*Options() factories, and route construction
+// with native OpenDRIVE maps. Vehicle and TrafficLight behavior requires
+// integration tests against a real server.
 
 #include "test.h"
 
@@ -20,18 +20,150 @@
 #include <carla/agents/navigation/BasicAgent.h>
 #include <carla/agents/navigation/BehaviorAgent.h>
 #include <carla/agents/navigation/ConstantVelocityAgent.h>
+#include <carla/client/Map.h>
+#include <carla/client/Waypoint.h>
 
 #include <carla/geom/Location.h>
 #include <carla/geom/Rotation.h>
 #include <carla/geom/Transform.h>
 
+#include <array>
 #include <cmath>
+#include <iomanip>
+#include <locale>
+#include <memory>
+#include <sstream>
+#include <string>
 #include <type_traits>
 
 using namespace carla::agents::navigation;
 using carla::geom::Location;
 using carla::geom::Rotation;
 using carla::geom::Transform;
+
+namespace {
+
+  carla::SharedPtr<carla::client::Map> SamplingMap(
+      std::array<double, 3> lengths = {20.0, 1.0, 20.0},
+      int lane_id = -1, const std::string &rule = "RHT",
+      bool curve = false, bool section_end = false) {
+    std::ostringstream xml;
+    xml.imbue(std::locale::classic());
+    xml << std::setprecision(17)
+        << "<OpenDRIVE><header revMajor='1' revMinor='4'><geoReference>"
+        << "+proj=tmerc +lat_0=0 +lon_0=0 +k=1 +x_0=0 +y_0=0 "
+        << "+datum=WGS84 +units=m</geoReference></header>";
+    double x = 0.0, y = 0.0, heading = 0.0;
+    for (std::size_t index = 0; index < lengths.size(); ++index) {
+      const auto identifier = index + 1u;
+      const double length = lengths[index];
+      const double curvature = curve && identifier == 2u ? 0.1 : 0.0;
+      xml << "<road id='" << identifier << "' length='" << length
+          << "' junction='-1' rule='" << rule << "'><link>";
+      if (identifier > 1u) {
+        xml << "<predecessor elementType='road' elementId='"
+            << identifier - 1u << "' contactPoint='end'/>";
+      }
+      if (identifier < 3u) {
+        xml << "<successor elementType='road' elementId='"
+            << identifier + 1u << "' contactPoint='start'/>";
+      }
+      xml << "</link><planView><geometry s='0' x='" << x << "' y='"
+          << y << "' hdg='" << heading << "' length='" << length << "'>";
+      if (curvature != 0.0) {
+        xml << "<arc curvature='" << curvature << "'/>";
+      } else {
+        xml << "<line/>";
+      }
+      const auto side = lane_id < 0 ? "right" : "left";
+      xml << "</geometry></planView><lanes><laneSection s='0'><center>"
+          << "<lane id='0' type='none'/></center><" << side
+          << "><lane id='" << lane_id << "' type='driving' level='false'><link>";
+      if (identifier > 1u) {
+        xml << "<predecessor id='" << lane_id << "'/>";
+      }
+      if (identifier < 3u) {
+        xml << "<successor id='" << lane_id << "'/>";
+      }
+      xml << "</link><width sOffset='0' a='3.5' b='0' c='0' d='0'/>"
+          << "</lane></" << side << "></laneSection>";
+      if (section_end && identifier == 3u) {
+        xml << "<laneSection s='0.5'><center><lane id='0' type='none'/>"
+            << "</center></laneSection>";
+      }
+      xml << "</lanes></road>";
+      if (curvature != 0.0) {
+        x += (std::sin(heading + length * curvature) - std::sin(heading))
+            / curvature;
+        y += (std::cos(heading) - std::cos(heading + length * curvature))
+            / curvature;
+      } else {
+        x += length * std::cos(heading);
+        y += length * std::sin(heading);
+      }
+      heading += length * curvature;
+    }
+    xml << "</OpenDRIVE>";
+    return std::make_shared<carla::client::Map>("intervals", xml.str());
+  }
+
+  void ExpectForwardRoute(const carla::SharedPtr<carla::client::Map> &map,
+                          int lane_id, bool forward, float terminal_s) {
+    GlobalRoutePlanner planner(map, 2.0);
+    const auto origin = map->GetWaypointXODR(forward ? 1u : 3u, lane_id, 10.0f);
+    const auto target = map->GetWaypointXODR(forward ? 3u : 1u, lane_id, terminal_s);
+    ASSERT_TRUE(origin);
+    ASSERT_TRUE(target);
+    const auto route = planner.TraceRoute(origin->GetTransform().location,
+                                          target->GetTransform().location);
+    ASSERT_FALSE(route.empty());
+    EXPECT_EQ(route.back().first->GetRoadId(), forward ? 3u : 1u);
+    for (std::size_t index = 1; index < route.size(); ++index) {
+      const float delta = route[index].first->GetTransform().location.x
+          - route[index - 1u].first->GetTransform().location.x;
+      EXPECT_GE((forward ? 1.0f : -1.0f) * delta, -0.0001f);
+    }
+  }
+
+} // namespace
+
+TEST(agents_route_sampling, short_connector_does_not_backtrack) {
+  for (const std::string rule : {"RHT", "LHT"}) {
+    for (const int lane_id : {-1, 1}) {
+      const bool forward = (lane_id < 0) == (rule == "RHT");
+      ExpectForwardRoute(SamplingMap({20.0, 1.0, 20.0}, lane_id, rule),
+                         lane_id, forward, 10.0f);
+    }
+  }
+}
+
+TEST(agents_route_sampling, short_terminal_lane_remains_routable) {
+  ExpectForwardRoute(SamplingMap({20.0, 1.0, 0.5}), -1, true, 0.25f);
+}
+
+TEST(agents_route_sampling, lane_section_remainder_remains_routable) {
+  ExpectForwardRoute(SamplingMap({20.0, 1.0, 20.0}, -1, "RHT", false, true),
+                     -1, true, 0.25f);
+}
+
+TEST(agents_route_sampling, nearby_curve_endpoints_retain_interior_samples) {
+  const auto map = SamplingMap({20.0, 20.0 * std::acos(-1.0) - 1.5, 20.0},
+                               -1, "RHT", true);
+  GlobalRoutePlanner planner(map, 2.0);
+  const auto origin = map->GetWaypointXODR(1u, -1, 10.0f);
+  const auto target = map->GetWaypointXODR(3u, -1, 10.0f);
+  ASSERT_TRUE(origin);
+  ASSERT_TRUE(target);
+  const auto route = planner.TraceRoute(origin->GetTransform().location,
+                                        target->GetTransform().location);
+  EXPECT_GT(std::count_if(route.begin(), route.end(), [](const auto &item) {
+    return item.first->GetRoadId() == 2u;
+  }), 20);
+}
+
+TEST(agents_route_sampling, ordinary_segment_control) {
+  ExpectForwardRoute(SamplingMap({20.0, 12.0, 20.0}), -1, true, 10.0f);
+}
 
 // =====================================================================
 // Types.h — enum sanity + behavior factory parity with Python.
