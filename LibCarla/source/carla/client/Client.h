@@ -190,13 +190,7 @@ namespace client {
 
     std::vector<rpc::CommandResponse> ApplyBatchSync(
         std::vector<rpc::Command> commands,
-        bool do_tick_cue = false) const {
-      auto responses = _simulator->ApplyBatchSync(std::move(commands), false);
-      if (do_tick_cue)
-        _simulator->Tick(_simulator->GetNetworkingTimeout());
-
-      return responses;
-    }
+        bool do_tick_cue = false) const;
 
   private:
 
