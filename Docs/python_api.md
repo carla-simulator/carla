@@ -5000,12 +5000,45 @@ Given a certain actor ID, checks if there is a snapshot corresponding it and so,
         - `actor_id` (_int_)  
     - **Return:** _bool_  
 
+##### Getters
+- <a name="carla.WorldSnapshot.get_accelerations"></a>**<font color="#7fb800">get_accelerations</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor_ids**=None</font>, <font color="#00a6ed">**out**=None</font>, <font color="#00a6ed">**return_mask**=False</font>)  
+Acceleration (m/s^2) of many actors at once, as an (N, 3) float64 array, read from this snapshot without calling the server. An actor not in the snapshot gets a row of NaN. With `return_mask`, returns `(array, mask)`. Needs numpy.  
+    - **Parameters:**
+        - `actor_ids` (_list(int) or numpy array_) - Actors to read, one row each in this order. <b>None</b> reads every actor of the snapshot in ascending id order, the order of [carla.WorldSnapshot.get_actor_ids](#carla.WorldSnapshot.get_actor_ids).  
+        - `out` (_numpy array_) - A C-contiguous float64 array of the right size to fill instead of a new one.  
+        - `return_mask` (_bool_) - Also return a bool array that is <b>False</b> for the actors not in the snapshot.  
+    - **Return:** _numpy.ndarray_  
+- <a name="carla.WorldSnapshot.get_actor_ids"></a>**<font color="#7fb800">get_actor_ids</font>**(<font color="#00a6ed">**self**</font>)  
+Ids of the actors in this snapshot, ascending, as a uint32 array. Needs numpy.  
+    - **Return:** _numpy.ndarray_  
+- <a name="carla.WorldSnapshot.get_angular_velocities"></a>**<font color="#7fb800">get_angular_velocities</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor_ids**=None</font>, <font color="#00a6ed">**out**=None</font>, <font color="#00a6ed">**return_mask**=False</font>)  
+Angular velocity (deg/s) of many actors at once, as an (N, 3) float64 array, read from this snapshot without calling the server. An actor not in the snapshot gets a row of NaN. With `return_mask`, returns `(array, mask)`. Needs numpy.  
+    - **Parameters:**
+        - `actor_ids` (_list(int) or numpy array_) - Actors to read, one row each in this order. <b>None</b> reads every actor of the snapshot in ascending id order, the order of [carla.WorldSnapshot.get_actor_ids](#carla.WorldSnapshot.get_actor_ids).  
+        - `out` (_numpy array_) - A C-contiguous float64 array of the right size to fill instead of a new one.  
+        - `return_mask` (_bool_) - Also return a bool array that is <b>False</b> for the actors not in the snapshot.  
+    - **Return:** _numpy.ndarray_  
+- <a name="carla.WorldSnapshot.get_transforms"></a>**<font color="#7fb800">get_transforms</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor_ids**=None</font>, <font color="#00a6ed">**out**=None</font>, <font color="#00a6ed">**return_mask**=False</font>)  
+x, y, z (meters) and pitch, yaw, roll (degrees) of many actors at once, as an (N, 6) float64 array, read from this snapshot without calling the server. An actor not in the snapshot gets a row of NaN. With `return_mask`, returns `(array, mask)`. The location is in 64-bit precision, as the server holds it, whereas [carla.ActorSnapshot.get_transform](#carla.ActorSnapshot.get_transform) rounds it to 32-bit floats: about 0.5 mm at 7 km from the origin. Needs numpy.  
+    - **Parameters:**
+        - `actor_ids` (_list(int) or numpy array_) - Actors to read, one row each in this order. <b>None</b> reads every actor of the snapshot in ascending id order, the order of [carla.WorldSnapshot.get_actor_ids](#carla.WorldSnapshot.get_actor_ids).  
+        - `out` (_numpy array_) - A C-contiguous float64 array of the right size to fill instead of a new one.  
+        - `return_mask` (_bool_) - Also return a bool array that is <b>False</b> for the actors not in the snapshot.  
+    - **Return:** _numpy.ndarray_  
+- <a name="carla.WorldSnapshot.get_velocities"></a>**<font color="#7fb800">get_velocities</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor_ids**=None</font>, <font color="#00a6ed">**out**=None</font>, <font color="#00a6ed">**return_mask**=False</font>)  
+Velocity (m/s) of many actors at once, as an (N, 3) float64 array, read from this snapshot without calling the server. An actor not in the snapshot gets a row of NaN. With `return_mask`, returns `(array, mask)`. Needs numpy.  
+    - **Parameters:**
+        - `actor_ids` (_list(int) or numpy array_) - Actors to read, one row each in this order. <b>None</b> reads every actor of the snapshot in ascending id order, the order of [carla.WorldSnapshot.get_actor_ids](#carla.WorldSnapshot.get_actor_ids).  
+        - `out` (_numpy array_) - A C-contiguous float64 array of the right size to fill instead of a new one.  
+        - `return_mask` (_bool_) - Also return a bool array that is <b>False</b> for the actors not in the snapshot.  
+    - **Return:** _numpy.ndarray_  
+
 ##### Dunder methods
 - <a name="carla.WorldSnapshot.__eq__"></a>**<font color="#7fb800">\__eq__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**=[carla.WorldSnapshot](#carla.WorldSnapshot)</font>)  
 Returns __True__ if both **<font color="#f8805a">timestamp</font>** are the same.  
     - **Return:** _bool_  
 - <a name="carla.WorldSnapshot.__iter__"></a>**<font color="#7fb800">\__iter__</font>**(<font color="#00a6ed">**self**</font>)  
-Iterate over the [carla.ActorSnapshot](#carla.ActorSnapshot) stored in the snapshot.  
+Iterate over the [carla.ActorSnapshot](#carla.ActorSnapshot) stored in the snapshot, in ascending actor id order.  
 - <a name="carla.WorldSnapshot.__len__"></a>**<font color="#7fb800">\__len__</font>**(<font color="#00a6ed">**self**</font>)  
 Returns the amount of [carla.ActorSnapshot](#carla.ActorSnapshot) present in this snapshot.  
     - **Return:** _int_  

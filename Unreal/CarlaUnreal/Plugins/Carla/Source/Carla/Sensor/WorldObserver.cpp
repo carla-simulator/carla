@@ -403,11 +403,13 @@ static carla::Buffer FWorldObserver_Serialize(
       State = FWorldObserver_GetActorState(*View, Registry);
     }
     ActorTransform = View->GetActorGlobalTransform();
+    const FVector Location = ActorTransform.GetLocation();
 
     ActorDynamicState info = {
       View->GetActorId(),
       View->GetActorState(),
-      carla::geom::Transform(ActorTransform),
+      {Location.X, Location.Y, Location.Z},
+      carla::geom::Rotation(ActorTransform.Rotator()),
       carla::geom::Vector3D(Velocity.X, Velocity.Y, Velocity.Z),
       AngularVelocity,
       Acceleration,

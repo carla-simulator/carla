@@ -60,6 +60,11 @@ namespace client {
       return _state->end();
     }
 
+    /// The episode state this snapshot reads from.
+    const detail::EpisodeState &GetEpisodeState() const {
+      return *_state;
+    }
+
     bool operator==(const WorldSnapshot &rhs) const {
       return GetTimestamp() == rhs.GetTimestamp();
     }

@@ -3,11 +3,13 @@
 
 #include <array>
 #include <memory>
+#include <optional>
 #include <string_view>
 
 #include "carla/client/ActorList.h"
 #include "carla/client/Timestamp.h"
 #include "carla/client/World.h"
+#include "carla/client/WorldSnapshot.h"
 #include "carla/Memory.h"
 #include "carla/rpc/ActorUpdateBatch.h"
 
@@ -70,6 +72,9 @@ private:
   // Time elapsed since last vehicle destruction due to being idle for too long.
   double elapsed_last_actor_destruction {0.0};
   cc::Timestamp current_timestamp;
+  // The world snapshot of the step: every actor is read from the same frame,
+  // even when a new one arrives during the step (asynchronous mode).
+  std::optional<cc::WorldSnapshot> current_snapshot;
   std::unordered_map<ActorId, bool> has_physics_enabled;
   std::unordered_map<ActorId, std::pair<float, bool>> &large_vehicles;
   // Base types of the vehicles considered as large ones.
@@ -96,6 +101,9 @@ private:
                   const bool hero_actor_present, const float physics_radius_square);
 
   void UpdateUnregisteredActorsData();
+
+  // State of an actor in the step's snapshot; empty if it is not in it.
+  cc::ActorSnapshot GetActorSnapshot(ActorId actor_id) const;
 
 public:
   ALSM(AtomicActorSet &registered_vehicles,

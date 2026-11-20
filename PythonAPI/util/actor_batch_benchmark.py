@@ -25,6 +25,8 @@ Modes:
                 True) instead
   updates_async client.apply_actor_updates_async(batch), then world.tick()
   snapshot      'read' only: WorldSnapshot.find(id) on the tick's snapshot
+  bulk          'read' only: WorldSnapshot.get_transforms(ids) and
+                get_velocities(ids) on the tick's snapshot, into numpy arrays
 
 --clients K runs K client processes. The first one ticks; all of them update
 or read their share of the actors every frame, in step through a barrier.
@@ -50,7 +52,8 @@ import time
 import carla
 
 APIS = ('per_actor', 'legacy_sync', 'legacy_tick', 'legacy_async', 'updates', 'updates_async',
-        'snapshot')
+        'snapshot', 'bulk')
+READ_ONLY_APIS = ('snapshot', 'bulk')
 PATH_LENGTH = 200
 PATH_STEP = 0.5
 
@@ -234,10 +237,16 @@ class BenchmarkClient:  # pylint: disable=too-many-instance-attributes
         self.client = client
         self.world = self.client.get_world()
         self.actors = {}
-        if args.api == 'per_actor' or (args.mode == 'read' and args.api != 'snapshot'):
+        if args.api == 'per_actor' or (args.mode == 'read' and args.api not in READ_ONLY_APIS):
             self.actors = {actor.id: actor for actor in self.world.get_actors(self.ids)}
         self.updates = TeleportArrays(self.ids, plain_paths) \
             if args.api.startswith('updates') else None
+        self.bulk = None
+        if args.api == 'bulk':
+            import numpy  # pylint: disable=import-outside-toplevel
+            self.bulk = (numpy.array(self.ids, dtype=numpy.uint32),
+                         numpy.empty((len(self.ids), 6)),
+                         numpy.empty((len(self.ids), 3)))
 
     def teleports(self, step):
         """The teleports of one step."""
@@ -275,7 +284,12 @@ class BenchmarkClient:  # pylint: disable=too-many-instance-attributes
 
     def update_read(self):
         """Reads every actor of this client."""
-        if self.args.api == 'snapshot':
+        if self.args.api == 'bulk':
+            ids, transforms, velocities = self.bulk
+            snapshot = self.world.get_snapshot()
+            snapshot.get_transforms(ids, out=transforms)
+            snapshot.get_velocities(ids, out=velocities)
+        elif self.args.api == 'snapshot':
             snapshot = self.world.get_snapshot()
             states = [snapshot.find(actor_id) for actor_id in self.ids]
             for state in states:
@@ -392,8 +406,8 @@ def parse_args():
     parser.add_argument('--timeout', type=float, default=60.0)
     parser.add_argument('--out', help='also write the JSON result here')
     args = parser.parse_args()
-    if args.api == 'snapshot' and args.mode != 'read':
-        parser.error('--api snapshot only applies to --mode read')
+    if args.api in READ_ONLY_APIS and args.mode != 'read':
+        parser.error('--api %s only applies to --mode read' % args.api)
     if args.api == 'legacy_tick' and not args.synchronous:
         parser.error('--api legacy_tick needs synchronous mode')
     if args.mode == 'tm' and args.clients != 1:

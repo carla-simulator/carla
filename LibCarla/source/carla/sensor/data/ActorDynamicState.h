@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "carla/geom/Transform.h"
+#include "carla/geom/Rotation.h"
 #include "carla/geom/Vector3D.h"
 #include "carla/rpc/ActorId.h"
 #include "carla/rpc/ActorState.h"
@@ -131,7 +131,12 @@ namespace detail {
 
     rpc::ActorState actor_state;
 
-    geom::Transform transform;
+    /// Location as Unreal holds it: centimeters, in double. Unreal uses large
+    /// world coordinates, so this keeps the exact position far from the
+    /// origin, where a float in meters rounds it.
+    double location[3u];
+
+    geom::Rotation rotation;
 
     geom::Vector3D velocity;
 
@@ -149,7 +154,7 @@ namespace detail {
 #pragma pack(pop)
 
  static_assert(
-    sizeof(ActorDynamicState) == 119u,
+    sizeof(ActorDynamicState) == 131u,
     "Invalid ActorDynamicState size! "
     "If you modified this class please update the size here, else you may "
     "comment this assert, but your platform may have compatibility issues "
