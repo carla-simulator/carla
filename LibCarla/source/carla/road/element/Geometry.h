@@ -9,7 +9,8 @@
 #include "carla/geom/Location.h"
 #include "carla/geom/Math.h"
 #include "carla/geom/CubicPolynomial.h"
-#include "carla/geom/Rtree.h"
+
+#include <vector>
 
 namespace carla {
 namespace road {
@@ -240,15 +241,13 @@ namespace element {
     double _c;
     double _d;
 
-    struct RtreeValue {
+    struct SplinePoint {
       double u = 0;
       double v = 0;
       double s = 0;
       double t = 0;
     };
-    using Rtree = geom::SegmentCloudRtree<RtreeValue, 1>;
-    using TreeElement = Rtree::TreeElement;
-    Rtree _rtree;
+    std::vector<SplinePoint> _spline;
     void PreComputeSpline();
   };
 
@@ -327,16 +326,14 @@ namespace element {
     double _dV;
     bool _arcLength;
 
-    struct RtreeValue {
+    struct SplinePoint {
       double u = 0;
       double v = 0;
       double s = 0;
       double t_u = 0;
       double t_v = 0;
     };
-    using Rtree = geom::SegmentCloudRtree<RtreeValue, 1>;
-    using TreeElement = Rtree::TreeElement;
-    Rtree _rtree;
+    std::vector<SplinePoint> _spline;
     void PreComputeSpline();
   };
 
