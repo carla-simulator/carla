@@ -221,3 +221,92 @@ TEST(MultiGpuMirror, truncated_vehicle_parts_fail) {
   carla::multigpu::MirroredVehicleParts got;
   EXPECT_FALSE(got.Read(in, static_cast<uint32_t>(body.size())));
 }
+
+namespace {
+
+  /// The packet 32 writer as it was before it streamed straight to the frame:
+  /// every level built in its own buffer. Kept to pin the wire bytes.
+  std::string ReferenceVehicleParts(const carla::multigpu::MirroredVehicleParts &parts) {
+    using carla::multigpu::MirroredVehicleParts;
+    namespace mg = carla::multigpu;
+    std::ostringstream payload;
+    mg::detail::WritePod(payload, static_cast<uint32_t>(parts.vehicles.size()));
+    for (const mg::VehicleParts &vehicle : parts.vehicles) {
+      std::ostringstream record;
+      mg::detail::WritePod(record, vehicle.actor_id);
+      {
+        std::ostringstream value;
+        mg::WriteFixedListHeader(value, static_cast<uint32_t>(vehicle.wheels.size()),
+            MirroredVehicleParts::kWheelRecordSizeV1);
+        for (const mg::WheelPose &wheel : vehicle.wheels) {
+          mg::detail::WritePod(value, wheel.steer);
+          mg::detail::WritePod(value, wheel.spin);
+          mg::detail::WritePod(value, wheel.suspension_offset);
+        }
+        mg::WriteField(record, MirroredVehicleParts::kWheels, value.str());
+      }
+      if (!vehicle.open_doors.empty()) {
+        std::ostringstream value;
+        mg::WriteFixedListHeader(value, static_cast<uint32_t>(vehicle.open_doors.size()),
+            MirroredVehicleParts::kDoorRecordSizeV1);
+        for (const mg::DoorPose &door : vehicle.open_doors) {
+          mg::detail::WritePod(value, door.door);
+          for (double axis : door.location) {
+            mg::detail::WritePod(value, axis);
+          }
+          for (double axis : door.rotation) {
+            mg::detail::WritePod(value, axis);
+          }
+        }
+        mg::WriteField(record, MirroredVehicleParts::kOpenDoors, value.str());
+      }
+      if (vehicle.current_gear) {
+        std::ostringstream value;
+        mg::detail::WritePod(value, *vehicle.current_gear);
+        const uint8_t flags =
+            (vehicle.manual_gear_shift ? 1u : 0u) | (vehicle.simulating_physics ? 2u : 0u);
+        mg::detail::WritePod(value, flags);
+        mg::WriteField(record, MirroredVehicleParts::kDrivetrain, value.str());
+      }
+      mg::WriteSizedBytes(payload, record.str());
+    }
+    std::ostringstream out;
+    mg::WriteFrameDataPacket(out, MirroredVehicleParts::kPacketId, payload.str());
+    return out.str();
+  }
+
+} // namespace
+
+// Writing packet 32 straight to the frame gives exactly the bytes the nested
+// buffers gave: same wire format, nothing for a secondary to notice.
+TEST(MultiGpuMirror, vehicle_parts_bytes_unchanged) {
+  carla::multigpu::MirroredVehicleParts parts;
+  EXPECT_EQ([&] { std::ostringstream o; parts.Write(o); return o.str(); }(),
+            ReferenceVehicleParts(parts));
+
+  carla::multigpu::VehicleParts car;
+  car.actor_id = 21u;
+  car.wheels = {{12.5f, 361.25f, 3.5f}, {-12.5f, 0.125f, -1.0f}, {0.0f, 90.0f, 0.0f}, {0.0f, 180.0f, 2.25f}};
+  carla::multigpu::DoorPose door;
+  door.door = 3u;
+  door.location = {10.0, -85.5, 40.25};
+  door.rotation = {0.0, 0.0, 0.38268343236508978, 0.92387953251128674};
+  car.open_doors = {door, door};
+  car.current_gear = 4;
+  car.manual_gear_shift = false;
+  car.simulating_physics = true;
+  carla::multigpu::VehicleParts bike;
+  bike.actor_id = 22u;
+  bike.wheels = {{5.0f, 10.0f, 0.5f}, {0.0f, 10.0f, 0.25f}};
+  carla::multigpu::VehicleParts bare;
+  bare.actor_id = 0xffffffffu;
+  carla::multigpu::VehicleParts geared;
+  geared.actor_id = 7u;
+  geared.current_gear = -1;
+  geared.manual_gear_shift = true;
+  parts.vehicles = {car, bike, bare, geared};
+
+  std::ostringstream out;
+  parts.Write(out);
+  EXPECT_EQ(out.str(), ReferenceVehicleParts(parts));
+}

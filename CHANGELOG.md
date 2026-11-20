@@ -99,6 +99,12 @@
 * **Optimized the DVS camera** grayscale conversion, about 8x faster in log mode and 4x in linear, with bit-identical output.
 * **Pedestrians are cheaper to move**: a walker no longer refreshes overlaps on every body of its physics asset each time it moves or animates, and a walker teleported by the client-side crowd or the replayer drops its capsule and trigger boxes from scene queries. Keeping AI walkers and replayed actors visible to sensors (#10068) therefore costs about 4% of the tick with 150 walkers and 40 vehicles on Town10HD instead of 25%, and about 6% while replaying them.
 * **Made volumetric clouds cheaper** at the Epic and Cine quality levels, with no visible difference (`r.VolumetricRenderTarget.Mode=2`).
+* **Multi-GPU frames cost less CPU on both sides, with the same bytes on the wire.**
+  * The primary writes each frame once, straight into the buffer it sends, instead of through an `std::ostringstream` and two copies.
+  * Vehicle parts (packet 32) are no longer built in nested buffers.
+  * The primary reads back one frame in 120 to check it, instead of every frame (`carla.MultiGpu.VerifyFrames`).
+  * Secondaries look each mirror up once per frame. They skip the parent ordering when nothing is attached, and clear stale velocities only on the mirrors the previous frame moved, instead of on every mirror.
+  * New `carla.MultiGpu.StateHash` logs a per-frame hash of the mirrors' state, to compare builds, and `carla.MultiGpu.Stats` logs the mean time spent writing or playing a frame. See `Docs/core_multigpu.md`.
 
 #### Sensors and content
 
@@ -168,6 +174,7 @@
 
 #### Simulation and content
 
+* Fixed `carla::Buffer::resize` reading past the end of its old block when it grew: it copied as many bytes as the new size instead of the old one.
 * Fixed **Ackermann control not starting a vehicle at rest when the physics step is 4 ms or less** (#10291), with `apply_ackermann_control()` and the ROS 2 `ackermann_control_cmd` topic alike: on a fast server or a small `fixed_delta_seconds` the vehicle never moved while the pedal flipped between throttle and brake. The controller now runs at most every 10 ms, on the mean speed over that period; steps of 10 ms and longer behave exactly as before.
 * Fixed **walkers on maps with client-side navigation walking slower than their set speed in asynchronous mode** (#10255): the crowd advanced by the delta of the last frame only, losing the time of the frames the client skipped. It now advances by the simulation time elapsed since its previous update, in steps of at most 0.1 s and up to 1 s.
 * Fixed **the server stopping answering every client, with no dump, when one client stopped reading a sensor stream in synchronous mode** (#10233). The server waited without a limit for each message to be sent, on the render or game thread, so a `listen()` callback that never returned froze it for good. The wait is now bounded by the 10 s streaming timeout, after which that client's stream is dropped (its client reconnects on its own), and a slow client no longer holds the stream's lock that the other clients' connections need. Unreal's hang detector is also enabled (`[Core.System] HangDuration=120`, not fatal): a stuck game thread now logs its call stack.

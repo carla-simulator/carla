@@ -136,3 +136,65 @@ TEST(buffer, buffer_pool) {
   // Now delete the pool to test the weak reference inside the buffers.
   pool.reset();
 }
+
+TEST(buffer, resize_keeps_contents) {
+  carla::Buffer buffer(std::string("0123456789"));
+  ASSERT_EQ(buffer.size(), 10u);
+  buffer.resize(100000u);
+  ASSERT_EQ(buffer.size(), 100000u);
+  ASSERT_GE(buffer.capacity(), 100000u);
+  ASSERT_EQ(std::string(reinterpret_cast<const char *>(buffer.data()), 10u), "0123456789");
+  buffer.resize(4u);
+  ASSERT_EQ(buffer.size(), 4u);
+  ASSERT_EQ(std::string(reinterpret_cast<const char *>(buffer.data()), 4u), "0123");
+}
+
+#include <carla/multigpu/frameWriter.h>
+
+#include <ostream>
+#include <sstream>
+
+namespace {
+
+  /// What a frame writer does: plain writes, a recorder-style back-patch of
+  /// a size written ahead, and writes long enough to grow the buffer.
+  void WriteSample(std::ostream &out) {
+    out.write("header", 6);
+    const std::streampos size_at = out.tellp();
+    uint32_t size = 0u;
+    out.write(reinterpret_cast<const char *>(&size), sizeof(size));
+    const std::string big(300000u, 'x');
+    for (int i = 0; i < 3; ++i) {
+      out.write(big.data(), static_cast<std::streamsize>(big.size()));
+      out.put(static_cast<char>('a' + i));
+    }
+    const std::streampos end = out.tellp();
+    size = static_cast<uint32_t>(end - size_at);
+    out.seekp(size_at, std::ios::beg);
+    out.write(reinterpret_cast<const char *>(&size), sizeof(size));
+    out.seekp(end, std::ios::beg);
+    out.write("tail", 4);
+  }
+
+} // namespace
+
+TEST(buffer, stream_buf_matches_ostringstream) {
+  std::ostringstream reference;
+  WriteSample(reference);
+  const std::string expected = reference.str();
+
+  // Small initial capacity, so the writes grow it several times.
+  carla::multigpu::BufferStreamBuf buf(16u);
+  std::ostream out(&buf);
+  WriteSample(out);
+  ASSERT_TRUE(out.good());
+  ASSERT_EQ(buf.size(), expected.size());
+  const carla::Buffer written = buf.Release();
+  ASSERT_EQ(written.size(), expected.size());
+  ASSERT_EQ(std::string(reinterpret_cast<const char *>(written.data()), written.size()), expected);
+
+  // Reusable after Release, starting empty.
+  WriteSample(out);
+  const carla::Buffer again = buf.Release();
+  ASSERT_EQ(std::string(reinterpret_cast<const char *>(again.data()), again.size()), expected);
+}

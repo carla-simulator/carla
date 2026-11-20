@@ -76,11 +76,16 @@ struct FMirrorState
   std::optional<std::vector<uint64_t>> DisabledObjects;
   uint64 DisabledObjectsRegistrations = 0u;
 
+  /// Local ids of the mirrors the last frame gave velocities to: the only
+  /// ones that can hold velocities a new frame has to clear.
+  std::vector<uint32_t> KinematicIds;
+
   void Reset()
   {
     CreatedIds.clear();
     PendingParents.clear();
     PlayedPoses.clear();
+    KinematicIds.clear();
     DisabledObjects.reset();
     DisabledObjectsRegistrations = 0u;
   }
@@ -124,6 +129,8 @@ class FFrameData
   CarlaRecorderFrames Frames;
   CarlaRecorderEventsAdd EventsAdd;
   CarlaRecorderEventsDel EventsDel;
+  /// The ids in EventsDel, to add each one once.
+  std::unordered_set<uint32_t> DeletedIds;
   CarlaRecorderEventsParent EventsParent;
   CarlaRecorderCollisions Collisions;
   CarlaRecorderPositions Positions;
@@ -273,7 +280,7 @@ private:
   // move a mirror to the primary's pose, keeping its own scale
   void PlaceMirror(FCarlaActor &CarlaActor, FTransform Transform);
   // apply packet 12: the primary's velocities of every moving mirror
-  void PlayKinematics(const std::unordered_map<uint32_t, uint32_t>& MappedId);
+  void PlayKinematics(const std::unordered_map<uint32_t, uint32_t>& MappedId, FMirrorState &MirrorState);
   // apply packet 32, once the vehicles are in place
   void PlayVehicleParts(const std::unordered_map<uint32_t, uint32_t>& MappedId);
   // load and unload the map layers the primary did
