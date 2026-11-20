@@ -399,7 +399,8 @@ class GlobalRoutePlanner:
                     cross_list = []
                     for neighbor in self._graph.successors(current_node):
                         select_edge = self._graph.edges[current_node, neighbor]
-                        if select_edge['type'] == RoadOption.LANEFOLLOW:
+                        if (select_edge['type'] == RoadOption.LANEFOLLOW
+                                and select_edge['net_vector'] is not None):
                             if neighbor != route[index + 1]:
                                 sv = select_edge['net_vector']
                                 cross_list.append(np.cross(cv, sv)[2])
