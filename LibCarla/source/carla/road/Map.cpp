@@ -581,6 +581,7 @@ namespace road {
           const double road_length = road.GetLength();
           const double z0 = road.GetElevationOn(s0).Evaluate(s0);
 
+          const size_t polygon_start = result.size();
           // calculate all the corners
           for (auto corner : crosswalk->GetPoints()) {
             geom::Vector3D v2(
@@ -603,6 +604,9 @@ namespace road {
             v2.z = base.location.z + static_cast<float>(z_corner - z0) +
                    static_cast<float>(corner.z);
             result.push_back(v2);
+          }
+          if (result.size() > polygon_start && result.back() != result[polygon_start]) {
+            result.push_back(result[polygon_start]);
           }
         }
       }
