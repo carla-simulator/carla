@@ -34,6 +34,11 @@ from invertedai.common import AgentProperties, AgentState, TrafficLightState, Po
 from carla import command, Location
 from typing import List, Tuple, Any, Optional
 
+# Actors this script spawns and the client that spawned them, so the exit path
+# can destroy them and hand the clock back even after an error or Ctrl+C.
+SPAWNED_ACTOR_IDS = []
+CLEANUP_STATE = {"client": None, "recording": False}
+
 #---------
 # CARLA Utils
 #---------
@@ -580,6 +585,7 @@ def spawn_pedestrians(
             logging.error(results[i].error)
         else:
             walkers_list.append({"id": results[i].actor_id})
+            SPAWNED_ACTOR_IDS.append(results[i].actor_id)
 
     # Spawn CARLA IA controllers for pedestrians
     batch = []
@@ -587,6 +593,7 @@ def spawn_pedestrians(
     for i in range(len(walkers_list)):
         batch.append(command.SpawnActor(walker_controller_bp, carla.Transform(), walkers_list[i]["id"]))
     results = client.apply_batch_sync(batch, True)
+    SPAWNED_ACTOR_IDS.extend(r.actor_id for r in results if not r.error)
 
     world.tick()
 
@@ -668,6 +675,7 @@ def assign_carla_blueprints_to_agents(
             actor = world.try_spawn_actor(blueprint,agent_transform)
             
             if actor is not None:
+                SPAWNED_ACTOR_IDS.append(actor.id)
                 bb = actor.bounding_box.extent
                 actor.set_simulate_physics(False)
 
@@ -833,7 +841,7 @@ def get_traffic_light_state_from_carla(carla_tl_state):
         return TrafficLightState.green
 
     else:  # Unknown state, turn off traffic light
-        return TrafficLightState.Off
+        return TrafficLightState.none
 
 # Assign IAI traffic lights based on the CARLA ones
 def assign_iai_traffic_lights_from_carla(
@@ -867,6 +875,30 @@ def initialize_tl_states(world):
     return iai_tl_states, carla2iai_tl
 
 
+def cleanup():
+    """Stop the recorder, destroy what this script spawned (walker controllers
+    first) and put the world back in asynchronous mode, so it is not left frozen
+    waiting for ticks that will never come."""
+    client = CLEANUP_STATE["client"]
+    if client is None:
+        return
+    try:
+        if CLEANUP_STATE["recording"]:
+            client.stop_recorder()
+        world = client.get_world()
+        settings = world.get_settings()
+        settings.synchronous_mode = False
+        settings.fixed_delta_seconds = None
+        world.apply_settings(settings)
+        actors = world.get_actors(SPAWNED_ACTOR_IDS)
+        for controller in actors.filter('controller.ai.walker'):
+            controller.stop()
+        client.apply_batch_sync([command.DestroyActor(a.id) for a in actors])
+        print(f"Destroyed {len(actors)} actors and restored asynchronous mode.")
+    except RuntimeError as e:
+        print(f"Cleanup failed: {e}")
+
+
 def get_distance(point1, point2):
     return np.sqrt((point2[0] - point1[0])**2 + (point2[1] - point1[1])**2)
 
@@ -883,6 +915,7 @@ def main():
         args.port, 
         args.location
     )
+    CLEANUP_STATE["client"] = client
 
     # Specify the IAI API key. Prefer the IAI_API_KEY environment variable and
     # fall back to the --iai-key argument. Registering it explicitly avoids
@@ -904,6 +937,7 @@ def main():
             os.system("mkdir "+logfolder)
         logfile = logfolder+"carla_record.log"
         client.start_recorder(logfile)
+        CLEANUP_STATE["recording"] = True
         print("Recording on file: %s" % logfile)
 
     seed = args.seed if args.seed is not None else int(time.time())
@@ -1094,6 +1128,7 @@ def main():
         
         if args.record:
             client.stop_recorder()
+            CLEANUP_STATE["recording"] = False
 
         if args.iai_log:
             print(f"Writing log data.")
@@ -1112,7 +1147,7 @@ def main():
                 agent_ids = list(range(len(agent_properties)))
             )
     except Exception as e:
-        print(f"{e}")
+        print(f"{type(e).__name__}: {e}")
 
 
 if __name__ == '__main__':
@@ -1122,4 +1157,5 @@ if __name__ == '__main__':
     except KeyboardInterrupt:
         pass
     finally:
+        cleanup()
         print('\ndone.')
