@@ -12,7 +12,6 @@
 #include "TrafficLightInterface.h"
 #include "TrafficLightManager.h"
 #include "Carla/Game/CarlaStatics.h"
-#include "Carla/MapGen/LargeMapManager.h"
 
 #include <util/disable-ue4-macros.h>
 #include <carla/road/element/RoadInfoSignal.h>
@@ -82,11 +81,6 @@ void UTrafficLightComponent::InitializeSign(const carla::road::Map &Map)
               LaneDistance + epsilon, LaneDistance + LaneLength - epsilon);
         }
         FTransform BoxTransform = Map.ComputeTransform(signal_waypoint);
-        ALargeMapManager* LargeMapManager = UCarlaStatics::GetLargeMapManager(GetWorld());
-        if (LargeMapManager)
-        {
-          BoxTransform = LargeMapManager->GlobalToLocalTransform(BoxTransform);
-        }
         GenerateTrafficLightBox(BoxTransform, FVector(100*BoxLength, 100*BoxWidth, 100*BoxHeight));
       }
     }

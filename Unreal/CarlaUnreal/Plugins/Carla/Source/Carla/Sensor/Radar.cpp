@@ -8,7 +8,6 @@
 #include "Carla.h"
 #include "Carla/Actor/ActorBlueprintFunctionLibrary.h"
 #include "Carla/Game/CarlaStatics.h"
-#include "Carla/MapGen/LargeMapManager.h"
 
 #include <util/disable-ue4-macros.h>
 #include <carla/geom/Math.h>
@@ -231,10 +230,7 @@ void ARadar::GetMirrorState(carla::multigpu::SensorState &State) const
   {
     State.random_engine = RandomEngine->GetState();
   }
-  // In the world frame: a large map rebases each server's local origin on its own.
-  const ALargeMapManager *LargeMap = UCarlaStatics::GetLargeMapManager(GetWorld());
-  const FVector World = (LargeMap != nullptr) ? LargeMap->LocalToGlobalLocation(PrevLocation) : PrevLocation;
-  State.radar_previous_location = std::array<double, 3>{World.X, World.Y, World.Z};
+  State.radar_previous_location = std::array<double, 3>{PrevLocation.X, PrevLocation.Y, PrevLocation.Z};
 }
 
 void ARadar::SetMirrorState(const carla::multigpu::SensorState &State)
@@ -246,8 +242,6 @@ void ARadar::SetMirrorState(const carla::multigpu::SensorState &State)
   if (State.radar_previous_location)
   {
     const auto &World = *State.radar_previous_location;
-    const FVector Location(World[0], World[1], World[2]);
-    const ALargeMapManager *LargeMap = UCarlaStatics::GetLargeMapManager(GetWorld());
-    PrevLocation = (LargeMap != nullptr) ? LargeMap->GlobalToLocalLocation(Location) : Location;
+    PrevLocation = FVector(World[0], World[1], World[2]);
   }
 }

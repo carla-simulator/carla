@@ -49,8 +49,6 @@ struct CARLA_API FMapData
 
   bool bUseCarlaMapMaterials;
 
-  /// Build one map out of a tiled .fbx set instead of a sublevel per tile.
-  bool bMergeTiles = false;
 };
 
 /// Struct containing all assets data read from .Package.json file.
@@ -82,12 +80,6 @@ public:
   /// Loads a UWorld object contained in Carla BaseMap into @a AssetData data
   /// structure.
   void LoadWorld(FAssetData &AssetData);
-
-  /// Loads a UWorld object contained in Carla BaseTile into @a AssetData data
-  /// structure.
-  void LoadWorldTile(FAssetData &AssetData);
-
-  void LoadLargeMapWorld(FAssetData &AssetData);
 
   /// Spawns all the static meshes located in @a AssetsPaths inside the World.
   /// There is an option to use Carla materials by setting @a bUseCarlaMaterials
@@ -133,9 +125,6 @@ public:
   /// all the props inside the world and saves it in .umap format
   /// in a destination path built from @a PackageName and @a MapDestPath.
   void PreparePropsForCooking(FString &PackageName, const TArray<FString> &PropsPaths, FString &MapDestPath);
-
-  /// Return if there is any tile between the assets to cook
-  bool IsMapInTiles(const TArray<FString> &AssetsPaths);
 
 public:
 

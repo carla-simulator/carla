@@ -14,9 +14,9 @@
 
 /// World Partition conversion for CARLA's legacy tiled large maps
 /// (Town11/12/13). These maps register their tiles in WorldComposition but
-/// never author FWorldTileInfo positions: at runtime ALargeMapManager parses
-/// the tile grid coordinates out of the "<Map>_Tile_<X>_<Y>" package name and
-/// places each tile at FirstTileCenter + TileSize * (X, -Y), with both values
+/// never author FWorldTileInfo positions: at runtime the legacy tile manager
+/// parsed the tile grid coordinates out of the "<Map>_Tile_<X>_<Y>" package
+/// name and placed each tile at FirstTileCenter + TileSize * (X, -Y), with both values
 /// coming from the map's TilesInfo.txt. The stock commandlet therefore merges
 /// every tile at the origin. This subclass reproduces the CARLA placement
 /// convention by baking that transform into each tile's streaming level before
