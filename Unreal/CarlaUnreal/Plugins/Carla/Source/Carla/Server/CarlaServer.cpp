@@ -1332,9 +1332,28 @@ void FCarlaServer::FPimpl::BindActions()
   {
     REQUIRE_CARLA_EPISODE();
     REQUIRE_PRIMARY_SERVER();
+    // "<console variable> <value>" sets it directly: a Shipping build compiles the console out (ConsoleCommand
+    // below then does nothing, yet reported success), but its console variables are there.
+    {
+      const FString Command = FString(UTF8_TO_TCHAR(cmd.c_str())).TrimStartAndEnd();
+      FString Name, Value;
+      if (Command.Split(TEXT(" "), &Name, &Value))
+      {
+        if (IConsoleVariable *Variable = IConsoleManager::Get().FindConsoleVariable(*Name))
+        {
+          Variable->Set(*Value.TrimStartAndEnd(), ECVF_SetByConsole);
+          UE_LOG(LogCarla, Log, TEXT("console_command: %s = %s"), *Name, *Variable->GetString());
+          return true;
+        }
+      }
+    }
     APlayerController* PController= UGameplayStatics::GetPlayerController(Episode->GetWorld(), 0);
     if( PController )
     {
+#if UE_BUILD_SHIPPING
+        // No console in a Shipping build: the command does nothing.
+        return false;
+#endif
         auto result = PController->ConsoleCommand(UTF8_TO_TCHAR(cmd.c_str()), true);
         return !(
           result.Contains(FString(TEXT("Command not recognized"))) ||
