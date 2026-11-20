@@ -914,6 +914,10 @@ namespace detail {
     _pimpl->AsyncCall("apply_actor_updates", std::move(blob), false);
   }
 
+  void Client::Fence() {
+    _pimpl->Fence();
+  }
+
   uint64_t Client::SendTickCue() {
     return _pimpl->CallAndWait<uint64_t>("tick_cue");
   }

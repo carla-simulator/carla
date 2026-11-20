@@ -9,6 +9,7 @@
 #include "carla/client/Timestamp.h"
 #include "carla/client/World.h"
 #include "carla/Memory.h"
+#include "carla/rpc/ActorUpdateBatch.h"
 
 #include "carla/trafficmanager/AtomicActorSet.h"
 #include "carla/trafficmanager/CollisionStage.h"
@@ -63,6 +64,9 @@ private:
   TrafficLightStage &traffic_light_stage;
   MotionPlanStage &motion_plan_stage;
   VehicleLightStage &vehicle_light_stage;
+  // Physics toggles and the velocities that follow them, sent with the
+  // step's controls instead of one call per vehicle.
+  carla::rpc::ActorUpdateBatchBuilder &updates;
   // Time elapsed since last vehicle destruction due to being idle for too long.
   double elapsed_last_actor_destruction {0.0};
   cc::Timestamp current_timestamp;
@@ -107,7 +111,8 @@ public:
        CollisionStage &collision_stage,
        TrafficLightStage &traffic_light_stage,
        MotionPlanStage &motion_plan_stage,
-       VehicleLightStage &vehicle_light_stage);
+       VehicleLightStage &vehicle_light_stage,
+       carla::rpc::ActorUpdateBatchBuilder &updates);
 
   void Update();
 

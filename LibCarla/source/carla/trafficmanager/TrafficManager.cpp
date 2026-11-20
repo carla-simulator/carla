@@ -39,6 +39,8 @@ using namespace constants::PID;
 
 std::map<uint16_t, TrafficManagerBase*> TrafficManager::_tm_map;
 std::mutex TrafficManager::_mutex;
+std::mutex TrafficManager::_fence_mutex;
+std::vector<std::weak_ptr<carla::client::detail::Simulator>> TrafficManager::_unfenced;
 
 TrafficManager::TrafficManager(
     carla::client::detail::EpisodeProxy episode_proxy,
@@ -91,13 +93,37 @@ void TrafficManager::Reset(uint64_t episode_id) {
   }
 }
 
-void TrafficManager::Tick() {
+void TrafficManager::Tick(uint64_t frame, const carla::client::detail::Simulator *ticker) {
   std::vector<ActorPtr> released;
   {
     std::scoped_lock<std::mutex> lock(_mutex);
     for(auto& tm : _tm_map) {
-      tm.second->SynchronousTick();
+      tm.second->TickForFrame(frame, ticker);
       AppendReleased(released, *tm.second);
+    }
+  }
+}
+
+void TrafficManager::AddUnfencedUpdates(const std::shared_ptr<carla::client::detail::Simulator> &simulator) {
+  std::scoped_lock<std::mutex> lock(_fence_mutex);
+  for (const auto &weak : _unfenced) {
+    if (weak.lock() == simulator) {
+      return;
+    }
+  }
+  _unfenced.emplace_back(simulator);
+}
+
+void TrafficManager::FenceUpdates(const carla::client::detail::Simulator *ticker) {
+  std::vector<std::weak_ptr<carla::client::detail::Simulator>> pending;
+  {
+    std::scoped_lock<std::mutex> lock(_fence_mutex);
+    pending.swap(_unfenced);
+  }
+  for (const auto &weak : pending) {
+    auto simulator = weak.lock();
+    if (simulator != nullptr && simulator.get() != ticker) {
+      simulator->FenceUpdates();
     }
   }
 }

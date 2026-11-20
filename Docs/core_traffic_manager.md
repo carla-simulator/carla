@@ -286,7 +286,7 @@ The most likely issue arising from the above set-up is a client trying to connec
 
 TM is designed to work in synchronous mode. Both the CARLA server and TM should be set to synchronous in order to function properly. __Using TM in asynchronous mode can lead to unexpected and undesirable results,__ however, if asynchronous mode is required, the simulation should run at 20-30 fps at least.
 
-In synchronous mode the TM runs its step on the thread that ticks the world, with no worker thread in between, so a tick returns only once the controls for that frame have been applied. In asynchronous mode the worker thread paces itself off the server's own frame rate instead of free-running, which keeps the controller from limit-cycling when a heavy sensor rig slows the simulator down.
+In synchronous mode the TM runs its step on the thread that ticks the world, with no worker thread in between, as soon as the new frame has arrived on the client the TM was created with. The step sends its controls for the next frame in one call and does not wait for the server to apply them: every later tick from the same process first waits until the server has queued them, so they are applied before that tick's physics. A tick sent from another process is not ordered after them, so the world should be ticked from the process that runs the TM. In asynchronous mode the worker thread paces itself off the server's own frame rate instead of free-running, which keeps the controller from limit-cycling when a heavy sensor rig slows the simulator down.
 
 The script below demonstrates how to set both the server and TM to synchronous mode:
 

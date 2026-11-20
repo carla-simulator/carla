@@ -564,6 +564,10 @@ namespace detail {
 
     uint64_t SendTickCue();
 
+    /// Waits until the server has queued every fire-and-forget call this
+    /// client made so far.
+    void Fence();
+
     std::vector<rpc::LightState> QueryLightsStateToServer() const;
 
     void UpdateServerLightsState(

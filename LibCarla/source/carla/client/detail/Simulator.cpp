@@ -58,11 +58,12 @@ namespace detail {
     }
   }
 
-  static bool SynchronizeFrame(uint64_t frame, const Episode &episode, time_duration timeout) {
+  static bool SynchronizeFrame(
+      uint64_t frame, const Episode &episode, time_duration timeout, const Simulator *ticker) {
     // Woken by the episode when the state arrives, instead of polling it.
     const bool result = episode.WaitForFrame(frame, timeout);
     if(result) {
-      carla::traffic_manager::TrafficManager::Tick();
+      carla::traffic_manager::TrafficManager::Tick(frame, ticker);
     }
 
     return result;
@@ -177,8 +178,10 @@ namespace detail {
 
     for (auto i = 0u; i < number_of_attempts; ++i) {
       using namespace std::literals::chrono_literals;
-      if (_client.GetEpisodeSettings().synchronous_mode)
+      if (_client.GetEpisodeSettings().synchronous_mode) {
+        FenceTrafficManagers();
         _client.SendTickCue();
+      }
 
       _episode->WaitForState(50ms);
       auto episode = GetCurrentEpisode();
@@ -225,6 +228,10 @@ namespace detail {
       _light_manager->SetEpisode(WeakEpisodeProxy{shared_from_this()});
     }
   }
+void Simulator::FenceTrafficManagers() const {
+  carla::traffic_manager::TrafficManager::FenceUpdates(this);
+}
+
 EpisodeProxy Simulator::GetCurrentEpisode() {
     GetReadyCurrentEpisode();
     return EpisodeProxy{shared_from_this()};
@@ -322,10 +329,11 @@ EpisodeProxy Simulator::GetCurrentEpisode() {
     NavigationTick();
 
     // send tick command
+    FenceTrafficManagers();
     const auto frame = _client.SendTickCue();
 
     // waits until new episode is received
-    bool result = SynchronizeFrame(frame, *_episode, timeout);
+    bool result = SynchronizeFrame(frame, *_episode, timeout, this);
     if (!result) {
       throw_exception(TimeoutException(_client.GetEndpoint(), timeout));
     }
@@ -335,6 +343,7 @@ EpisodeProxy Simulator::GetCurrentEpisode() {
   std::vector<rpc::CommandResponse> Simulator::ApplyBatchSyncAndTick(
       std::vector<rpc::Command> commands,
       time_duration timeout) {
+    FenceTrafficManagers();
     DEBUG_ASSERT(_episode != nullptr);
 
     // Same order on the server as ApplyBatchSync followed by Tick: the user's
@@ -368,7 +377,7 @@ EpisodeProxy Simulator::GetCurrentEpisode() {
       }
     }
 
-    if (!SynchronizeFrame(frame, *_episode, timeout)) {
+    if (!SynchronizeFrame(frame, *_episode, timeout, this)) {
       throw_exception(TimeoutException(_client.GetEndpoint(), timeout));
     }
     return responses;
@@ -382,6 +391,7 @@ EpisodeProxy Simulator::GetCurrentEpisode() {
       return _client.ApplyActorUpdates(std::move(blob), false).first;
     }
     DEBUG_ASSERT(_episode != nullptr);
+    FenceTrafficManagers();
 
     // Same order on the server as the updates followed by Tick: the updates,
     // then the walker navigation's commands, then the tick cue.
@@ -407,7 +417,7 @@ EpisodeProxy Simulator::GetCurrentEpisode() {
       }
     }
 
-    if (!SynchronizeFrame(frame, *_episode, timeout)) {
+    if (!SynchronizeFrame(frame, *_episode, timeout, this)) {
       throw_exception(TimeoutException(_client.GetEndpoint(), timeout));
     }
     return status;
@@ -454,7 +464,7 @@ EpisodeProxy Simulator::GetCurrentEpisode() {
     const auto frame = _client.SetEpisodeSettings(settings);
 
     using namespace std::literals::chrono_literals;
-    SynchronizeFrame(frame, *_episode, 1s);
+    SynchronizeFrame(frame, *_episode, 1s, this);
 
     return frame;
   }

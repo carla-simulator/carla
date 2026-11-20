@@ -17,6 +17,7 @@
 #include "carla/client/TrafficLight.h"
 #include "carla/client/World.h"
 #include "carla/Memory.h"
+#include "carla/rpc/ActorUpdateBatch.h"
 #include "carla/rpc/Command.h"
 
 #include "carla/trafficmanager/AtomicActorSet.h"
@@ -97,6 +98,12 @@ private:
   TrafficLightStage traffic_light_stage;
   MotionPlanStage motion_plan_stage;
   VehicleLightStage vehicle_light_stage;
+  /// Updates sent to the server at the end of each step: the ALSM's physics
+  /// toggles and target velocities, then the stages' control frame.
+  carla::rpc::ActorUpdateBatchBuilder update_batch;
+  /// Synchronous mode: whether this step may send its updates without
+  /// waiting, because a tick is the next thing to reach the server.
+  bool defer_updates_to_tick {false};
   ALSM alsm;
   /// Traffic manager server instance.
   TrafficManagerServer server;
@@ -226,6 +233,10 @@ public:
 
   /// Method to provide synchronous tick.
   bool SynchronousTick();
+
+  /// Synchronous tick for @a frame, which @a ticker has already received.
+  /// Waits until this TM's own connection has that frame too.
+  bool TickForFrame(uint64_t frame, const carla::client::detail::Simulator *ticker) override;
 
   /// Get CARLA episode information.
   carla::client::detail::EpisodeProxy &GetEpisodeProxy();
