@@ -527,7 +527,8 @@ EOF
 #      converged_param_nearest_voxel_transformation_likelihood 2.3 -> 1.0
 #      (UE4-era prebuilt pcd maps score low against UE5.8 geometry; regenerating
 #      the pcd with map_tools removes the need for this).
-#   2. tier4_localization_launch pose_twist_estimator.launch.xml:
+#   2. tier4_localization_launch pose_twist_estimator.launch.xml and
+#      autoware_localization_launch util.launch.xml:
 #      stop_check_enabled -> false (the sim runs below real time; the
 #      stopped-vehicle check never passes and initialization hangs).
 #   3. diagnostics/autoware-carla.yaml: the /autoware/localization/state and
@@ -550,19 +551,24 @@ write_override_script() {
 # Idempotent: re-running after the values are already patched is a no-op.
 set -e
 root="${OVERRIDE_ROOT:-/opt/autoware}"
-ndt="$(find -L "$root" -name ndt_scan_matcher.param.yaml 2>/dev/null | head -1)"
-if [ -n "$ndt" ]; then
+ndt_found=0
+while IFS= read -r -d '' ndt; do
+    ndt_found=1
     sed -E -i --follow-symlinks 's/(converged_param_nearest_voxel_transformation_likelihood:)[[:space:]]*[0-9.]+/\1 1.0/' "$ndt"
     echo "patched: $ndt (NDT convergence likelihood -> 1.0)"
-else
+done < <(find -L "$root" -name ndt_scan_matcher.param.yaml -print0 2>/dev/null)
+if [ "$ndt_found" = 0 ]; then
     echo "WARNING: ndt_scan_matcher.param.yaml not found under $root" >&2
 fi
-ptw="$(find -L "$root" -path '*tier4_localization_launch*' -name pose_twist_estimator.launch.xml 2>/dev/null | head -1)"
-if [ -n "$ptw" ]; then
+stop_found=0
+while IFS= read -r -d '' ptw; do
+    stop_found=1
     sed -E -i --follow-symlinks 's/(stop_check_enabled"[[:space:]]*(default|value)=")[^"]*(")/\1false\3/g' "$ptw"
     echo "patched: $ptw (stop_check_enabled -> false)"
-else
-    echo "WARNING: pose_twist_estimator.launch.xml not found under $root" >&2
+done < <(find -L "$root" \( -path '*tier4_localization_launch*' -name pose_twist_estimator.launch.xml \
+                     -o -path '*autoware_localization_launch*' -name util.launch.xml \) -print0 2>/dev/null)
+if [ "$stop_found" = 0 ]; then
+    echo "WARNING: no localization launch file setting stop_check_enabled found under $root" >&2
 fi
 # ADAPI diag units publish at a low rate; at sub-realtime sim speed the stock
 # 3.0 s staleness window flaps ERROR -> MRM EMERGENCY_STOP pulses. Bump ONLY
