@@ -50,6 +50,11 @@ def expected_version_pattern():
 
     "-dirty" is optional: whether the tree had local changes when it was built
     is not something the test can know afterwards.
+
+    In a checkout where git cannot read HEAD (not installed, or it refuses the
+    directory as not owned by the user) this raises rather than returning
+    None: that is when the build drops the commit from the version, so the
+    check must fail there, not be skipped.
     """
     release = os.environ.get("CARLA_RELEASE_VERSION", "").strip()
     if release:
@@ -61,5 +66,6 @@ def expected_version_pattern():
         return re.escape(tag)
     commit = _git("rev-parse", "--short=9", "HEAD")
     if commit is None:
-        return None
+        raise RuntimeError(
+            "git cannot read HEAD of {}, so the built commit is unknown".format(REPO_ROOT))
     return re.escape("{}-{}".format(base_version(), commit)) + "(-dirty)?"
