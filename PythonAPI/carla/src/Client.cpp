@@ -9,6 +9,8 @@
 
 #include <boost/python/stl_iterator.hpp>
 
+#include <carla/rpc/ActorUpdateBatch.h>
+
 namespace ctm = carla::traffic_manager;
 namespace cg = carla::geom;
 
@@ -96,6 +98,15 @@ static auto GetRequiredFiles(const carla::client::Client &self, const std::strin
   }
   return result;
 }
+
+// Defined in ActorUpdates.cpp.
+boost::python::object ApplyActorUpdates(
+    const carla::client::Client &self,
+    carla::rpc::ActorUpdateBatchBuilder &batch,
+    bool do_tick);
+void ApplyActorUpdatesAsync(
+    const carla::client::Client &self,
+    carla::rpc::ActorUpdateBatchBuilder &batch);
 
 static void ApplyBatchCommands(
     const carla::client::Client &self,
@@ -301,6 +312,8 @@ void export_client() {
     .def("set_replayer_ignore_spectator", &cc::Client::SetReplayerIgnoreSpectator, (arg("ignore_spectator")))
     .def("apply_batch", &ApplyBatchCommands, (arg("commands"), arg("do_tick")=false))
     .def("apply_batch_sync", &ApplyBatchCommandsSync, (arg("commands"), arg("do_tick")=false))
+    .def("apply_actor_updates", &ApplyActorUpdates, (arg("batch"), arg("do_tick")=false))
+    .def("apply_actor_updates_async", &ApplyActorUpdatesAsync, (arg("batch")))
     .def("get_trafficmanager", CONST_CALL_WITHOUT_GIL_1(cc::Client, GetInstanceTM, uint16_t), (arg("port")=ctm::TM_DEFAULT_PORT))
   ;
 }

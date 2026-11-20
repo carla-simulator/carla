@@ -79,8 +79,19 @@ namespace detail {
 
     template <typename ... Args>
     void AsyncCall(const std::string &function, Args && ... args) {
-      // Discard returned future.
+      // The result is never read; rpc_client keeps the call until the server
+      // has queued it, so that later calls that wait run after it.
       rpc_client.async_call(function, std::forward<Args>(args) ...);
+    }
+
+    /// Waits until the server has queued every fire-and-forget call made so
+    /// far, so that a call sent next reaches the game thread after them.
+    void Fence() {
+      try {
+        rpc_client.Fence();
+      } catch (const ::rpc::timeout &) {
+        throw_exception(TimeoutException(endpoint, GetTimeout()));
+      }
     }
 
     time_duration GetTimeout() const {
@@ -872,6 +883,10 @@ namespace detail {
   }
 
   void Client::ApplyBatch(std::vector<rpc::Command> commands, bool do_tick_cue) {
+    if (do_tick_cue) {
+      // The tick must come after this client's earlier fire-and-forget calls.
+      _pimpl->Fence();
+    }
     _pimpl->AsyncCall("apply_batch", std::move(commands), do_tick_cue);
   }
 
@@ -886,6 +901,17 @@ namespace detail {
       std::vector<rpc::Command> commands) {
     using return_t = std::pair<std::vector<rpc::CommandResponse>, uint64_t>;
     return _pimpl->CallAndWait<return_t>("apply_batch_and_tick", std::move(commands));
+  }
+
+  std::pair<std::vector<uint8_t>, uint64_t> Client::ApplyActorUpdates(
+      std::vector<uint8_t> blob,
+      bool do_tick) {
+    using return_t = std::pair<std::vector<uint8_t>, uint64_t>;
+    return _pimpl->CallAndWait<return_t>("apply_actor_updates", std::move(blob), do_tick);
+  }
+
+  void Client::ApplyActorUpdatesAsync(std::vector<uint8_t> blob) {
+    _pimpl->AsyncCall("apply_actor_updates", std::move(blob), false);
   }
 
   uint64_t Client::SendTickCue() {

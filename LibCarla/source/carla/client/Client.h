@@ -203,6 +203,22 @@ namespace client {
       return _simulator->ApplyBatchSync(std::move(commands), false);
     }
 
+    /// Applies a blob of typed actor updates built with
+    /// rpc::ActorUpdateBatchBuilder, optionally ticking the world in the same
+    /// call. Returns one rpc::ActorUpdateStatus byte per update.
+    std::vector<uint8_t> ApplyActorUpdates(
+        std::vector<uint8_t> blob,
+        bool do_tick = false) const {
+      return _simulator->ApplyActorUpdates(
+          std::move(blob), do_tick, _simulator->GetNetworkingTimeout());
+    }
+
+    /// Fire-and-forget ApplyActorUpdates. This client's next tick, or any
+    /// other call that waits for the server, runs after it.
+    void ApplyActorUpdatesAsync(std::vector<uint8_t> blob) const {
+      _simulator->ApplyActorUpdatesAsync(std::move(blob));
+    }
+
   private:
 
     std::shared_ptr<detail::Simulator> _simulator;

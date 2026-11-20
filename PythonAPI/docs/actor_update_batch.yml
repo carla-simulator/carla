@@ -1,0 +1,214 @@
+---
+- module_name: carla
+
+  classes:
+  - class_name: ActorUpdateBatch
+    # - DESCRIPTION ------------------------
+    doc: >
+      Per-actor updates for many actors, sent to the server in one call with carla.Client.apply_actor_updates or carla.Client.apply_actor_updates_async. It is the fast way to teleport, move or control hundreds of actors every tick, for example in a co-simulation: the updates travel as one binary block instead of one command or call per actor, and the `add_*s` methods read numpy arrays directly.
+
+      The server applies the updates grouped by kind, in this order: simulate physics, transform, location, walker state, target velocity, target angular velocity, vehicle control, Ackermann control, walker control, vehicle light state and traffic light state. Within a kind, updates are applied in the order they were added. Each update runs the same code as its single-actor method (for example carla.Actor.set_transform).
+
+      Locations are sent as 64-bit floats, so a location written far from the origin of a large map reaches Unreal without the rounding of the single-actor methods, which use 32-bit floats. Rotations, velocities and controls are 32-bit floats, as in the rest of the API.
+
+      Sending a batch empties it, so one object can be filled and sent every tick.
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __init__
+      doc: >
+        Creates an empty batch.
+    # --------------------------------------
+    - def_name: __len__
+      return: int
+      doc: >
+        Number of updates in the batch.
+    # --------------------------------------
+    - def_name: clear
+      doc: >
+        Removes every update.
+    # --------------------------------------
+    - def_name: add_transforms
+      params:
+      - param_name: actor_ids
+        type: list(int) or numpy array
+        doc: >
+          N actor ids.
+      - param_name: locations
+        type: numpy array (N, 3)
+        param_units: meters
+        doc: >
+          x, y, z of each actor. Read as 64-bit floats; a float64 array keeps every bit.
+      - param_name: rotations
+        type: numpy array (N, 3)
+        param_units: degrees
+        doc: >
+          pitch, yaw, roll of each actor, read as 32-bit floats.
+      doc: >
+        Adds a teleport for each actor, like carla.Actor.set_transform. Any C-contiguous buffer of numbers (numpy array, `array.array`) or a list of rows works.
+    # --------------------------------------
+    - def_name: add_locations
+      params:
+      - param_name: actor_ids
+        type: list(int) or numpy array
+      - param_name: locations
+        type: numpy array (N, 3)
+        param_units: meters
+        doc: >
+          Read as 64-bit floats.
+      doc: >
+        Adds a move to a new location, keeping the rotation, for each actor, like carla.Actor.set_location.
+    # --------------------------------------
+    - def_name: add_target_velocities
+      params:
+      - param_name: actor_ids
+        type: list(int) or numpy array
+      - param_name: velocities
+        type: numpy array (N, 3)
+        param_units: m/s
+      doc: >
+        Like carla.Actor.set_target_velocity for each actor.
+    # --------------------------------------
+    - def_name: add_target_angular_velocities
+      params:
+      - param_name: actor_ids
+        type: list(int) or numpy array
+      - param_name: angular_velocities
+        type: numpy array (N, 3)
+        param_units: degrees/s
+      doc: >
+        Like carla.Actor.set_target_angular_velocity for each actor.
+    # --------------------------------------
+    - def_name: add_vehicle_controls
+      params:
+      - param_name: actor_ids
+        type: list(int) or numpy array
+      - param_name: throttle
+        type: numpy array (N)
+      - param_name: steer
+        type: numpy array (N)
+      - param_name: brake
+        type: numpy array (N)
+      doc: >
+        Like carla.Vehicle.apply_control for each vehicle, with no hand brake, no reverse and automatic gears. Use add_vehicle_control for the other fields.
+    # --------------------------------------
+    - def_name: add_transform
+      params:
+      - param_name: actor_id
+        type: int
+      - param_name: transform
+        type: carla.Transform
+      doc: >
+        Like carla.Actor.set_transform.
+    # --------------------------------------
+    - def_name: add_location
+      params:
+      - param_name: actor_id
+        type: int
+      - param_name: location
+        type: carla.Location
+      doc: >
+        Like carla.Actor.set_location.
+    # --------------------------------------
+    - def_name: add_walker_state
+      params:
+      - param_name: actor_id
+        type: int
+      - param_name: transform
+        type: carla.Transform
+      - param_name: speed
+        type: float
+        param_units: m/s
+      doc: >
+        Like command.ApplyWalkerState: places a walker and sets its speed along its forward direction.
+    # --------------------------------------
+    - def_name: add_target_velocity
+      params:
+      - param_name: actor_id
+        type: int
+      - param_name: velocity
+        type: carla.Vector3D
+        param_units: m/s
+      doc: >
+        Like carla.Actor.set_target_velocity.
+    # --------------------------------------
+    - def_name: add_target_angular_velocity
+      params:
+      - param_name: actor_id
+        type: int
+      - param_name: angular_velocity
+        type: carla.Vector3D
+        param_units: degrees/s
+      doc: >
+        Like carla.Actor.set_target_angular_velocity.
+    # --------------------------------------
+    - def_name: add_simulate_physics
+      params:
+      - param_name: actor_id
+        type: int
+      - param_name: enabled
+        type: bool
+      doc: >
+        Like carla.Actor.set_simulate_physics.
+    # --------------------------------------
+    - def_name: add_vehicle_control
+      params:
+      - param_name: actor_id
+        type: int
+      - param_name: control
+        type: carla.VehicleControl
+      doc: >
+        Like carla.Vehicle.apply_control.
+    # --------------------------------------
+    - def_name: add_ackermann_control
+      params:
+      - param_name: actor_id
+        type: int
+      - param_name: control
+        type: carla.VehicleAckermannControl
+      doc: >
+        Like carla.Vehicle.apply_ackermann_control.
+    # --------------------------------------
+    - def_name: add_walker_control
+      params:
+      - param_name: actor_id
+        type: int
+      - param_name: control
+        type: carla.WalkerControl
+      doc: >
+        Like carla.Walker.apply_control.
+    # --------------------------------------
+    - def_name: add_vehicle_light_state
+      params:
+      - param_name: actor_id
+        type: int
+      - param_name: light_state
+        type: carla.VehicleLightState
+      doc: >
+        Like carla.Vehicle.set_light_state.
+    # --------------------------------------
+    - def_name: add_traffic_light_state
+      params:
+      - param_name: actor_id
+        type: int
+      - param_name: state
+        type: carla.TrafficLightState
+      doc: >
+        Like carla.TrafficLight.set_state.
+    # --------------------------------------
+
+  - class_name: ActorUpdateStatus
+    # - DESCRIPTION ------------------------
+    doc: >
+      Outcome of one update of a carla.ActorUpdateBatch. carla.Client.apply_actor_updates returns one byte per update with these values, in the order the server applied them (see carla.ActorUpdateBatch).
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: Success
+      doc: >
+        The update was applied.
+    - var_name: ActorNotFound
+      doc: >
+        No actor has that id.
+    - var_name: Failed
+      doc: >
+        The actor exists but the update failed, for example a vehicle control sent to a walker. The server log says why.
+...

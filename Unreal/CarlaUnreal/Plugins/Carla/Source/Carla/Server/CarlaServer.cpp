@@ -65,6 +65,7 @@
 #include <carla/rpc/String.h>
 #include <carla/rpc/Transform.h>
 #include <carla/rpc/Vector2D.h>
+#include <carla/rpc/ActorUpdateBatch.h>
 #include <carla/rpc/Vector3D.h>
 #include <carla/rpc/VehicleDoor.h>
 #include <carla/rpc/VehicleAckermannControl.h>
@@ -3980,6 +3981,194 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
       return frame.GetError();
     }
     return std::make_pair(std::move(result), frame.Get());
+  };
+
+  // ~~ Typed actor updates ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  // Applies a blob built by carla::rpc::ActorUpdateBatchBuilder: the whole
+  // blob is checked before anything is applied, then each update runs the
+  // same code as its single-actor RPC, except that positions stay in double
+  // from the wire to Unreal. Returns one status byte per update, in blob order.
+  auto apply_actor_update_blob = [=, this](
+      const std::vector<uint8_t> &Blob) -> R<std::vector<uint8_t>>
+  {
+    REQUIRE_CARLA_EPISODE();
+    REQUIRE_PRIMARY_SERVER();
+    std::vector<cr::ActorUpdateSection> Sections;
+    std::string Error;
+    if (!cr::ParseActorUpdateBatch(Blob.data(), Blob.size(), Sections, Error))
+    {
+      return RespondError("apply_actor_updates", FString(UTF8_TO_TCHAR(Error.c_str())));
+    }
+
+    using K = cr::ActorUpdateKind;
+    using S = cr::ActorUpdateStatus;
+    auto ToPose = [](const uint8_t *Record, FTransform &OutTransform, cr::Rotation &OutRotation)
+    {
+      const double X = cr::ReadActorUpdateField<double>(Record, 0u);
+      const double Y = cr::ReadActorUpdateField<double>(Record, 8u);
+      const double Z = cr::ReadActorUpdateField<double>(Record, 16u);
+      OutRotation = cr::Rotation(
+          cr::ReadActorUpdateField<float>(Record, 24u),
+          cr::ReadActorUpdateField<float>(Record, 28u),
+          cr::ReadActorUpdateField<float>(Record, 32u));
+      // Meters to centimeters in double: no float rounding far from the origin.
+      OutTransform = FTransform(
+          FRotator(OutRotation),
+          FVector(1e2 * X, 1e2 * Y, 1e2 * Z),
+          FVector(1.0, 1.0, 1.0));
+    };
+    auto ToVector = [](const uint8_t *Record)
+    {
+      return cr::Vector3D(
+          cr::ReadActorUpdateField<float>(Record, 0u),
+          cr::ReadActorUpdateField<float>(Record, 4u),
+          cr::ReadActorUpdateField<float>(Record, 8u));
+    };
+    auto ToStatus = [](const auto &Result)
+    {
+      return Result.HasError() ? S::Failed : S::Success;
+    };
+
+    size_t Total = 0u;
+    for (const cr::ActorUpdateSection &Section : Sections)
+    {
+      Total += Section.count;
+    }
+    std::vector<uint8_t> Status;
+    Status.reserve(Total);
+    uint32 Failed = 0u;
+    for (const cr::ActorUpdateSection &Section : Sections)
+    {
+      for (uint32_t i = 0u; i < Section.count; ++i)
+      {
+        const cr::ActorId Id = Section.Id(i);
+        const uint8_t *Record = Section.Record(i);
+        FCarlaActor *CarlaActor = Episode->FindCarlaActor(Id);
+        S Result = S::Success;
+        if (CarlaActor == nullptr)
+        {
+          Result = S::ActorNotFound;
+        }
+        else
+        {
+          switch (Section.kind)
+          {
+            case K::SimulatePhysics:
+              Result = ToStatus(set_actor_simulate_physics(Id, Record[0] != 0u));
+              break;
+            case K::Transform:
+            {
+              FTransform Transform;
+              cr::Rotation Rotation;
+              ToPose(Record, Transform, Rotation);
+              CarlaActor->SetActorGlobalTransform(Transform, ETeleportType::TeleportPhysics);
+              break;
+            }
+            case K::Location:
+              CarlaActor->SetActorGlobalLocation(
+                  FVector(
+                      1e2 * cr::ReadActorUpdateField<double>(Record, 0u),
+                      1e2 * cr::ReadActorUpdateField<double>(Record, 8u),
+                      1e2 * cr::ReadActorUpdateField<double>(Record, 16u)),
+                  ETeleportType::TeleportPhysics);
+              break;
+            case K::WalkerState:
+            {
+              FTransform Transform;
+              cr::Rotation Rotation;
+              ToPose(Record, Transform, Rotation);
+              const float Speed = cr::ReadActorUpdateField<float>(Record, 36u);
+              const ECarlaServerResponse Response = CarlaActor->SetWalkerState(
+                  Transform, cr::WalkerControl(Rotation.GetForwardVector(), Speed, false));
+              Result = (Response == ECarlaServerResponse::Success) ? S::Success : S::Failed;
+              break;
+            }
+            case K::TargetVelocity:
+              Result = ToStatus(set_actor_target_velocity(Id, ToVector(Record)));
+              break;
+            case K::TargetAngularVelocity:
+              Result = ToStatus(set_actor_target_angular_velocity(Id, ToVector(Record)));
+              break;
+            case K::VehicleControl:
+              Result = ToStatus(apply_control_to_vehicle(Id, cr::VehicleControl(
+                  cr::ReadActorUpdateField<float>(Record, 0u),
+                  cr::ReadActorUpdateField<float>(Record, 4u),
+                  cr::ReadActorUpdateField<float>(Record, 8u),
+                  Record[12] != 0u,
+                  Record[13] != 0u,
+                  Record[14] != 0u,
+                  cr::ReadActorUpdateField<int32_t>(Record, 16u))));
+              break;
+            case K::AckermannControl:
+              Result = ToStatus(apply_ackermann_control_to_vehicle(Id, cr::VehicleAckermannControl(
+                  cr::ReadActorUpdateField<float>(Record, 0u),
+                  cr::ReadActorUpdateField<float>(Record, 4u),
+                  cr::ReadActorUpdateField<float>(Record, 8u),
+                  cr::ReadActorUpdateField<float>(Record, 12u),
+                  cr::ReadActorUpdateField<float>(Record, 16u))));
+              break;
+            case K::WalkerControl:
+              Result = ToStatus(apply_control_to_walker(Id, cr::WalkerControl(
+                  ToVector(Record),
+                  cr::ReadActorUpdateField<float>(Record, 12u),
+                  Record[16] != 0u)));
+              break;
+            case K::VehicleLightState:
+              Result = ToStatus(set_vehicle_light_state(Id, cr::VehicleLightState(
+                  cr::ReadActorUpdateField<uint32_t>(Record, 0u))));
+              break;
+            case K::TrafficLightState:
+              if (Record[0] >= static_cast<uint8_t>(cr::TrafficLightState::SIZE))
+              {
+                Result = S::Failed;
+              }
+              else
+              {
+                Result = ToStatus(set_traffic_light_state(
+                    Id, static_cast<cr::TrafficLightState>(Record[0])));
+              }
+              break;
+          }
+        }
+        if (Result != S::Success)
+        {
+          ++Failed;
+        }
+        Status.push_back(static_cast<uint8_t>(Result));
+      }
+    }
+    if (Failed > 0u)
+    {
+      UE_LOG(LogCarlaServer, Log, TEXT("apply_actor_updates: %u of %llu updates failed"),
+          Failed, static_cast<uint64>(Total));
+    }
+    return Status;
+  };
+
+  // Typed per-actor updates in one blob, optionally followed by a tick in
+  // the same game-thread task. Returns one status per update and the frame
+  // the tick produced (0 without a tick).
+  BIND_SYNC(apply_actor_updates) << [=](
+      const std::vector<uint8_t> &Blob,
+      bool DoTick) -> R<std::pair<std::vector<uint8_t>, uint64_t>>
+  {
+    auto Status = apply_actor_update_blob(Blob);
+    if (Status.HasError())
+    {
+      return Status.GetError();
+    }
+    uint64_t Frame = 0u;
+    if (DoTick)
+    {
+      auto TickFrame = tick_cue();
+      if (TickFrame.HasError())
+      {
+        return TickFrame.GetError();
+      }
+      Frame = TickFrame.Get();
+    }
+    return std::make_pair(std::move(Status.Get()), Frame);
   };
 
   // ~~ Light Subsystem ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

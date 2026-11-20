@@ -374,6 +374,45 @@ EpisodeProxy Simulator::GetCurrentEpisode() {
     return responses;
   }
 
+  std::vector<uint8_t> Simulator::ApplyActorUpdates(
+      std::vector<uint8_t> blob,
+      bool do_tick,
+      time_duration timeout) {
+    if (!do_tick) {
+      return _client.ApplyActorUpdates(std::move(blob), false).first;
+    }
+    DEBUG_ASSERT(_episode != nullptr);
+
+    // Same order on the server as the updates followed by Tick: the updates,
+    // then the walker navigation's commands, then the tick cue.
+    auto nav = _episode->CreateNavigationIfMissing();
+    auto nav_tick = nav->PrepareTick(_episode);
+
+    std::vector<uint8_t> status;
+    uint64_t frame = 0u;
+    if (!nav_tick.has_value()) {
+      auto result = _client.ApplyActorUpdates(std::move(blob), true);
+      status = std::move(result.first);
+      frame = result.second;
+    } else {
+      status = _client.ApplyActorUpdates(std::move(blob), false).first;
+      if (nav->AnyWalkerDead(*nav_tick)) {
+        // Removing a dead walker takes calls of its own before the tick.
+        _client.ApplyBatchSync(std::move(nav_tick->commands), false);
+        nav->FinishTick(*nav_tick);
+        frame = _client.SendTickCue();
+      } else {
+        frame = _client.ApplyBatchAndTick(std::move(nav_tick->commands)).second;
+        nav->FinishTick(*nav_tick);
+      }
+    }
+
+    if (!SynchronizeFrame(frame, *_episode, timeout)) {
+      throw_exception(TimeoutException(_client.GetEndpoint(), timeout));
+    }
+    return status;
+  }
+
   // ===========================================================================
   // -- Access to global objects in the episode --------------------------------
   // ===========================================================================

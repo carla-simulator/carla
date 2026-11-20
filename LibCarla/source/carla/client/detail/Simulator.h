@@ -934,6 +934,18 @@ namespace detail {
         std::vector<rpc::Command> commands,
         time_duration timeout);
 
+    /// Applies a blob of typed actor updates and returns one status per
+    /// update. With @a do_tick, also ticks the walker navigation and the
+    /// world and waits for the new frame, as Tick does.
+    std::vector<uint8_t> ApplyActorUpdates(
+        std::vector<uint8_t> blob,
+        bool do_tick,
+        time_duration timeout);
+
+    void ApplyActorUpdatesAsync(std::vector<uint8_t> blob) {
+      _client.ApplyActorUpdatesAsync(std::move(blob));
+    }
+
     /// @}
     // =========================================================================
     /// @name Operations lights

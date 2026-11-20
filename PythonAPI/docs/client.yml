@@ -105,6 +105,30 @@
       doc: >
         Executes a list of commands on a single simulation step, blocks until the commands are linked, and returns a list of <b>command.Response</b> that can be used to determine whether a single command succeeded or not. [Here](https://github.com/carla-simulator/carla/blob/ue58-dev/PythonAPI/examples/generate_traffic.py) is an example of it being used to spawn actors.
     # --------------------------------------
+    - def_name: apply_actor_updates
+      params:
+      - param_name: batch
+        type: carla.ActorUpdateBatch
+        doc: >
+          The updates to apply. The batch is empty afterwards.
+      - param_name: do_tick
+        type: bool
+        default: false
+        doc: >
+          In _synchronous mode_, also tick the world after applying the updates, in the same call, as carla.World.tick does.
+      return: bytes
+      doc: >
+        Applies many per-actor updates in one call and waits until they are applied. Returns one carla.ActorUpdateStatus value per update, as a `bytes` object in the order the server applied them (grouped by kind, see carla.ActorUpdateBatch): `not any(statuses)` means every update succeeded, and `numpy.frombuffer(statuses, numpy.uint8)` gives an array.
+    # --------------------------------------
+    - def_name: apply_actor_updates_async
+      params:
+      - param_name: batch
+        type: carla.ActorUpdateBatch
+        doc: >
+          The updates to apply. The batch is empty afterwards.
+      doc: >
+        Sends the updates without waiting for them. They are applied before this client's next call that waits for the server, such as carla.World.tick, so in _synchronous mode_ they always land in the next frame. Two fire-and-forget calls of the same client, this one included, can still reach the server in either order: put updates that depend on each other in one batch.
+    # --------------------------------------
     - def_name: generate_opendrive_world
       params:
       - param_name: opendrive

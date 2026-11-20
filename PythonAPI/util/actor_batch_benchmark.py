@@ -20,6 +20,10 @@ Modes:
   legacy_sync   client.apply_batch_sync(commands), then world.tick()
   legacy_tick   client.apply_batch_sync(commands, True)
   legacy_async  client.apply_batch(commands), then world.tick()
+  updates       client.apply_actor_updates(batch) from numpy arrays, then
+                world.tick(); the ticking client sends apply_actor_updates(batch,
+                True) instead
+  updates_async client.apply_actor_updates_async(batch), then world.tick()
   snapshot      'read' only: WorldSnapshot.find(id) on the tick's snapshot
 
 --clients K runs K client processes. The first one ticks; all of them update
@@ -45,7 +49,8 @@ import time
 
 import carla
 
-APIS = ('per_actor', 'legacy_sync', 'legacy_tick', 'legacy_async', 'snapshot')
+APIS = ('per_actor', 'legacy_sync', 'legacy_tick', 'legacy_async', 'updates', 'updates_async',
+        'snapshot')
 PATH_LENGTH = 200
 PATH_STEP = 0.5
 
@@ -190,7 +195,27 @@ def transforms_digest(world, ids, step, digest):
             transform.rotation.pitch, transform.rotation.yaw, transform.rotation.roll))
 
 
-class BenchmarkClient:
+class TeleportArrays:  # pylint: disable=too-few-public-methods
+    """The teleports of every step as numpy arrays, for carla.ActorUpdateBatch."""
+
+    def __init__(self, ids, plain_paths):
+        import numpy  # pylint: disable=import-outside-toplevel
+        self.batch = carla.ActorUpdateBatch()
+        self.ids = numpy.array(ids, dtype=numpy.uint32)
+        poses = numpy.array(plain_paths, dtype=numpy.float64).reshape((len(ids), -1, 6))
+        self.locations = poses[:, :, 0:3].copy()
+        self.rotations = poses[:, :, 3:6].astype(numpy.float32)
+        self.rows = numpy.arange(len(ids))
+
+    def fill(self, step):
+        """The batch of teleports of one step."""
+        columns = (step + self.rows) % self.locations.shape[1]
+        self.batch.add_transforms(
+            self.ids, self.locations[self.rows, columns], self.rotations[self.rows, columns])
+        return self.batch
+
+
+class BenchmarkClient:  # pylint: disable=too-many-instance-attributes
     """One client process. Client 0 ticks the world and collects the result."""
 
     @property
@@ -209,6 +234,8 @@ class BenchmarkClient:
         self.actors = {}
         if args.api == 'per_actor' or (args.mode == 'read' and args.api != 'snapshot'):
             self.actors = {actor.id: actor for actor in self.world.get_actors(self.ids)}
+        self.updates = TeleportArrays(self.ids, plain_paths) \
+            if args.api.startswith('updates') else None
 
     def teleports(self, step):
         """The teleports of one step."""
@@ -217,31 +244,46 @@ class BenchmarkClient:
 
     def update(self, step):
         """Sends this client's work for one step. Returns True if it ticked."""
-        api = self.args.api
         if self.args.mode == 'set':
-            if api == 'per_actor':
-                for i, (actor_id, path) in enumerate(zip(self.ids, self.paths)):
-                    self.actors[actor_id].set_transform(path[(step + i) % len(path)])
-            elif api == 'legacy_tick' and self.ticker:
-                self.client.apply_batch_sync(self.teleports(step), True)
-                return True
-            elif api == 'legacy_async':
-                self.client.apply_batch(self.teleports(step))
-            else:
-                self.client.apply_batch_sync(self.teleports(step))
-        elif self.args.mode == 'read':
-            if api == 'snapshot':
-                snapshot = self.world.get_snapshot()
-                states = [snapshot.find(actor_id) for actor_id in self.ids]
-                for state in states:
-                    if state is not None:
-                        state.get_transform()
-                        state.get_velocity()
-            else:
-                for actor_id in self.ids:
-                    self.actors[actor_id].get_transform()
-                    self.actors[actor_id].get_velocity()
+            return self.update_set(step)
+        if self.args.mode == 'read':
+            self.update_read()
         return False
+
+    def update_set(self, step):
+        """Teleports this client's actors. Returns True if it ticked."""
+        api = self.args.api
+        ticks_here = self.ticker and self.args.synchronous
+        if api == 'per_actor':
+            for i, (actor_id, path) in enumerate(zip(self.ids, self.paths)):
+                self.actors[actor_id].set_transform(path[(step + i) % len(path)])
+        elif api == 'legacy_tick' and self.ticker:
+            self.client.apply_batch_sync(self.teleports(step), True)
+            return True
+        elif api == 'legacy_async':
+            self.client.apply_batch(self.teleports(step))
+        elif api == 'updates':
+            self.client.apply_actor_updates(self.updates.fill(step), ticks_here)
+            return ticks_here
+        elif api == 'updates_async':
+            self.client.apply_actor_updates_async(self.updates.fill(step))
+        else:
+            self.client.apply_batch_sync(self.teleports(step))
+        return False
+
+    def update_read(self):
+        """Reads every actor of this client."""
+        if self.args.api == 'snapshot':
+            snapshot = self.world.get_snapshot()
+            states = [snapshot.find(actor_id) for actor_id in self.ids]
+            for state in states:
+                if state is not None:
+                    state.get_transform()
+                    state.get_velocity()
+        else:
+            for actor_id in self.ids:
+                self.actors[actor_id].get_transform()
+                self.actors[actor_id].get_velocity()
 
     def advance(self, ticked):
         """Moves the simulation one frame forward, or waits for it."""
@@ -394,7 +436,8 @@ def main():
                 out.write(text + '\n')
     finally:
         if ids:
-            client.apply_batch_sync([carla.command.DestroyActor(actor_id) for actor_id in ids], True)
+            client.apply_batch_sync(
+                [carla.command.DestroyActor(actor_id) for actor_id in ids], True)
         traffic_manager.set_synchronous_mode(False)
         world.apply_settings(original)
 

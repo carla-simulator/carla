@@ -550,6 +550,18 @@ namespace detail {
     std::pair<std::vector<rpc::CommandResponse>, uint64_t> ApplyBatchAndTick(
         std::vector<rpc::Command> commands);
 
+    /// Applies a blob of typed actor updates (see rpc/ActorUpdateBatch.h)
+    /// and, with @a do_tick, sends the tick cue in the same game-thread task.
+    /// Returns one status per update and the frame the tick produced (0
+    /// without a tick).
+    std::pair<std::vector<uint8_t>, uint64_t> ApplyActorUpdates(
+        std::vector<uint8_t> blob,
+        bool do_tick);
+
+    /// Fire-and-forget ApplyActorUpdates without a tick. The next call that
+    /// waits for the server, a tick included, runs after it.
+    void ApplyActorUpdatesAsync(std::vector<uint8_t> blob);
+
     uint64_t SendTickCue();
 
     std::vector<rpc::LightState> QueryLightsStateToServer() const;
