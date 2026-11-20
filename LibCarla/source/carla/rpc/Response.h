@@ -22,6 +22,7 @@
 #endif
 
 #include <string>
+#include <type_traits>
 
 namespace carla {
 namespace rpc {
@@ -58,7 +59,8 @@ namespace rpc {
 
     Response() = default;
 
-    template <typename TValue>
+    template <typename TValue, typename = std::enable_if_t<
+        !std::is_same_v<std::decay_t<TValue>, Response>>>
     Response(TValue &&value) : _data(std::forward<TValue>(value)) {}
 
     template <typename TValue>
