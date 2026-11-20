@@ -64,7 +64,10 @@ Practical consequences for the code:
 | **0.10.0** | `Linux/Carla-0.10.0-Linux-Shipping.tar.gz` | 10.4 GB | Backblaze |
 | nightly (UE4) | `Linux/Dev/CARLA_Latest.tar.gz` | 8.4 GB | both |
 | nightly maps | `Linux/Dev/AdditionalMaps_Latest.tar.gz` | 14.8 GB | both |
-| nightly (UE5) | `Linux/Dev/CARLA_UE5_Latest.tar.gz` | 15.7 GB | Backblaze |
+| nightly (UE5) | `Linux/Dev/CARLA_UE5_Latest.tar.gz` | 14.1 GB | carlasim.com |
+| nightly (UE5, Windows) | `Windows/Dev/CARLA_UE5_Latest.zip` | 13.9 GB | carlasim.com |
+| **1.0** | `Linux/CARLA_1.0.tar.gz` | 14.1 GB | carlasim.com |
+| 1.0 maps (content pack) | `Linux/AdditionalMaps_1.0.tar.gz` | 6.8 GB | carlasim.com |
 
 `Linux/CARLA_0.10.0.tar.gz` returns **404** on every mirror — the UE5 line renamed
 the artifact. Anything that builds URLs from a template breaks there, which is the
@@ -75,10 +78,7 @@ The 0.10 line also renames the launcher (`CarlaUnreal.sh`, not `CarlaUE4.sh`), s
 `ue4` skills do not apply to it, and its client wheel is likewise 0.10.x.
 
 `nightly` means the UE4 `Dev` build; `nightly --ue5` fetches `CARLA_UE5_Latest.tar.gz`
-instead. The UE5 nightly is **Linux only** — no `Windows/Dev/CARLA_UE5_Latest.zip`
-is published (404 on both mirrors) — and there is no separate
-`AdditionalMaps_UE5_Latest`, because the UE5 package bundles its content. So
-`--ue5` refuses on Windows and takes no `--with-maps`.
+instead (`Windows/Dev/CARLA_UE5_Latest.zip` on Windows, verified 2026-11-19). No AdditionalMaps pack is published for the nightly (`CARLA_UE5_Latest_AdditionalMaps.tar.gz` is a 404), so `--ue5` takes no `--with-maps`; the weekly build and the 1.0+ releases have one, see `get-carla-additional-maps`.
 
 ## What each mode gives you
 
@@ -94,7 +94,7 @@ A cooked, runnable simulator. Contains:
 
 `nightly` is the same shape with no version identity — it is a moving target, fine
 for "does master fix my bug", wrong for anything reproducible. `nightly --ue5` is
-the UE5 equivalent: same shape, `CarlaUnreal.sh` as the launcher, a 0.10.x client
+the UE5 equivalent: same shape, `CarlaUnreal.sh` as the launcher, a 1.0 client
 wheel inside, and the `ue4` skills do not apply to it.
 
 ### `git`
