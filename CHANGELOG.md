@@ -254,6 +254,7 @@
 
 #### Examples and tests
 
+* **Pedestrian seed zero**: apply an explicit zero seed while preserving unseeded pedestrian behavior when the option is omitted.
 * Fixed `draw_skeleton.py` hanging on Ctrl+C: an unused `multiprocessing` pool caught the interrupt in its workers. The example now stops on Ctrl+C, stops the camera and walker controller, and destroys its actors.
 
 * Fixed **the agent skills on Windows (Git Bash with a native Python)** and a batch of script bugs found by the weekly package test. `PYTHONPATH` is built with the interpreter's separator and `D:\` paths, `check-carla-ports` falls back to `netstat`/`tasklist` and never reports a busy port as free, `run-carla-ue58-server` runs and stops a standalone package (`CarlaUnreal.exe`) with no checkout, and `install-python-api` searches every configured CARLA root and no longer reports `1.0` against `1.0-<commit>` as a mismatch. Also fixed: `set-world-settings async` hanging on a synchronous world nobody ticks, `read-sensor` and `control-spectator follow` hanging or failing at exit, `replay-recording` reading `/proc` on Windows (and a `stop --clear-scene` for servers that leave replayed actors behind), `create-sensor` and `spawn-vehicles ego` failing on `--ros-frame-id`/`--no-ros-tf` where the attribute does not exist (and the new `--ros-topic-name`), `load-map` not resolving `Town03` to `Town03_Opt`, and evenly spaced `telemetry watch` samples. Plus `spawn-walkers --seconds`, grouped spawn errors in `spawn-vehicles`, and stale paths and examples in the docs.
