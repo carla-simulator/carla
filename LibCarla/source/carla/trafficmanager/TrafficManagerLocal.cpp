@@ -5,11 +5,14 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include <algorithm>
+#include <type_traits>
+#include <variant>
 
 #include "carla/Logging.h"
 
 #include "carla/client/detail/Simulator.h"
 
+#include "carla/trafficmanager/TrafficManager.h"
 #include "carla/trafficmanager/TrafficManagerLocal.h"
 
 namespace carla {
@@ -98,7 +101,8 @@ TrafficManagerLocal::TrafficManagerLocal(
               collision_stage,
               traffic_light_stage,
               motion_plan_stage,
-              vehicle_light_stage)),
+              vehicle_light_stage,
+              update_batch)),
 
     server(TrafficManagerServer(RPCportTM, static_cast<carla::traffic_manager::TrafficManagerBase *>(this))) {
 
@@ -160,6 +164,35 @@ void TrafficManagerLocal::Start() {
   bool synchronous_mode = parameters.GetSynchronousMode();
   if (!synchronous_mode) {
     worker_thread = std::make_unique<std::thread>(&TrafficManagerLocal::Run, this);
+  }
+}
+
+/// Adds the stages' commands to @a batch. The batch applies each kind in a
+/// fixed order (transforms, then controls, then light states), which matches
+/// the frame's order: every vehicle gets either a transform or a control, and
+/// the light states come after both.
+static void AddControlFrame(const ControlFrame &frame, carla::rpc::ActorUpdateBatchBuilder &batch) {
+  namespace cmd = carla::rpc;
+  for (const auto &command : frame) {
+    std::visit([&batch](const auto &c) {
+      using T = std::decay_t<decltype(c)>;
+      if constexpr (std::is_same_v<T, cmd::Command::ApplyVehicleControl>) {
+        batch.AddVehicleControl(
+            c.actor, c.control.throttle, c.control.steer, c.control.brake,
+            c.control.hand_brake, c.control.reverse, c.control.manual_gear_shift, c.control.gear);
+      } else if constexpr (std::is_same_v<T, cmd::Command::ApplyTransform>) {
+        const auto &l = c.transform.location;
+        const auto &r = c.transform.rotation;
+        const double location[3] = {l.x, l.y, l.z};
+        const float rotation[3] = {r.pitch, r.yaw, r.roll};
+        batch.AddTransform(c.actor, location, rotation);
+      } else if constexpr (std::is_same_v<T, cmd::Command::SetVehicleLightState>) {
+        batch.AddVehicleLightState(c.actor, c.light_state);
+      } else {
+        // The stages emit only the three commands above.
+        log_error("Traffic Manager: unexpected command in the control frame, dropped");
+      }
+    }, command.command);
   }
 }
 
@@ -271,20 +304,31 @@ void TrafficManagerLocal::Step() {
     control_frame = std::move(filtered_frame);
   }
 
+  AddControlFrame(control_frame, update_batch);
   registration_lock.unlock();
 
-  // Sending the current cycle's batch command to the simulator. Synchronous
-  // mode must apply it before the next tick; async waiting costs a server frame.
-  if (synchronous_mode) {
-    episode_proxy.Lock()->ApplyBatchSync(control_frame, false);
-  } else if (!control_frame.empty()) {
+  // Sending the current cycle's updates to the simulator, as one blob after
+  // the ALSM's physics toggles. Synchronous mode must apply them before the
+  // next tick; async waiting costs a server frame.
+  if (update_batch.empty()) {
+    return;
+  }
+  auto simulator = episode_proxy.Lock();
+  if (synchronous_mode && defer_updates_to_tick) {
+    // Every tick of this process first waits until the server has queued
+    // this call (the fence of a connection's own calls, or FenceUpdates).
+    simulator->ApplyActorUpdatesAsync(update_batch.Finish());
+    TrafficManager::AddUnfencedUpdates(simulator);
+  } else if (synchronous_mode) {
+    simulator->ApplyActorUpdates(update_batch.Finish(), false, simulator->GetNetworkingTimeout());
+  } else {
     // An unwaited batch is acknowledged on receipt, not on application, so
     // periodically waiting is what bounds the queue ahead of the game thread.
     if (IsBatchSyncDue(unwaited_control_batches, MAX_UNWAITED_CONTROL_BATCHES)) {
-      episode_proxy.Lock()->ApplyBatchSync(control_frame, false);
+      simulator->ApplyActorUpdates(update_batch.Finish(), false, simulator->GetNetworkingTimeout());
       unwaited_control_batches = 0u;
     } else {
-      episode_proxy.Lock()->ApplyBatch(control_frame, false);
+      simulator->ApplyActorUpdatesAsync(update_batch.Finish());
       ++unwaited_control_batches;
     }
   }
@@ -302,6 +346,28 @@ bool TrafficManagerLocal::SynchronousTick() {
   if (parameters.GetSynchronousMode()) {
     Step();  // Do one step of TM.
   }
+  return true;
+}
+
+bool TrafficManagerLocal::TickForFrame(uint64_t frame, const cc::detail::Simulator *ticker) {
+  if (!parameters.GetSynchronousMode()) {
+    return true;
+  }
+  // The client that ticked has the new frame, but this TM reads the world
+  // through its own connection, which may still hold part of the previous one.
+  auto simulator = episode_proxy.TryLock();
+  if (simulator != nullptr && simulator.get() != ticker &&
+      !simulator->WaitForFrame(frame, simulator->GetNetworkingTimeout())) {
+    log_warning("Traffic Manager: frame", frame, "did not arrive on its connection; stepping anyway");
+  }
+  // Called from a tick, so the next tick of this process comes after this
+  // step: the step need not wait for the server to apply its updates.
+  defer_updates_to_tick = true;
+  struct Restore {
+    bool &flag;
+    ~Restore() { flag = false; }
+  } restore{defer_updates_to_tick};
+  Step();
   return true;
 }
 
@@ -339,6 +405,7 @@ void TrafficManagerLocal::Stop() {
   collision_frame.clear();
   tl_frame.clear();
   control_frame.clear();
+  update_batch.Clear();
   registration_lock.unlock();
 
   run_traffic_manger.store(true);

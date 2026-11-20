@@ -11,8 +11,11 @@
 #include "carla/NonCopyable.h"
 #include "carla/client/Timestamp.h"
 #include "carla/rpc/ActorId.h"
+#include "carla/rpc/Command.h"
 
 #include <memory>
+#include <optional>
+#include <vector>
 
 namespace carla {
 namespace client {
@@ -26,6 +29,17 @@ namespace detail {
     : public std::enable_shared_from_this<WalkerNavigation>,
     private NonCopyable {
   public:
+
+    struct WalkerHandle {
+      ActorId walker;
+      ActorId controller;
+    };
+
+    /// What one navigation tick sends, and the walker list it started from.
+    struct TickCommands {
+      std::vector<rpc::Command> commands;
+      std::shared_ptr<const std::vector<WalkerHandle>> walkers;
+    };
 
     explicit WalkerNavigation(std::weak_ptr<Simulator> simulator, bool server_side = false);
 
@@ -67,6 +81,17 @@ namespace detail {
 
     void Tick(std::shared_ptr<Episode> episode);
 
+    /// The first half of Tick: updates the crowd and returns the walker
+    /// commands to send, or nothing when there is no crowd to drive.
+    std::optional<TickCommands> PrepareTick(std::shared_ptr<Episode> episode);
+
+    /// True if a walker of @a tick died, so FinishTick has work to do.
+    bool AnyWalkerDead(const TickCommands &tick);
+
+    /// The second half of Tick, after the commands were sent: removes the
+    /// walkers of @a tick that died.
+    void FinishTick(const TickCommands &tick);
+
     // Get Random location in nav mesh
     std::optional<geom::Location> GetRandomLocation() {
       geom::Location random_location(0, 0, 0);
@@ -104,11 +129,6 @@ namespace detail {
     const bool _server_side;
 
     carla::nav::Navigation _nav;
-
-    struct WalkerHandle {
-      ActorId walker;
-      ActorId controller;
-    };
 
     AtomicList<WalkerHandle> _walkers;
 

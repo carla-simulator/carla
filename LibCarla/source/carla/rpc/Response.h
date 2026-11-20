@@ -22,6 +22,7 @@
 #endif
 
 #include <string>
+#include <type_traits>
 
 namespace carla {
 namespace rpc {
@@ -58,7 +59,12 @@ namespace rpc {
 
     Response() = default;
 
-    template <typename TValue>
+    // Never a Response itself: copying one from a non-const lvalue would pick
+    // this constructor over the copy constructor and build the value from the
+    // Response's operator bool, turning every value into 0 or 1.
+    template <
+        typename TValue,
+        typename = std::enable_if_t<!std::is_same_v<std::decay_t<TValue>, Response>>>
     Response(TValue &&value) : _data(std::forward<TValue>(value)) {}
 
     template <typename TValue>

@@ -39,14 +39,23 @@ namespace detail {
   }
 
   void WalkerNavigation::Tick(std::shared_ptr<Episode> episode) {
+    auto tick = PrepareTick(episode);
+    if (!tick.has_value()) {
+      return;
+    }
+    _simulator.lock()->ApplyBatchSync(std::move(tick->commands), false);
+    FinishTick(*tick);
+  }
+
+  std::optional<WalkerNavigation::TickCommands> WalkerNavigation::PrepareTick(std::shared_ptr<Episode> episode) {
     if (_server_side) {
       // Walkers are driven by the server's crowd; pushing client-side
       // WalkerControl states here would fight the server controller.
-      return;
+      return std::nullopt;
     }
     auto walkers = _walkers.Load();
     if (walkers->empty()) {
-      return;
+      return std::nullopt;
     }
 
     // get current state
@@ -72,7 +81,23 @@ namespace detail {
         commands.emplace_back(Cmd::ApplyWalkerState{ handle.walker, trans, speed });
       }
     }
-    _simulator.lock()->ApplyBatchSync(std::move(commands), false);
+    return TickCommands{std::move(commands), walkers};
+  }
+
+  bool WalkerNavigation::AnyWalkerDead(const TickCommands &tick) {
+    // The list PrepareTick started from, before it purged missing walkers.
+    const auto &walkers = tick.walkers;
+    bool alive;
+    for (auto handle : *walkers) {
+      if (_nav.IsWalkerAlive(handle.walker, alive) && !alive) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  void WalkerNavigation::FinishTick(const TickCommands &tick) {
+    const auto &walkers = tick.walkers;
 
     // check if any agent has been killed
     bool alive;

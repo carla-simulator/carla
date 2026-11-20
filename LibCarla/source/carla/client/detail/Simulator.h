@@ -201,12 +201,28 @@ namespace detail {
       return _client.GetTimeout();
     }
 
+    /// Blocks until this connection has received the state of @a frame or a
+    /// later one, or until @a timeout. Returns false on time-out.
+    bool WaitForFrame(uint64_t frame, time_duration timeout) const {
+      DEBUG_ASSERT(_episode != nullptr);
+      return _episode->WaitForFrame(frame, timeout);
+    }
+
+    /// Call before sending a tick: a Traffic Manager of this process that sent
+    /// its step through another connection must have it queued on the server
+    /// first. This connection's own calls are fenced by the tick itself.
+    void FenceTrafficManagers() const;
+
     std::string GetClientVersion() {
       return _client.GetClientVersion();
     }
 
     std::string GetServerVersion() {
       return _client.GetServerVersion();
+    }
+
+    rpc::ServerPerfCounters GetServerPerfCounters() {
+      return _client.GetServerPerfCounters();
     }
 
     /// @}
@@ -538,7 +554,7 @@ namespace detail {
     }
 
     void AddActorTorque(const Actor &actor, const geom::Vector3D &torque) {
-      _client.AddActorAngularImpulse(actor.GetId(), torque);
+      _client.AddActorTorque(actor.GetId(), torque);
     }
 
     geom::Transform GetActorComponentWorldTransform(const Actor &actor, const std::string &component_name) {
@@ -916,11 +932,42 @@ namespace detail {
     /// @{
 
     void ApplyBatch(std::vector<rpc::Command> commands, bool do_tick_cue) {
+      if (do_tick_cue) {
+        FenceTrafficManagers();
+      }
       _client.ApplyBatch(std::move(commands), do_tick_cue);
     }
 
     auto ApplyBatchSync(std::vector<rpc::Command> commands, bool do_tick_cue) {
+      if (do_tick_cue) {
+        FenceTrafficManagers();
+      }
       return _client.ApplyBatchSync(std::move(commands), do_tick_cue);
+    }
+
+    /// Applies @a commands, ticks the walker navigation and the world, and
+    /// waits for the new frame: the same as ApplyBatchSync followed by Tick,
+    /// in one round trip.
+    std::vector<rpc::CommandResponse> ApplyBatchSyncAndTick(
+        std::vector<rpc::Command> commands,
+        time_duration timeout);
+
+    /// Applies a blob of typed actor updates and returns one status per
+    /// update. With @a do_tick, also ticks the walker navigation and the
+    /// world and waits for the new frame, as Tick does.
+    std::vector<uint8_t> ApplyActorUpdates(
+        std::vector<uint8_t> blob,
+        bool do_tick,
+        time_duration timeout);
+
+    void ApplyActorUpdatesAsync(std::vector<uint8_t> blob) {
+      _client.ApplyActorUpdatesAsync(std::move(blob));
+    }
+
+    /// Waits until the server has queued every fire-and-forget call this
+    /// connection made so far.
+    void FenceUpdates() {
+      _client.Fence();
     }
 
     /// @}

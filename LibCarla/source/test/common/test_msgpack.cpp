@@ -8,6 +8,8 @@
 
 #include <carla/MsgPackAdaptors.h>
 #include <carla/rpc/Actor.h>
+#include <carla/rpc/Command.h>
+#include <carla/rpc/CommandResponse.h>
 #include <carla/rpc/Response.h>
 
 #include <thread>
@@ -132,6 +134,104 @@ TEST(msgpack, variant) {
   result = mp::UnPack<decltype(var)>(mp::Pack(var));
   ASSERT_EQ(result.index(), 2);
   ASSERT_EQ(std::get<std::string>(result), "hola!");
+}
+
+// Every alternative of rpc::Command decodes back into the same alternative,
+// with the same contents (packing it again gives the same bytes).
+template <size_t I>
+static void CheckCommandAlternative() {
+  using mp = carla::MsgPack;
+  using CommandType = Command::CommandType;
+  Command command;
+  command.command.template emplace<I>();
+  const auto bytes = mp::Pack(command);
+  const auto decoded = mp::UnPack<Command>(bytes);
+  ASSERT_EQ(decoded.command.index(), I);
+  const auto again = mp::Pack(decoded);
+  ASSERT_EQ(std::string(reinterpret_cast<const char *>(again.data()), again.size()),
+            std::string(reinterpret_cast<const char *>(bytes.data()), bytes.size()));
+  static_assert(I < std::variant_size_v<CommandType>);
+}
+
+template <size_t... Is>
+static void CheckCommandAlternatives(std::index_sequence<Is...>) {
+  (CheckCommandAlternative<Is>(), ...);
+}
+
+TEST(msgpack, command_variant_round_trip) {
+  using mp = carla::MsgPack;
+  CheckCommandAlternatives(
+      std::make_index_sequence<std::variant_size_v<Command::CommandType>>());
+
+  // Alternatives with contents, including a nested batch.
+  const carla::geom::Transform transform{
+      carla::geom::Location{1.5f, -2.25f, 3.0f}, carla::geom::Rotation{10.0f, -20.0f, 30.5f}};
+  ActorDescription description;
+  description.uid = 7u;
+  description.id = "vehicle.test.car";
+  Command::SpawnActor spawn(description, transform, 42u);
+  spawn.do_after.push_back(Command{Command::SetSimulatePhysics(0u, false)});
+  spawn.do_after.push_back(Command{Command::SetAutopilot(0u, true, 8001u)});
+  const std::vector<Command> batch = {
+      Command{spawn},
+      Command{Command::ApplyTransform(5u, transform)},
+      Command{Command::ConsoleCommand("stat fps")},
+  };
+  const auto bytes = mp::Pack(batch);
+  const auto decoded = mp::UnPack<std::vector<Command>>(bytes);
+  ASSERT_EQ(decoded.size(), batch.size());
+  const auto &decoded_spawn = std::get<Command::SpawnActor>(decoded[0].command);
+  ASSERT_EQ(decoded_spawn.description.id, "vehicle.test.car");
+  ASSERT_EQ(decoded_spawn.description.uid, 7u);
+  ASSERT_TRUE(decoded_spawn.parent.has_value());
+  ASSERT_EQ(*decoded_spawn.parent, 42u);
+  ASSERT_EQ(decoded_spawn.do_after.size(), 2u);
+  ASSERT_TRUE(std::get<Command::SetAutopilot>(decoded_spawn.do_after[1].command).enabled);
+  const auto &decoded_transform = std::get<Command::ApplyTransform>(decoded[1].command);
+  ASSERT_EQ(decoded_transform.actor, 5u);
+  ASSERT_EQ(decoded_transform.transform, transform);
+  ASSERT_EQ(std::get<Command::ConsoleCommand>(decoded[2].command).cmd, "stat fps");
+}
+
+// Copying a Response from a non-const lvalue keeps its value. It used to go
+// through the forwarding constructor and Response's operator bool, so every
+// copied value became 1 (or 0 for an error).
+TEST(msgpack, response_copy_keeps_value) {
+  CommandResponse value(ActorId(328u));
+  CommandResponse copy(value);
+  ASSERT_FALSE(copy.HasError());
+  ASSERT_EQ(copy.Get(), 328u);
+  CommandResponse error(ResponseError("collision"));
+  CommandResponse error_copy(error);
+  ASSERT_TRUE(error_copy.HasError());
+  ASSERT_EQ(error_copy.GetError().What(), std::string("collision"));
+  std::vector<CommandResponse> responses{value, error};
+  std::vector<CommandResponse> responses_copy(responses.begin(), responses.end());
+  ASSERT_EQ(responses_copy[0].Get(), 328u);
+  ASSERT_TRUE(responses_copy[1].HasError());
+}
+
+// What apply_batch_and_tick sends back: responses nested in a pair nested in
+// a response. Every level is a variant whose index must not leak into a value.
+TEST(msgpack, batch_and_tick_response_round_trip) {
+  using mp = carla::MsgPack;
+  using Result = Response<std::pair<std::vector<CommandResponse>, uint64_t>>;
+  std::vector<CommandResponse> responses;
+  responses.emplace_back(ActorId(328u));
+  responses.emplace_back(ResponseError("collision"));
+  responses.emplace_back(ActorId(4242u));
+  const Result sent{std::make_pair(responses, uint64_t(10129u))};
+  const auto received = mp::UnPack<Result>(mp::Pack(sent));
+  ASSERT_FALSE(received.HasError());
+  const auto &[decoded, frame] = received.Get();
+  ASSERT_EQ(frame, 10129u);
+  ASSERT_EQ(decoded.size(), 3u);
+  ASSERT_FALSE(decoded[0].HasError());
+  ASSERT_EQ(decoded[0].Get(), 328u);
+  ASSERT_TRUE(decoded[1].HasError());
+  ASSERT_EQ(decoded[1].GetError().What(), std::string("collision"));
+  ASSERT_FALSE(decoded[2].HasError());
+  ASSERT_EQ(decoded[2].Get(), 4242u);
 }
 
 TEST(msgpack, optional) {

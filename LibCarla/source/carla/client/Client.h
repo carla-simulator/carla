@@ -52,6 +52,11 @@ namespace client {
       return _simulator->GetServerVersion();
     }
 
+    /// Return the server's cumulative RPC and frame counters.
+    rpc::ServerPerfCounters GetServerPerfCounters() const {
+      return _simulator->GetServerPerfCounters();
+    }
+
     std::vector<std::string> GetAvailableMaps() const {
       return _simulator->GetAvailableMaps();
     }
@@ -191,11 +196,27 @@ namespace client {
     std::vector<rpc::CommandResponse> ApplyBatchSync(
         std::vector<rpc::Command> commands,
         bool do_tick_cue = false) const {
-      auto responses = _simulator->ApplyBatchSync(std::move(commands), false);
-      if (do_tick_cue)
-        _simulator->Tick(_simulator->GetNetworkingTimeout());
+      if (do_tick_cue) {
+        return _simulator->ApplyBatchSyncAndTick(
+            std::move(commands), _simulator->GetNetworkingTimeout());
+      }
+      return _simulator->ApplyBatchSync(std::move(commands), false);
+    }
 
-      return responses;
+    /// Applies a blob of typed actor updates built with
+    /// rpc::ActorUpdateBatchBuilder, optionally ticking the world in the same
+    /// call. Returns one rpc::ActorUpdateStatus byte per update.
+    std::vector<uint8_t> ApplyActorUpdates(
+        std::vector<uint8_t> blob,
+        bool do_tick = false) const {
+      return _simulator->ApplyActorUpdates(
+          std::move(blob), do_tick, _simulator->GetNetworkingTimeout());
+    }
+
+    /// Fire-and-forget ApplyActorUpdates. This client's next tick, or any
+    /// other call that waits for the server, runs after it.
+    void ApplyActorUpdatesAsync(std::vector<uint8_t> blob) const {
+      _simulator->ApplyActorUpdatesAsync(std::move(blob));
     }
 
   private:

@@ -116,6 +116,12 @@ public:
   /// Method to provide synchronous tick
   virtual bool SynchronousTick() = 0;
 
+  /// Synchronous tick after @a ticker received @a frame. A TM that reads the
+  /// simulation through another connection must wait for that frame first.
+  virtual bool TickForFrame(uint64_t /*frame*/, const carla::client::detail::Simulator * /*ticker*/) {
+    return SynchronousTick();
+  }
+
   /// Get carla episode information
   virtual  carla::client::detail::EpisodeProxy& GetEpisodeProxy() = 0;
 

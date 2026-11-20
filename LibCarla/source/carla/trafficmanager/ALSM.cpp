@@ -33,7 +33,8 @@ ALSM::ALSM(
   CollisionStage &collision_stage,
   TrafficLightStage &traffic_light_stage,
   MotionPlanStage &motion_plan_stage,
-  VehicleLightStage &vehicle_light_stage)
+  VehicleLightStage &vehicle_light_stage,
+  carla::rpc::ActorUpdateBatchBuilder &updates)
   : registered_vehicles(registered_vehicles),
     buffer_map(buffer_map),
     track_traffic(track_traffic),
@@ -47,6 +48,7 @@ ALSM::ALSM(
     traffic_light_stage(traffic_light_stage),
     motion_plan_stage(motion_plan_stage),
     vehicle_light_stage(vehicle_light_stage),
+    updates(updates),
     large_vehicles(large_vehicles) {}
 
 void ALSM::Update() {
@@ -246,10 +248,14 @@ void ALSM::UpdateData(const bool hybrid_physics_mode, const Actor &vehicle,
   bool enable_physics = hybrid_physics_mode ? in_range_of_hero_actor : true;
   if (!has_physics_enabled.count(actor_id) || has_physics_enabled[actor_id] != enable_physics) {
     if (hero_actors.find(actor_id) == hero_actors.end()) {
-      vehicle->SetSimulatePhysics(enable_physics);
+      // Applied with this step's controls, before the next tick: the batch
+      // applies physics toggles before target velocities.
+      updates.AddSimulatePhysics(actor_id, enable_physics);
       has_physics_enabled[actor_id] = enable_physics;
       if (enable_physics == true && state_entry_present) {
-        vehicle->SetTargetVelocity(simulation_state.GetVelocity(actor_id));
+        const cg::Vector3D velocity = simulation_state.GetVelocity(actor_id);
+        const float target[3] = {velocity.x, velocity.y, velocity.z};
+        updates.AddTargetVelocity(actor_id, target);
       }
     }
   }
