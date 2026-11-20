@@ -46,7 +46,7 @@ The development branch built every Sunday, with the [AdditionalMaps](map_content
 ---
 ## Docker
 
-Every release is on DockerHub. Always pull an explicit tag; `latest` is an old 0.9.x image. The CARLA 1.0 image has the tag `1.0` (see the [CARLA 1.0 release](https://github.com/carla-simulator/carla/releases/tag/1.0)).
+Every release is on DockerHub as `carlasim/carla:<VERSION>`, and `latest` is the newest release. Pull an explicit tag to stay on a version. The CARLA 1.0 image has the tag `1.0` (see the [CARLA 1.0 release](https://github.com/carla-simulator/carla/releases/tag/1.0)).
 
 ```sh
 docker pull carlasim/carla:1.0

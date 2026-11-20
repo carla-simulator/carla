@@ -1,6 +1,6 @@
 # Agentic CARLA skills
 
-CARLA ships a library of 68 vetted procedures for AI coding assistants, under [`Skills/`](https://github.com/carla-simulator/carla/tree/ue58-dev/Skills) in the repository and at the root of every CARLA package. An assistant working inside a CARLA checkout or a package finds them automatically and follows them instead of improvising a procedure of its own.
+CARLA ships a library of 69 vetted procedures for AI coding assistants, under [`Skills/`](https://github.com/carla-simulator/carla/tree/ue58-dev/Skills) in the repository and at the root of every CARLA package. An assistant working inside a CARLA checkout or a package finds them automatically and follows them instead of improvising a procedure of its own.
 
 Each skill is a directory holding a `SKILL.md` — YAML frontmatter (`name`, `description`, `compatibility` and `metadata`) followed by the step-by-step procedure — plus the `scripts/` and `references/` it needs. The procedures encode the failure modes that make the obvious approach fail, which is the point of them: they are the source of truth for these tasks, not a summary of the docs.
 
@@ -52,7 +52,7 @@ Starting from nothing, ask for the download first: the `download-carla`, `instal
 | Group | Skills | Covers |
 |---|---|---|
 | `setup` | 6 | Downloading CARLA, installing the Python API, Scenario Runner, Leaderboard and Scenic, and checking what a given install supports |
-| `python-api` | 23 | Driving a running server: spawning, sensors, traffic, weather, maps, recording, debug drawing |
+| `python-api` | 25 | Driving a running server: spawning, sensors, traffic, weather, maps, recording, debug drawing |
 | `ue58` | 8 | Building, packaging and running UE 5.8, importing maps, props and walkers, authoring vehicles, and running Autoware |
 | `ue4` | 7 | The same for the UE 4.26 branch |
 | `ue5` | 1 | UE 5.5 feature-support checks |
