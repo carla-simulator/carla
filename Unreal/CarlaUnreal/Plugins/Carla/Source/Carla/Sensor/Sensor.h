@@ -286,6 +286,7 @@ protected:
       ROS2->ProcessDataFromCamera(
         SensorTypeId,
         StreamId,
+        CaptureContext.Timestamp,
         Transform,
         W, H,
         Fov,
