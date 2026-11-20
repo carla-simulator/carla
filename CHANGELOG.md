@@ -218,6 +218,7 @@
 * Fixed the `BehaviorAgent` tailgating evasion. It re-planned only from the adjacent lane to the waypoint a few meters ahead: the agent never changed lanes, then stopped because its route was gone. It now plans a lane change into the adjacent lane, followed by the route to its original destination. It also no longer raises `AttributeError` when there is no adjacent lane, and it moves left when the lane marking allows changes in both directions.
 * Fixed the Traffic Manager's localization stage never forgetting the junction a vehicle is entering (`vehicles_at_junction_entrance`) when the vehicle is removed or the Traffic Manager is reset.
 * Fixed the Traffic Manager rebuilding its road graph on Town11 and Town13 from the AdditionalMaps pack although the pack ships their cache: `client.get_required_files()` now also serves a map's OpenDRIVE, navigation and Traffic Manager files from the mounted content pack that declares the map (`<pack>/Content/Maps/{OpenDrive,Nav,TM}/`). A copy in the base content still takes precedence.
+* Fixed a Traffic Manager segfault in `LocalizationStage::ImportPath` when a vehicle with a `set_path` route reached a fork where one branch ends before a junction. Each look-ahead walk now stops at the last waypoint of a dead-end branch, which is then scored like any other branch (#10321).
 
 #### Python API and client
 
