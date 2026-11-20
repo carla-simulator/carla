@@ -2,7 +2,7 @@
 name: control-lights
 description: Controls the map's light sources through the CARLA LightManager — turn street lamps, building/facade lights, vehicle lights or all of them on/off, set their colour and intensity, and toggle the automatic lights-at-night cycle. Use when the user asks to "turn on the street lights", "light up the city at night", "turn off building lights", "change the street-light colour", or "make lights come on automatically at night". Distinct from hiding lamp meshes (toggle-env-objects) and the sun (set-weather).
 license: MIT
-compatibility: Any OS with the CARLA PythonAPI installed for the active interpreter and a reachable, already-running CARLA server. Light effects are visible on a rendered server. Tested against CARLA 0.9.16.
+compatibility: Targets CARLA 1.0 on ue58-dev with matching client and server versions. Requires the LightManager client teardown correction and a reachable server. Light effects are visible on a rendered server. Older client teardown remains unverified.
 metadata:
   group: python-api
   prerequisites: scripts/check_env.sh
@@ -60,6 +60,8 @@ python3 scripts/lights.py day-night on
 ```
 
 Groups: `street`, `building`, `vehicle`, `other`, `all`.
+
+Write commands wait for the light update callback and a synchronous RPC before reporting success. Success confirms update submission; the simulator applies light changes asynchronously. The wait uses `CARLA_TIMEOUT`. A paused synchronous world requires another client to advance it. Timeout and connection failures return a nonzero status.
 
 ## Examples
 

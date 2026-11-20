@@ -20,7 +20,7 @@ from __future__ import annotations
 
 import argparse
 import os
-import sys
+import threading
 
 import carla  # provided by the active interpreter; check_env.sh verifies this
 
@@ -39,17 +39,21 @@ def _fresh(world):
     return world
 
 
-def _done(msg):
-    """Print, flush, and hard-exit.
-
-    LightManager write ops (turn_on/off/set_*) succeed, but destroying the `Light`
-    python objects after the RPC episode tears down aborts the process with a C++
-    "operate on a destroyed actor" (a CARLA teardown-order bug; read-only paths are
-    unaffected). We flush the result and os._exit past those destructors.
-    """
+def _done(client, msg):
+    """Wait for light submission and the RPC barrier before reporting success."""
+    world = client.get_world()
+    completed = threading.Event()
+    callback_id = world.on_tick(lambda _snapshot: completed.set())
+    try:
+        timeout = float(os.environ.get("CARLA_TIMEOUT", "60.0"))
+        if not completed.wait(timeout):
+            raise RuntimeError("Timed out waiting for the light update tick")
+    finally:
+        world.remove_on_tick(callback_id)
+    # Confirm RPC receipt and game thread responsiveness before teardown.
+    world.get_settings()
     print(msg)
-    sys.stdout.flush()
-    os._exit(0)
+
 
 GROUPS = {"all": carla.LightGroup.NONE, "street": carla.LightGroup.Street,
           "building": carla.LightGroup.Building, "vehicle": carla.LightGroup.Vehicle,
@@ -98,7 +102,7 @@ def cmd_on(args):
         lm.set_color(lights, _color(args.color))
     if args.intensity is not None:
         lm.set_intensity(lights, args.intensity)
-    _done(f"turned ON {len(lights)} '{args.group}' lights"
+    _done(client, f"turned ON {len(lights)} '{args.group}' lights"
           + (f", color={args.color}" if args.color else "")
           + (f", intensity={args.intensity}" if args.intensity is not None else ""))
 
@@ -108,7 +112,7 @@ def cmd_off(args):
     lm = _fresh(client.get_world()).get_lightmanager()
     lights = _lights(lm, args.group)
     lm.turn_off(lights)
-    _done(f"turned OFF {len(lights)} '{args.group}' lights")
+    _done(client, f"turned OFF {len(lights)} '{args.group}' lights")
 
 
 def cmd_set(args):
@@ -121,7 +125,7 @@ def cmd_set(args):
         lm.set_color(lights, _color(args.color))
     if args.intensity is not None:
         lm.set_intensity(lights, args.intensity)
-    _done(f"set {len(lights)} '{args.group}' lights"
+    _done(client, f"set {len(lights)} '{args.group}' lights"
           + (f", color={args.color}" if args.color else "")
           + (f", intensity={args.intensity}" if args.intensity is not None else ""))
 
