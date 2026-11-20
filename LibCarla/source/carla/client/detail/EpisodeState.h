@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include "carla/Iterator.h"
 #include "carla/ListView.h"
 #include "carla/NonCopyable.h"
 #include "carla/client/ActorSnapshot.h"
@@ -14,10 +13,11 @@
 #include "carla/geom/Vector3DInt.h"
 #include "carla/sensor/data/RawEpisodeState.h"
 
-#include <optional>
-
+#include <algorithm>
+#include <array>
 #include <memory>
-#include <unordered_map>
+#include <optional>
+#include <vector>
 
 namespace carla {
 namespace client {
@@ -61,7 +61,7 @@ namespace detail {
     }
 
     bool ContainsActorSnapshot(ActorId actor_id) const {
-      return _actors.find(actor_id) != _actors.end();
+      return FindIndex(actor_id).has_value();
     }
 
     ActorSnapshot GetActorSnapshot(ActorId id) const {
@@ -76,31 +76,59 @@ namespace detail {
       return state;
     }
 
+    /// Ids of the actors in this frame, in ascending order.
     auto GetActorIds() const {
-      return MakeListView(
-          iterator::make_map_keys_const_iterator(_actors.begin()),
-          iterator::make_map_keys_const_iterator(_actors.end()));
+      return MakeListView(_ids.begin(), _ids.end());
+    }
+
+    /// Position of @a id in GetActorIds(), if the actor is in this frame.
+    std::optional<size_t> FindIndex(ActorId id) const {
+      if (!_slots.empty()) {
+        // Unsigned: an id below _first_id wraps past the end.
+        const ActorId slot = id - _first_id;
+        if ((slot < _slots.size()) && (_slots[slot] != 0u)) {
+          return static_cast<size_t>(_slots[slot] - 1u);
+        }
+        return std::nullopt;
+      }
+      const auto it = std::lower_bound(_ids.begin(), _ids.end(), id);
+      if ((it == _ids.end()) || (*it != id)) {
+        return std::nullopt;
+      }
+      return static_cast<size_t>(it - _ids.begin());
+    }
+
+    /// Snapshot of the actor at @a index of GetActorIds().
+    const ActorSnapshot &GetActorSnapshotAt(size_t index) const {
+      return _actors[index];
+    }
+
+    /// Location in meters, in double, of the actor at @a index of
+    /// GetActorIds(). ActorSnapshot::transform holds it rounded to float.
+    const std::array<double, 3u> &GetLocationAt(size_t index) const {
+      return _locations[index];
     }
 
     size_t size() const {
       return _actors.size();
     }
 
+    /// Iterates the actor snapshots in ascending id order.
     auto begin() const {
-      return iterator::make_map_values_const_iterator(_actors.begin());
+      return _actors.cbegin();
     }
 
     auto end() const {
-      return iterator::make_map_values_const_iterator(_actors.end());
+      return _actors.cend();
     }
 
   private:
 
     template <typename T>
     void CopyActorSnapshotIfPresent(ActorId id, T &value) const {
-      auto it = _actors.find(id);
-      if (it != _actors.end()) {
-        value = it->second;
+      const auto index = FindIndex(id);
+      if (index.has_value()) {
+        value = _actors[*index];
       }
     }
 
@@ -112,7 +140,20 @@ namespace detail {
 
     SimulationState _simulation_state;
 
-    std::unordered_map<ActorId, ActorSnapshot> _actors;
+    // Three arrays in the same ascending id order.
+    std::vector<ActorId> _ids;
+
+    std::vector<ActorSnapshot> _actors;
+
+    std::vector<std::array<double, 3u>> _locations;
+
+    // Actor ids are handed out in increasing order, so they are usually dense:
+    // then _slots[id - _first_id] is the actor's index + 1 (0 if absent), and
+    // a lookup is one array access. Empty when the ids are too sparse; then a
+    // lookup is a binary search in _ids.
+    ActorId _first_id = 0u;
+
+    std::vector<uint32_t> _slots;
   };
 
 } // namespace detail

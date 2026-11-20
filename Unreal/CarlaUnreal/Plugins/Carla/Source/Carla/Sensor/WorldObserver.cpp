@@ -19,6 +19,7 @@
 #include "Carla/Walker/WalkerController.h"
 
 #include <util/disable-ue4-macros.h>
+#include <carla/rpc/ServerPerfCounters.h>
 #include <carla/rpc/String.h>
 #include <carla/sensor/SensorRegistry.h>
 #include <carla/sensor/data/ActorDynamicState.h>
@@ -402,11 +403,13 @@ static carla::Buffer FWorldObserver_Serialize(
       State = FWorldObserver_GetActorState(*View, Registry);
     }
     ActorTransform = View->GetActorGlobalTransform();
+    const FVector Location = ActorTransform.GetLocation();
 
     ActorDynamicState info = {
       View->GetActorId(),
       View->GetActorState(),
-      carla::geom::Transform(ActorTransform),
+      {Location.X, Location.Y, Location.Z},
+      carla::geom::Rotation(ActorTransform.Rotator()),
       carla::geom::Vector3D(Velocity.X, Velocity.Y, Velocity.Z),
       AngularVelocity,
       Acceleration,
@@ -436,12 +439,15 @@ void FWorldObserver::BroadcastTick(
 
   auto AsyncStream = Stream.MakeAsyncDataStream(*this, Episode.GetElapsedGameTime());
 
+  const uint64_t SerializeStart = carla::rpc::ServerPerfStats::NowNs();
   carla::Buffer buffer = FWorldObserver_Serialize(
       AsyncStream.PopBufferFromPool(),
       Episode,
       DeltaSecond,
       MapChange,
       PendingLightUpdates);
+  carla::rpc::ServerPerfStats::Get().OnSnapshotSerialized(
+      carla::rpc::ServerPerfStats::NowNs() - SerializeStart, buffer.size());
 
   AsyncStream.SerializeAndSend(*this, std::move(buffer));
 }

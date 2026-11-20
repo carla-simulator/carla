@@ -118,10 +118,9 @@ namespace adaptor {
     static void copy_to_variant_impl(
         const clmdep_msgpack::object &o,
         std::variant<Ts...> &v) {
-      /// @todo Workaround for finding the type.
-      auto dummy = std::get<I>(std::tuple<Ts...>{});
-      using T = decltype(dummy);
-      v = o.via.array.ptr[1].as<T>();
+      // Decode straight into the alternative; building a tuple of every
+      // alternative just to name the type cost one construction per type.
+      o.via.array.ptr[1].convert(v.template emplace<I>());
     }
 
     template <uint64_t... Is>

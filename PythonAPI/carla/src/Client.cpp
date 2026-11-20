@@ -6,15 +6,30 @@
 
 #include <PythonAPI.h>
 
-#include <thread>
 
 #include <boost/python/stl_iterator.hpp>
+
+#include <carla/rpc/ActorUpdateBatch.h>
 
 namespace ctm = carla::traffic_manager;
 namespace cg = carla::geom;
 
 namespace carla {
 namespace rpc {
+
+  std::ostream &operator<<(std::ostream &out, const ServerPerfCounters &c) {
+    out << "ServerPerfCounters(frames=" << c.frames
+        << ", sync_calls=" << c.sync_calls
+        << ", sync_call_ns=" << c.sync_call_ns
+        << ", async_calls=" << c.async_calls
+        << ", rpc_loop_ns=" << c.rpc_loop_ns
+        << ", backlog_sum=" << c.backlog_sum
+        << ", backlog_max=" << c.backlog_max
+        << ", snapshots=" << c.snapshots
+        << ", snapshot_ns=" << c.snapshot_ns
+        << ", snapshot_bytes=" << c.snapshot_bytes << ")";
+    return out;
+  }
 
   std::ostream &operator<<(std::ostream &out, const ContentPackInfo &pack) {
     out << "ContentPackInfo(name=" << pack.name
@@ -84,6 +99,15 @@ static auto GetRequiredFiles(const carla::client::Client &self, const std::strin
   return result;
 }
 
+// Defined in ActorUpdates.cpp.
+boost::python::object ApplyActorUpdates(
+    const carla::client::Client &self,
+    carla::rpc::ActorUpdateBatchBuilder &batch,
+    bool do_tick);
+void ApplyActorUpdatesAsync(
+    const carla::client::Client &self,
+    carla::rpc::ActorUpdateBatchBuilder &batch);
+
 static void ApplyBatchCommands(
     const carla::client::Client &self,
     const boost::python::object &commands,
@@ -136,105 +160,58 @@ static std::vector<carla::rpc::CommandResponse> ApplyBatchCommandsSyncNoGIL(
   using CommandType = carla::rpc::Command;
   auto responses = self.ApplyBatchSync(cmds, do_tick);
 
-  // check for autopilot command
-  std::vector<carla::traffic_manager::ActorPtr> vehicles_to_enable(cmds.size(), nullptr);
-  std::vector<carla::traffic_manager::ActorPtr> vehicles_to_disable(cmds.size(), nullptr);
-  carla::client::World world = self.GetWorld();
+  // Find the SetAutopilot commands, on their own or in a SpawnActor's
+  // do_after, of the commands that succeeded. Most batches have none.
+  struct AutopilotRequest {
+    carla::rpc::ActorId id;
+    bool enabled;
+  };
+  std::vector<AutopilotRequest> requests;
   uint16_t tm_port = 8000;
-
-  std::atomic<size_t> vehicles_to_enable_index;
-  std::atomic<size_t> vehicles_to_disable_index;
-
-  vehicles_to_enable_index.store(0);
-  vehicles_to_disable_index.store(0);
-
-  auto ProcessCommand = [&](size_t min_index, size_t max_index) {
-    for (size_t i = min_index; i < max_index; ++i) {
-      if (!responses[i].HasError()) {
-
-        bool isAutopilot = false;
-        bool autopilotValue = false;
-
-        CommandType::CommandType& cmd_type = cmds[i].command;
-
-        // check SpawnActor command
-        if (const auto *maybe_spawn_actor_cmd = std::get_if<carla::rpc::Command::SpawnActor>(&cmd_type)) {
-          // check inside 'do_after'
-          for (auto &cmd : maybe_spawn_actor_cmd->do_after) {
-            if (const auto *maybe_set_autopilot_command = std::get_if<carla::rpc::Command::SetAutopilot>(&cmd.command)) {
-              tm_port = maybe_set_autopilot_command->tm_port;
-              autopilotValue = maybe_set_autopilot_command->enabled;
-              isAutopilot = true;
-            }
-          }
-        }
-        // check SetAutopilot command
-        else if (const auto *maybe_set_autopilot_command = std::get_if<carla::rpc::Command::SetAutopilot>(&cmd_type)) {
-          tm_port = maybe_set_autopilot_command->tm_port;
-          autopilotValue = maybe_set_autopilot_command->enabled;
-          isAutopilot = true;
-        }
-
-        // check if found any SetAutopilot command
-        if (isAutopilot) {
-          // get the id
-          carla::rpc::ActorId id = static_cast<carla::rpc::ActorId>(responses[i].Get());
-
-          // get all actors
-          carla::SharedPtr<carla::client::Actor> actor;
-          actor = world.GetActor(id);
-
-          // check to enable or disable
-          if (actor) {
-            if (autopilotValue) {
-              size_t index = vehicles_to_enable_index.fetch_add(1);
-              vehicles_to_enable[index] = actor;
-            } else {
-              size_t index = vehicles_to_disable_index.fetch_add(1);
-              vehicles_to_disable[index] = actor;
-            }
-          }
+  for (size_t i = 0; i < cmds.size() && i < responses.size(); ++i) {
+    if (responses[i].HasError()) {
+      continue;
+    }
+    const CommandType::CommandType &cmd_type = cmds[i].command;
+    const carla::rpc::Command::SetAutopilot *autopilot = nullptr;
+    if (const auto *spawn = std::get_if<carla::rpc::Command::SpawnActor>(&cmd_type)) {
+      for (const auto &cmd : spawn->do_after) {
+        if (const auto *maybe = std::get_if<carla::rpc::Command::SetAutopilot>(&cmd.command)) {
+          autopilot = maybe;
         }
       }
+    } else {
+      autopilot = std::get_if<carla::rpc::Command::SetAutopilot>(&cmd_type);
     }
-  };
-
-  const size_t TaskLimit = 50;
-  size_t num_commands = cmds.size();
-  size_t num_batches = num_commands / TaskLimit;
-
-  std::vector<std::thread*> t(num_batches+1);
-
-  for(size_t n = 0; n < num_batches; n++) {
-    t[n] = new std::thread(ProcessCommand, n * TaskLimit, (n+1) * TaskLimit);
+    if (autopilot != nullptr) {
+      tm_port = autopilot->tm_port;
+      requests.push_back({static_cast<carla::rpc::ActorId>(responses[i].Get()), autopilot->enabled});
+    }
   }
-  t[num_batches] = new std::thread(ProcessCommand, num_batches * TaskLimit, num_commands);
-
-  for(size_t n = 0; n <= num_batches; n++) {
-    if(t[n]->joinable()){
-      t[n]->join();
-    }
-    delete t[n];
+  if (requests.empty()) {
+    return responses;
   }
 
-  // Fix vector size
-  vehicles_to_enable.resize(vehicles_to_enable_index.load());
-  vehicles_to_disable.resize(vehicles_to_disable_index.load());
-  // Release memory
-  vehicles_to_enable.shrink_to_fit();
-  vehicles_to_disable.shrink_to_fit();
+  carla::client::World world = self.GetWorld();
+  std::vector<carla::traffic_manager::ActorPtr> vehicles_to_enable;
+  std::vector<carla::traffic_manager::ActorPtr> vehicles_to_disable;
+  for (const auto &request : requests) {
+    carla::SharedPtr<carla::client::Actor> actor = world.GetActor(request.id);
+    if (actor) {
+      (request.enabled ? vehicles_to_enable : vehicles_to_disable).push_back(actor);
+    }
+  }
 
   // Ensure the TM always receives the same vector by sorting the elements
-  std::vector<carla::traffic_manager::ActorPtr> sorted_vehicle_to_enable = vehicles_to_enable;
-  std::sort(sorted_vehicle_to_enable.begin(), sorted_vehicle_to_enable.end(), [](carla::traffic_manager::ActorPtr &a, carla::traffic_manager::ActorPtr &b) {return a->GetId() < b->GetId(); });
+  const auto by_id = [](const carla::traffic_manager::ActorPtr &a, const carla::traffic_manager::ActorPtr &b) {
+    return a->GetId() < b->GetId();
+  };
+  std::sort(vehicles_to_enable.begin(), vehicles_to_enable.end(), by_id);
+  std::sort(vehicles_to_disable.begin(), vehicles_to_disable.end(), by_id);
 
-  std::vector<carla::traffic_manager::ActorPtr> sorted_vehicle_to_disable = vehicles_to_disable;
-  std::sort(sorted_vehicle_to_disable.begin(), sorted_vehicle_to_disable.end(), [](carla::traffic_manager::ActorPtr &a, carla::traffic_manager::ActorPtr &b) {return a->GetId() < b->GetId(); });
-
-  // check if any autopilot command was sent
-  if (sorted_vehicle_to_enable.size() || sorted_vehicle_to_disable.size()) {
-    self.GetInstanceTM(tm_port).RegisterVehicles(sorted_vehicle_to_enable);
-    self.GetInstanceTM(tm_port).UnregisterVehicles(sorted_vehicle_to_disable);
+  if (!vehicles_to_enable.empty() || !vehicles_to_disable.empty()) {
+    self.GetInstanceTM(tm_port).RegisterVehicles(vehicles_to_enable);
+    self.GetInstanceTM(tm_port).UnregisterVehicles(vehicles_to_disable);
   }
 
   return responses;
@@ -244,6 +221,20 @@ void export_client() {
   using namespace boost::python;
   namespace cc = carla::client;
   namespace rpc = carla::rpc;
+
+  class_<rpc::ServerPerfCounters>("ServerPerfCounters", no_init)
+    .def_readonly("frames", &rpc::ServerPerfCounters::frames)
+    .def_readonly("sync_calls", &rpc::ServerPerfCounters::sync_calls)
+    .def_readonly("sync_call_ns", &rpc::ServerPerfCounters::sync_call_ns)
+    .def_readonly("async_calls", &rpc::ServerPerfCounters::async_calls)
+    .def_readonly("rpc_loop_ns", &rpc::ServerPerfCounters::rpc_loop_ns)
+    .def_readonly("backlog_sum", &rpc::ServerPerfCounters::backlog_sum)
+    .def_readonly("backlog_max", &rpc::ServerPerfCounters::backlog_max)
+    .def_readonly("snapshots", &rpc::ServerPerfCounters::snapshots)
+    .def_readonly("snapshot_ns", &rpc::ServerPerfCounters::snapshot_ns)
+    .def_readonly("snapshot_bytes", &rpc::ServerPerfCounters::snapshot_bytes)
+    .def(self_ns::str(self_ns::self))
+  ;
 
   class_<rpc::ContentPackInfo>("ContentPackInfo", no_init)
     .def_readonly("name", &rpc::ContentPackInfo::name)
@@ -294,6 +285,7 @@ void export_client() {
     .def("set_timeout", &::SetTimeout, (arg("seconds")))
     .def("get_client_version", &cc::Client::GetClientVersion)
     .def("get_server_version", CONST_CALL_WITHOUT_GIL(cc::Client, GetServerVersion))
+    .def("get_server_perf_counters", CONST_CALL_WITHOUT_GIL(cc::Client, GetServerPerfCounters))
     .def("get_world", &cc::Client::GetWorld)
     .def("get_available_maps", &GetAvailableMaps)
     .def("get_content_packs", &GetContentPacks)
@@ -320,6 +312,8 @@ void export_client() {
     .def("set_replayer_ignore_spectator", &cc::Client::SetReplayerIgnoreSpectator, (arg("ignore_spectator")))
     .def("apply_batch", &ApplyBatchCommands, (arg("commands"), arg("do_tick")=false))
     .def("apply_batch_sync", &ApplyBatchCommandsSync, (arg("commands"), arg("do_tick")=false))
+    .def("apply_actor_updates", &ApplyActorUpdates, (arg("batch"), arg("do_tick")=false))
+    .def("apply_actor_updates_async", &ApplyActorUpdatesAsync, (arg("batch")))
     .def("get_trafficmanager", CONST_CALL_WITHOUT_GIL_1(cc::Client, GetInstanceTM, uint16_t), (arg("port")=ctm::TM_DEFAULT_PORT))
   ;
 }

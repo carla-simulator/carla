@@ -18,7 +18,9 @@
 #include "carla/rpc/EpisodeInfo.h"
 
 #include <atomic>
+#include <condition_variable>
 #include <memory>
+#include <mutex>
 #include <vector>
 
 namespace carla {
@@ -69,6 +71,15 @@ namespace detail {
 
     std::optional<WorldSnapshot> WaitForState(time_duration timeout) {
       return _snapshot.WaitFor(timeout);
+    }
+
+    /// Blocks until the state of @a frame or a later one has arrived, or
+    /// until @a timeout. Returns false on time-out.
+    bool WaitForFrame(uint64_t frame, time_duration timeout) const {
+      std::unique_lock<std::mutex> lock(_frame_mutex);
+      return _frame_cv.wait_for(lock, timeout.to_chrono(), [&] {
+        return _state.load()->GetTimestamp().frame >= frame;
+      });
     }
 
     size_t RegisterOnTickEvent(std::function<void(WorldSnapshot)> callback) {
@@ -131,6 +142,10 @@ namespace detail {
     CallbackList<WorldSnapshot> _on_light_update_callbacks;
 
     RecurrentSharedFuture<WorldSnapshot> _snapshot;
+
+    /// Wakes WaitForFrame when a new state is published.
+    mutable std::mutex _frame_mutex;
+    mutable std::condition_variable _frame_cv;
 
     AtomicSharedPtr<WalkerNavigation> _walker_navigation;
 

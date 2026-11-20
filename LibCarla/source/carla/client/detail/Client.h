@@ -16,6 +16,7 @@
 #include "carla/rpc/AttachmentType.h"
 #include "carla/rpc/Command.h"
 #include "carla/rpc/ContentPackInfo.h"
+#include "carla/rpc/ServerPerfCounters.h"
 #include "carla/rpc/CommandResponse.h"
 #include "carla/rpc/CustomV2XBytes.h"
 #include "carla/rpc/EnvironmentObject.h"
@@ -100,6 +101,8 @@ namespace detail {
     std::string GetClientVersion();
 
     std::string GetServerVersion();
+
+    rpc::ServerPerfCounters GetServerPerfCounters();
 
     void LoadEpisode(std::string map_name, bool reset_settings = true, rpc::MapLayer map_layer = rpc::MapLayer::All);
 
@@ -542,7 +545,28 @@ namespace detail {
         std::vector<rpc::Command> commands,
         bool do_tick_cue);
 
+    /// Applies @a commands and sends the tick cue in one round trip. Returns
+    /// the responses and the frame the tick produces.
+    std::pair<std::vector<rpc::CommandResponse>, uint64_t> ApplyBatchAndTick(
+        std::vector<rpc::Command> commands);
+
+    /// Applies a blob of typed actor updates (see rpc/ActorUpdateBatch.h)
+    /// and, with @a do_tick, sends the tick cue in the same game-thread task.
+    /// Returns one status per update and the frame the tick produced (0
+    /// without a tick).
+    std::pair<std::vector<uint8_t>, uint64_t> ApplyActorUpdates(
+        std::vector<uint8_t> blob,
+        bool do_tick);
+
+    /// Fire-and-forget ApplyActorUpdates without a tick. The next call that
+    /// waits for the server, a tick included, runs after it.
+    void ApplyActorUpdatesAsync(std::vector<uint8_t> blob);
+
     uint64_t SendTickCue();
+
+    /// Waits until the server has queued every fire-and-forget call this
+    /// client made so far.
+    void Fence();
 
     std::vector<rpc::LightState> QueryLightsStateToServer() const;
 

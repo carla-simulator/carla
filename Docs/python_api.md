@@ -376,6 +376,122 @@ An actor is Active when it visualized and can affect other actors.
 
 ---
 
+## carla.ActorUpdateBatch<a name="carla.ActorUpdateBatch"></a>
+Per-actor updates for many actors, sent to the server in one call with [carla.Client.apply_actor_updates](#carla.Client.apply_actor_updates) or [carla.Client.apply_actor_updates_async](#carla.Client.apply_actor_updates_async). It is the fast way to teleport, move or control hundreds of actors every tick, for example in a co-simulation: the updates travel as one binary block instead of one command or call per actor, and the `add_*s` methods read numpy arrays directly.
+The server applies the updates grouped by kind, in this order: simulate physics, transform, location, walker state, target velocity, target angular velocity, vehicle control, Ackermann control, walker control, vehicle light state and traffic light state. Within a kind, updates are applied in the order they were added. Each update runs the same code as its single-actor method (for example [carla.Actor.set_transform](#carla.Actor.set_transform)).
+Locations are sent as 64-bit floats, so a location written far from the origin of a large map reaches Unreal without the rounding of the single-actor methods, which use 32-bit floats. Rotations, velocities and controls are 32-bit floats, as in the rest of the API.
+Sending a batch empties it, so one object can be filled and sent every tick.  
+
+### Methods
+- <a name="carla.ActorUpdateBatch.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>)  
+Creates an empty batch.  
+- <a name="carla.ActorUpdateBatch.add_ackermann_control"></a>**<font color="#7fb800">add_ackermann_control</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor_id**</font>, <font color="#00a6ed">**control**</font>)  
+Like [carla.Vehicle.apply_ackermann_control](#carla.Vehicle.apply_ackermann_control).  
+    - **Parameters:**
+        - `actor_id` (_int_)  
+        - `control` (_[carla.VehicleAckermannControl](#carla.VehicleAckermannControl)_)  
+- <a name="carla.ActorUpdateBatch.add_location"></a>**<font color="#7fb800">add_location</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor_id**</font>, <font color="#00a6ed">**location**</font>)  
+Like [carla.Actor.set_location](#carla.Actor.set_location).  
+    - **Parameters:**
+        - `actor_id` (_int_)  
+        - `location` (_[carla.Location](#carla.Location)_)  
+- <a name="carla.ActorUpdateBatch.add_locations"></a>**<font color="#7fb800">add_locations</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor_ids**</font>, <font color="#00a6ed">**locations**</font>)  
+Adds a move to a new location, keeping the rotation, for each actor, like [carla.Actor.set_location](#carla.Actor.set_location).  
+    - **Parameters:**
+        - `actor_ids` (_list(int) or numpy array_)  
+        - `locations` (_numpy array (N, 3)<small> - meters</small>_) - Read as 64-bit floats.  
+- <a name="carla.ActorUpdateBatch.add_simulate_physics"></a>**<font color="#7fb800">add_simulate_physics</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor_id**</font>, <font color="#00a6ed">**enabled**</font>)  
+Like [carla.Actor.set_simulate_physics](#carla.Actor.set_simulate_physics).  
+    - **Parameters:**
+        - `actor_id` (_int_)  
+        - `enabled` (_bool_)  
+- <a name="carla.ActorUpdateBatch.add_target_angular_velocities"></a>**<font color="#7fb800">add_target_angular_velocities</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor_ids**</font>, <font color="#00a6ed">**angular_velocities**</font>)  
+Like [carla.Actor.set_target_angular_velocity](#carla.Actor.set_target_angular_velocity) for each actor.  
+    - **Parameters:**
+        - `actor_ids` (_list(int) or numpy array_)  
+        - `angular_velocities` (_numpy array (N, 3)<small> - degrees/s</small>_)  
+- <a name="carla.ActorUpdateBatch.add_target_angular_velocity"></a>**<font color="#7fb800">add_target_angular_velocity</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor_id**</font>, <font color="#00a6ed">**angular_velocity**</font>)  
+Like [carla.Actor.set_target_angular_velocity](#carla.Actor.set_target_angular_velocity).  
+    - **Parameters:**
+        - `actor_id` (_int_)  
+        - `angular_velocity` (_[carla.Vector3D](#carla.Vector3D)<small> - degrees/s</small>_)  
+- <a name="carla.ActorUpdateBatch.add_target_velocities"></a>**<font color="#7fb800">add_target_velocities</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor_ids**</font>, <font color="#00a6ed">**velocities**</font>)  
+Like [carla.Actor.set_target_velocity](#carla.Actor.set_target_velocity) for each actor.  
+    - **Parameters:**
+        - `actor_ids` (_list(int) or numpy array_)  
+        - `velocities` (_numpy array (N, 3)<small> - m/s</small>_)  
+- <a name="carla.ActorUpdateBatch.add_target_velocity"></a>**<font color="#7fb800">add_target_velocity</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor_id**</font>, <font color="#00a6ed">**velocity**</font>)  
+Like [carla.Actor.set_target_velocity](#carla.Actor.set_target_velocity).  
+    - **Parameters:**
+        - `actor_id` (_int_)  
+        - `velocity` (_[carla.Vector3D](#carla.Vector3D)<small> - m/s</small>_)  
+- <a name="carla.ActorUpdateBatch.add_traffic_light_state"></a>**<font color="#7fb800">add_traffic_light_state</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor_id**</font>, <font color="#00a6ed">**state**</font>)  
+Like [carla.TrafficLight.set_state](#carla.TrafficLight.set_state).  
+    - **Parameters:**
+        - `actor_id` (_int_)  
+        - `state` (_[carla.TrafficLightState](#carla.TrafficLightState)_)  
+- <a name="carla.ActorUpdateBatch.add_transform"></a>**<font color="#7fb800">add_transform</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor_id**</font>, <font color="#00a6ed">**transform**</font>)  
+Like [carla.Actor.set_transform](#carla.Actor.set_transform).  
+    - **Parameters:**
+        - `actor_id` (_int_)  
+        - `transform` (_[carla.Transform](#carla.Transform)_)  
+- <a name="carla.ActorUpdateBatch.add_transforms"></a>**<font color="#7fb800">add_transforms</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor_ids**</font>, <font color="#00a6ed">**locations**</font>, <font color="#00a6ed">**rotations**</font>)  
+Adds a teleport for each actor, like [carla.Actor.set_transform](#carla.Actor.set_transform). Any C-contiguous buffer of numbers (numpy array, `array.array`) or a list of rows works.  
+    - **Parameters:**
+        - `actor_ids` (_list(int) or numpy array_) - N actor ids.  
+        - `locations` (_numpy array (N, 3)<small> - meters</small>_) - x, y, z of each actor. Read as 64-bit floats; a float64 array keeps every bit.  
+        - `rotations` (_numpy array (N, 3)<small> - degrees</small>_) - pitch, yaw, roll of each actor, read as 32-bit floats.  
+- <a name="carla.ActorUpdateBatch.add_vehicle_control"></a>**<font color="#7fb800">add_vehicle_control</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor_id**</font>, <font color="#00a6ed">**control**</font>)  
+Like [carla.Vehicle.apply_control](#carla.Vehicle.apply_control).  
+    - **Parameters:**
+        - `actor_id` (_int_)  
+        - `control` (_[carla.VehicleControl](#carla.VehicleControl)_)  
+- <a name="carla.ActorUpdateBatch.add_vehicle_controls"></a>**<font color="#7fb800">add_vehicle_controls</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor_ids**</font>, <font color="#00a6ed">**throttle**</font>, <font color="#00a6ed">**steer**</font>, <font color="#00a6ed">**brake**</font>)  
+Like [carla.Vehicle.apply_control](#carla.Vehicle.apply_control) for each vehicle, with no hand brake, no reverse and automatic gears. Use add_vehicle_control for the other fields.  
+    - **Parameters:**
+        - `actor_ids` (_list(int) or numpy array_)  
+        - `throttle` (_numpy array (N)_)  
+        - `steer` (_numpy array (N)_)  
+        - `brake` (_numpy array (N)_)  
+- <a name="carla.ActorUpdateBatch.add_vehicle_light_state"></a>**<font color="#7fb800">add_vehicle_light_state</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor_id**</font>, <font color="#00a6ed">**light_state**</font>)  
+Like [carla.Vehicle.set_light_state](#carla.Vehicle.set_light_state).  
+    - **Parameters:**
+        - `actor_id` (_int_)  
+        - `light_state` (_[carla.VehicleLightState](#carla.VehicleLightState)_)  
+- <a name="carla.ActorUpdateBatch.add_walker_control"></a>**<font color="#7fb800">add_walker_control</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor_id**</font>, <font color="#00a6ed">**control**</font>)  
+Like [carla.Walker.apply_control](#carla.Walker.apply_control).  
+    - **Parameters:**
+        - `actor_id` (_int_)  
+        - `control` (_[carla.WalkerControl](#carla.WalkerControl)_)  
+- <a name="carla.ActorUpdateBatch.add_walker_state"></a>**<font color="#7fb800">add_walker_state</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor_id**</font>, <font color="#00a6ed">**transform**</font>, <font color="#00a6ed">**speed**</font>)  
+Like command.ApplyWalkerState: places a walker and sets its speed along its forward direction.  
+    - **Parameters:**
+        - `actor_id` (_int_)  
+        - `transform` (_[carla.Transform](#carla.Transform)_)  
+        - `speed` (_float<small> - m/s</small>_)  
+- <a name="carla.ActorUpdateBatch.clear"></a>**<font color="#7fb800">clear</font>**(<font color="#00a6ed">**self**</font>)  
+Removes every update.  
+
+##### Dunder methods
+- <a name="carla.ActorUpdateBatch.__len__"></a>**<font color="#7fb800">\__len__</font>**(<font color="#00a6ed">**self**</font>)  
+Number of updates in the batch.  
+    - **Return:** _int_  
+
+---
+
+## carla.ActorUpdateStatus<a name="carla.ActorUpdateStatus"></a>
+Outcome of one update of a [carla.ActorUpdateBatch](#carla.ActorUpdateBatch). [carla.Client.apply_actor_updates](#carla.Client.apply_actor_updates) returns one byte per update with these values, in the order the server applied them (see [carla.ActorUpdateBatch](#carla.ActorUpdateBatch)).  
+
+### Instance Variables
+- <a name="carla.ActorUpdateStatus.Success"></a>**<font color="#f8805a">Success</font>**  
+The update was applied.  
+- <a name="carla.ActorUpdateStatus.ActorNotFound"></a>**<font color="#f8805a">ActorNotFound</font>**  
+No actor has that id.  
+- <a name="carla.ActorUpdateStatus.Failed"></a>**<font color="#f8805a">Failed</font>**  
+The actor exists but the update failed, for example a vehicle control sent to a walker. The server log says why.  
+
+---
+
 ## carla.AttachmentType<a name="carla.AttachmentType"></a>
 Class that defines attachment options between an actor and its parent. When spawning actors, these can be attached to another actor so their position changes accordingly. This is specially useful for sensors. The snipet in [carla.World.spawn_actor](#carla.World.spawn_actor) shows some sensors being attached to a car when spawned. Note that the attachment type is declared as an enum within the class.  
 
@@ -599,6 +715,16 @@ Client constructor.
         - `host` (_str_) - IP address where a CARLA Simulator instance is running. Default is localhost (127.0.0.1).  
         - `port` (_int_) - TCP port where the CARLA Simulator instance is running. Default are 2000 and the subsequent 2001.  
         - `worker_threads` (_int_) - Number of working threads used for background updates. If 0, use all available concurrency.  
+- <a name="carla.Client.apply_actor_updates"></a>**<font color="#7fb800">apply_actor_updates</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**batch**</font>, <font color="#00a6ed">**do_tick**=False</font>)  
+Applies many per-actor updates in one call and waits until they are applied. Returns one [carla.ActorUpdateStatus](#carla.ActorUpdateStatus) value per update, as a `bytes` object in the order the server applied them (grouped by kind, see [carla.ActorUpdateBatch](#carla.ActorUpdateBatch)): `not any(statuses)` means every update succeeded, and `numpy.frombuffer(statuses, numpy.uint8)` gives an array.  
+    - **Parameters:**
+        - `batch` (_[carla.ActorUpdateBatch](#carla.ActorUpdateBatch)_) - The updates to apply. The batch is empty afterwards.  
+        - `do_tick` (_bool_) - In _synchronous mode_, also tick the world after applying the updates, in the same call, as [carla.World.tick](#carla.World.tick) does.  
+    - **Return:** _bytes_  
+- <a name="carla.Client.apply_actor_updates_async"></a>**<font color="#7fb800">apply_actor_updates_async</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**batch**</font>)  
+Sends the updates without waiting for them. They are applied before this client's next call that waits for the server, such as [carla.World.tick](#carla.World.tick), so in _synchronous mode_ they always land in the next frame. Two fire-and-forget calls of the same client, this one included, can still reach the server in either order: put updates that depend on each other in one batch.  
+    - **Parameters:**
+        - `batch` (_[carla.ActorUpdateBatch](#carla.ActorUpdateBatch)_) - The updates to apply. The batch is empty afterwards.  
 - <a name="carla.Client.apply_batch"></a>**<font color="#7fb800">apply_batch</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**commands**</font>, <font color="#00a6ed">**do_tick**=False</font>)  
 Executes a list of commands on a single simulation step and retrieves no information. If you need information about the response of each command, use the __<font color="#7fb800">apply_batch_sync()</font>__ method. [Here](https://github.com/carla-simulator/carla/blob/ue58-dev/PythonAPI/examples/generate_traffic.py) is an example on how to delete the actors that appear in [carla.ActorList](#carla.ActorList) all at once.  
     - **Parameters:**
@@ -730,6 +856,9 @@ Asks the server which files are required by the client to use the current map. O
     - **Parameters:**
         - `folder` (_str_) - Folder where files required by the client will be downloaded to.  
         - `download` (_bool_) - If True, downloads files that are not already in cache.  
+- <a name="carla.Client.get_server_perf_counters"></a>**<font color="#7fb800">get_server_perf_counters</font>**(<font color="#00a6ed">**self**</font>)  
+Returns the server's cumulative RPC and frame counters since it started. Read them before and after a piece of work and subtract the two to get what that work cost on the server, for example the game-thread time spent in RPC calls per frame.  
+    - **Return:** _[carla.ServerPerfCounters](#carla.ServerPerfCounters)_  
 - <a name="carla.Client.get_server_version"></a>**<font color="#7fb800">get_server_version</font>**(<font color="#00a6ed">**self**</font>)  
 Returns the server libcarla version by consulting it in the "Version.h" file. Both client and server should use the same libcarla version.  
     - **Return:** _str_  
@@ -3002,6 +3131,39 @@ Sensor's transform when the data was generated.
 
 ---
 
+## carla.ServerPerfCounters<a name="carla.ServerPerfCounters"></a>
+Cumulative counters of the server's RPC and frame work since it started, as returned by [carla.Client.get_server_perf_counters](#carla.Client.get_server_perf_counters). Every value only grows, so the difference between two readings measures what happened in between.  
+
+### Instance Variables
+- <a name="carla.ServerPerfCounters.frames"></a>**<font color="#f8805a">frames</font>** (_int_)  
+Frames whose RPC loop finished on the game thread.  
+- <a name="carla.ServerPerfCounters.sync_calls"></a>**<font color="#f8805a">sync_calls</font>** (_int_)  
+RPC calls run on the game thread.  
+- <a name="carla.ServerPerfCounters.sync_call_ns"></a>**<font color="#f8805a">sync_call_ns</font>** (_int<small> - nanoseconds</small>_)  
+Game-thread time spent inside those calls.  
+- <a name="carla.ServerPerfCounters.async_calls"></a>**<font color="#f8805a">async_calls</font>** (_int_)  
+RPC calls run on the server's RPC worker threads.  
+- <a name="carla.ServerPerfCounters.rpc_loop_ns"></a>**<font color="#f8805a">rpc_loop_ns</font>** (_int<small> - nanoseconds</small>_)  
+Game-thread time spent in the per-frame RPC loop. In synchronous mode it includes the time spent waiting for the client's tick.  
+- <a name="carla.ServerPerfCounters.backlog_sum"></a>**<font color="#f8805a">backlog_sum</font>** (_int_)  
+Game-thread calls still queued when a frame's RPC loop ended, summed over all frames. Divided by the number of frames, it is the average backlog.  
+- <a name="carla.ServerPerfCounters.backlog_max"></a>**<font color="#f8805a">backlog_max</font>** (_int_)  
+Largest number of game-thread calls still queued at the end of a frame's RPC loop.  
+- <a name="carla.ServerPerfCounters.snapshots"></a>**<font color="#f8805a">snapshots</font>** (_int_)  
+World snapshots serialized and sent to the clients.  
+- <a name="carla.ServerPerfCounters.snapshot_ns"></a>**<font color="#f8805a">snapshot_ns</font>** (_int<small> - nanoseconds</small>_)  
+Time spent serializing those snapshots.  
+- <a name="carla.ServerPerfCounters.snapshot_bytes"></a>**<font color="#f8805a">snapshot_bytes</font>** (_int<small> - bytes</small>_)  
+Total size of those snapshots.  
+
+### Methods
+
+##### Dunder methods
+- <a name="carla.ServerPerfCounters.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
+    - **Return:** _str_  
+
+---
+
 ## carla.TextureColor<a name="carla.TextureColor"></a>
 Class representing a texture object to be uploaded to the server. Pixel format is RGBA, uint8 per channel.  
 
@@ -4838,12 +5000,45 @@ Given a certain actor ID, checks if there is a snapshot corresponding it and so,
         - `actor_id` (_int_)  
     - **Return:** _bool_  
 
+##### Getters
+- <a name="carla.WorldSnapshot.get_accelerations"></a>**<font color="#7fb800">get_accelerations</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor_ids**=None</font>, <font color="#00a6ed">**out**=None</font>, <font color="#00a6ed">**return_mask**=False</font>)  
+Acceleration (m/s^2) of many actors at once, as an (N, 3) float64 array, read from this snapshot without calling the server. An actor not in the snapshot gets a row of NaN. With `return_mask`, returns `(array, mask)`. Needs numpy.  
+    - **Parameters:**
+        - `actor_ids` (_list(int) or numpy array_) - Actors to read, one row each in this order. <b>None</b> reads every actor of the snapshot in ascending id order, the order of [carla.WorldSnapshot.get_actor_ids](#carla.WorldSnapshot.get_actor_ids).  
+        - `out` (_numpy array_) - A C-contiguous float64 array of the right size to fill instead of a new one.  
+        - `return_mask` (_bool_) - Also return a bool array that is <b>False</b> for the actors not in the snapshot.  
+    - **Return:** _numpy.ndarray_  
+- <a name="carla.WorldSnapshot.get_actor_ids"></a>**<font color="#7fb800">get_actor_ids</font>**(<font color="#00a6ed">**self**</font>)  
+Ids of the actors in this snapshot, ascending, as a uint32 array. Needs numpy.  
+    - **Return:** _numpy.ndarray_  
+- <a name="carla.WorldSnapshot.get_angular_velocities"></a>**<font color="#7fb800">get_angular_velocities</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor_ids**=None</font>, <font color="#00a6ed">**out**=None</font>, <font color="#00a6ed">**return_mask**=False</font>)  
+Angular velocity (deg/s) of many actors at once, as an (N, 3) float64 array, read from this snapshot without calling the server. An actor not in the snapshot gets a row of NaN. With `return_mask`, returns `(array, mask)`. Needs numpy.  
+    - **Parameters:**
+        - `actor_ids` (_list(int) or numpy array_) - Actors to read, one row each in this order. <b>None</b> reads every actor of the snapshot in ascending id order, the order of [carla.WorldSnapshot.get_actor_ids](#carla.WorldSnapshot.get_actor_ids).  
+        - `out` (_numpy array_) - A C-contiguous float64 array of the right size to fill instead of a new one.  
+        - `return_mask` (_bool_) - Also return a bool array that is <b>False</b> for the actors not in the snapshot.  
+    - **Return:** _numpy.ndarray_  
+- <a name="carla.WorldSnapshot.get_transforms"></a>**<font color="#7fb800">get_transforms</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor_ids**=None</font>, <font color="#00a6ed">**out**=None</font>, <font color="#00a6ed">**return_mask**=False</font>)  
+x, y, z (meters) and pitch, yaw, roll (degrees) of many actors at once, as an (N, 6) float64 array, read from this snapshot without calling the server. An actor not in the snapshot gets a row of NaN. With `return_mask`, returns `(array, mask)`. The location is in 64-bit precision, as the server holds it, whereas [carla.ActorSnapshot.get_transform](#carla.ActorSnapshot.get_transform) rounds it to 32-bit floats: about 0.5 mm at 7 km from the origin. Needs numpy.  
+    - **Parameters:**
+        - `actor_ids` (_list(int) or numpy array_) - Actors to read, one row each in this order. <b>None</b> reads every actor of the snapshot in ascending id order, the order of [carla.WorldSnapshot.get_actor_ids](#carla.WorldSnapshot.get_actor_ids).  
+        - `out` (_numpy array_) - A C-contiguous float64 array of the right size to fill instead of a new one.  
+        - `return_mask` (_bool_) - Also return a bool array that is <b>False</b> for the actors not in the snapshot.  
+    - **Return:** _numpy.ndarray_  
+- <a name="carla.WorldSnapshot.get_velocities"></a>**<font color="#7fb800">get_velocities</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor_ids**=None</font>, <font color="#00a6ed">**out**=None</font>, <font color="#00a6ed">**return_mask**=False</font>)  
+Velocity (m/s) of many actors at once, as an (N, 3) float64 array, read from this snapshot without calling the server. An actor not in the snapshot gets a row of NaN. With `return_mask`, returns `(array, mask)`. Needs numpy.  
+    - **Parameters:**
+        - `actor_ids` (_list(int) or numpy array_) - Actors to read, one row each in this order. <b>None</b> reads every actor of the snapshot in ascending id order, the order of [carla.WorldSnapshot.get_actor_ids](#carla.WorldSnapshot.get_actor_ids).  
+        - `out` (_numpy array_) - A C-contiguous float64 array of the right size to fill instead of a new one.  
+        - `return_mask` (_bool_) - Also return a bool array that is <b>False</b> for the actors not in the snapshot.  
+    - **Return:** _numpy.ndarray_  
+
 ##### Dunder methods
 - <a name="carla.WorldSnapshot.__eq__"></a>**<font color="#7fb800">\__eq__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**=[carla.WorldSnapshot](#carla.WorldSnapshot)</font>)  
 Returns __True__ if both **<font color="#f8805a">timestamp</font>** are the same.  
     - **Return:** _bool_  
 - <a name="carla.WorldSnapshot.__iter__"></a>**<font color="#7fb800">\__iter__</font>**(<font color="#00a6ed">**self**</font>)  
-Iterate over the [carla.ActorSnapshot](#carla.ActorSnapshot) stored in the snapshot.  
+Iterate over the [carla.ActorSnapshot](#carla.ActorSnapshot) stored in the snapshot, in ascending actor id order.  
 - <a name="carla.WorldSnapshot.__len__"></a>**<font color="#7fb800">\__len__</font>**(<font color="#00a6ed">**self**</font>)  
 Returns the amount of [carla.ActorSnapshot](#carla.ActorSnapshot) present in this snapshot.  
     - **Return:** _int_  

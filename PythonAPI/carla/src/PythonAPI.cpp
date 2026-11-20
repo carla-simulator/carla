@@ -18,6 +18,7 @@ extern void export_weather();
 extern void export_world();
 extern void export_map();
 extern void export_client();
+extern void export_actor_updates();
 extern void export_exception();
 extern void export_commands();
 extern void export_trafficmanager();
@@ -44,6 +45,7 @@ BOOST_PYTHON_MODULE(carla) {
   export_world();
   export_map();
   export_client();
+  export_actor_updates();
   export_exception();
   export_commands();
   export_trafficmanager();

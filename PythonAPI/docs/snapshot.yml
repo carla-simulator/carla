@@ -55,6 +55,95 @@
       doc: > 
         Given a certain actor ID, returns its corresponding snapshot or <b>None</b> if it is not found. 
     # --------------------------------------
+    - def_name: get_actor_ids
+      return: numpy.ndarray
+      doc: >
+        Ids of the actors in this snapshot, ascending, as a uint32 array. Needs numpy.
+    # --------------------------------------
+    - def_name: get_transforms
+      return: numpy.ndarray
+      params:
+      - param_name: actor_ids
+        type: list(int) or numpy array
+        default: None
+        doc: >
+          Actors to read, one row each in this order. <b>None</b> reads every actor of the snapshot in ascending id order, the order of carla.WorldSnapshot.get_actor_ids.
+      - param_name: out
+        type: numpy array
+        default: None
+        doc: >
+          A C-contiguous float64 array of the right size to fill instead of a new one.
+      - param_name: return_mask
+        type: bool
+        default: False
+        doc: >
+          Also return a bool array that is <b>False</b> for the actors not in the snapshot.
+      doc: >
+        x, y, z (meters) and pitch, yaw, roll (degrees) of many actors at once, as an (N, 6) float64 array, read from this snapshot without calling the server. An actor not in the snapshot gets a row of NaN. With `return_mask`, returns `(array, mask)`. The location is in 64-bit precision, as the server holds it, whereas carla.ActorSnapshot.get_transform rounds it to 32-bit floats: about 0.5 mm at 7 km from the origin. Needs numpy.
+    # --------------------------------------
+    - def_name: get_velocities
+      return: numpy.ndarray
+      params:
+      - param_name: actor_ids
+        type: list(int) or numpy array
+        default: None
+        doc: >
+          Actors to read, one row each in this order. <b>None</b> reads every actor of the snapshot in ascending id order, the order of carla.WorldSnapshot.get_actor_ids.
+      - param_name: out
+        type: numpy array
+        default: None
+        doc: >
+          A C-contiguous float64 array of the right size to fill instead of a new one.
+      - param_name: return_mask
+        type: bool
+        default: False
+        doc: >
+          Also return a bool array that is <b>False</b> for the actors not in the snapshot.
+      doc: >
+        Velocity (m/s) of many actors at once, as an (N, 3) float64 array, read from this snapshot without calling the server. An actor not in the snapshot gets a row of NaN. With `return_mask`, returns `(array, mask)`. Needs numpy.
+    # --------------------------------------
+    - def_name: get_angular_velocities
+      return: numpy.ndarray
+      params:
+      - param_name: actor_ids
+        type: list(int) or numpy array
+        default: None
+        doc: >
+          Actors to read, one row each in this order. <b>None</b> reads every actor of the snapshot in ascending id order, the order of carla.WorldSnapshot.get_actor_ids.
+      - param_name: out
+        type: numpy array
+        default: None
+        doc: >
+          A C-contiguous float64 array of the right size to fill instead of a new one.
+      - param_name: return_mask
+        type: bool
+        default: False
+        doc: >
+          Also return a bool array that is <b>False</b> for the actors not in the snapshot.
+      doc: >
+        Angular velocity (deg/s) of many actors at once, as an (N, 3) float64 array, read from this snapshot without calling the server. An actor not in the snapshot gets a row of NaN. With `return_mask`, returns `(array, mask)`. Needs numpy.
+    # --------------------------------------
+    - def_name: get_accelerations
+      return: numpy.ndarray
+      params:
+      - param_name: actor_ids
+        type: list(int) or numpy array
+        default: None
+        doc: >
+          Actors to read, one row each in this order. <b>None</b> reads every actor of the snapshot in ascending id order, the order of carla.WorldSnapshot.get_actor_ids.
+      - param_name: out
+        type: numpy array
+        default: None
+        doc: >
+          A C-contiguous float64 array of the right size to fill instead of a new one.
+      - param_name: return_mask
+        type: bool
+        default: False
+        doc: >
+          Also return a bool array that is <b>False</b> for the actors not in the snapshot.
+      doc: >
+        Acceleration (m/s^2) of many actors at once, as an (N, 3) float64 array, read from this snapshot without calling the server. An actor not in the snapshot gets a row of NaN. With `return_mask`, returns `(array, mask)`. Needs numpy.
+    # --------------------------------------
     - def_name: has_actor
       return: bool
       params:
@@ -65,7 +154,7 @@
     # --------------------------------------
     - def_name: __iter__
       doc: >
-        Iterate over the carla.ActorSnapshot stored in the snapshot.  
+        Iterate over the carla.ActorSnapshot stored in the snapshot, in ascending actor id order.
     # --------------------------------------
     - def_name: __len__
       return: int

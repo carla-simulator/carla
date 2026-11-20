@@ -32,6 +32,7 @@
 #include <carla/multigpu/secondaryCommands.h>
 #include <carla/ros2/ROS2.h>
 #include <carla/ros2/middleware/Middleware.h>
+#include <carla/rpc/ServerPerfCounters.h>
 #include <carla/ros2/middleware/MiddlewareConfig.h>
 #include <carla/ros2/middleware/ActiveMiddleware.h>
 #include <carla/streaming/EndPoint.h>
@@ -956,12 +957,15 @@ void FCarlaEngine::OnPreTick(UWorld *World, ELevelTick TickType, float DeltaSeco
   // process RPC commands. Waiting here for a client's tick is not a hang:
   // keep the game thread's heartbeat going so Unreal's hang detector only
   // reports a game thread that is stuck somewhere else (#10233).
+  const uint64_t RpcLoopStart = carla::rpc::ServerPerfStats::NowNs();
   do
   {
     Server.RunSome(1u);
     FThreadHeartBeat::Get().HeartBeat();
   }
   while (bSynchronousMode && !Server.TickCueReceived());
+  carla::rpc::ServerPerfStats::Get().OnRpcLoopDone(
+      carla::rpc::ServerPerfStats::NowNs() - RpcLoopStart);
 
   // load_world() only schedules the travel, for the next engine frame: this
   // frame still belongs to the world being left, and is never sent.

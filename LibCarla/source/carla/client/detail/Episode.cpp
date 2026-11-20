@@ -106,6 +106,13 @@ using namespace std::chrono_literals;
             }
           } while (!self->_state.compare_exchange(&prev, next));
 
+          // Wake WaitForFrame. Taking the mutex orders this after a waiter's
+          // check of the old state, so the wake-up cannot be lost.
+          {
+            std::lock_guard<std::mutex> lock(self->_frame_mutex);
+          }
+          self->_frame_cv.notify_all();
+
           if(UpdateLights || HasMapChanged) {
             // The LightManager queries the server here; a time-out or a dying Simulator must not terminate the process.
             try {

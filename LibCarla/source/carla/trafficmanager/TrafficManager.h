@@ -8,6 +8,7 @@
 
 #include <functional>
 #include <map>
+#include <memory>
 #include <mutex>
 #include <vector>
 
@@ -50,7 +51,18 @@ public:
   /// Non-blocking: reset all TMs once per episode on the reset thread, then call @a on_done.
   static void RequestReset(uint64_t episode_id, std::function<void()> on_done);
 
-  static void Tick();
+  /// Steps every synchronous TM after @a ticker received @a frame.
+  static void Tick(uint64_t frame, const carla::client::detail::Simulator *ticker);
+
+  /// A TM step went to the server through @a simulator without waiting for
+  /// it. The next tick of this process waits until the server has queued it.
+  static void AddUnfencedUpdates(const std::shared_ptr<carla::client::detail::Simulator> &simulator);
+
+  /// Before @a ticker sends a tick: waits until the server has queued every
+  /// TM step sent without waiting through another connection. A connection's
+  /// own calls are fenced by its tick. Takes no lock that a TM holds while it
+  /// waits for a tick, such as during a reset.
+  static void FenceUpdates(const carla::client::detail::Simulator *ticker);
 
   uint16_t Port() const {
     return _port;
@@ -395,6 +407,10 @@ private:
   }
 
   static std::map<uint16_t, TrafficManagerBase*> _tm_map;
+  /// Connections with TM steps not yet fenced, under their own lock.
+  static std::mutex _fence_mutex;
+  static std::vector<std::weak_ptr<carla::client::detail::Simulator>> _unfenced;
+
   static std::mutex _mutex;
 
   uint16_t _port = 0;

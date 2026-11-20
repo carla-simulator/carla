@@ -58,20 +58,12 @@ namespace detail {
     }
   }
 
-  static bool SynchronizeFrame(uint64_t frame, const Episode &episode, time_duration timeout) {
-    bool result = true;
-    auto start = std::chrono::system_clock::now();
-    while (frame > episode.GetState()->GetTimestamp().frame) {
-      std::this_thread::sleep_for(std::chrono::microseconds(100));
-      auto end = std::chrono::system_clock::now();
-      auto diff = std::chrono::duration_cast<std::chrono::milliseconds>(end-start);
-      if(timeout.to_chrono() < diff) {
-        result = false;
-        break;
-      }
-    }
+  static bool SynchronizeFrame(
+      uint64_t frame, const Episode &episode, time_duration timeout, const Simulator *ticker) {
+    // Woken by the episode when the state arrives, instead of polling it.
+    const bool result = episode.WaitForFrame(frame, timeout);
     if(result) {
-      carla::traffic_manager::TrafficManager::Tick();
+      carla::traffic_manager::TrafficManager::Tick(frame, ticker);
     }
 
     return result;
@@ -186,8 +178,10 @@ namespace detail {
 
     for (auto i = 0u; i < number_of_attempts; ++i) {
       using namespace std::literals::chrono_literals;
-      if (_client.GetEpisodeSettings().synchronous_mode)
+      if (_client.GetEpisodeSettings().synchronous_mode) {
+        FenceTrafficManagers();
         _client.SendTickCue();
+      }
 
       _episode->WaitForState(50ms);
       auto episode = GetCurrentEpisode();
@@ -234,6 +228,10 @@ namespace detail {
       _light_manager->SetEpisode(WeakEpisodeProxy{shared_from_this()});
     }
   }
+void Simulator::FenceTrafficManagers() const {
+  carla::traffic_manager::TrafficManager::FenceUpdates(this);
+}
+
 EpisodeProxy Simulator::GetCurrentEpisode() {
     GetReadyCurrentEpisode();
     return EpisodeProxy{shared_from_this()};
@@ -331,14 +329,98 @@ EpisodeProxy Simulator::GetCurrentEpisode() {
     NavigationTick();
 
     // send tick command
+    FenceTrafficManagers();
     const auto frame = _client.SendTickCue();
 
     // waits until new episode is received
-    bool result = SynchronizeFrame(frame, *_episode, timeout);
+    bool result = SynchronizeFrame(frame, *_episode, timeout, this);
     if (!result) {
       throw_exception(TimeoutException(_client.GetEndpoint(), timeout));
     }
     return frame;
+  }
+
+  std::vector<rpc::CommandResponse> Simulator::ApplyBatchSyncAndTick(
+      std::vector<rpc::Command> commands,
+      time_duration timeout) {
+    FenceTrafficManagers();
+    DEBUG_ASSERT(_episode != nullptr);
+
+    // Same order on the server as ApplyBatchSync followed by Tick: the user's
+    // commands, then the walker navigation's, then the tick cue.
+    auto nav = _episode->CreateNavigationIfMissing();
+    auto nav_tick = nav->PrepareTick(_episode);
+
+    std::vector<rpc::CommandResponse> responses;
+    uint64_t frame = 0u;
+    if (nav_tick.has_value() && nav->AnyWalkerDead(*nav_tick)) {
+      // Removing a dead walker takes calls of its own between the walker
+      // commands and the tick. Keep that order exactly: separate calls.
+      responses = _client.ApplyBatchSync(std::move(commands), false);
+      _client.ApplyBatchSync(std::move(nav_tick->commands), false);
+      nav->FinishTick(*nav_tick);
+      frame = _client.SendTickCue();
+    } else {
+      const size_t user_count = commands.size();
+      if (nav_tick.has_value()) {
+        commands.insert(
+            commands.end(),
+            std::make_move_iterator(nav_tick->commands.begin()),
+            std::make_move_iterator(nav_tick->commands.end()));
+      }
+      auto result = _client.ApplyBatchAndTick(std::move(commands));
+      responses = std::move(result.first);
+      responses.resize(user_count);
+      frame = result.second;
+      if (nav_tick.has_value()) {
+        nav->FinishTick(*nav_tick);
+      }
+    }
+
+    if (!SynchronizeFrame(frame, *_episode, timeout, this)) {
+      throw_exception(TimeoutException(_client.GetEndpoint(), timeout));
+    }
+    return responses;
+  }
+
+  std::vector<uint8_t> Simulator::ApplyActorUpdates(
+      std::vector<uint8_t> blob,
+      bool do_tick,
+      time_duration timeout) {
+    if (!do_tick) {
+      return _client.ApplyActorUpdates(std::move(blob), false).first;
+    }
+    DEBUG_ASSERT(_episode != nullptr);
+    FenceTrafficManagers();
+
+    // Same order on the server as the updates followed by Tick: the updates,
+    // then the walker navigation's commands, then the tick cue.
+    auto nav = _episode->CreateNavigationIfMissing();
+    auto nav_tick = nav->PrepareTick(_episode);
+
+    std::vector<uint8_t> status;
+    uint64_t frame = 0u;
+    if (!nav_tick.has_value()) {
+      auto result = _client.ApplyActorUpdates(std::move(blob), true);
+      status = std::move(result.first);
+      frame = result.second;
+    } else {
+      status = _client.ApplyActorUpdates(std::move(blob), false).first;
+      if (nav->AnyWalkerDead(*nav_tick)) {
+        // Removing a dead walker takes calls of its own before the tick.
+        _client.ApplyBatchSync(std::move(nav_tick->commands), false);
+        nav->FinishTick(*nav_tick);
+        frame = _client.SendTickCue();
+      } else {
+        frame = _client.ApplyBatchAndTick(std::move(nav_tick->commands)).second;
+        nav->FinishTick(*nav_tick);
+      }
+    }
+
+    if (!SynchronizeFrame(frame, *_episode, timeout, this)) {
+      throw_exception(TimeoutException(_client.GetEndpoint(), timeout));
+    }
+    return status;
   }
 
   // ===========================================================================
@@ -382,7 +464,7 @@ EpisodeProxy Simulator::GetCurrentEpisode() {
     const auto frame = _client.SetEpisodeSettings(settings);
 
     using namespace std::literals::chrono_literals;
-    SynchronizeFrame(frame, *_episode, 1s);
+    SynchronizeFrame(frame, *_episode, 1s, this);
 
     return frame;
   }

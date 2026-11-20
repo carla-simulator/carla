@@ -33,7 +33,8 @@ ALSM::ALSM(
   CollisionStage &collision_stage,
   TrafficLightStage &traffic_light_stage,
   MotionPlanStage &motion_plan_stage,
-  VehicleLightStage &vehicle_light_stage)
+  VehicleLightStage &vehicle_light_stage,
+  carla::rpc::ActorUpdateBatchBuilder &updates)
   : registered_vehicles(registered_vehicles),
     buffer_map(buffer_map),
     track_traffic(track_traffic),
@@ -47,6 +48,7 @@ ALSM::ALSM(
     traffic_light_stage(traffic_light_stage),
     motion_plan_stage(motion_plan_stage),
     vehicle_light_stage(vehicle_light_stage),
+    updates(updates),
     large_vehicles(large_vehicles) {}
 
 void ALSM::Update() {
@@ -57,8 +59,10 @@ void ALSM::Update() {
   std::set<ActorId> world_pedestrian_ids;
   std::vector<ActorId> unregistered_list_to_be_deleted;
 
-  current_timestamp = world.GetSnapshot().GetTimestamp();
-  ActorList world_actors = world.GetActors();
+  current_snapshot.emplace(world.GetSnapshot());
+  current_timestamp = current_snapshot->GetTimestamp();
+  const auto snapshot_ids = current_snapshot->GetEpisodeState().GetActorIds();
+  ActorList world_actors = world.GetActors(std::vector<ActorId>(snapshot_ids.begin(), snapshot_ids.end()));
 
   // Find destroyed actors and perform clean up.
   const ALSM::DestroyeddActors destroyed_actors = IdentifyDestroyedActors(world_actors);
@@ -217,10 +221,12 @@ void ALSM::UpdateData(const bool hybrid_physics_mode, const Actor &vehicle,
                       const bool hero_actor_present, const float physics_radius_square) {
 
   ActorId actor_id = vehicle->GetId();
-  cg::Transform vehicle_transform = vehicle->GetTransform();
+  const cc::ActorSnapshot vehicle_snapshot = GetActorSnapshot(actor_id);
+  const auto &vehicle_data = vehicle_snapshot.state.vehicle_data;
+  cg::Transform vehicle_transform = vehicle_snapshot.transform;
   cg::Location vehicle_location = vehicle_transform.location;
   cg::Rotation vehicle_rotation = vehicle_transform.rotation;
-  cg::Vector3D vehicle_velocity = vehicle->GetVelocity();
+  cg::Vector3D vehicle_velocity = vehicle_snapshot.velocity;
   bool state_entry_present = simulation_state.ContainsActor(actor_id);
 
   // Initializing idle times.
@@ -246,10 +252,14 @@ void ALSM::UpdateData(const bool hybrid_physics_mode, const Actor &vehicle,
   bool enable_physics = hybrid_physics_mode ? in_range_of_hero_actor : true;
   if (!has_physics_enabled.count(actor_id) || has_physics_enabled[actor_id] != enable_physics) {
     if (hero_actors.find(actor_id) == hero_actors.end()) {
-      vehicle->SetSimulatePhysics(enable_physics);
+      // Applied with this step's controls, before the next tick: the batch
+      // applies physics toggles before target velocities.
+      updates.AddSimulatePhysics(actor_id, enable_physics);
       has_physics_enabled[actor_id] = enable_physics;
       if (enable_physics == true && state_entry_present) {
-        vehicle->SetTargetVelocity(simulation_state.GetVelocity(actor_id));
+        const cg::Vector3D velocity = simulation_state.GetVelocity(actor_id);
+        const float target[3] = {velocity.x, velocity.y, velocity.z};
+        updates.AddTargetVelocity(actor_id, target);
       }
     }
   }
@@ -267,11 +277,11 @@ void ALSM::UpdateData(const bool hybrid_physics_mode, const Actor &vehicle,
   // Updated kinematic state object.
   auto vehicle_ptr = std::static_pointer_cast<cc::Vehicle>(vehicle);
   KinematicState kinematic_state{vehicle_location, vehicle_rotation,
-                                  vehicle_velocity, vehicle_ptr->GetSpeedLimit(),
+                                  vehicle_velocity, vehicle_data.speed_limit,
                                   enable_physics, cg::Location()};
 
   // Updated traffic light state object.
-  TrafficLightState tl_state = {vehicle_ptr->GetTrafficLightState(), vehicle_ptr->IsAtTrafficLight()};
+  TrafficLightState tl_state = {vehicle_data.traffic_light_state, vehicle_data.has_traffic_light};
 
   // Update simulation state.
   if (state_entry_present) {
@@ -308,10 +318,11 @@ void ALSM::UpdateUnregisteredActorsData() {
     const ActorPtr actor_ptr = actor_info.second;
     const std::string type_id = actor_ptr->GetTypeId();
 
-    const cg::Transform actor_transform = actor_ptr->GetTransform();
+    const cc::ActorSnapshot actor_snapshot = GetActorSnapshot(actor_id);
+    const cg::Transform actor_transform = actor_snapshot.transform;
     const cg::Location actor_location = actor_transform.location;
     const cg::Rotation actor_rotation = actor_transform.rotation;
-    const cg::Vector3D actor_velocity = actor_ptr->GetVelocity();
+    const cg::Vector3D actor_velocity = actor_snapshot.velocity;
     KinematicState kinematic_state {actor_location, actor_rotation, actor_velocity, -1.0f, true, cg::Location()};
 
     TrafficLightState tl_state;
@@ -322,9 +333,10 @@ void ALSM::UpdateUnregisteredActorsData() {
     bool state_entry_not_present = !simulation_state.ContainsActor(actor_id);
     if (type_id.front() == 'v') {
       auto vehicle_ptr = std::static_pointer_cast<cc::Vehicle>(actor_ptr);
-      kinematic_state.speed_limit = vehicle_ptr->GetSpeedLimit();
+      const auto &vehicle_data = actor_snapshot.state.vehicle_data;
+      kinematic_state.speed_limit = vehicle_data.speed_limit;
 
-      tl_state = {vehicle_ptr->GetTrafficLightState(), vehicle_ptr->IsAtTrafficLight()};
+      tl_state = {vehicle_data.traffic_light_state, vehicle_data.has_traffic_light};
 
       if (state_entry_not_present) {
         dimensions = vehicle_ptr->GetBoundingBox().extent;
@@ -339,7 +351,7 @@ void ALSM::UpdateUnregisteredActorsData() {
 
       // Identify occupied waypoints.
       cg::Vector3D extent = vehicle_ptr->GetBoundingBox().extent;
-      cg::Vector3D heading_vector = vehicle_ptr->GetTransform().GetForwardVector();
+      cg::Vector3D heading_vector = actor_transform.GetForwardVector();
       std::vector<cg::Location> corners = {actor_location + cg::Location(extent.x * heading_vector),
                                            actor_location,
                                            actor_location + cg::Location(-extent.x * heading_vector)};
@@ -372,6 +384,10 @@ void ALSM::UpdateUnregisteredActorsData() {
 
     track_traffic.UpdateUnregisteredGridPosition(actor_id, nearest_waypoints);
   }
+}
+
+cc::ActorSnapshot ALSM::GetActorSnapshot(const ActorId actor_id) const {
+  return current_snapshot->GetEpisodeState().GetActorSnapshot(actor_id);
 }
 
 void ALSM::UpdateIdleTime(std::pair<ActorId, double>& max_idle_time, const ActorId& actor_id) {
@@ -454,6 +470,7 @@ void ALSM::Reset() {
   idle_time.clear();
   hero_actors.clear();
   elapsed_last_actor_destruction = 0.0;
+  current_snapshot.reset();
   current_timestamp = world.GetSnapshot().GetTimestamp();
 }
 
