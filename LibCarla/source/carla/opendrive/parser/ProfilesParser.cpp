@@ -8,7 +8,7 @@
 
 #include "carla/road/MapBuilder.h"
 
-#include <third-party/pugixml/pugixml.hpp>
+#include <pugixml.hpp>
 
 namespace carla {
 namespace opendrive {
@@ -129,7 +129,7 @@ namespace parser {
       map_builder.AddRoadElevationProfile(pro.road, pro.s, pro.a, pro.b, pro.c, pro.d);
     }
     /// @todo superelevation and crossfall still need RoadInfo classes.
-    for (auto const pro : lateral_profile) {
+    for (auto const &pro : lateral_profile) {
       if (pro.type == "shape") {
         map_builder.AddRoadLateralShape(pro.road, pro.s, pro.a, pro.b, pro.c,
             pro.d, pro.shape.t);

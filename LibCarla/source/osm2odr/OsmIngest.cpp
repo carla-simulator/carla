@@ -9,7 +9,7 @@
 #include <limits>
 #include <stdexcept>
 
-#include <third-party/pugixml/pugixml.hpp>
+#include <pugixml.hpp>
 
 namespace twinmodel {
 
