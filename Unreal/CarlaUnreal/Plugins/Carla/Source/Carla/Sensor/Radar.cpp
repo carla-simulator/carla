@@ -82,6 +82,14 @@ void ARadar::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaTime)
   TRACE_CPUPROFILER_EVENT_SCOPE(ARadar::PostPhysTick);
   CalculateCurrentVelocity(DeltaTime);
 
+  if (CanSkipRayCastSimulation())
+  {
+    // Draw what a traced tick draws, so the random sequence (mirrored to
+    // Multi-GPU secondaries) keeps advancing.
+    GenerateRays(GetNumPoints(DeltaTime));
+    return;
+  }
+
   RadarData.Reset();
   SendLineTraces(DeltaTime);
 
@@ -120,6 +128,22 @@ void ARadar::CalculateCurrentVelocity(const float DeltaTime)
   PrevLocation = RadarLocation;
 }
 
+int ARadar::GetNumPoints(const float DeltaTime) const
+{
+  return (int)(PointsPerSecond * DeltaTime);
+}
+
+void ARadar::GenerateRays(const int NumPoints)
+{
+  Rays.clear();
+  Rays.resize(NumPoints);
+  for (int i = 0; i < Rays.size(); i++) {
+    Rays[i].Radius = RandomEngine->GetUniformFloat();
+    Rays[i].Angle = RandomEngine->GetUniformFloatInRange(0.0f, carla::geom::Math::Pi2<float>());
+    Rays[i].Hitted = false;
+  }
+}
+
 void ARadar::SendLineTraces(float DeltaTime)
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(ARadar::SendLineTraces);
@@ -135,16 +159,8 @@ void ARadar::SendLineTraces(float DeltaTime)
   // Maximum radar radius in horizontal and vertical direction
   const float MaxRx = FMath::Tan(FMath::DegreesToRadians(HorizontalFOV * 0.5f)) * Range;
   const float MaxRy = FMath::Tan(FMath::DegreesToRadians(VerticalFOV * 0.5f)) * Range;
-  const int NumPoints = (int)(PointsPerSecond * DeltaTime);
-
-  // Generate the parameters of the rays in a deterministic way
-  Rays.clear();
-  Rays.resize(NumPoints);
-  for (int i = 0; i < Rays.size(); i++) {
-    Rays[i].Radius = RandomEngine->GetUniformFloat();
-    Rays[i].Angle = RandomEngine->GetUniformFloatInRange(0.0f, carla::geom::Math::Pi2<float>());
-    Rays[i].Hitted = false;
-  }
+  const int NumPoints = GetNumPoints(DeltaTime);
+  GenerateRays(NumPoints);
 
   auto LockedPhysObject = FPhysicsObjectExternalInterface::LockRead(GetWorld()->GetPhysicsScene());
   {

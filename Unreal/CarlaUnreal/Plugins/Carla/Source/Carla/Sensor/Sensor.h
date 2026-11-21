@@ -126,6 +126,11 @@ public:
     return Stream.AreClientsListening();
   }
 
+  /// True when no client stream, ROS 2 publisher (a stream enabled for ROS
+  /// counts as listened) or in-process reader can consume this tick's output,
+  /// so a ray-cast sensor may skip its traces.
+  bool CanSkipRayCastSimulation();
+
   void Tick(const float DeltaTime) final;
 
   virtual void PrePhysTick(float DeltaSeconds) {}
@@ -192,6 +197,10 @@ public:
   }
 
   void SetSavingDataToDisk(bool bSavingData) { bSavingDataToDisk = bSavingData; }
+
+  /// Something in this process reads the sensor's output every tick, so a
+  /// ray-cast sensor must not skip its traces.
+  void SetHasInProcessConsumer(bool bHasConsumer) { bHasInProcessConsumer = bHasConsumer; }
 
   /// Call on the game thread right after CaptureScene().
   static FSensorCaptureContext MakeCaptureContext(const ASensor &Sensor)
@@ -311,6 +320,8 @@ protected:
 
   // Property used when testing with SensorSpawnerActor in editor.
   bool bSavingDataToDisk = false;
+
+  bool bHasInProcessConsumer = false;
 
 private:
 

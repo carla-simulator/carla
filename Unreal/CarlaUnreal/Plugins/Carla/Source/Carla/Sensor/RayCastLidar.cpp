@@ -154,6 +154,13 @@ ARayCastLidar::FDetection ARayCastLidar::ComputeDetection(const FHitResult& HitI
       return RandomEngine->GetUniformFloat() < DropOffAlpha * Intensity + DropOffBeta;
   }
 
+  bool ARayCastLidar::DrawsRandomNumbers() const
+  {
+    constexpr float Epsilon = std::numeric_limits<float>::epsilon();
+    return (Description.NoiseStdDev > Epsilon) || DropOffGenActive ||
+        ((Description.DropOffAtZeroIntensity > Epsilon) && (Description.DropOffIntensityLimit > Epsilon));
+  }
+
   void ARayCastLidar::ResetDetections(uint32_t Channels, uint32_t MaxPointsPerChannel)
   {
     ResetChannelDetections(Detections, Channels, MaxPointsPerChannel);

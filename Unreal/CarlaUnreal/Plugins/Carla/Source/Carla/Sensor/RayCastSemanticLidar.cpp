@@ -123,9 +123,7 @@ void ARayCastSemanticLidar::SimulateLidar(const float DeltaTime, bool bLockPhysi
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(ARayCastSemanticLidar::SimulateLidar);
   const uint32 ChannelCount = Description.Channels;
-  const uint32 PointsToScanWithOneLaser =
-    FMath::RoundHalfFromZero(
-        Description.PointsPerSecond * DeltaTime / float(ChannelCount));
+  const uint32 PointsToScanWithOneLaser = GetPointsToScanWithOneLaser(DeltaTime);
 
   if (PointsToScanWithOneLaser <= 0)
   {
@@ -198,6 +196,39 @@ void ARayCastSemanticLidar::SimulateLidar(const float DeltaTime, bool bLockPhysi
 
   ComputeAndSaveDetections(ActorTransform);
 
+  AdvanceHorizontalAngle(DeltaTime);
+}
+
+void ARayCastSemanticLidar::SkipSimulation(const float DeltaTime)
+{
+  // Keep the scan phase a simulated tick would have reached, so a late
+  // listener sees the same azimuths.
+  if (GetPointsToScanWithOneLaser(DeltaTime) > 0)
+  {
+    AdvanceHorizontalAngle(DeltaTime);
+  }
+  // A traced tick's draw count depends on its hits, so it cannot be replayed.
+  // Reseed instead, so a Multi-GPU secondary mirroring this state does not
+  // repeat its noise every frame; advancing one draw would only shift the
+  // previous frame's minstd_rand sequence by one.
+  if (DrawsRandomNumbers() && (RandomEngine != nullptr))
+  {
+    RandomEngine->Seed(RandomEngine->GenerateSeed());
+  }
+}
+
+uint32 ARayCastSemanticLidar::GetPointsToScanWithOneLaser(const float DeltaTime) const
+{
+  return FMath::RoundHalfFromZero(
+      Description.PointsPerSecond * DeltaTime / float(Description.Channels));
+}
+
+void ARayCastSemanticLidar::AdvanceHorizontalAngle(const float DeltaTime)
+{
+  const float CurrentHorizontalAngle = carla::geom::Math::ToDegrees(
+      SemanticLidarData.GetHorizontalAngle());
+  const float AngleDistanceOfTick = Description.RotationFrequency * Description.HorizontalFov
+      * DeltaTime;
   const float HorizontalAngle = carla::geom::Math::ToRadians(
       std::fmod(CurrentHorizontalAngle + AngleDistanceOfTick, Description.HorizontalFov));
   SemanticLidarData.SetHorizontalAngle(HorizontalAngle);

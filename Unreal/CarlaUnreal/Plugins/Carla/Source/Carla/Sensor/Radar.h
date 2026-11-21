@@ -73,6 +73,10 @@ private:
 
   void SendLineTraces(float DeltaTime);
 
+  int GetNumPoints(const float DeltaTime) const;
+
+  void GenerateRays(const int NumPoints);
+
   float CalculateRelativeVelocity(const FHitResult& OutHit, const FVector& RadarLocation);
 
   FRadarData RadarData;
