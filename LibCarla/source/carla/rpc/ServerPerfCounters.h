@@ -70,6 +70,10 @@ namespace rpc {
     uint64_t stream_queue_ns = 0u;
     uint64_t stream_send_ns = 0u;
 
+    /// Game-thread time spent completing each snapshot's header (its hash)
+    /// and comparing it with the previous one, after snapshot_ns.
+    uint64_t snapshot_encode_ns = 0u;
+
     MSGPACK_DEFINE_ARRAY(
         frames,
         sync_calls,
@@ -92,7 +96,8 @@ namespace rpc {
         stream_drops,
         stream_blocked_ns,
         stream_queue_ns,
-        stream_send_ns);
+        stream_send_ns,
+        snapshot_encode_ns);
   };
 
   /// Process-wide accumulator behind ServerPerfCounters. Every update is a
@@ -144,6 +149,10 @@ namespace rpc {
       _snapshot_bytes.fetch_add(bytes, std::memory_order_relaxed);
     }
 
+    void OnSnapshotEncoded(uint64_t ns) {
+      _snapshot_encode_ns.fetch_add(ns, std::memory_order_relaxed);
+    }
+
     ServerPerfCounters Snapshot() const {
       ServerPerfCounters c;
       c.frames = _frames.load(std::memory_order_relaxed);
@@ -156,6 +165,7 @@ namespace rpc {
       c.snapshots = _snapshots.load(std::memory_order_relaxed);
       c.snapshot_ns = _snapshot_ns.load(std::memory_order_relaxed);
       c.snapshot_bytes = _snapshot_bytes.load(std::memory_order_relaxed);
+      c.snapshot_encode_ns = _snapshot_encode_ns.load(std::memory_order_relaxed);
       using Registry = streaming::detail::StreamCountersRegistry;
       ReadStreamCounters(Registry::Episode(),
           c.snapshot_writes, c.snapshot_wire_bytes, c.snapshot_drops,
@@ -199,6 +209,7 @@ namespace rpc {
     std::atomic<uint64_t> _snapshots{0u};
     std::atomic<uint64_t> _snapshot_ns{0u};
     std::atomic<uint64_t> _snapshot_bytes{0u};
+    std::atomic<uint64_t> _snapshot_encode_ns{0u};
   };
 
 } // namespace rpc

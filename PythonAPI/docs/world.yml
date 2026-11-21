@@ -816,6 +816,13 @@
       doc: >
         Returns a snapshot of the world at a certain moment comprising all the information about the actors.
     # --------------------------------------
+    - def_name: get_snapshot_stream_stats
+      return: dict
+      doc: >
+        Returns what this client's world-snapshot stream has received, as a dictionary whose counts only grow: `messages`; `keyframes` (whole snapshots) and `deltas` (changes against the previous snapshot); `resyncs`, the times the client dropped its copy of the last snapshot and reconnected the stream for a whole one because a message did not apply or did not match its hash; `incompatible`, messages from a server of another build, which are ignored; `wire_bytes` received and `published_bytes` of the whole snapshots published; `decode_ns`, the time spent decoding; and `callback_ns`, the time in the whole stream callback, which includes decoding, updating the snapshot and running the `on_tick` callbacks. With the environment variable `CARLA_SNAPSHOT_DIGEST=1` set before the client starts, `digests` maps each of the last 4096 frames to a digest of its actor records in ascending id order, to compare the snapshots two clients received.
+      note: >
+        Every snapshot reaches the client through one stream that runs its `on_tick` callbacks before it reads the next snapshot: a slow `on_tick` callback slows down the stream, and in synchronous mode the server's tick.
+    # --------------------------------------
     - def_name: get_spectator
       return: carla.Actor
       doc: >

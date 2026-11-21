@@ -616,11 +616,12 @@ EpisodeProxy Simulator::GetCurrentEpisode() {
     DEBUG_ASSERT(_episode != nullptr);
     _client.SubscribeToStream(
         sensor.GetActorDescription().GetStreamToken(),
-        [cb=std::move(callback), ep=WeakEpisodeProxy{shared_from_this()}](auto buffer) {
-          auto data = sensor::Deserializer::Deserialize(std::move(buffer));
-          data->_episode = ep.TryLock();
-          cb(std::move(data));
-        });
+        streaming::MakeStreamCallback(
+            [cb=std::move(callback), ep=WeakEpisodeProxy{shared_from_this()}](Buffer buffer) {
+              auto data = sensor::Deserializer::Deserialize(std::move(buffer));
+              data->_episode = ep.TryLock();
+              cb(std::move(data));
+            }));
   }
 
   void Simulator::UnSubscribeFromSensor(Actor &sensor) {

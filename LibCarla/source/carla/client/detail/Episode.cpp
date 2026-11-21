@@ -10,6 +10,7 @@
 #include "carla/client/detail/Client.h"
 #include "carla/client/detail/WalkerNavigation.h"
 #include "carla/sensor/Deserializer.h"
+#include "carla/sensor/s11n/EpisodeStateSerializer.h"
 #include "carla/trafficmanager/TrafficManager.h"
 
 #include <exception>
@@ -44,7 +45,14 @@ using namespace std::chrono_literals;
       _state(std::make_shared<EpisodeState>(info.id)),
       _token(info.token),
       _simulator(simulator),
-      _handled_episode_id(std::make_shared<std::atomic<uint64_t>>(info.id)) {}
+      _handled_episode_id(std::make_shared<std::atomic<uint64_t>>(info.id)) {
+    using Serializer = sensor::s11n::EpisodeStateSerializer;
+    if (info.snapshot_wire_version != Serializer::kVersion) {
+      log_error("the server sends world snapshots in wire format version",
+          info.snapshot_wire_version, "and this client reads version", Serializer::kVersion,
+          "(0 means a server older than versioned snapshots): client and server must come from the same build");
+    }
+  }
 
   Episode::~Episode() {
     try {
@@ -56,9 +64,28 @@ using namespace std::chrono_literals;
 
   void Episode::Listen() {
     std::weak_ptr<Episode> weak = shared_from_this();
-    _client.SubscribeToStream(_token, [weak](auto buffer) {
+    _client.SubscribeToStream(_token, [weak](Buffer buffer) -> streaming::CallbackResult {
       auto self = weak.lock();
       if (self != nullptr) {
+        const uint64_t start = SnapshotStreamDecoder::NowNs();
+        struct CallbackTimer {
+          SnapshotStreamDecoder &decoder;
+          uint64_t start;
+          ~CallbackTimer() {
+            decoder.AddCallbackTime(SnapshotStreamDecoder::NowNs() - start);
+          }
+        } timer{self->_snapshot_decoder, start};
+
+        // Decode first, whatever happens to the snapshot afterwards: the next
+        // message builds on this one even when it is not published.
+        switch (self->_snapshot_decoder.Decode(buffer)) {
+          case SnapshotStreamDecoder::Action::Publish:
+            break;
+          case SnapshotStreamDecoder::Action::Skip:
+            return streaming::CallbackResult::Continue;
+          case SnapshotStreamDecoder::Action::Resync:
+            return streaming::CallbackResult::Resync;
+        }
 
         auto data = sensor::Deserializer::Deserialize(std::move(buffer));
         auto next = std::make_shared<const EpisodeState>(CastData(*data));
@@ -102,7 +129,7 @@ using namespace std::chrono_literals;
           do {
             if (prev->GetFrame() >= next->GetFrame() && !episode_changed) {
               self->_on_tick_callbacks.Call(next);
-              return;
+              return streaming::CallbackResult::Continue;
             }
           } while (!self->_state.compare_exchange(&prev, next));
 
@@ -138,6 +165,7 @@ using namespace std::chrono_literals;
           self->_on_tick_callbacks.Call(next);
         }
       }
+      return streaming::CallbackResult::Continue;
     });
   }
 

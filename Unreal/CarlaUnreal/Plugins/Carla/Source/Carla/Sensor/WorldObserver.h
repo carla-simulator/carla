@@ -13,7 +13,7 @@
 class UCarlaEpisode;
 
 /// What FWorldObserver keeps from one tick to the next to compare snapshots.
-struct FWorldObserverChanges;
+struct FWorldObserverCodec;
 
 /// Serializes and sends all the actors in the current UCarlaEpisode.
 class FWorldObserver
@@ -59,11 +59,12 @@ public:
 
 private:
 
-  /// carla.Snapshot.Stats: compares this tick's snapshot with the last one
-  /// and adds what changed to carla::rpc::SnapshotChangeAccumulator.
-  void CountChanges(uint64 EpisodeId, const carla::Buffer &Buffer);
+  /// carla.Snapshot.Stats: adds what changed since the last snapshot, as
+  /// the codec found it, to carla::rpc::SnapshotChangeAccumulator.
+  void CountChanges(const carla::Buffer &Buffer);
 
   FDataMultiStream Stream;
 
-  std::unique_ptr<FWorldObserverChanges> Changes;
+  /// Completes each snapshot's header and compares it with the previous one.
+  std::unique_ptr<FWorldObserverCodec> Codec;
 };

@@ -5,9 +5,12 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include <algorithm>
+#include <stdexcept>
+#include <string>
 #include <type_traits>
 #include <variant>
 
+#include "carla/Exception.h"
 #include "carla/Logging.h"
 
 #include "carla/client/detail/Simulator.h"
@@ -356,9 +359,22 @@ bool TrafficManagerLocal::TickForFrame(uint64_t frame, const cc::detail::Simulat
   // The client that ticked has the new frame, but this TM reads the world
   // through its own connection, which may still hold part of the previous one.
   auto simulator = episode_proxy.TryLock();
-  if (simulator != nullptr && simulator.get() != ticker &&
-      !simulator->WaitForFrame(frame, simulator->GetNetworkingTimeout())) {
-    log_warning("Traffic Manager: frame", frame, "did not arrive on its connection; stepping anyway");
+  if (simulator != nullptr && simulator.get() != ticker) {
+    const bool arrived = simulator->WaitForFrame(frame, simulator->GetNetworkingTimeout());
+    const uint64_t resyncs = simulator->GetSnapshotResyncCount();
+    const bool resynced = (resyncs != snapshot_resyncs_seen);
+    snapshot_resyncs_seen = resyncs;
+    if (!arrived) {
+      if (resynced) {
+        // The connection dropped the snapshots it had and is waiting for a
+        // whole one: the state it holds may be several frames old.
+        throw_exception(std::runtime_error(
+            "Traffic Manager: the world-snapshot stream of its connection "
+            "resynchronized and frame " + std::to_string(frame) +
+            " did not arrive; not stepping on an older world"));
+      }
+      log_warning("Traffic Manager: frame", frame, "did not arrive on its connection; stepping anyway");
+    }
   }
   // Called from a tick, so the next tick of this process comes after this
   // step: the step need not wait for the server to apply its updates.

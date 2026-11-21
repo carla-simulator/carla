@@ -9,6 +9,7 @@
 #include "carla/Buffer.h"
 #include "carla/NonCopyable.h"
 #include "carla/profiler/LifetimeProfiled.h"
+#include "carla/streaming/CallbackResult.h"
 #include "carla/streaming/detail/Token.h"
 #include "carla/streaming/detail/Types.h"
 
@@ -41,12 +42,16 @@ namespace tcp {
 
     using endpoint = boost::asio::ip::tcp::endpoint;
     using protocol_type = endpoint::protocol_type;
-    using callback_function_type = std::function<void (Buffer)>;
+    using callback_function_type = StreamCallback;
 
+    /// @a callback receives each message; it may return CallbackResult, or
+    /// nothing (same as CallbackResult::Continue).
+    template <typename Functor>
     Client(
         boost::asio::io_context &io_context,
         const token_type &token,
-        callback_function_type callback);
+        Functor &&callback)
+      : Client(io_context, token, MakeStreamCallback(std::forward<Functor>(callback)), 0) {}
 
     ~Client();
 
@@ -60,9 +65,19 @@ namespace tcp {
 
   private:
 
+    Client(
+        boost::asio::io_context &io_context,
+        const token_type &token,
+        callback_function_type callback,
+        int);
+
     void Reconnect();
 
     void ReadData();
+
+    /// The callback asked to start over: reconnect, so that the server opens
+    /// a new session.
+    void Resync();
 
     const token_type _token;
 
@@ -80,6 +95,11 @@ namespace tcp {
     std::shared_ptr<BufferPool> _buffer_pool;
 
     std::atomic_bool _done{false};
+
+    /// Messages since the last resynchronization (only touched on _strand).
+    uint64_t _messages_since_resync = 0u;
+
+    bool _has_resynced = false;
   };
 
 } // namespace tcp

@@ -56,6 +56,7 @@
 #include <carla/rpc/DebugShape.h>
 #include <carla/rpc/EnvironmentObject.h>
 #include <carla/rpc/EpisodeInfo.h>
+#include <carla/sensor/s11n/EpisodeStateSerializer.h>
 #include <carla/rpc/EpisodeSettings.h>
 #include <carla/rpc/LabelledPoint.h>
 #include <carla/rpc/LightState.h>
@@ -719,7 +720,10 @@ void FCarlaServer::FPimpl::BindActions()
   BIND_SYNC(get_episode_info) << [this]() -> R<cr::EpisodeInfo>
   {
     REQUIRE_CARLA_EPISODE();
-    return cr::EpisodeInfo{Episode->GetId(), BroadcastStream.token()};
+    return cr::EpisodeInfo{
+        Episode->GetId(),
+        BroadcastStream.token(),
+        carla::sensor::s11n::EpisodeStateSerializer::kVersion};
   };
 
   BIND_SYNC(get_map_info) << [this]() -> R<cr::MapInfo>

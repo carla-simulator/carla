@@ -104,6 +104,9 @@ private:
   /// Synchronous mode: whether this step may send its updates without
   /// waiting, because a tick is the next thing to reach the server.
   bool defer_updates_to_tick {false};
+  /// Resynchronizations of the world-snapshot stream of this TM's connection
+  /// seen by the last TickForFrame.
+  uint64_t snapshot_resyncs_seen {0u};
   ALSM alsm;
   /// Traffic manager server instance.
   TrafficManagerServer server;

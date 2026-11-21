@@ -68,7 +68,8 @@ namespace tcp {
   Client::Client(
       boost::asio::io_context &io_context,
       const token_type &token,
-      callback_function_type callback)
+      callback_function_type callback,
+      int)
     : LIBCARLA_INITIALIZE_LIFETIME_PROFILER(
           std::string("tcp client ") + std::to_string(token.get_stream_id())),
       _token(token),
@@ -160,11 +161,32 @@ namespace tcp {
   void Client::Reconnect() {
     auto self = shared_from_this();
     _connection_timer.expires_after(time_duration::seconds(1u).to_chrono());
-    _connection_timer.async_wait([this, self](boost::system::error_code ec) {
+    _connection_timer.async_wait(boost::asio::bind_executor(_strand, [this, self](boost::system::error_code ec) {
       if (!ec) {
         Connect();
       }
-    });
+    }));
+  }
+
+  void Client::Resync() {
+    // At most one immediate reconnection every 100 messages: anything more
+    // frequent means the stream keeps failing, so say so and slow down.
+    constexpr uint64_t kMessagesBetweenResyncs = 100u;
+    const bool too_often = _has_resynced && (_messages_since_resync < kMessagesBetweenResyncs);
+    _has_resynced = true;
+    _messages_since_resync = 0u;
+    if (too_often) {
+      log_error("streaming client: stream", _token.get_stream_id(),
+          "asked to resynchronize again after fewer than", kMessagesBetweenResyncs,
+          "messages; reconnecting in 1 s");
+      if (_socket.is_open()) {
+        _socket.close();
+      }
+      Reconnect();
+    } else {
+      log_warning("streaming client: stream", _token.get_stream_id(), "resynchronizing");
+      Connect();
+    }
   }
 
   void Client::ReadData() {
@@ -196,16 +218,22 @@ namespace tcp {
           // An exception leaving this handler would escape io_context::run()
           // on a worker thread and call std::terminate, killing the client
           // process; log it and keep reading the stream instead.
+          CallbackResult result = CallbackResult::Continue;
 #ifndef LIBCARLA_NO_EXCEPTIONS
           try {
 #endif // LIBCARLA_NO_EXCEPTIONS
-            _callback(message->pop());
+            result = _callback(message->pop());
 #ifndef LIBCARLA_NO_EXCEPTIONS
           } catch (const std::exception &e) {
             log_error("streaming client: exception in stream callback:", e.what());
           }
 #endif // LIBCARLA_NO_EXCEPTIONS
-          ReadData();
+          ++_messages_since_resync;
+          if (result == CallbackResult::Resync) {
+            Resync();
+          } else {
+            ReadData();
+          }
         } else {
           // As usual, if anything fails start over from the very top.
           log_debug("streaming client: failed to read data:", ec.message());

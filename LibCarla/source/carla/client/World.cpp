@@ -115,6 +115,10 @@ namespace client {
     return _episode.Lock()->GetWorldSnapshot();
   }
 
+  detail::SnapshotStreamStats World::GetSnapshotStreamStats() const {
+    return _episode.Lock()->GetSnapshotStreamStats();
+  }
+
   SharedPtr<Actor> World::GetActor(ActorId id) const {
     auto simulator = _episode.Lock();
     auto description = simulator->GetActorById(id);

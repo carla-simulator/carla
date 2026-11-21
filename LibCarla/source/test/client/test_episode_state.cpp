@@ -9,14 +9,17 @@
 #include <carla/Buffer.h>
 #include <carla/client/WorldSnapshot.h>
 #include <carla/client/detail/EpisodeState.h>
+#include <carla/client/detail/SnapshotStreamDecoder.h>
 #include <carla/sensor/SensorRegistry.h>
 #include <carla/sensor/data/ActorDynamicState.h>
 #include <carla/sensor/data/RawEpisodeState.h>
+#include <carla/sensor/s11n/EpisodeStateCodec.h>
 #include <carla/sensor/s11n/EpisodeStateSerializer.h>
 #include <carla/sensor/s11n/SensorHeaderSerializer.h>
 
 #include <cstring>
 #include <memory>
+#include <random>
 #include <vector>
 
 namespace {
@@ -171,4 +174,172 @@ TEST(episode_state, sparse_ids_are_sorted_and_found) {
   for (const carla::ActorId missing : {0u, 8u, 89999u, 4000001u}) {
     ASSERT_FALSE(state->FindIndex(missing).has_value());
   }
+}
+
+namespace {
+
+  /// A world-snapshot stream message: sensor header, then a body that the
+  /// encoder completed (registry order), as the server sends it.
+  struct Message {
+    std::vector<unsigned char> keyframe;
+    std::vector<unsigned char> delta;  // empty if there is none
+  };
+
+  Message MakeMessage(
+      carla::sensor::s11n::episode_codec::DeltaEncoder &encoder,
+      uint64_t frame,
+      const std::vector<ActorDynamicState> &records) {
+    namespace s11n = carla::sensor::s11n;
+    s11n::SensorHeaderSerializer::Header sensor_header{};
+    sensor_header.sensor_type =
+        carla::sensor::SensorRegistry::get<FWorldObserver *>::index;
+    sensor_header.frame = frame;
+    sensor_header.timestamp = 0.05 * static_cast<double>(frame);
+    s11n::EpisodeStateSerializer::Header episode_header{};
+    episode_header.episode_id = 3u;
+    episode_header.delta_seconds = 0.05f;
+    std::vector<unsigned char> body(sizeof(episode_header));
+    std::memcpy(body.data(), &episode_header, sizeof(episode_header));
+    for (const auto &record : records) {
+      const auto *begin = reinterpret_cast<const unsigned char *>(&record);
+      body.insert(body.end(), begin, begin + sizeof(record));
+    }
+    encoder.Prepare(body.data(), body.size(), frame);
+    Message message;
+    const auto *sensor_begin = reinterpret_cast<const unsigned char *>(&sensor_header);
+    message.keyframe.assign(sensor_begin, sensor_begin + sizeof(sensor_header));
+    message.keyframe.insert(message.keyframe.end(), body.begin(), body.end());
+    if (encoder.HasDelta()) {
+      message.delta.assign(sensor_begin, sensor_begin + sizeof(sensor_header));
+      message.delta.resize(sizeof(sensor_header) + encoder.GetDeltaSize());
+      encoder.WriteDelta(body.data(), message.delta.data() + sizeof(sensor_header));
+    }
+    return message;
+  }
+
+  std::shared_ptr<EpisodeState> Publish(carla::Buffer buffer) {
+    auto data = carla::sensor::SensorRegistry::Deserialize(std::move(buffer));
+    auto raw = std::static_pointer_cast<carla::sensor::data::RawEpisodeState>(data);
+    return std::make_shared<EpisodeState>(*raw);
+  }
+
+  void ExpectSameState(const EpisodeState &lhs, const EpisodeState &rhs, uint64_t frame) {
+    ASSERT_EQ(lhs.GetFrame(), rhs.GetFrame());
+    ASSERT_EQ(lhs.GetEpisodeId(), rhs.GetEpisodeId());
+    ASSERT_EQ(lhs.GetTimestamp().elapsed_seconds, rhs.GetTimestamp().elapsed_seconds);
+    ASSERT_EQ(lhs.size(), rhs.size()) << "frame " << frame;
+    const auto lhs_ids = lhs.GetActorIds();
+    const auto rhs_ids = rhs.GetActorIds();
+    ASSERT_TRUE(std::equal(lhs_ids.begin(), lhs_ids.end(), rhs_ids.begin(), rhs_ids.end()));
+    for (size_t i = 0u; i < lhs.size(); ++i) {
+      const auto &a = lhs.GetActorSnapshotAt(i);
+      const auto &b = rhs.GetActorSnapshotAt(i);
+      ASSERT_EQ(a.id, b.id);
+      ASSERT_EQ(a.actor_state, b.actor_state);
+      ASSERT_EQ(a.transform, b.transform) << "frame " << frame << " actor " << a.id;
+      ASSERT_EQ(a.velocity, b.velocity);
+      ASSERT_EQ(a.angular_velocity, b.angular_velocity);
+      ASSERT_EQ(a.acceleration, b.acceleration);
+      ASSERT_EQ(std::memcmp(&a.state, &b.state, sizeof(a.state)), 0);
+      ASSERT_EQ(lhs.GetLocationAt(i), rhs.GetLocationAt(i));
+    }
+  }
+
+} // namespace
+
+// The client publishes, from deltas, the same EpisodeState as from the whole
+// snapshots, actor by actor, while actors move, come and go.
+TEST(episode_state, state_from_deltas_equals_state_from_keyframes) {
+  carla::sensor::s11n::episode_codec::DeltaEncoder encoder;
+  carla::client::detail::SnapshotStreamDecoder by_keyframe;
+  carla::client::detail::SnapshotStreamDecoder by_delta;
+  std::mt19937 rng(11u);
+  std::uniform_real_distribution<float> step(-1.0f, 1.0f);
+
+  std::vector<ActorDynamicState> actors;
+  carla::ActorId next_id = 1u;
+  auto spawn = [&]() {
+    ActorDynamicState state;
+    std::memset(&state, 0, sizeof(state));
+    state.id = next_id++;
+    state.actor_state = carla::rpc::ActorState::Active;
+    state.location[0u] = 1000.0 * state.id;
+    state.state.vehicle_data.speed_limit = 30.0f;
+    actors.push_back(state);
+  };
+  for (int i = 0; i < 50; ++i) {
+    spawn();
+  }
+
+  size_t deltas = 0u;
+  for (uint64_t frame = 1u; frame <= 300u; ++frame) {
+    for (size_t k = 0u; k < actors.size(); k += 2u) {
+      actors[k].location[0u] += step(rng);
+      actors[k].velocity = carla::geom::Vector3D{step(rng), step(rng), 0.0f};
+      carla::rpc::VehicleControl control;
+      control.throttle = 0.5f + 0.1f * step(rng);
+      actors[k].state.vehicle_data.control = control;
+    }
+    if (frame % 7u == 0u) {
+      actors.erase(actors.begin() + static_cast<long>(rng() % actors.size()));
+    }
+    if (frame % 5u == 0u) {
+      spawn();
+    }
+    if (frame % 50u == 0u) {
+      std::shuffle(actors.begin(), actors.end(), rng);  // registry order
+    }
+    const Message message = MakeMessage(encoder, frame, actors);
+
+    carla::Buffer full(message.keyframe.data(), message.keyframe.size());
+    ASSERT_EQ(by_keyframe.Decode(full), carla::client::detail::SnapshotStreamDecoder::Action::Publish);
+    const auto expected = Publish(std::move(full));
+
+    const auto &sent = message.delta.empty() ? message.keyframe : message.delta;
+    carla::Buffer received(sent.data(), sent.size());
+    ASSERT_EQ(by_delta.Decode(received), carla::client::detail::SnapshotStreamDecoder::Action::Publish);
+    const auto decoded = Publish(std::move(received));
+    ExpectSameState(*expected, *decoded, frame);
+    deltas += message.delta.empty() ? 0u : 1u;
+  }
+  EXPECT_GT(deltas, 290u);
+  const auto stats = by_delta.GetStats();
+  EXPECT_EQ(stats.deltas, deltas);
+  EXPECT_EQ(stats.keyframes, 300u - deltas);
+  EXPECT_EQ(stats.resyncs, 0u);
+  EXPECT_LT(stats.wire_bytes, by_keyframe.GetStats().wire_bytes / 2u);
+  EXPECT_EQ(stats.published_bytes, by_keyframe.GetStats().published_bytes);
+}
+
+// A delta that does not follow what the client has asks for a resync and
+// publishes nothing; a server of another wire format is skipped.
+TEST(episode_state, decoder_asks_for_a_resync_or_skips) {
+  carla::sensor::s11n::episode_codec::DeltaEncoder encoder;
+  std::vector<ActorDynamicState> actors(3u);
+  for (size_t k = 0u; k < actors.size(); ++k) {
+    std::memset(&actors[k], 0, sizeof(ActorDynamicState));
+    actors[k].id = static_cast<carla::ActorId>(k + 1u);
+  }
+  const Message first = MakeMessage(encoder, 1u, actors);
+  actors[0].location[0u] = 5.0;
+  const Message second = MakeMessage(encoder, 2u, actors);
+  ASSERT_FALSE(second.delta.empty());
+
+  using Action = carla::client::detail::SnapshotStreamDecoder::Action;
+  carla::client::detail::SnapshotStreamDecoder decoder;
+  carla::Buffer delta(second.delta.data(), second.delta.size());
+  EXPECT_EQ(decoder.Decode(delta), Action::Resync);
+  EXPECT_EQ(decoder.GetResyncCount(), 1u);
+  carla::Buffer keyframe(first.keyframe.data(), first.keyframe.size());
+  EXPECT_EQ(decoder.Decode(keyframe), Action::Publish);
+  carla::Buffer delta_again(second.delta.data(), second.delta.size());
+  EXPECT_EQ(decoder.Decode(delta_again), Action::Publish);
+
+  // The previous wire format: the body starts with the episode id.
+  std::vector<unsigned char> old_message(first.keyframe.begin(), first.keyframe.begin() + 48);
+  old_message.resize(48u + 36u + 131u, 0u);
+  old_message[48] = 3u;
+  carla::Buffer old_buffer(old_message.data(), old_message.size());
+  EXPECT_EQ(decoder.Decode(old_buffer), Action::Skip);
+  EXPECT_EQ(decoder.GetStats().incompatible, 1u);
 }

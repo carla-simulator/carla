@@ -57,6 +57,7 @@ import argparse
 import hashlib
 import json
 import multiprocessing
+import os
 import random
 import resource
 import socket
@@ -95,7 +96,7 @@ COUNTER_NAMES = (
     'snapshot_writes', 'snapshot_wire_bytes', 'snapshot_drops', 'snapshot_blocked_ns',
     'snapshot_queue_ns', 'snapshot_send_ns',
     'stream_writes', 'stream_wire_bytes', 'stream_drops', 'stream_blocked_ns',
-    'stream_queue_ns', 'stream_send_ns')
+    'stream_queue_ns', 'stream_send_ns', 'snapshot_encode_ns')
 
 
 def counters_dict(counters):
@@ -132,6 +133,7 @@ def counters_delta(before, after, ticks):
         'backlog_max_total': after['backlog_max'],
         'snapshot_ms': delta['snapshot_ns'] / max(1, delta['snapshots']) / 1e6,
         'snapshot_bytes': delta['snapshot_bytes'] / max(1, delta['snapshots']),
+        'snapshot_encode_ms': delta['snapshot_encode_ns'] / max(1, delta['snapshots']) / 1e6,
         'snapshot_wire_bytes_per_frame': delta['snapshot_wire_bytes'] / frames,
         'snapshot_writes_per_frame': delta['snapshot_writes'] / frames,
         'snapshot_drops': delta['snapshot_drops'],
@@ -204,6 +206,33 @@ def stream_stats_delta(before, after, ticks):
     return result
 
 
+def read_snapshot_stream(world):
+    """world.get_snapshot_stream_stats(), or None when the client predates it."""
+    try:
+        return world.get_snapshot_stream_stats()
+    except AttributeError:
+        return None
+
+
+def snapshot_stream_delta(before, after):
+    """What one client's snapshot stream received between two readings."""
+    if before is None or after is None:
+        return None
+    delta = {key: after[key] - before[key] for key in after if key != 'digests'}
+    messages = max(1, delta['messages'])
+    return {
+        'messages': delta['messages'],
+        'keyframes': delta['keyframes'],
+        'deltas': delta['deltas'],
+        'resyncs': delta['resyncs'],
+        'incompatible': delta['incompatible'],
+        'wire_bytes_per_message': delta['wire_bytes'] / messages,
+        'published_bytes_per_message': delta['published_bytes'] / messages,
+        'decode_us_per_message': delta['decode_ns'] / messages / 1e3,
+        'callback_us_per_message': delta['callback_ns'] / messages / 1e3,
+    }
+
+
 def snapshot_changes_delta(before, after):
     """Change statistics of the snapshot (carla.Snapshot.Stats) between two readings."""
     frames = after['frames'] - before['frames']
@@ -272,7 +301,9 @@ def build_paths(world_map, count, seed):
                 break
             current = following[0]
             path.append(current.transform)
-        if len(path) >= 2:
+        # Only whole paths: the array APIs need the same length for every
+        # actor, and on a large map some roads end before PATH_LENGTH steps.
+        if len(path) == PATH_LENGTH:
             paths.append(path)
     if len(paths) < count:
         sys.exit(f'only {len(paths)} paths on this map, asked for {count} actors')
@@ -317,14 +348,14 @@ def spawn_actors(client, world, args):
     for path in paths:
         blueprint = rng.choice(blueprints)
         blueprint.set_attribute('role_name', 'benchmark')
-        spawn = carla.command.SpawnActor(blueprint, lifted(path[0], 0.5))
+        spawn = carla.command.SpawnActor(blueprint, lifted(path[0], args.lift))
         if not physics:
             spawn = spawn.then(carla.command.SetSimulatePhysics(carla.command.FutureActor, False))
         commands.append(spawn)
     for path in parked_paths:
         blueprint = rng.choice(blueprints)
         blueprint.set_attribute('role_name', 'parked')
-        commands.append(carla.command.SpawnActor(blueprint, lifted(path[0], 0.3)))
+        commands.append(carla.command.SpawnActor(blueprint, lifted(path[0], args.lift)))
     ids, kept, parked = [], [], []
     responses = client.apply_batch_sync(commands, True)
     for response, path in zip(responses[:len(paths)], paths):
@@ -601,8 +632,12 @@ class BenchmarkClient:  # pylint: disable=too-many-instance-attributes
         cpu_before = 0.0
         start_wall = time.perf_counter()
         parked_previous, parked_same, parked_seen = None, 0, 0
+        stream_before = None
+        first_frame = None
         for step in range(args.warmup + args.ticks):
             if step == args.warmup:
+                stream_before = read_snapshot_stream(self.world)
+                first_frame = self.world.get_snapshot().frame
                 if self.ticker:
                     counters_before = read_server_counters(self.client)
                     streams_before = read_stream_stats(self.client)
@@ -639,7 +674,13 @@ class BenchmarkClient:  # pylint: disable=too-many-instance-attributes
                 if step >= args.warmup:
                     snapshot_digest(snapshot, self.all_ids, step - args.warmup, all_digest)
         wall = time.perf_counter() - start_wall
-        result = {'client': self.index, 'cpu_s': cpu_seconds() - cpu_before}
+        stream_after = read_snapshot_stream(self.world)
+        result = {'client': self.index, 'cpu_s': cpu_seconds() - cpu_before,
+                  'snapshot_stream': snapshot_stream_delta(stream_before, stream_after)}
+        if args.digests and stream_after is not None and 'digests' in stream_after:
+            result['digests'] = {frame_number: value
+                                 for frame_number, value in stream_after['digests'].items()
+                                 if frame_number > first_frame}
         if args.hash_all:
             result['hash_all'] = all_digest.hexdigest()
         if self.frames is not None:
@@ -735,6 +776,9 @@ def parse_args():
     parser.add_argument('--hash-all', action='store_true',
                         help='every client hashes the whole snapshot of every measured tick '
                         '(synchronous mode)')
+    parser.add_argument('--digests', action='store_true',
+                        help='every client keeps a digest of each snapshot it publishes '
+                        '(CARLA_SNAPSHOT_DIGEST=1); compare them frame by frame')
     parser.add_argument('--reload', action='store_true',
                         help='reload the world first, so that runs start from the same state')
     parser.add_argument('--deterministic', action='store_true',
@@ -750,6 +794,8 @@ def parse_args():
                         help="the last client's on_tick callback sleeps this long")
     parser.add_argument('--change-stats', action='store_true',
                         help='turn on carla.Snapshot.Stats on the server during the run')
+    parser.add_argument('--lift', type=float, default=0.5,
+                        help='spawn height above the road, in metres (Town15 needs about 5)')
     parser.add_argument('--timeout', type=float, default=60.0)
     parser.add_argument('--out', help='also write the JSON result here')
     args = parser.parse_args()
@@ -766,9 +812,26 @@ def parse_args():
     return args
 
 
+def compare_digests(per_client):
+    """Frames every client published, and whether their digests agree."""
+    common = set(per_client[0])
+    for digests in per_client[1:]:
+        common &= set(digests)
+    differing = sorted(frame_number for frame_number in common
+                       if len({digests[frame_number] for digests in per_client}) > 1)
+    return {
+        'digest_frames_compared': len(common),
+        'digest_frames_differing': len(differing),
+        'digest_first_differing_frame': differing[0] if differing else None,
+    }
+
+
 def main():
     """Sets the world up, runs the clients and prints the result."""
     args = parse_args()
+    if args.digests:
+        # Read when a client connects; the client processes inherit it.
+        os.environ['CARLA_SNAPSHOT_DIGEST'] = '1'
     client = carla.Client(args.host, args.port)
     client.set_timeout(args.timeout)
     world = client.get_world()
@@ -819,6 +882,13 @@ def main():
             hashes = [result['hash_all'] for result in results]
             summary['hash_all'] = hashes[0]
             summary['hash_all_clients_agree'] = len(set(hashes)) == 1
+        streams = [result.get('snapshot_stream') for result in results]
+        summary['clients_snapshot_stream'] = streams
+        summary['snapshot_resyncs'] = sum(
+            stream['resyncs'] for stream in streams if stream is not None)
+        summary.pop('digests', None)
+        if args.digests:
+            summary.update(compare_digests([result.get('digests') or {} for result in results]))
         if not args.synchronous or args.reader_delay_ms > 0:
             summary['clients_frames'] = [
                 {key: result.get(key) for key in

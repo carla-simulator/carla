@@ -263,6 +263,84 @@ struct DoneGuard {
   std::atomic_bool &done;
 };
 
+// A callback that lost the state the next messages build on returns Resync:
+// the client reconnects and the server sees a new session. A second resync
+// within 100 messages waits 1 s before reconnecting.
+TEST(streaming, low_level_tcp_callback_resync_opens_a_new_session) {
+  using namespace carla::streaming;
+  using namespace carla::streaming::detail;
+
+  boost::asio::io_context io_context;
+  tcp::Server::endpoint ep(boost::asio::ip::tcp::v4(), TESTING_PORT);
+
+  tcp::Server srv(io_context, ep);
+  srv.SetTimeout(1s);
+  std::atomic_bool done{false};
+  std::mutex mutex;
+  std::vector<std::chrono::steady_clock::time_point> opened;
+
+  srv.Listen([&](std::shared_ptr<tcp::ServerSession> session) {
+    std::string msg;
+    {
+      std::lock_guard<std::mutex> lock(mutex);
+      opened.push_back(std::chrono::steady_clock::now());
+      msg = "session " + std::to_string(opened.size());
+    }
+    carla::Buffer Buf(boost::asio::buffer(msg.c_str(), msg.size()));
+    carla::SharedBufferView BufView = carla::BufferView::CreateFrom(std::move(Buf));
+    while (!done) {
+      std::this_thread::sleep_for(1ms);
+      carla::SharedBufferView View = BufView;
+      if (session->Write(View) == tcp::WriteStatus::Closed) {
+        break;
+      }
+    }
+  }, [](std::shared_ptr<tcp::ServerSession>) {});
+
+  // Use loopback: Windows refuses to connect to the 0.0.0.0 wildcard the server binds to.
+  Dispatcher dispatcher{make_endpoint<tcp::Client::protocol_type>(
+      {make_localhost_address(), srv.GetLocalEndpoint().port()})};
+  auto stream = dispatcher.MakeStream();
+  std::vector<std::string> received;
+  auto c = std::make_shared<tcp::Client>(io_context, stream.token(), [&](carla::Buffer message) {
+    std::lock_guard<std::mutex> lock(mutex);
+    received.push_back(util::buffer::as_string(message));
+    const size_t n = received.size();
+    return (n == 5u || n == 8u) ? CallbackResult::Resync : CallbackResult::Continue;
+  });
+  c->Connect();
+
+  // One thread per session loop, plus the ones that do the I/O.
+  carla::ThreadGroup threads;
+  threads.CreateThreads(
+      std::max(6u, std::thread::hardware_concurrency()),
+      [&]() { io_context.run(); });
+
+  const auto deadline = std::chrono::steady_clock::now() + 15s;
+  for (;;) {
+    {
+      std::lock_guard<std::mutex> lock(mutex);
+      if (received.size() > 12u || std::chrono::steady_clock::now() > deadline) {
+        break;
+      }
+    }
+    std::this_thread::sleep_for(10ms);
+  }
+  c->Stop();
+  done = true;
+  io_context.stop();
+
+  std::lock_guard<std::mutex> lock(mutex);
+  ASSERT_GT(received.size(), 12u);
+  ASSERT_EQ(opened.size(), 3u);
+  // After a resync nothing more arrives from the previous session.
+  for (size_t k = 0u; k < received.size(); ++k) {
+    const char *expected = (k < 5u) ? "session 1" : (k < 8u) ? "session 2" : "session 3";
+    EXPECT_EQ(received[k], expected) << "message " << k;
+  }
+  EXPECT_GE(opened[2] - opened[1], 900ms);
+}
+
 TEST(streaming, stream_outlives_server) {
   using namespace carla::streaming;
   using namespace util::buffer;

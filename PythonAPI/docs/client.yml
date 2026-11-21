@@ -578,6 +578,11 @@
       var_units: nanoseconds
       doc: >
         As `snapshot_send_ns`, for every other stream (sensors).
+    - var_name: snapshot_encode_ns
+      type: int
+      var_units: nanoseconds
+      doc: >
+        Game-thread time spent, after collecting each snapshot (`snapshot_ns`), completing its header — the hash of its actor records — and comparing it with the previous snapshot.
     # - METHODS ----------------------------
     methods:
     - def_name: __str__

@@ -39,7 +39,8 @@ namespace rpc {
         << ", stream_drops=" << c.stream_drops
         << ", stream_blocked_ns=" << c.stream_blocked_ns
         << ", stream_queue_ns=" << c.stream_queue_ns
-        << ", stream_send_ns=" << c.stream_send_ns << ")";
+        << ", stream_send_ns=" << c.stream_send_ns
+        << ", snapshot_encode_ns=" << c.snapshot_encode_ns << ")";
     return out;
   }
 
@@ -348,6 +349,7 @@ void export_client() {
     .def_readonly("stream_blocked_ns", &rpc::ServerPerfCounters::stream_blocked_ns)
     .def_readonly("stream_queue_ns", &rpc::ServerPerfCounters::stream_queue_ns)
     .def_readonly("stream_send_ns", &rpc::ServerPerfCounters::stream_send_ns)
+    .def_readonly("snapshot_encode_ns", &rpc::ServerPerfCounters::snapshot_encode_ns)
     .def(self_ns::str(self_ns::self))
   ;
 

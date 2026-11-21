@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "carla/streaming/CallbackResult.h"
 #include "carla/streaming/detail/Token.h"
 #include "carla/streaming/detail/tcp/Client.h"
 
@@ -60,7 +61,7 @@ namespace low_level {
       auto client = std::make_shared<underlying_client>(
           io_context,
           token,
-          std::forward<Functor>(callback));
+          MakeStreamCallback(std::forward<Functor>(callback)));
       client->Connect();
       _clients.emplace(token.get_stream_id(), std::move(client));
     }

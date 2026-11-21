@@ -15,6 +15,7 @@
 #include "carla/client/detail/CallbackList.h"
 #include "carla/client/detail/EpisodeState.h"
 #include "carla/client/detail/EpisodeProxy.h"
+#include "carla/client/detail/SnapshotStreamDecoder.h"
 #include "carla/rpc/EpisodeInfo.h"
 
 #include <atomic>
@@ -106,6 +107,15 @@ namespace detail {
       _on_light_update_callbacks.Remove(id);
     }
 
+    SnapshotStreamStats GetSnapshotStreamStats() const {
+      return _snapshot_decoder.GetStats();
+    }
+
+    /// Times the snapshot stream reconnected for a whole snapshot.
+    uint64_t GetSnapshotResyncCount() const {
+      return _snapshot_decoder.GetResyncCount();
+    }
+
     void SetPedestriansCrossFactor(float percentage);
 
     void SetPedestriansSeed(unsigned int seed);
@@ -130,6 +140,9 @@ namespace detail {
     Client &_client;
 
     AtomicSharedPtr<const EpisodeState> _state;
+
+    /// Used on the snapshot stream's strand only, except for its statistics.
+    SnapshotStreamDecoder _snapshot_decoder;
 
     std::string _pending_exceptions_msg;
 

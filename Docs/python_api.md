@@ -3183,6 +3183,8 @@ As `snapshot_blocked_ns`, for every other stream (sensors). The waiting thread i
 As `snapshot_queue_ns`, for every other stream (sensors).  
 - <a name="carla.ServerPerfCounters.stream_send_ns"></a>**<font color="#f8805a">stream_send_ns</font>** (_int<small> - nanoseconds</small>_)  
 As `snapshot_send_ns`, for every other stream (sensors).  
+- <a name="carla.ServerPerfCounters.snapshot_encode_ns"></a>**<font color="#f8805a">snapshot_encode_ns</font>** (_int<small> - nanoseconds</small>_)  
+Game-thread time spent, after collecting each snapshot (`snapshot_ns`), completing its header — the hash of its actor records — and comparing it with the previous snapshot.  
 
 ### Methods
 
@@ -4861,6 +4863,10 @@ Returns an object containing some data about the simulation such as synchrony be
 - <a name="carla.World.get_snapshot"></a>**<font color="#7fb800">get_snapshot</font>**(<font color="#00a6ed">**self**</font>)  
 Returns a snapshot of the world at a certain moment comprising all the information about the actors.  
     - **Return:** _[carla.WorldSnapshot](#carla.WorldSnapshot)_  
+- <a name="carla.World.get_snapshot_stream_stats"></a>**<font color="#7fb800">get_snapshot_stream_stats</font>**(<font color="#00a6ed">**self**</font>)  
+Returns what this client's world-snapshot stream has received, as a dictionary whose counts only grow: `messages`; `keyframes` (whole snapshots) and `deltas` (changes against the previous snapshot); `resyncs`, the times the client dropped its copy of the last snapshot and reconnected the stream for a whole one because a message did not apply or did not match its hash; `incompatible`, messages from a server of another build, which are ignored; `wire_bytes` received and `published_bytes` of the whole snapshots published; `decode_ns`, the time spent decoding; and `callback_ns`, the time in the whole stream callback, which includes decoding, updating the snapshot and running the `on_tick` callbacks. With the environment variable `CARLA_SNAPSHOT_DIGEST=1` set before the client starts, `digests` maps each of the last 4096 frames to a digest of its actor records in ascending id order, to compare the snapshots two clients received.  
+    - **Return:** _dict_  
+    - **Note:** <font color="#8E8E8E">_Every snapshot reaches the client through one stream that runs its `on_tick` callbacks before it reads the next snapshot: a slow `on_tick` callback slows down the stream, and in synchronous mode the server's tick._</font>  
 - <a name="carla.World.get_spectator"></a>**<font color="#7fb800">get_spectator</font>**(<font color="#00a6ed">**self**</font>)<button class="SnipetButton" id="carla.World.get_spectator-snipet_button">snippet &rarr;</button>  
 Returns the spectator actor. The spectator is a special type of actor created by Unreal Engine, usually with ID=0, that acts as a camera and controls the view in the simulator window.  
     - **Return:** _[carla.Actor](#carla.Actor)_  

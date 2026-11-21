@@ -62,10 +62,11 @@ class TestStreamStats(SyncSmokeTest):
             console_command("carla.Snapshot.Stats 0", self.testing_address)
         after = self.client.get_stream_stats()['snapshot_changes']
 
-        # The first tick has nothing to compare with.
-        self.assertGreaterEqual(after['keyframes'] - idle['keyframes'], 1)
+        # The server compares every snapshot with the previous one anyway, so
+        # every tick is compared (a keyframe only after a new episode).
         frames = after['frames'] - idle['frames']
         self.assertGreaterEqual(frames, TICKS - 1)
+        self.assertEqual(after['keyframes'], idle['keyframes'])
 
         # A world nobody moves: the delta is far smaller than the snapshot.
         keyframe_bytes = after['keyframe_bytes'] - idle['keyframe_bytes']

@@ -16,6 +16,7 @@
 #include "carla/client/Timestamp.h"
 #include "carla/client/WorldSnapshot.h"
 #include "carla/client/detail/EpisodeProxy.h"
+#include "carla/client/detail/SnapshotStreamDecoder.h"
 #include "carla/geom/Transform.h"
 #include "carla/rpc/Actor.h"
 #include "carla/rpc/AttachmentType.h"
@@ -104,6 +105,10 @@ namespace client {
 
     /// Return a snapshot of the world at this moment.
     WorldSnapshot GetSnapshot() const;
+
+    /// What this client's world-snapshot stream received: whole snapshots,
+    /// deltas, resynchronizations, bytes and decoding time.
+    detail::SnapshotStreamStats GetSnapshotStreamStats() const;
 
     /// Find actor by id, return nullptr if not found.
     SharedPtr<Actor> GetActor(ActorId id) const;

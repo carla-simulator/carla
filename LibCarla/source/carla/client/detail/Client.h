@@ -36,6 +36,7 @@
 #include "carla/rpc/VehicleTelemetryData.h"
 #include "carla/rpc/VehicleWheels.h"
 #include "carla/rpc/WeatherParameters.h"
+#include "carla/streaming/CallbackResult.h"
 #include "carla/rpc/Texture.h"
 #include "carla/rpc/MaterialParameter.h"
 
@@ -503,9 +504,12 @@ namespace detail {
 
     void StopReplayer(bool keep_actors);
 
+    /// @a callback may return streaming::CallbackResult::Resync to reconnect
+    /// the stream; see streaming::MakeStreamCallback for callbacks that
+    /// return nothing.
     void SubscribeToStream(
         const streaming::Token &token,
-        std::function<void(Buffer)> callback);
+        streaming::StreamCallback callback);
 
     void SubscribeToGBuffer(
         rpc::ActorId ActorId,

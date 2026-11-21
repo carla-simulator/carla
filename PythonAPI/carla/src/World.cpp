@@ -121,6 +121,32 @@ static auto ApplySettings(carla::client::World &world, carla::rpc::EpisodeSettin
   return world.ApplySettings(settings, TimeDurationFromSeconds(seconds));
 }
 
+static boost::python::dict GetSnapshotStreamStats(const carla::client::World &self) {
+  carla::client::detail::SnapshotStreamStats stats;
+  {
+    carla::PythonUtil::ReleaseGIL unlock;
+    stats = self.GetSnapshotStreamStats();
+  }
+  boost::python::dict d;
+  d["messages"] = stats.messages;
+  d["keyframes"] = stats.keyframes;
+  d["deltas"] = stats.deltas;
+  d["resyncs"] = stats.resyncs;
+  d["incompatible"] = stats.incompatible;
+  d["wire_bytes"] = stats.wire_bytes;
+  d["published_bytes"] = stats.published_bytes;
+  d["decode_ns"] = stats.decode_ns;
+  d["callback_ns"] = stats.callback_ns;
+  if (stats.digests_enabled) {
+    boost::python::dict digests;
+    for (const auto &pair : stats.digests) {
+      digests[pair.first] = pair.second;
+    }
+    d["digests"] = digests;
+  }
+  return d;
+}
+
 static auto GetActorsById(carla::client::World &self, const boost::python::list &actor_ids) {
   std::vector<carla::ActorId> ids{
       boost::python::stl_input_iterator<carla::ActorId>(actor_ids),
@@ -450,6 +476,7 @@ void export_world() {
     .def("set_imu_sensor_gravity", &cc::World::SetIMUSensorGravity, (arg("gravity")))
     .def("is_weather_enabled", CONST_CALL_WITHOUT_GIL(cc::World, IsWeatherEnabled))
     .def("get_snapshot", &cc::World::GetSnapshot)
+    .def("get_snapshot_stream_stats", &GetSnapshotStreamStats)
     .def("get_actor", CONST_CALL_WITHOUT_GIL_1(cc::World, GetActor, carla::ActorId), (arg("actor_id")))
     .def("get_actors", CONST_CALL_WITHOUT_GIL(cc::World, GetActors))
     .def("get_actors", &GetActorsById, (arg("actor_ids")))

@@ -44,20 +44,23 @@ static TAutoConsoleVariable<int32> CVarCarlaSnapshotStats(
     TEXT("snapshot per tick while on."),
     ECVF_Default);
 
-struct FWorldObserverChanges
+struct FWorldObserverCodec
 {
-  carla::sensor::s11n::episode_codec::FrameDiffer Differ;
+  carla::sensor::s11n::episode_codec::DeltaEncoder Encoder;
 
-  carla::sensor::s11n::episode_codec::FrameDiff Diff;
-
-  /// FCarlaActor::ActorType of each record of the frame being compared.
-  std::vector<uint8_t> Kinds;
+  /// Number of the last snapshot, from 1. Never restarts, not even with a
+  /// new episode, so that a number names one snapshot only.
+  uint64_t Sequence = 0u;
 
   uint64_t EpisodeId = 0u;
+
+  /// FCarlaActor::ActorType of each record of the snapshot, for
+  /// carla.Snapshot.Stats.
+  std::vector<uint8_t> Kinds;
 };
 
 FWorldObserver::FWorldObserver()
-  : Changes(std::make_unique<FWorldObserverChanges>()) {}
+  : Codec(std::make_unique<FWorldObserverCodec>()) {}
 
 FWorldObserver::~FWorldObserver() = default;
 
@@ -482,6 +485,7 @@ void FWorldObserver::BroadcastTick(
   auto AsyncStream = Stream.MakeAsyncDataStream(*this, Episode.GetElapsedGameTime());
 
   const bool bCountChanges = (CVarCarlaSnapshotStats.GetValueOnGameThread() != 0);
+  FWorldObserverCodec &C = *Codec;
 
   const uint64_t SerializeStart = carla::rpc::ServerPerfStats::NowNs();
   carla::Buffer buffer = FWorldObserver_Serialize(
@@ -490,40 +494,39 @@ void FWorldObserver::BroadcastTick(
       DeltaSecond,
       MapChange,
       PendingLightUpdates,
-      bCountChanges ? &Changes->Kinds : nullptr);
+      bCountChanges ? &C.Kinds : nullptr);
+  const uint64_t EncodeStart = carla::rpc::ServerPerfStats::NowNs();
   carla::rpc::ServerPerfStats::Get().OnSnapshotSerialized(
-      carla::rpc::ServerPerfStats::NowNs() - SerializeStart, buffer.size());
+      EncodeStart - SerializeStart, buffer.size());
+
+  if (C.EpisodeId != Episode.GetId())
+  {
+    C.Encoder.Reset();
+    C.EpisodeId = Episode.GetId();
+  }
+  C.Encoder.Prepare(buffer.data(), buffer.size(), ++C.Sequence);
+  carla::rpc::ServerPerfStats::Get().OnSnapshotEncoded(
+      carla::rpc::ServerPerfStats::NowNs() - EncodeStart);
 
   if (bCountChanges)
   {
-    CountChanges(Episode.GetId(), buffer);
-  }
-  else
-  {
-    Changes->Differ.Reset();
+    CountChanges(buffer);
   }
 
   AsyncStream.SerializeAndSend(*this, std::move(buffer));
 }
 
-void FWorldObserver::CountChanges(uint64 EpisodeId, const carla::Buffer &Buffer)
+void FWorldObserver::CountChanges(const carla::Buffer &Buffer)
 {
   TRACE_CPUPROFILER_EVENT_SCOPE_STR(__FUNCTION__);
   namespace codec = carla::sensor::s11n::episode_codec;
-  using Serializer = carla::sensor::s11n::EpisodeStateSerializer;
   using Stats = carla::rpc::SnapshotChangeStats;
 
-  FWorldObserverChanges &C = *Changes;
-  if (C.EpisodeId != EpisodeId)
-  {
-    C.Differ.Reset();
-    C.EpisodeId = EpisodeId;
-  }
-  const size_t Count = (Buffer.size() - sizeof(Serializer::Header)) / codec::kRecordSize;
+  const FWorldObserverCodec &C = *Codec;
+  const size_t Count = (Buffer.size() - codec::kHeaderSize) / codec::kRecordSize;
   check(C.Kinds.size() == Count);
-
-  const auto Result = C.Differ.Next(
-      Buffer.data() + sizeof(Serializer::Header), Count, C.Diff);
+  const auto Result = C.Encoder.GetLastResult();
+  const codec::FrameDiff &Diff = C.Encoder.GetDiff();
 
   Stats Tick;
   if (Result != codec::FrameDiffer::Result::Diffed)
@@ -538,19 +541,19 @@ void FWorldObserver::CountChanges(uint64 EpisodeId, const carla::Buffer &Buffer)
     return Tick.by_type[Kind < Stats::kTypeCount ? Kind : 0u];
   };
   Tick.frames = 1u;
-  Tick.removed = C.Diff.removed.size();
+  Tick.removed = Diff.removed.size();
   Tick.keyframe_bytes = codec::KeyframeSize(Count);
-  Tick.delta_bytes = C.Diff.DeltaSize();
-  for (const uint32_t Index : C.Diff.added)
+  Tick.delta_bytes = Diff.DeltaSize();
+  for (const uint32_t Index : Diff.added)
   {
     auto &R = Row(Index);
     ++R[Stats::kRecords];
     ++R[Stats::kAdded];
   }
-  for (size_t K = 0u; K < C.Diff.survivors.size(); ++K)
+  for (size_t K = 0u; K < Diff.survivors.size(); ++K)
   {
-    auto &R = Row(C.Diff.survivors[K]);
-    const uint8_t Mask = C.Diff.masks[K];
+    auto &R = Row(Diff.survivors[K]);
+    const uint8_t Mask = Diff.masks[K];
     ++R[Stats::kRecords];
     if (Mask == 0u)
     {

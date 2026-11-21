@@ -229,6 +229,19 @@ namespace detail {
       return _client.GetStreamStats();
     }
 
+    /// What this connection's world-snapshot stream received.
+    SnapshotStreamStats GetSnapshotStreamStats() const {
+      DEBUG_ASSERT(_episode != nullptr);
+      return _episode->GetSnapshotStreamStats();
+    }
+
+    /// Times this connection's world-snapshot stream reconnected for a whole
+    /// snapshot.
+    uint64_t GetSnapshotResyncCount() const {
+      DEBUG_ASSERT(_episode != nullptr);
+      return _episode->GetSnapshotResyncCount();
+    }
+
     /// @}
     // =========================================================================
     /// @name Tick

@@ -25,7 +25,11 @@ namespace rpc {
 
     streaming::Token token;
 
-    MSGPACK_DEFINE_ARRAY(id, token);
+    /// sensor::s11n::EpisodeStateSerializer::kVersion of the server's world
+    /// snapshots; 0 from a server older than the field.
+    uint16_t snapshot_wire_version = 0u;
+
+    MSGPACK_DEFINE_ARRAY(id, token, snapshot_wire_version);
   };
 
 } // namespace rpc
