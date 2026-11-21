@@ -29,6 +29,7 @@ The message types are defined in `LibCarla/source/carla/ros2/types/msg/` and ser
 | [`geometry_msgs/Pose`](https://docs.ros.org/en/jazzy/p/geometry_msgs/msg/Pose.html) | `<sensor>/pose` | `sensor.other.autoware_gnss` |
 | [`geometry_msgs/PoseWithCovarianceStamped`](https://docs.ros.org/en/jazzy/p/geometry_msgs/msg/PoseWithCovarianceStamped.html) | `<sensor>/pose_with_covariance` | `sensor.other.autoware_gnss` |
 | [`carla_msgs/CarlaCollisionEvent`](#carlacollisionevent) | `<sensor>` | `sensor.other.collision` |
+| [`nav_msgs/Odometry`](https://docs.ros.org/en/jazzy/p/nav_msgs/msg/Odometry.html) | `<vehicle>/odometry` | A `hero` or `ego` vehicle, see [Odometry](ros2_native.md#odometry) |
 | [`autoware_vehicle_msgs/VelocityReport`](#velocityreport) | `/vehicle/status/velocity_status` | `sensor.other.vehicle_status` |
 | [`autoware_vehicle_msgs/SteeringReport`](#steeringreport) | `/vehicle/status/steering_status` | `sensor.other.vehicle_status` |
 | [`autoware_vehicle_msgs/ControlModeReport`](#controlmodereport) | `/vehicle/status/control_mode` | `sensor.other.vehicle_status` |

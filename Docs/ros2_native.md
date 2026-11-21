@@ -186,6 +186,33 @@ Choose whichever suits the stack: `vehicle_control_cmd` for a controller that al
 
 The CARLA message types come from the [ros-carla-msgs package](https://github.com/carla-simulator/ros-carla-msgs); every message is defined field by field in [ROS 2 messages](ros2_native_msgs.md).
 
+### Odometry
+
+A `hero` or `ego` vehicle also publishes its ground-truth odometry, whichever command surface it listens on:
+
+```py
+bp = world.get_blueprint_library().find('vehicle.lincoln.mkz')
+bp.set_attribute('role_name', 'hero')
+bp.set_attribute('ros_name', 'hero')
+
+ego = world.spawn_actor(bp, spawn_point)
+```
+
+| Field | Value |
+| --- | --- |
+| Topic | `/carla/<ros_name>/odometry`, so `/carla/hero/odometry` above. With `ros_topic_name` set, `<ros_topic_name>/odometry` |
+| Type | [`nav_msgs/Odometry`](https://docs.ros.org/en/jazzy/p/nav_msgs/msg/Odometry.html) |
+| Rate | One message per simulation tick |
+| `header.stamp` | The simulation time of the tick, the same clock as `/clock` |
+| `header.frame_id` | `odom` |
+| `child_frame_id` | The vehicle's `ros_name`, or `vehicle<id>` when `ros_name` is left at its default |
+| `pose.pose` | The vehicle's world position in meters and its orientation, converted to ROS axes as on `/tf` |
+| `twist.twist.linear` | Velocity in the vehicle frame, m/s: `x` forward (negative when reversing), `y` left, `z` up |
+| `twist.twist.angular` | Angular velocity in the vehicle frame, rad/s: `z` positive when turning left |
+| Covariances | All zero: the values are ground truth |
+
+The axes follow [REP 103](https://www.ros.org/reps/rep-0103.html): CARLA's left-handed frame is mirrored on `y`, so a left turn has a positive yaw rate. The `odom` frame coincides with the CARLA world frame and is not broadcast on `/tf`. The topic uses the same QoS as every other native publisher (`/clock`, the IMU): the middleware's default writer profile. `ros2 topic info -v` reports reliable and transient local with `--rmw=fastdds`, and reliable and volatile with `--rmw=cyclonedds` and `--rmw=zenoh`.
+
 
 ---
 ## Related pages
