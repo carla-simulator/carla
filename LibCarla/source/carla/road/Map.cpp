@@ -533,51 +533,39 @@ namespace road {
       std::vector<const RoadInfoCrosswalk *> crosswalks = road.GetInfos<RoadInfoCrosswalk>();
       if (crosswalks.size() > 0) {
         for (auto crosswalk : crosswalks) {
-          // waypoint only at start position
           std::vector<geom::Location> points;
-          Waypoint waypoint;
-          geom::Transform base;
-          for (const auto &section : road.GetLaneSectionsAt(crosswalk->GetS())) {
-            // get the section with the center lane
-            for (const auto &lane : section.GetLanes()) {
-              // is the center line
-              if (lane.first == 0) {
-                // get the center point
-                waypoint.road_id = pair.first;
-                waypoint.section_id = section.GetId();
-                waypoint.lane_id = 0;
-                waypoint.s = crosswalk->GetS();
-                base = ComputeTransform(waypoint);
-              }
-            }
-          }
+          // ASAM OpenDRIVE 1.4 places <object> records on the road reference line
+          // (before <laneOffset>), with lateral offset `t` perpendicular to `s`
+          // and relative orientation `hdg` applied at `(s, t)`. Evaluating lane 0
+          // via ComputeTransform() included <laneOffset>, shifting every crosswalk
+          // on offset roads by laneOffset, and rotating by `hdg` before applying `t`
+          // shifted projected crosswalks along `s` instead of across `t`.
+          const double s0 = crosswalk->GetS();
+          const double t0 = crosswalk->GetT();
+          element::DirectedPoint dp = road.GetDirectedPointInNoLaneOffset(s0);
+          dp.ApplyLateralOffset(static_cast<float>(-t0));
+          dp.location.z += static_cast<float>(road.GetLateralShapeZ(s0, t0));
+          dp.location.y *= -1.0f;
+          dp.tangent *= -1.0f;
+          geom::Rotation rot(
+              geom::Math::ToDegrees(static_cast<float>(dp.pitch)),
+              geom::Math::ToDegrees(static_cast<float>(dp.tangent)),
+              0.0f);
+          geom::Transform base(dp.location, rot);
 
-          // The outline corners are given at height 0 above the road surface.
-          // Placing them with the full centre-line transform at the crosswalk's
-          // s applies that one point's pitch and roll to the whole outline, which
-          // on a graded road tilts the slab about the pivot: the corners ahead of
-          // it stand 10-60 cm proud of the asphalt and the ones behind it sink.
           // Rotate the outline in the horizontal plane only and give every corner
-          // the road's own elevation at that corner's s.
+          // the road's own elevation at that corner's s so graded roads do not tilt
+          // the crosswalk slab into or above the asphalt.
           geom::Transform pivot = base;
           pivot.rotation.pitch = 0.0f;
           pivot.rotation.roll = 0.0f;
           const float heading_deg =
               geom::Math::ToDegrees<float>(static_cast<float>(crosswalk->GetHeading()));
-
-          // move perpendicular ('t')
           pivot.rotation.yaw -= heading_deg;
-          pivot.rotation.yaw -= 90;   // move perpendicular to 's' for the lateral offset
-          geom::Vector3D v(static_cast<float>(crosswalk->GetT()), 0.0f, 0.0f);
-          pivot.TransformPoint(v);
-          // restore pivot position and orientation (yaw only)
-          pivot.location = v;
-          pivot.rotation.yaw += 90;
 
           // s direction of the road at the crosswalk, in the horizontal plane
           const geom::Vector3D forward =
               geom::Rotation(0.0f, base.rotation.yaw, 0.0f).GetForwardVector();
-          const double s0 = crosswalk->GetS();
           const double road_length = road.GetLength();
           const double z0 = road.GetElevationOn(s0).Evaluate(s0);
 
