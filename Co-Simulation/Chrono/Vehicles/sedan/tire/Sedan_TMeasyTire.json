@@ -1,0 +1,48 @@
+{
+  "Name": "Sedan TMeasy Tire",
+  "Type": "Tire",
+  "Template": "TMeasyTire",
+
+  // ------------------------------------------------
+  // Tire design (REQUIRED)
+
+  "Design": {
+    "Unloaded Radius [m]": 0.3266,
+    "Mass [kg]": 11.5,
+    "Inertia [kg.m2]": [ 0.156, 0.679, 0.156 ],
+    "Width [m]": 0.245,
+    "Rim Radius [m]": 0.2286
+  },
+
+  "Coefficient of Friction": 0.8,
+
+  "Rolling Resistance Coefficient": 0.015,
+
+  // ------------------------------------------------
+  // Vehicle type.
+  // Required only if tire specified with "load index" or "bearing capacity".
+  // Must be one of "Truck" or "Passenger"
+
+  "Vehicle Type": "Passenger",
+
+  // ------------------------------------------------
+  // Load index specification.
+  // Takes priority over "bearing capacity" (used only if a full parameterization not provided)
+
+  "Load Index": 97,
+
+  // ------------------------------------------------
+  // Bearing capacity specification.
+  // Lowest priority (used only if no other specification provided)
+
+  "Maximum Bearing Capacity [N]": 10000,
+
+  // ------------------------------------------------
+  // Visualization mesh (OPTIONAL)
+
+    "Visualization": {
+        "Mesh Filename Left": "sedan/sedan_tire.obj",
+        "Mesh Filename Right": "sedan/sedan_tire.obj"
+    }
+
+}

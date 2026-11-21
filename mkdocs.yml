@@ -136,6 +136,7 @@ nav:
     - 'Sensors': 'ros2_native_sensors.md'
     - 'Messages': 'ros2_native_msgs.md'
     - 'ROS bridge': 'ros_bridge.md'
+  - 'Project Chrono': 'tuto_G_chrono.md'
 
 - Contributing:
   - 'Guidelines': 'cont_contribution_guidelines.md'
