@@ -447,7 +447,13 @@ namespace detail {
 
     ActorSnapshot GetActorSnapshot(ActorId actor_id) const {
       DEBUG_ASSERT(_episode != nullptr);
-      return _episode->GetState()->GetActorSnapshot(actor_id);
+      auto snapshot = _episode->GetState()->GetActorSnapshotIfPresent(actor_id);
+      if (!snapshot.has_value()) {
+        // A static actor the server leaves out of the episode state
+        // (-carla-omit-static-actors); nothing otherwise.
+        snapshot = _episode->GetStaticActorSnapshot(actor_id);
+      }
+      return snapshot.has_value() ? *snapshot : ActorSnapshot{};
     }
 
     ActorSnapshot GetActorSnapshot(const Actor &actor) const {
@@ -471,6 +477,9 @@ namespace detail {
       const auto snapshot = state->GetActorSnapshotIfPresent(actor.GetId());
       if (snapshot.has_value()) {
         return snapshot->actor_state;
+      }
+      if (_episode->GetStaticActorSnapshot(actor.GetId()).has_value()) {
+        return rpc::ActorState::Active;
       }
       if (actor.WasSpawnedByThisClient() && state->GetFrame() <= actor.GetSpawnFrame()) {
         return rpc::ActorState::Active;

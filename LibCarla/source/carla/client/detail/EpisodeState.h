@@ -60,6 +60,17 @@ namespace detail {
       return (_simulation_state & SimulationState::PendingLightUpdate)  != 0;
     }
 
+    /// The server left its static actors out of this frame
+    /// (-carla-omit-static-actors).
+    bool AreStaticActorsOmitted() const {
+      return (_simulation_state & SimulationState::StaticActorsOmitted) != 0;
+    }
+
+    /// The set of static actors changed since the previous frame.
+    bool HaveStaticActorsChanged() const {
+      return (_simulation_state & SimulationState::StaticActorsChanged) != 0;
+    }
+
     bool ContainsActorSnapshot(ActorId actor_id) const {
       return _actors.find(actor_id) != _actors.end();
     }

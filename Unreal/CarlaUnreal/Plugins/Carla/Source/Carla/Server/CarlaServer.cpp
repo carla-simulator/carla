@@ -17,6 +17,7 @@
 #include "Carla/Sensor/CustomV2XSensor.h"
 #include "Carla/Sensor/SceneCaptureSensor.h"
 #include "Carla/Sensor/SceneCaptureSensor_WideAngleLens.h"
+#include "Carla/Sensor/WorldObserver.h"
 #include "Carla/Walker/WalkerController.h"
 #include "Carla/Walker/WalkerBase.h"
 #include "Carla/Weather/SkyLightMap.h"
@@ -61,6 +62,7 @@
 #include <carla/rpc/MapLayer.h>
 #include <carla/rpc/Response.h>
 #include <carla/rpc/Server.h>
+#include <carla/rpc/StaticActor.h>
 #include <carla/rpc/String.h>
 #include <carla/rpc/Transform.h>
 #include <carla/rpc/Vector2D.h>
@@ -1190,6 +1192,26 @@ void FCarlaServer::FPimpl::BindActions()
       if (View)
       {
         Result.emplace_back(Episode->SerializeActor(View));
+      }
+    }
+    return Result;
+  };
+
+  // The actors a server with -carla-omit-static-actors leaves out of the
+  // episode state; clients call this when a frame says the set changed.
+  BIND_SYNC(get_static_actors) << [this]() -> R<std::vector<cr::StaticActor>>
+  {
+    REQUIRE_CARLA_EPISODE();
+    std::vector<cr::StaticActor> Result;
+    for (auto &&It : Episode->GetActorRegistry())
+    {
+      const FCarlaActor *View = It.Value.Get();
+      if (View != nullptr && FWorldObserver::IsStaticActor(*View))
+      {
+        cr::StaticActor Item;
+        Item.id = View->GetActorId();
+        Item.transform = cr::Transform(View->GetActorGlobalTransform());
+        Result.emplace_back(Item);
       }
     }
     return Result;

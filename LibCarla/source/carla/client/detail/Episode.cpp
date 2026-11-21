@@ -83,6 +83,13 @@ using namespace std::chrono_literals;
         else {
           bool episode_changed = (next->GetEpisodeId() != prev->GetEpisodeId());
 
+          // Static actors left out of the stream (-carla-omit-static-actors):
+          // only mark the cached set stale here; it is fetched on the reader's
+          // thread (GetStaticActors), never from the stream callback.
+          if (episode_changed || next->HaveStaticActorsChanged()) {
+            self->_static_version.fetch_add(1u);
+          }
+
           if (episode_changed) {
             // Drop the previous episode's WalkerNavigation BEFORE the new
             // episode id becomes visible (the compare_exchange below is what
@@ -151,7 +158,64 @@ using namespace std::chrono_literals;
   }
 
   std::vector<rpc::Actor> Episode::GetActors() {
-    return GetActorsById_Impl(_client, _actors, GetState()->GetActorIds());
+    auto state = GetState();
+    auto statics = GetStaticActors();
+    if (statics == nullptr || statics->actors.empty()) {
+      return GetActorsById_Impl(_client, _actors, state->GetActorIds());
+    }
+    std::vector<ActorId> ids;
+    ids.reserve(state->size() + statics->actors.size());
+    for (auto id : state->GetActorIds()) {
+      ids.push_back(id);
+    }
+    for (auto &&item : statics->actors) {
+      if (!state->ContainsActorSnapshot(item.first)) {
+        ids.push_back(item.first);
+      }
+    }
+    return GetActorsById_Impl(_client, _actors, ids);
+  }
+
+  std::shared_ptr<const Episode::StaticActors> Episode::GetStaticActors() {
+    if (!GetState()->AreStaticActorsOmitted()) {
+      return nullptr;
+    }
+    const uint64_t version = _static_version.load();
+    auto cached = _static_actors.load();
+    if (cached != nullptr && cached->version == version) {
+      return cached;
+    }
+    std::lock_guard<std::mutex> lock(_static_mutex);
+    cached = _static_actors.load();
+    if (cached != nullptr && cached->version == version) {
+      return cached;
+    }
+    // The version is read before the call: a change the server makes while
+    // the call is in flight bumps it again, and the next reader refetches.
+    auto fresh = std::make_shared<StaticActors>();
+    fresh->version = version;
+    auto list = _client.GetStaticActors();
+    fresh->actors.reserve(list.size());
+    for (auto &&actor : list) {
+      ActorSnapshot snapshot;
+      snapshot.id = actor.id;
+      snapshot.actor_state = rpc::ActorState::Active;
+      snapshot.transform = actor.transform;
+      fresh->actors.emplace(actor.id, snapshot);
+    }
+    _static_actors.store(fresh);
+    return fresh;
+  }
+
+  std::optional<ActorSnapshot> Episode::GetStaticActorSnapshot(ActorId id) {
+    auto statics = GetStaticActors();
+    if (statics != nullptr) {
+      auto it = statics->actors.find(id);
+      if (it != statics->actors.end()) {
+        return it->second;
+      }
+    }
+    return std::nullopt;
   }
 
   void Episode::OnEpisodeStarted() {

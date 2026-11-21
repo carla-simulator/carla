@@ -30,7 +30,12 @@ namespace s11n {
     enum SimulationState {
       None               = (0x0 << 0),
       MapChange          = (0x1 << 0),
-      PendingLightUpdate = (0x1 << 1)
+      PendingLightUpdate = (0x1 << 1),
+      /// The server runs with -carla-omit-static-actors: static actors are not
+      /// in this frame's actor list (see Episode::GetStaticActors).
+      StaticActorsOmitted = (0x1 << 2),
+      /// The set of omitted static actors changed since the previous frame.
+      StaticActorsChanged = (0x1 << 3)
     };
 
 #pragma pack(push, 1)
