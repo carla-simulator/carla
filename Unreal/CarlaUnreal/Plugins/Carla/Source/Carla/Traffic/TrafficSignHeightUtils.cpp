@@ -9,6 +9,7 @@
 #include "Carla.h"
 #include "TrafficSignBase.h"
 #include "Carla/Game/Tagger.h"
+#include "Carla/Util/CarlaTraceChannels.h"
 
 #include <util/ue-header-guard-begin.h>
 #include "Components/BoxComponent.h"
@@ -93,7 +94,7 @@ namespace TrafficSignHeightUtils
     // a single hit that the filter below then rejects, leaving no candidate.
     TArray<FHitResult> HitResults;
     World->LineTraceMultiByChannel(
-        HitResults, Start, End, ECC_GameTraceChannel3, CollisionParams);
+        HitResults, Start, End, CarlaTraceChannels::SensorOverlap(), CollisionParams);
 
     constexpr float ZOffsetSignToGround = 0.5f;
     for (const FHitResult &HitResult : HitResults)

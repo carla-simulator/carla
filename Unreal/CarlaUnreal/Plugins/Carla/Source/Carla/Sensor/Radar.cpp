@@ -9,6 +9,7 @@
 #include "Carla/Actor/ActorBlueprintFunctionLibrary.h"
 #include "Carla/Game/CarlaStatics.h"
 #include "Carla/MapGen/LargeMapManager.h"
+#include "Carla/Util/CarlaTraceChannels.h"
 
 #include <util/disable-ue4-macros.h>
 #include <carla/geom/Math.h>
@@ -74,6 +75,8 @@ void ARadar::BeginPlay()
 {
   Super::BeginPlay();
 
+  // Initialize the collision profile on the game thread before parallel traces.
+  (void)CarlaTraceChannels::SensorTrace();
   PrevLocation = GetActorLocation();
 }
 
@@ -123,6 +126,15 @@ void ARadar::CalculateCurrentVelocity(const float DeltaTime)
 void ARadar::SendLineTraces(float DeltaTime)
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(ARadar::SendLineTraces);
+
+  // CARLA attaches sensors after spawning them. Refresh the ignore list using
+  // the current owner so SensorTrace skips the ego's body and wheels.
+  TraceParams.ClearIgnoredActors();
+  TraceParams.AddIgnoredActor(this);
+  if (const AActor *Parent = GetOwner())
+  {
+    TraceParams.AddIgnoredActor(Parent);
+  }
   constexpr float TO_METERS = 1e-2;
   const FTransform& ActorTransform = GetActorTransform();
   const FRotator& TransformRotator = ActorTransform.Rotator();
@@ -171,7 +183,7 @@ void ARadar::SendLineTraces(float DeltaTime)
         OutHit,
         RadarLocation,
         EndLocation,
-        ECC_GameTraceChannel2,
+        CarlaTraceChannels::SensorTrace(),
         TraceParams,
         FCollisionResponseParams::DefaultResponseParam
       );

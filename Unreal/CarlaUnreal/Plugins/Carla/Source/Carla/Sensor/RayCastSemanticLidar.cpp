@@ -9,6 +9,7 @@
 #include "Carla/Actor/ActorBlueprintFunctionLibrary.h"
 #include "Carla/Game/Tagger.h"
 #include "Carla/Sensor/CarlaLidarSubsystem.h"
+#include "Carla/Util/CarlaTraceChannels.h"
 
 #include <util/disable-ue4-macros.h>
 #include "carla/geom/Math.h"
@@ -42,6 +43,7 @@ ARayCastSemanticLidar::ARayCastSemanticLidar(const FObjectInitializer& ObjectIni
 void ARayCastSemanticLidar::BeginPlay()
 {
   Super::BeginPlay();
+  (void)CarlaTraceChannels::SensorTrace();
   if (UCarlaLidarSubsystem* LidarSubsystem = GetWorld()->GetSubsystem<UCarlaLidarSubsystem>())
   {
     LidarSubsystem->RegisterLidar(this);
@@ -153,6 +155,7 @@ void ARayCastSemanticLidar::SimulateLidar(const float DeltaTime, bool bLockPhysi
   const FTransform InverseSensorTransform = ActorTransform.Inverse();
   const FVector LidarBodyLocation = ActorTransform.GetLocation();
   const FRotator LidarBodyRotation = ActorTransform.Rotator();
+  const AActor *Parent = GetOwner();
 
   auto RunChannelRaycasts = [&]()
   {
@@ -161,6 +164,10 @@ void ARayCastSemanticLidar::SimulateLidar(const float DeltaTime, bool bLockPhysi
       TRACE_CPUPROFILER_EVENT_SCOPE(ParallelForTask);
 
       FCollisionQueryParams TraceParams = FCollisionQueryParams(FName(TEXT("Laser_Trace")), true, this);
+      if (Parent != nullptr)
+      {
+        TraceParams.AddIgnoredActor(Parent);
+      }
       TraceParams.bTraceComplex = true;
       TraceParams.bReturnPhysicalMaterial = false;
 
@@ -305,7 +312,7 @@ bool ARayCastSemanticLidar::ShootLaser(const float VerticalAngle, const float Ho
     HitResult,
     LidarBodyLocation,
     EndTrace,
-    ECC_GameTraceChannel2,
+    CarlaTraceChannels::SensorTrace(),
     TraceParams,
     FCollisionResponseParams::DefaultResponseParam
   );

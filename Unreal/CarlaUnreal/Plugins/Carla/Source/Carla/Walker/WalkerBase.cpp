@@ -9,6 +9,7 @@
 #include "Carla/Game/CarlaStatics.h"
 #include "Carla/Game/CarlaEpisode.h"
 #include "Carla/Game/Tagger.h"
+#include "Carla/Util/CarlaTraceChannels.h"
 #include "Carla/Vehicle/CarlaWheeledVehicle.h"
 #include "Carla/Walker/WalkerController.h"
 
@@ -80,8 +81,8 @@ void AWalkerBase::AttachWheelchair()
   WheelchairComponent->SetCollisionProfileName(TEXT("CharacterMesh"));
   WheelchairComponent->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
   WheelchairComponent->SetCollisionObjectType(ECC_Pawn);
-  WheelchairComponent->SetCollisionResponseToChannel(ECC_GameTraceChannel1 /*SensorObject*/, ECR_Block);
-  WheelchairComponent->SetCollisionResponseToChannel(ECC_GameTraceChannel2 /*SensorTrace*/, ECR_Block);
+  WheelchairComponent->SetCollisionResponseToChannel(CarlaTraceChannels::SensorObject(), ECR_Block);
+  WheelchairComponent->SetCollisionResponseToChannel(CarlaTraceChannels::SensorTrace(), ECR_Block);
   WheelchairComponent->RegisterComponent();
   WheelchairComponent->AttachToComponent(
       WalkerMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
@@ -100,12 +101,6 @@ void AWalkerBase::AttachWheelchair()
   constexpr float RiderDrop = 25.0f;
   WalkerMesh->AddLocalOffset(FVector(0.0f, 0.0f, -RiderDrop));
   WheelchairComponent->AddLocalOffset(FVector(0.0f, 0.0f, RiderDrop));
-
-  // Move the rider back onto the seat (walker forward axis); the chair keeps its place.
-  constexpr float RiderBack = 25.0f;
-  WalkerMesh->AddRelativeLocation(FVector(-RiderBack, 0.0f, 0.0f));
-  WheelchairComponent->AddRelativeLocation(
-      WalkerMesh->GetRelativeRotation().UnrotateVector(FVector(RiderBack, 0.0f, 0.0f)));
 
   // Wheelchair animation: the migrated UE4 AnimBlueprint if it loads and
   // compiled (it blends idle/rolling by speed), else a looping rolling
@@ -238,10 +233,13 @@ void AWalkerBase::SetTeleportDriven(bool bEnable)
   }
   TArray<UPrimitiveComponent *> Primitives;
   GetComponents<UPrimitiveComponent>(Primitives, false);
+  const ECollisionChannel SensorTrace = CarlaTraceChannels::SensorTrace();
   for (UPrimitiveComponent *Primitive : Primitives)
   {
-    // Only what ray-cast sensors hit (body mesh, wheelchair) keeps collision; the capsule and triggers only cost queries.
-    if (Primitive->GetCollisionResponseToChannel(ECC_GameTraceChannel2 /*SensorTrace*/) == ECR_Block)
+    // City Sample defaults SensorTrace to Block. Exclude the walker capsule
+    // explicitly so the body mesh and wheelchair remain the sensor geometry.
+    if (Primitive != GetCapsuleComponent() &&
+        Primitive->GetCollisionResponseToChannel(SensorTrace) == ECR_Block)
     {
       continue;
     }

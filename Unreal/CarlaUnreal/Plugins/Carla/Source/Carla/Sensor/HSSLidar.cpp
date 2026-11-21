@@ -224,6 +224,7 @@ void AHSSLidar::SimulateLidar(const float DeltaTime, bool bLockPhysics)
   const FTransform InverseSensorTransform = ActorTransform.Inverse();
   const FVector LidarBodyLocation = ActorTransform.GetLocation();
   const FRotator LidarBodyRotation = ActorTransform.Rotator();
+  const AActor *Parent = GetOwner();
 
   auto RunChannelRaycasts = [&]()
   {
@@ -232,6 +233,10 @@ void AHSSLidar::SimulateLidar(const float DeltaTime, bool bLockPhysics)
       TRACE_CPUPROFILER_EVENT_SCOPE(ParallelForTask);
 
       FCollisionQueryParams TraceParams = FCollisionQueryParams(FName(TEXT("Laser_Trace")), true, this);
+      if (Parent != nullptr)
+      {
+        TraceParams.AddIgnoredActor(Parent);
+      }
       TraceParams.bTraceComplex = true;
       TraceParams.bReturnPhysicalMaterial = false;
 

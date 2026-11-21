@@ -8,6 +8,7 @@
 #include "Carla.h"
 #include "Carla/Game/CarlaStatics.h"
 #include "Carla/Game/Tagger.h"
+#include "Carla/Util/CarlaTraceChannels.h"
 
 
 namespace crp = carla::rpc;
@@ -20,7 +21,7 @@ std::vector<crp::LabelledPoint> URayTracer::CastRay(
       OutHits,
       StartLocation,
       EndLocation,
-      ECC_GameTraceChannel3, // overlap channel
+      CarlaTraceChannels::SensorOverlap(), // "OverlapChannel"
       FCollisionQueryParams(),
       FCollisionResponseParams()
   );
@@ -51,7 +52,7 @@ std::pair<bool, crp::LabelledPoint> URayTracer::ProjectPoint(
       Hit,
       StartLocation,
       StartLocation + Direction.GetSafeNormal() * MaxDistance,
-      ECC_GameTraceChannel2, // camera
+      CarlaTraceChannels::SensorTrace(), // "SensorTrace"
       FCollisionQueryParams(),
       FCollisionResponseParams()
   );
