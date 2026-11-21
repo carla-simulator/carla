@@ -127,6 +127,11 @@ private:
   /// its clients were given (see carla::multigpu::SensorStreamRegistry).
   void BindReplayedSensor(uint32_t PrimaryActorId, uint32_t LocalActorId, bool bCreated);
 
+  /// Secondary, multi-GPU command thread: decodes the frame's packet 35,
+  /// compares it with the frame's legacy packets and, with
+  /// carla.MultiGpu.ApplyActorState, makes the frame play from it.
+  void PlayActorStatePacket(FFrameData &Frame, uint64_t FrameNumber);
+
   /// Primary only: keeps processing RPC until every secondary sent LOAD_MAP
   /// reports its episode ready (bounded by a timeout).
   void WaitForSecondaryEpisodes();
@@ -216,6 +221,23 @@ private:
 
   // Secondary: frames queued in FramesToProcess, readable without the lock.
   std::atomic<size_t> QueuedFrames{0u};
+
+  // Primary, game thread: packet 35, the actors' state of the frame being
+  // sent, and the encoder that sends it as a delta against the last frame.
+  carla::multigpu::ActorStateFrame ActorStateFrame;
+  carla::multigpu::ActorStateEncoder ActorStateEncoder;
+  // Primary, game thread: the table and frame of the last packet 35 sent, to
+  // tell why the encoder sent a keyframe.
+  uint64_t LastActorStateTableHash = 0u;
+  std::optional<uint64_t> LastActorStateFrame;
+
+  // Secondary, multi-GPU command thread only: rebuilds every frame's packet 35
+  // from the previous one. NotifyBeginEpisode asks for a reset through the
+  // flag, which the command thread consumes.
+  carla::multigpu::ActorStateDecoder ActorStateDecoder;
+  std::atomic<bool> bResetActorStateDecoder{false};
+  bool bWarnedActorStateMismatch = false;
+  bool bWarnedActorStateMalformed = false;
 
   // Secondary, game thread: set when loading the primary's map failed.
   bool bTravelFailed = false;

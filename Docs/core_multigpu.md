@@ -152,6 +152,15 @@ Every frame the primary sends what changed in its world, and on a full resynchro
 - __World.__ Every weather change, loaded map layers, environment objects enabled or disabled, scene lights, the day/night cycle setting, the IMU gravity and ROS 2 TF publishing.
 - __Appearance.__ Each actor's collision, visibility and scale.
 
+### The actors' state packet
+
+The actors' poses, velocities, vehicle controls, lights and parts, and the walker and biker animation inputs travel in seven packets, each with the actor id in every record. The primary also sends the same state as one packet (35):
+
+- __One table.__ One slot per actor, with its id, sent once in a keyframe. Each kind of state is a section with a record, or none, per slot.
+- __Deltas.__ After a keyframe, each frame carries only the records that changed bit for bit since the previous frame. A secondary rebuilds the whole state of every frame from the previous one.
+- __Keyframes.__ The primary sends a keyframe with every full resynchronization, whenever the actors change (spawns and removals), after a frame it did not send, and every 600 frames. A secondary that missed a frame refuses the deltas that follow, asks for a resynchronization, and plays the frames from the seven packets meanwhile.
+- __Shadow mode, for now.__ A secondary plays the seven packets and compares packet 35 with them, record by record. `carla.MultiGpu.ApplyActorState 1` makes it play from packet 35 instead. A later version will drop the seven packets.
+
 ---
 ## Sensor assignment
 
@@ -183,6 +192,8 @@ These console variables help check that the secondaries replay what the primary 
 | `carla.MultiGpu.StateHash` | secondary | `0` | Logs `Multi-GPU state hash: frame <n> <hash>` for every frame played: a hash of every mirror's pose and velocity. Two secondaries, or two builds of one, that applied the same frames the same way log the same hashes. |
 | `carla.MultiGpu.Stats` | both | `0` | Every N frames, logs `Multi-GPU stats:` with the mean game-thread time the primary spends writing a frame (and reading it back, on the frames `VerifyFrames` checks) and the frame size, or the mean time a secondary spends playing one. |
 | `carla.MultiGpu.FastPlay` | secondary | `1` | `0` plays mirror poses and velocities the way earlier builds did. The result is the same; run one secondary with each value and `StateHash` on to check it. |
+| `carla.MultiGpu.SendActorState` | primary | `1` | Also sends the actors' state as packet 35 ([The actors' state packet](#the-actors-state-packet)). `0` stops sending it. |
+| `carla.MultiGpu.ApplyActorState` | secondary | `0` | `0` plays the actors' state from the seven legacy packets and compares packet 35 with them. It logs a warning, once per episode, on the first frame where they differ, and `Stats` counts those frames. `1` plays it from packet 35, after the same comparison. Run one secondary with each value and `StateHash` on to check that both play the same. |
 
 ---
 ## Limitations

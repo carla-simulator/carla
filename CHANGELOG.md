@@ -108,6 +108,7 @@
   * The primary reads back one frame in 120 to check it, instead of every frame (`carla.MultiGpu.VerifyFrames`).
   * Secondaries look each mirror up once per frame. They skip the parent ordering when nothing is attached, and clear stale velocities only on the mirrors the previous frame moved, instead of on every mirror.
   * New `carla.MultiGpu.StateHash` logs a per-frame hash of the mirrors' state, to compare builds, and `carla.MultiGpu.Stats` logs the mean time spent writing or playing a frame. See `Docs/core_multigpu.md`.
+* **Multi-GPU primaries also send the actors' state as one packet with deltas** (packet 35): one table of the actors, sent in keyframes, and each frame only the records that changed bit for bit. For now secondaries play the legacy packets and compare packet 35 with them; `carla.MultiGpu.ApplyActorState 1` plays from it, and `carla.MultiGpu.SendActorState 0` stops sending it. See "The actors' state packet" in `Docs/core_multigpu.md`.
 
 #### Sensors and content
 

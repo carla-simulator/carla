@@ -37,6 +37,7 @@
 #include <util/ue-header-guard-end.h>
 
 #include <util/disable-ue4-macros.h>
+#include "carla/multigpu/actorStateBatch.h"
 #include "carla/multigpu/frameDataCodec.h"
 #include "carla/multigpu/frameTime.h"
 #include "carla/multigpu/mirrorPackets.h"
@@ -164,6 +165,10 @@ class FFrameData
   std::optional<carla::multigpu::WorldGlobals> MirrorWorldGlobals;
   carla::multigpu::WorldObjects MirrorWorldObjects;
   carla::multigpu::ActorAppearances MirrorAppearances;
+  // Multi-GPU only, read side: the payload of packet 35, still encoded (it is
+  // decoded against the previous frame, which this frame does not know).
+  std::vector<uint8_t> ActorStatePayload;
+  bool bHasActorStatePayload = false;
 
 public:
 
@@ -184,6 +189,33 @@ public:
   void Clear();
 
   void Write(std::ostream& OutStream);
+
+  /// Writes the frame, with what @a BeforeFrameCounter writes right before
+  /// the frame counter, which must stay the last packet.
+  void Write(std::ostream& OutStream, TFunctionRef<void(std::ostream&)> BeforeFrameCounter);
+
+  /// Primary: packet 35, the actors' state of this frame, built from the
+  /// records of packets 34, 12, 8, 10, 32, 9 and 22. One slot per actor, in
+  /// the order of packet 34 (an actor with records but no pose comes after),
+  /// so that each legacy packet is the slots that have its record, in slot
+  /// order. The kind of a slot is the actor's FCarlaActor::ActorType. Every
+  /// section is there, even empty, so that the table changes only with the
+  /// actors. @a State keeps its memory between frames.
+  void BuildActorState(carla::multigpu::ActorStateFrame &State);
+
+  /// Compares a decoded packet 35 with the legacy packets of this frame, bit
+  /// for bit: the same actors in the same order, the same records. Returns the
+  /// number of records that differ (an actor missing or out of order counts
+  /// as one), and describes the first in @a OutFirstMismatch.
+  uint32 CompareActorState(const carla::multigpu::ActorStateFrame &State, FString &OutFirstMismatch);
+
+  /// Rewrites the records of packets 34, 12, 8, 10, 32, 9 and 22 of this frame
+  /// from a decoded packet 35, so that the frame plays from it.
+  void RestoreFromActorState(const carla::multigpu::ActorStateFrame &State);
+
+  /// Whether the frame read carries packet 35, and its encoded payload.
+  bool HasActorStatePayload() const { return bHasActorStatePayload; }
+  const std::vector<uint8_t> &GetActorStatePayload() const { return ActorStatePayload; }
 
   /// Parses one SEND_FRAME payload. Only a complete frame
   /// (FrameDataReadResult::IsComplete) may be played.

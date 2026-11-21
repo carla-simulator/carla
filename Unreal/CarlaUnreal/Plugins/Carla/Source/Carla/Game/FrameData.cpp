@@ -969,6 +969,8 @@ void FFrameData::Clear()
   MirrorWorldGlobals.reset();
   MirrorWorldObjects.disabled_environment_objects.reset();
   MirrorAppearances.actors.clear();
+  ActorStatePayload.clear();
+  bHasActorStatePayload = false;
 }
 
 static_assert(
@@ -995,8 +997,16 @@ static_assert(
 static_assert(
     static_cast<uint8_t>(CarlaRecorderPacketId::MultiGpuActorAppearance) == carla::multigpu::ActorAppearances::kPacketId,
     "packet ids are fixed: see LibCarla/source/carla/multigpu");
+static_assert(
+    static_cast<uint8_t>(CarlaRecorderPacketId::MultiGpuActorState) == carla::multigpu::kActorStatePacketId,
+    "packet ids are fixed: see LibCarla/source/carla/multigpu");
 
 void FFrameData::Write(std::ostream& OutStream)
+{
+  Write(OutStream, [](std::ostream &) {});
+}
+
+void FFrameData::Write(std::ostream& OutStream, TFunctionRef<void(std::ostream&)> BeforeFrameCounter)
 {
   // First, so that a secondary knows the frame's time before anything else.
   if (MultiGpuFrameTime)
@@ -1035,6 +1045,7 @@ void FFrameData::Write(std::ostream& OutStream)
   }
   // Always, even when empty: a secondary's mirrors tick only on what it lists.
   MirrorSensorTicks.Write(OutStream);
+  BeforeFrameCounter(OutStream);
   FrameCounter.Write(OutStream);
 }
 
@@ -1114,6 +1125,16 @@ carla::multigpu::FrameDataReadResult FFrameData::Read(const uint8_t *Data, size_
           case CarlaRecorderPacketId::MultiGpuSensorState:
             MirrorSensorStates.Read(InStream, PacketSize);
             return true;
+          case CarlaRecorderPacketId::MultiGpuActorState:
+            // Kept encoded: a delta decodes against the previous frame, which
+            // the command thread holds (the codec bounds PacketSize).
+            ActorStatePayload.resize(PacketSize);
+            if (PacketSize > 0u)
+            {
+              InStream.read(reinterpret_cast<char *>(ActorStatePayload.data()), PacketSize);
+            }
+            bHasActorStatePayload = true;
+            return true;
           case CarlaRecorderPacketId::MultiGpuPositions:
             // A short packet fails InStream, so the codec stops there.
             MirrorPositions.Read(InStream, PacketSize);
@@ -1141,6 +1162,478 @@ carla::multigpu::FrameDataReadResult FFrameData::Read(const uint8_t *Data, size_
     Checked.packet_id = carla::multigpu::FrameTime::kPacketId;
   }
   return Checked;
+}
+
+// Packet 35. Each legacy record turns into the bytes of a packet 35 record and
+// back, field by field and without any conversion, so that the legacy packets
+// rebuilt from a decoded packet 35 are bit for bit the ones the primary wrote.
+namespace
+{
+  namespace FFrameData_MG = carla::multigpu;
+
+  constexpr FFrameData_MG::ActorStateSection FFrameData_ActorStateSections[] = {
+      FFrameData_MG::ActorStateSection::Pose,
+      FFrameData_MG::ActorStateSection::Kinematics,
+      FFrameData_MG::ActorStateSection::VehicleControl,
+      FFrameData_MG::ActorStateSection::VehicleLight,
+      FFrameData_MG::ActorStateSection::Wheels,
+      FFrameData_MG::ActorStateSection::Drivetrain,
+      FFrameData_MG::ActorStateSection::Doors,
+      FFrameData_MG::ActorStateSection::Walker,
+      FFrameData_MG::ActorStateSection::Biker};
+
+  const TCHAR *FFrameData_SectionName(FFrameData_MG::ActorStateSection Kind)
+  {
+    switch (Kind)
+    {
+      case FFrameData_MG::ActorStateSection::Pose: return TEXT("pose (34)");
+      case FFrameData_MG::ActorStateSection::Kinematics: return TEXT("kinematics (12)");
+      case FFrameData_MG::ActorStateSection::VehicleControl: return TEXT("vehicle control (8)");
+      case FFrameData_MG::ActorStateSection::VehicleLight: return TEXT("vehicle light (10)");
+      case FFrameData_MG::ActorStateSection::Wheels: return TEXT("wheels (32)");
+      case FFrameData_MG::ActorStateSection::Drivetrain: return TEXT("drivetrain (32)");
+      case FFrameData_MG::ActorStateSection::Doors: return TEXT("doors (32)");
+      case FFrameData_MG::ActorStateSection::Walker: return TEXT("walker (9)");
+      case FFrameData_MG::ActorStateSection::Biker: return TEXT("biker (22)");
+    }
+    return TEXT("unknown");
+  }
+
+  template <typename T>
+  void FFrameData_AppendRecord(std::vector<uint8_t> &Out, const T &Record)
+  {
+    static_assert(std::is_trivially_copyable_v<T>, "records are plain values");
+    const auto *Bytes = reinterpret_cast<const uint8_t *>(&Record);
+    Out.insert(Out.end(), Bytes, Bytes + sizeof(T));
+  }
+
+  // Legacy record -> packet 35 record bytes (appended to Out); returns the actor id.
+
+  uint32_t FFrameData_ToBytes(const FFrameData_MG::MirroredPosition &In, std::vector<uint8_t> &Out)
+  {
+    FFrameData_MG::PoseRecord Record;
+    std::memcpy(Record.location, In.location, sizeof(Record.location));
+    std::memcpy(Record.rotation, In.rotation, sizeof(Record.rotation));
+    FFrameData_AppendRecord(Out, Record);
+    return In.id;
+  }
+
+  uint32_t FFrameData_ToBytes(const CarlaRecorderKinematics &In, std::vector<uint8_t> &Out)
+  {
+    FFrameData_MG::KinematicsRecord Record;
+    Record.linear_velocity[0] = In.LinearVelocity.X;
+    Record.linear_velocity[1] = In.LinearVelocity.Y;
+    Record.linear_velocity[2] = In.LinearVelocity.Z;
+    Record.angular_velocity[0] = In.AngularVelocity.X;
+    Record.angular_velocity[1] = In.AngularVelocity.Y;
+    Record.angular_velocity[2] = In.AngularVelocity.Z;
+    FFrameData_AppendRecord(Out, Record);
+    return In.DatabaseId;
+  }
+
+  uint32_t FFrameData_ToBytes(const CarlaRecorderAnimVehicle &In, std::vector<uint8_t> &Out)
+  {
+    FFrameData_MG::VehicleControlRecord Record;
+    Record.steering = In.Steering;
+    Record.throttle = In.Throttle;
+    Record.brake = In.Brake;
+    // The byte of the bool, as packet 8 writes it.
+    std::memcpy(&Record.handbrake, &In.bHandbrake, sizeof(Record.handbrake));
+    Record.gear = In.Gear;
+    FFrameData_AppendRecord(Out, Record);
+    return In.DatabaseId;
+  }
+
+  uint32_t FFrameData_ToBytes(const CarlaRecorderLightVehicle &In, std::vector<uint8_t> &Out)
+  {
+    FFrameData_MG::VehicleLightRecord Record;
+    Record.state = In.State;
+    FFrameData_AppendRecord(Out, Record);
+    return In.DatabaseId;
+  }
+
+  uint32_t FFrameData_ToBytes(const CarlaRecorderAnimWalker &In, std::vector<uint8_t> &Out)
+  {
+    FFrameData_MG::WalkerRecord Record;
+    Record.speed = In.Speed;
+    FFrameData_AppendRecord(Out, Record);
+    return In.DatabaseId;
+  }
+
+  uint32_t FFrameData_ToBytes(const CarlaRecorderAnimBiker &In, std::vector<uint8_t> &Out)
+  {
+    FFrameData_MG::BikerRecord Record;
+    Record.forward_speed = In.ForwardSpeed;
+    Record.engine_rotation = In.EngineRotation;
+    FFrameData_AppendRecord(Out, Record);
+    return In.DatabaseId;
+  }
+
+  // Packet 32 splits into three sections. A vehicle in packet 32 always has
+  // its (maybe empty) wheel list; its doors only while one is open, and its
+  // drivetrain only with a current gear, as packet 32 writes them.
+
+  struct FFrameData_Wheels { const FFrameData_MG::VehicleParts &Parts; };
+  struct FFrameData_Doors { const FFrameData_MG::VehicleParts &Parts; };
+  struct FFrameData_Drivetrain { const FFrameData_MG::VehicleParts &Parts; };
+
+  uint32_t FFrameData_ToBytes(const FFrameData_Wheels &In, std::vector<uint8_t> &Out)
+  {
+    for (const FFrameData_MG::WheelPose &Wheel : In.Parts.wheels)
+    {
+      FFrameData_AppendRecord(Out, FFrameData_MG::WheelRecord{Wheel.steer, Wheel.spin, Wheel.suspension_offset});
+    }
+    return In.Parts.actor_id;
+  }
+
+  uint32_t FFrameData_ToBytes(const FFrameData_Doors &In, std::vector<uint8_t> &Out)
+  {
+    for (const FFrameData_MG::DoorPose &Door : In.Parts.open_doors)
+    {
+      FFrameData_MG::DoorRecord Record;
+      Record.door = Door.door;
+      std::memcpy(Record.location, Door.location.data(), sizeof(Record.location));
+      std::memcpy(Record.rotation, Door.rotation.data(), sizeof(Record.rotation));
+      FFrameData_AppendRecord(Out, Record);
+    }
+    return In.Parts.actor_id;
+  }
+
+  uint32_t FFrameData_ToBytes(const FFrameData_Drivetrain &In, std::vector<uint8_t> &Out)
+  {
+    FFrameData_MG::DrivetrainRecord Record;
+    Record.current_gear = *In.Parts.current_gear;
+    Record.flags = static_cast<uint8_t>(
+        (In.Parts.manual_gear_shift ? 1u : 0u) | (In.Parts.simulating_physics ? 2u : 0u));
+    FFrameData_AppendRecord(Out, Record);
+    return In.Parts.actor_id;
+  }
+
+  /// The legacy records of each section of this frame, in packet order.
+  template <typename Visitor>
+  void FFrameData_VisitLegacySections(
+      const FFrameData_MG::MirroredPositions &Positions,
+      const std::vector<CarlaRecorderKinematics> &Kinematics,
+      const std::vector<CarlaRecorderAnimVehicle> &Vehicles,
+      const std::vector<CarlaRecorderLightVehicle> &Lights,
+      const FFrameData_MG::MirroredVehicleParts &Parts,
+      const std::vector<CarlaRecorderAnimWalker> &Walkers,
+      const std::vector<CarlaRecorderAnimBiker> &Bikers,
+      Visitor &&Visit)
+  {
+    Visit(FFrameData_MG::ActorStateSection::Pose, Positions.positions);
+    Visit(FFrameData_MG::ActorStateSection::Kinematics, Kinematics);
+    Visit(FFrameData_MG::ActorStateSection::VehicleControl, Vehicles);
+    Visit(FFrameData_MG::ActorStateSection::VehicleLight, Lights);
+    std::vector<FFrameData_Wheels> Wheels;
+    std::vector<FFrameData_Doors> Doors;
+    std::vector<FFrameData_Drivetrain> Drivetrains;
+    Wheels.reserve(Parts.vehicles.size());
+    for (const FFrameData_MG::VehicleParts &Vehicle : Parts.vehicles)
+    {
+      Wheels.push_back({Vehicle});
+      if (!Vehicle.open_doors.empty())
+      {
+        Doors.push_back({Vehicle});
+      }
+      if (Vehicle.current_gear)
+      {
+        Drivetrains.push_back({Vehicle});
+      }
+    }
+    Visit(FFrameData_MG::ActorStateSection::Wheels, Wheels);
+    Visit(FFrameData_MG::ActorStateSection::Drivetrain, Drivetrains);
+    Visit(FFrameData_MG::ActorStateSection::Doors, Doors);
+    Visit(FFrameData_MG::ActorStateSection::Walker, Walkers);
+    Visit(FFrameData_MG::ActorStateSection::Biker, Bikers);
+  }
+}
+
+void FFrameData::BuildActorState(carla::multigpu::ActorStateFrame &State)
+{
+  TRACE_CPUPROFILER_EVENT_SCOPE_STR("FFrameData::BuildActorState");
+  const auto &KinematicsRecords = Kinematics.GetKinematics();
+  const auto &VehicleRecords = Vehicles.GetVehicles();
+  const auto &LightRecords = LightVehicles.GetLightVehicles();
+  const auto &WalkerRecords = Walkers.GetWalkers();
+  const auto &BikerRecords = Bikers.GetBikers();
+
+  // The slots: packet 34's actors in its order. Every other packet lists a
+  // subsequence of them (one walk of the registry gathers them all), found by
+  // moving forward; an actor out of order or without a pose falls back to a
+  // map and, if new, gets a slot at the end.
+  std::vector<uint32_t> Ids;
+  Ids.reserve(MirrorPositions.positions.size());
+  for (const FFrameData_MG::MirroredPosition &Position : MirrorPositions.positions)
+  {
+    Ids.push_back(Position.id);
+  }
+  std::unordered_map<uint32_t, uint32_t> SlotOf;
+  auto FindSlot = [&Ids, &SlotOf](size_t &Cursor, uint32_t Id) -> uint32_t
+  {
+    while ((Cursor < Ids.size()) && (Ids[Cursor] != Id))
+    {
+      ++Cursor;
+    }
+    if (Cursor < Ids.size())
+    {
+      return static_cast<uint32_t>(Cursor++);
+    }
+    if (SlotOf.empty())
+    {
+      for (uint32_t Slot = 0u; Slot < Ids.size(); ++Slot)
+      {
+        SlotOf.emplace(Ids[Slot], Slot);
+      }
+    }
+    const auto [It, bAdded] = SlotOf.try_emplace(Id, static_cast<uint32_t>(Ids.size()));
+    if (bAdded)
+    {
+      Ids.push_back(Id);
+    }
+    return It->second;
+  };
+
+  // First the slot of every record (which may add slots), then the records.
+  struct FPending
+  {
+    FFrameData_MG::ActorStateSection Kind;
+    std::vector<uint32_t> Slots;
+    std::vector<uint32_t> Offsets;
+    std::vector<uint8_t> Bytes;
+  };
+  std::vector<FPending> Pending;
+  Pending.reserve(UE_ARRAY_COUNT(FFrameData_ActorStateSections));
+  FFrameData_VisitLegacySections(MirrorPositions, KinematicsRecords, VehicleRecords, LightRecords,
+      MirrorVehicleParts, WalkerRecords, BikerRecords,
+      [&](FFrameData_MG::ActorStateSection Kind, const auto &Records)
+      {
+        FPending &Section = Pending.emplace_back();
+        Section.Kind = Kind;
+        Section.Slots.reserve(Records.size());
+        Section.Offsets.reserve(Records.size() + 1u);
+        size_t Cursor = 0u;
+        for (const auto &Record : Records)
+        {
+          Section.Offsets.push_back(static_cast<uint32_t>(Section.Bytes.size()));
+          Section.Slots.push_back(FindSlot(Cursor, FFrameData_ToBytes(Record, Section.Bytes)));
+        }
+        Section.Offsets.push_back(static_cast<uint32_t>(Section.Bytes.size()));
+      });
+
+  // The kinds only change with the slots.
+  std::vector<uint8_t> Kinds;
+  if (Ids == State.ids)
+  {
+    Kinds = State.kinds;
+  }
+  else
+  {
+    Kinds.resize(Ids.size(), static_cast<uint8_t>(FCarlaActor::ActorType::INVALID));
+    for (size_t Slot = 0u; Slot < Ids.size(); ++Slot)
+    {
+      const FCarlaActor *View = (Episode != nullptr) ? Episode->FindCarlaActor(Ids[Slot]) : nullptr;
+      if (View != nullptr)
+      {
+        Kinds[Slot] = static_cast<uint8_t>(View->GetActorType());
+      }
+    }
+  }
+
+  State.frame = FrameCounter.FrameCounter;
+  for (FFrameData_MG::ActorStateSection Kind : FFrameData_ActorStateSections)
+  {
+    State.Section(Kind);
+  }
+  State.ResetSlots(std::move(Ids), std::move(Kinds));
+  for (const FPending &Section : Pending)
+  {
+    FFrameData_MG::ActorStateColumn &Column = State.Section(Section.Kind);
+    for (size_t Index = 0u; Index < Section.Slots.size(); ++Index)
+    {
+      const uint32_t Begin = Section.Offsets[Index];
+      Column.SetBytes(Section.Slots[Index], Section.Bytes.data() + Begin, Section.Offsets[Index + 1u] - Begin);
+    }
+  }
+}
+
+uint32 FFrameData::CompareActorState(const carla::multigpu::ActorStateFrame &State, FString &OutFirstMismatch)
+{
+  TRACE_CPUPROFILER_EVENT_SCOPE_STR("FFrameData::CompareActorState");
+  uint32 Mismatches = 0u;
+  auto Report = [&Mismatches, &OutFirstMismatch](const FString &What)
+  {
+    if (Mismatches++ == 0u)
+    {
+      OutFirstMismatch = What;
+    }
+  };
+  std::vector<uint8_t> Bytes;
+  // Packet by packet: its k-th record must be the k-th slot of the section
+  // that has a record, with the same actor and the same bytes.
+  FFrameData_VisitLegacySections(MirrorPositions, Kinematics.GetKinematics(), Vehicles.GetVehicles(),
+      LightVehicles.GetLightVehicles(), MirrorVehicleParts, Walkers.GetWalkers(), Bikers.GetBikers(),
+      [&](FFrameData_MG::ActorStateSection Kind, const auto &Records)
+      {
+        const FFrameData_MG::ActorStateColumn *Column = State.FindSection(Kind);
+        size_t Slot = 0u;
+        auto NextSlot = [&]() -> bool
+        {
+          if (Column == nullptr)
+          {
+            return false;
+          }
+          while ((Slot < State.ids.size()) && !Column->IsPresent(Slot))
+          {
+            ++Slot;
+          }
+          return Slot < State.ids.size();
+        };
+        for (const auto &Record : Records)
+        {
+          Bytes.clear();
+          const uint32_t Id = FFrameData_ToBytes(Record, Bytes);
+          if (!NextSlot())
+          {
+            Report(FString::Printf(TEXT("%s: actor %u is missing from packet 35"),
+                FFrameData_SectionName(Kind), Id));
+            continue;
+          }
+          if (State.ids[Slot] != Id)
+          {
+            Report(FString::Printf(TEXT("%s: packet 35 has actor %u where the legacy packet has actor %u"),
+                FFrameData_SectionName(Kind), State.ids[Slot], Id));
+          }
+          else if ((Column->Size(Slot) != Bytes.size()) ||
+              ((!Bytes.empty()) && (std::memcmp(Column->Data(Slot), Bytes.data(), Bytes.size()) != 0)))
+          {
+            Report(FString::Printf(TEXT("%s: actor %u has a different record (%u bytes against %u)"),
+                FFrameData_SectionName(Kind), Id, static_cast<uint32>(Column->Size(Slot)),
+                static_cast<uint32>(Bytes.size())));
+          }
+          ++Slot;
+        }
+        while (NextSlot())
+        {
+          Report(FString::Printf(TEXT("%s: packet 35 has a record of actor %u that the legacy packet does not"),
+              FFrameData_SectionName(Kind), State.ids[Slot]));
+          ++Slot;
+        }
+      });
+  return Mismatches;
+}
+
+void FFrameData::RestoreFromActorState(const carla::multigpu::ActorStateFrame &State)
+{
+  TRACE_CPUPROFILER_EVENT_SCOPE_STR("FFrameData::RestoreFromActorState");
+  const size_t Slots = State.ids.size();
+  auto Column = [&State](FFrameData_MG::ActorStateSection Kind) { return State.FindSection(Kind); };
+  auto Present = [](const FFrameData_MG::ActorStateColumn *Section, size_t Slot)
+  {
+    return (Section != nullptr) && Section->IsPresent(Slot);
+  };
+  const FFrameData_MG::ActorStateColumn *Pose = Column(FFrameData_MG::ActorStateSection::Pose);
+  const FFrameData_MG::ActorStateColumn *Kinematic = Column(FFrameData_MG::ActorStateSection::Kinematics);
+  const FFrameData_MG::ActorStateColumn *Control = Column(FFrameData_MG::ActorStateSection::VehicleControl);
+  const FFrameData_MG::ActorStateColumn *Light = Column(FFrameData_MG::ActorStateSection::VehicleLight);
+  const FFrameData_MG::ActorStateColumn *Wheels = Column(FFrameData_MG::ActorStateSection::Wheels);
+  const FFrameData_MG::ActorStateColumn *Drivetrain = Column(FFrameData_MG::ActorStateSection::Drivetrain);
+  const FFrameData_MG::ActorStateColumn *Doors = Column(FFrameData_MG::ActorStateSection::Doors);
+  const FFrameData_MG::ActorStateColumn *Walker = Column(FFrameData_MG::ActorStateSection::Walker);
+  const FFrameData_MG::ActorStateColumn *Biker = Column(FFrameData_MG::ActorStateSection::Biker);
+
+  MirrorPositions.positions.clear();
+  Kinematics.Clear();
+  Vehicles.Clear();
+  LightVehicles.Clear();
+  MirrorVehicleParts.vehicles.clear();
+  Walkers.Clear();
+  Bikers.Clear();
+  MirrorPositions.positions.reserve(Slots);
+
+  for (size_t Slot = 0u; Slot < Slots; ++Slot)
+  {
+    const uint32_t Id = State.ids[Slot];
+    if (Present(Pose, Slot))
+    {
+      const FFrameData_MG::PoseRecord Record = *Pose->Get<FFrameData_MG::PoseRecord>(Slot);
+      FFrameData_MG::MirroredPosition Position;
+      Position.id = Id;
+      std::memcpy(Position.location, Record.location, sizeof(Position.location));
+      std::memcpy(Position.rotation, Record.rotation, sizeof(Position.rotation));
+      MirrorPositions.positions.push_back(Position);
+    }
+    if (Present(Kinematic, Slot))
+    {
+      const FFrameData_MG::KinematicsRecord Record = *Kinematic->Get<FFrameData_MG::KinematicsRecord>(Slot);
+      Kinematics.Add(CarlaRecorderKinematics{Id,
+          FVector(Record.linear_velocity[0], Record.linear_velocity[1], Record.linear_velocity[2]),
+          FVector(Record.angular_velocity[0], Record.angular_velocity[1], Record.angular_velocity[2])});
+    }
+    if (Present(Control, Slot))
+    {
+      const FFrameData_MG::VehicleControlRecord Record = *Control->Get<FFrameData_MG::VehicleControlRecord>(Slot);
+      CarlaRecorderAnimVehicle Vehicle;
+      Vehicle.DatabaseId = Id;
+      Vehicle.Steering = Record.steering;
+      Vehicle.Throttle = Record.throttle;
+      Vehicle.Brake = Record.brake;
+      std::memcpy(&Vehicle.bHandbrake, &Record.handbrake, sizeof(Record.handbrake));
+      Vehicle.Gear = Record.gear;
+      Vehicles.Add(Vehicle);
+    }
+    if (Present(Light, Slot))
+    {
+      CarlaRecorderLightVehicle Record;
+      Record.DatabaseId = Id;
+      Record.State = Light->Get<FFrameData_MG::VehicleLightRecord>(Slot)->state;
+      LightVehicles.Add(Record);
+    }
+    if (Present(Wheels, Slot))
+    {
+      FFrameData_MG::VehicleParts Parts;
+      Parts.actor_id = Id;
+      for (const FFrameData_MG::WheelRecord &Wheel : Wheels->GetArray<FFrameData_MG::WheelRecord>(Slot))
+      {
+        Parts.wheels.push_back(FFrameData_MG::WheelPose{Wheel.steer, Wheel.spin, Wheel.suspension_offset});
+      }
+      if (Present(Doors, Slot))
+      {
+        for (const FFrameData_MG::DoorRecord &Record : Doors->GetArray<FFrameData_MG::DoorRecord>(Slot))
+        {
+          FFrameData_MG::DoorPose Door;
+          Door.door = Record.door;
+          std::memcpy(Door.location.data(), Record.location, sizeof(Record.location));
+          std::memcpy(Door.rotation.data(), Record.rotation, sizeof(Record.rotation));
+          Parts.open_doors.push_back(Door);
+        }
+      }
+      if (Present(Drivetrain, Slot))
+      {
+        const FFrameData_MG::DrivetrainRecord Record = *Drivetrain->Get<FFrameData_MG::DrivetrainRecord>(Slot);
+        Parts.current_gear = Record.current_gear;
+        Parts.manual_gear_shift = (Record.flags & 1u) != 0u;
+        Parts.simulating_physics = (Record.flags & 2u) != 0u;
+      }
+      MirrorVehicleParts.vehicles.push_back(std::move(Parts));
+    }
+    if (Present(Walker, Slot))
+    {
+      CarlaRecorderAnimWalker Record;
+      Record.DatabaseId = Id;
+      Record.Speed = Walker->Get<FFrameData_MG::WalkerRecord>(Slot)->speed;
+      Walkers.Add(Record);
+    }
+    if (Present(Biker, Slot))
+    {
+      const FFrameData_MG::BikerRecord Record = *Biker->Get<FFrameData_MG::BikerRecord>(Slot);
+      CarlaRecorderAnimBiker Anim;
+      Anim.DatabaseId = Id;
+      Anim.ForwardSpeed = Record.forward_speed;
+      Anim.EngineRotation = Record.engine_rotation;
+      Bikers.Add(Anim);
+    }
+  }
 }
 
 void FrameTimeFromSettings(const FEpisodeSettings &Settings, carla::multigpu::FrameTime &Time)

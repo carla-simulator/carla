@@ -521,3 +521,51 @@ TEST(MultiGpuActorState, truncated_and_corrupted_packets_never_break_the_state) 
     }
   }
 }
+
+TEST(MultiGpuActorState, packet_inside_a_frame_round_trips_through_the_frame_codec) {
+  // As a primary sends it: other packets, packet 35 right before the frame
+  // counter. A secondary keeps the payload the codec hands over and decodes it.
+  ActorStateFrame state = MakeState(41u);
+  // A vehicle whose wheel list is empty but present, as packet 32 can carry.
+  state.Section(ActorStateSection::Wheels).SetArray<WheelRecord>(0u, nullptr, 0u);
+  ActorStateEncoder encoder;
+  ActorStateDecoder decoder;
+  for (uint64_t frame = 41u; frame <= 43u; ++frame) {
+    state.frame = frame;
+    state.Section(ActorStateSection::Pose).Set(2u, MakePose(double(frame), 0.0, 0.0));
+    std::ostringstream out;
+    WriteFrameDataHeader(out, 34u, 4u);
+    detail::WritePod(out, uint32_t(7u));
+    const ActorStateEncodeInfo info = encoder.Encode(state, out);
+    ASSERT_EQ(info.keyframe, frame == 41u);
+    WriteFrameDataHeader(out, kFrameCounterPacketId, sizeof(uint64_t));
+    detail::WritePod(out, frame);
+    const std::string bytes = out.str();
+
+    std::vector<uint8_t> payload;
+    bool has_payload = false;
+    const FrameDataReadResult read = ReadFrameData(
+        reinterpret_cast<const uint8_t *>(bytes.data()), bytes.size(),
+        [&](uint8_t id, std::istream &in, uint32_t size) {
+          if (id != kActorStatePacketId) {
+            return false;
+          }
+          payload.resize(size);
+          in.read(reinterpret_cast<char *>(payload.data()), size);
+          has_payload = true;
+          return true;
+        });
+    ASSERT_TRUE(read.IsComplete());
+    ASSERT_EQ(*read.frame, frame);
+    ASSERT_EQ(read.skipped, 1u);
+    ASSERT_EQ(read.grown, 0u);
+    ASSERT_TRUE(has_payload);
+    const ActorStateDecodeResult result = decoder.Decode(payload.data(), payload.size());
+    ASSERT_TRUE(result.IsOk()) << ActorStateDecodeStatusName(result.status);
+    ASSERT_TRUE(SameState(decoder.State(), state));
+    const auto *wheels = decoder.State().FindSection(ActorStateSection::Wheels);
+    ASSERT_TRUE(wheels->IsPresent(0u));
+    ASSERT_EQ(wheels->Size(0u), 0u);
+    ASSERT_FALSE(wheels->IsPresent(3u));
+  }
+}

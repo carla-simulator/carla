@@ -85,7 +85,8 @@ enum class CarlaRecorderPacketId : uint8_t
   MultiGpuWorldAssets = 31,
   MultiGpuVehicleParts = 32,
   MultiGpuWalkerPose = 33,
-  MultiGpuPositions = 34
+  MultiGpuPositions = 34,
+  MultiGpuActorState = 35
 };
 
 /// Recorder for the simulation

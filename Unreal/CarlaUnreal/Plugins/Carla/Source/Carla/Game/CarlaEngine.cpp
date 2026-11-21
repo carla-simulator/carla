@@ -101,6 +101,36 @@ static TAutoConsoleVariable<int32> CVarCarlaMultiGpuStats(
     TEXT("playing (secondary) a frame, and its size (0 = off)."),
     ECVF_Default);
 
+static TAutoConsoleVariable<int32> CVarCarlaMultiGpuSendActorState(
+    TEXT("carla.MultiGpu.SendActorState"),
+    1,
+    TEXT("Multi-GPU primary: also send the actors' state as packet 35, a delta against the previous ")
+    TEXT("frame, beside the packets it replaces (1 = on, 0 = off)."),
+    ECVF_Default);
+
+static TAutoConsoleVariable<int32> CVarCarlaMultiGpuApplyActorState(
+    TEXT("carla.MultiGpu.ApplyActorState"),
+    0,
+    TEXT("Multi-GPU secondary: 0 plays the actors' state from the legacy packets and compares packet 35 ")
+    TEXT("with them; 1 plays it from packet 35 (after the same comparison) when the frame carries it."),
+    ECVF_Default);
+
+/// Packet 35 on a secondary, counted on the command thread and logged on the
+/// game thread by carla.MultiGpu.Stats.
+struct FCarlaEngine_ActorStateStats
+{
+  std::atomic<uint64> Frames{0u};
+  std::atomic<uint64> Keyframes{0u};
+  std::atomic<uint64> Refused{0u};
+  std::atomic<uint64> Mismatched{0u};
+  std::atomic<uint64> Applied{0u};
+  std::atomic<uint64> Bytes{0u};
+  std::atomic<uint64> DecodeCycles{0u};
+  std::atomic<uint64> CompareCycles{0u};
+};
+
+static FCarlaEngine_ActorStateStats GCarlaEngine_ActorStateStats;
+
 /// Game-thread time spent on multi-GPU frames, logged by carla.MultiGpu.Stats.
 struct FCarlaEngine_MultiGpuStats
 {
@@ -110,6 +140,16 @@ struct FCarlaEngine_MultiGpuStats
   uint64 VerifyCycles = 0u;
   uint64 VerifiedFrames = 0u;
   uint64 PlayCycles = 0u;
+  // Primary: packet 35, its bytes, its keyframes, and building plus encoding it.
+  uint64 ActorStateBytes = 0u;
+  uint64 ActorStateKeyframes = 0u;
+  uint64 ActorStateCycles = 0u;
+  // Why each keyframe was sent: a full resync, a frame not sent before it, a
+  // new table (actors spawned or removed), or the interval.
+  uint64 KeyframesResync = 0u;
+  uint64 KeyframesGap = 0u;
+  uint64 KeyframesTable = 0u;
+  uint64 KeyframesInterval = 0u;
 
   /// Logs and restarts the means once @a Every frames are in.
   void Flush(int32 Every, bool bPrimary)
@@ -127,11 +167,35 @@ struct FCarlaEngine_MultiGpuStats
           Frames, WriteCycles * Ms * PerFrame,
           VerifiedFrames > 0u ? VerifyCycles * Ms / static_cast<double>(VerifiedFrames) : 0.0,
           VerifiedFrames, Bytes * PerFrame / 1024.0);
+      if (ActorStateBytes > 0u)
+      {
+        UE_LOG(LogCarla, Log,
+            TEXT("Multi-GPU stats: packet 35 %.1f KiB per frame (inside the above), %llu keyframes (%llu resync, %llu after a gap, %llu new table, %llu interval), build and encode %.3f ms per frame"),
+            ActorStateBytes * PerFrame / 1024.0, ActorStateKeyframes, KeyframesResync, KeyframesGap,
+            KeyframesTable, KeyframesInterval, ActorStateCycles * Ms * PerFrame);
+      }
     }
     else
     {
       UE_LOG(LogCarla, Log, TEXT("Multi-GPU stats: %llu frames, play %.3f ms per frame"),
           Frames, PlayCycles * Ms * PerFrame);
+      FCarlaEngine_ActorStateStats &State = GCarlaEngine_ActorStateStats;
+      const uint64 StateFrames = State.Frames.exchange(0u);
+      const uint64 Keyframes = State.Keyframes.exchange(0u);
+      const uint64 Refused = State.Refused.exchange(0u);
+      const uint64 Mismatched = State.Mismatched.exchange(0u);
+      const uint64 Applied = State.Applied.exchange(0u);
+      const uint64 StateBytes = State.Bytes.exchange(0u);
+      const uint64 DecodeCycles = State.DecodeCycles.exchange(0u);
+      const uint64 CompareCycles = State.CompareCycles.exchange(0u);
+      if ((StateFrames > 0u) || (Refused > 0u))
+      {
+        const double PerStateFrame = 1.0 / static_cast<double>(std::max<uint64>(StateFrames, 1u));
+        UE_LOG(LogCarla, Log,
+            TEXT("Multi-GPU stats: packet 35 in %llu frames (%llu keyframes, %llu refused), %.1f KiB per frame, decode %.3f ms, compare %.3f ms, %llu frames differ from the legacy packets, %llu played from packet 35"),
+            StateFrames, Keyframes, Refused, StateBytes * PerStateFrame / 1024.0,
+            DecodeCycles * Ms * PerStateFrame, CompareCycles * Ms * PerStateFrame, Mismatched, Applied);
+      }
     }
     *this = FCarlaEngine_MultiGpuStats{};
   }
@@ -423,6 +487,10 @@ void FCarlaEngine::NotifyInitGame(const UCarlaSettings &Settings)
             FFrameData Frame;
             const carla::multigpu::FrameDataReadResult Result = Frame.Read(Data.data(), Data.size());
             const uint64_t FrameNumber = Frame.GetFrameNumber();
+            if (Result.IsComplete())
+            {
+              PlayActorStatePacket(Frame, FrameNumber);
+            }
             bool bReportDrop = false;
             bool bReportFormat = false;
             {
@@ -690,6 +758,7 @@ void FCarlaEngine::NotifyBeginEpisode(UCarlaEpisode &Episode)
     // The new episode has a new actor registry.
     MappedId.clear();
     MirrorState.Reset();
+    bResetActorStateDecoder = true;
     DroppedFrames = 0u;
     bWarnedFrameFormat = false;
   }
@@ -1373,6 +1442,84 @@ void FCarlaEngine::MirrorPrimarySettings(const carla::multigpu::FrameTime &Time)
 }
 
 
+void FCarlaEngine::PlayActorStatePacket(FFrameData &Frame, uint64_t FrameNumber)
+{
+  // Multi-GPU command thread: frames come in order, one at a time.
+  if (bResetActorStateDecoder.exchange(false))
+  {
+    ActorStateDecoder.Reset();
+    bWarnedActorStateMismatch = false;
+    bWarnedActorStateMalformed = false;
+  }
+  if (!Frame.HasActorStatePayload())
+  {
+    return;
+  }
+  TRACE_CPUPROFILER_EVENT_SCOPE_STR("FCarlaEngine::PlayActorStatePacket");
+  FCarlaEngine_ActorStateStats &Stats = GCarlaEngine_ActorStateStats;
+  const std::vector<uint8_t> &Payload = Frame.GetActorStatePayload();
+  const uint64 DecodeStart = FPlatformTime::Cycles64();
+  const carla::multigpu::ActorStateDecodeResult Decoded =
+      ActorStateDecoder.Decode(Payload.data(), Payload.size());
+  const uint64 CompareStart = FPlatformTime::Cycles64();
+  Stats.DecodeCycles += CompareStart - DecodeStart;
+  Stats.Bytes += Payload.size() + carla::multigpu::kFrameDataHeaderSize;
+
+  switch (Decoded.status)
+  {
+    case carla::multigpu::ActorStateDecodeStatus::Ok:
+      break;
+    case carla::multigpu::ActorStateDecodeStatus::NeedResync:
+      // The legacy packets of the frame still play it; a resync brings the
+      // next keyframe.
+      ++Stats.Refused;
+      bResyncRequested = true;
+      return;
+    case carla::multigpu::ActorStateDecodeStatus::Malformed:
+    case carla::multigpu::ActorStateDecodeStatus::UnknownLayout:
+    default:
+      ++Stats.Refused;
+      if (!bWarnedActorStateMalformed)
+      {
+        bWarnedActorStateMalformed = true;
+        carla::log_error("multigpu: packet 35 of frame", FrameNumber, "refused:",
+            carla::multigpu::ActorStateDecodeStatusName(Decoded.status),
+            "; this secondary plays the legacy packets. Every server must run the same CARLA build.");
+      }
+      bResyncRequested = (Decoded.status == carla::multigpu::ActorStateDecodeStatus::Malformed);
+      return;
+  }
+
+  ++Stats.Frames;
+  Stats.Keyframes += Decoded.keyframe ? 1u : 0u;
+  const carla::multigpu::ActorStateFrame &State = ActorStateDecoder.State();
+  FString FirstMismatch;
+  uint32 Mismatches = Frame.CompareActorState(State, FirstMismatch);
+  if (State.frame != FrameNumber)
+  {
+    FirstMismatch = Mismatches > 0u ? FirstMismatch :
+        FString::Printf(TEXT("packet 35 is of frame %llu"), static_cast<uint64>(State.frame));
+    ++Mismatches;
+  }
+  Stats.CompareCycles += FPlatformTime::Cycles64() - CompareStart;
+  if (Mismatches > 0u)
+  {
+    ++Stats.Mismatched;
+    if (!bWarnedActorStateMismatch)
+    {
+      bWarnedActorStateMismatch = true;
+      UE_LOG(LogCarla, Warning,
+          TEXT("Multi-GPU: packet 35 of frame %llu differs from the legacy packets in %u records; first: %s"),
+          static_cast<uint64>(FrameNumber), Mismatches, *FirstMismatch);
+    }
+  }
+  if (CVarCarlaMultiGpuApplyActorState.GetValueOnAnyThread() != 0)
+  {
+    Frame.RestoreFromActorState(State);
+    ++Stats.Applied;
+  }
+}
+
 void FCarlaEngine::OnPostTick(UWorld *World, ELevelTick TickType, float DeltaSeconds)
 {
   TRACE_CPUPROFILER_EVENT_SCOPE_STR(__FUNCTION__);
@@ -1436,16 +1583,64 @@ void FCarlaEngine::OnPostTick(UWorld *World, ELevelTick TickType, float DeltaSec
       const int32 StatsEvery = CVarCarlaMultiGpuStats.GetValueOnGameThread();
       const uint64 WriteStart = (StatsEvery > 0) ? FPlatformTime::Cycles64() : 0u;
 
+      // Packet 35: the same actors' state as packets 34, 12, 8, 10, 32, 9 and
+      // 22, as a delta against the previous frame. Every secondary gets the
+      // same bytes, so one encoder serves them all; a keyframe goes with every
+      // full resync, and whenever a frame was not sent (a frame gap).
+      const bool bSendActorState = (CVarCarlaMultiGpuSendActorState.GetValueOnGameThread() != 0);
+      carla::multigpu::ActorStateEncodeInfo ActorStateInfo;
+      uint64 ActorStateCycles = 0u;
+      bool ActorStateKeyframeGap = false;
+      bool ActorStateKeyframeTable = false;
+      if (bSendActorState)
+      {
+        const uint64 BuildStart = FPlatformTime::Cycles64();
+        FrameData.BuildActorState(ActorStateFrame);
+        ActorStateCycles += FPlatformTime::Cycles64() - BuildStart;
+        if (StatsEvery > 0)
+        {
+          const uint64_t TableHash = ActorStateFrame.TableHash();
+          ActorStateKeyframeGap = !LastActorStateFrame || (ActorStateFrame.frame != *LastActorStateFrame + 1u);
+          ActorStateKeyframeTable = (TableHash != LastActorStateTableHash);
+          LastActorStateTableHash = TableHash;
+        }
+        LastActorStateFrame = ActorStateFrame.frame;
+      }
+      else
+      {
+        LastActorStateFrame.reset();
+      }
+
       // Written once, straight into the buffer that is sent: no stream copy.
       carla::multigpu::BufferStreamBuf FrameBuffer(LastFrameDataSize + LastFrameDataSize / 4u);
       std::ostream OutStream(&FrameBuffer);
-      FrameData.Write(OutStream);
+      FrameData.Write(OutStream, [&](std::ostream &Out)
+      {
+        if (bSendActorState)
+        {
+          TRACE_CPUPROFILER_EVENT_SCOPE_STR("ActorStateEncoder::Encode");
+          const uint64 EncodeStart = FPlatformTime::Cycles64();
+          ActorStateInfo = ActorStateEncoder.Encode(ActorStateFrame, Out, bWasNewConnection);
+          ActorStateCycles += FPlatformTime::Cycles64() - EncodeStart;
+        }
+      });
       carla::Buffer FrameBytes = FrameBuffer.Release();
       LastFrameDataSize = FrameBytes.size();
       if (StatsEvery > 0)
       {
         GCarlaEngine_MultiGpuStats.WriteCycles += FPlatformTime::Cycles64() - WriteStart;
         GCarlaEngine_MultiGpuStats.Bytes += FrameBytes.size();
+        GCarlaEngine_MultiGpuStats.ActorStateBytes += ActorStateInfo.bytes;
+        GCarlaEngine_MultiGpuStats.ActorStateKeyframes += ActorStateInfo.keyframe ? 1u : 0u;
+        if (ActorStateInfo.keyframe)
+        {
+          uint64 &Reason = bWasNewConnection ? GCarlaEngine_MultiGpuStats.KeyframesResync :
+              (ActorStateKeyframeGap ? GCarlaEngine_MultiGpuStats.KeyframesGap :
+              (ActorStateKeyframeTable ? GCarlaEngine_MultiGpuStats.KeyframesTable :
+              GCarlaEngine_MultiGpuStats.KeyframesInterval));
+          ++Reason;
+        }
+        GCarlaEngine_MultiGpuStats.ActorStateCycles += ActorStateCycles;
         ++GCarlaEngine_MultiGpuStats.Frames;
       }
 
