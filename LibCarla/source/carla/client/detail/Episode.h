@@ -19,6 +19,9 @@
 
 #include <atomic>
 #include <memory>
+#include <mutex>
+#include <optional>
+#include <unordered_map>
 #include <vector>
 
 namespace carla {
@@ -66,6 +69,23 @@ namespace detail {
     std::vector<rpc::Actor> GetActorsById(const std::vector<ActorId> &actor_ids);
 
     std::vector<rpc::Actor> GetActors();
+
+    /// The static actors a server running with -carla-omit-static-actors
+    /// leaves out of the episode state, with the episode-state version they
+    /// were fetched at.
+    struct StaticActors {
+      uint64_t version = 0u;
+      std::unordered_map<ActorId, ActorSnapshot> actors;
+    };
+
+    /// The current static actors, or nullptr when the server sends every actor
+    /// in the episode state (the default). Fetched with one call the first
+    /// time they are needed after the set changed, never on the stream thread.
+    std::shared_ptr<const StaticActors> GetStaticActors();
+
+    /// The snapshot of an omitted static actor (transform, Active state, no
+    /// motion), or nothing.
+    std::optional<ActorSnapshot> GetStaticActorSnapshot(ActorId id);
 
     std::optional<WorldSnapshot> WaitForState(time_duration timeout) {
       return _snapshot.WaitFor(timeout);
@@ -133,6 +153,14 @@ namespace detail {
     RecurrentSharedFuture<WorldSnapshot> _snapshot;
 
     AtomicSharedPtr<WalkerNavigation> _walker_navigation;
+
+    AtomicSharedPtr<const StaticActors> _static_actors;
+
+    /// Bumped by the stream thread on frames whose static actors changed and
+    /// on episode changes; a cached StaticActors older than this is refetched.
+    std::atomic<uint64_t> _static_version{1u};
+
+    std::mutex _static_mutex;
 
     const streaming::Token _token;
 

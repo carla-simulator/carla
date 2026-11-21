@@ -376,6 +376,11 @@ namespace detail {
     return _pimpl->CallAndWait<return_t>("get_actors_by_id", ids);
   }
 
+  std::vector<rpc::StaticActor> Client::GetStaticActors() {
+    using return_t = std::vector<rpc::StaticActor>;
+    return _pimpl->CallAndWait<return_t>("get_static_actors");
+  }
+
   rpc::VehiclePhysicsControl Client::GetVehiclePhysicsControl(
       rpc::ActorId vehicle) const {
     return _pimpl->CallAndWait<carla::rpc::VehiclePhysicsControl>("get_physics_control", vehicle);

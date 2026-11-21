@@ -213,6 +213,12 @@ for actor_snapshot in world_snapshot: # Get the actor and the snapshot informati
 actor_snapshot = world_snapshot.find(actual_actor.id) # Get an actor's snapshot
 ```
 
+### Static actors and the snapshot
+
+Every client receives the state of every actor on every tick. A map dressed with thousands of `static.prop.mesh` props makes that state large: with about 8,000 props a synchronous `world.tick()` from a client takes several milliseconds longer, mostly to send and parse it, although the props never move.
+
+Start the server with `-carla-omit-static-actors` to leave such actors out of the per-tick state. An actor counts as static when it is not dormant, is of no other actor type (not a vehicle, walker, traffic light, traffic sign or sensor), its root component has `Static` mobility and simulates no physics, and it is not attached to another actor: a `static.prop.mesh` spawned without `mass` is one. The client fetches the static actors once and again only when a frame reports that they changed (one was spawned, destroyed, moved or turned dynamic), so `world.get_actors()`, `world.get_actor()`, `actor.is_alive`, `actor.get_transform()`, semantic tags and `destroy` behave as before. Only the snapshot changes: `world.get_snapshot()` and `on_tick` callbacks list the other actors only, and `world_snapshot.find()` returns `None` for a static actor. The client and the server must both support the flag; it is off by default.
+
 ## World settings
 
 !!! agent "Agentic CARLA"

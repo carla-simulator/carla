@@ -103,6 +103,13 @@ public:
   UPROPERTY(Category = "CARLA Server", VisibleAnywhere)
   bool bDisableRendering = false;
 
+  /// Leave static actors (static meshes that cannot move, such as
+  /// static.prop.mesh without mass) out of the per-tick episode state sent to
+  /// the clients; clients fetch them once and again only when they change
+  /// (-carla-omit-static-actors). Off by default.
+  UPROPERTY(Category = "CARLA Server", VisibleAnywhere)
+  bool bOmitStaticActors = false;
+
   // ===========================================================================
   /// @name Quality Settings
   // ===========================================================================

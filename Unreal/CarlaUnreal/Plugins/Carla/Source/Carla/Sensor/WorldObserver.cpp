@@ -25,6 +25,7 @@
 #include <util/enable-ue4-macros.h>
 
 #include <util/ue-header-guard-begin.h>
+#include "Components/PrimitiveComponent.h"
 #include "CoreGlobals.h"
 #include <util/ue-header-guard-end.h>
 
@@ -304,12 +305,62 @@ static carla::geom::Vector3D FWorldObserver_GetAcceleration(
   };
 }
 
+bool FWorldObserver::IsStaticActor(const FCarlaActor &View)
+{
+  if (View.IsDormant() || View.GetActorType() != FCarlaActor::ActorType::Other)
+  {
+    return false;
+  }
+  const AActor *Actor = View.GetActor();
+  if (Actor == nullptr || Actor->GetAttachParentActor() != nullptr)
+  {
+    return false;
+  }
+  const auto *Root = Cast<UPrimitiveComponent>(Actor->GetRootComponent());
+  return Root != nullptr &&
+      Root->Mobility == EComponentMobility::Static &&
+      !Root->IsSimulatingPhysics();
+}
+
+/// splitmix64: a well-mixed 64-bit value per static actor, summed over the
+/// set so that the registry's iteration order does not matter.
+static uint64 FWorldObserver_Mix(uint64 X)
+{
+  X += 0x9E3779B97F4A7C15ull;
+  X = (X ^ (X >> 30)) * 0xBF58476D1CE4E5B9ull;
+  X = (X ^ (X >> 27)) * 0x94D049BB133111EBull;
+  return X ^ (X >> 31);
+}
+
+static uint64 FWorldObserver_StaticActorHash(FCarlaActor::IdType Id, const FTransform &Transform)
+{
+  // Location in mm, rotation in 0.01 deg, scale in 1e-3: a move or turn the
+  // client would see changes the hash; float noise does not.
+  const FVector L = Transform.GetLocation() * 10.0;
+  const FRotator R = Transform.Rotator();
+  const FVector S = Transform.GetScale3D() * 1000.0;
+  const int64 Parts[] = {
+      FMath::RoundToInt64(L.X), FMath::RoundToInt64(L.Y), FMath::RoundToInt64(L.Z),
+      FMath::RoundToInt64(R.Pitch * 100.0), FMath::RoundToInt64(R.Yaw * 100.0),
+      FMath::RoundToInt64(R.Roll * 100.0),
+      FMath::RoundToInt64(S.X), FMath::RoundToInt64(S.Y), FMath::RoundToInt64(S.Z)};
+  uint64 H = FWorldObserver_Mix(static_cast<uint64>(Id));
+  for (const int64 P : Parts)
+  {
+    H = FWorldObserver_Mix(H ^ static_cast<uint64>(P));
+  }
+  return H;
+}
+
 static carla::Buffer FWorldObserver_Serialize(
     carla::Buffer &&buffer,
     const UCarlaEpisode &Episode,
     float DeltaSeconds,
     bool MapChange,
-    bool PendingLightUpdates)
+    bool PendingLightUpdates,
+    bool bOmitStaticActors,
+    uint64 &StaticActorsHash,
+    int32 &StaticActorsCount)
 {
   TRACE_CPUPROFILER_EVENT_SCOPE_STR(__FUNCTION__);
   using Serializer = carla::sensor::s11n::EpisodeStateSerializer;
@@ -344,15 +395,25 @@ static carla::Buffer FWorldObserver_Serialize(
   uint8_t simulation_state = (SimulationState::MapChange * MapChange);
   simulation_state |= (SimulationState::PendingLightUpdate * PendingLightUpdates);
 
-  header.simulation_state = static_cast<SimulationState>(simulation_state);
+  // The header goes in front of the actors once the static actors have been
+  // counted (it carries their bits); its space is kept here.
+  current_size = sizeof(Serializer::Header);
 
-  write_data(header);
+  uint64 StaticHash = 0u;
+  int32 StaticCount = 0;
 
-  // Write every actor.
+  // Write every actor (with -carla-omit-static-actors: every non-static one).
   for (auto& It : Registry)
   {
     const FCarlaActor* View = It.Value.Get();
     const FActorInfo* ActorInfo = View->GetActorInfo();
+
+    if (bOmitStaticActors && FWorldObserver::IsStaticActor(*View))
+    {
+      StaticHash += FWorldObserver_StaticActorHash(View->GetActorId(), View->GetActorGlobalTransform());
+      ++StaticCount;
+      continue;
+    }
 
     FTransform ActorTransform;
     FVector Velocity(0.0f);
@@ -415,6 +476,19 @@ static carla::Buffer FWorldObserver_Serialize(
     write_data(info);
   }
 
+  if (bOmitStaticActors)
+  {
+    simulation_state |= SimulationState::StaticActorsOmitted;
+    if (StaticHash != StaticActorsHash || StaticCount != StaticActorsCount)
+    {
+      simulation_state |= SimulationState::StaticActorsChanged;
+      StaticActorsHash = StaticHash;
+      StaticActorsCount = StaticCount;
+    }
+  }
+  header.simulation_state = static_cast<SimulationState>(simulation_state);
+  std::memcpy(buffer.begin(), &header, sizeof(header));
+
   // Shrink buffer
   buffer.resize(current_size);
 
@@ -441,7 +515,10 @@ void FWorldObserver::BroadcastTick(
       Episode,
       DeltaSecond,
       MapChange,
-      PendingLightUpdates);
+      PendingLightUpdates,
+      bOmitStaticActors,
+      StaticActorsHash,
+      StaticActorsCount);
 
   AsyncStream.SerializeAndSend(*this, std::move(buffer));
 }

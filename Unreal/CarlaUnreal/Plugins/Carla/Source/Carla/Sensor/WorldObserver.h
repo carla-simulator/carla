@@ -8,6 +8,8 @@
 
 #include "Carla/Sensor/DataStream.h"
 
+class FCarlaActor;
+
 class UCarlaEpisode;
 
 /// Serializes and sends all the actors in the current UCarlaEpisode.
@@ -30,6 +32,24 @@ public:
     return Stream.GetToken();
   }
 
+  /// Leave static actors (IsStaticActor) out of the per-tick episode state
+  /// (-carla-omit-static-actors). Clients get them once through the
+  /// "get_static_actors" call, again only when the frame says they changed.
+  void SetOmitStaticActors(bool bOmit)
+  {
+    bOmitStaticActors = bOmit;
+  }
+
+  bool OmitsStaticActors() const
+  {
+    return bOmitStaticActors;
+  }
+
+  /// An actor that cannot move or change by itself: not dormant, of type
+  /// Other, its root primitive Static and not simulating physics, and not
+  /// attached to another actor (a static.prop.mesh spawned without mass).
+  static bool IsStaticActor(const FCarlaActor &View);
+
   /// Send a message to every connected client with the info about the given @a
   /// Episode.
   void BroadcastTick(
@@ -47,4 +67,13 @@ public:
 private:
 
   FDataMultiStream Stream;
+
+  bool bOmitStaticActors = false;
+
+  /// Order-independent hash and count of the static actors (ids and
+  /// transforms) in the previous frame: a frame whose set differs is flagged
+  /// StaticActorsChanged.
+  uint64 StaticActorsHash = 0u;
+
+  int32 StaticActorsCount = -1;
 };
