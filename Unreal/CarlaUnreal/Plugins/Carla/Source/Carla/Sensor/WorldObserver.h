@@ -8,7 +8,12 @@
 
 #include "Carla/Sensor/DataStream.h"
 
+#include <memory>
+
 class UCarlaEpisode;
+
+/// What FWorldObserver keeps from one tick to the next to compare snapshots.
+struct FWorldObserverChanges;
 
 /// Serializes and sends all the actors in the current UCarlaEpisode.
 class FWorldObserver
@@ -17,6 +22,14 @@ public:
 
   /// Prevent this sensor to be spawned by users.
   using not_spawnable = void;
+
+  FWorldObserver();
+
+  ~FWorldObserver();
+
+  FWorldObserver(const FWorldObserver &) = delete;
+
+  FWorldObserver &operator=(const FWorldObserver &) = delete;
 
   /// Replace the Stream associated with this sensor.
   void SetStream(FDataMultiStream InStream)
@@ -46,5 +59,11 @@ public:
 
 private:
 
+  /// carla.Snapshot.Stats: compares this tick's snapshot with the last one
+  /// and adds what changed to carla::rpc::SnapshotChangeAccumulator.
+  void CountChanges(uint64 EpisodeId, const carla::Buffer &Buffer);
+
   FDataMultiStream Stream;
+
+  std::unique_ptr<FWorldObserverChanges> Changes;
 };

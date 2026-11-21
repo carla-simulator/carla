@@ -50,6 +50,15 @@ namespace tcp {
     const boost::asio::ip::tcp::no_delay option(true);
     _socket.set_option(option);
 
+    {
+      boost::system::error_code ec;
+      const auto peer = _socket.remote_endpoint(ec);
+      if (!ec) {
+        _remote = peer.address().to_string() + ":" + std::to_string(peer.port());
+        _loopback = peer.address().is_loopback();
+      }
+    }
+
     StartTimer();
     auto self = shared_from_this(); // To keep myself alive.
     boost::asio::post(_strand, [=]() {
@@ -76,68 +85,121 @@ namespace tcp {
     });
   }
 
-  void ServerSession::Write(std::shared_ptr<const Message> message) {
+  WriteStatus ServerSession::Reserve() {
+    if (IsClosing()) {
+      return WriteStatus::Closed;
+    }
+    if (_is_writing.exchange(true)) {
+      return WriteStatus::Busy;
+    }
+    if (IsClosing()) {
+      // Closed between the two checks; nothing is in flight, so give the
+      // reservation back.
+      _is_writing = false;
+      return WriteStatus::Closed;
+    }
+    return WriteStatus::Accepted;
+  }
+
+  WriteStatus ServerSession::WaitAndReserve() {
+    // Wait until the previous message has been sent, but not forever: the
+    // caller is the game thread or the render thread, and a client that
+    // stops reading this socket (a listen() callback that never returns, a
+    // frozen process) would otherwise stall the whole server, every other
+    // client included (#10233). Drop that client instead; its streaming
+    // client reconnects on its own.
+    const uint64_t start_ns = StreamCountersRegistry::NowNs();
+    const auto start = std::chrono::steady_clock::now();
+    const auto limit = _timeout.to_chrono();
+    bool warned = false;
+    WriteStatus status = WriteStatus::Busy;
+    while (status == WriteStatus::Busy) {
+      std::this_thread::sleep_for(std::chrono::microseconds(100));
+      status = Reserve();
+      if (status != WriteStatus::Busy) {
+        break;
+      }
+      const auto waited = std::chrono::steady_clock::now() - start;
+      if (!warned && waited > std::chrono::seconds(1)) {
+        warned = true;
+        log_warning("streaming session", _session_id, "for stream", _stream_id,
+            ": client is not reading, synchronous send blocked for 1 s");
+      }
+      if (waited > limit) {
+        log_error("streaming session", _session_id, "for stream", _stream_id,
+            ": client did not read for", _timeout.milliseconds(),
+            "ms in synchronous mode, closing the session and dropping the message");
+        Count(&StreamCounters::timeouts);
+        Close();
+        status = WriteStatus::Closed;
+      }
+    }
+    const uint64_t blocked = StreamCountersRegistry::NowNs() - start_ns;
+    Count(&StreamCounters::blocked_writes);
+    Count(&StreamCounters::blocked_ns, blocked);
+    _stream_counters->blocked_histogram.Add(blocked);
+    return status;
+  }
+
+  WriteStatus ServerSession::Write(std::shared_ptr<const Message> message) {
     DEBUG_ASSERT(message != nullptr);
     DEBUG_ASSERT(!message->empty());
-    auto self = shared_from_this();
-    if (!_socket.is_open()) {
-      return;
+    WriteStatus status = Reserve();
+    if ((status == WriteStatus::Busy) && _server.IsSynchronousMode()) {
+      status = WaitAndReserve();
     }
-    if (_is_writing) {
-      if (_server.IsSynchronousMode()) {
-        // Wait until the previous message has been sent, but not forever: the
-        // caller is the game thread or the render thread, and a client that
-        // stops reading this socket (a listen() callback that never returns,
-        // a frozen process) would otherwise stall the whole server, every
-        // other client included (#10233). Drop that client instead; its
-        // streaming client reconnects on its own.
-        const auto start = std::chrono::steady_clock::now();
-        const auto limit = _timeout.to_chrono();
-        bool warned = false;
-        while (_is_writing) {
-          std::this_thread::sleep_for(std::chrono::microseconds(100));
-          const auto waited = std::chrono::steady_clock::now() - start;
-          if (!warned && waited > std::chrono::seconds(1)) {
-            warned = true;
-            log_warning("streaming session", _session_id, "for stream", _stream_id,
-                ": client is not reading, synchronous send blocked for 1 s");
-          }
-          if (waited > limit) {
-            log_error("streaming session", _session_id, "for stream", _stream_id,
-                ": client did not read for", _timeout.milliseconds(),
-                "ms in synchronous mode, closing the session and dropping the message");
-            Close();
-            return;
-          }
-        }
-      } else {
-        // ignore this message
+    switch (status) {
+      case WriteStatus::Accepted:
+        StartWrite(std::move(message));
+        break;
+      case WriteStatus::Busy:
         log_debug("session", _session_id, ": connection too slow: message discarded");
-        return;
-      }
+        Count(&StreamCounters::busy_drops);
+        break;
+      case WriteStatus::Closed:
+        Count(&StreamCounters::closed_drops);
+        break;
     }
-    _is_writing = true;
+    return status;
+  }
 
-    auto handle_sent = [this, self, message](const boost::system::error_code &ec, size_t DEBUG_ONLY(bytes)) {
-      _is_writing = false;
-      if (ec) {
-        log_info("session", _session_id, ": error sending data :", ec.message());
-        CloseNow(ec);
-      } else {
-        DEBUG_ONLY(log_debug("session", _session_id, ": successfully sent", bytes, "bytes"));
-        DEBUG_ASSERT_EQ(bytes, sizeof(message_size_type) + message->size());
-      }
-    };
+  void ServerSession::StartWrite(std::shared_ptr<const Message> message) {
+    auto self = shared_from_this();
+    const uint64_t accepted_ns = StreamCountersRegistry::NowNs();
 
     log_debug("session", _session_id, ": sending message of", message->size(), "bytes");
 
     // Start the write on the session's strand: the socket and the timer are
     // not thread-safe, and CloseNow() runs on the strand.
-    boost::asio::post(_strand, [this, self, message, handle_sent]() mutable {
+    boost::asio::post(_strand, [this, self, message, accepted_ns]() mutable {
+      const uint64_t start_ns = StreamCountersRegistry::NowNs();
+      Count(&StreamCounters::queue_ns, start_ns - accepted_ns);
+      _stream_counters->queue_histogram.Add(start_ns - accepted_ns);
       if (_is_closed || !_socket.is_open()) {
+        Count(&StreamCounters::strand_drops);
         _is_writing = false;
         return;
       }
+
+      auto handle_sent = [this, self, message, start_ns](
+          const boost::system::error_code &ec,
+          size_t bytes) {
+        _is_writing = false;
+        if (ec) {
+          log_info("session", _session_id, ": error sending data :", ec.message());
+          Count(&StreamCounters::write_errors);
+          CloseNow(ec);
+        } else {
+          DEBUG_ONLY(log_debug("session", _session_id, ": successfully sent", bytes, "bytes"));
+          DEBUG_ASSERT_EQ(bytes, sizeof(message_size_type) + message->size());
+          const uint64_t send_ns = StreamCountersRegistry::NowNs() - start_ns;
+          Count(&StreamCounters::writes);
+          Count(&StreamCounters::wire_bytes, bytes);
+          Count(&StreamCounters::send_ns, send_ns);
+          _stream_counters->send_histogram.Add(send_ns);
+        }
+      };
+
       _deadline.expires_after(_timeout.to_chrono());
       boost::asio::async_write(_socket, message->GetBufferSequence(),
         boost::asio::bind_executor(_strand, std::move(handle_sent)));
@@ -145,7 +207,25 @@ namespace tcp {
   }
 
   void ServerSession::Close() {
+    _is_closing = true;
     boost::asio::post(_strand, [self=shared_from_this()]() { self->CloseNow(); });
+  }
+
+  SessionCountersRow ServerSession::GetCountersRow() const {
+    SessionCountersRow row;
+    row.stream_id = _stream_id;
+    row.session_id = _session_id;
+    row.remote = _remote;
+    row.loopback = _loopback;
+    row.writes = _counters.writes.load(std::memory_order_relaxed);
+    row.wire_bytes = _counters.wire_bytes.load(std::memory_order_relaxed);
+    row.busy_drops = _counters.busy_drops.load(std::memory_order_relaxed);
+    row.closed_drops = _counters.closed_drops.load(std::memory_order_relaxed);
+    row.timeouts = _counters.timeouts.load(std::memory_order_relaxed);
+    row.blocked_ns = _counters.blocked_ns.load(std::memory_order_relaxed);
+    row.queue_ns = _counters.queue_ns.load(std::memory_order_relaxed);
+    row.send_ns = _counters.send_ns.load(std::memory_order_relaxed);
+    return row;
   }
 
   void ServerSession::StartTimer() {
@@ -164,6 +244,7 @@ namespace tcp {
   }
 
   void ServerSession::CloseNow(boost::system::error_code ec) {
+    _is_closing = true;
     if (_is_closed.exchange(true)) return;
     _deadline.cancel();
     if (!ec)

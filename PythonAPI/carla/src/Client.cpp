@@ -27,7 +27,19 @@ namespace rpc {
         << ", backlog_max=" << c.backlog_max
         << ", snapshots=" << c.snapshots
         << ", snapshot_ns=" << c.snapshot_ns
-        << ", snapshot_bytes=" << c.snapshot_bytes << ")";
+        << ", snapshot_bytes=" << c.snapshot_bytes
+        << ", snapshot_writes=" << c.snapshot_writes
+        << ", snapshot_wire_bytes=" << c.snapshot_wire_bytes
+        << ", snapshot_drops=" << c.snapshot_drops
+        << ", snapshot_blocked_ns=" << c.snapshot_blocked_ns
+        << ", snapshot_queue_ns=" << c.snapshot_queue_ns
+        << ", snapshot_send_ns=" << c.snapshot_send_ns
+        << ", stream_writes=" << c.stream_writes
+        << ", stream_wire_bytes=" << c.stream_wire_bytes
+        << ", stream_drops=" << c.stream_drops
+        << ", stream_blocked_ns=" << c.stream_blocked_ns
+        << ", stream_queue_ns=" << c.stream_queue_ns
+        << ", stream_send_ns=" << c.stream_send_ns << ")";
     return out;
   }
 
@@ -75,6 +87,97 @@ static auto GetContentPacks(const carla::client::Client &self) {
   for (const auto &pack : packs) {
     result.append(pack);
   }
+  return result;
+}
+
+template <typename T>
+static boost::python::list ToPythonList(const std::vector<T> &values) {
+  boost::python::list result;
+  for (const auto &value : values) {
+    result.append(value);
+  }
+  return result;
+}
+
+static boost::python::dict StreamClassStatsToDict(const carla::rpc::StreamClassStats &s) {
+  boost::python::dict d;
+  d["sessions_opened"] = s.sessions_opened;
+  d["sessions_closed"] = s.sessions_closed;
+  d["writes"] = s.writes;
+  d["wire_bytes"] = s.wire_bytes;
+  d["busy_drops"] = s.busy_drops;
+  d["closed_drops"] = s.closed_drops;
+  d["timeouts"] = s.timeouts;
+  d["strand_drops"] = s.strand_drops;
+  d["write_errors"] = s.write_errors;
+  d["drops"] = s.Drops();
+  d["blocked_writes"] = s.blocked_writes;
+  d["blocked_ns"] = s.blocked_ns;
+  d["queue_ns"] = s.queue_ns;
+  d["send_ns"] = s.send_ns;
+  d["blocked_histogram"] = ToPythonList(s.blocked_histogram);
+  d["queue_histogram"] = ToPythonList(s.queue_histogram);
+  d["send_histogram"] = ToPythonList(s.send_histogram);
+  return d;
+}
+
+static boost::python::dict GetStreamStats(const carla::client::Client &self) {
+  carla::rpc::StreamStats stats;
+  {
+    carla::PythonUtil::ReleaseGIL unlock;
+    stats = self.GetStreamStats();
+  }
+  boost::python::dict result;
+  result["episode"] = StreamClassStatsToDict(stats.episode);
+  result["other"] = StreamClassStatsToDict(stats.other);
+  boost::python::list sessions;
+  for (const auto &row : stats.sessions) {
+    boost::python::dict d;
+    d["stream_id"] = row.stream_id;
+    d["session_id"] = row.session_id;
+    d["episode"] = row.episode;
+    d["remote"] = row.remote;
+    d["loopback"] = row.loopback;
+    d["writes"] = row.writes;
+    d["wire_bytes"] = row.wire_bytes;
+    d["busy_drops"] = row.busy_drops;
+    d["closed_drops"] = row.closed_drops;
+    d["timeouts"] = row.timeouts;
+    d["blocked_ns"] = row.blocked_ns;
+    d["queue_ns"] = row.queue_ns;
+    d["send_ns"] = row.send_ns;
+    sessions.append(d);
+  }
+  result["sessions"] = sessions;
+  using Changes = carla::rpc::SnapshotChangeStats;
+  const Changes &changes = stats.snapshot_changes;
+  boost::python::dict c;
+  c["frames"] = changes.frames;
+  c["keyframes"] = changes.keyframes;
+  c["removed"] = changes.removed;
+  c["keyframe_bytes"] = changes.keyframe_bytes;
+  c["delta_bytes"] = changes.delta_bytes;
+  static const char *type_names[Changes::kTypeCount] = {
+      "other", "vehicle", "walker", "traffic_light", "traffic_sign", "sensor"};
+  boost::python::dict by_type;
+  for (size_t t = 0u; t < Changes::kTypeCount && t < changes.by_type.size(); ++t) {
+    const auto &row = changes.by_type[t];
+    if (row.size() < Changes::kColumns) {
+      continue;
+    }
+    boost::python::dict d;
+    d["records"] = row[Changes::kRecords];
+    d["unchanged"] = row[Changes::kUnchanged];
+    d["added"] = row[Changes::kAdded];
+    boost::python::list groups;
+    for (size_t g = 0u; g < Changes::kGroupCount; ++g) {
+      groups.append(row[Changes::kFirstGroup + g]);
+    }
+    d["group_changed"] = groups;
+    by_type[type_names[t]] = d;
+  }
+  c["by_type"] = by_type;
+  result["snapshot_changes"] = c;
   return result;
 }
 
@@ -233,6 +336,18 @@ void export_client() {
     .def_readonly("snapshots", &rpc::ServerPerfCounters::snapshots)
     .def_readonly("snapshot_ns", &rpc::ServerPerfCounters::snapshot_ns)
     .def_readonly("snapshot_bytes", &rpc::ServerPerfCounters::snapshot_bytes)
+    .def_readonly("snapshot_writes", &rpc::ServerPerfCounters::snapshot_writes)
+    .def_readonly("snapshot_wire_bytes", &rpc::ServerPerfCounters::snapshot_wire_bytes)
+    .def_readonly("snapshot_drops", &rpc::ServerPerfCounters::snapshot_drops)
+    .def_readonly("snapshot_blocked_ns", &rpc::ServerPerfCounters::snapshot_blocked_ns)
+    .def_readonly("snapshot_queue_ns", &rpc::ServerPerfCounters::snapshot_queue_ns)
+    .def_readonly("snapshot_send_ns", &rpc::ServerPerfCounters::snapshot_send_ns)
+    .def_readonly("stream_writes", &rpc::ServerPerfCounters::stream_writes)
+    .def_readonly("stream_wire_bytes", &rpc::ServerPerfCounters::stream_wire_bytes)
+    .def_readonly("stream_drops", &rpc::ServerPerfCounters::stream_drops)
+    .def_readonly("stream_blocked_ns", &rpc::ServerPerfCounters::stream_blocked_ns)
+    .def_readonly("stream_queue_ns", &rpc::ServerPerfCounters::stream_queue_ns)
+    .def_readonly("stream_send_ns", &rpc::ServerPerfCounters::stream_send_ns)
     .def(self_ns::str(self_ns::self))
   ;
 
@@ -286,6 +401,7 @@ void export_client() {
     .def("get_client_version", &cc::Client::GetClientVersion)
     .def("get_server_version", CONST_CALL_WITHOUT_GIL(cc::Client, GetServerVersion))
     .def("get_server_perf_counters", CONST_CALL_WITHOUT_GIL(cc::Client, GetServerPerfCounters))
+    .def("get_stream_stats", &GetStreamStats)
     .def("get_world", &cc::Client::GetWorld)
     .def("get_available_maps", &GetAvailableMaps)
     .def("get_content_packs", &GetContentPacks)

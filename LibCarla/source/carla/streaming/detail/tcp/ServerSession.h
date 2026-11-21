@@ -10,6 +10,7 @@
 #include "carla/Time.h"
 #include "carla/TypeTraits.h"
 #include "carla/profiler/LifetimeProfiled.h"
+#include "carla/streaming/detail/StreamCounters.h"
 #include "carla/streaming/detail/Types.h"
 #include "carla/streaming/detail/tcp/Message.h"
 
@@ -26,8 +27,10 @@
 #endif
 
 #include <atomic>
+#include <cstdint>
 #include <functional>
 #include <memory>
+#include <string>
 
 namespace carla {
 namespace streaming {
@@ -35,6 +38,20 @@ namespace detail {
 namespace tcp {
 
   class Server;
+
+  /// What happened to a message given to ServerSession::Write.
+  enum class WriteStatus : uint8_t {
+    /// The message is the next one written to this session's socket. It
+    /// reaches the client unless the session closes first.
+    Accepted,
+    /// Asynchronous mode only: the previous message was still being written,
+    /// so this one was skipped. The session stays open.
+    Busy,
+    /// The session is closing or closed (in synchronous mode, also after the
+    /// client did not read for the whole time-out). Nothing more will be
+    /// written to it.
+    Closed
+  };
 
   /// A TCP server session. When a session opens, it reads from the socket a
   /// stream id object and passes itself to the callback functor. The session
@@ -73,23 +90,58 @@ namespace tcp {
       return std::make_shared<const Message>(buffers...);
     }
 
-    /// Writes some data to the socket.
-    void Write(std::shared_ptr<const Message> message);
+    /// Writes some data to the socket. There is at most one message in flight
+    /// per session: in synchronous mode this waits for the previous one (up
+    /// to the time-out, then closes the session); in asynchronous mode it
+    /// skips the message instead.
+    WriteStatus Write(std::shared_ptr<const Message> message);
 
     /// Writes some data to the socket.
     template <typename... Buffers>
-    void Write(Buffers... buffers) {
-      Write(MakeMessage(buffers...));
+    WriteStatus Write(Buffers... buffers) {
+      return Write(MakeMessage(buffers...));
     }
 
-    /// Post a job to close the session.
+    /// Post a job to close the session. From now on Write returns
+    /// WriteStatus::Closed.
     void Close();
+
+    /// True once the session started closing; it never becomes false again.
+    bool IsClosing() const {
+      return _is_closing.load(std::memory_order_acquire);
+    }
+
+    /// Where this session adds its counters besides its own: the counters of
+    /// the stream it joined. Set by the stream before it writes to the
+    /// session.
+    void SetStreamCounters(StreamCounters &counters) {
+      _stream_counters = &counters;
+    }
+
+    /// This session's own counters.
+    SessionCountersRow GetCountersRow() const;
 
   private:
 
     void StartTimer();
 
     void CloseNow(boost::system::error_code ec = boost::system::error_code());
+
+    /// Takes the right to write the next message, if it is free.
+    WriteStatus Reserve();
+
+    /// Synchronous mode: waits for the message in flight, then reserves.
+    WriteStatus WaitAndReserve();
+
+    /// Posts the write of a reserved message to the strand.
+    void StartWrite(std::shared_ptr<const Message> message);
+
+    /// Adds @a value to the counter @a member of this session and of its
+    /// stream.
+    void Count(StreamCounters::counter StreamCounters::*member, uint64_t value = 1u) {
+      (_counters.*member).fetch_add(value, std::memory_order_relaxed);
+      (_stream_counters->*member).fetch_add(value, std::memory_order_relaxed);
+    }
 
     friend class Server;
 
@@ -112,6 +164,19 @@ namespace tcp {
     /// Set by the sending thread, cleared by the write handler on the strand.
     std::atomic_bool _is_writing{false};
     std::atomic_bool _is_closed{false};
+
+    /// Set as soon as the session starts closing (Close(), the synchronous
+    /// time-out, CloseNow), so that writers stop at once instead of reading
+    /// the socket, which only the strand may touch.
+    std::atomic_bool _is_closing{false};
+
+    /// Peer address, set in Open() before the session joins a stream.
+    std::string _remote;
+    bool _loopback = false;
+
+    StreamCounters _counters;
+
+    StreamCounters *_stream_counters = &StreamCountersRegistry::Other();
   };
 
 } // namespace tcp

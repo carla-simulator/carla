@@ -73,6 +73,11 @@ namespace streaming {
       _server.SetSynchronousMode(is_synchro);
     }
 
+    /// The counters of every session of every stream, read now.
+    std::vector<detail::SessionCountersRow> GetSessionCounters() {
+      return _server.GetSessionCounters();
+    }
+
     token_type GetToken(stream_id sensor_id) {
       return _server.GetToken(sensor_id);
     }

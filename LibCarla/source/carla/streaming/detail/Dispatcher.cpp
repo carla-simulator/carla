@@ -155,6 +155,36 @@ namespace detail {
     return token_type();
   }
 
+  std::vector<SessionCountersRow> Dispatcher::GetSessionCounters() {
+    // Copy the sessions under the locks, in the order RegisterSession takes
+    // them (Dispatcher, then stream), and read their counters outside.
+    std::vector<std::pair<bool, std::shared_ptr<Session>>> sessions;
+    {
+      std::scoped_lock<std::mutex> lock(_mutex);
+      std::vector<std::shared_ptr<Session>> copy;
+      for (auto &pair : _stream_map) {
+        if (pair.second == nullptr) {
+          continue;
+        }
+        copy.clear();
+        pair.second->CopySessions(copy);
+        for (auto &session : copy) {
+          sessions.emplace_back(pair.second->IsEpisodeStream(), std::move(session));
+        }
+      }
+    }
+    std::vector<SessionCountersRow> rows;
+    rows.reserve(sessions.size());
+    for (auto &[episode, session] : sessions) {
+      if (session == nullptr) {
+        continue;
+      }
+      rows.emplace_back(session->GetCountersRow());
+      rows.back().episode = episode;
+    }
+    return rows;
+  }
+
   std::optional<token_type> Dispatcher::FindToken(stream_id_type stream_id) {
     std::scoped_lock<std::mutex> lock(_mutex);
     auto search = _stream_map.find(stream_id);

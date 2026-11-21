@@ -55,11 +55,13 @@ namespace tcp {
     }
 
     void SetSynchronousMode(bool is_synchro) {
-      _synchronous = is_synchro;
+      _synchronous.store(is_synchro, std::memory_order_relaxed);
     }
 
+    /// Read by the threads that write to the sessions (game, render and task
+    /// threads) while the game thread may change it.
     bool IsSynchronousMode() const {
-      return _synchronous;
+      return _synchronous.load(std::memory_order_relaxed);
     }
 
   private:
@@ -75,7 +77,7 @@ namespace tcp {
 
     std::atomic<time_duration> _timeout;
 
-    bool _synchronous;
+    std::atomic_bool _synchronous;
   };
 
 } // namespace tcp

@@ -20,14 +20,46 @@
 
 #include <util/disable-ue4-macros.h>
 #include <carla/rpc/ServerPerfCounters.h>
+#include <carla/rpc/StreamStats.h>
 #include <carla/rpc/String.h>
 #include <carla/sensor/SensorRegistry.h>
 #include <carla/sensor/data/ActorDynamicState.h>
+#include <carla/sensor/s11n/EpisodeStateCodec.h>
 #include <util/enable-ue4-macros.h>
 
 #include <util/ue-header-guard-begin.h>
 #include "CoreGlobals.h"
+#include "HAL/IConsoleManager.h"
 #include <util/ue-header-guard-end.h>
+
+#include <algorithm>
+#include <vector>
+
+static TAutoConsoleVariable<int32> CVarCarlaSnapshotStats(
+    TEXT("carla.Snapshot.Stats"),
+    0,
+    TEXT("Compare each world snapshot with the previous one and count, per actor type, which ")
+    TEXT("field groups changed and how big a snapshot delta would be (read them with ")
+    TEXT("carla.Client.get_stream_stats). 1 = on, 0 = off. Costs a copy and a compare of the ")
+    TEXT("snapshot per tick while on."),
+    ECVF_Default);
+
+struct FWorldObserverChanges
+{
+  carla::sensor::s11n::episode_codec::FrameDiffer Differ;
+
+  carla::sensor::s11n::episode_codec::FrameDiff Diff;
+
+  /// FCarlaActor::ActorType of each record of the frame being compared.
+  std::vector<uint8_t> Kinds;
+
+  uint64_t EpisodeId = 0u;
+};
+
+FWorldObserver::FWorldObserver()
+  : Changes(std::make_unique<FWorldObserverChanges>()) {}
+
+FWorldObserver::~FWorldObserver() = default;
 
 static auto FWorldObserver_GetActorState(const FCarlaActor &View, const FActorRegistry &Registry)
 {
@@ -310,7 +342,8 @@ static carla::Buffer FWorldObserver_Serialize(
     const UCarlaEpisode &Episode,
     float DeltaSeconds,
     bool MapChange,
-    bool PendingLightUpdates)
+    bool PendingLightUpdates,
+    std::vector<uint8_t> *Kinds)
 {
   TRACE_CPUPROFILER_EVENT_SCOPE_STR(__FUNCTION__);
   using Serializer = carla::sensor::s11n::EpisodeStateSerializer;
@@ -348,6 +381,11 @@ static carla::Buffer FWorldObserver_Serialize(
   header.simulation_state = static_cast<SimulationState>(simulation_state);
 
   write_data(header);
+
+  if (Kinds != nullptr)
+  {
+    Kinds->clear();
+  }
 
   // Write every actor.
   for (auto& It : Registry)
@@ -416,6 +454,10 @@ static carla::Buffer FWorldObserver_Serialize(
       State
     };
     write_data(info);
+    if (Kinds != nullptr)
+    {
+      Kinds->push_back(static_cast<uint8_t>(View->GetActorType()));
+    }
   }
 
   // Shrink buffer
@@ -439,15 +481,88 @@ void FWorldObserver::BroadcastTick(
 
   auto AsyncStream = Stream.MakeAsyncDataStream(*this, Episode.GetElapsedGameTime());
 
+  const bool bCountChanges = (CVarCarlaSnapshotStats.GetValueOnGameThread() != 0);
+
   const uint64_t SerializeStart = carla::rpc::ServerPerfStats::NowNs();
   carla::Buffer buffer = FWorldObserver_Serialize(
       AsyncStream.PopBufferFromPool(),
       Episode,
       DeltaSecond,
       MapChange,
-      PendingLightUpdates);
+      PendingLightUpdates,
+      bCountChanges ? &Changes->Kinds : nullptr);
   carla::rpc::ServerPerfStats::Get().OnSnapshotSerialized(
       carla::rpc::ServerPerfStats::NowNs() - SerializeStart, buffer.size());
 
+  if (bCountChanges)
+  {
+    CountChanges(Episode.GetId(), buffer);
+  }
+  else
+  {
+    Changes->Differ.Reset();
+  }
+
   AsyncStream.SerializeAndSend(*this, std::move(buffer));
+}
+
+void FWorldObserver::CountChanges(uint64 EpisodeId, const carla::Buffer &Buffer)
+{
+  TRACE_CPUPROFILER_EVENT_SCOPE_STR(__FUNCTION__);
+  namespace codec = carla::sensor::s11n::episode_codec;
+  using Serializer = carla::sensor::s11n::EpisodeStateSerializer;
+  using Stats = carla::rpc::SnapshotChangeStats;
+
+  FWorldObserverChanges &C = *Changes;
+  if (C.EpisodeId != EpisodeId)
+  {
+    C.Differ.Reset();
+    C.EpisodeId = EpisodeId;
+  }
+  const size_t Count = (Buffer.size() - sizeof(Serializer::Header)) / codec::kRecordSize;
+  check(C.Kinds.size() == Count);
+
+  const auto Result = C.Differ.Next(
+      Buffer.data() + sizeof(Serializer::Header), Count, C.Diff);
+
+  Stats Tick;
+  if (Result != codec::FrameDiffer::Result::Diffed)
+  {
+    Tick.keyframes = 1u;
+    carla::rpc::SnapshotChangeAccumulator::Get().Add(Tick);
+    return;
+  }
+  auto Row = [&](uint32_t Index) -> std::vector<uint64_t> &
+  {
+    const size_t Kind = C.Kinds[Index];
+    return Tick.by_type[Kind < Stats::kTypeCount ? Kind : 0u];
+  };
+  Tick.frames = 1u;
+  Tick.removed = C.Diff.removed.size();
+  Tick.keyframe_bytes = codec::KeyframeSize(Count);
+  Tick.delta_bytes = C.Diff.DeltaSize();
+  for (const uint32_t Index : C.Diff.added)
+  {
+    auto &R = Row(Index);
+    ++R[Stats::kRecords];
+    ++R[Stats::kAdded];
+  }
+  for (size_t K = 0u; K < C.Diff.survivors.size(); ++K)
+  {
+    auto &R = Row(C.Diff.survivors[K]);
+    const uint8_t Mask = C.Diff.masks[K];
+    ++R[Stats::kRecords];
+    if (Mask == 0u)
+    {
+      ++R[Stats::kUnchanged];
+    }
+    for (size_t G = 0u; G < Stats::kGroupCount; ++G)
+    {
+      if ((Mask & (1u << G)) != 0u)
+      {
+        ++R[Stats::kFirstGroup + G];
+      }
+    }
+  }
+  carla::rpc::SnapshotChangeAccumulator::Get().Add(Tick);
 }

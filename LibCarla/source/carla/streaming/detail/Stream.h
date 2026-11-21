@@ -67,6 +67,12 @@ namespace detail {
       return _shared_state ? _shared_state->AreClientsListening() : false;
     }
 
+    /// Counts this stream's sessions as the episode stream's (world
+    /// snapshots) in the streaming counters, apart from the sensors' streams.
+    void MarkAsEpisodeStream() {
+      _shared_state->MarkAsEpisodeStream();
+    }
+
   private:
 
     friend class detail::Dispatcher;

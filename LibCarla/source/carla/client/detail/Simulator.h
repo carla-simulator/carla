@@ -225,6 +225,10 @@ namespace detail {
       return _client.GetServerPerfCounters();
     }
 
+    rpc::StreamStats GetStreamStats() {
+      return _client.GetStreamStats();
+    }
+
     /// @}
     // =========================================================================
     /// @name Tick

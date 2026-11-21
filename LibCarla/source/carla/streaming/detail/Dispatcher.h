@@ -16,6 +16,7 @@
 #include <mutex>
 #include <optional>
 #include <unordered_map>
+#include <vector>
 
 namespace carla {
 namespace streaming {
@@ -82,6 +83,9 @@ namespace detail {
         search->second->DisableForROS();
       }
     }
+
+    /// The counters of every session of every stream, read now.
+    std::vector<SessionCountersRow> GetSessionCounters();
 
     bool IsEnabledForROS(stream_id_type sensor_id) {
       std::scoped_lock<std::mutex> lock(_mutex);

@@ -383,6 +383,14 @@
       doc: >
         Returns the server's cumulative RPC and frame counters since it started. Read them before and after a piece of work and subtract the two to get what that work cost on the server, for example the game-thread time spent in RPC calls per frame.
     # --------------------------------------
+    - def_name: get_stream_stats
+      params:
+      return: dict
+      doc: >
+        Returns what the server's streaming sessions sent since it started, as a dictionary. `episode` (the world snapshots) and `other` (every sensor stream) each hold the sessions opened and closed, the messages written to a socket (`writes`) and their bytes on the wire (`wire_bytes`), the messages that never reached one (`busy_drops`: asynchronous mode, the previous message was still being written; `closed_drops`: the session was closing, including after a `timeouts` close in synchronous mode; `strand_drops`, `write_errors`, and their sum `drops`), the writes that waited for a slow client in synchronous mode and the time the server waited (`blocked_writes`, `blocked_ns`), the time messages waited for a streaming thread (`queue_ns`) and the time the socket took to accept them (`send_ns`), plus histograms of those three times in log2 buckets of microseconds (bucket 0 below 2 µs, bucket i from 2^i µs). `sessions` lists every open session with its stream id, its peer address, whether it is local (`loopback`), and its own counters. `snapshot_changes` counts, while the console variable `carla.Snapshot.Stats` is 1, the ticks compared, the actors removed, the size of the snapshot body as a keyframe and as a delta (`keyframe_bytes`, `delta_bytes`), and for each actor type (`by_type`) the records compared, those unchanged, those added and how many changed each of their six field groups (actor state; location and rotation; velocities and acceleration; control; the rest of the vehicle or sign data; a traffic light's elapsed time and state). Every value only grows: read it twice and subtract.
+      note: >
+        Turn `carla.Snapshot.Stats` on with the Unreal console command `carla.Snapshot.Stats 1`. It costs a copy and a comparison of the snapshot on every tick.
+    # --------------------------------------
     - def_name: get_trafficmanager
       params:
       - param_name: port
@@ -503,17 +511,73 @@
     - var_name: snapshots
       type: int
       doc: >
-        World snapshots serialized and sent to the clients.
+        World snapshots the server built, one per tick, before they go to the clients.
     - var_name: snapshot_ns
       type: int
       var_units: nanoseconds
       doc: >
-        Time spent serializing those snapshots.
+        Game-thread time spent collecting those snapshots.
     - var_name: snapshot_bytes
       type: int
       var_units: bytes
       doc: >
-        Total size of those snapshots.
+        Total size of those snapshots as built, counted once whatever the number of clients. `snapshot_wire_bytes` is what the clients' sessions sent.
+    - var_name: snapshot_writes
+      type: int
+      doc: >
+        Snapshot messages written to a client's socket, over all the clients.
+    - var_name: snapshot_wire_bytes
+      type: int
+      var_units: bytes
+      doc: >
+        Bytes of those messages on the wire.
+    - var_name: snapshot_drops
+      type: int
+      doc: >
+        Snapshot messages that never reached a client's socket: skipped in asynchronous mode while the previous one was still being written, or because the session was closing.
+    - var_name: snapshot_blocked_ns
+      type: int
+      var_units: nanoseconds
+      doc: >
+        Time the game thread waited, in synchronous mode, for a client that had not taken the previous snapshot yet.
+    - var_name: snapshot_queue_ns
+      type: int
+      var_units: nanoseconds
+      doc: >
+        Time snapshot messages waited for a streaming thread to start writing them.
+    - var_name: snapshot_send_ns
+      type: int
+      var_units: nanoseconds
+      doc: >
+        Time the clients' sockets took to accept the snapshot messages.
+    - var_name: stream_writes
+      type: int
+      doc: >
+        As `snapshot_writes`, for every other stream (sensors).
+    - var_name: stream_wire_bytes
+      type: int
+      var_units: bytes
+      doc: >
+        As `snapshot_wire_bytes`, for every other stream (sensors).
+    - var_name: stream_drops
+      type: int
+      doc: >
+        As `snapshot_drops`, for every other stream (sensors).
+    - var_name: stream_blocked_ns
+      type: int
+      var_units: nanoseconds
+      doc: >
+        As `snapshot_blocked_ns`, for every other stream (sensors). The waiting thread is the one that sent the data, for example the render thread for cameras.
+    - var_name: stream_queue_ns
+      type: int
+      var_units: nanoseconds
+      doc: >
+        As `snapshot_queue_ns`, for every other stream (sensors).
+    - var_name: stream_send_ns
+      type: int
+      var_units: nanoseconds
+      doc: >
+        As `snapshot_send_ns`, for every other stream (sensors).
     # - METHODS ----------------------------
     methods:
     - def_name: __str__

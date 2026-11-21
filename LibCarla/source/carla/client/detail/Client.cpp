@@ -159,6 +159,10 @@ namespace detail {
     return _pimpl->CallAndWait<rpc::ServerPerfCounters>("get_server_perf_counters");
   }
 
+  rpc::StreamStats Client::GetStreamStats() {
+    return _pimpl->CallAndWait<rpc::StreamStats>("get_stream_stats");
+  }
+
   void Client::LoadEpisode(std::string map_name, bool reset_settings, rpc::MapLayer map_layer) {
     // Await response, we need to be sure in this one.
     _pimpl->CallAndWait<void>("load_new_episode", std::move(map_name), reset_settings, map_layer);

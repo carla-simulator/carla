@@ -8,6 +8,7 @@
 
 #include "carla/AtomicSharedPtr.h"
 #include "carla/Logging.h"
+#include "carla/streaming/detail/StreamCounters.h"
 #include "carla/streaming/detail/StreamStateBase.h"
 #include "carla/streaming/detail/tcp/Message.h"
 
@@ -85,9 +86,33 @@ namespace detail {
       return (_sessions.size() > 0 || _force_active || _enabled_for_ros);
     }
 
+    /// Counts this stream's sessions under the episode stream's counters
+    /// instead of the sensors' ones. Call it before any client subscribes.
+    void MarkAsEpisodeStream() {
+      _is_episode_stream = true;
+    }
+
+    bool IsEpisodeStream() const {
+      return _is_episode_stream;
+    }
+
+    StreamCounters &GetCounters() const {
+      return _is_episode_stream ?
+          StreamCountersRegistry::Episode() :
+          StreamCountersRegistry::Other();
+    }
+
+    /// Appends this stream's sessions to @a sessions.
+    void CopySessions(std::vector<std::shared_ptr<Session>> &sessions) {
+      std::scoped_lock<std::mutex> lock(_mutex);
+      sessions.insert(sessions.end(), _sessions.begin(), _sessions.end());
+    }
+
     void ConnectSession(std::shared_ptr<Session> session) final {
       DEBUG_ASSERT(session != nullptr);
       std::scoped_lock<std::mutex> lock(_mutex);
+      session->SetStreamCounters(GetCounters());
+      GetCounters().sessions_opened.fetch_add(1u, std::memory_order_relaxed);
       _sessions.emplace_back(std::move(session));
       log_debug("Connecting multistream sessions:", _sessions.size());
       if (_sessions.size() == 1) {
@@ -110,11 +135,15 @@ namespace detail {
         _session.store(nullptr);
         _sessions.clear();
         _force_active = false;
+        GetCounters().sessions_closed.fetch_add(1u, std::memory_order_relaxed);
         log_debug("Last session disconnected");
       } else {
+        const auto before = _sessions.size();
         _sessions.erase(
             std::remove(_sessions.begin(), _sessions.end(), session),
             _sessions.end());
+        GetCounters().sessions_closed.fetch_add(
+            before - _sessions.size(), std::memory_order_relaxed);
 
         // set single session if only one
         if (_sessions.size() == 1)
@@ -132,6 +161,7 @@ namespace detail {
           s->Close();
         }
       }
+      GetCounters().sessions_closed.fetch_add(_sessions.size(), std::memory_order_relaxed);
       _sessions.clear();
       _force_active = false;
       _session.store(nullptr);
@@ -148,6 +178,7 @@ namespace detail {
     std::vector<std::shared_ptr<Session>> _sessions;
     bool _force_active {false};
     bool _enabled_for_ros {false};
+    std::atomic_bool _is_episode_stream {false};
   };
 
 } // namespace detail

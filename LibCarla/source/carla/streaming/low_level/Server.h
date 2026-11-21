@@ -79,6 +79,10 @@ namespace low_level {
       _server.SetSynchronousMode(is_synchro);
     }
 
+    std::vector<detail::SessionCountersRow> GetSessionCounters() {
+      return _dispatcher.GetSessionCounters();
+    }
+
     token_type GetToken(stream_id sensor_id) {
       return _dispatcher.GetToken(sensor_id);
     }

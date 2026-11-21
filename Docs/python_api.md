@@ -862,6 +862,10 @@ Returns the server's cumulative RPC and frame counters since it started. Read th
 - <a name="carla.Client.get_server_version"></a>**<font color="#7fb800">get_server_version</font>**(<font color="#00a6ed">**self**</font>)  
 Returns the server libcarla version by consulting it in the "Version.h" file. Both client and server should use the same libcarla version.  
     - **Return:** _str_  
+- <a name="carla.Client.get_stream_stats"></a>**<font color="#7fb800">get_stream_stats</font>**(<font color="#00a6ed">**self**</font>)  
+Returns what the server's streaming sessions sent since it started, as a dictionary. `episode` (the world snapshots) and `other` (every sensor stream) each hold the sessions opened and closed, the messages written to a socket (`writes`) and their bytes on the wire (`wire_bytes`), the messages that never reached one (`busy_drops`: asynchronous mode, the previous message was still being written; `closed_drops`: the session was closing, including after a `timeouts` close in synchronous mode; `strand_drops`, `write_errors`, and their sum `drops`), the writes that waited for a slow client in synchronous mode and the time the server waited (`blocked_writes`, `blocked_ns`), the time messages waited for a streaming thread (`queue_ns`) and the time the socket took to accept them (`send_ns`), plus histograms of those three times in log2 buckets of microseconds (bucket 0 below 2 µs, bucket i from 2^i µs). `sessions` lists every open session with its stream id, its peer address, whether it is local (`loopback`), and its own counters. `snapshot_changes` counts, while the console variable `carla.Snapshot.Stats` is 1, the ticks compared, the actors removed, the size of the snapshot body as a keyframe and as a delta (`keyframe_bytes`, `delta_bytes`), and for each actor type (`by_type`) the records compared, those unchanged, those added and how many changed each of their six field groups (actor state; location and rotation; velocities and acceleration; control; the rest of the vehicle or sign data; a traffic light's elapsed time and state). Every value only grows: read it twice and subtract.  
+    - **Return:** _dict_  
+    - **Note:** <font color="#8E8E8E">_Turn `carla.Snapshot.Stats` on with the Unreal console command `carla.Snapshot.Stats 1`. It costs a copy and a comparison of the snapshot on every tick._</font>  
 - <a name="carla.Client.get_trafficmanager"></a>**<font color="#7fb800">get_trafficmanager</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**port**=8000</font>)  
 Returns an instance of the traffic manager related to the specified port. If it does not exist, this will be created.  
     - **Parameters:**
@@ -3150,11 +3154,35 @@ Game-thread calls still queued when a frame's RPC loop ended, summed over all fr
 - <a name="carla.ServerPerfCounters.backlog_max"></a>**<font color="#f8805a">backlog_max</font>** (_int_)  
 Largest number of game-thread calls still queued at the end of a frame's RPC loop.  
 - <a name="carla.ServerPerfCounters.snapshots"></a>**<font color="#f8805a">snapshots</font>** (_int_)  
-World snapshots serialized and sent to the clients.  
+World snapshots the server built, one per tick, before they go to the clients.  
 - <a name="carla.ServerPerfCounters.snapshot_ns"></a>**<font color="#f8805a">snapshot_ns</font>** (_int<small> - nanoseconds</small>_)  
-Time spent serializing those snapshots.  
+Game-thread time spent collecting those snapshots.  
 - <a name="carla.ServerPerfCounters.snapshot_bytes"></a>**<font color="#f8805a">snapshot_bytes</font>** (_int<small> - bytes</small>_)  
-Total size of those snapshots.  
+Total size of those snapshots as built, counted once whatever the number of clients. `snapshot_wire_bytes` is what the clients' sessions sent.  
+- <a name="carla.ServerPerfCounters.snapshot_writes"></a>**<font color="#f8805a">snapshot_writes</font>** (_int_)  
+Snapshot messages written to a client's socket, over all the clients.  
+- <a name="carla.ServerPerfCounters.snapshot_wire_bytes"></a>**<font color="#f8805a">snapshot_wire_bytes</font>** (_int<small> - bytes</small>_)  
+Bytes of those messages on the wire.  
+- <a name="carla.ServerPerfCounters.snapshot_drops"></a>**<font color="#f8805a">snapshot_drops</font>** (_int_)  
+Snapshot messages that never reached a client's socket: skipped in asynchronous mode while the previous one was still being written, or because the session was closing.  
+- <a name="carla.ServerPerfCounters.snapshot_blocked_ns"></a>**<font color="#f8805a">snapshot_blocked_ns</font>** (_int<small> - nanoseconds</small>_)  
+Time the game thread waited, in synchronous mode, for a client that had not taken the previous snapshot yet.  
+- <a name="carla.ServerPerfCounters.snapshot_queue_ns"></a>**<font color="#f8805a">snapshot_queue_ns</font>** (_int<small> - nanoseconds</small>_)  
+Time snapshot messages waited for a streaming thread to start writing them.  
+- <a name="carla.ServerPerfCounters.snapshot_send_ns"></a>**<font color="#f8805a">snapshot_send_ns</font>** (_int<small> - nanoseconds</small>_)  
+Time the clients' sockets took to accept the snapshot messages.  
+- <a name="carla.ServerPerfCounters.stream_writes"></a>**<font color="#f8805a">stream_writes</font>** (_int_)  
+As `snapshot_writes`, for every other stream (sensors).  
+- <a name="carla.ServerPerfCounters.stream_wire_bytes"></a>**<font color="#f8805a">stream_wire_bytes</font>** (_int<small> - bytes</small>_)  
+As `snapshot_wire_bytes`, for every other stream (sensors).  
+- <a name="carla.ServerPerfCounters.stream_drops"></a>**<font color="#f8805a">stream_drops</font>** (_int_)  
+As `snapshot_drops`, for every other stream (sensors).  
+- <a name="carla.ServerPerfCounters.stream_blocked_ns"></a>**<font color="#f8805a">stream_blocked_ns</font>** (_int<small> - nanoseconds</small>_)  
+As `snapshot_blocked_ns`, for every other stream (sensors). The waiting thread is the one that sent the data, for example the render thread for cameras.  
+- <a name="carla.ServerPerfCounters.stream_queue_ns"></a>**<font color="#f8805a">stream_queue_ns</font>** (_int<small> - nanoseconds</small>_)  
+As `snapshot_queue_ns`, for every other stream (sensors).  
+- <a name="carla.ServerPerfCounters.stream_send_ns"></a>**<font color="#f8805a">stream_send_ns</font>** (_int<small> - nanoseconds</small>_)  
+As `snapshot_send_ns`, for every other stream (sensors).  
 
 ### Methods
 

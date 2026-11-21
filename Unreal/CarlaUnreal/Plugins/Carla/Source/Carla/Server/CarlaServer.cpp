@@ -44,6 +44,7 @@
 #include <carla/Version.h>
 #include <carla/rpc/AckermannControllerSettings.h>
 #include <carla/rpc/ServerPerfCounters.h>
+#include <carla/rpc/StreamStats.h>
 #include <carla/rpc/Actor.h>
 #include <carla/rpc/ActorDefinition.h>
 #include <carla/rpc/ActorDescription.h>
@@ -196,6 +197,9 @@ public:
       StreamingServer(StreamingPort),
       BroadcastStream(StreamingServer.MakeStream())
   {
+    // Before any client can subscribe, so that every session of the world
+    // snapshots is counted apart from the sensors' (get_stream_stats).
+    BroadcastStream.MarkAsEpisodeStream();
     // we need to create shared_ptr from the router for some handlers to live
     SecondaryServer = std::make_shared<carla::multigpu::Router>(SecondaryPort);
     SecondaryServer->SetCallbacks();
@@ -416,6 +420,20 @@ void FCarlaServer::FPimpl::BindActions()
   BIND_ASYNC(get_server_perf_counters) << [] () -> R<cr::ServerPerfCounters>
   {
     return carla::rpc::ServerPerfStats::Get().Snapshot();
+  };
+
+  BIND_ASYNC(get_stream_stats) << [this] () -> R<cr::StreamStats>
+  {
+    using Registry = carla::streaming::detail::StreamCountersRegistry;
+    cr::StreamStats Stats;
+    Stats.episode = cr::StreamClassStats::From(Registry::Episode());
+    Stats.other = cr::StreamClassStats::From(Registry::Other());
+    for (const auto &Row : StreamingServer.GetSessionCounters())
+    {
+      Stats.sessions.emplace_back(cr::SessionStreamStats::From(Row));
+    }
+    Stats.snapshot_changes = cr::SnapshotChangeAccumulator::Get().Read();
+    return Stats;
   };
 
   // ~~ Tick ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

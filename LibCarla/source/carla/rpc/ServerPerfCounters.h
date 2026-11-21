@@ -7,6 +7,7 @@
 #pragma once
 
 #include "carla/MsgPack.h"
+#include "carla/streaming/detail/StreamCounters.h"
 
 #include <atomic>
 #include <chrono>
@@ -39,10 +40,35 @@ namespace rpc {
     uint64_t backlog_sum = 0u;
     uint64_t backlog_max = 0u;
 
-    /// Episode snapshots serialized, the time it took and their total size.
+    /// Episode snapshots serialized, the game-thread time it took to collect
+    /// them and their total size. This is what the server builds once per
+    /// tick, before it goes to the sessions; snapshot_wire_bytes is what the
+    /// sessions sent.
     uint64_t snapshots = 0u;
     uint64_t snapshot_ns = 0u;
     uint64_t snapshot_bytes = 0u;
+
+    /// What the episode stream's sessions did with those snapshots: messages
+    /// written to a socket and their bytes on the wire, messages that never
+    /// reached a socket (skipped while the previous one was still being
+    /// written in asynchronous mode, or the session was closing), the time
+    /// the game thread waited for a slow session in synchronous mode, the
+    /// time a message waited for a streaming thread, and the time the socket
+    /// took to accept it. Totals over every session.
+    uint64_t snapshot_writes = 0u;
+    uint64_t snapshot_wire_bytes = 0u;
+    uint64_t snapshot_drops = 0u;
+    uint64_t snapshot_blocked_ns = 0u;
+    uint64_t snapshot_queue_ns = 0u;
+    uint64_t snapshot_send_ns = 0u;
+
+    /// The same for every other stream (sensors).
+    uint64_t stream_writes = 0u;
+    uint64_t stream_wire_bytes = 0u;
+    uint64_t stream_drops = 0u;
+    uint64_t stream_blocked_ns = 0u;
+    uint64_t stream_queue_ns = 0u;
+    uint64_t stream_send_ns = 0u;
 
     MSGPACK_DEFINE_ARRAY(
         frames,
@@ -54,7 +80,19 @@ namespace rpc {
         backlog_max,
         snapshots,
         snapshot_ns,
-        snapshot_bytes);
+        snapshot_bytes,
+        snapshot_writes,
+        snapshot_wire_bytes,
+        snapshot_drops,
+        snapshot_blocked_ns,
+        snapshot_queue_ns,
+        snapshot_send_ns,
+        stream_writes,
+        stream_wire_bytes,
+        stream_drops,
+        stream_blocked_ns,
+        stream_queue_ns,
+        stream_send_ns);
   };
 
   /// Process-wide accumulator behind ServerPerfCounters. Every update is a
@@ -118,10 +156,35 @@ namespace rpc {
       c.snapshots = _snapshots.load(std::memory_order_relaxed);
       c.snapshot_ns = _snapshot_ns.load(std::memory_order_relaxed);
       c.snapshot_bytes = _snapshot_bytes.load(std::memory_order_relaxed);
+      using Registry = streaming::detail::StreamCountersRegistry;
+      ReadStreamCounters(Registry::Episode(),
+          c.snapshot_writes, c.snapshot_wire_bytes, c.snapshot_drops,
+          c.snapshot_blocked_ns, c.snapshot_queue_ns, c.snapshot_send_ns);
+      ReadStreamCounters(Registry::Other(),
+          c.stream_writes, c.stream_wire_bytes, c.stream_drops,
+          c.stream_blocked_ns, c.stream_queue_ns, c.stream_send_ns);
       return c;
     }
 
   private:
+
+    static void ReadStreamCounters(
+        const streaming::detail::StreamCounters &s,
+        uint64_t &writes,
+        uint64_t &wire_bytes,
+        uint64_t &drops,
+        uint64_t &blocked_ns,
+        uint64_t &queue_ns,
+        uint64_t &send_ns) {
+      constexpr auto relaxed = std::memory_order_relaxed;
+      writes = s.writes.load(relaxed);
+      wire_bytes = s.wire_bytes.load(relaxed);
+      drops = s.busy_drops.load(relaxed) + s.closed_drops.load(relaxed) +
+          s.strand_drops.load(relaxed) + s.write_errors.load(relaxed);
+      blocked_ns = s.blocked_ns.load(relaxed);
+      queue_ns = s.queue_ns.load(relaxed);
+      send_ns = s.send_ns.load(relaxed);
+    }
 
     ServerPerfStats() = default;
 

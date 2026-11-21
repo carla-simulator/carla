@@ -57,6 +57,12 @@ namespace client {
       return _simulator->GetServerPerfCounters();
     }
 
+    /// The server's streaming counters, per class of stream and per session,
+    /// and how the world snapshot changes from tick to tick.
+    rpc::StreamStats GetStreamStats() const {
+      return _simulator->GetStreamStats();
+    }
+
     std::vector<std::string> GetAvailableMaps() const {
       return _simulator->GetAvailableMaps();
     }

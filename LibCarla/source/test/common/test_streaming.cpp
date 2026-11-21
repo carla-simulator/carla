@@ -20,11 +20,16 @@
 #include <atomic>
 #include <chrono>
 #include <future>
+#include <mutex>
 #include <string>
 #include <thread>
 #include <vector>
 
 using namespace std::chrono_literals;
+
+static uint64_t OtherBusyDrops() {
+  return carla::streaming::detail::StreamCountersRegistry::Other().busy_drops.load();
+}
 
 // This is required for low level to properly stop the threads in case of
 // exception/assert.
@@ -425,6 +430,10 @@ TEST(streaming, sync_mode_client_not_reading_does_not_block_writer) {
   // second write.
   const std::string big(32u * 1024u * 1024u, 'x');
 
+  using Registry = carla::streaming::detail::StreamCountersRegistry;
+  const uint64_t timeouts_before = Registry::Other().timeouts.load();
+  const uint64_t blocked_before = Registry::Other().blocked_writes.load();
+
   Server srv(TESTING_PORT);
   srv.SetTimeout(timeout);
   srv.SetSynchronousMode(true);
@@ -467,6 +476,10 @@ TEST(streaming, sync_mode_client_not_reading_does_not_block_writer) {
   // Only the message written while the stuck session was being dropped may
   // be lost.
   EXPECT_GE(healthy_count, number_of_messages - 1u);
+
+  // The wait and the time-out are counted.
+  EXPECT_GE(Registry::Other().timeouts.load() - timeouts_before, 1u);
+  EXPECT_GE(Registry::Other().blocked_writes.load() - blocked_before, 1u);
 
   release.set_value();
 }
@@ -553,4 +566,151 @@ TEST(streaming, blocked_callback_does_not_stall_other_streams) {
       c.UnSubscribe(stream.token());
     }
   }
+}
+
+TEST(streaming, latency_histogram_buckets) {
+  using carla::streaming::detail::LatencyHistogram;
+  using carla::streaming::detail::kLatencyBuckets;
+  EXPECT_EQ(LatencyHistogram::BucketOf(0u), 0u);
+  EXPECT_EQ(LatencyHistogram::BucketOf(1999u), 0u);       // below 2 us
+  EXPECT_EQ(LatencyHistogram::BucketOf(2000u), 1u);       // [2, 4) us
+  EXPECT_EQ(LatencyHistogram::BucketOf(3999u), 1u);
+  EXPECT_EQ(LatencyHistogram::BucketOf(4000u), 2u);
+  EXPECT_EQ(LatencyHistogram::BucketOf(1000000u), 9u);    // 1 ms in [512, 1024) us
+  EXPECT_EQ(LatencyHistogram::BucketOf(~uint64_t(0)), kLatencyBuckets - 1u);
+  LatencyHistogram histogram;
+  histogram.Add(3000u);
+  histogram.Add(3500u);
+  histogram.Add(1000000u);
+  const auto buckets = histogram.Load();
+  EXPECT_EQ(buckets[1], 2u);
+  EXPECT_EQ(buckets[9], 1u);
+}
+
+// The world snapshots' stream counts its sessions and messages apart from the
+// sensors' streams, and per session.
+TEST(streaming, episode_stream_is_counted_apart) {
+  using namespace carla::streaming;
+  using Registry = carla::streaming::detail::StreamCountersRegistry;
+  auto &episode = Registry::Episode();
+  auto &other = Registry::Other();
+  const uint64_t episode_writes = episode.writes.load();
+  const uint64_t episode_bytes = episode.wire_bytes.load();
+  const uint64_t episode_opened = episode.sessions_opened.load();
+  const uint64_t other_writes = other.writes.load();
+
+  Server srv(TESTING_PORT);
+  srv.AsyncRun(2u);
+  auto episode_stream = srv.MakeStream();
+  episode_stream.MarkAsEpisodeStream();
+  auto sensor_stream = srv.MakeStream();
+
+  std::atomic_size_t received{0u};
+  Client c;
+  c.AsyncRun(1u);
+  c.Subscribe(episode_stream.token(), [&](auto) { ++received; });
+  for (auto i = 0; i < 250 && srv.GetSessionCounters().empty(); ++i) {
+    std::this_thread::sleep_for(20ms);
+  }
+  ASSERT_EQ(srv.GetSessionCounters().size(), 1u);
+
+  const std::string message = "a world snapshot";
+  constexpr size_t number_of_messages = 20u;
+  for (size_t i = 0u; i < number_of_messages; ++i) {
+    carla::Buffer Buf(boost::asio::buffer(message.c_str(), message.size()));
+    carla::SharedBufferView View = carla::BufferView::CreateFrom(std::move(Buf));
+    episode_stream.Write(View);
+    // Asynchronous mode skips a message while the previous one is in flight.
+    for (auto k = 0; k < 500 && received <= i; ++k) {
+      std::this_thread::sleep_for(1ms);
+    }
+  }
+  for (auto i = 0; i < 250 && received < number_of_messages; ++i) {
+    std::this_thread::sleep_for(20ms);
+  }
+  ASSERT_EQ(received, number_of_messages);
+
+  const uint64_t message_bytes = sizeof(carla::streaming::detail::message_size_type) + message.size();
+  EXPECT_EQ(episode.writes.load() - episode_writes, number_of_messages);
+  EXPECT_EQ(episode.wire_bytes.load() - episode_bytes, number_of_messages * message_bytes);
+  EXPECT_EQ(episode.sessions_opened.load() - episode_opened, 1u);
+  EXPECT_EQ(other.writes.load(), other_writes);
+
+  const auto rows = srv.GetSessionCounters();
+  ASSERT_EQ(rows.size(), 1u);
+  EXPECT_TRUE(rows[0].episode);
+  EXPECT_TRUE(rows[0].loopback);
+  EXPECT_FALSE(rows[0].remote.empty());
+  EXPECT_EQ(rows[0].stream_id,
+      carla::streaming::detail::token_type(episode_stream.token()).get_stream_id());
+  EXPECT_EQ(rows[0].writes, number_of_messages);
+  EXPECT_EQ(rows[0].wire_bytes, number_of_messages * message_bytes);
+}
+
+// ServerSession::Write tells whether the message will reach the socket: in
+// asynchronous mode a message is skipped (Busy) while the previous one is
+// still being written, and a closing session takes nothing more (Closed).
+TEST(streaming, write_reports_busy_and_closed) {
+  using namespace carla::streaming;
+  using namespace carla::streaming::detail;
+
+  io_context_running io(3u);
+  tcp::Server srv(io.service, tcp::Server::endpoint(boost::asio::ip::tcp::v4(), TESTING_PORT));
+  srv.SetTimeout(5s);
+
+  std::mutex mutex;
+  std::shared_ptr<tcp::ServerSession> session;
+  srv.Listen([&](std::shared_ptr<tcp::ServerSession> s) {
+    std::scoped_lock<std::mutex> lock(mutex);
+    if (session == nullptr) {
+      session = std::move(s);
+    }
+  }, [](std::shared_ptr<tcp::ServerSession>) {});
+
+  Dispatcher dispatcher{make_endpoint<tcp::Client::protocol_type>(
+      {make_localhost_address(), srv.GetLocalEndpoint().port()})};
+  auto stream = dispatcher.MakeStream();
+  std::promise<void> release;
+  std::shared_future<void> released = release.get_future().share();
+  auto c = std::make_shared<tcp::Client>(io.service, stream.token(), [released](carla::Buffer) {
+    released.wait();  // stop reading after the first message
+  });
+  c->Connect();
+
+  std::shared_ptr<tcp::ServerSession> s;
+  for (auto i = 0; i < 250 && s == nullptr; ++i) {
+    std::this_thread::sleep_for(20ms);
+    std::scoped_lock<std::mutex> lock(mutex);
+    s = session;
+  }
+  ASSERT_NE(s, nullptr);
+
+  // Larger than the socket buffers: a message the client does not read stays
+  // in flight.
+  const std::string big(32u * 1024u * 1024u, 'x');
+  carla::Buffer Buf(boost::asio::buffer(big.c_str(), big.size()));
+  carla::SharedBufferView BufView = carla::BufferView::CreateFrom(std::move(Buf));
+
+  const uint64_t busy_before = OtherBusyDrops();
+  size_t accepted = 0u;
+  size_t busy = 0u;
+  for (auto i = 0; i < 50 && busy == 0u; ++i) {
+    const auto status = s->Write(BufView);
+    ASSERT_NE(status, tcp::WriteStatus::Closed);
+    (status == tcp::WriteStatus::Accepted ? accepted : busy) += 1u;
+    std::this_thread::sleep_for(100ms);
+  }
+  EXPECT_GE(accepted, 1u);
+  ASSERT_EQ(busy, 1u);
+  EXPECT_EQ(OtherBusyDrops() - busy_before, 1u);
+  EXPECT_EQ(s->GetCountersRow().busy_drops, 1u);
+
+  s->Close();
+  EXPECT_TRUE(s->IsClosing());
+  EXPECT_EQ(s->Write(BufView), tcp::WriteStatus::Closed);
+  EXPECT_EQ(s->GetCountersRow().closed_drops, 1u);
+
+  release.set_value();
+  c->Stop();
+  io.stop();
 }
