@@ -528,6 +528,11 @@ void UCarlaEpisode::InitializeAtBeginPlay()
   {
     ATrafficSignBase *Actor = *It;
     check(Actor != nullptr);
+    if (Actor->bVisualOnly)
+    {
+      // Drawn over another sign actor, which is the one the API reports.
+      continue;
+    }
     FActorDescription Description;
     Description.Id = UCarlaEpisode_GetTrafficSignId(*Actor);
     Description.Class = Actor->GetClass();
