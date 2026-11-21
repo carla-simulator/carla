@@ -457,7 +457,7 @@
       return: float
       return_units: km/h
       doc: >
-        The client returns the speed limit affecting this vehicle according to last tick (it does not call the simulator). The speed limit is updated when passing by a speed limit signal, so a vehicle might have none right after spawning.
+        The client returns the speed limit affecting this vehicle according to last tick (it does not call the simulator). Where the OpenDRIVE map gives a limit for the vehicle's lane, it is that limit, the same as carla.Waypoint.speed_limit: the lane or road `<speed>`, capped by the last maximum speed sign (`274`) passed on the road. Junction roads without a limit keep the previous road's limit. Elsewhere, it is updated when passing by a speed limit signal, and is 30 km/h until then.
     # --------------------------------------
     - def_name: get_traffic_light
       return: carla.TrafficLight
