@@ -266,9 +266,9 @@ void ARayCastSemanticLidar::ComputeRawDetection(const FHitResult& HitInfo, const
     {
       Detection.object_tag = TerrainTag;
     }
-    else if (HitInfo.Component.IsValid())
+    else
     {
-      Detection.object_tag = static_cast<uint32_t>(ATagger::GetTagOfTaggedComponent(*HitInfo.Component));
+      Detection.object_tag = static_cast<uint32_t>(ATagger::GetTagOfHit(HitInfo));
     }
 
     if (actor != nullptr)
@@ -280,10 +280,7 @@ void ARayCastSemanticLidar::ComputeRawDetection(const FHitResult& HitInfo, const
         Detection.object_idx = view->GetPrimaryActorId();
       }
     }
-    else
-    {
-      UE_LOG(LogCarla, Warning, TEXT("Actor not valid %p!!!!"), actor);
-    }
+
 }
 
 

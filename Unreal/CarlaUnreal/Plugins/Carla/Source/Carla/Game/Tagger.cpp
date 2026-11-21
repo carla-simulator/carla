@@ -14,6 +14,7 @@
 #include "Engine/SkeletalMesh.h"
 #include "Engine/StaticMesh.h"
 #include "EngineUtils.h"
+#include "Engine/HitResult.h"
 #include "PhysicsEngine/PhysicsAsset.h"
 #include <util/ue-header-guard-end.h>
 
@@ -216,6 +217,32 @@ crp::CityObjectLabel ATagger::GetTagOfTaggedComponent(const UPrimitiveComponent 
     return GetTagFromName(Component.ComponentTags[0]);
   }
   return static_cast<crp::CityObjectLabel>(Component.CustomDepthStencilValue);
+}
+
+namespace
+{
+  ATagger::FHitLabelResolver GHitLabelResolver;
+}
+
+void ATagger::SetHitLabelResolver(ATagger::FHitLabelResolver Resolver)
+{
+  check(IsInGameThread());
+  GHitLabelResolver = MoveTemp(Resolver);
+}
+
+crp::CityObjectLabel ATagger::GetTagOfHit(const FHitResult &Hit)
+{
+  const UPrimitiveComponent *Component = Hit.GetComponent();
+  if (Component != nullptr && Component->ComponentTags.Num() > 0) {
+    return GetTagOfTaggedComponent(*Component);
+  }
+  if (GHitLabelResolver) {
+    const crp::CityObjectLabel Label = GHitLabelResolver(Hit);
+    if (Label != crp::CityObjectLabel::None) {
+      return Label;
+    }
+  }
+  return Component != nullptr ? GetTagOfTaggedComponent(*Component) : crp::CityObjectLabel::None;
 }
 
 void ATagger::GetTagsOfTaggedActor(const AActor &Actor, TSet<crp::CityObjectLabel> &Tags)

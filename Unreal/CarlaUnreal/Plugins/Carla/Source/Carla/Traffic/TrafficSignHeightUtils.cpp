@@ -41,13 +41,7 @@ namespace TrafficSignHeightUtils
         return true;
       }
 
-      const UPrimitiveComponent *Component = HitResult.GetComponent();
-      if (Component == nullptr)
-      {
-        return false;
-      }
-
-      switch (ATagger::GetTagOfTaggedComponent(*Component))
+      switch (ATagger::GetTagOfHit(HitResult))
       {
         case crp::CityObjectLabel::Roads:
         case crp::CityObjectLabel::RoadLines:

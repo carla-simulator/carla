@@ -27,9 +27,7 @@ std::vector<crp::LabelledPoint> URayTracer::CastRay(
   std::vector<crp::LabelledPoint> result;
   for (auto& Hit : OutHits)
   {
-    UPrimitiveComponent* Component = Hit.GetComponent();
-    crp::CityObjectLabel ComponentTag =
-        ATagger::GetTagOfTaggedComponent(*Component);
+    const crp::CityObjectLabel ComponentTag = ATagger::GetTagOfHit(Hit);
 
     FVector UELocation = Hit.Location;
     ACarlaGameModeBase* GameMode = UCarlaStatics::GetGameMode(World);
@@ -57,9 +55,7 @@ std::pair<bool, crp::LabelledPoint> URayTracer::ProjectPoint(
   );
   if (bDidHit)
   {
-    UPrimitiveComponent* Component = Hit.GetComponent();
-    crp::CityObjectLabel ComponentTag =
-        ATagger::GetTagOfTaggedComponent(*Component);
+    const crp::CityObjectLabel ComponentTag = ATagger::GetTagOfHit(Hit);
 
     FVector UELocation = Hit.Location;
     ACarlaGameModeBase* GameMode = UCarlaStatics::GetGameMode(World);

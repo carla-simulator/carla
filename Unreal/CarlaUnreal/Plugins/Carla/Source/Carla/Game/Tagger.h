@@ -19,6 +19,8 @@
 
 namespace crp = carla::rpc;
 
+struct FHitResult;
+
 /// Sets actors' custom depth stencil value for semantic segmentation according
 /// to their meshes.
 ///
@@ -52,6 +54,14 @@ public:
 
   /// Retrieve the tag of an already tagged component.
   static crp::CityObjectLabel GetTagOfTaggedComponent(const UPrimitiveComponent &Component);
+
+  /// Retrieve the semantic label for a physics hit, tolerating hits whose
+  /// UPrimitiveComponent is null (e.g. non-UObject Chaos physics owners such as
+  /// UE 5.8 FastGeoStreaming) and consulting an optional external resolver.
+  static crp::CityObjectLabel GetTagOfHit(const FHitResult &Hit);
+
+  using FHitLabelResolver = TFunction<crp::CityObjectLabel(const FHitResult &)>;
+  static void SetHitLabelResolver(FHitLabelResolver Resolver);
   
   /// Retrieve the tags of an already tagged actor. CityObjectLabel::None is
   /// not added to the array.
