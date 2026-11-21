@@ -302,75 +302,127 @@ void ALSM::UpdateData(const bool hybrid_physics_mode, const Actor &vehicle,
 
 
 void ALSM::UpdateUnregisteredActorsData() {
-  for (auto &actor_info: unregistered_actors) {
+  std::vector<ActorId> registered_ids = registered_vehicles.GetIDList();
+  std::vector<cg::Location> registered_locations;
+  registered_locations.reserve(registered_ids.size());
+  for (const ActorId reg_id : registered_ids) {
+    if (simulation_state.ContainsActor(reg_id)) {
+      registered_locations.push_back(simulation_state.GetLocation(reg_id));
+    }
+  }
 
+  constexpr float kDormantProxyRangeSq = 60.0f * 60.0f;
+  constexpr float kMaxVehicleWaypointDistSq = 3.5f * 3.5f;
+  constexpr float kMaxWalkerWaypointDistSq = 2.2f * 2.2f;
+
+  std::vector<ActorId> vanished_unregistered;
+  for (auto &actor_info: unregistered_actors) {
     const ActorId actor_id = actor_info.first;
     const ActorPtr actor_ptr = actor_info.second;
-    const std::string type_id = actor_ptr->GetTypeId();
+    if (actor_ptr == nullptr) {
+      vanished_unregistered.push_back(actor_id);
+      continue;
+    }
 
-    const cg::Transform actor_transform = actor_ptr->GetTransform();
-    const cg::Location actor_location = actor_transform.location;
-    const cg::Rotation actor_rotation = actor_transform.rotation;
-    const cg::Vector3D actor_velocity = actor_ptr->GetVelocity();
-    KinematicState kinematic_state {actor_location, actor_rotation, actor_velocity, -1.0f, true, cg::Location()};
-
-    TrafficLightState tl_state;
-    ActorType actor_type = ActorType::Any;
-    cg::Vector3D dimensions;
-    std::vector<SimpleWaypointPtr> nearest_waypoints;
-
-    bool state_entry_not_present = !simulation_state.ContainsActor(actor_id);
-    if (type_id.front() == 'v') {
-      auto vehicle_ptr = std::static_pointer_cast<cc::Vehicle>(actor_ptr);
-      kinematic_state.speed_limit = vehicle_ptr->GetSpeedLimit();
-
-      tl_state = {vehicle_ptr->GetTrafficLightState(), vehicle_ptr->IsAtTrafficLight()};
-
-      if (state_entry_not_present) {
-        dimensions = vehicle_ptr->GetBoundingBox().extent;
-        actor_type = ActorType::Vehicle;
-        StaticAttributes attributes {actor_type, dimensions.x, dimensions.y, dimensions.z};
-
-        simulation_state.AddActor(actor_id, kinematic_state, attributes, tl_state);
-      } else {
-        simulation_state.UpdateKinematicState(actor_id, kinematic_state);
-        simulation_state.UpdateTrafficLightState(actor_id, tl_state);
+    try {
+      const std::string type_id = actor_ptr->GetTypeId();
+      const bool is_dormant = actor_ptr->IsDormant();
+      if (is_dormant) {
+        // Streamed-out CARLA actors (PutActorToSleep) are frozen in unloaded
+        // cells and must not leave ghost roadblocks in track_traffic. Dormant
+        // Mass ECS proxies (.mass.) represent live external traffic/crowd, so
+        // only project them when within collision range of a registered TM car.
+        const bool is_mass_proxy = type_id.find(".mass.") != std::string::npos;
+        bool near_registered = false;
+        if (is_mass_proxy && !registered_locations.empty()) {
+          const cg::Location proxy_loc = actor_ptr->GetTransform().location;
+          for (const cg::Location &reg_loc : registered_locations) {
+            if (cg::Math::DistanceSquared(proxy_loc, reg_loc) <= kDormantProxyRangeSq) {
+              near_registered = true;
+              break;
+            }
+          }
+        }
+        if (!near_registered) {
+          track_traffic.UpdateUnregisteredGridPosition(actor_id, {});
+          continue;
+        }
       }
 
-      // Identify occupied waypoints.
-      cg::Vector3D extent = vehicle_ptr->GetBoundingBox().extent;
-      cg::Vector3D heading_vector = vehicle_ptr->GetTransform().GetForwardVector();
-      std::vector<cg::Location> corners = {actor_location + cg::Location(extent.x * heading_vector),
-                                           actor_location,
-                                           actor_location + cg::Location(-extent.x * heading_vector)};
-      for (cg::Location &vertex: corners) {
-        SimpleWaypointPtr nearest_waypoint = local_map->GetWaypoint(vertex);
-        if (nearest_waypoint != nullptr) {
+      const cg::Transform actor_transform = actor_ptr->GetTransform();
+      const cg::Location actor_location = actor_transform.location;
+      const cg::Rotation actor_rotation = actor_transform.rotation;
+      const cg::Vector3D actor_velocity = actor_ptr->GetVelocity();
+      KinematicState kinematic_state {actor_location, actor_rotation, actor_velocity, -1.0f, true, cg::Location()};
+
+      TrafficLightState tl_state;
+      ActorType actor_type = ActorType::Any;
+      cg::Vector3D dimensions;
+      std::vector<SimpleWaypointPtr> nearest_waypoints;
+
+      bool state_entry_not_present = !simulation_state.ContainsActor(actor_id);
+      if (!type_id.empty() && type_id.front() == 'v') {
+        auto vehicle_ptr = std::static_pointer_cast<cc::Vehicle>(actor_ptr);
+        kinematic_state.speed_limit = vehicle_ptr->GetSpeedLimit();
+
+        tl_state = {vehicle_ptr->GetTrafficLightState(), vehicle_ptr->IsAtTrafficLight()};
+
+        if (state_entry_not_present) {
+          dimensions = vehicle_ptr->GetBoundingBox().extent;
+          actor_type = ActorType::Vehicle;
+          StaticAttributes attributes {actor_type, dimensions.x, dimensions.y, dimensions.z};
+
+          simulation_state.AddActor(actor_id, kinematic_state, attributes, tl_state);
+        } else {
+          simulation_state.UpdateKinematicState(actor_id, kinematic_state);
+          simulation_state.UpdateTrafficLightState(actor_id, tl_state);
+        }
+
+        // Identify occupied waypoints (reject off-road / parked vehicles far from any lane).
+        cg::Vector3D extent = vehicle_ptr->GetBoundingBox().extent;
+        cg::Vector3D heading_vector = actor_transform.GetForwardVector();
+        std::vector<cg::Location> corners = {actor_location + cg::Location(extent.x * heading_vector),
+                                             actor_location,
+                                             actor_location + cg::Location(-extent.x * heading_vector)};
+        for (cg::Location &vertex: corners) {
+          SimpleWaypointPtr nearest_waypoint = local_map->GetWaypoint(vertex);
+          if (nearest_waypoint != nullptr &&
+              cg::Math::DistanceSquared2D(vertex, nearest_waypoint->GetLocation()) <= kMaxVehicleWaypointDistSq) {
+            nearest_waypoints.push_back(nearest_waypoint);
+          }
+        }
+      }
+      else if (!type_id.empty() && type_id.front() == 'w') {
+        auto walker_ptr = std::static_pointer_cast<cc::Walker>(actor_ptr);
+
+        if (state_entry_not_present) {
+          dimensions = walker_ptr->GetBoundingBox().extent;
+          actor_type = ActorType::Pedestrian;
+          StaticAttributes attributes {actor_type, dimensions.x, dimensions.y, dimensions.z};
+
+          simulation_state.AddActor(actor_id, kinematic_state, attributes, tl_state);
+        } else {
+          simulation_state.UpdateKinematicState(actor_id, kinematic_state);
+        }
+
+        // Only project walkers actually on or entering a carriageway/crosswalk,
+        // not pedestrians walking metres away on sidewalks.
+        SimpleWaypointPtr nearest_waypoint = local_map->GetWaypoint(actor_location);
+        if (nearest_waypoint != nullptr &&
+            cg::Math::DistanceSquared2D(actor_location, nearest_waypoint->GetLocation()) <= kMaxWalkerWaypointDistSq) {
           nearest_waypoints.push_back(nearest_waypoint);
         }
       }
+
+      track_traffic.UpdateUnregisteredGridPosition(actor_id, nearest_waypoints);
+    } catch (const std::exception &e) {
+      log_debug("Traffic Manager: dropping unregistered actor", actor_id, ":", e.what());
+      vanished_unregistered.push_back(actor_id);
     }
-    else if (type_id.front() == 'w') {
-      auto walker_ptr = std::static_pointer_cast<cc::Walker>(actor_ptr);
+  }
 
-      if (state_entry_not_present) {
-        dimensions = walker_ptr->GetBoundingBox().extent;
-        actor_type = ActorType::Pedestrian;
-        StaticAttributes attributes {actor_type, dimensions.x, dimensions.y, dimensions.z};
-
-        simulation_state.AddActor(actor_id, kinematic_state, attributes, tl_state);
-      } else {
-        simulation_state.UpdateKinematicState(actor_id, kinematic_state);
-      }
-
-      // Identify occupied waypoints.
-      SimpleWaypointPtr nearest_waypoint = local_map->GetWaypoint(actor_location);
-      if (nearest_waypoint != nullptr) {
-        nearest_waypoints.push_back(nearest_waypoint);
-      }
-    }
-
-    track_traffic.UpdateUnregisteredGridPosition(actor_id, nearest_waypoints);
+  for (const ActorId actor_id : vanished_unregistered) {
+    RemoveActor(actor_id, false);
   }
 }
 
