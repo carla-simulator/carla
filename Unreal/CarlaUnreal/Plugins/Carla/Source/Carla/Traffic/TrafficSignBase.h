@@ -158,6 +158,18 @@ public:
   UPROPERTY(Category = "Traffic Sign", VisibleAnywhere, BlueprintReadOnly, Transient)
   bool bGeneratedFromOpenDRIVE = false;
 
+  /// Only draws a sign. Set on a sign placed over another sign actor that keeps
+  /// the logic (its state, trigger volumes and OpenDRIVE match), to restyle a map
+  /// without touching its behaviour: a visual-only sign is not registered as a
+  /// traffic.* actor, is never matched to an OpenDRIVE signal, and its trigger
+  /// volumes do not collide.
+  UPROPERTY(Category = "Traffic Sign", EditAnywhere, BlueprintReadOnly)
+  bool bVisualOnly = false;
+
+protected:
+
+  virtual void BeginPlay() override;
+
 private:
 
   UPROPERTY(Category = "Traffic Sign", EditAnywhere)
