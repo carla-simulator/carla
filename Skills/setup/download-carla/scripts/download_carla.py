@@ -54,9 +54,10 @@ PLATFORM = "Windows" if sys.platform.startswith("win") else "Linux"
 NIGHTLY_PATH = ("Windows/Dev/CARLA_Latest.zip" if PLATFORM == "Windows"
                 else "Linux/Dev/CARLA_Latest.tar.gz")
 NIGHTLY = f"{MIRRORS[0]}/{NIGHTLY_PATH}"
-# The UE5 line's rolling build. Linux only — no Windows artifact is published, and
-# it ships no separate AdditionalMaps (the UE5 package bundles its content).
-NIGHTLY_UE5_PATH = "Linux/Dev/CARLA_UE5_Latest.tar.gz"
+# The UE5 line's rolling build; no AdditionalMaps pack is published for it
+# (the weekly and the releases have one: get-carla-additional-maps).
+NIGHTLY_UE5_PATH = ("Windows/Dev/CARLA_UE5_Latest.zip" if PLATFORM == "Windows"
+                    else "Linux/Dev/CARLA_UE5_Latest.tar.gz")
 NIGHTLY_UE5 = f"{MIRRORS[0]}/{NIGHTLY_UE5_PATH}"
 
 
@@ -159,13 +160,14 @@ def asset_urls(rel: dict) -> dict[str, str]:
     """{'package': url, 'maps': url} for THIS platform, from the release body."""
     want_ext = ".zip" if PLATFORM == "Windows" else ".tar.gz"
     out: dict[str, str] = {}
+    plat_dir = f"/{PLATFORM}/"
     for label, url in _links(rel["body"]):
         low = label.lower()
-        if not low.endswith(want_ext.lower()):
-            continue
-        if "additionalmaps" in low.replace(" ", ""):
+        # A UE5 AdditionalMaps content pack is a .tar.gz on Windows too.
+        maps_ok = low.endswith(want_ext.lower()) or (low.endswith(".tar.gz") and plat_dir in url)
+        if "additionalmaps" in low.replace(" ", "") and maps_ok:
             out.setdefault("maps", url)
-        elif low.startswith("carla"):
+        elif low.endswith(want_ext.lower()) and low.startswith("carla") and "release-metadata" not in low:
             out.setdefault("package", url)
     if "package" not in out:
         # Fallback to the historical pattern; correct for the 0.9.x line only.
@@ -283,7 +285,7 @@ def cmd_list(_a) -> int:
         print(f"{tag:24} {r['published_at'][:10]}  offers: {', '.join(bits) or 'nothing for ' + PLATFORM}")
     print(f"\nplatform detected: {PLATFORM}")
     print(f"  nightly       : {NIGHTLY}")
-    print(f"  nightly --ue5 : {NIGHTLY_UE5}" + ("   (Linux only)" if PLATFORM == "Windows" else ""))
+    print(f"  nightly --ue5 : {NIGHTLY_UE5}")
     return 0
 
 
@@ -317,14 +319,24 @@ def cmd_release(a) -> int:
         else:
             print("AdditionalMaps:")
             maps = download(urls["maps"], dest, a.dry_run)
-            # AdditionalMaps is NOT extracted: it is imported by the release's own
-            # ImportAssets script, which unpacks it into the cooked content tree.
-            imp = root / "Import"
-            print(f"  place it in {imp} and run {root}/ImportAssets.sh")
-            if not a.dry_run:
-                imp.mkdir(parents=True, exist_ok=True)
-                shutil.move(str(maps), str(imp / maps.name))
-                extra.append(f"maps staged in {imp} — run ./ImportAssets.sh to import")
+            tool = root / "Tools" / "carla_pack.py"
+            if (root / "CarlaUnreal" / "BaseRelease").is_file() and tool.is_file():
+                # UE 5.8 (1.0+): a content pack, installed into CarlaUnreal/Packs/.
+                print(f"  installing the content pack with {tool}")
+                r = subprocess.run([sys.executable, str(tool), "install", str(maps), "--server", str(root)])
+                if r.returncode != 0:
+                    raise SystemExit(f"carla_pack.py install failed; the pack is kept at {maps}")
+                extra.append(f"AdditionalMaps installed in {root / 'CarlaUnreal' / 'Packs'} (get-carla-additional-maps)")
+            elif a.dry_run and not rel["tag_name"].startswith("0."):
+                print("  (a 1.0+ package installs it as a content pack: carla_pack.py install)")
+            else:
+                # UE4 (0.9.x): imported by the release's own ImportAssets script.
+                imp = root / "Import"
+                print(f"  place it in {imp} and run {root}/ImportAssets.sh")
+                if not a.dry_run:
+                    imp.mkdir(parents=True, exist_ok=True)
+                    shutil.move(str(maps), str(imp / maps.name))
+                    extra.append(f"maps staged in {imp} — run ./ImportAssets.sh to import")
 
     if not a.dry_run and not a.keep_archive and archive.exists():
         print(f"  removing archive {archive.name} (--keep-archive to keep it)")
@@ -336,13 +348,9 @@ def cmd_release(a) -> int:
 def cmd_nightly(a) -> int:
     dest = Path(a.dest).expanduser().resolve()
     if a.ue5:
-        if PLATFORM == "Windows":
-            raise SystemExit("the UE5 nightly is published for Linux only "
-                             "(no Windows/Dev/CARLA_UE5_Latest.zip exists); "
-                             "use `release --version 0.10.0` for a UE5 build on Windows")
         url, label, version = NIGHTLY_UE5, "CARLA UE5 nightly (Dev/CARLA_UE5_Latest)", "dev-ue5"
         extra = ["note: rolling build, contents change without a tag",
-                 "this is a UE5 build: the ue4 skills do not apply, and its client is 0.10.x"]
+                 "this is a UE 5.8 build: the ue4 skills do not apply, use run-carla-ue58-server"]
     else:
         url, label, version = NIGHTLY, "CARLA nightly (Dev/CARLA_Latest)", "dev"
         extra = ["note: rolling build, contents change without a tag"]
@@ -413,7 +421,7 @@ def main() -> None:
 
     pn = sub.add_parser("nightly", help="download + extract the rolling Dev build")
     pn.add_argument("--ue5", action="store_true",
-                    help="the UE5 line's nightly (CARLA_UE5_Latest, ~15.7 GB, Linux only)")
+                    help="the UE5 line's nightly (CARLA_UE5_Latest, ~14 GB)")
     pn.add_argument("--dest", default=default_dest)
     pn.add_argument("--keep-archive", action="store_true")
     pn.add_argument("--dry-run", action="store_true")

@@ -58,6 +58,16 @@ Docker must be installed on your system to complete this step.
 ./run_rviz.sh --distro=humble --rmw=cyclonedds
 ```
 
+### Optional: Refresh the Docker image
+
+The first run builds a `carla-rviz-<distro>-<rmw>` image from `osrf/ros:<distro>-desktop` and reuses it on later runs,
+so it does not pick up newer ROS 2 packages by itself. To rebuild it from the latest base image, ignoring the Docker
+layer cache, pass `--no-cache`:
+
+```bash
+./run_rviz.sh --distro=jazzy --rmw=cyclonedds --no-cache
+```
+
 ### Optional: Custom ROS 2 domain id
 
 By default CARLA and `rviz` communicate on the default ROS 2 domain. To isolate the
