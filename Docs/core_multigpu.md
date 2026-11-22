@@ -38,7 +38,7 @@ Run the same CARLA build on every server. The frame data has no compatibility la
 ./CarlaUnreal.sh -nullrhi
 ```
 
-`-nullrhi` disables rendering entirely, so the primary needs no GPU of its own. It is not required — a primary can render — but on a machine whose GPUs are all driving secondaries it keeps one free.
+`-nullrhi` disables rendering entirely, so the primary needs no GPU of its own. It is not required — a primary can render — but on a machine whose GPUs are all driving secondaries it keeps one free. A single server with no secondaries can run this way too, when no client needs cameras; see [Running without a GPU](core_rendering.md#running-without-a-gpu).
 
 The primary listens for secondaries on the __secondary port__, 2002 by default:
 

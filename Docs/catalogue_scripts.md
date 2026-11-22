@@ -111,6 +111,7 @@ python3 ../util/config.py -m Town05_Opt
 | `dvs_suite.py` | DVS camera tests: synchronous mode, attributes, resolution and lifecycle. |
 | `deterministic_collisions.py` | Repeats a car-bicycle crash and reports whether every run ends the same, with [deterministic collisions](core_synchrony.md#deterministic-collisions) or, with `--no-deterministic`, without them. Reloads the map. |
 | `autoware_demo.py` | The TIER IV sensor-kit rig, for the [Autoware](autoware.md) integration. |
+| `util/headless_benchmark.py` | Ticks per second and real-time factor with N NPC vehicles and no cameras, for a server [running without a GPU](core_rendering.md#running-without-a-gpu). |
 
 ---
 

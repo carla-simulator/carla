@@ -9,6 +9,7 @@ This guide details how CARLA uses Unreal Engine's own renderer, which draws the 
     - [__DLSS Super Resolution__](#dlss-super-resolution)
 - [__Graphics quality__](#graphics-quality)
 - [__No-rendering mode__](#no-rendering-mode)
+- [__Running without a GPU__](#running-without-a-gpu)
 - [__Off-screen rendering mode__](#off-screen-rendering-mode)
 
 ---
@@ -230,6 +231,36 @@ From a terminal, `python3 PythonAPI/util/config.py --no-rendering` turns it on a
 
 !!! Note
     The setting acts on editor builds. On a packaged build, start the server with `-RenderOffScreen`, which switches off the same render.
+
+---
+## Running without a GPU
+
+Started with `-nullrhi`, the server creates no renderer at all and needs no GPU and no display. It runs on CPU cores alone, for example on a CI runner, a cloud instance without a GPU, or next to a driving stack that wants the GPU for its own models.
+
+```sh
+./CarlaUnreal.sh -nullrhi
+```
+
+An editor build takes the same flag in `-game` mode: `UnrealEditor CarlaUnreal.uproject <map> -game -nullrhi`.
+
+__What keeps running:__ physics, the Traffic Manager, walkers, the road network, traffic lights, the recorder, and every sensor that is not a camera: LiDAR, semantic LiDAR, radar, GNSS, IMU, collision, obstacle and lane invasion. They are ray casts and physics queries, not scene captures. Ground truth from the API is unchanged as well: actor transforms, velocities and bounding boxes (`actor.bounding_box`, `world.get_level_bbs()`), and traffic light states.
+
+__What stops:__ camera sensors (RGB, depth, segmentation and the rest) and the spectator view. Calling `listen()` on a camera raises a `RuntimeError` unless a [multi-GPU](core_multigpu.md) secondary server is connected to render it.
+
+This is enough for a driving stack that plans from object lists rather than images: it can take ground-truth bounding boxes from a server that has no GPU, so its tests can run on CPU machines, many servers can run side by side, and the GPU stays free for the stack itself.
+
+__How fast it runs.__ With no cameras, the simulation is bound by vehicle physics and the Traffic Manager, not by rendering, so a GPU does not make it faster. `Town10HD_Opt` in synchronous mode at 0.05 s per tick, NPC vehicles on Traffic Manager autopilot, editor build with `-nullrhi`, on an 8-core Intel Core i9-9900K with nothing else running:
+
+| NPC vehicles | Ticks per second | Real-time factor | Tick time p50 / p95 |
+| ------------ | ---------------- | ---------------- | ------------------- |
+| 0 | 1201 | 60x | 0.7 / 1.1 ms |
+| 10 | 184 | 9.2x | 5.4 / 6.2 ms |
+| 30 | 58 | 2.9x | 17.2 / 18.9 ms |
+| 60 | 29 | 1.46x | 32.6 / 52.0 ms |
+| 100 | 23 | 1.16x | 43.2 / 46.9 ms |
+| 150 | 18 | 0.91x | 54.5 / 63.3 ms |
+
+Run side by side under the same background load, a server rendering on an RTX 3090 with no-rendering mode on ran within 5 % of the `-nullrhi` server from 30 vehicles up, and slower with fewer vehicles. `PythonAPI/util/headless_benchmark.py` reproduces the table against any server.
 
 ---
 ## Off-screen rendering mode

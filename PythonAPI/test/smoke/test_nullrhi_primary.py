@@ -51,3 +51,33 @@ class TestNullRhiPrimary(SyncSmokeTest):
         imu.destroy()
 
         self.assertGreater(len(received), 0, "IMU sensor produced no data on a -nullrhi primary")
+
+    def test_cpu_sensors_deliver_without_gpu(self):
+        """LiDAR, semantic LiDAR, radar and GNSS deliver on a -nullrhi server.
+
+        They are ray casts and physics queries, not scene captures, so they need
+        no GPU (Docs/core_rendering.md, "Running without a GPU"). The IMU is
+        covered above."""
+        library = self.world.get_blueprint_library()
+        spawn_point = self.world.get_map().get_spawn_points()[0]
+        vehicle = self.world.spawn_actor(library.filter('vehicle.*')[0], spawn_point)
+        sensors = []
+        counts = {}
+        try:
+            for sensor_id in ('sensor.lidar.ray_cast', 'sensor.lidar.ray_cast_semantic',
+                              'sensor.other.radar', 'sensor.other.gnss'):
+                sensor = self.world.spawn_actor(
+                    library.find(sensor_id), carla.Transform(carla.Location(z=2.0)), attach_to=vehicle)
+                sensors.append(sensor)
+                counts[sensor_id] = 0
+                sensor.listen(lambda data, key=sensor_id: counts.__setitem__(key, counts[key] + 1))
+            for _ in range(40):
+                self.world.tick()
+            time.sleep(1.0)
+            for sensor_id, count in counts.items():
+                self.assertGreater(count, 0, f'{sensor_id} delivered nothing on a -nullrhi server')
+        finally:
+            for sensor in sensors:
+                sensor.stop()
+                sensor.destroy()
+            vehicle.destroy()
