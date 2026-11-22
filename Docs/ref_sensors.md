@@ -844,9 +844,33 @@ This sensor simulates a rotating LIDAR implemented using ray-casting that expose
 
 *   The raw data retrieved by the semantic LIDAR includes more data per point.
 	*   Coordinates of the point (as the normal LIDAR does).
+	*   Simulated atmospheric attenuation intensity.
 	*   The cosine between the angle of incidence and the normal of the surface hit.
 	*   Instance and semantic ground-truth. Basically the index of the CARLA object hit, and its semantic tag.
-*   The semantic LIDAR does not include neither intensity, drop-off nor noise model attributes.
+*   The semantic LIDAR does not include drop-off or noise model attributes.
+
+Each semantic point is stored in this exact packed 28-byte layout:
+
+| Offset | Field | Type |
+|--------|-------|------|
+| 0 | `x` | `float32` |
+| 4 | `y` | `float32` |
+| 8 | `z` | `float32` |
+| 12 | `intensity` | `float32` |
+| 16 | `cos_inc_angle` | `float32` |
+| 20 | `object_idx` | `uint32` |
+| 24 | `object_tag` | `uint32` |
+
+The intensity is the existing CARLA atmospheric attenuation approximation:
+
+```text
+intensity = exp(-atmosphere_attenuation_rate * distance)
+```
+
+Here, `distance` is the Euclidean length of the sensor-relative point (`detection.point`). The `atmosphere_attenuation_rate` attribute defaults to `0.004`. This value is a simulated atmospheric attenuation coefficient, not a physically based material-reflectance model.
+
+!!! warning
+    The semantic LiDAR binary record is now 28 bytes instead of 24 bytes. Consumers that parse `raw_data` with fixed byte offsets or the old 24-byte point stride must update all offsets and increment their stride to 28 bytes.
 
 The points are computed by adding a laser for each channel distributed in the vertical FOV. The rotation is simulated computing the horizontal angle that the LIDAR rotated in a frame. The point cloud is calculated by doing a ray-cast for each laser in every step.
 ```text

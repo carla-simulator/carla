@@ -246,6 +246,8 @@ void ARayCastSemanticLidar::ComputeRawDetection(const FHitResult& HitInfo, const
 
     const FVector HitPoint = HitInfo.ImpactPoint;
     Detection.point = InverseSensorTransform.TransformPosition(HitPoint);
+    const float Distance = Detection.point.Length();
+    Detection.intensity = exp(-Description.AtmospAttenRate * Distance);
 
     const FVector VecInc = - (HitPoint - SensorLocation).GetSafeNormal();
     Detection.cos_inc_angle = FVector::DotProduct(VecInc, HitInfo.ImpactNormal);

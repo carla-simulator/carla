@@ -14,7 +14,7 @@ namespace ros2 {
 namespace {
 
 // Wire-compatible POD mirror of sensor::data::SemanticLidarDetection:
-// {x, y, z, cos_inc_angle, object_idx, object_tag}. The real struct lives
+// {x, y, z, intensity, cos_inc_angle, object_idx, object_tag}. The real struct lives
 // behind carla/sensor/data/SemanticLidarData.h, which transitively pulls
 // Boost; that header chain is unavailable in the carla-ros2-native
 // ExternalProject include path. Layout pinned by kSemanticLidarFields in
@@ -23,14 +23,15 @@ struct SemanticLidarPoint {
   float x;
   float y;
   float z;
+  float intensity;
   float cos_inc_angle;
   std::uint32_t object_idx;
   std::uint32_t object_tag;
 };
 
 static_assert(
-    sizeof(SemanticLidarPoint) == 24u,
-    "SemanticLidarPoint must be tightly packed (4 float32s + 2 uint32s) for the wire layout");
+    sizeof(SemanticLidarPoint) == 28u,
+    "SemanticLidarPoint must be tightly packed (5 float32s + 2 uint32s) for the wire layout");
 
 }  // namespace
 

@@ -142,6 +142,7 @@ namespace data {
     out << "SemanticLidarDetection(x=" << std::to_string(det.point.x)
         << ", y=" << std::to_string(det.point.y)
         << ", z=" << std::to_string(det.point.z)
+        << ", intensity=" << std::to_string(det.intensity)
         << ", cos_inc_angle=" << std::to_string(det.cos_inc_angle)
         << ", object_idx=" << std::to_string(det.object_idx)
         << ", object_tag=" << std::to_string(det.object_tag)
@@ -548,6 +549,7 @@ void export_sensor_data() {
 
   class_<csd::SemanticLidarDetection>("SemanticLidarDetection")
     .def_readwrite("point", &csd::SemanticLidarDetection::point)
+    .def_readwrite("intensity", &csd::SemanticLidarDetection::intensity)
     .def_readwrite("cos_inc_angle", &csd::SemanticLidarDetection::cos_inc_angle)
     .def_readwrite("object_idx", &csd::SemanticLidarDetection::object_idx)
     .def_readwrite("object_tag", &csd::SemanticLidarDetection::object_tag)

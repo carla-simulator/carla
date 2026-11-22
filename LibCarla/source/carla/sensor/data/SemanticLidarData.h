@@ -40,15 +40,13 @@ namespace data {
   ///      Point count of channel n,
   ///    }
   ///
-  /// The points are stored in an array of detections, each detection consist in
-  /// four floats, the point detected and the angle between the casted ray and
-  /// the normal of the hitted object, and two unsigned integers, the index
-  /// and the semantic tag of the hitted object
+  /// The points are stored in an array of detections in the layout
+  /// X, Y, Z, Intensity, CosAngle, ObjectIdx, ObjectTag.
   ///
   ///    {
-  ///      X0, Y0, Z0, Cos(TH0), idx_0, tag_0
+  ///      X0, Y0, Z0, I0, Cos(TH0), idx_0, tag_0
   ///      ...
-  ///      Xn, Yn, Zn, Cos(THn), idx_n, tag_n
+  ///      Xn, Yn, Zn, In, Cos(THn), idx_n, tag_n
   ///    }
   ///
 
@@ -56,21 +54,23 @@ namespace data {
   class SemanticLidarDetection {
     public:
       geom::Location point{};
+      float intensity{};
       float cos_inc_angle{};
       uint32_t object_idx{};
       uint32_t object_tag{};
 
       SemanticLidarDetection() = default;
 
-      SemanticLidarDetection(float x, float y, float z, float cosTh, uint32_t idx, uint32_t tag) :
-          point(x, y, z), cos_inc_angle{cosTh}, object_idx{idx}, object_tag{tag} { }
-      SemanticLidarDetection(geom::Location p, float cosTh, uint32_t idx, uint32_t tag) :
-          point(p), cos_inc_angle{cosTh}, object_idx{idx}, object_tag{tag} { }
+      SemanticLidarDetection(float x, float y, float z, float intensity, float cosTh, uint32_t idx, uint32_t tag) :
+          point(x, y, z), intensity{intensity}, cos_inc_angle{cosTh}, object_idx{idx}, object_tag{tag} { }
+      SemanticLidarDetection(geom::Location p, float intensity, float cosTh, uint32_t idx, uint32_t tag) :
+          point(p), intensity{intensity}, cos_inc_angle{cosTh}, object_idx{idx}, object_tag{tag} { }
 
       void WritePlyHeaderInfo(std::ostream& out) const{
         out << "property float32 x\n" \
            "property float32 y\n" \
            "property float32 z\n" \
+           "property float32 I\n" \
            "property float32 CosAngle\n" \
            "property uint32 ObjIdx\n" \
            "property uint32 ObjTag";
@@ -78,9 +78,10 @@ namespace data {
 
       void WriteDetection(std::ostream& out) const{
         out << point.x << ' ' << point.y << ' ' << point.z << ' ' \
-          << cos_inc_angle << ' ' << object_idx << ' ' << object_tag;
+          << intensity << ' ' << cos_inc_angle << ' ' << object_idx << ' ' << object_tag;
       }
   };
+  static_assert(sizeof(SemanticLidarDetection) == 28u, "SemanticLidarDetection must be a 28-byte packed record");
   #pragma pack(pop)
 
   class SemanticLidarData {
