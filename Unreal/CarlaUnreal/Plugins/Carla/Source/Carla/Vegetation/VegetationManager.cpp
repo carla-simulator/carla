@@ -236,7 +236,6 @@ void AVegetationManager::BeginPlay()
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(AVegetationManager::BeginPlay);
   Super::BeginPlay();
-  LargeMap = UCarlaStatics::GetLargeMapManager(GetWorld());
   FWorldDelegates::LevelAddedToWorld.AddUObject(this, &AVegetationManager::OnLevelAddedToWorld);
   FWorldDelegates::LevelRemovedFromWorld.AddUObject(this, &AVegetationManager::OnLevelRemovedFromWorld);
   FCoreDelegates::PostWorldOriginOffset.AddUObject(this, &AVegetationManager::PostWorldOriginOffset);
@@ -249,9 +248,7 @@ void AVegetationManager::Tick(float DeltaTime)
     TRACE_CPUPROFILER_EVENT_SCOPE(Parent Tick);
     Super::Tick(DeltaTime);
   }
-  if (!LargeMap)
-    return;
-  HeroVehicle = LargeMap->GetHeroVehicle();
+  // The hero comes from AddVehicle.
   if (!IsValid(HeroVehicle))
       return;
     

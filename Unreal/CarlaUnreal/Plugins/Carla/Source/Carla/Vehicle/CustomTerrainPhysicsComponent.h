@@ -8,7 +8,6 @@
 
 #include "Carla/Math/DVector.h"
 #include "Carla/Vehicle/CarlaWheeledVehicle.h"
-#include "Carla/MapGen/LargeMapManager.h"
 #ifdef WITH_PYTORCH
 THIRD_PARTY_INCLUDES_START
 #include <carla/pytorch/pytorch.h>
@@ -26,6 +25,7 @@ THIRD_PARTY_INCLUDES_END
 #include "Misc/ScopeLock.h"
 #include <util/ue-header-guard-end.h>
 
+#include <set>
 #include <unordered_map>
 #include <vector>
 #include <string>
@@ -509,8 +509,6 @@ private:
   UPROPERTY(EditAnywhere)
   FVector HeightMapScaleFactor = FVector(1, 1, 1);
   UPROPERTY(EditAnywhere)
-  FVector HeightMapOffset = FVector(0, 0, 0);
-  UPROPERTY(EditAnywhere)
   bool bBenchMark = false;
   UPROPERTY(EditAnywhere)
   int MaxParticlesPerWheel = 6000;
@@ -518,20 +516,6 @@ private:
   UPROPERTY(EditAnywhere)
   FVector Radius = FVector(10,10,10);
   
-  UPROPERTY(VisibleAnywhere)
-  FIntVector CurrentLargeMapTileId = FIntVector(-1,-1,0);
-  UPROPERTY(VisibleAnywhere)
-  TObjectPtr<ALargeMapManager> LargeMapManager = nullptr;
-
-  // Async heightmap streaming state.
-  // ActiveHeightMap keeps the most recently applied data asset rooted for GC
-  // while the streaming handle is the primary owner during the in-flight load.
-  UPROPERTY(Transient, DuplicateTransient)
-  TObjectPtr<UHeightMapDataAsset> ActiveHeightMap = nullptr;
-  TSharedPtr<FStreamableHandle> PendingHeightMapHandle;
-  FIntVector PendingHeightMapTileId = FIntVector(-1, -1, 0);
-
-  void OnHeightMapLoaded();
 
   UPROPERTY()
   TArray<TObjectPtr<ACarlaWheeledVehicle>> Vehicles;

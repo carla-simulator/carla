@@ -2,8 +2,6 @@
 
 #pragma once
 
-#include "Carla/MapGen/LargeMapManager.h"
-
 #include <util/ue-header-guard-begin.h>
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
@@ -54,9 +52,16 @@ private:
   UPROPERTY(EditAnywhere)
   TMap<FIntVector, FSoilTerramechanicsProperties> TilesTerrainProperties;
 
+  /// Side of a soil tile, in centimetres.
   UPROPERTY(EditAnywhere)
-  ALargeMapManager* LargeMapManager;
-  
+  float TileSize = 2.0f * 1000.0f * 100.0f; // 2 km
+
+  /// Centre of tile (0, 0).
+  UPROPERTY(EditAnywhere)
+  FVector Tile0Offset = FVector(0, 0, 0);
+
+  FIntVector GetTileVectorID(const FVector &Location) const;
+
 public:  
   // Sets default values for this actor's properties
   ASoilTypeManager();

@@ -155,7 +155,7 @@
     - var_name: spectator_as_ego
       type: bool
       doc: >
-        Used for large maps only. Defines the influence of the spectator on tile loading in Large Maps. By default, the spectator will provoke loading of neighboring tiles in the absence of an ego actor. This might be inconvenient for applications that immediately spawn an ego actor.
+        Has no effect. It configured the spectator's influence on tile loading in the legacy tiled large maps, and it is kept so that scripts which set it keep working.
     - var_name: adjust_signs_height_to_ground
       type: bool
       doc: >
@@ -212,7 +212,7 @@
         type: bool
         default: True
         doc: >
-          Used for large maps only. Defines the influence of the spectator on tile loading in Large Maps.
+          Has no effect. It configured the legacy tiled large maps, and it is kept so that scripts which set it keep working.
       - param_name: adjust_signs_height_to_ground
         type: bool
         default: False

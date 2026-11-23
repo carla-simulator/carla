@@ -6,7 +6,6 @@
 
 #include "Commandlet/CarlaLargeMapConvertCommandlet.h"
 
-#include "Carla/MapGen/LargeMapManager.h"
 
 #include <util/ue-header-guard-begin.h>
 #include "Engine/DirectionalLight.h"
@@ -174,15 +173,13 @@ void UCarlaLargeMapConvertCommandlet::OnWorldLoaded(UWorld* World)
           *Actor->GetName(), *Actor->GetClass()->GetName());
       World->DestroyActor(Actor);
     }
-    // The legacy tile manager destroys itself at BeginPlay on World Partition
-    // worlds, but its saved MapTiles property still holds object references
-    // to the ULevelStreamingDynamic tiles this conversion deletes -- leaving
-    // it in the map produces a failed-import load error per tile on every
-    // subsequent load (and forces commandlets into exit code 1).
-    else if (Actor->IsA<ALargeMapManager>())
+    // The legacy tile manager. Its class is gone and DefaultEngine.ini
+    // redirects it to a plain AActor; it has no use on a World Partition map.
+    else if (Actor->GetClass() == AActor::StaticClass() &&
+             Actor->GetName().StartsWith(TEXT("LargeMapManager")))
     {
       UE_LOG(LogCarlaLargeMapConvert, Display, TEXT(
-          "Dropping legacy ALargeMapManager %s; World Partition streams natively."),
+          "Dropping legacy LargeMapManager %s; World Partition streams natively."),
           *Actor->GetName());
       World->DestroyActor(Actor);
     }
@@ -234,7 +231,7 @@ void UCarlaLargeMapConvertCommandlet::OnWorldLoaded(UWorld* World)
       continue;
     }
 
-    // Parse "<Map>_Tile_<X>_<Y>" (same convention as ALargeMapManager).
+    // Parse "<Map>_Tile_<X>_<Y>" (the legacy tiled-map convention).
     const FString TileName = FPackageName::GetShortName(Tile.PackageName);
     TArray<FString> Parts;
     TileName.ParseIntoArray(Parts, TEXT("_"), false);
@@ -248,8 +245,8 @@ void UCarlaLargeMapConvertCommandlet::OnWorldLoaded(UWorld* World)
     const int32 TileX = FCString::Atoi(*Parts[Parts.Num() - 2]);
     const int32 TileY = FCString::Atoi(*Parts[Parts.Num() - 1]);
 
-    // ALargeMapManager::GetTileLocation: (X, -Y, 0) * TileSide + Tile0Offset,
-    // where the cooked Tile0Offset equals the TilesInfo.txt first tile center.
+    // The legacy tile placement: (X, -Y, 0) * TileSide + Tile0Offset, where
+    // Tile0Offset is the TilesInfo.txt first tile center.
     const FVector TileLocation(
         FirstTileCenterX + TileSide * TileX,
         FirstTileCenterY - TileSide * TileY,
