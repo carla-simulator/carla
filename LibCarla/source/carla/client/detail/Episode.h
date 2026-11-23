@@ -70,21 +70,23 @@ namespace detail {
 
     std::vector<rpc::Actor> GetActors();
 
-    /// The static actors a server running with -carla-omit-static-actors
-    /// leaves out of the episode state, with the episode-state version they
-    /// were fetched at.
+    /// The actors the server leaves out of the episode state because they
+    /// cannot move (static props, traffic signs), and the episode and
+    /// static-actors version (EpisodeState::GetStaticActorsVersion) they were
+    /// fetched at.
     struct StaticActors {
-      uint64_t version = 0u;
+      uint64_t episode_id = 0u;
+      uint32_t version = 0u;
       std::unordered_map<ActorId, ActorSnapshot> actors;
     };
 
-    /// The current static actors, or nullptr when the server sends every actor
-    /// in the episode state (the default). Fetched with one call the first
-    /// time they are needed after the set changed, never on the stream thread.
+    /// The current static actors. Fetched with one call the first time they
+    /// are needed after the episode state reports a new version, never on the
+    /// stream thread. GetActors() does not list them.
     std::shared_ptr<const StaticActors> GetStaticActors();
 
-    /// The snapshot of an omitted static actor (transform, Active state, no
-    /// motion), or nothing.
+    /// The snapshot of a static actor (transform, Active state, no motion, the
+    /// sign id of a traffic sign), or nothing. Does not throw.
     std::optional<ActorSnapshot> GetStaticActorSnapshot(ActorId id);
 
     std::optional<WorldSnapshot> WaitForState(time_duration timeout) {
@@ -155,10 +157,6 @@ namespace detail {
     AtomicSharedPtr<WalkerNavigation> _walker_navigation;
 
     AtomicSharedPtr<const StaticActors> _static_actors;
-
-    /// Bumped by the stream thread on frames whose static actors changed and
-    /// on episode changes; a cached StaticActors older than this is refetched.
-    std::atomic<uint64_t> _static_version{1u};
 
     std::mutex _static_mutex;
 

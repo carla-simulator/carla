@@ -214,8 +214,8 @@ namespace detail {
 
     std::vector<rpc::Actor> GetActorsById(const std::vector<ActorId> &ids);
 
-    /// Ids and transforms of the actors a server running with
-    /// -carla-omit-static-actors leaves out of the episode state.
+    /// The actors the server leaves out of the episode state because they
+    /// cannot move.
     std::vector<rpc::StaticActor> GetStaticActors();
 
     rpc::VehiclePhysicsControl GetVehiclePhysicsControl(rpc::ActorId vehicle) const;

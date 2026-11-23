@@ -60,15 +60,11 @@ namespace detail {
       return (_simulation_state & SimulationState::PendingLightUpdate)  != 0;
     }
 
-    /// The server left its static actors out of this frame
-    /// (-carla-omit-static-actors).
-    bool AreStaticActorsOmitted() const {
-      return (_simulation_state & SimulationState::StaticActorsOmitted) != 0;
-    }
-
-    /// The set of static actors changed since the previous frame.
-    bool HaveStaticActorsChanged() const {
-      return (_simulation_state & SimulationState::StaticActorsChanged) != 0;
+    /// Version of the set of static actors, which are not in this state (see
+    /// Episode::GetStaticActors). 0 until the first state arrives.
+    uint32_t GetStaticActorsVersion() const {
+      return static_cast<uint32_t>(_simulation_state) >>
+          sensor::s11n::EpisodeStateSerializer::static_actors_version_shift;
     }
 
     bool ContainsActorSnapshot(ActorId actor_id) const {
@@ -121,7 +117,7 @@ namespace detail {
 
     geom::Vector3DInt _map_origin;
 
-    SimulationState _simulation_state;
+    SimulationState _simulation_state = SimulationState::None;
 
     std::unordered_map<ActorId, ActorSnapshot> _actors;
   };

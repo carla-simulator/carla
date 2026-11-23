@@ -32,23 +32,23 @@ public:
     return Stream.GetToken();
   }
 
-  /// Leave static actors (IsStaticActor) out of the per-tick episode state
-  /// (-carla-omit-static-actors). Clients get them once through the
-  /// "get_static_actors" call, again only when the frame says they changed.
-  void SetOmitStaticActors(bool bOmit)
-  {
-    bOmitStaticActors = bOmit;
-  }
-
-  bool OmitsStaticActors() const
-  {
-    return bOmitStaticActors;
-  }
-
-  /// An actor that cannot move or change by itself: not dormant, of type
-  /// Other, its root primitive Static and not simulating physics, and not
-  /// attached to another actor (a static.prop.mesh spawned without mass).
+  /// An actor that cannot move: active, of type Other or TrafficSign, not
+  /// attached to another actor, with a Static root that simulates no physics
+  /// (a static.prop.mesh spawned without mass, a traffic sign). Static actors
+  /// are left out of the per-tick episode state; clients get them through the
+  /// "get_static_actors" call, again only when the episode state says they
+  /// changed. A traffic light is never static: its state changes.
   static bool IsStaticActor(const FCarlaActor &View);
+
+  /// Order-independent hash and count of the static actors (ids and
+  /// transforms) in the previous tick, and the version sent in the episode
+  /// state, which changes when they do.
+  struct FStaticActors
+  {
+    uint64 Hash = 0u;
+    int32 Count = -1;
+    uint32 Version = 0u;
+  };
 
   /// Send a message to every connected client with the info about the given @a
   /// Episode.
@@ -68,12 +68,5 @@ private:
 
   FDataMultiStream Stream;
 
-  bool bOmitStaticActors = false;
-
-  /// Order-independent hash and count of the static actors (ids and
-  /// transforms) in the previous frame: a frame whose set differs is flagged
-  /// StaticActorsChanged.
-  uint64 StaticActorsHash = 0u;
-
-  int32 StaticActorsCount = -1;
+  FStaticActors StaticActors;
 };

@@ -241,12 +241,6 @@ void FCarlaEngine::NotifyInitGame(const UCarlaSettings &Settings)
       auto BroadcastStream = Server.Start(Settings.RPCPort, StreamingPort, SecondaryPort);
       Server.AsyncRun(FCarlaEngine_GetNumberOfThreadsForRPCServer());
       WorldObserver.SetStream(BroadcastStream);
-      WorldObserver.SetOmitStaticActors(Settings.bOmitStaticActors);
-      if (Settings.bOmitStaticActors)
-      {
-        UE_LOG(LogCarla, Log,
-            TEXT("Static actors are left out of the per-tick episode state (-carla-omit-static-actors)"));
-      }
     }
     catch (const std::exception &e)
     {

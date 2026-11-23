@@ -7,7 +7,9 @@
 #include "Carla/Server/CarlaServer.h"
 #include "Carla.h"
 #include "Carla/Server/CarlaServerResponse.h"
+#include "Carla/Traffic/SignComponent.h"
 #include "Carla/Traffic/TrafficLightGroup.h"
+#include "Carla/Traffic/TrafficSignBase.h"
 #include "Carla/OpenDrive/OpenDrive.h"
 #include "Carla/OpenDrive/OpenDriveGenerator.h"
 #include "Carla/Util/DebugShapeDrawer.h"
@@ -1197,8 +1199,9 @@ void FCarlaServer::FPimpl::BindActions()
     return Result;
   };
 
-  // The actors a server with -carla-omit-static-actors leaves out of the
-  // episode state; clients call this when a frame says the set changed.
+  // The actors left out of the episode state because they cannot move (see
+  // FWorldObserver::IsStaticActor); clients call this when the episode state
+  // says the set changed.
   BIND_SYNC(get_static_actors) << [this]() -> R<std::vector<cr::StaticActor>>
   {
     REQUIRE_CARLA_EPISODE();
@@ -1211,6 +1214,12 @@ void FCarlaServer::FPimpl::BindActions()
         cr::StaticActor Item;
         Item.id = View->GetActorId();
         Item.transform = cr::Transform(View->GetActorGlobalTransform());
+        const auto *Sign = Cast<ATrafficSignBase>(View->GetActor());
+        const auto *SignComponent = Sign ? Sign->FindComponentByClass<USignComponent>() : nullptr;
+        if (SignComponent != nullptr)
+        {
+          Item.sign_id = cr::FromFString(SignComponent->GetSignId());
+        }
         Result.emplace_back(Item);
       }
     }

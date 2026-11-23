@@ -162,10 +162,6 @@ void UCarlaSettings::LoadSettings()
     {
       bDisableRendering = true;
     }
-    if (FParse::Param(FCommandLine::Get(), TEXT("-carla-omit-static-actors")))
-    {
-      bOmitStaticActors = true;
-    }
     // FParse::Param only matches single-dash switches; also accept the
     // historically documented "--ros2" spelling so it does not silently no-op.
     if (FParse::Param(FCommandLine::Get(), TEXT("-ros2")) ||
