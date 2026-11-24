@@ -44,7 +44,7 @@ MotionPlanStage::MotionPlanStage(
   const CollisionFrame&collision_frame,
   const TLFrame &tl_frame,
   ControlFrame &output_array,
-  RandomGenerator &random_device,
+  UniformPRNG &random_device,
   const LocalMapPtr &local_map,
   std::unordered_map<ActorId, std::pair<float, bool>> &large_vehicles)
     : vehicle_id_list(vehicle_id_list),

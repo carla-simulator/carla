@@ -35,6 +35,7 @@ nav:
     - 'Actors and Blueprints': 'core_actors.md'
     - Maps and Navigation:
       - 'core_map.md'
+      - 'Geographic coordinates': 'core_geocoordinates.md'
       - 'Large maps': 'core_large_maps.md'
       - 'OpenDRIVE standalone mode': 'core_opendrive.md'
     - 'Multi-GPU': 'core_multigpu.md'
