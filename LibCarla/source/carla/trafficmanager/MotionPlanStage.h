@@ -8,7 +8,7 @@
 #include "carla/trafficmanager/InMemoryMap.h"
 #include "carla/trafficmanager/LocalizationUtils.h"
 #include "carla/trafficmanager/Parameters.h"
-#include "carla/trafficmanager/RandomGenerator.h"
+#include "carla/trafficmanager/UniformPRNG.h"
 #include "carla/trafficmanager/SimulationState.h"
 #include "carla/trafficmanager/Stage.h"
 #include "carla/trafficmanager/TrackTraffic.h"
@@ -55,7 +55,7 @@ private:
   std::unordered_map<ActorId, RecoveryState> recovery_state;
   ControlFrame &output_array;
   cc::Timestamp current_timestamp;
-  RandomGenerator &random_device;
+  UniformPRNG &random_device;
   const LocalMapPtr &local_map;
   std::unordered_map<ActorId, std::pair<float, bool>> &large_vehicles;
 
@@ -107,7 +107,7 @@ public:
                   const CollisionFrame &collision_frame,
                   const TLFrame &tl_frame,
                   ControlFrame &output_array,
-                  RandomGenerator &random_device,
+                  UniformPRNG &random_device,
                   const LocalMapPtr &local_map,
                   std::unordered_map<ActorId, std::pair<float, bool>> &large_vehicles);
 

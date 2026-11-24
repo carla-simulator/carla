@@ -29,7 +29,7 @@
 #include "carla/Memory.h"
 #include "carla/road/RoadTypes.h"
 
-#include "carla/trafficmanager/RandomGenerator.h"
+#include "carla/trafficmanager/UniformPRNG.h"
 #include "carla/trafficmanager/SimpleWaypoint.h"
 #include "carla/trafficmanager/CachedSimpleWaypoint.h"
 
