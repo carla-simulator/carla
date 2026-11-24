@@ -50,6 +50,11 @@ world = client.load_world('Town13')
 
 ## Making a pack
 
+!!! agent "Agentic CARLA"
+    *"Make a content pack with Town03_Opt and these FBX traffic cones, for my CARLA package, and install it."*
+
+    Skills: `create-carla-content-pack`, `install-carla-content-pack`, `manage-content-packs`. [Set up Agentic CARLA](agent_skills.md#set-up-agentic-carla).
+
 ### Requirements
 
 * A CARLA [source build](build_carla.md) with the Unreal Editor (the cooker is the editor binary). `CARLA_UNREAL_ENGINE_PATH` must point at the engine, as for any CARLA build (`--engine` overrides).
@@ -142,7 +147,7 @@ carla-pack add NewPack --asset SM_Thing.uasset --dest Static/Static/
 * `--map` (repeatable) registers a map in the manifest and copies its sidecar files to `Maps/OpenDrive/<Map>.xodr`, `Maps/Nav/<Map>.bin` and `Maps/TM/<Map>/`. The map may be a name (looked up under the project's and the pack's content folders), a package path or a `.umap` file:
     * a __project map__ (under the project's `Content`, i.e. a CARLA town) is registered in place at its `/Game/...` package, exactly as `create` does;
     * a map __already under the pack's `Content`__ is registered under its own path (`/NewPack/Maps/NewTown`);
-    * `--import` makes a __copy under the pack root__ instead of registering a project map in place (a map of another plugin has no path in the packaged server, so it is always imported this way): `carla-pack` starts the headless editor (`UnrealEditor-Cmd`, from `CARLA_UNREAL_ENGINE_PATH` or `--engine`) with the pack enabled and performs a Save As of the map to `/NewPack/Maps/<same layout>`, which carries a World Partition map's external actors along; the copy is then yours to edit without touching CARLA's content. Save As also re-saves the source map; `carla-pack` puts the original bytes back and reports any other file the editor touched next to it. Slow for large World Partition towns (Town12, 81k actors: 5 minutes; Town13, 359k actors: over 40 minutes and 30 GB of RAM); `<pack>/Saved/CarlaPack/import-<Map>.log` has the editor output if it fails. `--copy` skips the editor and copies the file as-is, only right for a map whose package name was already rewritten.
+    * `--import` makes a __copy under the pack root__ instead of registering a project map in place (a map of another plugin has no path in the packaged server, so it is always imported this way): `carla-pack` starts the headless editor (`UnrealEditor-Cmd`, from `CARLA_UNREAL_ENGINE_PATH` or `--engine`) with the pack enabled and performs a Save As of the map to `/NewPack/Maps/<same layout>`, which carries a World Partition map's external actors along; the copy is then yours to edit without touching CARLA's content. Save As also re-saves the source map; `carla-pack` puts the original bytes back and reports any other file the editor touched next to it. Slow for large World Partition towns (Town12, 81k actors: 5 minutes; Town13, 359k actors: over 40 minutes and 30 GB of RAM); `<pack>/Saved/CarlaPack/import-<Map>.log` has the editor output if it fails. `--copy` skips the editor and copies the file as-is, only right for a map whose package name was already rewritten. While an imported copy sits under `Plugins/Packs/`, its town's name is ambiguous to every pack: `add`/`create` of that town by name in any other pack, the `package-additional-maps` target included, stops with `2 maps are called <Town>; pass the one you mean`. Pass the package path (`/Game/Carla/Maps/<Town>`) instead, or move the importing pack out of `Plugins/Packs/` while you build the others.
     * Without `--xodr`/`--nav`/`--tm` the sidecars of a map outside the pack are picked up from CARLA's locations (see A); with several `--map`, they are picked up for each outside map. For a map already under the pack's `Content`, omitted flags keep its registered sidecar files. Pass a flag only for the sidecar you want to replace, or `--no-xodr`, `--no-nav` or `--no-tm` to unregister one and delete the staged file. World Partition maps are detected from their `__ExternalActors__/…/<Map>` folder; `--world-partition` forces the flag.
 * The catalog options validate the JSON against the shapes below, copy the file to `Content/Config/` under its canonical name and list it in the manifest. Asset paths that are neither under `/NewPack/` nor `/Game/` are reported: they cannot resolve once the pack is mounted.
 * `--asset` copies any file or folder under `Content/<dest>`.
@@ -205,7 +210,7 @@ __Walkers__ — `--walkers`, written as `Config/WalkerParameters.json` (`walker.
 }
 ```
 
-__Blueprints__ — `--blueprints`, written as `Config/BlueprintParameters.json` (arbitrary spawnable actors, `static.blueprint.<name>`):
+__Blueprints__ — `--blueprints`, written as `Config/BlueprintParameters.json` (arbitrary spawnable actors, `blueprint.<name>` in lowercase):
 
 ```json
 { "Blueprints": [ { "Name": "SmartTrafficLight", "Path": "/NewPack/Blueprints/BP_SmartTrafficLight.BP_SmartTrafficLight" } ] }
@@ -263,7 +268,7 @@ A map can carry DigitalTwin traffic-light timing in a `map_logic.json` next to i
 ---
 ## Installing a pack
 
-A CARLA package finds packs in three places, all read at start: `<package>/CarlaUnreal/Packs/*/` (next to the package's own `Content/Paks`), the directories given on the server command line as `-carla-packs=<dir>[;<dir>...]` (one flag, directories separated by `;`, quoted if a path has spaces), and those in `$CARLA_PACKS` (also separated by `;`). Each of these is a parent directory: every subfolder holding a `carla-pack.json` is a pack. A pack found there is mounted before the first episode: its maps show up in `client.get_available_maps()`, its vehicles, walkers and props in `world.get_blueprint_library()`. `Packs/` is the only supported drop-in location — do not put packs under the package's `Plugins/` folder. A pack that fails to mount does not stop the server: the server log shows `Content packs: '<manifest>' not mounted: <reason>`, so check the log when a map or blueprint is missing.
+A CARLA package finds packs in three places, all read at start: `<package>/CarlaUnreal/Packs/*/` (next to the package's own `Content/Paks`), the directories given on the server command line as `-carla-packs=<dir>[;<dir>...]` (one flag, directories separated by `;`, quoted if a path has spaces), and those in `$CARLA_PACKS` (also separated by `;`). Each of these is a parent directory: every subfolder holding a `carla-pack.json` is a pack. A pack found there is mounted before the first episode: its maps show up in `client.get_available_maps()`, its vehicles, walkers and props in `world.get_blueprint_library()`. `Packs/` is the only supported drop-in location — do not put packs under the package's `Plugins/` folder. A pack that fails to mount does not stop the server. A Development package logs `Content packs: '<manifest>' not mounted: <reason>`; a Shipping package logs nothing and the pack is just missing from `client.get_content_packs()`. To read the reason on any build, mount the folder from the Python API: `client.mount_content_pack('<package>/CarlaUnreal/Packs/<Pack>')` raises `RuntimeError` with it.
 
 ### Drop-in install
 
@@ -314,7 +319,7 @@ client.unmount_content_pack('NewPack')                                          
 
 `mount_content_pack` returns the pack's `ContentPackInfo` and raises `RuntimeError` with the reason when the path holds no pack or its manifest is invalid, the `.uplugin` is missing, the base release or platform does not match the server, a pack or plugin of the same name is already mounted, or its containers cannot be mounted. A tarball must be extracted first. The pack's vehicles, walkers and props are available immediately: mounting adds them to the blueprint library, so `world.get_blueprint_library()` lists them without an episode change. An entry that overrides an existing blueprint (same `make.model`, or the same name) only takes effect at the next episode. Loading one of the pack's __maps__ still requires `client.load_world(...)`.
 
-`get_content_packs` also lists packs that are known but unmounted (`mounted` is `False`); `mount_content_pack` mounts them again. `unmount_content_pack` returns `True`, and raises `RuntimeError` when the pack is unknown or not mounted, one of its maps is the current world (or streamed into it), the pack was mounted by the engine from `Plugins/` (restart instead), or an object from it is still alive. In that last case the pack's blueprints have already been removed from the library: `client.reload_world()` brings them back. Load another map before unmounting.
+`get_content_packs` also lists packs that are known but unmounted (`mounted` is `False`); `mount_content_pack` mounts them again. `unmount_content_pack` returns `True`, and raises `RuntimeError` when the pack is unknown or not mounted, one of its maps is the current world (or streamed into it), the pack was mounted by the engine from `Plugins/` (restart instead), or an object from it is still loaded (an actor using one of its meshes, for instance; actors of a pack's catalog entry whose class is a CARLA `/Game` asset do not count). A refused unmount changes nothing: the pack stays mounted and its blueprints stay in the library. Load another map and destroy the pack's actors before unmounting. After a successful unmount, `world.get_blueprint_library()` still lists the pack's blueprints until the next `client.load_world()` or `client.reload_world()`, for every client.
 
 ### Updating and removing
 
@@ -352,7 +357,7 @@ Inside the containers, content authored in the pack lives under its own mount po
 /NewPack/Blueprints/Vehicles/BP_Foo.uasset                 /NewPack/Blueprints/Walkers/BP_Bar.uasset
 ```
 
-CARLA towns shipped in place keep their `/Game/Carla/Maps/...` packages inside the pack's containers, together with the base-project assets they reference that the base did not cook. Nothing stops two packs from shipping the same town in place: both mount, the map name resolves to the pack mounted first, and which assets win is undefined. Keep each town in one pack.
+CARLA towns shipped in place keep their `/Game/Carla/Maps/...` packages inside the pack's containers, together with the base-project assets they reference that the base did not cook. Nothing stops two packs from shipping the same town in place: both mount, the map name resolves to the pack mounted first, and which assets win is undefined. The same holds for two maps with the same name at different paths, such as a town and an `add --import` copy of it: `get_available_maps()` lists the name once, and `load_world()` takes map names only, not package paths, so the other copy cannot be loaded. Keep each map name in one pack, and give an imported copy you edit its own name.
 
 Everything that is not a cooked asset — the catalogs, `.xodr`, navigation and Traffic Manager files — ships as loose files under the pack's `Content/` folder, where the server reads them. (Files inside a DLC container are addressed relative to the engine root and would be unreachable once the pack folder lives elsewhere.)
 
@@ -379,10 +384,11 @@ The manifest, `carla-pack.json`, is what CARLA reads when it mounts the pack. Th
 ## Limits
 
 * A pack targets __one base release__: same CARLA package, same engine binary, same cook settings. A new CARLA release means rebuilding the pack (`carla-pack build` again, minutes) — never re-packaging CARLA.
+* `carla-pack install` and the server compare only the base release __name__ (`carla-1.0-Linux`), which every build of one version shares. A pack cooked against another build of the same version is accepted, and if that build cooked more content than yours, the pack's towns load with assets missing. Install the pack built with the package, or compare the two registries with the `get-carla-additional-maps` skill (`pair`).
 * Building a pack needs the CARLA source build with the editor. Using a pack needs only the package.
 * Assets a pack references that are __not__ in the base release are cooked into the pack. That is correct, but a pack that references a whole asset library from another pack, or from a map the base did not cook, gets correspondingly large. Two packs never share content with each other.
 * A pack ships whole maps and new actors: CARLA towns the package left out, or maps of your own. Adding actors to a town the base package already ships (Town10HD_Opt, Town12, Town15) is out of scope for now, and a pack cannot replace a base map.
-* Pack names are global on a server: two packs called `NewPack` cannot be mounted at the same time. Two packs shipping the same town in place are not detected (see [What a pack is](#what-a-pack-is)).
+* Pack names are global on a server: two packs called `NewPack` cannot be mounted at the same time. Map names are global too: two packs that ship a map of the same name both mount without a warning, and only one of the two maps can be loaded (see [What a pack is](#what-a-pack-is)).
 * Updating a pack whose content has been loaded needs a server restart.
 
 ---
@@ -427,4 +433,4 @@ Yes. Cooked content is configuration independent; the same pack mounts on Develo
 
 __Can I edit a CARLA town for my pack?__
 
-Make your own copy first: `carla-pack add NewPack --map Town12 --import` performs the editor's Save As into `/NewPack/Maps/Town12/Town12` (minutes for a large World Partition town, see [Add maps, sidecar files and catalogs](#3-add-maps-sidecar-files-and-catalogs)), then edit that copy in the editor and `build`. The pack then ships the copy under `/NewPack/`, so it can be installed next to a pack that ships the original in place.
+Make your own copy first: `carla-pack add NewPack --map Town12 --import` performs the editor's Save As into `/NewPack/Maps/Town12/Town12` (minutes for a large World Partition town, see [Add maps, sidecar files and catalogs](#3-add-maps-sidecar-files-and-catalogs)), then edit that copy in the editor and `build`. The pack then ships the copy under `/NewPack/Maps/Town12/Town12`, still called `Town12`: on a server that also has the original (from the package or from another pack), only one of the two loads, because `load_world()` takes map names. Install it where the original is absent.

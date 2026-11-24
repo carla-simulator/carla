@@ -24,7 +24,7 @@ LocalizationStage::LocalizationStage(
   Parameters &parameters,
   std::vector<ActorId>& marked_for_removal,
   LocalizationFrame &output_array,
-  RandomGenerator &random_device)
+  UniformPRNG &random_device)
     : vehicle_id_list(vehicle_id_list),
     buffer_map(buffer_map),
     simulation_state(simulation_state),
@@ -224,8 +224,7 @@ void LocalizationStage::Update(const unsigned long index) {
       uint64_t selection_index = 0u;
       // Pseudo-randomized path selection if found more than one choice.
       if (next_waypoints.size() > 1) {
-        double r_sample = random_device.next();
-        selection_index = static_cast<uint64_t>(r_sample*next_waypoints.size()*0.01);
+        selection_index = random_device.next<uint64_t>(0, next_waypoints.size() - 1);
       } else if (next_waypoints.size() == 0) {
         if (!parameters.GetOSMMode()) {
           std::cout << "This map has dead-end roads, please change the set_open_street_map parameter to true" << std::endl;
@@ -601,19 +600,23 @@ void LocalizationStage::ImportPath(Path &imported_path, Buffer &waypoint_buffer,
 
       // Choose correct path.
       if (next_waypoints.size() > 1) {
-        const float imported_road_id = imported->GetWaypoint()->GetRoadId();
+        road::RoadId imported_road_id = imported->GetWaypoint()->GetRoadId();
         float min_distance = std::numeric_limits<float>::infinity();
         for (uint64_t k = 0u; k < next_waypoints.size(); ++k) {
           SimpleWaypointPtr junction_end_point = next_waypoints.at(k);
-          while (!junction_end_point->CheckJunction()) {
-            junction_end_point = junction_end_point->GetNextWaypoint().front();
-          }
-          while (junction_end_point->CheckJunction()) {
-            junction_end_point = junction_end_point->GetNextWaypoint().front();
-          }
-          while (next_waypoints.at(k)->DistanceSquared(junction_end_point) < 50.0f) {
-            junction_end_point = junction_end_point->GetNextWaypoint().front();
-          }
+          // Moves junction_end_point one step forward. Returns false, without
+          // moving, when the branch dead-ends.
+          auto step_forward = [&junction_end_point]() {
+            const auto next = junction_end_point->GetNextWaypoint();
+            if (next.empty()) {
+              return false;
+            }
+            junction_end_point = next.front();
+            return true;
+          };
+          while (!junction_end_point->CheckJunction() && step_forward()) {}
+          while (junction_end_point->CheckJunction() && step_forward()) {}
+          while (next_waypoints.at(k)->DistanceSquared(junction_end_point) < 50.0f && step_forward()) {}
           float jep_road_id = junction_end_point->GetWaypoint()->GetRoadId();
           if (jep_road_id == imported_road_id) {
             selection_index = k;

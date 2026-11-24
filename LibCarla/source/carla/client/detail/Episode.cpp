@@ -12,6 +12,8 @@
 #include "carla/sensor/Deserializer.h"
 #include "carla/trafficmanager/TrafficManager.h"
 
+#include <algorithm>
+#include <cstring>
 #include <exception>
 
 class FPoseSnapShot;
@@ -152,6 +154,68 @@ using namespace std::chrono_literals;
 
   std::vector<rpc::Actor> Episode::GetActors() {
     return GetActorsById_Impl(_client, _actors, GetState()->GetActorIds());
+  }
+
+  std::shared_ptr<const Episode::StaticActors> Episode::GetStaticActors() {
+    auto state = GetState();
+    auto cached = _static_actors.load();
+    const auto is_current = [&]() {
+      return cached != nullptr &&
+          cached->episode_id == state->GetEpisodeId() &&
+          cached->version == state->GetStaticActorsVersion();
+    };
+    if (is_current()) {
+      return cached;
+    }
+    std::lock_guard<std::mutex> lock(_static_mutex);
+    // Another reader may have fetched them while this one waited for the lock.
+    state = GetState();
+    cached = _static_actors.load();
+    if (is_current()) {
+      return cached;
+    }
+    auto fresh = std::make_shared<StaticActors>();
+    fresh->episode_id = state->GetEpisodeId();
+    fresh->version = state->GetStaticActorsVersion();
+    // Version 0: no state has arrived yet, so there is nothing to ask for. The
+    // version is read before the call: a change the server makes while the
+    // call is in flight arrives as a newer version, and the next reader
+    // refetches.
+    if (fresh->version != 0u) {
+      auto list = _client.GetStaticActors();
+      fresh->actors.reserve(list.size());
+      for (auto &&actor : list) {
+        ActorSnapshot snapshot{};
+        snapshot.id = actor.id;
+        snapshot.actor_state = rpc::ActorState::Active;
+        snapshot.transform = actor.transform;
+        // Where TrafficSign::GetSignId reads it.
+        auto &sign_id = snapshot.state.traffic_light_data.sign_id;
+        std::memcpy(sign_id, actor.sign_id.data(), std::min(sizeof(sign_id), actor.sign_id.size()));
+        fresh->actors.emplace(actor.id, snapshot);
+      }
+    }
+    _static_actors.store(fresh);
+    return fresh;
+  }
+
+  std::optional<ActorSnapshot> Episode::GetStaticActorSnapshot(ActorId id) {
+#ifndef LIBCARLA_NO_EXCEPTIONS
+    try {
+#endif // LIBCARLA_NO_EXCEPTIONS
+      const auto statics = GetStaticActors();
+      const auto it = statics->actors.find(id);
+      if (it != statics->actors.end()) {
+        return it->second;
+      }
+#ifndef LIBCARLA_NO_EXCEPTIONS
+    } catch (const std::exception &e) {
+      // Actor::IsAlive() gets here, and destructors call it: a server that
+      // does not answer means "not a static actor", never an exception.
+      log_debug("failed to get the static actors:", e.what());
+    }
+#endif // LIBCARLA_NO_EXCEPTIONS
+    return std::nullopt;
   }
 
   void Episode::OnEpisodeStarted() {

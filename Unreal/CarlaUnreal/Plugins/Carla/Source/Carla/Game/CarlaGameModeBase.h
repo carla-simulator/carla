@@ -26,7 +26,6 @@
 #include <util/ue-header-guard-begin.h>
 #include "CoreMinimal.h"
 #include "GameFramework/GameModeBase.h"
-#include "MapGen/LargeMapManager.h"
 #include <util/ue-header-guard-end.h>
 
 #include <optional>
@@ -126,10 +125,6 @@ public:
   UFUNCTION(BlueprintCallable, Category = "Carla Game Mode")
   void OnUnloadStreamLevel();
 
-  ALargeMapManager* GetLMManager() const {
-    return LMManager;
-  }
-
   AActor* FindActorByName(const FString& ActorName);
 
   UTexture2D* CreateUETexture(const carla::rpc::TextureColor& Texture);
@@ -174,10 +169,9 @@ protected:
 
 private:
 
-  /// Tags actors of World Partition cells as they stream in. The legacy
-  /// ALargeMapManager used to do this for WorldComposition tiles, but it
-  /// retires itself on World Partition maps, which left streamed-in cells
-  /// untagged (semantic segmentation rendered them unlabeled).
+  /// Tags actors of World Partition cells as they stream in; without it,
+  /// streamed-in cells are untagged and semantic segmentation renders them
+  /// unlabeled.
   void OnLevelAddedToWorld(ULevel* InLevel, UWorld* InWorld);
 
   void SpawnActorFactories();
@@ -230,8 +224,6 @@ private:
 
   UPROPERTY()
   ATrafficLightManager* TrafficLightManager = nullptr;
-
-  ALargeMapManager* LMManager = nullptr;
 
   FDelegateHandle OnEpisodeSettingsChangeHandle;
 

@@ -153,6 +153,15 @@ def cmd_load(args: argparse.Namespace) -> None:
     # to async/default; --keep passes False so sync mode, fixed_delta_seconds and
     # no_rendering_mode carry across the load.
     world = client.load_world(target, reset_settings=not args.keep, map_layers=layers)
+    # On 1.0 the load-time mask only adds layers; unload the unselected ones explicitly.
+    if args.layers:
+        names = ("Buildings", "Decals", "Foliage", "Ground", "ParkedVehicles", "Particles", "Props", "StreetLights", "Walls")
+        drop = [n for n in names if not int(layers) & int(getattr(carla.MapLayer, n))]
+        for n in drop:
+            world.unload_map_layer(getattr(carla.MapLayer, n))
+        if drop:
+            world.wait_for_tick()
+            print(f"  unloaded layers not asked for: {', '.join(drop)}")
     _report(world, f"(loaded {target}, keep_settings={args.keep})")
     if args.keep and world.get_settings().synchronous_mode:
         print("  note: synchronous_mode preserved — tick the world to advance it")

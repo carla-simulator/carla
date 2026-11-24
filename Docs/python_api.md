@@ -619,10 +619,10 @@ Loads a new world with a basic 3D topology generated from the content of an Open
 - <a name="carla.Client.load_world"></a>**<font color="#7fb800">load_world</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**map_name**</font>, <font color="#00a6ed">**reset_settings**=True</font>, <font color="#00a6ed">**map_layers**=[carla.MapLayer.All](#carla.MapLayer.All)</font>)  
 Creates a new world with default settings using `map_name` map. All actors in the current world will be destroyed.  
     - **Parameters:**
-        - `map_name` (_str_) - Name of the map to be used in this world. Accepts both full paths and map names, e.g. '/Game/Carla/Maps/Town01_Opt' or 'Town01_Opt'. The name is matched against the map file name, ignoring case, so it has to be exact. Remember that these paths are dynamic.  
+        - `map_name` (_str_) - Name of the map to be used in this world, as `get_available_maps()` lists it, e.g. 'Town01_Opt' or 'Town13'. The name is matched against the map file name, ignoring case, so it has to be exact. A path relative to `/Game/Carla/Maps` also works ('Town13/Town13'); a full package path ('/Game/Carla/Maps/Town01_Opt') does not, and a content pack's own maps (`/<Pack>/Maps/...`) load by name only.  
         - `reset_settings` (_bool_) - Option to reset the episode setting to default values, set to false to keep the current settings. This is useful to keep sync mode when changing map and to keep deterministic scenarios.  
         - `map_layers` (_[carla.MapLayer](#carla.MapLayer)_) - Layers of the map that will be loaded. By default all layers are loaded. This parameter works like a flag mask.  
-    - **Warning:** <font color="#ED2F2F">_`map_layers` only has an effect on Town01_Opt to Town07_Opt. Town10HD_Opt has no layers (see [carla.MapLayer](#carla.MapLayer))._</font>  
+    - **Warning:** <font color="#ED2F2F">_`map_layers` only has an effect on Town01_Opt to Town07_Opt, and it only adds layers: the layers left out of the mask are loaded too. To start without some layers, load the map and then call [carla.World.unload_map_layer](#carla.World.unload_map_layer). Town10HD_Opt has no layers (see [carla.MapLayer](#carla.MapLayer))._</font>  
 - <a name="carla.Client.load_world_if_different"></a>**<font color="#7fb800">load_world_if_different</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**map_name**</font>, <font color="#00a6ed">**reset_settings**=True</font>, <font color="#00a6ed">**map_layers**=[carla.MapLayer.All](#carla.MapLayer.All)</font>)  
 Returns the current world, loading <b>map_name</b> first unless it is already the map in use.  
     - **Parameters:**
@@ -2959,6 +2959,8 @@ The function the sensor will be calling to every time the desired GBuffer textur
     - **Parameters:**
         - `gbuffer_id` (_[carla.GBufferTextureID](#carla.GBufferTextureID)_) - The ID of the target Unreal Engine GBuffer texture.  
         - `callback` (_function_) - The called function with one argument containing the received GBuffer texture.  
+    - **Warning:** <font color="#ED2F2F">_G-buffer capture needs an Unreal Engine that provides `GBufferView.h`. The Unreal Engine 5.8 fork that CARLA builds on does not, so G-buffers are not available on UE 5.8._</font>  
+    - **Raises:** RuntimeError when the server was built without G-buffer support ("GBuffer capture is not available in this build").  
 - <a name="carla.Sensor.send"></a>**<font color="#7fb800">send</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**message**</font>)  
 Instructs the sensor to send the bytes given by `message` to all other custom V2X sensors on the next tick. Only supported on the custom V2X sensor (`sensor.other.v2x_custom`).  
     - **Parameters:**
@@ -2969,6 +2971,7 @@ Commands the sensor to stop listening for data.
 Commands the sensor to stop listening for the specified GBuffer texture.  
     - **Parameters:**
         - `gbuffer_id` (_[carla.GBufferTextureID](#carla.GBufferTextureID)_) - The ID of the Unreal Engine GBuffer texture.  
+    - **Raises:** RuntimeError when the server was built without G-buffer support ("GBuffer capture is not available in this build").  
 
 ##### Dunder methods
 - <a name="carla.Sensor.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
@@ -4666,11 +4669,14 @@ This can only be used with walkers. It retrieves a random location to be used as
 Returns an object containing some data about the simulation such as synchrony between client and server or rendering mode.  
     - **Return:** _[carla.WorldSettings](#carla.WorldSettings)_  
 - <a name="carla.World.get_snapshot"></a>**<font color="#7fb800">get_snapshot</font>**(<font color="#00a6ed">**self**</font>)  
-Returns a snapshot of the world at a certain moment comprising all the information about the actors.  
+Returns a snapshot of the world at a certain moment comprising all the information about the actors. The actors that cannot move are not part of it: see __<font color="#7fb800">get_static_actors()</font>__.  
     - **Return:** _[carla.WorldSnapshot](#carla.WorldSnapshot)_  
 - <a name="carla.World.get_spectator"></a>**<font color="#7fb800">get_spectator</font>**(<font color="#00a6ed">**self**</font>)<button class="SnipetButton" id="carla.World.get_spectator-snipet_button">snippet &rarr;</button>  
 Returns the spectator actor. The spectator is a special type of actor created by Unreal Engine, usually with ID=0, that acts as a camera and controls the view in the simulator window.  
     - **Return:** _[carla.Actor](#carla.Actor)_  
+- <a name="carla.World.get_static_actors"></a>**<font color="#7fb800">get_static_actors</font>**(<font color="#00a6ed">**self**</font>)  
+Retrieves the actors that cannot move: props without physics that were spawned as static meshes (a `static.prop.mesh` without `mass`), traffic signs and friction triggers. These actors are part of __<font color="#7fb800">get_actors()</font>__ too, but not of [carla.WorldSnapshot](#carla.WorldSnapshot): the server does not send them on every tick, and the client asks for them again only when one of them is spawned, destroyed or moved. Traffic lights are not static actors, because their state changes.  
+    - **Return:** _[carla.ActorList](#carla.ActorList)_  
 - <a name="carla.World.get_traffic_light"></a>**<font color="#7fb800">get_traffic_light</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**landmark**</font>)  
 Provided a landmark, returns the traffic light object it describes.  
     - **Parameters:**
@@ -4770,7 +4776,7 @@ Used for large maps only. Configures the maximum distance from the hero vehicle 
 - <a name="carla.WorldSettings.actor_active_distance"></a>**<font color="#f8805a">actor_active_distance</font>** (_float_)  
 Used for large maps only. Every actor is simulated whatever its distance to the hero vehicle; this value only bounds `tile_stream_distance`: when it is larger, the server raises `tile_stream_distance` to match.  
 - <a name="carla.WorldSettings.spectator_as_ego"></a>**<font color="#f8805a">spectator_as_ego</font>** (_bool_)  
-Used for large maps only. Defines the influence of the spectator on tile loading in Large Maps. By default, the spectator will provoke loading of neighboring tiles in the absence of an ego actor. This might be inconvenient for applications that immediately spawn an ego actor.  
+Has no effect. It configured the spectator's influence on tile loading in the legacy tiled large maps, and it is kept so that scripts which set it keep working.  
 - <a name="carla.WorldSettings.adjust_signs_height_to_ground"></a>**<font color="#f8805a">adjust_signs_height_to_ground</font>** (_bool_)  
 When enabled, OpenDRIVE-generated traffic signs and traffic lights are moved onto the ground below them after spawning, and their trigger volumes keep their position. Only generated actors are moved, never signs placed by hand in the level. It is false by default. Enabling it also adjusts the signs that are already spawned, so it can be enabled at any time. Disabling it stops further adjustment but does not move adjusted signs back. On a World Partition map the ground streams in around the streaming source, so each sign is adjusted when the cell below it becomes resident. The flag is kept by a map load with `reset_settings=False`, and it reads true on a map whose traffic light manager enables it.  
 - <a name="carla.WorldSettings.deterministic_collisions"></a>**<font color="#f8805a">deterministic_collisions</font>** (_bool_)  
@@ -4787,7 +4793,7 @@ Creates an object containing desired settings that could later be applied throug
         - `deterministic_ragdolls` (_bool_) - Defines wether to use deterministic physics or ragdoll simulation for pedestrian deaths.  
         - `tile_stream_distance` (_float<small> - meters</small>_) - Used for large maps only. Configures the maximum distance from the hero vehicle to stream tiled maps.  
         - `actor_active_distance` (_float<small> - meters</small>_) - Used for large maps only. Every actor is simulated whatever its distance to the hero vehicle; this value only bounds `tile_stream_distance`: when it is larger, the server raises `tile_stream_distance` to match.  
-        - `spectator_as_ego` (_bool_) - Used for large maps only. Defines the influence of the spectator on tile loading in Large Maps.  
+        - `spectator_as_ego` (_bool_) - Has no effect. It configured the legacy tiled large maps, and it is kept so that scripts which set it keep working.  
         - `adjust_signs_height_to_ground` (_bool_) - Set this to true to move OpenDRIVE-generated traffic signs and traffic lights onto the ground below them after spawning.  
         - `deterministic_collisions` (_bool_) - Set this to true for collisions that repeat exactly between runs. Takes effect at the next map load that keeps the settings (`reset_settings=False`).  
 
@@ -4805,7 +4811,7 @@ Parses the established settings to a string and shows them in command line.
 ---
 
 ## carla.WorldSnapshot<a name="carla.WorldSnapshot"></a>
-This snapshot comprises all the information for every actor on scene at a certain moment of time. It creates and gives acces to a data structure containing a series of [carla.ActorSnapshot](#carla.ActorSnapshot). The client recieves a new snapshot on every tick that cannot be stored.  
+This snapshot comprises all the information for every actor on scene at a certain moment of time. It creates and gives acces to a data structure containing a series of [carla.ActorSnapshot](#carla.ActorSnapshot). The client recieves a new snapshot on every tick that cannot be stored. The actors that cannot move, such as static props and traffic signs, are not part of the snapshot: [carla.World.get_static_actors](#carla.World.get_static_actors) lists them.  
 
 ### Instance Variables
 - <a name="carla.WorldSnapshot.platform_timestamp"></a>**<font color="#f8805a">platform_timestamp</font>** (_float<small> - seconds</small>_)  

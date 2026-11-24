@@ -15,7 +15,6 @@
 #include "Carla/Game/CarlaStatics.h"
 #include "Carla/Lights/CarlaLight.h"
 #include "Carla/Lights/CarlaLightSubsystem.h"
-#include "Carla/MapGen/LargeMapManager.h"
 #include "Carla/Traffic/TrafficLightBase.h"
 #include "Carla/Traffic/TrafficLightController.h"
 #include "Carla/Traffic/TrafficLightGroup.h"
@@ -77,11 +76,6 @@ std::pair<int, FCarlaActor*>CarlaReplayerHelper::TryToCreateReplayerActor(
       // relocate
       FTransform Trans2(Rot, Location, FVector(1, 1, 1));
       Result.Value->SetActorGlobalTransform(Trans2);
-      ALargeMapManager * LargeMapManager = UCarlaStatics::GetLargeMapManager(Episode->GetWorld());
-      if (LargeMapManager)
-      {
-        LargeMapManager->OnActorSpawned(*Result.Value);
-      }
       return std::pair<int, FCarlaActor*>(1, Result.Value);
     }
     else

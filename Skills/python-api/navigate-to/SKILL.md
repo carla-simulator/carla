@@ -29,7 +29,9 @@ Traffic Manager making cars roam; this drives one car to a **specific place**.
 ```
 Progress:
 - [ ] Step 1: Check prerequisites (bash scripts/check_env.sh), clear FAILs (incl. agents import)
-- [ ] Step 2: Have an ego (spawn-vehicles ego) and a destination (world-data/map-waypoints)
+- [ ] Step 2: Have an ego (spawn-vehicles ego) and a destination (world-data/map-waypoints).
+      The ego must be a four-wheeled car (spawn-vehicles' default): a bike or
+      motorbike tips over under BasicAgent and never arrives
 - [ ] Step 3: go (drive) — or route (plan only). Runs a tick loop until arrival/timeout
 ```
 

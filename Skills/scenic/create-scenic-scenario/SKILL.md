@@ -110,17 +110,20 @@ Spec keys:
 | `model` | `srunner` (default) or `scenic` — see [[run-scenic-scenario]] |
 | `placement` | `lane` for road situations, `intersection` for junction ones |
 | `arms`, `signalized` | intersection filter; `signalized: false` for negotiation |
-| `ego` | `{blueprint, speed, maneuver}`; `maneuver` is `straight`/`left`/`right` |
-| `actors[]` | `{name, type, blueprint, relation, distance, speed, maneuver, offset, threshold}` |
+| `ego` | `{blueprint, speed, maneuver, brake_distance}`; `maneuver` is `straight`/`left`/`right` |
+| `actors[]` | `{name, type, blueprint, relation, distance, speed, maneuver, offset, threshold, cut_in, cut_in_delay}` |
 | `requires[]` | extra `require` lines, verbatim |
 | `terminate` | termination condition; defaults to leaving the spawn area |
+
+Any `speed`, and `cut_in_delay`, takes a number or a `[lo, hi]` pair. A pair
+becomes a `Range`, so every sample draws a different value (m/s, seconds).
 
 `relation` decides the geometry, and each maps to a proven idiom:
 
 | `relation` | Geometry |
 |---|---|
 | `ahead` / `behind` | `following roadDirection from ego for ±Range(lo, hi)` |
-| `right_lane` / `left_lane` | selects lane **sections** with that neighbour, places there |
+| `right_lane` / `left_lane` | a car `distance` ahead in the same-direction neighbouring lane **cuts in** front of the ego after `cut_in_delay` s; `cut_in: false` keeps it in its lane |
 | `conflicting` | a conflicting maneuver through the same intersection |
 | `crossing` | anchored crossing: ego starts back up the lane, actor crosses it |
 
@@ -141,10 +144,17 @@ scenario is this skill's deliverable. Run it with [[run-scenic-scenario]].
 
 **Example 1: "a car cuts in front of me from the right lane"**
 
-`placement: lane`, one actor with `relation: right_lane`. The generator selects
-lane *sections* that have a right neighbour, because only sections know their
-neighbours — `network.lanes` does not. Samples in single-digit iterations on
-Town05.
+`placement: lane`, one actor with `relation: right_lane` (the `--example` spec).
+The generator selects lane *sections* whose right neighbour runs the same way,
+because only sections know their neighbours and `_laneToLeft` can be the
+oncoming lane. The car starts `distance` ahead in that lane, waits
+`cut_in_delay` seconds, then `LaneChangeBehavior` takes it into the ego's lane,
+and the ego brakes for objects in its lane within `brake_distance` (9 m). With
+ranges for both speeds and the delay, some samples have the ego already level
+with the car, so it cuts in *behind*. Keep `distance[0]` above a car length
+(the example uses 8 m): closer, the two spawn side by side and the lane change
+wedges the car into the ego. Samples in a few hundred iterations on Town05 and
+Town10HD_Opt.
 
 **Example 2: "a pedestrian steps into the road ahead of the ego"**
 

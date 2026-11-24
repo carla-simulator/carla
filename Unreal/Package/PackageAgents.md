@@ -51,6 +51,10 @@ user first, then record the answer.
 - The `python-api` skills drive that running server. The `scenario-runner`,
   `leaderboard` and `scenic` skills do too, once the matching `setup` skill has
   installed the tool they wrap.
+- `install-carla-content-pack` installs a pack tarball here with
+  `Tools/carla_pack.py`, `get-carla-additional-maps` downloads and installs the
+  AdditionalMaps pack of this release, and `manage-content-packs` mounts packs
+  on the running server.
 - The rest need a source checkout and cannot run here: building, packaging and
   importing assets (the other `ue58` skills, `ue4`, `ue5`), `docs`,
   `contributing`, and adding ROS 2 publishers or message types. They ship so the

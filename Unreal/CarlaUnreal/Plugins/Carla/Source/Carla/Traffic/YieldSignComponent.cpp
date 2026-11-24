@@ -9,7 +9,6 @@
 #include <queue>
 
 #include "Carla/Game/CarlaStatics.h"
-#include "Carla/MapGen/LargeMapManager.h"
 #include "Carla/Vehicle/CarlaWheeledVehicle.h"
 
 #include <util/disable-ue4-macros.h>
@@ -84,11 +83,6 @@ void UYieldSignComponent::InitializeSign(const carla::road::Map &Map)
               LaneDistance + epsilon, LaneDistance + LaneLength - epsilon);
         }
         FTransform BoxTransform = Map.ComputeTransform(box_waypoint);
-        ALargeMapManager* LargeMapManager = UCarlaStatics::GetLargeMapManager(GetWorld());
-        if (LargeMapManager)
-        {
-          BoxTransform = LargeMapManager->GlobalToLocalTransform(BoxTransform);
-        }
         GenerateYieldBox(BoxTransform, FVector(100*BoxLength, 100*BoxWidth, 100*BoxHeight));
 
         auto Predecessors = Map.GetPredecessors(signal_waypoint);
@@ -144,11 +138,6 @@ void UYieldSignComponent::InitializeSign(const carla::road::Map &Map)
             float UEBoxSize = 100*BoxSize;
 
             FTransform BoxTransform = Map.ComputeTransform(NextWaypoint);
-            ALargeMapManager* LargeMapManager = UCarlaStatics::GetLargeMapManager(GetWorld());
-            if (LargeMapManager)
-            {
-              BoxTransform = LargeMapManager->GlobalToLocalTransform(BoxTransform);
-            }
             GenerateCheckBox(BoxTransform, UEBoxSize);
 
             while (true)
@@ -164,10 +153,6 @@ void UYieldSignComponent::InitializeSign(const carla::road::Map &Map)
                 break;
               }
               BoxTransform = Map.ComputeTransform(NextWaypoint);
-              if (LargeMapManager)
-              {
-                BoxTransform = LargeMapManager->GlobalToLocalTransform(BoxTransform);
-              }
               GenerateCheckBox(BoxTransform, UEBoxSize);
 
             }

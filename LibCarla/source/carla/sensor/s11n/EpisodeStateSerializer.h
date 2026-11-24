@@ -27,11 +27,19 @@ namespace s11n {
   class EpisodeStateSerializer {
   public:
 
-    enum SimulationState {
+    enum SimulationState : uint32_t {
       None               = (0x0 << 0),
       MapChange          = (0x1 << 0),
       PendingLightUpdate = (0x1 << 1)
     };
+
+    /// Header::simulation_state holds the SimulationState flags in its low
+    /// byte and, in the other 24 bits, the version of the set of static
+    /// actors. Static actors are not in the actor list that follows the header
+    /// (see Episode::GetStaticActors); the server changes the version when
+    /// their set changes and never sends 0.
+    constexpr static uint32_t static_actors_version_shift = 8u;
+    constexpr static uint32_t static_actors_version_max = 0xFFFFFFu;
 
 #pragma pack(push, 1)
     struct Header {

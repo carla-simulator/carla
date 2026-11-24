@@ -11,7 +11,9 @@
 #include "StreetMap.h"
 #include "SignDataAsset.h"
 #include "PoleDataAsset.h"
+#include <util/disable-ue4-macros.h>
 #include <carla/road/Map.h>
+#include <util/enable-ue4-macros.h>
 #include "SignGenerationController.generated.h"
 
 class AGeoTrafficSign;

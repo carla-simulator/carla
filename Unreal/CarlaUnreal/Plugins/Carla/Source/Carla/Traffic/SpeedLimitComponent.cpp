@@ -6,7 +6,6 @@
 
 #include "SpeedLimitComponent.h"
 #include "Carla/Game/CarlaStatics.h"
-#include "Carla/MapGen/LargeMapManager.h"
 #include "Carla/Vehicle/CarlaWheeledVehicle.h"
 #include "Carla/Vehicle/WheeledVehicleAIController.h"
 
@@ -77,11 +76,6 @@ void USpeedLimitComponent::InitializeSign(const carla::road::Map &Map)
         }
         float UnrealBoxSize = 100*BoxSize;
         FTransform BoxTransform = Map.ComputeTransform(signal_waypoint);
-        ALargeMapManager* LargeMapManager = UCarlaStatics::GetLargeMapManager(GetWorld());
-        if (LargeMapManager)
-        {
-          BoxTransform = LargeMapManager->GlobalToLocalTransform(BoxTransform);
-        }
         GenerateSpeedBox(BoxTransform, UnrealBoxSize);
       }
     }

@@ -46,7 +46,7 @@ Two topics are global rather than per sensor:
 | `sensor.other.imu` | — | [sensor_msgs/Imu](https://docs.ros.org/en/jazzy/p/sensor_msgs/msg/Imu.html) |
 | `sensor.other.gnss` | — | [sensor_msgs/NavSatFix](https://docs.ros.org/en/jazzy/p/sensor_msgs/msg/NavSatFix.html) |
 | `sensor.other.collision` | — | [carla_msgs/CarlaCollisionEvent](ros2_native_msgs.md#carlacollisionevent) |
-| `sensor.other.autoware_gnss` | `/pose`, `/pose_with_covariance` | [geometry_msgs/PoseStamped](https://docs.ros.org/en/jazzy/p/geometry_msgs/msg/PoseStamped.html), [geometry_msgs/PoseWithCovarianceStamped](https://docs.ros.org/en/jazzy/p/geometry_msgs/msg/PoseWithCovarianceStamped.html) |
+| `sensor.other.autoware_gnss` | `/pose`, `/pose_with_covariance` | [geometry_msgs/Pose](https://docs.ros.org/en/jazzy/p/geometry_msgs/msg/Pose.html), [geometry_msgs/PoseWithCovarianceStamped](https://docs.ros.org/en/jazzy/p/geometry_msgs/msg/PoseWithCovarianceStamped.html) |
 | `sensor.other.vehicle_status` | the six `/vehicle/status/*` topics | The [Autoware vehicle report messages](ros2_native_msgs.md#published). Only publishes when its parent vehicle was spawned with `ros2_autoware_control`; otherwise it logs a warning and sends nothing. |
 
 The sensors that have no publisher — `sensor.other.lane_invasion`, `sensor.other.obstacle`, `sensor.other.v2x`, `sensor.other.v2x_custom`, `sensor.other.rss`, and the ray-traced lens and fisheye cameras — are read from the Python API instead.

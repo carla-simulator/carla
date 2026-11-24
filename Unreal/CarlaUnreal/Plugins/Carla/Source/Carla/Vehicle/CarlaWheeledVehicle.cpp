@@ -609,12 +609,6 @@ void ACarlaWheeledVehicle::DrawFoliageBoundingBox() const
 
 FBoxSphereBounds ACarlaWheeledVehicle::GetBoxSphereBounds() const
 {
-  ALargeMapManager* LargeMap = UCarlaStatics::GetLargeMapManager(GetWorld());
-  if (LargeMap)
-  {
-    FTransform GlobalTransform = LargeMap->LocalToGlobalTransform(GetActorTransform());
-    return VehicleBounds->CalcBounds(GlobalTransform);
-  }
   return VehicleBounds->CalcBounds(GetActorTransform());
 }
 
