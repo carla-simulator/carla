@@ -25,7 +25,9 @@
 #include <util/enable-ue4-macros.h>
 
 #include <util/ue-header-guard-begin.h>
+#include "Components/PrimitiveComponent.h"
 #include "CoreGlobals.h"
+#include "Hash/CityHash.h"
 #include <util/ue-header-guard-end.h>
 
 static auto FWorldObserver_GetActorState(const FCarlaActor &View, const FActorRegistry &Registry)
@@ -304,12 +306,49 @@ static carla::geom::Vector3D FWorldObserver_GetAcceleration(
   };
 }
 
+bool FWorldObserver::IsStaticActor(const FCarlaActor &View)
+{
+  const auto Type = View.GetActorType();
+  if (!View.IsActive() ||
+      (Type != FCarlaActor::ActorType::Other && Type != FCarlaActor::ActorType::TrafficSign))
+  {
+    return false;
+  }
+  const AActor *Actor = View.GetActor();
+  if (Actor == nullptr || Actor->GetAttachParentActor() != nullptr)
+  {
+    return false;
+  }
+  const USceneComponent *Root = Actor->GetRootComponent();
+  if (Root == nullptr || Root->Mobility != EComponentMobility::Static)
+  {
+    return false;
+  }
+  const auto *Primitive = Cast<UPrimitiveComponent>(Root);
+  return Primitive == nullptr || !Primitive->IsSimulatingPhysics();
+}
+
+/// Hash of a static actor's id and transform, exact to the bit. The sum over
+/// the static actors does not depend on the registry's iteration order.
+static uint64 FWorldObserver_StaticActorHash(const FCarlaActor &View)
+{
+  const FTransform Transform = View.GetActorGlobalTransform();
+  const FVector L = Transform.GetLocation();
+  const FQuat R = Transform.GetRotation();
+  const FVector S = Transform.GetScale3D();
+  // An array of doubles: no padding bytes get into the hash.
+  const double Key[] = {
+      static_cast<double>(View.GetActorId()), L.X, L.Y, L.Z, R.X, R.Y, R.Z, R.W, S.X, S.Y, S.Z};
+  return CityHash64(reinterpret_cast<const char *>(Key), sizeof(Key));
+}
+
 static carla::Buffer FWorldObserver_Serialize(
     carla::Buffer &&buffer,
     const UCarlaEpisode &Episode,
     float DeltaSeconds,
     bool MapChange,
-    bool PendingLightUpdates)
+    bool PendingLightUpdates,
+    FWorldObserver::FStaticActors &StaticActors)
 {
   TRACE_CPUPROFILER_EVENT_SCOPE_STR(__FUNCTION__);
   using Serializer = carla::sensor::s11n::EpisodeStateSerializer;
@@ -341,18 +380,28 @@ static carla::Buffer FWorldObserver_Serialize(
   FIntVector MapOriginInMeters = MapOrigin / 100;
   header.map_origin = carla::geom::Vector3DInt{ MapOriginInMeters.X, MapOriginInMeters.Y, MapOriginInMeters.Z };
 
-  uint8_t simulation_state = (SimulationState::MapChange * MapChange);
+  uint32_t simulation_state = (SimulationState::MapChange * MapChange);
   simulation_state |= (SimulationState::PendingLightUpdate * PendingLightUpdates);
 
-  header.simulation_state = static_cast<SimulationState>(simulation_state);
+  // The header goes in front of the actors once the static actors have been
+  // counted (it carries their version); its space is kept here.
+  current_size = sizeof(Serializer::Header);
 
-  write_data(header);
+  uint64 StaticHash = 0u;
+  int32 StaticCount = 0;
 
-  // Write every actor.
+  // Write every actor but the static ones.
   for (auto& It : Registry)
   {
     const FCarlaActor* View = It.Value.Get();
     const FActorInfo* ActorInfo = View->GetActorInfo();
+
+    if (FWorldObserver::IsStaticActor(*View))
+    {
+      StaticHash += FWorldObserver_StaticActorHash(*View);
+      ++StaticCount;
+      continue;
+    }
 
     FTransform ActorTransform;
     FVector Velocity(0.0f);
@@ -415,6 +464,20 @@ static carla::Buffer FWorldObserver_Serialize(
     write_data(info);
   }
 
+  // Clients fetch the static actors with the "get_static_actors" call when
+  // this version changes. It is in every header, so a client that misses a
+  // frame still learns of the change, and it is never 0: a client reads 0 as
+  // "no state received yet".
+  if (StaticHash != StaticActors.Hash || StaticCount != StaticActors.Count)
+  {
+    StaticActors.Hash = StaticHash;
+    StaticActors.Count = StaticCount;
+    StaticActors.Version = (StaticActors.Version % Serializer::static_actors_version_max) + 1u;
+  }
+  simulation_state |= StaticActors.Version << Serializer::static_actors_version_shift;
+  header.simulation_state = static_cast<SimulationState>(simulation_state);
+  std::memcpy(buffer.begin(), &header, sizeof(header));
+
   // Shrink buffer
   buffer.resize(current_size);
 
@@ -441,7 +504,8 @@ void FWorldObserver::BroadcastTick(
       Episode,
       DeltaSecond,
       MapChange,
-      PendingLightUpdates);
+      PendingLightUpdates,
+      StaticActors);
 
   AsyncStream.SerializeAndSend(*this, std::move(buffer));
 }

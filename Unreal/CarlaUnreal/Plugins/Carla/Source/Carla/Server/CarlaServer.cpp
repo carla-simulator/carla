@@ -7,7 +7,9 @@
 #include "Carla/Server/CarlaServer.h"
 #include "Carla.h"
 #include "Carla/Server/CarlaServerResponse.h"
+#include "Carla/Traffic/SignComponent.h"
 #include "Carla/Traffic/TrafficLightGroup.h"
+#include "Carla/Traffic/TrafficSignBase.h"
 #include "Carla/OpenDrive/OpenDrive.h"
 #include "Carla/OpenDrive/OpenDriveGenerator.h"
 #include "Carla/Util/DebugShapeDrawer.h"
@@ -17,6 +19,7 @@
 #include "Carla/Sensor/CustomV2XSensor.h"
 #include "Carla/Sensor/SceneCaptureSensor.h"
 #include "Carla/Sensor/SceneCaptureSensor_WideAngleLens.h"
+#include "Carla/Sensor/WorldObserver.h"
 #include "Carla/Walker/WalkerController.h"
 #include "Carla/Walker/WalkerBase.h"
 #include "Carla/Weather/SkyLightMap.h"
@@ -61,6 +64,7 @@
 #include <carla/rpc/MapLayer.h>
 #include <carla/rpc/Response.h>
 #include <carla/rpc/Server.h>
+#include <carla/rpc/StaticActor.h>
 #include <carla/rpc/String.h>
 #include <carla/rpc/Transform.h>
 #include <carla/rpc/Vector2D.h>
@@ -1190,6 +1194,33 @@ void FCarlaServer::FPimpl::BindActions()
       if (View)
       {
         Result.emplace_back(Episode->SerializeActor(View));
+      }
+    }
+    return Result;
+  };
+
+  // The actors left out of the episode state because they cannot move (see
+  // FWorldObserver::IsStaticActor); clients call this when the episode state
+  // says the set changed.
+  BIND_SYNC(get_static_actors) << [this]() -> R<std::vector<cr::StaticActor>>
+  {
+    REQUIRE_CARLA_EPISODE();
+    std::vector<cr::StaticActor> Result;
+    for (auto &&It : Episode->GetActorRegistry())
+    {
+      const FCarlaActor *View = It.Value.Get();
+      if (View != nullptr && FWorldObserver::IsStaticActor(*View))
+      {
+        cr::StaticActor Item;
+        Item.id = View->GetActorId();
+        Item.transform = cr::Transform(View->GetActorGlobalTransform());
+        const auto *Sign = Cast<ATrafficSignBase>(View->GetActor());
+        const auto *SignComponent = Sign ? Sign->FindComponentByClass<USignComponent>() : nullptr;
+        if (SignComponent != nullptr)
+        {
+          Item.sign_id = cr::FromFString(SignComponent->GetSignId());
+        }
+        Result.emplace_back(Item);
       }
     }
     return Result;

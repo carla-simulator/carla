@@ -407,9 +407,32 @@ namespace detail {
       return _episode->GetActorsById(actor_ids);
     }
 
+    /// The actors in the episode state plus the static ones.
     std::vector<rpc::Actor> GetAllTheActorsInTheEpisode() const {
       DEBUG_ASSERT(_episode != nullptr);
-      return _episode->GetActors();
+      const auto state = _episode->GetState();
+      auto ids = GetStaticActorIds(*state);
+      const auto state_ids = state->GetActorIds();
+      ids.insert(ids.end(), state_ids.begin(), state_ids.end());
+      return _episode->GetActorsById(ids);
+    }
+
+    /// The actors the server leaves out of the episode state because they
+    /// cannot move (see Episode::GetStaticActors).
+    std::vector<rpc::Actor> GetStaticActors() const {
+      DEBUG_ASSERT(_episode != nullptr);
+      return _episode->GetActorsById(GetStaticActorIds(*_episode->GetState()));
+    }
+
+    /// Ids of the static actors, without any that @a state lists.
+    std::vector<ActorId> GetStaticActorIds(const EpisodeState &state) const {
+      std::vector<ActorId> ids;
+      for (auto &&item : _episode->GetStaticActors()->actors) {
+        if (!state.ContainsActorSnapshot(item.first)) {
+          ids.push_back(item.first);
+        }
+      }
+      return ids;
     }
 
     /// Creates an actor instance out of a description of an existing actor.
@@ -447,7 +470,12 @@ namespace detail {
 
     ActorSnapshot GetActorSnapshot(ActorId actor_id) const {
       DEBUG_ASSERT(_episode != nullptr);
-      return _episode->GetState()->GetActorSnapshot(actor_id);
+      auto snapshot = _episode->GetState()->GetActorSnapshotIfPresent(actor_id);
+      if (!snapshot.has_value()) {
+        // Not in the episode state: a static actor, or one that is gone.
+        snapshot = _episode->GetStaticActorSnapshot(actor_id);
+      }
+      return snapshot.has_value() ? *snapshot : ActorSnapshot{};
     }
 
     ActorSnapshot GetActorSnapshot(const Actor &actor) const {
@@ -473,6 +501,11 @@ namespace detail {
         return snapshot->actor_state;
       }
       if (actor.WasSpawnedByThisClient() && state->GetFrame() <= actor.GetSpawnFrame()) {
+        return rpc::ActorState::Active;
+      }
+      // A static actor is never in the episode state: it is alive for as long
+      // as the server lists it.
+      if (_episode->GetStaticActorSnapshot(actor.GetId()).has_value()) {
         return rpc::ActorState::Active;
       }
       return rpc::ActorState::Invalid;

@@ -135,6 +135,12 @@ namespace client {
                                   _episode.Lock()->GetActorsById(actor_ids)}};
   }
 
+  SharedPtr<ActorList> World::GetStaticActors() const {
+    return SharedPtr<ActorList>{new ActorList{
+                                  _episode,
+                                  _episode.Lock()->GetStaticActors()}};
+  }
+
   SharedPtr<Actor> World::SpawnActor(
       const ActorBlueprint &blueprint,
       const geom::Transform &transform,

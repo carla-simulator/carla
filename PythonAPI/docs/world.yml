@@ -658,7 +658,12 @@
         doc: >
           The IDs of the actors being searched. By default it is set to <b>None</b> and returns every actor on scene. 
       doc: >
-        Retrieves a list of carla.Actor elements, either using a list of IDs provided or just listing everyone on stage. If an ID does not correspond with any actor, it will be excluded from the list returned, meaning that both the list of IDs and the list of actors may have different lengths. 
+        Retrieves a list of carla.Actor elements, either using a list of IDs provided or just listing everyone on stage. If an ID does not correspond with any actor, it will be excluded from the list returned, meaning that both the list of IDs and the list of actors may have different lengths.
+    # --------------------------------------
+    - def_name: get_static_actors
+      return: carla.ActorList
+      doc: >
+        Retrieves the actors that cannot move: props without physics that were spawned as static meshes (a `static.prop.mesh` without `mass`), traffic signs and friction triggers. These actors are part of __<font color="#7fb800">get_actors()</font>__ too, but not of carla.WorldSnapshot: the server does not send them on every tick, and the client asks for them again only when one of them is spawned, destroyed or moved. Traffic lights are not static actors, because their state changes.
     # --------------------------------------
     - def_name: get_blueprint_library
       return: carla.BlueprintLibrary
@@ -814,7 +819,7 @@
     - def_name: get_snapshot
       return: carla.WorldSnapshot
       doc: >
-        Returns a snapshot of the world at a certain moment comprising all the information about the actors.
+        Returns a snapshot of the world at a certain moment comprising all the information about the actors. The actors that cannot move are not part of it: see __<font color="#7fb800">get_static_actors()</font>__.
     # --------------------------------------
     - def_name: get_spectator
       return: carla.Actor
