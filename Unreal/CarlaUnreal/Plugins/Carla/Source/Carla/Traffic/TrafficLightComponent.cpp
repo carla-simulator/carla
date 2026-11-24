@@ -85,6 +85,29 @@ void UTrafficLightComponent::InitializeSign(const carla::road::Map &Map)
       }
     }
   }
+  DisableBlueprintTriggers();
+}
+
+void UTrafficLightComponent::DisableBlueprintTriggers()
+{
+  // The blueprint's own trigger sits by the pole, inside the junction, and would
+  // stop vehicles already crossing it; the OpenDRIVE boxes above replace it.
+  const TArray<UBoxComponent*> OpenDriveBoxes = GetEffectTriggerVolume();
+  AActor *Owner = GetOwner();
+  if (Owner == nullptr || OpenDriveBoxes.Num() == 0)
+  {
+    return;
+  }
+  TArray<UBoxComponent*> Boxes;
+  Owner->GetComponents<UBoxComponent>(Boxes);
+  for (UBoxComponent *Box : Boxes)
+  {
+    if (!OpenDriveBoxes.Contains(Box))
+    {
+      Box->SetGenerateOverlapEvents(false);
+      Box->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+    }
+  }
 }
 
 void UTrafficLightComponent::GenerateTrafficLightBox(const FTransform BoxTransform,
