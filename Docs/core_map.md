@@ -320,6 +320,8 @@ geo = carla_map.transform_to_geolocation(location, carla.GeoProjectionUTM(zone=3
 
 `get_georeference()` returns the geographic location of the map origin declared by the header.
 
+[Geographic coordinates](core_geocoordinates.md) lists every projection and ellipsoid parameter CARLA reads from `geoReference`.
+
 !!! Note
     A map whose `geoReference` is missing, or that names a projection CARLA does not implement, falls back to a transverse Mercator projection on the map origin and logs a warning.
 
