@@ -213,6 +213,23 @@ for actor_snapshot in world_snapshot: # Get the actor and the snapshot informati
 actor_snapshot = world_snapshot.find(actual_actor.id) # Get an actor's snapshot
 ```
 
+### Static actors and the snapshot
+
+Actors that cannot move are not part of the snapshot. The server does not send them on every tick, so thousands of scenery props add no time per tick in the server, in the clients or in the Traffic Manager. An actor is static when its root component has `Static` mobility and simulates no physics, it is not attached to another actor, and it is a traffic sign or an actor of no specific type:
+
+- a `static.prop.mesh` spawned without `mass`;
+- traffic signs (stop, yield, speed limit);
+- a `static.trigger.friction`.
+
+Traffic lights stay in the snapshot, because their state changes. So do the props of the catalogue (`static.prop.<name>`) and props with physics, which can move.
+
+```py
+static_actors = world.get_static_actors()    # a carla.ActorList
+signs = static_actors.filter('traffic.*')
+```
+
+`world.get_actors()` still returns every actor, the static ones included, and `world.get_actor()`, `actor.is_alive`, `actor.get_transform()` and `actor.destroy()` work on a static actor as on any other. The client asks the server for the static actors the first time it needs them, and again only after one of them was spawned, destroyed or moved. Only the snapshot differs: `world.get_snapshot()` and the snapshot an `on_tick` callback gets do not list the static actors, and `world_snapshot.find()` returns `None` for one.
+
 ## World settings
 
 !!! agent "Agentic CARLA"
