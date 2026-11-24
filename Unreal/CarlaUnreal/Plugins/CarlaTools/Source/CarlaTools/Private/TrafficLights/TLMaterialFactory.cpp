@@ -1,18 +1,17 @@
 #include "TrafficLights/TLMaterialFactory.h"
 
 #include "CarlaTools.h"
+#include "TrafficLights/TLToolContent.h"
 #include "UObject/Object.h"
 
 UMaterialInterface* FMaterialFactory::GetBaseLightMaterial()
 {
 	static UMaterialInterface* BaseMat{Cast<UMaterialInterface>(StaticLoadObject(UMaterialInterface::StaticClass(), nullptr,
-		TEXT("/CarlaDigitalTwinsTool/Carla/Static/TrafficLight/TrafficLights2025/TrafficLights/"
-			 "M_TrafficLights_Inst.M_TrafficLights_Inst")))};
+		*TLToolContent::LampMaterial()))};
 	if (!IsValid(BaseMat))
 	{
 		UE_LOG(LogCarlaTools, Error, TEXT("MaterialFactory: failed to load base material at '%s'"),
-			TEXT("/CarlaDigitalTwinsTool/Carla/Static/TrafficLight/TrafficLights2025/TrafficLights/"
-				 "M_TrafficLights_Inst.M_TrafficLights_Inst"));
+			*TLToolContent::LampMaterial());
 		return nullptr;
 	}
 

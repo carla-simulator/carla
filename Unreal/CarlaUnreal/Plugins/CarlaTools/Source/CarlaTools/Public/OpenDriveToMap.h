@@ -319,7 +319,6 @@ private:
   void GenerateTreePositions(const std::optional<carla::road::Map>& ParamCarlaMap, FVector MinLocation, FVector MaxLocation);
   void GenerateLaneMarks(const std::optional<carla::road::Map>& ParamCarlaMap, FVector MinLocation, FVector MaxLocation);
   void GenerateTrafficLights(const std::optional<carla::road::Map>& ParamCarlaMap, FVector MinLocation, FVector MaxLocation);
-  bool TryResolveContentFileAnywhere(const FString& RelativePathUnderContent, FString& OutAbsPath);
 
 
   FTransform GetSnappedPosition(FTransform Origin);
