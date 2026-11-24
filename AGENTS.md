@@ -162,9 +162,23 @@ packaged builds. See [`Docs/agent_skills.md`](Docs/agent_skills.md#unreal-mcp-in
 ## Before any pull request (mandatory)
 
 CI builds the code and runs only the LibCarla unit tests. It runs no Python
-tests and never opens the editor. Before you push a code change for a pull
-request, follow Step 4 of [`open-carla-pr`](Skills/contributing/open-carla-pr/SKILL.md)
-on the branch's own commit:
+tests and never opens the editor. Before you push a change for a pull request,
+follow Step 4 of [`open-carla-pr`](Skills/contributing/open-carla-pr/SKILL.md)
+on the branch's own commit. What runs depends on the **paths** the diff touches
+(`git diff --name-only "$BASE"...HEAD`; the highest tier wins, and a path you
+are unsure of is tier C):
+
+- **Tier A, docs** (`Docs/**`, `PythonAPI/docs/**`, any `*.md`, including
+  skills' `SKILL.md` and references): the docs checks only.
+- **Tier B, Python outside the build** (`Skills/**/scripts/**`,
+  `PythonAPI/examples/**`, `PythonAPI/util/**`, `PythonAPI/carla/agents/**`):
+  no build and no full smoke list. Lint the changed files, then **run every
+  changed script end-to-end** against a port-3654 server built from
+  `ue58-dev` at or after the merge-base, and report both commits.
+- **Tier C, everything else** (LibCarla, Unreal, bindings, `Util/`, CMake,
+  tests, CI, content): the full check below.
+
+The full check (tier C):
 
 1. Build it, including `carla-unreal-editor`.
 2. Open the Unreal Editor (`cmake --build Build/Release --target launch`) and
