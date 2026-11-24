@@ -5,7 +5,6 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "MapGeneratorWidget.h"
-#include "Carla/MapGen/LargeMapManager.h"
 #include "Carla/MapGen/SoilTypeManager.h"
 #include "Carla/Weather/Weather.h"
 #include "Carla/Vehicle/CustomTerrainPhysicsComponent.h"
@@ -786,36 +785,6 @@ bool UMapGeneratorWidget::CreateMainLargeMap(const FMapGeneratorMetaInfo& MetaIn
           *CUR_CLASS_FUNC_LINE, *PackageName);
       return false;
     }
-
-  AActor* LargeMapManagerActor = UGameplayStatics::GetActorOfClass(World, ALargeMapManager::StaticClass());
-  if(LargeMapManagerActor == nullptr)
-  {
-    UE_LOG(LogCarlaToolsMapGenerator, Error, 
-        TEXT("%s: Could not find LargeMapManager Actor in %s."),
-        *CUR_CLASS_FUNC_LINE, *MetaInfo.MapName); 
-    return false;
-  }
-
-  ALargeMapManager* LargeMapManager = StaticCast<ALargeMapManager*>(LargeMapManagerActor);
-  if(LargeMapManager == nullptr)
-  {
-    UE_LOG(LogCarlaToolsMapGenerator, Error, 
-        TEXT("%s: Failed to cast Large Map Actor in %s."),
-        *CUR_CLASS_FUNC_LINE, *MetaInfo.MapName); 
-    return false;
-  }
-
-  LargeMapManager->LargeMapTilePath = MetaInfo.DestinationPath;
-  LargeMapManager->LargeMapName = MetaInfo.MapName;
-
-  // Set Tile0Offset to 0 to cook tiles info
-  FVector OriginalTile0Offset = LargeMapManager->GetTile0Offset();
-  LargeMapManager->SetTile0Offset(FVector(0.0f, 0.0f, 0.0f));
-
-  LargeMapManager->GenerateMap_Editor();
-
-  // Reset Tile0Offset to original mid-tile position for runtime operations
-  LargeMapManager->SetTile0Offset(OriginalTile0Offset);
 
   // Spawn Vegetation Manager if defined
   if(MetaInfo.VegetationManagerBpClass)

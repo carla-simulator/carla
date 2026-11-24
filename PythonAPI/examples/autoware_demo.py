@@ -274,6 +274,19 @@ def generate_vlp16_blueprint(blueprint_library):
     blueprint.set_attribute("dropoff_general_rate", "0.0")
     blueprint.set_attribute("dropoff_zero_intensity", "0.0")
 
+    # Report the extended cloud's azimuth the way Autoware's LiDAR drivers do:
+    # the rotation angle, clockwise from forward in [0, 360). Autoware's ring
+    # outlier filter groups the points of a ring by the increase in azimuth
+    # from one to the next, and drops every point otherwise.
+    for key, value in (("azimuth_direction", "clockwise"),
+                       ("azimuth_range_start", "0.0"),
+                       ("azimuth_range_end", "360.0")):
+        if blueprint.has_attribute(key):
+            blueprint.set_attribute(key, value)
+        else:
+            log_warning(f"Blueprint '{blueprint.id}' has no '{key}' attribute; "
+                        "Autoware's ring outlier filter may drop the lidar points")
+
     # ROS settings
     blueprint.set_attribute("ros_name", "velodyne_top")  # frame_id
     try_set_ros_topic_name(blueprint, "/sensing/lidar/top/pointcloud_raw_ex")

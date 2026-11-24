@@ -139,6 +139,10 @@ above.
 image and from `get_environment_objects()` (Town03_Opt `Buildings`: 9254 -> 8513
 objects) and loading it brings it back, on all seven towns.
 
+Re-measured on the 1.0 release with its AdditionalMaps (2026-11-19), Town03_Opt `Buildings`:
+- `unload_map_layer` / `load_map_layer` hide and restore the houses on camera, but `get_environment_objects()` does not recover: 804 -> 67 after the unload, 76 after the reload. Count objects on a freshly loaded map, not after toggling.
+- `load_world(map, map_layers=...)` only **adds** layers: `load_world('Town03_Opt', carla.MapLayer.Ground)` still renders every house (the game mode loads the mask's sublevels at `BeginPlay` and never unloads the rest). `load --layers` therefore unloads the unselected layers after the load.
+
 **Town10HD_Opt has no map layers.** Its sublevels were merged into the persistent
 level on purpose (Content `68520135b61`, 2024-07-02), because sublevels are being
 phased out on UE 5. `ACarlaGameModeBase::UnLoadMapLayer` streams the sublevels whose
@@ -185,9 +189,9 @@ User says: "load this opendrive file as the world"
 
 **Example 4: minimal map, then add buildings**
 
-User says: "load Town10 with just the ground, then bring buildings in"
+User says: "load Town03 with just the ground, then bring buildings in"
 
-`load --map Town10HD_Opt --layers Ground` then `layer --load Buildings`.
+`load --map Town03_Opt --layers Ground` (it prints the layers it unloaded) then `layer --load Buildings`. Town10HD_Opt has no layers on 1.0.
 
 ## Troubleshooting
 
@@ -206,7 +210,7 @@ Solution: pass `--keep` (`reset_settings=False`). See the reference.
 **Problem: `layer --load/--unload` does nothing**
 Cause: the current map is fully baked (not an `_Opt`/large map); it has no
 toggleable layers.
-Solution: load an `_Opt` map first (`Town01_Opt` … `Town10HD_Opt`) or a large map.
+Solution: on 1.0, load one of `Town01_Opt` … `Town07_Opt` (AdditionalMaps pack); no other map has layers there. On 0.9.x, any `_Opt` map.
 
 ## Outputs
 

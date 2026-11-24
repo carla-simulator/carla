@@ -120,7 +120,7 @@ size_t WaypointsAliveAfter(
   ctm::Parameters parameters;
   std::vector<ctm::ActorId> marked_for_removal;
   ctm::LocalizationFrame output_array(1u);
-  ctm::RandomGenerator random_device(0u);
+  ctm::UniformPRNG random_device(0u);
 
   auto world_map = carla::MakeShared<carla::client::Map>("junction", RoadIntoJunction());
   ctm::LocalMapPtr local_map = std::make_shared<ctm::InMemoryMap>(world_map);

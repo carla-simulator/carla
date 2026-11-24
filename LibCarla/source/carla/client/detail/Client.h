@@ -26,6 +26,7 @@
 #include "carla/rpc/MapInfo.h"
 #include "carla/rpc/MapLayer.h"
 #include "carla/rpc/OpendriveGenerationParameters.h"
+#include "carla/rpc/StaticActor.h"
 #include "carla/rpc/TrafficLightState.h"
 #include "carla/rpc/VehicleDoor.h"
 #include "carla/rpc/VehicleLightStateList.h"
@@ -212,6 +213,10 @@ namespace detail {
     std::vector<geom::Transform> GetEgoSpawnPoints() const;
 
     std::vector<rpc::Actor> GetActorsById(const std::vector<ActorId> &ids);
+
+    /// The actors the server leaves out of the episode state because they
+    /// cannot move.
+    std::vector<rpc::StaticActor> GetStaticActors();
 
     rpc::VehiclePhysicsControl GetVehiclePhysicsControl(rpc::ActorId vehicle) const;
 

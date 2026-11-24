@@ -12,6 +12,7 @@
 #include "carla/ros2/ROS2CallbackData.h"
 #include "carla/ros2/middleware/Middleware.h"
 #include "carla/ros2/middleware/MiddlewareConfig.h"
+#include "carla/ros2/publishers/PointCloudFieldsLayout.h"
 #include "carla/streaming/detail/Types.h"
 
 #include <atomic>
@@ -185,7 +186,8 @@ public:
   // channel count and vertical FOV limits (degrees), the publisher emits the
   // extended Autoware XYZIRCAEDT layout instead of plain XYZI (requires
   // channel_count >= 2 to derive per-channel elevations; falls back to XYZI
-  // otherwise).
+  // otherwise). `azimuth_range` sets how the extended layout's azimuth is
+  // measured (the sensor's azimuth_* attributes).
   void ProcessDataFromLidar(
       uint64_t sensor_type,
       carla::streaming::detail::stream_id_type stream_id,
@@ -194,7 +196,8 @@ public:
       float upper_fov_limit,
       float lower_fov_limit,
       carla::sensor::data::LidarData &data,
-      void *actor = nullptr);
+      void *actor = nullptr,
+      const LidarAzimuthRange &azimuth_range = {});
   void ProcessDataFromSemanticLidar(
       uint64_t sensor_type,
       carla::streaming::detail::stream_id_type stream_id,

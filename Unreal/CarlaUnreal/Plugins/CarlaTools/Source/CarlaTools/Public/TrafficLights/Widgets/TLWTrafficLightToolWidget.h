@@ -68,11 +68,17 @@ private:
 	void RefreshPoleMeshes(int32 PoleIndex);
 	void RefreshModuleMeshOptions(int32 PoleIndex, int32 HeadIndex, int32 ModuleIndex);
 	EVisibility GetModifyVisibility() const;
+	EVisibility GetRestoreVisibility() const;
+	/// Loads a Traffic Light Tool JSON into the preview and the editing panel.
+	void LoadJSONString(const FString& JSONString);
+	/// The single actor selected in the level, or nullptr.
+	AActor* GetSingleSelectedActor() const;
 
 private:
 	FReply OnExportJSONClicked();
 	FReply OnImportJSONClicked();
 	FReply OnModifyClicked();
+	FReply OnRestoreClicked();
 	FReply OnAddPoleClicked();
 	FReply OnDeletePoleClicked(int32 PoleIndex);
 	FReply OnAddHeadClicked(int32 PoleIndex);

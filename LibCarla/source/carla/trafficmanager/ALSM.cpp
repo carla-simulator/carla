@@ -57,8 +57,16 @@ void ALSM::Update() {
   std::set<ActorId> world_pedestrian_ids;
   std::vector<ActorId> unregistered_list_to_be_deleted;
 
-  current_timestamp = world.GetSnapshot().GetTimestamp();
-  ActorList world_actors = world.GetActors();
+  // Only the actors in the snapshot: the static ones (props, traffic signs)
+  // are not in it and take no part in traffic.
+  const auto snapshot = world.GetSnapshot();
+  current_timestamp = snapshot.GetTimestamp();
+  std::vector<ActorId> snapshot_ids;
+  snapshot_ids.reserve(snapshot.size());
+  for (const auto &actor_snapshot : snapshot) {
+    snapshot_ids.push_back(actor_snapshot.id);
+  }
+  ActorList world_actors = world.GetActors(snapshot_ids);
 
   // Find destroyed actors and perform clean up.
   const ALSM::DestroyeddActors destroyed_actors = IdentifyDestroyedActors(world_actors);

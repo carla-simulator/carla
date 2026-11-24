@@ -120,9 +120,6 @@ public:
   UFUNCTION(BlueprintCallable)
   TArray<FRoadSignInfo> GetAllRoadSignsInfo();
 
-  UFUNCTION(BlueprintCallable, Category = "Assets Placement")
-  static void MoveActorsToSubLevelWithLargeMap(TArray<AActor*> Actors, ALargeMapManager* LargeMapManager);
-
   UFUNCTION(BlueprintCallable, Category = "HoudiniImporterWidget")
   static void UpdateGenericActorCoordinates(AActor* Actor, FVector TileOrigin);
 
@@ -307,9 +304,6 @@ protected:
   UFUNCTION( BlueprintImplementableEvent )
   void ExecuteTileCommandlet();
 
-  UFUNCTION( BlueprintCallable )
-  void MoveActorsToSubLevels(TArray<AActor*> ActorsToMove);
-
 
 private:
 
@@ -325,7 +319,6 @@ private:
   void GenerateTreePositions(const std::optional<carla::road::Map>& ParamCarlaMap, FVector MinLocation, FVector MaxLocation);
   void GenerateLaneMarks(const std::optional<carla::road::Map>& ParamCarlaMap, FVector MinLocation, FVector MaxLocation);
   void GenerateTrafficLights(const std::optional<carla::road::Map>& ParamCarlaMap, FVector MinLocation, FVector MaxLocation);
-  bool TryResolveContentFileAnywhere(const FString& RelativePathUnderContent, FString& OutAbsPath);
 
 
   FTransform GetSnappedPosition(FTransform Origin);
