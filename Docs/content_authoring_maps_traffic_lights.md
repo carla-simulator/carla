@@ -3,6 +3,7 @@
 Traffic lights and traffic signs are blueprints from the CARLA content library, dragged into the level and given a trigger volume: the area in which they affect a vehicle. This page covers placing both, and the regional sign system that builds sign plates of the European, American and Chinese conventions from texture atlases.
 
 - [__Traffic lights__](#traffic-lights)
+- [__Restyle a traffic light with the Traffic Light Tool__](#restyle-a-traffic-light-with-the-traffic-light-tool)
 - [__Traffic signs__](#traffic-signs)
 - [__Regional traffic signs__](#regional-traffic-signs)
 - [__Sign atlases__](#sign-atlases)
@@ -33,6 +34,24 @@ __5.__ Traffic light timing is only configurable through the Python API. See the
 
 ![ue_tlsigns_example](img/content_authoring_maps/ue_tlsigns_example.webp)
 <div class="img-caption">A Town10HD_Opt junction with its traffic lights and signs placed.</div>
+
+---
+## Restyle a traffic light with the Traffic Light Tool
+
+The traffic lights of Town01 to Town15 look like the region they were modelled on. The __Traffic Light Tool__ (__Window > Traffic Light Tool__) changes the look of any of them without touching its logic: build a light in the tool, select a traffic light in the level and press *Modify*.
+
+__1.__ Build the light in the tool: *Add Pole*, then *Add Head* and *Add Module*, or *Import JSON...* to start from one of the presets in `Content/Carla/Static/TrafficLight/TrafficLightTool/Presets`. The tool, its pieces and its presets are described in [Digital twins](content_authoring_maps_digital_twin.md#traffic-lights).
+
+__2.__ Select one traffic light in the level and press *Modify*. The tool adds its meshes to that actor, aligned with it, and hides the blueprint's own traffic light meshes.
+
+__3.__ Save the level. *Restore Original* removes the tool's meshes from the selected light and shows the blueprint's meshes again.
+
+The traffic light keeps its state, its trigger volume, its `BP_TrafficLightGroup` and its OpenDRIVE match, so the Python API, the Traffic Manager and the junction timing see no difference. Its new lamps follow the light's state by colour: green lamps, arrows included, light on green, amber lamps on amber, red lamps on red, and the pedestrian lamps (the `Crosswalk` modules) in the opposite phase.
+
+!!! Note
+    *Modify* only hides the blueprint's traffic light and pole meshes (under `Content/Carla/Static/TrafficLight` and `Content/Carla/Static/Pole`). Street lamps, street name plates and other signs mounted on the same blueprint stay where they were, so on a light that carries them they can end up floating next to the new pole. Pick a light without them, or build the new pole to match.
+
+The tool's meshes are tagged as traffic lights in the semantic segmentation, like the blueprint's.
 
 ---
 ## Traffic signs

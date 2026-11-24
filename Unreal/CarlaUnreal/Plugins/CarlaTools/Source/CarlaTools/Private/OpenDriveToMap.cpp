@@ -92,6 +92,7 @@
 #include "OpenDriveToMap.h"
 #include "TrafficLights/TLMeshFactory.h"
 #include "TrafficLights/TLPole.h"
+#include "TrafficLights/TLToolContent.h"
 #include "TrafficLights/TrafficLightActor.h"
 #if WITH_EDITOR
 #include "FileHelpers.h"
@@ -1165,7 +1166,7 @@ void UOpenDriveToMap::GenerateTrafficLights(
 		UE_LOG(LogCarlaTools, Warning, TEXT("GenerateTrafficLights: Map is not valid, skipping."));
 		return;
 	}
-	const FString BPPath{TEXT("/CarlaDigitalTwinsTool/Blueprints/TrafficLight/BP_TrafficLightActor.BP_TrafficLightActor_C")};
+	const FString BPPath{TLToolContent::RigBlueprintClass()};
 	const carla::geom::Vector3D CarlaMinLocation(MinLocation.X / 100.0, MinLocation.Y / 100.0, MinLocation.Z / 100.0);
 	const carla::geom::Vector3D CarlaMaxLocation(MaxLocation.X / 100.0, MaxLocation.Y / 100.0, MaxLocation.Z / 100.0);
 	const double MinX{FMath::Min(CarlaMinLocation.x, CarlaMaxLocation.x)};
@@ -1244,12 +1245,11 @@ void UOpenDriveToMap::GenerateTrafficLights(
 		{
 			continue;
 		}
-		const FString Rel{TEXT("Carla/Static/TrafficLight/TrafficLights2025/Presets/Default.json")};
-		FString JsonAbs;
-		if (!TryResolveContentFileAnywhere(Rel, JsonAbs))
+		const FString JsonAbs{TLToolContent::PresetsDir() / TEXT("Default.json")};
+		if (!FPaths::FileExists(JsonAbs))
 		{
 			UE_LOG(LogCarlaTools, Warning,
-				TEXT("Default traffic light JSON not found under any Content: %s. Using backup."), *Rel);
+				TEXT("Default traffic light JSON not found: %s. Using backup."), *JsonAbs);
 			TL->PopulateDefault();
 		}
 		else
@@ -2076,39 +2076,6 @@ void UOpenDriveToMap::MitsubaMeshOptimization()
 			Actor->SetIsTemporarilyHiddenInEditor(true);
 		}
 	}
-}
-bool UOpenDriveToMap::TryResolveContentFileAnywhere(const FString& RelativePathUnderContent, FString& OutAbsPath)
-{
-	if (RelativePathUnderContent.IsEmpty())
-	{
-		return false;
-	}
-
-	IPluginManager& PM{IPluginManager::Get()};
-	const TArray<TSharedRef<IPlugin>> Plugins{PM.GetEnabledPlugins()};
-	for (const TSharedRef<IPlugin>& Plugin : Plugins)
-	{
-		if (!Plugin->CanContainContent())
-		{
-			continue;
-		}
-
-		const FString Candidate{FPaths::Combine(Plugin->GetContentDir(), RelativePathUnderContent)};
-		if (FPaths::FileExists(Candidate))
-		{
-			OutAbsPath = Candidate;
-			return true;
-		}
-	}
-
-	const FString ProjectCandidate{FPaths::Combine(FPaths::ProjectContentDir(), RelativePathUnderContent)};
-	if (FPaths::FileExists(ProjectCandidate))
-	{
-		OutAbsPath = ProjectCandidate;
-		return true;
-	}
-
-	return false;
 }
 #endif
 
