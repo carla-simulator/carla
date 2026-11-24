@@ -65,8 +65,9 @@ CARLA-specific controllers live in
 
 Select one with `<ObjectController><CatalogReference>` /
 `<Controller><Properties><Property name="module" value="..."/>`. See
-`srunner/examples/OscControllerExample.xosc` and
-`srunner/examples/catalogs/ControllerCatalog.xosc`.
+`srunner/osc_examples/OscControllerExample.xosc` and
+`srunner/osc_examples/catalogs/ControllerCatalog.xosc` (under `srunner/examples/`
+on `master`).
 
 An entity with `external_control` will not move unless you drive it —
 `manual_control.py -a --rolename=hero` or a route agent.

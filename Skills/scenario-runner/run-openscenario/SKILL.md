@@ -2,7 +2,7 @@
 name: run-openscenario
 description: Runs standard-format scenarios through ScenarioRunner — ASAM OpenSCENARIO 1.x (.xosc, via --openscenario, with catalogs and ParameterDeclaration overrides) and OpenSCENARIO 2.0 (.osc, via --openscenario2, the ANTLR/osc2 pipeline). Validates a file against the schema before running, lists the bundled examples, and reports which OSC features ScenarioRunner actually implements. Use when the user asks to "run an xosc", "run an OpenSCENARIO file", "use the OpenSCENARIO standard", "run a .osc / OSC2 scenario", or hands over a scenario file from another tool.
 license: MIT
-compatibility: Any OS with a scenario_runner checkout, importable CARLA PythonAPI and a running server. OSC 1.x needs xmlschema==1.0.18; OSC 2.0 needs antlr4-python3-runtime==4.10 and graphviz. Example locations differ by branch (srunner/examples on master, srunner/osc_examples on ue5-master and ue58-dev).
+compatibility: Any OS with a scenario_runner checkout, importable CARLA PythonAPI and a running server. OSC 1.x needs xmlschema==1.0.18; OSC 2.0 needs graphviz and antlr4-python3-runtime matching the branch's parser (4.9.3 on ue58-dev, 4.10 on master and ue5-master). Example locations differ by branch (srunner/examples on master, srunner/osc_examples on ue5-master and ue58-dev).
 metadata:
   group: scenario-runner
   prerequisites: scripts/check_env.sh
@@ -62,14 +62,14 @@ seconds into a run, after the world has already been reloaded.
 source scripts/env.sh
 
 # OpenSCENARIO 1.x
-bash scripts/run_openscenario.sh run "$SCENARIO_RUNNER_ROOT/srunner/examples/FollowLeadingVehicle.xosc"
+bash scripts/run_openscenario.sh run "$SCENARIO_RUNNER_ROOT/srunner/osc_examples/FollowLeadingVehicle.xosc"
 
 # with global parameter overrides — note the 'key: value' comma-separated form
 PARAMS='leadingSpeed: 8.0, egoSpeed: 12.0' \
     bash scripts/run_openscenario.sh run .../FollowLeadingVehicle.xosc
 
 # OpenSCENARIO 2.0
-bash scripts/run_openscenario.sh run2 "$SCENARIO_RUNNER_ROOT/srunner/examples/cut_in_and_slow_right.osc"
+bash scripts/run_openscenario.sh run2 "$SCENARIO_RUNNER_ROOT/srunner/osc_examples/cut_in_and_slow_right.osc"
 ```
 
 Direct equivalents:
@@ -150,10 +150,12 @@ Cause: it was passed without `--openscenario` (e.g. with `--openscenario2`, whic
 has no parameter override).
 Solution: put the values in the file for OSC 2.0.
 
-**Problem: `ModuleNotFoundError: No module named 'antlr4'`**
-Cause: OSC 2.0 needs the ANTLR runtime.
-Solution: `pip install antlr4-python3-runtime==4.10`. The version matters — the
-generated parser in `srunner/osc2/osc2_parser/` is pinned to 4.10.
+**Problem: `ModuleNotFoundError: No module named 'antlr4'`, or "OpenSCENARIO 2.0 support is unavailable"**
+Cause: OSC 2.0 needs the ANTLR runtime of the version the parser was generated with.
+Solution: on `ue58-dev`, `pip install antlr4-python3-runtime==4.9.3`; on `master`
+and `ue5-master`, `==4.10`. The first line of
+`srunner/osc2/osc2_parser/OpenSCENARIO2Parser.py` names the version; a runtime of
+another version cannot load the parser.
 
 **Problem: catalog references fail to resolve**
 Cause: `<CatalogLocation>` paths are relative to the `.xosc` file.
