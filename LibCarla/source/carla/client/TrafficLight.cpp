@@ -16,7 +16,7 @@ namespace client {
   }
 
   rpc::TrafficLightState TrafficLight::GetState() const {
-    return GetEpisode().Lock()->GetActorSnapshot(*this).state.traffic_light_data.state;
+    return GetEpisode().Lock()->GetTrafficLightState(*this).state;
   }
 
   void TrafficLight::SetGreenTime(float green_time) {
@@ -44,7 +44,7 @@ namespace client {
   }
 
   float TrafficLight::GetElapsedTime() const {
-    return GetEpisode().Lock()->GetActorSnapshot(*this).state.traffic_light_data.elapsed_time;
+    return GetEpisode().Lock()->GetTrafficLightState(*this).elapsed_time;
   }
 
   void TrafficLight::Freeze(bool freeze) {
@@ -53,7 +53,7 @@ namespace client {
   }
 
   bool TrafficLight::IsFrozen() const {
-    return GetEpisode().Lock()->GetActorSnapshot(*this).state.traffic_light_data.time_is_frozen;
+    return GetEpisode().Lock()->GetTrafficLightState(*this).time_is_frozen;
   }
 
   uint32_t TrafficLight::GetPoleIndex()

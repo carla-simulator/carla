@@ -8,9 +8,13 @@
 
 #include "Carla/Sensor/DataStream.h"
 
+class FActorRegistry;
+
 class FCarlaActor;
 
 class UCarlaEpisode;
+
+namespace carla { namespace rpc { struct StaticActor; } }
 
 /// Serializes and sends all the actors in the current UCarlaEpisode.
 class FWorldObserver
@@ -32,17 +36,31 @@ public:
     return Stream.GetToken();
   }
 
-  /// An actor that cannot move: active, of type Other or TrafficSign, not
-  /// attached to another actor, with a Static root that simulates no physics
-  /// (a static.prop.mesh spawned without mass, a traffic sign). Static actors
-  /// are left out of the per-tick episode state; clients get them through the
-  /// "get_static_actors" call, again only when the episode state says they
-  /// changed. A traffic light is never static: its state changes.
+  /// An actor that cannot move: active, of type Other, TrafficSign or
+  /// TrafficLight, not attached to another actor, with a Static root that
+  /// simulates no physics (a static.prop.mesh spawned without mass, a traffic
+  /// sign or light). Static actors are left out of the per-tick episode state;
+  /// clients get them through the "get_static_actors" call, again only when
+  /// the episode state says they changed. A static traffic light still sends
+  /// its state, elapsed time and frozen flag on every tick.
   static bool IsStaticActor(const FCarlaActor &View);
 
-  /// Order-independent hash and count of the static actors (ids and
-  /// transforms) in the previous tick, and the version sent in the episode
-  /// state, which changes when they do.
+  /// An AI walker controller attached to the root of its walker with no
+  /// offset: it is where the walker is, so it is left out of the episode
+  /// state too, and clients take the walker's transform. Sets @a WalkerId.
+  static bool FollowsItsWalker(const FCarlaActor &View, const FActorRegistry &Registry, uint32 &WalkerId);
+
+  /// Sets the sign id, phase times and pole index of a traffic light, as the
+  /// episode state would carry them.
+  static void GetTrafficLightConstants(
+      const FCarlaActor &View,
+      const FActorRegistry &Registry,
+      carla::rpc::StaticActor &Item);
+
+  /// Order-independent hash and count of the static actors and followers
+  /// (ids, transforms, what a traffic light does not send on every tick, the
+  /// walker of a follower) in the previous tick, and the version sent in the
+  /// episode state, which changes when they do.
   struct FStaticActors
   {
     uint64 Hash = 0u;
