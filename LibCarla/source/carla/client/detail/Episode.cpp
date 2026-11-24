@@ -15,6 +15,7 @@
 #include <algorithm>
 #include <cstring>
 #include <exception>
+#include <utility>
 
 class FPoseSnapShot;
 
@@ -63,7 +64,15 @@ using namespace std::chrono_literals;
       if (self != nullptr) {
 
         auto data = sensor::Deserializer::Deserialize(std::move(buffer));
-        auto next = std::make_shared<const EpisodeState>(CastData(*data));
+        auto next = EpisodeState::Make(CastData(*data), self->_last_received);
+        if (next == nullptr) {
+          // Unreachable while the server sends a whole state to a session that missed one; logged once per break.
+          if (std::exchange(self->_last_received, nullptr) != nullptr) {
+            log_error("episode state: a delta does not follow the last state received, waiting for a whole one");
+          }
+          return;
+        }
+        self->_last_received = next;
         auto prev = self->GetState();
 
         // TODO: Update how the map change is detected

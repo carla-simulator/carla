@@ -82,6 +82,11 @@ namespace tcp {
       Write(MakeMessage(buffers...));
     }
 
+    /// True, once, if this session did not get the previous message: it is new, or the message was dropped.
+    bool TakeMissed() noexcept {
+      return _missed.exchange(false);
+    }
+
     /// Post a job to close the session.
     void Close();
 
@@ -112,6 +117,7 @@ namespace tcp {
     /// Set by the sending thread, cleared by the write handler on the strand.
     std::atomic_bool _is_writing{false};
     std::atomic_bool _is_closed{false};
+    std::atomic_bool _missed{true};
   };
 
 } // namespace tcp
