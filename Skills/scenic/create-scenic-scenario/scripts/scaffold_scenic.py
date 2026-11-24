@@ -18,9 +18,12 @@ Spec keys (all optional but `map`):
   placement           "lane" | "intersection"  (default "lane")
   arms                4 | 3        intersection arms                (intersection)
   signalized          true | false | null=don't care                (intersection)
-  ego                 {blueprint, speed, maneuver: straight|left|right}
-  actors              [{name, type, blueprint, relation, distance, speed, maneuver}]
+  ego                 {blueprint, speed, maneuver: straight|left|right, brake_distance}
+  actors              [{name, type, blueprint, relation, distance, speed, maneuver,
+                        cut_in, cut_in_delay}]
                       relation: ahead | behind | right_lane | left_lane | conflicting
+                      right_lane/left_lane cut in front of the ego unless cut_in is false
+  speed               a number, or [lo, hi] for a sampled Range (m/s)
   requires            ["(distance to intersection) > 50", ...]
   terminate           e.g. "(distance to ego_spawn) > 70"
   timestep            simulation timestep, default 0.1
@@ -38,12 +41,26 @@ EXAMPLE = {
     "map": "Town05",
     "model": "srunner",
     "placement": "lane",
-    "ego": {"blueprint": "vehicle.lincoln.mkz", "speed": 12},
+    "ego": {"blueprint": "vehicle.lincoln.mkz", "speed": [8, 11]},
     "actors": [{"name": "cutin_car", "type": "Car", "blueprint": "vehicle.dodge.charger",
-                "relation": "right_lane", "distance": [8, 20], "speed": 10}],
+                "relation": "right_lane", "distance": [8, 20], "speed": [6, 9],
+                "cut_in_delay": [0.5, 3.0]}],
     "requires": ["(distance to intersection) > 40"],
-    "terminate": "(distance to ego_spawn) > 80",
+    "terminate": "(distance to ego_spawn) > 70",
 }
+
+
+def num(v) -> str:
+    """A spec number, or a [lo, hi] pair as a Scenic Range sampled per scene."""
+    if isinstance(v, (list, tuple)):
+        return "Range(%s, %s)" % (v[0], v[1])
+    return str(v)
+
+
+def cuts_in(act: dict) -> bool:
+    """right_lane/left_lane actors change into the ego's lane unless told not to;
+    a car that only sits in the neighbouring lane is not a cut-in."""
+    return act.get("relation") in ("right_lane", "left_lane") and act.get("cut_in", True)
 
 
 def find_xodr(spec: dict) -> str:
@@ -99,15 +116,28 @@ def emit(spec: dict) -> str:
     A("model %s" % model)
     A("")
     A("EGO_MODEL = %r" % ego_bp)
-    A("EGO_SPEED = %s" % ego_speed)
+    A("EGO_SPEED = %s" % num(ego_speed))
+    any_cut_in = placement != "intersection" and any(cuts_in(a) for a in actors)
+    if any_cut_in:
+        A("EGO_BRAKE_DIST = %s" % ego.get("brake_distance", 9))
     for i, act in enumerate(actors):
-        A("ACTOR%d_SPEED = %s" % (i, act.get("speed", 8)))
+        A("ACTOR%d_SPEED = %s" % (i, num(act.get("speed", 8))))
+        if cuts_in(act):
+            A("ACTOR%d_CUT_IN_DELAY = %s" % (i, num(act.get("cut_in_delay", [0.5, 3.0]))))
     A("")
 
     # --- behaviors -----------------------------------------------------------
     if placement == "intersection":
         A("behavior EgoBehavior(trajectory):")
         A("    do FollowTrajectoryBehavior(target_speed=EGO_SPEED, trajectory=trajectory)")
+    elif any_cut_in:
+        # Brake for whatever ends up in the ego's lane ahead, or the cut-in is a
+        # rear-end collision rather than a situation.
+        A("behavior EgoBehavior():")
+        A("    try:")
+        A("        do FollowLaneBehavior(target_speed=EGO_SPEED)")
+        A("    interrupt when withinDistanceToObjsInLane(self, EGO_BRAKE_DIST):")
+        A("        take SetBrakeAction(0.8)")
     else:
         A("behavior EgoBehavior():")
         A("    do FollowLaneBehavior(target_speed=EGO_SPEED)")
@@ -121,6 +151,15 @@ def emit(spec: dict) -> str:
             # CrossingBehavior waits for the ego to close to `threshold` metres,
             # then walks across; a plain FollowLaneBehavior does not apply to walkers.
             A("    do CrossingBehavior(ego, ACTOR%d_SPEED, %s)" % (i, act.get("threshold", 10)))
+        elif cuts_in(act):
+            # A car placed in the right lane cuts in by moving to *its* left, the
+            # ego's lane, and vice versa. Read the neighbour from the section the
+            # car is on now, not the one it spawned on: it has driven since.
+            toward = "Left" if act["relation"] == "right_lane" else "Right"
+            A("    do FollowLaneBehavior(target_speed=ACTOR%d_SPEED) for ACTOR%d_CUT_IN_DELAY seconds" % (i, i))
+            A("    do LaneChangeBehavior(laneSectionToSwitch=self.laneSection._laneTo%s, target_speed=ACTOR%d_SPEED)"
+              % (toward, i))
+            A("    do FollowLaneBehavior(target_speed=ACTOR%d_SPEED)" % i)
         else:
             A("    do FollowLaneBehavior(target_speed=ACTOR%d_SPEED)" % i)
         A("")
@@ -157,12 +196,15 @@ def emit(spec: dict) -> str:
         if needs_adjacent:
             side = "right" if any(a.get("relation") == "right_lane" for a in actors) else "left"
             A("# Only lane *sections* know their neighbours, so select on sections.")
+            A("# The neighbour must run the same way: _laneToLeft can be the oncoming")
+            A("# lane, and a car placed there drives at the ego instead of beside it.")
             A("laneSecs = []")
             A("for lane in network.lanes:")
             A("    for sec in lane.sections:")
-            A("        if sec._laneTo%s != None:" % side.capitalize())
+            A("        nb = sec._laneTo%s" % side.capitalize())
+            A("        if nb != None and nb.isForward == sec.isForward:")
             A("            laneSecs.append(sec)")
-            A("assert len(laneSecs) > 0, 'no lane section with a %s neighbour on %s'" % (side, spec["map"]))
+            A("assert len(laneSecs) > 0, 'no lane section with a same-direction %s neighbour on %s'" % (side, spec["map"]))
             A("initLaneSec = Uniform(*laneSecs)")
             A("adjacentLane = initLaneSec._laneTo%s" % side.capitalize())
             A("ego_spawn = new OrientedPoint on initLaneSec.centerline")
@@ -181,6 +223,7 @@ def emit(spec: dict) -> str:
     A("")
 
     # --- other actors --------------------------------------------------------
+    post = []   # requirements an actor's placement implies, emitted with the spec's
     for i, act in enumerate(actors):
         nm = act.get("name") or "actor%d" % i
         typ = act.get("type", "Car")
@@ -201,6 +244,15 @@ def emit(spec: dict) -> str:
         elif rel in ("right_lane", "left_lane"):
             A("%s = new %s on adjacentLane.centerline," % (nm, typ))
             A("    with behavior Actor%dBehavior()" % i)
+            if cuts_in(act):
+                # Ahead of the ego by `distance`, with road left to change lanes
+                # before a junction. Without these the car is as likely to spawn
+                # behind the ego, and the cut-in never happens in front of it.
+                # Keep distance[0] above a car length (~5 m): closer, the two
+                # spawn side by side and the lane change wedges into the ego.
+                post.append("(relative position of %s from ego).y > %s" % (nm, lo))
+                post.append("(distance from ego to %s) < %s" % (nm, hi))
+                post.append("(distance from %s to intersection) > 30" % nm)
         elif rel == "behind":
             A("%s = new %s following roadDirection from ego for -Range(%s, %s)," % (nm, typ, lo, hi))
             A("    with behavior Actor%dBehavior()" % i)
@@ -218,7 +270,7 @@ def emit(spec: dict) -> str:
             A("    with regionContainedIn None")
         A("")
 
-    for r in spec.get("requires") or []:
+    for r in post + (spec.get("requires") or []):
         A("require %s" % r)
     A("terminate when %s" % (spec.get("terminate") or "(distance to ego_spawn) > 70"))
     return "\n".join(L) + "\n"

@@ -11,7 +11,6 @@
 #include "Carla/Autoware/Game/AutowareWorldSettings.h"
 #include "Carla/Game/CarlaEpisode.h"
 #include "Carla/Game/CarlaStatics.h"
-#include "Carla/MapGen/LargeMapManager.h"
 
 #include <util/disable-ue4-macros.h>
 #include "carla/geom/Vector3D.h"
@@ -45,13 +44,7 @@ void AAutowareGnssSensor::PostPhysTick(UWorld *World, ELevelTick TickType, float
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(AAutowareGnssSensor::PostPhysTick);
 
-  FVector ActorLocation = GetActorLocation();
-  ALargeMapManager * LargeMap = UCarlaStatics::GetLargeMapManager(GetWorld());
-  if (LargeMap)
-  {
-    ActorLocation = LargeMap->LocalToGlobalLocation(ActorLocation);
-  }
-  carla::geom::Location Location = ActorLocation;
+  carla::geom::Location Location = GetActorLocation();
   carla::geom::GeoLocation CurrentLocation = CurrentGeoProjection.TransformToGeoLocation(Location);
 
   LatitudeValue = CurrentLocation.latitude;

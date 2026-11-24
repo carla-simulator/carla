@@ -5,7 +5,6 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "CustomTerrainPhysicsComponent.h"
-#include "Carla/MapGen/LargeMapManager.h"
 #include "Carla/Game/CarlaStatics.h"
 #include "Carla/MapGen/SoilTypeManager.h"
 #include "Carla/Actor/ActorBlueprintFunctionLibrary.h"
@@ -74,17 +73,6 @@ constexpr float MToCM = 100.f;
 constexpr float CMToM = 0.01f;
 
 const int CacheExtraRadius = 10;
-
-// Async heightmap streaming on tile cross. Default 1 = async via
-// FStreamableManager; 0 = legacy synchronous StaticLoadObject path (rollback).
-static TAutoConsoleVariable<int32> CVarAsyncHeightmapLoad(
-    TEXT("carla.Terrain.AsyncHeightmapLoad"),
-    1,
-    TEXT("When non-zero (default), CustomTerrainPhysicsComponent loads heightmap ")
-    TEXT("data assets asynchronously on tile crossings instead of issuing a ")
-    TEXT("blocking StaticLoadObject on the game thread. Set to 0 to force the ")
-    TEXT("legacy synchronous path (for rollback/debugging)."),
-    ECVF_Default);
 
 static std::string CachePath = [] {
   constexpr char OverridePathEV[] = "CARLA_CACHE_DIR";
@@ -1284,7 +1272,6 @@ void UCustomTerrainPhysicsComponent::BeginPlay()
         this, &UCustomTerrainPhysicsComponent::OnLevelAddedToWorld);
   }
 
-  LargeMapManager = UCarlaStatics::GetLargeMapManager(GetWorld());
   if( TexturesRes.Contains(ChosenRes) ){
     TextureToUpdate = TexturesRes[ChosenRes];
   }
@@ -1297,13 +1284,6 @@ void UCustomTerrainPhysicsComponent::BeginPlay()
 
     SparseMap.Init(TextureToUpdate->GetSizeX(), TextureRadius, ParticleDiameter * CMToM, TerrainDepth * CMToM, FloorHeight * CMToM );
     RootComponent = Cast<UPrimitiveComponent>(GetOwner()->GetRootComponent());
-    if(LargeMapManager)
-    {
-      FIntVector NumTiles = LargeMapManager->GetNumTilesInXY();
-      // WorldSize = FVector(NumTiles) * LargeMap->GetTileSize();
-      // UE_LOG(LogCarla, Log, 
-      //     TEXT("World Size %s"), *(WorldSize.ToString()));
-    }
     // SparseMap.InitializeMap(HeightMap, UEFrameToSI(Tile0Origin), UEFrameToSI(WorldSize),
     //     1.f, MinHeight, MaxHeight, HeightMapScaleFactor.Z);
     if (DataAsset)
@@ -1434,53 +1414,8 @@ void UCustomTerrainPhysicsComponent::EndPlay(const EEndPlayReason::Type EndPlayR
     TilesWorker = nullptr;
   }
 
-  if (PendingHeightMapHandle.IsValid())
-  {
-    PendingHeightMapHandle->CancelHandle();
-    PendingHeightMapHandle.Reset();
-  }
-
   TRACE_CPUPROFILER_EVENT_SCOPE(FSparseHighDetailMap::SaveMap);
   SparseMap.SaveMap();
-}
-
-void UCustomTerrainPhysicsComponent::OnHeightMapLoaded()
-{
-  if (!PendingHeightMapHandle.IsValid())
-  {
-    return;
-  }
-  UObject* LoadedObject = PendingHeightMapHandle->GetLoadedAsset();
-  const FIntVector TargetTileId = PendingHeightMapTileId;
-  PendingHeightMapHandle.Reset();
-
-  UHeightMapDataAsset* HeightMapDataAsset = Cast<UHeightMapDataAsset>(LoadedObject);
-  if (HeightMapDataAsset == nullptr || LargeMapManager == nullptr)
-  {
-    UE_LOG(LogCarla, Warning,
-        TEXT("UCustomTerrainPhysicsComponent::OnHeightMapLoaded: async load for tile %s resolved but asset is unusable"),
-        *TargetTileId.ToString());
-    return;
-  }
-
-  ActiveHeightMap = HeightMapDataAsset;
-  FVector TilePosition =
-      HeightMapOffset
-      + LargeMapManager->GetTileLocation(TargetTileId)
-      - 0.5f * FVector(LargeMapManager->GetTileSize(), -LargeMapManager->GetTileSize(), 0);
-  UE_LOG(LogCarla, Log,
-      TEXT("Async height map loaded for tile %s at location %s"),
-      *TargetTileId.ToString(), *TilePosition.ToString());
-  TilePosition.Z += UEFrameToSI(FloorHeight);
-  SparseMap.UpdateHeightMap(
-      HeightMapDataAsset,
-      UEFrameToSI(TilePosition),
-      UEFrameToSI(FVector(
-          LargeMapManager->GetTileSize(),
-          -LargeMapManager->GetTileSize(),
-          0)),
-      1.f,
-      HeightMapScaleFactor.Z);
 }
 
 void UCustomTerrainPhysicsComponent::TickComponent(float DeltaTime, 
@@ -1511,78 +1446,6 @@ void UCustomTerrainPhysicsComponent::TickComponent(float DeltaTime,
     }
 
     FVector GlobalLocation = Vehicle->GetActorLocation();
-    if(LargeMapManager)
-    {
-      GlobalLocation = LargeMapManager->LocalToGlobalLocation(Vehicle->GetActorLocation());
-
-      uint64_t TileId = LargeMapManager->GetTileID(GlobalLocation);
-      FIntVector CurrentTileId = 
-          LargeMapManager->GetTileVectorID(GlobalLocation);
-      if(CurrentLargeMapTileId != CurrentTileId)
-      {
-        //load new height map
-        FCarlaMapTile* LargeMapTile = LargeMapManager->GetCarlaMapTile(TileId);
-        if(LargeMapTile)
-        {
-          CurrentLargeMapTileId = CurrentTileId;
-          FString FullTileNamePath = LargeMapTile->Name;
-          FString TileDirectory;
-          FString TileName;
-          FString Extension;
-          FPaths::Split(FullTileNamePath, TileDirectory, TileName, Extension);
-          FString AssetPath = TileDirectory + "/HeightMaps/" + TileName + "." + TileName;
-          UE_LOG(LogCarla, Log, TEXT("Enter tile %s, %s \n %s \n %s \n %s"), *CurrentTileId.ToString(), 
-              *FullTileNamePath, *TileDirectory, *TileName, *Extension);
-
-          if (CVarAsyncHeightmapLoad.GetValueOnGameThread() != 0)
-          {
-            // Cancel any in-flight load for a previous tile — we are crossing
-            // into a different tile, so the previous heightmap is no longer
-            // the target. The callback is bound via CreateUObject, so even if
-            // it fires after cancellation it is a no-op on a reset handle.
-            if (PendingHeightMapHandle.IsValid())
-            {
-              PendingHeightMapHandle->CancelHandle();
-              PendingHeightMapHandle.Reset();
-            }
-            PendingHeightMapTileId = CurrentTileId;
-            FSoftObjectPath HeightMapSoftPath(AssetPath);
-            FStreamableManager& Streamable = UAssetManager::GetStreamableManager();
-            PendingHeightMapHandle = Streamable.RequestAsyncLoad(
-                HeightMapSoftPath,
-                FStreamableDelegate::CreateUObject(
-                    this,
-                    &UCustomTerrainPhysicsComponent::OnHeightMapLoaded));
-          }
-          else
-          {
-            UObject* DataAssetObject = StaticLoadObject(UHeightMapDataAsset::StaticClass(), nullptr, *(AssetPath));
-            if(DataAssetObject)
-            {
-              UHeightMapDataAsset* HeightMapDataAsset = Cast<UHeightMapDataAsset>(DataAssetObject);
-              if (HeightMapDataAsset != nullptr)
-              {
-                FVector TilePosition = HeightMapOffset + LargeMapManager->GetTileLocation(CurrentLargeMapTileId) - 0.5f*FVector(LargeMapManager->GetTileSize(), -LargeMapManager->GetTileSize(), 0);
-                UE_LOG(LogCarla, Log, TEXT("Updating height map to location %s in tile location %s"),
-                    *TilePosition.ToString(), *LargeMapManager->GetTileLocation(CurrentLargeMapTileId).ToString());
-                TilePosition.Z += UEFrameToSI(FloorHeight) ;
-                ActiveHeightMap = HeightMapDataAsset;
-                SparseMap.UpdateHeightMap(
-                    HeightMapDataAsset, UEFrameToSI(TilePosition), UEFrameToSI(FVector(
-                      LargeMapManager->GetTileSize(),-LargeMapManager->GetTileSize(), 0)),
-                    1.f, HeightMapScaleFactor.Z);
-              }
-            }
-          }
-        }
-        else
-        {/*
-          UE_LOG(LogCarla, Log, TEXT("Tile not found %s %s"), 
-              *GlobalLocation.ToString(), *CurrentTileId.ToString());
-          */
-        }
-      }
-    }
 
     SparseMap.LockMutex();
     RunNNPhysicsSimulation(Vehicle, DeltaTime);
@@ -1654,10 +1517,6 @@ void UCustomTerrainPhysicsComponent::TickComponent(float DeltaTime,
       {
         float Height = SparseMap.GetHeight(UEFrameToSI(FVector(DrawPos_X, DrawPos_Y, 0)));
         FVector Point = FVector(DrawPos_X, DrawPos_Y, SIToUEFrame(Height));
-        if(LargeMapManager)
-        {
-          Point = LargeMapManager->GlobalToLocalLocation(Point);
-        }
         LineBatcher->DrawPoint(Point, 
             FLinearColor(1.f, 0.f, 0.f), 10.0, 0, LifeTime);
 
@@ -1684,10 +1543,6 @@ void UCustomTerrainPhysicsComponent::DrawParticles(UWorld* World, std::vector<FP
     // DrawDebugPoint(World, MToCM*Particle->Position.ToFVector(),
     //     1.0, FColor(255,0,0), false, 0.3, 0);
     FVector Point = SIToUEFrame(Particle->Position.ToFVector());
-    if(LargeMapManager)
-    {
-      Point = LargeMapManager->GlobalToLocalLocation(Point);
-    }
     LineBatcher->DrawPoint(Point, 
           Color, 1.0, 0, LifeTime);
   }
@@ -1735,13 +1590,6 @@ void UCustomTerrainPhysicsComponent::DrawOrientedBox(UWorld* World, const TArray
     TArray<FVector> Vertices;
     Vertices.SetNum(8);
     OBox.CalcVertices(&Vertices[0]);
-    if(LargeMapManager)
-    {
-      for(FVector& Point : Vertices)
-      {
-        Point = LargeMapManager->GlobalToLocalLocation(Point);
-      }
-    }
 
     FBatchedLine BatchedLines[] =
     {
@@ -1799,13 +1647,6 @@ void UCustomTerrainPhysicsComponent::DrawTiles(UWorld* World, const std::vector<
     FVector V2 = SIToUEFrame(TileCenter + FVector(SparseMap.GetTileSize(),0,0));
     FVector V3 = SIToUEFrame(TileCenter + FVector(0,SparseMap.GetTileSize(),0));
     FVector V4 = SIToUEFrame(TileCenter + FVector(SparseMap.GetTileSize(),SparseMap.GetTileSize(),0));
-    if(LargeMapManager)
-    {
-      V1 = LargeMapManager->GlobalToLocalLocation(V1);
-      V2 = LargeMapManager->GlobalToLocalLocation(V2);
-      V3 = LargeMapManager->GlobalToLocalLocation(V3);
-      V4 = LargeMapManager->GlobalToLocalLocation(V4);
-    }
     V1.Z = Height;
     V2.Z = Height;
     V3.Z = Height;
@@ -1906,13 +1747,6 @@ void UCustomTerrainPhysicsComponent::RunNNPhysicsSimulation(
   WheelTransform1.SetLocation(WheelPosition1);
   WheelTransform2.SetLocation(WheelPosition2);
   WheelTransform3.SetLocation(WheelPosition3);
-  if(LargeMapManager)
-  {
-    WheelPosition0 = LargeMapManager->LocalToGlobalLocation(WheelPosition0);
-    WheelPosition1 = LargeMapManager->LocalToGlobalLocation(WheelPosition1);
-    WheelPosition2 = LargeMapManager->LocalToGlobalLocation(WheelPosition2);
-    WheelPosition3 = LargeMapManager->LocalToGlobalLocation(WheelPosition3);
-  }
   FOrientedBox BboxWheel0;
   BboxWheel0.AxisX = VehicleTransform.GetUnitAxis(EAxis::X);
   BboxWheel0.AxisY = VehicleTransform.GetUnitAxis(EAxis::Y);
@@ -2699,10 +2533,6 @@ void UCustomTerrainPhysicsComponent::SetUpWheelArrays(ACarlaWheeledVehicle *Vehi
   else
   {
     Position = VehicleTransform.TransformPosition(Position);
-    if(LargeMapManager)
-    {
-      Position = LargeMapManager->LocalToGlobalLocation(Position);
-    }
     Position = UEFrameToSI(Position);
     float ForwardSpeed = FVector::DotProduct(
         Vehicle->GetVelocity(),VehicleTransform.GetRotation().GetForwardVector());

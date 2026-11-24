@@ -62,7 +62,6 @@
 #include "Subsystems/UnrealEditorSubsystem.h"
 #include "WorldPartition/WorldPartitionSubsystem.h"
 #endif
-#include "Carla/MapGen/LargeMapManager.h"
 #include "Carla/Util/ProceduralCustomMesh.h"
 #include "BlueprintUtilFunctions.h"
 #include <util/disable-ue4-macros.h>
@@ -545,28 +544,6 @@ void UOpenDriveToMap::GenerateTile()
 		MapName.RemoveFromEnd(".xodr", ESearchCase::Type::IgnoreCase);
 		UE_LOG(LogCarlaTools, Warning, TEXT("MapName %s"), *MapName);
 
-#if ENGINE_MAJOR_VERSION < 5
-		GEditor->GetEditorSubsystem<ULevelEditorSubsystem>()->LoadLevel(*BaseLevelName);
-		AActor* QueryActor = UGameplayStatics::GetActorOfClass(GetEditorWorld(), ALargeMapManager::StaticClass());
-		if (QueryActor != nullptr)
-		{
-			ALargeMapManager* LmManager = Cast<ALargeMapManager>(QueryActor);
-			LmManager->GenerateMap_Editor();
-			NumTilesInXY = LmManager->GetNumTilesInXY();
-			TileSize = LmManager->GetTileSize();
-			Tile0Offset = LmManager->GetTile0Offset();
-			GEditor->GetEditorSubsystem<ULevelEditorSubsystem>()->SaveCurrentLevel();
-			LmManager->GetCarlaMapTile(CurrentTilesInXY);
-			FCarlaMapTile& CarlaTile = LmManager->GetCarlaMapTile(CurrentTilesInXY);
-
-			UE_LOG(LogCarlaTools, Warning, TEXT("Current Tile is %s"), *(CurrentTilesInXY.ToString()));
-			UE_LOG(LogCarlaTools, Warning, TEXT("NumTilesInXY is %s"), *(NumTilesInXY.ToString()));
-			UE_LOG(LogCarlaTools, Warning, TEXT("TileSize is %f"), (TileSize));
-			UE_LOG(LogCarlaTools, Warning, TEXT("Tile0Offset is %s"), *(Tile0Offset.ToString()));
-			UE_LOG(LogCarlaTools, Warning, TEXT("Tile Name is %s"), *(CarlaTile.Name));
-
-			GEditor->GetEditorSubsystem<ULevelEditorSubsystem>()->LoadLevel(CarlaTile.Name);
-#endif
 			MinPosition = FVector(CurrentTilesInXY.X * TileSize, CurrentTilesInXY.Y * -TileSize, 0.0f);
 			MaxPosition = FVector((CurrentTilesInXY.X + 1.0f) * TileSize, (CurrentTilesInXY.Y + 1.0f) * -TileSize, 0.0f);
 
@@ -581,13 +558,6 @@ void UOpenDriveToMap::GenerateTile()
 			bRoadsFinished = true;
 			bMapLoaded = true;
 			bTileFinished = false;
-#if ENGINE_MAJOR_VERSION < 5
-		}
-		else
-		{
-			UE_LOG(LogCarlaTools, Error, TEXT("Largemapmanager not found "));
-		}
-#endif
 		UEditorLoadingAndSavingUtils::SaveDirtyPackages(true, true);
 		GEditor->GetEditorSubsystem<ULevelEditorSubsystem>()->SaveCurrentLevel();
 
@@ -717,24 +687,6 @@ void UOpenDriveToMap::LoadMap()
 		MapName.RemoveFromEnd(".xodr", ESearchCase::Type::IgnoreCase);
 		UE_LOG(LogCarlaTools, Warning, TEXT("MapName %s"), *MapName);
 
-		AActor* QueryActor = UGameplayStatics::GetActorOfClass(GetEditorWorld(), ALargeMapManager::StaticClass());
-#if ENGINE_MAJOR_VERSION < 5
-		if (QueryActor != nullptr)
-		{
-			ALargeMapManager* LargeMapManager = Cast<ALargeMapManager>(QueryActor);
-			NumTilesInXY = LargeMapManager->GetNumTilesInXY();
-			TileSize = LargeMapManager->GetTileSize();
-			Tile0Offset = LargeMapManager->GetTile0Offset();
-			CurrentTilesInXY = FIntVector(0, 0, 0);
-			ULevel* PersistantLevel = GetEditorWorld()->PersistentLevel;
-			BaseLevelName = LargeMapManager->LargeMapTilePath + "/" + LargeMapManager->LargeMapName;
-			do
-			{
-				GenerateTileStandalone();
-			} while (GoNextTile());
-			ReturnToMainLevel();
-		}
-#else
 		UWorld* World = GetEditorWorld();
 
 		StreetMapActorReference = Cast<AStreetMapActor>(UGameplayStatics::GetActorOfClass(World, AStreetMapActor::StaticClass()));
@@ -806,7 +758,6 @@ void UOpenDriveToMap::LoadMap()
 		}
 
 		RemoveFromRoot();
-#endif
 		Landscapes.Empty();
 	}
 }
@@ -1598,100 +1549,6 @@ void UOpenDriveToMap::ImportOSM()
 	else
 	{
 		UE_LOG(LogCarlaTools, Error, TEXT("FilePaths local osm file not copied: File not Copied!"));
-	}
-}
-
-void UOpenDriveToMap::MoveActorsToSubLevels(TArray<AActor*> ActorsToMove)
-{
-	AActor* QueryActor = UGameplayStatics::GetActorOfClass(GetEditorWorld(), ALargeMapManager::StaticClass());
-
-	if (QueryActor != nullptr)
-	{
-		ALargeMapManager* LmManager = Cast<ALargeMapManager>(QueryActor);
-		if (LmManager)
-		{
-			GEditor->GetEditorSubsystem<ULevelEditorSubsystem>()->SaveCurrentLevel();
-			UOpenDriveToMap::MoveActorsToSubLevelWithLargeMap(ActorsToMove, LmManager);
-		}
-	}
-}
-
-void UOpenDriveToMap::MoveActorsToSubLevelWithLargeMap(TArray<AActor*> Actors, ALargeMapManager* LargeMapManager)
-{
-	TMap<FCarlaMapTile*, TArray<AActor*>> ActorsToMove;
-	for (AActor* Actor : Actors)
-	{
-		if (Actor == nullptr)
-		{
-			continue;
-		}
-		UHierarchicalInstancedStaticMeshComponent* Component = Cast<UHierarchicalInstancedStaticMeshComponent>(
-			Actor->GetComponentByClass(UHierarchicalInstancedStaticMeshComponent::StaticClass()));
-		FVector ActorLocation = Actor->GetActorLocation();
-		if (Component)
-		{
-			ActorLocation = FVector(0);
-			for (int32 i = 0; i < Component->GetInstanceCount(); ++i)
-			{
-				FTransform Transform;
-				Component->GetInstanceTransform(i, Transform, true);
-				ActorLocation = ActorLocation + Transform.GetTranslation();
-			}
-			ActorLocation = ActorLocation / Component->GetInstanceCount();
-		}
-		UE_LOG(LogCarlaTools, Log, TEXT("Actor at location %s"), *ActorLocation.ToString());
-		FCarlaMapTile* Tile = LargeMapManager->GetCarlaMapTile(ActorLocation);
-		if (!Tile)
-		{
-			UE_LOG(LogCarlaTools, Error, TEXT("Error: actor %s in location %s is outside the map"), *Actor->GetName(),
-				*ActorLocation.ToString());
-			continue;
-		}
-
-		if (Component)
-		{
-			UpdateInstancedMeshCoordinates(Component, Tile->Location);
-		}
-		else
-		{
-			UpdateGenericActorCoordinates(Actor, Tile->Location);
-		}
-		ActorsToMove.FindOrAdd(Tile).Add(Actor);
-	}
-
-	for (auto& Element : ActorsToMove)
-	{
-		FCarlaMapTile* Tile = Element.Key;
-		TArray<AActor*> ActorList = Element.Value;
-		if (!ActorList.Num())
-		{
-			continue;
-		}
-
-		UWorld* World = GetEditorWorld();
-		ULevelStreamingDynamic* StreamingLevel = Tile->StreamingLevel;
-		StreamingLevel->bShouldBlockOnLoad = true;
-		StreamingLevel->SetShouldBeVisible(true);
-		StreamingLevel->SetShouldBeLoaded(true);
-		ULevelStreaming* Level =
-			UEditorLevelUtils::AddLevelToWorld(World, *Tile->Name, ULevelStreamingDynamic::StaticClass(), FTransform());
-		int MovedActors = UEditorLevelUtils::MoveActorsToLevel(ActorList, Level, false, false);
-		// StreamingLevel->SetShouldBeLoaded(false);
-		UE_LOG(LogCarlaTools, Log, TEXT("Moved %d actors"), MovedActors);
-		FEditorFileUtils::SaveDirtyPackages(false, true, true, false, false, false, nullptr);
-		UEditorLevelUtils::RemoveLevelFromWorld(Level->GetLoadedLevel());
-	}
-
-	GEngine->PerformGarbageCollectionAndCleanupActors();
-	FText TransResetText(FText::FromString("Clean up after Move actors to sublevels"));
-	if (GEditor->Trans)
-	{
-#if ENGINE_MAJOR_VERSION < 5
-		GEditor->Trans->Reset(TransResetText);
-#else
-		GEditor->Trans->Reset(TransResetText);
-#endif
-		GEditor->Cleanse(true, true, TransResetText);
 	}
 }
 

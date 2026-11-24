@@ -184,17 +184,10 @@ FTransform FCarlaActor::GetActorLocalTransform() const
 {
   if (IsDormant())
   {
-    FTransform Transform = FTransform(
+    return FTransform(
         ActorData->Rotation,
         ActorData->Location.ToFVector(),
         ActorData->Scale);
-    ALargeMapManager* LargeMap =
-        UCarlaStatics::GetLargeMapManager(World);
-    if (LargeMap)
-    {
-      Transform = LargeMap->GlobalToLocalTransform(Transform);
-    }
-    return Transform;
   }
   else
   {
@@ -221,14 +214,7 @@ FTransform FCarlaActor::GetActorGlobalTransform() const
       // stream-out converts these entries to dormant.
       return FTransform::Identity;
     }
-    FTransform Transform = Actor->GetActorTransform();
-    ALargeMapManager* LargeMap =
-        UCarlaStatics::GetLargeMapManager(World);
-    if (LargeMap)
-    {
-      Transform = LargeMap->LocalToGlobalTransform(Transform);
-    }
-    return Transform;
+    return Actor->GetActorTransform();
   }
 }
 
@@ -236,14 +222,7 @@ FVector FCarlaActor::GetActorLocalLocation() const
 {
   if (IsDormant())
   {
-    FVector Location = ActorData->Location.ToFVector();
-    ALargeMapManager* LargeMap =
-        UCarlaStatics::GetLargeMapManager(World);
-    if (LargeMap)
-    {
-      Location = LargeMap->GlobalToLocalLocation(Location);
-    }
-    return Location;
+    return ActorData->Location.ToFVector();
   }
   else
   {
@@ -259,14 +238,7 @@ FVector FCarlaActor::GetActorGlobalLocation() const
   }
   else
   {
-    FVector Location = GetActor()->GetActorLocation();
-    ALargeMapManager* LargeMap =
-        UCarlaStatics::GetLargeMapManager(World);
-    if (LargeMap)
-    {
-      Location = LargeMap->LocalToGlobalLocation(Location);
-    }
-    return Location;
+    return GetActor()->GetActorLocation();
   }
 }
 
@@ -274,14 +246,7 @@ void FCarlaActor::SetActorLocalLocation(const FVector& Location, ETeleportType T
 {
   if (IsDormant())
   {
-    FVector GlobalLocation = Location;
-    ALargeMapManager* LargeMap =
-        UCarlaStatics::GetLargeMapManager(World);
-    if (LargeMap)
-    {
-      GlobalLocation = LargeMap->LocalToGlobalLocation(GlobalLocation);
-    }
-    ActorData->Location = FDVector(GlobalLocation);
+    ActorData->Location = FDVector(Location);
   }
   else
   {
@@ -302,15 +267,8 @@ void FCarlaActor::SetActorGlobalLocation(
   }
   else
   {
-    FVector LocalLocation = Location;
-    ALargeMapManager* LargeMap =
-        UCarlaStatics::GetLargeMapManager(World);
-    if (LargeMap)
-    {
-      LocalLocation = LargeMap->GlobalToLocalLocation(Location);
-    }
     GetActor()->SetActorRelativeLocation(
-        LocalLocation,
+        Location,
         false,
         nullptr,
         TeleportType);
@@ -322,17 +280,9 @@ void FCarlaActor::SetActorLocalTransform(
 {
   if (IsDormant())
   {
-    FTransform GlobalTransform = Transform;
-    ALargeMapManager* LargeMap =
-        UCarlaStatics::GetLargeMapManager(World);
-    if (LargeMap)
-    {
-      GlobalTransform =
-          LargeMap->LocalToGlobalTransform(GlobalTransform);
-    }
-    ActorData->Location = FDVector(GlobalTransform.GetLocation());
-    ActorData->Rotation = GlobalTransform.GetRotation();
-    ActorData->Scale = GlobalTransform.GetScale3D();
+    ActorData->Location = FDVector(Transform.GetLocation());
+    ActorData->Rotation = Transform.GetRotation();
+    ActorData->Scale = Transform.GetScale3D();
   }
   else
   {
@@ -355,16 +305,8 @@ void FCarlaActor::SetActorGlobalTransform(
   }
   else
   {
-    FTransform LocalTransform = Transform;
-    ALargeMapManager* LargeMap =
-        UCarlaStatics::GetLargeMapManager(World);
-    if (LargeMap)
-    {
-      LocalTransform =
-          LargeMap->GlobalToLocalTransform(LocalTransform);
-    }
     GetActor()->SetActorTransform(
-        LocalTransform,
+        Transform,
         false,
         nullptr,
         TeleportType);

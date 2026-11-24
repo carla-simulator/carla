@@ -78,16 +78,20 @@ void ARayCastLidar::SendData(const float DeltaTime)
     // Passing the channel count and vertical FOV limits routes the publisher
     // through the extended Autoware XYZIRCAEDT layout (tier4 autoware-support
     // port); see ROS2::ProcessDataFromLidar.
+    const auto AzimuthRange = carla::ros2::LidarAzimuthRange::FromDegrees(
+        Description.AzimuthClockwise, Description.AzimuthRangeStart, Description.AzimuthRangeEnd);
     if (ParentActor)
     {
       FTransform LocalTransformRelativeToParent = GetActorTransform().GetRelativeTransform(ParentActor->GetActorTransform());
       ROS2->ProcessDataFromLidar(DataStream.GetSensorType(), StreamId, LocalTransformRelativeToParent,
-                                 Description.Channels, Description.UpperFovLimit, Description.LowerFovLimit, LidarData, this);
+                                 Description.Channels, Description.UpperFovLimit, Description.LowerFovLimit, LidarData, this,
+                                 AzimuthRange);
     }
     else
     {
       ROS2->ProcessDataFromLidar(DataStream.GetSensorType(), StreamId, SensorTransform,
-                                 Description.Channels, Description.UpperFovLimit, Description.LowerFovLimit, LidarData, this);
+                                 Description.Channels, Description.UpperFovLimit, Description.LowerFovLimit, LidarData, this,
+                                 AzimuthRange);
     }
   }
   #endif

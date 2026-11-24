@@ -14,9 +14,11 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "StaticMeshResources.h"
 #include "GenerationPathsHelper.h"
+#include <util/disable-ue4-macros.h>
 #include <carla/opendrive/OpenDriveParser.h>
 #include <carla/rpc/String.h>
 #include <carla/road/element/Waypoint.h>
+#include <util/enable-ue4-macros.h>
 #include <optional>
 #include "OpenDriveToMap.h"
 #include "DrawDebugHelpers.h"

@@ -111,8 +111,10 @@ make this less likely on Linux than on Windows, but the check costs nothing.
 
 The towns outside the cook scope ship as one content pack, `AdditionalMaps`,
 cooked as DLC against **this** package's base release — so build it right after
-Step 3, from the same tree, and ship it with this package only (a pack from
-another build is refused at install).
+Step 3, from the same tree, and ship it with this package only. Install does not
+catch a pack from another build of the same version: both carry the same
+`BaseRelease`, and its towns then load with content missing. See
+[[get-carla-additional-maps]].
 
 ```bash
 cmake --build Build/Release --target package-additional-maps-dry-run   # resolve maps, print UAT line

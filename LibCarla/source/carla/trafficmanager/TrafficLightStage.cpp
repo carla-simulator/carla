@@ -19,7 +19,7 @@ TrafficLightStage::TrafficLightStage(
   const Parameters &parameters,
   const cc::World &world,
   TLFrame &output_array,
-  RandomGenerator &random_device)
+  UniformPRNG &random_device)
   : vehicle_id_list(vehicle_id_list),
     simulation_state(simulation_state),
     buffer_map(buffer_map),

@@ -27,22 +27,17 @@ void ASoilTypeManager::Tick(float DeltaTime)
 #if WITH_EDITOR // Only for debugging purposes. Requires to activate tick in contructor
   if((int)DeltaTime % 2000 == 0)
   {
-    ALargeMapManager* LMManager = (ALargeMapManager*) UGameplayStatics::GetActorOfClass(GetWorld(), ALargeMapManager::StaticClass());
     AActor* Car = UGameplayStatics::GetActorOfClass(GetWorld(), CarClass);
 
     if(Car != nullptr)
     {
       FVector CarPos = Car->GetActorLocation();
 
-      FVector GlobalCarPos = LMManager->LocalToGlobalLocation(CarPos);
-      FIntVector TileVector = LMManager->GetTileVectorID(GlobalCarPos);
-      uint64 TileIndex = LMManager->GetTileID(GlobalCarPos);
+      FIntVector TileVector = GetTileVectorID(CarPos);
+      FString TypeStr = GetTerrainPropertiesAtGlobalLocation(CarPos).ToString();
 
-      FString TypeStr = GetTerrainPropertiesAtGlobalLocation(GlobalCarPos).ToString();
-      
-      UE_LOG(LogCarla, Log, TEXT("Current Tile Index %d ----> (%d, %d, %d) with position L[%f, %f, %f] G[%f, %f, %f] Terrain Type: %s"),
-        TileIndex, TileVector.X, TileVector.Y, TileVector.Z, CarPos.X, CarPos.Y, CarPos.Z, GlobalCarPos.X, GlobalCarPos.Y, GlobalCarPos.Z,
-        *TypeStr);
+      UE_LOG(LogCarla, Log, TEXT("Current Tile (%d, %d, %d) with position [%f, %f, %f] Terrain Type: %s"),
+        TileVector.X, TileVector.Y, TileVector.Z, CarPos.X, CarPos.Y, CarPos.Z, *TypeStr);
     }
   }
 #endif
@@ -53,10 +48,21 @@ FSoilTerramechanicsProperties ASoilTypeManager::GetGeneralTerrainProperties()
   return GeneralTerrainProperties;
 }
 
+FIntVector ASoilTypeManager::GetTileVectorID(const FVector &Location) const
+{
+  // Tile (0, 0) is centred on Tile0Offset; Y grows the other way in tile
+  // indices, as in the tiled maps this grid comes from.
+  FIntVector VectorId = FIntVector(
+      (Location - (Tile0Offset - FVector(0.5f * TileSize, -0.5f * TileSize, 0)))
+      / TileSize);
+  VectorId.Y *= -1;
+  return VectorId;
+}
+
 FSoilTerramechanicsProperties ASoilTypeManager::GetTerrainPropertiesAtGlobalLocation(FVector VehicleLocation)
 {
   // Get Indexes from location
-  FIntVector TileVectorID = LargeMapManager->GetTileVectorID(VehicleLocation);
+  FIntVector TileVectorID = GetTileVectorID(VehicleLocation);
 
   // Query the map, if not in map, return general
   if(TilesTerrainProperties.Contains(TileVectorID))
@@ -67,8 +73,7 @@ FSoilTerramechanicsProperties ASoilTypeManager::GetTerrainPropertiesAtGlobalLoca
 
 FSoilTerramechanicsProperties ASoilTypeManager::GetTerrainPropertiesAtLocalLocation(FVector VehicleLocation)
 {
-  FVector GlobalVehiclePosition = LargeMapManager->LocalToGlobalLocation(VehicleLocation);
-  return GetTerrainPropertiesAtGlobalLocation(GlobalVehiclePosition);
+  return GetTerrainPropertiesAtGlobalLocation(VehicleLocation);
 }
 
 void ASoilTypeManager::SetGeneralTerrainProperties(FSoilTerramechanicsProperties TerrainProperties)
@@ -80,9 +85,6 @@ void ASoilTypeManager::SetGeneralTerrainProperties(FSoilTerramechanicsProperties
 
 void ASoilTypeManager::AddTerrainPropertiesToTile(int TileX, int TileY, FSoilTerramechanicsProperties TerrainProperties)
 {
-  // Compute ID from X,Y coords
-  check(LargeMapManager != nullptr)
-
   FIntVector TileVectorID(TileX, TileY, 0);
 
   // Add to map

@@ -54,7 +54,8 @@ lane = Uniform(*network.lanes)                     # any lane
 intersections = network.intersections              # .is3Way .is4Way .isSignalized
 lane.centerline                                    # a region to place on
 lane.sections                                      # only sections know neighbours
-sec._laneToLeft / sec._laneToRight                 # adjacent lane, or None
+sec._laneToLeft / sec._laneToRight                 # adjacent lane, or None; may be oncoming
+sec.isForward                                      # direction relative to its road
 intersec.incomingLanes                             # arms
 lane.maneuvers                                     # .type, .startLane, .connectingLane, .endLane
 maneuver.conflictingManeuvers                      # crossing traffic
@@ -63,7 +64,12 @@ ManeuverType.STRAIGHT / LEFT_TURN / RIGHT_TURN
 
 **Adjacent lanes live on sections, not lanes.** To find a lane with a right
 neighbour you must loop over `lane.sections` and test `sec._laneToRight`; there is
-no `lane.laneToRight`.
+no `lane.laneToRight`. The neighbour may run the other way (`_laneToLeft` of a
+right-hand lane is often the oncoming one), so compare `isForward` before placing
+a car beside the ego. To move a car across, use
+`LaneChangeBehavior(laneSectionToSwitch=self.laneSection._laneToLeft)`. Read the
+section from `self` at that moment: by then the car is on a different section
+from the one it spawned on.
 
 **`filter()` over a network attribute is deterministic** — safe to `assert` on.
 **Anything derived from `Uniform()` is random** — comparing it raises
