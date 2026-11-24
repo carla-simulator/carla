@@ -85,6 +85,9 @@ private:
       const FTransform BoxTransform,
       const FVector BoxSize);
 
+  /// Turns off the owner's trigger boxes other than the OpenDRIVE ones.
+  void DisableBlueprintTriggers();
+
   UPROPERTY(Category = "Traffic Light", EditAnywhere)
   ETrafficLightState LightState;
 
