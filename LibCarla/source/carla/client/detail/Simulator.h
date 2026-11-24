@@ -794,6 +794,10 @@ namespace detail {
           BaseJSONPath);
     }
 
+    void RestoreDefaultPhysics(Vehicle &vehicle) {
+      _client.RestoreDefaultPhysics(vehicle.GetId());
+    }
+
     /// @}
     // =========================================================================
     /// @name Operations with the recorder

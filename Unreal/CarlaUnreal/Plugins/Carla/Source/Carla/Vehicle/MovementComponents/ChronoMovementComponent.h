@@ -19,7 +19,7 @@
 #endif
 
 #include "chrono/physics/ChSystemNSC.h"
-#include "chrono_vehicle/ChVehicleModelData.h"
+#include "chrono_vehicle/ChVehicleDataPath.h"
 #include "chrono_vehicle/ChTerrain.h"
 #include "chrono_vehicle/driver/ChDataDriver.h"
 #include "chrono_vehicle/wheeled_vehicle/vehicle/WheeledVehicle.h"
@@ -36,15 +36,23 @@
 #ifdef WITH_CHRONO
 class UERayCastTerrain : public chrono::vehicle::ChTerrain
 {
+  // Used where the trace finds no physical material: ChTerrain's own default.
+  static constexpr float DefaultFriction = 0.8f;
   ACarlaWheeledVehicle* CarlaVehicle;
   chrono::vehicle::ChVehicle* ChronoVehicle;
 public:
   UERayCastTerrain(ACarlaWheeledVehicle* UEVehicle, chrono::vehicle::ChVehicle* ChrVehicle);
 
   std::pair<bool, FHitResult> GetTerrainProperties(const FVector &Location) const;
-  virtual double GetHeight(const chrono::ChVector<>& loc) const override;
-  virtual chrono::ChVector<> GetNormal(const chrono::ChVector<>& loc) const override;
-  virtual float GetCoefficientFriction(const chrono::ChVector<>& loc) const override;
+  virtual double GetHeight(const chrono::ChVector3d& loc) const override;
+  virtual chrono::ChVector3d GetPoint(const chrono::ChVector3d& loc) const override;
+  virtual chrono::ChVector3d GetNormal(const chrono::ChVector3d& loc) const override;
+  virtual float GetCoefficientFriction(const chrono::ChVector3d& loc) const override;
+  virtual void GetProperties(const chrono::ChVector3d& loc,
+                             chrono::ChVector3d& point,
+                             double& height,
+                             chrono::ChVector3d& normal,
+                             float& friction) const override;
 };
 #endif
 
@@ -62,15 +70,23 @@ class CARLA_API UChronoMovementComponent : public UBaseCarlaMovementComponent
   uint64_t MaxSubsteps = 10;
   float MaxSubstepDeltaTime = 0.01;
   FVehicleControl VehicleControl;
-  FString VehicleJSON =    "hmmwv/vehicle/HMMWV_Vehicle.json";
-  FString PowertrainJSON = "hmmwv/powertrain/HMMWV_ShaftsPowertrain.json";
-  FString TireJSON =       "hmmwv/tire/HMMWV_Pac02Tire.json";
+  // Defaults: the sedan templates under Co-Simulation/Chrono/Vehicles/, which
+  // is also where an empty base path points (see CreateChronoMovementComponent).
+  FString VehicleJSON =    "sedan/vehicle/Sedan_Vehicle.json";
+  FString PowertrainJSON = "sedan/powertrain/Sedan_SimpleMapPowertrain.json";
+  FString TireJSON =       "sedan/tire/Sedan_TMeasyTire.json";
   FString BaseJSONPath = "";
+  // Resolved from the powertrain template by CreateChronoMovementComponent.
+  FString EngineJSON = "";
+  FString TransmissionJSON = "";
 
 public:
 
 
-  static void CreateChronoMovementComponent(
+  // Replaces the vehicle's movement component with a Chrono one. Returns an
+  // empty string on success, or why Chrono could not be enabled, in which
+  // case the vehicle keeps the physics it had.
+  static FString CreateChronoMovementComponent(
       ACarlaWheeledVehicle* Vehicle,
       uint64_t MaxSubsteps,
       float MaxSubstepDeltaTime,
@@ -82,6 +98,8 @@ public:
   #ifdef WITH_CHRONO
   virtual void BeginPlay() override;
 
+  // Builds the Chrono system and vehicle from the templates. Throws
+  // std::exception on a template Chrono cannot use.
   void InitializeChronoVehicle();
 
   void ProcessControl(FVehicleControl &Control) override;
@@ -101,9 +119,13 @@ public:
   virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
   #endif
 
+  virtual void DisableSpecialPhysics() override;
+
 private:
 
-  void DisableChronoPhysics();
+  // Hands the vehicle back to Chaos. It keeps the velocity Chrono gave it
+  // unless bResetVelocity, for a Chrono state that cannot be trusted.
+  void DisableChronoPhysics(bool bResetVelocity = false);
 
   UFUNCTION()
   void OnVehicleHit(AActor *Actor,

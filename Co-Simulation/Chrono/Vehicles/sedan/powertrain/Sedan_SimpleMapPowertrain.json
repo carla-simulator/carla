@@ -1,0 +1,8 @@
+{
+  "Name":                    "Sedan Simple Map Powertrain",
+  "Type":                    "Powertrain",
+  "Template":                "PowertrainAssembly",
+
+  "Engine Input File":       "sedan/powertrain/Sedan_EngineSimpleMap.json",
+  "Transmission Input File": "sedan/powertrain/Sedan_AutomaticTransmissionSimpleMap.json"
+}

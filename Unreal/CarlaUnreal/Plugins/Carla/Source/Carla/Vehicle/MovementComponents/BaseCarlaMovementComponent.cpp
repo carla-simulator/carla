@@ -70,13 +70,13 @@ void UBaseCarlaMovementComponent::DisableUE4VehiclePhysics()
 
 void UBaseCarlaMovementComponent::EnableUE4VehiclePhysics(bool bResetVelocity)
 {
+  EnableUE4VehiclePhysics(
+      bResetVelocity ? FVector::ZeroVector : GetVelocity(), bResetVelocity);
+}
 
-  FVector CurrentVelocity(0, 0, 0);
-  if (!bResetVelocity)
-  {
-    CurrentVelocity = GetVelocity();
-  }
-  CarlaVehicle->GetMesh()->SetPhysicsLinearVelocity(CurrentVelocity, false, "Vehicle_Base");
+void UBaseCarlaMovementComponent::EnableUE4VehiclePhysics(
+    const FVector& LinearVelocity, bool bResetAngularVelocity)
+{
   CarlaVehicle->GetVehicleMovementComponent()->SetComponentTickEnabled(true);
   CarlaVehicle->GetVehicleMovementComponent()->Activate();
   CarlaVehicle->GetMesh()->PhysicsTransformUpdateMode = EPhysicsTransformUpdateMode::SimulationUpatesComponentTransform;
@@ -92,4 +92,15 @@ void UBaseCarlaMovementComponent::EnableUE4VehiclePhysics(bool bResetVelocity)
   CarlaVehicle->GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_WorldStatic, ECollisionResponse::ECR_Block);
   CarlaVehicle->GetMesh()->SetCollisionProfileName("Vehicle");
   CarlaVehicle->RestoreVehiclePhysicsControl();
+  // Last: a velocity only sticks once the bodies simulate again, and
+  // RestoreVehiclePhysicsControl() recreates the Chaos physics state. Every
+  // body needs it; it used to be set first, on a bone named "Vehicle_Base"
+  // (which not every vehicle has), so Chaos carried on with whatever the
+  // bodies picked up while they were moved kinematically, which after a
+  // diverged Chrono simulation is kilometres per second.
+  CarlaVehicle->GetMesh()->SetAllPhysicsLinearVelocity(LinearVelocity);
+  if (bResetAngularVelocity)
+  {
+    CarlaVehicle->GetMesh()->SetAllPhysicsAngularVelocityInDegrees(FVector::ZeroVector);
+  }
 }
