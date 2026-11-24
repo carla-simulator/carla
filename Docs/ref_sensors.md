@@ -595,7 +595,25 @@ where the camera otherwise keeps motion blur off.
 | `carla.Camera.FNumber` | `2.0` | Lens f-number used to turn the auto exposure into an exposure time. |
 | `carla.Camera.MinExposureMs` | `0.05` | Shortest exposure time in milliseconds. |
 | `carla.Camera.MaxExposureMs` | `20` | Longest exposure time in milliseconds. |
-| `carla.Camera.ExposureLog` | `0` | `1` logs each capture's exposure, exposure time and motion blur amount. |
+| `carla.Camera.ExposureLog` | `0` | `1` logs each capture's exposure, exposure time and motion blur amount, and its EV100 and bloom. |
+
+#### Exposure-linked bloom
+
+A camera's glare comes from light much brighter than what its exposure maps to white. By day the exposure is short
+and almost nothing gets there but the sun; at night it is long, and street lamps, headlights and lit windows flare.
+CARLA's lamps and emissive materials keep the same brightness by day and by night, so the RGB camera scales the bloom
+and lens flare of its post-process profile with its own exposure: the profile's full value at night (EV100 at or
+below `carla.Camera.BloomNightEV100`), `carla.Camera.BloomDayScale` of it in daylight (EV100 at or above
+`carla.Camera.BloomDayEV100`), and a smooth blend at dusk, in tunnels or under heavy cloud. In Town10HD_Opt a camera
+meters about EV100 10 to 11 at `ClearNoon` and about 4 at `ClearNight`. A bloom or lens flare intensity set through
+the profile or the `bloom_intensity` attribute is the night value the scale starts from.
+
+| Console variable | Default | Description |
+| --- | --- | --- |
+| `carla.Camera.ExposureBloom` | `1` | `1` scales the bloom and lens flare with the exposure; `0` leaves those of the post-process profile as they are. |
+| `carla.Camera.BloomDayScale` | `0.25` | Fraction of the profile's bloom and lens flare kept in daylight. |
+| `carla.Camera.BloomNightEV100` | `5` | EV100 at or below which the full bloom is used. |
+| `carla.Camera.BloomDayEV100` | `10` | EV100 at or above which only `BloomDayScale` of it is used. |
 
 #### Auto exposure of a new camera
 
