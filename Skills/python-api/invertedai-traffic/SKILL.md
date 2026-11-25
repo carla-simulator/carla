@@ -173,7 +173,7 @@ error; the scripts filter it out of their own output.
 | `invertedai not importable` / numpy errors | The wrong interpreter. Use `$IAI_PY`, not `python3`. Re-run `install_iai.sh`. |
 | `carla not importable` in the venv | The venv was made without `--system-site-packages`, or the wheel is in another user site. Install the wheel into the venv with `install-python-api`. |
 | Few spawned (`spawned 12/30`) | Initial states overlapped existing actors. Clear the area or change `--seed`/`--center`. |
-| NPCs run red lights | The Inverted AI map has no lights (`ping` says so), or a `WARN … match no CARLA light` line at start: those lights are not synced. Lights are matched by position, never by actor-id order: a sorted-id table was off by two on UE 5.8 and fed every NPC another junction's light. |
+| NPCs run red lights | The Inverted AI map has no lights (`ping` says so), or a `WARN  Inverted AI lights with no CARLA light: …` / `WARN  CARLA lights with no Inverted AI light: …` line at start (`WARN  unpaired: …` in `ping`): those lights are not synced. Lights are matched by position, never by actor-id order: a sorted-id table was off by two on UE 5.8 and fed every NPC another junction's light. |
 | Server froze after a crash | The world was left synchronous. Run `iai_client.py clean`. |
 | Example prints `KeyError: '4378'` (a bare `'4378'` in older examples) after "Generating birdview GIF" | It comes from the SDK's GIF renderer, not from the light mapping. The recording, the JSON log and a GIF are still written; the wrapper flags it as WARN. |
 | `AttributeError: Off` from `TrafficLightState` | Older examples used `TrafficLightState.Off`; the SDK's off state is `TrafficLightState.none`. Fixed in the example and in `iai_client.py`. |
