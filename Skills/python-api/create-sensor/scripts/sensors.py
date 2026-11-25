@@ -7,6 +7,8 @@ Commands:
           [--x 1.5 --y 0 --z 2.4 --pitch 0 --yaw 0 --roll 0]
           [--attachment Rigid|SpringArm] [--attr image_size_x=800 --attr fov=90]
                                            spawn one sensor; prints its id
+    rig --preset surround|av | --file RIG.json [--attach-to hero] [--out ids.json]
+                                           spawn several sensors at once; prints a name -> id table
     destroy [--filter sensor.*]            remove sensors
 
 `--type` accepts a short name (camera.rgb, lidar.ray_cast, other.gnss) or the full
@@ -171,6 +173,73 @@ def cmd_spawn(args):
         # sensor publish with no Python client attached.
         sensor.enable_for_ros()
     _report_ros(sensor, parent, args)
+
+
+def _find_parent(world, args):
+    if args.parent_id is not None:
+        parent = world.get_actors().find(args.parent_id)
+        if parent is None:
+            raise SystemExit(f"no actor id {args.parent_id}")
+        return parent
+    if args.attach_to:
+        matches = [a for a in world.get_actors().filter("vehicle.*")
+                   if a.attributes.get("role_name", "") == args.attach_to]
+        if not matches:
+            raise SystemExit(f"no vehicle with role_name={args.attach_to!r} "
+                             "(spawn an ego with spawn-vehicles, or use --parent-id)")
+        return matches[0]
+    return None
+
+
+def cmd_rig(args):
+    """Spawn several sensors from a JSON list; all of them or none."""
+    import json
+    path = args.file or os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "assets", "rigs", f"{args.preset}.json")
+    with open(path) as fh:
+        spec = json.load(fh)
+    world = _fresh(_client().get_world())
+    lib = world.get_blueprint_library()
+    parent = _find_parent(world, args)
+    names = [e.get("name", f"s{i}") for i, e in enumerate(spec)]
+    if len(set(names)) != len(names):
+        raise SystemExit("sensor names in the rig must be unique")
+    planned = []
+    for name, e in zip(names, spec):
+        try:
+            bp = lib.find(_full_type(e["type"]))
+        except IndexError:
+            raise SystemExit(f"{name}: no blueprint {_full_type(e['type'])!r} (see: types)")
+        for k, v in (e.get("attrs") or {}).items():
+            if not bp.has_attribute(k):
+                raise SystemExit(f"{name}: {bp.id} has no attribute {k!r}")
+            bp.set_attribute(k, str(v))
+        if args.ros and bp.has_attribute("ros_name"):
+            bp.set_attribute("ros_name", name)
+        tf = carla.Transform(carla.Location(e.get("x", 0.0), e.get("y", 0.0), e.get("z", 0.0)),
+                             carla.Rotation(pitch=e.get("pitch", 0.0), yaw=e.get("yaw", 0.0), roll=e.get("roll", 0.0)))
+        planned.append((name, bp, tf, getattr(carla.AttachmentType, e.get("attachment", "Rigid"))))
+    spawned = []
+    try:
+        for name, bp, tf, attach in planned:
+            s = world.spawn_actor(bp, tf, attach_to=parent, attachment_type=attach) if parent else world.spawn_actor(bp, tf)
+            spawned.append((name, s))
+    except RuntimeError as exc:
+        for _, s in spawned:
+            s.destroy()
+        raise SystemExit(f"spawning '{name}' failed ({exc}); destroyed the {len(spawned)} already spawned")
+    if args.ros:
+        for _, s in spawned:
+            s.enable_for_ros()
+    where = f"attached to id={parent.id} ({parent.type_id})" if parent else "world-fixed"
+    print(f"spawned {len(spawned)} sensors {where}:")
+    for name, s in spawned:
+        print(f"  {name:14s} id={s.id:6d}  {s.type_id}")
+    ids = {name: s.id for name, s in spawned}
+    if args.out:
+        with open(args.out, "w") as fh:
+            json.dump(ids, fh, indent=1)
+        print(f"  ids written to {args.out}")
+    print(f"  save them together with: read-sensor save --ids {','.join(str(i) for i in ids.values())} --out DIR")
 
 
 def _resolved_ros_name(actor, explicit=None):
@@ -362,6 +431,16 @@ def main() -> None:
                     help="do not publish this sensor's transform on rt/tf. UE4 "
                          "servers only; on UE5 use world.set_publish_tf(False)")
     ps.set_defaults(func=cmd_spawn)
+
+    prg = sub.add_parser("rig", help="spawn several sensors from a JSON rig file or a preset")
+    src = prg.add_mutually_exclusive_group(required=True)
+    src.add_argument("--file", help="JSON list of {name, type, x, y, z, pitch, yaw, roll, attachment, attrs}")
+    src.add_argument("--preset", choices=("surround", "av"), help="assets/rigs/<preset>.json")
+    prg.add_argument("--attach-to", help="parent vehicle role_name (e.g. hero)")
+    prg.add_argument("--parent-id", type=int)
+    prg.add_argument("--ros", action="store_true", help="name each sensor's topic after it and enable_for_ros()")
+    prg.add_argument("--out", help="write {name: id} JSON here")
+    prg.set_defaults(func=cmd_rig)
 
     pr = sub.add_parser("ros", help="enable/disable ROS publishing on existing sensors")
     pr.add_argument("--id", type=int, help="one sensor (default: every sensor matching --filter)")

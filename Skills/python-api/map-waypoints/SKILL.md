@@ -1,6 +1,6 @@
 ---
 name: map-waypoints
-description: Explores a CARLA map's road network through the Map/Waypoint API — a natural-language rundown of the whole map ("give me the topology"), drawing the topology to confirm the modelled map matches the visible one, enumerating junctions to resolve phrases like "the 4-way junction in the middle", nearest-waypoint lane facts, and next/previous lane navigation. Use when the user asks about the map's layout, lanes, junctions, topology, or to locate/navigate specific map elements.
+description: Explores a CARLA map's road network through the Map/Waypoint API — a natural-language rundown of the whole map ("give me the topology"), drawing the topology to confirm the modelled map matches the visible one, enumerating junctions to resolve phrases like "the 4-way junction in the middle", nearest-waypoint lane facts, next/previous lane navigation, and the OpenDRIVE structure itself (one road's lane sections and lanes, one lane's width and connections, one junction's entry and exit lanes). Use when the user asks about the map's layout, lanes, junctions, topology, or to locate/navigate specific map elements.
 license: MIT
 compatibility: Any OS with the CARLA PythonAPI installed for the active interpreter and a reachable, already-running CARLA server. Drawing needs a rendered view; text queries work headless. Tested against CARLA 0.9.16.
 metadata:
@@ -77,7 +77,21 @@ python3 scripts/waypoints.py junctions --arms 4 --draw     # highlight + label t
 # lane facts at a point, and a forward walk along the lane
 python3 scripts/waypoints.py waypoint --at 30,20,0
 python3 scripts/waypoints.py navigate --at 30,20,0 --dist 2 --steps 30 --draw
+
+# the OpenDRIVE structure: one road, one lane, one junction
+python3 scripts/waypoints.py road --id 10
+python3 scripts/waypoints.py lane --at=100,-20,0 --draw          # the lane under a point
+python3 scripts/waypoints.py lane --road 0 --section 0 --lane 2
+python3 scripts/waypoints.py junction --id 841 --draw            # entry lanes green, exit lanes red
 ```
+
+### The OpenDRIVE structure
+
+`road`, `lane` and `junction` read the structure the waypoints are sampled from, through `carla.Road`, `carla.LaneSection`, `carla.Lane` and `carla.Junction` (`map.get_road()`, `map.get_lane()`, `map.get_junction_by_id()`). A road is cut along its `s` into lane sections; a lane lives in one section, so it is named `road/section/lane`.
+
+- `road` prints the road's length, previous and next roads, and each section's lanes with type and width.
+- `lane` prints width, direction, left and right lanes, and the lanes it comes from and leads into: the connectivity a route planner follows.
+- `junction` prints the roads that meet the junction and its entry and exit lanes. On Town10HD_Opt, junction 841 has 3 adjacent roads, matching its 3 arms, and junction 189 has 4.
 
 ## On CARLA 0.10.0 (the UE5 line: 5.5 and 5.8)
 
@@ -93,6 +107,8 @@ So any code shaped `landmark.waypoint.transform` or
 road position from the landmark itself instead — `map.get_waypoint_xodr(
 landmark.road_id, lane_id, landmark.s)`, or `map.get_waypoint(
 landmark.transform.location)` when you only need the nearest lane.
+
+**`get_left_lane()` and `get_right_lane()` on a waypoint are deprecated**; use `get_left_waypoint()` and `get_right_waypoint()`. Neither pair filters by lane type or by the lane-change marking: on Town10HD_Opt road 0 lane 2, marked `lane_change=Left`, `get_right_waypoint()` returned the shoulder (lane 3). Check `lane_type` and `lane_change` yourself before steering into the result.
 
 `get_all_landmarks`, `get_all_landmarks_of_type`, `get_all_landmarks_from_id` and
 `get_landmark_group` all work on both versions. The rest of the Map/Waypoint API

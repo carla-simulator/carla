@@ -1,0 +1,8 @@
+[
+ {"name": "front",       "type": "camera.rgb", "x": 1.5, "z": 1.6, "yaw": 0,    "attrs": {"image_size_x": "1600", "image_size_y": "900", "fov": "70"}},
+ {"name": "front_left",  "type": "camera.rgb", "x": 1.3, "y": -0.5, "z": 1.6, "yaw": -55,  "attrs": {"image_size_x": "1600", "image_size_y": "900", "fov": "70"}},
+ {"name": "front_right", "type": "camera.rgb", "x": 1.3, "y": 0.5, "z": 1.6, "yaw": 55,   "attrs": {"image_size_x": "1600", "image_size_y": "900", "fov": "70"}},
+ {"name": "back",        "type": "camera.rgb", "x": -1.5, "z": 1.6, "yaw": 180,  "attrs": {"image_size_x": "1600", "image_size_y": "900", "fov": "110"}},
+ {"name": "back_left",   "type": "camera.rgb", "x": -0.8, "y": -0.5, "z": 1.6, "yaw": -110, "attrs": {"image_size_x": "1600", "image_size_y": "900", "fov": "70"}},
+ {"name": "back_right",  "type": "camera.rgb", "x": -0.8, "y": 0.5, "z": 1.6, "yaw": 110,  "attrs": {"image_size_x": "1600", "image_size_y": "900", "fov": "70"}}
+]
