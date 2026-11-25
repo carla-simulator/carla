@@ -1200,25 +1200,37 @@ void FCarlaServer::FPimpl::BindActions()
   };
 
   // The actors left out of the episode state because they cannot move (see
-  // FWorldObserver::IsStaticActor); clients call this when the episode state
-  // says the set changed.
+  // FWorldObserver::IsStaticActor) or follow their walker (see
+  // FWorldObserver::FollowsItsWalker); clients call this when the episode
+  // state says the set changed.
   BIND_SYNC(get_static_actors) << [this]() -> R<std::vector<cr::StaticActor>>
   {
     REQUIRE_CARLA_EPISODE();
+    const FActorRegistry &Registry = Episode->GetActorRegistry();
     std::vector<cr::StaticActor> Result;
-    for (auto &&It : Episode->GetActorRegistry())
+    for (auto &&It : Registry)
     {
       const FCarlaActor *View = It.Value.Get();
-      if (View != nullptr && FWorldObserver::IsStaticActor(*View))
+      uint32 WalkerId = 0u;
+      if (View != nullptr && (FWorldObserver::IsStaticActor(*View) ||
+                              FWorldObserver::FollowsItsWalker(*View, Registry, WalkerId)))
       {
         cr::StaticActor Item;
         Item.id = View->GetActorId();
         Item.transform = cr::Transform(View->GetActorGlobalTransform());
-        const auto *Sign = Cast<ATrafficSignBase>(View->GetActor());
-        const auto *SignComponent = Sign ? Sign->FindComponentByClass<USignComponent>() : nullptr;
-        if (SignComponent != nullptr)
+        Item.parent_id = WalkerId;
+        if (View->GetActorType() == FCarlaActor::ActorType::TrafficLight)
         {
-          Item.sign_id = cr::FromFString(SignComponent->GetSignId());
+          FWorldObserver::GetTrafficLightConstants(*View, Registry, Item);
+        }
+        else
+        {
+          const auto *Sign = Cast<ATrafficSignBase>(View->GetActor());
+          const auto *SignComponent = Sign ? Sign->FindComponentByClass<USignComponent>() : nullptr;
+          if (SignComponent != nullptr)
+          {
+            Item.sign_id = cr::FromFString(SignComponent->GetSignId());
+          }
         }
         Result.emplace_back(Item);
       }

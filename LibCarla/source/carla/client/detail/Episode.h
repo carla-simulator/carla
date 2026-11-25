@@ -71,13 +71,16 @@ namespace detail {
     std::vector<rpc::Actor> GetActors();
 
     /// The actors the server leaves out of the episode state because they
-    /// cannot move (static props, traffic signs), and the episode and
-    /// static-actors version (EpisodeState::GetStaticActorsVersion) they were
-    /// fetched at.
+    /// cannot move (static props, traffic signs and lights) or because they
+    /// are where their walker is (AI walker controllers, the followers), and
+    /// the episode and static-actors version
+    /// (EpisodeState::GetStaticActorsVersion) they were fetched at.
     struct StaticActors {
       uint64_t episode_id = 0u;
       uint32_t version = 0u;
       std::unordered_map<ActorId, ActorSnapshot> actors;
+      /// Follower -> its walker.
+      std::unordered_map<ActorId, ActorId> followers;
     };
 
     /// The current static actors. Fetched with one call the first time they
@@ -86,7 +89,9 @@ namespace detail {
     std::shared_ptr<const StaticActors> GetStaticActors();
 
     /// The snapshot of a static actor (transform, Active state, no motion, the
-    /// sign id of a traffic sign), or nothing. Does not throw.
+    /// sign id of a traffic sign, the times and pole of a traffic light), or
+    /// of a follower (the transform of its walker), or nothing. Does not
+    /// throw.
     std::optional<ActorSnapshot> GetStaticActorSnapshot(ActorId id);
 
     std::optional<WorldSnapshot> WaitForState(time_duration timeout) {

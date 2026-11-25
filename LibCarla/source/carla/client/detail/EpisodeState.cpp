@@ -34,6 +34,12 @@ namespace detail {
               actor.state});
       DEBUG_ASSERT(result.second);
     }
+    const auto traffic_lights = state.GetTrafficLights();
+    _traffic_lights.reserve(traffic_lights.size());
+    for (auto &&light : traffic_lights) {
+      const ActorId id = light.id;
+      _traffic_lights.emplace(id, light);
+    }
   }
 
 } // namespace detail

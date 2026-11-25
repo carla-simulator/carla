@@ -4,6 +4,8 @@
 # This work is licensed under the terms of the MIT license.
 # For a copy, see <https://opensource.org/licenses/MIT>.
 
+import time
+
 import carla
 
 from . import SyncSmokeTest
@@ -106,3 +108,103 @@ class TestTrafficLight(SyncSmokeTest):
             traffic_light.set_state(expected_state)
             world.tick()
             self.assertEqual(expected_state, traffic_light.get_state())
+
+    def _tick_until(self, world, condition, ticks=5):
+        for _ in range(ticks):
+            world.tick()
+            if condition():
+                return True
+        return False
+
+    def test_static_light_keeps_its_data(self):
+        """A traffic light is a static actor: only its state, elapsed time and
+        frozen flag reach the client every tick. Everything else it had in the
+        snapshot (transform, OpenDRIVE id, phase times, pole index) must read
+        the same, also after it changes."""
+        print("TestTrafficLight.test_static_light_keeps_its_data")
+        parameters = carla.OpendriveGenerationParameters(
+            vertex_distance=2.0,
+            max_road_length=50.0,
+            wall_height=0.0,
+            additional_width=0.6,
+            smooth_junctions=True,
+            enable_mesh_visibility=True)
+        world = self.client.generate_opendrive_world(
+            OUTSIDE_JUNCTION_TRAFFIC_LIGHT_XODR, parameters, reset_settings=False)
+        self.world = world
+        self.assertTrue(self._tick_until(
+            world, lambda: len(world.get_actors().filter("traffic.traffic_light*")) == 1, ticks=100))
+        light = world.get_actors().filter("traffic.traffic_light*")[0]
+
+        snapshot = world.get_snapshot()
+        self.assertIsNone(snapshot.find(light.id))
+        self.assertFalse(snapshot.has_actor(light.id))
+        self.assertIn(light.id, {actor.id for actor in world.get_static_actors()})
+        self.assertTrue(light.is_alive)
+        self.assertEqual("10", light.get_opendrive_id())
+        self.assertEqual(light.id, world.get_actor(light.id).id)
+
+        # The signal is 40 m along a road that runs on the x axis, 5 m aside.
+        transform = light.get_transform()
+        self.assertTrue(20.0 < transform.location.x < 60.0, transform)
+        self.assertTrue(abs(transform.location.y) < 15.0, transform)
+        self.assertEqual(light.get_velocity().length(), 0.0)
+        pole_index = light.get_pole_index()
+
+        # Running: the elapsed time advances one step per tick while the
+        # state holds, and starts again when the state changes.
+        light.freeze(False)
+        self.assertTrue(self._tick_until(world, lambda: not light.is_frozen()))
+        steps = 0
+        for _ in range(60):
+            state, elapsed = light.get_state(), light.get_elapsed_time()
+            world.tick()
+            if light.get_state() == state:
+                self.assertAlmostEqual(light.get_elapsed_time() - elapsed, 0.05, places=3)
+                steps += 1
+            else:
+                self.assertLess(light.get_elapsed_time(), elapsed)
+        self.assertGreater(steps, 30)
+
+        # Frozen: the flag arrives and the elapsed time stands still.
+        light.freeze(True)
+        self.assertTrue(self._tick_until(world, light.is_frozen))
+        elapsed = light.get_elapsed_time()
+        for _ in range(5):
+            world.tick()
+            self.assertTrue(light.is_frozen())
+            self.assertEqual(elapsed, light.get_elapsed_time())
+
+        # The phase times are not sent every tick: a change still arrives.
+        for setter, getter, seconds in (
+                (light.set_green_time, light.get_green_time, 7.5),
+                (light.set_yellow_time, light.get_yellow_time, 2.5),
+                (light.set_red_time, light.get_red_time, 4.5)):
+            self.assertNotAlmostEqual(getter(), seconds, places=3)
+            setter(seconds)
+            self.assertTrue(
+                self._tick_until(world, lambda: abs(getter() - seconds) < 1e-4), (getter(), seconds))
+        self.assertAlmostEqual(light.get_green_time(), 7.5, places=4)
+        self.assertAlmostEqual(light.get_yellow_time(), 2.5, places=4)
+        self.assertAlmostEqual(light.get_red_time(), 4.5, places=4)
+
+        # A client that connects now reads the same, and nothing else changed.
+        late = carla.Client(*self.testing_address)
+        late.set_timeout(120.0)
+        late_world = late.get_world()
+        frame = world.tick()
+        deadline = time.time() + 30.0
+        while late_world.get_snapshot().frame < frame and time.time() < deadline:
+            time.sleep(0.001)
+        self.assertEqual(late_world.get_snapshot().frame, frame)
+        for seen in (light, late_world.get_actor(light.id)):
+            self.assertEqual("10", seen.get_opendrive_id())
+            self.assertEqual(pole_index, seen.get_pole_index())
+            self.assertEqual(transform.location.distance(seen.get_transform().location), 0.0)
+            self.assertEqual(transform.rotation.yaw, seen.get_transform().rotation.yaw)
+            self.assertAlmostEqual(seen.get_green_time(), 7.5, places=4)
+            self.assertAlmostEqual(seen.get_yellow_time(), 2.5, places=4)
+            self.assertAlmostEqual(seen.get_red_time(), 4.5, places=4)
+            self.assertTrue(seen.is_frozen())
+            self.assertEqual(light.get_state(), seen.get_state())
+            self.assertTrue(seen.is_alive)

@@ -83,6 +83,16 @@ namespace detail {
       return state;
     }
 
+    /// State, elapsed time and frozen flag of a traffic light that is a
+    /// static actor; nothing for any other actor.
+    std::optional<sensor::data::TrafficLightDynamicState> GetTrafficLightState(ActorId id) const {
+      auto it = _traffic_lights.find(id);
+      if (it == _traffic_lights.end()) {
+        return std::nullopt;
+      }
+      return it->second;
+    }
+
     auto GetActorIds() const {
       return MakeListView(
           iterator::make_map_keys_const_iterator(_actors.begin()),
@@ -120,6 +130,8 @@ namespace detail {
     SimulationState _simulation_state = SimulationState::None;
 
     std::unordered_map<ActorId, ActorSnapshot> _actors;
+
+    std::unordered_map<ActorId, sensor::data::TrafficLightDynamicState> _traffic_lights;
   };
 
 } // namespace detail
