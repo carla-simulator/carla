@@ -529,3 +529,65 @@ class TestRightHandedBoundary(unittest.TestCase):
         self.assertAlmostEqual(forward.z, math.sin(math.radians(20.0)), self.PLACES)
         right = carla.Rotation(roll=25.0).get_right_vector()
         self.assertAlmostEqual(right.z, -math.sin(math.radians(25.0)), self.PLACES)
+
+
+# One straight road; carla.Map parses it offline, with no server.
+_XODR = """<?xml version="1.0" standalone="yes"?>
+<OpenDRIVE>
+  <header revMajor="1" revMinor="4" name="" version="1">
+    <geoReference><![CDATA[{geo}]]></geoReference>{offset}
+  </header>
+  <road name="r" length="100.0" id="0" junction="-1">
+    <link/>
+    <planView><geometry s="0.0" x="0.0" y="0.0" hdg="0.0" length="100.0"><line/></geometry></planView>
+    <elevationProfile/>
+    <lateralProfile/>
+    <lanes>
+      <laneSection s="0.0">
+        <center><lane id="0" type="none" level="false"/></center>
+        <right><lane id="-1" type="driving" level="false"><width sOffset="0.0" a="3.5" b="0.0" c="0.0" d="0.0"/></lane></right>
+      </laneSection>
+    </lanes>
+  </road>
+</OpenDRIVE>
+"""
+
+
+class TestMapGeoProjection(unittest.TestCase):
+    PLACES = 7
+    LOCATION = carla.Location(x=100.0, y=200.0, z=5.0)
+
+    def make_map(self, geo, offset=''):
+        return carla.Map('geo_test', _XODR.format(geo=geo, offset=offset))
+
+    def assert_geo_equal(self, a, b):
+        self.assertAlmostEqual(a.latitude, b.latitude, self.PLACES)
+        self.assertAlmostEqual(a.longitude, b.longitude, self.PLACES)
+        self.assertAlmostEqual(a.altitude, b.altitude, self.PLACES)
+
+    def test_own_projection_matches_default(self):
+        # Passing the map's own projection must give the same result as passing none.
+        for geo in ('+proj=tmerc +lat_0=41.5 +lon_0=2.1 +ellps=WGS84',
+                    '+proj=utm +zone=31 +ellps=WGS84',
+                    '+proj=merc +ellps=WGS84',
+                    '+proj=lcc +lat_0=41 +lat_1=40 +lat_2=43 +lon_0=2 +ellps=WGS84'):
+            m = self.make_map(geo)
+            projection = m.get_geoprojection()
+            expected = m.transform_to_geolocation(self.LOCATION)
+            self.assert_geo_equal(m.transform_to_geolocation(self.LOCATION, projection), expected)
+            back = m.geolocation_to_transform(expected, projection)
+            self.assertAlmostEqual(back.x, self.LOCATION.x, 2)
+            self.assertAlmostEqual(back.y, self.LOCATION.y, 2)
+
+    def test_north_is_minus_y_with_custom_projection(self):
+        m = self.make_map('+proj=tmerc +lat_0=41.5 +lon_0=2.1 +ellps=WGS84')
+        projection = carla.GeoProjectionTM(lat_0=41.5, lon_0=2.1, ellps=WGS84)
+        origin = m.transform_to_geolocation(carla.Location(), projection)
+        north = m.transform_to_geolocation(carla.Location(y=-100.0), projection)
+        self.assertGreater(north.latitude, origin.latitude)
+
+    def test_utm_zero_offset_matches_no_offset(self):
+        geo = '+proj=utm +zone=31 +ellps=WGS84'
+        plain = self.make_map(geo).transform_to_geolocation(self.LOCATION)
+        offset = self.make_map(geo, '<offset x="0" y="0" z="0" hdg="0"/>').transform_to_geolocation(self.LOCATION)
+        self.assert_geo_equal(offset, plain)

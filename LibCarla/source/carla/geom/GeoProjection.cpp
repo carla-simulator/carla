@@ -172,7 +172,7 @@ namespace geom {
         // un-projecting; mirror it here with the inverse offset so a
         // geo -> location -> geo round-trip stays the identity.
         if (p.offset.has_value()) {
-            result = p.offset->ApplyInverseTransformation(result);
+            result = SwapHandedness(p.offset->ApplyInverseTransformation(result));
         }
 
         return result;
@@ -297,7 +297,7 @@ namespace geom {
 
         Location location;
         if (p.offset.has_value()) {
-            location = p.offset->ApplyTransformation(location_in);
+            location = p.offset->ApplyTransformation(SwapHandedness(location_in));
         }
         else{
             location = location_in;

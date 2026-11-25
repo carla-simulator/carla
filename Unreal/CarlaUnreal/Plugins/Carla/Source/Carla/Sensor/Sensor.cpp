@@ -101,6 +101,21 @@ void ASensor::Tick(const float DeltaTime)
   PrePhysTick(SensorDeltaTime);
 }
 
+bool ASensor::CanSkipRayCastSimulation()
+{
+  return !(bSavingDataToDisk || bHasInProcessConsumer || AreClientsListening());
+}
+
+void ASensor::SeedRandomEngineForFrame()
+{
+  if (RandomEngine == nullptr)
+  {
+    return;
+  }
+  RandomEngine->Seed(static_cast<int32>(
+      HashCombine(GetTypeHash(Seed), GetTypeHash(FCarlaEngine::GetFrameCounter()))));
+}
+
 void ASensor::SetSeed(const int32 InSeed)
 {
   check(RandomEngine != nullptr);

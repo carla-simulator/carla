@@ -44,6 +44,8 @@ public:
 
   virtual void SimulateLidar(const float DeltaTime, bool bLockPhysics = true) override;
 
+  virtual void SkipSimulation(const float DeltaTime) override;
+
 private:
   FDetection ComputeDetection(const FHitResult& HitInfo, const FTransform& InverseSensorTransform) const;
 

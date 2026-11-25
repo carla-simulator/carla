@@ -31,7 +31,7 @@ It lives in its own repository, [`carla-simulator/carla-digitaltwins`](https://g
 | `CarlaDigitalTwinsTool` content | __Optional download__, about 18 GB, not distributed with CARLA. See [The CarlaDigitalTwinsTool content](#step-4-download-the-content-optional). The pipeline needs it only for procedural buildings. |
 | Editor plugin (`UW_DigitalTwins`) | __Not usable.__ The widget comes with the `CarlaDigitalTwinsTool` content, but its Blueprint does not compile against CARLA's `CarlaTools`: `Could not find a function named "GenerateMap_Editor"`. Use the command line pipeline. |
 | Map preview and navigation (*Select OSM Database*, *Render*, arrows, zoom) | __Removed.__ The OSM renderer these controls talk to is no longer in the repository. The buttons remain in the older `UW_OnRoadMainWidget`, and pressing them aborts the editor: `UMapPreviewUserWidget::ConnectToSocket` connects to port 5000 with the throwing Boost.Asio overload, so a refused connection raises an uncaught exception. |
-| Traffic Light Tool | Opens in the editor. Adding a pole needs the [`CarlaDigitalTwinsTool` content](#step-4-download-the-content-optional): without it, *Add Pole* crashes the editor. The phases in a map's `map_logic.json` work at run time. |
+| Traffic Light Tool | __Available.__ Its pieces, data tables and presets are part of CARLA's content, so it does not need the `CarlaDigitalTwinsTool` content. The phases in a map's `map_logic.json` work at run time. |
 | Traffic sign generation | Available in the editor, for a map that has OSM data and an OpenDRIVE file. |
 | Vegetation and furniture (PCG) | Available in the editor, from a placement plan in JSON. |
 | Twin maps | One in the content: `Eixample`. It has no Traffic Manager cache and no pedestrian navigation. |
@@ -51,7 +51,7 @@ The tool comes from two repositories, neither of which is part of a CARLA checko
 | What | Repository | Where it goes | Needed for |
 | --- | --- | --- | --- |
 | The pipeline (`TwinModel/`) | [`carla-simulator/carla-digitaltwins`](https://github.com/carla-simulator/carla-digitaltwins), branch `ue58-twins` | Anywhere __outside__ the CARLA tree | Building a twin |
-| The `CarlaDigitalTwinsTool` content | `bitbucket.org/carla-simulator/digitaltwins`, branch `ue5-digitaltwins` | `Unreal/CarlaUnreal/Plugins/CarlaDigitalTwinsTool/Content` | Procedural buildings, *Add Pole* in the Traffic Light Tool, the sign catalog, `GenerateTile`. Optional |
+| The `CarlaDigitalTwinsTool` content | `bitbucket.org/carla-simulator/digitaltwins`, branch `ue5-digitaltwins` | `Unreal/CarlaUnreal/Plugins/CarlaDigitalTwinsTool/Content` | Procedural buildings, the sign catalog, `GenerateTile`. Optional |
 
 In the commands below, `<carla-root>` is your CARLA checkout and `<repo>` is the `carla-digitaltwins` clone.
 
@@ -93,7 +93,6 @@ Run the `python -m twinmodel` commands of this page with that environment active
 The `CarlaDigitalTwinsTool` content is a Git LFS repository of about 18 GB on disk (about 9 GB to download). CARLA mounts it through its own `Unreal/CarlaUnreal/Plugins/CarlaDigitalTwinsTool/CarlaDigitalTwinsTool.uplugin`, which expects it in that plugin's `Content/` folder. CARLA's git ignores that folder. It contains:
 
 * the procedural building generator (`BP_BuildingGen`)
-* the Traffic Light Tool's pieces and presets
 * the sign catalog
 * the editor widget
 
@@ -205,25 +204,25 @@ The pack carries the map's OpenDRIVE and Traffic Manager files as sidecars, so t
 ---
 ## Traffic lights
 
-__Window > Traffic Light Tool__ (the last entry of the *Window* menu) opens an editor tab to build and edit traffic lights: poles, heads and lamp modules, imported from or exported to JSON. The pole, head and module meshes come from the `CarlaDigitalTwinsTool` content; without it the tab opens, but *Add Pole* crashes the editor, and *Add Head* and *Add Module* only appear once a pole exists. The phases of a twin map's traffic lights live in a `map_logic.json` next to its OpenDRIVE file. The server reads it when the map loads and drives the lights from it; without the file, the lights run on the default timing. A content pack ships the file with the map (see [Content packs](content_authoring_packs.md#traffic-light-phase-files)).
+__Window > Traffic Light Tool__ (the last entry of the *Window* menu) opens an editor tab to build and edit traffic lights: poles, heads and lamp modules, imported from or exported to JSON. *Add Head* and *Add Module* appear once a pole exists. *Modify* applies the light in the tab to the traffic light selected in the level, also on the classic towns (see [Restyle a traffic light](content_authoring_maps_traffic_lights.md#restyle-a-traffic-light-with-the-traffic-light-tool)). The phases of a twin map's traffic lights live in a `map_logic.json` next to its OpenDRIVE file. The server reads it when the map loads and drives the lights from it; without the file, the lights run on the default timing. A content pack ships the file with the map (see [Content packs](content_authoring_packs.md#traffic-light-phase-files)).
 
 ![traffic_light_tool_anim](img/content_authoring_maps_digital_twin/traffic_light_tool_anim.webp)
 <div class="img-caption">Building a traffic light from scratch: <i>Add Pole</i>, its base, extensible and cap meshes, <i>Add Head</i>, the head raised to 3.5 m and scaled to 1.25, and three modules with visors. Each <i>Add Module</i> stacks the new module on top, so the lights are set bottom to top: <i>Arrow Left (Green)</i>, <i>Solid Color (Amber)</i> and <i>Solid Color (Red)</i>. From the head on, the close-ups show the panel and the head side by side.</div>
 
-The `CarlaDigitalTwinsTool` content ships eleven presets to start from, `TrafficLight_01.json` to `TrafficLight_11.json` in `Content/Carla/Static/TrafficLight/TrafficLights2025/Presets`. Load one with *Import JSON...*, change it, and save the result with *Export JSON...*.
+The tool ships eleven presets to start from, `TrafficLight_01.json` to `TrafficLight_11.json` in `Content/Carla/Static/TrafficLight/TrafficLightTool/Presets`, the folder *Import JSON...* opens in. Load one with *Import JSON...*, change it, and save the result with *Export JSON...*.
 
 ![traffic_light_presets](img/content_authoring_maps_digital_twin/traffic_light_presets.webp)
 <div class="img-caption">Seven of the shipped presets in the preview of the tool: mast arms with hanging heads (01, 03), a head with a backplate and four arrow modules (02), pedestrian signals (05, 10) and poles with several heads (08, 09).</div>
 
-A traffic light is assembled from the meshes in `Content/Carla/Static/TrafficLight/TrafficLights2025` of the `CarlaDigitalTwinsTool` content, listed by style in the `Modules`, `Poles` and `Backplates` data tables of its `DataTables` folder. A pole is a base, an extensible section stretched to _Pole Height_ and a cap or an arm connector; a head is a column or row of modules, with a visor or without, and an optional backplate built from corner, edge and middle pieces.
+A traffic light is assembled from the meshes in `Content/Carla/Static/TrafficLight/TrafficLightTool`, listed by style in the `DT_TLTool_Modules`, `DT_TLTool_Poles` and `DT_TLTool_Backplates` data tables of its `DataTables` folder. Their names say the piece and the style: `SM_TLTool_Pole01_NA_Vertical`, `SM_TLTool_Module_EU_Visor`, `SM_TLTool_Crosswalk_NA_02`. A pole is a base, an extensible section stretched to _Pole Height_ and a cap or an arm connector; a head is a column or row of modules, with a visor or without, and an optional backplate built from corner, edge and middle pieces.
 
 ![traffic_light_pieces](img/content_authoring_maps_digital_twin/traffic_light_pieces.webp)
-<div class="img-caption">The pieces the tool builds from. The meshes with <code>Black</code> in their name are the European style of the data tables; the others are North American.</div>
+<div class="img-caption">The pieces the tool builds from. <code>EU</code> in a mesh name is the European style of the data tables (black); <code>NA</code> is North American (grey).</div>
 
-Each module lights one cell of the atlas `T_TrafficLights_Atlas` (`TrafficLights2025/TrafficLights`), chosen by its __light type__. The types are the rows of the `LightTypes` data table in `TrafficLights2025/DataTables`: an atlas cell, a colour and an emissive intensity. Most shapes come in a `Green`, `Amber` and `Red` row (`PedestrianWalkGreen`, `ArrowLeftRed`); the tram signals, `PedestrianStop`, `Circle` and `Triangle` have a single row.
+Each module lights one cell of the atlas `T_TLTool_LampAtlas` (`TrafficLightTool/Modules/Textures`), chosen by its __light type__. The types are the rows of the `DT_TLTool_LightTypes` data table in `TrafficLightTool/DataTables`: an atlas cell, a colour and an emissive intensity. Most shapes come in a `Green`, `Amber` and `Red` row (`PedestrianWalkGreen`, `ArrowLeftRed`); the tram signals, `PedestrianStop`, `Circle` and `Triangle` have a single row.
 
 ![traffic_light_atlas](img/content_authoring_maps_digital_twin/traffic_light_atlas.webp)
-<div class="img-caption">The 30 shapes of <code>T_TrafficLights_Atlas</code>, named after their light type without the colour, each drawn in one of the colours it ships in.</div>
+<div class="img-caption">The 30 shapes of <code>T_TLTool_LampAtlas</code>, named after their light type without the colour, each drawn in one of the colours it ships in.</div>
 
 ---
 ## Traffic signs
@@ -426,12 +425,6 @@ __Cause:__ the map has no `map_logic.json` next to its OpenDRIVE file, so the li
 __Fix:__ add a `map_logic.json` to `Maps/Twins/<Name>/OpenDrive/`, and restart the server.
 
 ### Editor tool problems
-
-#### *Add Pole* in the Traffic Light Tool crashes the editor
-
-__Cause:__ the pole, head and module meshes, and their data tables, are loaded from `/CarlaDigitalTwinsTool/...`, which is empty without the content.
-
-__Fix:__ install the content as in [Step 4](#step-4-download-the-content-optional), and restart the editor.
 
 #### `GenerateTile` stops with `OpenDrive class is not properly set`
 
