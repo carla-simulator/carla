@@ -306,6 +306,8 @@ For a better realism, points in the cloud can be dropped off. This is an easy wa
 
 Additionally, the `noise_stddev` attribute makes for a noise model to simulate unexpected deviations that appear in real-life sensors. For positive values, each point is randomly perturbed along the vector of the laser ray. The result is a LIDAR sensor with perfect angular positioning, but noisy distance measurement.
 
+While no client listens to it, it is not enabled for ROS 2 and it saves no data to disk, the LIDAR skips its ray casts. After a late `listen()` it delivers data from the next tick with the scan angle where it would have been. The noise and drop-off of a frame depend only on `noise_seed` and the frame number, so a LIDAR listened to late delivers the same data as one listened to from the start.
+
 The rotation of the LIDAR can be tuned to cover a specific angle on every simulation step (using a [fixed time-step](core_synchrony.md)). For example, to rotate once per step (full circle output, as in the picture below), the rotation frequency and the simulated FPS should be equal. <br> __1.__ Set the sensor's frequency `sensors_bp['lidar'][0].set_attribute('rotation_frequency','10')`. <br> __2.__ Run the simulation using `python3 PythonAPI/util/config.py --fps 10`.
 
 ![LidarPointCloud](img/ref_sensors/sensor_lidar_bev.webp)
@@ -393,6 +395,11 @@ Two independent drop-off mechanisms simulate point loss:
 
 The `noise_stddev` attribute applies per-ray Gaussian noise along the laser
 direction, leaving angular position unaffected.
+
+While no client listens to it, it is not enabled for ROS 2 and it saves no
+data to disk, the sensor skips its ray casts. Its noise and drop-off depend
+only on `noise_seed` and the frame number, so a sensor listened to late
+delivers the same data as one listened to from the start.
 
 ![HSSLidarOnCamera](img/ref_sensors/sensor_hss_lidar_on_camera.webp)
 <div class="img-caption">One HSS LiDAR scan projected on the RGB image, coloured by range (128 channels, 120&deg; horizontal field of view).</div>
@@ -487,6 +494,8 @@ This raw data provided by the radar sensor can be easily converted to a format m
 points = np.frombuffer(radar_data.raw_data, dtype=np.dtype('f4'))
 points = np.reshape(points, (len(radar_data), 4))
 ```
+
+While no client listens to it, it is not enabled for ROS 2 and nothing in the editor reads it, the radar skips its ray casts. Its random ray directions depend only on the frame number, so after a late `listen()` it delivers the same data as a radar listened to from the start.
 
 The provided script `manual_control.py` uses this sensor to show the points being detected and paint them white when static, red when moving towards the object and blue when moving away:
 
@@ -871,6 +880,8 @@ This sensor simulates a rotating LIDAR implemented using ray-casting that expose
 	*   The cosine between the angle of incidence and the normal of the surface hit.
 	*   Instance and semantic ground-truth. Basically the index of the CARLA object hit, and its semantic tag.
 *   The semantic LIDAR does not include neither intensity, drop-off nor noise model attributes.
+
+While no client listens to it and it is not enabled for ROS 2, the semantic LIDAR skips its ray casts. After a late `listen()` it delivers data from the next tick with the scan angle where it would have been; it draws no random numbers, so its data matches a sensor listened to from the start.
 
 The points are computed by adding a laser for each channel distributed in the vertical FOV. The rotation is simulated computing the horizontal angle that the LIDAR rotated in a frame. The point cloud is calculated by doing a ray-cast for each laser in every step.
 ```text
