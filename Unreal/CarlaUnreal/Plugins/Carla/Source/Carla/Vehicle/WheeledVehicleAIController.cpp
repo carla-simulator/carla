@@ -13,7 +13,6 @@
 #include "Carla/Util/RandomEngine.h"
 #include "Carla/Game/CarlaGameModeBase.h"
 #include "Carla/Game/CarlaStatics.h"
-#include "Carla/MapGen/LargeMapManager.h"
 
 #include <util/disable-ue4-macros.h>
 #include <carla/geom/Location.h>
@@ -201,12 +200,7 @@ void AWheeledVehicleAIController::UpdateMapSpeedLimit()
   }
   const carla::road::Map &Map = *GameMode->GetMap();
 
-  FVector Location = Vehicle->GetActorLocation();
-  ALargeMapManager *LargeMapManager = UCarlaStatics::GetLargeMapManager(GetWorld());
-  if (LargeMapManager != nullptr)
-  {
-    Location = LargeMapManager->LocalToGlobalLocation(Location);
-  }
+  const FVector Location = Vehicle->GetActorLocation();
 
   const auto Waypoint = Map.GetWaypoint(carla::geom::Location(Location));
   if (!Waypoint.has_value())
