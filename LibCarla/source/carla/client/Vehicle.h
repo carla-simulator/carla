@@ -174,9 +174,6 @@ namespace client {
         std::string TireJSON = "",
         std::string BaseJSONPath = "");
 
-    /// Returns the failure state of the vehicle
-    rpc::VehicleFailureState GetFailureState() const;
-
   private:
 
     const bool _is_control_sticky;

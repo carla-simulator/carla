@@ -9,6 +9,7 @@
 #include <carla/Buffer.h>
 #include <carla/BufferPool.h>
 
+#include <algorithm>
 #include <array>
 #include <list>
 #include <set>
@@ -112,7 +113,55 @@ TEST(buffer, memcpy) {
   ASSERT_EQ(*cpy, *msg);
 }
 
+TEST(buffer, resize_growth_preserves_data) {
+  const std::array<uint8_t, 3u> prefix{{11u, 22u, 33u}};
+  Buffer buffer(prefix);
+  buffer.resize(4096u);
+  ASSERT_EQ(buffer.size(), 4096u);
+  ASSERT_GE(buffer.capacity(), buffer.size());
+  EXPECT_TRUE(std::equal(prefix.begin(), prefix.end(), buffer.begin()));
+}
+
+TEST(buffer, resize_empty_buffer) {
+  Buffer buffer;
+  buffer.resize(16u);
+  EXPECT_EQ(buffer.size(), 16u);
+  EXPECT_GE(buffer.capacity(), buffer.size());
+  EXPECT_NE(buffer.data(), nullptr);
+}
+
+TEST(buffer, resize_within_capacity_preserves_storage) {
+  Buffer buffer(16u);
+  buffer[0u] = 11u;
+  buffer[1u] = 22u;
+  const auto *data = buffer.data();
+  buffer.resize(1u);
+  EXPECT_EQ(buffer.size(), 1u);
+  buffer.resize(16u);
+  EXPECT_EQ(buffer.size(), 16u);
+  EXPECT_EQ(buffer.data(), data);
+  EXPECT_EQ(buffer[0u], 11u);
+  EXPECT_EQ(buffer[1u], 22u);
+  buffer.resize(0u);
+  EXPECT_TRUE(buffer.empty());
+  EXPECT_EQ(buffer.capacity(), 16u);
+  EXPECT_EQ(buffer.data(), data);
+}
+
 #ifndef LIBCARLA_NO_EXCEPTIONS
+TEST(buffer, resize_rejected_size_preserves_state) {
+  const std::array<uint8_t, 3u> prefix{{11u, 22u, 33u}};
+  Buffer buffer(prefix);
+  const auto *data = buffer.data();
+  const auto capacity = buffer.capacity();
+  EXPECT_THROW(buffer.resize(static_cast<uint64_t>(Buffer::max_size()) + 1u),
+      std::invalid_argument);
+  ASSERT_EQ(buffer.data(), data);
+  EXPECT_EQ(buffer.size(), prefix.size());
+  EXPECT_EQ(buffer.capacity(), capacity);
+  EXPECT_TRUE(std::equal(prefix.begin(), prefix.end(), buffer.begin()));
+}
+
 TEST(buffer, message_too_big) {
   // carla::throw_exception is templated on the static type, so the
   // std::invalid_argument survives the rethrow with its message.

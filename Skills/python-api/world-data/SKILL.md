@@ -75,10 +75,12 @@ python3 scripts/world_data.py actors --filter '*prius*'           # all priuses 
 python3 scripts/world_data.py actors --filter '*prius*' --full    # + color/role/size to tell them apart
 python3 scripts/world_data.py actors --filter '*prius*' --color 255,0,0          # the red one
 python3 scripts/world_data.py actors --filter '*prius*' --near-id 100 --nearest  # closest to actor 100
+python3 scripts/world_data.py actors --static                     # only actors that cannot move (static props, signs)
 python3 scripts/world_data.py snapshot                            # frame / time / count
 python3 scripts/world_data.py level-bbox --label TrafficSigns     # static boxes by label
 python3 scripts/world_data.py raycast --from=0,0,50 --to=0,0,-5   # semantic hits along a ray (straight down)
 python3 scripts/world_data.py ground --at=20,20,50               # drop to the ground
+python3 scripts/world_data.py ground --at=0,0,2 --direction=1,0,0   # first surface along +X
 python3 scripts/world_data.py ros-topics                          # ROS 2 topic tree per actor
 ```
 

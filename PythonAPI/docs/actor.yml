@@ -457,7 +457,7 @@
       return: float
       return_units: km/h
       doc: >
-        The client returns the speed limit affecting this vehicle according to last tick (it does not call the simulator). The speed limit is updated when passing by a speed limit signal, so a vehicle might have none right after spawning.
+        The client returns the speed limit affecting this vehicle according to last tick (it does not call the simulator). Where the OpenDRIVE map gives a limit for the vehicle's lane, it is that limit, the same as carla.Waypoint.speed_limit: the lane or road `<speed>`, capped by the last maximum speed sign (`274`) passed on the road. Junction roads without a limit keep the previous road's limit. Elsewhere, it is updated when passing by a speed limit signal, and is 30 km/h until then.
     # --------------------------------------
     - def_name: get_traffic_light
       return: carla.TrafficLight
@@ -611,11 +611,6 @@
           type: carla.VehicleWheelLocation
       doc: >
         Returns the suspension offset in meters of a vehicle's wheel, following the same rules as carla.Vehicle.get_wheel_steer_angle.
-    # --------------------------------------
-    - def_name: get_failure_state
-      return: carla.VehicleFailureState
-      doc: >
-        Vehicle have failure states, to  indicate that it is incapable of continuing its route. This function returns the vehicle's specific failure state, or in other words, the cause that resulted in it.
     # --------------------------------------
     - def_name: show_debug_telemetry
       params:
@@ -973,15 +968,4 @@
         Represents all doors.
     # --------------------------------------
 
-  - class_name: VehicleFailureState
-    # - DESCRIPTION ------------------------
-    doc: >
-      Enum containing the different failure states of a vehicle, from which the it cannot recover. These are returned by __<font color="#7fb800">get_failure_state()</font>__ and only Rollover is currently implemented.
-
-    # - PROPERTIES -------------------------
-    instance_variables:
-    - var_name: NONE
-    - var_name: Rollover
-    - var_name: Engine
-    - var_name: TirePuncture
 ...

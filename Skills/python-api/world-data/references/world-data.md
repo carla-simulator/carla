@@ -46,9 +46,12 @@ not actors — distinct from `actors` and from an actor's own `bounding_box`.
 - `world.cast_ray(start, end)` → ordered list of `carla.LabelledPoint`
   (`.location`, `.label` = the `CityObjectLabel` of the surface hit) where the
   segment crosses geometry. Good for line-of-sight and "what's between A and B".
-- `world.project_point(location, direction, search_distance)` → the first
-  `LabelledPoint` hit from `location` along `direction` (this skill uses
-  `(0,0,-1)` to drop to the ground), or `None`. Returns the surface point + label.
+- `world.ground_projection(location, search_distance)` → the first `LabelledPoint` straight below `location`, or `None`. `ground` uses it by default.
+- `world.project_point(location, direction, search_distance)` → the same along any `direction`. `ground --direction X,Y,Z` uses it.
+
+## Static actors
+
+`world.get_static_actors()` returns the actors that cannot move: static props spawned without `mass` and traffic signs. They are also in `get_actors()`, but not in a `carla.WorldSnapshot`, so `snap.find(id)` returns `None` for them. Traffic lights are not static actors. `actors --static` lists them, and skips the default filter that hides `traffic.*`.
 
 ## Notes
 

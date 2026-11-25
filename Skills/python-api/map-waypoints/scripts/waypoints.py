@@ -8,6 +8,9 @@ Commands:
     junctions [--arms N] [--draw]        enumerate junctions (id, centre, arms, place)
     waypoint  --at X,Y,Z                 nearest driving waypoint + lane facts
     navigate  --at X,Y,Z [--dist 2 --steps 20] [--draw]   walk next() from a point
+    road      --id R                     one road: length, neighbours, lane sections and their lanes
+    lane      --at X,Y,Z | --road R --lane L [--section S] [--draw]   one lane and its connections
+    junction  --id J [--draw]            one junction: adjacent roads, entry and exit lanes
 
 Design note for natural language: this skill turns the map into STRUCTURED data
 (junction list with centre / arm-count / distance-to-map-centre / bearing, lane
@@ -214,9 +217,10 @@ def cmd_waypoint(args):
     print(f"  lane_type={wp.lane_type} lane_width={wp.lane_width:.2f}m lane_change={wp.lane_change}")
     print(f"  location=({wp.transform.location.x:.1f},{wp.transform.location.y:.1f},"
           f"{wp.transform.location.z:.1f}) yaw={wp.transform.rotation.yaw:.0f}")
-    left, right = wp.get_left_lane(), wp.get_right_lane()
-    print(f"  left lane : {left.lane_type if left else 'none'}")
-    print(f"  right lane: {right.lane_type if right else 'none'}")
+    # get_left/right_waypoint() replace the deprecated get_left/right_lane(); they return any lane type.
+    for side, w in (("left", wp.get_left_waypoint()), ("right", wp.get_right_waypoint())):
+        print(f"  {side} lane : " + (f"{w.lane_type} (lane {w.lane_id})" if w else "none"))
+    print(f"  lane object: {_lane_str(wp.get_lane())} (map-waypoints lane --road {wp.road_id} --section {wp.section_id} --lane {wp.lane_id})")
 
 
 def cmd_navigate(args):
@@ -244,6 +248,84 @@ def cmd_navigate(args):
                            carla.Location(lb.x, lb.y, lb.z + 0.3),
                            0.15, 0.25, carla.Color(0, 128, 255), args.life)
         print(f"drew the {len(path)-1}-step path (life {args.life}s)")
+
+
+def _lane_str(lane):
+    return f"{lane.road_id}/{lane.section_id}/{lane.id}" if lane else "none"
+
+
+def cmd_road(args):
+    m = _world().get_map()
+    road = m.get_road(args.id)
+    if road is None:
+        raise SystemExit(f"no road {args.id} on {m.name}")
+    j = f" in junction {road.junction_id}" if road.is_junction else ""
+    print(f"road {road.id} '{road.name}': {road.length:.1f} m{j}, {'right' if road.is_rht else 'left'}-hand traffic")
+    print(f"  previous roads: {[r.id for r in road.get_previous_road()] or 'none'}")
+    print(f"  next roads    : {[r.id for r in road.get_next_road()] or 'none'}")
+    t = road.get_transform_at(0.0).location
+    print(f"  starts at ({t.x:.1f},{t.y:.1f},{t.z:.1f})")
+    for sec in road.get_sections():
+        lanes = sorted(sec.get_lanes(carla.LaneType.Any), key=lambda l: l.id)
+        mid = sec.s_start + sec.length / 2
+        desc = ", ".join(f"{l.id}:{str(l.type).split('.')[-1]} {l.get_width(mid):.1f}m" for l in lanes if l.id != 0)
+        print(f"  section {sec.id}: s={sec.s_start:.1f}..{sec.s_start + sec.length:.1f}  {desc}")
+
+
+def _lane_from_args(m, args):
+    if args.at:
+        x, y, z = (float(v) for v in args.at.split(","))
+        wp = m.get_waypoint(carla.Location(x, y, z), project_to_road=True, lane_type=carla.LaneType.Any)
+        if wp is None:
+            raise SystemExit("no lane near that point")
+        return wp.get_lane()
+    if args.road is None or args.lane is None:
+        raise SystemExit("lane needs --at X,Y,Z, or --road R --lane L [--section S]")
+    lane = m.get_lane(args.road, args.section, args.lane)
+    if lane is None:
+        raise SystemExit(f"no lane {args.road}/{args.section}/{args.lane}")
+    return lane
+
+
+def cmd_lane(args):
+    m = _world().get_map()
+    lane = _lane_from_args(m, args)
+    mid = lane.s_start + lane.length / 2
+    print(f"lane {_lane_str(lane)} (road/section/lane): {str(lane.type).split('.')[-1]}, {lane.length:.1f} m from s={lane.s_start:.1f}")
+    print(f"  width {lane.get_width(lane.s_start):.2f} m at start, {lane.get_width(mid):.2f} m in the middle")
+    print(f"  straight={lane.is_straight}  travels with the road's s: {lane.is_positive_direction}")
+    print(f"  left: {_lane_str(lane.get_left_lane())}   right: {_lane_str(lane.get_right_lane())}")
+    print(f"  previous: {[_lane_str(l) for l in lane.get_previous_lane()] or 'none'}")
+    print(f"  next    : {[_lane_str(l) for l in lane.get_next_lane()] or 'none'}")
+    if args.draw:
+        wps = lane.get_waypoints(2.0)
+        dbg = _world().debug
+        for a, b in zip(wps, wps[1:]):
+            dbg.draw_line(a.transform.location + carla.Location(z=0.3), b.transform.location + carla.Location(z=0.3),
+                          0.15, carla.Color(0, 200, 255), args.life)
+        print(f"drew the lane centre, {len(wps)} waypoints (life {args.life}s)")
+
+
+def cmd_junction(args):
+    world = _world()
+    j = world.get_map().get_junction_by_id(args.id)
+    if j is None:
+        raise SystemExit(f"no junction {args.id}")
+    lt = carla.LaneType.Driving
+    entries, exits = j.get_entry_waypoints(lt), j.get_exit_waypoints(lt)
+    c = j.bounding_box.location
+    print(f"junction {j.id} at ({c.x:.0f},{c.y:.0f}): {len(j.get_connecting_roads())} connecting roads inside")
+    print(f"  adjacent roads: {sorted(r.id for r in j.get_adjacent_roads())}")
+    print(f"  entry lanes ({len(entries)}): {[_lane_str(l) for l in j.get_entry_lanes(lt)]}")
+    print(f"  exit lanes  ({len(exits)}): {[_lane_str(l) for l in j.get_exit_lanes(lt)]}")
+    if args.draw:
+        dbg = world.debug
+        for wps, col, tag in ((entries, carla.Color(0, 255, 0), "in"), (exits, carla.Color(255, 0, 0), "out")):
+            for w in wps:
+                loc = w.transform.location + carla.Location(z=0.5)
+                dbg.draw_arrow(loc, loc + w.transform.get_forward_vector() * 3, 0.15, 0.3, col, args.life)
+                dbg.draw_string(loc + carla.Location(z=1), f"{tag} {w.road_id}/{w.lane_id}", False, col, args.life)
+        print(f"drew {len(entries)} entries (green) and {len(exits)} exits (red) (life {args.life}s)")
 
 
 def cmd_landmarks(args):
@@ -296,6 +378,21 @@ def main() -> None:
     pn.add_argument("--steps", type=int, default=20, help="number of steps")
     pn.add_argument("--draw", action="store_true"); pn.add_argument("--life", type=float, default=120.0)
     pn.set_defaults(func=cmd_navigate)
+
+    pr = sub.add_parser("road", help="one OpenDRIVE road: length, neighbours, sections and lanes")
+    pr.add_argument("--id", type=int, required=True)
+    pr.set_defaults(func=cmd_road)
+
+    pl = sub.add_parser("lane", help="one lane: width, neighbours, what it connects to")
+    pl.add_argument("--at", help="X,Y,Z world location (the lane under it)")
+    pl.add_argument("--road", type=int); pl.add_argument("--section", type=int, default=0); pl.add_argument("--lane", type=int)
+    pl.add_argument("--draw", action="store_true"); pl.add_argument("--life", type=float, default=120.0)
+    pl.set_defaults(func=cmd_lane)
+
+    pjj = sub.add_parser("junction", help="one junction: adjacent roads, entry and exit lanes")
+    pjj.add_argument("--id", type=int, required=True)
+    pjj.add_argument("--draw", action="store_true"); pjj.add_argument("--life", type=float, default=120.0)
+    pjj.set_defaults(func=cmd_junction)
 
     pk = sub.add_parser("landmarks", help="OpenDRIVE signals: speed limits, signs")
     pk.add_argument("--near", help="X,Y,Z — landmarks ahead in that lane (else whole map)")
