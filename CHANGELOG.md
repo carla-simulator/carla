@@ -96,6 +96,7 @@
 * **`actor.destroy()` now always asks the server**, so a handle returned by `spawn_actor()` reports `is_alive` True until a newer snapshot arrives. Scripts that polled `is_alive` to detect "not yet spawned" must use `world.wait_for_tick()`/`tick()` instead.
 * **Renamed the `static.prop.bike helmet` blueprint to `static.prop.bikehelmet`**, the only blueprint id that contained a space.
 * **Static actors are no longer part of the world snapshot**, and the new `world.get_static_actors()` lists them. An actor is static when it cannot move: a `static.prop.mesh` spawned without `mass`, a traffic sign or a `static.trigger.friction`. `world.get_snapshot()`, `on_tick` and `wait_for_tick` list the other actors only, so `snapshot.find()` returns `None` for a static actor; scripts that read traffic signs or static props from a snapshot must use `world.get_static_actors()` or `actor.get_transform()` instead. `world.get_actors()`, `get_actor()`, `is_alive`, `get_transform()` and `TrafficSign.get_opendrive_id()` work as before. Traffic lights, the props of the catalogue (`static.prop.<name>`) and props with physics stay in the snapshot.
+* **Removed `carla.Vehicle.get_failure_state()` and `carla.VehicleFailureState`**, which always returned `NONE`. Remove the calls; to detect a rolled-over vehicle, test `abs(vehicle.get_transform().rotation.roll)`.
 
 #### Performance
 
@@ -127,6 +128,7 @@
 
 * **Improved the Traffic Manager**: lateral control was rebuilt for Chaos's linear steering, with the gains scaled by each vehicle's steering authority so buses and trucks hold their lane through a junction like cars do, and large vehicles take wider turns on top of that (`traffic_manager.vehicle_large_vehicle_wide_turn` and the global toggle). Stuck vehicles recover with a K-turn, parked vehicles are gated, a vehicle that reaches the end of its route holds position, and synchronous mode runs inline without the internal mutex.
 * **Modernized the Python navigation agents** with type hints, typed obstacle and traffic-light detection tuples in `agents/tools/hints.py`, and a `BasicAgent.set_destination` that takes an optional start location and queue-clean flag.
+* Fixed `TrafficManager.get_next_action()` and `get_all_actions()` returning an empty list in every process except the one that created the Traffic Manager. The plan now reaches every client, with its waypoints rebuilt on that client's map.
 
 #### Python API
 
@@ -260,6 +262,7 @@
 * `Sensor.stop()` releases the GIL, so stopping a camera whose frame callback is still running no longer deadlocks the client at exit.
 * Fixed **a sensor callback that blocks or runs long stalling other streams of the same client**: another sensor stopped delivering data, or `world.tick()` and `world.wait_for_tick()` timed out because the world snapshots were held back, for roughly one pair of streams in 193. Each stream of a client now has its own strand: Boost.Asio shares the implementations of `io_context::strand` among the strands of an `io_context`.
 * Fixed `World.debug` shapes glowing and showing up as reflections on car windows in packaged (Shipping) builds. The server multiplied their colour by 1000 in Shipping only; shapes now use the colour you pass in every build, and stay visible at night.
+* Fixed `DVSEventArray.to_array()` raising `No to_python (by-value) converter found for C++ type: std::vector<long>`; it returns one `[x, y, t, pol]` list per event.
 
 #### Build and packaging
 

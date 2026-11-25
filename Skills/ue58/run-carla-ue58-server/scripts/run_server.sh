@@ -6,7 +6,7 @@
 #   bash run_server.sh package [MAP]       the packaged shipping server
 #   bash run_server.sh editor              open the full editor (interactive)
 #   bash run_server.sh probe               connect a client and report
-#   bash run_server.sh stop                stop any CARLA server
+#   bash run_server.sh stop                stop the server on PORT (STOP_ALL=1: every CARLA server)
 #
 # Env: PORT=2000  TM_PORT=8000  ROS2=1  RMW=fastdds|cyclonedds|zenoh  ROS_DOMAIN_ID=
 #      OFFSCREEN=1 (default for game/package)  NULLRHI=1  QUALITY=Low|Epic
@@ -33,6 +33,41 @@ COMM_EDITOR="UnrealEditor"
 
 port_busy() { (echo >"/dev/tcp/127.0.0.1/$1") >/dev/null 2>&1; }
 
+# PIDs of CARLA server processes listening on TCP port $1, none if the port is free or held by something else.
+server_pids_on_port() {
+  local pids="" p name
+  if carla_is_windows; then
+    pids="$(netstat -ano 2>/dev/null | tr -d '\r' | awk -v port=":$1" '$1 == "TCP" && $4 == "LISTENING" && $2 ~ port"$" {print $5}' | sort -u)"
+  else
+    pids="$(ss -ltnpH "sport = :$1" 2>/dev/null | grep -o 'pid=[0-9]*' | cut -d= -f2 | sort -u)"
+    # ss shows no pid for another user's process; the command line still names the port.
+    [ -n "${pids}" ] || pids="$(pgrep -f -- "-carla-rpc-port=$1( |$)" 2>/dev/null | sort -u)"
+  fi
+  for p in ${pids}; do
+    if carla_is_windows; then
+      name="$(MSYS_NO_PATHCONV=1 tasklist /FI "PID eq ${p}" /FO CSV /NH 2>/dev/null | tr -d '\r' | cut -s -d'"' -f2)"
+    else
+      name="$(cat "/proc/${p}/comm" 2>/dev/null)"
+    fi
+    case "${name}" in
+      "${COMM_PKG}"*|"${COMM_EDITOR}"*|CarlaUnreal*) echo -n "${p} " ;;
+      *) echo "[run] port $1 is held by pid ${p} (${name:-unknown}), not a CARLA server: leaving it" >&2 ;;
+    esac
+  done
+}
+
+kill_pids() {
+  local sig="$1"; shift
+  local p
+  for p in "$@"; do
+    if carla_is_windows; then
+      MSYS_NO_PATHCONV=1 taskkill /F /T /PID "${p}" >/dev/null 2>&1 || true
+    else
+      kill "-${sig}" "${p}" 2>/dev/null || true
+    fi
+  done
+}
+
 preflight_ports() {
   local blocked=0
   for p in "${PORT}" "$(( PORT + 1 ))" "$(( PORT + 2 ))"; do
@@ -44,7 +79,7 @@ preflight_ports() {
   if [ "${blocked}" -eq 1 ]; then
     echo "  CARLA needs the RPC port and the two streaming ports above it." >&2
     echo "  Either stop the running server:" >&2
-    echo "      bash run_server.sh stop" >&2
+    echo "      PORT=${PORT} bash run_server.sh stop" >&2
     echo "  or run this one on different ports:" >&2
     echo "      PORT=3000 bash run_server.sh ${MODE}   (+ CARLA_PORT=3000 for clients)" >&2
     echo "  Launching anyway ends in 'bind: Address already in use' then Signal 11." >&2
@@ -263,25 +298,37 @@ PY
   ;;
 
 stop)
-  STOPPED=0
   if carla_is_windows; then
     # The packaged CarlaUnreal.exe is a launcher; the server is its child.
     NAMES=(CarlaUnreal-Win64-Shipping.exe CarlaUnreal.exe UnrealEditor.exe)
   else
     NAMES=("${COMM_PKG}" "${COMM_EDITOR}")
   fi
-  for comm in "${NAMES[@]}"; do
-    if PIDS="$(carla_proc_find "${comm}")"; then
-      echo "[run] stopping ${comm} (${PIDS})"
-      carla_proc_kill "${comm}"
-      STOPPED=1
+  if [ "${STOP_ALL:-0}" = "1" ]; then
+    STOPPED=0
+    for comm in "${NAMES[@]}"; do
+      if PIDS="$(carla_proc_find "${comm}")"; then
+        echo "[run] STOP_ALL=1: stopping every ${comm} (${PIDS})"
+        carla_proc_kill "${comm}"
+        STOPPED=1
+      fi
+    done
+    [ "${STOPPED}" -eq 0 ] && echo "[run] no CARLA server process found"
+  else
+    # Only the server holding PORT: other servers on this machine (parallel tests, agents) keep running.
+    PIDS="$(server_pids_on_port "${PORT}")"
+    if [ -z "${PIDS}" ]; then
+      echo "[run] no CARLA server listening on port ${PORT} (set PORT=, or STOP_ALL=1 to stop every server)"
+      exit 0
     fi
-  done
-  [ "${STOPPED}" -eq 0 ] && echo "[run] no CARLA server process found"
+    echo "[run] stopping the server on port ${PORT} (pid ${PIDS})"
+    kill_pids TERM ${PIDS}
+  fi
   # The port is what other launches collide with, so wait on the port rather than
   # on the process.
-  for _ in $(seq 1 30); do
+  for i in $(seq 1 30); do
     port_busy "${PORT}" || { echo "[run] port ${PORT} released"; exit 0; }
+    [ "${i}" -eq 20 ] && [ -n "${PIDS:-}" ] && { echo "[run] still up after 20s, sending KILL"; kill_pids KILL ${PIDS}; }
     sleep 1
   done
   echo "[run] port ${PORT} still held after 30s — check for a stuck process" >&2

@@ -89,8 +89,6 @@ public:
 
   float SpeedLimit = 30;
 
-  carla::rpc::VehicleFailureState FailureState;
-
   /// Doors open when the vehicle went dormant, as ACarlaWheeledVehicle::GetOpenDoorMask.
   uint8 OpenDoorMask = 0u;
 

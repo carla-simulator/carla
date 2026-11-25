@@ -10,7 +10,6 @@
 #include "carla/geom/Vector3D.h"
 #include "carla/rpc/ActorId.h"
 #include "carla/rpc/ActorState.h"
-#include "carla/rpc/VehicleFailureState.h"
 #include "carla/rpc/TrafficLightState.h"
 #include "carla/rpc/VehicleControl.h"
 #include "carla/rpc/WalkerControl.h"
@@ -64,7 +63,6 @@ namespace detail {
     rpc::TrafficLightState traffic_light_state;
     bool has_traffic_light;
     rpc::ActorId traffic_light_id;
-    rpc::VehicleFailureState failure_state;
     /// Bit i set when door i (rpc::VehicleDoor below All) is open.
     uint8_t open_doors;
     /// Number of doors the vehicle can open.
