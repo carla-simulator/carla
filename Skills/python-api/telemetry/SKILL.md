@@ -1,6 +1,6 @@
 ---
 name: telemetry
-description: Reads a specific actor's live telemetry from a running CARLA server — location and rotation, velocity and speed, acceleration, angular velocity, and for vehicles the control input (throttle/steer/brake), front-wheel steer angle and mass. All kinematics come from one world snapshot so they are frame-consistent. Use when the user asks "how fast is it going", "where/what heading is the car", "show the ego's telemetry", or "stream a vehicle's state". Resolve ambiguous targets with the world-data skill.
+description: Reads a specific actor's live telemetry from a running CARLA server — location and rotation, velocity and speed, acceleration, angular velocity, and for vehicles the control input (throttle/steer/brake), front-wheel steer angle, mass, the speed limit in force and the traffic light affecting it. All kinematics come from one world snapshot so they are frame-consistent. Use when the user asks "how fast is it going", "what is the speed limit here", "is the ego stopped at a red light", "where/what heading is the car", "show the ego's telemetry", or "stream a vehicle's state". Resolve ambiguous targets with the world-data skill.
 license: MIT
 compatibility: Any OS with the CARLA PythonAPI installed for the active interpreter and a reachable, already-running CARLA server. Does NOT need UE4_ROOT. Tested against CARLA 0.9.16.
 metadata:
@@ -58,6 +58,10 @@ python3 scripts/telemetry.py show --id 137
 # or directly by a distinguishing attribute
 python3 scripts/telemetry.py show --filter '*prius*' --color 255,0,0
 ```
+
+## Speed limit and traffic light
+
+For vehicles, `show` also prints `get_speed_limit()` (km/h) and `get_traffic_light()` with its state, flagged `(stopped at it)` when `is_at_traffic_light()` is true. The client fills these from the last tick without calling the server. A vehicle has a traffic light only while it is inside the light's trigger box: an autopilot car on Town10HD_Opt showed `none` for 20 s of driving, then `id=43 Red (stopped at it)` once it queued at a red light.
 
 ## On CARLA 0.10.0 (the UE5 line: 5.5 and 5.8)
 

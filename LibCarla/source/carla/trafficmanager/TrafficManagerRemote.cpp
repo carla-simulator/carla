@@ -6,6 +6,7 @@
 
 #include <thread>
 
+#include "carla/client/Map.h"
 #include "carla/client/detail/Simulator.h"
 
 #include "carla/trafficmanager/TrafficManagerRemote.h"
@@ -275,12 +276,29 @@ void TrafficManagerRemote::SetSynchronousModeTimeOutInMiliSecond(double time) {
   client.SetSynchronousModeTimeOutInMiliSecond(time);
 }
 
+// Rebuilds the waypoints on this client's own map, from the same OpenDRIVE as the TM server's.
+static ActionBuffer ToActions(carla::client::detail::EpisodeProxy &episode, const ActionInfoBuffer &infos) {
+  ActionBuffer actions;
+  if (infos.empty()) {
+    return actions;
+  }
+  const auto map = episode.Lock()->GetCurrentMap();
+  for (const auto &info : infos) {
+    auto waypoint = map->GetWaypointXODR(std::get<1>(info), std::get<2>(info), static_cast<float>(std::get<3>(info)));
+    if (waypoint != nullptr) {
+      actions.emplace_back(static_cast<RoadOption>(std::get<0>(info)), waypoint);
+    }
+  }
+  return actions;
+}
+
 Action TrafficManagerRemote::GetNextAction(const ActorId &actor_id) {
-  return client.GetNextAction(actor_id);
+  ActionBuffer actions = ToActions(episodeProxyTM, client.GetNextAction(actor_id));
+  return actions.empty() ? Action() : actions.front();
 }
 
 ActionBuffer TrafficManagerRemote::GetActionBuffer(const ActorId &actor_id) {
-  return client.GetActionBuffer(actor_id);
+  return ToActions(episodeProxyTM, client.GetActionBuffer(actor_id));
 }
 
 bool TrafficManagerRemote::SynchronousTick() {

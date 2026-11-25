@@ -576,7 +576,18 @@ void export_sensor_data() {
       self.at(pos) = event;
     })
     .def("to_image", CALL_RETURNING_LIST(csd::DVSEventArray, ToImage))
-    .def("to_array", CALL_RETURNING_LIST(csd::DVSEventArray, ToArray))
+    // One [x, y, t, pol] list per event: boost has no converter for the inner std::vector<int64_t>.
+    .def("to_array", +[](const csd::DVSEventArray &self) {
+      boost::python::list result;
+      for (const auto &event : self.ToArray()) {
+        boost::python::list row;
+        for (const auto value : event) {
+          row.append(value);
+        }
+        result.append(row);
+      }
+      return result;
+    })
     .def("to_array_x", CALL_RETURNING_LIST(csd::DVSEventArray, ToArrayX))
     .def("to_array_y", CALL_RETURNING_LIST(csd::DVSEventArray, ToArrayY))
     .def("to_array_t", CALL_RETURNING_LIST(csd::DVSEventArray, ToArrayT))

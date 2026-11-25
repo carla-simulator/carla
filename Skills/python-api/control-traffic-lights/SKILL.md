@@ -1,6 +1,6 @@
 ---
 name: control-traffic-lights
-description: Controls the traffic-light actors on a running CARLA server — set a light green/red/yellow/off, freeze all lights (optionally all-green), set phase timing (green/yellow/red durations), and reset to the normal cycle. Target all lights, one by id, all in a junction, or the nearest. Use when the user asks to "make the light red", "freeze all lights green", "change the light timing", "turn the traffic lights off", or "reset the lights". This is the light actors, not the Traffic Manager (that's control-traffic).
+description: Controls the traffic-light actors on a running CARLA server — set a light green/red/yellow/off, freeze all lights (optionally all-green), set phase timing (green/yellow/red durations), and reset to the normal cycle. Target all lights, one by actor id or OpenDRIVE signal id, all in a junction, or the nearest. Use when the user asks to "make the light red", "freeze all lights green", "change the light timing", "turn the traffic lights off", or "reset the lights". This is the light actors, not the Traffic Manager (that's control-traffic).
 license: MIT
 compatibility: Any OS with the CARLA PythonAPI installed for the active interpreter and a reachable, already-running CARLA server. Does NOT need UE4_ROOT. Tested against CARLA 0.9.16.
 metadata:
@@ -54,6 +54,7 @@ python3 scripts/traffic_lights.py freeze off                # back to normal cyc
 python3 scripts/traffic_lights.py set --state red --id 42
 python3 scripts/traffic_lights.py set --state green --junction 838
 python3 scripts/traffic_lights.py set --state red --near=-24,-57,1
+python3 scripts/traffic_lights.py set --state red --opendrive-id 1067   # by the signal id in the .xodr
 
 # phase timing (seconds) on all lights
 python3 scripts/traffic_lights.py timing --green 20 --yellow 3 --red 10 --all

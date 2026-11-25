@@ -73,9 +73,6 @@ static auto FWorldObserver_GetActorState(const FCarlaActor &View, const FActorRe
           state.vehicle_data.has_traffic_light = false;
         }
       }
-      // Get the failure state by checking the rollover one as it is the only one currently implemented.
-      // This will have to be expanded once more states are added
-      state.vehicle_data.failure_state = Vehicle->GetFailureState();
       state.vehicle_data.open_doors = Vehicle->GetOpenDoorMask();
       state.vehicle_data.door_count = static_cast<uint8_t>(FMath::Min(Vehicle->GetDoorCount(), 8));
     }

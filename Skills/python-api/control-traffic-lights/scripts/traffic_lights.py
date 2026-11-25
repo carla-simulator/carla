@@ -9,8 +9,9 @@ Commands:
                                            forcing a state first, e.g. all green)
     reset                                  reset all lights to their normal cycle
 
-Selector (for set/timing): --all | --id N | --junction J (lights in that junction)
-| --near X,Y,Z (the nearest one). Junction ids come from the map-waypoints skill.
+Selector (for set/timing): --all | --id N | --opendrive-id S (the .xodr signal id)
+| --junction J (lights in that junction) | --near X,Y,Z (the nearest one).
+Junction ids come from the map-waypoints skill.
 
 This controls the actual `traffic.traffic_light` actors — NOT the Traffic Manager
 (that is control-traffic, which governs how autopilot *vehicles* behave).
@@ -52,6 +53,11 @@ def _select(world, args):
     lights = list(world.get_actors().filter("traffic.traffic_light"))
     if getattr(args, "id", None) is not None:
         lights = [l for l in lights if l.id == args.id]
+    elif getattr(args, "opendrive_id", None):
+        tl = world.get_traffic_light_from_opendrive_id(args.opendrive_id)
+        lights = [tl] if tl is not None else []
+        if not lights:
+            raise SystemExit(f"no traffic light with OpenDRIVE signal id {args.opendrive_id} (see list)")
     elif getattr(args, "junction", None) is not None:
         lights = list(world.get_traffic_lights_in_junction(args.junction))
     elif getattr(args, "near", None):
@@ -59,7 +65,7 @@ def _select(world, args):
         ref = carla.Location(x, y, z)
         lights = [min(lights, key=lambda l: l.get_transform().location.distance(ref))] if lights else []
     elif not getattr(args, "all", False):
-        raise SystemExit("need a selector: --all | --id N | --junction J | --near X,Y,Z")
+        raise SystemExit("need a selector: --all | --id N | --opendrive-id S | --junction J | --near X,Y,Z")
     return lights
 
 
@@ -68,9 +74,10 @@ def cmd_list(_):
     print(f"{len(lights)} traffic light(s):")
     for l in lights:
         loc = l.get_transform().location
-        print(f"  id={l.id:6d}  state={str(l.get_state()).split('.')[-1]:7s} "
+        frozen = " frozen" if l.is_frozen() else ""
+        print(f"  id={l.id:6d}  odr={l.get_opendrive_id():>5s}  state={str(l.get_state()).split('.')[-1]:7s} "
               f"({loc.x:.0f},{loc.y:.0f})  green={l.get_green_time():.0f}s "
-              f"yellow={l.get_yellow_time():.0f}s red={l.get_red_time():.0f}s")
+              f"yellow={l.get_yellow_time():.0f}s red={l.get_red_time():.0f}s{frozen}")
 
 
 def cmd_set(args):
@@ -116,6 +123,7 @@ def cmd_reset(_):
 def _sel(sp):
     sp.add_argument("--all", action="store_true"); sp.add_argument("--id", type=int)
     sp.add_argument("--junction", type=int); sp.add_argument("--near")
+    sp.add_argument("--opendrive-id", help="the light's OpenDRIVE signal id, as the .xodr and list show it")
     return sp
 
 
