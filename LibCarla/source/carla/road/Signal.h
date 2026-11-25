@@ -120,6 +120,14 @@ namespace road {
       return _zOffset;
     }
 
+    /// Whether the transform comes from the signal's <positionInertial>. That
+    /// transform is the inertial position as the OpenDRIVE file writes it,
+    /// whereas the transform of a signal placed by s and t has the zOffset
+    /// added into it.
+    bool IsUsingInertialPosition() const {
+      return _using_inertial_position;
+    }
+
     const std::string &GetCountry() const {
       return _country;
     }
