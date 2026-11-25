@@ -843,10 +843,10 @@ Measured against the raster [instance segmentation camera](#instance-segmentatio
 This sensor simulates a rotating LIDAR implemented using ray-casting that exposes all the information about the raycast hit. Its behavior is quite similar to the [LIDAR sensor](#lidar-sensor), but there are two main differences between them.
 
 *   The raw data retrieved by the semantic LIDAR includes more data per point.
-	*   Coordinates of the point (as the normal LIDAR does).
-	*   Simulated atmospheric attenuation intensity.
-	*   The cosine between the angle of incidence and the normal of the surface hit.
-	*   Instance and semantic ground-truth. Basically the index of the CARLA object hit, and its semantic tag.
+    *   Coordinates of the point (as the normal LIDAR does).
+    *   Simulated atmospheric attenuation intensity.
+    *   The cosine between the angle of incidence and the normal of the surface hit.
+    *   Instance and semantic ground-truth. Basically the index of the CARLA object hit, and its semantic tag.
 *   The semantic LIDAR does not include drop-off or noise model attributes.
 
 Each semantic point is stored in this exact packed 28-byte layout:
