@@ -6,6 +6,7 @@
 
 #include "Carla/Sensor/WorldObserver.h"
 #include "Carla.h"
+#include "Carla/AI/WalkerAIController.h"
 #include "Carla/Actor/ActorData.h"
 #include "Carla/Actor/ActorRegistry.h"
 #include "Carla/Game/CarlaEpisode.h"
@@ -19,6 +20,7 @@
 #include "Carla/Walker/WalkerController.h"
 
 #include <util/disable-ue4-macros.h>
+#include <carla/rpc/StaticActor.h>
 #include <carla/rpc/String.h>
 #include <carla/sensor/SensorRegistry.h>
 #include <carla/sensor/data/ActorDynamicState.h>
@@ -29,6 +31,10 @@
 #include "CoreGlobals.h"
 #include "Hash/CityHash.h"
 #include <util/ue-header-guard-end.h>
+
+#include <cstring>
+#include <string>
+#include <vector>
 
 static auto FWorldObserver_GetActorState(const FCarlaActor &View, const FActorRegistry &Registry)
 {
@@ -307,7 +313,8 @@ bool FWorldObserver::IsStaticActor(const FCarlaActor &View)
 {
   const auto Type = View.GetActorType();
   if (!View.IsActive() ||
-      (Type != FCarlaActor::ActorType::Other && Type != FCarlaActor::ActorType::TrafficSign))
+      (Type != FCarlaActor::ActorType::Other && Type != FCarlaActor::ActorType::TrafficSign &&
+       Type != FCarlaActor::ActorType::TrafficLight))
   {
     return false;
   }
@@ -323,6 +330,51 @@ bool FWorldObserver::IsStaticActor(const FCarlaActor &View)
   }
   const auto *Primitive = Cast<UPrimitiveComponent>(Root);
   return Primitive == nullptr || !Primitive->IsSimulatingPhysics();
+}
+
+bool FWorldObserver::FollowsItsWalker(const FCarlaActor &View, const FActorRegistry &Registry, uint32 &WalkerId)
+{
+  if (!View.IsActive() || (View.GetActorType() != FCarlaActor::ActorType::Other))
+  {
+    return false;
+  }
+  const AActor *Actor = View.GetActor();
+  if ((Actor == nullptr) || !Actor->IsA<AWalkerAIController>())
+  {
+    return false;
+  }
+  // Its world transform is the walker's only when its root hangs from the
+  // walker's root with an identity relative transform.
+  const AActor *Walker = Actor->GetAttachParentActor();
+  const USceneComponent *Root = Actor->GetRootComponent();
+  if ((Walker == nullptr) || (Root == nullptr) || (Root->GetAttachParent() != Walker->GetRootComponent()) ||
+      Root->IsUsingAbsoluteLocation() || Root->IsUsingAbsoluteRotation() || Root->IsUsingAbsoluteScale() ||
+      !Root->GetRelativeTransform().Equals(FTransform::Identity, 0.0))
+  {
+    return false;
+  }
+  const FCarlaActor *WalkerView = Registry.FindCarlaActor(Walker);
+  if ((WalkerView == nullptr) || !WalkerView->IsActive() ||
+      (WalkerView->GetActorType() != FCarlaActor::ActorType::Walker))
+  {
+    return false;
+  }
+  WalkerId = WalkerView->GetActorId();
+  return true;
+}
+
+void FWorldObserver::GetTrafficLightConstants(
+    const FCarlaActor &View,
+    const FActorRegistry &Registry,
+    carla::rpc::StaticActor &Item)
+{
+  const auto State = FWorldObserver_GetActorState(View, Registry);
+  const auto &Light = State.traffic_light_data;
+  Item.sign_id = std::string(Light.sign_id, strnlen(Light.sign_id, sizeof(Light.sign_id)));
+  Item.green_time = Light.green_time;
+  Item.yellow_time = Light.yellow_time;
+  Item.red_time = Light.red_time;
+  Item.pole_index = Light.pole_index;
 }
 
 /// Hash of a static actor's id and transform, exact to the bit. The sum over
@@ -386,8 +438,11 @@ static carla::Buffer FWorldObserver_Serialize(
 
   uint64 StaticHash = 0u;
   int32 StaticCount = 0;
+  // What changes of the static traffic lights; it goes in front of the actors.
+  static std::vector<carla::sensor::data::TrafficLightDynamicState> TrafficLights;
+  TrafficLights.clear();
 
-  // Write every actor but the static ones.
+  // Write every actor but the static ones and the followers.
   for (auto& It : Registry)
   {
     const FCarlaActor* View = It.Value.Get();
@@ -395,7 +450,32 @@ static carla::Buffer FWorldObserver_Serialize(
 
     if (FWorldObserver::IsStaticActor(*View))
     {
-      StaticHash += FWorldObserver_StaticActorHash(*View);
+      uint64 Hash = FWorldObserver_StaticActorHash(*View);
+      if (View->GetActorType() == FCarlaActor::ActorType::TrafficLight)
+      {
+        // Sent: state, elapsed time, frozen flag. Hashed: the rest of what the
+        // episode state carried (sign id, phase times, pole index).
+        auto State = FWorldObserver_GetActorState(*View, Registry);
+        TrafficLights.push_back({
+            View->GetActorId(),
+            State.traffic_light_data.elapsed_time,
+            State.traffic_light_data.time_is_frozen,
+            State.traffic_light_data.state});
+        State.traffic_light_data.elapsed_time = 0.0f;
+        State.traffic_light_data.time_is_frozen = false;
+        State.traffic_light_data.state = carla::rpc::TrafficLightState::Red;
+        Hash = CityHash64WithSeed(reinterpret_cast<const char *>(&State), sizeof(State), Hash);
+      }
+      StaticHash += Hash;
+      ++StaticCount;
+      continue;
+    }
+
+    uint32 WalkerId = 0u;
+    if (FWorldObserver::FollowsItsWalker(*View, Registry, WalkerId))
+    {
+      const uint64 Key[] = {View->GetActorId(), WalkerId};
+      StaticHash += CityHash64(reinterpret_cast<const char *>(Key), sizeof(Key));
       ++StaticCount;
       continue;
     }
@@ -473,7 +553,21 @@ static carla::Buffer FWorldObserver_Serialize(
   }
   simulation_state |= StaticActors.Version << Serializer::static_actors_version_shift;
   header.simulation_state = static_cast<SimulationState>(simulation_state);
+  header.traffic_light_count = static_cast<uint32_t>(TrafficLights.size());
   std::memcpy(buffer.begin(), &header, sizeof(header));
+
+  // The traffic lights go between the header and the actors. They fit: each
+  // takes the place of a whole record.
+  const size_t TrafficLightsSize = TrafficLights.size() * sizeof(TrafficLights[0]);
+  if (TrafficLightsSize > 0u)
+  {
+    std::memmove(
+        buffer.begin() + sizeof(header) + TrafficLightsSize,
+        buffer.begin() + sizeof(header),
+        current_size - sizeof(header));
+    std::memcpy(buffer.begin() + sizeof(header), TrafficLights.data(), TrafficLightsSize);
+    current_size += TrafficLightsSize;
+  }
 
   // Shrink buffer
   buffer.resize(current_size);

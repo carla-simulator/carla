@@ -48,6 +48,10 @@ namespace s11n {
       float delta_seconds;
       geom::Vector3DInt map_origin;
       SimulationState simulation_state = SimulationState::None;
+      /// The header is followed by this many TrafficLightDynamicState, one per
+      /// traffic light that is a static actor, and then the ActorDynamicState
+      /// of the other actors.
+      uint32_t traffic_light_count = 0u;
     };
 #pragma pack(pop)
 

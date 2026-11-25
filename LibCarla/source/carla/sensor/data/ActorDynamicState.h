@@ -153,6 +153,22 @@ namespace detail {
     "comment this assert, but your platform may have compatibility issues "
     "connecting to other platforms.");
 
+#pragma pack(push, 1)
+
+  /// The part of a traffic light that changes, for a traffic light that is a
+  /// static actor: it travels in front of the ActorDynamicState records
+  /// instead of one of them (see EpisodeStateSerializer::Header).
+  struct TrafficLightDynamicState {
+    ActorId id;
+    float elapsed_time;
+    bool time_is_frozen;
+    rpc::TrafficLightState state;
+  };
+
+#pragma pack(pop)
+
+  static_assert(sizeof(TrafficLightDynamicState) == 10u, "Invalid TrafficLightDynamicState size!");
+
 } // namespace data
 } // namespace sensor
 } // namespace carla
