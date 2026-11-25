@@ -11,6 +11,14 @@
 #include "Carla/Vehicle/CarlaWheeledVehicle.h"
 #include "Carla/CityMapGenerator.h"
 #include "Carla/Util/RandomEngine.h"
+#include "Carla/Game/CarlaGameModeBase.h"
+#include "Carla/Game/CarlaStatics.h"
+#include "Carla/MapGen/LargeMapManager.h"
+
+#include <util/disable-ue4-macros.h>
+#include <carla/geom/Location.h>
+#include <carla/road/Map.h>
+#include <util/enable-ue4-macros.h>
 
 #include <util/ue-header-guard-begin.h>
 #include "EngineUtils.h"
@@ -142,6 +150,8 @@ void AWheeledVehicleAIController::Tick(const float DeltaTime)
     return;
   }
 
+  UpdateMapSpeedLimit();
+
   if (!bAutopilotEnabled && !bControlIsSticky)
   {
     Vehicle->ApplyVehicleControl(FVehicleControl{}, EVehicleInputPriority::Relaxation);
@@ -178,6 +188,48 @@ void AWheeledVehicleAIController::ConfigureAutopilot(const bool Enable, const bo
 // =============================================================================
 // -- Traffic ------------------------------------------------------------------
 // =============================================================================
+
+void AWheeledVehicleAIController::UpdateMapSpeedLimit()
+{
+  TRACE_CPUPROFILER_EVENT_SCOPE(AWheeledVehicleAIController::UpdateMapSpeedLimit);
+
+  ACarlaGameModeBase *GameMode = UCarlaStatics::GetGameMode(GetWorld());
+  if (GameMode == nullptr || !GameMode->GetMap().has_value())
+  {
+    bHasMapSpeedLimit = false;
+    return;
+  }
+  const carla::road::Map &Map = *GameMode->GetMap();
+
+  FVector Location = Vehicle->GetActorLocation();
+  ALargeMapManager *LargeMapManager = UCarlaStatics::GetLargeMapManager(GetWorld());
+  if (LargeMapManager != nullptr)
+  {
+    Location = LargeMapManager->LocalToGlobalLocation(Location);
+  }
+
+  const auto Waypoint = Map.GetWaypoint(carla::geom::Location(Location));
+  if (!Waypoint.has_value())
+  {
+    // Off the driving lanes: keep the last limit, as a speed-sign trigger box
+    // would.
+    return;
+  }
+
+  const std::optional<double> Limit = Map.GetSpeedLimit(*Waypoint);
+  if (Limit.has_value())
+  {
+    MapSpeedLimit = static_cast<float>(*Limit);
+    bHasMapSpeedLimit = true;
+  }
+  else if (!Map.IsJunction(Waypoint->road_id))
+  {
+    // Junction connecting roads often carry no <speed>, so the limit of the
+    // road the vehicle came from stays in force through them. Anywhere else
+    // without a limit, fall back to the speed-sign trigger boxes.
+    bHasMapSpeedLimit = false;
+  }
+}
 
 void AWheeledVehicleAIController::SetFixedRoute(
     const TArray<FVector> &Locations,
