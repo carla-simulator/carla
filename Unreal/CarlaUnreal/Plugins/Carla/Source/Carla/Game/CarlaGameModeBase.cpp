@@ -105,29 +105,6 @@ void ACarlaGameModeBase::InitGame(
       Episode != nullptr,
       TEXT("Missing episode, can't continue without an episode!"));
 
-  AActor* LMManagerActor =
-      UGameplayStatics::GetActorOfClass(GetWorld(), ALargeMapManager::StaticClass());
-  LMManager = Cast<ALargeMapManager>(LMManagerActor);
-  if (LMManager && World->GetWorldPartition() != nullptr)
-  {
-    // World Partition map (e.g. a legacy tiled map converted with the
-    // WorldPartitionConvert commandlet): the engine streams cells natively and
-    // keeps absolute double-precision coordinates, so the UE4-era large-map
-    // machinery (WorldComposition tiles + origin rebasing) must not run. The
-    // conversion carries the old manager actor over; remove it before it ticks.
-    UE_LOG(LogCarla, Log, TEXT(
-        "World Partition map detected: disabling legacy LargeMapManager"));
-    LMManager->Destroy();
-    LMManager = nullptr;
-  }
-  if (LMManager) {
-    if (LMManager->GetNumTiles() == 0)
-    {
-      LMManager->GenerateLargeMap();
-    }
-    InMapName = LMManager->LargeMapName;
-  }
-
 #if WITH_EDITOR
     {
       // When playing in editor the map name gets an extra prefix, here we
@@ -321,8 +298,7 @@ void ACarlaGameModeBase::BeginPlay()
   // World Partition streams cells in after BeginPlay, and their actors are
   // loaded, not spawned, so neither the tagging sweep above nor the
   // TaggerDelegate spawn handler ever sees them. Tag each cell's level as it
-  // is added to the world (the legacy ALargeMapManager did this for
-  // WorldComposition tiles, but it retires itself on World Partition maps).
+  // is added to the world.
   if (World->GetWorldPartition() != nullptr)
   {
     FWorldDelegates::LevelAddedToWorld.AddUObject(
@@ -402,11 +378,6 @@ void ACarlaGameModeBase::BeginPlay()
   if(ReadyToRegisterObjects && PendingLevelsToLoad == 0)
   {
     RegisterEnvironmentObjects();
-  }
-
-  if (LMManager) {
-    LMManager->RegisterInitialObjects();
-    LMManager->ConsiderSpectatorAsEgo(Episode->GetSettings().SpectatorAsEgo);
   }
 
   // Manually run begin play on lights as it may not run on sublevels

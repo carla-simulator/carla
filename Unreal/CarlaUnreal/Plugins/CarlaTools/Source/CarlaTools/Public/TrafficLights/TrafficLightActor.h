@@ -19,6 +19,8 @@
 
 #include "TrafficLightActor.generated.h"
 
+class ATrafficLightBase;
+
 UCLASS(BlueprintType, Blueprintable)
 class CARLATOOLS_API ATrafficLightActor : public AActor
 {
@@ -33,6 +35,16 @@ public:
 
 	UFUNCTION(BlueprintCallable, CallInEditor, Category = "TrafficLight")
 	void Bake(const FString& MapName, const FString& DesiredLabel);
+
+	/// Restyles a traffic light placed from a blueprint (Town01-Town15) in place: copies this
+	/// rig's meshes onto Target as instance components tagged ATrafficLightBase::ToolRigTag and
+	/// sets bUseToolRig, which hides the blueprint's own meshes. Target keeps its logic (state,
+	/// trigger volumes, group, OpenDRIVE match). The meshes and materials come from the tool's
+	/// folder in the base Content (TLToolContent), so the map needs no plugin.
+	void BakeOntoTrafficLight(ATrafficLightBase* Target) const;
+
+	/// Removes what BakeOntoTrafficLight added and shows the blueprint's meshes again.
+	static void RestoreTrafficLight(ATrafficLightBase* Target);
 
 	UFUNCTION(BlueprintCallable, CallInEditor, Category = "TrafficLight|JSON")
 	void BuildFromJSON();

@@ -3,7 +3,7 @@
 
 #include "carla/trafficmanager/DataStructures.h"
 #include "carla/trafficmanager/Parameters.h"
-#include "carla/trafficmanager/RandomGenerator.h"
+#include "carla/trafficmanager/UniformPRNG.h"
 #include "carla/trafficmanager/SimulationState.h"
 #include "carla/trafficmanager/Stage.h"
 
@@ -29,7 +29,7 @@ private:
   /// Map containing the timestamp at which the actor first stopped at a stop sign.
   std::unordered_map<ActorId, cc::Timestamp> vehicle_stop_time;
   TLFrame &output_array;
-  RandomGenerator &random_device;
+  UniformPRNG &random_device;
   cc::Timestamp current_timestamp;
 
   /// This controls all vehicle's interactions at non signalized junctions. Priorities are done by order of arrival
@@ -51,7 +51,7 @@ public:
                     const Parameters &parameters,
                     const cc::World &world,
                     TLFrame &output_array,
-                    RandomGenerator &random_device);
+                    UniformPRNG &random_device);
 
   void Update(const unsigned long index) override;
 

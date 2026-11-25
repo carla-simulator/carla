@@ -47,8 +47,10 @@ class TestSnapshot(SyncSmokeTest):
         snapshot = self.world.get_snapshot()
         self.assertEqual(frame, snapshot.timestamp.frame)
 
+        # Every actor is in the snapshot or is a static actor, never both.
         actors = self.world.get_actors()
-        self.assertTrue(all(snapshot.has_actor(x.id) for x in actors))
+        static = {x.id for x in self.world.get_static_actors()}
+        self.assertTrue(all(snapshot.has_actor(x.id) != (x.id in static) for x in actors))
 
         for actor_id, t0 in zip(ids, spawn_points):
             actor_snapshot = snapshot.find(actor_id)

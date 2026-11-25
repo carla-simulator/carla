@@ -15,7 +15,6 @@
 #include "Carla/Recorder/CarlaRecorder.h"
 #include "Carla/Settings/CarlaSettings.h"
 #include "Carla/Settings/EpisodeSettings.h"
-#include "Carla/MapGen/LargeMapManager.h"
 #include "Carla/OpenDrive/OpenDrive.h"
 #include "Carla/OpenDrive/OpenDriveGenerator.h"
 #include "Carla/Traffic/TrafficLightManager.h"
@@ -598,18 +597,10 @@ void FCarlaEngine::NotifyBeginEpisode(UCarlaEpisode &Episode)
     bWarnedFrameFormat = false;
   }
 
-  // Reset map settings
-  UWorld* World = CurrentEpisode->GetWorld();
-  ALargeMapManager* LargeMapManager = UCarlaStatics::GetLargeMapManager(World);
-  if (LargeMapManager)
-  {
-    CurrentSettings.TileStreamingDistance = LargeMapManager->GetLayerStreamingDistance();
-    CurrentSettings.ActorActiveDistance = LargeMapManager->GetActorStreamingDistance();
-  }
-
   // The settings survive load_world(reset_settings=False) but the traffic
   // light manager is new with every map, and a map can enable sign snapping
   // on its own. Enable it on whichever side lacks it so that they agree.
+  UWorld* World = CurrentEpisode->GetWorld();
   ACarlaGameModeBase* GameMode = UCarlaStatics::GetGameMode(World);
   if (ATrafficLightManager* TrafficLightManager =
           GameMode ? GameMode->GetTrafficLightManager() : nullptr)
@@ -1247,10 +1238,6 @@ void FCarlaEngine::MirrorPrimarySettings(const carla::multigpu::FrameTime &Time)
   // set_episode_settings applies these two itself; do the same here.
   if (ACarlaGameModeBase *GameMode = UCarlaStatics::GetGameMode(CurrentEpisode->GetWorld()))
   {
-    if (ALargeMapManager *LargeMap = GameMode->GetLMManager())
-    {
-      LargeMap->ConsiderSpectatorAsEgo(Settings.SpectatorAsEgo);
-    }
     if (ATrafficLightManager *TrafficLightManager = GameMode->GetTrafficLightManager())
     {
       TrafficLightManager->SetAdjustSignsHeightToGround(Settings.bAdjustSignsHeightToGround);
@@ -1490,14 +1477,6 @@ void FCarlaEngine::OnEpisodeSettingsChanged(const FEpisodeSettings &Settings)
   PhysSett->bSubstepping = Settings.bSubstepping;
   PhysSett->MaxSubstepDeltaTime = Settings.MaxSubstepDeltaTime;
   PhysSett->MaxSubsteps = Settings.MaxSubsteps;
-
-  UWorld* World = CurrentEpisode->GetWorld();
-  ALargeMapManager* LargeMapManager = UCarlaStatics::GetLargeMapManager(World);
-  if (LargeMapManager)
-  {
-    LargeMapManager->SetLayerStreamingDistance(Settings.TileStreamingDistance);
-    LargeMapManager->SetActorStreamingDistance(Settings.ActorActiveDistance);
-  }
 }
 
 void FCarlaEngine::ResetSimulationState()

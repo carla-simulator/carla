@@ -18,6 +18,9 @@
 class FTLMeshFactory
 {
 public:
+	/// Current name of a mesh, given the name a preset or an older JSON file uses.
+	static FString ResolveMeshName(const FString& Name);
+
 	static UStaticMesh* GetBaseMeshByName(const FString& Name);
 	static UStaticMesh* GetExtensibleMeshByName(const FString& Name);
 	static UStaticMesh* GetCapMeshByName(const FString& Name);

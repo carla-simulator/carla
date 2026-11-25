@@ -306,6 +306,8 @@ For a better realism, points in the cloud can be dropped off. This is an easy wa
 
 Additionally, the `noise_stddev` attribute makes for a noise model to simulate unexpected deviations that appear in real-life sensors. For positive values, each point is randomly perturbed along the vector of the laser ray. The result is a LIDAR sensor with perfect angular positioning, but noisy distance measurement.
 
+While no client listens to it, it is not enabled for ROS 2 and it saves no data to disk, the LIDAR skips its ray casts. After a late `listen()` it delivers data from the next tick with the scan angle where it would have been. The noise and drop-off of a frame depend only on `noise_seed` and the frame number, so a LIDAR listened to late delivers the same data as one listened to from the start.
+
 The rotation of the LIDAR can be tuned to cover a specific angle on every simulation step (using a [fixed time-step](core_synchrony.md)). For example, to rotate once per step (full circle output, as in the picture below), the rotation frequency and the simulated FPS should be equal. <br> __1.__ Set the sensor's frequency `sensors_bp['lidar'][0].set_attribute('rotation_frequency','10')`. <br> __2.__ Run the simulation using `python3 PythonAPI/util/config.py --fps 10`.
 
 ![LidarPointCloud](img/ref_sensors/sensor_lidar_bev.webp)
@@ -333,6 +335,9 @@ The rotation of the LIDAR can be tuned to cover a specific angle on every simula
 | `sensor_tick`      | float  | 0.0   | Simulation seconds between sensor captures (ticks). |
 | `noise_stddev`     | float  | 0.0   | Standard deviation of the noise model to disturb each point along the vector of its raycast. |
 | `noise_seed`       | int    | 0     | Seed of the random generator behind the drop-off and the noise. Set it to make a run reproducible. |
+| `azimuth_direction` | str   | counterclockwise | Direction, seen from above, in which the `azimuth` field of the ROS 2 extended (Autoware XYZIRCAEDT) point cloud grows: `counterclockwise` or `clockwise`. Zero is the sensor's forward axis. All LiDAR blueprints accept these three attributes. |
+| `azimuth_range_start` | float | -180.0 | Start, in degrees, of the interval that `azimuth` is reported in. |
+| `azimuth_range_end` | float | 180.0 | End, in degrees, of that interval. It must be 360 degrees after `azimuth_range_start`, otherwise both keep their defaults. The defaults give `atan2(y, x)` in the ROS frame. Autoware's LiDAR drivers report `clockwise` in [0, 360). |
 
 
 
@@ -391,6 +396,11 @@ Two independent drop-off mechanisms simulate point loss:
 The `noise_stddev` attribute applies per-ray Gaussian noise along the laser
 direction, leaving angular position unaffected.
 
+While no client listens to it, it is not enabled for ROS 2 and it saves no
+data to disk, the sensor skips its ray casts. Its noise and drop-off depend
+only on `noise_seed` and the frame number, so a sensor listened to late
+delivers the same data as one listened to from the start.
+
 ![HSSLidarOnCamera](img/ref_sensors/sensor_hss_lidar_on_camera.webp)
 <div class="img-caption">One HSS LiDAR scan projected on the RGB image, coloured by range (128 channels, 120&deg; horizontal field of view).</div>
 
@@ -415,6 +425,9 @@ direction, leaving angular position unaffected.
 | `noise_stddev` | float | 0.0 | Stddev of per-point Gaussian distance noise. |
 | `noise_seed` | int | 0 | Seed for the per-sensor random engine. |
 | `sensor_tick` | float | 0.0 | Simulated seconds between captures. 0 means every tick. |
+| `azimuth_direction` | str | counterclockwise | Same as for `sensor.lidar.ray_cast`. Applies to ROS 2 layouts with an `azimuth` field; this sensor's current ROS 2 layout has none, so it is accepted for consistency and has no effect yet. |
+| `azimuth_range_start` | float | -180.0 | Same as for `sensor.lidar.ray_cast` (see `azimuth_direction`). |
+| `azimuth_range_end` | float | 180.0 | Same as for `sensor.lidar.ray_cast` (see `azimuth_direction`). |
 
 #### Output attributes
 
@@ -481,6 +494,8 @@ This raw data provided by the radar sensor can be easily converted to a format m
 points = np.frombuffer(radar_data.raw_data, dtype=np.dtype('f4'))
 points = np.reshape(points, (len(radar_data), 4))
 ```
+
+While no client listens to it, it is not enabled for ROS 2 and nothing in the editor reads it, the radar skips its ray casts. Its random ray directions depend only on the frame number, so after a late `listen()` it delivers the same data as a radar listened to from the start.
 
 The provided script `manual_control.py` uses this sensor to show the points being detected and paint them white when static, red when moving towards the object and blue when moving away:
 
@@ -589,7 +604,25 @@ where the camera otherwise keeps motion blur off.
 | `carla.Camera.FNumber` | `2.0` | Lens f-number used to turn the auto exposure into an exposure time. |
 | `carla.Camera.MinExposureMs` | `0.05` | Shortest exposure time in milliseconds. |
 | `carla.Camera.MaxExposureMs` | `20` | Longest exposure time in milliseconds. |
-| `carla.Camera.ExposureLog` | `0` | `1` logs each capture's exposure, exposure time and motion blur amount. |
+| `carla.Camera.ExposureLog` | `0` | `1` logs each capture's exposure, exposure time and motion blur amount, and its EV100 and bloom. |
+
+#### Exposure-linked bloom
+
+A camera's glare comes from light much brighter than what its exposure maps to white. By day the exposure is short
+and almost nothing gets there but the sun; at night it is long, and street lamps, headlights and lit windows flare.
+CARLA's lamps and emissive materials keep the same brightness by day and by night, so the RGB camera scales the bloom
+and lens flare of its post-process profile with its own exposure: the profile's full value at night (EV100 at or
+below `carla.Camera.BloomNightEV100`), `carla.Camera.BloomDayScale` of it in daylight (EV100 at or above
+`carla.Camera.BloomDayEV100`), and a smooth blend at dusk, in tunnels or under heavy cloud. In Town10HD_Opt a camera
+meters about EV100 10 to 11 at `ClearNoon` and about 4 at `ClearNight`. A bloom or lens flare intensity set through
+the profile or the `bloom_intensity` attribute is the night value the scale starts from.
+
+| Console variable | Default | Description |
+| --- | --- | --- |
+| `carla.Camera.ExposureBloom` | `1` | `1` scales the bloom and lens flare with the exposure; `0` leaves those of the post-process profile as they are. |
+| `carla.Camera.BloomDayScale` | `0.25` | Fraction of the profile's bloom and lens flare kept in daylight. |
+| `carla.Camera.BloomNightEV100` | `5` | EV100 at or below which the full bloom is used. |
+| `carla.Camera.BloomDayEV100` | `10` | EV100 at or above which only `BloomDayScale` of it is used. |
 
 #### Auto exposure of a new camera
 
@@ -872,6 +905,8 @@ Here, `distance` is the Euclidean length of the sensor-relative point (`detectio
 !!! warning
     The semantic LiDAR binary record is now 28 bytes instead of 24 bytes. Consumers that parse `raw_data` with fixed byte offsets or the old 24-byte point stride must update all offsets and increment their stride to 28 bytes.
 
+While no client listens to it and it is not enabled for ROS 2, the semantic LIDAR skips its ray casts. After a late `listen()` it delivers data from the next tick with the scan angle where it would have been; it draws no random numbers, so its data matches a sensor listened to from the start.
+
 The points are computed by adding a laser for each channel distributed in the vertical FOV. The rotation is simulated computing the horizontal angle that the LIDAR rotated in a frame. The point cloud is calculated by doing a ray-cast for each laser in every step.
 ```text
 points_per_channel_each_step = points_per_second / (FPS * channels)
@@ -911,6 +946,9 @@ __2.__ Run the simulation using `python3 PythonAPI/util/config.py --fps 10`.
 | `lower_fov`        | float | -30.0 | Angle in degrees of the lowest laser.     |
 | `horizontal_fov`   | float | 360.0 | Horizontal field of view in degrees, 0 - 360. |
 | `sensor_tick`      | float | 0.0  | Simulation seconds between sensor captures (ticks).   |
+| `azimuth_direction` | str | counterclockwise | Same as for `sensor.lidar.ray_cast`. Applies to ROS 2 layouts with an `azimuth` field; this sensor's current ROS 2 layout has none, so it is accepted for consistency and has no effect yet. |
+| `azimuth_range_start` | float | -180.0 | Same as for `sensor.lidar.ray_cast` (see `azimuth_direction`). |
+| `azimuth_range_end` | float | 180.0 | Same as for `sensor.lidar.ray_cast` (see `azimuth_direction`). |
 
 
 

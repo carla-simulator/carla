@@ -94,7 +94,6 @@ def generate_json_package(folder, package_name, use_carla_materials):
             else:
                 map_dict['tile_size'] = 2000
                 map_dict['tiles'] = tiles
-                map_dict['merge_tiles'] = True
 
             # write
             json_maps.append(map_dict)
@@ -303,8 +302,7 @@ def generate_package_file(package_name, props, maps):
         output_json["maps"].append({
             "name": umap["name"],
             "path": path,
-            "use_carla_materials": use_carla_materials,
-            "merge_tiles": umap.get("merge_tiles", False)
+            "use_carla_materials": use_carla_materials
         })
 
     package_config_path = os.path.join(CARLA_ROOT_PATH, "Unreal", "CarlaUnreal", "Content", package_name, "Config")
@@ -435,9 +433,6 @@ def import_assets_from_json_list(json_list, batch_size):
                     tile_size = maps[0]["tile_size"]
             if "props" in data:
                 props = data["props"]
-            for umap in maps:
-                if "tiles" in umap:
-                    umap["merge_tiles"] = True
 
             package_name = filename.replace(".json", "")
 

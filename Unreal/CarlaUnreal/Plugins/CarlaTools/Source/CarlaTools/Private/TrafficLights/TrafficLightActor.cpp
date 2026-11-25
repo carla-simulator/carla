@@ -1,6 +1,7 @@
 #include "TrafficLights/TrafficLightActor.h"
 
 #include "BlueprintUtilFunctions.h"
+#include "Carla/Traffic/TrafficLightBase.h"
 #include "CarlaTools.h"
 #include "Components/SceneComponent.h"
 #include "Components/StaticMeshComponent.h"
@@ -331,6 +332,109 @@ void ATrafficLightActor::Bake(const FString& MapName, const FString& DesiredLabe
 		}
 	}
 
+#endif
+}
+
+void ATrafficLightActor::BakeOntoTrafficLight(ATrafficLightBase* Target) const
+{
+#if WITH_EDITOR
+	if (!IsValid(Target))
+	{
+		return;
+	}
+	USceneComponent* const TargetRoot{Target->GetRootComponent()};
+	if (!IsValid(TargetRoot))
+	{
+		return;
+	}
+
+	Target->Modify();
+	RestoreTrafficLight(Target);
+
+	TArray<UStaticMeshComponent*> SourceMeshComponents{};
+	GetComponents<UStaticMeshComponent>(SourceMeshComponents);
+
+	int32 Added{0};
+	for (UStaticMeshComponent* const Source : SourceMeshComponents)
+	{
+		if (!(IsValid(Source) && IsValid(Source->GetStaticMesh())))
+		{
+			continue;
+		}
+
+		// Keep the tool's component name ("Pole_00_Head_01_Mod_02"): the lamp fallback in
+		// ATrafficLightBase reads the head and module order from it.
+		const FName Name{MakeUniqueObjectName(Target, UStaticMeshComponent::StaticClass(), Source->GetFName())};
+		UStaticMeshComponent* const Baked{NewObject<UStaticMeshComponent>(Target, Name, RF_Transactional)};
+		Baked->ComponentTags.Add(ATrafficLightBase::ToolRigTag);
+		Baked->SetMobility(TargetRoot->Mobility);
+		Baked->SetStaticMesh(Source->GetStaticMesh());
+
+		const int32 MaterialCount{Source->GetNumMaterials()};
+		for (int32 MaterialIndex{0}; MaterialIndex < MaterialCount; ++MaterialIndex)
+		{
+			UMaterialInterface* const SourceMaterial{Source->GetMaterial(MaterialIndex)};
+			if (!IsValid(SourceMaterial))
+			{
+				continue;
+			}
+			if (UMaterialInstanceDynamic* const SourceMID{Cast<UMaterialInstanceDynamic>(SourceMaterial)})
+			{
+				// Lamps: a MID saved with the level, carrying the colour and atlas offsets
+				// ATrafficLightBase classifies and drives.
+				UMaterialInstanceDynamic* const MID{UMaterialInstanceDynamic::Create(SourceMID->Parent, Target)};
+				if (IsValid(MID))
+				{
+					MID->K2_CopyMaterialInstanceParameters(SourceMID);
+					Baked->SetMaterial(MaterialIndex, MID);
+				}
+				continue;
+			}
+			Baked->SetMaterial(MaterialIndex, SourceMaterial);
+		}
+
+		Baked->SetupAttachment(TargetRoot);
+		Target->AddInstanceComponent(Baked);
+		Baked->RegisterComponent();
+		Baked->SetWorldTransform(Source->GetComponentTransform());
+		++Added;
+	}
+
+	Target->bUseToolRig = Added > 0;
+	if (Target->bUseToolRig)
+	{
+		Target->HideBlueprintVisuals();
+	}
+	Target->MarkPackageDirty();
+	UE_LOG(LogCarlaTools, Log, TEXT("Traffic Light Tool: restyled %s with %d meshes"), *Target->GetActorLabel(), Added);
+#endif
+}
+
+void ATrafficLightActor::RestoreTrafficLight(ATrafficLightBase* Target)
+{
+#if WITH_EDITOR
+	if (!IsValid(Target))
+	{
+		return;
+	}
+	Target->Modify();
+
+	TArray<UActorComponent*> RigComponents{Target->GetComponentsByTag(UStaticMeshComponent::StaticClass(), ATrafficLightBase::ToolRigTag)};
+	for (UActorComponent* const Component : RigComponents)
+	{
+		// Free the name first, so a new bake can reuse the tool's component names.
+		Component->Rename(*MakeUniqueObjectName(Target, Component->GetClass(), TEXT("RemovedToolRig")).ToString(),
+			nullptr, REN_DontCreateRedirectors);
+		Target->RemoveInstanceComponent(Component);
+		Component->DestroyComponent();
+	}
+
+	if (Target->bUseToolRig)
+	{
+		Target->bUseToolRig = false;
+		Target->RestoreBlueprintVisuals();
+	}
+	Target->MarkPackageDirty();
 #endif
 }
 
@@ -700,7 +804,7 @@ void ATrafficLightActor::BuildFromJSONString(const FString& JSONConfig)
 							}
 							if (ModObj->HasTypedField<EJson::String>(TEXT("ModuleMesh")))
 							{
-								const FString MeshName{ModObj->GetStringField(TEXT("ModuleMesh"))};
+								const FString MeshName{FTLMeshFactory::ResolveMeshName(ModObj->GetStringField(TEXT("ModuleMesh")))};
 								bool MeshFound{false};
 								for (UStaticMesh* Mesh : FTLMeshFactory::GetAllMeshesForModule(Head, Module))
 								{
@@ -804,8 +908,8 @@ void ATrafficLightActor::BuildFromJSONString(const FString& JSONConfig)
 void ATrafficLightActor::PopulateDefault()
 {
 	Poles.Empty();
-	const FString BaseMeshName{TEXT("SM_TrafficLight_Base")};
-	const FString ExtensibleMeshName{TEXT("SM_TrafficLight_Pole04")};
+	const FString BaseMeshName{TEXT("SM_TLTool_Pole04_NA_Base")};
+	const FString ExtensibleMeshName{TEXT("SM_TLTool_Pole04_NA_Vertical")};
 	FTLPole Pole;
 	Pole.Transform = FTransform::Identity;
 	Pole.Offset = FTransform::Identity;

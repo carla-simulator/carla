@@ -114,6 +114,10 @@ namespace client {
     /// Return a list with the actors requested by ActorId.
     SharedPtr<ActorList> GetActors(const std::vector<ActorId> &actor_ids) const;
 
+    /// Return a list with the actors that cannot move (static props, traffic
+    /// signs). They are part of GetActors() but not of the world snapshots.
+    SharedPtr<ActorList> GetStaticActors() const;
+
     /// Spawn an actor into the world based on the @a blueprint provided at @a
     /// transform. If a @a parent is provided, the actor is attached to
     /// @a parent.

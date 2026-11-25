@@ -67,10 +67,20 @@ void UCarlaLidarSubsystem::StartLidarSimulations(UWorld *World, [[maybe_unused]]
   for (const TWeakObjectPtr<ARayCastSemanticLidar> &WeakLidar : ActiveLidars)
   {
     ARayCastSemanticLidar *Lidar = WeakLidar.Get();
-    if (Lidar != nullptr && Lidar->IsReadyToTick())
+    if (Lidar == nullptr || !Lidar->IsReadyToTick())
     {
-      LidarsToSimulate.Add(Lidar);
+      continue;
     }
+    // A client that subscribes between Start and FinishLidarSimulations misses
+    // this frame; it gets data from the next one.
+    if (Lidar->CanSkipRayCastSimulation())
+    {
+      Lidar->SkipSimulation(Lidar->GetReadyToTickDeltaSeconds());
+      Lidar->ClearReadyToTick();
+      continue;
+    }
+    Lidar->SeedRandomEngineForFrame();
+    LidarsToSimulate.Add(Lidar);
   }
 
   if (LidarsToSimulate.Num() == 0)

@@ -320,13 +320,7 @@ ITSContainer::StationType_t CaService::GetStationType()const
 FVector CaService::GetReferencePosition()const
 {
     FVector RefPos;
-    carla::geom::Location ActorLocation = mActorOwner->GetActorLocation();
-    ALargeMapManager *LargeMap = UCarlaStatics::GetLargeMapManager(mWorld);
-    if (LargeMap)
-    {
-        ActorLocation = LargeMap->LocalToGlobalLocation(ActorLocation);
-    }
-    carla::geom::Location Location = ActorLocation;
+    carla::geom::Location Location = mActorOwner->GetActorLocation();
     carla::geom::GeoLocation CurrentLocation = CurrentGeoProjection.TransformToGeoLocation(Location);
 
     // Compute the noise for the sensor
