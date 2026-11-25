@@ -98,7 +98,8 @@ target_link_libraries (
 
 
 # ==== ZLIB ====
-carla_dependency_option (ZLIB_BUILD_EXAMPLES OFF)
+carla_dependency_option (ZLIB_BUILD_TESTING OFF)
+carla_dependency_option (ZLIB_BUILD_SHARED OFF)
 carla_dependency_add (
   zlib
   ${CARLA_ZLIB_TAG}
@@ -110,13 +111,16 @@ carla_dependency_add (
       -P${CMAKE_CURRENT_LIST_DIR}/DisableZlibCPack.cmake
 )
 carla_dependencies_make_available ()
+if (NOT TARGET ZLIB::ZLIB)
+  add_library (ZLIB::ZLIB ALIAS zlibstatic)
+endif ()
 include_directories (
   ${zlib_SOURCE_DIR}
   ${zlib_BINARY_DIR}
 ) # @TODO HACK
 
 if (WIN32)
-  carla_dependency_option (ZLIB_LIBRARY ${zlib_BINARY_DIR}/zlibstatic${CARLA_DEBUG_AFFIX}.lib)
+  carla_dependency_option (ZLIB_LIBRARY ${zlib_BINARY_DIR}/zs${CARLA_DEBUG_AFFIX}.lib)
 else ()
   carla_dependency_option (ZLIB_LIBRARY ${zlib_BINARY_DIR}/libz.a)
 endif ()
