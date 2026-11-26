@@ -54,6 +54,8 @@ source scripts/env.sh
 
 # plan a route and draw it (no driving)
 python3 scripts/navigate.py route --from=0,0,1 --to=-24,-57,1 --draw
+# (remove the drawn route before its --life ends with debug-draw clear;
+#  --color r,g,b sets its colour, default green)
 
 # drive the ego there (BasicAgent, obeys lights)
 python3 scripts/navigate.py go --to=-24,-57,1 --speed 25

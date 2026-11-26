@@ -11,7 +11,10 @@ Commands:
     stop                                     full brake + hand-brake
     constant-velocity --speed 8 [--off]      hold a fixed forward speed
     lights   [--on Brake,LowBeam] [--off Position]       toggle light flags
-    door     [--open FL,FR] [--close All]                open/close doors
+    door     [--open FL,FR] [--close All] [--status]     open/close doors, report which are open
+    wheels   [--override on --steer FL=20 --pitch FL=90 --suspension FL=0.05]
+                                             read wheels, or pose them visually
+    light-states [--lit]                     every vehicle's lights in one call
     physics  [--show] [--mass 1600 --drag 0.3 --max-rpm 6000]   read/tune physics
     telemetry [--off]                        on-screen physics telemetry (rendered)
     ros-info                                 the ROS 2 command topics for this
@@ -219,8 +222,8 @@ def _doors(spec):
 def cmd_door(args):
     world = _fresh(_client().get_world())
     v = _resolve(world, args)
-    if not args.open and not args.close:
-        raise SystemExit("door needs --open and/or --close")
+    if not (args.open or args.close or args.status):
+        raise SystemExit("door needs --open, --close and/or --status")
     if args.open:
         for d in _doors(args.open):
             v.open_door(d)
@@ -229,6 +232,65 @@ def cmd_door(args):
         for d in _doors(args.close):
             v.close_door(d)
         print(f"id={v.id}: closed {args.close}")
+    if args.status:
+        _for_seconds_or_none(world, 1.0)
+        doors = _doors("FL,FR,RL,RR,Hood,Trunk")
+        print(f"id={v.id}: " + "  ".join(f"{str(d).split('.')[-1]}={'open' if v.is_door_open(d) else 'closed'}" for d in doors))
+
+
+def _for_seconds_or_none(world, seconds):
+    # Door animations take about a second; wait in simulation time when the world is ticking.
+    try:
+        for _ in _for_seconds(world, seconds):
+            pass
+    except RuntimeError:
+        pass
+
+
+WHEELS = {"FL": carla.VehicleWheelLocation.FL_Wheel, "FR": carla.VehicleWheelLocation.FR_Wheel,
+          "BL": carla.VehicleWheelLocation.BL_Wheel, "BR": carla.VehicleWheelLocation.BR_Wheel}
+
+
+def _wheel_values(spec):
+    out = []
+    for item in spec.split(","):
+        k, _, val = item.partition("=")
+        if k.strip().upper() not in WHEELS:
+            raise SystemExit(f"unknown wheel {k!r}; use FL, FR, BL, BR")
+        out.append((WHEELS[k.strip().upper()], float(val)))
+    return out
+
+
+def cmd_wheels(args):
+    world = _fresh(_client().get_world())
+    v = _resolve(world, args)
+    if args.override is not None:
+        v.set_wheel_animation_override(args.override == "on")
+    for spec, setter in ((args.steer, v.set_wheel_steer_direction), (args.pitch, v.set_wheel_pitch_angle),
+                         (args.suspension, v.set_wheel_suspension_offset)):
+        for wheel, val in _wheel_values(spec) if spec else []:
+            setter(wheel, val)
+    _for_seconds_or_none(world, 0.2)
+    print(f"id={v.id} wheels (steer deg, spin deg, suspension m):")
+    for name, w in WHEELS.items():
+        print(f"  {name}: steer={v.get_wheel_steer_angle(w):7.2f}  pitch={v.get_wheel_pitch_angle(w):8.2f}  "
+              f"suspension={v.get_wheel_suspension_offset(w):6.3f}")
+
+
+_LIGHT_FLAGS = [(n, int(getattr(carla.VehicleLightState, n))) for n in
+                ("Position", "LowBeam", "HighBeam", "Brake", "RightBlinker", "LeftBlinker",
+                 "Reverse", "Fog", "Interior", "Special1", "Special2")]
+
+
+def cmd_light_states(args):
+    world = _fresh(_client().get_world())
+    states = world.get_vehicles_light_states()
+    print(f"{len(states)} vehicle(s):")
+    for vid, st in sorted(states.items()):
+        if args.lit and int(st) == 0:
+            continue
+        names = [n for n, f in _LIGHT_FLAGS if int(st) & f] or ["None"]
+        print(f"  id={vid:6d}  {int(st):5d}  {','.join(names)}")
 
 
 def cmd_physics(args):
@@ -346,7 +408,18 @@ def main() -> None:
     pl.add_argument("--on"); pl.add_argument("--off"); pl.set_defaults(func=cmd_lights)
 
     pd = _sel(sub.add_parser("door", help="open/close doors"))
-    pd.add_argument("--open"); pd.add_argument("--close"); pd.set_defaults(func=cmd_door)
+    pd.add_argument("--open"); pd.add_argument("--close")
+    pd.add_argument("--status", action="store_true", help="report which doors are open (is_door_open)")
+    pd.set_defaults(func=cmd_door)
+
+    pw = _sel(sub.add_parser("wheels", help="read wheels; pose them visually with --override on"))
+    pw.add_argument("--override", choices=("on", "off"), help="wheels show only the values set here")
+    pw.add_argument("--steer", help="FL=20,FR=20 degrees"); pw.add_argument("--pitch", help="FL=90 spin, degrees")
+    pw.add_argument("--suspension", help="FL=0.05 offset, metres"); pw.set_defaults(func=cmd_wheels)
+
+    pls = sub.add_parser("light-states", help="light state of every vehicle, in one call")
+    pls.add_argument("--lit", action="store_true", help="only vehicles with a light on")
+    pls.set_defaults(func=cmd_light_states)
 
     pp = _sel(sub.add_parser("physics", help="read/tune physics control"))
     pp.add_argument("--show", action="store_true")

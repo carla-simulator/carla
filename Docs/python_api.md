@@ -3110,6 +3110,8 @@ A traffic light actor, considered a specific type of traffic sign. As traffic li
      
   Within a group the state of traffic lights is changed in a cyclic pattern: one index is chosen and it spends a few seconds in green, yellow and eventually red. The rest of the traffic lights remain frozen in red this whole time, meaning that there is a gap in the last seconds of the cycle where all the traffic lights are red. However, the state of a traffic light can be changed manually.  
 
+  A traffic light is a static actor: [carla.World.get_static_actors](#carla.World.get_static_actors) lists it and it is not part of [carla.WorldSnapshot](#carla.WorldSnapshot). Its state, elapsed time and frozen flag reach the client on every tick; its transform, OpenDRIVE id, phase times and pole index are asked for when they change.  
+
 ### Instance Variables
 - <a name="carla.TrafficLight.state"></a>**<font color="#f8805a">state</font>** (_[carla.TrafficLightState](#carla.TrafficLightState)_)  
 Current state of the traffic light.  
@@ -3654,9 +3656,6 @@ Returns the last Ackermann control settings applied to this vehicle.
 - <a name="carla.Vehicle.get_control"></a>**<font color="#7fb800">get_control</font>**(<font color="#00a6ed">**self**</font>)  
 The client returns the control applied in the last tick. The method does not call the simulator.  
     - **Return:** _[carla.VehicleControl](#carla.VehicleControl)_  
-- <a name="carla.Vehicle.get_failure_state"></a>**<font color="#7fb800">get_failure_state</font>**(<font color="#00a6ed">**self**</font>)  
-Vehicle have failure states, to  indicate that it is incapable of continuing its route. This function returns the vehicle's specific failure state, or in other words, the cause that resulted in it.  
-    - **Return:** _[carla.VehicleFailureState](#carla.VehicleFailureState)_  
 - <a name="carla.Vehicle.get_light_state"></a>**<font color="#7fb800">get_light_state</font>**(<font color="#00a6ed">**self**</font>)  
 Returns a flag representing the vehicle light state, this represents which lights are active or not.  
     - **Return:** _[carla.VehicleLightState](#carla.VehicleLightState)_  
@@ -3827,17 +3826,6 @@ Hood, on vehicles that have one configured as a fifth door.
 Trunk, on vehicles that have one configured as a sixth door.  
 - <a name="carla.VehicleDoor.All"></a>**<font color="#f8805a">All</font>**  
 Represents all doors.  
-
----
-
-## carla.VehicleFailureState<a name="carla.VehicleFailureState"></a>
-Enum containing the different failure states of a vehicle, from which the it cannot recover. These are returned by __<font color="#7fb800">get_failure_state()</font>__ and only Rollover is currently implemented.  
-
-### Instance Variables
-- <a name="carla.VehicleFailureState.NONE"></a>**<font color="#f8805a">NONE</font>**  
-- <a name="carla.VehicleFailureState.Rollover"></a>**<font color="#f8805a">Rollover</font>**  
-- <a name="carla.VehicleFailureState.Engine"></a>**<font color="#f8805a">Engine</font>**  
-- <a name="carla.VehicleFailureState.TirePuncture"></a>**<font color="#f8805a">TirePuncture</font>**  
 
 ---
 
@@ -4070,7 +4058,7 @@ Set the bones of the actor. For each bone we want to set we use a relative trans
 
 ## carla.WalkerAIController<a name="carla.WalkerAIController"></a>
 <small style="display:block;margin-top:-20px;">Inherited from _[carla.Actor](#carla.Actor)_</small></br>
-Class that conducts AI control for a walker. The controllers are defined as actors, but they are quite different from the rest. They need to be attached to a parent actor during their creation, which is the walker they will be controlling (take a look at [carla.World](#carla.World) if you are yet to learn on how to spawn actors). They also need for a special blueprint (already defined in [carla.BlueprintLibrary](#carla.BlueprintLibrary) as "controller.ai.walker"). This is an empty blueprint, as the AI controller will be invisible in the simulation but will follow its parent around to dictate every step of the way.  
+Class that conducts AI control for a walker. The controllers are defined as actors, but they are quite different from the rest. They need to be attached to a parent actor during their creation, which is the walker they will be controlling (take a look at [carla.World](#carla.World) if you are yet to learn on how to spawn actors). They also need for a special blueprint (already defined in [carla.BlueprintLibrary](#carla.BlueprintLibrary) as "controller.ai.walker"). This is an empty blueprint, as the AI controller will be invisible in the simulation but will follow its parent around to dictate every step of the way. A controller attached to its walker with no offset (the default `carla.Transform()`) is not part of [carla.WorldSnapshot](#carla.WorldSnapshot): __<font color="#7fb800">get_transform()</font>__ returns the transform of the walker, and [carla.World.get_actors](#carla.World.get_actors) still lists it.  
 
 ### Methods
 - <a name="carla.WalkerAIController.go_to_location"></a>**<font color="#7fb800">go_to_location</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**destination**</font>)  
@@ -4669,13 +4657,13 @@ This can only be used with walkers. It retrieves a random location to be used as
 Returns an object containing some data about the simulation such as synchrony between client and server or rendering mode.  
     - **Return:** _[carla.WorldSettings](#carla.WorldSettings)_  
 - <a name="carla.World.get_snapshot"></a>**<font color="#7fb800">get_snapshot</font>**(<font color="#00a6ed">**self**</font>)  
-Returns a snapshot of the world at a certain moment comprising all the information about the actors. The actors that cannot move are not part of it: see __<font color="#7fb800">get_static_actors()</font>__.  
+Returns a snapshot of the world at a certain moment comprising all the information about the actors. The actors that cannot move are not part of it: see __<font color="#7fb800">get_static_actors()</font>__. Neither is a [carla.WalkerAIController](#carla.WalkerAIController) attached to its walker, which has the transform of the walker.  
     - **Return:** _[carla.WorldSnapshot](#carla.WorldSnapshot)_  
 - <a name="carla.World.get_spectator"></a>**<font color="#7fb800">get_spectator</font>**(<font color="#00a6ed">**self**</font>)<button class="SnipetButton" id="carla.World.get_spectator-snipet_button">snippet &rarr;</button>  
 Returns the spectator actor. The spectator is a special type of actor created by Unreal Engine, usually with ID=0, that acts as a camera and controls the view in the simulator window.  
     - **Return:** _[carla.Actor](#carla.Actor)_  
 - <a name="carla.World.get_static_actors"></a>**<font color="#7fb800">get_static_actors</font>**(<font color="#00a6ed">**self**</font>)  
-Retrieves the actors that cannot move: props without physics that were spawned as static meshes (a `static.prop.mesh` without `mass`), traffic signs and friction triggers. These actors are part of __<font color="#7fb800">get_actors()</font>__ too, but not of [carla.WorldSnapshot](#carla.WorldSnapshot): the server does not send them on every tick, and the client asks for them again only when one of them is spawned, destroyed or moved. Traffic lights are not static actors, because their state changes.  
+Retrieves the actors that cannot move: props without physics that were spawned as static meshes (a `static.prop.mesh` without `mass`), traffic signs, traffic lights and friction triggers. These actors are part of __<font color="#7fb800">get_actors()</font>__ too, but not of [carla.WorldSnapshot](#carla.WorldSnapshot): the server does not send them on every tick, and the client asks for them again only when one of them is spawned, destroyed or moved. A traffic light is a static actor whose state, elapsed time and frozen flag still reach the client on every tick, so [carla.TrafficLight](#carla.TrafficLight) reads the same as before.  
     - **Return:** _[carla.ActorList](#carla.ActorList)_  
 - <a name="carla.World.get_traffic_light"></a>**<font color="#7fb800">get_traffic_light</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**landmark**</font>)  
 Provided a landmark, returns the traffic light object it describes.  
@@ -4811,7 +4799,7 @@ Parses the established settings to a string and shows them in command line.
 ---
 
 ## carla.WorldSnapshot<a name="carla.WorldSnapshot"></a>
-This snapshot comprises all the information for every actor on scene at a certain moment of time. It creates and gives acces to a data structure containing a series of [carla.ActorSnapshot](#carla.ActorSnapshot). The client recieves a new snapshot on every tick that cannot be stored. The actors that cannot move, such as static props and traffic signs, are not part of the snapshot: [carla.World.get_static_actors](#carla.World.get_static_actors) lists them.  
+This snapshot comprises all the information for every actor on scene at a certain moment of time. It creates and gives acces to a data structure containing a series of [carla.ActorSnapshot](#carla.ActorSnapshot). The client recieves a new snapshot on every tick that cannot be stored. The actors that cannot move, such as static props, traffic signs and traffic lights, are not part of the snapshot: [carla.World.get_static_actors](#carla.World.get_static_actors) lists them. A [carla.WalkerAIController](#carla.WalkerAIController) attached to its walker is not part of it either: it has the transform of the walker.  
 
 ### Instance Variables
 - <a name="carla.WorldSnapshot.platform_timestamp"></a>**<font color="#f8805a">platform_timestamp</font>** (_float<small> - seconds</small>_)  

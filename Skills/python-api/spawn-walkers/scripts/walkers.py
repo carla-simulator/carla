@@ -252,16 +252,12 @@ def _ensure_walking(world, controllers, walker_ids, args):
           f"reads 0 for nav-driven walkers on this build)", flush=True)
 
 
-def cmd_spawn(args):
-    # --seconds N is a hold that ends by itself, with the same cleanup.
-    if args.seconds > 0:
-        args.hold = True
-    client = _client()
-    world = _fresh(client.get_world())
-    previous = _claim_clock(world, args.delta, allow_sync=not args.no_sync)
-    if args.seed is not None:
-        world.set_pedestrians_seed(args.seed)
-        random.seed(args.seed)
+def _spawn_crowd(client, world, args):
+    """Spawn walkers + controllers and set them wandering; return (controller_ids, walker_ids).
+
+    The clock must already be claimed (or not) by the caller. Shared with the
+    populate-world skill, which spawns vehicles and walkers from one process.
+    """
     # How often pedestrians cross roads (0 = never, 1 = always). Low by default so
     # they mostly use sidewalks rather than constantly jaywalking.
     world.set_pedestrians_cross_factor(args.cross_factor)
@@ -331,6 +327,20 @@ def cmd_spawn(args):
     if len(controller_ids) < args.count:
         print(f"  note: {args.count - len(controller_ids)} fewer than requested "
               f"(nav-point collisions / spawn failures — normal at high counts)")
+    return controller_ids, walker_ids
+
+
+def cmd_spawn(args):
+    # --seconds N is a hold that ends by itself, with the same cleanup.
+    if args.seconds > 0:
+        args.hold = True
+    client = _client()
+    world = _fresh(client.get_world())
+    previous = _claim_clock(world, args.delta, allow_sync=not args.no_sync)
+    if args.seed is not None:
+        world.set_pedestrians_seed(args.seed)
+        random.seed(args.seed)
+    controller_ids, walker_ids = _spawn_crowd(client, world, args)
     try:
         if args.hold and not args.no_wander:
             _hold(world, args.seconds)

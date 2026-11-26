@@ -69,6 +69,11 @@ __3.__ Adjust the [`trigger volume`][triggerlink] for each traffic sign by selec
 ---
 ## Regional traffic signs
 
+!!! agent "Agentic CARLA"
+    *"Show the signs of the Town15 open in the editor in US (MUTCD) style."*
+
+    Skill: `restyle-carla-ue58-signs`. [Set up Agentic CARLA](agent_skills.md#set-up-agentic-carla).
+
 The blueprints in `Content > Carla > Static > TrafficSign` are one fixed sign each. The regional sign system builds a sign from data instead: one actor, `BP_Sign`, mounts a plate mesh on a pole and paints the plate with one cell of a texture atlas. A data asset says which plate, which atlas and which cell, so a new sign is a new data asset, not a new blueprint. Town15 is built with it.
 
 ![sign_atlas_mosaic](img/content_authoring_maps_traffic_lights/sign_atlas_mosaic.webp)

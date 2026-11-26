@@ -19,9 +19,12 @@
 
 #include <atomic>
 #include <chrono>
+#include <cstdio>
 #include <future>
+#include <mutex>
 #include <string>
 #include <thread>
+#include <utility>
 #include <vector>
 
 using namespace std::chrono_literals;
@@ -552,5 +555,170 @@ TEST(streaming, blocked_callback_does_not_stall_other_streams) {
     for (auto &stream : streams) {
       c.UnSubscribe(stream.token());
     }
+  }
+}
+
+// A client of a WriteDelta stream: message i is "HF<i>" whole or "HD<i>", a delta only good right after i - 1.
+class DeltaClient {
+public:
+
+  explicit DeltaClient(const carla::streaming::Token &token, std::chrono::milliseconds delay = 0ms) {
+    _client.AsyncRun(1u);
+    _client.Subscribe(token, [this, delay](auto buffer) {
+      const std::string text = util::buffer::as_string(buffer);
+      {
+        std::lock_guard<std::mutex> lock(_mutex);
+        _received.emplace_back(text[1u], std::stoul(text.substr(2u, 8u)));
+      }
+      std::this_thread::sleep_for(delay);
+    });
+  }
+
+  std::vector<std::pair<char, size_t>> Received() {
+    std::lock_guard<std::mutex> lock(_mutex);
+    return _received;
+  }
+
+  // What a real client needs: a whole message first, and no delta after a gap.
+  void ExpectChain(size_t &whole, size_t &deltas) {
+    const auto received = Received();
+    whole = deltas = 0u;
+    ASSERT_FALSE(received.empty());
+    ASSERT_EQ(received.front().first, 'F');
+    for (size_t i = 0u; i < received.size(); ++i) {
+      if (received[i].first == 'D') {
+        ASSERT_EQ(received[i].second, received[i - 1u].second + 1u) << "delta after a gap, at " << i;
+        ++deltas;
+      } else {
+        ASSERT_EQ(received[i].first, 'F');
+        ++whole;
+      }
+    }
+  }
+
+private:
+
+  std::mutex _mutex;
+
+  std::vector<std::pair<char, size_t>> _received;
+
+  carla::streaming::Client _client;
+};
+
+static void WriteNumbered(carla::streaming::Stream &stream, size_t number, size_t padding = 0u) {
+  const auto view = [](const std::string &text) {
+    return carla::BufferView::CreateFrom(carla::Buffer(boost::asio::buffer(text.c_str(), text.size())));
+  };
+  char digits[16];
+  std::snprintf(digits, sizeof(digits), "%08zu", number);
+  const std::string body = std::string(digits) + std::string(padding, '.');
+  stream.WriteDelta(view("H"), view("F" + body), view("D" + body));
+}
+
+// Gives up after 5000 messages, so a client that never gets there fails its assertions instead of hanging the test.
+template <typename Done>
+static size_t WriteUntil(carla::streaming::Stream &stream, size_t number, Done done) {
+  for (size_t i = 0u; (i < 5000u) && !done(); ++i) {
+    WriteNumbered(stream, number++);
+    std::this_thread::sleep_for(1ms);
+  }
+  return number;
+}
+
+TEST(streaming, delta_new_sessions_start_with_a_whole_message) {
+  using namespace carla::streaming;
+  Server srv(TESTING_PORT);
+  srv.SetSynchronousMode(true);
+  srv.AsyncRun(4u);
+  auto stream = srv.MakeStream();
+  size_t whole = 0u;
+  size_t deltas = 0u;
+  size_t number = 1u;
+
+  WriteNumbered(stream, number++);   // nobody listens yet
+  DeltaClient first(stream.token());
+  number = WriteUntil(stream, number, [&]() { return first.Received().size() >= 20u; });
+  {
+    DeltaClient second(stream.token());
+    number = WriteUntil(stream, number, [&]() { return second.Received().size() >= 20u; });
+    second.ExpectChain(whole, deltas);
+    ASSERT_EQ(whole, 1u);
+    ASSERT_GE(deltas, 19u);
+  }
+  // Back to one session, then a third one: only the new one gets a whole message.
+  for (size_t i = 0u; i < 10u; ++i) {
+    WriteNumbered(stream, number++);
+  }
+  DeltaClient third(stream.token());
+  number = WriteUntil(stream, number, [&]() { return third.Received().size() >= 20u; });
+  third.ExpectChain(whole, deltas);
+  ASSERT_EQ(whole, 1u);
+  // In synchronous mode nothing is dropped: it has every message since its first one.
+  const auto got = first.Received();
+  ASSERT_FALSE(got.empty());
+  ASSERT_EQ(got.size(), got.back().second - got.front().second + 1u);
+  first.ExpectChain(whole, deltas);
+  ASSERT_EQ(whole, 1u);
+}
+
+TEST(streaming, delta_after_a_dropped_message_comes_a_whole_one) {
+  using namespace carla::streaming;
+  // Asynchronous mode: a message is dropped for a session that is still sending the one before.
+  Server srv(TESTING_PORT);
+  srv.AsyncRun(4u);
+  auto stream = srv.MakeStream();
+  DeltaClient slow(stream.token(), 20ms);
+  DeltaClient fast(stream.token());
+  std::this_thread::sleep_for(200ms);
+  constexpr size_t number_of_messages = 150u;
+  for (size_t i = 1u; i <= number_of_messages; ++i) {
+    // A few of these fill the socket buffers, so the slow client keeps its session busy.
+    WriteNumbered(stream, i, 1024u * 1024u);
+    std::this_thread::sleep_for(5ms);
+  }
+  std::this_thread::sleep_for(1s);
+  size_t whole = 0u;
+  size_t deltas = 0u;
+  slow.ExpectChain(whole, deltas);
+  // It missed messages, and got a whole one after each gap.
+  ASSERT_LT(whole + deltas, number_of_messages);
+  ASSERT_GT(whole, 1u);
+  fast.ExpectChain(whole, deltas);
+}
+
+TEST(streaming, delta_sessions_come_and_go) {
+  using namespace carla::streaming;
+  for (const bool synchronous : {true, false}) {
+    Server srv(TESTING_PORT);
+    srv.SetSynchronousMode(synchronous);
+    srv.AsyncRun(4u);
+    auto stream = srv.MakeStream();
+    std::atomic_bool done{false};
+    std::atomic_size_t number{0u};
+    std::thread writer([&]() {
+      while (!done) {
+        WriteNumbered(stream, ++number, 1024u);
+        std::this_thread::sleep_for(200us);
+      }
+    });
+    DeltaClient steady(stream.token());
+    size_t whole = 0u;
+    size_t deltas = 0u;
+    size_t checked = 0u;
+    for (size_t round = 0u; round < 40u; ++round) {
+      DeltaClient visitor(stream.token(), (round % 4u == 0u) ? 5ms : 0ms);
+      std::this_thread::sleep_for(25ms);
+      if (!visitor.Received().empty()) {
+        visitor.ExpectChain(whole, deltas);
+        ++checked;
+      }
+    }
+    done = true;
+    writer.join();
+    ASSERT_GT(checked, 0u);
+    std::this_thread::sleep_for(100ms);
+    steady.ExpectChain(whole, deltas);
+    // Low on purpose: sleep_for(200us) takes ~15 ms on Windows.
+    ASSERT_GT(deltas, 10u);
   }
 }

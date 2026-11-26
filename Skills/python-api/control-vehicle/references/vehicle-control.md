@@ -68,3 +68,13 @@ live physics on a rendered server, handy while tuning.
 Under synchronous mode the vehicle only moves when the world is ticked, and
 `--hold` counts wall-clock seconds — drive the tick loop (set-world-settings)
 alongside, or control in async mode.
+
+## Wheels, doors and light states (measured on ue58-dev ccc52d24d)
+
+| Call | Behaviour |
+|---|---|
+| `set_wheel_animation_override(True)` + `set_wheel_steer_direction` / `set_wheel_pitch_angle` / `set_wheel_suspension_offset` | the getters return the values set (FL steer 30°, spin 90°, suspension 0.1 m) |
+| `set_wheel_animation_override(False)` | steer and suspension return to the physics values; the spin angle keeps 90° until the wheel turns |
+| `is_door_open(door)` | true for doors opened by any client; `VehicleDoor.All` is true once every door the model has is open |
+| `open_door(Hood / Trunk)` on `vehicle.tesla.model3` | no effect: the model has only FL, FR, RL, RR |
+| `world.get_vehicles_light_states()` | `{actor_id: VehicleLightState}` for every vehicle; the value is a bit mask, so `int(state) & int(VehicleLightState.LowBeam)` tests one light |

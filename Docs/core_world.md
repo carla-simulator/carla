@@ -173,6 +173,11 @@ vehicle.set_light_state(carla.VehicleLightState(current_lights))
 
 ## Debugging
 
+!!! agent "Agentic CARLA"
+    *"Mark the spawn points, draw the road topology, then clear everything."*
+
+    Skills: `debug-draw`, `map-waypoints`, `show-traffic-signs`. [Set up Agentic CARLA](agent_skills.md#set-up-agentic-carla).
+
 World objects have a [carla.DebugHelper](python_api.md#carla.DebugHelper) object as a public attribute. It allows for different shapes to be drawn during the simulation. These are used to  trace the events happening. The following example would draw a red box at an actor's location and rotation.
 
 ```py
@@ -215,17 +220,23 @@ actor_snapshot = world_snapshot.find(actual_actor.id) # Get an actor's snapshot
 
 ### Static actors and the snapshot
 
-Actors that cannot move are not part of the snapshot. The server does not send them on every tick, so thousands of scenery props add no time per tick in the server, in the clients or in the Traffic Manager. An actor is static when its root component has `Static` mobility and simulates no physics, it is not attached to another actor, and it is a traffic sign or an actor of no specific type:
+Actors that cannot move are not part of the snapshot. The server does not send them on every tick, so thousands of scenery props add no time per tick in the server, in the clients or in the Traffic Manager. An actor is static when its root component has `Static` mobility and simulates no physics, it is not attached to another actor, and it is a traffic sign, a traffic light or an actor of no specific type:
 
 - a `static.prop.mesh` spawned without `mass`;
 - traffic signs (stop, yield, speed limit);
+- traffic lights;
 - a `static.trigger.friction`.
 
-Traffic lights stay in the snapshot, because their state changes. So do the props of the catalogue (`static.prop.<name>`) and props with physics, which can move.
+The props of the catalogue (`static.prop.<name>`) and props with physics stay in the snapshot, because they can move.
+
+Only three values of a traffic light change: its state, its elapsed time and whether it is frozen. The server sends those on every tick, in 10 bytes per light, so `get_state()`, `get_elapsed_time()` and `is_frozen()` are as up to date as before. Its transform, OpenDRIVE id, phase times and pole index come with the static actors, and the client asks for them again after `set_green_time()`, `set_yellow_time()` or `set_red_time()`.
+
+The AI controller of a walker (`controller.ai.walker`) is not in the snapshot either while it is attached to its walker with no offset, which is how `carla.Transform()` and `attach_to` spawn it. It is not a static actor: `controller.get_transform()` returns the transform of the walker.
 
 ```py
 static_actors = world.get_static_actors()    # a carla.ActorList
-signs = static_actors.filter('traffic.*')
+signs_and_lights = static_actors.filter('traffic.*')
+lights = static_actors.filter('traffic.traffic_light')
 ```
 
 `world.get_actors()` still returns every actor, the static ones included, and `world.get_actor()`, `actor.is_alive`, `actor.get_transform()` and `actor.destroy()` work on a static actor as on any other. The client asks the server for the static actors the first time it needs them, and again only after one of them was spawned, destroyed or moved. Only the snapshot differs: `world.get_snapshot()` and the snapshot an `on_tick` callback gets do not list the static actors, and `world_snapshot.find()` returns `None` for one.

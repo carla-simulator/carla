@@ -6,13 +6,14 @@ This is the RESOLVER skill — use it to turn an ambiguous description ("a prius
 skills (telemetry, bounding-boxes, control-vehicle, control-spectator) take.
 
 Commands:
-    actors [--filter vehicle.*] [--role hero] [--color 255,0,0]
+    actors [--filter vehicle.*] [--role hero] [--color 255,0,0] [--static]
            [--near X,Y,Z | --near-id N] [--nearest] [--full] [--limit N]
                                            find actors by attribute / nearest
     snapshot                               frame/timestamp/actor count
     level-bbox --label Buildings [--limit]  static level bounding boxes by label
     raycast --from X,Y,Z --to X,Y,Z        semantic points a ray crosses
-    ground  --at X,Y,Z [--search 1000]     drop a point to the ground below it
+    ground  --at X,Y,Z [--search 1000] [--direction X,Y,Z]
+                                           drop a point to the ground, or cast it along a direction
     ros-topics [--filter] [--all]          the ROS 2 topic tree the server is
                                            expected to publish, per actor, with
                                            the reason for each silent one
@@ -86,12 +87,13 @@ def _speed(a):  # m/s magnitude
 def cmd_actors(args):
     world = _world()
     actors = world.get_actors()
-    rows = list(actors.filter(args.filter)) if args.filter else list(actors)
+    pool = world.get_static_actors() if args.static else actors
+    rows = list(pool.filter(args.filter)) if args.filter else list(pool)
     if args.role:
         rows = [a for a in rows if a.attributes.get("role_name", "") == args.role]
     if args.color:
         rows = [a for a in rows if a.attributes.get("color", "") == args.color]
-    if not args.all:
+    if not (args.all or args.static):
         rows = [a for a in rows if not a.type_id.startswith(("traffic.", "spectator", "sensor.other.v2x"))]
 
     # Optional spatial reference — a distance is shown for context and lets
@@ -276,11 +278,15 @@ def cmd_raycast(args):
 def cmd_ground(args):
     world = _world()
     x, y, z = (float(v) for v in args.at.split(","))
-    p = world.project_point(carla.Location(x, y, z), carla.Vector3D(0, 0, -1), args.search)
+    if args.direction:
+        d = carla.Vector3D(*(float(v) for v in args.direction.split(",")))
+        p, where = world.project_point(carla.Location(x, y, z), d, args.search), f"along ({args.direction}) from"
+    else:
+        p, where = world.ground_projection(carla.Location(x, y, z), args.search), "under"
     if p is None:
-        print(f"no ground within {args.search} m below ({x},{y},{z})")
+        print(f"no geometry within {args.search} m {where} ({x},{y},{z})")
         return
-    print(f"ground under ({x},{y},{z}): ({p.location.x:.2f},{p.location.y:.2f},"
+    print(f"hit {where} ({x},{y},{z}): ({p.location.x:.2f},{p.location.y:.2f},"
           f"{p.location.z:.2f})  label={p.label}")
 
 
@@ -297,6 +303,8 @@ def main() -> None:
     pa.add_argument("--nearest", action="store_true", help="return only the single closest to --near/--near-id")
     pa.add_argument("--limit", type=int, help="display cap only (truncates, not a selection)")
     pa.add_argument("--all", action="store_true", help="include traffic/spectator/etc")
+    pa.add_argument("--static", action="store_true",
+                    help="only actors that cannot move (get_static_actors): static props, traffic signs")
     pa.add_argument("--full", action="store_true",
                     help="show every identifying field (all attrs, size, yaw)")
     pa.set_defaults(func=cmd_actors)
@@ -311,8 +319,9 @@ def main() -> None:
     pr.add_argument("--from", required=True); pr.add_argument("--to", required=True)
     pr.set_defaults(func=cmd_raycast)
 
-    pg = sub.add_parser("ground", help="project a point to the ground")
+    pg = sub.add_parser("ground", help="project a point to the ground, or along --direction")
     pg.add_argument("--at", required=True); pg.add_argument("--search", type=float, default=1000.0)
+    pg.add_argument("--direction", help="X,Y,Z ray direction instead of straight down (project_point)")
     pg.set_defaults(func=cmd_ground)
 
     prt = sub.add_parser("ros-topics", help="ROS 2 topic tree the server should publish")

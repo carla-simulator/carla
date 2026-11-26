@@ -1,6 +1,6 @@
 # Agentic CARLA skills
 
-CARLA ships a library of 71 vetted procedures for AI coding assistants, under [`Skills/`](https://github.com/carla-simulator/carla/tree/ue58-dev/Skills) in the repository and at the root of every CARLA package. An assistant working inside a CARLA checkout or a package finds them automatically and follows them instead of improvising a procedure of its own.
+CARLA ships a library of 79 vetted procedures for AI coding assistants, under [`Skills/`](https://github.com/carla-simulator/carla/tree/ue58-dev/Skills) in the repository and at the root of every CARLA package. An assistant working inside a CARLA checkout or a package finds them automatically and follows them instead of improvising a procedure of its own.
 
 Each skill is a directory holding a `SKILL.md` — YAML frontmatter (`name`, `description`, `compatibility` and `metadata`) followed by the step-by-step procedure — plus the `scripts/` and `references/` it needs. The procedures encode the failure modes that make the obvious approach fail, which is the point of them: they are the source of truth for these tasks, not a summary of the docs.
 
@@ -52,8 +52,8 @@ Starting from nothing, ask for the download first: the `download-carla`, `instal
 | Group | Skills | Covers |
 |---|---|---|
 | `setup` | 7 | Downloading CARLA, installing the Python API, Scenario Runner, Leaderboard and Scenic, and checking what a given install supports |
-| `python-api` | 25 | Driving a running server: spawning, sensors, traffic, weather, maps, recording, debug drawing |
-| `ue58` | 13 | Building, packaging and running UE 5.8, importing maps, props and walkers, authoring vehicles, content packs, switching sign conventions, calibrating camera profiles from reference photos, and running Autoware |
+| `python-api` | 31 | Driving a running server: spawning and populating the world, driving vehicles, physics, sensors, traffic, traffic lights and signs, Inverted AI traffic, weather, textures, maps, recording, debug drawing |
+| `ue58` | 15 | Building, packaging and running UE 5.8, in Docker too, building C++ clients, importing maps, props and walkers, authoring vehicles, content packs, switching sign conventions, calibrating camera profiles from reference photos, and running Autoware |
 | `ue4` | 7 | The same for the UE 4.26 branch |
 | `ue5` | 1 | UE 5.5 feature-support checks |
 | `scenario-runner` | 5 | Writing and running scenarios, including OpenSCENARIO, and reading the results |

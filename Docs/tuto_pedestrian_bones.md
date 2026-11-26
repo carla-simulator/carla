@@ -15,6 +15,11 @@ This tutorial spawns a pedestrian, gives it an AI controller, then reads its ske
 - [__Cleaning up__](#cleaning-up)
 - [__Summary__](#summary)
 
+!!! agent "Agentic CARLA"
+    *"Spawn a walking pedestrian in front of a camera and save its 2D skeleton keypoints with every frame."*
+
+    Skill: `walker-pose-keypoints`. [Set up Agentic CARLA](agent_skills.md#set-up-agentic-carla).
+
 !!! Note
     `PythonAPI/examples/draw_skeleton.py` already does this end to end. This page builds it up piece by piece.
 

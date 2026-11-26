@@ -1,6 +1,6 @@
 ---
 name: read-sensor
-description: Listens to a CARLA sensor and either saves its data to files, shows it live in a window, prints a one-shot summary, or (ros-info) reports the native ROS 2 topics, QoS and enabled-for-ROS state so you can echo it from ROS instead. Cameras save as PNG (depth/semantic auto-colourised) and display in a pygame window; lidar saves as .ply and shows as a top-down scatter; IMU/GNSS/radar/collision stream to JSONL or the console. Use when the user asks to "show/view the camera", "display the lidar", "save the sensor data / capture a dataset", or "what is this sensor reading". Select the sensor by id, type, or the actor it's attached to.
+description: Listens to one CARLA sensor or several and either saves their data to files (several sensors frame-aligned, with a manifest per frame), shows it live in a window (several sensors tiled in one window), prints a one-shot summary, or (ros-info) reports the native ROS 2 topics, QoS and enabled-for-ROS state so you can echo it from ROS instead. Cameras save as PNG (depth/semantic auto-colourised) and display in a pygame window; lidar saves as .ply and shows as a top-down scatter; IMU/GNSS/radar/collision stream to JSONL or the console; DVS events save as .npy plus a polarity image. Use when the user asks to "show/view the camera", "display the lidar", "save the sensor data / capture a dataset", or "what is this sensor reading". Select the sensor by id, type, or the actor it's attached to.
 license: MIT
 compatibility: Any OS with the CARLA PythonAPI, numpy, and (for windows) pygame installed for the active interpreter, and a reachable running CARLA server with a sensor. A window needs a display; saving/summary work headless. Tested against CARLA 0.9.16.
 metadata:
@@ -132,11 +132,32 @@ python3 scripts/read_sensor.py save --id 123 --out ./capture --seconds 10
 python3 scripts/read_sensor.py save --id 123 --out ./capture --frames 50
 
 # MULTI-SENSOR: tile several cameras/lidars in one window
-python3 scripts/read_sensor.py grid --ids 123,124,125 --seconds 30
+python3 scripts/read_sensor.py show --ids 123,124,125 --seconds 30
+python3 scripts/read_sensor.py show --attached-to hero --all          # every sensor on the ego
+python3 scripts/read_sensor.py grid --attached-to hero               # same; grid implies --all
+
+# MULTI-SENSOR: one reading from each, or a frame-aligned recording of all of them
+python3 scripts/read_sensor.py info --attached-to hero --all
+python3 scripts/read_sensor.py save --ids 64,65,66,67,68 --out ./capture --frames 200
+python3 scripts/read_sensor.py save --attached-to hero --all --out ./capture --seconds 10
 
 # ROS 2: which topics does this sensor publish, and is it actually publishing?
 python3 scripts/read_sensor.py ros-info --id 123
 ```
+
+### Recording several sensors
+
+`save` with `--ids` or `--all` writes one directory per sensor, `<out>/<id>_<type>/`, plus `<out>/frames.jsonl` with one line per tick: the frame, the simulation time and, for each sensor, the file holding that frame. Every streaming sensor (camera, lidar, radar, GNSS, IMU, DVS) must deliver the frame of each tick, so all files on a line belong to the same frame. Event sensors (collision, lane invasion, obstacle) are written when they fire, and a sensor with `sensor_tick` set is written when it delivers. The summary reports any sensor-frame that did not arrive.
+
+Measured on ue58-dev ccc52d24d: the 9-sensor `av` rig (3 cameras at 1280×720, lidar, radar, GNSS, IMU, 2 event sensors) recorded 10 aligned frames in 1.7 s; the 6-camera `surround` rig at 1600×900 plus a DVS camera recorded 20 aligned frames in 11 s, with none missing.
+
+### Showing several sensors
+
+`show` with `--ids` or `--all` (and `grid`, which is the same window) tiles every camera and lidar into one window, 400×300 per cell, from a single client. Sensors without an image (IMU, GNSS, collision, …) print their readings to the console instead of taking a blank cell.
+
+### DVS cameras
+
+`sensor.camera.dvs` delivers a `carla.DVSEventArray`. `save` writes each frame as `<frame>.npy`, a structured array with fields `x`, `y` (uint16), `t` (int64, ns) and `pol` (bool), and `<frame>.png`, positive events blue and negative red; `show` and `grid` draw the same image. The script reads `raw_data` with that dtype instead of `DVSEventArray.to_array()`: for 188144 events, `to_array()` took 47 ms and `raw_data` under 1 ms. Before ue58-dev's fix, `to_array()` raised `No to_python (by-value) converter found for C++ type: std::vector<long>`; `to_array_x()`, `to_array_y()`, `to_array_t()` and `to_array_pol()` always worked.
 
 ### Reading it from ROS 2 instead
 

@@ -12,6 +12,11 @@ CARLA UE5 can be built inside a Docker container running Ubuntu 22.04. This is u
 - [__Using a VS Code Devcontainer__](#using-a-vs-code-devcontainer)
 - [__Tips and known issues__](#tips-and-known-issues)
 
+!!! agent "Agentic CARLA"
+    *"Build CARLA from my checkout inside the development Docker container."*
+
+    Skill: `build-carla-ue58-docker`. [Set up Agentic CARLA](agent_skills.md#set-up-agentic-carla).
+
 ---
 
 ## Prerequisites

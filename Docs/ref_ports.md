@@ -7,7 +7,7 @@ Nothing here shares a default with anything else, which took moving two of them 
 !!! agent "Agentic CARLA"
     *"Which CARLA ports are in use on this machine, and what is holding them? I want to start a second simulator."*
 
-    Skills: `check-carla-ports`. [Set up Agentic CARLA](agent_skills.md#set-up-agentic-carla).
+    Skill: `check-carla-ports`. [Set up Agentic CARLA](agent_skills.md#set-up-agentic-carla).
 
 ## Simulator
 

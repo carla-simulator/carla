@@ -13,6 +13,11 @@ Linux users can pull an image based on a CARLA release to run in a Docker contai
 - [__Get the client library__](#get-the-client-library)
 - [__Run several servers on different GPUs__](#run-several-servers-on-different-gpus)
 
+!!! agent "Agentic CARLA"
+    *"Build a Docker image from my CARLA package and run two headless servers on separate GPUs."*
+
+    Skill: `build-carla-ue58-docker`. [Set up Agentic CARLA](agent_skills.md#set-up-agentic-carla).
+
 ---
 ## Before you begin
 

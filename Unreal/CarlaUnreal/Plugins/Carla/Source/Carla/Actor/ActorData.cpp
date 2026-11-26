@@ -172,7 +172,6 @@ void FVehicleData::RecordActorData(FCarlaActor* CarlaActor, UCarlaEpisode* Carla
   {
     SpeedLimit = Controller->GetSpeedLimit();
   }
-  FailureState = Vehicle->GetFailureState();
   OpenDoorMask = Vehicle->GetOpenDoorMask();
   DoorCount = static_cast<uint8>(FMath::Min(Vehicle->GetDoorCount(), 8));
 }
@@ -202,7 +201,6 @@ void FVehicleData::RestoreActorData(FCarlaActor* CarlaActor, UCarlaEpisode* Carl
   {
     Controller->SetSpeedLimit(SpeedLimit);
   }
-  Vehicle->SetFailureState(FailureState);
   for (int32 i = 0; i < Vehicle->GetDoorCount(); ++i)
   {
     if ((OpenDoorMask & (1u << i)) != 0u)

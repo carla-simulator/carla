@@ -1,8 +1,8 @@
 ---
 name: invertedai-traffic
-description: Populates a running CARLA server with Inverted AI traffic — NPC vehicles driven by Inverted AI's learned, real-data driving model over its API instead of the rule-based Traffic Manager. Sets up the API key in a git-ignored .env and the SDK in its own venv, verifies the key, runs a compact co-simulation loop (N cars around a point, traffic lights synced on Town10HD, optional CARLA recording), or the full shipped invertedai_traffic.py example (walkers, IAI log and birdview GIF). Use when the user asks for "Inverted AI", "IAI", "realistic/learned/human-like traffic", "NPCs driven by Inverted AI", or to compare TM traffic with Inverted AI.
+description: Populates a running CARLA server with Inverted AI traffic — NPC vehicles driven by Inverted AI's learned, real-data driving model over its API instead of the rule-based Traffic Manager. Sets up the API key in a git-ignored .env and the SDK in its own venv, verifies the key, runs a compact co-simulation loop (N cars around a point, traffic lights synced by position, optional CARLA recording), or the full shipped invertedai_traffic.py example (walkers, IAI log and birdview GIF). Use when the user asks for "Inverted AI", "IAI", "realistic/learned/human-like traffic", "NPCs driven by Inverted AI", or to compare TM traffic with Inverted AI.
 license: MIT
-compatibility: Linux, Python 3.8-3.12 for the invertedai venv (the pinned SDK forces numpy 1.26), an Inverted AI API key, network access to the Inverted AI API, and a reachable, already-running CARLA server. Traffic-light sync only on Town10HD. Tested on CARLA 1.0 (UE 5.8, ue58-dev, Town10HD_Opt) with invertedai 0.0.22 on an academic key.
+compatibility: Linux, Python 3.8-3.12 for the invertedai venv (the pinned SDK forces numpy 1.26), an Inverted AI API key, network access to the Inverted AI API, and a reachable, already-running CARLA server. Traffic lights synced in either direction wherever the Inverted AI map has lights. Tested on CARLA 1.0 (UE 5.8, ue58-dev, Town10HD_Opt) with invertedai 0.0.22 on an academic key.
 metadata:
   group: python-api
   prerequisites: scripts/check_env.sh
@@ -90,7 +90,36 @@ source scripts/env.sh
 "$IAI_PY" scripts/iai_client.py run -n 30 --hold
 # another area: centre and side of the populated square, CARLA metres
 "$IAI_PY" scripts/iai_client.py run -n 20 --center 0 0 --size 150
+# Inverted AI runs the traffic lights instead of CARLA
+"$IAI_PY" scripts/iai_client.py run -n 30 --traffic-lights iai
 ```
+
+**Traffic lights.** One side runs them and the other follows, so CARLA and
+Inverted AI show the same states:
+
+| `--traffic-lights` | Who runs the lights | What the other side does |
+|---|---|---|
+| `carla` (default) | CARLA's own light cycle | Inverted AI is sent CARLA's states, read after every tick |
+| `iai` | Inverted AI's server (`light_recurrent_states`) | CARLA's lights are frozen and set to the states the agents acted on; released on exit |
+
+Lights are paired along the lane: an Inverted AI light goes to the CARLA stop
+waypoint on its lane, facing the same way, up to 20 m before it. That pairs
+every light on Town01-07 and Town10HD except one CARLA light on Town03. Every
+step is checked: the server must echo the states sent (`carla`), or CARLA's
+lights must show the states applied (`iai`). The run ends with a line like
+`traffic lights (carla): 15 CARLA <-> 30 Inverted AI, 0 mismatches in 300 checks`
+and exits non-zero on any mismatch.
+
+- **Unpaired lights** are printed at start. An Inverted AI-only light is sent
+  as off (`carla`); a CARLA-only light is switched off (`iai`).
+- **Per-lane lights.** Where Inverted AI has a light per lane and CARLA one per
+  approach (Town06's free turn lanes), `iai` mode shows the majority state and
+  counts the split steps. `carla` mode has no such gap.
+- **Timing.** In `iai` mode CARLA shows the agents 0.1 s late (with the positions
+  they reacted from), because the server picks a step's lights inside the call
+  that moves the agents.
+
+`run_example.sh` passes `--traffic-lights iai` through to the example as well.
 
 `run` puts the world in synchronous mode at 0.1 s (the only step Inverted AI
 supports) and becomes the ticker. If the world is already synchronous, it warns
@@ -144,9 +173,9 @@ error; the scripts filter it out of their own output.
 | `invertedai not importable` / numpy errors | The wrong interpreter. Use `$IAI_PY`, not `python3`. Re-run `install_iai.sh`. |
 | `carla not importable` in the venv | The venv was made without `--system-site-packages`, or the wheel is in another user site. Install the wheel into the venv with `install-python-api`. |
 | Few spawned (`spawned 12/30`) | Initial states overlapped existing actors. Clear the area or change `--seed`/`--center`. |
-| NPCs run red lights | The map is not Town10HD, so there is no light mapping. |
+| NPCs run red lights | The Inverted AI map has no lights (`ping` says so), or a `WARN  Inverted AI lights with no CARLA light: …` / `WARN  CARLA lights with no Inverted AI light: …` line at start (`WARN  unpaired: …` in `ping`): those lights are not synced. Lights are matched by position, never by actor-id order: a sorted-id table was off by two on UE 5.8 and fed every NPC another junction's light. |
 | Server froze after a crash | The world was left synchronous. Run `iai_client.py clean`. |
-| Example prints `KeyError: '4378'` (a bare `'4378'` in older examples) after "Generating birdview GIF" | It comes from the SDK's GIF renderer, not from the light mapping, which matches IAI's ids exactly. The recording, the JSON log and a GIF are still written; the wrapper flags it as WARN. |
+| Example prints `KeyError: '4378'` (a bare `'4378'` in older examples) after "Generating birdview GIF" | It comes from the SDK's GIF renderer, not from the light mapping. The recording, the JSON log and a GIF are still written; the wrapper flags it as WARN. |
 | `AttributeError: Off` from `TrafficLightState` | Older examples used `TrafficLightState.Off`; the SDK's off state is `TrafficLightState.none`. Fixed in the example and in `iai_client.py`. |
 | Frozen cars/walkers left after the example | An older example that never cleaned up, or a crash. `CLEAN=1 run_example.sh …`, or by hand: `restore_world.py HOST PORT 1`. |
 
