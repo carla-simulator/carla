@@ -523,6 +523,7 @@ ECarlaServerResponse FCarlaActor::AddActorTorque(const FVector& Torque)
 
 ECarlaServerResponse FCarlaActor::SetActorSimulatePhysics(bool bEnabled)
 {
+  FWorldObserver::MarkStaticActorsChanged();
   if (IsDormant())
   {
     ActorData->bSimulatePhysics = bEnabled;

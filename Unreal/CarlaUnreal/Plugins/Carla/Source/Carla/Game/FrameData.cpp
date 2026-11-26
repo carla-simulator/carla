@@ -592,6 +592,7 @@ void FFrameData::PlayAppearances(const std::unordered_map<uint32_t, uint32_t>& M
         if ((Root != nullptr) && (Root->GetMobility() != EComponentMobility::Movable))
         {
           Root->SetMobility(EComponentMobility::Movable);
+          FWorldObserver::MarkStaticActorsChanged();
         }
         Actor->SetActorScale3D(Scale);
       }
@@ -803,6 +804,7 @@ void FFrameData::PlaceMirror(FCarlaActor &CarlaActor, FTransform Transform)
       return;
     }
     Root->SetMobility(EComponentMobility::Movable);
+    FWorldObserver::MarkStaticActorsChanged();
   }
   // No teleport: the renderer keeps the previous pose for motion vectors.
   CarlaActor.SetActorGlobalTransform(Transform, ETeleportType::None);
@@ -1801,6 +1803,7 @@ bool FFrameData::ProcessReplayerEventParent(
     if (ChildActor->GetAttachParentActor() != ParentActor)
     {
       ChildActor->AttachToActor(ParentActor, FAttachmentTransformRules::KeepWorldTransform);
+      FWorldObserver::MarkStaticActorsChanged();
     }
     // Sensors read their parent's motion through their owner (the IMU). A
     // collision sensor binds its owner's hit event in SetOwner.

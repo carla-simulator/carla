@@ -465,6 +465,7 @@ void UCarlaEpisode::AttachActors(
   Child->AddActorWorldOffset(FVector(CurrentMapOrigin));
 
   UActorAttacher::AttachActors(Child, Parent, InAttachmentType);
+  FWorldObserver::MarkStaticActorsChanged();
 
   if (bIsPrimaryServer)
   {

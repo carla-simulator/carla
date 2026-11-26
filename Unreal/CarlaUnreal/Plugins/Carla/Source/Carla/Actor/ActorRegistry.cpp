@@ -11,11 +11,16 @@
 #include "Carla/Traffic/TrafficLightBase.h"
 #include "Carla/Util/BoundingBoxCalculator.h"
 #include "Carla/Sensor/Sensor.h"
+#include "Carla/Sensor/WorldObserver.h"
 
 #include <util/disable-ue4-macros.h>
 #include "carla/streaming/Token.h"
 #include "carla/streaming/detail/Token.h"
 #include <util/enable-ue4-macros.h>
+
+#include <util/ue-header-guard-begin.h>
+#include "Engine/Level.h"
+#include <util/ue-header-guard-end.h>
 
 
 namespace crp = carla::rpc;
@@ -70,6 +75,7 @@ FString CarlaGetRelevantTagAsString(const TSet<crp::CityObjectLabel> &SemanticTa
 
 FCarlaActor* FActorRegistry::Register(AActor &Actor, FActorDescription Description, IdType DesiredId)
 {
+  FWorldObserver::MarkStaticActorsChanged();
 
   FCarlaActor* CarlaActor = FindCarlaActor(DesiredId);
   bool IsDormant = CarlaActor && (CarlaActor->IsDormant());
@@ -150,6 +156,7 @@ void FActorRegistry::Deregister(IdType Id)
   FCarlaActor* CarlaActor = FindCarlaActor(Id);
 
   if(!CarlaActor) return;
+  FWorldObserver::MarkStaticActorsChanged();
 
   AActor *Actor = CarlaActor->GetActor();
   CarlaActor->TheActor = nullptr;
@@ -209,11 +216,14 @@ TSharedPtr<FCarlaActor> FActorRegistry::MakeCarlaActor(
         Id, &Actor,
         std::move(Info), Type,
         InState, Actor.GetWorld());
+  const ULevel *Level = Actor.GetLevel();
+  CarlaActor->bInPersistentLevel = (Level != nullptr) && Level->IsPersistentLevel();
   return CarlaActor;
 }
 
 void FActorRegistry::PutActorToSleep(FCarlaActor::IdType Id, UCarlaEpisode* CarlaEpisode)
 {
+  FWorldObserver::MarkStaticActorsChanged();
   FCarlaActor* CarlaActor = FindCarlaActor(Id);
 
   // update id maps

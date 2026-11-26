@@ -384,12 +384,32 @@ static uint64 FWorldObserver_StaticActorHash(const FCarlaActor &View)
   const FTransform Transform = View.GetActorGlobalTransform();
   const FVector L = Transform.GetLocation();
   const FQuat R = Transform.GetRotation();
-  const FVector S = Transform.GetScale3D();
+  // No scale: clients never get it, and set_transform can change it with no mark.
   // An array of doubles: no padding bytes get into the hash.
-  const double Key[] = {
-      static_cast<double>(View.GetActorId()), L.X, L.Y, L.Z, R.X, R.Y, R.Z, R.W, S.X, S.Y, S.Z};
+  const double Key[] = {static_cast<double>(View.GetActorId()), L.X, L.Y, L.Z, R.X, R.Y, R.Z, R.W};
   return CityHash64(reinterpret_cast<const char *>(Key), sizeof(Key));
 }
+
+/// Adds what a static traffic light sends every tick to @a Lights; returns @a Hash chained with the rest (sign id, phase times, pole index).
+static uint64 FWorldObserver_StaticLightHash(
+    const FCarlaActor &View,
+    const FActorRegistry &Registry,
+    uint64 Hash,
+    std::vector<carla::sensor::data::TrafficLightDynamicState> &Lights)
+{
+  auto State = FWorldObserver_GetActorState(View, Registry);
+  Lights.push_back({
+      View.GetActorId(),
+      State.traffic_light_data.elapsed_time,
+      State.traffic_light_data.time_is_frozen,
+      State.traffic_light_data.state});
+  State.traffic_light_data.elapsed_time = 0.0f;
+  State.traffic_light_data.time_is_frozen = false;
+  State.traffic_light_data.state = carla::rpc::TrafficLightState::Red;
+  return CityHash64WithSeed(reinterpret_cast<const char *>(&State), sizeof(State), Hash);
+}
+
+bool FWorldObserver::FStaticActors::bChanged = true;
 
 static carla::Buffer FWorldObserver_Serialize(
     carla::Buffer &&buffer,
@@ -441,11 +461,13 @@ static carla::Buffer FWorldObserver_Serialize(
   // What changes of the static traffic lights; it goes in front of the actors.
   static std::vector<carla::sensor::data::TrafficLightDynamicState> TrafficLights;
   TrafficLights.clear();
+  // Lights that turned static with no mark (from a Blueprint or the console), sent after the cached ones until the next mark.
+  static std::vector<carla::sensor::data::TrafficLightDynamicState> OtherTrafficLights;
+  OtherTrafficLights.clear();
 
-  // Write every actor but the static ones and the followers.
-  for (auto& It : Registry)
+  // Write an actor that is not in the cache, unless it is static or a follower.
+  auto WriteActor = [&](const FCarlaActor* View)
   {
-    const FCarlaActor* View = It.Value.Get();
     const FActorInfo* ActorInfo = View->GetActorInfo();
 
     if (FWorldObserver::IsStaticActor(*View))
@@ -453,22 +475,11 @@ static carla::Buffer FWorldObserver_Serialize(
       uint64 Hash = FWorldObserver_StaticActorHash(*View);
       if (View->GetActorType() == FCarlaActor::ActorType::TrafficLight)
       {
-        // Sent: state, elapsed time, frozen flag. Hashed: the rest of what the
-        // episode state carried (sign id, phase times, pole index).
-        auto State = FWorldObserver_GetActorState(*View, Registry);
-        TrafficLights.push_back({
-            View->GetActorId(),
-            State.traffic_light_data.elapsed_time,
-            State.traffic_light_data.time_is_frozen,
-            State.traffic_light_data.state});
-        State.traffic_light_data.elapsed_time = 0.0f;
-        State.traffic_light_data.time_is_frozen = false;
-        State.traffic_light_data.state = carla::rpc::TrafficLightState::Red;
-        Hash = CityHash64WithSeed(reinterpret_cast<const char *>(&State), sizeof(State), Hash);
+        Hash = FWorldObserver_StaticLightHash(*View, Registry, Hash, OtherTrafficLights);
       }
       StaticHash += Hash;
       ++StaticCount;
-      continue;
+      return;
     }
 
     uint32 WalkerId = 0u;
@@ -477,7 +488,7 @@ static carla::Buffer FWorldObserver_Serialize(
       const uint64 Key[] = {View->GetActorId(), WalkerId};
       StaticHash += CityHash64(reinterpret_cast<const char *>(Key), sizeof(Key));
       ++StaticCount;
-      continue;
+      return;
     }
 
     FTransform ActorTransform;
@@ -510,7 +521,7 @@ static carla::Buffer FWorldObserver_Serialize(
         // registry (the entry is still Active but the weak pointer is now
         // null). Skip it this frame; converting these to dormant on
         // stream-out is tracked as follow-up work.
-        continue;
+        return;
       }
       // Go through FCarlaActor::GetActorVelocity() rather than
       // Actor->GetVelocity() directly: FWalkerActor overrides it to read
@@ -539,7 +550,60 @@ static carla::Buffer FWorldObserver_Serialize(
       State
     };
     write_data(info);
+  };
+
+  // A static prop or sign of the persistent level is visited only when the cache is rebuilt, after a mark or in a new episode.
+  if (FWorldObserver::FStaticActors::bChanged || (StaticActors.EpisodeId != Episode.GetId()))
+  {
+    FWorldObserver::FStaticActors::bChanged = false;
+    StaticActors.EpisodeId = Episode.GetId();
+    StaticActors.CachedHash = 0u;
+    StaticActors.CachedCount = 0;
+    StaticActors.Lights.Reset();
+    StaticActors.Rest.Reset();
+    for (auto& It : Registry)
+    {
+      const FCarlaActor* View = It.Value.Get();
+      const bool bLight = (View->GetActorType() == FCarlaActor::ActorType::TrafficLight);
+      // World Partition can stream out the statics of other levels with no Deregister: of those, only lights, checked every tick, are cached.
+      if (!(bLight || View->IsInPersistentLevel()) || !FWorldObserver::IsStaticActor(*View))
+      {
+        StaticActors.Rest.Add(View);
+        WriteActor(View);
+      }
+      else if (bLight)
+      {
+        const uint64 Hash = FWorldObserver_StaticActorHash(*View);
+        StaticActors.Lights.Emplace(View, Hash);
+        StaticHash += FWorldObserver_StaticLightHash(*View, Registry, Hash, TrafficLights);
+        ++StaticCount;
+      }
+      else
+      {
+        StaticActors.CachedHash += FWorldObserver_StaticActorHash(*View);
+        ++StaticActors.CachedCount;
+      }
+    }
   }
+  else
+  {
+    for (const auto& Light : StaticActors.Lights)
+    {
+      // As in the walk over the registry, an actor gone without a Deregister is left out.
+      if (Light.Key->GetActor() != nullptr)
+      {
+        StaticHash += FWorldObserver_StaticLightHash(*Light.Key, Registry, Light.Value, TrafficLights);
+        ++StaticCount;
+      }
+    }
+    for (const FCarlaActor* View : StaticActors.Rest)
+    {
+      WriteActor(View);
+    }
+  }
+  StaticHash += StaticActors.CachedHash;
+  StaticCount += StaticActors.CachedCount;
+  TrafficLights.insert(TrafficLights.end(), OtherTrafficLights.begin(), OtherTrafficLights.end());
 
   // Clients fetch the static actors with the "get_static_actors" call when
   // this version changes. It is in every header, so a client that misses a
