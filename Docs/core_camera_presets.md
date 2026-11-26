@@ -6,6 +6,11 @@ A camera's look (exposure, tonemapper, white balance, bloom, lens flare, noise) 
 - [__Presets shipped with CARLA__](#presets-shipped-with-carla)
 - [__Creating, loading and saving presets__](#creating-loading-and-saving-presets)
 
+!!! agent "Agentic CARLA"
+    *"Make a camera profile that matches these nuScenes front-camera frames and attach a camera that uses it to the ego."*
+
+    Skills: `calibrate-carla-ue58-camera-profile`, `create-sensor`. [Set up Agentic CARLA](agent_skills.md#set-up-agentic-carla).
+
 ---
 ## Using post-process presets for the RGB camera sensor
 

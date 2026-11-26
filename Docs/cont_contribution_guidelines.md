@@ -8,6 +8,11 @@ The CARLA team is glad to accept contributions from anybody willing to collabora
 - [__Art contributions__](#art-contributions)
 - [__Docs contributions__](#docs-contributions)
 
+!!! agent "Agentic CARLA"
+    *"Check my branch against the contribution rules and open its pull request against ue58-dev."*
+
+    Skill: `open-carla-pr`. [Set up Agentic CARLA](agent_skills.md#set-up-agentic-carla).
+
 ---
 ## Report bugs
 

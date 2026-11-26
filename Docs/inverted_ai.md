@@ -12,6 +12,11 @@ Inverted AI drives non-player vehicles with models learned from real human drivi
 ---
 ## Using Inverted AI with CARLA
 
+!!! agent "Agentic CARLA"
+    *"Set up my Inverted AI key and fill Town10 with 30 cars driven by Inverted AI around the ego."*
+
+    Skill: `invertedai-traffic`. [Set up Agentic CARLA](agent_skills.md#set-up-agentic-carla).
+
 `PythonAPI/examples/invertedai_traffic.py` is a working integration. It needs the `invertedai` package, which is in the examples' requirements, and an API key.
 
 ```sh

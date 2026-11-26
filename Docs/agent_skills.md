@@ -52,8 +52,8 @@ Starting from nothing, ask for the download first: the `download-carla`, `instal
 | Group | Skills | Covers |
 |---|---|---|
 | `setup` | 7 | Downloading CARLA, installing the Python API, Scenario Runner, Leaderboard and Scenic, and checking what a given install supports |
-| `python-api` | 31 | Driving a running server: spawning, sensors, traffic, weather, maps, recording, debug drawing |
-| `ue58` | 15 | Building, packaging and running UE 5.8, importing maps, props and walkers, authoring vehicles, content packs, switching sign conventions, calibrating camera profiles from reference photos, and running Autoware |
+| `python-api` | 31 | Driving a running server: spawning and populating the world, driving vehicles, physics, sensors, traffic, traffic lights and signs, Inverted AI traffic, weather, textures, maps, recording, debug drawing |
+| `ue58` | 15 | Building, packaging and running UE 5.8, in Docker too, building C++ clients, importing maps, props and walkers, authoring vehicles, content packs, switching sign conventions, calibrating camera profiles from reference photos, and running Autoware |
 | `ue4` | 7 | The same for the UE 4.26 branch |
 | `ue5` | 1 | UE 5.5 feature-support checks |
 | `scenario-runner` | 5 | Writing and running scenarios, including OpenSCENARIO, and reading the results |
