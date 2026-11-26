@@ -88,4 +88,14 @@ struct CARLA_API FLidarDescription
   /// is 360.
   UPROPERTY(EditAnywhere)
   float AzimuthRangeEnd = 180.0f;
+
+  /// ROS 2 output like a lidar driver: one message per full rotation, stamped
+  /// at its first point, per-point time_stamp, firing order, driver azimuth.
+  UPROPERTY(EditAnywhere)
+  bool RosDriverMode = false;
+
+  /// Azimuth where a rotation starts in driver mode, in degrees, in the ROS
+  /// sensor frame (counter-clockwise from +X; 180 = behind the sensor).
+  UPROPERTY(EditAnywhere)
+  float RosScanCutAngle = 180.0f;
 };

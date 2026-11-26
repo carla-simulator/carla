@@ -13,6 +13,7 @@
 #include "carla/ros2/middleware/Middleware.h"
 #include "carla/ros2/middleware/MiddlewareConfig.h"
 #include "carla/ros2/publishers/PointCloudFieldsLayout.h"
+#include "carla/ros2/publishers/LidarScanAssembler.h"
 #include "carla/streaming/detail/Types.h"
 
 #include <atomic>
@@ -195,6 +196,21 @@ public:
       uint32_t channel_count,
       float upper_fov_limit,
       float lower_fov_limit,
+      carla::sensor::data::LidarData &data,
+      void *actor = nullptr,
+      const LidarAzimuthRange &azimuth_range = {});
+  // Same, with the driver-like output of a rotating lidar (ros_driver_mode):
+  // when driver.enabled the steps are assembled into full rotations and a
+  // message is published once per rotation, stamped at its first point, with
+  // per-point time_stamp offsets and the lidar driver azimuth convention.
+  void ProcessDataFromLidar(
+      uint64_t sensor_type,
+      carla::streaming::detail::stream_id_type stream_id,
+      const carla::geom::Transform sensor_transform,
+      uint32_t channel_count,
+      float upper_fov_limit,
+      float lower_fov_limit,
+      const LidarDriverOptions &driver,
       carla::sensor::data::LidarData &data,
       void *actor = nullptr,
       const LidarAzimuthRange &azimuth_range = {});
