@@ -10,6 +10,11 @@ The textures of map objects can be replaced while the simulation runs, which is 
 - [__Update the texture through the API__](#update-the-texture-through-the-api)
 - [__Which materials can be changed__](#which-materials-can-be-changed)
 
+!!! agent "Agentic CARLA"
+    *"Paint the apartment block in front of the spectator red and show me a before-and-after image."*
+
+    Skill: `apply-textures`. [Set up Agentic CARLA](agent_skills.md#set-up-agentic-carla).
+
 ---
 ## Find the object
 

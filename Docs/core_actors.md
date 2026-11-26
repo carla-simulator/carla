@@ -144,6 +144,11 @@ for vehicle in actor_list.filter('vehicle.*'):
 
 ### Handling
 
+!!! agent "Agentic CARLA"
+    *"Push the ego sideways with an impulse, then freeze it in mid-air with its physics off, and tell me how far it moved."*
+
+    Skill: `apply-actor-physics`. [Set up Agentic CARLA](agent_skills.md#set-up-agentic-carla).
+
 [carla.Actor](python_api.md#carla.Actor) mostly consists of _get()_ and _set()_ methods to manage the actors around the map.
 
 ```py
@@ -257,6 +262,11 @@ if traffic_light.get_state() == carla.TrafficLightState.Red:
 
 ### Vehicles
 
+!!! agent "Agentic CARLA"
+    *"Drive the ego at 30 km/h with Ackermann control, turn on its headlights and open the driver's door."*
+
+    Skill: `control-vehicle`. [Set up Agentic CARLA](agent_skills.md#set-up-agentic-carla).
+
 [__carla.Vehicle__](python_api.md#carla.Vehicle) is a special type of actor. It incorporates special internal components that simulate the physics of wheeled vehicles. This is achieved by applying three types of control:
 
 * __[carla.VehicleControl](python_api.md#carla.VehicleControl)__ provides input for driving commands such as throttle, steering, brake, etc. 
@@ -342,6 +352,11 @@ vehicle.set_light_state(carla.VehicleLightState(current_lights))
 ```
 
 ### Walkers
+
+!!! agent "Agentic CARLA"
+    *"Show me where pedestrians can walk on this map, then spawn 30 that wander around."*
+
+    Skills: `debug-navmesh`, `spawn-walkers`. [Set up Agentic CARLA](agent_skills.md#set-up-agentic-carla).
 
 [__carla.Walker__](python_api.md#carla.Walker) work in a similar way as vehicles do. Control over them is provided by controllers.
 
