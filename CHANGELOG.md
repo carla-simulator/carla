@@ -218,6 +218,7 @@
 * Fixed **synchronous mode running frames on its own on a server that had been used before**, which made `deterministic_collisions` runs differ after other scripts. Every `world.tick()` (or `apply_batch_sync(..., True)`) sent while the server was asynchronous was banked and never consumed, and once synchronous mode was turned on the server ran one frame per banked tick without any client ticking. Turning synchronous mode on now starts from no pending ticks, as on a fresh server.
 * Fixed `stop_replayer(keep_actors=False)` leaving the replayed actors in the scene, so every play/stop cycle added another copy of them. It destroys the actors the replayer spawned, also when the replay already reached its end; actors it reused from the scene, such as traffic lights, stay.
 * The server now names the missing file when a map has no pedestrian navigation mesh (`Failed to find the navigation mesh file 'Map.bin'`) instead of reporting a missing OpenDrive file.
+* Fixed the server writing into freed memory every time an actor was removed: `FActorRegistry::Deregister` cleared the actor pointer of the registry entry after freeing that entry, which could corrupt the heap and crash the server later at an unrelated place.
 
 #### ROS 2
 
