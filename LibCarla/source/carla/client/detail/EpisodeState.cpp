@@ -96,6 +96,19 @@ namespace detail {
         offsetof(ActorSnapshot, acceleration),
         offsetof(ActorSnapshot, state),
         offsetof(ActorSnapshot, state) + Serializer::delta_ranges[7] - Serializer::delta_ranges[6]};
+    // A light that only advanced is a bit, in the order of the previous whole message: only its elapsed time changes.
+    if (const auto advanced = delta.GetAdvancedLights()) {
+      if (advanced->first != _traffic_lights.size()) {
+        return false;
+      }
+      // The header's float, which GetDeltaSeconds widened to double without loss.
+      const float seconds = static_cast<float>(delta.GetDeltaSeconds());
+      for (size_t i = 0u; i < _traffic_lights.size(); ++i) {
+        if ((advanced->second[i / 8u] & (1u << (i % 8u))) != 0u) {
+          _traffic_lights[i].elapsed_time = Serializer::AdvanceElapsed(_traffic_lights[i].elapsed_time, seconds);
+        }
+      }
+    }
     // A delta lists lights and actors in the order of the whole message, which is the order of the vectors.
     size_t position = 0u;
     for (auto &&light : delta.GetTrafficLights()) {
