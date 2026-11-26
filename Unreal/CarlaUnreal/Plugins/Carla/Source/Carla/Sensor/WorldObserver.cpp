@@ -590,13 +590,26 @@ void FWorldObserver::BroadcastTick(
 
   auto AsyncStream = Stream.MakeAsyncDataStream(*this, Episode.GetElapsedGameTime());
 
-  carla::Buffer buffer = FWorldObserver_Serialize(
+  auto Full = carla::BufferView::CreateFrom(FWorldObserver_Serialize(
       AsyncStream.PopBufferFromPool(),
       Episode,
       DeltaSecond,
       MapChange,
       PendingLightUpdates,
-      StaticActors);
+      StaticActors));
 
-  AsyncStream.SerializeAndSend(*this, std::move(buffer));
+  // A delta applies on the frame before it: none after a frame that was not sent (a paused world skips them).
+  const uint64 Frame = FCarlaEngine::GetFrameCounter();
+  carla::SharedBufferView Delta = Full;
+  if (LastFull && (Frame == LastFrame + 1u) && Stream.AreClientsListening())
+  {
+    carla::Buffer Buffer = AsyncStream.PopBufferFromPool();
+    if (carla::sensor::s11n::EpisodeStateSerializer::MakeDelta(*LastFull, *Full, Buffer))
+    {
+      Delta = carla::BufferView::CreateFrom(std::move(Buffer));
+    }
+  }
+  AsyncStream.SendDelta(Full, std::move(Delta));
+  LastFull = std::move(Full);
+  LastFrame = Frame;
 }

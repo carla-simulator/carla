@@ -87,4 +87,9 @@ private:
   FDataMultiStream Stream;
 
   FStaticActors StaticActors;
+
+  /// The last whole message and its frame: the next message is sent as its difference with this one.
+  carla::SharedBufferView LastFull;
+
+  uint64 LastFrame = 0u;
 };
