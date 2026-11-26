@@ -584,7 +584,11 @@ def _elapsed(latest):
 
 def cmd_show(args):
     world = _fresh(_client().get_world())
-    sensor = _resolve(world, args)
+    sensors = _resolve_many(world, args)
+    if len(sensors) > 1:
+        # Several sensors: one tiled window, all fed from this one client.
+        return _grid(world, sensors, args.seconds)
+    sensor = sensors[0]
     is_img = sensor.type_id.startswith("sensor.camera")
     is_lidar = "lidar" in sensor.type_id
     if not (is_img or is_lidar):
@@ -644,16 +648,29 @@ def cmd_show(args):
 
 
 def cmd_grid(args):
+    world = _fresh(_client().get_world())
+    if args.id is None and not args.ids:
+        args.all = True          # grid --attached-to hero = every sensor on the ego
+    _grid(world, _resolve_many(world, args), args.seconds)
+
+
+def _grid(world, sensors, seconds):
+    """Tile several sensors in one pygame window, for `seconds` simulated (0 = until closed).
+
+    Cameras and lidars get a cell each; a sensor with no image (IMU, GNSS,
+    collision, ...) is printed to the console instead of taking a blank cell.
+    """
     import cv2
     import pygame
-    world = _fresh(_client().get_world())
-    ids = [int(x) for x in args.ids.split(",")]
-    sensors = []
-    for i in ids:
-        s = world.get_actors().find(i)
-        if s is None or not s.type_id.startswith("sensor."):
-            raise SystemExit(f"no sensor with id {i}")
-        sensors.append(s)
+    visual = [s for s in sensors
+              if s.type_id.startswith("sensor.camera") or "lidar" in s.type_id]
+    other = [s for s in sensors if s not in visual]
+    for s in other:
+        print(f"id={s.id} ({s.type_id}) has no image; streaming its readings to the console")
+        s.listen(lambda d, s=s: print(f"  {s.id}:", _describe(d)))
+    if not visual:
+        raise SystemExit("none of the selected sensors has an image to show")
+    all_sensors, sensors = sensors, visual
 
     cw, ch = 400, 300                       # per-cell size
     cols = math.ceil(math.sqrt(len(sensors)))
@@ -683,7 +700,7 @@ def cmd_grid(args):
     # bounded by wall time shows a different amount of simulation depending on
     # how loaded the server is. pygame's clock.tick(30) below stays -- that is
     # the window's redraw cap, not a wait on simulation state.
-    span = args.seconds or None
+    span = seconds or None
     running = True
     while running:
         for e in pygame.event.get():
@@ -701,7 +718,7 @@ def cmd_grid(args):
         clock.tick(30)
         if span is not None and _elapsed(seen) >= span:
             running = False
-    _stop_and_drain(world, sensors)
+    _stop_and_drain(world, all_sensors)
     pygame.quit()
     print(f"closed grid of {len(sensors)} sensors")
 
@@ -848,12 +865,15 @@ def main() -> None:
                          "instead of hanging")
     ps.set_defaults(func=cmd_save)
 
-    psh = _sel(sub.add_parser("show", help="live window (camera/lidar) or console stream"))
+    psh = _sel(sub.add_parser("show", help="live window (camera/lidar) or console stream; "
+                                           "several sensors (--ids/--all) tile in one window"),
+               many=True)
     psh.add_argument("--seconds", type=float, default=20.0, help="0 = until window closed")
     psh.set_defaults(func=cmd_show)
 
-    pgr = sub.add_parser("grid", help="tile several sensors in one window")
-    pgr.add_argument("--ids", required=True, help="comma-separated sensor ids, e.g. 12,13,14")
+    pgr = _sel(sub.add_parser("grid", help="tile several sensors in one window "
+                                           "(--ids, or every sensor matching --attached-to/--type)"),
+               many=True)
     pgr.add_argument("--seconds", type=float, default=20.0, help="0 = until window closed")
     pgr.set_defaults(func=cmd_grid)
 

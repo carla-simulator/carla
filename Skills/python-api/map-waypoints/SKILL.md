@@ -1,6 +1,6 @@
 ---
 name: map-waypoints
-description: Explores a CARLA map's road network through the Map/Waypoint API — a natural-language rundown of the whole map ("give me the topology"), drawing the topology to confirm the modelled map matches the visible one, enumerating junctions to resolve phrases like "the 4-way junction in the middle", nearest-waypoint lane facts, next/previous lane navigation, and the OpenDRIVE structure itself (one road's lane sections and lanes, one lane's width and connections, one junction's entry and exit lanes). Use when the user asks about the map's layout, lanes, junctions, topology, or to locate/navigate specific map elements.
+description: Explores a CARLA map's road network through the Map/Waypoint API — crosswalk areas (list and draw them), a natural-language rundown of the whole map ("give me the topology"), drawing the topology to confirm the modelled map matches the visible one, enumerating junctions to resolve phrases like "the 4-way junction in the middle", nearest-waypoint lane facts, next/previous lane navigation, and the OpenDRIVE structure itself (one road's lane sections and lanes, one lane's width and connections, one junction's entry and exit lanes). Use when the user asks about the map's layout, lanes, junctions, topology, or to locate/navigate specific map elements.
 license: MIT
 compatibility: Any OS with the CARLA PythonAPI installed for the active interpreter and a reachable, already-running CARLA server. Drawing needs a rendered view; text queries work headless. Tested against CARLA 0.9.16.
 metadata:
@@ -21,7 +21,8 @@ Query and visualise the road network of the loaded map. Three headline uses:
 1. **Rundown** — `summary` turns the map into stats *and* a one-paragraph
    description ("a dense, city-like map … mostly 2-lane roads … 12 junctions").
 2. **Show the topology** — `topology --draw` overlays the modelled road graph so
-   you can confirm it matches the map you see rendered.
+   you can confirm it matches the map you see rendered. debug-draw `clear`
+   removes any drawing before its `--life` ends.
 3. **Resolve a described element** — `junctions` lists every junction with its
    centre, arm count, distance-to-map-centre and bearing, so a phrase like
    "the 4-way junction in the middle" resolves to a specific junction id.
@@ -68,6 +69,11 @@ python3 scripts/waypoints.py summary
 
 # draw the whole road topology to compare with the visible map
 python3 scripts/waypoints.py topology --draw --life 180
+# ...following each lane, one arrow every 2 m (curves and junction turns show their shape;
+# without --step each segment is ONE straight arrow, start to end, cutting across curves)
+python3 scripts/waypoints.py topology --draw --step 2 --life 180
+# lanes inside junctions are muted blue, the rest muted purple; --junction-color r,g,b changes the blue,
+# --color r,g,b draws everything in one colour
 
 # every junction; or just the four-way ones, nearest the centre first
 python3 scripts/waypoints.py junctions
@@ -83,7 +89,22 @@ python3 scripts/waypoints.py road --id 10
 python3 scripts/waypoints.py lane --at=100,-20,0 --draw          # the lane under a point
 python3 scripts/waypoints.py lane --road 0 --section 0 --lane 2
 python3 scripts/waypoints.py junction --id 841 --draw            # entry lanes green, exit lanes red
+
+# crosswalks: every one (centre, size, junction), or those near a point; --draw outlines them
+python3 scripts/waypoints.py crosswalks
+python3 scripts/waypoints.py crosswalks --near=-47,20,0 --radius 40 --draw --life 120
 ```
+
+`crosswalks` reads `Map.get_crosswalks()`, a flat list of corners in which each
+polygon is closed by repeating its first corner (Town10HD_Opt: 80 points, 16
+crosswalks of 4 corners). The corners carry the OpenDRIVE height, which is 0 on
+Town10HD_Opt, so the drawing takes the road height under each centre. Each is
+labelled `CW<n>`, an index into that list, stable for one map. Outlines and
+labels are dark blue by default.
+
+Every `--draw` here also takes `--color r,g,b`, which draws everything that
+command draws in that colour (junction entry/exit lanes lose their green/red
+distinction), and `--life` for how long it stays.
 
 ### The OpenDRIVE structure
 
@@ -153,7 +174,8 @@ Solution: expected; it still completes. Increase `STAT_STEP` in the script for a
 faster, coarser pass.
 
 **Problem: drawn topology/junctions not visible**
-Cause: headless `-nullrhi` server, or the spectator is far away.
+Cause: headless `-nullrhi` server, or the spectator is far away (tell the user
+where the drawing is; move the spectator only if they ask).
 Solution: use a rendered server (see debug-draw) and move to the map centre.
 
 **Problem: a "junction" has an odd arm count**
