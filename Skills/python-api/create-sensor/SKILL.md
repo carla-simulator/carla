@@ -1,6 +1,6 @@
 ---
 name: create-sensor
-description: Spawns and attaches sensors on a running CARLA server — cameras (rgb/depth/semantic/instance/optical-flow/normals), lidar, radar, IMU, GNSS, collision/lane-invasion/obstacle — to the ego or any actor, one at a time or a whole rig from a JSON file or a preset (av, surround), with a mount transform and blueprint attributes (resolution, fov, sensor_tick, lidar range/points, …). Also sets up native ROS 2 publishing (--ros to enable_for_ros, --ros-name/--ros-topic-name topic naming, --ros-frame-id/--no-ros-tf on UE4 servers) and prints the topics the sensor will publish. Use when the user asks to "add a camera/lidar/sensor", "put a dashcam on the ego", "attach a depth camera", "mount a sensor", or "publish a sensor to ROS". Prints the sensor id; read its data with the read-sensor skill.
+description: Spawns and attaches sensors on a running CARLA server — cameras (rgb/depth/semantic/instance/optical-flow/normals), lidar, radar, IMU, GNSS, collision/lane-invasion/obstacle — to the ego or any actor, one at a time, several on one mount in one command (--type camera.rgb,camera.depth,camera.semantic_segmentation), or a whole rig from a JSON file or a preset (av, surround), with a mount transform and blueprint attributes (resolution, fov, sensor_tick, lidar range/points, …). Also sets up native ROS 2 publishing (--ros to enable_for_ros, --ros-name/--ros-topic-name topic naming, --ros-frame-id/--no-ros-tf on UE4 servers) and prints the topics the sensor will publish. Use when the user asks to "add a camera/lidar/sensor", "put a dashcam on the ego", "attach a depth camera", "mount a sensor", or "publish a sensor to ROS". Prints the sensor id; read its data with the read-sensor skill.
 license: MIT
 compatibility: Any OS with the CARLA PythonAPI installed for the active interpreter and a reachable, already-running CARLA server (and an actor to attach to, for attached sensors). Does NOT need UE4_ROOT. Tested against CARLA 0.9.16.
 metadata:
@@ -70,7 +70,20 @@ python3 scripts/sensors.py ros --filter 'sensor.camera.*' --disable
 attaches to any actor; omit both for a world-fixed sensor. `--attachment SpringArm`
 gives a smooth chase mount. Repeat `--attr key=value` for blueprint attributes.
 
-### Several sensors at once (`rig`)
+### Several sensors at once
+
+Several types on **one mount** — no file needed. Give `--type` a comma list:
+
+```bash
+# RGB + depth + semantic cameras, same pose, on the ego
+python3 scripts/sensors.py spawn --type camera.rgb,camera.depth,camera.semantic_segmentation \
+    --attach-to hero --attr image_size_x=1280 --attr image_size_y=720
+# a camera and a lidar, world-fixed at a point
+python3 scripts/sensors.py spawn --type camera.rgb,lidar.ray_cast --x 10 --y 20 --z 5 --attr range=50
+```
+
+All share the transform and attachment. Each `--attr` is applied to every blueprint that has it (`image_size_x` sizes the cameras and skips the lidar); one that **no** blueprint has is an error. It is all or nothing, like `rig`, and prints a name → id table plus the `read-sensor save --ids …` and `show --ids …` lines. With `--ros` each sensor's `ros_name` is its type (`camera_rgb`, `camera_depth`, …); `--ros-name`/`--ros-topic-name` are rejected because they name one sensor. The same type twice, or different mounts, is a `rig`:
+
 
 ```bash
 python3 scripts/sensors.py rig --preset av --attach-to hero --out ids.json        # 3 cameras, lidar, radar, GNSS, IMU, collision, lane invasion

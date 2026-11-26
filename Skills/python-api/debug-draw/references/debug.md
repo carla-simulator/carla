@@ -39,8 +39,11 @@ takes a centre `Location` and a half-size `Vector3D` (extent is half-width, so a
 ## Not actors
 
 Debug shapes are a render overlay, not world actors: `get_actors()` never returns
-them, and there is no handle to delete one. Control them purely through
-`life_time`. A world reload clears everything.
+them, and there is no handle to delete one. Control them through `life_time`,
+or remove all of them at once with `clear_debug_shape()` (points, lines,
+arrows, boxes) and `clear_debug_string()` (text) — the skill's `clear` command.
+Both are world-wide: they remove every client's drawings. A world reload also
+clears everything.
 
 ## Moving objects: shapes do NOT follow
 

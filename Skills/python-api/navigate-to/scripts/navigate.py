@@ -25,6 +25,15 @@ import argparse
 import os
 
 import carla  # provided by the active interpreter; check_env.sh verifies this
+
+
+def _rgb(s: str) -> carla.Color:
+    """--color r,g,b (0-255 each)."""
+    try:
+        r, g, b = (int(v) for v in s.split(","))
+    except ValueError:
+        raise argparse.ArgumentTypeError(f"expected r,g,b but got {s!r}")
+    return carla.Color(r, g, b)
 from agents.navigation.basic_agent import BasicAgent
 from agents.navigation.behavior_agent import BehaviorAgent
 from agents.navigation.constant_velocity_agent import ConstantVelocityAgent
@@ -89,7 +98,7 @@ def cmd_route(args):
         dbg = world.debug
         for wp, _ in route:
             l = wp.transform.location
-            dbg.draw_point(carla.Location(l.x, l.y, l.z + 0.3), 0.1, carla.Color(0, 255, 0), args.life)
+            dbg.draw_point(carla.Location(l.x, l.y, l.z + 0.3), 0.1, args.color, args.life)
         print(f"  drew the route ({args.life}s) — view on a rendered server")
 
 
@@ -138,7 +147,8 @@ def main() -> None:
     pr = sub.add_parser("route", help="plan a route (no driving)")
     pr.add_argument("--from", required=True); pr.add_argument("--to", required=True)
     pr.add_argument("--resolution", type=float, default=2.0, help="waypoint spacing (m)")
-    pr.add_argument("--draw", action="store_true"); pr.add_argument("--life", type=float, default=60.0)
+    pr.add_argument("--draw", action="store_true"); pr.add_argument("--life", type=float, default=120.0)
+    pr.add_argument("--color", type=_rgb, default=carla.Color(0, 255, 0), help="r,g,b of the drawn route (default 0,255,0)")
     pr.set_defaults(func=cmd_route)
 
     pg = sub.add_parser("go", help="drive the ego to a destination")

@@ -8,9 +8,13 @@ Commands (all take a --life in seconds and an optional --color r,g,b):
     arrow  --from X,Y,Z --to X,Y,Z [--thickness 0.1 --arrow-size 0.2]
     box    --center X,Y,Z --extent EX,EY,EZ [--yaw 0 --thickness 0.1]
     text   --at X,Y,Z --text "hello"
+    clear  [--shapes | --strings]        remove debug drawings now (default: both)
 
 Debug shapes are an overlay drawn by the server; they are not actors and cannot
-be queried or individually removed — they simply expire after --life seconds.
+be queried or removed one by one. They expire after --life seconds, or `clear`
+removes them all at once (DebugHelper.clear_debug_shape / clear_debug_string).
+`clear` is world-wide: it also removes what other clients and skills drew
+(map-waypoints, debug-navmesh, navigate-to, bounding-boxes, ...).
 
 Lifetime & sync mode (see references/debug.md): shapes are rendered on a world
 tick. In asynchronous mode the server ticks itself, so a shape appears right away
@@ -86,11 +90,27 @@ def cmd_text(args):
     print(f"text {args.text!r} at {args.at} life={args.life}s")
 
 
+def cmd_clear(args):
+    debug = _debug(args)
+    if not hasattr(debug, "clear_debug_shape"):
+        raise SystemExit("this server's DebugHelper has no clear_debug_shape/clear_debug_string; "
+                         "shapes can only expire after their --life")
+    both = not (args.shapes or args.strings)
+    done = []
+    if args.shapes or both:
+        debug.clear_debug_shape()          # points, lines, arrows, boxes
+        done.append("shapes")
+    if args.strings or both:
+        debug.clear_debug_string()         # text drawn with draw_string
+        done.append("strings")
+    print(f"cleared all debug {' and '.join(done)} (world-wide, every client's)")
+
+
 def main() -> None:
     p = argparse.ArgumentParser(description="Draw debug primitives in CARLA.")
     # Shared options on every subcommand.
     def common(sp):
-        sp.add_argument("--life", type=float, default=30.0, help="seconds the shape lasts (default 30)")
+        sp.add_argument("--life", type=float, default=120.0, help="seconds the shape lasts (default 120)")
         sp.add_argument("--color", type=_color, default=carla.Color(255, 0, 0), help="r,g,b (default 255,0,0)")
         return sp
     sub = p.add_subparsers(dest="cmd", required=True)
@@ -100,6 +120,12 @@ def main() -> None:
     pa = common(sub.add_parser("arrow")); pa.add_argument("--from", required=True); pa.add_argument("--to", required=True); pa.add_argument("--thickness", type=float, default=0.1); pa.add_argument("--arrow-size", type=float, default=0.2); pa.set_defaults(func=cmd_arrow)
     pb = common(sub.add_parser("box")); pb.add_argument("--center", required=True); pb.add_argument("--extent", required=True); pb.add_argument("--yaw", type=float, default=0.0); pb.add_argument("--thickness", type=float, default=0.1); pb.set_defaults(func=cmd_box)
     pt = common(sub.add_parser("text")); pt.add_argument("--at", required=True); pt.add_argument("--text", required=True); pt.set_defaults(func=cmd_text)
+
+    pc = sub.add_parser("clear", help="remove debug drawings now (default: shapes and strings)")
+    which = pc.add_mutually_exclusive_group()
+    which.add_argument("--shapes", action="store_true", help="only points, lines, arrows and boxes")
+    which.add_argument("--strings", action="store_true", help="only text")
+    pc.set_defaults(func=cmd_clear)
 
     args = p.parse_args()
     args.func(args)

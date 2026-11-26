@@ -8,6 +8,9 @@ Commands:
     freeze on|off [--state green]          freeze/unfreeze ALL lights (optionally
                                            forcing a state first, e.g. all green)
     reset                                  reset all lights to their normal cycle
+    draw  [<selector>] [--seconds 120]     overlay each light's live data in the world
+                                           (state, time in state, phase times, frozen);
+                                           default selector --all
 
 Selector (for set/timing): --all | --id N | --opendrive-id S (the .xodr signal id)
 | --junction J (lights in that junction) | --near X,Y,Z (the nearest one).
@@ -23,6 +26,15 @@ import argparse
 import os
 
 import carla  # provided by the active interpreter; check_env.sh verifies this
+
+
+def _rgb(s: str) -> carla.Color:
+    """--color r,g,b (0-255 each)."""
+    try:
+        r, g, b = (int(v) for v in s.split(","))
+    except ValueError:
+        raise argparse.ArgumentTypeError(f"expected r,g,b but got {s!r}")
+    return carla.Color(r, g, b)
 
 STATES = {"green": carla.TrafficLightState.Green, "red": carla.TrafficLightState.Red,
           "yellow": carla.TrafficLightState.Yellow, "off": carla.TrafficLightState.Off}
@@ -120,6 +132,90 @@ def cmd_reset(_):
     print("reset all traffic lights to their normal cycle")
 
 
+_STATE_COLOR = {"Green": carla.Color(0, 255, 0), "Yellow": carla.Color(255, 200, 0),
+                "Red": carla.Color(255, 0, 0), "Off": carla.Color(128, 128, 128),
+                "Unknown": carla.Color(128, 128, 128)}
+
+
+def _for_seconds(world, seconds):
+    """Yield one snapshot per frame until `seconds` of SIMULATED time pass (0 = forever).
+
+    An observer: it waits for whoever owns the clock and never ticks, so it is
+    safe next to a traffic holder. The budget is read off the world clock, not
+    summed from deltas, so a slow client does not stretch it.
+    """
+    start = None
+    while True:
+        snap = world.wait_for_tick()
+        now = snap.timestamp.elapsed_seconds
+        if start is None:
+            start = now
+        elif seconds > 0 and now - start >= seconds:
+            return
+        yield snap
+
+
+def cmd_draw(args):
+    """Overlay every selected light's data, redrawn each frame so it follows the cycle.
+
+    Per light: a bar across each lane it controls, on the stop line, in the
+    light's colour, and a label above it -- id, OpenDRIVE id, state, seconds in
+    the current state out of that state's duration, the green/yellow/red times
+    and whether it is frozen. Each stamp lives about two frames, so the overlay
+    tracks state changes and disappears as soon as this command stops.
+    """
+    if not any(getattr(args, k, None) not in (None, False)
+               for k in ("all", "id", "opendrive_id", "junction", "near")):
+        args.all = True
+    world = _world()
+    lights = _select(world, args)
+    if not lights:
+        raise SystemExit("no traffic lights matched")
+    # Stop lines are static: query once. A light with no stop waypoint is
+    # labelled at its pole instead.
+    stops = {}
+    for l in lights:
+        wps = list(l.get_stop_waypoints())
+        stops[l.id] = wps
+    dbg = world.debug
+    print(f"drawing {len(lights)} traffic light(s) for "
+          f"{'ever (Ctrl+C)' if args.seconds <= 0 else f'{args.seconds:g}s'} "
+          "— view on a rendered server; the overlay vanishes when this stops", flush=True)
+    durations = {"Green": "get_green_time", "Yellow": "get_yellow_time"}
+    try:
+        for snap in _for_seconds(world, args.seconds):
+            life = max(snap.timestamp.delta_seconds * 2.0, 0.05)
+            for l in lights:
+                st = str(l.get_state()).split(".")[-1]
+                col = args.color or _STATE_COLOR.get(st, _STATE_COLOR["Unknown"])
+                wps = stops[l.id]
+                for wp in wps:
+                    tf = wp.transform
+                    right = tf.get_right_vector()
+                    half = wp.lane_width / 2.0
+                    base = tf.location + carla.Location(z=0.3)
+                    dbg.draw_line(base - right * half, base + right * half, 0.3, col, life)
+                if wps:
+                    xs = [w.transform.location for w in wps]
+                    at = carla.Location(sum(p.x for p in xs) / len(xs), sum(p.y for p in xs) / len(xs),
+                                        sum(p.z for p in xs) / len(xs) + 2.5)
+                else:
+                    at = l.get_transform().location + carla.Location(z=4.0)
+                # The timer only means something for the light whose turn it is.
+                # A red light waiting in its junction group reads elapsed 0.0 the
+                # whole time (measured on Town10HD_Opt), and red_time is just the
+                # all-red clearance after yellow, not how long it stays red.
+                dur = getattr(l, durations[st])() if st in ("Green", "Yellow") else 0.0
+                timing = f"{l.get_elapsed_time():.1f}/{dur:.0f}s" if dur else ""
+                label = (f"TL {l.id} [{l.get_opendrive_id()}] {st.upper()} {timing}"
+                         f"  G{l.get_green_time():.0f} Y{l.get_yellow_time():.0f} R{l.get_red_time():.0f}"
+                         + (" FROZEN" if l.is_frozen() else ""))
+                dbg.draw_string(at, label, False, col, life)
+    except KeyboardInterrupt:
+        pass
+    print(f"stopped drawing {len(lights)} traffic light(s)")
+
+
 def _sel(sp):
     sp.add_argument("--all", action="store_true"); sp.add_argument("--id", type=int)
     sp.add_argument("--junction", type=int); sp.add_argument("--near")
@@ -148,6 +244,12 @@ def main() -> None:
     pf.set_defaults(func=cmd_freeze)
 
     sub.add_parser("reset", help="reset all lights to normal cycle").set_defaults(func=cmd_reset)
+
+    pd = _sel(sub.add_parser("draw", help="overlay each light's live state/timing in the world"))
+    pd.add_argument("--seconds", type=float, default=120.0,
+                    help="simulated seconds to keep drawing (0 = until Ctrl+C)")
+    pd.add_argument("--color", type=_rgb, help="r,g,b for every light (default: its state colour)")
+    pd.set_defaults(func=cmd_draw)
 
     args = p.parse_args()
     args.func(args)

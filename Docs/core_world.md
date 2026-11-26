@@ -173,6 +173,11 @@ vehicle.set_light_state(carla.VehicleLightState(current_lights))
 
 ## Debugging
 
+!!! agent "Agentic CARLA"
+    *"Mark the spawn points, draw the road topology, then clear everything."*
+
+    Skills: `debug-draw`, `map-waypoints`, `show-traffic-signs`. [Set up Agentic CARLA](agent_skills.md#set-up-agentic-carla).
+
 World objects have a [carla.DebugHelper](python_api.md#carla.DebugHelper) object as a public attribute. It allows for different shapes to be drawn during the simulation. These are used to  trace the events happening. The following example would draw a red box at an actor's location and rotation.
 
 ```py

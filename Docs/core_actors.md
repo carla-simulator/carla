@@ -11,7 +11,7 @@ This section will cover spawning, destruction, types, and how to manage them. Ho
 !!! agent "Agentic CARLA"
     *"Spawn a red Tesla Model 3 at a free spawn point, 20 pedestrians that walk around, and tell me the speed of the Tesla."*
 
-    Skills: `spawn-vehicles`, `spawn-walkers`, `world-data`, `telemetry`. [Set up Agentic CARLA](agent_skills.md#set-up-agentic-carla).
+    Skills: `spawn-vehicles`, `spawn-walkers`, `populate-world`, `world-data`, `telemetry`. [Set up Agentic CARLA](agent_skills.md#set-up-agentic-carla).
 
 ---
 ## Blueprints
@@ -224,6 +224,11 @@ carla.Rotation(pitch=-90)))
 ```
 
 ### Traffic signs and traffic lights
+
+!!! agent "Agentic CARLA"
+    *"Show the traffic signs with their trigger boxes, and the state of every traffic light."*
+
+    Skills: `show-traffic-signs`, `control-traffic-lights`. [Set up Agentic CARLA](agent_skills.md#set-up-agentic-carla).
 
 Stops, yields, speed limit signs and traffic lights are actors in CARLA. The rest of the OpenDRIVE signs are accessible from the API as [__carla.Landmark__](python_api.md#carla.Landmark). Their information is accessible using these instances, but they do no exist in the simulation as actors. Landmarks are explained in detail in [Maps and navigation](core_map.md).
 

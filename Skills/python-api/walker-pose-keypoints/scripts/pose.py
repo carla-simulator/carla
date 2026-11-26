@@ -24,6 +24,15 @@ import queue
 
 import carla  # provided by the active interpreter; check_env.sh verifies this
 
+
+def _rgb(s: str) -> carla.Color:
+    """--color r,g,b (0-255 each)."""
+    try:
+        r, g, b = (int(v) for v in s.split(","))
+    except ValueError:
+        raise argparse.ArgumentTypeError(f"expected r,g,b but got {s!r}")
+    return carla.Color(r, g, b)
+
 # Parent of each bone drawn, on the shared crl_ pedestrian skeleton (PythonAPI/examples/draw_skeleton.py).
 LINKS = [
     ("crl_hips__C", "crl_spine__C"), ("crl_spine__C", "crl_spine01__C"), ("crl_spine01__C", "crl_neck__C"),
@@ -158,7 +167,7 @@ def cmd_draw(args):
     for p, c in LINKS:
         if p in bones and c in bones:
             world.debug.draw_line(bones[p].location, bones[c].location, thickness=0.02,
-                                  color=carla.Color(0, 255, 0), life_time=args.seconds)
+                                  color=args.color, life_time=args.seconds)
             n += 1
     print(f"[pose] drew {n} skeleton links on id={a.id} for {args.seconds}s")
 
@@ -216,7 +225,8 @@ def main() -> None:
     s = sub.add_parser("keypoints"); s.add_argument("--id", required=True, help="walker id, or ids comma-separated")
     s.add_argument("--camera", type=int, required=True); s.add_argument("--frames", type=int, default=1)
     s.add_argument("--out", default="keypoints"); s.add_argument("--tick", action="store_true"); s.set_defaults(func=cmd_keypoints)
-    s = sub.add_parser("draw"); s.add_argument("--id", type=int, required=True); s.add_argument("--seconds", type=float, default=10.0); s.set_defaults(func=cmd_draw)
+    s = sub.add_parser("draw"); s.add_argument("--id", type=int, required=True); s.add_argument("--seconds", type=float, default=120.0)
+    s.add_argument("--color", type=_rgb, default=carla.Color(0, 255, 0), help="r,g,b (default 0,255,0)"); s.set_defaults(func=cmd_draw)
     s = sub.add_parser("pose"); s.add_argument("--id", type=int, required=True); s.add_argument("--file", required=True)
     s.add_argument("--blend", type=float, default=1.0); s.add_argument("--tick", action="store_true")
     s.add_argument("--absolute", action="store_true", help="POSE.json holds transforms, not changes"); s.set_defaults(func=cmd_pose)

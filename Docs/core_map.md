@@ -115,6 +115,11 @@ waypoints_junc = junction.get_waypoints(carla.LaneType.Driving)
 
 ### Crosswalks
 
+!!! agent "Agentic CARLA"
+    *"Draw the crosswalks around the junction in the middle of the map."*
+
+    Skill: `map-waypoints`. [Set up Agentic CARLA](agent_skills.md#set-up-agentic-carla).
+
 `get_crosswalks()` returns the crosswalk polygons the OpenDRIVE file defines, as a flat list of [`carla.Location`](python_api.md#carla.Location) points. Each polygon repeats its first point at the end, which is what separates one from the next.
 
 ```py
