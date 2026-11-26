@@ -37,7 +37,7 @@ struct LidarSliceInfo {
   std::uint32_t rays_per_channel{0u};
 };
 
-// Driver-like output of a rotating ray-cast lidar (ros_driver_mode).
+// Driver-like output of a rotating ray-cast lidar (ros_full_scan).
 struct LidarDriverOptions {
   bool enabled{false};
   // Azimuth where a rotation starts [deg], in the ROS sensor frame

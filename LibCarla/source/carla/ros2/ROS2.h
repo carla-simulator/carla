@@ -199,7 +199,7 @@ public:
       carla::sensor::data::LidarData &data,
       void *actor = nullptr,
       const LidarAzimuthRange &azimuth_range = {});
-  // Same, with the driver-like output of a rotating lidar (ros_driver_mode):
+  // Same, with the driver-like output of a rotating lidar (ros_full_scan):
   // when driver.enabled the steps are assembled into full rotations and a
   // message is published once per rotation, stamped at its first point, with
   // per-point time_stamp offsets and the lidar driver azimuth convention.

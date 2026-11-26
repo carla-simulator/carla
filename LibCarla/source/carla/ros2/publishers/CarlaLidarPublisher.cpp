@@ -116,7 +116,7 @@ std::vector<LidarPointEx> CarlaLidarPublisher::ExpandPoints(
     point.azimuth = ComputeLidarAzimuth(point.x, point.y, _azimuth_range);
     // Autoware's distortion corrector reads time_stamp as a nanosecond offset
     // from header.stamp. CARLA casts every ray of a scan at the same sim
-    // instant, so the offset is zero for all points (driver mode sets it per
+    // instant, so the offset is zero for all points (full scan mode sets it per
     // point when it assembles the rotation).
     point.time_stamp = 0u;
   }

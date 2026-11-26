@@ -75,7 +75,7 @@ public:
       const std::vector<float> &vertical_angles,
       const LidarAzimuthRange &azimuth_range = {});
 
-  // Driver mode (ros_driver_mode): adds the step to the rotation being
+  // Full scan (ros_full_scan): adds the step to the rotation being
   // assembled, in the extended layout with the azimuth convention of a lidar
   // driver (nebula: clockwise from +Y, [0, 2pi)). Returns true when a rotation
   // was completed and written (stamped at its first point): only then is there
@@ -106,7 +106,7 @@ private:
   std::vector<float> _vertical_angles;
   LidarAzimuthRange _azimuth_range;
 
-  // Driver-mode rotation assembly, created on the first driver-mode step.
+  // Full scan rotation assembly, created on the first full scan step.
   std::unique_ptr<LidarScanAssembler<LidarPointEx>> _assembler;
   float _cut_angle = 0.0f;
 };
