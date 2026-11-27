@@ -507,3 +507,65 @@ TEST(road, stencil_parsing) {
   ASSERT_EQ(found.size(), 1u);
   EXPECT_DOUBLE_EQ(found[0].accumulated_s, 5.0);
 }
+
+// Minimal OpenDRIVE with a single road (id=1) on flat ground carrying two
+// traffic lights with a 5 m zOffset: "10" placed by s and t, "11" with a
+// <positionInertial> at z = 1. The traffic light manager spawns a signal at
+// its transform minus the zOffset only when the zOffset is in the transform,
+// which is what IsUsingInertialPosition() tells apart.
+static constexpr const char* kSignalPositionXodr = R"(<?xml version="1.0" encoding="UTF-8"?>
+<OpenDRIVE>
+    <header revMajor="1" revMinor="6" name="" version="1" date="2026-01-01T00:00:00" north="0.0" south="0.0" east="0.0" west="0.0" vendor="CARLA"/>
+    <road name="Road 1" length="2.0000000000000000e+1" id="1" junction="-1">
+        <planView>
+            <geometry s="0.0000000000000000e+0" x="0.0000000000000000e+0" y="0.0000000000000000e+0" hdg="0.0000000000000000e+0" length="2.0000000000000000e+1">
+                <line/>
+            </geometry>
+        </planView>
+        <elevationProfile>
+            <elevation s="0.0000000000000000e+0" a="0.0000000000000000e+0" b="0.0000000000000000e+0" c="0.0000000000000000e+0" d="0.0000000000000000e+0"/>
+        </elevationProfile>
+        <lanes>
+            <laneSection s="0.0000000000000000e+0">
+                <center>
+                    <lane id="0" type="none" level="false"/>
+                </center>
+                <right>
+                    <lane id="-1" type="driving" level="false">
+                        <width sOffset="0.0000000000000000e+0" a="3.5000000000000000e+0" b="0.0000000000000000e+0" c="0.0000000000000000e+0" d="0.0000000000000000e+0"/>
+                    </lane>
+                </right>
+            </laneSection>
+        </lanes>
+        <signals>
+            <signal id="10" name="ByRoad" s="5.0" t="-5.0" zOffset="5.0" hOffset="0.0" roll="0.0" pitch="0.0" orientation="-" dynamic="yes" country="DE" type="1000001" subtype="-1" value="-1" text="" height="1.2" width="0.6"/>
+            <signal id="11" name="Inertial" s="10.0" t="-5.0" zOffset="5.0" hOffset="0.0" roll="0.0" pitch="0.0" orientation="-" dynamic="yes" country="DE" type="1000001" subtype="-1" value="-1" text="" height="1.2" width="0.6">
+                <positionInertial x="10.0" y="-5.0" z="1.0" hdg="0.0" pitch="0.0" roll="0.0"/>
+            </signal>
+        </signals>
+    </road>
+</OpenDRIVE>
+)";
+
+TEST(road, signal_transform_holds_zoffset_only_without_position_inertial) {
+  std::string xodr = kSignalPositionXodr;
+  auto map = OpenDriveParser::Load(xodr);
+  ASSERT_TRUE(map.has_value());
+  const auto &signals = map->GetSignals();
+  ASSERT_EQ(signals.count("10"), 1u);
+  ASSERT_EQ(signals.count("11"), 1u);
+
+  // Placed by s and t: the transform is the road point raised by the zOffset.
+  const auto &by_road = *signals.at("10");
+  EXPECT_FALSE(by_road.IsUsingInertialPosition());
+  EXPECT_NEAR(by_road.GetTransform().location.z, 5.0f, 1e-4f);
+
+  // Placed by <positionInertial>: the transform is the inertial position as
+  // written, the zOffset not added, so taking it off would sink the signal.
+  const auto &inertial = *signals.at("11");
+  EXPECT_TRUE(inertial.IsUsingInertialPosition());
+  EXPECT_DOUBLE_EQ(inertial.GetZOffset(), 5.0);
+  EXPECT_NEAR(inertial.GetTransform().location.x, 10.0f, 1e-4f);
+  EXPECT_NEAR(inertial.GetTransform().location.y, 5.0f, 1e-4f);
+  EXPECT_NEAR(inertial.GetTransform().location.z, 1.0f, 1e-4f);
+}

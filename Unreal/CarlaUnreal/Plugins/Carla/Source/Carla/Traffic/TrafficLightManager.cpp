@@ -32,6 +32,24 @@
 
 #include <string>
 
+// The road-level transform of a signal, where its blueprint goes: the
+// blueprint models the whole signal, with its pivot at the pole base.
+// MapBuilder adds the OpenDRIVE zOffset (the mounting height of the plate
+// above the road) into the transform of a signal placed by s and t, so it is
+// taken off again. A <positionInertial> transform is the position the file
+// gives, with no zOffset added, so it is kept as it is: taking the zOffset off
+// it too would sink the signal by its mounting height.
+static carla::geom::Transform GetSignalRoadLevelTransform(
+    const carla::road::Signal &Signal)
+{
+  auto CarlaTransform = Signal.GetTransform();
+  if (!Signal.IsUsingInertialPosition())
+  {
+    CarlaTransform.location.z -= static_cast<float>(Signal.GetZOffset());
+  }
+  return CarlaTransform;
+}
+
 static TAutoConsoleVariable<bool> CVarCarlaHideSpawnedSignsWhenPlaced(
     TEXT("carla.TrafficSigns.HideSpawnedWhenPlaced"),
     true,
@@ -713,11 +731,9 @@ bool MatchSignalAndActor(const carla::road::Signal &Signal, ATrafficSignBase* Cl
 template<typename T = ATrafficSignBase>
 T * GetClosestTrafficSignActor(const carla::road::Signal &Signal, UWorld* World)
 {
-  auto CarlaTransform = Signal.GetTransform();
-  // The signal transform carries the OpenDRIVE zOffset (mounting height of
-  // the plate above the road); baked sign actors have their pivot at road
-  // level, so match against the road-level position.
-  CarlaTransform.location.z -= static_cast<float>(Signal.GetZOffset());
+  // Baked sign actors have their pivot at road level, so match against the
+  // road-level position.
+  auto CarlaTransform = GetSignalRoadLevelTransform(Signal);
   FTransform UETransform(CarlaTransform);
   FVector Location = UETransform.GetLocation();
   // max distance to match 500cm
@@ -826,11 +842,7 @@ void ATrafficLightManager::SpawnTrafficLights()
       continue;
     }
     const auto& Signal = Signals.at(SignalId);
-    auto CarlaTransform = Signal->GetTransform();
-    // The signal transform carries the OpenDRIVE zOffset (mounting height of
-    // the reference point above the road). The spawned blueprint models the
-    // whole signal with its pivot at the pole base, so spawn at road level.
-    CarlaTransform.location.z -= static_cast<float>(Signal->GetZOffset());
+    auto CarlaTransform = GetSignalRoadLevelTransform(*Signal);
     auto ClosestWaypointToSignal =
         GetMap()->GetClosestWaypointOnRoad(CarlaTransform.location);
 
@@ -936,12 +948,9 @@ void ATrafficLightManager::SpawnSignals()
       {
         continue;
       }
-      auto CarlaTransform = Signal->GetTransform();
-      // The signal transform carries the OpenDRIVE zOffset (mounting height
-      // of the plate above the road, e.g. ~2.3 m for Town12 stop signs). The
-      // spawned blueprint models the whole sign with its pivot at the pole
-      // base, so spawn at road level or the sign floats by exactly zOffset.
-      CarlaTransform.location.z -= static_cast<float>(Signal->GetZOffset());
+      // Spawn at road level, or the sign floats by its zOffset (~2.3 m for
+      // Town12 stop signs).
+      auto CarlaTransform = GetSignalRoadLevelTransform(*Signal);
       FTransform SpawnTransform(CarlaTransform);
       FVector SpawnLocation = SpawnTransform.GetLocation();
       FRotator SpawnRotation(SpawnTransform.GetRotation());
@@ -1027,10 +1036,7 @@ void ATrafficLightManager::SpawnSignals()
           SpeedModel = SpeedLimitModels_US[BestKey];
         }
       }
-      auto CarlaTransform = Signal->GetTransform();
-      // Spawn at road level: the blueprint pivot is at the pole base (see
-      // the zOffset note on the traffic-sign branch above).
-      CarlaTransform.location.z -= static_cast<float>(Signal->GetZOffset());
+      auto CarlaTransform = GetSignalRoadLevelTransform(*Signal);
       FTransform SpawnTransform(CarlaTransform);
       FVector SpawnLocation = SpawnTransform.GetLocation();
       FRotator SpawnRotation(SpawnTransform.GetRotation());
