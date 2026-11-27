@@ -104,7 +104,7 @@ def _client():
 def _lights(lm, group, args=None):
     lights = lm.get_all_lights(GROUPS[group])
     if args is not None and getattr(args, "near", None):
-        ref = carla.Location(*(float(v) for v in args.near.split(",")))
+        ref = carla.Location(*args.near)
         lights = [l for l in lights if l.location.distance(ref) <= args.radius]
     return lights
 
@@ -213,13 +213,40 @@ def cmd_day_night(args):
     print(f"day-night cycle = {args.mode == 'on'} (lights auto-switch with the sun when on)")
 
 
+def _point(text):
+    """argparse type for --near: three comma-separated numbers."""
+    try:
+        x, y, z = (float(v) for v in text.split(","))
+    except ValueError:
+        raise argparse.ArgumentTypeError(f"expected X,Y,Z (three numbers), got {text!r}") from None
+    return x, y, z
+
+
+def _join_near(argv):
+    """Glue `--near -119.9,-92.9,0.1` into `--near=-119.9,-92.9,0.1`.
+
+    argparse takes a value that starts with '-' for an option, so a point with
+    a negative X (most of the map) failed with "expected one argument".
+    """
+    out, i = [], 0
+    while i < len(argv):
+        if argv[i] == "--near" and i + 1 < len(argv) and argv[i + 1].startswith("-"):
+            out.append("--near=" + argv[i + 1])
+            i += 2
+        else:
+            out.append(argv[i])
+            i += 1
+    return out
+
+
 def main() -> None:
     p = argparse.ArgumentParser(description="Control CARLA light sources.")
     sub = p.add_subparsers(dest="cmd", required=True)
 
     def grp(sp, required=False):
         sp.add_argument("--group", choices=tuple(GROUPS), default="all")
-        sp.add_argument("--near", help="X,Y,Z: only lights within --radius of this point")
+        sp.add_argument("--near", type=_point, metavar="X,Y,Z",
+                        help="only lights within --radius of this point")
         sp.add_argument("--radius", type=float, default=30.0, help="metres, with --near")
         return sp
 
@@ -249,7 +276,7 @@ def main() -> None:
     pdn.add_argument("mode", choices=("on", "off"))
     pdn.set_defaults(func=cmd_day_night)
 
-    args = p.parse_args()
+    args = p.parse_args(_join_near(sys.argv[1:]))
     args.func(args)
 
 

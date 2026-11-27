@@ -76,7 +76,7 @@ python3 scripts/lights.py restore --file lights.json
 python3 scripts/lights.py regroup --group street --near=84,8,0 --radius 3 --to other
 ```
 
-`--near X,Y,Z --radius M` works on `list`, `on`, `off`, `set`, `save` and `regroup`. `restore` sends every saved state in one `set_light_states` call.
+`--near X,Y,Z --radius M` works on `list`, `on`, `off`, `set`, `save` and `regroup`. Both `--near -120,-93,0` and `--near=-120,-93,0` work. `restore` sends every saved state in one `set_light_states` call.
 
 ### Changes are sent on the next tick
 
