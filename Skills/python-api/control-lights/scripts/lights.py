@@ -27,8 +27,13 @@ from __future__ import annotations
 import argparse
 import os
 import sys
+import threading
 
 import carla  # provided by the active interpreter; check_env.sh verifies this
+
+
+_NO_TICK = ("error: no tick arrived within CARLA_TIMEOUT, so nothing was read or changed "
+            "(synchronous mode with no client ticking?)")
 
 
 def _fresh(world):
@@ -41,14 +46,31 @@ def _fresh(world):
     must be a wait rather than a tick: another client owns that clock.
     """
     if world.get_settings().synchronous_mode:
-        world.wait_for_tick()
+        try:
+            world.wait_for_tick()
+        except RuntimeError:
+            raise SystemExit(_NO_TICK) from None
     return world
 
 
 def _flush(world):
-    """The LightManager sends queued changes to the server from its on-tick callback; wait for two ticks."""
-    for _ in range(2):
-        world.wait_for_tick()
+    """Return once the queued light changes have been applied on the server.
+
+    The LightManager only queues turn_on/off/set_* and sends them, fire and
+    forget, from its on-tick callback. Callbacks run in registration order, so
+    one registered now fires after the LightManager's has sent the update. The
+    blocking call that follows goes down the same connection, and the server
+    handles both on its game thread in arrival order, so when it returns the
+    change is in. Only then is it safe for _done to hard-exit.
+    """
+    ticked = threading.Event()
+    callback_id = world.on_tick(lambda _snapshot: ticked.set())
+    try:
+        if not ticked.wait(float(os.environ.get("CARLA_TIMEOUT", "60.0"))):
+            raise SystemExit(_NO_TICK)
+    finally:
+        world.remove_on_tick(callback_id)
+    world.get_settings()
 
 
 def _done(msg):
@@ -185,7 +207,9 @@ def cmd_regroup(args):
 
 def cmd_day_night(args):
     client = _client()
-    client.get_world().get_lightmanager().set_day_night_cycle(args.mode == "on")
+    world = client.get_world()
+    world.get_lightmanager().set_day_night_cycle(args.mode == "on")
+    world.get_settings()  # sent fire-and-forget; this round trip makes sure it arrived
     print(f"day-night cycle = {args.mode == 'on'} (lights auto-switch with the sun when on)")
 
 
