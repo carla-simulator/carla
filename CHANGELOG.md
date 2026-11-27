@@ -196,6 +196,7 @@
 * Fixed the wheelchair of a wheelchair-user pedestrian being invisible to ray-cast sensors (LiDAR, radar).
 * Fixed the editor's `SensorSpawnerActor` crashing with radar point drawing on when it had spawned any sensor other than a radar: `DrawRadarSensorPoints` tested the sensor instead of the radar cast, and dereferenced null for every other sensor.
 * Fixed **`listen_to_gbuffer()` and `stop_gbuffer()` crashing the server**: `get_gbuffer_token` read the token of a G-buffer stream that was never opened. G-buffer capture is not built on Unreal Engine 5.8 (its engine has no `GBufferView.h`), so both calls now raise a `RuntimeError` that says so, and the server keeps running.
+* Fixed **sensor `raw_data` returning a view of freed memory**, which made numpy arrays built from it (e.g. from `get_color_coded_flow()`) show garbage or stripes. The `memoryview` now keeps its sensor data alive while it or an array made from it exists.
 
 #### Simulation and content
 

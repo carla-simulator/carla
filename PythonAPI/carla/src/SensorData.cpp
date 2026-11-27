@@ -160,16 +160,56 @@ enum class EColorConverter {
   CityScapesPalette
 };
 
+// Buffer exporter for raw_data: holds a reference to the Python object that
+// owns the memory, so a memoryview (or numpy array) keeps that object alive.
+struct RawDataExporter {
+  PyObject_HEAD
+  PyObject *owner;
+  void *data;
+  Py_ssize_t size;
+};
+
+static int RawDataExporter_GetBuffer(PyObject *exporter, Py_buffer *view, int flags) {
+  auto *self = reinterpret_cast<RawDataExporter *>(exporter);
+  return PyBuffer_FillInfo(view, exporter, self->data, self->size, 1, flags);
+}
+
+static void RawDataExporter_Dealloc(PyObject *exporter) {
+  Py_XDECREF(reinterpret_cast<RawDataExporter *>(exporter)->owner);
+  Py_TYPE(exporter)->tp_free(exporter);
+}
+
+static PyTypeObject *RawDataExporterType() {
+  static PyBufferProcs buffer_procs = {RawDataExporter_GetBuffer, nullptr};
+  static PyTypeObject type = [] {
+    PyTypeObject t = {PyVarObject_HEAD_INIT(nullptr, 0)};
+    t.tp_name = "carla.RawDataExporter";
+    t.tp_basicsize = sizeof(RawDataExporter);
+    t.tp_flags = Py_TPFLAGS_DEFAULT;
+    t.tp_dealloc = RawDataExporter_Dealloc;
+    t.tp_as_buffer = &buffer_procs;
+    return t;
+  }();
+  static const bool ready = PyType_Ready(&type) == 0;
+  if (!ready) {
+    boost::python::throw_error_already_set();
+  }
+  return &type;
+}
+
 template <typename T>
-static auto GetRawDataAsBuffer(T &self) {
-  auto *data = reinterpret_cast<unsigned char *>(self.data());
-  auto size = static_cast<Py_ssize_t>(sizeof(typename T::value_type) * self.size());
-#if PY_MAJOR_VERSION >= 3
-  auto *ptr = PyMemoryView_FromMemory(reinterpret_cast<char *>(data), size, PyBUF_READ);
-#else
-  auto *ptr = PyBuffer_FromMemory(data, size);
-#endif
-  return boost::python::object(boost::python::handle<>(ptr));
+static boost::python::object GetRawDataAsBuffer(boost::python::object owner) {
+  T &self = boost::python::extract<T &>(owner);
+  auto *exporter = PyObject_New(RawDataExporter, RawDataExporterType());
+  if (exporter == nullptr) {
+    boost::python::throw_error_already_set();
+  }
+  exporter->owner = boost::python::incref(owner.ptr());
+  exporter->data = reinterpret_cast<void *>(self.data());
+  exporter->size = static_cast<Py_ssize_t>(sizeof(typename T::value_type) * self.size());
+  // The memoryview holds the exporter, the exporter holds the owner.
+  boost::python::handle<> exporter_handle(reinterpret_cast<PyObject *>(exporter));
+  return boost::python::object(boost::python::handle<>(PyMemoryView_FromObject(exporter_handle.get())));
 }
 
 template <typename T>
