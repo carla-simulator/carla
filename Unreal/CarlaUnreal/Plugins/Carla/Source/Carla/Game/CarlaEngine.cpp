@@ -29,6 +29,7 @@
 #include <carla/multigpu/frameGate.h>
 #include <carla/multigpu/secondary.h>
 #include <carla/multigpu/secondaryCommands.h>
+#include <carla/multigpu/sensorOwnership.h>
 #include <carla/ros2/ROS2.h>
 #include <carla/ros2/middleware/Middleware.h>
 #include <carla/ros2/middleware/MiddlewareConfig.h>
@@ -181,6 +182,7 @@ FCarlaEngine::~FCarlaEngine()
   {
     #if defined(WITH_ROS2)
     auto ROS2 = carla::ros2::ROS2::GetInstance();
+    ROS2->SetPublicationOwnerQuery(nullptr);
     if (ROS2->IsEnabled())
       ROS2->Shutdown();
     #endif
@@ -536,6 +538,8 @@ void FCarlaEngine::NotifyInitGame(const UCarlaSettings &Settings)
             DomainId, carla::ros2::kMinDomainId, carla::ros2::kMaxDomainId);
         DomainId = carla::ros2::kUnsetDomainId;
       }
+      // A secondary mirrors the primary's simulation time.
+      ROS2->SetClockOwner(bIsPrimaryServer);
       if (!ROS2->Enable(true, Parsed.middleware, DomainId))
       {
         // Either the middleware is not compiled in, or it failed to start
@@ -548,6 +552,12 @@ void FCarlaEngine::NotifyInitGame(const UCarlaSettings &Settings)
       else
       {
         UE_LOG(LogCarla, Log, TEXT("ROS2: enabled with middleware '%s'."), *Settings.RmwName);
+        // Installed on a primary as well: secondaries can connect later.
+        ROS2->SetPublicationOwnerQuery(
+            [this](carla::streaming::detail::stream_id_type StreamId, bool bPrimaryOnly)
+            {
+              return OwnsSensorStream(StreamId, bPrimaryOnly);
+            });
         if (Settings.RmwName == TEXT("fastdds"))
         {
           // Mirrors the transport default applied in FastDDSSharedParticipant:
@@ -717,6 +727,23 @@ void FCarlaEngine::SendEpisodeReady()
 {
   const std::string Ready = carla::multigpu::MakeEpisodeReadyMessage(LoadingLoadMapId);
   Secondary->Write(carla::Buffer(reinterpret_cast<const unsigned char *>(Ready.data()), Ready.size()));
+}
+
+bool FCarlaEngine::OwnsSensorStream(carla::streaming::detail::stream_id_type StreamId, bool bPrimaryOnly) const
+{
+  using carla::multigpu::PrimaryOwnsSensor;
+  using carla::multigpu::SecondaryOwnsSensor;
+  if (!bIsRunning)
+  {
+    return true;
+  }
+  if (bIsPrimaryServer)
+  {
+    const bool bRouted = SecondaryServer && SecondaryServer->GetCommander().IsRouted(StreamId);
+    return PrimaryOwnsSensor(bPrimaryOnly, bRouted);
+  }
+  const bool bConnected = Secondary && Secondary->IsConnected();
+  return SecondaryOwnsSensor(bPrimaryOnly, bConnected, SensorStreams.IsRoutedHere(StreamId));
 }
 
 void FCarlaEngine::DetachFromPrimary(const char *Reason)
@@ -1004,6 +1031,7 @@ void FCarlaEngine::OnBeginFrame()
   {
     carla::log_warning("multigpu: lost the connection to the primary; this secondary stops mirroring "
         "it and runs on its own clock until it is restarted");
+    SensorStreams.DropRoutes(Server.GetStreamingServer());
   }
   bWasConnectedToPrimary = bConnected;
 

@@ -10,6 +10,7 @@
 #include "Carla/Actor/ActorROS2Handler.h"
 #include "Carla/Actor/CarlaActorFactory.h"
 #include "Carla/Game/CarlaEpisode.h"
+#include "Carla/Game/CarlaStatics.h"
 #include "Carla/Game/Tagger.h"
 #include "Carla/Vehicle/VehicleControl.h"
 
@@ -293,7 +294,11 @@ FCarlaActor* UActorDispatcher::RegisterActor(
           bEnableAutowareControl = Attr.Value.Value.ToBool();
         }
       }
-      if (bIsHero)
+      // A Multi-GPU secondary mirrors the hero; only the primary takes its control topics.
+      UCarlaGameInstance *GameInstance = bIsHero ? UCarlaStatics::GetGameInstance(&Actor) : nullptr;
+      const FCarlaEngine *CarlaEngine = (GameInstance != nullptr) ? GameInstance->GetCarlaEngine() : nullptr;
+      const bool bIsSecondary = (CarlaEngine != nullptr) && !CarlaEngine->IsPrimaryServer();
+      if (bIsHero && !bIsSecondary)
       {
         if (bEnableAutowareControl)
         {

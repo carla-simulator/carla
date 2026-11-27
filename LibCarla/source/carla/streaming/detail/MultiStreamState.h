@@ -107,6 +107,11 @@ namespace detail {
       return (_sessions.size() > 0 || _force_active || _enabled_for_ros);
     }
 
+    /// Like AreClientsListening(), but ignoring the ROS 2 flag.
+    bool AreSessionsListening() {
+      return (_sessions.size() > 0 || _force_active);
+    }
+
     void ConnectSession(std::shared_ptr<Session> session) final {
       DEBUG_ASSERT(session != nullptr);
       std::scoped_lock<std::mutex> lock(_mutex);

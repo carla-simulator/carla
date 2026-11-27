@@ -73,6 +73,11 @@ namespace detail {
       return _shared_state ? _shared_state->AreClientsListening() : false;
     }
 
+    bool AreSessionsListening()
+    {
+      return _shared_state ? _shared_state->AreSessionsListening() : false;
+    }
+
   private:
 
     friend class detail::Dispatcher;

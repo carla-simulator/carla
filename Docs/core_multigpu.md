@@ -168,10 +168,23 @@ Every frame the primary sends what changed in its world, and on a full resynchro
 ---
 ## ROS 2
 
-- `--ros2` on the primary publishes what the primary produces: clock, TF and the data of sensors that run on the primary.
-- A `-nullrhi` primary with `--ros2` never renders or publishes camera images.
-- Camera images can only be published by a rendering secondary started with `--ros2`. The secondary publishes the cameras it owns.
-- Ownership of ROS 2 publication across several ROS-enabled secondaries is not solved yet. A ROS-enabled secondary can publish topics for sensors it only mirrors, and a topic can have more than one publisher. Check the publishers of each topic (`ros2 topic info -v`) before relying on a multi-secondary ROS 2 setup.
+- Every sensor topic has a single publisher, whichever servers run with `--ros2`:
+    - A sensor assigned to a secondary (see [Sensor assignment](#sensor-assignment)) is captured and published only by that secondary. The primary stops capturing and publishing it.
+    - Every other sensor is published by the primary, including the collision sensor and the vehicle status sensor. A secondary never publishes a sensor it only mirrors.
+- `/clock` and the control topics of the hero vehicle are only on the primary.
+- A `-nullrhi` primary with `--ros2` never renders or publishes camera images. A camera is published only once it is assigned to a rendering secondary started with `--ros2`, so call `listen()` or `enable_for_ros()` on it. A camera that was never assigned has no publisher, even with `ROS2TopicVisibility` on.
+- When a sensor moves (its secondary is lost and the primary or another secondary takes it, or a map is loaded), the server that loses it drops its publishers.
+
+---
+## Running the unit tests
+
+The Multi-GPU unit tests (`test_multigpu_*`) are not built by default, so CI never runs them. Build and run them manually:
+
+```sh
+cmake --preset Release -DBUILD_LIBCARLA_MULTIGPU_TESTS=ON
+cmake --build Build/Release --target libcarla_test_server
+./Build/Release/LibCarla/libcarla_test_server --gtest_filter='MultiGpu*'
+```
 
 ---
 ## Limitations

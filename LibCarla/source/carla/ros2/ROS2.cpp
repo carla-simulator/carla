@@ -87,10 +87,17 @@ bool ROS2::Enable(bool enable, Middleware middleware, int domain_id) {
     log_info("ROS2: using middleware '", MiddlewareToString(middleware),
         "', domain id: ", resolved.id, " (", domain_source, ")");
   }
-  // The clock publisher is the first entity created, so it is the one that
-  // brings the middleware up (DDS participant or Zenoh session).
-  auto clock_publisher = std::make_shared<CarlaClockPublisher>();
-  if (enable && !clock_publisher->IsReady()) {
+  // The clock publisher brings the middleware up; a secondary holds it up without a /clock writer.
+  std::shared_ptr<CarlaClockPublisher> clock_publisher;
+  bool ready = true;
+  if (_clock_owner) {
+    clock_publisher = std::make_shared<CarlaClockPublisher>();
+    ready = clock_publisher->IsReady();
+  } else if (enable && !_holds_middleware_context) {
+    _holds_middleware_context = AcquireMiddlewareContext();
+    ready = _holds_middleware_context;
+  }
+  if (enable && !ready) {
     log_error("**********************************************************************");
     log_error("ROS2: middleware", MiddlewareToString(middleware),
               "FAILED TO START. ROS2 is DISABLED for this session:");
@@ -174,6 +181,38 @@ void ROS2::SetTimestamp(double timestamp) {
   _basic_publisher->SetData("Hello from Carla!");
   _basic_publisher->Publish();
 #endif
+}
+
+void ROS2::SetPublicationOwnerQuery(PublicationOwnerQuery query) {
+  std::unique_lock<std::shared_mutex> lock(_owner_query_mutex);
+  _owner_query = std::move(query);
+}
+
+bool ROS2::OwnsPublication(carla::streaming::detail::stream_id_type stream_id, bool primary_only) const {
+  std::shared_lock<std::shared_mutex> lock(_owner_query_mutex);
+  return !_owner_query || _owner_query(stream_id, primary_only);
+}
+
+void ROS2::ReleasePublication(void *actor) {
+  // Destroyed after the lock is released: a writer's teardown may block.
+  std::shared_ptr<BasePublisher> publisher;
+  std::shared_ptr<CarlaCameraPublisher> camera_publisher;
+  std::shared_ptr<CarlaTransformPublisher> transform_publisher;
+  {
+    std::lock_guard<std::mutex> lock(_mutex);
+    if (auto it = _publishers.find(actor); it != _publishers.end()) {
+      publisher = std::move(it->second);
+      _publishers.erase(it);
+    }
+    if (auto it = _camera_publishers.find(actor); it != _camera_publishers.end()) {
+      camera_publisher = std::move(it->second);
+      _camera_publishers.erase(it);
+    }
+    if (auto it = _transforms.find(actor); it != _transforms.end()) {
+      transform_publisher = std::move(it->second);
+      _transforms.erase(it);
+    }
+  }
 }
 
 ROS2::Stamp ROS2::GetStamp() const {
@@ -580,6 +619,9 @@ void ROS2::ProcessDataFromCamera(
     int W, int H, float Fov,
     const carla::SharedBufferView buffer,
     void *actor) {
+  if (!OwnsPublication(stream_id)) {
+    return;
+  }
   const Stamp stamp = GetStamp();
   // Image dimensions + FOV are now read straight from ImageSerializer's
   // per-frame header inside the camera publisher's WriteCameraInfo call;
@@ -656,6 +698,9 @@ void ROS2::ProcessDataFromGNSS(
     const carla::geom::Transform sensor_transform,
     const carla::geom::GeoLocation &data,
     void *actor) {
+  if (!OwnsPublication(stream_id)) {
+    return;
+  }
   const Stamp stamp = GetStamp();
   if (auto base = GetOrCreateSensor(ESensors::GnssSensor, stream_id, actor)) {
     auto publisher = std::dynamic_pointer_cast<CarlaGNSSPublisher>(base);
@@ -673,6 +718,9 @@ void ROS2::ProcessDataFromIMU(
     carla::geom::Vector3D gyroscope,
     float compass,
     void *actor) {
+  if (!OwnsPublication(stream_id)) {
+    return;
+  }
   const Stamp stamp = GetStamp();
   if (auto base = GetOrCreateSensor(ESensors::InertialMeasurementUnit, stream_id, actor)) {
     auto publisher = std::dynamic_pointer_cast<CarlaIMUPublisher>(base);
@@ -693,6 +741,9 @@ void ROS2::ProcessDataFromDVS(
     const carla::SharedBufferView buffer,
     int /*W*/, int /*H*/, float /*Fov*/,
     void *actor) {
+  if (!OwnsPublication(stream_id)) {
+    return;
+  }
   const Stamp stamp = GetStamp();
   if (auto base = GetOrCreateSensor(ESensors::DVSCamera, stream_id, actor)) {
     auto publisher = std::dynamic_pointer_cast<CarlaDVSCameraPublisher>(base);
@@ -742,6 +793,9 @@ void ROS2::ProcessDataFromLidar(
     carla::sensor::data::LidarData &data,
     void *actor,
     const LidarAzimuthRange &azimuth_range) {
+  if (!OwnsPublication(stream_id)) {
+    return;
+  }
   const Stamp stamp = GetStamp();
   if (auto base = GetOrCreateSensor(ESensors::RayCastLidar, stream_id, actor)) {
     auto publisher = std::dynamic_pointer_cast<CarlaLidarPublisher>(base);
@@ -786,6 +840,9 @@ void ROS2::ProcessDataFromSemanticLidar(
     const carla::geom::Transform sensor_transform,
     carla::sensor::data::SemanticLidarData &data,
     void *actor) {
+  if (!OwnsPublication(stream_id)) {
+    return;
+  }
   const Stamp stamp = GetStamp();
   if (auto base = GetOrCreateSensor(ESensors::RayCastSemanticLidar, stream_id, actor)) {
     auto publisher = std::dynamic_pointer_cast<CarlaSemanticLidarPublisher>(base);
@@ -804,6 +861,9 @@ void ROS2::ProcessDataFromRadar(
     const carla::geom::Transform sensor_transform,
     const carla::sensor::data::RadarData &data,
     void *actor) {
+  if (!OwnsPublication(stream_id)) {
+    return;
+  }
   const Stamp stamp = GetStamp();
   if (auto base = GetOrCreateSensor(ESensors::Radar, stream_id, actor)) {
     auto publisher = std::dynamic_pointer_cast<CarlaRadarPublisher>(base);
@@ -824,6 +884,9 @@ void ROS2::ProcessDataFromObstacleDetection(
     AActor * /*second_actor*/,
     float distance,
     void * /*actor*/) {
+  if (!OwnsPublication(stream_id)) {
+    return;
+  }
   log_info(
       "Sensor ObstacleDetector to ROS data: frame.", _frame.load(), "sensor.", sensor_type,
       "stream.", stream_id, "distance.", distance);
@@ -836,6 +899,9 @@ void ROS2::ProcessDataFromCollisionSensor(
     uint32_t other_actor,
     carla::geom::Vector3D impulse,
     void *actor) {
+  if (!OwnsPublication(stream_id, true)) {
+    return;
+  }
   const Stamp stamp = GetStamp();
   if (auto base = GetOrCreateSensor(ESensors::CollisionSensor, stream_id, actor)) {
     auto publisher = std::dynamic_pointer_cast<CarlaCollisionPublisher>(base);
@@ -847,11 +913,14 @@ void ROS2::ProcessDataFromCollisionSensor(
 
 void ROS2::ProcessDataFromStatusSensor(
     uint64_t /*sensor_type*/,
-    carla::streaming::detail::stream_id_type /*stream_id*/,
+    carla::streaming::detail::stream_id_type stream_id,
     const carla::geom::Transform /*sensor_transform*/,
     const carla::sensor::s11n::VehicleStatusData &data,
     void *vehicle_actor,
     void * /*actor*/) {
+  if (!OwnsPublication(stream_id, true)) {
+    return;
+  }
   const Stamp stamp = GetStamp();
   // Only vehicles registered with enable_autoware_control publish reports:
   // the report topics are fixed absolute names shared by the whole vehicle
@@ -960,6 +1029,9 @@ void ROS2::ProcessDataFromAutowareGNSS(
     const carla::geom::Transform &sensor_world_transform,
     const double mgrs_offset_position[3],
     void *actor) {
+  if (!OwnsPublication(stream_id)) {
+    return;
+  }
   const Stamp stamp = GetStamp();
   if (auto base = GetOrCreateSensor(ESensors::AutowareGnssSensor, stream_id, actor)) {
     if (auto publisher = std::dynamic_pointer_cast<AutowareGNSSPublisher>(base)) {
@@ -983,23 +1055,31 @@ void ROS2::ProcessDataFromAutowareGNSS(
 }
 
 void ROS2::Shutdown() {
-  std::lock_guard<std::mutex> lock(_mutex);
-  _publishers.clear();
-  _transforms.clear();
-  _camera_publishers.clear();
-  _subscribers.clear();
-  _actor_callbacks.clear();
-  _registrations.clear();
-  _actor_parents.clear();
-  _actor_ros_topic_names.clear();
-  _autoware_vehicles.clear();
-  _autoware_status_publishers.clear();
-  _clock_publisher.reset();
-  _enabled = false;
+  bool release_middleware_context = false;
+  {
+    std::lock_guard<std::mutex> lock(_mutex);
+    _publishers.clear();
+    _transforms.clear();
+    _camera_publishers.clear();
+    _subscribers.clear();
+    _actor_callbacks.clear();
+    _registrations.clear();
+    _actor_parents.clear();
+    _actor_ros_topic_names.clear();
+    _autoware_vehicles.clear();
+    _autoware_status_publishers.clear();
+    _clock_publisher.reset();
+    _enabled = false;
 #if defined(WITH_ROS2_DEMO)
-  _basic_publisher.reset();
-  _basic_subscriber.reset();
+    _basic_publisher.reset();
+    _basic_subscriber.reset();
 #endif
+    release_middleware_context = std::exchange(_holds_middleware_context, false);
+  }
+  // Outside the lock: dropping the last FastDDS reference deletes the participant.
+  if (release_middleware_context) {
+    ReleaseMiddlewareContext();
+  }
 }
 
 }  // namespace ros2

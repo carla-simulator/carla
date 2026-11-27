@@ -15,8 +15,10 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <memory>
 #include <mutex>
 #include <optional>
+#include <unordered_map>
 
 namespace carla {
 namespace multigpu {
@@ -79,6 +81,9 @@ class PrimaryCommands {
     /// Drops the routing of a destroyed sensor so it is never routed again.
     void ForgetSensor(stream_id sensor_id);
 
+    /// Whether @a sensor_id is routed to a connected secondary; never waits on a round trip.
+    bool IsRouted(stream_id sensor_id) const;
+
   private:
 
     struct Route {
@@ -114,6 +119,10 @@ class PrimaryCommands {
     /// enabled before. Caller must hold _mutex.
     void RestoreRosAfterReroute(stream_id sensor_id);
 
+    void SetRoute(stream_id sensor_id, std::weak_ptr<Primary> session);
+    void EraseRoute(stream_id sensor_id);
+    void ClearRoutes();
+
     /// Reads a one-bool reply; @a buffer must not be empty.
     static bool ReadBoolReply(const carla::Buffer &buffer);
 
@@ -128,6 +137,10 @@ class PrimaryCommands {
     // (see Router::_promises), so two overlapping requests to the same
     // session would otherwise clobber each other's promise.
     std::mutex _mutex;
+
+    // Mirror of the _servers sessions, readable without _mutex.
+    mutable std::mutex _routes_mutex;
+    std::unordered_map<stream_id, std::weak_ptr<Primary>> _routes;
 };
 
 } // namespace multigpu
