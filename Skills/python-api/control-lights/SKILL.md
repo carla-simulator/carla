@@ -80,7 +80,7 @@ python3 scripts/lights.py regroup --group street --near=84,8,0 --radius 3 --to o
 
 ### Changes are sent on the next tick
 
-The LightManager queues `turn_on`, `set_color` and the rest, and sends them from its on-tick callback (or its destructor). Every write command therefore waits for two ticks before exiting. In synchronous mode another client must be ticking, or the command waits. Before this wait was added, the script exited straight after the calls and the server never saw them: on ue58-dev ccc52d24d, `on` printed success and `list` still showed every lamp off with its old colour.
+The LightManager queues `turn_on`, `set_color` and the rest, and sends them from its on-tick callback (or its destructor). Every write command therefore waits for the next tick, then makes one blocking call to the server, which handles requests in arrival order, so the change has been applied when the command prints its result. `day-night` sends its change the same way and makes the same blocking call. In synchronous mode another client must be ticking; otherwise the command stops with an error after `CARLA_TIMEOUT` seconds. Before this wait was added, the script exited straight after the calls and the server never saw them: on ue58-dev ccc52d24d, `on` printed success and `list` still showed every lamp off with its old colour.
 
 ## Examples
 
@@ -105,8 +105,8 @@ User says: "have the street lights come on by themselves at dusk"
 
 ## Troubleshooting
 
-**Problem: the command hangs**
-Cause: synchronous mode with nobody ticking; the write commands wait for two ticks to send the changes.
+**Problem: "error: no tick arrived within CARLA_TIMEOUT, so nothing was read or changed"**
+Cause: synchronous mode with nobody ticking; the write commands wait for a tick to send the changes.
 Solution: tick from your own client, or run in asynchronous mode (set-world-settings).
 
 **Problem: no visible change**
