@@ -65,6 +65,28 @@ namespace detail {
       }
     }
 
+    /// Like Write, but a session that missed the previous message gets @a full instead of @a delta.
+    void WriteDelta(SharedBufferView header, SharedBufferView full, SharedBufferView delta) {
+      auto session = _session.load();
+      if (session != nullptr) {
+        session->Write(Session::MakeMessage(header, session->TakeMissed() ? full : delta));
+        return;
+      }
+      std::vector<std::shared_ptr<Session>> sessions;
+      {
+        std::scoped_lock<std::mutex> lock(_mutex);
+        sessions = _sessions;
+      }
+      std::shared_ptr<const tcp::Message> messages[2u];
+      for (auto &s : sessions) {
+        const bool missed = s->TakeMissed();
+        if (messages[missed] == nullptr) {
+          messages[missed] = Session::MakeMessage(header, missed ? full : delta);
+        }
+        s->Write(messages[missed]);
+      }
+    }
+
     void ForceActive() {
       _force_active = true;
     }

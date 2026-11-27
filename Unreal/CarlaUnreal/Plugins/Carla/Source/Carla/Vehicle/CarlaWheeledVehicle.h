@@ -26,10 +26,6 @@
 #endif
 //-------------------------------------------
 
-#include <util/disable-ue4-macros.h>
-#include <carla/rpc/VehicleFailureState.h>
-#include <util/enable-ue4-macros.h>
-
 #include <util/ue-header-guard-begin.h>
 #include "Components/SkeletalMeshComponent.h"
 #include "WheeledVehiclePawn.h"
@@ -216,8 +212,6 @@ public:
   void SetSimulatePhysics(bool enabled);
 
   void SetVehicleLightState(const FVehicleLightState &LightState);
-
-  void SetFailureState(const carla::rpc::VehicleFailureState &FailureState);
 
   UFUNCTION(BlueprintNativeEvent)
   bool IsTwoWheeledVehicle();
@@ -585,12 +579,6 @@ private:
   bool bAckermannControlActive = false;
   FAckermannController AckermannController;
 
-  float RolloverBehaviorForce = 0.35;
-  int RolloverBehaviorTracker = 0;
-  float RolloverFlagTime = 5.0f;
-
-  carla::rpc::VehicleFailureState FailureState = carla::rpc::VehicleFailureState::None;
-
   // Light Defaults tool integration: loaded once in
   // ActivateVehicleLightComponents (BeginPlay), then reapplied by
   // SetVehicleLightState on every light-state change -- see
@@ -812,10 +800,6 @@ public:
   UPROPERTY(Category="CARLA Wheeled Vehicle", VisibleAnywhere)
   bool bIsNWVehicle = false;
 
-  void SetRolloverFlag();
-
-  carla::rpc::VehicleFailureState GetFailureState() const;
-
   UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
   static FRotator GetPhysicsConstraintAngle(UPhysicsConstraintComponent* Component);
   UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
@@ -913,13 +897,6 @@ private:
   UPROPERTY(Category="CARLA Wheeled Vehicle", VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
   TMap<UPrimitiveComponent*, UPhysicsConstraintComponent*> CollisionDisableConstraints;
 
-  /// Rollovers tend to have too much angular velocity, resulting in the vehicle doing a full 360º flip.
-  /// This function progressively reduces the vehicle's angular velocity so that it ends up upside down instead.
-  UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
-  void ApplyRolloverBehavior();
-
-  void CheckRollover(const float roll, const std::pair<float, float> threshold_roll);
-
   void AddReferenceToManager();
   void RemoveReferenceToManager();
 
@@ -931,8 +908,6 @@ private:
   /// Applies both fixes directly to this actor's light components.
   void ActivateVehicleLightComponents();
 
-
-  FTimerHandle TimerHandler;
 public:
   float SpeedAnim { 0.0f };
   float RotationAnim { 0.0f };

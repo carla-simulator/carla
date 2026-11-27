@@ -382,8 +382,8 @@ pgrep -f 'UnrealEditor.*CarlaUnreal.uproject' >/dev/null && echo "editor still r
   sensors or vehicles, place one in the level and check that it spawns and
   ticks without errors.
 - Close the editor (**File → Exit**) before 4d. A Play-In-Editor session
-  starts its own CARLA server, and `run_server.sh stop` ends every
-  `UnrealEditor` process, the open editor included.
+  starts its own CARLA server on port 2000, so `run_server.sh stop` on that
+  port ends the open editor, and `STOP_ALL=1` ends every `UnrealEditor`.
 
 The editor needs a display. Without one, the step cannot run: stop and tell
 the user (see the rules above). `-nullrhi` or the `-game` server is not a

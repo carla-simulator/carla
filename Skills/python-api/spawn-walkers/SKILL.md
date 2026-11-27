@@ -1,6 +1,6 @@
 ---
 name: spawn-walkers
-description: Spawns pedestrians that wander autonomously via WalkerAIController, and destroys them in the correct order. Pairs each walker.pedestrian.* with a controller.ai.walker, places them on the navigation mesh, and sends them to random navmesh points at walking speed. Use when the user asks to "spawn pedestrians/walkers", "add people/crowds", "make pedestrians walk around", or "remove the walkers". Reads the world settings first: if the world is already synchronous it never ticks it, and if it is asynchronous it makes it synchronous and drives the clock itself.
+description: Spawns pedestrians that wander autonomously via WalkerAIController, and destroys them in the correct order. Pairs each walker.pedestrian.* with a controller.ai.walker, places them on the navigation mesh, and sends them to random navmesh points at walking speed. Use when the user asks to "spawn pedestrians/walkers", "add people/crowds", "make pedestrians walk around", or "remove the walkers". Reads the world settings first: if the world is already synchronous it never ticks it, and if it is asynchronous it makes it synchronous and drives the clock itself. For vehicles and pedestrians together, use populate-world.
 license: MIT
 compatibility: Any OS with the CARLA PythonAPI installed for the active interpreter and a reachable, already-running CARLA server WITH a pedestrian navmesh for the loaded map. Does NOT need UE4_ROOT. Tested against CARLA 0.9.16; the client-lifetime and clock-ownership behaviour below was measured on 0.10.0.
 metadata:

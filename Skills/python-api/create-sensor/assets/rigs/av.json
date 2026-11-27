@@ -1,0 +1,11 @@
+[
+ {"name": "front_rgb",   "type": "camera.rgb", "x": 1.5, "z": 1.6, "attrs": {"image_size_x": "1280", "image_size_y": "720", "fov": "90"}},
+ {"name": "front_depth", "type": "camera.depth", "x": 1.5, "z": 1.6, "attrs": {"image_size_x": "1280", "image_size_y": "720", "fov": "90"}},
+ {"name": "front_seg",   "type": "camera.semantic_segmentation", "x": 1.5, "z": 1.6, "attrs": {"image_size_x": "1280", "image_size_y": "720", "fov": "90"}},
+ {"name": "lidar",       "type": "lidar.ray_cast", "z": 2.0, "attrs": {"channels": "32", "range": "80", "points_per_second": "600000", "rotation_frequency": "20"}},
+ {"name": "radar",       "type": "other.radar", "x": 2.2, "z": 0.7, "attrs": {"horizontal_fov": "30", "vertical_fov": "10", "range": "100"}},
+ {"name": "gnss",        "type": "other.gnss", "z": 1.0},
+ {"name": "imu",         "type": "other.imu", "z": 1.0},
+ {"name": "collision",   "type": "other.collision"},
+ {"name": "lane",        "type": "other.lane_invasion"}
+]

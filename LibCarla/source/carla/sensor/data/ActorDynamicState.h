@@ -10,7 +10,6 @@
 #include "carla/geom/Vector3D.h"
 #include "carla/rpc/ActorId.h"
 #include "carla/rpc/ActorState.h"
-#include "carla/rpc/VehicleFailureState.h"
 #include "carla/rpc/TrafficLightState.h"
 #include "carla/rpc/VehicleControl.h"
 #include "carla/rpc/WalkerControl.h"
@@ -64,7 +63,6 @@ namespace detail {
     rpc::TrafficLightState traffic_light_state;
     bool has_traffic_light;
     rpc::ActorId traffic_light_id;
-    rpc::VehicleFailureState failure_state;
     /// Bit i set when door i (rpc::VehicleDoor below All) is open.
     uint8_t open_doors;
     /// Number of doors the vehicle can open.
@@ -154,6 +152,22 @@ namespace detail {
     "If you modified this class please update the size here, else you may "
     "comment this assert, but your platform may have compatibility issues "
     "connecting to other platforms.");
+
+#pragma pack(push, 1)
+
+  /// The part of a traffic light that changes, for a traffic light that is a
+  /// static actor: it travels in front of the ActorDynamicState records
+  /// instead of one of them (see EpisodeStateSerializer::Header).
+  struct TrafficLightDynamicState {
+    ActorId id;
+    float elapsed_time;
+    bool time_is_frozen;
+    rpc::TrafficLightState state;
+  };
+
+#pragma pack(pop)
+
+  static_assert(sizeof(TrafficLightDynamicState) == 10u, "Invalid TrafficLightDynamicState size!");
 
 } // namespace data
 } // namespace sensor

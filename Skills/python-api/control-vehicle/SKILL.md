@@ -1,6 +1,6 @@
 ---
 name: control-vehicle
-description: Directly drives a specific vehicle on a running CARLA server — raw VehicleControl (throttle/steer/brake/reverse/hand-brake), Ackermann speed control, vehicle lights, opening/closing doors, and physics-control tuning; ros-info reports the native ROS 2 command topics (vehicle_control_cmd, ackermann_control_cmd) for the hero. Targets the ego by default. Use when the user asks to "drive/steer the car", "accelerate/brake/reverse", "set a target speed", "turn on the headlights/blinkers/brake lights", "open a door", "drive the car from ROS", or "change the vehicle's mass/drag/physics". This is manual control (autopilot off) — for TM-driven traffic use control-traffic.
+description: Directly drives a specific vehicle on a running CARLA server — raw VehicleControl (throttle/steer/brake/reverse/hand-brake), Ackermann speed control, vehicle lights, opening/closing doors and reading which are open, reading or visually posing the wheels (steer, spin, suspension), every vehicle's light state in one call, and physics-control tuning; ros-info reports the native ROS 2 command topics (vehicle_control_cmd, ackermann_control_cmd) for the hero. Targets the ego by default. Use when the user asks to "drive/steer the car", "accelerate/brake/reverse", "set a target speed", "turn on the headlights/blinkers/brake lights", "open a door", "drive the car from ROS", or "change the vehicle's mass/drag/physics". This is manual control (autopilot off) — for TM-driven traffic use control-traffic.
 license: MIT
 compatibility: Any OS with the CARLA PythonAPI installed for the active interpreter and a reachable, already-running CARLA server with at least one vehicle. Does NOT need UE4_ROOT. Tested against CARLA 0.9.16.
 metadata:
@@ -28,7 +28,7 @@ physics. It targets **the ego** (`role_name = hero`) by default, or any vehicle 
 Progress:
 - [ ] Step 1: Check prerequisites (bash scripts/check_env.sh), clear FAILs
 - [ ] Step 2: Ensure a target vehicle exists (spawn-vehicles ego)
-- [ ] Step 3: Apply the command (control / ackermann / lights / door / physics)
+- [ ] Step 3: Apply the command (control / ackermann / lights / door / wheels / physics)
 - [ ] Step 4: Confirm on a rendered server; `stop` to halt manual driving
 ```
 
@@ -62,6 +62,15 @@ python3 scripts/vehicle_control.py lights --filter '*prius*' --on LeftBlinker
 # doors
 python3 scripts/vehicle_control.py door --open FL,FR
 python3 scripts/vehicle_control.py door --close All
+python3 scripts/vehicle_control.py door --status                  # which doors are open (is_door_open)
+
+# wheels: read steer/spin/suspension, or pose them for a render
+python3 scripts/vehicle_control.py wheels
+python3 scripts/vehicle_control.py wheels --override on --steer FL=30,FR=30 --suspension FL=0.1
+python3 scripts/vehicle_control.py wheels --override off
+
+# every vehicle's lights in one call
+python3 scripts/vehicle_control.py light-states --lit
 
 # physics: read, then make it heavier / draggier
 python3 scripts/vehicle_control.py physics --show
@@ -217,6 +226,10 @@ Solution: `stop`, or use `--hold` for timed inputs.
 **Problem: "no vehicle with role hero"**
 Cause: no ego spawned.
 Solution: spawn one with the spawn-vehicles `ego` command, or target `--id`/`--filter`.
+
+**Problem: `door --status` shows a door closed after `--open`**
+Cause: the model has no such door. On `vehicle.tesla.model3`, `Hood` and `Trunk` stay closed; `is_door_open(VehicleDoor.All)` is true once the four doors it has are open.
+Solution: open the doors the model has; the server log lists them (`Door name: SM_DoorFL`, ...).
 
 **Problem: no door named Hood/Trunk**
 Cause: 0.9.16 exposes only FL, FR, RL, RR, All.

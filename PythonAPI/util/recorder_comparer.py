@@ -9,6 +9,7 @@
 """Compare two recorder files (gotten from 'show_recorder_file_info') line by line"""
 
 import argparse
+from itertools import zip_longest
 
 def main():
 
@@ -38,8 +39,8 @@ def main():
     with open(args.file2, 'r') as fd:
         recorder_2_str = fd.read()
 
-    list_of_rows_1 = recorder_1_str.split("\n")[3:]
-    list_of_rows_2 = recorder_2_str.split("\n")[3:]
+    list_of_rows_1 = recorder_1_str.splitlines()[3:]
+    list_of_rows_2 = recorder_2_str.splitlines()[3:]
     len_1 = len(list_of_rows_1)
     len_2 = len(list_of_rows_2)
 
@@ -49,47 +50,47 @@ def main():
     ignored_ids_1 = []
     ignored_ids_2 = []
 
-    frame_1 = 0
-    frame_2 = 0
-    time_1 = 0
-    time_2 = 0
+    frame_1 = '?'
+    frame_2 = '?'
+    time_1 = '?'
+    time_2 = '?'
 
     print("")
     try:
-        for i in range(len_1):
-            row1 = list_of_rows_1[i].strip()
-            row2 = list_of_rows_2[i].strip()
+        for i, (left, right) in enumerate(zip_longest(list_of_rows_1, list_of_rows_2)):
+            row1 = left.strip() if left is not None else '<end of file>'
+            row2 = right.strip() if right is not None else '<end of file>'
 
             row1_id = None
             row2_id = None
 
             # Get the recorder's frame info. Part of the output when a difference is detected
             if row1.startswith('Frame '):
-                frame_1 = row1.split(' ')[1]
-                time_1 = row1.split(' ')[3]
+                frame_1 = row1.split()[1]
+                time_1 = row1.split()[3]
             if row2.startswith('Frame '):
-                frame_2 = row2.split(' ')[1]
-                time_2 = row2.split(' ')[3]
+                frame_2 = row2.split()[1]
+                time_2 = row2.split()[3]
 
             # Ignore some lines
             if row1.startswith("Parenting") and row2.startswith("Parenting"):  # Based on ids, which vary
                 continue
             elif row1.startswith("Collision") and row2.startswith("Collision"):  # Based on ids, which vary
                 continue
-            elif row1.startswith("Destroy"):  # No more info apart from the id, which vary
+            elif row1.startswith("Destroy") and row2.startswith("Destroy"):  # No more info apart from the id, which vary
                 continue
-            elif row1.startswith("Current platform time:"):  # Real time, so it can vary without affecting determinism
+            elif row1.startswith("Current platform time:") and row2.startswith("Current platform time:"):  # Real time, so it can vary without affecting determinism
                 continue
 
             # Ignoring the Id part, as it can differ between simulations
-            elif row1.startswith("Id:"):
-                _, row1_id, *row1_info = row1.split(" ")
-                _, row2_id, *row2_info = row2.split(" ")
+            elif row1.startswith("Id:") and row2.startswith("Id:"):
+                _, row1_id, *row1_info = row1.split()
+                _, row2_id, *row2_info = row2.split()
 
             # Same with Create and Destroy, but 
-            elif row1.startswith("Create"):
-                _, row1_id, *row1_info = row1.split(" ")
-                _, row2_id, *row2_info = row2.split(" ")
+            elif row1.startswith("Create") and row2.startswith("Create"):
+                _, row1_id, *row1_info = row1.split()
+                _, row2_id, *row2_info = row2.split()
 
                 row1_id = row1_id[:-1]
                 row2_id = row2_id[:-1]
@@ -101,8 +102,8 @@ def main():
                     ignored_ids_2.append(row2_id)
 
             else:
-                row1_info = row1.split(" ")
-                row2_info = row2.split(" ")
+                row1_info = row1.split()
+                row2_info = row2.split()
 
             # Check if the ID has to be ignored
             if row1_id and row2_id and row1_id in ignored_ids_1 and row2_id in ignored_ids_2:

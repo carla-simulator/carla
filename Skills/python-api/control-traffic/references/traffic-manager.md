@@ -71,3 +71,13 @@ sync mode the world must be ticked for the TM to advance the cars.
   a car OUT of autopilot for manual driving — don't tune a manually-driven car
   here.
 - Hybrid physics matters mainly on the large maps (Town12, Town13, Town15).
+
+## Routes, paths and plans (measured on ue58-dev ccc52d24d, Town10HD_Opt)
+
+| Call | Result |
+|---|---|
+| `set_desired_speed(v, 15)` | 14.9–15.0 km/h held: the unit is km/h |
+| `set_path(v, locations)` | 15 points along a route with turns, each passed within 2 m |
+| `set_route(v, ['Right'] * 4)` | straight through three junctions, and `get_all_actions` never showed `Right`: route options are matched to the TM's road graph, whose branch points can differ from the OpenDRIVE junctions |
+| `get_next_action` / `get_all_actions` from another process | `[]` before the TM RPC fix (the client dropped the reply); with it, the same `[option, carla.Waypoint]` pairs as in the TM's own process |
+| TM on port 3656 next to a server on 3654 | `bind error`: 3656 is taken by the server, so pick a TM port away from RPC + 1 and + 2 |

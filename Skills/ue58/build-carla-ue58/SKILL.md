@@ -161,6 +161,32 @@ whether `libcarla-ros2-native.so` exists and the plugin actually carries
 `carla::ros2` symbols. A CMake target can report success while the artifact it
 was supposed to produce is stale or absent.
 
+## On Windows
+
+The scripts above are bash and Linux-only; on Windows the build is driven by `CarlaSetup.bat` and plain `cmake` from the **x64 Native Tools Command Prompt for VS 2022**. This section follows `Docs/build_windows_ue5.md` and has not been run by this skill: no step below was verified on a Windows machine.
+
+```bat
+git clone -b ue58-dev https://github.com/carla-simulator/carla.git CarlaUE5
+cd CarlaUE5
+CarlaSetup.bat                      &REM first time: prerequisites, engine, content, configure and build
+cmake -G Ninja -S . -B Build --toolchain=CMake/Toolchain.cmake -DCMAKE_BUILD_TYPE=Release
+cmake --build Build --target carla-unreal-editor
+cmake --build Build --target carla-python-api-install
+cmake --build Build --target launch
+```
+
+The differences from Linux that change what you do:
+
+| | Linux | Windows |
+|---|---|---|
+| First build | engine by hand, then `cmake --preset` | `CarlaSetup.bat` does everything, engine included when `CARLA_UNREAL_ENGINE_PATH` is unset and `..\UnrealEngine5_carla` is absent (over an hour, ~225 GB) |
+| Build directory | `Build/<preset>` | `Build` (the docs configure without a preset) |
+| Compiler | the engine's bundled clang | Visual Studio 2022 with the MSVC v14.38 toolset, or v14.44.35211 or later; import `Unreal\CarlaUnreal\.vsconfig` to add v14.38 |
+| ROS 2 | `-DENABLE_ROS2=ON` | not built on Windows |
+| Package | `Build/<preset>/Package/Carla-<ver>-Linux-Shipping/` | `Build\Package\Carla-<ver>-Win64-Shipping\` plus a `.zip` (skip it with `-DCARLA_UNREAL_PACKAGE_NO_COMPRESSION=ON`) |
+
+Before the first build, check the three things that fail late on Windows: **Developer Mode** must be on, the checkout must be on an **internal disk** (external disks lack the permissions the build needs), and Visual Studio must carry one of the supported MSVC toolsets. `CarlaSetup.bat` takes `--skip-prerequisites` (`-p`), `--launch` (`-l`) and `--python-root=C:\Path\To\PythonDir`; with `--python-root`, also pass `-DPython_ROOT_DIR=` and `-DPython3_ROOT_DIR=` to every later configure. Options, DLSS and `CARLA_MAPS_TO_COOK` work as on Linux. Detail in [references/windows.md](references/windows.md).
+
 ## Examples
 
 **Example 1: "build CARLA UE5 with ROS 2"**
