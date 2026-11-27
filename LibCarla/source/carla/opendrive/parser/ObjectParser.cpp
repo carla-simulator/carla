@@ -10,7 +10,7 @@
 #include "carla/road/element/RoadInfoCrosswalk.h"
 #include "carla/road/Road.h"
 
-#include <third-party/pugixml/pugixml.hpp>
+#include <pugixml.hpp>
 
 namespace carla {
 namespace opendrive {

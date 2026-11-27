@@ -157,6 +157,7 @@
 * **Enabled the LibCarla GoogleTest suite** (server and client) and gated both in CI.
 * **Added a Visual C++ Redistributable prerequisite** and troubleshooting note to the Windows quickstart (#9560), and corrected Doxygen parameter names across the LibCarla headers.
 * **Added `--no-xodr`, `--no-nav` and `--no-tm` to `carla-pack add`**, which unregister a sidecar of an in-pack map and delete the staged file; omitting a flag keeps the registered file.
+* **Upgraded zlib (1.3.2), libpng (1.6.58), SQLite (3.53.4) and pugixml (1.16)**, with pugixml now a CMake-managed external dependency instead of a vendored copy, and added malformed PNG, XML and OpenDRIVE regression tests.
 * **Removed `ALargeMapManager`**, the UE4-era tiled large map. Every large map is now World Partition, and the manager already removed itself from those maps on load.
   * Actor transforms, spawning, the recorder, multi-GPU mirroring, sensors, traffic signal volumes, debug drawing, ray casts and the location-based RPCs no longer convert coordinates through it. Global and local coordinates are now the same everywhere.
   * The importer no longer has a sublevel-per-tile mode: a tiled `.fbx` set is always imported as one map, and `merge_tiles` is gone from the package JSON.
