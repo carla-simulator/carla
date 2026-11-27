@@ -113,6 +113,7 @@ namespace tcp {
       } else {
         // ignore this message
         log_debug("session", _session_id, ": connection too slow: message discarded");
+        _missed = true;
         return;
       }
     }

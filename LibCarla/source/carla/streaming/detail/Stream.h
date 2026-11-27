@@ -7,6 +7,7 @@
 #pragma once
 
 #include "carla/Buffer.h"
+#include "carla/BufferView.h"
 #include "carla/Debug.h"
 #include "carla/streaming/Token.h"
 
@@ -51,6 +52,11 @@ namespace detail {
     template <typename... Buffers>
     void Write(Buffers &&... buffers) {
       _shared_state->Write(std::move(buffers)...);
+    }
+
+    /// Flush @a delta down the stream, or @a full to a session that missed the previous message. No copies are made.
+    void WriteDelta(SharedBufferView header, SharedBufferView full, SharedBufferView delta) {
+      _shared_state->WriteDelta(std::move(header), std::move(full), std::move(delta));
     }
 
     /// Make a copy of @a data and flush it down the stream.

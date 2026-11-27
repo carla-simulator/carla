@@ -1,6 +1,6 @@
 ---
 name: control-lights
-description: Controls the map's light sources through the CARLA LightManager — turn street lamps, building/facade lights, vehicle lights or all of them on/off, set their colour and intensity, and toggle the automatic lights-at-night cycle. Use when the user asks to "turn on the street lights", "light up the city at night", "turn off building lights", "change the street-light colour", or "make lights come on automatically at night". Distinct from hiding lamp meshes (toggle-env-objects) and the sun (set-weather).
+description: Controls the map's light sources through the CARLA LightManager — turn street lamps, building/facade lights, vehicle lights or all of them on/off, set their colour and intensity, select only the lights near a point, save and restore every light's state, move lights between groups, and toggle the automatic lights-at-night cycle. Use when the user asks to "turn on the street lights", "light up the city at night", "turn off building lights", "change the street-light colour", or "make lights come on automatically at night". Distinct from hiding lamp meshes (toggle-env-objects) and the sun (set-weather).
 license: MIT
 compatibility: Any OS with the CARLA PythonAPI installed for the active interpreter and a reachable, already-running CARLA server. Light effects are visible on a rendered server. Tested against CARLA 0.9.16.
 metadata:
@@ -61,6 +61,27 @@ python3 scripts/lights.py day-night on
 
 Groups: `street`, `building`, `vehicle`, `other`, `all`.
 
+### One street, and saving the lighting
+
+```bash
+# only the lamps within 40 m of a point
+python3 scripts/lights.py on --group street --near=100,-20,0 --radius 40 --color 0,0,255
+
+# save every light's state (on, colour, intensity, group), change things, put it back
+python3 scripts/lights.py save --file lights.json
+python3 scripts/lights.py off --group all
+python3 scripts/lights.py restore --file lights.json
+
+# move lights to another group, so later commands treat them separately
+python3 scripts/lights.py regroup --group street --near=84,8,0 --radius 3 --to other
+```
+
+`--near X,Y,Z --radius M` works on `list`, `on`, `off`, `set`, `save` and `regroup`. `restore` sends every saved state in one `set_light_states` call.
+
+### Changes are sent on the next tick
+
+The LightManager queues `turn_on`, `set_color` and the rest, and sends them from its on-tick callback (or its destructor). Every write command therefore waits for two ticks before exiting. In synchronous mode another client must be ticking, or the command waits. Before this wait was added, the script exited straight after the calls and the server never saw them: on ue58-dev ccc52d24d, `on` printed success and `list` still showed every lamp off with its old colour.
+
 ## Examples
 
 **Example 1: night city**
@@ -83,6 +104,10 @@ User says: "have the street lights come on by themselves at dusk"
 `day-night on`.
 
 ## Troubleshooting
+
+**Problem: the command hangs**
+Cause: synchronous mode with nobody ticking; the write commands wait for two ticks to send the changes.
+Solution: tick from your own client, or run in asynchronous mode (set-world-settings).
 
 **Problem: no visible change**
 Cause: headless `-nullrhi` server (no rendering), or it's daytime so lights wash out.

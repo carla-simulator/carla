@@ -105,6 +105,11 @@ def _print(world, actor):
             print(f"  wheel steer: FL={fl:.1f} deg FR={fr:.1f} deg   mass={actor.get_physics_control().mass:.0f} kg")
         except RuntimeError:
             pass
+        # Both come from the client's last tick, not a server call.
+        tl = actor.get_traffic_light()
+        tl_txt = (f"id={tl.id} {str(actor.get_traffic_light_state()).split('.')[-1]}"
+                  + (" (stopped at it)" if actor.is_at_traffic_light() else "")) if tl else "none"
+        print(f"  speed limit={actor.get_speed_limit():.0f} km/h   traffic light={tl_txt}")
 
 
 def cmd_show(args):

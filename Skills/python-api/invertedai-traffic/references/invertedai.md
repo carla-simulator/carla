@@ -30,9 +30,45 @@ that Inverted AI vehicles react to.
   the IAI name is `carla:Town10HD`. The client strips `_Opt`.
 - **Coordinates** are shared: IAI `center.x/y` are CARLA metres; orientation is
   radians (CARLA yaw is degrees).
-- **Traffic lights.** The mapping of CARLA light actors to IAI light ids is
-  hard-coded for Town10HD (sorted actor ids → 4364+i and 5364+i). Elsewhere the
-  lights are not synced and NPCs may run CARLA's reds.
+- **Traffic lights.** IAI numbers its lights (e.g. Town10HD 4364-4378 and
+  5364-5378, two per CARLA light) independently of CARLA's actor ids. They are
+  paired along the lane: each IAI light from `location_info().static_actors`
+  goes to the nearest CARLA stop waypoint (`get_stop_waypoints()`) within
+  2.5 m of its lane centre, facing within 45 degrees, from 2 m before to 20 m
+  past it. Measured with that rule:
+
+  | Map | CARLA lights | IAI lights | Unpaired |
+  |---|---|---|---|
+  | Town01 / Town02 | 36 / 24 | 36 / 24 | none (IAI lights up to 13.5 m past the stop waypoint) |
+  | Town03 | 38 | 57 | 1 CARLA light |
+  | Town04 / Town05 / Town06 / Town07 | 43 / 54 / 19 / 17 | 52 / 109 / 67 / 18 | none |
+  | Town10HD | 15 | 30 | none |
+
+  Town15 does not pair at all: Inverted AI's `carla:Town15` is rotated 180
+  degrees against CARLA 1.0's Town15 (its lights match CARLA's stop lines only
+  with x and y negated, and no initialized vehicle lines up with a CARLA lane
+  until rotated), so the co-simulation is not usable there. Its light ids also
+  repeat once per signal head; the clients keep each id once.
+
+  A plain radius does not work: Town01/02 lights sit 10-13.5 m along the lane,
+  and Town05/06 ones on the line between two lanes. The old table built from
+  sorted actor ids (4364+i) was off by two on UE 5.8 Town10HD, so every NPC
+  obeyed another junction's light. Do not reintroduce it.
+- **Per-lane lights.** Where several IAI lights pair with one CARLA light they
+  are one per lane. On Town06 they really differ (the outer lane often stays
+  green), so in `iai` mode the client shows their majority state and counts the
+  split steps.
+- **Who runs the lights.** `traffic_lights_states` sent to `large_drive`
+  override the server's lights; with them left out and the previous response's
+  `light_recurrent_states` passed instead, the server runs the lights (each
+  light group's state and time remaining; a phase lasts up to about 20 s). The
+  server steps them at the start of the call and the agents react to the new
+  states, so a step's lights are only known when the call returns. The SDK
+  returns light ids as `int`, while the clients key them as `str`.
+- **Stop lines differ.** Each IAI light sits 0.5-6.5 m further along the lane
+  than the matching CARLA stop waypoint, so IAI cars stop a few metres past
+  CARLA's stop line. That is map geometry, not a light-state difference;
+  measure red-light crossings at IAI's light positions.
 - **Cost / latency.** Every step is one or more HTTPS requests
   (`single_call_agent_limit` agents each). Measured on Town10HD with 28 agents:
   ~385 ms per `large_drive` and ~11 s for `large_initialize`, so the simulation

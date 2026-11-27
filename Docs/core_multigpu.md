@@ -137,7 +137,7 @@ The primary is the only clock. Every frame it sends carries the primary's frame 
 - Asks the primary for a full resynchronization when it misses a frame (a frame that cannot be read is dropped and logged), and gets the whole world state again on the next frame.
 - Runs on its own clock, at most 50 frames per second, only while it has no primary to follow (not connected, or a map load or a world travel in progress). It captures nothing during those frames.
 
-Sensors that keep state between ticks get it from the primary as well: the random seeds of the noise models, where a LiDAR's sweep starts, and the previous readings the IMU and the radar use. A sensor on a secondary therefore produces the data the primary would, in the same frame.
+Sensors that keep state between ticks get it from the primary as well: the random seeds of the GNSS and IMU noise models, where a LiDAR's sweep starts, and the previous readings the IMU and the radar use. The noise of the LiDARs and the radar follows from their `noise_seed` and the frame number, so it needs no state. A sensor on a secondary therefore produces the data the primary would, in the same frame.
 
 ---
 ## What secondaries mirror
@@ -158,6 +158,7 @@ Every frame the primary sends what changed in its world, and on a full resynchro
 - A sensor is assigned when a client first calls `listen()` or `enable_for_ros()` on it, not when it is spawned.
 - While at least one secondary is connected, the primary assigns every sensor round-robin across the connected secondaries. That includes CPU sensors such as LiDAR, GNSS and IMU. The exceptions are the collision sensor, the V2X sensors (`sensor.other.v2x` and `sensor.other.v2x_custom`, which exchange messages between sensors) and the world observer stream, which always stay on the primary.
 - The assignment is sticky. The sensor stays on its secondary until it is destroyed or that secondary is lost (see below). It never rebalances, and assignment does not take the load on each GPU into account.
+- Without ROS 2 on the primary, the primary's copy of a ray-cast LiDAR or radar assigned to a secondary no longer traces its rays while nothing on the primary consumes it. It only advances the scan angle that the secondary continues from each frame.
 - When no secondary is connected, sensors are served by the primary. On a `-nullrhi` primary that only works for CPU sensors, as described above.
 - A secondary that disconnects takes its sensors' streams with it: they stop delivering data until a secondary connects again.
 - When a secondary connects, the primary assigns it the sensors that were lost, under the same stream ids, and re-enables ROS 2 publication on the ones that had it. Destroyed sensors are not reassigned.

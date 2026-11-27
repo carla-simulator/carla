@@ -246,12 +246,12 @@ public:
 
       /// Method to get the vehicle's next action.
       server->bind("get_next_action", [=](const ActorId actor_id) {
-        tm->GetNextAction(actor_id);
+        return ToActionInfo(ActionBuffer{tm->GetNextAction(actor_id)});
       });
 
       /// Method to get the vehicle's action buffer.
       server->bind("get_all_actions", [=](const ActorId actor_id) {
-        tm->GetActionBuffer(actor_id);
+        return ToActionInfo(tm->GetActionBuffer(actor_id));
       });
 
       server->bind("shut_down", [=]() {

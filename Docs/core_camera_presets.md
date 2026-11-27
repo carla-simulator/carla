@@ -6,6 +6,11 @@ A camera's look (exposure, tonemapper, white balance, bloom, lens flare, noise) 
 - [__Presets shipped with CARLA__](#presets-shipped-with-carla)
 - [__Creating, loading and saving presets__](#creating-loading-and-saving-presets)
 
+!!! agent "Agentic CARLA"
+    *"Make a camera profile that matches these nuScenes front-camera frames and attach a camera that uses it to the ego."*
+
+    Skills: `calibrate-carla-ue58-camera-profile`, `create-sensor`. [Set up Agentic CARLA](agent_skills.md#set-up-agentic-carla).
+
 ---
 ## Using post-process presets for the RGB camera sensor
 
@@ -116,6 +121,7 @@ The automotive presets add camera artefacts on top of the grading:
 - __Lens flare.__ `AutomotiveHDR` and `AutomotiveHDRClean` use the convolution (FFT) bloom with a lens kernel, `Kernels/T_LensPSF_Star`, modelled on the nuScenes night frames: a soft halo and faint star spikes around bright lights. The other presets use the standard bloom.
 - __Small lights and temporal anti-aliasing.__ With TSR (the default anti-aliasing) distant or thin lights (small vehicle lamps, far street lights) lose most of their glow, because TSR blends each frame with the previous ones and flattens bright features of a few pixels before the bloom. A real camera has no such filter. FXAA (`r.AntiAliasingMethod 1`) keeps their glow at the cost of more aliasing, shimmer and moiré on foliage, fences and distant lines.
 - __Exposure-linked motion blur.__ Applies to every preset: see [RGB camera: exposure-linked motion blur](ref_sensors.md#exposure-linked-motion-blur).
+- __Exposure-linked bloom.__ Applies to every preset: the bloom and lens flare of a preset are its night values, and by day the camera keeps a quarter of them, so lamps and emissive materials do not glow in daylight. See [RGB camera: exposure-linked bloom](ref_sensors.md#exposure-linked-bloom).
 
 ---
 ## Creating, loading and saving presets

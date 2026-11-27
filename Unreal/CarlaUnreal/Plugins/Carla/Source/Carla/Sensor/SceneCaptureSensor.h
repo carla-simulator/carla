@@ -671,6 +671,16 @@ protected:
   /// Exposure time of the last capture in seconds (exposure-linked motion blur).
   float ExposureSeconds = 0.0f;
 
+  /// Bloom and lens flare scaled down with the scene brightness (carla.Camera.ExposureBloom).
+  void UpdateExposureBloom();
+
+  /// Bloom and lens flare intensities of the profile or attributes, before the
+  /// exposure scale, and the values last written over them (-1: not read yet).
+  float BloomIntensityBase = -1.0f;
+  float BloomIntensityApplied = -1.0f;
+  float LensFlareIntensityBase = -1.0f;
+  float LensFlareIntensityApplied = -1.0f;
+
   virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
   virtual void SetUpSceneCaptureComponent(USceneCaptureComponent2D &SceneCapture) {}

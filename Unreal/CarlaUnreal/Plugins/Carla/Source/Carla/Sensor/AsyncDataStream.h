@@ -63,6 +63,12 @@ public:
   template <typename SensorT, typename... ArgsT>
   void SerializeAndSend(SensorT &Sensor, ArgsT &&... Args);
 
+  /// Send the header with @a Delta, or with @a Full to the clients that missed the previous message.
+  void SendDelta(carla::SharedBufferView Full, carla::SharedBufferView Delta)
+  {
+    Stream.WriteDelta(carla::BufferView::CreateFrom(std::move(Header)), std::move(Full), std::move(Delta));
+  }
+
   /// allow to change the frame number of the header
   void SetFrameNumber(uint64_t FrameNumber)
   {

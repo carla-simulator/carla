@@ -152,6 +152,11 @@ bool AHSSLidar::PostprocessDetection(FDetection& Detection) const
     return RandomEngine->GetUniformFloat() < DropOffAlpha * Intensity + DropOffBeta;
 }
 
+void AHSSLidar::SkipSimulation([[maybe_unused]] const float DeltaTime)
+{
+  // The sweep is fixed, so there is no scan phase to advance.
+}
+
 void AHSSLidar::ResetDetections(uint32_t Channels, uint32_t MaxPointsPerChannel)
 {
   ResetChannelDetections(Detections, Channels, MaxPointsPerChannel);

@@ -7,7 +7,7 @@ The CARLA package ships Town10HD_Opt, Town12 and Town15. The towns below are not
 !!! agent "Agentic CARLA"
     *"Install the AdditionalMaps that matches my CARLA package and load Town03_Opt."*
 
-    Skills: `get-carla-additional-maps`, `install-carla-content-pack`, `manage-content-packs`. [Set up Agentic CARLA](agent_skills.md#set-up-agentic-carla).
+    Skills: `get-carla-additional-maps`, `install-carla-content-pack`, `manage-content-packs`, `load-map`. [Set up Agentic CARLA](agent_skills.md#set-up-agentic-carla).
 
 Download a package and the `AdditionalMaps` tarball built with it: a release, or the weekly build of the development branch, made every Sunday. The weekly pair is under `https://downloads.carlasim.com/Linux/Dev/`: `CARLA_UE5_Weekly.tar.gz` (the package) and `CARLA_UE5_Weekly_AdditionalMaps.tar.gz` (the pack). For Windows it is under `https://downloads.carlasim.com/Windows/Dev/`: `CARLA_UE5_Weekly.zip` and `CARLA_UE5_Weekly_AdditionalMaps.tar.gz`. The nightly `CARLA_UE5_Latest` package is a different build and has no pack that installs into it. Install the pack with `carla-pack`. Installing only needs `carla_pack.py`, which packages ship in `Tools/` (or `Util/ContentPacks/carla_pack.py` in the CARLA repository; Python 3.8+, standard library only):
 

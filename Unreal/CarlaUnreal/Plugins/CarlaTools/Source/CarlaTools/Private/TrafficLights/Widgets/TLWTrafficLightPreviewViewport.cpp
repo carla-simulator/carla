@@ -1,5 +1,6 @@
 #include "TrafficLights/Widgets/TLWTrafficLightPreviewViewport.h"
 
+#include "CarlaTools.h"
 #include "Components/DirectionalLightComponent.h"
 #include "Components/SkyLightComponent.h"
 #include "Components/StaticMeshComponent.h"
@@ -8,7 +9,7 @@
 #include "EditorViewportClient.h"
 #include "Engine/DirectionalLight.h"
 #include "Engine/Light.h"
-#include "Engine/PostProcessVolume.h"
+#include "Engine/TextureCube.h"
 #include "Engine/World.h"
 #include "EngineUtils.h"
 #include "Logging/LogMacros.h"
@@ -23,89 +24,24 @@
 
 void STrafficLightPreviewViewport::Construct(const FArguments& InArgs)
 {
-	PreviewScene = MakeUnique<FPreviewScene>(FPreviewScene::ConstructionValues());
-
-	float WorldSunIntensity{1.0f};
-	FLinearColor WorldSunColor{FLinearColor::White};
-	float WorldSkyIntensity{1.0f};
-	FLinearColor WorldSkyColor{FLinearColor::White};
-
-	UWorld* EditorWorld{GEditor->GetEditorWorldContext().World()};
-	if (IsValid(EditorWorld))
+	// The preview has its own daylight and a fixed exposure, independent of the map open in the
+	// editor. Copying the map's sun, sky light and post process (as it used to) breaks with the
+	// CARLA maps: their sky light captures the map's sky, which the preview scene lacks (black),
+	// and their exposure is tuned for that sky. Physical values, so the tool's lamps (emissive
+	// 50000 nits when lit) read as lamps: a 50000 lux sun, a sky light from the engine's daylight
+	// cubemap, and EV100 13, a bright overcast day.
+	PreviewScene = MakeUnique<FPreviewScene>(FPreviewScene::ConstructionValues()
+		.SetLightBrightness(50000.0f)
+		.SetSkyBrightness(8000.0f)
+		.SetLightRotation(FRotator(-40.0f, -60.0f, 0.0f)));
+	if (UTextureCube* const SkyCubemap{LoadObject<UTextureCube>(
+			nullptr, TEXT("/Engine/MapTemplates/Sky/DaylightAmbientCubemap.DaylightAmbientCubemap"))})
 	{
-		APostProcessVolume* GlobalPPV{nullptr};
-		for (TActorIterator<APostProcessVolume> It(EditorWorld); It; ++It)
-		{
-			if (It->bUnbound)
-			{
-				GlobalPPV = *It;
-				break;
-			}
-		}
-		if (!GlobalPPV)
-		{
-			for (TActorIterator<APostProcessVolume> It(EditorWorld); It; ++It)
-			{
-				GlobalPPV = *It;
-				break;
-			}
-		}
-
-		if (IsValid(GlobalPPV) && IsValid(PreviewScene->GetWorld()))
-		{
-			FActorSpawnParameters SpawnParams;
-			SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-			SpawnParams.ObjectFlags |= RF_Transient;
-
-			APostProcessVolume* PreviewPPV{PreviewScene->GetWorld()->SpawnActor<APostProcessVolume>(
-				APostProcessVolume::StaticClass(), FTransform::Identity, SpawnParams)};
-			PreviewPPV->bUnbound = true;
-			PreviewPPV->BlendWeight = GlobalPPV->BlendWeight;
-			PreviewPPV->Settings = GlobalPPV->Settings;
-		}
-
-		for (TObjectIterator<UDirectionalLightComponent> It; It; ++It)
-		{
-			if (It->GetWorld() == EditorWorld)
-			{
-				WorldSunIntensity = It->Intensity;
-				WorldSunColor = It->LightColor;
-				break;
-			}
-		}
-		for (TObjectIterator<USkyLightComponent> It; It; ++It)
-		{
-			if (It->GetWorld() == EditorWorld)
-			{
-				WorldSkyIntensity = It->Intensity;
-				WorldSkyColor = It->LightColor;
-				break;
-			}
-		}
+		PreviewScene->SetSkyCubemap(SkyCubemap);
 	}
 	else
 	{
-		UE_LOG(LogTemp, Warning, TEXT("[PreviewViewport] No editor world found for preview scene"));
-	}
-
-	if (IsValid(PreviewScene->DirectionalLight))
-	{
-		PreviewScene->DirectionalLight->SetIntensity(WorldSunIntensity);
-		PreviewScene->DirectionalLight->SetLightColor(WorldSunColor);
-	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("[PreviewViewport] No directional light found in preview scene"));
-	}
-	if (IsValid(PreviewScene->SkyLight))
-	{
-		PreviewScene->SkyLight->SetIntensity(WorldSkyIntensity);
-		PreviewScene->SkyLight->SetLightColor(WorldSkyColor);
-		PreviewScene->SkyLight->RecaptureSky();
-	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("[PreviewViewport] No sky light found in preview scene"));
+		UE_LOG(LogCarlaTools, Warning, TEXT("Traffic Light Tool preview: daylight cubemap not found; the preview has no sky light"));
 	}
 
 	{
@@ -129,6 +65,8 @@ void STrafficLightPreviewViewport::Construct(const FArguments& InArgs)
 	ViewportClient->SetAllowCinematicControl(true);
 	ViewportClient->VisibilityDelegate.BindLambda([]() { return true; });
 	ViewportClient->EngineShowFlags.SetGrid(true);
+	ViewportClient->ExposureSettings.bFixed = true;
+	ViewportClient->ExposureSettings.FixedEV100 = 13.0f;
 
 	SAssignNew(ViewportWidget, SViewport).EnableGammaCorrection(false).EnableBlending(true);
 

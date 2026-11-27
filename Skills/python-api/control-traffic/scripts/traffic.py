@@ -4,9 +4,11 @@
 Commands:
     global   [--speed-diff -30] [--distance 2.5] [--seed 42]
              [--hybrid on|off] [--hybrid-radius 70] [--osm on|off]
+             [--lane-offset M] [--wide-turn on|off]
                                                   TM-wide settings
     vehicle  <selector> [per-vehicle flags]        settings for one vehicle
     all      [--filter vehicle.*] [per-vehicle flags]  same, for every match
+    plan     <selector> [--all]                    the vehicle's next road option(s) and waypoints
     sync     on|off                                TM synchronous mode
 
 Per-vehicle flags (also valid on `all`):
@@ -20,6 +22,10 @@ Per-vehicle flags (also valid on `all`):
     --keep-slow-lane P    % adherence to the keep-right/slow-lane rule
     --lane-offset M       lateral offset from lane centre (m; +right)
     --lights on|off       let the TM manage this vehicle's lights
+    --desired-speed KMH   exact target speed in km/h, ignoring the speed limit
+    --wide-turn on|off    large vehicles take wider turns at junctions
+    --route L,S,R         turns at the next junctions: Left, Right, Straight
+    --path 'X,Y,Z;...'    locations to drive through
 
 SPEED SIGN: --speed-diff is a percentage BELOW the limit, so -30 means 30% ABOVE
 the limit (faster) and +30 means 30% slower. Use the same --tm-port everywhere.
@@ -78,6 +84,11 @@ def _apply_per_vehicle(tm, vehicles, args):
         if args.keep_slow_lane is not None:  tm.keep_slow_lane_rule_percentage(v, args.keep_slow_lane)
         if args.lane_offset is not None:     tm.vehicle_lane_offset(v, args.lane_offset)
         if args.lights is not None:          tm.update_vehicle_lights(v, _on(args.lights))
+        if args.desired_speed is not None:   tm.set_desired_speed(v, args.desired_speed)
+        if args.wide_turn is not None:       tm.vehicle_large_vehicle_wide_turn(v, _on(args.wide_turn))
+        if args.route:                       tm.set_route(v, args.route.split(","))
+        if args.path:
+            tm.set_path(v, [carla.Location(*(float(c) for c in p.split(","))) for p in args.path.split(";")])
         applied.append(v.id)
     return applied
 
@@ -110,6 +121,10 @@ def cmd_global(args):
         tm.set_hybrid_physics_radius(args.hybrid_radius); done.append(f"hybrid_radius={args.hybrid_radius}")
     if args.osm is not None:
         tm.set_osm_mode(_on(args.osm)); done.append(f"osm={args.osm}")
+    if args.lane_offset is not None:
+        tm.global_lane_offset(args.lane_offset); done.append(f"lane_offset={args.lane_offset}m")
+    if args.wide_turn is not None:
+        tm.global_large_vehicle_wide_turn(_on(args.wide_turn)); done.append(f"wide_turn={args.wide_turn}")
     if not done:
         raise SystemExit("global needs at least one setting (see --help)")
     print(f"TM :{args.tm_port} global -> {', '.join(done)}")
@@ -135,6 +150,26 @@ def cmd_all(args):
     print(f"TM :{args.tm_port} applied settings to all {len(ids)} vehicle(s) matching {args.filter!r}")
 
 
+def cmd_plan(args):
+    client = _client()
+    vehicles = _resolve(_fresh(client.get_world()), args)
+    if len(vehicles) != 1:
+        raise SystemExit(f"{len(vehicles)} vehicles match; plan reads one (pass --id)")
+    v, tm = vehicles[0], _tm(client, args)
+    actions = tm.get_all_actions(v) if args.all else [tm.get_next_action(v)]
+    if not actions or not actions[0] or actions[0][1] is None:
+        raise SystemExit(f"no plan for id={v.id}: is it on autopilot on TM port {args.tm_port}? "
+                         "(before ue58-dev with the TM RPC fix, only the TM's own process could read it)")
+    loc = v.get_location()
+    print(f"TM :{args.tm_port} plan of id={v.id} ({len(actions)} action(s)):")
+    for option, wp in actions[:args.limit]:
+        l = wp.transform.location
+        print(f"  {option:12s} road={wp.road_id} lane={wp.lane_id} ({l.x:.1f},{l.y:.1f})  {l.distance(loc):.0f} m away"
+              + (" [junction]" if wp.is_junction else ""))
+    if len(actions) > args.limit:
+        print(f"  ... and {len(actions) - args.limit} more (raise --limit)")
+
+
 def cmd_sync(args):
     _tm(_client(), args).set_synchronous_mode(args.mode == "on")
     print(f"TM :{args.tm_port} synchronous_mode = {args.mode == 'on'} "
@@ -152,6 +187,10 @@ def _pv_args(sp):
     sp.add_argument("--keep-slow-lane", type=float)
     sp.add_argument("--lane-offset", type=float)
     sp.add_argument("--lights", choices=("on", "off"))
+    sp.add_argument("--desired-speed", type=float, help="exact target speed, km/h (replaces --speed-diff)")
+    sp.add_argument("--wide-turn", choices=("on", "off"), help="large vehicles take wider turns at junctions")
+    sp.add_argument("--route", help="turns to take at the next junctions, e.g. Left,Straight,Right")
+    sp.add_argument("--path", help="locations to drive through, 'X,Y,Z;X,Y,Z;...'")
     return sp
 
 
@@ -165,6 +204,8 @@ def main() -> None:
     pg.add_argument("--seed", type=int)
     pg.add_argument("--hybrid", choices=("on", "off")); pg.add_argument("--hybrid-radius", type=float)
     pg.add_argument("--osm", choices=("on", "off"))
+    pg.add_argument("--lane-offset", type=float, help="lateral offset for every vehicle, m (+right)")
+    pg.add_argument("--wide-turn", choices=("on", "off"), help="large vehicles take wider turns")
     pg.set_defaults(func=cmd_global)
 
     pv = _pv_args(sub.add_parser("vehicle", help="settings for one vehicle"))
@@ -174,6 +215,12 @@ def main() -> None:
     pa = _pv_args(sub.add_parser("all", help="settings for every matching vehicle"))
     pa.add_argument("--filter", default="vehicle.*")
     pa.set_defaults(func=cmd_all)
+
+    pp = sub.add_parser("plan", help="what one vehicle will do next: road option + waypoint")
+    pp.add_argument("--id", type=int); pp.add_argument("--role"); pp.add_argument("--filter")
+    pp.add_argument("--all", action="store_true", help="every planned action, not just the next")
+    pp.add_argument("--limit", type=int, default=20)
+    pp.set_defaults(func=cmd_plan)
 
     psy = sub.add_parser("sync", help="TM synchronous mode")
     psy.add_argument("mode", choices=("on", "off"))

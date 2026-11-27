@@ -457,7 +457,7 @@
       return: float
       return_units: km/h
       doc: >
-        The client returns the speed limit affecting this vehicle according to last tick (it does not call the simulator). The speed limit is updated when passing by a speed limit signal, so a vehicle might have none right after spawning.
+        The client returns the speed limit affecting this vehicle according to last tick (it does not call the simulator). Where the OpenDRIVE map gives a limit for the vehicle's lane, it is that limit, the same as carla.Waypoint.speed_limit: the lane or road `<speed>`, capped by the last maximum speed sign (`274`) passed on the road. Junction roads without a limit keep the previous road's limit. Elsewhere, it is updated when passing by a speed limit signal, and is 30 km/h until then.
     # --------------------------------------
     - def_name: get_traffic_light
       return: carla.TrafficLight
@@ -612,11 +612,6 @@
       doc: >
         Returns the suspension offset in meters of a vehicle's wheel, following the same rules as carla.Vehicle.get_wheel_steer_angle.
     # --------------------------------------
-    - def_name: get_failure_state
-      return: carla.VehicleFailureState
-      doc: >
-        Vehicle have failure states, to  indicate that it is incapable of continuing its route. This function returns the vehicle's specific failure state, or in other words, the cause that resulted in it.
-    # --------------------------------------
     - def_name: show_debug_telemetry
       params:
       - param_name: enabled
@@ -723,7 +718,7 @@
     parent: carla.Actor
     # - DESCRIPTION ------------------------
     doc: >
-      Class that conducts AI control for a walker. The controllers are defined as actors, but they are quite different from the rest. They need to be attached to a parent actor during their creation, which is the walker they will be controlling (take a look at carla.World if you are yet to learn on how to spawn actors). They also need for a special blueprint (already defined in carla.BlueprintLibrary as "controller.ai.walker"). This is an empty blueprint, as the AI controller will be invisible in the simulation but will follow its parent around to dictate every step of the way. 
+      Class that conducts AI control for a walker. The controllers are defined as actors, but they are quite different from the rest. They need to be attached to a parent actor during their creation, which is the walker they will be controlling (take a look at carla.World if you are yet to learn on how to spawn actors). They also need for a special blueprint (already defined in carla.BlueprintLibrary as "controller.ai.walker"). This is an empty blueprint, as the AI controller will be invisible in the simulation but will follow its parent around to dictate every step of the way. A controller attached to its walker with no offset (the default `carla.Transform()`) is not part of carla.WorldSnapshot: __<font color="#7fb800">get_transform()</font>__ returns the transform of the walker, and carla.World.get_actors still lists it. 
     # - METHODS ----------------------------
     methods:
     - def_name: go_to_location
@@ -804,6 +799,8 @@
       A traffic light actor, considered a specific type of traffic sign. As traffic lights will mostly appear at junctions, they belong to a group which contains the different traffic lights in it. Inside the group, traffic lights are differenciated by their pole index.
            
         Within a group the state of traffic lights is changed in a cyclic pattern: one index is chosen and it spends a few seconds in green, yellow and eventually red. The rest of the traffic lights remain frozen in red this whole time, meaning that there is a gap in the last seconds of the cycle where all the traffic lights are red. However, the state of a traffic light can be changed manually.  
+
+        A traffic light is a static actor: carla.World.get_static_actors lists it and it is not part of carla.WorldSnapshot. Its state, elapsed time and frozen flag reach the client on every tick; its transform, OpenDRIVE id, phase times and pole index are asked for when they change.  
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: state
@@ -971,15 +968,4 @@
         Represents all doors.
     # --------------------------------------
 
-  - class_name: VehicleFailureState
-    # - DESCRIPTION ------------------------
-    doc: >
-      Enum containing the different failure states of a vehicle, from which the it cannot recover. These are returned by __<font color="#7fb800">get_failure_state()</font>__ and only Rollover is currently implemented.
-
-    # - PROPERTIES -------------------------
-    instance_variables:
-    - var_name: NONE
-    - var_name: Rollover
-    - var_name: Engine
-    - var_name: TirePuncture
 ...

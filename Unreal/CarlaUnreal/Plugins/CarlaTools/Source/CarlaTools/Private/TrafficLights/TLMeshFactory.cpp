@@ -11,6 +11,8 @@
 #include "TrafficLights/TLModuleDataTable.h"
 #include "TrafficLights/TLPoleDataTable.h"
 #include "TrafficLights/TLPoleType.h"
+#include "TrafficLights/TLToolContent.h"
+#include "Misc/Paths.h"
 #include "UObject/NameTypes.h"
 
 UDataTable* FTLMeshFactory::s_ModuleMeshTable{nullptr};
@@ -18,13 +20,81 @@ UDataTable* FTLMeshFactory::s_PoleMeshTable{nullptr};
 UDataTable* FTLMeshFactory::s_LightTypeMeshTable{nullptr};
 UDataTable* FTLMeshFactory::s_BackplateMeshTable{nullptr};
 
+FString TLToolContent::PresetsDir()
+{
+	return FPaths::ProjectContentDir() / TEXT("Carla/Static/TrafficLight/TrafficLightTool/Presets");
+}
+
+FString FTLMeshFactory::ResolveMeshName(const FString& Name)
+{
+	// Mesh names written by the tool while its assets lived in the CarlaDigitalTwinsTool
+	// plugin, so older JSON files keep loading.
+	static const TMap<FString, FString> LegacyNames{
+		{TEXT("SM_TrafficLight_Pole01_Base"), TEXT("SM_TLTool_Pole01_NA_Base")},
+		{TEXT("SM_TrafficLight_Pole01_01"), TEXT("SM_TLTool_Pole01_NA_Vertical")},
+		{TEXT("SM_TrafficLight_Pole01_02"), TEXT("SM_TLTool_Pole01_NA_Horizontal")},
+		{TEXT("SM_TrafficLight_Pole01_Connector"), TEXT("SM_TLTool_Pole01_NA_Connector")},
+		{TEXT("SM_TrafficLight_Pole01_Black_Base1"), TEXT("SM_TLTool_Pole01_EU_Base")},
+		{TEXT("SM_TrafficLight_Pole01_Black_01"), TEXT("SM_TLTool_Pole01_EU_Vertical")},
+		{TEXT("SM_TrafficLight_Pole01_Black_02"), TEXT("SM_TLTool_Pole01_EU_Horizontal")},
+		{TEXT("SM_TrafficLight_Pole01_Black_Connector1"), TEXT("SM_TLTool_Pole01_EU_Connector")},
+		{TEXT("SM_TrafficLight_Pole02_Base"), TEXT("SM_TLTool_Pole02_NA_Base")},
+		{TEXT("SM_TrafficLight_Pole02_01"), TEXT("SM_TLTool_Pole02_NA_Vertical")},
+		{TEXT("SM_TrafficLight_Pole02_02"), TEXT("SM_TLTool_Pole02_NA_Horizontal")},
+		{TEXT("SM_TrafficLight_Pole02_Cap"), TEXT("SM_TLTool_Pole02_NA_Cap")},
+		{TEXT("SM_TrafficLight_Pole02_Connector1"), TEXT("SM_TLTool_Pole02_NA_Connector")},
+		{TEXT("SM_TrafficLight_Pole02_EndCap1"), TEXT("SM_TLTool_Pole02_NA_EndCap")},
+		{TEXT("SM_TrafficLight_Pole02_Black_Base"), TEXT("SM_TLTool_Pole02_EU_Base")},
+		{TEXT("SM_TrafficLight_Black_Pole02_01"), TEXT("SM_TLTool_Pole02_EU_Vertical")},
+		{TEXT("SM_TrafficLight_Black_Pole02_02"), TEXT("SM_TLTool_Pole02_EU_Horizontal")},
+		{TEXT("SM_TrafficLight_Black_Pole02_Cap"), TEXT("SM_TLTool_Pole02_EU_Cap")},
+		{TEXT("SM_TrafficLight_Pole02_Black_Connector"), TEXT("SM_TLTool_Pole02_EU_Connector")},
+		{TEXT("SM_TrafficLight_Pole02_Black_EndCap"), TEXT("SM_TLTool_Pole02_EU_EndCap")},
+		{TEXT("SM_TrafficLight_Pole03_Base"), TEXT("SM_TLTool_Pole03_NA_Base")},
+		{TEXT("SM_TrafficLight_Pole03_Base1"), TEXT("SM_TLTool_Pole03_NA_BaseAlt")},
+		{TEXT("SM_TrafficLight_Pole03"), TEXT("SM_TLTool_Pole03_NA_Vertical")},
+		{TEXT("SM_TrafficLight_Pole03_Cap"), TEXT("SM_TLTool_Pole03_NA_Cap")},
+		{TEXT("SM_TrafficLight_Pole03_Cap1"), TEXT("SM_TLTool_Pole03_NA_CapAlt")},
+		{TEXT("SM_TrafficLight_Black_Pole01"), TEXT("SM_TLTool_Pole03_EU_Vertical")},
+		{TEXT("SM_TrafficLight_Base"), TEXT("SM_TLTool_Pole04_NA_Base")},
+		{TEXT("SM_TrafficLight_Pole04"), TEXT("SM_TLTool_Pole04_NA_Vertical")},
+		{TEXT("SM_TrafficLight_Pole04_Cap"), TEXT("SM_TLTool_Pole04_NA_Cap")},
+		{TEXT("SM_TrafficLight_Black_Base"), TEXT("SM_TLTool_Pole04_EU_Base")},
+		{TEXT("SM_TrafficLight_Black_Pole04"), TEXT("SM_TLTool_Pole04_EU_Vertical")},
+		{TEXT("SM_TrafficLight_Black_Pole04_Cap"), TEXT("SM_TLTool_Pole04_EU_Cap")},
+		{TEXT("SM_TrafficLights_Module_01"), TEXT("SM_TLTool_Module_NA_Visor")},
+		{TEXT("SM_TrafficLights_Module_02"), TEXT("SM_TLTool_Module_NA")},
+		{TEXT("SM_TrafficLights_Horizontal_Module_01"), TEXT("SM_TLTool_Module_NA_Horizontal_Visor")},
+		{TEXT("SM_TrafficLights_Horizontal_Module_02"), TEXT("SM_TLTool_Module_NA_Horizontal")},
+		{TEXT("SM_TrafficLights_Black_Module_01"), TEXT("SM_TLTool_Module_EU_Visor")},
+		{TEXT("SM_TrafficLights_Black_Module_02"), TEXT("SM_TLTool_Module_EU")},
+		{TEXT("SM_TrafficLights_Horizontal_Black_Module_01"), TEXT("SM_TLTool_Module_EU_Horizontal_Visor")},
+		{TEXT("SM_TrafficLights_Horizontal_Black_Module_02"), TEXT("SM_TLTool_Module_EU_Horizontal")},
+		{TEXT("SM_TrafficLights_Crosswalk_01"), TEXT("SM_TLTool_Crosswalk_NA_01")},
+		{TEXT("SM_TrafficLights_Crosswalk_02"), TEXT("SM_TLTool_Crosswalk_NA_02")},
+		{TEXT("SM_TrafficLights_Crosswalk_03"), TEXT("SM_TLTool_Crosswalk_NA_03")},
+		{TEXT("SM_TrafficLights_Crosswalk_04"), TEXT("SM_TLTool_Crosswalk_NA_04")},
+		{TEXT("SM_TrafficLights_Black_Crosswalk_03"), TEXT("SM_TLTool_Crosswalk_EU_03")},
+		{TEXT("SM_TrafficLights_Black_Crosswalk_04"), TEXT("SM_TLTool_Crosswalk_EU_04")},
+		{TEXT("SM_BackPlate_01"), TEXT("SM_TLTool_Backplate_NA_Vertical")},
+		{TEXT("SM_BackPlate_02"), TEXT("SM_TLTool_Backplate_NA_Horizontal")},
+		{TEXT("SM_BackPlate_Corner01"), TEXT("SM_TLTool_Backplate_NA_Corner")},
+		{TEXT("SM_BackPlate_Middle"), TEXT("SM_TLTool_Backplate_NA_Middle")},
+		{TEXT("SM_BackPlate_Black_01"), TEXT("SM_TLTool_Backplate_EU_Vertical")},
+		{TEXT("SM_BackPlate_Black_02"), TEXT("SM_TLTool_Backplate_EU_Horizontal")},
+		{TEXT("SM_BackPlate_Black_Corner01"), TEXT("SM_TLTool_Backplate_EU_Corner")},
+		{TEXT("SM_BackPlate_Black_Middle"), TEXT("SM_TLTool_Backplate_EU_Middle")},
+	};
+	const FString* const Renamed{LegacyNames.Find(Name)};
+	return Renamed ? *Renamed : Name;
+}
+
 UDataTable* FTLMeshFactory::GetLightTypeMeshTable()
 {
 	if (!s_LightTypeMeshTable)
 	{
-		constexpr TCHAR const* Path{
-			TEXT("/CarlaDigitalTwinsTool/Carla/Static/TrafficLight/TrafficLights2025/DataTables/LightTypes.LightTypes")};
-		UObject* Loaded = StaticLoadObject(UDataTable::StaticClass(), nullptr, Path);
+		const FString Path{TLToolContent::DataTable(TEXT("DT_TLTool_LightTypes"))};
+		UObject* Loaded = StaticLoadObject(UDataTable::StaticClass(), nullptr, *Path);
 		s_LightTypeMeshTable = Cast<UDataTable>(Loaded);
 	}
 	check(s_LightTypeMeshTable);
@@ -35,9 +105,8 @@ UDataTable* FTLMeshFactory::GetModuleMeshTable()
 {
 	if (!s_ModuleMeshTable)
 	{
-		constexpr TCHAR const* Path{
-			TEXT("/CarlaDigitalTwinsTool/Carla/Static/TrafficLight/TrafficLights2025/DataTables/Modules.Modules")};
-		UObject* Loaded = StaticLoadObject(UDataTable::StaticClass(), nullptr, Path);
+		const FString Path{TLToolContent::DataTable(TEXT("DT_TLTool_Modules"))};
+		UObject* Loaded = StaticLoadObject(UDataTable::StaticClass(), nullptr, *Path);
 		s_ModuleMeshTable = Cast<UDataTable>(Loaded);
 	}
 	check(s_ModuleMeshTable);
@@ -48,9 +117,8 @@ UDataTable* FTLMeshFactory::GetPoleMeshTable()
 {
 	if (!s_PoleMeshTable)
 	{
-		constexpr TCHAR const* Path{
-			TEXT("/CarlaDigitalTwinsTool/Carla/Static/TrafficLight/TrafficLights2025/DataTables/Poles.Poles")};
-		UObject* Loaded = StaticLoadObject(UDataTable::StaticClass(), nullptr, Path);
+		const FString Path{TLToolContent::DataTable(TEXT("DT_TLTool_Poles"))};
+		UObject* Loaded = StaticLoadObject(UDataTable::StaticClass(), nullptr, *Path);
 		s_PoleMeshTable = Cast<UDataTable>(Loaded);
 	}
 	check(s_PoleMeshTable);
@@ -61,17 +129,17 @@ UDataTable* FTLMeshFactory::GetBackplateMeshTable()
 {
 	if (!s_BackplateMeshTable)
 	{
-		constexpr TCHAR const* Path{
-			TEXT("/CarlaDigitalTwinsTool/Carla/Static/TrafficLight/TrafficLights2025/DataTables/Backplates.Backplates")};
-		UObject* Loaded = StaticLoadObject(UDataTable::StaticClass(), nullptr, Path);
+		const FString Path{TLToolContent::DataTable(TEXT("DT_TLTool_Backplates"))};
+		UObject* Loaded = StaticLoadObject(UDataTable::StaticClass(), nullptr, *Path);
 		s_BackplateMeshTable = Cast<UDataTable>(Loaded);
 	}
 	check(s_BackplateMeshTable);
 	return s_BackplateMeshTable;
 }
 
-UStaticMesh* FTLMeshFactory::GetBaseMeshByName(const FString& Name)
+UStaticMesh* FTLMeshFactory::GetBaseMeshByName(const FString& InName)
 {
+	const FString Name{ResolveMeshName(InName)};
 	UDataTable* Table{GetPoleMeshTable()};
 	if (!Table)
 	{
@@ -95,8 +163,9 @@ UStaticMesh* FTLMeshFactory::GetBaseMeshByName(const FString& Name)
 	return nullptr;
 }
 
-UStaticMesh* FTLMeshFactory::GetExtensibleMeshByName(const FString& Name)
+UStaticMesh* FTLMeshFactory::GetExtensibleMeshByName(const FString& InName)
 {
+	const FString Name{ResolveMeshName(InName)};
 	UDataTable* Table{GetPoleMeshTable()};
 	if (!Table)
 	{
@@ -120,8 +189,9 @@ UStaticMesh* FTLMeshFactory::GetExtensibleMeshByName(const FString& Name)
 	return nullptr;
 }
 
-UStaticMesh* FTLMeshFactory::GetCapMeshByName(const FString& Name)
+UStaticMesh* FTLMeshFactory::GetCapMeshByName(const FString& InName)
 {
+	const FString Name{ResolveMeshName(InName)};
 	UDataTable* Table{GetPoleMeshTable()};
 	if (!Table)
 	{

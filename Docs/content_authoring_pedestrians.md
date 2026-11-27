@@ -12,6 +12,11 @@ CARLA's pedestrians share one skeleton, so any model skinned to it works with th
 - [__Add a custom animation__](#add-a-custom-animation)
 - [__Ship the pedestrian__](#ship-the-pedestrian)
 
+!!! agent "Agentic CARLA"
+    *"Import my pedestrian from ~/walkers/Hiker.fbx as a walker and spawn it walking."*
+
+    Skill: `import-carla-ue58-walker`. [Set up Agentic CARLA](agent_skills.md#set-up-agentic-carla).
+
 Running the Unreal Engine editor is required for this process, therefore you need to [build CARLA from source](build_carla.md).
 
 ---

@@ -152,12 +152,11 @@ void FActorRegistry::Deregister(IdType Id)
   if(!CarlaActor) return;
 
   AActor *Actor = CarlaActor->GetActor();
+  CarlaActor->TheActor = nullptr;
 
   ActorDatabase.Remove(Id);
   Actors.Remove(Id);
   Ids.Remove(Actor);
-
-  CarlaActor->TheActor = nullptr;
 
   check(static_cast<size_t>(Actors.Num()) == ActorDatabase.Num());
 }

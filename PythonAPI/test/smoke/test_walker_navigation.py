@@ -206,3 +206,91 @@ class TestWalkerNavigation(SyncSmokeTest):
             controller.destroy()
             walker.destroy()
             self.world.tick()
+
+    def test_controller_follows_its_walker_outside_the_snapshot(self):
+        """An AI controller attached to its walker with no offset is not in
+        the snapshot: it has the walker's transform. One with an offset, or
+        whose walker is gone, is in the snapshot with a transform of its own."""
+        print("TestWalkerNavigation.test_controller_follows_its_walker_outside_the_snapshot")
+        library = self.world.get_blueprint_library()
+        walker_bp = library.filter("walker.pedestrian.*")[0]
+        controller_bp = library.find("controller.ai.walker")
+        walker, follower = self._spawn_ai_walker()
+        location = self._random_navigation_location()
+        location.z += 1.0
+        other = self.world.spawn_actor(walker_bp, carla.Transform(location))
+        offset = self.world.spawn_actor(
+            controller_bp, carla.Transform(carla.Location(z=1.0)), attach_to=other)
+        try:
+            start = walker.get_location()
+            for _ in range(60):
+                self.world.tick()
+                snapshot = self.world.get_snapshot()
+                self.assertIsNone(snapshot.find(follower.id))
+                self.assertTrue(follower.is_alive)
+                expected = snapshot.find(walker.id).get_transform()
+                got = follower.get_transform()
+                self.assertEqual(got.location.distance(expected.location), 0.0)
+                self.assertEqual(
+                    (got.rotation.pitch, got.rotation.yaw, got.rotation.roll),
+                    (expected.rotation.pitch, expected.rotation.yaw, expected.rotation.roll))
+                self.assertEqual(follower.get_velocity().length(), 0.0)
+                # The one with an offset is not at its walker: a record of its own.
+                own = snapshot.find(offset.id)
+                self.assertIsNotNone(own)
+                height = own.get_transform().location.z - snapshot.find(other.id).get_transform().location.z
+                self.assertAlmostEqual(height, 1.0, delta=0.01)
+            self.assertGreater(walker.get_location().distance(start), 0.3)
+
+            # Listed with every other actor, and not as a static one.
+            listed = {a.id for a in self.world.get_actors()}
+            static = {a.id for a in self.world.get_static_actors()}
+            self.assertTrue({follower.id, offset.id, walker.id, other.id} <= listed)
+            self.assertFalse({follower.id, offset.id} & static)
+            self.assertEqual(self.world.get_actor(follower.id).parent.id, walker.id)
+
+            # A client that connects now reads the same.
+            late = carla.Client(*self.testing_address)
+            late.set_timeout(120.0)
+            late_world = late.get_world()
+            # Its stream may connect after a tick was sent: tick until one reaches it.
+            for _ in range(20):
+                frame = self.world.tick()
+                deadline = time.time() + 1.0
+                while late_world.get_snapshot().frame < frame and time.time() < deadline:
+                    time.sleep(0.001)
+                if late_world.get_snapshot().frame == frame:
+                    break
+            self.assertEqual(late_world.get_snapshot().frame, frame)
+            late_follower = late_world.get_actor(follower.id)
+            self.assertTrue(late_follower.is_alive)
+            self.assertIsNone(late_world.get_snapshot().find(follower.id))
+            self.assertEqual(
+                late_follower.get_transform().location.distance(walker.get_transform().location), 0.0)
+
+            # Without its walker the controller stays where the walker was,
+            # back in the snapshot.
+            follower.stop()
+            self.world.tick()
+            last = walker.get_location()
+            walker.destroy()
+            walker = None
+            self.world.tick()
+            self.world.tick()
+            orphan = self.world.get_snapshot().find(follower.id)
+            self.assertIsNotNone(orphan)
+            self.assertTrue(follower.is_alive)
+            self.assertLess(orphan.get_transform().location.distance(last), 0.5)
+            self.assertLess(follower.get_location().distance(last), 0.5)
+
+            follower.destroy()
+            self.world.tick()
+            self.world.tick()
+            self.assertFalse(follower.is_alive)
+            self.assertNotIn(follower.id, {a.id for a in self.world.get_actors()})
+            follower = None
+        finally:
+            for actor in (follower, offset, walker, other):
+                if actor is not None:
+                    actor.destroy()
+            self.world.tick()

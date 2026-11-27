@@ -17,10 +17,10 @@ COUNT = 40
 
 
 class TestStaticActors(SyncSmokeTest):
-    """Actors that cannot move (static props, traffic signs) are missing from
-    the per-tick snapshot only: they are in get_static_actors() and
-    get_actors(), found by id, with their transform, alive, tagged, and gone
-    after destroy. Actors that can change stay in the snapshot."""
+    """Actors that cannot move (static props, traffic signs and lights) are
+    missing from the per-tick snapshot only: they are in get_static_actors()
+    and get_actors(), found by id, with their transform, alive, tagged, and
+    gone after destroy. Actors that can move stay in the snapshot."""
 
     def _spawn(self, mass=None, count=COUNT):
         bp = self.world.get_blueprint_library().find("static.prop.mesh")
@@ -92,10 +92,14 @@ class TestStaticActors(SyncSmokeTest):
             late = carla.Client(*self.testing_address)
             late.set_timeout(120.0)
             late_world = late.get_world()
-            frame = self.world.tick()
-            deadline = time.time() + 30.0
-            while late_world.get_snapshot().frame < frame and time.time() < deadline:
-                time.sleep(0.001)
+            # Its stream may connect after a tick was sent: tick until one reaches it.
+            for _ in range(20):
+                frame = self.world.tick()
+                deadline = time.time() + 1.0
+                while late_world.get_snapshot().frame < frame and time.time() < deadline:
+                    time.sleep(0.001)
+                if late_world.get_snapshot().frame == frame:
+                    break
             self.assertEqual(late_world.get_snapshot().frame, frame)
             self._check_listed(late_world, ids, transforms, moving[0])
             ids = self._check_destroy_and_spawn(ids)
@@ -105,11 +109,12 @@ class TestStaticActors(SyncSmokeTest):
 
 
 class TestStaticSigns(SmokeTest):
-    """Traffic signs are static actors that still give their OpenDRIVE id and
-    their transform; traffic lights and the spectator stay in the snapshot."""
+    """Traffic signs and traffic lights are static actors that still give
+    their OpenDRIVE id and their transform, and a light its state; the
+    spectator stays in the snapshot."""
 
-    def test_signs_are_static_and_lights_are_not(self):
-        print("TestStaticSigns.test_signs_are_static_and_lights_are_not")
+    def test_signs_and_lights_are_static(self):
+        print("TestStaticSigns.test_signs_and_lights_are_static")
         # Town10HD_Opt ships with every package. It has traffic lights, and
         # stop and yield signs that come from OpenDRIVE signals.
         if self.initial_map_name != "Town10HD_Opt":
@@ -124,14 +129,42 @@ class TestStaticSigns(SmokeTest):
         signs = [a for a in traffic if a.type_id != "traffic.traffic_light"]
         self.assertTrue(lights)
         self.assertTrue(signs)
+        landmarks = {landmark.id: landmark for landmark in self.world.get_map().get_all_landmarks()}
+        # A second client must read the same transforms: they come from the
+        # server once, not from the snapshot.
+        late = carla.Client(*self.testing_address)
+        late.set_timeout(120.0)
+        late_world = late.get_world()
+        late_world.wait_for_tick()
+        lights_from_opendrive = 0
         for light in lights:
-            self.assertIsNotNone(snapshot.find(light.id))
-            self.assertNotIn(light.id, static_ids)
+            # Only the state of a light changes, and it does not need the
+            # snapshot: the light is as static as a sign.
+            self.assertIsNone(snapshot.find(light.id))
+            self.assertIn(light.id, static_ids)
             self.assertTrue(light.is_alive)
-            self.assertTrue(light.get_opendrive_id())
             self.assertIn(light.get_state(), (carla.TrafficLightState.Red, carla.TrafficLightState.Yellow,
                                               carla.TrafficLightState.Green, carla.TrafficLightState.Off))
-        landmarks = {landmark.id: landmark for landmark in self.world.get_map().get_all_landmarks()}
+            transform = light.get_transform()
+            self.assertGreater(abs(transform.location.x) + abs(transform.location.y), 1.0)
+            seen_late = late_world.get_actor(light.id).get_transform()
+            self.assertEqual(transform.location.distance(seen_late.location), 0.0)
+            self.assertEqual(transform.rotation.yaw, seen_late.rotation.yaw)
+            self.assertEqual(light.get_velocity().length(), 0.0)
+            # The id of its OpenDRIVE signal, and the landmark leads back to it.
+            sign_id = light.get_opendrive_id()
+            self.assertTrue(sign_id)
+            if sign_id in landmarks:
+                self.assertEqual(self.world.get_traffic_light(landmarks[sign_id]).id, light.id)
+                lights_from_opendrive += 1
+            self.assertGreater(light.get_green_time(), 0.0)
+            self.assertGreater(light.get_yellow_time(), 0.0)
+            self.assertGreater(light.get_red_time(), 0.0)
+            self.assertGreaterEqual(light.get_elapsed_time(), 0.0)
+            # The lights of its group are found among the actors.
+            self.assertTrue(all(member is not None and member.type_id == "traffic.traffic_light"
+                                for member in light.get_group_traffic_lights()))
+        self.assertGreater(lights_from_opendrive, 0)
         from_opendrive = 0
         for sign in signs:
             self.assertIsNone(snapshot.find(sign.id))
@@ -147,4 +180,4 @@ class TestStaticSigns(SmokeTest):
                 self.assertEqual(self.world.get_traffic_sign(landmarks[sign_id]).id, sign.id)
                 from_opendrive += 1
         self.assertGreater(from_opendrive, 0)
-        self.assertEqual({a.id for a in static.filter("traffic.*")}, {s.id for s in signs})
+        self.assertEqual({a.id for a in static.filter("traffic.*")}, {a.id for a in traffic})

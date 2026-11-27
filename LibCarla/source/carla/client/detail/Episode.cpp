@@ -15,6 +15,7 @@
 #include <algorithm>
 #include <cstring>
 #include <exception>
+#include <utility>
 
 class FPoseSnapShot;
 
@@ -63,7 +64,15 @@ using namespace std::chrono_literals;
       if (self != nullptr) {
 
         auto data = sensor::Deserializer::Deserialize(std::move(buffer));
-        auto next = std::make_shared<const EpisodeState>(CastData(*data));
+        auto next = EpisodeState::Make(CastData(*data), self->_last_received);
+        if (next == nullptr) {
+          // Unreachable while the server sends a whole state to a session that missed one; logged once per break.
+          if (std::exchange(self->_last_received, nullptr) != nullptr) {
+            log_error("episode state: a delta does not follow the last state received, waiting for a whole one");
+          }
+          return;
+        }
+        self->_last_received = next;
         auto prev = self->GetState();
 
         // TODO: Update how the map change is detected
@@ -189,10 +198,17 @@ using namespace std::chrono_literals;
         snapshot.id = actor.id;
         snapshot.actor_state = rpc::ActorState::Active;
         snapshot.transform = actor.transform;
-        // Where TrafficSign::GetSignId reads it.
-        auto &sign_id = snapshot.state.traffic_light_data.sign_id;
-        std::memcpy(sign_id, actor.sign_id.data(), std::min(sizeof(sign_id), actor.sign_id.size()));
+        // Where TrafficSign::GetSignId and the TrafficLight getters read them.
+        auto &light = snapshot.state.traffic_light_data;
+        std::memcpy(light.sign_id, actor.sign_id.data(), std::min(sizeof(light.sign_id), actor.sign_id.size()));
+        light.green_time = actor.green_time;
+        light.yellow_time = actor.yellow_time;
+        light.red_time = actor.red_time;
+        light.pole_index = actor.pole_index;
         fresh->actors.emplace(actor.id, snapshot);
+        if (actor.parent_id != 0u) {
+          fresh->followers.emplace(actor.id, actor.parent_id);
+        }
       }
     }
     _static_actors.store(fresh);
@@ -206,7 +222,16 @@ using namespace std::chrono_literals;
       const auto statics = GetStaticActors();
       const auto it = statics->actors.find(id);
       if (it != statics->actors.end()) {
-        return it->second;
+        auto snapshot = it->second;
+        // A follower is where its walker is now.
+        const auto follower = statics->followers.find(id);
+        if (follower != statics->followers.end()) {
+          const auto walker = GetState()->GetActorSnapshotIfPresent(follower->second);
+          if (walker.has_value()) {
+            snapshot.transform = walker->transform;
+          }
+        }
+        return snapshot;
       }
 #ifndef LIBCARLA_NO_EXCEPTIONS
     } catch (const std::exception &e) {

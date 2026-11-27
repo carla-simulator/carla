@@ -1,6 +1,8 @@
 #include "TrafficLights/Widgets/TLWTrafficLightToolWidget.h"
 
 #include "CarlaTools.h"
+#include "Carla/Traffic/TrafficLightBase.h"
+#include "TrafficLights/TLToolContent.h"
 #include "Components/ActorComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Containers/Array.h"
@@ -332,7 +334,7 @@ FReply STrafficLightToolWidget::OnImportJSONClicked()
 	const void* ParentWindowHandle{FSlateApplication::Get().FindBestParentWindowHandleForDialogs(nullptr)};
 	TArray<FString> Filenames;
 	const bool bFileChosen{Desktop->OpenFileDialog(ParentWindowHandle, TEXT("Import Traffic Light JSON"),
-		FPaths::ProjectContentDir(), TEXT(""), TEXT("JSON files (*.json)|*.json"), EFileDialogFlags::None, Filenames)};
+		TLToolContent::PresetsDir(), TEXT(""), TEXT("JSON files (*.json)|*.json"), EFileDialogFlags::None, Filenames)};
 	if (!bFileChosen || Filenames.Num() == 0)
 	{
 		return FReply::Handled();
@@ -346,6 +348,12 @@ FReply STrafficLightToolWidget::OnImportJSONClicked()
 		return FReply::Handled();
 	}
 
+	LoadJSONString(JSONString);
+	return FReply::Handled();
+}
+
+void STrafficLightToolWidget::LoadJSONString(const FString& JSONString)
+{
 	if (PreviewViewport.IsValid())
 	{
 		ATrafficLightActor* TL{PreviewViewport->GetPreviewTrafficLight()};
@@ -383,8 +391,6 @@ FReply STrafficLightToolWidget::OnImportJSONClicked()
 
 	Rebuild();
 	RefreshPoleList();
-
-	return FReply::Handled();
 }
 
 FReply STrafficLightToolWidget::OnModifyClicked()
@@ -428,6 +434,43 @@ FReply STrafficLightToolWidget::OnModifyClicked()
 		return FReply::Handled();
 	}
 
+	// A light placed from a blueprint (the classic towns): restyle it in place, keeping the
+	// actor and with it its state, trigger volumes, group and OpenDRIVE match.
+	if (ATrafficLightBase* const ClassicLight{Cast<ATrafficLightBase>(SelectedActor)})
+	{
+		const FString BpPath{TLToolContent::RigBlueprintClass()};
+		UClass* const TrafficLightBpClass{LoadObject<UClass>(nullptr, *BpPath)};
+		if (!IsValid(TrafficLightBpClass))
+		{
+			return FReply::Handled();
+		}
+
+		const FScopedTransaction Transaction{NSLOCTEXT("TLW", "RestyleTrafficLight", "Restyle Traffic Light")};
+		const FTransform LightTransform{ClassicLight->GetActorTransform()};
+
+		FActorSpawnParameters SpawnParams{};
+		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+		SpawnParams.ObjectFlags |= RF_Transient;
+		SpawnParams.bDeferConstruction = true;
+		ATrafficLightActor* const Rig{EditorWorld->SpawnActor<ATrafficLightActor>(TrafficLightBpClass, LightTransform, SpawnParams)};
+		if (!IsValid(Rig))
+		{
+			return FReply::Handled();
+		}
+		Rig->Poles = PreviewActor->Poles;
+		Rig->FinishSpawning(LightTransform);
+		Rig->SetActorTransform(LightTransform, false, nullptr, ETeleportType::TeleportPhysics);
+		Rig->Build();
+		Rig->BakeOntoTrafficLight(ClassicLight);
+		Rig->Destroy();
+
+		GEditor->SelectNone(false, true);
+		GEditor->SelectActor(ClassicLight, true, true);
+		GEditor->NoteSelectionChange();
+		GEditor->RedrawLevelEditingViewports();
+		return FReply::Handled();
+	}
+
 	USceneComponent* const SelectedRoot{SelectedActor->GetRootComponent()};
 	if (!(IsValid(SelectedRoot) && SelectedRoot->GetName() == TEXT("BakedRoot")))
 	{
@@ -445,7 +488,7 @@ FReply STrafficLightToolWidget::OnModifyClicked()
 		MapName = CurrentMapName;
 	}
 
-	const FString BpPath{TEXT("/CarlaDigitalTwinsTool/Blueprints/TrafficLight/BP_TrafficLightActor.BP_TrafficLightActor_C")};
+	const FString BpPath{TLToolContent::RigBlueprintClass()};
 	UClass* const TrafficLightBpClass{LoadObject<UClass>(nullptr, *BpPath)};
 	if (!IsValid(TrafficLightBpClass))
 	{
@@ -1275,6 +1318,17 @@ TSharedRef<SWidget> STrafficLightToolWidget::BuildPoleSection()
             .Visibility(this, &STrafficLightToolWidget::GetModifyVisibility)
             .Text(FText::FromString("Modify"))
             .OnClicked(this, &STrafficLightToolWidget::OnModifyClicked)
+        ]
+    // Restore: only for a classic light the tool has restyled
+    + SVerticalBox::Slot()
+        .AutoHeight()
+        .Padding(10)
+        [
+            SNew(SButton)
+            .Visibility(this, &STrafficLightToolWidget::GetRestoreVisibility)
+            .Text(FText::FromString("Restore Original"))
+            .ToolTipText(FText::FromString("Remove the Traffic Light Tool look from the selected traffic light"))
+            .OnClicked(this, &STrafficLightToolWidget::OnRestoreClicked)
         ]
 	+ SVerticalBox::Slot()
 		.AutoHeight()
@@ -2467,17 +2521,11 @@ FString STrafficLightToolWidget::GetLightTypeText(ETLLightType Type)
 	return EnumPtr->GetDisplayNameTextByValue((int64) Type).ToString();
 }
 
-EVisibility STrafficLightToolWidget::GetModifyVisibility() const
+AActor* STrafficLightToolWidget::GetSingleSelectedActor() const
 {
-	if (!GEditor)
+	if (!(GEditor && GEditor->GetEditorWorldContext().World()))
 	{
-		return EVisibility::Collapsed;
-	}
-
-	UWorld* const EditorWorld{GEditor->GetEditorWorldContext().World()};
-	if (!EditorWorld)
-	{
-		return EVisibility::Collapsed;
+		return nullptr;
 	}
 
 	int32 SelectedCount{0};
@@ -2491,17 +2539,40 @@ EVisibility STrafficLightToolWidget::GetModifyVisibility() const
 			++SelectedCount;
 		}
 	}
+	return SelectedCount == 1 ? SelectedActor : nullptr;
+}
 
-	if (SelectedCount != 1)
+EVisibility STrafficLightToolWidget::GetModifyVisibility() const
+{
+	AActor* const SelectedActor{GetSingleSelectedActor()};
+	if (!SelectedActor)
 	{
 		return EVisibility::Collapsed;
 	}
 
+	// A light placed from a blueprint (classic towns), or a rig the tool baked (digital twins).
+	if (SelectedActor->IsA<ATrafficLightBase>())
+	{
+		return EVisibility::Visible;
+	}
 	USceneComponent* const Root{SelectedActor->GetRootComponent()};
-	if (!(IsValid(Root) && Root->GetName() == TEXT("BakedRoot")))
-	{
-		return EVisibility::Collapsed;
-	}
+	return (IsValid(Root) && Root->GetName() == TEXT("BakedRoot")) ? EVisibility::Visible : EVisibility::Collapsed;
+}
 
-	return EVisibility::Visible;
+EVisibility STrafficLightToolWidget::GetRestoreVisibility() const
+{
+	const ATrafficLightBase* const Light{Cast<ATrafficLightBase>(GetSingleSelectedActor())};
+	return (Light && Light->bUseToolRig) ? EVisibility::Visible : EVisibility::Collapsed;
+}
+
+FReply STrafficLightToolWidget::OnRestoreClicked()
+{
+	ATrafficLightBase* const Light{Cast<ATrafficLightBase>(GetSingleSelectedActor())};
+	if (Light)
+	{
+		const FScopedTransaction Transaction{NSLOCTEXT("TLW", "RestoreTrafficLight", "Restore Traffic Light")};
+		ATrafficLightActor::RestoreTrafficLight(Light);
+		GEditor->RedrawLevelEditingViewports();
+	}
+	return FReply::Handled();
 }
