@@ -1,6 +1,6 @@
 ---
 name: spawn-vehicles
-description: Spawns vehicles on a running CARLA server and destroys them — scattered across the map's spawn points on Traffic Manager autopilot, a row queued in a single lane at a fixed spacing, or a single hero/ego vehicle (optionally named for native ROS 2 publishing with --ros-name). Covers blueprint filtering, the atomic autopilot hand-off, and cleanup. Use when the user asks to "spawn vehicles/cars/traffic", "add N cars driving around", "put cars in a lane 15 m apart", "spawn the ego/hero vehicle", or "remove the vehicles".
+description: Spawns vehicles on a running CARLA server and destroys them — scattered across the map's spawn points on Traffic Manager autopilot, a row queued in a single lane at a fixed spacing, or a single hero/ego vehicle (optionally named for native ROS 2 publishing with --ros-name). Covers blueprint filtering, the atomic autopilot hand-off, and cleanup. Use when the user asks to "spawn vehicles/cars/traffic", "add N cars driving around", "put cars in a lane 15 m apart", "spawn the ego/hero vehicle", or "remove the vehicles". For vehicles and pedestrians together, use populate-world.
 license: MIT
 compatibility: Any OS with the CARLA PythonAPI installed for the active interpreter and a reachable, already-running CARLA server. Does NOT need UE4_ROOT. Puts the world in synchronous mode by default (--no-sync opts out), and restores the previous settings on release. Tested against CARLA 0.9.16; the Traffic Manager and clock-ownership behaviour was measured on 0.10.0.
 metadata:
@@ -101,7 +101,7 @@ python3 scripts/vehicles.py spawn --count 40 --hold --no-sync
 python3 scripts/vehicles.py spawn --count 40 --hold --delta 0.033
 
 # four-wheeled cars only, reproducible
-python3 scripts/vehicles.py spawn --count 30 --safe --seed 42
+python3 scripts/vehicles.py spawn --count 30 --safe --seed 42   # cars only (4 wheels, base_type car)
 
 # only Teslas, parked (no autopilot)
 python3 scripts/vehicles.py spawn --count 10 --filter 'vehicle.tesla.*' --no-autopilot

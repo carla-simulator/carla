@@ -28,6 +28,15 @@ import os
 import threading
 
 import carla  # provided by the active interpreter; check_env.sh verifies this
+
+
+def _rgb(s: str) -> carla.Color:
+    """--color r,g,b (0-255 each)."""
+    try:
+        r, g, b = (int(v) for v in s.split(","))
+    except ValueError:
+        raise argparse.ArgumentTypeError(f"expected r,g,b but got {s!r}")
+    return carla.Color(r, g, b)
 import numpy as np
 
 
@@ -68,14 +77,14 @@ def cmd_list(args):
               f"{bb.extent.z:.2f})  (LxWxH = {bb.extent.x*2:.1f}x{bb.extent.y*2:.1f}x{bb.extent.z*2:.1f} m)")
 
 
-def _draw_boxes(world, actors, life):
+def _draw_boxes(world, actors, life, color=carla.Color(0, 255, 0)):
     dbg = world.debug
     for a in actors:
         bb = a.bounding_box
         # draw_box takes a WORLD-space box: place it at the actor's current pose.
         world_bb = carla.BoundingBox(a.get_transform().transform(bb.location), bb.extent)
         world_bb.rotation = a.get_transform().rotation
-        dbg.draw_box(world_bb, world_bb.rotation, 0.1, carla.Color(0, 255, 0), life)
+        dbg.draw_box(world_bb, world_bb.rotation, 0.1, color, life)
 
 
 def cmd_draw(args):
@@ -92,7 +101,7 @@ def cmd_draw(args):
         # track the actors instead of smearing or flickering, whatever rate the
         # server is running at.
         actors = _targets(world, args.filter)
-        _draw_boxes(world, actors, snapshot.timestamp.delta_seconds * 2.0)
+        _draw_boxes(world, actors, snapshot.timestamp.delta_seconds * 2.0, args.color)
         n = len(actors)
     print(f"done — tracked {n} boxes for {args.seconds}s")
 
@@ -229,7 +238,8 @@ def main() -> None:
 
     pdw = sub.add_parser("draw", help="draw 3D boxes in the world (tracks moving actors)")
     pdw.add_argument("--filter")
-    pdw.add_argument("--seconds", type=float, default=30.0, help="how long boxes stay drawn (default 30)")
+    pdw.add_argument("--seconds", type=float, default=120.0, help="how long boxes stay drawn (default 120)")
+    pdw.add_argument("--color", type=_rgb, default=carla.Color(0, 255, 0), help="r,g,b (default 0,255,0)")
     pdw.set_defaults(func=cmd_draw)
 
     pp = sub.add_parser("project", help="project boxes into a camera frame")

@@ -15,9 +15,9 @@ you need to inspect them.)
 ## Blueprint filtering
 
 `world.get_blueprint_library().filter(pattern)` selects vehicle blueprints
-(`vehicle.*`, `vehicle.tesla.*`, `vehicle.audi.a2`, ...). `--safe` keeps only
-`number_of_wheels == 4`, dropping motorbikes/bicycles and odd vehicles that can
-misbehave in traffic. A random `color` (from the blueprint's recommended values)
+(`vehicle.*`, `vehicle.tesla.*`, `vehicle.audi.a2`, ...). `--safe` keeps only cars:
+`number_of_wheels == 4` and `base_type == car`, dropping motorbikes, bicycles,
+trucks, vans and buses. A random `color` (from the blueprint's recommended values)
 and `role_name = "autopilot"` are set per vehicle.
 
 ## The autopilot hand-off

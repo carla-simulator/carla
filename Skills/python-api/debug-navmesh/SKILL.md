@@ -57,6 +57,8 @@ python3 scripts/navmesh.py sample --count 2000 --life 120
 
 Draws the sampled points via `world.debug`; the dotted region is walkable. Needs a
 windowed/packaged server (headless `-nullrhi` draws nothing — see debug-draw).
+To remove the points before `--life` ends, run debug-draw `clear`.
+`--color r,g,b` sets their colour (default 0,180,255).
 
 ## Examples
 
@@ -88,7 +90,8 @@ Solution: rebuild the map's nav mesh in the import pipeline; then re-validate.
 
 **Problem: `sample` prints a count but nothing is visible**
 Cause: headless `-nullrhi` server, or the camera is far from the coverage bounds.
-Solution: use a rendered server and move the spectator over the reported bounds.
+Solution: use a rendered server and tell the user the reported bounds to look at;
+move the spectator there only if they ask.
 
 **Problem: very few unique locations**
 Cause: navmesh is tiny or degenerate (a sliver of walkable area).

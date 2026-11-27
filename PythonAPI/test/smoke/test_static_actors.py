@@ -92,10 +92,14 @@ class TestStaticActors(SyncSmokeTest):
             late = carla.Client(*self.testing_address)
             late.set_timeout(120.0)
             late_world = late.get_world()
-            frame = self.world.tick()
-            deadline = time.time() + 30.0
-            while late_world.get_snapshot().frame < frame and time.time() < deadline:
-                time.sleep(0.001)
+            # Its stream may connect after a tick was sent: tick until one reaches it.
+            for _ in range(20):
+                frame = self.world.tick()
+                deadline = time.time() + 1.0
+                while late_world.get_snapshot().frame < frame and time.time() < deadline:
+                    time.sleep(0.001)
+                if late_world.get_snapshot().frame == frame:
+                    break
             self.assertEqual(late_world.get_snapshot().frame, frame)
             self._check_listed(late_world, ids, transforms, moving[0])
             ids = self._check_destroy_and_spawn(ids)

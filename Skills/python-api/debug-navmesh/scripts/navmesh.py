@@ -25,6 +25,15 @@ import os
 import carla  # provided by the active interpreter; check_env.sh verifies this
 
 
+def _rgb(s: str) -> carla.Color:
+    """--color r,g,b (0-255 each)."""
+    try:
+        r, g, b = (int(v) for v in s.split(","))
+    except ValueError:
+        raise argparse.ArgumentTypeError(f"expected r,g,b but got {s!r}")
+    return carla.Color(r, g, b)
+
+
 def _fresh(world):
     """A world handle that already holds a snapshot.
 
@@ -84,11 +93,13 @@ def cmd_sample(args):
     if not pts:
         print("FAIL: no navmesh points to draw (empty navigation).")
         raise SystemExit(1)
-    color = carla.Color(0, 180, 255)
+    color = args.color
     dbg = world.debug
-    for p in pts:
+    for i, p in enumerate(pts):
         # lift slightly so points sit above the ground plane and stay visible
         dbg.draw_point(carla.Location(p.x, p.y, p.z + 0.3), 0.08, color, args.life)
+        if (i + 1) % 1000 == 0:
+            world.wait_for_tick()   # at most 1000 shapes per tick, or the server drops some
     print(f"drew {len(pts)} navmesh points (life {args.life}s) on {world.get_map().name}")
     print("view in a rendered server; the dotted area is walkable for pedestrians")
 
@@ -104,6 +115,7 @@ def main() -> None:
     ps = sub.add_parser("sample", help="sample and draw navmesh points")
     ps.add_argument("--count", type=int, default=2000, help="points to draw (default 2000)")
     ps.add_argument("--life", type=float, default=120.0, help="seconds the points last (default 120)")
+    ps.add_argument("--color", type=_rgb, default=carla.Color(0, 180, 255), help="r,g,b (default 0,180,255)")
     ps.set_defaults(func=cmd_sample)
 
     args = p.parse_args()

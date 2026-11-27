@@ -115,6 +115,11 @@ waypoints_junc = junction.get_waypoints(carla.LaneType.Driving)
 
 ### Crosswalks
 
+!!! agent "Agentic CARLA"
+    *"Draw the crosswalks around the junction in the middle of the map."*
+
+    Skill: `map-waypoints`. [Set up Agentic CARLA](agent_skills.md#set-up-agentic-carla).
+
 `get_crosswalks()` returns the crosswalk polygons the OpenDRIVE file defines, as a flat list of [`carla.Location`](python_api.md#carla.Location) points. Each polygon repeats its first point at the end, which is what separates one from the next.
 
 ```py
@@ -155,6 +160,11 @@ road = lane.get_road()
 Junctions answer in objects too, with `get_connecting_roads()`, `get_adjacent_roads()`, `get_entry_lanes()` and `get_exit_lanes()` beside the waypoint equivalents.
 
 ### Environment objects
+
+!!! agent "Agentic CARLA"
+    *"Hide every building and tree on the map, then bring them back."*
+
+    Skill: `toggle-env-objects`. [Set up Agentic CARLA](agent_skills.md#set-up-agentic-carla).
 
 Every object on a CARLA map has a set of associated variables which can be found [here][env_obj]. Included in these variables is a [unique ID][env_obj_id] that can be used to [toggle][toggle_env_obj] that object's visibility on the map. You can use the Python API to [fetch][fetch_env_obj] the IDs of each environment object based on their [semantic tag][semantic_tag]:
 
@@ -294,6 +304,11 @@ carla_map.save_to_disk(path)            # or straight to a file
 
 ---
 ## Geographic coordinates
+
+!!! agent "Agentic CARLA"
+    *"Which projection does this map use, and what are the latitude and longitude of the ego?"*
+
+    Skill: `convert-geocoordinates`. [Set up Agentic CARLA](agent_skills.md#set-up-agentic-carla).
 
 The OpenDRIVE header of a map carries a `geoReference` string: the [PROJ](https://proj.org/) definition of the projection the map's coordinates came from. CARLA parses it and converts through it, so geographic coordinates agree with the data the map was built from.
 

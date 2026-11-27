@@ -192,10 +192,14 @@ class TestTrafficLight(SyncSmokeTest):
         late = carla.Client(*self.testing_address)
         late.set_timeout(120.0)
         late_world = late.get_world()
-        frame = world.tick()
-        deadline = time.time() + 30.0
-        while late_world.get_snapshot().frame < frame and time.time() < deadline:
-            time.sleep(0.001)
+        # Its stream may connect after a tick was sent: tick until one reaches it.
+        for _ in range(20):
+            frame = world.tick()
+            deadline = time.time() + 1.0
+            while late_world.get_snapshot().frame < frame and time.time() < deadline:
+                time.sleep(0.001)
+            if late_world.get_snapshot().frame == frame:
+                break
         self.assertEqual(late_world.get_snapshot().frame, frame)
         for seen in (light, late_world.get_actor(light.id)):
             self.assertEqual("10", seen.get_opendrive_id())

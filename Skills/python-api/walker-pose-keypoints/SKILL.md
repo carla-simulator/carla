@@ -41,7 +41,7 @@ $P bones --id 26                                   # 66 bones, world transforms
 $P bones --id 26 --relative                        # relative to the actor
 $P keypoints --id 26 --camera 27 --frames 10 --out kp/      # kp/<frame>.json + kp/<frame>.png
 $P keypoints --id 26,31,40 --camera 27 --frames 100 --tick  # several walkers, synchronous mode
-$P draw --id 26 --seconds 10                       # skeleton as debug lines in the world
+$P draw --id 26 --seconds 10                       # skeleton as debug lines in the world (--color r,g,b; debug-draw clear removes them early)
 
 $P pose --id 26 --file pose.json                   # pose.json: {"crl_arm__R": {"rotation": [0, 0, 70]}}
 $P blend --id 26 --value 0.5                       # half pose, half animation

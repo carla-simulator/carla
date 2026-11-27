@@ -147,6 +147,9 @@ namespace detail {
 
     AtomicSharedPtr<const EpisodeState> _state;
 
+    /// The last state decoded from the stream, published or not: the next delta applies on it. Stream thread only.
+    std::shared_ptr<const EpisodeState> _last_received;
+
     std::string _pending_exceptions_msg;
 
     CachedActorList _actors;

@@ -80,7 +80,7 @@ The semantic segmentation camera, the instance segmentation camera and the seman
 !!! agent "Agentic CARLA"
     *"Attach a front RGB camera and a 64-channel lidar to the ego vehicle and save their data to disk."*
 
-    Skills: `create-sensor`, `read-sensor`, `bounding-boxes`. [Set up Agentic CARLA](agent_skills.md#set-up-agentic-carla).
+    Skills: `create-sensor`, `read-sensor`, `bounding-boxes`. Several sensors can be spawned on one mount, recorded frame-aligned and shown tiled in one window. [Set up Agentic CARLA](agent_skills.md#set-up-agentic-carla).
 
 The class [carla.Sensor](python_api.md#carla.Sensor) defines a special type of actor able to measure and stream data.
 

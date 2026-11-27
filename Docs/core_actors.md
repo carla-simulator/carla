@@ -11,7 +11,7 @@ This section will cover spawning, destruction, types, and how to manage them. Ho
 !!! agent "Agentic CARLA"
     *"Spawn a red Tesla Model 3 at a free spawn point, 20 pedestrians that walk around, and tell me the speed of the Tesla."*
 
-    Skills: `spawn-vehicles`, `spawn-walkers`, `world-data`, `telemetry`. [Set up Agentic CARLA](agent_skills.md#set-up-agentic-carla).
+    Skills: `spawn-vehicles`, `spawn-walkers`, `populate-world`, `world-data`, `telemetry`. [Set up Agentic CARLA](agent_skills.md#set-up-agentic-carla).
 
 ---
 ## Blueprints
@@ -144,6 +144,11 @@ for vehicle in actor_list.filter('vehicle.*'):
 
 ### Handling
 
+!!! agent "Agentic CARLA"
+    *"Push the ego sideways with an impulse, then freeze it in mid-air with its physics off, and tell me how far it moved."*
+
+    Skill: `apply-actor-physics`. [Set up Agentic CARLA](agent_skills.md#set-up-agentic-carla).
+
 [carla.Actor](python_api.md#carla.Actor) mostly consists of _get()_ and _set()_ methods to manage the actors around the map.
 
 ```py
@@ -225,6 +230,11 @@ carla.Rotation(pitch=-90)))
 
 ### Traffic signs and traffic lights
 
+!!! agent "Agentic CARLA"
+    *"Show the traffic signs with their trigger boxes, and the state of every traffic light."*
+
+    Skills: `show-traffic-signs`, `control-traffic-lights`. [Set up Agentic CARLA](agent_skills.md#set-up-agentic-carla).
+
 Stops, yields, speed limit signs and traffic lights are actors in CARLA. The rest of the OpenDRIVE signs are accessible from the API as [__carla.Landmark__](python_api.md#carla.Landmark). Their information is accessible using these instances, but they do no exist in the simulation as actors. Landmarks are explained in detail in [Maps and navigation](core_map.md).
 
 When the simulation starts, stops, yields and traffic lights are generated automatically from the signals in the map's OpenDRIVE file, if not already present in the scene. They are actors like any other and can be found with `world.get_actors()`, but __none of them is in the blueprint library__, so they cannot be spawned.
@@ -251,6 +261,11 @@ if traffic_light.get_state() == carla.TrafficLightState.Red:
     A vehicle is aware of a traffic light while it stands inside the light's trigger box, whatever colour the light is showing. Outside one, [`carla.Vehicle.get_traffic_light_state`](python_api.md#carla.Vehicle.get_traffic_light_state) reports `Green` and [`is_at_traffic_light`](python_api.md#carla.Vehicle.is_at_traffic_light) is `False`.
 
 ### Vehicles
+
+!!! agent "Agentic CARLA"
+    *"Drive the ego at 30 km/h with Ackermann control, turn on its headlights and open the driver's door."*
+
+    Skill: `control-vehicle`. [Set up Agentic CARLA](agent_skills.md#set-up-agentic-carla).
 
 [__carla.Vehicle__](python_api.md#carla.Vehicle) is a special type of actor. It incorporates special internal components that simulate the physics of wheeled vehicles. This is achieved by applying three types of control:
 
@@ -337,6 +352,11 @@ vehicle.set_light_state(carla.VehicleLightState(current_lights))
 ```
 
 ### Walkers
+
+!!! agent "Agentic CARLA"
+    *"Show me where pedestrians can walk on this map, then spawn 30 that wander around."*
+
+    Skills: `debug-navmesh`, `spawn-walkers`. [Set up Agentic CARLA](agent_skills.md#set-up-agentic-carla).
 
 [__carla.Walker__](python_api.md#carla.Walker) work in a similar way as vehicles do. Control over them is provided by controllers.
 

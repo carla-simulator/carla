@@ -19,7 +19,7 @@ lane. `--backward` lays them behind the start point instead of ahead.
 By default vehicles are handed to the Traffic Manager autopilot at spawn time
 (atomic SpawnActor.then(SetAutopilot)), so they drive off on their own;
 `--no-autopilot` leaves them stationary (useful for a static queue). `--safe`
-keeps only four-wheeled cars.
+keeps only cars (four wheels and base_type car: no bikes, trucks, vans or buses).
 
 `ego` picks a four-wheeled car (`base_type` car) unless you narrow it yourself
 with --filter or --base-type, or pass --any. A two-wheeler drawn at random
@@ -207,16 +207,19 @@ def _hold(world, what: str) -> None:
 def _vehicle_bps(world, filt, safe, base_types=""):
     """Blueprints to spawn from, filtered by id, wheel count and body type.
 
-    `--safe` is a *wheel count*, not a body type: on 0.10.0 it admits 11 cars
-    but also 3 trucks, a van and a bus, so "50 cars --safe" measured 37 cars,
-    7 trucks, 4 buses and 1 van. `--base-type car` is the filter that means
-    cars. Both are kept because they answer different questions -- and they are
-    worth combining, since one blueprint reports base_type car on three wheels.
+    `--safe` means cars: four wheels AND base_type car. It used to be the wheel
+    count alone, which on 0.10.0 also admitted 3 trucks, a van and a bus ("50
+    cars --safe" measured 37 cars, 7 trucks, 4 buses and 1 van), while users
+    asking for "safe vehicles" expect cars. Both checks stay, since one
+    blueprint reports base_type car on three wheels. `--base-type` still picks
+    any other body types.
     """
     bps = list(world.get_blueprint_library().filter(filt))
     if safe:
         bps = [b for b in bps if b.has_attribute("number_of_wheels")
-               and int(b.get_attribute("number_of_wheels")) == 4]
+               and int(b.get_attribute("number_of_wheels")) == 4
+               and b.has_attribute("base_type")
+               and b.get_attribute("base_type").as_str().lower() == "car"]
     wanted = {t.strip().lower() for t in base_types.split(",") if t.strip()}
     if wanted:
         bps = [b for b in bps if b.has_attribute("base_type")
@@ -506,12 +509,13 @@ def main() -> None:
     ps = sub.add_parser("spawn", help="spawn vehicles at spawn points, autopilot by default")
     ps.add_argument("--count", type=int, default=30)
     ps.add_argument("--filter", default="vehicle.*", help="blueprint filter (default all vehicles)")
-    ps.add_argument("--safe", action="store_true", help="four-wheeled cars only (no bikes/oddities)")
+    ps.add_argument("--safe", action="store_true",
+                    help="cars only: four wheels and base_type car (no bikes, trucks, vans or buses)")
     ps.add_argument("--base-type", default="",
                     help="comma-separated carla base_type values to spawn from "
                          "(car, van, truck, bus, motorcycle, bicycle). Empty "
-                         "allows all. --safe is a wheel count and is not the "
-                         "same thing: it admits trucks, vans and a bus")
+                         "allows all. --safe is the same as --base-type car "
+                         "plus four wheels")
     ps.add_argument("--seed", type=int, help="reproducible blueprint/point/TM choices")
     ps.add_argument("--tm-port", type=int, default=int(os.environ.get("TM_PORT", "8000")))
     ps.add_argument("--no-sync", action="store_true",
@@ -537,12 +541,12 @@ def main() -> None:
     pl.add_argument("--backward", action="store_true", help="lay the row behind --at instead of ahead")
     pl.add_argument("--z-offset", type=float, default=0.3, help="height above the road to spawn (m)")
     pl.add_argument("--filter", default="vehicle.*")
-    pl.add_argument("--safe", action="store_true")
+    pl.add_argument("--safe", action="store_true", help="cars only (four wheels, base_type car)")
     pl.add_argument("--base-type", default="",
                     help="comma-separated carla base_type values to spawn from "
                          "(car, van, truck, bus, motorcycle, bicycle). Empty "
-                         "allows all. --safe is a wheel count and is not the "
-                         "same thing: it admits trucks, vans and a bus")
+                         "allows all. --safe is the same as --base-type car "
+                         "plus four wheels")
     pl.add_argument("--seed", type=int)
     pl.add_argument("--tm-port", type=int, default=int(os.environ.get("TM_PORT", "8000")))
     pl.add_argument("--no-sync", action="store_true",

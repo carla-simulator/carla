@@ -7,6 +7,11 @@ CARLA converts between a CARLA location, **X**, **Y** and **Z** in meters, and a
 - [__Reference ellipsoid__](#reference-ellipsoid)
 - [__Geographic coordinates in the Python API__](#geographic-coordinates-in-the-python-api)
 
+!!! agent "Agentic CARLA"
+    *"Convert the GNSS points in ~/route.csv to CARLA locations and tell me which ones fall off the road."*
+
+    Skill: `convert-geocoordinates`. [Set up Agentic CARLA](agent_skills.md#set-up-agentic-carla).
+
 ---
 
 ## The geoReference tag
