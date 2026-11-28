@@ -19,6 +19,9 @@
 
 #include <atomic>
 #include <memory>
+#include <mutex>
+#include <optional>
+#include <unordered_map>
 #include <vector>
 
 namespace carla {
@@ -66,6 +69,30 @@ namespace detail {
     std::vector<rpc::Actor> GetActorsById(const std::vector<ActorId> &actor_ids);
 
     std::vector<rpc::Actor> GetActors();
+
+    /// The actors the server leaves out of the episode state because they
+    /// cannot move (static props, traffic signs and lights) or because they
+    /// are where their walker is (AI walker controllers, the followers), and
+    /// the episode and static-actors version
+    /// (EpisodeState::GetStaticActorsVersion) they were fetched at.
+    struct StaticActors {
+      uint64_t episode_id = 0u;
+      uint32_t version = 0u;
+      std::unordered_map<ActorId, ActorSnapshot> actors;
+      /// Follower -> its walker.
+      std::unordered_map<ActorId, ActorId> followers;
+    };
+
+    /// The current static actors. Fetched with one call the first time they
+    /// are needed after the episode state reports a new version, never on the
+    /// stream thread. GetActors() does not list them.
+    std::shared_ptr<const StaticActors> GetStaticActors();
+
+    /// The snapshot of a static actor (transform, Active state, no motion, the
+    /// sign id of a traffic sign, the times and pole of a traffic light), or
+    /// of a follower (the transform of its walker), or nothing. Does not
+    /// throw.
+    std::optional<ActorSnapshot> GetStaticActorSnapshot(ActorId id);
 
     std::optional<WorldSnapshot> WaitForState(time_duration timeout) {
       return _snapshot.WaitFor(timeout);
@@ -120,6 +147,9 @@ namespace detail {
 
     AtomicSharedPtr<const EpisodeState> _state;
 
+    /// The last state decoded from the stream, published or not: the next delta applies on it. Stream thread only.
+    std::shared_ptr<const EpisodeState> _last_received;
+
     std::string _pending_exceptions_msg;
 
     CachedActorList _actors;
@@ -133,6 +163,10 @@ namespace detail {
     RecurrentSharedFuture<WorldSnapshot> _snapshot;
 
     AtomicSharedPtr<WalkerNavigation> _walker_navigation;
+
+    AtomicSharedPtr<const StaticActors> _static_actors;
+
+    std::mutex _static_mutex;
 
     const streaming::Token _token;
 

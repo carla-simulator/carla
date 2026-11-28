@@ -107,6 +107,7 @@ library" is not evidence of support. Same shape as gbuffers.
   leftovers. Sublevel-based layers are being phased out on UE 5; a grouping without
   sublevels is planned (issue #10228). On Town10HD_Opt use
   `enable_environment_objects` ([[toggle-env-objects]]).
+  On the 1.0 release (re-measured 2026-11-19): `load_world(map, map_layers=...)` does not remove layers (Town03_Opt with `MapLayer.Ground` renders every house), so unload after loading; and after `load_map_layer` the houses come back on camera but `get_environment_objects()` stays low (804 -> 67 -> 76).
 - **Re-check:** `unload_map_layer(MapLayer.Buildings)` on Town03_Opt and on
   Town10HD_Opt, compare `get_environment_objects()` counts.
 

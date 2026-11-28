@@ -164,7 +164,21 @@ echo "[run] route mode forces --reloadWorld and --sync; the world WILL be reload
 cd "${SCENARIO_RUNNER_ROOT}"
 # -u: Python block-buffers stdout when it is not a tty, so redirecting a long
 # run to a log otherwise shows nothing until it finishes.
-"${PYTHON}" -u scenario_runner.py "${ARGS[@]}"
-RC=$?
+LOG="$(mktemp)"
+"${PYTHON}" -u scenario_runner.py "${ARGS[@]}" 2>&1 | tee "${LOG}"
+RC=${PIPESTATUS[0]}
 echo "[run] scenario_runner exited ${RC}"
+# scenario_runner.py catches its own exceptions and still exits 0 (a route that
+# dies in setup, e.g. scenario_runner#1174, looks like a success by its exit
+# code). Every route that ran to the end prints one of these two verdicts.
+if grep -qE "All scenario tests were passed successfully|Not all scenario tests were successful" "${LOG}"; then
+  echo "[run] PASS the route ran to the end"
+  grep -q "Not all scenario tests were successful" "${LOG}" \
+    && echo "[run] NOTE the route ran but did not pass (OUTPUT=1 shows the criteria)"
+else
+  echo "[run] FAIL the route did not run to the end. Last lines:"
+  tail -5 "${LOG}" | sed 's/^/[run]        /'
+  [ "${RC}" -eq 0 ] && RC=1
+fi
+rm -f "${LOG}"
 exit ${RC}

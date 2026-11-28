@@ -6,7 +6,13 @@ Commands:
     on    --group street [--color 255,220,150] [--intensity 2000]   turn on (+set)
     off   --group street                                            turn off
     set   --group building [--color ...] [--intensity ...]  change without toggling
+    save    --file F [--group ...]          write the lights' states (on, colour, intensity, group) to JSON
+    restore --file F                        put them back in one call (set_light_states)
+    regroup --to street [--group ...]       move lights to another group (set_light_groups)
     day-night on|off                        auto lights-at-night on/off
+
+Every command except restore and day-night also takes --near X,Y,Z [--radius 30]:
+only the lights within that distance, e.g. the lamps of one street.
 
 Light groups: `street` (street lamps), `building` (window/facade lights),
 `vehicle` (car lights), `other`; `all` covers every group. These are the world's
@@ -21,8 +27,13 @@ from __future__ import annotations
 import argparse
 import os
 import sys
+import threading
 
 import carla  # provided by the active interpreter; check_env.sh verifies this
+
+
+_NO_TICK = ("error: no tick arrived within CARLA_TIMEOUT, so nothing was read or changed "
+            "(synchronous mode with no client ticking?)")
 
 
 def _fresh(world):
@@ -35,8 +46,31 @@ def _fresh(world):
     must be a wait rather than a tick: another client owns that clock.
     """
     if world.get_settings().synchronous_mode:
-        world.wait_for_tick()
+        try:
+            world.wait_for_tick()
+        except RuntimeError:
+            raise SystemExit(_NO_TICK) from None
     return world
+
+
+def _flush(world):
+    """Return once the queued light changes have been applied on the server.
+
+    The LightManager only queues turn_on/off/set_* and sends them, fire and
+    forget, from its on-tick callback. Callbacks run in registration order, so
+    one registered now fires after the LightManager's has sent the update. The
+    blocking call that follows goes down the same connection, and the server
+    handles both on its game thread in arrival order, so when it returns the
+    change is in. Only then is it safe for _done to hard-exit.
+    """
+    ticked = threading.Event()
+    callback_id = world.on_tick(lambda _snapshot: ticked.set())
+    try:
+        if not ticked.wait(float(os.environ.get("CARLA_TIMEOUT", "60.0"))):
+            raise SystemExit(_NO_TICK)
+    finally:
+        world.remove_on_tick(callback_id)
+    world.get_settings()
 
 
 def _done(msg):
@@ -67,14 +101,18 @@ def _client():
 # is garbage-collected the manager operates on a destroyed episode. So every
 # command keeps `client` in local scope for the whole call (do not factor the
 # client away and return only the manager).
-def _lights(lm, group):
-    return lm.get_all_lights(GROUPS[group])
+def _lights(lm, group, args=None):
+    lights = lm.get_all_lights(GROUPS[group])
+    if args is not None and getattr(args, "near", None):
+        ref = carla.Location(*(float(v) for v in args.near.split(",")))
+        lights = [l for l in lights if l.location.distance(ref) <= args.radius]
+    return lights
 
 
 def cmd_list(args):
     client = _client()
     lm = _fresh(client.get_world()).get_lightmanager()
-    lights = _lights(lm, args.group)
+    lights = _lights(lm, args.group, args)
     on = sum(1 for l in lights if l.is_on)
     print(f"{len(lights)} '{args.group}' light(s): {on} on, {len(lights)-on} off")
     for l in lights[:15]:
@@ -92,12 +130,13 @@ def _color(s):
 def cmd_on(args):
     client = _client()
     lm = _fresh(client.get_world()).get_lightmanager()
-    lights = _lights(lm, args.group)
+    lights = _lights(lm, args.group, args)
     lm.turn_on(lights)
     if args.color:
         lm.set_color(lights, _color(args.color))
     if args.intensity is not None:
         lm.set_intensity(lights, args.intensity)
+    _flush(client.get_world())
     _done(f"turned ON {len(lights)} '{args.group}' lights"
           + (f", color={args.color}" if args.color else "")
           + (f", intensity={args.intensity}" if args.intensity is not None else ""))
@@ -106,29 +145,71 @@ def cmd_on(args):
 def cmd_off(args):
     client = _client()
     lm = _fresh(client.get_world()).get_lightmanager()
-    lights = _lights(lm, args.group)
+    lights = _lights(lm, args.group, args)
     lm.turn_off(lights)
+    _flush(client.get_world())
     _done(f"turned OFF {len(lights)} '{args.group}' lights")
 
 
 def cmd_set(args):
     client = _client()
     lm = _fresh(client.get_world()).get_lightmanager()
-    lights = _lights(lm, args.group)
+    lights = _lights(lm, args.group, args)
     if not args.color and args.intensity is None:
         raise SystemExit("set needs --color and/or --intensity")
     if args.color:
         lm.set_color(lights, _color(args.color))
     if args.intensity is not None:
         lm.set_intensity(lights, args.intensity)
+    _flush(client.get_world())
     _done(f"set {len(lights)} '{args.group}' lights"
           + (f", color={args.color}" if args.color else "")
           + (f", intensity={args.intensity}" if args.intensity is not None else ""))
 
 
+def cmd_save(args):
+    import json
+    client = _client()
+    lm = _fresh(client.get_world()).get_lightmanager()
+    lights = _lights(lm, args.group, args)
+    rows = [{"id": l.id, "on": st.active, "intensity": st.intensity, "group": str(st.group).split(".")[-1],
+             "color": [st.color.r, st.color.g, st.color.b, st.color.a]}
+            for l, st in zip(lights, lm.get_light_state(lights))]
+    with open(args.file, "w") as fh:
+        json.dump(rows, fh, indent=1)
+    _done(f"saved {len(rows)} light state(s), {sum(r['on'] for r in rows)} on, to {args.file}")
+
+
+def cmd_restore(args):
+    import json
+    client = _client()
+    lm = _fresh(client.get_world()).get_lightmanager()
+    with open(args.file) as fh:
+        rows = {r["id"]: r for r in json.load(fh)}
+    lights = [l for l in lm.get_all_lights(carla.LightGroup.NONE) if l.id in rows]
+    states = [carla.LightState(rows[l.id]["intensity"], carla.Color(*rows[l.id]["color"]),
+                               getattr(carla.LightGroup, rows[l.id]["group"]), rows[l.id]["on"]) for l in lights]
+    lm.set_light_states(lights, states)
+    _flush(client.get_world())
+    _done(f"restored {len(lights)} of {len(rows)} saved light(s) from {args.file}")
+
+
+def cmd_regroup(args):
+    client = _client()
+    lm = _fresh(client.get_world()).get_lightmanager()
+    lights = _lights(lm, args.group, args)
+    if not lights:
+        raise SystemExit("no lights selected (--group / --near)")
+    lm.set_light_groups(lights, [GROUPS[args.to]] * len(lights))
+    _flush(client.get_world())
+    _done(f"moved {len(lights)} light(s) to group '{args.to}'")
+
+
 def cmd_day_night(args):
     client = _client()
-    client.get_world().get_lightmanager().set_day_night_cycle(args.mode == "on")
+    world = client.get_world()
+    world.get_lightmanager().set_day_night_cycle(args.mode == "on")
+    world.get_settings()  # sent fire-and-forget; this round trip makes sure it arrived
     print(f"day-night cycle = {args.mode == 'on'} (lights auto-switch with the sun when on)")
 
 
@@ -138,6 +219,8 @@ def main() -> None:
 
     def grp(sp, required=False):
         sp.add_argument("--group", choices=tuple(GROUPS), default="all")
+        sp.add_argument("--near", help="X,Y,Z: only lights within --radius of this point")
+        sp.add_argument("--radius", type=float, default=30.0, help="metres, with --near")
         return sp
 
     grp(sub.add_parser("list", help="list lights in a group")).set_defaults(func=cmd_list)
@@ -151,6 +234,16 @@ def main() -> None:
     pset = grp(sub.add_parser("set", help="change colour/intensity without toggling"))
     pset.add_argument("--color"); pset.add_argument("--intensity", type=float)
     pset.set_defaults(func=cmd_set)
+
+    psv = grp(sub.add_parser("save", help="write every selected light's state to JSON"))
+    psv.add_argument("--file", required=True); psv.set_defaults(func=cmd_save)
+
+    prs = sub.add_parser("restore", help="put saved light states back")
+    prs.add_argument("--file", required=True); prs.set_defaults(func=cmd_restore)
+
+    prg = grp(sub.add_parser("regroup", help="move the selected lights to another group"))
+    prg.add_argument("--to", required=True, choices=tuple(g for g in GROUPS if g != "all"))
+    prg.set_defaults(func=cmd_regroup)
 
     pdn = sub.add_parser("day-night", help="auto lights-at-night on/off")
     pdn.add_argument("mode", choices=("on", "off"))

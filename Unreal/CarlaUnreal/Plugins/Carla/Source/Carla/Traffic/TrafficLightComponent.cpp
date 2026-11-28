@@ -12,7 +12,6 @@
 #include "TrafficLightInterface.h"
 #include "TrafficLightManager.h"
 #include "Carla/Game/CarlaStatics.h"
-#include "Carla/MapGen/LargeMapManager.h"
 
 #include <util/disable-ue4-macros.h>
 #include <carla/road/element/RoadInfoSignal.h>
@@ -82,13 +81,31 @@ void UTrafficLightComponent::InitializeSign(const carla::road::Map &Map)
               LaneDistance + epsilon, LaneDistance + LaneLength - epsilon);
         }
         FTransform BoxTransform = Map.ComputeTransform(signal_waypoint);
-        ALargeMapManager* LargeMapManager = UCarlaStatics::GetLargeMapManager(GetWorld());
-        if (LargeMapManager)
-        {
-          BoxTransform = LargeMapManager->GlobalToLocalTransform(BoxTransform);
-        }
         GenerateTrafficLightBox(BoxTransform, FVector(100*BoxLength, 100*BoxWidth, 100*BoxHeight));
       }
+    }
+  }
+  DisableBlueprintTriggers();
+}
+
+void UTrafficLightComponent::DisableBlueprintTriggers()
+{
+  // The blueprint's own trigger sits by the pole, inside the junction, and would
+  // stop vehicles already crossing it; the OpenDRIVE boxes above replace it.
+  const TArray<UBoxComponent*> OpenDriveBoxes = GetEffectTriggerVolume();
+  AActor *Owner = GetOwner();
+  if (Owner == nullptr || OpenDriveBoxes.Num() == 0)
+  {
+    return;
+  }
+  TArray<UBoxComponent*> Boxes;
+  Owner->GetComponents<UBoxComponent>(Boxes);
+  for (UBoxComponent *Box : Boxes)
+  {
+    if (!OpenDriveBoxes.Contains(Box))
+    {
+      Box->SetGenerateOverlapEvents(false);
+      Box->SetCollisionEnabled(ECollisionEnabled::NoCollision);
     }
   }
 }

@@ -6,8 +6,8 @@ Commands:
     spawn   --count 40 [--filter vehicle.*] [--safe] [--seed 42]
             [--tm-port 8000] [--no-autopilot]        spawn at map spawn points
     line    --at X,Y,Z --count 5 --gap 15 [--backward] [...]   a queue in one lane
-    ego     [--at X,Y,Z] [--filter] [--autopilot] [--ros-name hero]
-                                                     one hero vehicle, id printed
+    ego     [--at X,Y,Z] [--filter] [--base-type] [--any] [--autopilot]
+            [--ros-name hero]                        one hero vehicle, id printed
     destroy [--filter vehicle.*]                     remove all (or a subset)
 
 `spawn` scatters vehicles across the map's predefined spawn points (one per
@@ -19,7 +19,11 @@ lane. `--backward` lays them behind the start point instead of ahead.
 By default vehicles are handed to the Traffic Manager autopilot at spawn time
 (atomic SpawnActor.then(SetAutopilot)), so they drive off on their own;
 `--no-autopilot` leaves them stationary (useful for a static queue). `--safe`
-keeps only four-wheeled cars.
+keeps only cars (four wheels and base_type car: no bikes, trucks, vans or buses).
+
+`ego` picks a four-wheeled car (`base_type` car) unless you narrow it yourself
+with --filter or --base-type, or pass --any. A two-wheeler drawn at random
+cannot be driven by the navigation agents (BasicAgent tips a bike over).
 
 ROS 2 (only on a server started with --ros2, see run-carla-server): `ego` takes
 --ros-name / --ros-frame-id / --no-ros-tf. Only a vehicle whose role_name is
@@ -42,6 +46,8 @@ SpawnActor = carla.command.SpawnActor
 SetAutopilot = carla.command.SetAutopilot
 DestroyActor = carla.command.DestroyActor
 FutureActor = carla.command.FutureActor
+
+EGO_DEFAULT_FILTER = "vehicle.*"
 
 
 def _fresh(world):
@@ -201,16 +207,19 @@ def _hold(world, what: str) -> None:
 def _vehicle_bps(world, filt, safe, base_types=""):
     """Blueprints to spawn from, filtered by id, wheel count and body type.
 
-    `--safe` is a *wheel count*, not a body type: on 0.10.0 it admits 11 cars
-    but also 3 trucks, a van and a bus, so "50 cars --safe" measured 37 cars,
-    7 trucks, 4 buses and 1 van. `--base-type car` is the filter that means
-    cars. Both are kept because they answer different questions -- and they are
-    worth combining, since one blueprint reports base_type car on three wheels.
+    `--safe` means cars: four wheels AND base_type car. It used to be the wheel
+    count alone, which on 0.10.0 also admitted 3 trucks, a van and a bus ("50
+    cars --safe" measured 37 cars, 7 trucks, 4 buses and 1 van), while users
+    asking for "safe vehicles" expect cars. Both checks stay, since one
+    blueprint reports base_type car on three wheels. `--base-type` still picks
+    any other body types.
     """
     bps = list(world.get_blueprint_library().filter(filt))
     if safe:
         bps = [b for b in bps if b.has_attribute("number_of_wheels")
-               and int(b.get_attribute("number_of_wheels")) == 4]
+               and int(b.get_attribute("number_of_wheels")) == 4
+               and b.has_attribute("base_type")
+               and b.get_attribute("base_type").as_str().lower() == "car"]
     wanted = {t.strip().lower() for t in base_types.split(",") if t.strip()}
     if wanted:
         bps = [b for b in bps if b.has_attribute("base_type")
@@ -349,12 +358,22 @@ def cmd_line(args):
         _release_clock(world, previous, tm)
 
 
+def _ego_bps(world, args):
+    """Blueprints an ego may be drawn from.
+
+    An ego the user did not narrow down is a four-wheeled car: a bike or
+    motorbike drawn at random tips over under BasicAgent and never arrives
+    (#10320). An explicit --filter/--base-type, or --any, is taken as given.
+    """
+    if args.any or args.base_type or args.filter != EGO_DEFAULT_FILTER:
+        return _vehicle_bps(world, args.filter, safe=False, base_types=args.base_type)
+    return _vehicle_bps(world, args.filter, safe=True, base_types="car")
+
+
 def cmd_ego(args):
     client = _client()
     world = _fresh(client.get_world())
-    bp = _configure(random.choice(_vehicle_bps(world, args.filter, safe=False,
-                                                base_types=getattr(args, "base_type", ""))),
-                    role="hero")
+    bp = _configure(random.choice(_ego_bps(world, args)), role="hero")
 
     # ROS 2 naming: read once, at registration, so it must be set before spawn.
     # Which attributes exist depends on the server line: ros_frame_id and
@@ -386,7 +405,9 @@ def cmd_ego(args):
     if args.autopilot:
         _tm_and_sync(client, world, args.tm_port)
         ego.set_autopilot(True, args.tm_port)
-    loc = ego.get_transform().location
+    # The actor's own transform reads (0,0,0) until the next tick; report the
+    # transform it was spawned at.
+    loc = tf.location
     print(f"spawned ego id={ego.id} ({ego.type_id}) role=hero at "
           f"({loc.x:.0f},{loc.y:.0f},{loc.z:.0f}); autopilot={args.autopilot}")
     print(f"  reference it downstream with role 'hero' (spectator/sensors/telemetry) or id {ego.id}")
@@ -488,12 +509,13 @@ def main() -> None:
     ps = sub.add_parser("spawn", help="spawn vehicles at spawn points, autopilot by default")
     ps.add_argument("--count", type=int, default=30)
     ps.add_argument("--filter", default="vehicle.*", help="blueprint filter (default all vehicles)")
-    ps.add_argument("--safe", action="store_true", help="four-wheeled cars only (no bikes/oddities)")
+    ps.add_argument("--safe", action="store_true",
+                    help="cars only: four wheels and base_type car (no bikes, trucks, vans or buses)")
     ps.add_argument("--base-type", default="",
                     help="comma-separated carla base_type values to spawn from "
                          "(car, van, truck, bus, motorcycle, bicycle). Empty "
-                         "allows all. --safe is a wheel count and is not the "
-                         "same thing: it admits trucks, vans and a bus")
+                         "allows all. --safe is the same as --base-type car "
+                         "plus four wheels")
     ps.add_argument("--seed", type=int, help="reproducible blueprint/point/TM choices")
     ps.add_argument("--tm-port", type=int, default=int(os.environ.get("TM_PORT", "8000")))
     ps.add_argument("--no-sync", action="store_true",
@@ -519,12 +541,12 @@ def main() -> None:
     pl.add_argument("--backward", action="store_true", help="lay the row behind --at instead of ahead")
     pl.add_argument("--z-offset", type=float, default=0.3, help="height above the road to spawn (m)")
     pl.add_argument("--filter", default="vehicle.*")
-    pl.add_argument("--safe", action="store_true")
+    pl.add_argument("--safe", action="store_true", help="cars only (four wheels, base_type car)")
     pl.add_argument("--base-type", default="",
                     help="comma-separated carla base_type values to spawn from "
                          "(car, van, truck, bus, motorcycle, bicycle). Empty "
-                         "allows all. --safe is a wheel count and is not the "
-                         "same thing: it admits trucks, vans and a bus")
+                         "allows all. --safe is the same as --base-type car "
+                         "plus four wheels")
     pl.add_argument("--seed", type=int)
     pl.add_argument("--tm-port", type=int, default=int(os.environ.get("TM_PORT", "8000")))
     pl.add_argument("--no-sync", action="store_true",
@@ -545,7 +567,15 @@ def main() -> None:
 
     pe = sub.add_parser("ego", help="spawn one hero vehicle (autopilot off by default)")
     pe.add_argument("--at", help="X,Y,Z near a lane (default: a random spawn point)")
-    pe.add_argument("--filter", default="vehicle.*")
+    pe.add_argument("--filter", default=EGO_DEFAULT_FILTER,
+                    help="blueprint filter. Left at its default, the ego is a "
+                         "four-wheeled car (see --any)")
+    pe.add_argument("--base-type", default="",
+                    help="comma-separated carla base_type values to pick from "
+                         "(e.g. car, truck, motorcycle)")
+    pe.add_argument("--any", action="store_true",
+                    help="allow any vehicle, two-wheelers included, when "
+                         "--filter and --base-type are not given")
     pe.add_argument("--autopilot", action="store_true", help="also enrol the ego in autopilot")
     pe.add_argument("--ros-name", help="ROS topic segment for this vehicle (default actor<id>)")
     pe.add_argument("--ros-frame-id", help="TF frame id (default: the ros name)")

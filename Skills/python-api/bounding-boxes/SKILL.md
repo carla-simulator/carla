@@ -46,9 +46,12 @@ source scripts/env.sh
 # 3D box geometry of every vehicle
 python3 scripts/bounding_boxes.py list --filter vehicle.*
 
-# draw 3D boxes around vehicles — they track moving cars, stay 30 s (default)
+# draw 3D boxes around vehicles — they track moving cars, stay 120 s (default)
 python3 scripts/bounding_boxes.py draw --filter vehicle.*
 python3 scripts/bounding_boxes.py draw --filter vehicle.* --seconds 60
+# remove them: stop the draw process (Ctrl+C); each box lives about one frame,
+# so they vanish at once. debug-draw clear alone does not: draw restamps them
+python3 scripts/bounding_boxes.py draw --filter vehicle.* --color 255,0,255   # any colour (default green)
 
 # project vehicle boxes into a camera frame -> annotated PNG + JSON
 python3 scripts/bounding_boxes.py project --camera <camera_id> --filter vehicle.* --out boxes.png
@@ -99,7 +102,7 @@ Cause: headless `-nullrhi` server.
 Solution: use a rendered server (see debug-draw).
 
 **Note: boxes always track moving actors**
-`draw` re-stamps each frame for `--seconds` (default 30), so boxes ride moving
+`draw` re-stamps each frame for `--seconds` (default 120), so boxes ride moving
 cars automatically — the command blocks for that duration.
 
 ## Outputs

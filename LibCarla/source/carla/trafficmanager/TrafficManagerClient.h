@@ -7,6 +7,7 @@
 #pragma once
 
 #include "carla/trafficmanager/Constants.h"
+#include "carla/trafficmanager/TrafficManagerBase.h"
 #include "carla/rpc/Actor.h"
 
 #include <rpc/client.h>
@@ -285,18 +286,16 @@ public:
     _client->call("update_imported_route", actor_id, route);
   }
 
-  /// Method to get the vehicle's next action.
-  Action GetNextAction(const ActorId &actor_id) {
+  /// Method to get the vehicle's next action, as at most one ActionInfo.
+  ActionInfoBuffer GetNextAction(const ActorId &actor_id) {
     DEBUG_ASSERT(_client != nullptr);
-    _client->call("get_next_action", actor_id);
-    return Action();
+    return _client->call("get_next_action", actor_id).as<ActionInfoBuffer>();
   }
 
   /// Method to get the vehicle's action buffer.
-  ActionBuffer GetActionBuffer(const ActorId &actor_id) {
+  ActionInfoBuffer GetActionBuffer(const ActorId &actor_id) {
     DEBUG_ASSERT(_client != nullptr);
-    _client->call("get_all_actions", actor_id);
-    return ActionBuffer();
+    return _client->call("get_all_actions", actor_id).as<ActionInfoBuffer>();
   }
 
   void ShutDown() {

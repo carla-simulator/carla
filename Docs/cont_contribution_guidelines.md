@@ -8,6 +8,11 @@ The CARLA team is glad to accept contributions from anybody willing to collabora
 - [__Art contributions__](#art-contributions)
 - [__Docs contributions__](#docs-contributions)
 
+!!! agent "Agentic CARLA"
+    *"Check my branch against the contribution rules and open its pull request against ue58-dev."*
+
+    Skill: `open-carla-pr`. [Set up Agentic CARLA](agent_skills.md#set-up-agentic-carla).
+
 ---
 ## Report bugs
 
@@ -72,6 +77,12 @@ CI runs only the LibCarla unit tests ([What CI runs](dev_testing.md#what-ci-runs
 3.  Run the LibCarla unit tests and the Python API unit tests ([LibCarla unit tests](dev_testing.md#libcarla-unit-tests), [Python API unit tests](dev_testing.md#python-api-unit-tests)).
 4.  Start a server on port 3654 from that build and run the whole smoke test list ([Smoke tests](dev_testing.md#smoke-tests)).
 
+What has to run depends on the paths the pull request touches:
+
+*   __Docs only__ (`Docs/`, `PythonAPI/docs/`, Markdown files such as the skills' `SKILL.md`): no local build or test run; build the docs as described in the [documentation guidelines](cont_doc_standard.md).
+*   __Python outside the build__ (`Skills/*/*/scripts/`, `PythonAPI/examples/`, `PythonAPI/util/`, `PythonAPI/carla/agents/`): no build and no full smoke list. Lint the changed files and run every changed script against a server on port 3654 built from `ue58-dev` at or after the branch's merge base, and report both commits.
+*   __Everything else__ (LibCarla, Unreal, the Python bindings, `Util/`, CMake, tests, CI, content), or any mix that includes it: the full check above. A pull request that changes only tests runs the test files it changes against a server built from `ue58-dev`.
+
 Changing or adding a test is not the same as running it. Every test in the pull request has to have run and passed locally. The __Where has this been tested?__ field of the template reports what ran and on which commit; the __Tests__ field is only for the tests the pull request adds or modifies, and why. This applies equally to pull requests prepared with AI coding assistants. A failure blocks the pull request unless it also happens on a clean `ue58-dev`; in that case, say so in the pull request instead of skipping the test.
 
 ### CI workflows
@@ -97,7 +108,7 @@ Contributions and new features are merged to the development branch, `ue58-dev`.
 
 ### Checklist
 
-Before a pull request to `ue58-dev`:
+Before a pull request to `ue58-dev` (the compile, editor and test items are the full local check; a docs-only or Python-only pull request runs the lighter check described in [Tests](#tests) instead):
 
 *   [ ] The branch is up-to-date with `ue58-dev` and tested with the latest changes.
 *   [ ] The code compiles: `cmake --build Build --target carla-client carla-python-api carla-server carla-unreal-editor`.

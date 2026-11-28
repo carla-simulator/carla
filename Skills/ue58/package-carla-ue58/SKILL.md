@@ -111,8 +111,10 @@ make this less likely on Linux than on Windows, but the check costs nothing.
 
 The towns outside the cook scope ship as one content pack, `AdditionalMaps`,
 cooked as DLC against **this** package's base release — so build it right after
-Step 3, from the same tree, and ship it with this package only (a pack from
-another build is refused at install).
+Step 3, from the same tree, and ship it with this package only. Install does not
+catch a pack from another build of the same version: both carry the same
+`BaseRelease`, and its towns then load with content missing. See
+[[get-carla-additional-maps]].
 
 ```bash
 cmake --build Build/Release --target package-additional-maps-dry-run   # resolve maps, print UAT line
@@ -148,6 +150,7 @@ Checks, on the artifact rather than the log:
 | shipping binary + launcher present and executable | a stage that dropped the binary |
 | `VERSION` git hashes | which carla / content / engine commits actually went in |
 | bundled wheel under `PythonAPI/carla/dist/` | a package whose client cannot be installed |
+| `Skills/`, `Util/AgenticTools/`, `AGENTS.md`, `.mcp.json` at the root | a package whose skills an assistant does not find (they are copied from git-tracked files, so a tree that is not a git checkout ships none) |
 
 What `DirectoriesToAlwaysStageAsUFS` actually delivers, measured on a clean 1-map
 build with the engine's own `UnrealPak -List` (80 UFS entries, 20 `.xodr`):
@@ -261,9 +264,11 @@ and check the map is in `CARLA_MAPS_TO_COOK`.
 `Build/<preset>/Package/Carla-<version>-Linux-<config>/` containing
 `CarlaUnreal.sh` + the shipping binary, `CarlaUnreal/Content/Paks/`
 (`pakchunk0-Linux.{pak,ucas,utoc}` + `global.{ucas,utoc}`), a bundled `PythonAPI/`
-with its wheel, and `VERSION` with the three git hashes — plus a `.tar.gz` of the
-same. `inspect` is read-only. Step 3b adds `AdditionalMaps-<version>-<release>.tar.gz`
-next to it; Step 3 always writes `<release>-release-metadata.tar.gz` there.
+with its wheel, this skill library (`Skills/`, `Util/AgenticTools/`, and an
+`AGENTS.md` and `.mcp.json` written for a package), and `VERSION` with the three
+git hashes — plus a `.tar.gz` of the same. `inspect` is read-only. Step 3b adds
+`AdditionalMaps-<version>-<release>.tar.gz` next to it; Step 3 always writes
+`<release>-release-metadata.tar.gz` there.
 
 Cook/stage mechanics, the staging list, and the full defect register are in
 [references/packaging.md](references/packaging.md).

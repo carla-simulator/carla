@@ -89,6 +89,39 @@ static TAutoConsoleVariable<float> CVarCarlaCameraMaxExposureMs(
     TEXT("Longest exposure time in ms; darker scenes raise the gain instead (carla.Camera.ExposureMotionBlur)."),
     ECVF_Default);
 
+// Exposure-linked bloom for the RGB cameras. A camera's glare comes from light
+// far brighter than what its exposure maps to white. By day the exposure is
+// short and only the sun gets there; at night it is long, and lamps, headlights
+// and lit windows flare. CARLA's emissives keep their night-time radiance by
+// day, so a profile's bloom tuned for night glare made every emissive glow in
+// daylight. Each capture scales the profile's bloom and lens flare intensities
+// by its exposure: the full value at or below BloomNightEV100, BloomDayScale of
+// it at or above BloomDayEV100, smoothly in between.
+static TAutoConsoleVariable<int32> CVarCarlaCameraExposureBloom(
+    TEXT("carla.Camera.ExposureBloom"),
+    1,
+    TEXT("1: RGB cameras scale their bloom and lens flare with the auto exposure (less by day).\n")
+    TEXT("0: use the bloom and lens flare of the post-process profile as they are."),
+    ECVF_Default);
+
+static TAutoConsoleVariable<float> CVarCarlaCameraBloomDayScale(
+    TEXT("carla.Camera.BloomDayScale"),
+    0.25f,
+    TEXT("Fraction of the profile's bloom and lens flare kept in daylight (carla.Camera.ExposureBloom)."),
+    ECVF_Default);
+
+static TAutoConsoleVariable<float> CVarCarlaCameraBloomNightEV100(
+    TEXT("carla.Camera.BloomNightEV100"),
+    5.0f,
+    TEXT("EV100 at or below which the profile's full bloom is used (carla.Camera.ExposureBloom)."),
+    ECVF_Default);
+
+static TAutoConsoleVariable<float> CVarCarlaCameraBloomDayEV100(
+    TEXT("carla.Camera.BloomDayEV100"),
+    10.0f,
+    TEXT("EV100 at or above which only BloomDayScale of the bloom is used (carla.Camera.ExposureBloom)."),
+    ECVF_Default);
+
 // A new camera has no eye adaptation history: left alone it starts from a
 // default exposure and takes seconds to adapt (a white sky flash every time a
 // client respawns a camera, e.g. manual_control's TAB). Its first captures are
@@ -1192,6 +1225,7 @@ void ASceneCaptureSensor::PostPhysTick(UWorld *World, ELevelTick TickType, float
     return;
   }
   UpdateExposureMotionBlur(World, DeltaTime);
+  UpdateExposureBloom();
   EnqueueRenderSceneImmediate();
 }
 
@@ -1235,6 +1269,50 @@ void ASceneCaptureSensor::UpdateExposureMotionBlur(UWorld *World, float DeltaTim
     UE_LOG(LogCarla, Log, TEXT("%s exposure %.4g (EV100 %.2f) -> %.3f ms, interval %.1f ms, motion blur %.3f"),
         *GetName(), Exposure, FMath::Log2(1.0f / (1.2f * Exposure)), ExposureSeconds * 1e3f, Interval * 1e3f,
         Settings.MotionBlurAmount);
+  }
+}
+
+void ASceneCaptureSensor::UpdateExposureBloom()
+{
+  FPostProcessSettings &Settings = CaptureComponent2D->PostProcessSettings;
+
+  // Anything that set the intensities since the last capture (a profile, an
+  // attribute, set_bloom_intensity) becomes the new base.
+  if (Settings.BloomIntensity != BloomIntensityApplied)
+  {
+    BloomIntensityBase = Settings.BloomIntensity;
+  }
+  if (Settings.LensFlareIntensity != LensFlareIntensityApplied)
+  {
+    LensFlareIntensityBase = Settings.LensFlareIntensity;
+  }
+
+  float Scale = 1.0f;
+  float EV100 = 0.0f;
+  if (ArePostProcessingEffectsEnabled() && CVarCarlaCameraExposureBloom.GetValueOnGameThread() != 0)
+  {
+    FSceneViewStateInterface *ViewState = CaptureComponent2D->GetViewState(0);
+    const float Exposure = ViewState != nullptr ? ViewState->GetLastEyeAdaptationExposure() : 0.0f;
+    if (Exposure > 0.0f && FMath::IsFinite(Exposure))
+    {
+      EV100 = FMath::Log2(1.0f / (1.2f * Exposure));
+      const float NightEV = CVarCarlaCameraBloomNightEV100.GetValueOnGameThread();
+      const float DayEV = FMath::Max(CVarCarlaCameraBloomDayEV100.GetValueOnGameThread(), NightEV + 0.01f);
+      const float Day = FMath::SmoothStep(0.0f, 1.0f, (EV100 - NightEV) / (DayEV - NightEV));
+      const float DayScale = FMath::Clamp(CVarCarlaCameraBloomDayScale.GetValueOnGameThread(), 0.0f, 1.0f);
+      Scale = FMath::Lerp(1.0f, DayScale, Day);
+    }
+  }
+
+  Settings.BloomIntensity = BloomIntensityBase * Scale;
+  Settings.LensFlareIntensity = LensFlareIntensityBase * Scale;
+  BloomIntensityApplied = Settings.BloomIntensity;
+  LensFlareIntensityApplied = Settings.LensFlareIntensity;
+
+  if (CVarCarlaCameraExposureLog.GetValueOnGameThread() != 0)
+  {
+    UE_LOG(LogCarla, Log, TEXT("%s EV100 %.2f -> bloom %.3f (base %.3f), lens flare %.3f"),
+        *GetName(), EV100, Settings.BloomIntensity, BloomIntensityBase, Settings.LensFlareIntensity);
   }
 }
 

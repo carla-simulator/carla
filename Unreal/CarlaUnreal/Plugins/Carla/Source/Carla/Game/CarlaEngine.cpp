@@ -15,11 +15,11 @@
 #include "Carla/Recorder/CarlaRecorder.h"
 #include "Carla/Settings/CarlaSettings.h"
 #include "Carla/Settings/EpisodeSettings.h"
-#include "Carla/MapGen/LargeMapManager.h"
 #include "Carla/OpenDrive/OpenDrive.h"
 #include "Carla/OpenDrive/OpenDriveGenerator.h"
 #include "Carla/Traffic/TrafficLightManager.h"
 #include "Carla/Actor/ActorData.h"
+#include "Carla/Actor/CarlaActor.h"
 #include "Carla/Sensor/Sensor.h"
 
 #include <util/disable-ue4-macros.h>
@@ -103,6 +103,40 @@ static bool FCarlaEngine_IsWorldTravelPending(const UWorld *World)
   const FWorldContext *Context = (GEngine && World) ? GEngine->GetWorldContextFromWorld(World) : nullptr;
   return (Context != nullptr) && !Context->TravelURL.IsEmpty();
 }
+
+#if defined(WITH_ROS2)
+/// Publishes the odometry of the hero and ego vehicles, after
+/// physics so velocity and pose belong to the frame stamped in OnPreTick.
+static void FCarlaEngine_PublishROS2Odometry(UCarlaEpisode &Episode)
+{
+  auto ROS2 = carla::ros2::ROS2::GetInstance();
+  if (!ROS2->IsEnabled())
+  {
+    return;
+  }
+  for (void *Key : ROS2->GetOdometryVehicles())
+  {
+    // The registry lookup hashes the pointer without dereferencing it.
+    FCarlaActor *View = Episode.FindCarlaActor(static_cast<AActor *>(Key));
+    const AActor *Vehicle = (View != nullptr) ? View->GetActor() : nullptr;
+    if (!IsValid(Vehicle))
+    {
+      continue;
+    }
+    const FTransform Transform = Vehicle->GetActorTransform();
+    const FQuat InvRotation = Transform.GetRotation().Inverse();
+    const FVector Velocity = InvRotation.RotateVector(Vehicle->GetVelocity()) / 100.0;
+    const FVector AngularVelocity =
+        InvRotation.RotateVector(CarlaGetActorAngularVelocityInRadians(*Vehicle));
+    ROS2->ProcessDataFromVehicleOdometry(
+        Key,
+        carla::geom::Transform(Transform),
+        carla::geom::Vector3D((float)Velocity.X, (float)Velocity.Y, (float)Velocity.Z),
+        carla::geom::Vector3D(
+            (float)AngularVelocity.X, (float)AngularVelocity.Y, (float)AngularVelocity.Z));
+  }
+}
+#endif
 
 static bool FCarlaEngine_SameSettings(const FEpisodeSettings &A, const FEpisodeSettings &B)
 {
@@ -598,18 +632,10 @@ void FCarlaEngine::NotifyBeginEpisode(UCarlaEpisode &Episode)
     bWarnedFrameFormat = false;
   }
 
-  // Reset map settings
-  UWorld* World = CurrentEpisode->GetWorld();
-  ALargeMapManager* LargeMapManager = UCarlaStatics::GetLargeMapManager(World);
-  if (LargeMapManager)
-  {
-    CurrentSettings.TileStreamingDistance = LargeMapManager->GetLayerStreamingDistance();
-    CurrentSettings.ActorActiveDistance = LargeMapManager->GetActorStreamingDistance();
-  }
-
   // The settings survive load_world(reset_settings=False) but the traffic
   // light manager is new with every map, and a map can enable sign snapping
   // on its own. Enable it on whichever side lacks it so that they agree.
+  UWorld* World = CurrentEpisode->GetWorld();
   ACarlaGameModeBase* GameMode = UCarlaStatics::GetGameMode(World);
   if (ATrafficLightManager* TrafficLightManager =
           GameMode ? GameMode->GetTrafficLightManager() : nullptr)
@@ -1247,10 +1273,6 @@ void FCarlaEngine::MirrorPrimarySettings(const carla::multigpu::FrameTime &Time)
   // set_episode_settings applies these two itself; do the same here.
   if (ACarlaGameModeBase *GameMode = UCarlaStatics::GetGameMode(CurrentEpisode->GetWorld()))
   {
-    if (ALargeMapManager *LargeMap = GameMode->GetLMManager())
-    {
-      LargeMap->ConsiderSpectatorAsEgo(Settings.SpectatorAsEgo);
-    }
     if (ATrafficLightManager *TrafficLightManager = GameMode->GetTrafficLightManager())
     {
       TrafficLightManager->SetAdjustSignsHeightToGround(Settings.bAdjustSignsHeightToGround);
@@ -1390,6 +1412,14 @@ void FCarlaEngine::OnPostTick(UWorld *World, ELevelTick TickType, float DeltaSec
 
     // send the worldsnapshot
     WorldObserver.BroadcastTick(*CurrentEpisode, DeltaSeconds, bMapChanged, LightUpdatePending);
+#if defined(WITH_ROS2)
+    // The primary owns the vehicles' physics; a secondary would publish the
+    // same topic again.
+    if (bIsPrimaryServer)
+    {
+      FCarlaEngine_PublishROS2Odometry(*CurrentEpisode);
+    }
+#endif
     CurrentEpisode->GetSensorManager().PostPhysTick(World, TickType, DeltaSeconds);
     ResetSimulationState();
   }
@@ -1490,14 +1520,6 @@ void FCarlaEngine::OnEpisodeSettingsChanged(const FEpisodeSettings &Settings)
   PhysSett->bSubstepping = Settings.bSubstepping;
   PhysSett->MaxSubstepDeltaTime = Settings.MaxSubstepDeltaTime;
   PhysSett->MaxSubsteps = Settings.MaxSubsteps;
-
-  UWorld* World = CurrentEpisode->GetWorld();
-  ALargeMapManager* LargeMapManager = UCarlaStatics::GetLargeMapManager(World);
-  if (LargeMapManager)
-  {
-    LargeMapManager->SetLayerStreamingDistance(Settings.TileStreamingDistance);
-    LargeMapManager->SetActorStreamingDistance(Settings.ActorActiveDistance);
-  }
 }
 
 void FCarlaEngine::ResetSimulationState()

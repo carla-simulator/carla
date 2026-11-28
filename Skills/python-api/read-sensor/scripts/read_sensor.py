@@ -7,6 +7,10 @@ Select an existing sensor (spawn one with the create-sensor skill first):
 Commands:
     info   [--seconds 5]                    grab one reading and print a summary
     save   --out DIR [--seconds 10] [--frames N]   write frames to DIR
+    save   --ids 12,13,14 | --attached-to hero --all  --out DIR
+                                            several sensors frame-aligned: DIR/<id>_<type>/ each,
+                                            and DIR/frames.jsonl mapping every frame to its files
+    info   --ids 12,13,14 | --attached-to hero --all   one reading from each
     show   [--seconds 20]                   live window (cameras + lidar)
     grid   --ids 12,13,14 [--seconds 20]    tile several sensors in one window
     ros-info                                the ROS 2 topics this sensor
@@ -81,6 +85,34 @@ def _resolve(world, args) -> carla.Actor:
     return sensors[0]
 
 
+def _resolve_many(world, args):
+    """Several sensors: --ids a,b,c, or --all with --attached-to/--type; otherwise the single _resolve()."""
+    actors = world.get_actors()
+    if getattr(args, "ids", None):
+        out = []
+        for i in (int(v) for v in args.ids.split(",")):
+            s = actors.find(i)
+            if s is None or not s.type_id.startswith("sensor."):
+                raise SystemExit(f"no sensor with id {i}")
+            out.append(s)
+        return out
+    if getattr(args, "all", False):
+        sensors = list(actors.filter("sensor.*"))
+        if args.attached_to:
+            sensors = [s for s in sensors if s.parent is not None
+                       and s.parent.attributes.get("role_name", "") == args.attached_to]
+        if args.type:
+            full = args.type if args.type.startswith("sensor.") else f"sensor.{args.type}"
+            sensors = [s for s in sensors if s.type_id == full]
+        if not sensors:
+            raise SystemExit("no matching sensors for --all")
+        return sorted(sensors, key=lambda s: s.id)
+    return [_resolve(world, args)]
+
+
+_EVENT_SENSORS = ("sensor.other.collision", "sensor.other.lane_invasion", "sensor.other.obstacle")
+
+
 def _cc(type_id):
     if "depth" in type_id:
         return carla.ColorConverter.LogarithmicDepth
@@ -92,7 +124,10 @@ def _cc(type_id):
 def _describe(data) -> dict:
     """Key fields per measurement type — for info and jsonl saving."""
     d = {"frame": data.frame, "t": round(data.timestamp, 4)}
-    if isinstance(data, carla.Image):
+    if isinstance(data, carla.DVSEventArray):
+        ev = _dvs_events(data)
+        d.update(kind="dvs", w=data.width, h=data.height, events=int(len(ev)), positive=int(ev["pol"].sum()))
+    elif isinstance(data, carla.Image):
         d.update(kind="image", w=data.width, h=data.height, fov=data.fov)
     elif isinstance(data, (carla.LidarMeasurement, carla.SemanticLidarMeasurement)):
         d.update(kind="lidar", points=len(data))
@@ -122,6 +157,22 @@ def _camera_rgb(image) -> np.ndarray:
     return a[:, :, :3][:, :, ::-1]  # BGRA -> RGB
 
 
+# One DVS event as packed in raw_data; numpy reads it without building a Python list per event.
+_DVS_DTYPE = np.dtype([("x", np.uint16), ("y", np.uint16), ("t", np.int64), ("pol", np.bool_)])
+
+
+def _dvs_events(data) -> np.ndarray:
+    return np.frombuffer(data.raw_data, dtype=_DVS_DTYPE)
+
+
+def _dvs_rgb(data) -> np.ndarray:
+    """Events as an image: positive polarity blue, negative red, as DVS viewers draw them."""
+    ev = _dvs_events(data)
+    img = np.zeros((data.height, data.width, 3), np.uint8)
+    img[ev["y"], ev["x"], 2 * ev["pol"].astype(np.int64)] = 255
+    return img
+
+
 def _lidar_topdown(measure, size=600, rng=50.0) -> np.ndarray:
     """Top-down scatter of a lidar sweep into an RGB image (rng metres half-extent)."""
     pts = np.frombuffer(measure.raw_data, dtype=np.float32).reshape(-1, 4)[:, :2]
@@ -134,6 +185,8 @@ def _lidar_topdown(measure, size=600, rng=50.0) -> np.ndarray:
 
 def _render_frame(data, type_id, cc):
     """Measurement -> RGB array for cameras (converted) and lidar; None otherwise."""
+    if type_id == "sensor.camera.dvs":
+        return _dvs_rgb(data)
     if type_id.startswith("sensor.camera"):
         data.convert(cc)
         return _camera_rgb(data)
@@ -175,7 +228,10 @@ def _stop_and_drain(world, sensors, frames=None):
 
 def cmd_info(args):
     world = _fresh(_client().get_world())
-    sensor = _resolve(world, args)
+    sensors = _resolve_many(world, args)
+    if len(sensors) > 1:
+        return _info_many(world, sensors, args)
+    sensor = sensors[0]
     got = {"data": None}
     ev = threading.Event()
 
@@ -191,6 +247,25 @@ def cmd_info(args):
                          "(is the world ticking? sensor_tick too high?)")
     print(f"sensor id={sensor.id} ({sensor.type_id}):")
     print(f"  {_describe(got['data'])}")
+
+
+def _info_many(world, sensors, args):
+    got = {s.id: None for s in sensors}
+    for s in sensors:
+        s.listen(lambda data, sid=s.id: got.__setitem__(sid, data) if got[sid] is None else None)
+    deadline = time.time() + args.seconds
+    while time.time() < deadline and any(got[s.id] is None for s in sensors if s.type_id not in _EVENT_SENSORS):
+        time.sleep(0.05)
+    _stop_and_drain(world, sensors)
+    print(f"{len(sensors)} sensors:")
+    for s in sensors:
+        d = got[s.id]
+        if d is None:
+            note = "no event (fires only on a collision/crossing/obstacle)" if s.type_id in _EVENT_SENSORS else \
+                f"no data within {args.seconds}s"
+            print(f"  id={s.id:6d} {s.type_id:38s} {note}")
+        else:
+            print(f"  id={s.id:6d} {s.type_id:38s} {_describe(d)}")
 
 
 # --- waiting on the simulation, not on the wall clock ----------------------
@@ -291,6 +366,18 @@ def _write_png(data, path, cc):
     Image.fromarray(frame[:, :, ::-1]).save(path)
 
 
+def _write_dvs(data, stem):
+    """DVS frame: the events as .npy (x, y, t, pol) and a polarity image as .png."""
+    np.save(stem + ".npy", _dvs_events(data))
+    rgb = _dvs_rgb(data)
+    try:
+        import cv2
+        cv2.imwrite(stem + ".png", rgb[:, :, ::-1])
+    except ImportError:
+        from PIL import Image
+        Image.fromarray(rgb).save(stem + ".png")
+
+
 def cmd_save(args):
     """Save sensor output, writing from the main thread rather than the callback.
 
@@ -308,7 +395,10 @@ def cmd_save(args):
     stalling.
     """
     world = _fresh(_client().get_world())
-    sensor = _resolve(world, args)
+    sensors = _resolve_many(world, args)
+    if len(sensors) > 1:
+        return _save_many(world, sensors, args)
+    sensor = sensors[0]
     os.makedirs(args.out, exist_ok=True)
     cc = _cc(sensor.type_id)
     is_img = sensor.type_id.startswith("sensor.camera")
@@ -320,7 +410,9 @@ def cmd_save(args):
     sensor.listen(frames.put)          # cheap: hand off and return
 
     def write(data):
-        if is_img:
+        if sensor.type_id == "sensor.camera.dvs":
+            _write_dvs(data, os.path.join(args.out, f"{data.frame:08d}"))
+        elif is_img:
             # NOT save_to_disk. That function deadlocks this build's client:
             # measured twice with the call inside the listen callback (HD
             # stalled at 396 frames, 720p at 147) and once with it moved to
@@ -392,6 +484,97 @@ def cmd_save(args):
           + (f", {dropped} dropped to keep the queue under {args.queue_max}" if dropped else ""))
 
 
+def _save_many(world, sensors, args):
+    """Capture several sensors frame-aligned: one sub-directory each, and frames.jsonl tying a frame to its files.
+
+    Every streaming sensor must deliver the frame of each tick; event sensors (collision, lane
+    invasion, obstacle) are written when they fire. Same queue-then-encode pattern as cmd_save.
+    """
+    os.makedirs(args.out, exist_ok=True)
+    dirs, queues, streaming = {}, {}, []
+    for s in sensors:
+        dirs[s.id] = os.path.join(args.out, f"{s.id}_{s.type_id[len('sensor.'):].replace('.', '_')}")
+        os.makedirs(dirs[s.id], exist_ok=True)
+        queues[s.id] = queue.Queue()
+        if s.type_id not in _EVENT_SENSORS:
+            if float(s.attributes.get("sensor_tick", "0") or 0) > 0:
+                print(f"  note: id={s.id} has sensor_tick={s.attributes['sensor_tick']}; it is written when it fires")
+            else:
+                streaming.append(s)
+    jsonl = {s.id: open(os.path.join(dirs[s.id], "data.jsonl"), "w") for s in sensors
+             if not (s.type_id.startswith("sensor.camera") or "lidar" in s.type_id)}
+    manifest = open(os.path.join(args.out, "frames.jsonl"), "w")
+
+    def write(s, data):
+        stem = os.path.join(dirs[s.id], f"{data.frame:08d}")
+        if s.type_id == "sensor.camera.dvs":
+            _write_dvs(data, stem); return stem + ".npy"
+        if s.type_id.startswith("sensor.camera"):
+            _write_png(data, stem + ".png", _cc(s.type_id)); return stem + ".png"
+        if "lidar" in s.type_id:
+            data.save_to_disk(stem + ".ply"); return stem + ".ply"
+        jsonl[s.id].write(json.dumps(_describe(data)) + "\n"); jsonl[s.id].flush()
+        return os.path.join(dirs[s.id], "data.jsonl")
+
+    previous = _claim_clock(world, args.delta, allow_sync=not args.no_sync)
+    for s in sensors:
+        s.listen(queues[s.id].put)
+
+    def step():
+        if _OWNS_CLOCK:
+            world.tick()
+            return world.get_snapshot()
+        return world.wait_for_tick(args.frame_timeout)
+
+    for _ in range(args.warmup):
+        step()
+    for q in queues.values():
+        while not q.empty():
+            q.get_nowait()
+    if args.warmup:
+        print(f"  discarded {args.warmup} warm-up frame(s) for auto exposure")
+
+    saved = missing = 0
+    first = last = None
+    try:
+        while not (args.frames and saved >= args.frames):
+            snap = step()
+            row = {"frame": snap.frame, "t": round(snap.timestamp.elapsed_seconds, 4), "files": {}}
+            for s in streaming:
+                data = None
+                try:
+                    while data is None or data.frame < snap.frame:
+                        data = queues[s.id].get(timeout=args.frame_timeout)
+                except queue.Empty:
+                    pass
+                if data is None or data.frame != snap.frame:
+                    missing += 1
+                    if data is not None and data.frame > snap.frame:
+                        queues[s.id].queue.appendleft(data)
+                    continue
+                row["files"][s.id] = os.path.relpath(write(s, data), args.out)
+            for s in sensors:
+                if s in streaming:
+                    continue
+                while not queues[s.id].empty():
+                    d = queues[s.id].get_nowait()
+                    row["files"][s.id] = os.path.relpath(write(s, d), args.out)
+            manifest.write(json.dumps(row) + "\n"); manifest.flush()
+            saved += 1
+            first = row["t"] if first is None else first
+            last = row["t"]
+            if not args.frames and last - first >= args.seconds:
+                break
+    finally:
+        _stop_and_drain(world, sensors)
+        for f in list(jsonl.values()) + [manifest]:
+            f.close()
+        _release_clock(world, previous)
+    print(f"saved {saved} frame(s) from {len(sensors)} sensors to {args.out} ({len(streaming)} frame-aligned)")
+    print(f"  {(last or 0) - (first or 0):.2f}s of simulated time; frames.jsonl maps each frame to its files"
+          + (f"; {missing} sensor-frame(s) missing" if missing else ""))
+
+
 def _elapsed(latest):
     """Simulated seconds of sensor data seen so far (0 until the first frame)."""
     if "t" not in latest or "t0" not in latest:
@@ -401,7 +584,11 @@ def _elapsed(latest):
 
 def cmd_show(args):
     world = _fresh(_client().get_world())
-    sensor = _resolve(world, args)
+    sensors = _resolve_many(world, args)
+    if len(sensors) > 1:
+        # Several sensors: one tiled window, all fed from this one client.
+        return _grid(world, sensors, args.seconds)
+    sensor = sensors[0]
     is_img = sensor.type_id.startswith("sensor.camera")
     is_lidar = "lidar" in sensor.type_id
     if not (is_img or is_lidar):
@@ -423,11 +610,7 @@ def cmd_show(args):
     lock = threading.Lock()
 
     def cb(data):
-        if is_img:
-            data.convert(cc)
-            frame = _camera_rgb(data)
-        else:
-            frame = _lidar_topdown(data)
+        frame = _render_frame(data, sensor.type_id, cc)
         with lock:
             latest["frame"] = frame
             latest.setdefault("t0", data.timestamp)
@@ -465,16 +648,29 @@ def cmd_show(args):
 
 
 def cmd_grid(args):
+    world = _fresh(_client().get_world())
+    if args.id is None and not args.ids:
+        args.all = True          # grid --attached-to hero = every sensor on the ego
+    _grid(world, _resolve_many(world, args), args.seconds)
+
+
+def _grid(world, sensors, seconds):
+    """Tile several sensors in one pygame window, for `seconds` simulated (0 = until closed).
+
+    Cameras and lidars get a cell each; a sensor with no image (IMU, GNSS,
+    collision, ...) is printed to the console instead of taking a blank cell.
+    """
     import cv2
     import pygame
-    world = _fresh(_client().get_world())
-    ids = [int(x) for x in args.ids.split(",")]
-    sensors = []
-    for i in ids:
-        s = world.get_actors().find(i)
-        if s is None or not s.type_id.startswith("sensor."):
-            raise SystemExit(f"no sensor with id {i}")
-        sensors.append(s)
+    visual = [s for s in sensors
+              if s.type_id.startswith("sensor.camera") or "lidar" in s.type_id]
+    other = [s for s in sensors if s not in visual]
+    for s in other:
+        print(f"id={s.id} ({s.type_id}) has no image; streaming its readings to the console")
+        s.listen(lambda d, s=s: print(f"  {s.id}:", _describe(d)))
+    if not visual:
+        raise SystemExit("none of the selected sensors has an image to show")
+    all_sensors, sensors = sensors, visual
 
     cw, ch = 400, 300                       # per-cell size
     cols = math.ceil(math.sqrt(len(sensors)))
@@ -504,7 +700,7 @@ def cmd_grid(args):
     # bounded by wall time shows a different amount of simulation depending on
     # how loaded the server is. pygame's clock.tick(30) below stays -- that is
     # the window's redraw cap, not a wait on simulation state.
-    span = args.seconds or None
+    span = seconds or None
     running = True
     while running:
         for e in pygame.event.get():
@@ -522,7 +718,7 @@ def cmd_grid(args):
         clock.tick(30)
         if span is not None and _elapsed(seen) >= span:
             running = False
-    _stop_and_drain(world, sensors)
+    _stop_and_drain(world, all_sensors)
     pygame.quit()
     print(f"closed grid of {len(sensors)} sensors")
 
@@ -630,8 +826,11 @@ def cmd_ros_info(args):
         print("  enabled_for_ros=? (client too old for is_enabled_for_ros)")
 
 
-def _sel(sp):
+def _sel(sp, many=False):
     sp.add_argument("--id", type=int); sp.add_argument("--type"); sp.add_argument("--attached-to")
+    if many:
+        sp.add_argument("--ids", help="several sensors, comma-separated ids")
+        sp.add_argument("--all", action="store_true", help="every sensor matching --attached-to / --type")
     return sp
 
 
@@ -639,11 +838,11 @@ def main() -> None:
     p = argparse.ArgumentParser(description="Read/save/show a CARLA sensor.")
     sub = p.add_subparsers(dest="cmd", required=True)
 
-    pi = _sel(sub.add_parser("info", help="one reading + summary"))
+    pi = _sel(sub.add_parser("info", help="one reading + summary"), many=True)
     pi.add_argument("--seconds", type=float, default=5.0)
     pi.set_defaults(func=cmd_info)
 
-    ps = _sel(sub.add_parser("save", help="write frames to a directory"))
+    ps = _sel(sub.add_parser("save", help="write frames to a directory"), many=True)
     ps.add_argument("--out", required=True)
     ps.add_argument("--seconds", type=float, default=10.0)
     ps.add_argument("--frames", type=int, help="stop after this many frames")
@@ -666,12 +865,15 @@ def main() -> None:
                          "instead of hanging")
     ps.set_defaults(func=cmd_save)
 
-    psh = _sel(sub.add_parser("show", help="live window (camera/lidar) or console stream"))
+    psh = _sel(sub.add_parser("show", help="live window (camera/lidar) or console stream; "
+                                           "several sensors (--ids/--all) tile in one window"),
+               many=True)
     psh.add_argument("--seconds", type=float, default=20.0, help="0 = until window closed")
     psh.set_defaults(func=cmd_show)
 
-    pgr = sub.add_parser("grid", help="tile several sensors in one window")
-    pgr.add_argument("--ids", required=True, help="comma-separated sensor ids, e.g. 12,13,14")
+    pgr = _sel(sub.add_parser("grid", help="tile several sensors in one window "
+                                           "(--ids, or every sensor matching --attached-to/--type)"),
+               many=True)
     pgr.add_argument("--seconds", type=float, default=20.0, help="0 = until window closed")
     pgr.set_defaults(func=cmd_grid)
 

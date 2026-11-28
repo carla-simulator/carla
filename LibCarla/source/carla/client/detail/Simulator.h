@@ -407,9 +407,35 @@ namespace detail {
       return _episode->GetActorsById(actor_ids);
     }
 
+    /// The actors in the episode state plus the static ones and the followers.
     std::vector<rpc::Actor> GetAllTheActorsInTheEpisode() const {
       DEBUG_ASSERT(_episode != nullptr);
-      return _episode->GetActors();
+      const auto state = _episode->GetState();
+      auto ids = GetStaticActorIds(*state, true);
+      const auto state_ids = state->GetActorIds();
+      ids.insert(ids.end(), state_ids.begin(), state_ids.end());
+      return _episode->GetActorsById(ids);
+    }
+
+    /// The actors the server leaves out of the episode state because they
+    /// cannot move (see Episode::GetStaticActors).
+    std::vector<rpc::Actor> GetStaticActors() const {
+      DEBUG_ASSERT(_episode != nullptr);
+      return _episode->GetActorsById(GetStaticActorIds(*_episode->GetState(), false));
+    }
+
+    /// Ids of the static actors, and of the followers if @a with_followers,
+    /// without any that @a state lists.
+    std::vector<ActorId> GetStaticActorIds(const EpisodeState &state, bool with_followers) const {
+      const auto statics = _episode->GetStaticActors();
+      std::vector<ActorId> ids;
+      for (auto &&item : statics->actors) {
+        if (!state.ContainsActorSnapshot(item.first) &&
+            (with_followers || (statics->followers.find(item.first) == statics->followers.end()))) {
+          ids.push_back(item.first);
+        }
+      }
+      return ids;
     }
 
     /// Creates an actor instance out of a description of an existing actor.
@@ -447,11 +473,31 @@ namespace detail {
 
     ActorSnapshot GetActorSnapshot(ActorId actor_id) const {
       DEBUG_ASSERT(_episode != nullptr);
-      return _episode->GetState()->GetActorSnapshot(actor_id);
+      auto snapshot = _episode->GetState()->GetActorSnapshotIfPresent(actor_id);
+      if (!snapshot.has_value()) {
+        // Not in the episode state: a static actor, or one that is gone.
+        snapshot = _episode->GetStaticActorSnapshot(actor_id);
+      }
+      return snapshot.has_value() ? *snapshot : ActorSnapshot{};
     }
 
     ActorSnapshot GetActorSnapshot(const Actor &actor) const {
       return GetActorSnapshot(actor.GetId());
+    }
+
+    /// State, elapsed time and frozen flag of @a traffic_light according to
+    /// the latest world snapshot. A traffic light that is a static actor sends
+    /// only these on every tick, so this never needs the static actors.
+    sensor::data::TrafficLightDynamicState GetTrafficLightState(const Actor &traffic_light) const {
+      DEBUG_ASSERT(_episode != nullptr);
+      const auto light = _episode->GetState()->GetTrafficLightState(traffic_light.GetId());
+      if (light.has_value()) {
+        return *light;
+      }
+      // Not static: its whole record is in the episode state.
+      const auto snapshot = GetActorSnapshot(traffic_light);
+      const auto &data = snapshot.state.traffic_light_data;
+      return {traffic_light.GetId(), data.elapsed_time, data.time_is_frozen, data.state};
     }
 
     /// State of @a actor according to the latest world snapshot.
@@ -473,6 +519,15 @@ namespace detail {
         return snapshot->actor_state;
       }
       if (actor.WasSpawnedByThisClient() && state->GetFrame() <= actor.GetSpawnFrame()) {
+        return rpc::ActorState::Active;
+      }
+      // A static traffic light sends its state on every tick.
+      if (state->GetTrafficLightState(actor.GetId()).has_value()) {
+        return rpc::ActorState::Active;
+      }
+      // A static actor is never in the episode state: it is alive for as long
+      // as the server lists it.
+      if (_episode->GetStaticActorSnapshot(actor.GetId()).has_value()) {
         return rpc::ActorState::Active;
       }
       return rpc::ActorState::Invalid;

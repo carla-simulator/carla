@@ -12,6 +12,11 @@ This tutorial is a practical C++ workflow for CARLA users who want to build and 
 - [__Navigation agents in C++__](#navigation-agents-in-c)
 - [__See also__](#see-also)
 
+!!! agent "Agentic CARLA"
+    *"Build the C++ example client and run it against my server, then set up my own CMake project linked against LibCarla."*
+
+    Skill: `build-carla-ue58-cpp-client`. [Set up Agentic CARLA](agent_skills.md#set-up-agentic-carla).
+
 ---
 ## Scope
 

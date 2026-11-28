@@ -8,7 +8,6 @@
 #include "Carla.h"
 #include "Carla/Game/CarlaHUD.h"
 #include "Carla/Game/CarlaStatics.h"
-#include "Carla/MapGen/LargeMapManager.h"
 #include "DrawDebugHelpers.h"
 #include "Components/LineBatchComponent.h"
 
@@ -26,7 +25,7 @@ struct FShapeVisitor
 
   FShapeVisitor(UWorld &InWorld, FColor InColor, float InLifeTime, bool bInPersistentLines)
     : World(&InWorld),
-      Color(InColor.ReinterpretAsLinear() * BrightMultiplier),
+      Color(InColor.ReinterpretAsLinear()),
       LifeTime(InLifeTime),
       bPersistentLines(bInPersistentLines)
   {
@@ -36,11 +35,6 @@ struct FShapeVisitor
   void operator()(const Shape::Point &Point) const
   {
     FVector Location = FVector(Point.location);
-    ALargeMapManager* LargeMap = UCarlaStatics::GetLargeMapManager(World);
-    if (LargeMap)
-    {
-      Location = LargeMap->GlobalToLocalLocation(Location);
-    }
     World->GetLineBatcher(UWorld::ELineBatcherType::WorldPersistent)->DrawPoint(
         Location,
         Color,
@@ -53,12 +47,6 @@ struct FShapeVisitor
   {
     FVector Begin = FVector(Line.begin);
     FVector End = FVector(Line.end);
-    ALargeMapManager* LargeMap = UCarlaStatics::GetLargeMapManager(World);
-    if (LargeMap)
-    {
-      Begin = LargeMap->GlobalToLocalLocation(Begin);
-      End = LargeMap->GlobalToLocalLocation(End);
-    }
     World->GetLineBatcher(UWorld::ELineBatcherType::WorldPersistent)->DrawLine(
         Begin,
         End,
@@ -72,12 +60,6 @@ struct FShapeVisitor
   {
     FVector Begin = FVector(Arrow.line.begin);
     FVector End = FVector(Arrow.line.end);
-    ALargeMapManager* LargeMap = UCarlaStatics::GetLargeMapManager(World);
-    if (LargeMap)
-    {
-      Begin = LargeMap->GlobalToLocalLocation(Begin);
-      End = LargeMap->GlobalToLocalLocation(End);
-    }
     const auto Diff = End - Begin;
     const FRotator LookAt = FRotationMatrix::MakeFromX(Diff).Rotator();
     const FTransform Transform = {LookAt, Begin};
@@ -136,11 +118,6 @@ struct FShapeVisitor
     FTransform Transform = {FRotator(Box.rotation), Box.box.location};
     const auto Thickness = 1e2f * Box.thickness;
 
-    ALargeMapManager* LargeMap = UCarlaStatics::GetLargeMapManager(World);
-    if (LargeMap)
-    {
-      Transform = LargeMap->GlobalToLocalTransform(Transform);
-    }
 
     FVector B[2], P, Q;
     B[0] = -Extent;
@@ -204,11 +181,6 @@ struct FShapeVisitor
       return;
     }
     FVector Location = FVector(Str.location);
-    ALargeMapManager* LargeMap = UCarlaStatics::GetLargeMapManager(World);
-    if (LargeMap)
-    {
-      Location = LargeMap->GlobalToLocalLocation(Location);
-    }
     ACarlaHUD *Hud = Cast<ACarlaHUD>(PlayerController->GetHUD());
     Hud->AddHUDString(carla::rpc::ToFString(Str.text), Location, Color.QuantizeRound(), LifeTime);
   }
@@ -224,16 +196,6 @@ private:
   bool bPersistentLines;
 
   uint8 DepthPriority = SDPG_World;
-
-  // Debug lines are way more dark in the package, that's why this
-  // multiplier is needed.
-#if UE_BUILD_SHIPPING
-  static constexpr double BrightMultiplier = 1000.0;
-#else
-  // @TODO: Use UKismetSystemLibrary::IsStandalone to support colors
-  // in Editor's standalone mode.
-  static constexpr double BrightMultiplier = 1.0;
-#endif
 
 };
 

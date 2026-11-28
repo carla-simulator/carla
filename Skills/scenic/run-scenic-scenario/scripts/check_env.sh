@@ -82,8 +82,8 @@ echo "== Blueprint table =="
 # Scenic picks blueprints from a table keyed by CLIENT version. An unknown key
 # means every category resolves empty and scenarios fail at sample time with
 # "no 'X' blueprints recorded", which reads like a scenario bug but is not.
-"${PYTHON}" - <<'PY'
-import sys
+"${PYTHON}" - "${SCENARIO_RUNNER_ROOT:-}" <<'PY'
+import os, sys
 try:
     from importlib.metadata import version
     cv = version("carla")
@@ -101,8 +101,16 @@ if cv in bd._IDS:
     if empty:
         print(f"  WARN empty categories for {cv}: {', '.join(empty)}")
         print("  WARN   scenarios asking for those types fail at sample time, not at runtime")
+elif sys.argv[1] and os.path.isfile(os.path.join(sys.argv[1], "srunner", "scenic", "models", "blueprints.py")):
+    # ScenarioRunner's world model carries its own blueprint list, so the
+    # srunner/scenic scenarios run on any client.
+    print(f"  WARN Scenic has no blueprint table for client {cv} (has: {', '.join(keys)})")
+    print("  WARN   only scenarios on `model srunner.scenic.models.model` will run;")
+    print("  WARN   ones on Scenic's own model fail at sample time")
 else:
     print(f"  FAIL Scenic has no blueprint table for client {cv} (has: {', '.join(keys)})")
+    print("  FAIL   upgrade Scenic, or set SCENARIO_RUNNER_ROOT to a ue58-dev checkout to")
+    print("  FAIL   use its model (`model srunner.scenic.models.model`)")
     sys.exit(3)
 PY
 [ $? -ne 0 ] && rc=1

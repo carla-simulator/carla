@@ -47,13 +47,38 @@ class TestSnapshot(SyncSmokeTest):
         snapshot = self.world.get_snapshot()
         self.assertEqual(frame, snapshot.timestamp.frame)
 
+        # Every actor is in the snapshot, or is a static actor, or is an AI
+        # controller that has the transform of its walker; never two of them.
         actors = self.world.get_actors()
-        self.assertTrue(all(snapshot.has_actor(x.id) for x in actors))
+        by_id = {x.id: x for x in actors}
+        static = {x.id for x in self.world.get_static_actors()}
+        followers = {
+            x.id for x in actors
+            if x.type_id == "controller.ai.walker" and not snapshot.has_actor(x.id) and
+            x.parent is not None and snapshot.has_actor(x.parent.id)}
+        for x in actors:
+            self.assertEqual(
+                1, int(snapshot.has_actor(x.id)) + int(x.id in static) + int(x.id in followers), x)
+
+        # The snapshot is exactly the other actors, and none of them is a
+        # traffic light or sign: those do not move.
+        self.assertEqual(len(snapshot), len(actors) - len(static) - len(followers))
+        for actor_snapshot in snapshot:
+            self.assertIn(actor_snapshot.id, by_id)
+            self.assertFalse(by_id[actor_snapshot.id].type_id.startswith("traffic."))
+        self.assertTrue(all(snapshot.has_actor(i) for i in ids))
 
         for actor_id, t0 in zip(ids, spawn_points):
             actor_snapshot = snapshot.find(actor_id)
             self.assertIsNotNone(actor_snapshot)
             t1 = actor_snapshot.get_transform()
+            # The actor and its snapshot say the same.
+            actor = by_id[actor_id]
+            self.assertEqual(t1.location.distance(actor.get_transform().location), 0.0)
+            self.assertEqual(t1.rotation.yaw, actor.get_transform().rotation.yaw)
+            self.assertEqual(actor_snapshot.get_velocity(), actor.get_velocity())
+            self.assertEqual(actor_snapshot.get_angular_velocity(), actor.get_angular_velocity())
+            self.assertEqual(actor_snapshot.get_acceleration(), actor.get_acceleration())
             # Ignore Z cause vehicle is falling.
             self.assertAlmostEqual(t0.location.x, t1.location.x, places=2)
             self.assertAlmostEqual(t0.location.y, t1.location.y, places=2)

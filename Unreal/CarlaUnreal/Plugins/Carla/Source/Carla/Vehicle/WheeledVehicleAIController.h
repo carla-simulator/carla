@@ -156,6 +156,10 @@ private:
 
   void ConfigureAutopilot(const bool Enable, const bool KeepState = false);
 
+  /// Resolve the speed limit of the vehicle's current lane from the
+  /// OpenDRIVE map (see GetSpeedLimit).
+  void UpdateMapSpeedLimit();
+
   /// @}
   // ===========================================================================
   /// @name Traffic
@@ -165,13 +169,20 @@ private:
 public:
 
   /// Get current speed limit in km/h.
+  ///
+  /// Where the OpenDRIVE map gives a limit for the vehicle's lane (its lane
+  /// <speed> or road <type><speed>, capped by the last maximum speed sign 274
+  /// passed on the road), that limit. Junction roads without one keep the
+  /// limit of the road the vehicle came from. Elsewhere, the limit set by the
+  /// last speed-sign trigger box the vehicle drove through (SetSpeedLimit).
   UFUNCTION(Category = "Wheeled Vehicle Controller", BlueprintCallable)
   float GetSpeedLimit() const
   {
-    return SpeedLimit;
+    return bHasMapSpeedLimit ? MapSpeedLimit : SpeedLimit;
   }
 
-  /// Set vehicle's speed limit in km/h.
+  /// Set the vehicle's speed limit in km/h for roads where the OpenDRIVE map
+  /// gives none (see GetSpeedLimit).
   UFUNCTION(Category = "Wheeled Vehicle Controller", BlueprintCallable)
   void SetSpeedLimit(float InSpeedLimit)
   {
@@ -229,8 +240,18 @@ private:
   UPROPERTY(VisibleAnywhere)
   bool bControlIsSticky = true;
 
+  /// Speed limit set by speed-sign trigger boxes, in km/h. Used where the
+  /// OpenDRIVE map gives no limit.
   UPROPERTY(VisibleAnywhere)
   float SpeedLimit = 30.0f;
+
+  /// Speed limit of the vehicle's lane from the OpenDRIVE map, in km/h. Only
+  /// meaningful while bHasMapSpeedLimit is set.
+  UPROPERTY(VisibleAnywhere)
+  float MapSpeedLimit = 0.0f;
+
+  UPROPERTY(VisibleAnywhere)
+  bool bHasMapSpeedLimit = false;
 
   UPROPERTY(VisibleAnywhere)
   ETrafficLightState TrafficLightState = ETrafficLightState::Green;

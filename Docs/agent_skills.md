@@ -1,6 +1,6 @@
 # Agentic CARLA skills
 
-CARLA ships a library of 64 vetted procedures for AI coding assistants, under [`Skills/`](https://github.com/carla-simulator/carla/tree/ue58-dev/Skills) in the repository. An assistant working inside a CARLA checkout finds them automatically and follows them instead of improvising a procedure of its own.
+CARLA ships a library of 79 vetted procedures for AI coding assistants, under [`Skills/`](https://github.com/carla-simulator/carla/tree/ue58-dev/Skills) in the repository and at the root of every CARLA package. An assistant working inside a CARLA checkout or a package finds them automatically and follows them instead of improvising a procedure of its own.
 
 Each skill is a directory holding a `SKILL.md` — YAML frontmatter (`name`, `description`, `compatibility` and `metadata`) followed by the step-by-step procedure — plus the `scripts/` and `references/` it needs. The procedures encode the failure modes that make the obvious approach fail, which is the point of them: they are the source of truth for these tasks, not a summary of the docs.
 
@@ -27,6 +27,7 @@ The manual steps stay below each box, for those who prefer to run them by hand o
 To give your assistant the skills, use one of these:
 
 * __Inside a CARLA checkout__, nothing to do. Assistants that read [`AGENTS.md`](https://github.com/carla-simulator/carla/blob/ue58-dev/AGENTS.md) find the library, and the root `.mcp.json` starts the CARLA MCP server for MCP clients.
+* __Inside a CARLA package__, nothing to do either. A package carries `Skills/`, the MCP server under `Util/AgenticTools/`, and its own `AGENTS.md` and `.mcp.json` at its root, so an assistant opened in the package folder finds the library of the very commit the package was built from. The build, packaging and import skills still need a source checkout.
 * __As a plugin__, with no CARLA checkout at all. In Claude Code:
 
 ```
@@ -36,7 +37,7 @@ To give your assistant the skills, use one of these:
 
 In Codex, run `codex plugin marketplace add carla-simulator/carla-agentic-tools`; in Cursor, add the same marketplace from __Customize__ in the sidebar.
 
-* __As an MCP server registered by path__, from a CARLA checkout, so that assistants working in other projects can use it (needs Node 12 or later):
+* __As an MCP server registered by path__, from a CARLA checkout or a package, so that assistants working in other projects can use it (needs Node 12 or later):
 
 ```sh
 claude mcp add carla -s user -- node /path/to/carla/Util/AgenticTools/bin/carla-agentic-tools.js
@@ -50,9 +51,9 @@ Starting from nothing, ask for the download first: the `download-carla`, `instal
 
 | Group | Skills | Covers |
 |---|---|---|
-| `setup` | 6 | Downloading CARLA, installing the Python API, Scenario Runner, Leaderboard and Scenic, and checking what a given install supports |
-| `python-api` | 23 | Driving a running server: spawning, sensors, traffic, weather, maps, recording, debug drawing |
-| `ue58` | 8 | Building, packaging and running UE 5.8, importing maps, props and walkers, authoring vehicles, and running Autoware |
+| `setup` | 7 | Downloading CARLA, installing the Python API, Scenario Runner, Leaderboard and Scenic, and checking what a given install supports |
+| `python-api` | 31 | Driving a running server: spawning and populating the world, driving vehicles, physics, sensors, traffic, traffic lights and signs, Inverted AI traffic, weather, textures, maps, recording, debug drawing |
+| `ue58` | 15 | Building, packaging and running UE 5.8, in Docker too, building C++ clients, importing maps, props and walkers, authoring vehicles, content packs, switching sign conventions, calibrating camera profiles from reference photos, and running Autoware |
 | `ue4` | 7 | The same for the UE 4.26 branch |
 | `ue5` | 1 | UE 5.5 feature-support checks |
 | `scenario-runner` | 5 | Writing and running scenarios, including OpenSCENARIO, and reading the results |

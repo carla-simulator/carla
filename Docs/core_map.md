@@ -115,6 +115,11 @@ waypoints_junc = junction.get_waypoints(carla.LaneType.Driving)
 
 ### Crosswalks
 
+!!! agent "Agentic CARLA"
+    *"Draw the crosswalks around the junction in the middle of the map."*
+
+    Skill: `map-waypoints`. [Set up Agentic CARLA](agent_skills.md#set-up-agentic-carla).
+
 `get_crosswalks()` returns the crosswalk polygons the OpenDRIVE file defines, as a flat list of [`carla.Location`](python_api.md#carla.Location) points. Each polygon repeats its first point at the end, which is what separates one from the next.
 
 ```py
@@ -155,6 +160,11 @@ road = lane.get_road()
 Junctions answer in objects too, with `get_connecting_roads()`, `get_adjacent_roads()`, `get_entry_lanes()` and `get_exit_lanes()` beside the waypoint equivalents.
 
 ### Environment objects
+
+!!! agent "Agentic CARLA"
+    *"Hide every building and tree on the map, then bring them back."*
+
+    Skill: `toggle-env-objects`. [Set up Agentic CARLA](agent_skills.md#set-up-agentic-carla).
 
 Every object on a CARLA map has a set of associated variables which can be found [here][env_obj]. Included in these variables is a [unique ID][env_obj_id] that can be used to [toggle][toggle_env_obj] that object's visibility on the map. You can use the Python API to [fetch][fetch_env_obj] the IDs of each environment object based on their [semantic tag][semantic_tag]:
 
@@ -295,6 +305,11 @@ carla_map.save_to_disk(path)            # or straight to a file
 ---
 ## Geographic coordinates
 
+!!! agent "Agentic CARLA"
+    *"Which projection does this map use, and what are the latitude and longitude of the ego?"*
+
+    Skill: `convert-geocoordinates`. [Set up Agentic CARLA](agent_skills.md#set-up-agentic-carla).
+
 The OpenDRIVE header of a map carries a `geoReference` string: the [PROJ](https://proj.org/) definition of the projection the map's coordinates came from. CARLA parses it and converts through it, so geographic coordinates agree with the data the map was built from.
 
 ```py
@@ -319,6 +334,8 @@ geo = carla_map.transform_to_geolocation(location, carla.GeoProjectionUTM(zone=3
 ```
 
 `get_georeference()` returns the geographic location of the map origin declared by the header.
+
+[Geographic coordinates](core_geocoordinates.md) lists every projection and ellipsoid parameter CARLA reads from `geoReference`.
 
 !!! Note
     A map whose `geoReference` is missing, or that names a projection CARLA does not implement, falls back to a transverse Mercator projection on the map origin and logs a warning.
@@ -369,15 +386,15 @@ A cell loads when a __streaming source__ comes near it, and CARLA registers one 
 
 The hero's ring is the one to tune; the rest only need the ground under their wheels. Spawning blocks until the cells under the new actor are resident, so an actor never falls through a road that has not loaded yet.
 
-Two further settings apply only to these maps:
+One further setting applies only to these maps:
 
 - `actor_active_distance` — every actor is simulated whatever its distance to the hero; this value only bounds `tile_stream_distance`: the server raises the streaming distance to match and warns if you set it higher.
-- `spectator_as_ego` — whether the spectator also loads cells around itself when no ego actor exists. Turn it off if your script spawns its ego immediately.
+
+`spectator_as_ego` has no effect: it configured the legacy tiled maps, and it is kept so that scripts which set it keep working.
 
 ```py
 settings = world.get_settings()
 settings.tile_stream_distance = 2000.0     # metres of map kept loaded around the hero
-settings.spectator_as_ego = False
 world.apply_settings(settings)
 
 ego_bp = world.get_blueprint_library().find('vehicle.lincoln.mkz')
@@ -403,7 +420,7 @@ What streams afterwards depends on how the geometry was split, not on the map's 
 
 ### Converting a legacy tiled town
 
-A town built with CARLA's own tiling — the UE4-era large maps, `Town11` to `Town13` among them — is a different case: its tiles are registered in WorldComposition and carry no `FWorldTileInfo` positions, so the stock commandlet merges every tile at the origin. `CarlaLargeMapConvert` is the subclass that handles them. It reads the grid from the map's `TilesInfo.txt`, places each tile the way `ALargeMapManager` did at runtime, removes the legacy static lighting rig the weather-driven sky now replaces, and renames the map's `.xodr` and Traffic Manager files when `-ConversionSuffix` saves the result under a new name:
+A town built with CARLA's own tiling — the UE4-era large maps, `Town11` to `Town13` among them — is a different case: its tiles are registered in WorldComposition and carry no `FWorldTileInfo` positions, so the stock commandlet merges every tile at the origin. `CarlaLargeMapConvert` is the subclass that handles them. It reads the grid from the map's `TilesInfo.txt`, places each tile where the legacy tiled maps placed it at runtime, removes the legacy static lighting rig the weather-driven sky now replaces, and renames the map's `.xodr` and Traffic Manager files when `-ConversionSuffix` saves the result under a new name:
 
 ```sh
 UnrealEditor-Cmd /abs/path/to/CarlaUnreal.uproject -run=CarlaLargeMapConvert \

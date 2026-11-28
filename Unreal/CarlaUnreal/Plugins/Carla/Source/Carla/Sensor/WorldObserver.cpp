@@ -6,6 +6,7 @@
 
 #include "Carla/Sensor/WorldObserver.h"
 #include "Carla.h"
+#include "Carla/AI/WalkerAIController.h"
 #include "Carla/Actor/ActorData.h"
 #include "Carla/Actor/ActorRegistry.h"
 #include "Carla/Game/CarlaEpisode.h"
@@ -19,14 +20,21 @@
 #include "Carla/Walker/WalkerController.h"
 
 #include <util/disable-ue4-macros.h>
+#include <carla/rpc/StaticActor.h>
 #include <carla/rpc/String.h>
 #include <carla/sensor/SensorRegistry.h>
 #include <carla/sensor/data/ActorDynamicState.h>
 #include <util/enable-ue4-macros.h>
 
 #include <util/ue-header-guard-begin.h>
+#include "Components/PrimitiveComponent.h"
 #include "CoreGlobals.h"
+#include "Hash/CityHash.h"
 #include <util/ue-header-guard-end.h>
+
+#include <cstring>
+#include <string>
+#include <vector>
 
 static auto FWorldObserver_GetActorState(const FCarlaActor &View, const FActorRegistry &Registry)
 {
@@ -65,9 +73,6 @@ static auto FWorldObserver_GetActorState(const FCarlaActor &View, const FActorRe
           state.vehicle_data.has_traffic_light = false;
         }
       }
-      // Get the failure state by checking the rollover one as it is the only one currently implemented.
-      // This will have to be expanded once more states are added
-      state.vehicle_data.failure_state = Vehicle->GetFailureState();
       state.vehicle_data.open_doors = Vehicle->GetOpenDoorMask();
       state.vehicle_data.door_count = static_cast<uint8_t>(FMath::Min(Vehicle->GetDoorCount(), 8));
     }
@@ -304,12 +309,95 @@ static carla::geom::Vector3D FWorldObserver_GetAcceleration(
   };
 }
 
+bool FWorldObserver::IsStaticActor(const FCarlaActor &View)
+{
+  const auto Type = View.GetActorType();
+  if (!View.IsActive() ||
+      (Type != FCarlaActor::ActorType::Other && Type != FCarlaActor::ActorType::TrafficSign &&
+       Type != FCarlaActor::ActorType::TrafficLight))
+  {
+    return false;
+  }
+  const AActor *Actor = View.GetActor();
+  if (Actor == nullptr || Actor->GetAttachParentActor() != nullptr)
+  {
+    return false;
+  }
+  const USceneComponent *Root = Actor->GetRootComponent();
+  if (Root == nullptr || Root->Mobility != EComponentMobility::Static)
+  {
+    return false;
+  }
+  const auto *Primitive = Cast<UPrimitiveComponent>(Root);
+  return Primitive == nullptr || !Primitive->IsSimulatingPhysics();
+}
+
+bool FWorldObserver::FollowsItsWalker(const FCarlaActor &View, const FActorRegistry &Registry, uint32 &WalkerId)
+{
+  if (!View.IsActive() || (View.GetActorType() != FCarlaActor::ActorType::Other))
+  {
+    return false;
+  }
+  const AActor *Actor = View.GetActor();
+  if ((Actor == nullptr) || !Actor->IsA<AWalkerAIController>())
+  {
+    return false;
+  }
+  // Its world transform is the walker's only when its root hangs from the
+  // walker's root with an identity relative transform.
+  const AActor *Walker = Actor->GetAttachParentActor();
+  const USceneComponent *Root = Actor->GetRootComponent();
+  if ((Walker == nullptr) || (Root == nullptr) || (Root->GetAttachParent() != Walker->GetRootComponent()) ||
+      Root->IsUsingAbsoluteLocation() || Root->IsUsingAbsoluteRotation() || Root->IsUsingAbsoluteScale() ||
+      !Root->GetRelativeTransform().Equals(FTransform::Identity, 0.0))
+  {
+    return false;
+  }
+  const FCarlaActor *WalkerView = Registry.FindCarlaActor(Walker);
+  if ((WalkerView == nullptr) || !WalkerView->IsActive() ||
+      (WalkerView->GetActorType() != FCarlaActor::ActorType::Walker))
+  {
+    return false;
+  }
+  WalkerId = WalkerView->GetActorId();
+  return true;
+}
+
+void FWorldObserver::GetTrafficLightConstants(
+    const FCarlaActor &View,
+    const FActorRegistry &Registry,
+    carla::rpc::StaticActor &Item)
+{
+  const auto State = FWorldObserver_GetActorState(View, Registry);
+  const auto &Light = State.traffic_light_data;
+  Item.sign_id = std::string(Light.sign_id, strnlen(Light.sign_id, sizeof(Light.sign_id)));
+  Item.green_time = Light.green_time;
+  Item.yellow_time = Light.yellow_time;
+  Item.red_time = Light.red_time;
+  Item.pole_index = Light.pole_index;
+}
+
+/// Hash of a static actor's id and transform, exact to the bit. The sum over
+/// the static actors does not depend on the registry's iteration order.
+static uint64 FWorldObserver_StaticActorHash(const FCarlaActor &View)
+{
+  const FTransform Transform = View.GetActorGlobalTransform();
+  const FVector L = Transform.GetLocation();
+  const FQuat R = Transform.GetRotation();
+  const FVector S = Transform.GetScale3D();
+  // An array of doubles: no padding bytes get into the hash.
+  const double Key[] = {
+      static_cast<double>(View.GetActorId()), L.X, L.Y, L.Z, R.X, R.Y, R.Z, R.W, S.X, S.Y, S.Z};
+  return CityHash64(reinterpret_cast<const char *>(Key), sizeof(Key));
+}
+
 static carla::Buffer FWorldObserver_Serialize(
     carla::Buffer &&buffer,
     const UCarlaEpisode &Episode,
     float DeltaSeconds,
     bool MapChange,
-    bool PendingLightUpdates)
+    bool PendingLightUpdates,
+    FWorldObserver::FStaticActors &StaticActors)
 {
   TRACE_CPUPROFILER_EVENT_SCOPE_STR(__FUNCTION__);
   using Serializer = carla::sensor::s11n::EpisodeStateSerializer;
@@ -341,18 +429,56 @@ static carla::Buffer FWorldObserver_Serialize(
   FIntVector MapOriginInMeters = MapOrigin / 100;
   header.map_origin = carla::geom::Vector3DInt{ MapOriginInMeters.X, MapOriginInMeters.Y, MapOriginInMeters.Z };
 
-  uint8_t simulation_state = (SimulationState::MapChange * MapChange);
+  uint32_t simulation_state = (SimulationState::MapChange * MapChange);
   simulation_state |= (SimulationState::PendingLightUpdate * PendingLightUpdates);
 
-  header.simulation_state = static_cast<SimulationState>(simulation_state);
+  // The header goes in front of the actors once the static actors have been
+  // counted (it carries their version); its space is kept here.
+  current_size = sizeof(Serializer::Header);
 
-  write_data(header);
+  uint64 StaticHash = 0u;
+  int32 StaticCount = 0;
+  // What changes of the static traffic lights; it goes in front of the actors.
+  static std::vector<carla::sensor::data::TrafficLightDynamicState> TrafficLights;
+  TrafficLights.clear();
 
-  // Write every actor.
+  // Write every actor but the static ones and the followers.
   for (auto& It : Registry)
   {
     const FCarlaActor* View = It.Value.Get();
     const FActorInfo* ActorInfo = View->GetActorInfo();
+
+    if (FWorldObserver::IsStaticActor(*View))
+    {
+      uint64 Hash = FWorldObserver_StaticActorHash(*View);
+      if (View->GetActorType() == FCarlaActor::ActorType::TrafficLight)
+      {
+        // Sent: state, elapsed time, frozen flag. Hashed: the rest of what the
+        // episode state carried (sign id, phase times, pole index).
+        auto State = FWorldObserver_GetActorState(*View, Registry);
+        TrafficLights.push_back({
+            View->GetActorId(),
+            State.traffic_light_data.elapsed_time,
+            State.traffic_light_data.time_is_frozen,
+            State.traffic_light_data.state});
+        State.traffic_light_data.elapsed_time = 0.0f;
+        State.traffic_light_data.time_is_frozen = false;
+        State.traffic_light_data.state = carla::rpc::TrafficLightState::Red;
+        Hash = CityHash64WithSeed(reinterpret_cast<const char *>(&State), sizeof(State), Hash);
+      }
+      StaticHash += Hash;
+      ++StaticCount;
+      continue;
+    }
+
+    uint32 WalkerId = 0u;
+    if (FWorldObserver::FollowsItsWalker(*View, Registry, WalkerId))
+    {
+      const uint64 Key[] = {View->GetActorId(), WalkerId};
+      StaticHash += CityHash64(reinterpret_cast<const char *>(Key), sizeof(Key));
+      ++StaticCount;
+      continue;
+    }
 
     FTransform ActorTransform;
     FVector Velocity(0.0f);
@@ -415,6 +541,34 @@ static carla::Buffer FWorldObserver_Serialize(
     write_data(info);
   }
 
+  // Clients fetch the static actors with the "get_static_actors" call when
+  // this version changes. It is in every header, so a client that misses a
+  // frame still learns of the change, and it is never 0: a client reads 0 as
+  // "no state received yet".
+  if (StaticHash != StaticActors.Hash || StaticCount != StaticActors.Count)
+  {
+    StaticActors.Hash = StaticHash;
+    StaticActors.Count = StaticCount;
+    StaticActors.Version = (StaticActors.Version % Serializer::static_actors_version_max) + 1u;
+  }
+  simulation_state |= StaticActors.Version << Serializer::static_actors_version_shift;
+  header.simulation_state = static_cast<SimulationState>(simulation_state);
+  header.traffic_light_count = static_cast<uint32_t>(TrafficLights.size());
+  std::memcpy(buffer.begin(), &header, sizeof(header));
+
+  // The traffic lights go between the header and the actors. They fit: each
+  // takes the place of a whole record.
+  const size_t TrafficLightsSize = TrafficLights.size() * sizeof(TrafficLights[0]);
+  if (TrafficLightsSize > 0u)
+  {
+    std::memmove(
+        buffer.begin() + sizeof(header) + TrafficLightsSize,
+        buffer.begin() + sizeof(header),
+        current_size - sizeof(header));
+    std::memcpy(buffer.begin() + sizeof(header), TrafficLights.data(), TrafficLightsSize);
+    current_size += TrafficLightsSize;
+  }
+
   // Shrink buffer
   buffer.resize(current_size);
 
@@ -436,12 +590,26 @@ void FWorldObserver::BroadcastTick(
 
   auto AsyncStream = Stream.MakeAsyncDataStream(*this, Episode.GetElapsedGameTime());
 
-  carla::Buffer buffer = FWorldObserver_Serialize(
+  auto Full = carla::BufferView::CreateFrom(FWorldObserver_Serialize(
       AsyncStream.PopBufferFromPool(),
       Episode,
       DeltaSecond,
       MapChange,
-      PendingLightUpdates);
+      PendingLightUpdates,
+      StaticActors));
 
-  AsyncStream.SerializeAndSend(*this, std::move(buffer));
+  // A delta applies on the frame before it: none after a frame that was not sent (a paused world skips them).
+  const uint64 Frame = FCarlaEngine::GetFrameCounter();
+  carla::SharedBufferView Delta = Full;
+  if (LastFull && (Frame == LastFrame + 1u) && Stream.AreClientsListening())
+  {
+    carla::Buffer Buffer = AsyncStream.PopBufferFromPool();
+    if (carla::sensor::s11n::EpisodeStateSerializer::MakeDelta(*LastFull, *Full, Buffer))
+    {
+      Delta = carla::BufferView::CreateFrom(std::move(Buffer));
+    }
+  }
+  AsyncStream.SendDelta(Full, std::move(Delta));
+  LastFull = std::move(Full);
+  LastFrame = Frame;
 }

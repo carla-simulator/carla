@@ -11,6 +11,7 @@
 #include <optional>
 
 #include <string>
+#include <string_view>
 
 namespace carla {
 namespace opendrive {
@@ -18,7 +19,9 @@ namespace opendrive {
   class OpenDriveParser {
   public:
 
+    static std::optional<road::Map> Load(std::string_view opendrive);
     static std::optional<road::Map> Load(const std::string &opendrive);
+    static std::optional<road::Map> Load(const char *opendrive);
   };
 
 } // namespace opendrive

@@ -158,3 +158,30 @@ TEST(OffsetTransform, inverse_is_exact) {
     ASSERT_NEAR(back.z, input.z, tolerance_m);
   }
 }
+
+TEST(GeoProjection, utm_zero_offset_matches_no_offset) {
+  // A zero <offset> must not change the result; it used to flip y twice and mirror latitude.
+  const GeoProjection plain = GeoProjection::Make(
+      UniversalTransverseMercatorParams(31, true, Wgs84()));
+  const GeoProjection offset = GeoProjection::Make(
+      UniversalTransverseMercatorParams(31, true, Wgs84(), OffsetTransform(0.0, 0.0, 0.0, 0.0)));
+  for (const Location &input :
+       {Location{100.0f, 200.0f, 0.0f}, Location{-300.0f, -50.0f, 10.0f}}) {
+    const GeoLocation a = plain.TransformToGeoLocation(input);
+    const GeoLocation b = offset.TransformToGeoLocation(input);
+    ASSERT_NEAR(a.latitude, b.latitude, 1e-9);
+    ASSERT_NEAR(a.longitude, b.longitude, 1e-9);
+    const Location back = offset.GeoLocationToTransform(a);
+    ASSERT_NEAR(back.x, input.x, 1e-2f);
+    ASSERT_NEAR(back.y, input.y, 1e-2f);
+  }
+}
+
+TEST(GeoProjection, utm_offset_north_is_minus_y) {
+  // With an <offset>, north must still be CARLA's -y.
+  const GeoProjection projection = GeoProjection::Make(
+      UniversalTransverseMercatorParams(32, true, Wgs84(), OffsetTransform(500000.0, 4000000.0, 0.0, 0.0)));
+  const GeoLocation origin = projection.TransformToGeoLocation(Location{0.0f, 0.0f, 0.0f});
+  const GeoLocation north = projection.TransformToGeoLocation(Location{0.0f, -100.0f, 0.0f});
+  ASSERT_GT(north.latitude, origin.latitude);
+}

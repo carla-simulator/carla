@@ -75,6 +75,9 @@
       doc: >
         The function the sensor will be calling to every time the desired GBuffer texture is received.<br>
         This function needs for an argument containing an object type carla.SensorData to work with.
+      warning: >
+        G-buffer capture needs an Unreal Engine that provides `GBufferView.h`. The Unreal Engine 5.8 fork that CARLA builds on does not, so G-buffers are not available on UE 5.8.
+      raises: RuntimeError when the server was built without G-buffer support ("GBuffer capture is not available in this build").
     # --------------------------------------
     - def_name: is_listening_gbuffer
       params:
@@ -93,6 +96,7 @@
           The ID of the Unreal Engine GBuffer texture.
       doc: >
         Commands the sensor to stop listening for the specified GBuffer texture.
+      raises: RuntimeError when the server was built without G-buffer support ("GBuffer capture is not available in this build").
     # --------------------------------------
     - def_name: send
       params:

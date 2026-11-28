@@ -1,6 +1,6 @@
 ---
 name: control-traffic-lights
-description: Controls the traffic-light actors on a running CARLA server — set a light green/red/yellow/off, freeze all lights (optionally all-green), set phase timing (green/yellow/red durations), and reset to the normal cycle. Target all lights, one by id, all in a junction, or the nearest. Use when the user asks to "make the light red", "freeze all lights green", "change the light timing", "turn the traffic lights off", or "reset the lights". This is the light actors, not the Traffic Manager (that's control-traffic).
+description: Controls the traffic-light actors on a running CARLA server — set a light green/red/yellow/off, freeze all lights (optionally all-green), set phase timing (green/yellow/red durations), reset to the normal cycle, and draw each light's live data in the world (state, time in state, phase times, frozen) as a debug overlay. Target all lights, one by actor id or OpenDRIVE signal id, all in a junction, or the nearest. Use when the user asks to "make the light red", "freeze all lights green", "change the light timing", "turn the traffic lights off", or "reset the lights", or to "show the traffic lights data / draw the traffic light states". This is the light actors, not the Traffic Manager (that's control-traffic).
 license: MIT
 compatibility: Any OS with the CARLA PythonAPI installed for the active interpreter and a reachable, already-running CARLA server. Does NOT need UE4_ROOT. Tested against CARLA 0.9.16.
 metadata:
@@ -54,12 +54,33 @@ python3 scripts/traffic_lights.py freeze off                # back to normal cyc
 python3 scripts/traffic_lights.py set --state red --id 42
 python3 scripts/traffic_lights.py set --state green --junction 838
 python3 scripts/traffic_lights.py set --state red --near=-24,-57,1
+python3 scripts/traffic_lights.py set --state red --opendrive-id 1067   # by the signal id in the .xodr
 
 # phase timing (seconds) on all lights
 python3 scripts/traffic_lights.py timing --green 20 --yellow 3 --red 10 --all
 
 python3 scripts/traffic_lights.py reset                     # normal cycle again
 ```
+
+### Show the lights' data in the world (`draw`)
+
+```bash
+python3 scripts/traffic_lights.py draw                      # every light, 120 s
+python3 scripts/traffic_lights.py draw --junction 189 --seconds 0   # one junction, until Ctrl+C
+```
+
+Each light gets a bar across every lane it controls, on the stop line, in its
+current colour, and a label above it: `TL <id> [<OpenDRIVE id>] <STATE>
+<elapsed>/<duration>s  G<green> Y<yellow> R<red> [FROZEN]`. It is redrawn every
+frame with a lifetime of about two frames, so it follows the cycle and is gone
+as soon as the command stops. It only waits for ticks, never ticks, so it runs
+alongside a traffic holder. Needs a rendered server, like any debug drawing.
+`--color r,g,b` draws every light in that colour instead of its state colour.
+
+The timer is shown for green and yellow only. Measured on Town10HD_Opt: a red
+light waiting for its turn in the junction group reads `get_elapsed_time()`
+0.0 the whole time, and `red_time` (2 s there) is only the all-red pause after
+yellow, not how long the light stays red.
 
 ## Examples
 

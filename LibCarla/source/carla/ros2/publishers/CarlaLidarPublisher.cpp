@@ -6,6 +6,7 @@
 
 #include "carla/ros2/publishers/CarlaLidarPublisher.h"
 
+#include <algorithm>
 #include <cmath>
 #include <cstring>
 
@@ -75,11 +76,13 @@ bool CarlaLidarPublisher::WriteExtendedPointCloud(
     const std::uint8_t *data,
     const std::uint32_t *channel_point_counts,
     std::size_t channel_count,
-    const std::vector<float> &vertical_angles) {
+    const std::vector<float> &vertical_angles,
+    const LidarAzimuthRange &azimuth_range) {
   _extended = true;
   _channel_point_counts.assign(
       channel_point_counts, channel_point_counts + channel_count);
   _vertical_angles = vertical_angles;
+  _azimuth_range = azimuth_range;
   return CarlaPointCloudPublisher::WritePointCloud(
       seconds, nanoseconds, height, width, data);
 }
@@ -117,15 +120,17 @@ std::vector<std::uint8_t> CarlaLidarPublisher::ComputePointCloud(
     point = LidarPointEx{};
     point.x = input[i].x;
     point.y = -input[i].y;  // ROS right-handed frame, same flip as XYZI path.
-    // tier4 truncates CARLA's [0, 1] float intensity straight into the uint8
-    // slot (so it is effectively 0/1); replicated verbatim for wire parity.
-    point.intensity = static_cast<std::uint8_t>(input[i].intensity);
+    // CARLA's intensity is a float in [0, 1]; the Autoware layout holds a
+    // uint8, so scale to [0, 255]. A plain cast truncates every return to 0.
+    point.intensity = static_cast<std::uint8_t>(
+        std::clamp(input[i].intensity, 0.0f, 1.0f) * 255.0f + 0.5f);
     point.z = input[i].z;
     // return_type stays 0 (tier4 leaves it as dummy data).
     // Azimuth/distance are derived from the (already mirrored) Cartesian
-    // coordinates, matching tier4's post-conversion computation.
+    // coordinates, matching tier4's post-conversion computation. The azimuth
+    // direction and range follow the sensor's azimuth_* attributes.
     point.distance = std::hypot(point.x, point.y, point.z);
-    point.azimuth = std::atan2(point.y, point.x);
+    point.azimuth = ComputeLidarAzimuth(point.x, point.y, _azimuth_range);
     // Autoware's distortion corrector reads time_stamp as a nanosecond offset
     // from header.stamp. CARLA casts every ray of a scan at the same sim
     // instant, so the offset is zero for all points.

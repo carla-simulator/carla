@@ -34,6 +34,11 @@ from invertedai.common import AgentProperties, AgentState, TrafficLightState, Po
 from carla import command, Location
 from typing import List, Tuple, Any, Optional
 
+# Actors this script spawns and the client that spawned them, so the exit path
+# can destroy them and hand the clock back even after an error or Ctrl+C.
+SPAWNED_ACTOR_IDS = []
+CLEANUP_STATE = {"client": None, "recording": False, "traffic_lights": None}
+
 #---------
 # CARLA Utils
 #---------
@@ -115,7 +120,7 @@ def argument_parser():
     argparser.add_argument(
         '--location',
         type=str,
-        help=f"IAI formatted map on which to create simulate (default: carla:Town10HD, only tested there)",
+        help="IAI formatted map on which to create simulate (default: carla:Town10HD)",
         default='carla:Town10HD')
     argparser.add_argument(
         '--capacity',
@@ -148,6 +153,12 @@ def argument_parser():
         type=str,
         help=f"IAI API model version",
         default="nBu1")
+    argparser.add_argument(
+        '--traffic-lights',
+        choices=['carla', 'iai'],
+        default='carla',
+        help="Who runs the traffic lights: CARLA's light cycle, sent to InvertedAI every step, or InvertedAI's "
+             "server, applied to CARLA's frozen lights. Both sides always see the same states")
     argparser.add_argument(
         '--iai-log',
         action="store_true",
@@ -445,14 +456,16 @@ class SimulationData:
                 self.all_agent_data[agent_id].recurrent_state = agent_recurrent_states[agent_id]
 
     # Update transforms of CARLA agents driven by IAI and tick the world
-    def update_carla_states_from_iai(self):
+    def update_carla_states_from_iai(self, agent_states=None):
         """
         Tick the carla simulation forward one time step
         Assume carla_actors is a list of carla actors controlled by IAI
+        agent_states: states to show instead of the agents' current ones (same order)
         """
-        for agent in self.all_agent_data:
+        for agent_id, agent in enumerate(self.all_agent_data):
             if not agent.type == AgentType.CARLA:
-                agent_transform = transform_iai_to_carla(agent.state)
+                state = agent_states[agent_id] if agent_states is not None else agent.state
+                agent_transform = transform_iai_to_carla(state)
                 try:     
                     agent.carla_actor.set_transform(agent_transform)
                 except:
@@ -580,6 +593,7 @@ def spawn_pedestrians(
             logging.error(results[i].error)
         else:
             walkers_list.append({"id": results[i].actor_id})
+            SPAWNED_ACTOR_IDS.append(results[i].actor_id)
 
     # Spawn CARLA IA controllers for pedestrians
     batch = []
@@ -587,6 +601,7 @@ def spawn_pedestrians(
     for i in range(len(walkers_list)):
         batch.append(command.SpawnActor(walker_controller_bp, carla.Transform(), walkers_list[i]["id"]))
     results = client.apply_batch_sync(batch, True)
+    SPAWNED_ACTOR_IDS.extend(r.actor_id for r in results if not r.error)
 
     world.tick()
 
@@ -668,6 +683,7 @@ def assign_carla_blueprints_to_agents(
             actor = world.try_spawn_actor(blueprint,agent_transform)
             
             if actor is not None:
+                SPAWNED_ACTOR_IDS.append(actor.id)
                 bb = actor.bounding_box.extent
                 actor.set_simulate_physics(False)
 
@@ -702,8 +718,6 @@ def initialize_simulation(
     existing_agent_properties=None
 ):
     
-    traffic_lights_states, carla2iai_tl = initialize_tl_states(world)
-
     #################################################################################################
     # Initialize IAI Agents
     map_center = args.map_center
@@ -713,6 +727,15 @@ def initialize_simulation(
         include_map_source=True,
         rendering_center = map_center
     )
+
+    traffic_lights = TrafficLightSync(world, location_info_response, args.traffic_lights)
+    CLEANUP_STATE["traffic_lights"] = traffic_lights
+    if args.traffic_lights == "iai":
+        traffic_lights.freeze()  # From here on only InvertedAI changes CARLA's lights
+        traffic_light_state_history = None  # The server picks the initial light states
+    else:
+        carla_states = traffic_lights.states_from_carla()
+        traffic_light_state_history = [carla_states] if carla_states else None
     print(f"Begin initialization.") 
     # Acquire a grid of 100x100m regions in which to initialize vehicles to be controlled by IAI.
     regions = iai.get_regions_default(
@@ -725,7 +748,7 @@ def initialize_simulation(
     response = iai.large_initialize(
         location = args.location,
         regions = regions,
-        traffic_light_state_history = [traffic_lights_states],
+        traffic_light_state_history = traffic_light_state_history,
         agent_states = existing_agent_states,
         agent_properties = existing_agent_properties,
         random_seed = seed
@@ -756,7 +779,11 @@ def initialize_simulation(
     response.agent_properties = agent_properties
     response.recurrent_states = agent_recurrent_states
 
-    return response, carla2iai_tl, location_info_response, agent_data
+    if args.traffic_lights == "iai":
+        # The agents were placed for these lights: CARLA shows them from the first frame
+        traffic_lights.apply_iai_states(response.traffic_lights_states)
+
+    return response, traffic_lights, location_info_response, agent_data
 
 #---------
 # Ego Simulator-in-the-Loop Integration
@@ -807,18 +834,158 @@ def tick_ego_vehicle() -> Tuple[List[AgentState],List[AgentProperties]]:
 # Synchronize InvertedAI and CARLA traffic lights
 #---------
 
-# Mapping between CARLA and IAI traffic lights IDs
-def get_traffic_lights_mapping(world):
-    tls = world.get_actors().filter('traffic.traffic_light*')
-    tl_ids = sorted([tl.id for tl in list(tls)])
-    carla2iai_tl = {}
-    # ID for IAI traffic lights, only valid for Town10 for now (in both UE4 and UE5 versions of the map)
-    iai_tl_id = 4364
-    for carla_tl_id in tl_ids:
-        carla2iai_tl[str(carla_tl_id)] = [str(iai_tl_id), str(iai_tl_id+1000)]
-        iai_tl_id+=1
+# IAI numbers its traffic lights independently of CARLA's actor ids, and the order of the actor ids
+# is not stable across builds, so lights are matched along the lane: an IAI light belongs to the
+# nearest CARLA stop waypoint on its lane (or the line between two lanes), facing the same way, just
+# before it. On Town01-07 and Town10HD, IAI lights sit 0-14 m past CARLA's stop waypoints.
+#
+# One side owns the lights and the other follows it, so both always show the same states:
+#   carla  CARLA's light cycle runs; after every tick its states are sent to Inverted AI.
+#   iai    Inverted AI's server runs the lights; CARLA's lights are frozen and set to the states
+#          the IAI agents acted on.
+# A light only one side has is shown as off on the other side where possible. Both modes check
+# every step and count mismatches.
+TL_LATERAL_DISTANCE = 2.5        # Max distance from the stop waypoint's lane centre, in metres
+TL_ALONG_DISTANCE = (-2.0, 20.0) # Max distance before/past the stop waypoint along the lane, in metres
+TL_YAW_DIFFERENCE = 45.0         # Max heading difference, in degrees
 
-    return carla2iai_tl
+# Most restrictive first, to break ties between IAI per-lane lights of one CARLA light
+TL_RESTRICTIVE_ORDER = [carla.TrafficLightState.Red, carla.TrafficLightState.Yellow,
+                        carla.TrafficLightState.Green, carla.TrafficLightState.Off]
+
+def get_lane_distance(light, stop_transform):
+    """Distance from a CARLA stop waypoint to an IAI light on the same lane and heading just past
+    it, or None if the light is not there."""
+    forward = stop_transform.get_forward_vector()
+    dx = light.center.x - stop_transform.location.x
+    dy = light.center.y - stop_transform.location.y
+    along = dx * forward.x + dy * forward.y
+    lateral = -dx * forward.y + dy * forward.x
+    yaw_difference = (math.degrees(light.orientation) - stop_transform.rotation.yaw + 180.0) % 360.0 - 180.0
+    if (abs(lateral) <= TL_LATERAL_DISTANCE and TL_ALONG_DISTANCE[0] <= along <= TL_ALONG_DISTANCE[1]
+            and abs(yaw_difference) <= TL_YAW_DIFFERENCE):
+        return math.hypot(dx, dy)
+    return None
+
+def match_traffic_lights(world, iai_lights):
+    """CARLA light id -> the IAI light ids on its lanes, plus the unpaired IAI and CARLA lights."""
+    stop_waypoints = [(tl.id, wp.transform) for tl in world.get_actors().filter('traffic.traffic_light*')
+                      for wp in tl.get_stop_waypoints()]
+    carla2iai, unpaired_iai = {}, []
+    for light in iai_lights:
+        candidates = [(distance, carla_id) for carla_id, transform in stop_waypoints
+                      for distance in [get_lane_distance(light, transform)] if distance is not None]
+        if candidates:
+            carla2iai.setdefault(min(candidates)[1], set()).add(str(light.actor_id))
+        else:
+            unpaired_iai.append(str(light.actor_id))
+    # An IAI light id can come once per signal head, so ids are kept once
+    carla2iai = {carla_id: sorted(iai_ids) for carla_id, iai_ids in carla2iai.items()}
+    paired_iai = {iai_id for iai_ids in carla2iai.values() for iai_id in iai_ids}
+    unpaired_iai = sorted(set(unpaired_iai) - paired_iai)
+    unpaired_carla = sorted({carla_id for carla_id, _ in stop_waypoints} - set(carla2iai))
+    return carla2iai, unpaired_iai, unpaired_carla
+
+def get_group_traffic_light_state(carla_states):
+    """One CARLA state for the IAI lights of one CARLA light. They only differ where IAI has
+    per-lane lights (e.g. a free turn lane on Town06), which one CARLA light cannot show:
+    take the majority, ties to the most restrictive."""
+    return max(set(carla_states),
+               key=lambda state: (carla_states.count(state), -TL_RESTRICTIVE_ORDER.index(state)))
+
+class TrafficLightSync:  # pylint: disable=too-many-instance-attributes
+    """Pairs CARLA's and InvertedAI's traffic lights and keeps their states identical."""
+
+    def __init__(self, world, location_info_response, mode):
+        self.mode = mode
+        self.world = world
+        self.carla_lights = {tl.id: tl for tl in world.get_actors().filter('traffic.traffic_light*')}
+        self.carla2iai, self.unpaired_iai, self.unpaired_carla = {}, [], []
+        self.applied = {}
+        self.frozen = False
+        self.counts = {"checks": 0, "mismatches": 0, "split": 0}
+        iai_lights = [actor for actor in location_info_response.static_actors
+                      if str(actor.agent_type).endswith("traffic_light")]
+        if not iai_lights:
+            if mode == "iai":
+                raise RuntimeError("This InvertedAI map has no traffic lights, use --traffic-lights carla.")
+            print("This InvertedAI map has no traffic lights: the IAI agents will ignore CARLA's lights.")
+            return
+        self.carla2iai, self.unpaired_iai, self.unpaired_carla = match_traffic_lights(world, iai_lights)
+        if self.unpaired_iai:
+            print(f"InvertedAI traffic lights with no CARLA light: {self.unpaired_iai}. "
+                  + ("They are sent as off." if mode == "carla" else "CARLA cannot show them."))
+        if self.unpaired_carla:
+            print(f"CARLA traffic lights with no InvertedAI light: {self.unpaired_carla}. "
+                  + ("The IAI agents ignore them." if mode == "carla" else "They are switched off."))
+
+    def summary(self):
+        """One line: the mode, the pairs, the unpaired lights and the check results."""
+        if not self.carla2iai:
+            return "Traffic lights not synchronized (no InvertedAI traffic lights)."
+        text = (f"Traffic lights ({self.mode}): {len(self.carla2iai)} CARLA <-> "
+                f"{sum(len(ids) for ids in self.carla2iai.values())} InvertedAI")
+        if self.unpaired_iai or self.unpaired_carla:
+            text += f" ({len(self.unpaired_iai)} InvertedAI and {len(self.unpaired_carla)} CARLA unpaired)"
+        text += f", {self.counts['mismatches']} mismatches in {self.counts['checks']} checks"
+        if self.counts["split"]:
+            text += (f", {self.counts['split']} steps where InvertedAI per-lane lights of one CARLA light"
+                     " differed (CARLA showed the majority)")
+        return text + "."
+
+    def states_from_carla(self):
+        """carla mode: IAI states for every IAI light, from one read of CARLA's lights."""
+        if not self.carla2iai:
+            return None
+        states = {iai_id: get_traffic_light_state_from_carla(self.carla_lights[carla_id].state)
+                  for carla_id, iai_ids in self.carla2iai.items() for iai_id in iai_ids}
+        states.update({iai_id: TrafficLightState.none for iai_id in self.unpaired_iai})  # No CARLA light there
+        return states
+
+    def check_echo(self, sent, seen):
+        """carla mode: the states the server says the agents saw must be the ones sent."""
+        if sent is None:
+            return
+        seen = {str(iai_id): state for iai_id, state in (seen or {}).items()}  # the SDK returns int ids
+        self.counts["checks"] += 1
+        if any(seen.get(iai_id) != state for iai_id, state in sent.items()):
+            self.counts["mismatches"] += 1
+
+    def freeze(self):
+        """iai mode: stop CARLA's light cycle so only InvertedAI changes the lights."""
+        for tl in self.carla_lights.values():
+            tl.freeze(True)
+        self.frozen = True
+
+    def apply_iai_states(self, states):
+        """iai mode: set every CARLA light to its IAI lights' state, and the CARLA lights IAI does
+        not have to off. It shows from the next tick."""
+        states = {str(iai_id): state for iai_id, state in (states or {}).items()}  # the SDK returns int ids
+        self.applied = {carla_id: carla.TrafficLightState.Off for carla_id in self.unpaired_carla}
+        split = False
+        for carla_id, iai_ids in self.carla2iai.items():
+            if any(iai_id not in states for iai_id in iai_ids):
+                self.counts["mismatches"] += 1  # The server left out a light it has
+            carla_states = [get_traffic_light_state_from_iai(states.get(iai_id)) for iai_id in iai_ids]
+            split |= len(set(carla_states)) != 1
+            self.applied[carla_id] = get_group_traffic_light_state(carla_states)
+        self.counts["split"] += split
+        for carla_id, carla_state in self.applied.items():
+            self.carla_lights[carla_id].set_state(carla_state)
+
+    def check_carla(self):
+        """iai mode, after a tick: CARLA's lights must show the states applied."""
+        self.counts["checks"] += 1
+        if any(self.carla_lights[carla_id].state != state for carla_id, state in self.applied.items()):
+            self.counts["mismatches"] += 1
+
+    def release(self):
+        """Give the lights back to CARLA's own cycle."""
+        if self.frozen:
+            for tl in self.carla_lights.values():
+                tl.freeze(False)
+            self.world.reset_all_traffic_lights()
+            self.frozen = False
 
 # Returns IAI traffic light state based on CARLA traffic light state
 def get_traffic_light_state_from_carla(carla_tl_state):
@@ -833,38 +1000,41 @@ def get_traffic_light_state_from_carla(carla_tl_state):
         return TrafficLightState.green
 
     else:  # Unknown state, turn off traffic light
-        return TrafficLightState.Off
+        return TrafficLightState.none
 
-# Assign IAI traffic lights based on the CARLA ones
-def assign_iai_traffic_lights_from_carla(
-    world, 
-    iai_tl, 
-    carla2iai_tl
-):
+def get_traffic_light_state_from_iai(iai_tl_state):
+    """CARLA traffic light state for an IAI one; anything else turns the light off."""
+    return {
+        TrafficLightState.red: carla.TrafficLightState.Red,
+        TrafficLightState.yellow: carla.TrafficLightState.Yellow,
+        TrafficLightState.green: carla.TrafficLightState.Green,
+    }.get(iai_tl_state, carla.TrafficLightState.Off)
 
-    traffic_lights = world.get_actors().filter('traffic.traffic_light*')
-    
-    carla_tl_dict = {}
-    for tl in traffic_lights:
-        carla_tl_dict[str(tl.id)]=tl.state
 
-    for carla_tl_id, carla_state in carla_tl_dict.items():
-        iai_tl_id_pair = carla2iai_tl[carla_tl_id]
-        for iai_tl_id in iai_tl_id_pair:
-            iai_tl[iai_tl_id] = get_traffic_light_state_from_carla(carla_state)
-
-    return iai_tl
-
-# Initialize traffic lights states
-def initialize_tl_states(world):
-    carla2iai_tl = get_traffic_lights_mapping(world)
-    iai_tl_states = {}
-    for tlpair in carla2iai_tl.values():
-        for tl in tlpair:
-            iai_tl_states[tl] = TrafficLightState.red # Initialize to given value
-
-    iai_tl_states = assign_iai_traffic_lights_from_carla(world, iai_tl_states, carla2iai_tl)
-    return iai_tl_states, carla2iai_tl
+def cleanup():
+    """Stop the recorder, destroy what this script spawned (walker controllers
+    first) and put the world back in asynchronous mode, so it is not left frozen
+    waiting for ticks that will never come."""
+    client = CLEANUP_STATE["client"]
+    if client is None:
+        return
+    try:
+        if CLEANUP_STATE["recording"]:
+            client.stop_recorder()
+        if CLEANUP_STATE["traffic_lights"] is not None:
+            CLEANUP_STATE["traffic_lights"].release()
+        world = client.get_world()
+        settings = world.get_settings()
+        settings.synchronous_mode = False
+        settings.fixed_delta_seconds = None
+        world.apply_settings(settings)
+        actors = world.get_actors(SPAWNED_ACTOR_IDS)
+        for controller in actors.filter('controller.ai.walker'):
+            controller.stop()
+        client.apply_batch_sync([command.DestroyActor(a.id) for a in actors])
+        print(f"Destroyed {len(actors)} actors and restored asynchronous mode.")
+    except RuntimeError as e:
+        print(f"Cleanup failed: {e}")
 
 
 def get_distance(point1, point2):
@@ -883,6 +1053,7 @@ def main():
         args.port, 
         args.location
     )
+    CLEANUP_STATE["client"] = client
 
     # Specify the IAI API key. Prefer the IAI_API_KEY environment variable and
     # fall back to the --iai-key argument. Registering it explicitly avoids
@@ -904,6 +1075,7 @@ def main():
             os.system("mkdir "+logfolder)
         logfile = logfolder+"carla_record.log"
         client.start_recorder(logfile)
+        CLEANUP_STATE["recording"] = True
         print("Recording on file: %s" % logfile)
 
     seed = args.seed if args.seed is not None else int(time.time())
@@ -945,7 +1117,7 @@ def main():
     
     sim_pre_data = SimulationData(agent_data)
     # Initialize InvertedAI co-simulation
-    response, carla2iai_tl, location_info_response, agent_data = initialize_simulation(
+    response, traffic_lights, location_info_response, agent_data = initialize_simulation(
         args=args, 
         world=world,
         seed=seed,
@@ -1014,7 +1186,6 @@ def main():
             # Perform CARLA simulation tick to spawn sensors
             world.tick()
         for frame in tqdm(range(args.sim_length * FPS)):
-            traffic_lights_states = assign_iai_traffic_lights_from_carla(world, response.traffic_lights_states, carla2iai_tl)
             agent_properties = wp_manager.update(
                 response = response,
                 agent_properties = agent_properties,
@@ -1032,6 +1203,14 @@ def main():
             world.tick()
             time.sleep(1/FPS)
 
+            # The light states the IAI agents act on in this step are the ones CARLA shows now
+            if args.traffic_lights == "iai":
+                traffic_lights.check_carla()
+                traffic_lights_states = None
+            else:
+                traffic_lights_states = traffic_lights.states_from_carla()
+            shown_agent_states = list(response.agent_states)
+
             # Update spectator view if there is hero vehicle
             if args.capture_video:
                 sensor_manager.update_all_sensors()
@@ -1046,11 +1225,21 @@ def main():
                 agent_properties = agent_properties,
                 recurrent_states = response.recurrent_states,
                 traffic_lights_states = traffic_lights_states,
+                light_recurrent_states = response.light_recurrent_states if args.traffic_lights == "iai" else None,
                 single_call_agent_limit = args.capacity,
                 async_api_calls = args.iai_async,
                 api_model_version = args.api_model,
                 random_seed = seed
             )
+
+            if args.traffic_lights == "iai":
+                # The server steps its lights at the start of the call and the agents react to them, so
+                # they are only known now. CARLA shows them with the positions the agents reacted from
+                # (the call's input), and the new positions follow on the next step, so every frame
+                # pairs positions with the lights acted on, as in carla mode.
+                traffic_lights.apply_iai_states(response.traffic_lights_states)
+            else:
+                traffic_lights.check_echo(traffic_lights_states, response.traffic_lights_states)
 
             #=================================================
             #=================================================
@@ -1071,7 +1260,8 @@ def main():
                 agent_recurrent_states = response.recurrent_states
             )
 
-            sim_agent_data.update_carla_states_from_iai()
+            sim_agent_data.update_carla_states_from_iai(
+                shown_agent_states if args.traffic_lights == "iai" else None)
             sim_agent_data.update_iai_states_from_carla()
 
             response.agent_states = sim_agent_data.get_all_states()
@@ -1085,6 +1275,7 @@ def main():
             #=================================================
 
         time.sleep(0.5)
+        print(traffic_lights.summary())
 
         if args.capture_video:
             print(f"Writing sensor videos to disk.")
@@ -1094,6 +1285,7 @@ def main():
         
         if args.record:
             client.stop_recorder()
+            CLEANUP_STATE["recording"] = False
 
         if args.iai_log:
             print(f"Writing log data.")
@@ -1112,7 +1304,7 @@ def main():
                 agent_ids = list(range(len(agent_properties)))
             )
     except Exception as e:
-        print(f"{e}")
+        print(f"{type(e).__name__}: {e}")
 
 
 if __name__ == '__main__':
@@ -1122,4 +1314,5 @@ if __name__ == '__main__':
     except KeyboardInterrupt:
         pass
     finally:
+        cleanup()
         print('\ndone.')

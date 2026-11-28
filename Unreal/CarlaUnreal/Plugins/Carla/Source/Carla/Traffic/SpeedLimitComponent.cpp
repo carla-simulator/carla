@@ -6,7 +6,6 @@
 
 #include "SpeedLimitComponent.h"
 #include "Carla/Game/CarlaStatics.h"
-#include "Carla/MapGen/LargeMapManager.h"
 #include "Carla/Vehicle/CarlaWheeledVehicle.h"
 #include "Carla/Vehicle/WheeledVehicleAIController.h"
 
@@ -33,7 +32,10 @@ void USpeedLimitComponent::InitializeSign(const carla::road::Map &Map)
   auto* Signal = GetSignal(Map);
   if (Signal)
   {
-    SetSpeedLimit(Signal->GetValue());
+    // A 274 sign's value converted from its unit, the same limit the
+    // OpenDRIVE map applies once the sign is passed.
+    const auto Limit = Signal->GetSpeedLimitKmh();
+    SetSpeedLimit(Limit.has_value() ? static_cast<float>(*Limit) : Signal->GetValue());
   }
 
   for (auto& Reference : References)
@@ -74,11 +76,6 @@ void USpeedLimitComponent::InitializeSign(const carla::road::Map &Map)
         }
         float UnrealBoxSize = 100*BoxSize;
         FTransform BoxTransform = Map.ComputeTransform(signal_waypoint);
-        ALargeMapManager* LargeMapManager = UCarlaStatics::GetLargeMapManager(GetWorld());
-        if (LargeMapManager)
-        {
-          BoxTransform = LargeMapManager->GlobalToLocalTransform(BoxTransform);
-        }
         GenerateSpeedBox(BoxTransform, UnrealBoxSize);
       }
     }

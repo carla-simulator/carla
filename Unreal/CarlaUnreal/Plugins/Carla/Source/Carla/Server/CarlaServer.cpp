@@ -7,7 +7,9 @@
 #include "Carla/Server/CarlaServer.h"
 #include "Carla.h"
 #include "Carla/Server/CarlaServerResponse.h"
+#include "Carla/Traffic/SignComponent.h"
 #include "Carla/Traffic/TrafficLightGroup.h"
+#include "Carla/Traffic/TrafficSignBase.h"
 #include "Carla/OpenDrive/OpenDrive.h"
 #include "Carla/OpenDrive/OpenDriveGenerator.h"
 #include "Carla/Util/DebugShapeDrawer.h"
@@ -17,6 +19,7 @@
 #include "Carla/Sensor/CustomV2XSensor.h"
 #include "Carla/Sensor/SceneCaptureSensor.h"
 #include "Carla/Sensor/SceneCaptureSensor_WideAngleLens.h"
+#include "Carla/Sensor/WorldObserver.h"
 #include "Carla/Walker/WalkerController.h"
 #include "Carla/Walker/WalkerBase.h"
 #include "Carla/Weather/SkyLightMap.h"
@@ -61,6 +64,7 @@
 #include <carla/rpc/MapLayer.h>
 #include <carla/rpc/Response.h>
 #include <carla/rpc/Server.h>
+#include <carla/rpc/StaticActor.h>
 #include <carla/rpc/String.h>
 #include <carla/rpc/Transform.h>
 #include <carla/rpc/Vector2D.h>
@@ -965,12 +969,6 @@ void FCarlaServer::FPimpl::BindActions()
     {
       RESPOND_ERROR("unable to find CARLA game mode");
     }
-    ALargeMapManager* LargeMap = GameMode->GetLMManager();
-    if (LargeMap)
-    {
-      LargeMap->ConsiderSpectatorAsEgo(settings.spectator_as_ego);
-    }
-
     if (ATrafficLightManager* TrafficLightManager = GameMode->GetTrafficLightManager())
     {
       TrafficLightManager->SetAdjustSignsHeightToGround(
@@ -1007,14 +1005,6 @@ void FCarlaServer::FPimpl::BindActions()
       RESPOND_ERROR("unable to find CARLA game mode");
     }
     Result = GameMode->GetAllBBsOfLevel(QueriedTag);
-    ALargeMapManager* LargeMap = GameMode->GetLMManager();
-    if (LargeMap)
-    {
-      for(auto& Box : Result)
-      {
-        Box.Origin = LargeMap->LocalToGlobalLocation(Box.Origin);
-      }
-    }
     return MakeVectorFromTArray<cg::BoundingBox>(Result);
   };
 
@@ -1027,14 +1017,6 @@ void FCarlaServer::FPimpl::BindActions()
       RESPOND_ERROR("unable to find CARLA game mode");
     }
     TArray<FEnvironmentObject> Result = GameMode->GetEnvironmentObjects(QueriedTag);
-    ALargeMapManager* LargeMap = GameMode->GetLMManager();
-    if (LargeMap)
-    {
-      for(auto& Object : Result)
-      {
-        Object.Transform = LargeMap->LocalToGlobalTransform(Object.Transform);
-      }
-    }
     return MakeVectorFromTArray<cr::EnvironmentObject>(Result);
   };
 
@@ -1217,6 +1199,45 @@ void FCarlaServer::FPimpl::BindActions()
     return Result;
   };
 
+  // The actors left out of the episode state because they cannot move (see
+  // FWorldObserver::IsStaticActor) or follow their walker (see
+  // FWorldObserver::FollowsItsWalker); clients call this when the episode
+  // state says the set changed.
+  BIND_SYNC(get_static_actors) << [this]() -> R<std::vector<cr::StaticActor>>
+  {
+    REQUIRE_CARLA_EPISODE();
+    const FActorRegistry &Registry = Episode->GetActorRegistry();
+    std::vector<cr::StaticActor> Result;
+    for (auto &&It : Registry)
+    {
+      const FCarlaActor *View = It.Value.Get();
+      uint32 WalkerId = 0u;
+      if (View != nullptr && (FWorldObserver::IsStaticActor(*View) ||
+                              FWorldObserver::FollowsItsWalker(*View, Registry, WalkerId)))
+      {
+        cr::StaticActor Item;
+        Item.id = View->GetActorId();
+        Item.transform = cr::Transform(View->GetActorGlobalTransform());
+        Item.parent_id = WalkerId;
+        if (View->GetActorType() == FCarlaActor::ActorType::TrafficLight)
+        {
+          FWorldObserver::GetTrafficLightConstants(*View, Registry, Item);
+        }
+        else
+        {
+          const auto *Sign = Cast<ATrafficSignBase>(View->GetActor());
+          const auto *SignComponent = Sign ? Sign->FindComponentByClass<USignComponent>() : nullptr;
+          if (SignComponent != nullptr)
+          {
+            Item.sign_id = cr::FromFString(SignComponent->GetSignId());
+          }
+        }
+        Result.emplace_back(Item);
+      }
+    }
+    return Result;
+  };
+
   BIND_SYNC(spawn_actor) << [this](
       cr::ActorDescription Description,
       const cr::Transform &Transform) -> R<cr::Actor>
@@ -1230,12 +1251,6 @@ void FCarlaServer::FPimpl::BindActions()
     {
       UE_LOG(LogCarla, Error, TEXT("Actor not Spawned"));
       RESPOND_ERROR_FSTRING(FActorSpawnResult::StatusToString(Result.Key));
-    }
-
-    ALargeMapManager* LargeMap = UCarlaStatics::GetLargeMapManager(Episode->GetWorld());
-    if(LargeMap)
-    {
-      LargeMap->OnActorSpawned(*Result.Value);
     }
 
     cr::Actor SerializedActor = Episode->SerializeActor(Result.Value);
@@ -1841,12 +1856,6 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
           " Actor Id: " + FString::FromInt(ActorId));
     }
     FVector UELocation = location.ToCentimeters().ToFVector();
-    ACarlaGameModeBase* GameMode = UCarlaStatics::GetGameMode(Episode->GetWorld());
-    ALargeMapManager* LargeMap = GameMode->GetLMManager();
-    if (LargeMap)
-    {
-      UELocation = LargeMap->GlobalToLocalLocation(UELocation);
-    }
     ECarlaServerResponse Response =
         CarlaActor->AddActorImpulseAtLocation(impulse.ToCentimeters().ToFVector(), UELocation);
     if (Response != ECarlaServerResponse::Success)
@@ -1902,12 +1911,6 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
           " Actor Id: " + FString::FromInt(ActorId));
     }
     FVector UELocation = location.ToCentimeters().ToFVector();
-    ACarlaGameModeBase* GameMode = UCarlaStatics::GetGameMode(Episode->GetWorld());
-    ALargeMapManager* LargeMap = GameMode->GetLMManager();
-    if (LargeMap)
-    {
-      UELocation = LargeMap->GlobalToLocalLocation(UELocation);
-    }
     ECarlaServerResponse Response =
         CarlaActor->AddActorForceAtLocation(force.ToCentimeters().ToFVector(), UELocation);
     if (Response != ECarlaServerResponse::Success)
@@ -2913,12 +2916,6 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
     {
       return Sentinel;
     }
-    ACarlaGameModeBase *GameMode = UCarlaStatics::GetGameMode(Episode->GetWorld());
-    ALargeMapManager *LargeMap = GameMode ? GameMode->GetLMManager() : nullptr;
-    if (LargeMap)
-    {
-      Location = LargeMap->LocalToGlobalLocation(Location);
-    }
     return cr::Location(Location);
   };
 
@@ -2959,14 +2956,7 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
     {
       return false;
     }
-    FVector UELocation = Location;
-    ACarlaGameModeBase *GameMode = UCarlaStatics::GetGameMode(Episode->GetWorld());
-    ALargeMapManager *LargeMap = GameMode ? GameMode->GetLMManager() : nullptr;
-    if (LargeMap)
-    {
-      UELocation = LargeMap->GlobalToLocalLocation(UELocation);
-    }
-    return Controller->GoToNavLocation(UELocation);
+    return Controller->GoToNavLocation(Location);
   };
 
   BIND_SYNC(walker_set_max_speed) << [this](
@@ -3523,6 +3513,14 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
           " Actor Id: " + FString::FromInt(ActorId));
     }
 
+#ifndef CARLA_HAS_GBUFFER_API
+    // G-buffer streams are never opened here; GetToken() would crash (#10329).
+    return RespondError(
+        "get_gbuffer_token",
+        "GBuffer capture is not available in this build (its Unreal Engine has no GBufferView.h)",
+        " Actor Id: " + FString::FromInt(ActorId) +
+        ", GBuffer Id: " + FString::FromInt(GBufferId));
+#else
     switch (GBufferId)
     {
       case 0:
@@ -3594,6 +3592,7 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
         UE_LOG(LogCarla, Error, TEXT("Requested invalid GBuffer ID %u"), GBufferId);
         return {};
     }
+#endif
   };
 
   // ~~ Logging and playback ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -3997,14 +3996,7 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
     REQUIRE_CARLA_EPISODE();
     auto *World = Episode->GetWorld();
     constexpr float meter_to_centimeter = 100.0f;
-    FVector UELocation = Location;
-    ACarlaGameModeBase* GameMode = UCarlaStatics::GetGameMode(Episode->GetWorld());
-    ALargeMapManager* LargeMap = GameMode->GetLMManager();
-    if (LargeMap)
-    {
-      UELocation = LargeMap->GlobalToLocalLocation(UELocation);
-    }
-    return URayTracer::ProjectPoint(UELocation, Direction.ToFVector(),
+    return URayTracer::ProjectPoint(Location, Direction.ToFVector(),
         meter_to_centimeter * SearchDistance, World);
   };
 
@@ -4014,15 +4006,6 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
   {
     REQUIRE_CARLA_EPISODE();
     auto *World = Episode->GetWorld();
-    FVector UEStartLocation = StartLocation;
-    FVector UEEndLocation = EndLocation;
-    ACarlaGameModeBase* GameMode = UCarlaStatics::GetGameMode(Episode->GetWorld());
-    ALargeMapManager* LargeMap = GameMode->GetLMManager();
-    if (LargeMap)
-    {
-      UEStartLocation = LargeMap->GlobalToLocalLocation(UEStartLocation);
-      UEEndLocation = LargeMap->GlobalToLocalLocation(UEEndLocation);
-    }
     return URayTracer::CastRay(StartLocation, EndLocation, World);
   };
 

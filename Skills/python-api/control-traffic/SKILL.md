@@ -1,6 +1,6 @@
 ---
 name: control-traffic
-description: Tunes the CARLA Traffic Manager that drives autopilot vehicles — global and per-vehicle speed, following distance, running lights/signs, lane-change behaviour, lane offset, TM-managed lights, deterministic seed, hybrid physics, and TM sync mode. Use when the user asks to "make the traffic faster/slower", "let cars run red lights", "keep more distance", "stop lane changes", "make traffic deterministic", or otherwise change how autopilot cars behave. For manually driving one car, use control-vehicle.
+description: Tunes the CARLA Traffic Manager that drives autopilot vehicles — global and per-vehicle speed, following distance, running lights/signs, lane-change behaviour, lane offset, TM-managed lights, an exact target speed, a path of locations to drive through, wide turns for large vehicles, deterministic seed, hybrid physics, and TM sync mode. Use when the user asks to "make the traffic faster/slower", "let cars run red lights", "keep more distance", "stop lane changes", "make traffic deterministic", or otherwise change how autopilot cars behave. For manually driving one car, use control-vehicle.
 license: MIT
 compatibility: Any OS with the CARLA PythonAPI installed for the active interpreter and a reachable, already-running CARLA server with autopilot vehicles (spawn-vehicles). Does NOT need UE4_ROOT. Tested against CARLA 0.9.16.
 metadata:
@@ -60,7 +60,23 @@ python3 scripts/traffic.py vehicle --role hero --ignore-vehicles 40 --ignore-sig
 
 # TM sync (only alongside a synchronous world — see set-world-settings)
 python3 scripts/traffic.py sync on
+
+# an exact speed in km/h, regardless of the limit
+python3 scripts/traffic.py vehicle --role hero --desired-speed 30
+
+# drive through given points (use the = form: the coordinates may start with a minus)
+python3 scripts/traffic.py vehicle --role hero --path="-48,20,0;-100,20,0"
+
+# large vehicles take wider turns; offset every vehicle 0.3 m to the right
+python3 scripts/traffic.py global --wide-turn on --lane-offset 0.3
 ```
+
+### Routes and plans
+
+- `--desired-speed` sets an exact target in km/h and replaces `--speed-diff` for that vehicle. Measured: 15 km/h requested, 14.9 to 15.0 km/h held.
+- `--path` makes the vehicle drive through the given locations. Measured: 15 points 20 m apart along a route with turns, every one passed within 2 m.
+- `--route Left,Straight,Right` is passed to `set_route`. Each instruction is matched to the next branch point of the Traffic Manager's own road graph, not to the junctions you see: the TM builds that graph from the OpenDRIVE and drops junctions that are not real choices, so its branch points can differ from the map's junctions. On Town10HD_Opt, `Right` at four junctions in a row left the car going straight through three of them, and the plan showed no `Right` option. Read `plan --all` to see the options the TM has planned ahead; use `--path` when the route must follow given roads.
+- `plan` prints `get_next_action` / `get_all_actions`: the road option (`LaneFollow`, `Left`, `Right`, `Straight`, lane changes) and the waypoint the vehicle is heading to. It works from any process.
 
 ### Step 4: Verify
 

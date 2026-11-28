@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include "Carla/MapGen/LargeMapManager.h"
 #include "Carla/Vehicle/CarlaWheeledVehicle.h"
 
 #include <util/ue-header-guard-begin.h>
@@ -179,7 +178,6 @@ private:
   float PoolTranslationTimer {30.0f};
   FTransform InactivePoolTransform { FQuat(1.0f, 1.0f, 1.0f, 1.0f), FVector(1.0f, 1.0f, 1.0f), FVector(1.0f, 1.0f, 1.0f)};
   //Actors
-  ALargeMapManager* LargeMap {nullptr};
   ACarlaWheeledVehicle* HeroVehicle {nullptr};
   //Caches
   TMap<FString, FFoliageBlueprint> FoliageBlueprintCache {};

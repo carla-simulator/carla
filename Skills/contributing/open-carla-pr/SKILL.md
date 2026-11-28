@@ -39,7 +39,7 @@ Progress:
 - [ ] Step 1: Confirm the target — ue58-dev tree, GitHub (not content) change
 - [ ] Step 2: Branch from an up-to-date ue58-dev, named user/topic
 - [ ] Step 3: Review the diff against the rules, fix every finding
-- [ ] Step 4: Build, open the editor, run the local checks (mandatory)
+- [ ] Step 4: Run the local checks for the diff's tier (mandatory)
 - [ ] Step 5: Commit and push (after the user confirms)
 - [ ] Step 6: Fill the PR template, open the PR (after the user confirms)
 - [ ] Step 7: Watch the checks
@@ -285,9 +285,58 @@ PR body.
   step silently missing. Open it only if the user decides to, and then list
   the step as not run under **Possible Drawbacks**.
 
-Only a docs-only PR (Step 3, item 10) skips this step. Run it on the Linux
-tree; `Build/Release` below is the preset build directory, so use `Build` if
-the tree was configured without a preset.
+#### Pick the tier from the paths the diff touches
+
+What has to run depends on **which paths** changed, not on the language:
+rebuilding for a change the build never sees proves nothing, and the smoke
+list does not import skill scripts, examples or `agents`. List the files with
+`git diff --name-only "$BASE"...HEAD` and take the **highest** tier any of them
+falls in:
+
+| Tier | Paths | What runs |
+|---|---|---|
+| **A, docs** | `Docs/**`, `mkdocs.yml`, `docs_hooks.py`, `PythonAPI/docs/**`, any `*.md` (`Skills/**/SKILL.md`, `Skills/**/references/*.md`, `CHANGELOG.md`, `AGENTS.md`) | Only the Step 3 docs checks. Report `Docs-only`. |
+| **B, Python outside the build** | `Skills/**/scripts/**`, other non-Markdown files under `Skills/**`, `PythonAPI/examples/**`, `PythonAPI/util/**`, `PythonAPI/carla/agents/**` | The [tier B check](#tier-b-python-only-check) instead of 4a–4d. |
+| **C, everything else** | `LibCarla/**`, `Unreal/**`, `PythonAPI/carla/src/**`, other files under `PythonAPI/carla/`, `PythonAPI/test/**`, `Util/**` (build tooling, even when it is Python), `CMake*`, `cmake/**`, `Content/**`, config, `.github/workflows/**`, and **any path not listed above** | The full check, 4a–4e. |
+
+- A path you are unsure of is tier C.
+- The rules above apply to every tier. "Run it, do not reason about it"
+  still holds. Only *what* runs changes.
+
+Run tier C on the Linux tree; `Build/Release` below is the preset build
+directory, so use `Build` if the tree was configured without a preset.
+
+#### Tier B: Python-only check
+
+No build, no editor, no full smoke list. Instead, **run the changed code**:
+
+1. **Lint.** The Step 3 checks on the changed files, plus
+   `python3 -m py_compile <files>`.
+2. **Use the changed code.** For `PythonAPI/carla/agents/**`, the installed
+   `carla` wheel still holds the old `agents` package: put
+   `PythonAPI/carla` first on `PYTHONPATH`, or reinstall the wheel, and check
+   with `python3 -c "import agents; print(agents.__file__)"`.
+3. **Server.** Start one on port 3654 with [[run-carla-ue58-server]] from a
+   build of `ue58-dev` at or after the merge-base
+   (`git merge-base "$BASE" HEAD`). No server code changed, so it is
+   equivalent to a build of this branch. Note its commit.
+4. **Run every changed script end-to-end** against it, through each code path
+   the diff touches (each changed option or mode, not only `--help`). For a
+   changed skill script, follow that skill's `SKILL.md` as an agent would. A
+   script that needs something you do not have (an API key, ROS 2, a GPU
+   sensor) is a step that cannot run: stop and tell the user.
+5. **Unit tests.** If `agents` changed, run the Python unit tests
+   (`cd PythonAPI/test/unit && python3 -m nose2 -v`) and any smoke test that
+   imports the changed module (`grep -rl agents PythonAPI/test`).
+
+Record the branch commit, the server's build commit, each command and its
+result for **Where has this been tested?**. If the branch changes, run the
+tier B check again.
+
+**Test-only PRs.** A PR that only changes files in `PythonAPI/test/**`
+(no server, LibCarla or binding change) does not need the build: run the
+tests it changes, and the files they live in, against a server built as in the
+tier B check, step 3.
 
 #### 4a. Build everything the PR touches
 
@@ -333,8 +382,8 @@ pgrep -f 'UnrealEditor.*CarlaUnreal.uproject' >/dev/null && echo "editor still r
   sensors or vehicles, place one in the level and check that it spawns and
   ticks without errors.
 - Close the editor (**File → Exit**) before 4d. A Play-In-Editor session
-  starts its own CARLA server, and `run_server.sh stop` ends every
-  `UnrealEditor` process, the open editor included.
+  starts its own CARLA server on port 2000, so `run_server.sh stop` on that
+  port ends the open editor, and `STOP_ALL=1` ends every `UnrealEditor`.
 
 The editor needs a display. Without one, the step cannot run: stop and tell
 the user (see the rules above). `-nullrhi` or the `-game` server is not a
@@ -390,9 +439,10 @@ skip it, say so under **Possible Drawbacks**.
 
 ### Step 5: Commit and push
 
-- **Do not push without Step 4.** Every check of 4a–4d passed on the commit
-  you are about to push, or the user decided to go ahead with a named step
-  not run. Re-run Step 4 if the code changed since.
+- **Do not push without Step 4.** Every check of the tier that applies (tier B,
+  or 4a–4d) passed on the commit you are about to push, or the user decided
+  to go ahead with a named step not run. Re-run Step 4 if the code changed
+  since.
 - Commit messages: an imperative subject line that says what changed
   ("Fix wheel spin when Chaos is not simulating"), not "fixes" or
   "final changes". Follow the repository's commit attribution rules.
@@ -412,7 +462,7 @@ nothing. Fill each section from evidence:
 |---|---|
 | **Description** | What changed and why, from `git log "$BASE"..HEAD` and the diff. Name the user-visible effect first, then the mechanism. Mention new API, options, and docs pages. |
 | **Fixes #** | The issue number, if any (from Step 0's search or [Opening an issue](#opening-an-issue)). `Fixes #<n>` closes it on merge. Check it with `gh issue view <n> --repo carla-simulator/carla`. Otherwise delete the line, never leave `Fixes #` empty. |
-| **Where has this been tested?** | Platform: `lsb_release -ds` (or OS name). Python: `python3 --version` of the interpreter that ran the tests. Unreal Engine: `5.8` (from `$CARLA_UNREAL_ENGINE_PATH/Engine/Build/Build.version`). **Local checks**, from Step 4e: the commit, the editor check (opened, map loaded, PIE if run), and the summary line of each suite (LibCarla server and client, Python unit, smoke). A docs-only PR writes `Docs-only`. Never left empty for a code change. |
+| **Where has this been tested?** | Platform: `lsb_release -ds` (or OS name). Python: `python3 --version` of the interpreter that ran the tests. Unreal Engine: `5.8` (from `$CARLA_UNREAL_ENGINE_PATH/Engine/Build/Build.version`). **Local checks**, from Step 4e: the commit, the editor check (opened, map loaded, PIE if run), and the summary line of each suite (LibCarla server and client, Python unit, smoke). A tier B PR writes `Python-only (tier B)`, the branch commit, the server's build commit, and each script it ran with the result (tier B check). A docs-only PR writes `Docs-only`. Never left empty for a code change. |
 | **Tests** | Only the tests this PR adds or modifies: what each one asserts, why it was added or changed, and which regression it catches. Not the local run results, which go in the row above. Write `None` if the PR adds or modifies no test, and say why none is needed. |
 | **CI workflows** | `None`, unless `.github/workflows/` changed: then the URL of the agreed discussion from [Opening a discussion](#opening-a-discussion). |
 | **Possible Drawbacks** | Behaviour changes, performance cost, API breaks, assets or content that must land at the same time, things not tested (e.g. Windows). |

@@ -7,7 +7,7 @@
 #include "carla/trafficmanager/InMemoryMap.h"
 #include "carla/trafficmanager/LocalizationUtils.h"
 #include "carla/trafficmanager/Parameters.h"
-#include "carla/trafficmanager/RandomGenerator.h"
+#include "carla/trafficmanager/UniformPRNG.h"
 #include "carla/trafficmanager/TrackTraffic.h"
 #include "carla/trafficmanager/SimulationState.h"
 #include "carla/trafficmanager/Stage.h"
@@ -46,7 +46,7 @@ private:
   std::unordered_map<ActorId, SimpleWaypointPair> vehicles_at_junction_entrance;
   std::unordered_set<ActorId> large_vehicles_at_junction_entrance;
   std::unordered_set<ActorId> large_vehicles_at_junction;
-  RandomGenerator &random_device;
+  UniformPRNG &random_device;
   std::unordered_map<ActorId, std::pair<float, bool>> &large_vehicles;
 
   SimpleWaypointPtr AssignLaneChange(const ActorId actor_id,
@@ -83,7 +83,7 @@ public:
                     Parameters &parameters,
                     std::vector<ActorId>& marked_for_removal,
                     LocalizationFrame &output_array,
-                    RandomGenerator &random_device);
+                    UniformPRNG &random_device);
 
   void Update(const unsigned long index) override;
 

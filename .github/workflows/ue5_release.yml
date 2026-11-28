@@ -8,11 +8,18 @@ name: UE5-Release
 #   CARLA_<VERSION>.zip                      (package)
 #   AdditionalMaps_<VERSION>.tar.gz          (pack)
 #   CARLA_<VERSION>_release-metadata.tar.gz
+# and pushes the Docker image carlasim/carla:<VERSION> (and :latest, unless
+# docker-latest is unchecked, e.g. for a patch release of an older version).
 # Run it on a release branch ue5/<VERSION> created from ue58-dev, whose head
 # carries the tag <VERSION> (e.g. branch ue5/1.0, tag 1.0).
 
 on:
   workflow_dispatch:
+    inputs:
+      docker-latest:
+        description: "Also push the Docker image as carlasim/carla:latest"
+        type: boolean
+        default: true
 
 concurrency:
   group: release-${{ github.ref }}
@@ -70,7 +77,8 @@ jobs:
       upload-package: true
       upload-replace-latest: false
       release-version: ${{ needs.version.outputs.version }}
-      upload-docker: false
+      upload-docker: true
+      upload-docker-latest: ${{ inputs.docker-latest }}
 
   windows-release:
     name: Windows Release

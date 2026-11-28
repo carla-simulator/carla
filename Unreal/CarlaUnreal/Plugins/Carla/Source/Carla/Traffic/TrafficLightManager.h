@@ -69,7 +69,7 @@ public:
   void AdoptModelConfigurationFrom(const ATrafficLightManager& Other);
 
   // Whether OpenDRIVE-generated signs/lights are snapped to the ground after
-  // spawning. Read by ALargeMapManager so both paths share the same flag.
+  // spawning.
   bool GetAdjustSignsHeightToGround() const { return bAdjustSignsHeightToGround; }
 
   // Toggle ground snapping at runtime (driven by the carla.WorldSettings
@@ -178,8 +178,7 @@ private:
   // On World Partition maps the OpenDRIVE-spawned signals are persistent
   // actors while the ground streams per cell, so a signal can be visible over
   // terrain that is not resident. Signals with no ground beneath them are
-  // hidden until their cell streams in (legacy tiled maps handled this by
-  // putting out-of-range actors to sleep in ALargeMapManager).
+  // hidden until their cell streams in.
   UPROPERTY(EditAnywhere, Category= "Traffic Light Manager")
   int32 DormancyChecksPerTick = 150;
 

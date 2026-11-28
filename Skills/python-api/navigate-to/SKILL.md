@@ -29,7 +29,9 @@ Traffic Manager making cars roam; this drives one car to a **specific place**.
 ```
 Progress:
 - [ ] Step 1: Check prerequisites (bash scripts/check_env.sh), clear FAILs (incl. agents import)
-- [ ] Step 2: Have an ego (spawn-vehicles ego) and a destination (world-data/map-waypoints)
+- [ ] Step 2: Have an ego (spawn-vehicles ego) and a destination (world-data/map-waypoints).
+      The ego must be a four-wheeled car (spawn-vehicles' default): a bike or
+      motorbike tips over under BasicAgent and never arrives
 - [ ] Step 3: go (drive) — or route (plan only). Runs a tick loop until arrival/timeout
 ```
 
@@ -52,6 +54,8 @@ source scripts/env.sh
 
 # plan a route and draw it (no driving)
 python3 scripts/navigate.py route --from=0,0,1 --to=-24,-57,1 --draw
+# (remove the drawn route before its --life ends with debug-draw clear;
+#  --color r,g,b sets its colour, default green)
 
 # drive the ego there (BasicAgent, obeys lights)
 python3 scripts/navigate.py go --to=-24,-57,1 --speed 25

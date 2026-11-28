@@ -7,6 +7,7 @@
 #pragma once
 
 #include <memory>
+#include <tuple>
 #include "carla/client/Actor.h"
 #include "carla/trafficmanager/SimpleWaypoint.h"
 
@@ -19,6 +20,20 @@ using Route = std::vector<uint8_t>;
 using WaypointPtr = carla::SharedPtr<carla::client::Waypoint>;
 using Action = std::pair<RoadOption, WaypointPtr>;
 using ActionBuffer = std::vector<Action>;
+/// An action as it crosses the TM RPC: a client waypoint cannot, so it travels as road id, lane id and s.
+using ActionInfo = std::tuple<uint8_t, carla::road::RoadId, carla::road::LaneId, double>;
+using ActionInfoBuffer = std::vector<ActionInfo>;
+
+inline ActionInfoBuffer ToActionInfo(const ActionBuffer &actions) {
+  ActionInfoBuffer infos;
+  for (const auto &action : actions) {
+    if (action.second != nullptr) {
+      infos.emplace_back(static_cast<uint8_t>(action.first), action.second->GetRoadId(),
+                         action.second->GetLaneId(), action.second->GetDistance());
+    }
+  }
+  return infos;
+}
 
 
 /// The function of this class is to integrate all the various stages of

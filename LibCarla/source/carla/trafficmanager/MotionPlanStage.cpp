@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <cmath>
 #include <limits>
+#include <optional>
 
 #include "carla/client/TrafficSign.h"
 #include "carla/client/TrafficLight.h"
@@ -44,7 +45,7 @@ MotionPlanStage::MotionPlanStage(
   const CollisionFrame&collision_frame,
   const TLFrame &tl_frame,
   ControlFrame &output_array,
-  RandomGenerator &random_device,
+  UniformPRNG &random_device,
   const LocalMapPtr &local_map,
   std::unordered_map<ActorId, std::pair<float, bool>> &large_vehicles)
     : vehicle_id_list(vehicle_id_list),
@@ -669,8 +670,12 @@ float MotionPlanStage::GetLandmarkTargetVelocity(const SimpleWaypoint& waypoint,
       } else if (landmark_type == "205") {  // Yield
         minimum_velocity = YIELD_TARGET_VELOCITY;
       } else if (landmark_type == "274") {  // Speed limit
-        float value = static_cast<float>(landmark->GetValue()) / 3.6f;
-        value = parameters.GetVehicleTargetVelocity(actor_id, value);
+        const std::optional<double> limit = landmark->GetSpeedLimitKmh();
+        if (!limit.has_value()) {
+          continue;
+        }
+        const float value = parameters.GetVehicleTargetVelocity(
+            actor_id, static_cast<float>(*limit)) / 3.6f;
         minimum_velocity = (value < max_target_velocity) ? value : max_target_velocity;
       } else {
         continue;

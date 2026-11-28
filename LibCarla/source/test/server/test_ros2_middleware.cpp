@@ -26,12 +26,13 @@
 #include <algorithm>
 #include <cstdint>
 #include <cstdlib>
+#include <cstring>
 #include <memory>
 #include <string>
 #include <vector>
 
 // ==========================================================================
-// Group 1: cdr_topic_info (2 tests)
+// Group 1: cdr_topic_info (3 tests)
 // ==========================================================================
 
 TEST(cdr_topic_info, type_names_are_non_empty) {
@@ -65,8 +66,16 @@ TEST(cdr_topic_info, max_sizes_are_positive) {
   EXPECT_GT(carla::ros2::CdrTopicInfo<carla::ros2::msg::AckermannDriveStamped>::max_serialized_size(), 0u);
 }
 
+TEST(cdr_topic_info, odometry_matches_ros2_jazzy) {
+  using Info = carla::ros2::CdrTopicInfo<carla::ros2::msg::Odometry>;
+  EXPECT_STREQ(Info::type_name(), "nav_msgs::msg::dds_::Odometry_");
+  EXPECT_STREQ(
+      Info::type_hash(),
+      "RIHS01_3cc97dc7fb7502f8714462c526d369e35b603cfc34d946e3f2eda2766dfec6e0");
+}
+
 // ==========================================================================
-// Group 2: cdr_serialization (22 tests)
+// Group 2: cdr_serialization (23 tests)
 // ==========================================================================
 
 TEST(cdr_serialization, time_round_trip) {
@@ -289,6 +298,44 @@ TEST(cdr_serialization, navsat_fix_round_trip) {
   EXPECT_EQ(
       recovered.position_covariance_type,
       static_cast<uint8_t>(carla::ros2::msg::NavSatFix::COVARIANCE_TYPE_DIAGONAL_KNOWN));
+}
+
+TEST(cdr_serialization, odometry_round_trip) {
+  carla::ros2::msg::Odometry original{};
+  original.header.stamp.sec = 7;
+  original.header.stamp.nanosec = 500u;
+  original.header.frame_id = "odom";
+  original.child_frame_id = "hero";
+  original.pose.pose.position.x = 1.5;
+  original.pose.pose.position.y = -2.5;
+  original.pose.pose.orientation.w = 1.0;
+  original.pose.covariance[35] = 0.25;
+  original.twist.twist.linear.x = -3.0;
+  original.twist.twist.angular.z = 0.5;
+  original.twist.covariance[0] = 0.125;
+
+  const auto buf = carla::ros2::serialize_to_cdr(original);
+  // Encapsulation(4) + header stamp(8) + "odom"(4+5) + pad(3) + "hero"(4+5)
+  // + pad(3) + Pose(56) + covariance(288) + Twist(48) + covariance(288).
+  ASSERT_EQ(buf.size(), 716u);
+  EXPECT_EQ(carla::ros2::cdr_serialized_size(original), buf.size());
+  double position_x = 0.0;
+  std::memcpy(&position_x, buf.data() + 36, sizeof(position_x));
+  EXPECT_DOUBLE_EQ(position_x, 1.5);
+
+  carla::ros2::msg::Odometry recovered{};
+  EXPECT_TRUE(carla::ros2::deserialize_from_cdr(buf.data(), buf.size(), recovered));
+  EXPECT_EQ(recovered.header.stamp.sec, 7);
+  EXPECT_EQ(recovered.header.stamp.nanosec, 500u);
+  EXPECT_EQ(recovered.header.frame_id, "odom");
+  EXPECT_EQ(recovered.child_frame_id, "hero");
+  EXPECT_DOUBLE_EQ(recovered.pose.pose.position.x, 1.5);
+  EXPECT_DOUBLE_EQ(recovered.pose.pose.position.y, -2.5);
+  EXPECT_DOUBLE_EQ(recovered.pose.pose.orientation.w, 1.0);
+  EXPECT_DOUBLE_EQ(recovered.pose.covariance[35], 0.25);
+  EXPECT_DOUBLE_EQ(recovered.twist.twist.linear.x, -3.0);
+  EXPECT_DOUBLE_EQ(recovered.twist.twist.angular.z, 0.5);
+  EXPECT_DOUBLE_EQ(recovered.twist.covariance[0], 0.125);
 }
 
 TEST(cdr_serialization, carla_ego_vehicle_control_round_trip) {

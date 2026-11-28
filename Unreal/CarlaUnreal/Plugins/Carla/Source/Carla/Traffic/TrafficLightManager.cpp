@@ -730,6 +730,12 @@ T * GetClosestTrafficSignActor(const carla::road::Signal &Signal, UWorld* World)
   {
     float Dist = FVector::DistSquared(Actor->GetActorLocation(), Location);
     T * TrafficSign = Cast<T>(Actor);
+    // A visual-only sign stands on the same spot as the sign that carries the
+    // logic; never let it take the signal.
+    if (TrafficSign == nullptr || TrafficSign->bVisualOnly)
+    {
+      continue;
+    }
     // Baked twin signs carry an explicit identity. Their support may be moved
     // onto a sidewalk more than 5 m from the logical OpenDRIVE control point.
     // Never adopt another signal's identified sign through the proximity fallback.

@@ -1,6 +1,6 @@
 ---
 name: run-carla-ue58-server
-description: Starts a CARLA UE 5.8 server from a ue58-dev tree — the editor binary in -game mode (the working headless server), the packaged shipping build, or the full editor — with offscreen/nullrhi rendering, custom RPC and streaming ports, and native ROS 2 via the single-dash -ros2 flag. Probes a running server, and stops one cleanly despite the 15-character process-name truncation. Use when the user asks to "run/start CARLA UE5", "launch a ue58 server", "run headless", "publish ROS 2 topics from UE5", or a client cannot reach the simulator.
+description: Starts a CARLA UE 5.8 server from a ue58-dev tree — the editor binary in -game mode (the working headless server), the packaged shipping build, or the full editor — with offscreen/nullrhi rendering, custom RPC and streaming ports, and native ROS 2 via the single-dash -ros2 flag. Probes a running server, and stops the one on a given port (or every server with STOP_ALL=1) cleanly despite the 15-character process-name truncation. Use when the user asks to "run/start CARLA UE5", "launch a ue58 server", "run headless", "publish ROS 2 topics from UE5", or a client cannot reach the simulator.
 license: MIT
 compatibility: Linux with a built ue58-dev tree (engine + carla-unreal) or a package. On Windows, Git Bash with a standalone package (CarlaUnreal.exe) for package/probe/stop. Rendering modes need Vulkan; -nullrhi does not. ROS 2 needs -DENABLE_ROS2=ON at build time. Verified live against ue58-dev HEAD 718efd7cc, engine 5.8, CARLA 0.10.0 — editor -game and packaged shipping, with and without ROS 2.
 metadata:
@@ -152,8 +152,11 @@ before your real client so a failure is attributable.
 ### Step 5: Stop
 
 ```bash
-bash scripts/run_server.sh stop
+PORT=3654 bash scripts/run_server.sh stop     # only the server listening on 3654 (default PORT is 2000)
+STOP_ALL=1 bash scripts/run_server.sh stop    # every CARLA server on the machine
 ```
+
+`stop` finds the process listening on `PORT` (`ss -ltnp`, or the `-carla-rpc-port=` in its command line; `netstat -ano` on Windows) and stops only that one, so servers on other ports keep running. It refuses to kill a process on that port that is not a CARLA server, and sends KILL if the port is still held after 20 s. Before this, `stop` killed every UnrealEditor and shipping process whatever `PORT` said: an agent stopping its own server on 4000 took down another agent's server on 3654 mid-test. Measured after the fix: with servers on 3654 and 3700, `PORT=3700 ... stop` released 3700 and 3654 still answered `probe`.
 
 **Process names are truncated to 15 characters in `/proc`**, so the shipping
 binary appears as `CarlaUnreal-Lin`, never `CarlaUnreal-Linux-Shipping`. A
@@ -282,7 +285,7 @@ all three.
 **Problem: `bind: Address already in use`, then Signal 11**
 Cause: a stale server still holds the port — very often because `pkill -x` was
 given the untruncated process name.
-Solution: `bash scripts/run_server.sh stop`. The preflight refuses to launch onto
+Solution: `PORT=<port> bash scripts/run_server.sh stop`. The preflight refuses to launch onto
 a busy port and prints both remedies.
 
 **Problem: the server dies the moment a camera is spawned**
