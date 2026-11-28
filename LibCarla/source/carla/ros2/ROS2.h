@@ -51,6 +51,7 @@ class BaseSubscriber;
 class AutowareVehicleStatusPublisher;
 class CarlaCameraPublisher;
 class CarlaClockPublisher;
+class CarlaOdometryPublisher;
 class CarlaTransformPublisher;
 class BasicSubscriber;
 class BasicPublisher;
@@ -104,11 +105,16 @@ public:
   // subscribers and marks the vehicle as the Autoware ego so
   // ProcessDataFromStatusSensor accepts its status stream. Default behavior
   // (both flags false) is unchanged for non-Autoware users.
+  // Every registered vehicle also gets the <base>/odometry publisher fed by
+  // ProcessDataFromVehicleOdometry, whatever its control mode.
   void RegisterVehicle(
       void *actor, std::string ros_name, std::string frame_id, ActorCallback callback,
       bool enable_ackermann_control = false,
       bool enable_autoware_control = false);
   void UnregisterVehicle(void *actor);
+  // Registered vehicles. The plugin feeds each one once
+  // per tick; entries leave on UnregisterVehicle, before the actor is freed.
+  std::vector<void *> GetOdometryVehicles() const;
 
   // Exact-topic-name override (tier4 port of the ros_topic_name attribute
   // flow). When set (non-empty), the actor's publishers/subscribers bind to
@@ -149,6 +155,7 @@ public:
   void ProcessDataFromCamera(
       uint64_t sensor_type,
       carla::streaming::detail::stream_id_type stream_id,
+      double capture_timestamp,
       const carla::geom::Transform sensor_transform,
       int W, int H, float Fov,
       const carla::SharedBufferView buffer,
@@ -246,6 +253,14 @@ public:
       const carla::geom::Transform &sensor_world_transform,
       const double mgrs_offset_position[3],
       void *actor = nullptr);
+  // Vehicle odometry in CARLA's left-handed frame: the world transform and the
+  // body-frame linear (m/s) and angular (rad/s) velocity. Ignored unless the
+  // vehicle was registered with RegisterVehicle.
+  void ProcessDataFromVehicleOdometry(
+      void *vehicle_actor,
+      const carla::geom::Transform &transform,
+      const carla::geom::Vector3D &velocity,
+      const carla::geom::Vector3D &angular_velocity);
 
 private:
   struct ActorRegistration {
@@ -338,6 +353,8 @@ private:
   // is supported (tier4 semantics).
   std::unordered_map<void *, std::shared_ptr<AutowareVehicleStatusPublisher>>
       _autoware_status_publishers;
+  std::unordered_set<void *> _odometry_vehicles;
+  std::unordered_map<void *, std::shared_ptr<CarlaOdometryPublisher>> _odometry_publishers;
   std::unordered_map<void *, std::vector<void *>> _actor_parents;
   std::shared_ptr<CarlaClockPublisher> _clock_publisher;
   std::unordered_map<void *, std::shared_ptr<BasePublisher>> _publishers;

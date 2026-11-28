@@ -24,7 +24,7 @@ struct CARLA_API FHitDisplacementEntry
     FString Pattern;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MeshToLandscapeUtil")
-    double Displacement;
+    double Displacement = 0.0;
 };
 
 UCLASS(BlueprintType)

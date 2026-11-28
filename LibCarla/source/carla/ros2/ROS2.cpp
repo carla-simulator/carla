@@ -7,6 +7,7 @@
 #include "carla/Logging.h"
 #include "carla/ros2/ROS2.h"
 #include "carla/ros2/ROS2SensorTypes.h"
+#include "carla/ros2/ROS2Time.h"
 #include "carla/geom/GeoLocation.h"
 #include "carla/geom/Vector3D.h"
 #include "carla/sensor/data/DVSEvent.h"
@@ -36,6 +37,7 @@
 #include "publishers/CarlaSemanticLidarPublisher.h"
 #include "publishers/CarlaRadarPublisher.h"
 #include "publishers/CarlaIMUPublisher.h"
+#include "publishers/CarlaOdometryPublisher.h"
 #include "publishers/CarlaGNSSPublisher.h"
 #include "publishers/CarlaTransformPublisher.h"
 #include "publishers/CarlaCollisionPublisher.h"
@@ -50,7 +52,6 @@
   #include "subscribers/BasicSubscriber.h"
 #endif
 
-#include <cmath>
 #include <memory>
 #include <string>
 #include <utility>
@@ -154,12 +155,8 @@ void ROS2::SetFrame(uint64_t frame) {
 }
 
 void ROS2::SetTimestamp(double timestamp) {
-  double integral;
-  const double fractional = std::modf(timestamp, &integral);
-  const double multiplier = 1000000000.0;
-  const Stamp stamp{
-      static_cast<int32_t>(integral),
-      static_cast<uint32_t>(fractional * multiplier)};
+  const msg::Time time = ToRosTime(timestamp);
+  const Stamp stamp{time.sec, time.nanosec};
   std::shared_ptr<CarlaClockPublisher> clock_publisher;
   {
     std::lock_guard<std::mutex> lock(_mutex);
@@ -185,6 +182,7 @@ void ROS2::DropPublishersLocked(void *actor) {
   _publishers.erase(actor);
   _camera_publishers.erase(actor);
   _transforms.erase(actor);
+  _odometry_publishers.erase(actor);
 }
 
 bool ROS2::IsKnownActorLocked(void *actor) const {
@@ -197,6 +195,7 @@ void ROS2::RegisterSensor(
   // A new actor can reuse a destroyed one's address; never inherit its
   // cached publishers.
   DropPublishersLocked(actor);
+  _odometry_vehicles.erase(actor);
   // insert_or_assign so re-registering an actor with a new ros_name actually
   // updates the entry; unordered_map::insert would silently keep the stale
   // one.
@@ -221,6 +220,7 @@ void ROS2::RegisterVehicle(
     bool enable_autoware_control) {
   std::lock_guard<std::mutex> lock(_mutex);
   DropPublishersLocked(actor);
+  _odometry_vehicles.insert(actor);
   _registrations.insert_or_assign(
       actor, ActorRegistration{ros_name, frame_id, true});
 
@@ -258,7 +258,13 @@ void ROS2::UnregisterVehicle(void *actor) {
   _actor_callbacks.erase(actor);
   _autoware_vehicles.erase(actor);
   _autoware_status_publishers.erase(actor);
+  _odometry_vehicles.erase(actor);
   UnregisterSensorLocked(actor);
+}
+
+std::vector<void *> ROS2::GetOdometryVehicles() const {
+  std::lock_guard<std::mutex> lock(_mutex);
+  return {_odometry_vehicles.begin(), _odometry_vehicles.end()};
 }
 
 void ROS2::AddActorRosTopicName(void *actor, std::string ros_topic_name) {
@@ -576,11 +582,13 @@ void ROS2::PublishTransform(
 void ROS2::ProcessDataFromCamera(
     uint64_t sensor_type,
     carla::streaming::detail::stream_id_type stream_id,
+    double capture_timestamp,
     const carla::geom::Transform sensor_transform,
     int W, int H, float Fov,
     const carla::SharedBufferView buffer,
     void *actor) {
-  const Stamp stamp = GetStamp();
+  const msg::Time capture_time = ToRosTime(capture_timestamp);
+  const Stamp stamp{capture_time.sec, capture_time.nanosec};
   // Image dimensions + FOV are now read straight from ImageSerializer's
   // per-frame header inside the camera publisher's WriteCameraInfo call;
   // the W/H/Fov arguments survive for ABI compatibility with the
@@ -982,6 +990,40 @@ void ROS2::ProcessDataFromAutowareGNSS(
   PublishTransform(actor, stamp, sensor_transform);
 }
 
+void ROS2::ProcessDataFromVehicleOdometry(
+    void *vehicle_actor,
+    const carla::geom::Transform &transform,
+    const carla::geom::Vector3D &velocity,
+    const carla::geom::Vector3D &angular_velocity) {
+  const Stamp stamp = GetStamp();
+  std::shared_ptr<CarlaOdometryPublisher> publisher;
+  {
+    std::lock_guard<std::mutex> lock(_mutex);
+    if (_odometry_vehicles.count(vehicle_actor) == 0) {
+      return;
+    }
+    auto it = _odometry_publishers.find(vehicle_actor);
+    if (it != _odometry_publishers.end()) {
+      publisher = it->second;
+    } else {
+      const std::string base_topic_name = BuildBaseTopicName(vehicle_actor);
+      if (base_topic_name.empty()) {
+        return;
+      }
+      publisher = std::make_shared<CarlaOdometryPublisher>(
+          base_topic_name, LookupFrameId(vehicle_actor));
+      _odometry_publishers.insert({vehicle_actor, publisher});
+    }
+  }
+  publisher->Write(
+      stamp.seconds, stamp.nanoseconds,
+      transform.location.x, transform.location.y, transform.location.z,
+      transform.rotation.pitch, transform.rotation.yaw, transform.rotation.roll,
+      velocity.x, velocity.y, velocity.z,
+      angular_velocity.x, angular_velocity.y, angular_velocity.z);
+  publisher->Publish();
+}
+
 void ROS2::Shutdown() {
   std::lock_guard<std::mutex> lock(_mutex);
   _publishers.clear();
@@ -994,6 +1036,8 @@ void ROS2::Shutdown() {
   _actor_ros_topic_names.clear();
   _autoware_vehicles.clear();
   _autoware_status_publishers.clear();
+  _odometry_vehicles.clear();
+  _odometry_publishers.clear();
   _clock_publisher.reset();
   _enabled = false;
 #if defined(WITH_ROS2_DEMO)
