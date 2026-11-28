@@ -1206,6 +1206,8 @@ void FCarlaServer::FPimpl::BindActions()
   BIND_SYNC(get_static_actors) << [this]() -> R<std::vector<cr::StaticActor>>
   {
     REQUIRE_CARLA_EPISODE();
+    // The next episode state then carries the version of the list sent here.
+    FWorldObserver::MarkStaticActorsChanged();
     const FActorRegistry &Registry = Episode->GetActorRegistry();
     std::vector<cr::StaticActor> Result;
     for (auto &&It : Registry)
@@ -1332,6 +1334,7 @@ void FCarlaServer::FPimpl::BindActions()
     // We need to force the actor state change, since dormant actors
     //  will ignore the FCarlaActor destruction
     CarlaActor->SetActorState(cr::ActorState::PendingKill);
+    FWorldObserver::MarkStaticActorsChanged();
     if (!Episode->DestroyActor(ActorId))
     {
       RESPOND_ERROR("internal error: unable to destroy actor");

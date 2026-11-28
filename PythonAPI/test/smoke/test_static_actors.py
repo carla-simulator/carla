@@ -107,6 +107,80 @@ class TestStaticActors(SyncSmokeTest):
             self.client.apply_batch_sync([carla.command.DestroyActor(i) for i in ids + moving])
             self.world.tick()
 
+    def _is_static(self, actor_id):
+        """True if only get_static_actors() has the actor, False if only the snapshot has it."""
+        in_snapshot = self.world.get_snapshot().has_actor(actor_id)
+        in_static = actor_id in {a.id for a in self.world.get_static_actors()}
+        self.assertNotEqual(in_snapshot, in_static)
+        # That call makes the server rebuild its static actors: tick it away, so the next change needs a mark of its own.
+        self.world.tick()
+        return in_static
+
+    def test_snapshot_follows_physics_attach_and_parent_destroy(self):
+        """A static prop leaves or rejoins the snapshot on the next tick when it
+        starts or stops simulating physics; a prop spawned attached to it is in
+        the snapshot, and is static on the next tick once that parent is destroyed."""
+        print("TestStaticActors.test_snapshot_follows_physics_attach_and_parent_destroy")
+        (parent,), _ = self._spawn(count=1)
+        bp = self.world.get_blueprint_library().find("static.prop.mesh")
+        bp.set_attribute("mesh_path", MESH)
+        child = None
+        try:
+            self.world.tick()
+            self.assertTrue(self._is_static(parent))
+            parent_actor = self.world.get_actor(parent)
+            parent_actor.set_simulate_physics(True)
+            self.world.tick()
+            self.assertFalse(self._is_static(parent))
+            parent_actor.set_simulate_physics(False)
+            self.world.tick()
+            self.assertTrue(self._is_static(parent))
+            child = self.world.spawn_actor(bp, carla.Transform(carla.Location(x=2.0)), attach_to=parent_actor).id
+            self.world.tick()
+            self.assertFalse(self._is_static(child))
+            self.client.apply_batch_sync([carla.command.DestroyActor(parent)])
+            parent = None
+            self.world.tick()
+            self.assertTrue(self._is_static(child))
+        finally:
+            self.client.apply_batch_sync([carla.command.DestroyActor(i) for i in (parent, child) if i is not None])
+            self.world.tick()
+
+    def test_swapped_light_times_reach_a_second_client(self):
+        """Two traffic lights that swap their green times in one tick: a client
+        that read the old times reads the swapped ones."""
+        print("TestStaticActors.test_swapped_light_times_reach_a_second_client")
+        all_lights = list(self.world.get_actors().filter("traffic.traffic_light"))
+        self.assertGreater(len(all_lights), 1)
+        # Lights of one group can share a controller, and so their green time.
+        group = {light.id for light in all_lights[0].get_group_traffic_lights()}
+        lights = [all_lights[0], next(light for light in all_lights if light.id not in group)]
+        saved = [light.get_green_time() for light in lights]
+        late = carla.Client(*self.testing_address)
+        late.set_timeout(120.0)
+        late_world = late.get_world()
+
+        def read_on_late_client(frame):
+            deadline = time.time() + 30.0
+            while late_world.get_snapshot().frame < frame and time.time() < deadline:
+                time.sleep(0.001)
+            self.assertGreaterEqual(late_world.get_snapshot().frame, frame)
+            return [late_world.get_actor(light.id).get_green_time() for light in lights]
+
+        try:
+            lights[0].set_green_time(11.0)
+            lights[1].set_green_time(17.0)
+            self.assertEqual(read_on_late_client(self.world.tick()), [11.0, 17.0])
+            # That read made the server rebuild its static actors: tick it away, so the swap needs the per-tick hash.
+            self.world.tick()
+            lights[0].set_green_time(17.0)
+            lights[1].set_green_time(11.0)
+            self.assertEqual(read_on_late_client(self.world.tick()), [17.0, 11.0])
+        finally:
+            for light, green in zip(lights, saved):
+                light.set_green_time(green)
+            self.world.tick()
+
 
 class TestStaticSigns(SmokeTest):
     """Traffic signs and traffic lights are static actors that still give

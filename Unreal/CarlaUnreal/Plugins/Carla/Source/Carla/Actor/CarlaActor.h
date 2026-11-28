@@ -88,6 +88,12 @@ public:
     return Type;
   }
 
+  /// Whether the actor was registered in the persistent level, which World Partition never streams out.
+  bool IsInPersistentLevel() const
+  {
+    return bInPersistentLevel;
+  }
+
   AActor *GetActor()
   {
     return TheActor.Get();
@@ -590,6 +596,8 @@ private:
 protected:
 
   ActorType Type = ActorType::INVALID;
+
+  bool bInPersistentLevel = false;
 
   TSharedPtr<FActorData> ActorData = nullptr;
 

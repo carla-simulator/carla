@@ -59,14 +59,30 @@ public:
 
   /// Order-independent hash and count of the static actors and followers
   /// (ids, transforms, what a traffic light does not send on every tick, the
-  /// walker of a follower) in the previous tick, and the version sent in the
-  /// episode state, which changes when they do.
+  /// walker of a follower), and the version sent in the episode state, which
+  /// changes when they do; the cached ones below count as of the last rebuild.
   struct FStaticActors
   {
     uint64 Hash = 0u;
     int32 Count = -1;
     uint32 Version = 0u;
+    /// Set by MarkStaticActorsChanged(); the next tick rebuilds the cache below.
+    static bool bChanged;
+    uint64 EpisodeId = 0u;
+    /// Hash and count of the cached static actors that are not traffic lights.
+    uint64 CachedHash = 0u;
+    int32 CachedCount = 0;
+    /// The static traffic lights, in registry order, each with the hash of its id and transform.
+    TArray<TPair<const FCarlaActor *, uint64>> Lights;
+    /// Every other registry entry, walked on every tick.
+    TArray<const FCarlaActor *> Rest;
   };
+
+  /// Call wherever a registry entry is added or freed, an actor may start or stop being static, or a static actor moves.
+  static void MarkStaticActorsChanged()
+  {
+    FStaticActors::bChanged = true;
+  }
 
   /// Send a message to every connected client with the info about the given @a
   /// Episode.

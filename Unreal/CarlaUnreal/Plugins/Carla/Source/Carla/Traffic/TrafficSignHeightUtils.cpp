@@ -9,6 +9,7 @@
 #include "Carla.h"
 #include "TrafficSignBase.h"
 #include "Carla/Game/Tagger.h"
+#include "Carla/Sensor/WorldObserver.h"
 
 #include <util/ue-header-guard-begin.h>
 #include "Components/BoxComponent.h"
@@ -169,6 +170,7 @@ namespace TrafficSignHeightUtils
     Sign->bPositioned = true;
     UE_LOG(LogCarla, Log, TEXT("Adjusted sign %s height by %f cm"),
         *Sign->GetName(), ZOffset);
+    FWorldObserver::MarkStaticActorsChanged();
     return true;
   }
 }
