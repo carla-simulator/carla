@@ -32,10 +32,10 @@ struct FRoadSignInfo
   FString RoadId;
 
   UPROPERTY(BlueprintReadOnly)
-  double S;
+  double S = 0.0;
 
   UPROPERTY(BlueprintReadOnly)
-  double T;
+  double T = 0.0;
 
   UPROPERTY(BlueprintReadOnly)
   FString Orientation;
