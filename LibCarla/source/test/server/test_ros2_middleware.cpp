@@ -16,6 +16,7 @@
 #include <carla/ros2/middleware/ISubscriberMiddleware.h>
 #include <carla/ros2/publishers/PublisherImpl.h>
 #include <carla/ros2/publishers/CarlaEgoVehicleStatusPublisher.h>
+#include <carla/ros2/publishers/CarlaTrafficLightStatusPublisher.h>
 #include <carla/ros2/publishers/UeToRosConversions.h>
 #include <carla/ros2/subscribers/SubscriberImpl.h>
 #include <carla/ros2/middleware/fastdds/GenericCdrPubSubType.h>
@@ -573,7 +574,7 @@ TEST(subscriber_impl, init_failure_propagated) {
 }
 
 // ==========================================================================
-// Group 9: cdr_topic_info (2 tests)
+// Group 9: cdr_topic_info (5 tests)
 // ==========================================================================
 
 TEST(cdr_topic_info, ego_vehicle_type_names_match_packages) {
@@ -596,6 +597,24 @@ TEST(cdr_topic_info, ego_vehicle_max_sizes_are_positive) {
   EXPECT_GT(carla::ros2::CdrTopicInfo<carla::ros2::msg::CarlaEgoVehicleStatus>::max_serialized_size(), 0u);
   EXPECT_GT(carla::ros2::CdrTopicInfo<carla::ros2::msg::CarlaEgoVehicleInfo>::max_serialized_size(), 0u);
   EXPECT_GT(carla::ros2::CdrTopicInfo<carla::ros2::msg::CarlaEgoVehicleInfoWheel>::max_serialized_size(), 0u);
+}
+
+TEST(cdr_topic_info, traffic_light_type_names_match_packages) {
+  EXPECT_STREQ(
+      "carla_msgs::msg::dds_::CarlaBoundingBox_",
+      carla::ros2::CdrTopicInfo<carla::ros2::msg::CarlaBoundingBox>::type_name());
+  EXPECT_STREQ(
+      "carla_msgs::msg::dds_::CarlaTrafficLightStatus_",
+      carla::ros2::CdrTopicInfo<carla::ros2::msg::CarlaTrafficLightStatus>::type_name());
+  EXPECT_STREQ(
+      "carla_msgs::msg::dds_::CarlaTrafficLightStatusList_",
+      carla::ros2::CdrTopicInfo<carla::ros2::msg::CarlaTrafficLightStatusList>::type_name());
+  EXPECT_STREQ(
+      "carla_msgs::msg::dds_::CarlaTrafficLightInfo_",
+      carla::ros2::CdrTopicInfo<carla::ros2::msg::CarlaTrafficLightInfo>::type_name());
+  EXPECT_STREQ(
+      "carla_msgs::msg::dds_::CarlaTrafficLightInfoList_",
+      carla::ros2::CdrTopicInfo<carla::ros2::msg::CarlaTrafficLightInfoList>::type_name());
 }
 
 TEST(cdr_topic_info, type_names_are_non_empty) {
@@ -1893,4 +1912,167 @@ TEST(vehicle_status_acceleration, non_positive_delta_returns_zero) {
   EXPECT_FLOAT_EQ(a.x, 0.0f);
   EXPECT_FLOAT_EQ(a.y, 0.0f);
   EXPECT_FLOAT_EQ(a.z, 0.0f);
+}
+
+// ==========================================================================
+// Group 20: traffic light types CDR round-trips (6 tests)
+// ==========================================================================
+
+TEST(cdr_serialization, carla_bounding_box_round_trip) {
+  carla::ros2::msg::CarlaBoundingBox original{};
+  original.center.x = 1.5;
+  original.center.y = -2.5;
+  original.center.z = 0.75;
+  original.size.x = 4.0;
+  original.size.y = 2.0;
+  original.size.z = 1.5;
+
+  auto buf = carla::ros2::serialize_to_cdr(original);
+  ASSERT_FALSE(buf.empty());
+
+  carla::ros2::msg::CarlaBoundingBox recovered{};
+  EXPECT_TRUE(carla::ros2::deserialize_from_cdr(buf.data(), buf.size(), recovered));
+  EXPECT_DOUBLE_EQ(recovered.center.x, 1.5);
+  EXPECT_DOUBLE_EQ(recovered.center.y, -2.5);
+  EXPECT_DOUBLE_EQ(recovered.center.z, 0.75);
+  EXPECT_DOUBLE_EQ(recovered.size.x, 4.0);
+  EXPECT_DOUBLE_EQ(recovered.size.y, 2.0);
+  EXPECT_DOUBLE_EQ(recovered.size.z, 1.5);
+}
+
+TEST(cdr_serialization, carla_traffic_light_status_round_trip) {
+  carla::ros2::msg::CarlaTrafficLightStatus original{};
+  original.id = 123u;
+  original.state = 2u; // GREEN
+
+  auto buf = carla::ros2::serialize_to_cdr(original);
+  ASSERT_FALSE(buf.empty());
+
+  carla::ros2::msg::CarlaTrafficLightStatus recovered{};
+  EXPECT_TRUE(carla::ros2::deserialize_from_cdr(buf.data(), buf.size(), recovered));
+  EXPECT_EQ(recovered.id, 123u);
+  EXPECT_EQ(recovered.state, 2u);
+}
+
+TEST(cdr_serialization, carla_traffic_light_status_list_round_trip) {
+  // Three entries exercise the alignment between the uint8 state of one
+  // element and the uint32 id of the next.
+  carla::ros2::msg::CarlaTrafficLightStatusList original{};
+  original.traffic_lights.resize(3u);
+  original.traffic_lights[0].id = 10u;
+  original.traffic_lights[0].state = 0u; // RED
+  original.traffic_lights[1].id = 11u;
+  original.traffic_lights[1].state = 1u; // YELLOW
+  original.traffic_lights[2].id = 12u;
+  original.traffic_lights[2].state = 4u; // UNKNOWN
+
+  auto buf = carla::ros2::serialize_to_cdr(original);
+  ASSERT_FALSE(buf.empty());
+
+  carla::ros2::msg::CarlaTrafficLightStatusList recovered{};
+  EXPECT_TRUE(carla::ros2::deserialize_from_cdr(buf.data(), buf.size(), recovered));
+  ASSERT_EQ(recovered.traffic_lights.size(), 3u);
+  EXPECT_EQ(recovered.traffic_lights[0].id, 10u);
+  EXPECT_EQ(recovered.traffic_lights[0].state, 0u);
+  EXPECT_EQ(recovered.traffic_lights[1].id, 11u);
+  EXPECT_EQ(recovered.traffic_lights[1].state, 1u);
+  EXPECT_EQ(recovered.traffic_lights[2].id, 12u);
+  EXPECT_EQ(recovered.traffic_lights[2].state, 4u);
+}
+
+TEST(cdr_serialization, carla_traffic_light_status_list_empty_round_trip) {
+  carla::ros2::msg::CarlaTrafficLightStatusList original{};
+
+  auto buf = carla::ros2::serialize_to_cdr(original);
+  ASSERT_FALSE(buf.empty());
+
+  carla::ros2::msg::CarlaTrafficLightStatusList recovered{};
+  EXPECT_TRUE(carla::ros2::deserialize_from_cdr(buf.data(), buf.size(), recovered));
+  EXPECT_TRUE(recovered.traffic_lights.empty());
+}
+
+TEST(cdr_serialization, carla_traffic_light_info_list_round_trip) {
+  carla::ros2::msg::CarlaTrafficLightInfoList original{};
+  original.traffic_lights.resize(2u);
+
+  original.traffic_lights[0].id = 30u;
+  original.traffic_lights[0].transform.position.x = 100.5;
+  original.traffic_lights[0].transform.position.y = -20.25;
+  original.traffic_lights[0].transform.position.z = 0.3;
+  original.traffic_lights[0].transform.orientation.w = 0.7071;
+  original.traffic_lights[0].transform.orientation.z = -0.7071;
+  original.traffic_lights[0].trigger_volume.center.x = 1.0;
+  original.traffic_lights[0].trigger_volume.center.y = -14.6;
+  original.traffic_lights[0].trigger_volume.size.x = 9.0;
+  original.traffic_lights[0].trigger_volume.size.y = 1.5;
+  original.traffic_lights[0].trigger_volume.size.z = 2.0;
+
+  original.traffic_lights[1].id = 31u;
+  original.traffic_lights[1].transform.orientation.w = 1.0;
+
+  auto buf = carla::ros2::serialize_to_cdr(original);
+  ASSERT_FALSE(buf.empty());
+
+  carla::ros2::msg::CarlaTrafficLightInfoList recovered{};
+  EXPECT_TRUE(carla::ros2::deserialize_from_cdr(buf.data(), buf.size(), recovered));
+  ASSERT_EQ(recovered.traffic_lights.size(), 2u);
+  EXPECT_EQ(recovered.traffic_lights[0].id, 30u);
+  EXPECT_DOUBLE_EQ(recovered.traffic_lights[0].transform.position.x, 100.5);
+  EXPECT_DOUBLE_EQ(recovered.traffic_lights[0].transform.position.y, -20.25);
+  EXPECT_DOUBLE_EQ(recovered.traffic_lights[0].transform.position.z, 0.3);
+  EXPECT_DOUBLE_EQ(recovered.traffic_lights[0].transform.orientation.w, 0.7071);
+  EXPECT_DOUBLE_EQ(recovered.traffic_lights[0].transform.orientation.z, -0.7071);
+  EXPECT_DOUBLE_EQ(recovered.traffic_lights[0].trigger_volume.center.x, 1.0);
+  EXPECT_DOUBLE_EQ(recovered.traffic_lights[0].trigger_volume.center.y, -14.6);
+  EXPECT_DOUBLE_EQ(recovered.traffic_lights[0].trigger_volume.size.x, 9.0);
+  EXPECT_DOUBLE_EQ(recovered.traffic_lights[0].trigger_volume.size.y, 1.5);
+  EXPECT_DOUBLE_EQ(recovered.traffic_lights[0].trigger_volume.size.z, 2.0);
+  EXPECT_EQ(recovered.traffic_lights[1].id, 31u);
+  EXPECT_DOUBLE_EQ(recovered.traffic_lights[1].transform.orientation.w, 1.0);
+}
+
+TEST(cdr_serialization, deserialize_traffic_light_status_list_hostile_length_returns_false) {
+  // A traffic_lights sequence length above the sanity cap must be rejected
+  // instead of resizing the vector to a multi-GB allocation.
+  carla::ros2::msg::CarlaTrafficLightStatusList original{};
+  auto buf = carla::ros2::serialize_to_cdr(original);
+  ASSERT_FALSE(buf.empty());
+
+  // Layout after the 4-byte encapsulation header: traffic_lights length
+  // (uint32) at offset 4.
+  const size_t length_offset = 4u;
+  ASSERT_GE(buf.size(), length_offset + 4u);
+  const uint32_t hostile_length = 0xFFFFFFFFu;
+  std::memcpy(buf.data() + length_offset, &hostile_length, sizeof(hostile_length));
+
+  carla::ros2::msg::CarlaTrafficLightStatusList recovered{};
+  EXPECT_FALSE(carla::ros2::deserialize_from_cdr(buf.data(), buf.size(), recovered));
+}
+
+// ==========================================================================
+// Group 21: traffic light status change detection (4 tests)
+// ==========================================================================
+
+TEST(traffic_light_status_change, equal_lists_report_no_change) {
+  const std::vector<TrafficLightState> previous = {{10u, 0u}, {11u, 2u}};
+  const std::vector<TrafficLightState> current = {{10u, 0u}, {11u, 2u}};
+  EXPECT_TRUE(CarlaTrafficLightStatusPublisher::StatesEqual(previous, current));
+}
+
+TEST(traffic_light_status_change, changed_state_reports_change) {
+  const std::vector<TrafficLightState> previous = {{10u, 0u}, {11u, 2u}};
+  const std::vector<TrafficLightState> current = {{10u, 0u}, {11u, 1u}};
+  EXPECT_FALSE(CarlaTrafficLightStatusPublisher::StatesEqual(previous, current));
+}
+
+TEST(traffic_light_status_change, added_light_reports_change) {
+  const std::vector<TrafficLightState> previous = {{10u, 0u}};
+  const std::vector<TrafficLightState> current = {{10u, 0u}, {11u, 2u}};
+  EXPECT_FALSE(CarlaTrafficLightStatusPublisher::StatesEqual(previous, current));
+}
+
+TEST(traffic_light_status_change, same_states_different_ids_report_change) {
+  const std::vector<TrafficLightState> previous = {{10u, 0u}, {11u, 2u}};
+  const std::vector<TrafficLightState> current = {{10u, 0u}, {12u, 2u}};
+  EXPECT_FALSE(CarlaTrafficLightStatusPublisher::StatesEqual(previous, current));
 }
