@@ -17,6 +17,7 @@
 #include "WorldPartition/WorldPartitionRuntimeCell.h"
 #include "WorldPartition/WorldPartitionStreamingSource.h"
 #include "WorldPartition/WorldPartitionSubsystem.h"
+#include "HAL/IConsoleManager.h"
 #include <util/ue-header-guard-end.h>
 
 namespace
@@ -39,6 +40,88 @@ namespace
   constexpr float FallbackWalkerRadius = 35.0f;
   constexpr float FallbackWalkerHeight = 180.0f;
   constexpr float FallbackWalkerStepHeight = 25.0f;
+
+  TAutoConsoleVariable<int32> CVarUpdateNavOctreeOnMove(
+      TEXT("carla.Navigation.UpdateOctreeOnMove"),
+      -1,
+      TEXT("Whether moving a component updates the navigation octree, which ")
+      TEXT("only the runtime navmesh generator reads. -1 (default): only when ")
+      TEXT("some navigation data of the world is rebuilt at runtime; 0: never; ")
+      TEXT("1: always (the engine's default). Read at BeginPlay and when ")
+      TEXT("navigation data is registered or built."));
+}
+
+void UCarlaNavigationSubsystem::OnWorldBeginPlay(UWorld &InWorld)
+{
+  Super::OnWorldBeginPlay(InWorld);
+  if (UNavigationSystemV1 *NavSys = FNavigationSystem::GetCurrent<UNavigationSystemV1>(&InWorld))
+  {
+    NavSys->OnNavDataRegisteredEvent.AddUniqueDynamic(this, &UCarlaNavigationSubsystem::OnNavDataChanged);
+    NavSys->OnNavigationGenerationFinishedDelegate.AddUniqueDynamic(this, &UCarlaNavigationSubsystem::OnNavDataChanged);
+  }
+  ConfigureNavOctreeUpdates();
+}
+
+void UCarlaNavigationSubsystem::Deinitialize()
+{
+  if (UNavigationSystemV1 *NavSys = FNavigationSystem::GetCurrent<UNavigationSystemV1>(GetWorld()))
+  {
+    NavSys->OnNavDataRegisteredEvent.RemoveDynamic(this, &UCarlaNavigationSubsystem::OnNavDataChanged);
+    NavSys->OnNavigationGenerationFinishedDelegate.RemoveDynamic(this, &UCarlaNavigationSubsystem::OnNavDataChanged);
+  }
+  // The setting is global to the process: give the next world (or the
+  // editor, after Play In Editor) the engine's default back.
+  if (bDisabledNavOctreeUpdates)
+  {
+    UNavigationSystemV1::SetUpdateNavOctreeOnComponentChange(true);
+    bDisabledNavOctreeUpdates = false;
+  }
+  Super::Deinitialize();
+}
+
+void UCarlaNavigationSubsystem::OnNavDataChanged(ANavigationData * /*NavData*/)
+{
+  ConfigureNavOctreeUpdates();
+}
+
+bool UCarlaNavigationSubsystem::IsNavigationStatic() const
+{
+  const UNavigationSystemV1 *NavSys =
+      FNavigationSystem::GetCurrent<UNavigationSystemV1>(GetWorld());
+  if (NavSys == nullptr)
+  {
+    return true;
+  }
+  for (const ANavigationData *NavData : NavSys->NavDataSet)
+  {
+    // A static navmesh that still needs its first build counts as rebuilt
+    // at runtime: the build reads the octree.
+    if ((NavData != nullptr) && NavData->SupportsRuntimeGeneration())
+    {
+      return false;
+    }
+  }
+  return true;
+}
+
+void UCarlaNavigationSubsystem::ConfigureNavOctreeUpdates()
+{
+  const UWorld *World = GetWorld();
+  if ((World == nullptr) || !World->IsGameWorld())
+  {
+    return;
+  }
+  const int32 Mode = CVarUpdateNavOctreeOnMove.GetValueOnGameThread();
+  const bool bUpdate = (Mode > 0) || ((Mode < 0) && !IsNavigationStatic());
+  if (bUpdate == !bDisabledNavOctreeUpdates)
+  {
+    return;
+  }
+  UNavigationSystemV1::SetUpdateNavOctreeOnComponentChange(bUpdate);
+  bDisabledNavOctreeUpdates = !bUpdate;
+  UE_LOG(LogCarla, Log,
+      TEXT("Navigation octree updates on component moves: %s (carla.Navigation.UpdateOctreeOnMove=%d)"),
+      bUpdate ? TEXT("on") : TEXT("off"), Mode);
 }
 
 bool UCarlaNavigationSubsystem::HasServerSideNavigation() const

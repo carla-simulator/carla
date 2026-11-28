@@ -24,6 +24,10 @@ class CARLA_API UCarlaNavigationSubsystem : public UWorldSubsystem
 
 public:
 
+  virtual void OnWorldBeginPlay(UWorld &InWorld) override;
+
+  virtual void Deinitialize() override;
+
   static UCarlaNavigationSubsystem *Get(UWorld *World)
   {
     return World != nullptr
@@ -43,6 +47,25 @@ public:
   bool GetRandomNavLocation(FVector &OutLocation) const;
 
 private:
+
+  /// Turns off the navigation octree updates that every moved component
+  /// triggers when no navigation data of this world is ever rebuilt at runtime:
+  /// those updates only feed the navmesh generator, so they change nothing
+  /// but cost about a third of each vehicle teleport. See
+  /// carla.Navigation.UpdateOctreeOnMove.
+  void ConfigureNavOctreeUpdates();
+
+  /// Whether every navigation data of this world is static (never rebuilt
+  /// at runtime), or there is no navigation system.
+  bool IsNavigationStatic() const;
+
+  /// Navigation data registered or (re)built after BeginPlay may not be
+  /// static: decide again.
+  UFUNCTION()
+  void OnNavDataChanged(class ANavigationData *NavData);
+
+  /// Whether this subsystem turned the octree updates off, to restore them.
+  bool bDisabledNavOctreeUpdates = false;
 
   /// Why a sampled nav point was rejected, for the Verbose log.
   enum class ERejectReason : uint8

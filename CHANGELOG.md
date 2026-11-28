@@ -119,6 +119,7 @@
 * **Optimized the DVS camera** grayscale conversion, about 8x faster in log mode and 4x in linear, with bit-identical output.
 * **Pedestrians are cheaper to move**: a walker no longer refreshes overlaps on every body of its physics asset each time it moves or animates, and a walker teleported by the client-side crowd or the replayer drops its capsule and trigger boxes from scene queries. Keeping AI walkers and replayed actors visible to sensors (#10068) therefore costs about 4% of the tick with 150 walkers and 40 vehicles on Town10HD instead of 25%, and about 6% while replaying them.
 * **Made volumetric clouds cheaper** at the Epic and Cine quality levels, with no visible difference (`r.VolumetricRenderTarget.Mode=2`).
+* **Moving actors is cheaper**: when no navigation data of the map is rebuilt at runtime, which is the case for CARLA's maps, a moved component no longer updates the engine's navigation octree. Only the runtime navmesh generator reads it. A vehicle teleport costs about 27% less (141 to 103 µs on Town10HD), and a co-simulation client that teleports 221 vehicles every tick goes from 99.5 to 90.6 ms per tick. The results are bit-identical. `carla.Navigation.UpdateOctreeOnMove` overrides it (`-1` auto, `0` never, `1` always).
 
 #### Sensors and content
 
