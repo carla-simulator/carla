@@ -474,6 +474,40 @@
       note: >
         Returns the angle based on the physics of the wheel, not the visual angle.
     # --------------------------------------
+    - def_name: set_wheel_pitch_angle
+      params:
+        - param_name: wheel_location
+          type: carla.VehicleWheelLocation
+        - param_name: angle_in_deg
+          type: float
+      doc: >
+        Sets the pitch angle of a vehicle's wheel visually.
+    # --------------------------------------
+    - def_name: get_wheel_pitch_angle
+      return: float
+      params:
+        - param_name: wheel_location
+          type: carla.VehicleWheelLocation
+      doc: >
+        Returns the pitch angle in degrees of a vehicle's wheel.
+    # --------------------------------------
+    - def_name: set_wheel_height
+      params:
+        - param_name: wheel_location
+          type: carla.VehicleWheelLocation
+        - param_name: height
+          type: float
+      doc: >
+        Sets the height of a vehicle's wheel visually.
+    # --------------------------------------
+    - def_name: get_wheel_height
+      return: float
+      params:
+        - param_name: wheel_location
+          type: carla.VehicleWheelLocation
+      doc: >
+        Returns the height of a vehicle's wheel.
+    # --------------------------------------
     - def_name: get_failure_state
       return: carla.VehicleFailureState
       doc: >

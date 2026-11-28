@@ -300,6 +300,23 @@
       doc: >
         Semantic tag of the point.
     # --------------------------------------
+
+  - class_name: ContactPoint
+    # - DESCRIPTION ------------------------
+    doc: >
+      Class that represents a contact point with a surface. It exposes the normal vector and the friction coefficient of the surface.
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: location
+      doc: >
+        Location in 3D space.
+    - var_name: normal
+      doc: >
+        Normal vector of the surface on which the contact point lies.
+    - var_name: friction
+      doc: >
+        Surface friction coefficient. If the surface material is not defined in the map, the friction coefficient is set to -1.0.
+    # --------------------------------------
   
   - class_name: MapLayer
     # - DESCRIPTION ------------------------
@@ -759,6 +776,28 @@
           The final position of the ray.
       doc: >
         Casts a ray from the specified initial_location to final_location. The function then detects all geometries intersecting the ray and returns a list of carla.LabelledPoint in order.
+    # --------------------------------------
+    - def_name: get_contact_points
+      return: list(carla.ContactPoint|None)
+      params:
+      - param_name: locations
+        type: list(carla.Location)
+        doc: >
+          Points to be projected.
+      - param_name: directions
+        type: list(carla.Vector3D)
+        doc: >
+          A direction in which a ray should be casted for each point in locations.
+      - param_name: actor_ids
+        type: list(int)
+        doc: >
+          Actors ignored during ray casting.
+      - param_name: search_distance
+        type: float
+        doc: >
+          The maximum distance to perform the projection.
+      doc: >
+        Casts rays from the specified locations in the given directions, in order to find the first intersection of each ray with a surface. Intersections with actors defined via the given ids are ignored. For each intersection a carla.ContactPoint is returned. If no intersection was found in the search_distance range, None is returned instead of a carla.ContactPoint.
     # --------------------------------------
     - def_name: project_point
       return: carla.LabelledPoint
