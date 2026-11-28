@@ -166,6 +166,11 @@ if grep -q "Criteria Information" "${LOG}"; then
   echo "[run] PASS a criteria report was produced"
   grep -qE "GLOBAL RESULT.*(FAILURE|TIMEOUT)" "${LOG}" \
     && echo "[run] NOTE the scenario ran but did not pass — most need a driver for the ego"
+elif grep -qE "All scenario tests were passed successfully|Not all scenario tests were successful" "${LOG}"; then
+  # Without --output there is no criteria table, only this verdict line.
+  echo "[run] PASS the scenario ran to the end (OUTPUT=1 prints the criteria table)"
+  grep -q "Not all scenario tests were successful" "${LOG}" \
+    && echo "[run] NOTE the scenario ran but did not pass — most need a driver for the ego"
 elif grep -qE "not supported .*Exiting|no scenario with name" "${LOG}"; then
   # SR prints the scenario TYPE here, not the config name. The config can be
   # present in the XML while the class that implements it was deleted.

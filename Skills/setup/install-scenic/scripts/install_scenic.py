@@ -58,10 +58,44 @@ def module_file(interp: str, mod: str) -> str | None:
 def cli_for(interp: str) -> str | None:
     """The scenic CLI that belongs to `interp`, not whatever is first on PATH.
     A pyenv shim on PATH commonly points at a different environment."""
-    cand = Path(interp).parent / "scenic"
-    if cand.is_file() and os.access(cand, os.X_OK):
-        return str(cand)
+    for cand in cli_candidates(interp):
+        if cand.is_file() and os.access(cand, os.X_OK):
+            return str(cand)
     return shutil.which("scenic")
+
+
+def cli_candidates(interp: str) -> list[Path]:
+    """Where `interp`'s environment puts console scripts: next to the interpreter
+    (a POSIX venv, or Scripts\\ in a Windows venv), or in Scripts\\ beside a
+    Windows base install's python.exe. On Windows the script is scenic.exe."""
+    here = Path(interp).parent
+    return [d / n for d in (here, here / "Scripts") for n in ("scenic", "scenic.exe")]
+
+
+def config_value(key: str) -> str:
+    """`key` from the environment, else from the files Skills/_common/env_common.sh
+    reads (./.carla-tools.env, then the user config). Values are taken literally."""
+    if os.environ.get(key):
+        return os.environ[key]
+    xdg = os.environ.get("XDG_CONFIG_HOME") or str(Path.home() / ".config")
+    user = os.environ.get("CARLA_TOOLS_CONFIG") or f"{xdg}/carla-agentic-tools/config.env"
+    for f in (Path.cwd() / ".carla-tools.env", Path(user)):
+        try:
+            for line in f.read_text().splitlines():
+                k, sep, v = line.partition("=")
+                if sep and k.strip() == key and v.strip():
+                    return v.strip()
+        except OSError:
+            continue
+    return ""
+
+
+def sr_scenic_model() -> str | None:
+    """ScenarioRunner's Scenic world model, which has its own blueprint list."""
+    root = config_value("SCENARIO_RUNNER_ROOT")
+    if root and (Path(root) / "srunner" / "scenic" / "models" / "blueprints.py").is_file():
+        return str(Path(root) / "srunner" / "scenic" / "models")
+    return None
 
 
 def blueprint_versions(interp: str) -> list[str] | None:
@@ -183,7 +217,7 @@ def cmd_verify(args) -> None:
 
     ok("scenic %s" % d["scenic"]) if d["scenic"] else bad("scenic not importable from %s" % interp)
     ok("CLI at %s" % d["cli"]) if d["cli"] else bad("no scenic CLI for this interpreter")
-    if d["cli"] and Path(d["cli"]).parent != Path(interp).parent:
+    if d["cli"] and Path(d["cli"]) not in cli_candidates(interp):
         bad("CLI %s belongs to a different environment than %s" % (d["cli"], interp))
     ok("carla client %s" % d["carla"]) if d["carla"] else bad("no carla client in this interpreter")
     if d["carla_module"] and d["carla_module"].endswith("__init__.py"):
@@ -193,8 +227,16 @@ def cmd_verify(args) -> None:
         t = d["tables"] or []
         if d["carla"] in t:
             ok("blueprint table present for client %s" % d["carla"])
+        elif sr_scenic_model():
+            # Scenic's own world model (scenic.simulators.carla.model) picks
+            # blueprints from this table, but ScenarioRunner's model, which its
+            # srunner/scenic/*.scenic use, carries its own and runs regardless.
+            print("  WARN no Scenic blueprint table for client %s (has: %s): scenarios on "
+                  "Scenic's own model fail at sample time; use `model srunner.scenic.models.model` "
+                  "(%s)" % (d["carla"], ", ".join(t) or "none", sr_scenic_model()))
         else:
-            bad("no blueprint table for client %s (has: %s) — upgrade scenic"
+            bad("no blueprint table for client %s (has: %s) — upgrade scenic, or use "
+                "ScenarioRunner's model (set SCENARIO_RUNNER_ROOT to a ue58-dev checkout)"
                 % (d["carla"], ", ".join(t) or "none"))
     # The world model is model.scenic — a Scenic file, not an importable module.
     # What actually breaks when the two halves live in different environments is

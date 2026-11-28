@@ -118,6 +118,10 @@ The branch to use against a CARLA tree built on Unreal Engine 5.8.
 - **Scenic**: `srunner/scenic/` holds the Scenic carlaChallenge ports.
 - **Python**: `requirements.txt` pins `py-trees==2.6.0`, unlike every other
   branch; the branch ran fine on Python 3.13.
+- **OpenSCENARIO 2.0** needs `antlr4-python3-runtime==4.9.3`, not the `4.10` of
+  `master`: the parser in `srunner/osc2/osc2_parser/` was regenerated with ANTLR
+  4.9.3 (scenario_runner `a293045`), and `requirements.txt` does not list it.
+  Without it, `--openscenario2` prints "OpenSCENARIO 2.0 support is unavailable".
 - **This is the CARLA 1.0 branch**, and `MIN_CARLA_VERSION = '1.0'`. A `0.10.0`
   server is the UE 5.5 release and is rejected with an `ImportError`; use
   `ue5-master` for those.

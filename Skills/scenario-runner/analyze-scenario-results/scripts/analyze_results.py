@@ -241,8 +241,17 @@ def cmd_metrics(args) -> None:
         log = cand if cand.exists() else log
     if not log.exists():
         sys.exit(f"recording {log} not found (--record writes under {root})")
+    # metrics_manager.py builds "$SCENARIO_RUNNER_ROOT/<--log>" by string
+    # concatenation, so an absolute --log ends up behind the root a second time
+    # ("The specified log file does not exist"). Hand it a path relative to the
+    # root, and pin the root it joins to the checkout used here.
+    try:
+        log_arg = os.path.relpath(log.resolve(), root.resolve())
+    except ValueError:  # Windows: the log is on another drive than the checkout
+        sys.exit(f"recording {log} must be on the same drive as {root}: "
+                 "metrics_manager.py only accepts a path relative to SCENARIO_RUNNER_ROOT")
     cmd = [sys.executable, str(root / "metrics_manager.py"),
-           "--metric", args.metric, "--log", str(log),
+           "--metric", args.metric, "--log", log_arg,
            "--host", args.host, "--port", str(args.port)]
     crit = args.criteria
     if not crit:
@@ -254,7 +263,8 @@ def cmd_metrics(args) -> None:
         cmd += ["--criteria", crit]
     print("# " + " ".join(cmd))
     print("# NOTE metrics_manager needs a RUNNING server: it replays the log to recover the map")
-    sys.exit(subprocess.run(cmd, cwd=str(root)).returncode)
+    env = dict(os.environ, SCENARIO_RUNNER_ROOT=str(root))
+    sys.exit(subprocess.run(cmd, cwd=str(root), env=env).returncode)
 
 
 def main() -> None:

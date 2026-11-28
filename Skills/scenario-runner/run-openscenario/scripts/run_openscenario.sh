@@ -35,9 +35,11 @@ list)
     find "${SCENARIO_RUNNER_ROOT}/srunner/${d}" -maxdepth 1 \( -name '*.xosc' -o -name '*.osc' \) \
       | sort | sed "s|${SCENARIO_RUNNER_ROOT}/|  |"
   done
-  [ -d "${SCENARIO_RUNNER_ROOT}/srunner/examples/catalogs" ] && \
-    echo "== catalogs (referenced relative to the .xosc) ==" && \
-    ls "${SCENARIO_RUNNER_ROOT}/srunner/examples/catalogs" | sed 's/^/  /'
+  for d in examples osc_examples; do
+    [ -d "${SCENARIO_RUNNER_ROOT}/srunner/${d}/catalogs" ] || continue
+    echo "== srunner/${d}/catalogs (referenced relative to the .xosc) =="
+    ls "${SCENARIO_RUNNER_ROOT}/srunner/${d}/catalogs" | sed 's/^/  /'
+  done
   exit 0
   ;;
 validate)
@@ -140,7 +142,17 @@ run|run2)
   [ -n "${FILE}" ] || { echo "usage: bash run_openscenario.sh ${CMD} <file>" >&2; exit 2; }
   [ -f "${FILE}" ] || { echo "ERROR: ${FILE} does not exist" >&2; exit 3; }
   FLAG=--openscenario; [ "${CMD}" = "run2" ] && FLAG=--openscenario2
-  ARGS=("${FLAG}" "$(cd "$(dirname "${FILE}")" && pwd)/$(basename "${FILE}")"
+  # The run happens from SCENARIO_RUNNER_ROOT, so hand the file over relative to
+  # it. The OSC 2.0 preprocessor builds `os.getcwd() + "/" + path`, which puts an
+  # absolute path behind the root a second time. Only a file on another Windows
+  # drive keeps its absolute path (and fails in run2).
+  SCENARIO_FILE="$("${PYTHON}" -c 'import os, sys
+f, root = os.path.abspath(sys.argv[1]), os.path.abspath(sys.argv[2])
+try:
+    print(os.path.relpath(f, root))
+except ValueError:
+    print(f)' "${FILE}" "${SCENARIO_RUNNER_ROOT}")"
+  ARGS=("${FLAG}" "${SCENARIO_FILE}"
         --host "${CARLA_HOST}" --port "${CARLA_PORT}" --trafficManagerPort "${CARLA_TM_PORT}"
         --timeout "${TIMEOUT:-120}")
   if [ -n "${PARAMS:-}" ]; then
@@ -183,9 +195,23 @@ PY
   cd "${SCENARIO_RUNNER_ROOT}"
   # -u: Python block-buffers stdout when it is not a tty, so redirecting a long
   # run to a log otherwise shows nothing until it finishes.
-  "${PYTHON}" -u scenario_runner.py "${ARGS[@]}"
-  RC=$?
+  LOG="$(mktemp)"
+  "${PYTHON}" -u scenario_runner.py "${ARGS[@]}" 2>&1 | tee "${LOG}"
+  RC=${PIPESTATUS[0]}
   echo "[run] scenario_runner exited ${RC}"
+  # scenario_runner.py catches its own exceptions and still exits 0, so the exit
+  # code alone reports success for a run that never started. Every scenario that
+  # ran to the end prints one of these two verdicts.
+  if grep -qE "All scenario tests were passed successfully|Not all scenario tests were successful" "${LOG}"; then
+    echo "[run] PASS the scenario ran to the end"
+    grep -q "Not all scenario tests were successful" "${LOG}" \
+      && echo "[run] NOTE the scenario ran but did not pass (OUTPUT=1 shows the criteria)"
+  else
+    echo "[run] FAIL the scenario did not run to the end. Last lines:"
+    tail -5 "${LOG}" | sed 's/^/[run]        /'
+    [ "${RC}" -eq 0 ] && RC=1
+  fi
+  rm -f "${LOG}"
   exit ${RC}
   ;;
 *)
