@@ -70,14 +70,32 @@ TEST(PointCloudFields, extended_lidar_layout_is_autoware_xyzircaedt) {
 
 TEST(PointCloudFields, semantic_lidar_layout_matches_semantic_lidar_detection_size) {
   const auto &fields = carla::ros2::kSemanticLidarFields;
-  ASSERT_EQ(fields.size(), 6u);
+  ASSERT_EQ(fields.size(), 7u);
   EXPECT_EQ(fields[0].name, "x");
-  EXPECT_EQ(fields[3].name, "cos_inc_angle");
-  EXPECT_EQ(fields[4].name, "object_idx");
-  EXPECT_EQ(fields[5].name, "object_tag");
-  EXPECT_EQ(fields[4].datatype, carla::ros2::PointFieldDataType::UInt32);
+  EXPECT_EQ(fields[0].offset, 0u);
+  EXPECT_EQ(fields[0].datatype, carla::ros2::PointFieldDataType::Float32);
+  EXPECT_EQ(fields[1].name, "y");
+  EXPECT_EQ(fields[1].offset, 4u);
+  EXPECT_EQ(fields[1].datatype, carla::ros2::PointFieldDataType::Float32);
+  EXPECT_EQ(fields[2].name, "z");
+  EXPECT_EQ(fields[2].offset, 8u);
+  EXPECT_EQ(fields[2].datatype, carla::ros2::PointFieldDataType::Float32);
+  EXPECT_EQ(fields[3].name, "intensity");
+  EXPECT_EQ(fields[3].offset, 12u);
+  EXPECT_EQ(fields[3].datatype, carla::ros2::PointFieldDataType::Float32);
+  EXPECT_EQ(fields[4].name, "cos_inc_angle");
+  EXPECT_EQ(fields[4].offset, 16u);
+  EXPECT_EQ(fields[4].datatype, carla::ros2::PointFieldDataType::Float32);
+  EXPECT_EQ(fields[5].name, "object_idx");
+  EXPECT_EQ(fields[5].offset, 20u);
   EXPECT_EQ(fields[5].datatype, carla::ros2::PointFieldDataType::UInt32);
-  EXPECT_EQ(LastFieldEnd(fields), 24u);
+  EXPECT_EQ(fields[6].name, "object_tag");
+  EXPECT_EQ(fields[6].offset, 24u);
+  EXPECT_EQ(fields[6].datatype, carla::ros2::PointFieldDataType::UInt32);
+  for (const auto &field : fields) {
+    EXPECT_EQ(field.count, 1u);
+  }
+  EXPECT_EQ(LastFieldEnd(fields), 28u);
 }
 
 TEST(PointCloudFields, radar_layout_carries_seven_float_fields) {

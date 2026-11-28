@@ -2859,11 +2859,13 @@ Parses the axis' orientations to string.
 ---
 
 ## carla.SemanticLidarDetection<a name="carla.SemanticLidarDetection"></a>
-Data contained inside a [carla.SemanticLidarMeasurement](#carla.SemanticLidarMeasurement). Each of these represents one of the points in the cloud with its location, the cosine of the incident angle, index of the object hit, and its semantic tag.  
+Data contained inside a [carla.SemanticLidarMeasurement](#carla.SemanticLidarMeasurement). Each of these represents one of the points in the cloud with its location, simulated atmospheric attenuation intensity, cosine of the incident angle, index of the object hit, and its semantic tag.  
 
 ### Instance Variables
 - <a name="carla.SemanticLidarDetection.point"></a>**<font color="#f8805a">point</font>** (_[carla.Location](#carla.Location)<small> - meters</small>_)  
 [x,y,z] coordinates of the point.  
+- <a name="carla.SemanticLidarDetection.intensity"></a>**<font color="#f8805a">intensity</font>** (_float_)  
+Simulated atmospheric attenuation intensity, computed as exp(-atmosphere_attenuation_rate * distance). This is not a physically measured surface reflectance.  
 - <a name="carla.SemanticLidarDetection.cos_inc_angle"></a>**<font color="#f8805a">cos_inc_angle</font>** (_float_)  
 Cosine of the incident angle between the ray, and the normal of the hit object.  
 - <a name="carla.SemanticLidarDetection.object_idx"></a>**<font color="#f8805a">object_idx</font>** (_uint_)  

@@ -13,8 +13,8 @@ import numpy as np
 from . import SyncSmokeTest
 from .test_lidar import wait_for_frame
 
-SEMANTIC_POINT = np.dtype([('x', 'f4'), ('y', 'f4'), ('z', 'f4'), ('cos', 'f4'),
-                           ('object_idx', 'u4'), ('object_tag', 'u4')])
+SEMANTIC_POINT = np.dtype([('x', 'f4'), ('y', 'f4'), ('z', 'f4'), ('intensity', 'f4'),
+                           ('cos_inc_angle', 'f4'), ('object_idx', 'u4'), ('object_tag', 'u4')])
 
 
 WORLD = "Town10HD_Opt"

@@ -453,8 +453,8 @@ class TestLidarSensorTick(SyncSmokeTest):
 class TestSemanticTags(SyncSmokeTest):
     """Semantic tags read from tagged components by the semantic LiDAR."""
 
-    SEMANTIC_POINT = np.dtype([('x', 'f4'), ('y', 'f4'), ('z', 'f4'), ('cos', 'f4'),
-                               ('object_idx', 'u4'), ('object_tag', 'u4')])
+    SEMANTIC_POINT = np.dtype([('x', 'f4'), ('y', 'f4'), ('z', 'f4'), ('intensity', 'f4'),
+                               ('cos_inc_angle', 'f4'), ('object_idx', 'u4'), ('object_tag', 'u4')])
 
     def test_semantic_lidar_vehicle_tags(self):
         print("TestSemanticTags.test_semantic_lidar_vehicle_tags")

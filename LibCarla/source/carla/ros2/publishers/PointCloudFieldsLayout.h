@@ -64,6 +64,7 @@ inline constexpr std::array<PointFieldDescriptor, 10> kLidarFieldsEx = {{
     {"time_stamp",  28u, PointFieldDataType::UInt32,  1u},
 }};
 
+// Semantic lidar: 7 fields. 5 FLOAT32 + 2 UINT32. Point stride = 28 B =
 inline constexpr double kLidarAzimuthPi = 3.14159265358979323846;
 
 // How the extended layout's `azimuth` is measured, set per sensor through the
@@ -109,13 +110,14 @@ inline float ComputeLidarAzimuth(float x, float y, const LidarAzimuthRange &rang
 
 // Semantic lidar: 6 fields. 4 FLOAT32 + 2 UINT32. Point stride = 24 B =
 // sizeof(sensor::data::SemanticLidarDetection).
-inline constexpr std::array<PointFieldDescriptor, 6> kSemanticLidarFields = {{
+inline constexpr std::array<PointFieldDescriptor, 7> kSemanticLidarFields = {{
     {"x",             0u,  PointFieldDataType::Float32, 1u},
     {"y",             4u,  PointFieldDataType::Float32, 1u},
     {"z",             8u,  PointFieldDataType::Float32, 1u},
-    {"cos_inc_angle", 12u, PointFieldDataType::Float32, 1u},
-    {"object_idx",    16u, PointFieldDataType::UInt32,  1u},
-    {"object_tag",    20u, PointFieldDataType::UInt32,  1u},
+    {"intensity",     12u, PointFieldDataType::Float32, 1u},
+    {"cos_inc_angle", 16u, PointFieldDataType::Float32, 1u},
+    {"object_idx",    20u, PointFieldDataType::UInt32,  1u},
+    {"object_tag",    24u, PointFieldDataType::UInt32,  1u},
 }};
 
 // Radar: 7 FLOAT32 fields. Point stride = 28 B =

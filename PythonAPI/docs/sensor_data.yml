@@ -400,7 +400,7 @@
   - class_name: SemanticLidarDetection
     # - DESCRIPTION ------------------------
     doc: >
-      Data contained inside a carla.SemanticLidarMeasurement. Each of these represents one of the points in the cloud with its location, the cosine of the incident angle, index of the object hit, and its semantic tag.
+      Data contained inside a carla.SemanticLidarMeasurement. Each of these represents one of the points in the cloud with its location, simulated atmospheric attenuation intensity, cosine of the incident angle, index of the object hit, and its semantic tag.
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: point
@@ -408,6 +408,11 @@
       var_units: meters
       doc: >
         [x,y,z] coordinates of the point.
+    # --------------------------------------
+    - var_name: intensity
+      type: float
+      doc: >
+        Simulated atmospheric attenuation intensity, computed as exp(-atmosphere_attenuation_rate * distance). This is not a physically measured surface reflectance.
     # --------------------------------------
     - var_name: cos_inc_angle
       type: float

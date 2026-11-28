@@ -1649,6 +1649,8 @@ void UActorBlueprintFunctionLibrary::MakeLidarDefinition(
                                   Frequency,
                                   UpperFOV,
                                   LowerFOV,
+                                  AtmospAttenRate,
+                                  HorizontalFOV});
                                   HorizontalFOV,
                                   AzimuthDirection,
                                   AzimuthRangeStart,
