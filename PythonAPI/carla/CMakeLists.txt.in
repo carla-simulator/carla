@@ -153,6 +153,13 @@ install (
   DESTINATION .
 )
 
+install (
+  DIRECTORY "${CARLA_PYTHON_API_CARLA_PATH}/agents"
+  DESTINATION .
+  FILES_MATCHING PATTERN "*.py"
+  PATTERN "__pycache__" EXCLUDE
+)
+
 target_include_directories (
   ${SKBUILD_PROJECT_NAME} SYSTEM PRIVATE
   ${CARLA_PYTHON_API_INCLUDE_PATH}
