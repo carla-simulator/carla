@@ -65,6 +65,7 @@
 * Added **stop-sign support and more reliable traffic-light lane linking** to the CARLA-Autoware map generator, plus a traffic-light state bridge for Autoware.
 * Added a closed-loop example for **NVIDIA Alpamayo 2 Super**: it captures the model's calibrated cameras and ego-motion history, runs the trajectory inference, shows the predicted path and the model's Chain of Causation reasoning, and turns the trajectory into vehicle control, with CARLA-rendered cameras on any map or NuRec cameras on a reconstructed real-world scene. See `Docs/nvidia_alpamayo.md`.
 * Added a **choice of ROS 2 middleware**: the native connector sits behind a middleware abstraction supporting FastDDS, CycloneDDS and Zenoh, selected at launch with `--rmw=`. `--ros-domain-id=<N>` sets the domain id (falling back to `ROS_DOMAIN_ID`, then 0), and `ROS2TopicVisibility` sets whether sensor topics are exposed by default.
+* Added the **`ros_frame_id` and `ros_publish_tf` sensor attributes** to the native ROS 2 interface, for robots that bring their own TF tree, such as Autoware's sensor kit. `ros_frame_id` sets the `frame_id` of the sensor's messages, which otherwise carry its `ros_name`, and `ros_publish_tf` set to `false` keeps the sensor out of `/tf`, so the frame does not get a second parent.
 * Added **ROS 2 ego odometry**: every `hero` or `ego` vehicle publishes `nav_msgs/Odometry` on `/carla/<ros_name>/odometry` every tick, with its world pose and its body-frame velocity and yaw rate in ROS axes, whichever control mode it uses. See `Docs/ros2_native.md`.
 
 #### Scenarios
