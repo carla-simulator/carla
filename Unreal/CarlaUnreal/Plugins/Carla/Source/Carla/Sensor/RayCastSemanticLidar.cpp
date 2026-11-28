@@ -196,6 +196,11 @@ void ARayCastSemanticLidar::SimulateLidar(const float DeltaTime, bool bLockPhysi
 
   ComputeAndSaveDetections(ActorTransform);
 
+  // The sweep of this step, for the ROS 2 full scan rotation assembly.
+  LastSweepStartAngle = CurrentHorizontalAngle;
+  LastSweepAngle = AngleDistanceOfTick;
+  LastRaysPerChannel = PointsToScanWithOneLaser;
+
   AdvanceHorizontalAngle(DeltaTime);
 }
 
