@@ -13,7 +13,10 @@
 #include "carla/sensor/s11n/EpisodeStateSerializer.h"
 
 #include <algorithm>
+#include <cstdint>
+#include <cstring>
 #include <optional>
+#include <utility>
 
 namespace carla {
 namespace sensor {
@@ -41,14 +44,32 @@ namespace data {
       return Serializer::DeserializeHeader(Super::GetRawData());
     }
 
-    /// Number of traffic lights between the header and the actors, or nothing
+    /// Bytes of the LightsAdvanced map after the header, 0 without one, or nothing when the message cannot hold it.
+    static std::optional<size_t> AdvancedMapSize(const RawData &raw) {
+      if (!IsDelta(raw) || ((Serializer::DeserializeHeader(raw).simulation_state & Serializer::LightsAdvanced) == 0u)) {
+        return 0u;
+      }
+      uint32_t count = 0u;
+      if (raw.size() < Serializer::header_offset + sizeof(count)) {
+        return std::nullopt;
+      }
+      std::memcpy(&count, raw.begin() + Serializer::header_offset, sizeof(count));
+      const size_t size = sizeof(count) + (size_t(count) + 7u) / 8u;
+      if (size > raw.size() - Serializer::header_offset) {
+        return std::nullopt;
+      }
+      return size;
+    }
+
+    /// Number of traffic light records before the actors (after a delta's map), or nothing
     /// when the message cannot hold the count it gives (another build): then
     /// it reads as empty, never past its end.
     static std::optional<size_t> TrafficLightCount(const RawData &raw) {
-      if (raw.size() < Serializer::header_offset) {
+      const auto map_size = AdvancedMapSize(raw);
+      if (!map_size || (raw.size() < Serializer::header_offset + *map_size)) {
         return std::nullopt;
       }
-      const size_t available = raw.size() - Serializer::header_offset;
+      const size_t available = raw.size() - Serializer::header_offset - *map_size;
       const size_t count = Serializer::DeserializeHeader(raw).traffic_light_count;
       const size_t size = count * sizeof(TrafficLightDynamicState);
       if ((size > available) || (!IsDelta(raw) && ((available - size) % sizeof(ActorDynamicState) != 0u))) {
@@ -65,12 +86,24 @@ namespace data {
   public:
 
     /// What changes of the traffic lights that are static actors, which are
-    /// not among the actors of this state.
+    /// not among the actors of this state. A delta leaves out those that only advanced.
     auto GetTrafficLights() const {
       const auto &raw = Super::GetRawData();
       const auto *begin = reinterpret_cast<const TrafficLightDynamicState *>(
-          raw.begin() + std::min(raw.size(), Serializer::header_offset));
+          raw.begin() + std::min(raw.size(), Serializer::header_offset + AdvancedMapSize(raw).value_or(0u)));
       return MakeListView(begin, begin + TrafficLightCount(raw).value_or(0u));
+    }
+
+    /// In a delta, the previous frame's light count and a bit per light that only advanced, low bit first.
+    std::optional<std::pair<uint32_t, const unsigned char *>> GetAdvancedLights() const {
+      const auto &raw = Super::GetRawData();
+      const auto map_size = AdvancedMapSize(raw);
+      if (!map_size || (*map_size == 0u)) {
+        return std::nullopt;
+      }
+      uint32_t count = 0u;
+      std::memcpy(&count, raw.begin() + Serializer::header_offset, sizeof(count));
+      return std::make_pair(count, raw.begin() + Serializer::header_offset + sizeof(count));
     }
 
     /// True if this message holds only what changed since the previous frame; the actor array is then empty.
@@ -86,7 +119,8 @@ namespace data {
         return std::nullopt;
       }
       return MakeListView<const unsigned char *>(
-          raw.begin() + Serializer::header_offset + *count * sizeof(TrafficLightDynamicState), raw.end());
+          raw.begin() + Serializer::header_offset + *AdvancedMapSize(raw) + *count * sizeof(TrafficLightDynamicState),
+          raw.end());
     }
 
     /// Unique id of the episode at which this data was generated.

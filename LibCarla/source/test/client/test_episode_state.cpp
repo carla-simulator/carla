@@ -34,11 +34,12 @@ using StatePtr = std::shared_ptr<const EpisodeState>;
 static carla::SharedBufferView MakeBody(
     uint64_t episode,
     const std::vector<TrafficLightDynamicState> &lights,
-    const std::vector<ActorDynamicState> &actors) {
+    const std::vector<ActorDynamicState> &actors,
+    float delta_seconds = 0.05f) {
   Serializer::Header header{};
   header.episode_id = episode;
   header.platform_timestamp = 100.0;
-  header.delta_seconds = 0.05f;
+  header.delta_seconds = delta_seconds;
   // Static-actors version 3, no flags.
   header.simulation_state =
       static_cast<Serializer::SimulationState>(3u << Serializer::static_actors_version_shift);
@@ -375,6 +376,96 @@ TEST(episode_state_delta, a_delta_that_does_not_follow_is_refused) {
   ExpectState(base, lights, before);
 }
 
+TEST(episode_state_delta, lights_that_only_advanced_travel_as_bits) {
+  const auto actors = MakeActors(2u);
+  const auto advanced = [](std::vector<TrafficLightDynamicState> lights) {
+    for (auto &light : lights) {
+      light.elapsed_time = Serializer::AdvanceElapsed(light.elapsed_time, 0.05f);
+    }
+    return lights;
+  };
+  const auto flags = [](const carla::Buffer &delta) {
+    return reinterpret_cast<const Serializer::Header *>(delta.data())->simulation_state;
+  };
+  for (const size_t count : {4u, 8u, 9u, 20u}) {
+    const auto lights = MakeLights(count);
+    const auto body = MakeBody(7u, lights, actors);
+    const auto base = Apply(1u, *body, nullptr);
+    const size_t map_size = sizeof(uint32_t) + (count + 7u) / 8u;
+    // Every light advanced: the map alone.
+    const auto all = advanced(lights);
+    carla::Buffer delta;
+    ASSERT_TRUE(Serializer::MakeDelta(*body, *MakeBody(7u, all, actors), delta)) << count;
+    ASSERT_EQ(delta.size(), sizeof(Serializer::Header) + map_size) << count;
+    ASSERT_NE(flags(delta) & Serializer::LightsAdvanced, 0u);
+    ExpectState(Apply(2u, delta, base), all, actors);
+    // Another amount, a new state or a frozen flag that changed with the advance is a record; the rest are bits.
+    auto mixed = all;
+    mixed[0u].elapsed_time = lights[0u].elapsed_time + 0.1f;
+    mixed[1u].time_is_frozen = true;
+    mixed.back().state = TLS::Green;
+    ASSERT_TRUE(Serializer::MakeDelta(*body, *MakeBody(7u, mixed, actors), delta)) << count;
+    ASSERT_EQ(delta.size(), sizeof(Serializer::Header) + map_size + 3u * sizeof(TrafficLightDynamicState)) << count;
+    ExpectState(Apply(2u, delta, base), mixed, actors);
+    // No light only advanced: no map.
+    auto changed = lights;
+    changed[0u].state = TLS::Green;
+    ASSERT_TRUE(Serializer::MakeDelta(*body, *MakeBody(7u, changed, actors), delta)) << count;
+    ASSERT_EQ(delta.size(), sizeof(Serializer::Header) + sizeof(TrafficLightDynamicState)) << count;
+    ASSERT_EQ(flags(delta) & Serializer::LightsAdvanced, 0u);
+    ExpectState(Apply(2u, delta, base), changed, actors);
+    ExpectState(base, lights, actors);
+  }
+}
+
+TEST(episode_state_delta, a_light_advances_by_the_delta_seconds_of_its_own_frame) {
+  const auto actors = MakeActors(1u);
+  auto lights = MakeLights(3u);
+  lights[2u].elapsed_time = -0.0f;
+  const auto body = MakeBody(7u, lights, actors, 0.05f);
+  const auto base = Apply(1u, *body, nullptr);
+  auto after = lights;
+  after[0u].elapsed_time = Serializer::AdvanceElapsed(lights[0u].elapsed_time, 0.04f);   // this frame's: a bit
+  after[1u].elapsed_time = Serializer::AdvanceElapsed(lights[1u].elapsed_time, 0.05f);   // last frame's: a record
+  carla::Buffer delta;
+  ASSERT_TRUE(Serializer::MakeDelta(*body, *MakeBody(7u, after, actors, 0.04f), delta));
+  ASSERT_EQ(delta.size(), sizeof(Serializer::Header) + sizeof(uint32_t) + 1u + sizeof(TrafficLightDynamicState));
+  ExpectState(Apply(2u, delta, base), after, actors);
+  // A frame of zero seconds: -0 + 0 is +0, other bytes, and still only an advance.
+  auto zero = lights;
+  zero[2u].elapsed_time = Serializer::AdvanceElapsed(-0.0f, 0.0f);
+  ASSERT_TRUE(Serializer::MakeDelta(*body, *MakeBody(7u, zero, actors, 0.0f), delta));
+  ASSERT_EQ(delta.size(), sizeof(Serializer::Header) + sizeof(uint32_t) + 1u);
+  ExpectState(Apply(2u, delta, base), zero, actors);
+}
+
+TEST(episode_state_delta, a_map_that_does_not_fit_is_refused) {
+  const auto actors = MakeActors(2u);
+  const auto lights = MakeLights(9u);
+  auto after = lights;
+  for (auto &light : after) {
+    light.elapsed_time = Serializer::AdvanceElapsed(light.elapsed_time, 0.05f);
+  }
+  after[4u].state = TLS::Yellow;
+  const auto body = MakeBody(7u, lights, actors);
+  carla::Buffer delta;
+  ASSERT_TRUE(Serializer::MakeDelta(*body, *MakeBody(7u, after, actors), delta));
+  const auto base = Apply(10u, *body, nullptr);
+  ExpectState(Apply(11u, delta, base), after, actors);
+  // A client whose previous frame had another number of lights.
+  ASSERT_EQ(Apply(11u, delta, Apply(10u, *MakeBody(7u, MakeLights(10u), actors), nullptr)), nullptr);
+  // Cut anywhere, the map or the light record after it: never read past the end.
+  for (size_t size = sizeof(Serializer::Header); size < delta.size(); ++size) {
+    ASSERT_EQ(Apply(11u, delta.data(), size, base), nullptr) << size;
+  }
+  // A light count the map cannot hold.
+  std::vector<unsigned char> broken(delta.data(), delta.data() + delta.size());
+  const uint32_t count = 1000u;
+  std::memcpy(broken.data() + sizeof(Serializer::Header), &count, sizeof(count));
+  ASSERT_EQ(Apply(11u, broken.data(), broken.size(), base), nullptr);
+  ExpectState(base, lights, actors);
+}
+
 /// What FWorldObserver::BroadcastTick and MultiStreamState::WriteDelta do, with clients that miss messages.
 TEST(episode_state_delta, fuzz_every_client_always_holds_the_world) {
   std::mt19937 rng(20261124u);
@@ -393,12 +484,15 @@ TEST(episode_state_delta, fuzz_every_client_always_holds_the_world) {
   uint64_t frame = 1u;
   uint64_t last_frame = 0u;
   carla::SharedBufferView last_full;
+  size_t deltas_with_map = 0u;
   const auto randomize = [&rng](ActorDynamicState &actor, size_t begin, size_t end) {
     for (size_t i = begin; i < end; ++i) {
       Bytes(actor)[i] = static_cast<unsigned char>(rng());
     }
   };
   for (size_t step = 0u; step < 4000u; ++step) {
+    // Asynchronous mode: every frame has its own delta seconds.
+    const float delta_seconds = (rng() % 4u == 0u) ? 0.04f : 0.05f;
     for (auto &actor : actors) {
       if (chance(40u)) {
         const size_t range = rng() % 8u;
@@ -413,6 +507,8 @@ TEST(episode_state_delta, fuzz_every_client_always_holds_the_world) {
         light.elapsed_time += 0.05f;
         light.state = static_cast<TLS>(rng() % 4u);
         light.time_is_frozen = chance(10u);
+      } else if (chance(50u)) {
+        light.elapsed_time = Serializer::AdvanceElapsed(light.elapsed_time, delta_seconds);   // a bit of the map
       }
     }
     if (chance(4u)) {
@@ -434,10 +530,14 @@ TEST(episode_state_delta, fuzz_every_client_always_holds_the_world) {
       next_id += 20u;
     }
     frame += chance(3u) ? 2u : 1u;   // a frame that was not broadcast
-    const auto full = MakeBody(episode, lights, actors);
+    const auto full = MakeBody(episode, lights, actors, delta_seconds);
     carla::Buffer delta;
     const bool is_delta = (last_full != nullptr) && (frame == last_frame + 1u) &&
         Serializer::MakeDelta(*last_full, *full, delta);
+    if (is_delta && ((reinterpret_cast<const Serializer::Header *>(delta.data())->simulation_state &
+                      Serializer::LightsAdvanced) != 0u)) {
+      ++deltas_with_map;
+    }
     for (auto &client : clients) {
       if (chance(2u)) {
         client.missed = true;   // reconnected: a new session, the client keeps its old state
@@ -465,4 +565,5 @@ TEST(episode_state_delta, fuzz_every_client_always_holds_the_world) {
     ASSERT_GT(client.deltas, client.whole);
     ASSERT_GT(client.whole, 100u);
   }
+  ASSERT_GT(deltas_with_map, 1000u);
 }

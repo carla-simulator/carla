@@ -35,8 +35,15 @@ namespace s11n {
       MapChange          = (0x1 << 0),
       PendingLightUpdate = (0x1 << 1),
       /// Only what changed since the previous frame follows the header (see MakeDelta).
-      Delta              = (0x1 << 2)
+      Delta              = (0x1 << 2),
+      /// In a delta, a uint32 light count and one bit per light, low bit first, precede the lights (see MakeDelta).
+      LightsAdvanced     = (0x1 << 3)
     };
+
+    /// Elapsed time of a light that only advanced: server and client add alike, since the delta sends no float.
+    static float AdvanceElapsed(float elapsed, float delta_seconds) {
+      return elapsed + delta_seconds;
+    }
 
     /// Header::simulation_state holds the SimulationState flags in its low
     /// byte and, in the other 24 bits, the version of the set of static
@@ -55,7 +62,7 @@ namespace s11n {
       SimulationState simulation_state = SimulationState::None;
       /// The header is followed by this many TrafficLightDynamicState, one per
       /// traffic light that is a static actor, and then the ActorDynamicState
-      /// of the other actors.
+      /// of the other actors. In a delta, a LightsAdvanced map comes first.
       uint32_t traffic_light_count = 0u;
     };
 #pragma pack(pop)
@@ -101,22 +108,44 @@ namespace s11n {
           (actors > size) || ((size - actors) % sizeof(Actor) != 0u)) {
         return false;
       }
-      // The mask is the only thing a delta adds: one byte per actor at most.
-      delta.reset(static_cast<Buffer::size_type>(size + (size - actors) / sizeof(Actor)));
-      unsigned char *out = delta.data() + sizeof(header);
+      // A light whose elapsed time only advanced by delta_seconds is one bit of this map instead of a record.
+      const uint32_t light_count = header.traffic_light_count;
+      const size_t map_size = sizeof(light_count) + (size_t(light_count) + 7u) / 8u;
+      // Room for the map, every light as a record, and every actor whole plus its mask byte.
+      delta.reset(static_cast<Buffer::size_type>(size + map_size + (size - actors) / sizeof(Actor)));
+      unsigned char *const map = delta.data() + sizeof(header) + sizeof(light_count);
+      std::memset(delta.data() + sizeof(header), 0, map_size);
+      unsigned char *const lights = delta.data() + sizeof(header) + map_size;
+      unsigned char *out = lights;
       header.traffic_light_count = 0u;
+      bool advanced = false;
       size_t i = sizeof(header);
       // One loop per record size: only a memcmp of constant length is inlined, and a big map has a thousand lights.
-      for (; i < actors; i += sizeof(Light)) {
+      for (size_t light = 0u; i < actors; i += sizeof(Light), ++light) {
         if (std::memcmp(old + i, now + i, sizeof(Light)) == 0) {
           continue;
         }
         if (std::memcmp(old + i, now + i, sizeof(ActorId)) != 0) {
           return false;
         }
+        Light expected;
+        std::memcpy(&expected, old + i, sizeof(Light));
+        expected.elapsed_time = AdvanceElapsed(expected.elapsed_time, header.delta_seconds);
+        if (std::memcmp(&expected, now + i, sizeof(Light)) == 0) {
+          map[light / 8u] = static_cast<unsigned char>(map[light / 8u] | (1u << (light % 8u)));
+          advanced = true;
+          continue;
+        }
         std::memcpy(out, now + i, sizeof(Light));
         out += sizeof(Light);
         ++header.traffic_light_count;
+      }
+      if (advanced) {
+        std::memcpy(delta.data() + sizeof(header), &light_count, sizeof(light_count));
+        header.simulation_state = static_cast<SimulationState>(header.simulation_state | LightsAdvanced);
+      } else {
+        std::memmove(delta.data() + sizeof(header), lights, static_cast<size_t>(out - lights));
+        out -= map_size;
       }
       for (; i < size; i += sizeof(Actor)) {
         if (std::memcmp(old + i, now + i, sizeof(Actor)) == 0) {
